@@ -422,3 +422,17 @@ for line in hand:
     if len(x) > 0 :
         print(x)
   
+#lambda (useful for simple data cleaning tasks)
+my_function = lambda a, b, c: a + b
+my_function(1, 2, 3)
+
+#NumPy creates an array, a grid of values of the same type and indexed by non-negative integers
+import numpy as np
+mylist = [1, 2, 3]
+x = np.array(mylist)
+print(x)
+
+#create an array of even numbers betwee  0 and 30
+m.shape
+n=np.arange(0, 30, 2)
+print(n)
