@@ -170,6 +170,56 @@ camels=42
 "I saw %d camels."%camels
 'In %d years I have spotted %g %s.' % (3, 0.1, 'camels') 
 
+
+#######################################################
+#Chapter 7: Using Data Files
+#use open for large files rather than reading in a file with input()
+data_long = open("/Users/wiseer85/Desktop/mbox.txt")
+count = 0
+for line in data_long:
+    count = count + 1 
+print('Line Count:', count)
+
+#save short files
+with open("/Users/wiseer85/Desktop/mbox-short.txt", 'r') as infile:
+    #NOTE: r is standard, rU is universal, rB is binary code, rT is text
+    data = infile.read()
+print(data)
+len(data)
+
+#import files from internet using requests
+import requests
+url = "http://www.py4inf.com/code/mbox-short.txt"
+res = requests.get(url)
+text = res.text
+len(text)
+print(text)
+
+#strip specific words from text file by line
+fhand = open("/Users/wiseer85/Desktop/mbox-short.txt",'r')
+count=0
+for line in fhand:
+    if line.startswith("Subject:"): 
+        count=count+1
+print("There were",count,"subject lines")
+    
+#same thing using find words in text 
+data = open("/Users/wiseer85/Desktop/mbox-short.txt",'r')
+for line in data:
+    line=line.rstrip()
+    if line.find("@uct.ac.za")==-1: 
+        continue
+
+#read in and write out a file 
+fhand = open("/Users/wiseer85/Desktop/mbox.txt",'r')
+whand = open("/Users/wiseer85/Desktop/mailaddress.txt",'w')
+for line in fhand:
+    if line.startswith('From:') and line.endswith('umich.edu\n'):
+        whand.write(line[6:])
+fhand.close()
+whand.close()
+
+
 ####################################################### 
 #Chapter 8: Lists
 #unlike strings, lists are mutable because you can change the order or reassign items to a list
