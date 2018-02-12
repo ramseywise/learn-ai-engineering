@@ -10,7 +10,7 @@ data = pd.read_csv('/Users/wiseer85/Desktop/nesarc_pds.csv')
 #bug fix for display formats to avoid run time errors
 pd.set_option('display.float_format', lambda x:'%f'%x)
 
-#upper-case all DataFrame column names - place afer code for loading data aboave
+#upper-case all DataFrame column names
 data.columns = map(str.upper, data.columns)
 
 #convert variables to numeric
