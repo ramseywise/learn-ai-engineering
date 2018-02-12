@@ -66,12 +66,16 @@ print(ds2)
 recode1 = {1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1}
 sub2['USFREQ']= sub2['S3AQ3B1'].map(recode1)
 
-#recoding values for S3AQ3B1 into a new variable, USFREQMO
+#recoding values for S3AQ3B1 into a continuous variable, USFREQMO
 recode2 = {1: 30, 2: 22, 3: 14, 4: 5, 5: 2.5, 6: 1}
 sub2['USFREQMO']= sub2['S3AQ3B1'].map(recode2)
 
 #secondary variable multiplying the number of days smoked/month and the approx number of cig smoked/day
 sub2['NUMCIGMO_EST']=sub2['USFREQMO'] * sub2['S3AQ3C1']
+
+#create new sub-sample with selected variables
+sub3=sub2[['IDNUM', 'S3AQ3C1', 'USFREQMO', 'NUMCIGMO_EST']]
+sub3.head(25)          
 
 #examining frequency distributions for age
 print('counts for AGE')
