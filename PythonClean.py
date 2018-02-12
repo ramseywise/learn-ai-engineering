@@ -109,3 +109,60 @@ print(c10)
 print('percentages for AGEGROUP3')
 p10 = sub2['AGEGROUP3'].value_counts(sort=False, normalize=True)
 print (p10)
+
+
+#######################################################
+#ADDHEALTH EXAMPLE
+import pandas as pd
+import numpy as np
+
+data = pd.read_csv('/Users/wiseer85/Desktop/addhealth_pds.csv')
+
+#convert ethnicity variables to numeric
+data['H1GI4'] = pd.to_numeric(data['H1GI4'], errors='coerce')
+data['H1GI6A'] = pd.to_numeric(data['H1GI6A'], errors='coerce')
+data['H1GI6B'] = pd.to_numeric(data['H1GI6B'], errors='coerce')
+data['H1GI6C'] = pd.to_numeric(data['H1GI6C'], errors='coerce')
+data['H1GI6D'] = pd.to_numeric(data['H1GI6D'], errors='coerce')
+
+#Set missing data to NAN
+data['H1GI4']=data['H1GI4'].replace(6, np.nan)
+data['H1GI4']=data['H1GI4'].replace(8, np.nan)
+data['H1GI6A']=data['H1GI6A'].replace(6, np.nan)
+data['H1GI6A']=data['H1GI6A'].replace(8, np.nan)
+data['H1GI6B']=data['H1GI6B'].replace(6, np.nan)
+data['H1GI6B']=data['H1GI6B'].replace(8, np.nan)
+data['H1GI6C']=data['H1GI6C'].replace(6, np.nan)
+data['H1GI6C']=data['H1GI6C'].replace(8, np.nan)
+data['H1GI6D']=data['H1GI6D'].replace(6, np.nan)
+data['H1GI6D']=data['H1GI6D'].replace(8, np.nan)
+
+#count of number of ethnicity categories endorsed, NUMETHNIC
+data['NUMETHNIC']=data['H1GI4'] + data['H1GI6A'] + data['H1GI6B'] + data['H1GI6C'] + data['H1GI6D'] 
+print('NUMETHNIC')
+
+# subset variables in new data frame, sub1
+sub1=data[['AID','H1GI4', 'H1GI6A', 'H1GI6B', 'H1GI6C', 'H1GI6D', 'NUMETHNIC']]
+
+#print first 10 entries and responses to items
+a = sub1.head (n=10)
+print(a)
+
+#new ETHNICITY variable, categorical 1 through 6
+def ETHNICITY (row):
+   if row['NUMETHNIC'] > 1 :
+      return 1
+   if row['H1GI4'] == 1 :
+      return 2
+   if row['H1GI6A'] == 1:
+      return 3
+   if row['H1GI6B'] == 1:
+      return 4
+   if row['H1GI6C'] == 1:
+      return 5
+   if row['H1GI6D'] == 1:
+      return 6
+sub1['ETHNICITY'] = sub1.apply (lambda row: ETHNICITY (row),axis=1)
+
+a = sub1.head (n=10)
+print(a)
