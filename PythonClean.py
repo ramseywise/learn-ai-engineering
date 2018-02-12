@@ -1,5 +1,5 @@
 #######################################################
-#Data Analysis and Interpretation (Wesleyen)
+#Data Analysis and Interpretation (Wesleyan)
 #######################################################
 import pandas as pd
 import numpy as np
@@ -166,3 +166,56 @@ sub1['ETHNICITY'] = sub1.apply (lambda row: ETHNICITY (row),axis=1)
 
 a = sub1.head (n=10)
 print(a)
+
+#frequency distributions for primary and secondary ethinciity variables
+print 'counts for Hispanic/Latino'
+c10 = sub1['H1GI4'].value_counts(sort=False)
+print(c10)
+
+print 'percentages for Hispanic/Latino'
+p10 = sub1['H1GI4'].value_counts(sort=False, normalize=True)
+print (p10)
+
+print 'counts for Black/African American'
+c11 = sub1['H1GI6A'].value_counts(sort=False)
+print(c11)
+
+print 'percentages for Black/African American'
+p11= sub1['H1GI6A'].value_counts(sort=False, normalize=True)
+print (p11)
+
+print 'counts for American Indian/Native American'
+c12 = sub1['H1GI6B'].value_counts(sort=False)
+print(c12)
+
+print 'percentages for American Indian/Native American'
+p12 = sub1['H1GI6B'].value_counts(sort=False, normalize=True)
+print (p12)
+
+print 'counts for Asian/Pacific Islander'
+c13 = sub1['H1GI6C'].value_counts(sort=False)
+print(c13)
+
+print 'percentages for Asian/Pacific Islander'
+p13 = sub1['H1GI6C'].value_counts(sort=False, normalize=True)
+print (p13)
+
+print 'counts for White'
+c14 = sub1['H1GI6D'].value_counts(sort=False)
+print(c14)
+
+print 'percentages for White'
+p14 = sub1['H1GI6D'].value_counts(sort=False, normalize=True)
+print (p14)
+
+print 'counts for number of races/ethnicities endorsed'
+c15 = sub1['NUMETHNIC'].value_counts(sort=False)
+print(c15)
+
+print 'counts for each Ethnic group'
+c16 = sub1['ETHNICITY'].value_counts(sort=False)
+print(c16)
+
+print 'percentages for each Ethnic Group'
+p16 = sub1['ETHNICITY'].value_counts(sort=False, normalize=True)
+print (p16)
