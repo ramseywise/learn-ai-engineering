@@ -12,10 +12,13 @@
 
 import numpy as np
 import pandas as pd
+import scipy
+import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
+%matplotlib inline
 
 #scatter plot
 plt.figure()
@@ -80,7 +83,7 @@ plt.bar(xvals, linear_data, width=0.3, yerr=linear_err)
     
 
 #######################################################
-#example
+#example 1
 plt.figure()
 languages =['Python', 'SQL', 'Java', 'C++', 'JavaScript']
 pos = np.arange(len(languages))
@@ -213,3 +216,225 @@ ax2 = mpl_il.inset_axes(plt.gca(), width='60%', height='40%', loc=2)
 ax2.hist(df['gamma'], bins=100)
 ax2.margins(x=0.5)
 ax2.yaxis.tick_right()
+
+#seaborn
+%matplotlib notebook
+
+np.random.seed(1234)
+v1 = pd.Series(np.random.normal(0,10,1000), name='v1')
+v2 = pd.Series(2*v1 + np.random.normal(60,15,1000), name='v2')
+
+plt.figure()
+plt.hist(v1,alpha=0.7, bins=np.arange(-50,150,5), label='v1')
+plt.hist(v2,alpha=0.7, bins=np.arange(-50,150,5), label='v2')
+plt.legend();
+
+plt.figure()
+plt.hist([v1, v2], histtype='barstacked', normed=True);
+v3 = np.concatenate((v1,v2))
+sns.kdeplot(v3);
+
+plt.figure()
+sns.distplot(v3, hist_kws={'color': 'Teal'}, kde_kws={'color': 'Navy'});
+
+#joint plots
+sns.jointplot(v1, v2, alpha=0.4);
+grid = sns.jointplot(v1, v2, alpha=0.4);
+grid.ax_joint.set_aspect('equal')
+sns.jointplot(v1, v2, kind='hex'); 
+
+sns.set_style('white')
+sns.jointplot(v1, v2, kind='kde', space=0);
+iris = pd.read_csv('iris.csv')
+iris.head()
+sns.pairplt(iris, hue='Name', diag_kind='kde');
+
+#violin plot
+plt.figure(figsize=(12,8))
+plt.subplot(121)
+sns.swarmplot('name', 'PetalLength', data=iris);
+plt.subplot(122)
+sns.violinplot('Name', 'PetalLength', data=iris);
+
+
+############################################################
+#Example 2 from Data Analysis and Interpretation (Wesleyan)
+############################################################
+data = pd.read_csv('/Users/wiseer85/Desktop/nesarc_pds.csv', low_memory=False)
+
+#Set PANDAS to show all columns in DataFrame
+pd.set_option('display.max_columns', None)
+#Set PANDAS to show all rows in DataFrame
+pd.set_option('display.max_rows', None)
+
+# bug fix for display formats to avoid run time errors
+pd.set_option('display.float_format', lambda x:'%f'%x)
+
+#setting variables you will be working with to numeric
+data['TAB12MDX'] = pd.to_numeric(data['TAB12MDX'], errors='coerce')
+data['CHECK321'] = pd.to_numeric(data['CHECK321'], errors='coerce')
+data['S3AQ3B1'] = pd.to_numeric(data['S3AQ3B1'], errors='coerce')
+data['S3AQ3C1'] = pd.to_numeric(data['S3AQ3C1'], errors='coerce')
+data['S2AQ8A'] = pd.to_numeric(data['S2AQ8A'], errors='coerce')
+data['AGE'] = pd.to_numeric(data['AGE'], errors='coerce')
+
+#subset data to young adults age 18 to 25 who have smoked in the past 12 months
+sub1=data[(data['AGE']>=18) & (data['AGE']<=25) & (data['CHECK321']==1)]
+
+#make a copy of my new subsetted data
+sub2 = sub1.copy()
+
+#SETTING MISSING DATA
+# recode missing values to python missing (NaN)
+sub2['S3AQ3B1']=sub2['S3AQ3B1'].replace(9, np.nan)
+# recode missing values to python missing (NaN)
+sub2['S3AQ3C1']=sub2['S3AQ3C1'].replace(99, np.nan)
+
+recode1 = {1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1}
+sub2['USFREQ']= sub2['S3AQ3B1'].map(recode1)
+
+recode2 = {1: 30, 2: 22, 3: 14, 4: 5, 5: 2.5, 6: 1}
+sub2['USFREQMO']= sub2['S3AQ3B1'].map(recode2)
+
+# A secondary variable multiplying the number of days smoked/month and the approx number of cig smoked/day
+sub2['NUMCIGMO_EST']=sub2['USFREQMO'] * sub2['S3AQ3C1']
+
+#univariate bar graph for categorical variables
+# First hange format from numeric to categorical
+sub2["TAB12MDX"] = sub2["TAB12MDX"].astype('category')
+
+seaborn.countplot(x="TAB12MDX", data=sub2)
+plt.xlabel('Nicotine Dependence past 12 months')
+plt.title('Nicotine Dependence in the Past 12 Months Among Young Adult Smokers in the NESARC Study')
+
+#Univariate histogram for quantitative variable:
+seaborn.distplot(sub2["NUMCIGMO_EST"].dropna(), kde=False);
+plt.xlabel('Number of Cigarettes per Month')
+plt.title('Estimated Number of Cigarettes per Month among Young Adult Smokers in the NESARC Study')
+
+# standard deviation and other descriptive statistics for quantitative variables
+print('describe number of cigarettes smoked per month')
+desc1 = sub2['NUMCIGMO_EST'].describe()
+print(desc1)
+
+c1= sub2.groupby('NUMCIGMO_EST').size()
+print(c1)
+
+print('describe nicotine dependence')
+desc2 = sub2['TAB12MDX'].describe()
+print(desc2)
+
+c1= sub2.groupby('TAB12MDX').size()
+print(c1)
+
+print('mode')
+mode1 = sub2['TAB12MDX'].mode()
+print(mode1)
+
+print('mean')
+mean1 = sub2['NUMCIGMO_EST'].mean()
+print(mean1)
+
+print('std')
+std1 = sub2['NUMCIGMO_EST'].std()
+print(std1)
+
+print('min')
+min1 = sub2['NUMCIGMO_EST'].min()
+print(min1)
+
+print('max')
+max1 = sub2['NUMCIGMO_EST'].max()
+print(max1)
+
+print('median')
+median1 = sub2['NUMCIGMO_EST'].median()
+print(median1)
+
+print('mode')
+mode1 = sub2['NUMCIGMO_EST'].mode()
+print(mode1)
+
+c1= sub2.groupby('TAB12MDX').size()
+print(c1)
+
+p1 = sub2.groupby('TAB12MDX').size() * 100 / len(data)
+print(p1)
+
+c2 = sub2.groupby('NUMCIGMO_EST').size()
+print(c2)
+
+p2 = sub2.groupby('NUMCIGMO_EST').size() * 100 / len(data)
+print(p2)
+
+# A secondary variable multiplying the number of days smoked per month and the approx number of cig smoked per day
+sub2['PACKSPERMONTH']=sub2['NUMCIGMO_EST'] / 20
+
+c2= sub2.groupby('PACKSPERMONTH').size()
+print(c2)
+
+sub2['PACKCATEGORY'] = pd.cut(sub2.PACKSPERMONTH, [0, 5, 10, 20, 30, 147])
+
+# change format from numeric to categorical
+sub2['PACKCATEGORY'] = sub2['PACKCATEGORY'].astype('category')
+
+print('describe PACKCATEGORY')
+desc3 = sub2['PACKCATEGORY'].describe()
+print(desc3)
+
+print('pack category counts')
+c7 = sub2['PACKCATEGORY'].value_counts(sort=False, dropna=True)
+print(c7)
+
+sub2['TAB12MDX'] = pd.to_numeric(sub2['TAB12MDX'], errors='coerce')
+
+# bivariate bar graph C->Q
+seaborn.factorplot(x='PACKCATEGORY', y='TAB12MDX', data=sub2, kind="bar", ci=None)
+plt.xlabel('Packs per Month')
+plt.ylabel('Proportion Nicotine Dependent')
+
+#creating 3 level smokegroup variable
+def SMOKEGRP (row):
+   if row['TAB12MDX'] == 1 :
+      return 1
+   elif row['USFREQMO'] == 30 :
+      return 2
+   else :
+      return 3
+         
+sub2['SMOKEGRP'] = sub2.apply (lambda row: SMOKEGRP (row),axis=1)
+
+c3= sub2.groupby('SMOKEGRP').size()
+print(c3)
+
+#creating daily smoking vairable
+def DAILY (row):
+   if row['USFREQMO'] == 30 :
+      return 1
+   elif row['USFREQMO'] != 30 :
+      return 0
+      
+sub2['DAILY'] = sub2.apply (lambda row: DAILY (row),axis=1)
+      
+c4= sub2.groupby('DAILY').size()
+print(c4)
+
+# you can rename categorical variable values for graphing if original values are not informative 
+# first change the variable format to categorical if you haven’t already done so
+sub2['ETHRACE2A'] = sub2['ETHRACE2A'].astype('category')
+# second create a new variable (PACKCAT) that has the new variable value labels
+sub2['ETHRACE2A']=sub2['ETHRACE2A'].cat.rename_categories(["White", "Black", "NatAm", "Asian", "Hispanic"])
+
+# bivariate bar graph C->C
+seaborn.factorplot(x='ETHRACE2A', y='DAILY', data=sub2, kind="bar", ci=None)
+plt.xlabel('Ethnic Group')
+plt.ylabel('Proportion Daily Smokers')
+
+#check to see if missing data were set to NaN 
+print('counts for S3AQ3C1 with 99 set to NAN and number of missing requested')
+c4 = sub2['S3AQ3C1'].value_counts(sort=False, dropna=False)
+print(c4)
+
+print('counts for TAB12MDX - past 12 month nicotine dependence')
+c5 = sub2['TAB12MDX'].value_counts(sort=False)
+print(c5)
