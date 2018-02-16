@@ -113,9 +113,6 @@ print (p10)
 
 #######################################################
 #ADDHEALTH EXAMPLE
-import pandas as pd
-import numpy as np
-
 data = pd.read_csv('/Users/wiseer85/Desktop/addhealth_pds.csv')
 
 #convert ethnicity variables to numeric
