@@ -50,7 +50,6 @@ plt.plot(linear_data, '-o', quadratic_data, '-o')
 
 plt.plot([22,44,55], '--r')
 
-import pandas as pd
 plt.figure()
 observation_dates = np.arange('2017-01-01', '2017-01-09', dtype='datetime64[D]')
 observation_dates=list(map(pd.to_datetime, observation_dates))
@@ -82,7 +81,6 @@ plt.bar(xvals, linear_data, width=0.3, yerr=linear_err)
 
 #######################################################
 #example
-
 plt.figure()
 languages =['Python', 'SQL', 'Java', 'C++', 'JavaScript']
 pos = np.arange(len(languages))
@@ -114,7 +112,6 @@ plt.show()
   
 #######################################################
 ##Charting Fundamentals
-
 plt.figure()
 plt.subplot(1,2,1)
 linear_data=np.array([1,2,3,4,5,6,7,8])
