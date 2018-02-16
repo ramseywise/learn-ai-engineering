@@ -1,9 +1,11 @@
 #######################################################
 #Applied Data Science in Python (University of Michigan)
 #######################################################
+import pandas as pd
+import numpy as np
+
 ##Basic Data Processing
 #the dataframe data structure: attribute is column, tuple a row and relation a set of tuples that have the same attributes 
-import pandas as pd
 purchase_1 = pd.Series({'Name': 'Chris', 'Item': 'Dog food', 'Cost': 22.50})
 purchase_2 = pd.Series({'Name': 'Kevyn', 'Item': 'Kitty litter', 'Cost': 2.50})
 purchase_3 = pd.Series({'Name': 'Vince', 'Item': 'Bird seed', 'Cost': 5.00})
@@ -12,7 +14,6 @@ df.head()
 
 ##Pandas
 #pandas are a form of vectorization 
-import numpy as np
 total=np.sum(n)
 print(total)
 
