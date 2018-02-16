@@ -10,6 +10,11 @@ data = pd.read_csv('/Users/wiseer85/Desktop/nesarc_pds.csv')
 #bug fix for display formats to avoid run time errors
 pd.set_option('display.float_format', lambda x:'%f'%x)
 
+#Set PANDAS to show all columns in DataFrame
+pd.set_option('display.max_columns', None)
+#Set PANDAS to show all rows in DataFrame
+pd.set_option('display.max_rows', None)
+
 #upper-case all DataFrame column names
 data.columns = map(str.upper, data.columns)
 
