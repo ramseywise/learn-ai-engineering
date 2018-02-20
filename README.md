@@ -13,7 +13,7 @@ Audited courses include:
         - Graphic Representation and Visualization
         - Machine Learning
    - Data Analysis and Interpretation with Python (University of Wesleyan)
-        - Data Managementh
+        - Data Management
         - Data Analysis Tools
         - Regression Modeling
         - Machine Learning
