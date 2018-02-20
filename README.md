@@ -3,16 +3,16 @@ These scripts are the combination of my notes taken from various online courses 
 
 Audited courses include:
    - Python for Everybody (University of Michigan)
-        - Python Basics
+        - Basic Python Functions
         - Python Data Structures
-        - Accessing Web Data with Python
-        - Using Databases with Python
-   - Applied Data Science with Python (University of Michigan)
-        - Data Query with Python
+        - Accessing Web Data
+        - Using Databases
+   - Applied Data Science in Python (University of Michigan)
+        - Data Query
         - Data Mining
         - Graphic Representation and Visualization
         - Machine Learning
-   - Data Analysis and Interpretation with Python (University of Wesleyan)
+   - Data Analysis and Interpretation in Python (University of Wesleyan)
         - Data Management
         - Data Analysis Tools
         - Regression Modeling
