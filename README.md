@@ -1,14 +1,14 @@
 # Couresera
 These scripts are the combination of my notes taken from various online courses via Coursera.
 
-Completed courses include:
-  - Python for Informatics (University of Michigan)
-       - Python Basics
+Audited courses include:
+  - Python for Informatics (University of Michigan)
+       - Python Basics
        - Python Data Structures
        - Accessing Web Data
-       - Using Databases
-  - Applied Python (University of Michigan)
-       - Data Querry
+       - Using Databases
+  - Applied Python (University of Michigan)
+       - Data Querry
        - Data Mining
        - Applied Graphics and Visualization
        - Machine Learning
