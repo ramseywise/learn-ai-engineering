@@ -17,3 +17,11 @@ Audited courses include:
         - Data Analysis Tools
         - Regression Modeling
         - Machine Learning
+   - Deep Learning (deeplearning.ai)
+        - Neural Networks and Deep Learning
+        - Hyperparameter tuning, Regularization and Optimization
+        - Structuring Machine Learning Projects
+        - Convolutional Neural Networks
+        - Sequence Models
+
+
