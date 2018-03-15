@@ -1,7 +1,5 @@
 # Couresera
-These scripts are the combination of my notes taken from various online courses via Coursera.
-
-Audited courses include:
+Scripts are the compilation of my notes from auditing data science courses on Courseraa, including:
    - Python for Everybody (University of Michigan)
         - Basic Python Functions
         - Python Data Structures
