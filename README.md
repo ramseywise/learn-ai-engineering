@@ -17,6 +17,15 @@ Audited courses include:
         - Data Analysis Tools
         - Regression Modeling
         - Machine Learning
+   - Machine Learning (Stanford)
+        - Linear Regression
+        - Logistic Regression
+        - Multi-class Classification
+        - Neural Networks
+        - Regularization, Bias vs Variance
+        - Support Vector Machines
+        - K-means Clustering
+        - Anomaly Detectionand Recommender Systems
    - Deep Learning (deeplearning.ai)
         - Neural Networks and Deep Learning
         - Hyperparameter tuning, Regularization and Optimization
