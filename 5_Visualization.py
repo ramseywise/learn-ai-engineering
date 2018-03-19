@@ -1,15 +1,6 @@
 #######################################################
 #Applied Data Science in Python (University of Michigan)
 #######################################################
-##Principals of Visualization
-##the visualization wheel
-#abstraction - figuration: boxes and charts or real-world objects
-#functionality - decoration: no embellishments or artistic
-#density - lightness: studied in depth or on the surface
-#multidimensional - unidimensional:  different aspects of a henomena or sinle items
-#originality - familiarity: novel methods of visualization or established methods
-#novelty - redundancy: explainint each item once or encoding multiple explanations of the same phenomenon
-
 import numpy as np
 import pandas as pd
 import scipy
