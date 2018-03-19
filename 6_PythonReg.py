@@ -1,11 +1,6 @@
 #######################################################
 #Data Analysis and Interpretation (Wesleyen)
 #######################################################
-#regression assumptions. 1) normality, 2) linearity, 3) homoscedasticity and 4) independence
-#also check inflluence of multicollinearity and outliers
-#to test for multicollinearity, sings include: 1) highly associated IV not significant
-#2) negative regression coefficient should be positive or 3) taking out confounders drastically changes predictions
-#see also outlier decision tree
 import numpy
 import pandas
 import matplotlib.pyplot as plt
