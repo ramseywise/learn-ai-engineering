@@ -1,5 +1,5 @@
 # Couresera
-Scripts are the compilation of my notes from auditing data science courses on Courseraa, including:
+Scripts are the compilation of my notes from auditing data science courses on Coursera, including:
    - Python for Everybody (University of Michigan)
         - Basic Python Functions
         - Python Data Structures
