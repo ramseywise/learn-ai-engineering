@@ -1,8 +1,7 @@
 #######################################################
 #Data Analysis and Interpretation (Wesleyen)
 #######################################################
-##Decision Trees - for exploratory understanding of covariate relationships in the data
-#but findings may not be reproducible with other data
+##Decision Trees
 from pandas import Series, DataFrame
 import pydotplus
 import pandas as pd
@@ -63,9 +62,7 @@ Image(graph.create_png())
 
 
 ###############################################################################
-##Random Forests - only splits one variable that has the strongest association but is completely random
-#trees are based on subset of variables and random subset of sample for each node where 60% of sample is retained
-#trees are not interpreted but collectively rank prediction variables; does not explain their relationships
+##Random Forests 
 
 #Set directory and load the dataset
 os.chdir("/Users/wiseer85/Desktop/")
@@ -122,8 +119,7 @@ plt.plot(trees, accuracy)
 
 
 #######################################################
-##Lasso Regression
-#Least absolute selective shrinkage operator
+##Lasso Regression: Least absolute selective shrinkage operator
 #constrains variables towards zero to reduce bias
 #Load the dataset
 data = pd.read_csv('/Users/wiseer85/Desktop/tree_addhealth.csv')
