@@ -22,19 +22,8 @@ Current approaches to NLP are based on deep learning, a subgroup of AI that exam
 - Improves accuracy and efficiency when processing documentation.
 - It has ability to: `read`, `classify`, `summarize`, `generate text`, `translate`, `extract information` and `sentiment` from texts.
 
-**Usage of NLP**
-
-- Chatbots for customer support
-- Personal assistants such as Siri and Alexa
-
-### This Repo
-
-In this repository I added a collection of jupyter notebooks with 
-examples of NLP models for *text summarization*, *text classification* and 
-*text pre-processing* and tasks using **TensorFlow**, **NLTK**, **Transformers**,
-**word2vec**, etc.
-
-**It contains:**
+**Contents
+**
 
 - `data` data sets used in the models
 - `nltk` natural language toolkit examples 
@@ -42,9 +31,3 @@ examples of NLP models for *text summarization*, *text classification* and
 - `transformers` sample usage of the transformers APIs
 - `word2vec` example of model using word2vec
 
-
-*This collection of Jupyter Notebooks came from my own studies and trainings I have done during the past years. They are all updated to be used with `Python 3.7`.*
-
-:email: mariahsonja@hotmail.com
-
-**Thank you!**
