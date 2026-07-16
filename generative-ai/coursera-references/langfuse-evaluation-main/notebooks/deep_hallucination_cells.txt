@@ -1,0 +1,540 @@
+# ADD THESE CELLS TO THE NOTEBOOK FOR DEEP HALLUCINATION ANALYSIS
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+## 4. Deep Hallucination Analysis
+
+This section goes beyond basic detection to understand **WHY** Conecta hallucinates:
+- **Root Cause Analysis**: Document length? Question quality? Missing information?
+- **Pattern Detection**: When do hallucinations happen most?
+- **Detailed Examples**: See exact claims to validate if evaluator is accurate or too strict
+- **Correlations**: Statistical analysis of hallucination triggers
+
+# ============================================================================
+# NEW CELL: Helper Functions for Deep Analysis
+# ============================================================================
+import numpy as np
+from collections import defaultdict
+
+def calculate_text_metrics(text: str) -> dict:
+    """Calculate metrics about text quality and complexity"""
+    if not text or pd.isna(text):
+        return {
+            'length': 0,
+            'word_count': 0,
+            'avg_word_length': 0,
+            'sentence_count': 0,
+            'has_question_mark': False,
+            'is_vague': True
+        }
+
+    words = text.split()
+    sentences = text.split('.')
+
+    return {
+        'length': len(text),
+        'word_count': len(words),
+        'avg_word_length': np.mean([len(w) for w in words]) if words else 0,
+        'sentence_count': len([s for s in sentences if s.strip()]),
+        'has_question_mark': '?' in text,
+        'is_vague': len(words) < 5
+    }
+
+def analyze_hallucination_patterns(conversations, results):
+    """Analyze patterns in hallucinations vs clean responses"""
+
+    analysis_rows = []
+
+    for conv, result_dict in zip(conversations, results):
+        if not result_dict.get('success'):
+            continue
+
+        hall = result_dict.get('hallucination', {})
+        doc_rel = result_dict.get('document_relevance', {})
+        comp = result_dict.get('completeness', {})
+
+        # Question metrics
+        q_metrics = calculate_text_metrics(conv.user_question)
+
+        # Response metrics
+        r_metrics = calculate_text_metrics(conv.ai_response)
+
+        # Document metrics
+        total_doc_length = sum(len(str(d)) for d in conv.documents) if conv.documents else 0
+        doc_count = len(conv.documents) if conv.documents else 0
+        avg_doc_length = total_doc_length / doc_count if doc_count > 0 else 0
+
+        # Hallucination info
+        has_hallucination = hall.get('hallucination_detected', False)
+        severity = hall.get('severity', 'none')
+        grounding_ratio = hall.get('grounding_ratio', 1.0)
+
+        row = {
+            # Identifiers
+            'session_id': conv.session_id,
+
+            # Hallucination status
+            'has_hallucination': has_hallucination,
+            'severity': severity,
+            'grounding_ratio': grounding_ratio,
+            'hallucination_type': hall.get('hallucination_type', 'none'),
+
+            # Question characteristics
+            'q_length': q_metrics['length'],
+            'q_word_count': q_metrics['word_count'],
+            'q_is_vague': q_metrics['is_vague'],
+            'q_has_question_mark': q_metrics['has_question_mark'],
+
+            # Response characteristics
+            'r_length': r_metrics['length'],
+            'r_word_count': r_metrics['word_count'],
+
+            # Document characteristics
+            'doc_count': doc_count,
+            'total_doc_length': total_doc_length,
+            'avg_doc_length': avg_doc_length,
+            'doc_has_answer': doc_rel.get('has_answer', False),
+            'doc_relevance_score': doc_rel.get('relevance_score', 0),
+
+            # Other factors
+            'unnecessary_clarification': comp.get('unnecessary_clarification', False),
+            'completeness_score': comp.get('completeness_score', 0),
+
+            # For detailed examination
+            'user_question': conv.user_question,
+            'ai_response': conv.ai_response,
+            'evidence': hall.get('evidence', []),
+            'reasoning': hall.get('reasoning', ''),
+        }
+
+        analysis_rows.append(row)
+
+    return pd.DataFrame(analysis_rows)
+
+print("✅ Deep analysis helper functions loaded")
+
+# ============================================================================
+# NEW CELL: Run Deep Analysis on Sample
+# ============================================================================
+# Select larger sample for pattern detection
+deep_sample_size = min(50, len(conversation_df))
+
+print(f"🔍 DEEP HALLUCINATION ANALYSIS")
+print(f"Sample size: {deep_sample_size} conversations")
+print(f"Goal: Find patterns and validate evaluator accuracy")
+print()
+
+# Get diverse sample
+deep_sample_indices = np.linspace(0, len(conversation_df)-1, deep_sample_size, dtype=int)
+deep_sample_df = conversation_df.iloc[deep_sample_indices].copy()
+
+# Prepare conversations
+deep_conversations = []
+for idx, row in deep_sample_df.iterrows():
+    conv = ConversationData(
+        session_id=row['sessionId'],
+        user_question=row['user_question'],
+        ai_response=row['ai_response'],
+        documents=row['all_documents'],
+        escalated=row.get('need_expert', False)
+    )
+    deep_conversations.append(conv)
+
+# Evaluate
+print("🤖 Evaluating conversations...")
+print(f"   Estimated time: ~{deep_sample_size * 3} seconds")
+print()
+
+deep_results = []
+for i, conv in enumerate(deep_conversations, 1):
+    print(f"   [{i}/{len(deep_conversations)}] {conv.session_id[:30]}... ", end="", flush=True)
+
+    try:
+        result = orchestrator.evaluate_conversation(conv, run_verification=True)
+        deep_results.append(result.to_dict())
+        print("✅")
+    except Exception as e:
+        print(f"❌ {str(e)[:50]}")
+        continue
+
+print()
+print(f"✅ Completed {len(deep_results)} evaluations")
+
+# ============================================================================
+# NEW CELL: Build Analysis DataFrame
+# ============================================================================
+# Build detailed analysis dataframe
+analysis_df = analyze_hallucination_patterns(deep_conversations, deep_results)
+
+print(f"📊 Analysis DataFrame created: {len(analysis_df)} conversations")
+print()
+
+# Quick stats
+hall_count = analysis_df['has_hallucination'].sum()
+hall_pct = hall_count / len(analysis_df) * 100
+
+print(f"Hallucinations detected: {hall_count}/{len(analysis_df)} ({hall_pct:.1f}%)")
+print()
+
+if hall_count > 0:
+    print("Severity breakdown:")
+    for severity in ['minor', 'major', 'critical']:
+        count = (analysis_df['severity'] == severity).sum()
+        if count > 0:
+            print(f"  {severity.upper()}: {count}")
+
+# ============================================================================
+# NEW CELL: Correlation Analysis
+# ============================================================================
+print("="*100)
+print("CORRELATION ANALYSIS: What Causes Hallucinations?")
+print("="*100)
+print()
+
+# Split into hallucination vs clean
+hall_df = analysis_df[analysis_df['has_hallucination'] == True]
+clean_df = analysis_df[analysis_df['has_hallucination'] == False]
+
+if len(hall_df) == 0:
+    print("✅ No hallucinations detected in sample!")
+else:
+    print(f"📊 Sample Size:")
+    print(f"   Total: {len(analysis_df)}")
+    print(f"   With hallucinations: {len(hall_df)} ({len(hall_df)/len(analysis_df)*100:.1f}%)")
+    print(f"   Clean: {len(clean_df)} ({len(clean_df)/len(analysis_df)*100:.1f}%)")
+    print()
+
+    # Factor comparison
+    factors = [
+        ('Avg Document Length', 'avg_doc_length'),
+        ('Number of Documents', 'doc_count'),
+        ('Question Length (words)', 'q_word_count'),
+        ('Response Length (words)', 'r_word_count'),
+        ('Document Relevance Score', 'doc_relevance_score'),
+        ('Completeness Score', 'completeness_score'),
+    ]
+
+    print("📈 FACTOR COMPARISON (Hallucination vs Clean):")
+    print()
+
+    for label, col in factors:
+        hall_avg = hall_df[col].mean()
+        clean_avg = clean_df[col].mean()
+
+        if clean_avg > 0:
+            diff_pct = ((hall_avg - clean_avg) / clean_avg) * 100
+        else:
+            diff_pct = 0
+
+        indicator = "🔴" if abs(diff_pct) > 20 else "🟡" if abs(diff_pct) > 10 else "✅"
+
+        print(f"{indicator} {label}:")
+        print(f"   Hallucination: {hall_avg:,.1f}")
+        print(f"   Clean: {clean_avg:,.1f}")
+        print(f"   Difference: {diff_pct:+.1f}%")
+        print()
+
+    # Boolean factors
+    print("🔍 BOOLEAN FACTORS:")
+    print()
+
+    bool_factors = [
+        ('Vague Question', 'q_is_vague'),
+        ('Documents Have Answer', 'doc_has_answer'),
+        ('Unnecessary Clarification', 'unnecessary_clarification'),
+    ]
+
+    for label, col in bool_factors:
+        hall_pct = (hall_df[col].sum() / len(hall_df) * 100)
+        clean_pct = (clean_df[col].sum() / len(clean_df) * 100)
+        diff = hall_pct - clean_pct
+
+        indicator = "🔴" if abs(diff) > 20 else "🟡" if abs(diff) > 10 else "✅"
+
+        print(f"{indicator} {label}:")
+        print(f"   In hallucination cases: {hall_pct:.1f}%")
+        print(f"   In clean cases: {clean_pct:.1f}%")
+        print(f"   Difference: {diff:+.1f} pp")
+        print()
+
+# ============================================================================
+# NEW CELL: Generate Hypotheses
+# ============================================================================
+print("="*100)
+print("HYPOTHESES: What's Causing Hallucinations?")
+print("="*100)
+print()
+
+if len(hall_df) == 0:
+    print("✅ No hallucinations detected - cannot generate hypotheses")
+else:
+    hypotheses = []
+
+    # Test: Document length
+    hall_doc_len = hall_df['avg_doc_length'].mean()
+    clean_doc_len = clean_df['avg_doc_length'].mean()
+
+    if hall_doc_len > clean_doc_len * 1.3:
+        hypotheses.append(
+            f"📚 LONGER DOCUMENTS → MORE HALLUCINATIONS\n"
+            f"   Hallucination cases: {hall_doc_len:,.0f} chars\n"
+            f"   Clean cases: {clean_doc_len:,.0f} chars\n"
+            f"   Difference: {(hall_doc_len/clean_doc_len - 1)*100:.0f}% longer\n"
+            f"   → Conecta may struggle to parse long documents accurately"
+        )
+    elif hall_doc_len < clean_doc_len * 0.7:
+        hypotheses.append(
+            f"📄 SHORTER DOCUMENTS → MORE HALLUCINATIONS\n"
+            f"   Hallucination cases: {hall_doc_len:,.0f} chars\n"
+            f"   Clean cases: {clean_doc_len:,.0f} chars\n"
+            f"   → Insufficient information forces Conecta to fill gaps"
+        )
+
+    # Test: Document relevance
+    hall_rel = hall_df['doc_relevance_score'].mean()
+    clean_rel = clean_df['doc_relevance_score'].mean()
+
+    if hall_rel < clean_rel - 0.5:
+        hypotheses.append(
+            f"🎯 POOR DOCUMENT RETRIEVAL → HALLUCINATIONS\n"
+            f"   Hallucination cases: {hall_rel:.1f}/5\n"
+            f"   Clean cases: {clean_rel:.1f}/5\n"
+            f"   → When retrieval fails, Conecta invents information"
+        )
+
+    # Test: Document has answer
+    hall_has_answer_pct = hall_df['doc_has_answer'].sum() / len(hall_df) * 100
+
+    if hall_has_answer_pct > 50:
+        hypotheses.append(
+            f"⚠️  CRITICAL: HALLUCINATING DESPITE HAVING THE ANSWER!\n"
+            f"   {hall_has_answer_pct:.0f}% of hallucination cases had answer in docs\n"
+            f"   → Conecta is adding false details even when correct info available\n"
+            f"   → This is a CRITICAL BUG - not just missing information"
+        )
+    else:
+        hypotheses.append(
+            f"ℹ️  MISSING INFORMATION → HALLUCINATIONS\n"
+            f"   Only {hall_has_answer_pct:.0f}% of hallucination cases had answer in docs\n"
+            f"   → Hallucinations occur when information is missing (expected)"
+        )
+
+    # Test: Question clarity
+    hall_vague_pct = hall_df['q_is_vague'].sum() / len(hall_df) * 100
+    clean_vague_pct = clean_df['q_is_vague'].sum() / len(clean_df) * 100
+
+    if hall_vague_pct > clean_vague_pct + 20:
+        hypotheses.append(
+            f"❓ VAGUE QUESTIONS → HALLUCINATIONS\n"
+            f"   Hallucination: {hall_vague_pct:.0f}% vague\n"
+            f"   Clean: {clean_vague_pct:.0f}% vague\n"
+            f"   → Conecta fills gaps when question is too general"
+        )
+
+    if hypotheses:
+        for i, hyp in enumerate(hypotheses, 1):
+            print(f"{i}. {hyp}")
+            print()
+    else:
+        print("✅ No clear patterns detected")
+        print("   May need larger sample size for statistical significance")
+
+# ============================================================================
+# NEW CELL: Detailed Hallucination Examples
+# ============================================================================
+print("="*100)
+print("DETAILED HALLUCINATION EXAMPLES")
+print("="*100)
+print()
+
+hallucination_cases = analysis_df[analysis_df['has_hallucination'] == True].copy()
+
+if len(hallucination_cases) == 0:
+    print("✅ No hallucinations detected in sample!")
+else:
+    # Sort by severity
+    severity_order = {'critical': 0, 'major': 1, 'minor': 2}
+    hallucination_cases['severity_rank'] = hallucination_cases['severity'].map(severity_order)
+    hallucination_cases = hallucination_cases.sort_values('severity_rank')
+
+    examples_to_show = min(10, len(hallucination_cases))
+
+    print(f"Found {len(hallucination_cases)} hallucination cases")
+    print(f"Showing top {examples_to_show} examples (sorted by severity)")
+    print()
+    print("Review each to validate: Is evaluator accurate or too strict?")
+    print()
+
+# ============================================================================
+# NEW CELL: Display Example 1 (run this cell multiple times to see different examples)
+# ============================================================================
+# Set which example to view (change this number: 0, 1, 2, etc.)
+example_idx = 0
+
+if len(hallucination_cases) > 0 and example_idx < len(hallucination_cases):
+    row = hallucination_cases.iloc[example_idx]
+
+    print("="*100)
+    print(f"EXAMPLE {example_idx + 1}/{len(hallucination_cases)}")
+    print(f"Severity: {row['severity'].upper()} | Grounding: {row['grounding_ratio']*100:.0f}%")
+    print("="*100)
+    print()
+
+    # Context
+    print("📊 CONTEXT METRICS:")
+    print(f"   Documents provided: {row['doc_count']:.0f}")
+    print(f"   Avg document length: {row['avg_doc_length']:,.0f} chars")
+    print(f"   Document relevance: {row['doc_relevance_score']:.0f}/5")
+    print(f"   Documents have answer: {'✅ Yes' if row['doc_has_answer'] else '❌ No'}")
+    print(f"   Question: {row['q_word_count']:.0f} words")
+    print(f"   Response: {row['r_word_count']:.0f} words")
+    print()
+
+    # Question
+    print("❓ USER QUESTION:")
+    print("─"*100)
+    print(row['user_question'])
+    print()
+
+    # Response
+    print("🤖 CONECTA'S RESPONSE:")
+    print("─"*100)
+    print(row['ai_response'])
+    print()
+
+    # Hallucination details
+    print(f"🚨 HALLUCINATION DETECTED ({row['severity'].upper()}):")
+    print("─"*100)
+    print()
+    print(f"📊 Grounding: {row['grounding_ratio']*100:.0f}% of claims supported")
+    print(f"🏷️  Type: {row['hallucination_type']}")
+    print()
+
+    if row['reasoning']:
+        print("💭 AI EVALUATOR'S REASONING:")
+        print(row['reasoning'])
+        print()
+
+    # Evidence
+    if row['evidence'] and len(row['evidence']) > 0:
+        print("🔍 SPECIFIC HALLUCINATED CLAIMS:")
+        print()
+
+        for i, ev in enumerate(row['evidence'], 1):
+            if isinstance(ev, dict):
+                claim = ev.get('claim', 'Unknown')
+                explanation = ev.get('explanation', 'No explanation')
+
+                print(f"   Claim #{i}:")
+                print(f"   📌 Statement: \"{claim}\"")
+                print(f"   💡 Issue: {explanation}")
+                print()
+            elif isinstance(ev, str):
+                print(f"   • {ev}")
+                print()
+
+    print("─"*100)
+    print("❓ VALIDATION: Is this actually a hallucination, or is the evaluator too strict?")
+    print("─"*100)
+    print()
+    print(f"To see next example, change example_idx to {example_idx + 1} and re-run this cell")
+else:
+    print("No hallucination examples to show")
+    print(f"(example_idx={example_idx}, total cases={len(hallucination_cases)})")
+
+# ============================================================================
+# NEW CELL: Show All Examples Quickly
+# ============================================================================
+# Quick view of all hallucination examples
+
+if len(hallucination_cases) > 0:
+    for idx, row in hallucination_cases.iterrows():
+        print("\n" + "="*100)
+        print(f"Severity: {row['severity'].upper()} | Grounding: {row['grounding_ratio']*100:.0f}%")
+        print("="*100)
+
+        print(f"\n❓ QUESTION: {row['user_question'][:150]}...")
+        print(f"\n🤖 RESPONSE: {row['ai_response'][:200]}...")
+
+        print(f"\n📊 Context: {row['doc_count']:.0f} docs, avg {row['avg_doc_length']:,.0f} chars, relevance {row['doc_relevance_score']:.0f}/5")
+        print(f"   Has answer in docs: {'✅ Yes' if row['doc_has_answer'] else '❌ No'}")
+
+        if row['evidence'] and len(row['evidence']) > 0:
+            print(f"\n🔍 Hallucinated claims: {len(row['evidence'])}")
+            for i, ev in enumerate(row['evidence'][:2], 1):  # Show first 2
+                if isinstance(ev, dict):
+                    print(f"   {i}. {ev.get('claim', 'Unknown')[:100]}...")
+
+        print("\n" + "-"*100)
+else:
+    print("No hallucination examples found")
+
+# ============================================================================
+# NEW CELL: Save Detailed Results
+# ============================================================================
+# Save for further analysis
+output_file = "hallucination_analysis_detailed.csv"
+analysis_df.to_csv(output_file, index=False)
+
+print(f"💾 Saved detailed analysis to: {output_file}")
+print()
+print("Columns in CSV:")
+print("  - session_id, has_hallucination, severity, grounding_ratio")
+print("  - q_length, q_word_count, q_is_vague")
+print("  - r_length, r_word_count")
+print("  - doc_count, avg_doc_length, doc_relevance_score, doc_has_answer")
+print("  - user_question, ai_response, evidence, reasoning")
+print()
+print("Use this for custom analysis in Excel or Python")
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+### Key Questions to Answer
+
+After reviewing the examples above:
+
+**1. Evaluator Accuracy**
+- Are the flagged hallucinations actually incorrect?
+- Or is the evaluator being too strict?
+- False positive rate: ____%
+
+**2. Primary Root Cause**
+- □ Poor document retrieval
+- □ Documents too long
+- □ Vague questions
+- □ Hallucinating even when docs have answer (CRITICAL)
+- □ Other: ___________
+
+**3. Severity Assessment**
+- Critical cases: ___
+- Major cases: ___
+- Minor cases: ___
+- Are severity levels appropriate?
+
+**4. Next Steps**
+- □ Evaluator is accurate - proceed to full analysis
+- □ Evaluator too strict - adjust temperature/prompts
+- □ Identified root cause - implement fix
+- □ Need larger sample size
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+### Summary and Recommendations
+
+Based on the analysis above, document your findings:
+
+**Hallucination Rate:** ___ %
+
+**Primary Pattern:** ___________
+
+**Evaluator Quality:** ___/10
+
+**Recommended Actions:**
+1. ___________
+2. ___________
+3. ___________
+
+**Ready for full analysis?** Yes / No
