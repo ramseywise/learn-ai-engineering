@@ -100,10 +100,3 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - `Leet-Code/` — arrays/hashing, two pointers, sliding windows, linked lists, plus a
       competitive-programming reference book
 
----
-
-**Archived, not deleted:** generic third-party downloads with no personal modification (a 318MB GCP
-reference clone, a 622MB Deep-Learning course dump, a 112MB never-opened NLP archive, several
-pristine Bayes/ML repo clones, old chatbot demos, and 5 redundant coursera zip aggregations) were
-moved to `github/_archived/python-dumps/` rather than kept here or deleted outright — recoverable if
-anything turns out to be wanted after all.

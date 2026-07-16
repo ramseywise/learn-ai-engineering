@@ -19,8 +19,7 @@ agentic-AI course repos.
   courses, RAG (2), knowledge graphs for RAG, LangFuse eval/observability (3), agent memory (2),
   context engineering, evaluating AI agents, and an internet-search agent. 5 zips that were
   redundant mega-aggregations of the same material (one shipped a committed 438MB `venv/`) were
-  archived rather than extracted — see `github/_archived/python-dumps/coursera-original-zips/` for
-  the full original set if anything archived turns out to be wanted after all.
+  archived rather than extracted.
 - **`chatbot/deep-research-bot/`** — the one genuinely active thing in the old chatbot grab-bag: a
   2025 agent-building workshop clone with its own `CLAUDE.md`/`AGENTS.md`, and real post-clone
   activity (eval scripts and a notebook edited well after the initial clone date). Several older,
@@ -29,7 +28,7 @@ agentic-AI course repos.
 
 ## Not part of this showcase
 
-- `mcp/` — the original sevdesk-tied accounting-API integration, superseded by
+- `mcp/` — the original vendor-tied accounting-API integration, superseded by
   `mcp-server-template/`. Left as-is, out of scope.
 - `chatbot/berlin/`, `chatbot/BERT/`, `chatbot/deep_research_bench/` — left untouched, permissions
   unchanged. `BERT/` in particular looks like real production work (AWS Lambda deployment code), not
