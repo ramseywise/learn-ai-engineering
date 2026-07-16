@@ -1,8 +1,7 @@
 # Data Science
 
 Machine learning and deep learning fundamentals — course work, worked assignments, and personal
-notebooks. Pruned in 2026-07: generic/pristine third-party clones with no personal modification were
-archived to `github/_archived/python-dumps/` rather than kept here (nothing was deleted outright).
+notebooks. 
 
 ## Finished / organized
 
