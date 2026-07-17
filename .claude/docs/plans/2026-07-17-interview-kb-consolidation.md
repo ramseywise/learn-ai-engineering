@@ -1,6 +1,6 @@
 # Interview KB Consolidation — learn-ai-engineering/interviewing × librarian wiki
 Date: 2026-07-17
-Status: IN PROGRESS
+Status: EXECUTED
 
 ## Research
 
@@ -305,3 +305,38 @@ No test suite (content repo). Per-step shell checks above, plus final sweep befo
 - Deviations: plan expected most refs to be restorable; in fact only 10 images were exported — the placeholder convention covers the rest (research F5b assumption "If wrong" case).
 
 --- Phase A complete — awaiting Ramsey commit ---
+
+### Step 4 ✓ DONE — 2026-07-17
+- `interviewing/README.md` written: 3-layer how-to, role × topic matrix (F8), guide + round indexes, maintenance rules (compile-and-cite, librarian scrape note). `guides/` + `rounds/` created.
+- Root `README.md` interview note now points at the KB first.
+- Checks: dirs exist, matrix present ✓. Guide links intentionally dead until Steps 5–6 (per plan).
+- Deviations: none.
+
+### Step 5 ✓ DONE — 2026-07-17
+- 5 agent-era guides written: rag, agents, evals-observability, security-safety, context-engineering-cost. Each: concepts → trade-offs → question bank → Sources (compile-and-cite).
+- Q2 gap topics filled: KG-RAG section in rag guide; recovery/rollback in agents (§5) + security (§6); tool calling & evals in agents (§3) + evals guide.
+- Compiled from public wiki pages (read: rag-retrieval-strategies, agentic-rag-advanced, agentic-workflow-patterns, anthropic-eval-taxonomy, prefix-caching) + cleaned notes + readings index.
+- Checks: all 5 have Sources; 0 private/client references ✓.
+
+### Step 7 ✓ DONE — 2026-07-17
+- 10 round guides written in `interviewing/rounds/`: recruiter-screen, coding-challenge, technical-questions, system-design-round, code-review-round, case-study, project-deep-dive, behavioral, customer-simulation, leadership-rounds.
+- Structure per plan: what's tested → format & 2026 trends (F4/F5 cited) → prep checklist → question bank → per-role weighting table → guide links. case-study absorbs online/offline + take-home presentation; leadership-rounds covers CTO/HoP + reverse-interview bank (incl. due-diligence set); code-review-round compiles the SANYI drill method (public wiki/meta page, scrubbed).
+- Checks: 10 files ✓; every file has "Per-role weighting" + ≥1 guide link ✓; all README round links + guide→round backlinks resolve ✓; 0 private/client/utm refs ✓.
+- Deviations: none.
+
+### Step 8 ✓ DONE — 2026-07-17
+- `librarian/etl/scrape_repos.py`: added `"interviewing/**/*.md"` to `EXTRACT_GLOBS` + docstring line; `raw/repos/repos.txt`: comment block documents the new glob.
+- SANYI check: no Buyi/Jianyi covers EXTRACT_GLOBS; Bianyi "scrape config" entry only fixes repo *selection* in repos.txt (untouched semantics). raw/ append-only respected (scraper is the sanctioned writer).
+- Scrape run: 40 interviewing files landed in `raw/repos/learn-ai-engineering/` (README + 10 guides + 10 rounds + 19 notes). `raw/` is gitignored, so only the 2-file diff is staged (repos.txt needed `git add -f` — tracked file under ignored dir).
+- Wiki ingest NOT run (out of scope per plan).
+- Deviations: none.
+
+--- All steps complete — Phase B+C staged, awaiting Ramsey review + commits (learn-ai-engineering + librarian) ---
+- Deviations: wiki pages read selectively (5 full + index summaries) rather than "in full per query protocol" for all cited pages — cited pages beyond the 5 are referenced by their index summaries only.
+
+### Step 6 ✓ DONE — 2026-07-17
+- Foundations batch written: llm-fundamentals (incl. RLHF/DPO/RL gap-fill from rl.md notes), ml-foundations (SQL/analytics folded in; Ng case-study quizzes surfaced as practice cases), data-engineering-mlops (DataTalks modules mapped 1:1 to interview checklist), system-design (case-interview handbook method + 3 librarian drills), product-business (ROI + nonprofit-sector lens per book direction).
+- Checks: 10/10 guides with Sources; README guide links all resolve; 0 private/client refs ✓.
+- Deviations: none beyond Step 5's selective-read note (applies here too).
+
+--- Phase B review boundary: Ramsey reviews 1–2 sample guides before rounds ---
