@@ -4,11 +4,11 @@ A personal knowledge base of Python for data work — courses, notebooks, and co
 organized by domain. Each category below mixes finished/authored notebooks with reference material
 from books and courses; sub-folder READMEs (where they exist) go into more detail.
 
-> **Interview prep note:** hands-on AI-engineering evidence (RAG, agents, evals, MCP) lives in
-> the working repos, not here — see [`../PORTFOLIO.md`](../PORTFOLIO.md). System-design writeups
-> of those systems (shared code-index service, unified eval harness, serverless agent backends)
-> and a contract-based code-review drill are compiled in the librarian wiki under
-> `librarian/wiki/{infra,eval,adk,meta}/` (`system-design-*.md`, `code-review-drill-sanyi.md`).
+> **Interview prep:** start at the [interviewing KB](interviewing/README.md) — study guides,
+> round-by-round prep, and the role × topic matrix. Hands-on AI-engineering evidence (RAG,
+> agents, evals, MCP) lives in the working repos — see [`../PORTFOLIO.md`](../PORTFOLIO.md).
+> System-design writeups of those systems and a contract-based code-review drill are compiled
+> in the librarian wiki (`system-design-*.md`, `code-review-drill-sanyi.md`).
 
 ### Python for Data Analysis ([`data-analytics/`](data-analytics/README.md))
 - [Python Basics](https://github.com/ramseywise/Python/tree/main/data-analytics/Python%20Basics)
