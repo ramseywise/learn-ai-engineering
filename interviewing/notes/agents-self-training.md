@@ -206,7 +206,7 @@ That kills RL.
 
 A typical training architecture for an agentic system involves several interconnected components, including:
 
-!Agentic Training Architecture (Created by [Fareed Khan)](attachment:bbd56ee9-bd4c-466d-b6bb-93cbb180d7be:image.png)
+*(missing diagram — not exported from Notion: Agentic Training Architecture, by Fareed Khan)*
 
 Agentic Training Architecture (Created by Fareed Khan)
 

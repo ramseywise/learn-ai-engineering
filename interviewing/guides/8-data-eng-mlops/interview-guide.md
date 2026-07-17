@@ -27,8 +27,8 @@ its folder.
 - Formats & lakes: Parquet (columnar, predicate pushdown) over CSV for anything processed;
   lakehouse table formats give ACID over object storage.
 - Data quality & governance: expectations/contracts at ingest, lineage, PII classification
-  (ties to [security-safety](security-safety.md) §5). Data mesh handouts in
-  `readings/data mesh/` for the org-level decentralization story.
+  (ties to [security-safety](../7-security-safety/interview-guide.md) §5). Data mesh handouts in
+  `readings/8-data-eng-data-mesh/` for the org-level decentralization story.
 
 ## 2. MLOps checklist (DataTalks MLOps structure)
 
@@ -46,7 +46,7 @@ its folder.
   delayed labels; alert thresholds tied to retrain triggers.
 - **Best practices** (`06-best-practices`) — tests for data code, pre-commit/lint,
   Makefiles, CI running the eval suite as a merge gate — the same regression-gate pattern
-  as agent evals ([evals guide](evals-observability.md) §4).
+  as agent evals ([evals guide](../6-evals-observability/interview-guide.md) §4).
 
 ## 3. LLM-era additions (bridge topics)
 
@@ -73,6 +73,6 @@ advantage.
 ## Sources
 
 - repo: `data-engineering/DataTalks Data Engineering/` (modules 01–06 + projects), `data-engineering/DataTalks MLOps/` (modules 01–07)
-- readings: `data mesh/` handouts, *The Data Warehouse Toolkit* (Kimball), *Machine Learning Engineering in Action*, `general/` (hidden-technical-debt, SE-for-ML)
+- readings: `8-data-eng-data-mesh/` handouts, *The Data Warehouse Toolkit* (Kimball), *Machine Learning Engineering in Action*, `general/` (hidden-technical-debt, SE-for-ML)
 - librarian wiki: Embedder Warmup · Production Hardening Patterns · PGVector Migration Pattern · Cloud Run + Cloud SQL Pattern · Synthetic Dataset Generation (fingerprinting)
 - global rules: `~/.claude/rules/ml.md`, `~/.claude/rules/logging.md`

@@ -1,6 +1,6 @@
 # Curriculum Pillars — restructure guides/ into a learner's journey
 Date: 2026-07-17
-Status: PLANNED
+Status: EXECUTED
 
 ## Research
 Basis: direct inspection + the executed consolidation plan
@@ -130,3 +130,29 @@ readings tracking check, dead-link loop) over the new layout.
 - All moves are `git mv` on a clean checkpoint; rollback is a single revert.
 
 ## Execution Log
+
+### Pre-execution notes — 2026-07-17
+- Repo state changed since planning: readings library moved to root `readings/` (202 files already committed), gitignore readings rules removed by Ramsey, 82 O'Reilly book chapters staged + more book folders untracked.
+- **Ramsey's decision (flagged, confirmed 2026-07-17): commit everything incl. copyrighted book chapters — redistribution risk accepted knowingly.** Supersedes the consolidation plan's books-local-only policy.
+- Open Q4 adapted: paths now root `readings/`; `ai_engineering/` has grown into a cross-pillar book library (ai design, ai engineer, ai performance, agent applications, llm handbook, mcp, …) — it keeps its name like `general/`, cited per-subfolder from overviews, instead of the planned `4-agents-ai-engineering` rename.
+
+### Step 1 ✓ DONE — 2026-07-17
+- 10 pillar dirs created; guides `git mv`'d to `<pillar>/interview-guide.md`. No flat files remain.
+
+### Step 2 ✓ DONE — 2026-07-17
+- 10 `00-overview.md` written: what/why → learning path → resource map table (pdf/code/wiki/note with locations + one-liners) → "test yourself" links. Inventoried the grown readings library (O'Reilly/Manning book collections in `ai_engineering/`, RL book, KG book, stats shelf).
+
+### Step 3 ✓ DONE — 2026-07-17
+- `guides/00-start-here.md`: journey table (pillar → "you can now…" → prereqs), 3-layer explanation, deferred pillars, entry points. README layer-1 description updated to introduce the curriculum.
+
+### Step 4 ✓ DONE — 2026-07-17
+- Scripted rewrite: rounds (`../guides/<topic>.md` → pillar paths), guides (sibling links + `../notes|images|rounds` → `../../…`), README tables, readings-name references. Fixed 2 stragglers (3-rag guide sources line; a missed Notion `attachment:` ref in notes/agents-self-training.md → placeholder). Dead-link sweep over all interviewing/**/*.md: OK. Private scrub: only the maintenance-rule text itself matches (false positive).
+
+### Step 5 ✓ DONE — 2026-07-17
+- readings renames at root `readings/` (location changed by Ramsey pre-execution): 0.rag→3-rag, 1.prompt engineering→2-llm-fundamentals, 2.knowledge graphs→3-rag-knowledge-graphs, 3.reinforcement_learning→2-llm-rlhf, data mesh→8-data-eng-data-mesh, stats_recs→0-cross-stats; `ai_engineering/` + `general/` kept as cross-pillar libraries (deviation from planned Q4 mapping, logged in pre-execution notes). readings/README.md rewritten as pillar-keyed index; local-only language dropped per Ramsey's commit-everything decision.
+
+### Step 6 ✓ DONE — 2026-07-17
+- Librarian re-scrape: 35 files updated; 10 pillar overviews + 00-start-here present in `raw/repos/learn-ai-engineering/`. Stale flat-guide copies remain in raw/ (append-only) — ingest dedupes.
+- Deviations: Step order (renames ran before overviews so paths were final); Ramsey committed mid-restructure (f9b94d3 et al.), so moves are already in HEAD and remaining changes are staged as edits.
+
+--- All steps complete — staged for Ramsey ---

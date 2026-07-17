@@ -27,15 +27,15 @@ AUROC-over-accuracy, not code.)
 
 For ML cases: define the business objective as a number ("reduce churn 5%") → data →
 baseline model → validation plan → risk register. For LLM cases: the
-[system-design guide](../guides/system-design.md) §3 architecture + RAG-vs-fine-tune,
-cost, hallucination handling, eval ([rag](../guides/rag.md),
-[evals](../guides/evals-observability.md)).
+[system-design guide](../guides/9-system-design/interview-guide.md) §3 architecture + RAG-vs-fine-tune,
+cost, hallucination handling, eval ([rag](../guides/3-rag/interview-guide.md),
+[evals](../guides/6-evals-observability/interview-guide.md)).
 
 ## Prep checklist
 - [ ] Rehearse the one-page template until you can write it from memory in 2 minutes.
 - [ ] Timebox drills: one Kaggle dataset, 3 hours, full template → writeup. Twice.
 - [ ] Practice the clarify-first reflex: never accept the stated solution ("a chatbot")
-  — interrogate the problem ([product-business guide](../guides/product-business.md) §1).
+  — interrogate the problem ([product-business guide](../guides/10-product-delivery/interview-guide.md) §1).
 - [ ] ROI arithmetic cold: token math, hours-saved math, error-cost math
   (product-business §2).
 - [ ] Prepare "what went wrong" honesty for defense rounds — consulting-style loops ask
@@ -50,14 +50,14 @@ cost, hallucination handling, eval ([rag](../guides/rag.md),
 - "Here's 100K rows of churn data — what do you do in 3 hours?" — EDA (leakage check!),
   baseline logistic, one strong model, calibration, top-3 drivers, honest validation.
 - "Your take-home model gets challenged: why not deep learning?" — sample size, tabular
-  SOTA is boosting ([ml-foundations](../guides/ml-foundations.md) §7), interpretability
+  SOTA is boosting ([ml-foundations](../guides/1-foundations/interview-guide.md) §7), interpretability
   requirement; concede the conditions under which you'd switch.
 - "The client's data turns out to be much messier than the brief said." — the ambiguity
   test: triage data quality, renegotiate scope against the objective, ship the reduced
   MVP — narrate the re-plan out loud.
 - "What if retrieval quality is poor / chunks truncate the answer / docs grow 10×?" —
   the RAG what-if chain (notes: case-interview) — thresholds, chunking revisit,
-  index/rebuild plan ([rag guide](../guides/rag.md)).
+  index/rebuild plan ([rag guide](../guides/3-rag/interview-guide.md)).
 
 ## Per-role weighting
 | AIE | MLE | DS | FDE |
@@ -69,5 +69,5 @@ take-home-with-presentation is near-universal (24–48h, research F4). AIE/MLE l
 case elements into system design instead.
 
 ## Links
-- Study guides: [product-business](../guides/product-business.md) (framing + ROI), [system-design](../guides/system-design.md) (LLM cases), [ml-foundations](../guides/ml-foundations.md) (ML cases — incl. Ng's two case-study quizzes as practice)
+- Study guides: [product-business](../guides/10-product-delivery/interview-guide.md) (framing + ROI), [system-design](../guides/9-system-design/interview-guide.md) (LLM cases), [ml-foundations](../guides/1-foundations/interview-guide.md) (ML cases — incl. Ng's two case-study quizzes as practice)
 - Notes: [case-interview.md](../notes/case-interview.md); research F4 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

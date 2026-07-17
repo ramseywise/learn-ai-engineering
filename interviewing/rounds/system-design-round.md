@@ -12,7 +12,7 @@ support chatbot"). 2026 versions are LLM-flavored by default: RAG pipelines, age
 systems, eval/monitoring, cost/latency budgets. Curveballs mid-round are deliberate
 adaptability tests; the best interviews meander through options before converging.
 
-**The method lives in the [system-design study guide](../guides/system-design.md)** —
+**The method lives in the [system-design study guide](../guides/9-system-design/interview-guide.md)** —
 process (§1), trade-off narration formula (§2), reference architecture (§3),
 bottleneck/failure tables (§4), the measurement close (§5). This file is round-day
 logistics only.
@@ -29,14 +29,14 @@ logistics only.
   don't defend.
 
 ## Question bank
-See [system-design guide](../guides/system-design.md) §7. Round-day variants:
+See [system-design guide](../guides/9-system-design/interview-guide.md) §7. Round-day variants:
 - "Design X for 1K users. … Now 1M." — the scale curveball; separate what changes
   (caching, sharding, async) from what doesn't.
 - "You have half the budget." — degrade deliberately: smaller model tiers, caching,
   batch instead of realtime; state what quality you're trading.
 - "What breaks first?" — pick from the bottleneck table and name the mitigation.
 - "How do you know it works?" — evals + monitoring, stated unprompted
-  ([evals guide](../guides/evals-observability.md)).
+  ([evals guide](../guides/6-evals-observability/interview-guide.md)).
 
 ## Per-role weighting
 | AIE | MLE | DS | FDE |
@@ -49,5 +49,5 @@ design method underpins the case. DS gets a lighter "design the analytics/ML pip
 variant.
 
 ## Links
-- Study guides: [system-design](../guides/system-design.md) (the method), [rag](../guides/rag.md), [agents](../guides/agents.md), [context-engineering-cost](../guides/context-engineering-cost.md) (domain content)
+- Study guides: [system-design](../guides/9-system-design/interview-guide.md) (the method), [rag](../guides/3-rag/interview-guide.md), [agents](../guides/4-agents/interview-guide.md), [context-engineering-cost](../guides/5-context-cost/interview-guide.md) (domain content)
 - Research: F4 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

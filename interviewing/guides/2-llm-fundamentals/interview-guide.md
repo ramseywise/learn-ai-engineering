@@ -18,7 +18,7 @@ signal is).
   decoder for translation-style tasks. Papers: attention-is-all-you-need, BERT — both in
   `readings/general/`.
 - **KV cache** — decode-time cache of past keys/values; the mechanism under prompt caching
-  (see [context-engineering-cost guide](context-engineering-cost.md) §3).
+  (see [context-engineering-cost guide](../5-context-cost/interview-guide.md) §3).
 - **Sampling** — temperature, top-p/top-k, why temperature 0 still isn't fully deterministic
   in production (batching, floating point, MoE routing).
 
@@ -62,7 +62,7 @@ decoding as a latency trick. Serving metrics: TTFT, tokens/sec, p95.
 - **Context limitations** — attention dilution in long contexts ("lost in the middle");
   mitigation = context engineering, not bigger windows.
 - **Sycophancy, position bias, verbosity bias** — matter both for products and for
-  LLM-as-judge design (see [evals guide](evals-observability.md)).
+  LLM-as-judge design (see [evals guide](../6-evals-observability/interview-guide.md)).
 - **Knowledge cutoff + drift** — why production systems pin model versions and re-eval on
   upgrades.
 
@@ -83,7 +83,7 @@ decoding as a latency trick. Serving metrics: TTFT, tokens/sec, p95.
 
 ## Sources
 
-- notes: [rl.md](../notes/rl.md) (RL/RLHF/MARL — confidence: low, verify claims), [agents-self-training.md](../notes/agents-self-training.md) (Agent-Lightning, training-agent disaggregation)
-- readings: `general/` (attention, BERT, LLaMA, GPT-4, InstructGPT, Constitutional AI, CoT, ReAct, ToT, TruthfulQA), `3.reinforcement_learning/` (DQN, PPO, RLHF preferences), `1.prompt engineering/` chapters
+- notes: [rl.md](../../notes/rl.md) (RL/RLHF/MARL — confidence: low, verify claims), [agents-self-training.md](../../notes/agents-self-training.md) (Agent-Lightning, training-agent disaggregation)
+- readings: `general/` (attention, BERT, LLaMA, GPT-4, InstructGPT, Constitutional AI, CoT, ReAct, ToT, TruthfulQA), `2-llm-rlhf/` (DQN, PPO, RLHF preferences), `2-llm-fundamentals/` chapters
 - repo: `generative-ai/nn-zero-to-hero/` (nanogpt from scratch), `generative-ai/intro-to-nlp/`
 - librarian wiki: Direct Preference Optimization · Chain of Thought · Self-Learning Agents

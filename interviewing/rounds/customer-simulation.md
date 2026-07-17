@@ -18,7 +18,7 @@ customer bar decides.
 ## The habits that pass
 - **Discovery before prescription**: open with questions (workflow today, pain ranking,
   success definition, who decides) — never with your solution.
-  ([product-business guide](../guides/product-business.md) §1 framing habit.)
+  ([product-business guide](../guides/10-product-delivery/interview-guide.md) §1 framing habit.)
 - **Listen and mirror**: restate their problem in their words before answering; catch the
   emotional layer ("it sounds like the team's trust in the tool took a hit").
 - **Translate, don't dumb down**: pick the altitude for the audience
@@ -44,20 +44,20 @@ customer bar decides.
 ## Question bank (scenario prompts)
 - "I'm the COO. Your AI gave our customer wrong information yesterday. Go." —
   acknowledge, no defensiveness; containment already done/proposed; root cause honestly
-  ([security guide](../guides/security-safety.md) incident framing); prevention +
+  ([security guide](../guides/7-security-safety/interview-guide.md) incident framing); prevention +
   monitoring; rebuild trust with a review cadence.
 - "We want it to do everything your competitor's demo showed." — discovery on which
   capability maps to their actual workflow; demo ≠ production; phase the roadmap by
-  value ([agents guide](../guides/agents.md) §9 staged-trust pattern).
+  value ([agents guide](../guides/4-agents/interview-guide.md) §9 staged-trust pattern).
 - "Why can't we just fine-tune on all our data?" — translate the adaptation ladder
-  ([llm-fundamentals](../guides/llm-fundamentals.md) §3) into their terms: freshness,
+  ([llm-fundamentals](../guides/2-llm-fundamentals/interview-guide.md) §3) into their terms: freshness,
   cost, privacy; recommend the boring first step.
 - "The pilot metrics look bad and the renewal is next month." — reframe what the pilot
   measured vs what success meant; propose the smallest change that moves the decision
   metric; honest go/no-go recommendation.
 - "Our IT team says no external APIs. Ever." — don't argue; discover the underlying
   concern (residency? audit?); options: self-hosted, VPC deployment, vendor with
-  guarantees ([system-design guide](../guides/system-design.md) §7 on-prem-vs-API).
+  guarantees ([system-design guide](../guides/9-system-design/interview-guide.md) §7 on-prem-vs-API).
 
 ## Per-role weighting
 | AIE | MLE | DS | FDE |
@@ -69,5 +69,5 @@ rarely see it as a dedicated round but the skills carry the
 [project deep-dive](project-deep-dive.md).
 
 ## Links
-- Study guides: [product-business](../guides/product-business.md) (the whole guide is this round's substrate)
+- Study guides: [product-business](../guides/10-product-delivery/interview-guide.md) (the whole guide is this round's substrate)
 - Research: F4/F5 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

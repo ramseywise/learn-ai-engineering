@@ -18,10 +18,10 @@ scored as seriousness.
 - **CTO**: opinions with reasons about *their* likely stack tensions — build-vs-buy,
   model vendor strategy, eval discipline, tech-debt honesty. Expect "how would you
   approach our X?" — clarify like a design round, answer with trade-offs
-  ([system-design guide](../guides/system-design.md) §2). Have one strong-opinion-loosely-
+  ([system-design guide](../guides/9-system-design/interview-guide.md) §2). Have one strong-opinion-loosely-
   held ready and one "here's where I'd need your context" — both land.
 - **Head of Product**: think in user problems and metrics trees
-  ([product-business guide](../guides/product-business.md) §3); expect "should we build
+  ([product-business guide](../guides/10-product-delivery/interview-guide.md) §3); expect "should we build
   feature X?" → interrogate the problem first (§1); show you'll push back on solution-
   first requests *respectfully*.
 - **Founder/CEO**: why this mission, specifically; what you'd do in the first 90 days;
@@ -34,7 +34,7 @@ Pick 3–4 per round; tailor. These do double duty: they signal judgment *and* p
 **Technical/judgment (for the CTO)**
 - "What's the most expensive technical decision you'd revisit if you could?"
 - "How do you evaluate model/vendor changes — is there an eval gate?" (their answer
-  tells you the [evals](../guides/evals-observability.md) maturity)
+  tells you the [evals](../guides/6-evals-observability/interview-guide.md) maturity)
 - "Where does AI-generated code sit in your review process?"
 - "What does on-call / incident load actually look like?"
 
@@ -72,5 +72,5 @@ FDE adds a customer-executive flavor — the [customer-simulation](customer-simu
 habits apply to the interview itself.
 
 ## Links
-- Study guides: [product-business](../guides/product-business.md), [system-design](../guides/system-design.md) (judgment threads run on its method)
+- Study guides: [product-business](../guides/10-product-delivery/interview-guide.md), [system-design](../guides/9-system-design/interview-guide.md) (judgment threads run on its method)
 - Research: F5 (incl. the interviewer-centric → what-is-tested reframing) in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

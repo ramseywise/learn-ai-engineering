@@ -118,8 +118,8 @@ a defined handoff protocol (agent↔agent, agent↔human: what transfers, who ow
 
 ## Sources
 
-- notes: [eval-harness.md](../notes/eval-harness.md) (Anthropic demystifying-evals synthesis + production management layer), [observability.md](../notes/observability.md)
-- images: [two-layer eval](../images/two-layer-eval-human-llm-calibration.png)
+- notes: [eval-harness.md](../../notes/eval-harness.md) (Anthropic demystifying-evals synthesis + production management layer), [observability.md](../../notes/observability.md)
+- images: [two-layer eval](../../images/two-layer-eval-human-llm-calibration.png)
 - librarian wiki: Anthropic Three-Tier Eval Taxonomy · RAG Eval Metrics Suite · RAG Evaluation · Grounding Claim Methodology · Observability & Evaluation Glossary · HITL Annotation Pipeline · Synthetic Dataset Generation for RAG Eval · Eval Gate Contract · LLM Grader Calibration Insights · Observability — LangFuse vs LangSmith Decision · System Design — Unified Eval Harness
 - course refs: `generative-ai/coursera-references/langfuse-evaluation-main`, `DeepLearning.AI-Evaluating-AI-Agents-master`
 - external: anthropic.com/engineering/demystifying-evals-for-ai-agents · langchain.com/blog/agent-evaluation-readiness-checklist

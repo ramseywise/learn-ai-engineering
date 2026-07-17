@@ -34,7 +34,7 @@ Backprop intuition; vanishing/exploding gradients (init, norm layers, residuals)
 optimization (SGD → momentum → Adam; LR schedules; batch size effects); batch norm (what it
 stabilizes — and see `rethinking-batch-norm` in readings for the caveats); dropout;
 CNNs (locality/weight sharing) vs RNNs → transformers for sequence (see
-[llm-fundamentals](llm-fundamentals.md)). **Structuring ML Projects** (Ng course, notebooks
+[llm-fundamentals](../2-llm-fundamentals/interview-guide.md)). **Structuring ML Projects** (Ng course, notebooks
 in repo) is interview gold: orthogonalization, single-number eval metric, human-level
 performance as Bayes-error proxy, error analysis by slicing — and its two case-study quizzes
 (bird detection, autonomous driving) are literally practice case interviews.
@@ -82,6 +82,6 @@ cold. Practice substrate: `data-analytics/` notebooks; DuckDB locally.
 ## Sources
 
 - repo: `data-science/Ng's Deep Learning Nbks/` (incl. Structuring ML Projects case-study quizzes), `data-science/Ng's Machine Learning Nbks/`, `data-science/Intro to Machine Learning in Python/`, `data-science/Bayes/`, `data-analytics/` (SQL/pandas-era notebooks)
-- readings: `general/` (SHAP, LIME, hidden-technical-debt, batch-norm ×2, KDD metric-interpretation pitfalls), `stats_recs/` (ISLR, Practical Statistics — also seeds the deferred stats guide)
+- readings: `general/` (SHAP, LIME, hidden-technical-debt, batch-norm ×2, KDD metric-interpretation pitfalls), `0-cross-stats/` (ISLR, Practical Statistics — also seeds the deferred stats guide)
 - librarian wiki: LightGBM vs CatBoost Comparison · Track2Vec Playlist Co-Occurrence Embeddings
 - global rules: `~/.claude/rules/ml.md` (personal ML practice checklist — pipelines, seeds, baselines)

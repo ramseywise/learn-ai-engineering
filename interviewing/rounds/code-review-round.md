@@ -42,7 +42,7 @@ From the librarian code-review drill (wiki: *Code Review Drill — SANYI*):
   catches — say so explicitly, it's a maturity signal.
 - [ ] For AIE roles: have a take on reviewing LLM-generated code (verify behavior against
   intent, check hallucinated APIs, test coverage as the safety net —
-  [agents guide](../guides/agents.md) harness sections).
+  [agents guide](../guides/4-agents/interview-guide.md) harness sections).
 
 ## Question bank
 - "Review this PR." — narrate the method: intent first, then consequence-ranked passes;
@@ -65,5 +65,5 @@ From the librarian code-review drill (wiki: *Code Review Drill — SANYI*):
 Mostly senior/staff loops; AIE variants increasingly use AI-generated code as the artifact.
 
 ## Links
-- Study guides: [agents](../guides/agents.md) (harness/tooling conventions), [security-safety](../guides/security-safety.md) (the invariants you check first)
+- Study guides: [agents](../guides/4-agents/interview-guide.md) (harness/tooling conventions), [security-safety](../guides/7-security-safety/interview-guide.md) (the invariants you check first)
 - librarian wiki: Code Review Drill — SANYI · SANYI Change-Contract System
