@@ -15,7 +15,7 @@ standard probe.
 
 ## Prep checklist
 - [ ] Pick 2–3 projects; for each, prepare the three-altitude version
-  ([product-business guide](../guides/product-business.md) §5): 60s exec pitch →
+  ([product-business guide](../guides/10-product-delivery/interview-guide.md) §5): 60s exec pitch →
   5-min architecture walk → deep dive on any component.
 - [ ] For each project, write down: the constraint set at decision time, 2–3 decisions
   with the rejected alternative and why, one failure/incident and its fix, the numbers
@@ -36,7 +36,7 @@ standard probe.
 - "What was the hardest bug/incident?" — detection → isolation → root cause → fix →
   prevention; the prevention step is the senior signal.
 - "How did you measure success?" — metrics stated unprompted, eval/monitoring story
-  ([evals guide](../guides/evals-observability.md)); tie to a business number.
+  ([evals guide](../guides/6-evals-observability/interview-guide.md)); tie to a business number.
 - "What would you do differently?" — one architectural, one process answer, both with
   reasons — never "nothing".
 - "How much of this was you?" — precise ownership, credit the team; inflated claims die
@@ -52,5 +52,5 @@ interviewer is watching *how* you explain as much as what
 ([customer-simulation](customer-simulation.md)).
 
 ## Links
-- Study guides: [system-design](../guides/system-design.md) §6 (your systems as drills), [product-business](../guides/product-business.md) §5 (three-audience pitch), [evals-observability](../guides/evals-observability.md) (the measurement story)
+- Study guides: [system-design](../guides/9-system-design/interview-guide.md) §6 (your systems as drills), [product-business](../guides/10-product-delivery/interview-guide.md) §5 (three-audience pitch), [evals-observability](../guides/6-evals-observability/interview-guide.md) (the measurement story)
 - Repo: `../PORTFOLIO.md`; research F5 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

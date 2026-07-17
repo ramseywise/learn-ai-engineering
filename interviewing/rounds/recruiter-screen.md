@@ -41,5 +41,5 @@ Universal first gate. FDE screens lean harder on communication polish — the re
 already sampling the customer-facing signal ([customer-simulation](customer-simulation.md)).
 
 ## Links
-- Study guides: none needed — this round is narrative. Skim [product-business](../guides/product-business.md) §5 for the "three audiences" pitch discipline.
+- Study guides: none needed — this round is narrative. Skim [product-business](../guides/10-product-delivery/interview-guide.md) §5 for the "three audiences" pitch discipline.
 - Research: F4 loop structures in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

@@ -28,7 +28,7 @@ not whether you land their pet answer.
 
 - **Where AI belongs**: high-volume + tolerant-of-review workflows first (drafting, triage,
   summarization); irreversible/high-stakes actions last (see PRINCE's Search → Ask → **Do**
-  staging in the [agents guide](agents.md) §9 — trust is earned by phase).
+  staging in the [agents guide](../4-agents/interview-guide.md) §9 — trust is earned by phase).
 - **Metrics trees**: north star → driver metrics → guardrail metrics. For agents: goal
   completion rate, no-touch rate (fully automated share), escalation rate, time-to-trust;
   guardrails: hallucination rate, complaint rate, cost/interaction.
@@ -78,7 +78,7 @@ probe: a failure you learned from, adapting when a client rejects your recommend
 
 ## Sources
 
-- notes: [case-interview.md](../notes/case-interview.md) (business-context tips, consulting-round expectations, ROI examples)
+- notes: [case-interview.md](../../notes/case-interview.md) (business-context tips, consulting-round expectations, ROI examples)
 - external (from research doc): FDE loop analyses — case study + customer empathy ≈ 50% of evaluation (Exponent FDE guide, Perspective AI Anthropic/FDE writeups, Sundeep Teki guide — links in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`)
 - librarian wiki: Agentic KPI Trees · Copilot Learning Loop · VA Product Design Patterns (interaction-level staging)
-- related round: [customer-simulation](../rounds/customer-simulation.md) · [leadership-rounds](../rounds/leadership-rounds.md)
+- related round: [customer-simulation](../../rounds/customer-simulation.md) · [leadership-rounds](../../rounds/leadership-rounds.md)

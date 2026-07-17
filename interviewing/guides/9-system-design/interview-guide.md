@@ -1,9 +1,9 @@
 # System Design (ML/LLM/Agent) — Study Guide
 
 The highest-weight technical round in 2026 AIE/MLE loops. This guide is the *method*; the
-domain content lives in the [rag](rag.md), [agents](agents.md),
-[evals](evals-observability.md), and [context/cost](context-engineering-cost.md) guides.
-Round-day logistics: [rounds/system-design-round.md](../rounds/system-design-round.md).
+domain content lives in the [rag](../3-rag/interview-guide.md), [agents](../4-agents/interview-guide.md),
+[evals](../6-evals-observability/interview-guide.md), and [context/cost](../5-context-cost/interview-guide.md) guides.
+Round-day logistics: [rounds/system-design-round.md](../../rounds/system-design-round.md).
 
 ## 1. The process (45–55 min ≈ 8 min/step)
 
@@ -80,7 +80,7 @@ Three interview-format writeups exist in the librarian wiki — rehearse them as
   streaming inside platform timeout budgets, phase-2 stateful handoff design.
 
 Classic prompts to dry-run against the §1 process: support chatbot for a bank
-([security guide](security-safety.md) has the governance layer) · document-QA at 10K→1M
+([security guide](../7-security-safety/interview-guide.md) has the governance layer) · document-QA at 10K→1M
 docs · code-assistant for private enterprise code (residency → self-hosted vs vendor with
 privacy guarantees) · feed/notification ranking (classic + ML hybrid).
 
@@ -91,7 +91,7 @@ privacy guarantees) · feed/notification ranking (classic + ML hybrid).
   measure deflection rate, resolution, p95.
 - *"Agent system performance is below expectations — what do you do?"* — instrument first:
   traces → failure clustering → is it retrieval, tool design, or model? Fix eval before
-  agent (see [evals](evals-observability.md) §5); then targeted lever, re-measure.
+  agent (see [evals](../6-evals-observability/interview-guide.md) §5); then targeted lever, re-measure.
 - *"Design for 100× scale."* — separate read/write paths, cache tiers, async everything
   non-interactive, shard the index, degrade gracefully (smaller model under load), cost
   model per component.
@@ -100,8 +100,8 @@ privacy guarantees) · feed/notification ranking (classic + ML hybrid).
 
 ## Sources
 
-- notes: [case-interview.md](../notes/case-interview.md) (System Design Interview Handbook section + bottleneck/failure tables + vantage-point framing)
-- images: [case interview evaluation dimensions](../images/case-interview-evaluation-dimensions.png)
+- notes: [case-interview.md](../../notes/case-interview.md) (System Design Interview Handbook section + bottleneck/failure tables + vantage-point framing)
+- images: [case interview evaluation dimensions](../../images/case-interview-evaluation-dimensions.png)
 - librarian wiki: System Design — Shared Code-Index Service · System Design — Unified Eval Harness · System Design — Serverless Agent Backends · Orchestration Architecture Decision · Runtime Topology and Checkpointer Alignment
-- repo: `../PORTFOLIO.md` (the deployed systems these drills describe)
-- guides: [rag](rag.md) §5 latency budgets · [agents](agents.md) §9 PRINCE reference architecture
+- repo: `../../PORTFOLIO.md` (the deployed systems these drills describe)
+- guides: [rag](../3-rag/interview-guide.md) §5 latency budgets · [agents](../4-agents/interview-guide.md) §9 PRINCE reference architecture

@@ -136,7 +136,7 @@ for selection.
 
 ## Sources
 
-- notes: [agent-harness.md](../notes/agent-harness.md) (harness anatomy + OpenClaw 10 principles), [reliable-agents.md](../notes/reliable-agents.md) (PRINCE case study), [agents-design.md](../notes/agents-design.md) (protocol-driven multi-agent, decomposition), [loop-engineering.md](../notes/loop-engineering.md), [deep-agents.md](../notes/deep-agents.md), [memory.md](../notes/memory.md), [agents-google-adk.md](../notes/agents-google-adk.md)
+- notes: [agent-harness.md](../../notes/agent-harness.md) (harness anatomy + OpenClaw 10 principles), [reliable-agents.md](../../notes/reliable-agents.md) (PRINCE case study), [agents-design.md](../../notes/agents-design.md) (protocol-driven multi-agent, decomposition), [loop-engineering.md](../../notes/loop-engineering.md), [deep-agents.md](../../notes/deep-agents.md), [memory.md](../../notes/memory.md), [agents-google-adk.md](../../notes/agents-google-adk.md)
 - librarian wiki: Agentic Workflow Patterns · ACI (Agent-Computer Interface) · ReAct Pattern · Plan and Execute Pattern · Multi-Agent Orchestration Patterns · Agent Memory Types · Deep Agents Framework · Framework Selection (LangChain vs LangGraph vs Deep Agents) · ADK Workflow Agents · MCP Protocol · A2A Agent Protocol · HITL and Interrupt Patterns
 - readings: `ai_engineering/` (building agents, multi-agent context, mcp), `general/` (ReAct, generative agents, Gorilla, ToolLLM)
 - external: martinfowler.com/articles/reliable-llm-bayer.html · anthropic.com/engineering/building-effective-agents · openai.com/index/harness-engineering

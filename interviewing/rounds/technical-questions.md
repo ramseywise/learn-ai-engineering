@@ -27,20 +27,20 @@ whatever you claim.
   explain it two levels deep.
 
 ## Question bank (samplers — full banks live in the guides)
-- "Explain attention to a PM." → [llm-fundamentals](../guides/llm-fundamentals.md) §6
-- "Why does the model hallucinate citations, and what do you do about it?" → llm-fundamentals §5, [rag](../guides/rag.md)
+- "Explain attention to a PM." → [llm-fundamentals](../guides/2-llm-fundamentals/interview-guide.md) §6
+- "Why does the model hallucinate citations, and what do you do about it?" → llm-fundamentals §5, [rag](../guides/3-rag/interview-guide.md)
 - "RAG or fine-tuning for X?" → llm-fundamentals §3 (the adaptation ladder)
-- "Precision vs recall — when does each matter?" → [ml-foundations](../guides/ml-foundations.md) §2
-- "How do you evaluate an LLM system beyond accuracy?" → [evals-observability](../guides/evals-observability.md)
-- "What is prompt injection and one real defense?" → [security-safety](../guides/security-safety.md)
-- "What's in your context window and why does ordering matter?" → [context-engineering-cost](../guides/context-engineering-cost.md)
+- "Precision vs recall — when does each matter?" → [ml-foundations](../guides/1-foundations/interview-guide.md) §2
+- "How do you evaluate an LLM system beyond accuracy?" → [evals-observability](../guides/6-evals-observability/interview-guide.md)
+- "What is prompt injection and one real defense?" → [security-safety](../guides/7-security-safety/interview-guide.md)
+- "What's in your context window and why does ordering matter?" → [context-engineering-cost](../guides/5-context-cost/interview-guide.md)
 
 ## Per-role weighting
 | AIE | MLE | DS | FDE |
 |---|---|---|---|
 | ● | ● | ◐ | ● |
 
-AIE/FDE versions skew LLM-era topics; MLE adds classical depth ([ml-foundations](../guides/ml-foundations.md));
+AIE/FDE versions skew LLM-era topics; MLE adds classical depth ([ml-foundations](../guides/1-foundations/interview-guide.md));
 DS versions fold into the stats/SQL screen instead.
 
 ## Links

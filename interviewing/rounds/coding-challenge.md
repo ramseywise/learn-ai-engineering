@@ -40,7 +40,7 @@ small solution cleanly, and narrating decisions while typing.
 - "Parse this log file and report the top-5 error codes." — generator + Counter; ask about
   file size (streaming vs load-all — a mini trade-off narration).
 - "Write a retry decorator with exponential backoff." — jitter, max attempts, which
-  exceptions retry; mention idempotency ([data-eng guide](../guides/data-engineering-mlops.md) §1).
+  exceptions retry; mention idempotency ([data-eng guide](../guides/8-data-eng-mlops/interview-guide.md) §1).
 - "Refactor this function while keeping tests green." — small steps, run tests each step,
   name the smells you're removing.
 
@@ -50,9 +50,9 @@ small solution cleanly, and narrating decisions while typing.
 | ◐ | ◐ | ◐ | ◐ |
 
 Present in every loop but rarely the differentiator round; DS versions skew
-SQL/pandas ([ml-foundations](../guides/ml-foundations.md) §6), FDE versions skew
+SQL/pandas ([ml-foundations](../guides/1-foundations/interview-guide.md) §6), FDE versions skew
 practical scripting under time pressure.
 
 ## Links
-- Study guides: [ml-foundations](../guides/ml-foundations.md) (SQL screens), [data-engineering-mlops](../guides/data-engineering-mlops.md) (pipeline idioms)
+- Study guides: [ml-foundations](../guides/1-foundations/interview-guide.md) (SQL screens), [data-engineering-mlops](../guides/8-data-eng-mlops/interview-guide.md) (pipeline idioms)
 - Research: F4/F5 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

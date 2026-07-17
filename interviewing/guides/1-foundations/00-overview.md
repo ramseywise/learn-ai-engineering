@@ -1,0 +1,49 @@
+# Pillar 1 — Foundations (classical ML, stats, SQL)
+
+Everything else in AI is built on this: how models learn from data, how you know they
+work, and how you query the data in the first place. If you're starting from zero, this
+pillar is where terms like "overfitting", "precision/recall", and "train/test split" stop
+being jargon and become tools you reach for.
+
+## Learning path
+
+1. **Python + data handling first** — work through `data-analytics/Python Basics/` and
+   *Python for Data Analysis* (readings) until pandas feels boring.
+2. **Core ML by doing** — `data-science/Intro to Machine Learning in Python/` notebooks:
+   fit your first models, break them, plot learning curves.
+3. **Theory to anchor it** — *An Introduction to Statistical Learning* (ISLR, readings):
+   read each chapter *after* you've touched the technique in code, not before.
+4. **Ng's courses for the discipline** — `data-science/Ng's Machine Learning Nbks/` and
+   the Structuring ML Projects material in `Ng's Deep Learning Nbks/` (error analysis,
+   single-number metrics — the habits that survive into every later pillar).
+5. **Stats honesty** — *Statistics Done Wrong* + *Practical Statistics for Data
+   Scientists* (readings): what p-values and metrics actually claim.
+6. **Bayes as a second lens** — `data-science/Bayes/` + *Bayesian Methods for Hackers*
+   (code copy in `data-science/`, PDF in readings).
+
+## Resource map
+
+| Resource | Type | Where | What it teaches |
+|---|---|---|---|
+| Python Basics · Text Analytics | code | `data-analytics/` | pandas/SQL-era analytics, NLP basics |
+| Intro to ML in Python | code | `data-science/Intro to Machine Learning in Python/` | hands-on scikit-learn fundamentals |
+| Ng ML + DL notebooks | code | `data-science/Ng's Machine Learning Nbks/`, `Ng's Deep Learning Nbks/` | course discipline; Structuring ML Projects = case-study practice |
+| ISLR (Python ed.) | pdf | `readings/0-cross-stats/` | the standard ML theory text |
+| Practical Statistics for Data Scientists | pdf | `readings/0-cross-stats/` | working-stats reference |
+| Statistics Done Wrong (Reinhart) | pdf | `readings/0-cross-stats/` | inference pitfalls |
+| Think Stats · Think Bayes · Statistical Rethinking · Computer Age Statistical Inference | pdf | `readings/0-cross-stats/` | deeper/alternative stats tracks |
+| Python for Data Analysis (McKinney) | pdf | `readings/0-cross-stats/` | pandas from its author |
+| Storytelling with Data (Knaflic) | pdf | `readings/0-cross-stats/` | communicating results (feeds pillar 10) |
+| SHAP (1705.07874) · LIME (1602.04938) | pdf | `readings/general/` | model explanation methods |
+| Hidden Technical Debt in ML (NIPS 2015) | pdf | `readings/general/` | why ML systems rot — read before pillar 8 |
+| KDD Metric Interpretation Pitfalls | pdf | `readings/general/` | metric misreads in practice |
+| LightGBM vs CatBoost · Track2Vec | wiki | librarian | applied tabular + embedding case studies |
+
+## Test yourself
+[interview-guide.md](interview-guide.md) (the exam-prep summary) · rounds:
+[technical-questions](../../rounds/technical-questions.md),
+[coding-challenge](../../rounds/coding-challenge.md) (SQL screens),
+[case-study](../../rounds/case-study.md) (ML cases).
+
+*Detailed notes (`01-…`) land here pillar-by-pillar; stats/experimentation will grow into
+its own pillar from `readings/0-cross-stats/`.*

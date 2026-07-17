@@ -34,7 +34,7 @@ a time an AI tool misled you" — have one.
   visible behavior change — accept feedback, adjust direction fast is exactly what
   production environments need (notes: case-interview).
 - [ ] Nonprofit/mission orgs: prepare a "why this mission" story that's specific, not
-  generic do-gooding ([product-business guide](../guides/product-business.md) §4).
+  generic do-gooding ([product-business guide](../guides/10-product-delivery/interview-guide.md) §4).
 
 ## Question bank
 - "Tell me about a conflict with a coworker." — technical disagreement, steelman their
@@ -58,5 +58,5 @@ Universal. For FDE the bar is higher and partially re-tested in
 [leadership-rounds](leadership-rounds.md).
 
 ## Links
-- Study guides: [product-business](../guides/product-business.md) (stakeholder translation, §5)
+- Study guides: [product-business](../guides/10-product-delivery/interview-guide.md) (stakeholder translation, §5)
 - Notes: [case-interview.md](../notes/case-interview.md) (adaptability/self-awareness signals); research F5 in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`

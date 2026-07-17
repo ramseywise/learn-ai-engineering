@@ -61,7 +61,7 @@ Self-RAG decides *inside the LLM* during generation.
 existing link structure (e.g. wikilinks) already gives you a traversable graph — say this
 before proposing entity extraction + community detection.
 
-**Knowledge-graph RAG in depth:** chapters in `readings/2.knowledge graphs/` (KG-powered
+**Knowledge-graph RAG in depth:** chapters in `readings/3-rag-knowledge-graphs/` (KG-powered
 retrieval, QA agents over graphs) cover the build path: entity linking → graph features →
 KG-RAG.
 
@@ -82,7 +82,7 @@ p95 latency, cost per query, deflection/trust metrics. Agentic additions: eviden
 per answer, self-correction rate, human-override frequency.
 
 Method: golden dataset + LLM-as-judge calibrated against human labels — full treatment in
-the [evals-observability guide](evals-observability.md).
+the [evals-observability guide](../6-evals-observability/interview-guide.md).
 
 ## 5. Latency and cost budgets (memorize one)
 
@@ -120,8 +120,8 @@ control · HITL review for flagged outputs · claim-level provenance if CRAG/age
 
 ## Sources
 
-- notes: [rag.md](../notes/rag.md) (9-architectures + production checklist), [memory.md](../notes/memory.md) (memory-augmented conversational RAG)
-- images: [9 RAG architectures](../images/9-rag-architectures.png)
-- readings: `0.rag/` (RAG, Self-RAG, RAGAS, survey papers), `2.knowledge graphs/` (KG-RAG chapters)
+- notes: [rag.md](../../notes/rag.md) (9-architectures + production checklist), [memory.md](../../notes/memory.md) (memory-augmented conversational RAG)
+- images: [9 RAG architectures](../../images/9-rag-architectures.png)
+- readings: `3-rag/` (RAG, Self-RAG, RAGAS, survey papers), `3-rag-knowledge-graphs/` (KG-RAG chapters)
 - librarian wiki: RAG Retrieval Strategies · Agentic RAG — Advanced Patterns · RAG Reranking · Reciprocal Rank Fusion · RAG Evaluation · CRAG Retry Logic · Semantic Cache Pipeline · Vector Database Comparison · HistoryCondenser
 - course refs: `generative-ai/coursera-references/Deeplearning.ai-RAG-main`, `Knowledge_Graphs_for_RAG-main`

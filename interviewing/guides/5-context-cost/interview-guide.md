@@ -79,7 +79,7 @@ wrong cached answers. Know both and distinguish them; interviewers conflate deli
 7. Batch/offline jobs for non-interactive work (overnight embedding refresh, summaries)
 
 Have one number ready: p95 budget decomposition of your own pipeline (see the
-[rag guide](rag.md) §5 for a worked budget).
+[rag guide](../3-rag/interview-guide.md) §5 for a worked budget).
 
 ## 6. Question bank (answer sketches)
 
@@ -97,7 +97,7 @@ Have one number ready: p95 budget decomposition of your own pipeline (see the
 
 ## Sources
 
-- notes: [context-management.md](../notes/context-management.md) (5 layers + compaction + caching notes), [context-engineering.md](../notes/context-engineering.md) (skills tips), [agent-harness.md](../notes/agent-harness.md) (offloading, progressive disclosure)
+- notes: [context-management.md](../../notes/context-management.md) (5 layers + compaction + caching notes), [context-engineering.md](../../notes/context-engineering.md) (skills tips), [agent-harness.md](../../notes/agent-harness.md) (offloading, progressive disclosure)
 - librarian wiki: Prefix Caching · Semantic Cache Pipeline · ADK Context Engineering · Summarization Node · HistoryCondenser · Multi-Agent Orchestration Patterns (caching-driven topology choice)
 - readings: `ai_engineering/multiagent context/`
 - external: developers.openai.com compaction guide · openai skills-shell-tips post
