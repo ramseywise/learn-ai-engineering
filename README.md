@@ -44,8 +44,6 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - deployment
     - monitoring
 
-- Python-production-template — a cookiecutter reference template for structuring a production Python project
-
 ### Python for Data Science ([`data-science/`](data-science/README.md))
 - [Intro to Machine Learning in Python](https://github.com/ramseywise/Python/tree/main/data-science/Intro%20to%20Machine%20Learning%20in%20Python)
     - supervised learning
@@ -54,7 +52,7 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - model evaluation
     - pipelines
 
-- [Andrew Ng's Machine Learning Course](https://github.com/ramseywise/Python/tree/main/data-science/Ng's%20Machine%20Learning%20Course)
+- [Andrew Ng's Machine Learning Course](https://github.com/ramseywise/Python/tree/main/data-science/Ng's%20Machine%20Learning%20Nbks)
     - linear regression
     - logistic regression
     - multi-class classification
@@ -64,14 +62,14 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - K-means and PCA
     - Anomaly detection and recommender systems
 
-- [Andrew Ng's Deep Learning Course](https://github.com/ramseywise/Python/tree/main/data-science/Ng's%20Deep%20Learning%20Course)
+- [Andrew Ng's Deep Learning Course](https://github.com/ramseywise/Python/tree/main/data-science/Ng's%20Deep%20Learning%20Nbks)
     - CNNs
     - Hyperparameter tuning
     - Sequence models
 
-- `Bayes/`, `personal-notebooks/`, and `Python for ML Models/` — pruned to just the authored/
-  completed work; generic third-party clones with no personal modification were archived (see the
-  category [README](data-science/README.md) for exactly what moved where).
+- `Bayes/` and `Python for ML Models/` — pruned to just the authored/completed work; generic
+  third-party clones with no personal modification were deleted (see the category
+  [README](data-science/README.md) for exactly what went).
 
 ### Python for Generative AI ([`generative-ai/`](generative-ai/README.md))
 - [Intro to NLP](https://github.com/ramseywise/Python/tree/main/generative-ai/intro-to-nlp)
@@ -86,18 +84,22 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - makemore
     - nanogpt
 
-- [mcp-server-template](https://github.com/ramseywise/Python/tree/main/generative-ai/mcp-server-template) —
-  a generic FastMCP server template (token-auth REST API → MCP tools), extracted from a real personal
-  integration; swap in your own API to reuse the pattern
-
-- `readings/` — reference papers (attention-is-all-you-need, WaveNet, batch normalization, etc.)
-
 - [`coursera-references/`](generative-ai/coursera-references) — 13 agentic-AI course repos (AutoGen,
   LangGraph, RAG, LangFuse eval, agent memory, context engineering), curated from what used to be an
   unopened `coursera/` folder of 18 zips
 
 - `chatbot/deep-research-bot/` — the one active item from the old chatbot grab-bag; older demo
-  clones were archived (see the category [README](generative-ai/README.md))
+  clones were deleted (see the category [README](generative-ai/README.md))
+
+### Readings ([`readings/`](readings/general/README.md))
+- Reference papers and book chapters, no notes — pure reference, grouped by topic
+    - `0-cross-stats/` — statistics and data-viz references (ISLP, *Statistics Done Wrong*)
+    - `2-llm-fundamentals/` — prompting and generative-AI foundations
+    - `2-llm-rlhf/` — reinforcement learning and RLHF
+    - `3-rag/`, `3-rag-knowledge-graphs/` — retrieval-augmented generation and knowledge graphs
+    - `8-data-eng-data-mesh/` — data mesh and data-engineering handouts
+    - `ai_engineering/` — AI design, AI engineering, and performance
+    - `general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
 
 ### Programming ([`programming/`](programming/README.md))
 - Practice problems and cloud/infra reference — doesn't fit the data-domain categories above, kept

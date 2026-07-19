@@ -1,6 +1,6 @@
 # Data Engineering
 
-Two full DataTalksClub Zoomcamp courses, plus a reference project template.
+Two full DataTalksClub Zoomcamp courses.
 
 ## Contents
 
@@ -11,9 +11,5 @@ Two full DataTalksClub Zoomcamp courses, plus a reference project template.
   deployment, monitoring. Real worked notebooks (e.g. `duration-prediction.ipynb`,
   `model-registry.ipynb`), not just exercises. See its own
   [README](DataTalks%20MLOps/README.md).
-- **`Python-production-template/`** — a downloaded cookiecutter template for structuring a
-  production Python project (hooks, `poetry.lock`, standard layout). Reference only, not run against
-  a real project here.
-
 Also present: `awesome-data-engineering.md` (curated resource list) and *Designing Data Intensive
 Applications* (O'Reilly reference PDF).
