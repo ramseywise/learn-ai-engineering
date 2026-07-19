@@ -6,13 +6,12 @@ Signals: consequence-ranked reading order, catching the innocent-looking dangero
 communicating findings without condescension, and knowing what *not* to flag.
 
 ## Format & trends
-30–60 min: a PR/diff (sometimes a whole small service) to review live, or async with a
+30-60 min: a PR/diff (sometimes a whole small service) to review live, or async with a
 written review discussed in the round. Increasingly common for senior/staff loops and
 AIE roles (reviewing AI-generated code is now a core job skill — say that out loud if
 asked why review matters in 2026).
 
 ## The method (contract-first, consequence-ranked)
-From the librarian code-review drill (wiki: *Code Review Drill — SANYI*):
 
 1. **Orient before judging** — first question is never "is this code good?" but *"what is
    this change supposed to do, and what contracts/invariants does the code it touches
@@ -41,21 +40,7 @@ From the librarian code-review drill (wiki: *Code Review Drill — SANYI*):
 - [ ] Know your linter boundary: never spend interview time on what a formatter/linter
   catches — say so explicitly, it's a maturity signal.
 - [ ] For AIE roles: have a take on reviewing LLM-generated code (verify behavior against
-  intent, check hallucinated APIs, test coverage as the safety net —
-  [agents guide](../guides/4-agents/interview-guide.md) harness sections).
-
-## Question bank
-- "Review this PR." — narrate the method: intent first, then consequence-ranked passes;
-  end with a summary ranked by severity.
-- "The tests pass and it lints clean — approve?" — passing checks verify what's encoded,
-  not what's intended; look for contract/convention violations (the §3 dangerous class).
-- "How do you review a 2,000-line PR?" — push back first (ask for it split); else review
-  by risk: entry points, data writes, interface changes; timebox style to zero.
-- "A senior engineer disagrees with your blocker." — restate the consequence, not the
-  rule; escalate to data (test, incident precedent) or explicitly downgrade with a
-  follow-up ticket — no ego ([behavioral](behavioral.md) overlap).
-- "What makes a review comment good?" — specific, actionable, severity-labeled, question-
-  phrased where possible.
+  intent, check hallucinated APIs, test coverage as the safety net).
 
 ## Per-role weighting
 | AIE | MLE | DS | FDE |
@@ -64,6 +49,8 @@ From the librarian code-review drill (wiki: *Code Review Drill — SANYI*):
 
 Mostly senior/staff loops; AIE variants increasingly use AI-generated code as the artifact.
 
-## Links
-- Study guides: [agents](../guides/4-agents/interview-guide.md) (harness/tooling conventions), [security-safety](../guides/7-security-safety/interview-guide.md) (the invariants you check first)
-- librarian wiki: Code Review Drill — SANYI · SANYI Change-Contract System
+## Folder contents
+- [sources.md](sources.md) — curated references and reading list
+- [examples/](examples/) — worked code review examples
+- [questions.md](questions.md) — sample questions and model answers
+- [study-guide.md](study-guide.md) — indexed knowledge areas and what to study
