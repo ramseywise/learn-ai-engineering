@@ -1,8 +1,58 @@
 # Generative AI
 
-LLM/NLP fundamentals and a curated set of agentic-AI course repos.
+> **Depth domain.** This folder goes deep on the three pillars of generative AI.
+> The [interviewing guides](../interviewing/guides/00-start-here.md) are the compressed
+> summary layer — read those for exam prep. Read here for synthesis and depth.
 
-## Finished / organized
+---
+
+## The three pillars
+
+```
+LLM fundamentals → RAG & retrieval → Agentic applications
+```
+
+The order encodes temporal emergence and dependency:
+
+- **LLM fundamentals** — what these models are, how they're trained, how to prompt them.
+  Everything else builds on this.
+- **RAG & retrieval** — the first killer app pattern: augment a model with external
+  knowledge at inference time. Presumes prompt fundamentals.
+- **Agentic applications** — the current frontier: models that plan, use tools, and
+  operate over multiple turns. Presumes both prior pillars.
+
+---
+
+## Pillar → interviewing-guide crosswalk
+
+| Pillar | Depth (here) | Summary (guide) | Coursera repos | Seed notes |
+|---|---|---|---|---|
+| LLM fundamentals | [01-llm-fundamentals/](01-llm-fundamentals/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) | `nn-zero-to-hero`, `intro-to-nlp` | [prompt-engineering.md](../interviewing/notes/prompt-engineering.md), [rl.md](../interviewing/notes/rl.md) |
+| RAG & retrieval | [02-rag-retrieval/](02-rag-retrieval/README.md) | [3-rag](../interviewing/guides/3-rag/00-overview.md) | `Deeplearning.ai-RAG-main`, `Knowledge_Graphs_for_RAG-main` | [rag.md](../interviewing/notes/rag.md), [graph-engineering.md](../interviewing/notes/graph-engineering.md) |
+| Agentic applications | [03-agentic-applications/](03-agentic-applications/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | AutoGen, LangGraph, AgenticAIFrameworks, Context-Engineering, agent-memory (2), internet-search-agent, LangFuse (3), Evaluating-AI-Agents | [agent-harness.md](../interviewing/notes/agent-harness.md), [deep-agents.md](../interviewing/notes/deep-agents.md), [loop-engineering.md](../interviewing/notes/loop-engineering.md), [reliable-agents.md](../interviewing/notes/reliable-agents.md) |
+
+---
+
+## Relationship to ai-engineering
+
+These two folders are complementary, not redundant:
+
+- **generative-ai/** is the **application wave** — building things with LLMs. It maps
+  the course material, foundational papers, and practical patterns for using LLMs.
+- **[ai-engineering/](../ai-engineering/README.md)** is the **discipline wave** — the
+  engineering practices that make LLM applications reliable, observable, and maintainable.
+  It emerged after the application wave and presumes it.
+
+Temporal order: learn the three gen-AI pillars first; the ai-engineering foundations
+(prompt → context → harness → loop → graph → eval) layer engineering discipline on top.
+
+Cross-links from gen-AI pillars into ai-engineering:
+- RAG patterns → ai-eng [02-context/](../ai-engineering/02-context/README.md) (context assembly) and [05-graph/](../ai-engineering/05-graph/README.md) (KG-for-RAG)
+- Agentic patterns → ai-eng [03-harness/](../ai-engineering/03-harness/README.md), [04-loop/](../ai-engineering/04-loop/README.md), [06-eval/](../ai-engineering/06-eval/README.md)
+
+---
+
+## Content in this folder
 
 - **`intro-to-nlp/`** — NLTK, TensorFlow, transformers, word-cloud, word2vec. See its own
   [README](intro-to-nlp/README.md).
@@ -19,6 +69,8 @@ LLM/NLP fundamentals and a curated set of agentic-AI course repos.
   activity (eval scripts and a notebook edited well after the initial clone date). Several older,
   never-revisited demo clones (`HubermanGPT`, `buddha-gpt`, ~6 more reference chatbot examples) were
   deleted.
+
+---
 
 ## Removed
 

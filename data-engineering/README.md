@@ -2,6 +2,8 @@
 
 Two full DataTalksClub Zoomcamp courses.
 
+**Learning path:** For the recommended sequence (ingest → transform → orchestrate → warehouse → monitor → feature-serve), start with [CURRICULUM.md](CURRICULUM.md).
+
 ## Contents
 
 - **`DataTalks Data Engineering/`** — the full Data Engineering Zoomcamp: Docker + Terraform,

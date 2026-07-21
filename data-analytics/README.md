@@ -2,6 +2,8 @@
 
 Python fundamentals for working with data: core language features, then text analytics.
 
+**Learning path:** For the recommended sequence (Python fundamentals → data wrangling → EDA/visualization → feature engineering → statistical analysis → modeling/BI), start with [CURRICULUM.md](CURRICULUM.md).
+
 ## Contents
 
 - **`Python Basics/`** — 7 self-authored, worked-through notebooks covering the operations you need
