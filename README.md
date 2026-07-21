@@ -89,25 +89,25 @@ builds things with LLMs; ai-engineering is the discipline that makes them reliab
 - **[02 — RAG & Retrieval](generative-ai/02-rag-retrieval/README.md)** — the first killer
   app pattern. Course material: DeepLearning.AI RAG, Knowledge Graphs for RAG.
 
-- **[03 — Agentic Applications](generative-ai/03-agentic-applications/README.md)** — the
+- **[03 — Agentic Foundations](generative-ai/03-agentic-foundations/README.md)** — the
   current frontier. Course material: AutoGen, LangGraph, AgenticAIFrameworks, context
-  engineering, agent memory (2), internet-search agent, LangFuse eval (3), evaluating
-  AI agents. Active project: `chatbot/deep-research-bot/`.
+  engineering, agent memory (2), internet-search agent (in `07-agentic-applications/`), LangFuse eval (3, in `06-observability/`), evaluating
+  AI agents. Active project: `07-agentic-applications/chatbot/deep-research-bot/`.
 
 ### AI Engineering ([`ai-engineering/`](ai-engineering/README.md))
 - Six foundations — **prompt → context → harness → loop → graph → eval**. Depth companion
   to the [interviewing guides](interviewing/guides/00-start-here.md) (guides summarize;
   this goes deep). Each pillar cross-links its guide, cleaned notes, and coursera code.
 
-### Readings ([`readings/`](readings/general/README.md))
-- Reference papers and book chapters, no notes — pure reference, grouped by topic
-    - `0-cross-stats/` — statistics and data-viz references (ISLP, *Statistics Done Wrong*)
-    - `2-llm-fundamentals/` — prompting and generative-AI foundations
-    - `2-llm-rlhf/` — reinforcement learning and RLHF
-    - `3-rag/`, `3-rag-knowledge-graphs/` — retrieval-augmented generation and knowledge graphs
-    - `8-data-eng-data-mesh/` — data mesh and data-engineering handouts
-    - `ai_engineering/` — AI design, AI engineering, and performance
-    - `general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
+### Readings (distributed by pillar)
+- Reference papers and book chapters, no notes — pure reference, colocated with the pillar that uses them:
+    - `data-analytics/0-cross-stats/` — statistics and data-viz references (ISLP, *Statistics Done Wrong*)
+    - `data-engineering/8-data-eng-data-mesh/` — data mesh and data-engineering handouts
+    - `generative-ai/01-llm-fundamentals/readings/` — prompting, RLHF, and LLM foundations
+    - `generative-ai/02-rag-retrieval/3-rag/` — retrieval-augmented generation papers
+    - `ai-engineering/05-graph/3-rag-knowledge-graphs/` — knowledge graphs for RAG
+    - `ai-engineering/readings/ai_engineering/` — AI design, AI engineering, and performance books
+    - `ai-engineering/readings/general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
 
 ### Programming ([`programming/`](programming/README.md))
 - Practice problems and cloud/infra reference — doesn't fit the data-domain categories above, kept

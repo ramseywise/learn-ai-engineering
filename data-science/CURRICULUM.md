@@ -30,12 +30,12 @@ everything that follows.
 
 | Resource | Location | Focus |
 |---|---|---|
-| An Introduction to Statistical Learning (ISLR, Python ed.) | `readings/0-cross-stats/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf` | canonical ML theory text; read chapters alongside Layer 2 code |
-| Practical Statistics for Data Scientists | `readings/0-cross-stats/Practical_Statistics_for_Data_Scientist.pdf` | working-stats reference; chapter-level |
-| Statistics Done Wrong (Reinhart) | `readings/0-cross-stats/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf` | inference pitfalls — read before any metric interpretation |
-| Think Bayes | `readings/0-cross-stats/think_bayes.pdf` | gateway to Layer 6 |
-| Statistical Rethinking (McElreath) | `readings/0-cross-stats/RM-StatRethink-Bayes.pdf` | deep Bayesian intuition |
-| Computer Age Statistical Inference | `readings/0-cross-stats/computer age statistical inference.pdf` | frequentist-to-Bayes bridge |
+| An Introduction to Statistical Learning (ISLR, Python ed.) | `../data-analytics/0-cross-stats/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf` | canonical ML theory text; read chapters alongside Layer 2 code |
+| Practical Statistics for Data Scientists | `../data-analytics/0-cross-stats/Practical_Statistics_for_Data_Scientist.pdf` | working-stats reference; chapter-level |
+| Statistics Done Wrong (Reinhart) | `../data-analytics/0-cross-stats/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf` | inference pitfalls — read before any metric interpretation |
+| Think Bayes | `../data-analytics/0-cross-stats/think_bayes.pdf` | gateway to Layer 6 |
+| Statistical Rethinking (McElreath) | `../data-analytics/0-cross-stats/RM-StatRethink-Bayes.pdf` | deep Bayesian intuition |
+| Computer Age Statistical Inference | `../data-analytics/0-cross-stats/computer age statistical inference.pdf` | frequentist-to-Bayes bridge |
 
 **No hands-on here.** This is the grounding layer — return to these after each later layer
 solidifies a technique.
@@ -53,7 +53,7 @@ Linear/logistic regression, classification, SVMs, neural net basics. Independent
 |---|---|---|
 | Intro to ML in Python — ch01, ch02 | `data-science/Intro to Machine Learning in Python/01-introduction.ipynb`, `02-supervised-learning.ipynb` | supervised learning foundations, scikit-learn API |
 | Ng ML Notebooks — ex1, ex2, ex3 | `data-science/Ng's Machine Learning Nbks/ex1/`, `ex2/`, `ex3/` | linear regression, logistic regression, multi-class classification |
-| ISLR ch2-4 | `readings/0-cross-stats/` | linear methods theory |
+| ISLR ch2-4 | `../data-analytics/0-cross-stats/` | linear methods theory |
 
 **Staleness note:** Notebooks were authored against sklearn 0.20 (current: 1.4+). The API
 is largely compatible but some pipeline and preprocessing patterns have changed. Pin
@@ -76,7 +76,7 @@ discipline. **Depends on Layer 2** (assumes you've fit at least one supervised m
 |---|---|---|
 | Intro to ML in Python — ch05 | `data-science/Intro to Machine Learning in Python/05-model-evaluation-and-improvement.ipynb` | cross-validation, grid search, metrics |
 | Ng ML Notebooks — ex5 | `data-science/Ng's Machine Learning Nbks/ex5/` | bias-variance diagnosis, learning curves |
-| ISLR ch5 | `readings/0-cross-stats/` | resampling methods |
+| ISLR ch5 | `../data-analytics/0-cross-stats/` | resampling methods |
 
 **Interview crosswalk:** Layer 3 is the core of pillar [1-foundations](../interviewing/guides/1-foundations/interview-guide.md) —
 metric interpretation, train/test discipline, and leakage are the most common interview
@@ -95,7 +95,7 @@ can tackle this directly after Layer 2 without completing evaluation.
 |---|---|---|
 | Intro to ML in Python — ch03 | `data-science/Intro to Machine Learning in Python/03-unsupervised-learning.ipynb` | k-means, DBSCAN, PCA, NMF, manifold learning |
 | Ng ML Notebooks — ex7, ex8 | `data-science/Ng's Machine Learning Nbks/ex7/`, `ex8/` | k-means + PCA, anomaly detection, recommender systems |
-| ISLR ch10, ch12 | `readings/0-cross-stats/` | PCA, clustering theory |
+| ISLR ch10, ch12 | `../data-analytics/0-cross-stats/` | PCA, clustering theory |
 
 ---
 
@@ -109,7 +109,7 @@ any single model on tabular data.
 | Resource | Location | Covers |
 |---|---|---|
 | Intro to ML in Python — ch02 (trees + ensembles section) | `data-science/Intro to Machine Learning in Python/02-supervised-learning.ipynb` | decision trees, random forests, gradient boosting |
-| ISLR ch8 | `readings/0-cross-stats/` | tree methods theory |
+| ISLR ch8 | `../data-analytics/0-cross-stats/` | tree methods theory |
 
 **Gap — no XGBoost/LightGBM hands-on.** The notebooks use scikit-learn's GradientBoostingClassifier
 (sklearn 0.20); LightGBM and XGBoost — the actual tabular SOTA — have no dedicated notebooks
@@ -131,7 +131,7 @@ notebook comparing sklearn GB vs XGBoost vs LightGBM on a real dataset with SHAP
 | Bayes/bayesian_inference_talk-main | `data-science/Bayes/bayesian_inference_talk-main/` | slides + 3 executed notebooks from a real talk |
 | Bayes/BayesianML-master | `data-science/Bayes/BayesianML-master/` | Coursera "Bayesian Methods for ML" — weeks 2/4/5/6 + final |
 | Bayesian Methods for Hackers (vendored) | `data-science/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77/` | chapters 1–7 with PyMC3 code |
-| Bayesian Methods for Hackers (PDF) | `readings/0-cross-stats/bayes_for_hackers.pdf` | reference copy |
+| Bayesian Methods for Hackers (PDF) | `../data-analytics/0-cross-stats/bayes_for_hackers.pdf` | reference copy |
 
 **Staleness note:** All Bayes notebooks use **PyMC3** (current: PyMC 5.x — breaking API change
 at v4). Do not run without either pinning `pymc3==3.11.4` with its `theano-pymc` dependency or
@@ -154,5 +154,4 @@ porting to PyMC 5 syntax (`pm.Data`, `pm.draw`, autodiff backend changed from Th
 - **Pillar 1 — Foundations:** [interviewing/guides/1-foundations/](../interviewing/guides/1-foundations/00-overview.md)
   (covers Layers 1–5 content: bias-variance, metrics, supervised learning, unsupervised, ensembles)
 - **Cleaned notes:** `interviewing/notes/foundations.md` (Pillar 1 summary — bias-variance, metrics, CV)
-- **Readings cross-cut:** `readings/0-cross-stats/` maps to Layers 1–3; `readings/general/` has SHAP/LIME
-  papers and Hidden Technical Debt (bridge from Layer 3 to MLOps)
+- **Readings cross-cut:** `../data-analytics/0-cross-stats/` maps to Layers 1–3

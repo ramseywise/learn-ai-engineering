@@ -28,7 +28,7 @@ its folder.
   lakehouse table formats give ACID over object storage.
 - Data quality & governance: expectations/contracts at ingest, lineage, PII classification
   (ties to [security-safety](../7-security-safety/interview-guide.md) §5). Data mesh handouts in
-  `readings/8-data-eng-data-mesh/` for the org-level decentralization story.
+  `data-engineering/8-data-eng-data-mesh/` for the org-level decentralization story.
 
 ## 2. MLOps checklist (DataTalks MLOps structure)
 

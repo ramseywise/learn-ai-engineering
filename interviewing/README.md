@@ -10,8 +10,7 @@ Interview-prep knowledge base for ML / AI-engineering / DS / FDE roles. Three la
 2. **[Interview rounds](#interview-rounds)** (`rounds/`) — one file per round type: what's
    tested, format and current trends, prep checklist, question bank, per-role weighting.
 3. **Sources** — [`notes/`](notes/) (cleaned Notion notes with provenance frontmatter),
-   [`images/`](images/), the [readings library](../readings/README.md)
-   (PDFs), this repo's course folders, and the librarian wiki (public domains),
+   [`images/`](images/), this repo's course folders, and the librarian wiki (public domains),
    which also scrapes this KB back into its own knowledge graph.
 
 **How to use:** learning from scratch → [guides/00-start-here.md](guides/00-start-here.md).
@@ -39,7 +38,7 @@ Roles: **AIE** (AI/agent engineer), **MLE** (ML engineer), **DS** (data scientis
 | Coding patterns / DS&A — *deferred (see below)* | ◐ | ◐ | ◐ | ◐ |
 
 **Deferred topics** (separate milestone): stats/experimentation (seed material:
-`readings/0-cross-stats/`) and coding patterns (seed: `programming/Leet-Code/`).
+`data-analytics/0-cross-stats/`) and coding patterns (seed: `programming/Leet-Code/`).
 
 ## Study guides
 

@@ -13,7 +13,7 @@ highest-weight technical round in AIE/MLE interviews.
    [case-interview.md](../../notes/case-interview.md) (System Design Interview Handbook
    section).
 2. **Architecture pattern language** — *Generative AI Design Patterns* (all 10 chapters,
-   `readings/ai_engineering/ai design/`) + `agentic_architectural_patterns.pdf`
+   `ai-engineering/readings/ai_engineering/ai design/`) + `agentic_architectural_patterns.pdf`
    (`readings/`): named patterns you can draw and defend.
 3. **App-level architecture** — *AI Engineering* ch 10 (Architecture & User Feedback);
    *Building Applications with AI Agents* chs 5, 8 (orchestration, multi-agent).
@@ -28,9 +28,9 @@ highest-weight technical round in AIE/MLE interviews.
 | Resource | Type | Where | What it teaches |
 |---|---|---|---|
 | case-interview.md | note | [../../notes/case-interview.md](../../notes/case-interview.md) | the round's process + trade-off technique |
-| *Generative AI Design Patterns* | pdf | `readings/ai_engineering/ai design/` | the pattern vocabulary |
-| agentic_architectural_patterns.pdf | pdf | `readings/` | agent architecture survey |
-| *AI Engineering* ch 10 | pdf | `readings/ai_engineering/ai engineer/` | full-app architecture + feedback loops |
+| *Generative AI Design Patterns* | pdf | `ai-engineering/readings/ai_engineering/ai design/` | the pattern vocabulary |
+| agentic_architectural_patterns.pdf | pdf | `ai-engineering/readings/ai_engineering/` | agent architecture survey |
+| *AI Engineering* ch 10 | pdf | `ai-engineering/readings/ai_engineering/ai engineer/` | full-app architecture + feedback loops |
 | System Design — Shared Code-Index Service · Unified Eval Harness · Serverless Agent Backends | wiki | librarian | worked designs of real systems |
 | Orchestration Architecture Decision · Runtime Topology pages | wiki | librarian | decision records to cite |
 | evaluation-dimensions diagram | image | [../../images/case-interview-evaluation-dimensions.png](../../images/case-interview-evaluation-dimensions.png) | what's actually graded |

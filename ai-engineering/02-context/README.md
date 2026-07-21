@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
 > Position in the stack: *each loop step assembles context*.
-> Deep note: [context-engineering.md](../../interviewing/notes/context-engineering.md)
+> Deep note: [context-engineering.md](context-engineering.md)
 
 ---
 
@@ -19,17 +19,18 @@ Memory and tool-design are **sub-components of this layer and the harness layer*
 ## Resource map
 
 ### Deep notes
-- [context-engineering.md](../../interviewing/notes/context-engineering.md) — the 10 core context-engineering techniques (window composition, retrieval integration, memory types, token budget management).
-- [context-management.md](../../interviewing/notes/context-management.md) — operational patterns for managing context across multi-turn conversations.
-- [memory.md](../../interviewing/notes/memory.md) — memory as a context sub-component: in-context, external, episodic, semantic.
+- [context-engineering.md](context-engineering.md) — the 10 core context-engineering techniques (window composition, retrieval integration, memory types, token budget management).
+- [context-management.md](context-management.md) — operational patterns for managing context across multi-turn conversations.
+- [memory.md](memory.md) — memory as a context sub-component: in-context, external, episodic, semantic.
+- [hooks-architecture.md](hooks-architecture.md) — hooks architecture as context injection mechanism.
 
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [Context-Engineering-main](../../generative-ai/coursera-references/Context-Engineering-main/) — hands-on context engineering patterns.
-- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/coursera-references/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as OS primitive.
-- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/coursera-references/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
+- [Context-Engineering-main](Context-Engineering-main/) — hands-on context engineering patterns.
+- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as OS primitive.
+- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/03-agentic-foundations/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
 
 ### Next layer
 → [03-harness/](../03-harness/README.md) — the harness wraps the loops that assemble context.

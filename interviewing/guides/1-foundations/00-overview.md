@@ -7,7 +7,7 @@ being jargon and become tools you reach for.
 
 ## Learning path
 
-1. **Python + data handling first** — work through `data-analytics/Python Basics/` and
+1. **Python + data handling first** — work through `programming/Python Basics/` and
    *Python for Data Analysis* (readings) until pandas feels boring.
 2. **Core ML by doing** — `data-science/Intro to Machine Learning in Python/` notebooks:
    fit your first models, break them, plot learning curves.
@@ -28,15 +28,15 @@ being jargon and become tools you reach for.
 | Python Basics · Text Analytics | code | `data-analytics/` | pandas/SQL-era analytics, NLP basics |
 | Intro to ML in Python | code | `data-science/Intro to Machine Learning in Python/` | hands-on scikit-learn fundamentals |
 | Ng ML + DL notebooks | code | `data-science/Ng's Machine Learning Nbks/`, `Ng's Deep Learning Nbks/` | course discipline; Structuring ML Projects = case-study practice |
-| ISLR (Python ed.) | pdf | `readings/0-cross-stats/` | the standard ML theory text |
-| Practical Statistics for Data Scientists | pdf | `readings/0-cross-stats/` | working-stats reference |
-| Statistics Done Wrong (Reinhart) | pdf | `readings/0-cross-stats/` | inference pitfalls |
-| Think Stats · Think Bayes · Statistical Rethinking · Computer Age Statistical Inference | pdf | `readings/0-cross-stats/` | deeper/alternative stats tracks |
-| Python for Data Analysis (McKinney) | pdf | `readings/0-cross-stats/` | pandas from its author |
-| Storytelling with Data (Knaflic) | pdf | `readings/0-cross-stats/` | communicating results (feeds pillar 10) |
-| SHAP (1705.07874) · LIME (1602.04938) | pdf | `readings/general/` | model explanation methods |
-| Hidden Technical Debt in ML (NIPS 2015) | pdf | `readings/general/` | why ML systems rot — read before pillar 8 |
-| KDD Metric Interpretation Pitfalls | pdf | `readings/general/` | metric misreads in practice |
+| ISLR (Python ed.) | pdf | `data-analytics/0-cross-stats/` | the standard ML theory text |
+| Practical Statistics for Data Scientists | pdf | `data-analytics/0-cross-stats/` | working-stats reference |
+| Statistics Done Wrong (Reinhart) | pdf | `data-analytics/0-cross-stats/` | inference pitfalls |
+| Think Stats · Think Bayes · Statistical Rethinking · Computer Age Statistical Inference | pdf | `data-analytics/0-cross-stats/` | deeper/alternative stats tracks |
+| Python for Data Analysis (McKinney) | pdf | `data-analytics/0-cross-stats/` | pandas from its author |
+| Storytelling with Data (Knaflic) | pdf | `data-analytics/0-cross-stats/` | communicating results (feeds pillar 10) |
+| SHAP (1705.07874) · LIME (1602.04938) | pdf | `data-science/` | model explanation methods |
+| Hidden Technical Debt in ML (NIPS 2015) | pdf | `data-science/` | why ML systems rot — read before pillar 8 |
+| KDD Metric Interpretation Pitfalls | pdf | `data-science/` | metric misreads in practice |
 | LightGBM vs CatBoost · Track2Vec | wiki | librarian | applied tabular + embedding case studies |
 
 ## Test yourself
@@ -46,4 +46,4 @@ being jargon and become tools you reach for.
 [case-study](../../rounds/case-study.md) (ML cases).
 
 *Detailed notes (`01-…`) land here pillar-by-pillar; stats/experimentation will grow into
-its own pillar from `readings/0-cross-stats/`.*
+its own pillar from `data-analytics/0-cross-stats/`.*

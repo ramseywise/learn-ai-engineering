@@ -97,7 +97,7 @@ Have one number ready: p95 budget decomposition of your own pipeline (see the
 
 ## Sources
 
-- notes: [context-management.md](../../notes/context-management.md) (5 layers + compaction + caching notes), [context-engineering.md](../../notes/context-engineering.md) (skills tips), [agent-harness.md](../../notes/agent-harness.md) (offloading, progressive disclosure)
+- notes: [context-management.md](../../../ai-engineering/02-context/context-management.md) (5 layers + compaction + caching notes), [context-engineering.md](../../../ai-engineering/02-context/context-engineering.md) (skills tips), [agent-harness.md](../../../ai-engineering/03-harness/agent-harness.md) (offloading, progressive disclosure)
 - librarian wiki: Prefix Caching · Semantic Cache Pipeline · ADK Context Engineering · Summarization Node · HistoryCondenser · Multi-Agent Orchestration Patterns (caching-driven topology choice)
 - readings: `ai_engineering/multiagent context/`
 - external: developers.openai.com compaction guide · openai skills-shell-tips post

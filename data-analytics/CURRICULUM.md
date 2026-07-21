@@ -12,16 +12,16 @@ or generative AI — this curriculum ends with that branching decision.
 
 | # | Layer | What you learn | Notebooks / Material | Status |
 |---|---|---|---|---|
-| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | `Python Basics/1_Overview.ipynb`, `2_Texts.ipynb` | Present |
-| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | `Python Basics/3_Arrays.ipynb`, `4_DataFrames.ipynb` | Present |
-| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | `Python Basics/5_Plotting.ipynb`, `6_Aggregation.ipynb`, `7_Time_Series.ipynb` | Present |
+| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | `../programming/Python Basics/1_Overview.ipynb`, `2_Texts.ipynb` | Present |
+| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | `../programming/Python Basics/3_Arrays.ipynb`, `4_DataFrames.ipynb` | Present |
+| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | `../programming/Python Basics/5_Plotting.ipynb`, `6_Aggregation.ipynb`, `7_Time_Series.ipynb` | Present |
 | 4 | **Feature engineering** | Text feature representation; NLP preprocessing; TF-IDF, embeddings, classification features | `Text Analytics with Python/Ch03`, `Ch04`, `Ch05` | Present |
 | 5 | **Statistical analysis** | Hypothesis testing; distributions; A/B testing; correlation vs. causation | — | **MISSING** |
 | 6 | **Modeling + BI** | Semantic analysis; topic modeling; similarity; clustering; deep learning intro | `Text Analytics with Python/Ch06`, `Ch07`, `Ch08`, `Ch09`, `Ch10` | Present |
 
 ## Notebook Map
 
-### `Python Basics/` (self-authored, 7 notebooks)
+### `../programming/Python Basics/` (self-authored, 7 notebooks)
 
 Sequential — each builds on the previous.
 
@@ -62,13 +62,13 @@ Layer 5 (statistical analysis) is the critical missing piece. No notebooks cover
 - Correlation vs. causation
 
 Until this gap is filled, students should supplement with the readings in
-`../readings/0-cross-stats/` (*Practical Statistics for Data Scientists*, *Statistics Done Wrong*).
+`0-cross-stats/` (*Practical Statistics for Data Scientists*, *Statistics Done Wrong*).
 
 ## Reference Links
 
 - **Python reference**: `Python for Data Analysis.pdf` (Wes McKinney, O'Reilly — in this dir)
 - **Quick reference**: [`SimpleHacks.md`](SimpleHacks.md)
-- **Stats readings**: [`../readings/0-cross-stats/`](../readings/0-cross-stats/)
+- **Stats readings**: [`0-cross-stats/`](0-cross-stats/)
 
 ## What Comes Next — The Branching Decision
 

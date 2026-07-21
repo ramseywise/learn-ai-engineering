@@ -6,14 +6,14 @@ context rot, token economics, and latency budgets.
 
 ## Learning path
 
-1. **The mental model** — notes: [context-engineering.md](../../notes/context-engineering.md)
-   + [context-management.md](../../notes/context-management.md) (the 5 context layers,
+1. **The mental model** — notes: [context-engineering.md](../../../ai-engineering/02-context/context-engineering.md)
+   + [context-management.md](../../../ai-engineering/02-context/context-management.md) (the 5 context layers,
    static-first ordering); librarian's *Prefix Caching* page for the caching mechanism.
 2. **Why it matters mechanically** — KV cache + prefill/decode economics from the
    [pillar-2 interview guide](../2-llm-fundamentals/interview-guide.md) §§1,4; ALiBi
-   (`readings/2108.12409v2.pdf`) for the long-context side.
+   (`ai-engineering/readings/general/`) for the long-context side.
 3. **Inference optimization in depth** — *AI Engineering* ch 9 (Inference Optimization,
-   `readings/ai_engineering/ai engineer/`); for how deep the rabbit hole goes:
+   `ai-engineering/readings/ai_engineering/ai engineer/`); for how deep the rabbit hole goes:
    *AI Systems Performance Engineering* (`ai performance/`, esp. chs 15–19 on
    multinode inference, prefill/decode disaggregation, KV-cache tuning).
 4. **Compaction & summarization** — librarian *Summarization Node* + ADK context pages;
@@ -27,11 +27,11 @@ context rot, token economics, and latency budgets.
 
 | Resource | Type | Where | What it teaches |
 |---|---|---|---|
-| *AI Engineering* ch 9 | pdf | `readings/ai_engineering/ai engineer/` | quantization, distillation, speculative decoding, serving metrics |
-| *AI Systems Performance Engineering* (chs 1–20) | pdf | `readings/ai_engineering/ai performance/` | GPU/CUDA-level inference performance (awareness tier) |
-| ALiBi (2108.12409) | pdf | `readings/` | long-context positional method |
+| *AI Engineering* ch 9 | pdf | `ai-engineering/readings/ai_engineering/ai engineer/` | quantization, distillation, speculative decoding, serving metrics |
+| *AI Systems Performance Engineering* (chs 1–20) | pdf | `ai-engineering/readings/ai_engineering/ai performance/` | GPU/CUDA-level inference performance (awareness tier) |
+| ALiBi (2108.12409) | pdf | `ai-engineering/readings/general/` | long-context positional method |
 | Prefix Caching · ADK Context Engineering · Summarization Node | wiki | librarian | caching + compaction patterns from real builds |
-| context-engineering.md · context-management.md | note | [../../notes/](../../notes/) | context layers, compaction instructions |
+| context-engineering.md · context-management.md | note | [ai-engineering/02-context/](../../../ai-engineering/02-context/) | context layers, compaction instructions |
 | ADK context diagrams | image | [../../images/](../../images/) | static-vs-dynamic context, vibe-coding stakes spectrum |
 
 ## Test yourself

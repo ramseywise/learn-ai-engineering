@@ -4,7 +4,7 @@ Last updated: 2026-07-21
 
 ## Prerequisites
 
-Python basics from `data-analytics/Python Basics/`. Docker and SQL fundamentals help (the
+Python basics from `programming/Python Basics/`. Docker and SQL fundamentals help (the
 DataTalks DE Zoomcamp covers Docker from scratch; SQL is assumed).
 
 ## The 6 Foundations
@@ -67,7 +67,7 @@ The following tools are not covered in the existing material but are standard in
 ## Reference Links
 
 - **Interview guide**: [`../interviewing/guides/8-data-eng-mlops/`](../interviewing/guides/8-data-eng-mlops/00-overview.md)
-- **Readings**: [`../readings/8-data-eng-data-mesh/`](../readings/8-data-eng-data-mesh/)
+- **Readings**: [`8-data-eng-data-mesh/`](8-data-eng-data-mesh/)
 - **Curated resource list**: [`awesome-data-engineering.md`](awesome-data-engineering.md)
 - **Reference book**: *Designing Data-Intensive Applications* (O'Reilly, in repo root of this dir)
 

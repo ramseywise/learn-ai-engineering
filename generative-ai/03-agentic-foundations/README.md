@@ -1,21 +1,20 @@
-# 03 — Agentic Applications
+# 03 — Agentic Foundations
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
-> Position: third pillar — the current frontier of generative AI.
+> Position: third pillar — framework learning for agentic AI.
 > Presumes: [01-llm-fundamentals](../01-llm-fundamentals/README.md), [02-rag-retrieval](../02-rag-retrieval/README.md).
 
 ---
 
 ## What it is
 
-Agentic applications are LLM systems that plan, use tools, maintain state across turns,
-and operate in loops — often with multiple cooperating agents. This is where generative AI
-becomes software engineering: harnesses, loops, memory, evaluation, and guardrails all
-become first-class concerns.
+Agentic foundations is where LLM systems graduate from single-call patterns to planning,
+tool use, multi-turn state, and multi-agent coordination. This pillar covers the course
+material for learning the major agentic frameworks: LangGraph, AutoGen, and Google ADK.
 
-This pillar is the largest because the agentic frontier is where most active development
-is happening. It maps to the highest concentration of course material, notes, and
-real project work in this repo.
+For framework comparison and selection guides (which framework for which problem), see
+[04-agentic-frameworks/](../04-agentic-frameworks/README.md). For deployed projects built
+with these frameworks, see [07-agentic-applications/](../07-agentic-applications/README.md).
 
 ---
 
@@ -24,40 +23,38 @@ real project work in this repo.
 ### Course material (hands-on)
 
 **Design patterns and frameworks:**
-- **[`../coursera-references/AI-Agentic-Design-Patterns-with-AutoGen-main/`](../coursera-references/AI-Agentic-Design-Patterns-with-AutoGen-main/)** —
+
+- **[`AI-Agentic-Design-Patterns-with-AutoGen-main/`](AI-Agentic-Design-Patterns-with-AutoGen-main/)** —
   AutoGen multi-agent design patterns: conversation, tool use, code execution, orchestration.
-- **[`../coursera-references/AI-Agents-in-LangGraph-main/`](../coursera-references/AI-Agents-in-LangGraph-main/)** —
+- **[`AI-Agents-in-LangGraph-main/`](AI-Agents-in-LangGraph-main/)** —
   LangGraph agent construction: state machines, persistence, streaming, human-in-the-loop.
-- **[`../coursera-references/AgenticAIFrameworks-master/`](../coursera-references/AgenticAIFrameworks-master/)** —
+- **[`AgenticAIFrameworks-master/`](AgenticAIFrameworks-master/)** —
   survey of agentic frameworks: comparative patterns across AutoGen, LangGraph, CrewAI.
 
 **Context and memory:**
-- **[`../coursera-references/Context-Engineering-main/`](../coursera-references/Context-Engineering-main/)** —
+
+- **[`../../ai-engineering/02-context/Context-Engineering-main/`](../../ai-engineering/02-context/Context-Engineering-main/)** —
   context engineering for agents: what goes in the context window and why it matters.
-- **[`../coursera-references/LLMs-as-Operating-Systems--Agent-Memory-main/`](../coursera-references/LLMs-as-Operating-Systems--Agent-Memory-main/)** —
+- **[`LLMs-as-Operating-Systems--Agent-Memory-main/`](LLMs-as-Operating-Systems--Agent-Memory-main/)** —
   agent memory architectures: in-context, external (vector/KG), procedural memory.
-- **[`../coursera-references/Long-Term-Agentic-Memory-With-LangGraph-main/`](../coursera-references/Long-Term-Agentic-Memory-With-LangGraph-main/)** —
+- **[`Long-Term-Agentic-Memory-With-LangGraph-main/`](Long-Term-Agentic-Memory-With-LangGraph-main/)** —
   long-term memory implementation with LangGraph persistence layer.
 
-**Tool use and search:**
-- **[`../coursera-references/internet-search-agent-main/`](../coursera-references/internet-search-agent-main/)** —
-  building a web-search agent: tool calling, result parsing, iterative refinement.
+**Generative AI design patterns:**
+
+- **[`ai design/`](<ai design/>)** — "Generative AI Design Patterns" chapters (PDFs):
+  content style, knowledge augmentation, tool use, reliability, safety, composable workflows.
 
 **Evaluation and observability:**
-- **[`../coursera-references/Learning-LangFuse-main/`](../coursera-references/Learning-LangFuse-main/)** —
-  LangFuse basics: tracing, scoring, and observability for LLM applications.
-- **[`../coursera-references/langfuse-evaluation-main/`](../coursera-references/langfuse-evaluation-main/)** —
-  evaluation pipelines in LangFuse: golden sets, LLM-as-judge, regression tracking.
-- **[`../coursera-references/langfuse-mcp-python-main/`](../coursera-references/langfuse-mcp-python-main/)** —
-  LangFuse + MCP integration: observability for MCP-enabled agents.
-- **[`../coursera-references/DeepLearning.AI-Evaluating-AI-Agents-master/`](../coursera-references/DeepLearning.AI-Evaluating-AI-Agents-master/)** —
-  end-to-end agent evaluation: task decomposition, trajectory evaluation, benchmark design.
 
-**Active project:**
-- **[`../chatbot/deep-research-bot/`](../chatbot/deep-research-bot/)** — the one genuinely
-  active project in this repo: a 2025 agent-building workshop clone with real post-clone
-  activity (eval scripts and notebooks edited after the initial clone). Good reference for
-  what a real agent research loop looks like.
+- **[`../06-observability/Learning-LangFuse-main/`](../06-observability/Learning-LangFuse-main/)** —
+  LangFuse basics: tracing, scoring, and observability for LLM applications.
+- **[`../06-observability/langfuse-evaluation-main/`](../06-observability/langfuse-evaluation-main/)** —
+  evaluation pipelines in LangFuse: golden sets, LLM-as-judge, regression tracking.
+- **[`../06-observability/langfuse-mcp-python-main/`](../06-observability/langfuse-mcp-python-main/)** —
+  LangFuse + MCP integration: observability for MCP-enabled agents.
+- **[`../../ai-engineering/06-eval/DeepLearning.AI-Evaluating-AI-Agents-master/`](../../ai-engineering/06-eval/DeepLearning.AI-Evaluating-AI-Agents-master/)** —
+  end-to-end agent evaluation: task decomposition, trajectory evaluation, benchmark design.
 
 ### Interviewing guides
 
@@ -66,21 +63,22 @@ real project work in this repo.
 
 ### Cleaned notes
 
-- [agent-harness.md](../../interviewing/notes/agent-harness.md) — harness architecture: tool
+- [agents-google-adk.md](agents-google-adk.md) — Google ADK: agent framework, tool use, deployment.
+- [agent-harness.md](../../ai-engineering/03-harness/agent-harness.md) — harness architecture: tool
   registration, the agent loop, structured output parsing, error handling.
-- [agents-design.md](../../interviewing/notes/agents-design.md) — agent design patterns:
+- [agents-design.md](../../ai-engineering/03-harness/agents-design.md) — agent design patterns:
   ReAct, plan-and-execute, reflection, multi-agent orchestration.
-- [deep-agents.md](../../interviewing/notes/deep-agents.md) — advanced agent patterns:
-  long-horizon planning, self-correction, agentic evals.
-- [loop-engineering.md](../../interviewing/notes/loop-engineering.md) — loop reliability:
-  termination conditions, loop invariants, stuck-agent detection.
-- [reliable-agents.md](../../interviewing/notes/reliable-agents.md) — reliability patterns:
-  retries, fallbacks, circuit breakers, determinism vs. stochasticity tradeoffs.
-- [agents-guardrails.md](../../interviewing/notes/agents-guardrails.md) — safety and
+- [agents-guardrails.md](../../ai-engineering/03-harness/agents-guardrails.md) — safety and
   guardrails: input/output filtering, scope limiting, human-in-the-loop gates.
-- [memory.md](../../interviewing/notes/memory.md) — memory architectures: in-context,
+- [reliable-agents.md](../../ai-engineering/03-harness/reliable-agents.md) — reliability patterns:
+  retries, fallbacks, circuit breakers, determinism vs. stochasticity tradeoffs.
+- [loop-engineering.md](../../ai-engineering/04-loop/loop-engineering.md) — loop reliability:
+  termination conditions, loop invariants, stuck-agent detection.
+- [deep-agents.md](../../ai-engineering/04-loop/deep-agents.md) — advanced agent patterns:
+  long-horizon planning, self-correction, agentic evals.
+- [memory.md](../../ai-engineering/05-graph/memory.md) — memory architectures: in-context,
   episodic, semantic, procedural.
-- [context-engineering.md](../../interviewing/notes/context-engineering.md) — context
+- [context-engineering.md](../../ai-engineering/02-context/context-engineering.md) — context
   assembly for agents: what to include, what to compress, what to externalize.
 
 ---
@@ -99,7 +97,7 @@ For each agentic concern, there is a corresponding ai-engineering pillar:
 
 ---
 
-## TypeScript
+## Next pillar
 
-Google ADK repo (TS) — coming as a pointer target once linked. The Python course material
-above remains canonical for now. Vercel AI SDK agent patterns will also be added here.
+→ [04-agentic-frameworks/](../04-agentic-frameworks/README.md) — framework reference
+material: comparison docs and selection guides for LangGraph, LangFuse, LangSmith, and ADK.
