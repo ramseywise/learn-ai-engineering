@@ -4,7 +4,12 @@ A personal knowledge base of Python for data work — courses, notebooks, and co
 organized by domain. Each category below mixes finished/authored notebooks with reference material
 from books and courses; sub-folder READMEs (where they exist) go into more detail.
 
-> **Interview prep:** start at the [interviewing KB](interviewing/README.md) — study guides,
+> **Self-learner?** Start at [CURRICULUM.md](CURRICULUM.md) — subject map, prerequisites,
+> and three learning paths (AI Engineering, Data Engineering, Full-Stack Data).
+> **Interview prep?** Start at [interviewing/guides/00-start-here.md](interviewing/guides/00-start-here.md) —
+> ten pillars (+ Pillar 0 programming), ordered so each builds on the last.
+
+> **Interview prep (extended):** [interviewing KB](interviewing/README.md) — study guides,
 > round-by-round prep, and the role × topic matrix. Hands-on AI-engineering evidence (RAG,
 > agents, evals, MCP) lives in the working repos — see [`../PORTFOLIO.md`](../PORTFOLIO.md).
 > System-design writeups of those systems and a contract-based code-review drill are compiled
@@ -72,24 +77,27 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
   [README](data-science/README.md) for exactly what went).
 
 ### Python for Generative AI ([`generative-ai/`](generative-ai/README.md))
-- [Intro to NLP](https://github.com/ramseywise/Python/tree/main/generative-ai/intro-to-nlp)
-    - NLTK
-    - TensorFlow
-    - transformers
-    - word-cloud
-    - word2vec
 
-- [Neural Networks: Zero to Hero](https://github.com/ramseywise/Python/tree/main/generative-ai/nn-zero-to-hero)
-    - microgrd
-    - makemore
-    - nanogpt
+Three pillars, ordered by temporal emergence: **LLM fundamentals → RAG & retrieval →
+Agentic applications**. Pairs with [`ai-engineering/`](ai-engineering/README.md) — gen-AI
+builds things with LLMs; ai-engineering is the discipline that makes them reliable.
 
-- [`coursera-references/`](generative-ai/coursera-references) — 13 agentic-AI course repos (AutoGen,
-  LangGraph, RAG, LangFuse eval, agent memory, context engineering), curated from what used to be an
-  unopened `coursera/` folder of 18 zips
+- **[01 — LLM Fundamentals](generative-ai/01-llm-fundamentals/README.md)** — what LLMs
+  are, how they're trained, how to prompt them. Course material: `intro-to-nlp/` (NLTK,
+  TensorFlow, transformers) and `nn-zero-to-hero/` (Karpathy: micrograd, makemore, nanogpt).
 
-- `chatbot/deep-research-bot/` — the one active item from the old chatbot grab-bag; older demo
-  clones were deleted (see the category [README](generative-ai/README.md))
+- **[02 — RAG & Retrieval](generative-ai/02-rag-retrieval/README.md)** — the first killer
+  app pattern. Course material: DeepLearning.AI RAG, Knowledge Graphs for RAG.
+
+- **[03 — Agentic Applications](generative-ai/03-agentic-applications/README.md)** — the
+  current frontier. Course material: AutoGen, LangGraph, AgenticAIFrameworks, context
+  engineering, agent memory (2), internet-search agent, LangFuse eval (3), evaluating
+  AI agents. Active project: `chatbot/deep-research-bot/`.
+
+### AI Engineering ([`ai-engineering/`](ai-engineering/README.md))
+- Six foundations — **prompt → context → harness → loop → graph → eval**. Depth companion
+  to the [interviewing guides](interviewing/guides/00-start-here.md) (guides summarize;
+  this goes deep). Each pillar cross-links its guide, cleaned notes, and coursera code.
 
 ### Readings ([`readings/`](readings/general/README.md))
 - Reference papers and book chapters, no notes — pure reference, grouped by topic
