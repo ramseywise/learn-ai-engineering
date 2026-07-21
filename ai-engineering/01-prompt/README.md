@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md)
 > Position in the stack: innermost — *context contains prompts*.
-> Deep note: [prompt-engineering.md](prompt-engineering.md)
+> Deep note: [prompt-engineering.md](../../interviewing/notes/prompt-engineering.md)
 
 ---
 
@@ -17,8 +17,8 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ## Resource map
 
 ### Deep notes
-- [prompt-engineering.md](prompt-engineering.md) — core techniques: system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring, prompt templates, prompt chaining, long-context patterns, and the prompt↔context boundary.
-- [prompt-injection.md](prompt-injection.md) — the security facet: adversarial input manipulation.
+- [prompt-engineering.md](../../interviewing/notes/prompt-engineering.md) — core techniques: system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring, prompt templates, prompt chaining, long-context patterns, and the prompt↔context boundary.
+- [prompt-injection.md](../../interviewing/notes/prompt-injection.md) — the security facet: adversarial input manipulation.
 
 ### Interviewing guides
 - [2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
@@ -31,3 +31,18 @@ Prompt engineering is the craft of writing instructions and examples that consis
 
 ### Next layer
 → [02-context/](../02-context/README.md) — context engineering assembles the window that delivers your prompts.
+
+---
+
+## Working References
+
+Claude Code convention references that map to this pillar. These files live at `~/.claude/refs/` and can be consulted in any Claude Code session.
+
+### `agent-safety.md`
+Conventions for what the agent cannot do and where that is enforced. Directly relevant to prompt injection defense and the instruction hierarchy that governs how prompts interact with system-level constraints.
+
+Key topics for this pillar:
+- Five protection layers — Layer 1 (pre-input sanitization) and Layer 4 (post-generate output check) are the prompt-layer guards
+- Prompt injection: structural delimiting of untrusted content, deny-list patterns, instruction hierarchy (system prompt > developer context > user input)
+- Credential and secret custody — rules for what must never appear in a prompt context window
+- Write-operation confirm gate — two-phase pattern for irreversible actions triggered by prompt instructions
