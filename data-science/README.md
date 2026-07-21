@@ -1,7 +1,11 @@
 # Data Science
 
 Machine learning and deep learning fundamentals — course work, worked assignments, and personal
-notebooks. 
+notebooks.
+
+**Learning path:** [CURRICULUM.md](CURRICULUM.md) — 6-layer tree structure: statistical
+foundations → supervised learning (branches to unsupervised, independent) → model evaluation →
+ensemble methods → Bayesian methods. **Not linear — Layers 2 and 4 are independent branches.**
 
 ## Finished / organized
 

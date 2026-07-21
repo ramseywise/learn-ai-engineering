@@ -18,6 +18,7 @@ Every pillar folder has three layers:
 
 | # | Pillar | You can now… | Prereqs |
 |---|---|---|---|
+| 0 | [Programming](0-programming/00-overview.md) | write clean, efficient code and solve DSA problems | Python |
 | 1 | [Foundations](1-foundations/00-overview.md) | train, evaluate, and explain a classical ML model honestly | Python |
 | 2 | [LLM Fundamentals](2-llm-fundamentals/00-overview.md) | build a tiny GPT; explain attention, RLHF, and prompting without hand-waving | 1 |
 | 3 | [RAG](3-rag/00-overview.md) | build a document-QA system with citations and measure its faithfulness | 2 |
@@ -32,8 +33,7 @@ Every pillar folder has three layers:
 Pillars 1 and 8 can run in parallel; 9 and 10 are integrative — revisit them repeatedly.
 
 **Coming pillars** (deferred): *Stats & Experimentation* (A/B testing, causal inference —
-seed: `readings/0-cross-stats/`) and *Coding Patterns* (DS&A drills — seed:
-`programming/`).
+seed: `readings/0-cross-stats/`).
 
 ## Other entry points
 

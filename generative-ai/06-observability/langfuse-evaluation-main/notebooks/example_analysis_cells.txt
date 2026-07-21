@@ -1,0 +1,294 @@
+# ADD THESE CELLS TO THE NOTEBOOK AFTER CELL 13 (Test on Single Conversation)
+
+# ============================================================================
+# NEW CELL: Import Analysis Helpers
+# ============================================================================
+# Import analysis visualization tools
+from src.utils.analysis_helpers import (
+    display_conversation_detail,
+    create_evaluation_summary_table,
+    analyze_evaluation_quality,
+    print_quality_report,
+    print_section_header
+)
+
+print("✅ Analysis helpers loaded!")
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+### 3.2 Detailed Example Analysis (10 Conversations)
+
+Let's examine 10 sample conversations in detail to understand:
+1. What the AI evaluators are detecting
+2. How accurate the evaluations are
+3. Quality of the hallucination detection
+
+This will help validate the evaluation system before running on all conversations.
+
+# ============================================================================
+# NEW CELL: Select and Evaluate 10 Samples
+# ============================================================================
+# Select 10 diverse samples
+# Try to get a mix of different conversation types
+sample_size = min(10, len(conversation_df))
+
+# Sample conversations
+sample_indices = [0, 10, 20, 30, 40, 50, 100, 150, 200, 250]
+sample_indices = [i for i in sample_indices if i < len(conversation_df)][:sample_size]
+
+sample_df = conversation_df.iloc[sample_indices].copy()
+
+print(f"📊 Selected {len(sample_df)} sample conversations for detailed analysis")
+print(f"💰 Estimated cost: ~${len(sample_df) * 0.0037:.2f}")
+print()
+
+# Prepare conversations
+sample_conversations = []
+for idx, row in sample_df.iterrows():
+    conv = ConversationData(
+        session_id=row['sessionId'],
+        user_question=row['user_question'],
+        ai_response=row['ai_response'],
+        documents=row['all_documents'],
+        escalated=row.get('need_expert', False)
+    )
+    sample_conversations.append(conv)
+
+# Evaluate
+print("🤖 Evaluating sample conversations...")
+print("   This may take 2-3 minutes...\n")
+
+sample_results = []
+for i, conv in enumerate(sample_conversations, 1):
+    print(f"   [{i}/{len(sample_conversations)}] Evaluating {conv.session_id[:20]}... ", end="", flush=True)
+
+    try:
+        result = orchestrator.evaluate_conversation(conv, run_verification=True)
+        sample_results.append(result)
+        print("✅")
+    except Exception as e:
+        print(f"❌ {e}")
+        continue
+
+print(f"\n✅ Completed {len(sample_results)} evaluations")
+
+# Convert to dicts
+sample_results_dicts = [r.to_dict() for r in sample_results]
+
+# ============================================================================
+# NEW CELL: Quick Summary Table
+# ============================================================================
+print_section_header("QUICK SUMMARY - 10 SAMPLE CONVERSATIONS")
+
+summary_table = create_evaluation_summary_table(sample_results_dicts)
+print("\n")
+print(summary_table.to_string(index=False))
+print("\n")
+
+# Interpret the table
+print("📖 How to read this table:")
+print("   🔴 = Issue detected")
+print("   ✅ = No issues")
+print("   Severity: none/minor/major/critical")
+print("   Grounding: % of claims supported by documents")
+print("   Doc score: Relevance of retrieved documents (1-5)")
+print("   Comp score: Completeness of response (1-5)")
+print()
+
+# ============================================================================
+# NEW CELL: Quality Report
+# ============================================================================
+# Analyze evaluation quality
+quality_metrics = analyze_evaluation_quality(sample_results_dicts)
+print_quality_report(quality_metrics)
+
+# Add interpretation
+print("💡 INTERPRETATION:")
+print()
+
+detection_rate = quality_metrics.get('detection_rate', 0)
+avg_grounding = quality_metrics.get('avg_grounding_ratio', 0)
+
+if detection_rate > 0.3:
+    print("⚠️  HIGH DETECTION RATE:")
+    print(f"   {detection_rate:.0%} of responses flagged with hallucinations")
+    print("   → This suggests Conecta may be making up information frequently")
+elif detection_rate > 0.1:
+    print("⚠️  MODERATE DETECTION RATE:")
+    print(f"   {detection_rate:.0%} of responses flagged with hallucinations")
+    print("   → Some responses contain unsupported claims")
+else:
+    print("✅ LOW DETECTION RATE:")
+    print(f"   {detection_rate:.0%} of responses flagged with hallucinations")
+    print("   → Most responses are well-grounded in documents")
+
+print()
+
+if avg_grounding < 0.8:
+    print(f"⚠️  LOW AVERAGE GROUNDING: {avg_grounding:.0%}")
+    print("   → Many claims lack document support")
+elif avg_grounding < 0.95:
+    print(f"✅ GOOD AVERAGE GROUNDING: {avg_grounding:.0%}")
+    print("   → Most claims are supported")
+else:
+    print(f"✅ EXCELLENT GROUNDING: {avg_grounding:.0%}")
+    print("   → Nearly all claims are well-supported")
+
+print()
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+### 3.3 Detailed Conversation Examination
+
+Now let's examine each conversation in detail to see:
+- What the user asked
+- How Conecta responded
+- What the AI evaluators found
+- Whether the evaluation makes sense
+
+**Navigate through conversations using the cells below**
+
+# ============================================================================
+# NEW CELL: Display All Sample Conversations
+# ============================================================================
+print_section_header("DETAILED EXAMINATION OF 10 SAMPLE CONVERSATIONS", "=")
+print()
+print("Below are detailed analyses of each conversation.")
+print("Review these to understand:")
+print("  • What questions users are asking")
+print("  • How Conecta is responding")
+print("  • What the AI evaluators are detecting")
+print("  • Whether evaluations are accurate")
+print()
+
+# Display each conversation in detail
+for i, (conv_data, result_dict) in enumerate(zip(sample_df.to_dict('records'), sample_results_dicts), 1):
+
+    # Check if this conversation has interesting findings
+    is_interesting = False
+    if result_dict.get('success'):
+        hall = result_dict.get('hallucination', {})
+        comp = result_dict.get('completeness', {})
+        doc = result_dict.get('document_relevance', {})
+
+        is_interesting = (
+            hall.get('hallucination_detected', False) or
+            comp.get('unnecessary_clarification', False) or
+            hall.get('grounding_ratio', 1.0) < 0.8 or
+            doc.get('relevance_score', 5) < 3
+        )
+
+    # Header
+    print("\n" + "=" * 100)
+    print(f" CONVERSATION {i}/{len(sample_results)}")
+
+    if is_interesting:
+        print(" ⚠️  INTERESTING CASE - Issues Detected!")
+    else:
+        print(" ✅ Clean Case - No Major Issues")
+
+    print("=" * 100)
+
+    # Display full detail
+    display_conversation_detail(
+        conversation_data=conv_data,
+        evaluation_result=result_dict,
+        show_documents=False,  # Set to True to see full documents
+        show_evidence=True  # Show hallucination evidence
+    )
+
+# ============================================================================
+# NEW CELL: Focus on Problematic Cases
+# ============================================================================
+print_section_header("PROBLEMATIC CASES - DETAILED REVIEW", "=")
+print()
+
+# Find cases with issues
+problematic = []
+for i, result_dict in enumerate(sample_results_dicts):
+    if not result_dict.get('success'):
+        continue
+
+    hall = result_dict.get('hallucination', {})
+    comp = result_dict.get('completeness', {})
+    doc = result_dict.get('document_relevance', {})
+
+    issues = []
+
+    if hall.get('hallucination_detected'):
+        issues.append(f"Hallucination ({hall.get('severity', 'unknown')})")
+
+    if comp.get('unnecessary_clarification'):
+        issues.append("Unnecessary clarification")
+
+    if hall.get('grounding_ratio', 1.0) < 0.7:
+        issues.append(f"Low grounding ({hall.get('grounding_ratio', 0):.0%})")
+
+    if doc.get('relevance_score', 5) < 3:
+        issues.append(f"Poor doc relevance ({doc.get('relevance_score', 0)}/5)")
+
+    if issues:
+        problematic.append({
+            'index': i,
+            'session_id': result_dict.get('session_id', 'unknown'),
+            'issues': ', '.join(issues),
+            'data': (sample_df.iloc[i].to_dict(), result_dict)
+        })
+
+if problematic:
+    print(f"Found {len(problematic)} conversations with issues:\n")
+
+    for item in problematic:
+        print(f"  • Conversation {item['index'] + 1}: {item['issues']}")
+        print(f"    Session: {item['session_id'][:40]}")
+        print()
+
+    print("\nReview these cases above in detail to understand the issues.")
+else:
+    print("✅ No problematic cases found in this sample!")
+    print("   All conversations appear to be well-handled by Conecta.")
+
+# ============================================================================
+# NEW CELL: Manual Review Checklist
+# ============================================================================
+print_section_header("EVALUATION QUALITY CHECKLIST", "=")
+print()
+print("Review the evaluations above and answer these questions:")
+print()
+print("1. HALLUCINATION DETECTION:")
+print("   □ Are the flagged hallucinations actually incorrect?")
+print("   □ Did the evaluator miss any false information?")
+print("   □ Are the severity levels (minor/major/critical) appropriate?")
+print()
+print("2. DOCUMENT RELEVANCE:")
+print("   □ Do the retrieved documents actually contain relevant information?")
+print("   □ Are there cases where documents don't have the answer but are marked as relevant?")
+print()
+print("3. COMPLETENESS:")
+print("   □ When marked as 'unnecessary clarification', was the answer truly in the docs?")
+print("   □ Are there missing aspects that weren't flagged?")
+print()
+print("4. OVERALL QUALITY:")
+print("   □ Do the AI evaluations align with your human judgment?")
+print("   □ Are there patterns of false positives or false negatives?")
+print()
+print("💡 If you find issues with the evaluations, you can adjust:")
+print("   • Prompts in: src/utils/prompt_templates.py")
+print("   • Model selection in config (Flash vs Pro)")
+print("   • Threshold parameters")
+print()
+
+# ============================================================================
+# NEW CELL MARKDOWN
+# ============================================================================
+### Next Steps
+
+Based on the sample analysis above:
+
+1. **If evaluations look good** → Proceed to full batch evaluation (Section 4)
+2. **If evaluations need tuning** → Adjust prompts/config and re-run this section
+3. **If you want to see more examples** → Change `sample_indices` and re-run
+
+**Ready to proceed?** Continue to Section 4 for full analysis.
