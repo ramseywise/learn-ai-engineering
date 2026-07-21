@@ -68,7 +68,7 @@ A first-class graph primitive: the graph pauses at designated nodes for human in
 
 Graphs appear in a second context: **knowledge graphs as retrieval structure** rather than as agent topology. Here, nodes are entities (people, places, concepts) and edges are typed relationships — the graph encodes structured world knowledge that a RAG pipeline queries instead of (or alongside) a vector index.
 
-Key distinction: KG-for-RAG is about *data structure for retrieval*; agent graph engineering is about *execution topology for orchestration*. Both are "graph engineering" but at different layers. Course reference: [`Knowledge_Graphs_for_RAG-main`](../../generative-ai/coursera-references/Knowledge_Graphs_for_RAG-main/).
+Key distinction: KG-for-RAG is about *data structure for retrieval*; agent graph engineering is about *execution topology for orchestration*. Both are "graph engineering" but at different layers. Course reference: [`Knowledge_Graphs_for_RAG-main`](Knowledge_Graphs_for_RAG-main/).
 
 ---
 
@@ -123,9 +123,9 @@ Each layer presumes the one below. You cannot graph-engineer effectively without
 
 ## Resources
 
-- Pillar guide: [`4-agents`](../guides/4-agents/00-overview.md)
-- Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../generative-ai/coursera-references/AI-Agents-in-LangGraph-main/)
-- Coursera code — KG for RAG: [`Knowledge_Graphs_for_RAG-main`](../../generative-ai/coursera-references/Knowledge_Graphs_for_RAG-main/)
-- Readings — knowledge graphs: [`readings/3-rag-knowledge-graphs/`](../../readings/3-rag-knowledge-graphs/)
+- Pillar guide: [`4-agents`](../../interviewing/guides/4-agents/00-overview.md)
+- Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../generative-ai/03-agentic-foundations/AI-Agents-in-LangGraph-main/)
+- Coursera code — KG for RAG: [`Knowledge_Graphs_for_RAG-main`](Knowledge_Graphs_for_RAG-main/)
+- Readings — knowledge graphs: [`3-rag-knowledge-graphs/`](3-rag-knowledge-graphs/)
 - LangGraph docs: https://docs.langchain.com/langgraph
 - Loop engineering note: [`loop-engineering.md`](loop-engineering.md)

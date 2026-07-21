@@ -3,9 +3,9 @@ origin: synthesized
 sources:
   - interviewing/guides/1-foundations/interview-guide.md
   - interviewing/guides/1-foundations/00-overview.md
-  - readings/0-cross-stats/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf
-  - readings/0-cross-stats/Practical_Statistics_for_Data_Scientist.pdf
-  - readings/0-cross-stats/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
+  - data-analytics/0-cross-stats/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf
+  - data-analytics/0-cross-stats/Practical_Statistics_for_Data_Scientist.pdf
+  - data-analytics/0-cross-stats/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
 confidence: high
 cleaned: 2026-07-21
 ---
@@ -148,7 +148,7 @@ ch5 (resampling) → `Intro to ML in Python/05-model-evaluation-and-improvement.
 
 **The gap ISLR doesn't fill:** ISLR teaches what models are and why they work; it doesn't
 teach production hygiene (pipelines, leakage, train/serve skew, drift). Fill that gap with:
-- *Hidden Technical Debt in ML Systems* (NIPS 2015) — `readings/general/` — the "why ML
+- *Hidden Technical Debt in ML Systems* (NIPS 2015) — `ai-engineering/readings/general/` — the "why ML
   systems rot" paper. Read before pillar 8 (data eng/MLOps).
 - Ng's *Structuring ML Projects* (in `Ng's Deep Learning Nbks/`) — orthogonalization,
   single-number eval metrics, human-level performance as Bayes-error proxy, error analysis by
@@ -165,5 +165,5 @@ book is short (~170 pages); read it once, reference it when reviewing A/B test r
 
 - Pillar guide: [`1-foundations/interview-guide.md`](../guides/1-foundations/interview-guide.md)
 - Depth dir: [`data-science/`](../../data-science/CURRICULUM.md) (Layers 1–3 of the curriculum)
-- Readings: `readings/0-cross-stats/` (ISLR, Practical Statistics, Statistics Done Wrong, Think Bayes)
-- Readings: `readings/general/` (SHAP, LIME, Hidden Technical Debt, KDD Metric Pitfalls)
+- Readings: `data-analytics/0-cross-stats/` (ISLR, Practical Statistics, Statistics Done Wrong, Think Bayes)
+- Readings: `ai-engineering/readings/general/` (SHAP, LIME, Hidden Technical Debt, KDD Metric Pitfalls)

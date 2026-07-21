@@ -32,7 +32,7 @@ having them in memory already.
 
 Goal: build reliable, production-grade LLM systems.
 
-1. **Python fluency** — `data-analytics/Python Basics/` (2–3 weeks)
+1. **Python fluency** — `programming/Python Basics/` (2–3 weeks)
    Data wrangling, pandas, basic plotting. Skip if you already write Python daily.
 
 2. **What LLMs are** — `generative-ai/01-llm-fundamentals/` (3–4 weeks)
@@ -43,7 +43,7 @@ Goal: build reliable, production-grade LLM systems.
    Prompt → context → harness → loop → graph → eval. Six numbered foundations.
    Each has a depth README, a cleaned note, and an interview guide summary.
 
-4. **Build things** — `generative-ai/02-rag-retrieval/` + `03-agentic-applications/` (4–6 weeks)
+4. **Build things** — `generative-ai/02-rag-retrieval/` + `03-agentic-foundations/` (4–6 weeks)
    The application layer: RAG (the first killer app pattern), then full agentic systems.
    After the ai-engineering discipline, the code patterns will make sense structurally.
 
@@ -56,7 +56,7 @@ pillars 0–4 are the core loop for this path.
 
 Goal: build data pipelines and ML infrastructure.
 
-1. **Python fluency** — `data-analytics/Python Basics/` (see Path A step 1)
+1. **Python fluency** — `programming/Python Basics/` (see Path A step 1)
 
 2. **Data Engineering sequence** — `data-engineering/CURRICULUM.md`
    Ingest → transform → orchestrate → warehouse → monitor → feature-serve.

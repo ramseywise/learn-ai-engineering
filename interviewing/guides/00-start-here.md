@@ -33,12 +33,11 @@ Every pillar folder has three layers:
 Pillars 1 and 8 can run in parallel; 9 and 10 are integrative — revisit them repeatedly.
 
 **Coming pillars** (deferred): *Stats & Experimentation* (A/B testing, causal inference —
-seed: `readings/0-cross-stats/`).
+seed: `data-analytics/0-cross-stats/`).
 
 ## Other entry points
 
 - Interview prep: [../README.md](../README.md) — role × topic matrix + the
   [rounds/](../rounds/) files (one per interview-round type).
-- Raw sources: [../notes/](../notes/) (cleaned Notion notes), `readings/` (PDF library —
-  see [readings README](../../readings/README.md)), and the librarian wiki (compiled
+- Raw sources: [../notes/](../notes/) (cleaned Notion notes) and the librarian wiki (compiled
   design experience; it scrapes this KB back in turn).

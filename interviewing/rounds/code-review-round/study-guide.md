@@ -48,7 +48,7 @@ Third pass — will the next person understand and safely modify this code?
 | Eval threshold changes | Quality bar lowered without calibration evidence or version bump | [conventions ex.3](examples/conventions.md) — pass threshold halved |
 | Convention drift | Breaking established patterns without justification | SANYI Bianyi layer; [conventions ex.1](examples/conventions.md) |
 | Test/eval quality | Tests exist, test the right things, break when the code breaks | [evals guide §2](../../guides/6-evals-observability/interview-guide.md) — grader types and calibration |
-| Enforcement > documentation | Constraints in linters/types/CI, not prose docs agents ignore | [agent-harness notes](../../notes/agent-harness.md) — "encode invariants, don't micromanage implementations" |
+| Enforcement > documentation | Constraints in linters/types/CI, not prose docs agents ignore | [agent-harness notes](../../../ai-engineering/03-harness/agent-harness.md) — "encode invariants, don't micromanage implementations" |
 
 ### 5. Communication & feedback
 Often weighted as heavily as technical skill in senior/staff rounds.

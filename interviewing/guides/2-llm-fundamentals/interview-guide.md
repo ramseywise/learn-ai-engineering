@@ -12,11 +12,11 @@ signal is).
 - **Attention** — `softmax(QKᵀ/√d)V`; self-attention = every token attends to every other
   (O(n²) — the reason long context is expensive and why "context rot" exists). Multi-head =
   parallel subspace views. Positional info via embeddings (learned, RoPE, ALiBi — ALiBi
-  paper is in `readings/`).
+  paper is in `ai-engineering/readings/general/`).
 - **Transformer block** — attention + MLP + residuals + layer norm; decoder-only for GPT-family
   (causal mask), encoder-only for BERT (bidirectional, classification/embedding), encoder-
   decoder for translation-style tasks. Papers: attention-is-all-you-need, BERT — both in
-  `readings/general/`.
+  `ai-engineering/readings/general/`.
 - **KV cache** — decode-time cache of past keys/values; the mechanism under prompt caching
   (see [context-engineering-cost guide](../5-context-cost/interview-guide.md) §3).
 - **Sampling** — temperature, top-p/top-k, why temperature 0 still isn't fully deterministic
@@ -33,7 +33,7 @@ signal is).
    - **DPO** — skips the reward model, optimizes preference pairs directly; more stable,
      cheaper, the common industry default now.
    - **Constitutional AI / RLAIF** — AI feedback guided by principles instead of (or before)
-     human labels; critique-and-revise loop (paper in `readings/`).
+     human labels; critique-and-revise loop (paper in `ai-engineering/readings/general/`).
 4. **RL fundamentals behind it** (from the notes): MDP framing — agent/environment/state/
    action/reward/policy; exploration vs exploitation; value-based (DQN) vs policy-gradient
    (PPO) vs actor-critic. **MARL** exists (CTDE, QMIX, MADDPG) but say honestly: it's for
@@ -83,7 +83,7 @@ decoding as a latency trick. Serving metrics: TTFT, tokens/sec, p95.
 
 ## Sources
 
-- notes: [rl.md](../../notes/rl.md) (RL/RLHF/MARL — confidence: low, verify claims), [agents-self-training.md](../../notes/agents-self-training.md) (Agent-Lightning, training-agent disaggregation)
+- notes: [rl.md](../../../generative-ai/01-llm-fundamentals/rl.md) (RL/RLHF/MARL — confidence: low, verify claims), [agents-self-training.md](../../notes/agents-self-training.md) (Agent-Lightning, training-agent disaggregation)
 - readings: `general/` (attention, BERT, LLaMA, GPT-4, InstructGPT, Constitutional AI, CoT, ReAct, ToT, TruthfulQA), `2-llm-rlhf/` (DQN, PPO, RLHF preferences), `2-llm-fundamentals/` chapters
 - repo: `generative-ai/nn-zero-to-hero/` (nanogpt from scratch), `generative-ai/intro-to-nlp/`
 - librarian wiki: Direct Preference Optimization · Chain of Thought · Self-Learning Agents

@@ -22,10 +22,10 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 
 ### Course material (hands-on)
 
-- **[`../coursera-references/Deeplearning.ai-RAG-main/`](../coursera-references/Deeplearning.ai-RAG-main/)** —
+- **[`Deeplearning.ai-RAG-main/`](Deeplearning.ai-RAG-main/)** —
   DeepLearning.AI RAG course: building a document-QA pipeline with embeddings, vector
   stores, and faithfulness evaluation.
-- **[`../coursera-references/Knowledge_Graphs_for_RAG-main/`](../coursera-references/Knowledge_Graphs_for_RAG-main/)** —
+- **[`../../ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main/`](../../ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main/)** —
   knowledge graphs as a retrieval layer: structured retrieval over graph databases,
   KG-augmented context assembly.
 
@@ -36,15 +36,15 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 
 ### Cleaned notes
 
-- [rag.md](../../interviewing/notes/rag.md) — RAG architecture: retrieval pipeline,
+- [rag.md](rag.md) — RAG architecture: retrieval pipeline,
   chunking strategies, hybrid search, reranking, faithfulness and groundedness evaluation.
-- [graph-engineering.md](../../interviewing/notes/graph-engineering.md) — knowledge
+- [graph-engineering.md](../../ai-engineering/05-graph/graph-engineering.md) — knowledge
   graph patterns: entity extraction, graph construction, KG-for-RAG, graph traversal.
 
 ### Readings
 
-- [`readings/3-rag/`](../../readings/3-rag/) — RAG reference papers and book chapters.
-- [`readings/3-rag-knowledge-graphs/`](../../readings/3-rag-knowledge-graphs/) — knowledge
+- [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
+- [`../../ai-engineering/05-graph/3-rag-knowledge-graphs/`](../../ai-engineering/05-graph/3-rag-knowledge-graphs/) — knowledge
   graphs for retrieval reference material.
 
 ---
@@ -64,6 +64,6 @@ context window. The ai-engineering depth layer for this:
 
 ## Next pillar
 
-→ [03-agentic-applications/](../03-agentic-applications/README.md) — agents extend RAG:
+→ [03-agentic-foundations/](../03-agentic-foundations/README.md) — agents extend RAG:
 instead of a single retrieve-then-generate call, an agent plans, retrieves, acts, and
 iterates over multiple turns.

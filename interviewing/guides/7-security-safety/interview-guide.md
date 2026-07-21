@@ -107,7 +107,7 @@ hang.
 
 ## Sources
 
-- notes: [security.md](../../notes/security.md) (OWASP agent cheat sheet + source–sink + PRINCE recovery), [prompt-injection.md](../../notes/prompt-injection.md) (OWASP injection cheat sheet), [agents-guardrails.md](../../notes/agents-guardrails.md)
+- notes: [security.md](../../notes/security.md) (OWASP agent cheat sheet + source–sink + PRINCE recovery), [prompt-injection.md](../../../ai-engineering/01-prompt/prompt-injection.md) (OWASP injection cheat sheet), [agents-guardrails.md](../../../ai-engineering/03-harness/agents-guardrails.md)
 - librarian wiki: Input Guardrails Pipeline · MCP Server Security Patterns · PII Masking Approaches · Presidio PII Redaction · Production Hardening Patterns
 - external: OWASP AI Agent Security Cheat Sheet · OWASP LLM Prompt Injection Prevention Cheat Sheet · martinfowler.com/articles/reliable-llm-bayer.html
 - readings: `general/` (Constitutional AI, TruthfulQA)

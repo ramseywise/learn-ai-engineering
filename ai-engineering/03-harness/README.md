@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *harness implements loops*.
-> Deep note: [agent-harness.md](../../interviewing/notes/agent-harness.md)
+> Deep note: [agent-harness.md](agent-harness.md)
 
 ---
 
@@ -19,17 +19,17 @@ Per `awesome-harness-engineering`: verification & CI/evals, memory & state, obse
 ## Resource map
 
 ### Deep notes
-- [agent-harness.md](../../interviewing/notes/agent-harness.md) — harness primitives: tool execution, memory, guardrails, observability. Cites LangChain, OpenAI, Interloom.
-- [agents-design.md](../../interviewing/notes/agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
-- [deep-agents.md](../../interviewing/notes/deep-agents.md) — depth on agentic architectures: planning, reflection, self-critique.
-- [agents-guardrails.md](../../interviewing/notes/agents-guardrails.md) — guardrails and safety constraints in harness design.
+- [agent-harness.md](agent-harness.md) — harness primitives: tool execution, memory, guardrails, observability. Cites LangChain, OpenAI, Interloom.
+- [agents-design.md](agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
+- [agents-guardrails.md](agents-guardrails.md) — guardrails and safety constraints in harness design.
+- [reliable-agents.md](reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/coursera-references/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.
-- [AgenticAIFrameworks-master](../../generative-ai/coursera-references/AgenticAIFrameworks-master/) — framework survey.
+- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.
+- [AgenticAIFrameworks-master](../../generative-ai/03-agentic-foundations/AgenticAIFrameworks-master/) — framework survey.
 
 ### External reading queue
 - Lilian Weng, "Harness Engineering for Self-Improvement": https://lilianweng.github.io/posts/2026-07-04-harness — authoritative; ties harness→loop→self-improvement.

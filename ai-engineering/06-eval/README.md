@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md)
 > Position in the stack: sixth foundation — *measures every layer below; guide = exam summary, here = depth*.
-> Deep note: [eval-harness.md](../../interviewing/notes/eval-harness.md)
+> Deep note: [eval-harness.md](eval-harness.md)
 
 ---
 
@@ -21,16 +21,18 @@ Evaluation engineering is the discipline of building systematic measurement for 
 ## Resource map
 
 ### Deep notes
-- [eval-harness.md](../../interviewing/notes/eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
-- [observability.md](../../interviewing/notes/observability.md) — tracing, logging, metrics for agent systems; LangFuse integration.
+- [eval-harness.md](eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
+- [observability.md](observability.md) — tracing, logging, metrics for agent systems; LangFuse integration.
+- [grounding-methodology.md](grounding-methodology.md) — grounding and faithfulness methodology: RAG correctness, hallucination detection.
+- [safeguards-architecture.md](safeguards-architecture.md) — safeguards architecture: input/output filtering, safety constraints at the eval layer.
 
 ### Interviewing guide
 - [6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [DeepLearning.AI-Evaluating-AI-Agents-master](../../generative-ai/coursera-references/DeepLearning.AI-Evaluating-AI-Agents-master/) — agent eval patterns: task completion, faithfulness, safety.
-- [Learning-LangFuse-main](../../generative-ai/coursera-references/Learning-LangFuse-main/) — LangFuse observability platform.
-- [langfuse-evaluation-main](../../generative-ai/coursera-references/langfuse-evaluation-main/) — evaluation workflows in LangFuse.
+- [DeepLearning.AI-Evaluating-AI-Agents-master](DeepLearning.AI-Evaluating-AI-Agents-master/) — agent eval patterns: task completion, faithfulness, safety.
+- [Learning-LangFuse-main](../../generative-ai/06-observability/Learning-LangFuse-main/) — LangFuse observability platform.
+- [langfuse-evaluation-main](../../generative-ai/06-observability/langfuse-evaluation-main/) — evaluation workflows in LangFuse.
 
 ### External references
 - Anthropic on eval harness design: https://www.anthropic.com/research/evaluating-ai-systems

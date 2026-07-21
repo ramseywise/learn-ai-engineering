@@ -18,12 +18,21 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
 
 ### Course material (hands-on)
 
-- **[`../intro-to-nlp/`](../intro-to-nlp/README.md)** — NLTK, TensorFlow, transformers,
-  word-cloud, word2vec. The NLP foundations that predate the transformer era; useful for
-  understanding what transformers replaced and improved on.
-- **[`../nn-zero-to-hero/`](../nn-zero-to-hero/README.md)** — Karpathy's course: micrograd
-  (backprop from scratch), makemore (character-level LMs), nanogpt (GPT-2 from scratch).
-  Best hands-on build-it-yourself path to understanding the transformer.
+- **[`langchain/`](langchain/)** — Learning LangChain book chapters (PDFs): LLM fundamentals,
+  RAG, memory, agent architecture, deployment. Cross-pillar reference; the RAG and agent
+  chapters overlap with 02 and 03.
+- **[`llm from scratch/`](<llm from scratch/>)** — "Build a Large Language Model (From Scratch)"
+  chapters (PDFs): attention mechanisms, GPT implementation, pretraining, fine-tuning for
+  classification and instruction following.
+- **[`llm handbook/`](<llm handbook/>)** — "LLM Engineer's Handbook" chapters (PDFs):
+  LLM Twin concept, data engineering, RAG pipelines, supervised fine-tuning, preference
+  alignment, evaluation, inference optimization, deployment.
+
+### Readings
+
+- **[`readings/`](readings/)** — prompting, RLHF, and generative-AI foundations reference
+  papers and book chapters (PDFs). Includes constitutional AI, chain-of-thought, and
+  prompt engineering for generative AI.
 
 ### Interviewing guides
 
@@ -32,23 +41,10 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
 
 ### Cleaned notes
 
-- [prompt-engineering.md](../../interviewing/notes/prompt-engineering.md) — core techniques:
+- [rl.md](rl.md) — reinforcement learning and RLHF: how models are aligned post-pretraining.
+- [prompt-engineering.md](../../ai-engineering/01-prompt/prompt-engineering.md) — core techniques:
   system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring,
   prompt templates, prompt chaining, long-context patterns, and the prompt/context boundary.
-- [rl.md](../../interviewing/notes/rl.md) — reinforcement learning and RLHF: how models are
-  aligned post-pretraining.
-
-### Readings
-
-- [`readings/2-llm-fundamentals/`](../../readings/2-llm-fundamentals/) — prompting and
-  generative-AI foundations reference papers.
-- [`readings/2-llm-rlhf/`](../../readings/2-llm-rlhf/) — reinforcement learning and RLHF
-  reference papers.
-
-### TypeScript
-
-TS examples coming — Google ADK and Vercel AI SDK will be added here as pointer targets
-once the repos are linked. The Python fundamentals in this pillar remain canonical.
 
 ---
 
