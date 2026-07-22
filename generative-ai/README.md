@@ -72,6 +72,33 @@ Cross-links from gen-AI pillars into ai-engineering:
 
 ---
 
+## TypeScript Examples
+
+**What exists:** `01-llm-fundamentals/typescript/` — 4 self-contained Anthropic SDK examples
+covering the core API patterns: basic message creation + streaming (`01-api-call.ts`), structured
+JSON output via forced tool use (`02-structured-output.ts`), multi-tool agentic loop with dispatch
+(`03-function-calling.ts`), and conversation history / multi-turn REPL (`04-multi-turn.ts`).
+See [`01-llm-fundamentals/typescript/README.md`](01-llm-fundamentals/typescript/README.md) for
+setup and running instructions.
+
+**Gaps — no TypeScript examples in pillars 02–07:**
+
+| Pillar | Python coverage | TypeScript gap |
+|---|---|---|
+| 02 — RAG & retrieval | DeepLearning.AI RAG notebooks | No TS RAG example (Vercel AI SDK + vector store pattern missing) |
+| 03 — Agentic foundations | AutoGen, LangGraph, ADK course repos | No TS agent example (LangGraph.js or Vercel AI SDK agent loop missing) |
+| 04 — Agentic frameworks | LangGraph notebooks, ADK notes | No TS framework example |
+| 05 — RL & alignment | RLHF readings | Not applicable (no runnable code for either language) |
+| 06 — Observability | LangFuse Python SDK repos | No TS observability example (LangFuse JS SDK missing) |
+| 07 — Agentic applications | Python internet-search agent, deep-research bot | No TS application |
+
+**Priority additions (if filling the gap):**
+1. Pillar 02: a minimal RAG example using Vercel AI SDK + Anthropic + an in-memory vector store — the JS/TS equivalent of the Python RAG pattern is the highest-value addition given Vercel AI SDK is in active use.
+2. Pillar 03/04: a tool-using agent loop in LangGraph.js or Vercel AI SDK — directly parallels the Python LangGraph course material.
+3. Pillar 06: LangFuse JS SDK tracing example — low effort, high value for observability coverage.
+
+---
+
 ## Removed
 
 Earlier versions of this README described `mcp-server-template/`, `mcp/`, `chatbot/berlin/`,
