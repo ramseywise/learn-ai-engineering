@@ -35,9 +35,9 @@ asked why review matters in 2026).
    confidence is a hypothesis — especially a high-severity one — frame it as a question or
    a targeted test request, not as an assertion: "this could double-charge if the provider
    retries — worth checking?" beats "this double-charges."
-5. **Report news, not history** — don't re-litigate pre-existing debt unless asked; a
+6. **Report news, not history** — don't re-litigate pre-existing debt unless asked; a
    reviewer who flags everything gets muted.
-6. **Voice**: questions over verdicts ("what happens if this input is empty?" beats
+7. **Voice**: questions over verdicts ("what happens if this input is empty?" beats
    "this is wrong"); acknowledge good decisions; propose the mechanical fix when you
    flag something.
 
