@@ -60,7 +60,9 @@ The worst thing is pretending you reviewed everything carefully when you didn't.
 
 **What they're testing**: Conflict resolution, conviction vs. flexibility.
 
-**Model answer**: "I'd restate the *consequence*, not the *rule*. 'My concern is that if [specific scenario], this will [specific bad outcome].' If they have context I'm missing — maybe there's a guard upstream I didn't see — I'd update my assessment. If the risk is real but they want to ship anyway, I'd propose: downgrade to a warning with a follow-up ticket, and document the known risk. I'd never block on taste, only on consequence."
+**Model answer**: "I'd restate the *consequence*, not the *rule*. 'My concern is that if [specific scenario], this will [specific bad outcome].' If they have context I'm missing — maybe there's a guard upstream I didn't see — I'd update my assessment. If the risk is real but they want to ship anyway, I'd propose: downgrade to a warning with a follow-up ticket, and document the known risk. I'd never block on taste, only on consequence.
+
+Worth separating two things that are easy to conflate here: how severe the underlying issue is, and whether it blocks *this* merge. Those are two independent axes — the code's severity doesn't change just because we decide to ship anyway; what changes is the merge decision, made consciously, with the risk documented. I'm not lowering my assessment of the bug to placate them; I'm agreeing to accept a known risk for now."
 
 **Study ref**: SANYI severity semantics — severity comes from the layer, not the reviewer's mood. Invariant touched → blocker; tunable made rigid → info. See the [SANYI wiki page](sources.md) violation codes table. Overlap with [behavioral round](../behavioral/).
 
@@ -78,6 +80,23 @@ The worst thing is pretending you reviewed everything carefully when you didn't.
 - **Acknowledges good decisions**: "Nice catch handling the nil case here" — reviewing is mentoring, not gatekeeping
 
 **Study ref**: [study guide §5](study-guide.md) on communication; Google eng-practices on [reviewer comments](https://google.github.io/eng-practices/review/reviewer/comments.html).
+
+---
+
+## Q5b: "How do you distinguish a confirmed bug from a plausible concern during PR review?"
+
+**What they're testing**: Whether you overstate confidence — a common tell of reviewers who pattern-match rather than verify, and a direct risk when reviewing LLM-generated code where plausible-looking claims are cheap to produce. Also tests whether you conflate "how bad" with "how sure" — two independent judgments that are easy to blur under pressure.
+
+**Model answer**: "I separate severity from confidence. Severity describes the consequence if the issue is real — blocker, warning, or nit. Confidence describes how strongly the available evidence supports the claim, independent of severity: a suspected data leak can be high-severity but low-confidence until I've actually traced the path; a misspelled variable is high-confidence but low-severity. Collapsing the two is how reviewers either cry wolf on hunches or bury a serious-but-unconfirmed risk under a nit label.
+
+For confidence specifically, I use three levels:
+- **Verified** — I reproduced it, or traced the failure conclusively through the full code path. I state it directly: 'This retries after the external write, so a timeout after success duplicates the side effect.'
+- **Supported** — the code path or documented behavior strongly indicates it, but I haven't reproduced it directly (e.g., I'm assuming the downstream API isn't idempotent, based on its docs). I say what's still assumed.
+- **Hypothesis** — a plausible failure mechanism, but key context is still missing. For a hypothesis, especially a high-severity one, I explain the mechanism and ask a targeted question or suggest a test instead of presenting it as a confirmed bug: 'This could double-charge if the provider retries — worth checking?' beats asserting 'this double-charges.'
+
+Note that a question isn't a fourth confidence tier — it's how I *communicate* a hypothesis (or any judgment I can't make without more context), not a level of evidence in itself."
+
+**Study ref**: [README.md](README.md) §The method, point 5 (confidence as a second, independent axis from severity); Google eng-practices — [The Standard](https://google.github.io/eng-practices/review/reviewer/standard.html) prioritizes technical facts and data over personal preference, and separates non-blocking nits explicitly; [GitHub Staff Engineer's code review philosophy](https://github.blog/developer-skills/github/how-to-review-code-effectively-a-github-staff-engineers-philosophy/) — good comments cite evidence or reasoning, and uncertain judgments get verified by asking rather than asserting; [Conventional Comments](https://conventionalcomments.org/) — separates `issue` (confirmed problem) from `question` (not sure it's even a problem), and separately labels `blocking`/`non-blocking` — the same two-axis split, arrived at independently.
 
 ---
 
@@ -125,6 +144,7 @@ The ideal story: a small diff that linted clean and tests passed, but violated a
 3. **Irreversible actions** — anything that sends data, modifies external state, or costs money needs HITL or at minimum explicit confirmation.
 4. **Memory writes** — is data validated before persisting? Unvalidated memory storage is a poisoning vector.
 5. **Error handling** — does a failure in one step cascade or get silently swallowed? Agent loops need explicit recovery paths.
-6. **Prompt/config tunables** — are thresholds and prompts changeable without a deploy, or hardcoded in business logic?"
+6. **Prompt/config tunables** — are thresholds and prompts changeable without a deploy, or hardcoded in business logic?
+7. **Documented safeguards without code backing** — if the system prompt, a doc, or a config comment *claims* a safety behavior exists (an escalation path, a confidence gate, an input/output validator), I go check whether there's an actual deterministic code path enforcing it, or whether it's just a sentence the model can choose to ignore under the right adversarial input. This is the one I'd expect a line-by-line reviewer to miss — the prompt text reads as if the safeguard exists."
 
 **Study ref**: [security guide §3-4](../../guides/7-security-safety/interview-guide.md) on defense stack and operational boundaries; [OWASP AI Agent Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.html); SANYI Buyi layer for invariants that must be code-enforced.
