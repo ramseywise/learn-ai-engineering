@@ -31,7 +31,7 @@ ensemble methods → Bayesian methods. **Not linear — Layers 2 and 4 are indep
 
 ## Also present
 
-Three O'Reilly-style reference PDFs (*Fundamentals of Deep Learning*, *Introduction to Machine
+Three O'Reilly-style reference PDFs in `readings/` (*Fundamentals of Deep Learning*, *Introduction to Machine
 Learning with Python*, *Natural Language Processing with Python*) — kept as reference.
 
 ## Removed

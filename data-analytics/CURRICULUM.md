@@ -66,7 +66,7 @@ Until this gap is filled, students should supplement with the readings in
 
 ## Reference Links
 
-- **Python reference**: `Python for Data Analysis.pdf` (Wes McKinney, O'Reilly — in this dir)
+- **Python reference**: [`readings/Python for Data Analysis.pdf`](readings/Python%20for%20Data%20Analysis.pdf) (Wes McKinney, O'Reilly)
 - **Quick reference**: [`SimpleHacks.md`](SimpleHacks.md)
 - **Stats readings**: [`0-cross-stats/`](0-cross-stats/)
 
