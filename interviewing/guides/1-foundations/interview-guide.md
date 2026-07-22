@@ -81,7 +81,7 @@ cold. Practice substrate: `data-analytics/` notebooks; DuckDB locally.
 
 ## Sources
 
-- repo: `data-science/Ng's Deep Learning Nbks/` (incl. Structuring ML Projects case-study quizzes), `data-science/Ng's Machine Learning Nbks/`, `data-science/Intro to Machine Learning in Python/`, `data-science/Bayes/`, `data-analytics/` (SQL/pandas-era notebooks)
-- readings: `general/` (SHAP, LIME, hidden-technical-debt, batch-norm ×2, KDD metric-interpretation pitfalls), `0-cross-stats/` (ISLR, Practical Statistics — also seeds the deferred stats guide)
+- repo: `data-science/Ng's Deep Learning Nbks/` (incl. Structuring ML Projects case-study quizzes), `data-science/Ng's Machine Learning Nbks/`, `data-science/Intro to Machine Learning in Python/`, `data-analytics/Bayes/`, `data-analytics/` (SQL/pandas-era notebooks)
+- readings: `general/` (SHAP, LIME, hidden-technical-debt, batch-norm ×2, KDD metric-interpretation pitfalls), `data-analytics/readings/` (ISLR, Practical Statistics — also seeds the deferred stats guide)
 - librarian wiki: LightGBM vs CatBoost Comparison · Track2Vec Playlist Co-Occurrence Embeddings
 - global rules: `~/.claude/rules/ml.md` (personal ML practice checklist — pipelines, seeds, baselines)

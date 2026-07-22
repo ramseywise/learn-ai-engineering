@@ -28,9 +28,9 @@ Evaluation engineering is the discipline of building systematic measurement for 
 - [6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [DeepLearning.AI-Evaluating-AI-Agents-master](../../generative-ai/coursera-references/DeepLearning.AI-Evaluating-AI-Agents-master/) — agent eval patterns: task completion, faithfulness, safety.
-- [Learning-LangFuse-main](../../generative-ai/coursera-references/Learning-LangFuse-main/) — LangFuse observability platform.
-- [langfuse-evaluation-main](../../generative-ai/coursera-references/langfuse-evaluation-main/) — evaluation workflows in LangFuse.
+- [DeepLearning.AI-Evaluating-AI-Agents-master](./DeepLearning.AI-Evaluating-AI-Agents-master/) — agent eval patterns: task completion, faithfulness, safety.
+- [Learning-LangFuse-main](../../generative-ai/06-observability/Learning-LangFuse-main/) — LangFuse observability platform.
+- [langfuse-evaluation-main](../../generative-ai/06-observability/langfuse-evaluation-main/) — evaluation workflows in LangFuse.
 
 ### External references
 - Anthropic on eval harness design: https://www.anthropic.com/research/evaluating-ai-systems

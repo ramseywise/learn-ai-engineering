@@ -1,7 +1,7 @@
 # Git — Workflow Reference
 
-Branch management, PR review, and stash patterns for galactus. Most gotchas arise when
-switching context between a large in-progress working tree and reviewing a teammate's PR.
+Branch management, PR review, and stash patterns. Most gotchas arise when switching
+context between a large in-progress working tree and reviewing a teammate's PR.
 
 ---
 

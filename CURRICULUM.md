@@ -16,7 +16,7 @@ sequenced learning paths for each domain.
 | Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | None — entry point | Linear (Python basics → domain branches) |
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear (pipeline stages) |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree (statistical foundations splits into supervised / unsupervised / Bayesian) |
-| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 3-pillar sequential (LLM fundamentals → RAG → Agentic applications) |
+| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar sequential (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications) |
 | AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval) |
 | Programming | [programming/README.md](programming/README.md) | None | Topic + difficulty library (not sequential) |
 
@@ -43,8 +43,9 @@ Goal: build reliable, production-grade LLM systems.
    Prompt → context → harness → loop → graph → eval. Six numbered foundations.
    Each has a depth README, a cleaned note, and an interview guide summary.
 
-4. **Build things** — `generative-ai/02-rag-retrieval/` + `03-agentic-foundations/` (4–6 weeks)
-   The application layer: RAG (the first killer app pattern), then full agentic systems.
+4. **Build things** — `generative-ai/02-rag-retrieval/` through `07-agentic-applications/` (4–6 weeks)
+   The application layer: RAG (the first killer app pattern), agentic foundations and
+   frameworks, RL/alignment, observability, then full agentic applications.
    After the ai-engineering discipline, the code patterns will make sense structurally.
 
 Interview guide: start at [interviewing/guides/00-start-here.md](interviewing/guides/00-start-here.md),
