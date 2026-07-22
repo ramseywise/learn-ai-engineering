@@ -16,7 +16,7 @@ sequenced learning paths for each domain.
 | Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | None — entry point | Linear (Python basics → domain branches) |
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear (pipeline stages) |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree (statistical foundations splits into supervised / unsupervised / Bayesian) |
-| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 3-pillar sequential (LLM fundamentals → RAG → Agentic applications) |
+| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar (LLM fundamentals → RAG → Agentic → Frameworks → RL & alignment → Observability → Applications) |
 | AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval) |
 | Programming | [programming/README.md](programming/README.md) | None | Topic + difficulty library (not sequential) |
 
