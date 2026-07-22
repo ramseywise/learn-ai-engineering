@@ -28,8 +28,8 @@ Per `awesome-harness-engineering`: verification & CI/evals, memory & state, obse
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/coursera-references/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.
-- [AgenticAIFrameworks-master](../../generative-ai/coursera-references/AgenticAIFrameworks-master/) — framework survey.
+- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.
+- [AgenticAIFrameworks-master](../../generative-ai/03-agentic-foundations/AgenticAIFrameworks-master/) — framework survey.
 
 ### External reading queue
 - Lilian Weng, "Harness Engineering for Self-Improvement": https://lilianweng.github.io/posts/2026-07-04-harness — authoritative; ties harness→loop→self-improvement.

@@ -28,8 +28,8 @@ The next foundation — [05-graph](../05-graph/README.md) — extends this: grap
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agents-in-LangGraph-main](../../generative-ai/coursera-references/AI-Agents-in-LangGraph-main/) — agent loops implemented as LangGraph graphs.
-- [internet-search-agent-main](../../generative-ai/coursera-references/internet-search-agent-main/) — concrete loop with web-search tooling.
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — agent loops implemented as LangGraph graphs.
+- [internet-search-agent-main](../../generative-ai/07-agentic-applications/internet-search-agent-main/) — concrete loop with web-search tooling.
 
 ### Next layer
 → [05-graph/](../05-graph/README.md) — graph engineering composes loops into multi-agent topologies.

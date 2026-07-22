@@ -27,9 +27,9 @@ Memory and tool-design are **sub-components of this layer and the harness layer*
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [Context-Engineering-main](../../generative-ai/coursera-references/Context-Engineering-main/) — hands-on context engineering patterns.
-- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/coursera-references/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as OS primitive.
-- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/coursera-references/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
+- [Context-Engineering-main](./Context-Engineering-main/) — hands-on context engineering patterns.
+- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as OS primitive.
+- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
 
 ### Next layer
 → [03-harness/](../03-harness/README.md) — the harness wraps the loops that assemble context.

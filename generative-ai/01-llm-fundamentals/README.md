@@ -42,6 +42,9 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
 ### Cleaned notes
 
 - [rl.md](rl.md) — reinforcement learning and RLHF: how models are aligned post-pretraining.
+  This is a rough Notion export covering RL basics, MARL, RL-in-RAG, and DPO/ILQL. For the
+  full RL curriculum (topic map, gap analysis, priority roadmap), see
+  [05-RL/README.md](../05-RL/README.md).
 - [prompt-engineering.md](../../ai-engineering/01-prompt/prompt-engineering.md) — core techniques:
   system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring,
   prompt templates, prompt chaining, long-context patterns, and the prompt/context boundary.

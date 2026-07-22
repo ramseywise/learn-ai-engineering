@@ -26,7 +26,9 @@ The order encodes dependency and temporal emergence:
 - **Agentic frameworks** — framework reference material: comparison docs, selection
   guides. Use after foundations to choose and configure the right tool.
 - **RL & alignment** — reinforcement learning and RLHF: how models are aligned
-  post-pretraining. Large and growing field; currently reference-heavy.
+  post-pretraining. Covers six topic areas: RL foundations, RLHF pipeline, preference
+  optimization algorithms (PPO/DPO/GRPO), reward modeling, constitutional AI/RLAIF,
+  and RL for agentic systems. Includes a curriculum with resource map and gap analysis.
 - **Observability** — LangFuse and related tooling: tracing, scoring, and evaluation
   pipelines for LLM applications.
 - **Agentic applications** — specific projects built with the frameworks: an
