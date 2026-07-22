@@ -55,9 +55,10 @@ Linear/logistic regression, classification, SVMs, neural net basics. Independent
 | Ng ML Notebooks — ex1, ex2, ex3 | `data-science/Ng's Machine Learning Nbks/ex1/`, `ex2/`, `ex3/` | linear regression, logistic regression, multi-class classification |
 | ISLR ch2-4 | `../data-analytics/0-cross-stats/` | linear methods theory |
 
-**Staleness note:** Notebooks were authored against sklearn 0.20 (current: 1.4+). The API
-is largely compatible but some pipeline and preprocessing patterns have changed. Pin
-`scikit-learn==0.20` if running as-is, or update imports to sklearn 1.x conventions.
+**Staleness note:** Notebooks were authored against sklearn 0.20 and have been updated for
+sklearn 1.4+ compatibility (notebooks 02, 04, 05). The API is largely compatible; changes
+were: `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")`,
+`OneHotEncoder(sparse_output=False)`. No version pinning required for these notebooks.
 
 **Prerequisite:** Layer 1 vocabulary (bias-variance, distributions). No prior code requirement
 beyond Python basics.
@@ -133,9 +134,15 @@ notebook comparing sklearn GB vs XGBoost vs LightGBM on a real dataset with SHAP
 | Bayesian Methods for Hackers (vendored) | `data-science/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77/` | chapters 1–7 with PyMC3 code |
 | Bayesian Methods for Hackers (PDF) | `../data-analytics/0-cross-stats/bayes_for_hackers.pdf` | reference copy |
 
-**Staleness note:** All Bayes notebooks use **PyMC3** (current: PyMC 5.x — breaking API change
-at v4). Do not run without either pinning `pymc3==3.11.4` with its `theano-pymc` dependency or
-porting to PyMC 5 syntax (`pm.Data`, `pm.draw`, autodiff backend changed from Theano to PyTensor).
+**Staleness note (partial migration — 2026-07-22):** Simple-tier notebooks migrated to PyMC 5.x:
+- `Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` — import swap + `az.plot_trace`
+- `Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` — import swap
+- `CamDavidsonPilon-.../Chapter1_Introduction/Ch1_Introduction_PyMC3.ipynb` — import swap
+
+Remaining notebooks still use **PyMC3** (breaking at v4). Do not run without pinning `pymc3==3.11.4`
+with its `theano-pymc` dependency, or completing Phase 2 porting (medium/hard tiers: `BayesianML-master/week_4/`,
+CamDavidsonPilon chapters 2–6). Phase 2 notebooks require custom Theano→PyTensor op rewrites and
+`pm.traceplot`/`pm.summary` API updates.
 
 ---
 
@@ -143,9 +150,9 @@ porting to PyMC 5 syntax (`pm.Data`, `pm.draw`, autodiff backend changed from Th
 
 | Library | Notebooks authored against | Current | Risk |
 |---|---|---|---|
-| scikit-learn | 0.20 | 1.4+ | Medium — mostly API-compatible; some pipeline changes |
-| PyMC3 | 3.x | 5.x (breaking at 4.0) | High — must pin or port |
-| TensorFlow | 1.x (Ng DL notebooks) | 2.x (breaking) | High — must pin `tensorflow==1.x` or use compat mode |
+| scikit-learn | 0.20 → updated to 1.4+ | 1.4+ | Low — notebooks 02/04/05 updated; no pinning needed |
+| PyMC3 | 3.x | 5.x (breaking at 4.0) | Partial — 3 simple-tier notebooks ported (2026-07-22); remaining must pin or port |
+| TensorFlow | 1.x (Ng DL notebooks) | 2.x (breaking) | Phase 1 complete — 5 notebooks updated to `tf.compat.v1` + `disable_v2_behavior`. 2 notebooks (`Tensorflow Tutorial`, `Convolution model - Application`) still use `tf.contrib` (removed in TF2, not restored by compat.v1) — Phase 2 rewrite required for those. |
 
 ---
 
