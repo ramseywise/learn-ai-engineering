@@ -55,7 +55,7 @@ Linear/logistic regression, classification, SVMs, neural net basics. Independent
 | Ng ML Notebooks — ex1, ex2, ex3 | `data-science/Ng's Machine Learning Nbks/ex1/`, `ex2/`, `ex3/` | linear regression, logistic regression, multi-class classification |
 | ISLR ch2-4 | `../data-analytics/readings/` | linear methods theory |
 
-**Staleness note:** Notebooks were authored against sklearn 0.20 and have been updated for
+**Staleness note (resolved — #35):** Notebooks were authored against sklearn 0.20 and have been updated for
 sklearn 1.4+ compatibility (notebooks 02, 04, 05). The API is largely compatible; changes
 were: `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")`,
 `OneHotEncoder(sparse_output=False)`. No version pinning required for these notebooks.
@@ -134,25 +134,101 @@ notebook comparing sklearn GB vs XGBoost vs LightGBM on a real dataset with SHAP
 | Bayesian Methods for Hackers (vendored) | `../data-analytics/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77/` | chapters 1–7 with PyMC3 code |
 | Bayesian Methods for Hackers (PDF) | `../data-analytics/readings/bayes_for_hackers.pdf` | reference copy |
 
-**Staleness note (partial migration — 2026-07-22):** Simple-tier notebooks migrated to PyMC 5.x:
-- `../data-analytics/Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` — import swap + `az.plot_trace`
-- `../data-analytics/Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` — import swap
-- `../data-analytics/CamDavidsonPilon-.../Chapter1_Introduction/Ch1_Introduction_PyMC3.ipynb` — import swap
+**Staleness note — PyMC migration status (#37):**
 
-Remaining notebooks still use **PyMC3** (breaking at v4). Do not run without pinning `pymc3==3.11.4`
-with its `theano-pymc` dependency, or completing Phase 2 porting (medium/hard tiers: `../data-analytics/Bayes/BayesianML-master/week_4/`,
-CamDavidsonPilon chapters 2–6 in `../data-analytics/CamDavidsonPilon-.../`). Phase 2 notebooks
-require custom Theano→PyTensor op rewrites and `pm.traceplot`/`pm.summary` API updates.
+CamDavidsonPilon repo ships both `_PyMC3` and `_PyMC_current` variants per chapter — the `_current`
+variants use `import pymc as pm` (PyMC 5.x). Simple-tier notebooks already migrated:
+- `../data-analytics/Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` — uses `import pymc as pm` (done)
+- `../data-analytics/Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` — uses `import pymc as pm` (done)
+- `../data-analytics/CamDavidsonPilon-.../Chapter1_Introduction/Ch1_Introduction_PyMC3.ipynb` — uses `import pymc as pm` (done despite `_PyMC3` filename)
+- `../data-analytics/CamDavidsonPilon-.../Chapter2_MorePyMC/Ch2_MorePyMC_PyMC_current.ipynb` — PyMC5 variant exists (use this)
+- `../data-analytics/CamDavidsonPilon-.../Chapter3_MCMC/Ch3_IntroMCMC_PyMC_current.ipynb` — PyMC5 variant exists (use this)
+- `../data-analytics/CamDavidsonPilon-.../Chapter4_TheGreatestTheoremNeverTold/Ch4_LawOfLargeNumbers_PyMC_current.ipynb` — PyMC5 variant exists (use this)
+- `../data-analytics/CamDavidsonPilon-.../Chapter5_LossFunctions/Ch5_LossFunctions_PyMC_current.ipynb` — uses `import pymc3` still (stale despite name — needs import swap)
+- `../data-analytics/CamDavidsonPilon-.../Chapter6_Priorities/Ch6_Priors_PyMC_current.ipynb` — PyMC5 variant exists (verify import)
+
+Still on **PyMC3** (breaking at v4), no `_current` equivalent:
+- `../data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` — `import pymc3 as pm`; requires full port or pin `pymc3==3.11.4` + `theano-pymc`
+
+Phase 2 work (medium/hard tiers) requires: `pm.traceplot` → `az.plot_trace`, `pm.summary` → `az.summary`,
+and any custom Theano ops → PyTensor equivalents.
 
 ---
 
-## Dependency Pinning Summary
+## Dependency Staleness Audit (#33, #35, #36, #37)
 
-| Library | Notebooks authored against | Current | Risk |
-|---|---|---|---|
-| scikit-learn | 0.20 → updated to 1.4+ | 1.4+ | Low — notebooks 02/04/05 updated; no pinning needed |
-| PyMC3 | 3.x | 5.x (breaking at 4.0) | Partial — 3 simple-tier notebooks ported (2026-07-22); remaining must pin or port |
-| TensorFlow | 1.x (Ng DL notebooks) | 2.x (breaking) | Phase 1 complete — 5 notebooks updated to `tf.compat.v1` + `disable_v2_behavior`. 2 notebooks (`Tensorflow Tutorial`, `Convolution model - Application`) still use `tf.contrib` (removed in TF2, not restored by compat.v1) — Phase 2 rewrite required for those. |
+Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (moved from `data-science/`).
+
+### scikit-learn: 0.20 → 1.4+ (#35) — **Resolved**
+
+| Notebook | Status | Notes |
+|---|---|---|
+| `Intro to ML in Python/02-supervised-learning.ipynb` | Updated | `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")` |
+| `Intro to ML in Python/04-representing-data-feature-engineering.ipynb` | Updated | `OneHotEncoder(sparse_output=False)` |
+| `Intro to ML in Python/05-model-evaluation-and-improvement.ipynb` | Updated | No stale module imports; uses `mglearn` helpers |
+| `Intro to ML in Python/01,03,06,07,08` | Clean | No stale API patterns |
+| `intro-to-nlp/` notebooks | Clean | `sklearn.manifold.TSNE`, `cosine_similarity`, `LogisticRegression`, `SVC` — all stable across 1.x |
+| `Ng's Machine Learning Nbks/` | Clean | No sklearn imports |
+| `Text Analytics with Python/` | Clean | Uses `sklearn.pipeline.Pipeline` / `make_pipeline` — stable |
+
+No version pinning required. `sklearn.cross_validation` (removed in 0.20) is not present anywhere —
+occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook output, not imports.
+
+**Migration map (for reference):**
+- `sklearn.cross_validation` → `sklearn.model_selection` (removed in 0.20, already absent)
+- `sklearn.grid_search` → `sklearn.model_selection` (removed in 0.20, already absent)
+- `DummyClassifier(strategy="warn")` → `strategy="stratified"` (default changed in 1.1)
+- `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2)
+
+### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete, Phase 2 required for 2 notebooks**
+
+**Decision: `tf.compat.v1` bridge (Phase 1) for most; full Keras rewrite (Phase 2) for tf.contrib notebooks.**
+
+| Notebook | Status | Blocker |
+|---|---|---|
+| `Ng's Deep Learning Nbks/.../Tensorflow Tutorial.ipynb` | Phase 1 done (`tf.compat.v1` + `disable_v2_behavior`) | `tf.contrib.layers.xavier_initializer` — **Phase 2 required** |
+| `Ng's Deep Learning Nbks/CNN/Week1/Convolution model - Application.ipynb` | Phase 1 done | `tf.contrib.layers.flatten`, `tf.contrib.layers.fully_connected`, `tf.contrib.layers.xavier_initializer` — **Phase 2 required** |
+| `Ng's Deep Learning Nbks/CNN/Week2/ResNets/Residual Networks.ipynb` | Phase 1 done | `tf.Session` / `tf.placeholder` via compat.v1 — runs on TF 2.x |
+| `Ng's Deep Learning Nbks/CNN/Week3/Car detection.../Autonomous driving application.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
+| `Ng's Deep Learning Nbks/CNN/Week4/Face Recognition for the Happy House.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
+| `Ng's Deep Learning Nbks/CNN/Week4/Art Generation with Neural Style Transfer.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
+| `intro-to-nlp/tensorFlow/` (all 10 notebooks) | TF 2.x native | Use `tensorflow` / `tensorflow.keras` directly — no compat.v1 needed |
+| `Text Analytics with Python/Ch10a` | Stale | `with tf.Session() as session` — no compat shim; needs `tf.compat.v1.Session` or Keras rewrite |
+
+**Phase 2 migration map for tf.contrib (Tensorflow Tutorial + Convolution model):**
+- `tf.contrib.layers.xavier_initializer(seed=N)` → `tf.keras.initializers.glorot_uniform(seed=N)`
+- `tf.contrib.layers.flatten(P)` → `tf.keras.layers.Flatten()(P)` or `tf.reshape(P, [tf.shape(P)[0], -1])`
+- `tf.contrib.layers.fully_connected(F, n, activation_fn=None)` → `tf.keras.layers.Dense(n, activation=None)(F)`
+- `tf.get_variable(name, shape, initializer=...)` → `tf.Variable(initializer(shape=shape))`
+- `tf.placeholder(dtype, shape)` → function argument / `tf.keras.Input`
+- `with tf.Session() as sess: sess.run(op)` → `op.numpy()` or direct eager execution
+
+### PyMC3 → PyMC 5 (#37) — **Partial; data-analytics/ not data-science/**
+
+Note: all Bayesian notebooks are in `../data-analytics/`, not `data-science/`. CURRICULUM.md Layer 6
+cross-references them correctly.
+
+| Notebook | Status | Action |
+|---|---|---|
+| `data-analytics/Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` | Done — `import pymc as pm` | — |
+| `data-analytics/Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` | Done — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch1_Introduction_PyMC3.ipynb` | Done — uses `import pymc as pm` despite filename | — |
+| `data-analytics/CamDavidsonPilon-.../Ch2_MorePyMC_PyMC_current.ipynb` | Available — use this variant | Verify no `pymc3` remnants |
+| `data-analytics/CamDavidsonPilon-.../Ch3_IntroMCMC_PyMC_current.ipynb` | Available — use this variant | Verify |
+| `data-analytics/CamDavidsonPilon-.../Ch4_LawOfLargeNumbers_PyMC_current.ipynb` | Available — use this variant | Verify |
+| `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Stale — still `import pymc3 as pm` | Swap: `import pymc3` → `import pymc`; `pm.traceplot` → `az.plot_trace` |
+| `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Likely done | Verify import |
+| `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc` if must run |
+| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | Stale — `import pymc3 as pm` | Port or pin; no `_current` variant exists |
+| `data-analytics/CamDavidsonPilon-.../sandbox/`, `Chapter7_BayesianMachineLearning/` | Stale — various pymc imports | Low priority; not in curriculum path |
+
+**PyMC3 → PyMC 5 migration map:**
+- `import pymc3 as pm` → `import pymc as pm`
+- `pm.traceplot(trace)` → `import arviz as az; az.plot_trace(trace)`
+- `pm.summary(trace)` → `az.summary(trace)`
+- `pm.plot_posterior(trace)` → `az.plot_posterior(trace)`
+- `pm.sample(draws, tune=N)` — signature largely unchanged; `return_inferencedata=True` is now default in PyMC 5
+- Theano custom ops → PyTensor equivalents (advanced; only in BayesianML week_4)
 
 ---
 
