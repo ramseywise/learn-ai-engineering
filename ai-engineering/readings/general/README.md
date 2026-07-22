@@ -9,7 +9,7 @@ is the filename — resolve at `https://arxiv.org/abs/<id>`.
 
 | Folder | Contents | Feeds pillar |
 |---|---|---|
-| `0-cross-stats/` | Stats bookshelf: ISLR (Python), Practical Statistics for Data Scientists, Statistics Done Wrong, Think Stats/Bayes, Statistical Rethinking, Computer Age Statistical Inference, Python for Data Analysis, Storytelling with Data | 1-foundations, 10-product-delivery, deferred stats pillar |
+| `data-analytics/readings/` | Stats bookshelf: ISLR (Python), Practical Statistics for Data Scientists, Statistics Done Wrong, Think Stats/Bayes, Statistical Rethinking, Computer Age Statistical Inference, Python for Data Analysis, Storytelling with Data | 1-foundations, 10-product-delivery, deferred stats pillar |
 | `2-llm-fundamentals/` | *Prompt Engineering for Generative AI* (O'Reilly, chapters) + CoT (2201.11903), Constitutional AI (2212.08073), LLaMA (2302.13971), GPT-4 (2303.08774), Gorilla (2305.15334), ToolLLM (2307.16789), generative agents (2304.03442) | 2-llm-fundamentals, 4-agents |
 | `2-llm-rlhf/` | *Reinforcement Learning* (book chapters) + Sutton & Barto (RLbook2020), DQN (1312.5602), PPO (1707.06347), RLHF preferences (1706.03741), InstructGPT (2203.02155), DPO (2305.18290), ReAct, Reflexion, Tree-of-Thoughts | 2-llm-fundamentals (RLHF/reasoning) |
 | `3-rag/` | Core RAG papers: RAG (2005.11401), Self-RAG (2310.11511), RAGAS (2309.15217), ARES (2311.09476), RAG survey (2312.10997), retrieval eval (SIGIR '24) | 3-rag, 6-evals-observability |

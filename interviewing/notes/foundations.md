@@ -3,9 +3,9 @@ origin: synthesized
 sources:
   - interviewing/guides/1-foundations/interview-guide.md
   - interviewing/guides/1-foundations/00-overview.md
-  - data-analytics/0-cross-stats/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf
-  - data-analytics/0-cross-stats/Practical_Statistics_for_Data_Scientist.pdf
-  - data-analytics/0-cross-stats/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
+  - data-analytics/readings/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf
+  - data-analytics/readings/Practical_Statistics_for_Data_Scientist.pdf
+  - data-analytics/readings/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
 confidence: high
 cleaned: 2026-07-21
 ---
@@ -165,5 +165,5 @@ book is short (~170 pages); read it once, reference it when reviewing A/B test r
 
 - Pillar guide: [`1-foundations/interview-guide.md`](../guides/1-foundations/interview-guide.md)
 - Depth dir: [`data-science/`](../../data-science/CURRICULUM.md) (Layers 1–3 of the curriculum)
-- Readings: `data-analytics/0-cross-stats/` (ISLR, Practical Statistics, Statistics Done Wrong, Think Bayes)
+- Readings: `data-analytics/readings/` (ISLR, Practical Statistics, Statistics Done Wrong, Think Bayes)
 - Readings: `ai-engineering/readings/general/` (SHAP, LIME, Hidden Technical Debt, KDD Metric Pitfalls)

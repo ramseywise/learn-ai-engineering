@@ -38,7 +38,7 @@ Roles: **AIE** (AI/agent engineer), **MLE** (ML engineer), **DS** (data scientis
 | Coding patterns / DS&A — *deferred (see below)* | ◐ | ◐ | ◐ | ◐ |
 
 **Deferred topics** (separate milestone): stats/experimentation (seed material:
-`data-analytics/0-cross-stats/`) and coding patterns (seed: `programming/Leet-Code/`).
+`data-analytics/readings/`) and coding patterns (seed: `programming/Leet-Code/`).
 
 ## Study guides
 

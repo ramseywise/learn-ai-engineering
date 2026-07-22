@@ -27,8 +27,8 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agents-in-LangGraph-main](../../generative-ai/coursera-references/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs: nodes, edges, state, conditional routing.
-- [Knowledge_Graphs_for_RAG-main](../../generative-ai/coursera-references/Knowledge_Graphs_for_RAG-main/) — knowledge-graph facet: entity graphs as retrieval structure.
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs: nodes, edges, state, conditional routing.
+- [Knowledge_Graphs_for_RAG-main](./Knowledge_Graphs_for_RAG-main/) — knowledge-graph facet: entity graphs as retrieval structure.
 
 ### Readings
 - [readings/3-rag-knowledge-graphs/](../../readings/3-rag-knowledge-graphs/) — KG for RAG reference papers.

@@ -15,5 +15,5 @@ Python fundamentals for working with data: core language features, then text ana
   summarization/topic modeling, similarity/clustering, semantic and sentiment analysis). See its own
   [README](Text%20Analytics%20with%20Python/README.md). Reference/course material, not original work.
 
-Also present: `Python for Data Analysis.pdf` (O'Reilly reference) and `SimpleHacks.md` (quick-reference
+Also present: `readings/Python for Data Analysis.pdf` (O'Reilly reference) and `SimpleHacks.md` (quick-reference
 notes).

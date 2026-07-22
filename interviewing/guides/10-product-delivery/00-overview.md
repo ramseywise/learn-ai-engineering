@@ -17,7 +17,7 @@ the nonprofit sector) and the differentiator for FDE/DS roles.
    design for agentic systems; human–agent collaboration) + *Human-AI Interaction
    Guidelines* (Microsoft, `ai-engineering/05-graph/3-rag-knowledge-graphs/Guidelines-for-Human-AI-Interaction-camera-ready.pdf`).
 4. **Communicating results** — *Storytelling with Data* (Knaflic,
-   `data-analytics/0-cross-stats/`): the deck/memo skills that carry take-home presentations
+   `data-analytics/readings/`): the deck/memo skills that carry take-home presentations
    and funder reports alike.
 5. **Metrics as products** — librarian *Agentic KPI Trees* + *Copilot Learning Loop*:
    north-star/driver/guardrail trees for agent systems.
@@ -31,7 +31,7 @@ the nonprofit sector) and the differentiator for FDE/DS roles.
 | case-interview.md | note | [../../notes/case-interview.md](../../notes/case-interview.md) | business-context framing, consulting expectations |
 | *Building Applications with AI Agents* chs 3, 13 | pdf | see librarian wiki | agent UX + human collaboration |
 | Human-AI Interaction Guidelines | pdf | see librarian wiki | the 18 interaction guidelines |
-| Storytelling with Data (Knaflic) | pdf | `data-analytics/0-cross-stats/` | communicating to non-technical audiences |
+| Storytelling with Data (Knaflic) | pdf | `data-analytics/readings/` | communicating to non-technical audiences |
 | Agentic KPI Trees · Copilot Learning Loop · VA Product Design Patterns | wiki | librarian | metric trees + staged-trust product patterns |
 | FDE loop research (F4) | doc | `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md` | what customer-facing loops actually weigh |
 
