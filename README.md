@@ -72,27 +72,40 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
     - Hyperparameter tuning
     - Sequence models
 
-- `Bayes/` and `Python for ML Models/` — pruned to just the authored/completed work; generic
-  third-party clones with no personal modification were deleted (see the category
-  [README](data-science/README.md) for exactly what went).
+- `Bayes/` (now in `data-analytics/`) and `Python for ML Models/` — pruned to just the
+  authored/completed work; generic third-party clones with no personal modification were
+  deleted (see [data-analytics/README.md](data-analytics/README.md) for what moved where).
 
 ### Python for Generative AI ([`generative-ai/`](generative-ai/README.md))
 
-Three pillars, ordered by temporal emergence: **LLM fundamentals → RAG & retrieval →
-Agentic applications**. Pairs with [`ai-engineering/`](ai-engineering/README.md) — gen-AI
-builds things with LLMs; ai-engineering is the discipline that makes them reliable.
+Seven pillars, ordered by dependency and temporal emergence. Pairs with
+[`ai-engineering/`](ai-engineering/README.md) — gen-AI builds things with LLMs;
+ai-engineering is the discipline that makes them reliable.
 
 - **[01 — LLM Fundamentals](generative-ai/01-llm-fundamentals/README.md)** — what LLMs
   are, how they're trained, how to prompt them. Course material: `intro-to-nlp/` (NLTK,
   TensorFlow, transformers) and `nn-zero-to-hero/` (Karpathy: micrograd, makemore, nanogpt).
+  TypeScript examples in `typescript/` (Anthropic SDK: API call, structured output, function calling, multi-turn).
 
 - **[02 — RAG & Retrieval](generative-ai/02-rag-retrieval/README.md)** — the first killer
   app pattern. Course material: DeepLearning.AI RAG, Knowledge Graphs for RAG.
 
-- **[03 — Agentic Foundations](generative-ai/03-agentic-foundations/README.md)** — the
-  current frontier. Course material: AutoGen, LangGraph, AgenticAIFrameworks, context
-  engineering, agent memory (2), internet-search agent (in `07-agentic-applications/`), LangFuse eval (3, in `06-observability/`), evaluating
-  AI agents. Active project: `07-agentic-applications/chatbot/deep-research-bot/`.
+- **[03 — Agentic Foundations](generative-ai/03-agentic-foundations/README.md)** — framework
+  learning: AutoGen, LangGraph, AgenticAIFrameworks, context engineering, agent memory.
+
+- **[04 — Agentic Frameworks](generative-ai/04-agentic-frameworks/README.md)** — framework
+  reference: LangGraph and ADK notes, selection guides. Course material: AI-Agents-in-LangGraph,
+  Long-Term-Agentic-Memory-With-LangGraph.
+
+- **[05 — RL & Alignment](generative-ai/05-RL/README.md)** — reinforcement learning, RLHF,
+  and how models are aligned post-pretraining.
+
+- **[06 — Observability](generative-ai/06-observability/README.md)** — LangFuse tracing,
+  scoring, and evaluation pipelines for LLM applications.
+
+- **[07 — Agentic Applications](generative-ai/07-agentic-applications/README.md)** — specific
+  built projects: internet-search agent, deep-research bot. Active project:
+  `07-agentic-applications/chatbot/deep-research-bot/`.
 
 ### AI Engineering ([`ai-engineering/`](ai-engineering/README.md))
 - Six foundations — **prompt → context → harness → loop → graph → eval**. Depth companion
@@ -101,7 +114,7 @@ builds things with LLMs; ai-engineering is the discipline that makes them reliab
 
 ### Readings (distributed by pillar)
 - Reference papers and book chapters, no notes — pure reference, colocated with the pillar that uses them:
-    - `data-analytics/0-cross-stats/` — statistics and data-viz references (ISLP, *Statistics Done Wrong*)
+    - `data-analytics/readings/` — statistics and data-viz references (ISLP, *Statistics Done Wrong*)
     - `data-engineering/8-data-eng-data-mesh/` — data mesh and data-engineering handouts
     - `generative-ai/01-llm-fundamentals/readings/` — prompting, RLHF, and LLM foundations
     - `generative-ai/02-rag-retrieval/3-rag/` — retrieval-augmented generation papers

@@ -33,7 +33,7 @@ Every pillar folder has three layers:
 Pillars 1 and 8 can run in parallel; 9 and 10 are integrative — revisit them repeatedly.
 
 **Coming pillars** (deferred): *Stats & Experimentation* (A/B testing, causal inference —
-seed: `data-analytics/0-cross-stats/`).
+seed: `data-analytics/readings/`).
 
 ## Other entry points
 
