@@ -32,7 +32,7 @@ Interviewers probe specific failure modes that burned their team. Startup loops 
 |---|---|---|---|
 | ● | ● | ● | ● |
 
-Universal. For FDE the bar is higher and partially re-tested in customer-simulation; for leadership conversations see [leadership-rounds](../leadership-rounds.md).
+Universal. For FDE the bar is higher and partially re-tested in customer-simulation; for leadership conversations see [leadership-rounds](../leadership-rounds/README.md).
 
 ## Folder contents
 - [study-guide.md](study-guide.md) — story bank framework, STAR deep dive, anti-patterns, practice plan

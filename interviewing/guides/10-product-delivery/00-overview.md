@@ -37,6 +37,6 @@ the nonprofit sector) and the differentiator for FDE/DS roles.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[case-study](../../rounds/case-study.md),
-[customer-simulation](../../rounds/customer-simulation.md),
-[leadership-rounds](../../rounds/leadership-rounds.md).
+[case-study](../../rounds/case-study/README.md),
+[customer-simulation](../../rounds/customer-simulation/README.md),
+[leadership-rounds](../../rounds/leadership-rounds/README.md).

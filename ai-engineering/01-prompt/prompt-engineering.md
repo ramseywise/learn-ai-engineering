@@ -129,13 +129,13 @@ Once you are making decisions about *what* is in the window (not *how* to phrase
 
 ## Security facet
 
-Prompt injection — manipulating model behavior via adversarial input embedded in user data — is the primary security concern for systems with external inputs. See [`prompt-injection.md`](prompt-injection.md) and pillar [`7-security-safety`](../guides/7-security-safety/00-overview.md) for the defense patterns.
+Prompt injection — manipulating model behavior via adversarial input embedded in user data — is the primary security concern for systems with external inputs. See [`prompt-injection.md`](prompt-injection.md) and pillar [`7-security-safety`](../../interviewing/guides/7-security-safety/00-overview.md) for the defense patterns.
 
 ---
 
 ## Resources
 
-- Pillar guide: [`2-llm-fundamentals`](../guides/2-llm-fundamentals/00-overview.md)
+- Pillar guide: [`2-llm-fundamentals`](../../interviewing/guides/2-llm-fundamentals/00-overview.md)
 - Security facet: [`prompt-injection.md`](prompt-injection.md)
 - Anthropic interactive tutorial: https://github.com/anthropics/prompt-eng-interactive-tutorial
 - Anthropic best practices: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices

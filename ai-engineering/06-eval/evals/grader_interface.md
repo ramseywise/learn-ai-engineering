@@ -1,6 +1,6 @@
 # Grader Interface Contract
 
-The grader interface is documented in the canonical source: **[evals/graders/README.md](../../evals/graders/README.md)**
+The grader interface is documented in the canonical source: **`evals/graders/README.md`**
 
 That file covers:
 - `BaseGrader` abstract class and `grade()` signature
