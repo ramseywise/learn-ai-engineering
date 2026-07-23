@@ -34,6 +34,7 @@ The second review pass — does the code do what it claims?
 | Tool schema drift | Tool signature changed but schema not updated — agent can't call it | [correctness ex.1](examples/correctness.md) — agent breaks on missing parameter |
 | Swallowed errors in loops | Agent receives fake success, compounds false signal across turns | [correctness ex.2](examples/correctness.md) — silent failure + denial-of-wallet |
 | Schema/signature drift | Changed function signatures without updating all callers | [correctness ex.3](examples/correctness.md) — `name` → `firstName`/`lastName` |
+| Cross-usage schema consistency | When a diff touches a *shared* schema/type, grep the whole repo for other usages — not just the diff's own callers, which is all a diff-scoped read naturally shows you | Parallax PR-review spec §18.2 — a downstream serializer can silently drop a renamed field on a shared response type with zero visible callers in the diff itself |
 | Missing circuit breakers | No error counter, no max retries — failing tool causes infinite loop | [correctness ex.2](examples/correctness.md); [agents guide §5](../../guides/4-agents/interview-guide.md) |
 | API contracts | Request/response shape matches documentation and callers' expectations | [correctness ex.3](examples/correctness.md) |
 | Edge cases | Boundary values, off-by-one, unicode, timezone, large inputs | — |
@@ -56,7 +57,8 @@ Often weighted as heavily as technical skill in senior/staff rounds.
 | Skill | How to demonstrate | Where to study |
 |-------|-------------------|---------------|
 | Severity labeling | Every comment is blocker / warning / nit — interviewer sees your calibration | SANYI severity semantics: invariant → blocker; entropy → warning; tunable → info |
-| Question framing | "What happens if X?" > "This is wrong" | [questions.md](questions.md) Q5; Google eng-practices on [reviewer comments](https://google.github.io/eng-practices/review/reviewer/comments.html) |
+| Severity vs. confidence | Two independent axes: consequence sets severity, evidence strength sets confidence (verified / supported / hypothesis) — a high-severity finding can still be low-confidence, and vice versa | [README.md](README.md) §The method, point 5; [questions.md](questions.md) Q5b; [Conventional Comments](https://conventionalcomments.org/) — `issue` vs `question`, labeled separately from `blocking`/`non-blocking` |
+| Question framing | "What happens if X?" > "This is wrong" — a question is how you communicate a hypothesis, not a confidence tier of its own. Careful: a question can also just be an accusation in disguise ("Why did you use threads here when there's obviously no benefit?") — the goal is genuinely deferring to the author's context, not softened blame | [questions.md](questions.md) Q5, Q5b; [GitHub Staff Engineer's review philosophy](https://github.blog/developer-skills/github/how-to-review-code-effectively-a-github-staff-engineers-philosophy/) — dedicated "Ask questions" section, author has the most context; Google eng-practices on [reviewer comments](https://google.github.io/eng-practices/review/reviewer/comments.html) — comment on the code, not the developer (its own worked example rewrites an accusatory *question* into a direct, code-focused *statement* — question-phrasing isn't the point there, courtesy is) |
 | Acknowledging good work | Call out smart decisions — shows you're not just hunting for problems | — |
 | Proposing fixes | Don't just flag — suggest the mechanical fix or link the pattern | All examples include fix suggestions |
 | Knowing when to stop | Don't flag pre-existing debt; don't nit style the linter handles | SANYI Debt baseline: "report news, not history" |
@@ -72,6 +74,7 @@ Increasingly tested — the volume of code to review has exploded.
 | Intent vs. appearance | Code reads well but doesn't match the actual requirement | [ai-generated ex.1](examples/ai-generated.md) — `encoding_format` / return type mismatch |
 | Convention drift | Each generation is independent — patterns diverge across a PR | [agents guide §4](../../guides/4-agents/interview-guide.md) — ACI principles apply to reviewing LLM output |
 | Test coverage as safety net | Verify behavior, not just readability | [evals guide](../../guides/6-evals-observability/interview-guide.md) — trajectory vs outcome grading |
+| Documented safeguards without code backing | A system prompt or doc claims a safety behavior (escalation path, input/output validation, confidence gate) — check whether it's backed by an actual deterministic code path, or exists only as a sentence the model can choose to ignore | Parallax PR-review spec §19.7 — same failure mode as a SANYI Buyi-invariant violation, just applied to an invariant nobody declared yet |
 
 ## Practice plan
 

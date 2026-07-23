@@ -32,6 +32,8 @@
 | Google eng-practices — CL Author's Guide | The other side: how to write reviewable code, respond to feedback | [eng-practices/developer](https://google.github.io/eng-practices/review/developer/) |
 | 18F Code Review Interview Guide | Government hiring rubric for code review rounds — evaluation criteria, sample exercises | [guides.18f.gov](https://guides.18f.gov/eng-hiring/interviews/code-review/) |
 | Augment Code Review Checklist | 40 questions before you approve — organized by correctness, security, performance, testing | [augmentcode.com](https://www.augmentcode.com/guides/code-review-checklist-40-questions-before-you-approve) |
+| GitHub Staff Engineer's code review philosophy | Good-comment traits (specific, cites evidence, proposes a solution) and verifying assumptions by asking rather than asserting | [github.blog](https://github.blog/developer-skills/github/how-to-review-code-effectively-a-github-staff-engineers-philosophy/) |
+| Conventional Comments | `issue`/`question`/`suggestion` comment-type taxonomy plus separate `blocking`/`non-blocking` labeling — the severity-vs-confidence split as a community convention | [conventionalcomments.org](https://conventionalcomments.org/) |
 
 ### Interview prep
 
@@ -49,6 +51,7 @@
 | OWASP Secure Code Review Guide | Security-focused review: injection, auth, crypto, error handling | [owasp.org](https://owasp.org/www-project-code-review-guide/) |
 | Dr. Michaela Greiler — Code Reviews at Google | How Google's review process actually works — speed, lightweight, culture | [michaelagreiler.com](https://www.michaelagreiler.com/code-reviews-at-google/) |
 | GetDX — Code Review Checklist | Structured checklist with security, performance, and testing sections | [getdx.com](https://getdx.com/blog/code-review-checklist/) |
+
 
 ## Practice material
 
