@@ -59,16 +59,16 @@ Roles: **AIE** (AI/agent engineer), **MLE** (ML engineer), **DS** (data scientis
 
 | Round | Covers |
 |---|---|
-| [recruiter-screen](rounds/recruiter-screen.md) | Narrative, logistics, comp framing |
-| [coding-challenge](rounds/coding-challenge.md) | Live coding, debugging rounds, pair programming (AI-assisted) |
-| [technical-questions](rounds/technical-questions.md) | ML/LLM breadth & theory rapid-fire |
-| [system-design-round](rounds/system-design-round.md) | ML/LLM/agent system design interviews |
-| [code-review-round](rounds/code-review-round.md) | Reviewing unfamiliar code under observation |
-| [case-study](rounds/case-study.md) | Live + take-home cases, presentation/defense |
-| [project-deep-dive](rounds/project-deep-dive.md) | Walking through your own systems |
-| [behavioral](rounds/behavioral.md) | STAR stories, failure questions, collaboration |
-| [customer-simulation](rounds/customer-simulation.md) | FDE stakeholder role-play, ambiguous-client scenarios |
-| [leadership-rounds](rounds/leadership-rounds.md) | CTO / head-of-product conversations + reverse interview |
+| [recruiter-screen](rounds/recruiter-screen/README.md) | Narrative, logistics, comp framing |
+| [coding-challenge](rounds/coding-challenge/README.md) | Live coding, debugging rounds, pair programming (AI-assisted) |
+| [technical-questions](rounds/technical-questions/README.md) | ML/LLM breadth & theory rapid-fire |
+| [system-design-round](rounds/system-design-round/README.md) | ML/LLM/agent system design interviews |
+| [code-review-round](rounds/code-review-round/README.md) | Reviewing unfamiliar code under observation |
+| [case-study](rounds/case-study/README.md) | Live + take-home cases, presentation/defense |
+| [project-deep-dive](rounds/project-deep-dive/README.md) | Walking through your own systems |
+| [behavioral](rounds/behavioral/README.md) | STAR stories, failure questions, collaboration |
+| [customer-simulation](rounds/customer-simulation/README.md) | FDE stakeholder role-play, ambiguous-client scenarios |
+| [leadership-rounds](rounds/leadership-rounds/README.md) | CTO / head-of-product conversations + reverse interview |
 
 ## Maintenance
 

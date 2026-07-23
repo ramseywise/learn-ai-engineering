@@ -1,7 +1,7 @@
 
 ## Neural Networks: Zero to Hero
 
-A course on neural networks that starts all the way at the basics. The course is a series of YouTube videos where we code and train neural networks together. The Jupyter notebooks we build in the videos are then captured here inside the [lectures](lectures/) directory. Every lecture also has a set of exercises included in the video description. (This may grow into something more respectable).
+A course on neural networks that starts all the way at the basics. The course is a series of YouTube videos where we code and train neural networks together. The Jupyter notebooks we build in the videos are then captured here inside the `micrograd/` and `makemore/` directories. Every lecture also has a set of exercises included in the video description. (This may grow into something more respectable).
 
 ---
 
@@ -10,7 +10,7 @@ A course on neural networks that starts all the way at the basics. The course is
 Backpropagation and training of neural networks. Assumes basic knowledge of Python and a vague recollection of calculus from high school.
 
 - [YouTube video lecture](https://www.youtube.com/watch?v=VMj-3S1tku0)
-- [Jupyter notebook files](lectures/micrograd)
+- [Jupyter notebook files](micrograd/)
 - [micrograd Github repo](https://github.com/karpathy/micrograd)
 
 ---
@@ -20,7 +20,7 @@ Backpropagation and training of neural networks. Assumes basic knowledge of Pyth
 We implement a bigram character-level language model, which we will further complexify in followup videos into a modern Transformer language model, like GPT. In this video, the focus is on (1) introducing torch.Tensor and its subtleties and use in efficiently evaluating neural networks and (2) the overall framework of language modeling that includes model training, sampling, and the evaluation of a loss (e.g. the negative log likelihood for classification).
 
 - [YouTube video lecture](https://www.youtube.com/watch?v=PaCmpygFfXo)
-- [Jupyter notebook files](lectures/makemore/makemore_part1_bigrams.ipynb)
+- [Jupyter notebook files](makemore/makemore_part1_bigrams.ipynb)
 - [makemore Github repo](https://github.com/karpathy/makemore)
 
 ---
@@ -30,7 +30,7 @@ We implement a bigram character-level language model, which we will further comp
 We implement a multilayer perceptron (MLP) character-level language model. In this video we also introduce many basics of machine learning (e.g. model training, learning rate tuning, hyperparameters, evaluation, train/dev/test splits, under/overfitting, etc.).
 
 - [YouTube video lecture](https://youtu.be/TCH_1BHY58I)
-- [Jupyter notebook files](lectures/makemore/makemore_part2_mlp.ipynb)
+- [Jupyter notebook files](makemore/makemore_part2_mlp.ipynb)
 - [makemore Github repo](https://github.com/karpathy/makemore)
 
 ---
@@ -40,7 +40,7 @@ We implement a multilayer perceptron (MLP) character-level language model. In th
 We dive into some of the internals of MLPs with multiple layers and scrutinize the statistics of the forward pass activations, backward pass gradients, and some of the pitfalls when they are improperly scaled. We also look at the typical diagnostic tools and visualizations you'd want to use to understand the health of your deep network. We learn why training deep neural nets can be fragile and introduce the first modern innovation that made doing so much easier: Batch Normalization. Residual connections and the Adam optimizer remain notable todos for later video.
 
 - [YouTube video lecture](https://youtu.be/P6sfmUTpUmc)
-- [Jupyter notebook files](lectures/makemore/makemore_part3_bn.ipynb)
+- [Jupyter notebook files](makemore/makemore_part3_bn.ipynb)
 - [makemore Github repo](https://github.com/karpathy/makemore)
 
 ---
@@ -52,7 +52,7 @@ We take the 2-layer MLP (with BatchNorm) from the previous video and backpropaga
 I recommend you work through the exercise yourself but work with it in tandem and whenever you are stuck unpause the video and see me give away the answer. This video is not super intended to be simply watched. The exercise is [here as a Google Colab](https://colab.research.google.com/drive/1WV2oi2fh9XXyldh02wupFQX0wh5ZC-z-?usp=sharing). Good luck :)
 
 - [YouTube video lecture](https://youtu.be/q8SA3rM6ckI)
-- [Jupyter notebook files](lectures/makemore/makemore_part4_backprop.ipynb)
+- [Jupyter notebook files](makemore/makemore_part4_backprop.ipynb)
 - [makemore Github repo](https://github.com/karpathy/makemore)
 
 ---
@@ -62,7 +62,7 @@ I recommend you work through the exercise yourself but work with it in tandem an
 We take the 2-layer MLP from previous video and make it deeper with a tree-like structure, arriving at a convolutional neural network architecture similar to the WaveNet (2016) from DeepMind. In the WaveNet paper, the same hierarchical architecture is implemented more efficiently using causal dilated convolutions (not yet covered). Along the way we get a better sense of torch.nn and what it is and how it works under the hood, and what a typical deep learning development process looks like (a lot of reading of documentation, keeping track of multidimensional tensor shapes, moving between jupyter notebooks and repository code, ...).
 
 - [YouTube video lecture](https://youtu.be/t3YJ5hKiMQ0)
-- [Jupyter notebook files](lectures/makemore/makemore_part5_cnn1.ipynb)
+- [Jupyter notebook files](makemore/makemore_part5_cnn1.ipynb)
 
 ---
 

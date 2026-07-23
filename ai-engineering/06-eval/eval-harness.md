@@ -230,7 +230,7 @@ Traceability / Observability  for evals
 1.  manual sampling and labeling. Based on rules, it samples error cases, long dialogues, and negative user feedback. Humans judge the execution quality and reasons for failure, primarily to identify failure patterns and provide calibration data for the second layer.
 2. LLM as a judge, providing full coverage of a wider range of traces. It uses the labeling results from the first layer as the calibration basis. Running only the second layer makes the scoring criteria prone to drift, while relying solely on the first layer doesn't cover real-world traffic on a large scale. Both layers must be used together.
 
-![Two-layer eval: human sampling calibrates LLM evaluator](../images/two-layer-eval-human-llm-calibration.png)
+![Two-layer eval: human sampling calibrates LLM evaluator](../../interviewing/images/two-layer-eval-human-llm-calibration.png)
 
 #### **How to perform sampling in online evaluation?**
 

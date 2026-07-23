@@ -27,7 +27,7 @@ https://notebooklm.google.com/notebook/25cb1710-ae04-4a99-9c1a-b6c2a4fdbb11
         - Get started with Antigravity 2.0 and IDE (https://codelabs.developers.google.com/getting-started-google-antigravity#0)
         - Build a Web Application in AI Studio and Deploy to Cloud Run (https://codelabs.developers.google.com/deploy-from-aistudio-to-run?hl=en#0)
 
-![Vibe-coding stakes spectrum — prototype vs production](../images/adk-vibe-coding-stakes-spectrum.png)
+![Vibe-coding stakes spectrum — prototype vs production](../../interviewing/images/adk-vibe-coding-stakes-spectrum.png)
 
 The right position on this spectrum depends on the stakes. A weekend prototype
 can be pure vibe coding. A production API handling financial transactions demands
@@ -53,13 +53,13 @@ can invoke.
 
 **2 contexts:** 
 
-![Static vs dynamic context](../images/adk-static-vs-dynamic-context.png)
+![Static vs dynamic context](../../interviewing/images/adk-static-vs-dynamic-context.png)
 
 managing dynamic context: skills
 
 ### The new software development life cycle -**SDLC Phase Transformations**
 
-![SDLC phase transformations with agents](../images/adk-sdlc-phase-transformations.png)
+![SDLC phase transformations with agents](../../interviewing/images/adk-sdlc-phase-transformations.png)
 
 **What will remain constant is human judgment, taste, and the skill to verify AI
 output as the machines take on more of the implementation.**
@@ -71,7 +71,7 @@ output as the machines take on more of the implementation.**
 - **Code Review and Deployment**: AI acts as a first-pass reviewer for security and style, while deployment pipelines become "AI-aware," using agents to monitor health and predict risks or perform automatic rollbacks.
 - **Maintenance and Evolution**: AI makes legacy codebases accessible by understanding impenetrable patterns and automating tedious tasks like framework migrations or updating deprecated APIs.
 
-![New SDLC lifecycle stages](../images/adk-sdlc-lifecycle-stages.png)
+![New SDLC lifecycle stages](../../interviewing/images/adk-sdlc-lifecycle-stages.png)
 
 ### **Tips for Navigating the New SDLC**
 
@@ -84,7 +84,7 @@ output as the machines take on more of the implementation.**
 
 ### Harness: Agent = model + harness
 
-![Agent = model + harness](../images/adk-agent-model-plus-harness.png)
+![Agent = model + harness](../../interviewing/images/adk-agent-model-plus-harness.png)
 
 it includes: 
 

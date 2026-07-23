@@ -39,4 +39,4 @@ where you build a tiny GPT with your own hands — after that, nothing about LLM
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[technical-questions](../../rounds/technical-questions.md) (this pillar is its core).
+[technical-questions](../../rounds/technical-questions/README.md) (this pillar is its core).

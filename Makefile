@@ -50,7 +50,7 @@ link-check:  ## Verify relative links in markdown files exist on disk
 		dir=$$(dirname "$$f"); \
 		for link in $$(grep -oE '\[([^]]*)\]\(([^)#]+)\)' "$$f" 2>/dev/null | grep -v 'http' | sed 's/.*](\(.*\))/\1/'); do \
 			case "$$link" in \
-				/oss/*|/use-these-docs*) continue ;; \
+				/oss/*|/use-these-docs*|/langsmith/*) continue ;; \
 			esac; \
 			target="$$dir/$$link"; \
 			target=$$(echo "$$target" | sed 's/%20/ /g'); \

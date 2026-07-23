@@ -3,7 +3,7 @@
 The highest-weight technical round in 2026 AIE/MLE loops. This guide is the *method*; the
 domain content lives in the [rag](../3-rag/interview-guide.md), [agents](../4-agents/interview-guide.md),
 [evals](../6-evals-observability/interview-guide.md), and [context/cost](../5-context-cost/interview-guide.md) guides.
-Round-day logistics: [rounds/system-design-round.md](../../rounds/system-design-round.md).
+Round-day logistics: [rounds/system-design-round.md](../../rounds/system-design-round/README.md).
 
 ## 1. The process (45–55 min ≈ 8 min/step)
 
