@@ -1,7 +1,7 @@
 # Readings Library
 
-Primary-source tier of the [interviewing KB](../interviewing/README.md) and its
-[curriculum pillars](../interviewing/guides/00-start-here.md). Folder names carry the
+Primary-source tier of the [interviewing KB](../../../interviewing/README.md) and its
+[curriculum pillars](../../../interviewing/guides/00-start-here.md). Folder names carry the
 pillar number they feed (`0-` = cross-cutting). Papers are listed by arXiv ID where that
 is the filename — resolve at `https://arxiv.org/abs/<id>`.
 

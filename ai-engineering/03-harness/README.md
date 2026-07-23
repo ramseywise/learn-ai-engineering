@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *harness implements loops*.
-> Deep note: [agent-harness.md](../../interviewing/notes/agent-harness.md)
+> Deep note: [agent-harness.md](agent-harness.md)
 
 ---
 
@@ -19,10 +19,10 @@ Per `awesome-harness-engineering`: verification & CI/evals, memory & state, obse
 ## Resource map
 
 ### Deep notes
-- [agent-harness.md](../../interviewing/notes/agent-harness.md) — harness primitives: tool execution, memory, guardrails, observability. Cites LangChain, OpenAI, Interloom.
-- [agents-design.md](../../interviewing/notes/agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
-- [deep-agents.md](../../interviewing/notes/deep-agents.md) — depth on agentic architectures: planning, reflection, self-critique.
-- [agents-guardrails.md](../../interviewing/notes/agents-guardrails.md) — guardrails and safety constraints in harness design.
+- [agent-harness.md](agent-harness.md) — harness primitives: tool execution, memory, guardrails, observability. Cites LangChain, OpenAI, Interloom.
+- [agents-design.md](agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
+- [deep-agents.md](../04-loop/deep-agents.md) — depth on agentic architectures: planning, reflection, self-critique.
+- [agents-guardrails.md](agents-guardrails.md) — guardrails and safety constraints in harness design.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.

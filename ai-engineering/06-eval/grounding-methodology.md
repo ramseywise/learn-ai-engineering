@@ -2,7 +2,7 @@
 
 > Applies to RAG-grounded agents (`hc_adk`, `hc_lg`, `hc_rag`) — any agent where the answer
 > should come from retrieved passages, not model training memory.
-> The grounding tiers that enforce this are in [invocation-flow.md](invocation-flow.md) (Tier 2–3).
+> The grounding tiers that enforce this are in `invocation-flow.md` (Tier 2–3).
 
 ---
 

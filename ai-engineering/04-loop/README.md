@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *loops make agent behavior programmable; the graph foundation ([05-graph](../05-graph/README.md)) builds on loops*.
-> Deep note: [loop-engineering.md](../../interviewing/notes/loop-engineering.md)
+> Deep note: [loop-engineering.md](loop-engineering.md)
 
 ---
 
@@ -21,8 +21,8 @@ The next foundation — [05-graph](../05-graph/README.md) — extends this: grap
 ## Resource map
 
 ### Deep notes
-- [loop-engineering.md](../../interviewing/notes/loop-engineering.md) — loop anatomy, termination design, tool integration, the art of the loop. Cites LangChain art-of-loop + Anthropic loops blog.
-- [reliable-agents.md](../../interviewing/notes/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
+- [loop-engineering.md](loop-engineering.md) — loop anatomy, termination design, tool integration, the art of the loop. Cites LangChain art-of-loop + Anthropic loops blog.
+- [reliable-agents.md](../03-harness/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.

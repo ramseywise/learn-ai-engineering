@@ -38,5 +38,5 @@ actually hold.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md) (governance layers in
-regulated designs), [technical-questions](../../rounds/technical-questions.md).
+[system-design-round](../../rounds/system-design-round/README.md) (governance layers in
+regulated designs), [technical-questions](../../rounds/technical-questions/README.md).
