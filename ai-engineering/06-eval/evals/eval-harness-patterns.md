@@ -121,5 +121,5 @@ Galactus equivalent: `sample_friction_convs.jsonl` with `conv_outcome` labels.
 
 ## Adding a new grader (galactus-specific)
 
-See [grader_interface.md](grader_interface.md) for the contract summary, or [evals/graders/README.md](../../evals/graders/README.md) for the full implementation reference.  
+See [grader_interface.md](grader_interface.md) for the contract summary, or `evals/graders/README.md` for the full implementation reference.  
 See `/nbk-to-eval` skill for the 7-step notebook → production promotion workflow.

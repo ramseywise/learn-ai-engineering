@@ -40,5 +40,5 @@ real answer.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md) ("how do you know it works?"),
-[project-deep-dive](../../rounds/project-deep-dive.md) (the measurement story).
+[system-design-round](../../rounds/system-design-round/README.md) ("how do you know it works?"),
+[project-deep-dive](../../rounds/project-deep-dive/README.md) (the measurement story).

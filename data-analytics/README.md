@@ -12,8 +12,8 @@ Python fundamentals for working with data: core language features, then text ana
   table of contents. Moved to `programming/` to reflect that Python fluency is a cross-domain prerequisite.
 - **`Text Analytics with Python/`** — companion code for Dipanjan Sarkar's *Text Analytics with
   Python* (chapters 01–10: NLP basics, text processing, feature engineering, classification,
-  summarization/topic modeling, similarity/clustering, semantic and sentiment analysis). See its own
-  [README](Text%20Analytics%20with%20Python/README.md). Reference/course material, not original work.
+  summarization/topic modeling, similarity/clustering, semantic and sentiment analysis). Reference/course
+  material, not original work.
 
 Also present: `readings/Python for Data Analysis.pdf` (O'Reilly reference) and `SimpleHacks.md` (quick-reference
 notes).

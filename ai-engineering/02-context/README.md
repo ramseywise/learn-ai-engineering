@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
 > Position in the stack: *each loop step assembles context*.
-> Deep note: [context-engineering.md](../../interviewing/notes/context-engineering.md)
+> Deep note: [context-engineering.md](context-engineering.md)
 
 ---
 
@@ -19,9 +19,9 @@ Memory and tool-design are **sub-components of this layer and the harness layer*
 ## Resource map
 
 ### Deep notes
-- [context-engineering.md](../../interviewing/notes/context-engineering.md) — the 10 core context-engineering techniques (window composition, retrieval integration, memory types, token budget management).
-- [context-management.md](../../interviewing/notes/context-management.md) — operational patterns for managing context across multi-turn conversations.
-- [memory.md](../../interviewing/notes/memory.md) — memory as a context sub-component: in-context, external, episodic, semantic.
+- [context-engineering.md](context-engineering.md) — the 10 core context-engineering techniques (window composition, retrieval integration, memory types, token budget management).
+- [context-management.md](context-management.md) — operational patterns for managing context across multi-turn conversations.
+- [memory.md](../05-graph/memory.md) — memory as a context sub-component: in-context, external, episodic, semantic.
 
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
