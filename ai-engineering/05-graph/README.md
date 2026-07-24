@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: fifth foundation — builds on [04-loop](../04-loop/README.md); *graphs make agent organizations programmable*.
-> Deep note: [graph-engineering.md](../../interviewing/notes/graph-engineering.md)
+> Deep note: [graph-engineering.md](graph-engineering.md)
 
 ---
 
@@ -21,7 +21,7 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 ## Resource map
 
 ### Deep notes
-- [graph-engineering.md](../../interviewing/notes/graph-engineering.md) — graph topology: nodes, edges, state, conditional routing, multi-agent patterns (supervisor, fan-out, hierarchical), human-in-the-loop, and the knowledge-graph-for-RAG facet.
+- [graph-engineering.md](graph-engineering.md) — graph topology: nodes, edges, state, conditional routing, multi-agent patterns (supervisor, fan-out, hierarchical), human-in-the-loop, and the knowledge-graph-for-RAG facet.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
@@ -31,7 +31,7 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 - [Knowledge_Graphs_for_RAG-main](./Knowledge_Graphs_for_RAG-main/) — knowledge-graph facet: entity graphs as retrieval structure.
 
 ### Readings
-- [readings/3-rag-knowledge-graphs/](../../readings/3-rag-knowledge-graphs/) — KG for RAG reference papers.
+- readings/3-rag-knowledge-graphs/ — KG for RAG reference papers.
 
 ### External references
 - LangGraph docs: https://docs.langchain.com/langgraph

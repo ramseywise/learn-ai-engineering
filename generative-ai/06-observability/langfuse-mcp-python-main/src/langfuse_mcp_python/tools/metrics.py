@@ -346,39 +346,39 @@ def build_metrics_query(args: Dict[str, Any]) -> tuple[Dict[str, Any], List[str]
 
 class GetMetricsTool(BaseLangfuseTool):
     """Get aggregated metrics from Langfuse Metrics API"""
-    
+
     async def execute(self, args: Dict[str, Any]) -> str:
         """Execute get_metrics tool"""
-        
+
         try:
             # Handle preset configurations
             if args.get("preset"):
                 preset_name = args["preset"]
-                
+
                 if preset_name not in METRIC_PRESETS:
                     return f"Unknown preset: {preset_name}"
-                
+
                 preset_config = METRIC_PRESETS[preset_name].copy()
-                
+
                 # Merge preset with user args (user args take precedence)
                 for key, value in args.items():
                     if key != "preset" and value:
                         preset_config[key] = value
-                
+
                 args = preset_config
                 self.logger.info("Using preset configuration", preset=preset_name)
-            
+
             # Build metrics query
             query, dropped_dimensions = build_metrics_query(args)
-            
+
             # Fetch metrics with retry
             self.logger.info("Fetching metrics", query=query)
-            
+
             metrics_response = await self._fetch_with_retry(
                 self.langfuse.get_metrics,
                 query
             )
-            
+
             # Format and return response
             response = self._format_metrics_response(
                 metrics_response,
@@ -388,47 +388,47 @@ class GetMetricsTool(BaseLangfuseTool):
                 response += "\n[WARN] Dropped unsupported dimensions for this view: "
                 response += ", ".join(dropped_dimensions)
                 response += "\n"
-            
+
             return response
-        
+
         except Exception as e:
             self.logger.error("Error fetching metrics", error=str(e))
             return f"Error fetching metrics: {str(e)}"
-    
+
     def _format_metrics_response(
         self,
         metrics_response: Any,
         args: Dict[str, Any]
     ) -> str:
         """Format metrics into readable response"""
-        
+
         response = "[STATS] **Aggregated Metrics**\n\n"
-        
+
         # Add query info
         view = args.get("view", "observations")
         response += f"**View**: {view}\n"
-        
+
         if args.get("preset"):
             response += f"**Preset**: {args['preset']}\n"
-        
+
         if args.get("metrics"):
             response += f"**Metrics**: {', '.join(args['metrics'])}\n"
-        
+
         if args.get("group_by"):
             response += f"**Grouped by**: {', '.join(args['group_by'])}\n"
-        
+
         if args.get("time_range"):
             tr = args["time_range"]
             response += f"**Time Range**: {tr.get('from', 'start')} to {tr.get('to', 'now')}\n"
-        
+
         response += "\n"
-        
+
         # Handle different response formats
         if hasattr(metrics_response, 'data'):
             data = metrics_response.data
         else:
             data = metrics_response
-        
+
         # Check if time-series or grouped data
         if isinstance(data, list):
             if args.get("granularity"):
@@ -437,21 +437,21 @@ class GetMetricsTool(BaseLangfuseTool):
                 response += self._format_grouped_metrics(data, args)
         else:
             response += self._format_single_metric(data, args)
-        
+
         return response
-    
+
     def _format_timeseries_metrics(
         self,
         data: List[Any],
         args: Dict[str, Any]
     ) -> str:
         """Format time-series metrics"""
-        
+
         response = "**Time-Series Data:**\n\n"
-        
+
         granularity = args.get("granularity", "day")
         metrics = args.get("metrics", [])
-        
+
         for i, point in enumerate(data[:20], 1):  # Limit to 20 points
             timestamp = self._get_item_value(point, "timestamp")
             if timestamp is None:
@@ -462,33 +462,33 @@ class GetMetricsTool(BaseLangfuseTool):
                 response += f"**{timestamp}** ({granularity}):\n"
             else:
                 response += f"**Period {i}**:\n"
-            
+
             # Show each metric
             for metric in metrics:
                 value = self._get_item_value(point, metric)
                 if value is not None:
                     response += f"  - {metric}: {self._format_metric_value(metric, value)}\n"
-            
+
             response += "\n"
-        
+
         if len(data) > 20:
             response += f"... and {len(data) - 20} more data points\n"
-        
+
         return response
-    
+
     def _format_grouped_metrics(
         self,
         data: List[Any],
         args: Dict[str, Any]
     ) -> str:
         """Format grouped metrics"""
-        
+
         response = "**Grouped Results:**\n\n"
-        
+
         group_by = args.get("group_by", [])
         view = VIEW_MAP.get(args.get("view", "observations"), args.get("view", "observations"))
         metrics = args.get("metrics", [])
-        
+
         for i, group in enumerate(data[:50], 1):  # Limit to 50 groups
             # Show group identifiers
             group_label = []
@@ -497,65 +497,65 @@ class GetMetricsTool(BaseLangfuseTool):
                 value = self._get_item_value(group, mapped_field)
                 if value is not None:
                     group_label.append(f"{field}={value}")
-            
+
             if group_label:
                 response += f"**{' | '.join(group_label)}**:\n"
             else:
                 response += f"**Group {i}**:\n"
-            
+
             # Show metrics for this group
             for metric in metrics:
                 value = self._get_item_value(group, metric)
                 if value is not None:
                     response += f"  - {metric}: {self._format_metric_value(metric, value)}\n"
-            
+
             response += "\n"
-        
+
         if len(data) > 50:
             response += f"... and {len(data) - 50} more groups\n"
-        
+
         return response
-    
+
     def _format_single_metric(
         self,
         data: Any,
         args: Dict[str, Any]
     ) -> str:
         """Format single aggregated metric result"""
-        
+
         response = "**Aggregated Results:**\n\n"
-        
+
         metrics = args.get("metrics", [])
-        
+
         for metric in metrics:
             value = self._get_item_value(data, metric)
             if value is not None:
                 response += f"  - **{metric}**: {self._format_metric_value(metric, value)}\n"
-        
+
         return response
-    
+
     def _format_metric_value(self, metric_name: str, value: Any) -> str:
         """Format metric value based on type"""
-        
+
         if value is None:
             return "N/A"
-        
+
         # Cost metrics
         if "cost" in metric_name.lower():
             return self._format_cost(float(value))
-        
+
         # Latency metrics (in milliseconds)
         if "latency" in metric_name.lower():
             return self._format_duration(float(value))
-        
+
         # Token metrics
         if "token" in metric_name.lower():
             return self._format_tokens(int(value))
-        
+
         # Count metrics
         if "count" in metric_name.lower():
             return f"{int(value):,}"
-        
+
         # Default: numeric with 2 decimals
         try:
             return f"{float(value):.2f}"

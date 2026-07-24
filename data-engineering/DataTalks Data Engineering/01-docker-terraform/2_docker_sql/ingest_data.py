@@ -13,12 +13,12 @@ from sqlalchemy import create_engine
 def main(params):
     user = params.user
     password = params.password
-    host = params.host 
-    port = params.port 
+    host = params.host
+    port = params.port
     db = params.db
     table_name = params.table_name
     url = params.url
-    
+
     # the backup files are gzipped, and it's important to keep the correct extension
     # for pandas to be able to open the file
     if url.endswith('.csv.gz'):
@@ -42,11 +42,11 @@ def main(params):
     df.to_sql(name=table_name, con=engine, if_exists='append')
 
 
-    while True: 
+    while True:
 
         try:
             t_start = time()
-            
+
             df = next(df_iter)
 
             df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)

@@ -188,35 +188,35 @@ Let's explore practical implementations of prompt programming:
 function summarize(text, length="short", style="informative", focus=null) {
   // Function description
   // Summarize the provided text with specified parameters
-  
+
   // Parameter validation
   if (length not in ["short", "medium", "long"]) {
     throw Error("Length must be short, medium, or long");
   }
-  
+
   // Processing logic
   summary_length = {
     "short": "1-2 paragraphs",
     "medium": "3-4 paragraphs",
     "long": "5+ paragraphs"
   }[length];
-  
-  focus_instruction = focus ? 
-    `Focus particularly on aspects related to ${focus}.` : 
+
+  focus_instruction = focus ?
+    `Focus particularly on aspects related to ${focus}.` :
     "Cover all main points evenly.";
-  
+
   // Output specification
   return `
     Task: Summarize the following text.
-    
+
     Parameters:
     - Length: ${summary_length}
     - Style: ${style}
     - Special Instructions: ${focus_instruction}
-    
+
     Text to summarize:
     ${text}
-    
+
     Please provide a ${style} summary of the text in ${summary_length}.
     ${focus_instruction}
   `;
@@ -261,8 +261,8 @@ function solve_math_problem(problem, show_work=true, check_solution=true) {
   if contains_variables(problem) {
     approach = "algebraic";
     steps = [
-      "Identify variables and constants", 
-      "Set up equations", 
+      "Identify variables and constants",
+      "Set up equations",
       "Solve for unknown variables",
       "Verify solution in original problem"
     ];
@@ -270,7 +270,7 @@ function solve_math_problem(problem, show_work=true, check_solution=true) {
     approach = "geometric";
     steps = [
       "Identify relevant geometric properties",
-      "Apply appropriate geometric formulas", 
+      "Apply appropriate geometric formulas",
       "Calculate the required values",
       "Verify consistency of the solution"
     ];
@@ -283,19 +283,19 @@ function solve_math_problem(problem, show_work=true, check_solution=true) {
       "Verify the calculation"
     ];
   }
-  
+
   // Construct the prompt
   prompt = `
     Task: Solve the following ${approach} problem.
-    
+
     Problem: ${problem}
-    
+
     ${show_work ? "Show your work step by step following this approach:" : "Provide only the final answer."}
     ${show_work ? steps.map((step, i) => `${i+1}. ${step}`).join("\n") : ""}
-    
+
     ${check_solution ? "After solving, verify your answer by checking if it satisfies all conditions in the original problem." : ""}
   `;
-  
+
   return prompt;
 }
 
@@ -310,57 +310,57 @@ solve_math_problem(problem, show_work=true, check_solution=true);
 function iterative_essay_writing(topic, iterations=3) {
   // Initial draft
   draft = `Write a basic first draft essay about ${topic}. Focus on getting the main ideas down.`;
-  
+
   // Refinement loop
   for (i = 1; i <= iterations; i++) {
     if (i == 1) {
       // First refinement: structure and content
       draft = `
         Review the following essay draft:
-        
+
         ${draft}
-        
+
         Improve the structure and content with these specific changes:
         1. Add a clear thesis statement in the introduction
         2. Ensure each paragraph has a topic sentence
         3. Add supporting evidence for each main point
         4. Create smoother transitions between paragraphs
-        
+
         Provide the revised essay.
       `;
     } else if (i == 2) {
       // Second refinement: language and style
       draft = `
         Review the following essay:
-        
+
         ${draft}
-        
+
         Improve the language and style with these changes:
         1. Eliminate passive voice where appropriate
         2. Replace generic terms with more specific ones
         3. Vary sentence structure and length
         4. Remove redundancies and filler phrases
-        
+
         Provide the revised essay.
       `;
     } else {
       // Final refinement: polish and finalize
       draft = `
         Review the following essay:
-        
+
         ${draft}
-        
+
         Make final improvements:
         1. Ensure the conclusion effectively summarizes key points
         2. Check for logical flow throughout the essay
         3. Verify that the essay fully addresses the topic
         4. Add a compelling final thought
-        
+
         Provide the final polished essay.
       `;
     }
   }
-  
+
   return draft;
 }
 
@@ -399,22 +399,22 @@ As outlined in Brown et al. (2025), these cognitive tools can be called within a
 function solve_complex_problem(problem) {
   // First, ensure we understand the question properly
   understanding = understand_question(problem);
-  
+
   // Recall related knowledge or examples
   related_knowledge = recall_related(problem, limit=2);
-  
+
   // Attempt step-by-step solution
   solution_attempt = step_by_step(problem, context=[understanding, related_knowledge]);
-  
+
   // Verify the solution
   verification = verify_logic(solution_attempt);
-  
+
   // If verification failed, try backtracking
   if (!verification.is_correct) {
     revised_solution = backtracking(solution_attempt, error_points=verification.issues);
     return revised_solution;
   }
-  
+
   return solution_attempt;
 }
 
@@ -422,9 +422,9 @@ function solve_complex_problem(problem) {
 function understand_question(question) {
   return `
     Task: Analyze and break down the following question.
-    
+
     Question: ${question}
-    
+
     Please provide:
     1. The core task being asked
     2. Key components that need to be addressed
@@ -444,9 +444,9 @@ Let's implement a complete prompt program for mathematical reasoning:
 function understand_math_problem(problem) {
   return `
     Task: Analyze this math problem thoroughly before solving.
-    
+
     Problem: ${problem}
-    
+
     Please provide:
     1. What type of math problem is this? (algebra, geometry, calculus, etc.)
     2. What are the key variables or unknowns?
@@ -459,15 +459,15 @@ function understand_math_problem(problem) {
 function plan_solution_steps(problem_analysis) {
   return `
     Task: Create a step-by-step plan to solve this math problem.
-    
+
     Problem Analysis: ${problem_analysis}
-    
+
     Please outline a specific sequence of steps to solve this problem.
     For each step:
     1. What operation or method will be applied
     2. What this step will accomplish
     3. What the expected outcome of this step is
-    
+
     Format each step clearly and number them sequentially.
   `;
 }
@@ -475,17 +475,17 @@ function plan_solution_steps(problem_analysis) {
 function execute_solution(problem, solution_plan) {
   return `
     Task: Solve this math problem following the provided plan.
-    
+
     Problem: ${problem}
-    
+
     Solution Plan: ${solution_plan}
-    
+
     Please show all work for each step:
     - Write out all equations
     - Show all calculations
     - Explain your reasoning at each step
     - Highlight intermediate results
-    
+
     After completing all steps, clearly state the final answer.
   `;
 }
@@ -493,17 +493,17 @@ function execute_solution(problem, solution_plan) {
 function verify_solution(problem, solution) {
   return `
     Task: Verify the correctness of this math solution.
-    
+
     Original Problem: ${problem}
-    
+
     Proposed Solution: ${solution}
-    
+
     Please check:
     1. Are all calculations correct?
     2. Were appropriate formulas and methods used?
     3. Does the final answer actually solve the original problem?
     4. Are there any logical errors or missed constraints?
-    
+
     If you find any errors, explain them clearly. If the solution is correct,
     confirm this and explain how you verified it.
   `;
@@ -513,16 +513,16 @@ function verify_solution(problem, solution) {
 function solve_math_with_cognitive_tools(problem) {
   // Step 1: Understand the problem
   problem_analysis = LLM(understand_math_problem(problem));
-  
+
   // Step 2: Plan the solution approach
   solution_plan = LLM(plan_solution_steps(problem_analysis));
-  
+
   // Step 3: Execute the solution
   detailed_solution = LLM(execute_solution(problem, solution_plan));
-  
+
   // Step 4: Verify the solution
   verification = LLM(verify_solution(problem, detailed_solution));
-  
+
   // Step 5: Return the complete reasoning process
   return {
     original_problem: problem,
@@ -574,20 +574,20 @@ function create_specialized_tool(task_type, complexity_level) {
   // Generate a new cognitive tool based on parameters
   return `
     Task: Create a specialized cognitive tool for ${task_type} tasks at ${complexity_level} complexity.
-    
+
     A cognitive tool should:
     1. Have a clear and specific function
     2. Break down complex reasoning into steps
     3. Guide the model through a structured process
     4. Include input validation and error handling
     5. Produce well-formatted, useful output
-    
+
     Please design a cognitive tool that:
     - Is specialized for ${task_type} tasks
     - Is appropriate for ${complexity_level} complexity
     - Has clear parameters and return format
     - Includes step-by-step guidance
-    
+
     Return the tool as a function definition with full implementation.
   `;
 }
@@ -673,18 +673,18 @@ function analyze_text(text, analysis_types=["themes", "tone", "style"], depth="d
   // Parameter validation
   valid_types = ["themes", "tone", "style", "structure", "argument", "bias"];
   analysis_types = analysis_types.filter(type => valid_types.includes(type));
-  
+
   if (analysis_types.length === 0) {
     throw Error("At least one valid analysis type must be specified");
   }
-  
+
   // Depth settings
   depth_settings = {
     "brief": "Provide a concise overview with 1-2 points per category",
     "detailed": "Provide a thorough analysis with 3-5 points per category and specific examples",
     "comprehensive": "Provide an exhaustive analysis with 5+ points per category, specific examples, and nuanced discussion"
   };
-  
+
   // Construct specialized analysis prompts for each type
   analysis_prompts = {
     "themes": `
@@ -693,28 +693,28 @@ function analyze_text(text, analysis_types=["themes", "tone", "style"], depth="d
       - Explain how these themes are developed
       - Note any subthemes or connected ideas
     `,
-    
+
     "tone": `
       Analyze the tone of the text:
       - Identify the overall emotional tone
       - Note any shifts in tone throughout the text
       - Explain how tone is conveyed through word choice and style
     `,
-    
+
     "style": `
       Analyze the writing style:
       - Describe the overall writing style and voice
       - Identify notable stylistic elements (sentence structure, vocabulary, etc.)
       - Comment on how style relates to the content and purpose
     `,
-    
+
     "structure": `
       Analyze the text structure:
       - Outline the organizational pattern used
       - Evaluate the effectiveness of the structure
       - Note any structural techniques that enhance the message
     `,
-    
+
     "argument": `
       Analyze the argument presented:
       - Identify the main claims or thesis
@@ -722,7 +722,7 @@ function analyze_text(text, analysis_types=["themes", "tone", "style"], depth="d
       - Assess the logical flow and reasoning
       - Note any logical fallacies or strengths
     `,
-    
+
     "bias": `
       Analyze potential bias in the text:
       - Identify any evident perspective or slant
@@ -731,29 +731,29 @@ function analyze_text(text, analysis_types=["themes", "tone", "style"], depth="d
       - Assess how bias might influence interpretation
     `
   };
-  
+
   // Build the complete analysis prompt
   selected_analyses = analysis_types.map(type => analysis_prompts[type]).join("\n\n");
-  
+
   final_prompt = `
     Task: Analyze the following text according to these specific dimensions.
-    
+
     Text:
     "${text}"
-    
+
     Analysis Dimensions:
     ${selected_analyses}
-    
+
     Analysis Depth:
     ${depth_settings[depth]}
-    
+
     Format:
     Provide your analysis organized by each requested dimension with clear headings.
     Support all observations with specific evidence from the text.
-    
+
     Begin your analysis:
   `;
-  
+
   return final_prompt;
 }
 
@@ -819,7 +819,7 @@ The boundary between traditional programming and prompt programming will likely 
 
 ## **pareto-lang**
 
-Prompt program and protocol template that empowers the agent with a meta template to design its own cognitive tools, guided by the user—serving as a translation layer, Rosetta Stone, and language engine for agent, protocol, memory communication, and more. 
+Prompt program and protocol template that empowers the agent with a meta template to design its own cognitive tools, guided by the user—serving as a translation layer, Rosetta Stone, and language engine for agent, protocol, memory communication, and more.
 
 It leverages the same mechanisms of tokenization—first principles reductionism of operations for intuitive use by advanced transformers. At its core, pareto-lang encodes every operation, protocol, or agent action as:
 
@@ -887,7 +887,7 @@ or more generally:
 }
 ```
 
-## Emergence Theory Amplification  
+## Emergence Theory Amplification
 ```python
 /recursive.field.anchor_attractor_shell{
     intent="Self-prompt and recursively ground the field in foundational theory anchors while surfacing and integrating emergent future attractors. Field adapts via recursive emergence, not fixed determinism.",

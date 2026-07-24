@@ -1130,8 +1130,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "ethical frameworks", 
-            "cognitive models", 
+            "ethical frameworks",
+            "cognitive models",
             "policy implications"
         ],
         boundaries: {

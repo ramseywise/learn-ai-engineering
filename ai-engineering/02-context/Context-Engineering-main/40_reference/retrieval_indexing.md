@@ -759,7 +759,7 @@ Ensuring semantic coherence between retrieved information and the rest of the co
    - Highlighting key connections to the query
    - Guiding attention to the most important elements
 
-# 4. Semantic Integration: Incorporating Retrieved Content 
+# 4. Semantic Integration: Incorporating Retrieved Content
 
 ## 4.4 Prompt Engineering for Retrieval
 
@@ -842,25 +842,25 @@ Let's look at how we might structure retrieval instructions using a protocol-bas
 ```
 /retrieval.instructions{
   intent="Guide model in effectively using retrieved information",
-  
+
   usage_guidelines=[
     "/directive{action='prioritize', target='factual information from retrieved context'}",
     "/directive{action='use', target='parametric knowledge', condition='only when retrieved context is insufficient'}",
     "/directive{action='synthesize', target='information across multiple retrieved chunks'}"
   ],
-  
+
   relevance_assessment=[
     "/criteria{type='direct_answer', weight='highest'}",
     "/criteria{type='contextual_information', weight='medium'}",
     "/criteria{type='tangential_information', weight='low'}"
   ],
-  
+
   citation_requirements=[
     "/citation{when='direct quotes', format='(Source: document_name)'}",
     "/citation{when='paraphrased information', format='(Based on: document_name)'}",
     "/citation{when='combining multiple sources', format='(Sources: document_1, document_2)'}"
   ],
-  
+
   conflict_resolution=[
     "/resolution{strategy='present_both', condition='equally credible sources'}",
     "/resolution{strategy='prioritize_recency', condition='temporal information'}",
@@ -918,25 +918,25 @@ Here's how we might structure context framing using a protocol-based approach:
 ```
 /retrieval.framing{
   intent="Structure retrieved information for optimal model processing",
-  
+
   introduction_markers=[
     "/marker{position='before_retrieved', text='### RETRIEVED INFORMATION'}",
     "/marker{position='relevance_indicator', text='Relevance to query: [score]'}",
     "/marker{position='after_retrieved', text='### END OF RETRIEVED INFORMATION'}"
   ],
-  
+
   source_indicators=[
     "/source{elements=['title', 'author', 'date', 'type']}",
     "/source{format='[Title] by [Author] ([Date]) - [Type]'}",
     "/source{position='before_content'}"
   ],
-  
+
   chunk_boundaries=[
     "/boundary{marker='---', position='between_chunks'}",
     "/boundary{include='chunk_id', format='Document [id]'}",
     "/boundary{include='relevance_score', format='Relevance: [score]/10'}"
   ],
-  
+
   structure_signals=[
     "/signal{type='hierarchical', format='H1, H2, H3 headings'}",
     "/signal{type='sequential', format='numbered paragraphs'}",
@@ -1001,25 +1001,25 @@ Here's a protocol-based approach to integration directives:
 ```
 /retrieval.integration{
   intent="Guide information synthesis and knowledge integration",
-  
+
   knowledge_prioritization=[
     "/priority{source='retrieved', condition='factual information, technical details, specific examples'}",
     "/priority{source='parametric', condition='general concepts, common knowledge, methodological frameworks'}",
     "/priority{hierarchy='retrieved > parametric', condition='conflicting information'}"
   ],
-  
+
   gap_handling=[
     "/gap{strategy='acknowledge', condition='critical information missing'}",
     "/gap{strategy='infer_carefully', condition='partial information available', with='explicit uncertainty markers'}",
     "/gap{strategy='suggest_alternatives', condition='speculative but helpful'}"
   ],
-  
+
   uncertainty_expression=[
     "/uncertainty{level='high', marker='It is unclear whether...', condition='contradictory or missing information'}",
     "/uncertainty{level='medium', marker='It appears that...', condition='limited or indirect evidence'}",
     "/uncertainty{level='low', marker='Most likely...', condition='strong but not definitive evidence'}"
   ],
-  
+
   synthesis_approach=[
     "/synthesis{method='compare_contrast', condition='multiple perspectives available'}",
     "/synthesis{method='chronological', condition='evolutionary or historical information'}",
@@ -1075,26 +1075,26 @@ Here's a protocol-based approach to response formatting:
 ```
 /retrieval.response_format{
   intent="Define the structure and presentation of model responses",
-  
+
   output_structure=[
     "/structure{format='structured_sections', with=['Summary', 'Detailed Explanation', 'Additional Context']}",
     "/structure{progressive_disclosure=true, order='most_relevant_first'}",
     "/structure{length_guideline='concise_but_complete', prioritize='direct_answer'}"
   ],
-  
+
   citation_format=[
     "/citation{style='inline', format='(Source: [document_name], [page/section])'}",
     "/citation{for='direct_quotes', additional='quotation_marks'}",
     "/citation{for='synthesized_information', format='(Synthesized from: [document_list])'}",
     "/citation{include='confidence', format='[citation] - Confidence: High/Medium/Low'}"
   ],
-  
+
   confidence_indication=[
     "/confidence{high='Definitively, [statement]', criterion='multiple reliable sources confirm'}",
     "/confidence{medium='Evidence suggests that [statement]', criterion='limited but credible sources'}",
     "/confidence{low='It may be the case that [statement]', criterion='minimal or uncertain evidence'}"
   ],
-  
+
   follow_up=[
     "/follow_up{suggest='related_questions', count='2-3', format='You might also want to ask:'}",
     "/follow_up{indicate='partial_answer', format='To provide a more complete answer, I would need information about:'}",
@@ -1163,14 +1163,14 @@ Here's a straightforward protocol for implementing a basic retrieval system that
 ```
 /retrieval.pipeline{
   intent="Create a simple but effective retrieval system",
-  
+
   document_processing={
     input_documents="collection of text files or web pages",
     chunking_strategy="overlapping paragraphs with 100-word overlap",
     chunk_size="~500 words per chunk",
     metadata_extraction=["title", "source", "date", "section headings"]
   },
-  
+
   embedding_creation={
     model="sentence-transformers/all-mpnet-base-v2",  // Accessible, open-source embedding model
     dimensions=768,
@@ -1178,36 +1178,36 @@ Here's a straightforward protocol for implementing a basic retrieval system that
     normalization=true,
     storage="simple JSON files with document references"
   },
-  
+
   vector_database={
     type="FAISS with flat index",  // Simple, exact search for smaller collections
     metric="cosine similarity",
     implementation="in-memory for <100K documents",
     persistence="save index to disk after creation"
   },
-  
+
   query_processing={
     preprocessing="remove stop words, normalize case",
     expansion=false,  // Start simple
     embedding="same model as documents",
     top_k=5  // Retrieve 5 most relevant chunks
   },
-  
+
   result_handling={
     filtering="remove chunks below 0.7 similarity",
     deduplication="remove near-identical paragraphs",
     ordering="by similarity score",
     formatting="prepend source information to each chunk"
   },
-  
+
   prompt_template=`
     Use the following retrieved information to answer the question.
-    
+
     Retrieved information:
     {{RETRIEVED_CHUNKS}}
-    
+
     Question: {{QUERY}}
-    
+
     Answer the question based on the retrieved information. If the information doesn't contain the answer, say "I don't have enough information to answer this question."
   `
 }
@@ -1229,32 +1229,32 @@ import faiss
 def process_documents(folder_path):
     chunks = []
     chunk_metadata = []
-    
+
     for filename in os.listdir(folder_path):
         if filename.endswith('.txt'):
             with open(os.path.join(folder_path, filename), 'r') as file:
                 text = file.read()
-                
+
                 # Extract metadata (simplified)
                 metadata = {
                     'title': filename,
                     'source': folder_path,
                     'date': '2023'  # Placeholder
                 }
-                
+
                 # Simple paragraph chunking (~ 500 words)
                 paragraphs = text.split('\n\n')
-                
+
                 for i in range(len(paragraphs)):
                     # Create overlapping chunks
                     if i < len(paragraphs) - 1:
                         chunk = paragraphs[i] + '\n\n' + paragraphs[i+1][:100]
                     else:
                         chunk = paragraphs[i]
-                    
+
                     chunks.append(chunk)
                     chunk_metadata.append(metadata)
-    
+
     return chunks, chunk_metadata
 
 # 2. Embedding Creation
@@ -1277,10 +1277,10 @@ def retrieve(query, index, model, chunks, chunk_metadata, top_k=5):
     # Process query the same way as documents
     query_embedding = model.encode([query])
     faiss.normalize_L2(query_embedding)
-    
+
     # Search
     scores, indices = index.search(query_embedding, top_k)
-    
+
     # Handle results
     results = []
     for i, idx in enumerate(indices[0]):
@@ -1290,7 +1290,7 @@ def retrieve(query, index, model, chunks, chunk_metadata, top_k=5):
                 'metadata': chunk_metadata[idx],
                 'score': float(scores[0][i])
             })
-    
+
     # Remove near-duplicates (simplified)
     unique_results = []
     seen_sources = set()
@@ -1299,32 +1299,32 @@ def retrieve(query, index, model, chunks, chunk_metadata, top_k=5):
         if source not in seen_sources:
             unique_results.append(result)
             seen_sources.add(source)
-    
+
     return unique_results
 
 # 5. Format Retrieved Information for the Model
 def format_for_prompt(results, query):
     retrieved_chunks = ""
-    
+
     for result in results:
         chunk = result['chunk']
         metadata = result['metadata']
         score = result['score']
-        
+
         retrieved_chunks += f"Source: {metadata['title']} (Relevance: {score:.2f})\n\n"
         retrieved_chunks += chunk + "\n\n---\n\n"
-    
+
     prompt = f"""
     Use the following retrieved information to answer the question.
-    
+
     Retrieved information:
     {retrieved_chunks}
-    
+
     Question: {query}
-    
+
     Answer the question based on the retrieved information. If the information doesn't contain the answer, say "I don't have enough information to answer this question."
     """
-    
+
     return prompt
 
 # Main execution flow
@@ -1334,7 +1334,7 @@ def main():
     chunks, chunk_metadata = process_documents(docs_folder)
     embeddings, model = create_embeddings(chunks)
     index = create_vector_db(embeddings)
-    
+
     # Save for later (simplified)
     with open('retrieval_system.json', 'w') as f:
         json.dump({
@@ -1342,12 +1342,12 @@ def main():
             'metadata': chunk_metadata
         }, f)
     faiss.write_index(index, 'vector_index.faiss')
-    
+
     # Example query (interactive use)
     query = "How do I configure the network settings?"
     results = retrieve(query, index, model, chunks, chunk_metadata)
     prompt = format_for_prompt(results, query)
-    
+
     # This prompt would then be sent to an LLM
     print(prompt)
 
@@ -1362,14 +1362,14 @@ For those who prefer a no-code approach, here's how to implement the same retrie
 ```
 /retrieval.nocode.implementation{
   intent="Implement retrieval without programming",
-  
+
   tool_selection={
     document_processing="LlamaHub document loaders",
     vector_database="LlamaIndex or Pinecone (free tier)",
     llm_integration="LangChain or FlowiseAI",
     user_interface="Streamlit sharing or Gradio"
   },
-  
+
   step_by_step=[
     "/step{
       action='Load documents',
@@ -1377,35 +1377,35 @@ For those who prefer a no-code approach, here's how to implement the same retrie
       process='Upload documents through web interface',
       settings='Choose paragraph chunking with overlap'
     }",
-    
+
     "/step{
       action='Generate embeddings',
       tool='LlamaIndex',
       process='Use the built-in embedding generation',
       settings='Select OpenAI or Hugging Face embedding models'
     }",
-    
+
     "/step{
       action='Create vector store',
       tool='LlamaIndex or Pinecone',
       process='Follow web interface to initialize vector store',
       settings='Choose simple flat index for <100K documents'
     }",
-    
+
     "/step{
       action='Configure retrieval',
       tool='LangChain or FlowiseAI visual editor',
       process='Connect query input → retrieval → LLM nodes',
       settings='Set similarity threshold to 0.7, top_k to 5'
     }",
-    
+
     "/step{
       action='Design prompt template',
       tool='LangChain or FlowiseAI template editor',
       process='Create template with placeholders for query and results',
       settings='Use structured format with source citations'
     }",
-    
+
     "/step{
       action='Deploy interface',
       tool='Streamlit or Gradio',
@@ -1413,7 +1413,7 @@ For those who prefer a no-code approach, here's how to implement the same retrie
       settings='Add text input for query, text area for results'
     }"
   ],
-  
+
   maintenance_tips=[
     "/tip{action='Update index', frequency='when documents change', method='Re-run document processing workflow'}",
     "/tip{action='Monitor performance', metric='relevance of results', method='Periodic sampling of queries and results'}",
@@ -1507,14 +1507,14 @@ Here's a structured approach to evaluating retrieval system performance:
 ```
 /retrieval.evaluation{
   intent="Assess and improve retrieval system performance",
-  
+
   evaluation_dataset={
     creation="manually curated representative queries",
     annotation="expected relevant documents/passages",
     diversity="cover different query types and topics",
     maintenance="regular updates as content changes"
   },
-  
+
   retrieval_metrics=[
     "/metric{
       name='Precision@k',
@@ -1522,14 +1522,14 @@ Here's a structured approach to evaluating retrieval system performance:
       target_value='>0.8 for P@5',
       improvement='refine query processing, adjust similarity thresholds'
     }",
-    
+
     "/metric{
       name='Recall@k',
       calculation='relevant_retrieved / total_relevant',
       target_value='>0.9 for critical information',
       improvement='chunking strategy, embedding model quality, query expansion'
     }",
-    
+
     "/metric{
       name='Mean Reciprocal Rank',
       calculation='average(1/rank_of_first_relevant)',
@@ -1537,7 +1537,7 @@ Here's a structured approach to evaluating retrieval system performance:
       improvement='reranking algorithms, query understanding'
     }"
   ],
-  
+
   response_quality=[
     "/metric{
       name='Factual Accuracy',
@@ -1545,7 +1545,7 @@ Here's a structured approach to evaluating retrieval system performance:
       target_value='>95%',
       improvement='prompt engineering, citation requirements'
     }",
-    
+
     "/metric{
       name='Answer Completeness',
       evaluation='manual assessment against ideal answers',
@@ -1553,7 +1553,7 @@ Here's a structured approach to evaluating retrieval system performance:
       improvement='chunk size, overlap, retrieval count'
     }"
   ],
-  
+
   system_performance=[
     "/metric{
       name='Query Latency',
@@ -1561,7 +1561,7 @@ Here's a structured approach to evaluating retrieval system performance:
       target_value='<500ms',
       improvement='index optimization, hardware scaling, caching'
     }",
-    
+
     "/metric{
       name='Indexing Speed',
       measurement='documents processed per minute',
@@ -1569,7 +1569,7 @@ Here's a structured approach to evaluating retrieval system performance:
       improvement='batch processing, parallel embedding'
     }"
   ],
-  
+
   user_experience=[
     "/metric{
       name='Task Completion Rate',
@@ -1577,7 +1577,7 @@ Here's a structured approach to evaluating retrieval system performance:
       target_value='>90%',
       improvement='holistic system refinement'
     }",
-    
+
     "/metric{
       name='User Satisfaction',
       measurement='survey or feedback ratings',
@@ -1585,7 +1585,7 @@ Here's a structured approach to evaluating retrieval system performance:
       improvement='response format, speed, accuracy improvements'
     }"
   ],
-  
+
   continuous_improvement={
     cadence="weekly evaluation on test set",
     focus="prioritize metrics based on user feedback",
@@ -1668,13 +1668,13 @@ Chunking is often the first place to optimize as it fundamentally affects what i
 ```
 /retrieval.optimize.chunking{
   intent="Improve the segmentation of documents for more effective retrieval",
-  
+
   challenges_to_address=[
     "/challenge{type='overly_large_chunks', symptom='answers miss specific details', solution='reduce chunk size'}",
     "/challenge{type='too_small_chunks', symptom='fragmented context', solution='increase chunk size or overlap'}",
     "/challenge{type='random_boundaries', symptom='broken concepts', solution='implement semantic chunking'}"
   ],
-  
+
   optimization_techniques=[
     "/technique{
       name='Semantic Boundary Detection',
@@ -1683,7 +1683,7 @@ Chunking is often the first place to optimize as it fundamentally affects what i
       complexity='Medium',
       impact='High - preserves coherent knowledge units'
     }",
-    
+
     "/technique{
       name='Hierarchical Chunking',
       approach='Create multiple granularity levels',
@@ -1691,7 +1691,7 @@ Chunking is often the first place to optimize as it fundamentally affects what i
       complexity='Medium-High',
       impact='High - enables multi-level retrieval'
     }",
-    
+
     "/technique{
       name='Dynamic Chunk Sizing',
       approach='Vary chunk size based on content density',
@@ -1699,7 +1699,7 @@ Chunking is often the first place to optimize as it fundamentally affects what i
       complexity='Medium',
       impact='Medium-High - adapts to content characteristics'
     }",
-    
+
     "/technique{
       name='Overlapping Windows',
       approach='Create chunks with significant overlap',
@@ -1708,13 +1708,13 @@ Chunking is often the first place to optimize as it fundamentally affects what i
       impact='Medium - reduces boundary problems but increases index size'
     }"
   ],
-  
+
   testing_approach=[
     "/test{metric='Concept Preservation', method='Manual review of concept boundaries', target='No broken concepts'}",
     "/test{metric='Information Density', method='Analyze token-to-information ratio', target='Consistent information per chunk'}",
     "/test{metric='Retrieval Performance', method='A/B test different chunking strategies', target='Improved recall of complete concepts'}"
   ],
-  
+
   implementation_considerations={
     technical="NLP-based boundary detection, recursive chunking algorithms",
     non_technical="Rule-based approaches using document structure, heading levels, etc."
@@ -1758,10 +1758,10 @@ def semantic_chunk_document(document, min_chunk_size=200, max_chunk_size=1000):
     This is a simplified implementation that anyone can understand.
     """
     chunks = []
-    
+
     # Split the document into sections based on headings
     sections = split_by_headings(document)
-    
+
     for section in sections:
         # If section is very small, combine with others
         if len(section) < min_chunk_size and chunks:
@@ -1770,7 +1770,7 @@ def semantic_chunk_document(document, min_chunk_size=200, max_chunk_size=1000):
         elif len(section) > max_chunk_size:
             paragraphs = section.split("\n\n")
             current_chunk = ""
-            
+
             for paragraph in paragraphs:
                 # If adding this paragraph exceeds max size, start a new chunk
                 if len(current_chunk) + len(paragraph) > max_chunk_size and current_chunk:
@@ -1781,14 +1781,14 @@ def semantic_chunk_document(document, min_chunk_size=200, max_chunk_size=1000):
                         current_chunk += "\n\n" + paragraph
                     else:
                         current_chunk = paragraph
-            
+
             # Add the last chunk if it's not empty
             if current_chunk:
                 chunks.append(current_chunk)
         # Otherwise, use the section as a chunk
         else:
             chunks.append(section)
-    
+
     # Ensure proper overlap between chunks
     overlapped_chunks = []
     for i in range(len(chunks)):
@@ -1798,7 +1798,7 @@ def semantic_chunk_document(document, min_chunk_size=200, max_chunk_size=1000):
             overlapped_chunks.append(chunks[i] + "\n\n" + next_chunk_start)
         else:
             overlapped_chunks.append(chunks[i])
-    
+
     return overlapped_chunks
 
 # Helper function to split by headings (simplified)
@@ -1806,21 +1806,21 @@ def split_by_headings(text):
     """Split text at heading boundaries (lines starting with # in markdown)"""
     import re
     heading_pattern = re.compile(r'^#+\s+', re.MULTILINE)
-    
+
     # Find all heading positions
     matches = list(heading_pattern.finditer(text))
     sections = []
-    
+
     # Extract sections based on heading positions
     for i in range(len(matches)):
         start = matches[i].start()
         end = matches[i+1].start() if i < len(matches) - 1 else len(text)
         sections.append(text[start:end])
-    
+
     # Handle case with no headings
     if not sections:
         sections = [text]
-        
+
     return sections
 ```
 
@@ -1831,7 +1831,7 @@ For those who prefer a no-code approach, here's a strategy using existing tools:
 ```
 /chunking.nocode{
   intent="Implement better chunking without programming",
-  
+
   strategies=[
     "/strategy{
       name='Structure-Based Chunking',
@@ -1839,14 +1839,14 @@ For those who prefer a no-code approach, here's a strategy using existing tools:
       implementation='Configure chunking at heading or section boundaries in tools like LlamaIndex or LangChain',
       example='Set chunk_size=None, chunking_strategy="markdown_headings" in most RAG tools'
     }",
-    
+
     "/strategy{
       name='Hybrid Size and Overlap Settings',
       approach='Configure optimal size and overlap parameters',
       implementation='Use UI controls in vector database tools',
       example='In Pinecone or Weaviate UIs, set chunk size to ~500 tokens with 100-150 token overlap'
     }",
-    
+
     "/strategy{
       name='Template Documents',
       approach='Format source documents with clear section breaks',
@@ -1866,13 +1866,13 @@ Embedding quality directly impacts how well your system can match semantic meani
 ```
 /retrieval.optimize.embedding{
   intent="Improve vector representations for more accurate semantic matching",
-  
+
   challenges_to_address=[
     "/challenge{type='generic_embeddings', symptom='poor domain-specific matching', solution='use or fine-tune domain-specific embeddings'}",
     "/challenge{type='outdated_models', symptom='missing recent concepts', solution='upgrade to newer embedding models'}",
     "/challenge{type='single_vector_limitation', symptom='can't represent complex documents', solution='implement multi-vector representations'}"
   ],
-  
+
   optimization_techniques=[
     "/technique{
       name='Domain Adaptation',
@@ -1881,7 +1881,7 @@ Embedding quality directly impacts how well your system can match semantic meani
       complexity='Medium-High',
       impact='High - significantly improves domain relevance'
     }",
-    
+
     "/technique{
       name='Multi-Vector Representation',
       approach='Represent documents with multiple vectors',
@@ -1889,7 +1889,7 @@ Embedding quality directly impacts how well your system can match semantic meani
       complexity='Medium',
       impact='High - captures more document facets'
     }",
-    
+
     "/technique{
       name='Hybrid Embeddings',
       approach='Combine different embedding models',
@@ -1897,7 +1897,7 @@ Embedding quality directly impacts how well your system can match semantic meani
       complexity='Medium',
       impact='Medium-High - leverages strengths of different models'
     }",
-    
+
     "/technique{
       name='Query-Document Alignment',
       approach='Train embeddings specifically for retrieval',
@@ -1906,13 +1906,13 @@ Embedding quality directly impacts how well your system can match semantic meani
       impact='High - directly optimizes for retrieval task'
     }"
   ],
-  
+
   testing_approach=[
     "/test{metric='Semantic Accuracy', method='Evaluate on labeled query-document pairs', target='Improved similarity scores for relevant matches'}",
     "/test{metric='Domain-Specific Concept Matching', method='Test with technical terminology', target='Better handling of specialized terms'}",
     "/test{metric='Embedding Space Analysis', method='Visualize and analyze embedding clusters', target='Clear separation of concepts'}"
   ],
-  
+
   implementation_considerations={
     technical="Model fine-tuning, contrastive learning approaches",
     non_technical="Using pre-trained domain-specific models, combining results from multiple models"
@@ -1977,7 +1977,7 @@ def adapt_embedding_model(base_model_name, domain_texts, domain_queries=None, ep
     """
     # Load base model
     model = SentenceTransformer(base_model_name)
-    
+
     # Create training examples
     if domain_queries:
         # If you have query-document pairs, use them for in-domain training
@@ -1986,7 +1986,7 @@ def adapt_embedding_model(base_model_name, domain_texts, domain_queries=None, ep
             for doc in relevant_docs:
                 # Create positive pair (query matches document)
                 train_examples.append((query, doc))
-        
+
         # Use triplet loss for training
         train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=16)
         train_loss = losses.TripletLoss(model=model)
@@ -1997,16 +1997,16 @@ def adapt_embedding_model(base_model_name, domain_texts, domain_queries=None, ep
             # Extract sentences or paragraphs as training units
             segments = text.split('.')
             segments = [s for s in segments if len(s) > 20]  # Filter short segments
-            
+
             # Create pairs of segments from the same document
             for i in range(len(segments)):
                 for j in range(i+1, min(i+5, len(segments))):  # Limit to nearby segments
                     train_examples.append((segments[i], segments[j]))
-        
+
         # Use cosine similarity loss for training
         train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=16)
         train_loss = losses.CosineSimilarityLoss(model=model)
-    
+
     # Train the model
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
@@ -2014,7 +2014,7 @@ def adapt_embedding_model(base_model_name, domain_texts, domain_queries=None, ep
         warmup_steps=100,
         show_progress_bar=True
     )
-    
+
     # Save the adapted model
     model.save('domain_adapted_model')
     return model
@@ -2027,7 +2027,7 @@ For those who prefer a no-code approach:
 ```
 /embedding.nocode{
   intent="Improve embeddings without programming",
-  
+
   strategies=[
     "/strategy{
       name='Use Specialized Pre-Trained Models',
@@ -2035,14 +2035,14 @@ For those who prefer a no-code approach:
       implementation='Choose domain-specific models in your RAG platform',
       example='For technical documentation, select models like "BAAI/bge-large-en" in LlamaIndex or LangChain'
     }",
-    
+
     "/strategy{
       name='Ensemble Multiple Models',
       approach='Retrieve using multiple embedding models',
       implementation='Configure multiple retrievers and merge results',
       example='In FlowiseAI, connect multiple vector stores with different embeddings and combine outputs'
     }",
-    
+
     "/strategy{
       name='Embedding Customization Services',
       approach='Use services that adapt embeddings',
@@ -2062,13 +2062,13 @@ The retrieval mechanism itself can be optimized to improve both accuracy and per
 ```
 /retrieval.optimize.algorithm{
   intent="Enhance retrieval mechanisms for better results",
-  
+
   challenges_to_address=[
     "/challenge{type='semantic_gap', symptom='misses relevant content despite good embeddings', solution='implement hybrid retrieval'}",
     "/challenge{type='coarse_ranking', symptom='retrieves topically relevant but not precisely helpful content', solution='add re-ranking step'}",
     "/challenge{type='fixed_k_limitation', symptom='sometimes needs more/fewer results', solution='implement adaptive retrieval count'}"
   ],
-  
+
   optimization_techniques=[
     "/technique{
       name='Hybrid Semantic-Lexical Retrieval',
@@ -2077,7 +2077,7 @@ The retrieval mechanism itself can be optimized to improve both accuracy and per
       complexity='Medium',
       impact='High - combines strengths of both approaches'
     }",
-    
+
     "/technique{
       name='Multi-Stage Retrieval',
       approach='Initial broad retrieval followed by focused re-ranking',
@@ -2085,7 +2085,7 @@ The retrieval mechanism itself can be optimized to improve both accuracy and per
       complexity='Medium-High',
       impact='High - significant precision improvement'
     }",
-    
+
     "/technique{
       name='Query Expansion',
       approach='Enrich queries with related terms or reformulations',
@@ -2093,7 +2093,7 @@ The retrieval mechanism itself can be optimized to improve both accuracy and per
       complexity='Medium',
       impact='Medium-High - improves recall for complex queries'
     }",
-    
+
     "/technique{
       name='Adaptive Retrieval',
       approach='Dynamically adjust retrieval parameters',
@@ -2102,13 +2102,13 @@ The retrieval mechanism itself can be optimized to improve both accuracy and per
       impact='Medium - better handles query diversity'
     }"
   ],
-  
+
   testing_approach=[
     "/test{metric='Precision@k', method='Evaluate on diverse query set', target='Improved precision without recall loss'}",
     "/test{metric='Mean Reciprocal Rank', method='Measure rank of first relevant result', target='Higher MRR'}",
     "/test{metric='Query Coverage', method='Test with query variations', target='Consistent results across reformulations'}"
   ],
-  
+
   implementation_considerations={
     technical="Integration of multiple retrieval mechanisms, custom scoring functions",
     non_technical="Using platforms with built-in hybrid search, configuring re-ranking plugins"
@@ -2176,7 +2176,7 @@ def hybrid_retrieve(query, documents, embeddings, embedding_model, top_k=5, alph
     """
     Perform hybrid retrieval combining vector similarity and keyword matching.
     This is a simplified implementation to illustrate the concept.
-    
+
     Parameters:
     - query: User query
     - documents: List of document texts
@@ -2184,26 +2184,26 @@ def hybrid_retrieve(query, documents, embeddings, embedding_model, top_k=5, alph
     - embedding_model: Model to encode the query
     - top_k: Number of results to return
     - alpha: Weight for vector similarity (1-alpha for keyword similarity)
-    
+
     Returns:
     - List of top_k document indices
     """
     # 1. Vector-based retrieval
     query_embedding = embedding_model.encode([query])[0]
     vector_scores = cosine_similarity([query_embedding], embeddings)[0]
-    
+
     # 2. Keyword-based retrieval using TF-IDF
     tfidf = TfidfVectorizer(stop_words='english')
     document_tfidf = tfidf.fit_transform(documents)
     query_tfidf = tfidf.transform([query])
     keyword_scores = (document_tfidf @ query_tfidf.T).toarray().flatten()
-    
+
     # 3. Combine scores with weighted average
     combined_scores = alpha * vector_scores + (1 - alpha) * keyword_scores
-    
+
     # 4. Get top results
     top_indices = combined_scores.argsort()[-top_k:][::-1]
-    
+
     return [(i, documents[i], combined_scores[i]) for i in top_indices]
 ```
 
@@ -2214,7 +2214,7 @@ For those who prefer a no-code approach:
 ```
 /retrieval.nocode{
   intent="Implement advanced retrieval without programming",
-  
+
   strategies=[
     "/strategy{
       name='Use Hybrid Search Platforms',
@@ -2222,14 +2222,14 @@ For those who prefer a no-code approach:
       implementation='Configure both vector and keyword search components',
       example='In Weaviate or Pinecone, enable hybrid search options in the configuration panel'
     }",
-    
+
     "/strategy{
       name='Multi-Query Expansion',
       approach='Generate multiple versions of each query',
       implementation='Use LLM to create variations, then combine results',
       example='In LangChain or LlamaIndex, use QueryTransformationChain components'
     }",
-    
+
     "/strategy{
       name='Re-ranking Integration',
       approach='Add post-retrieval ranking step',
@@ -2348,33 +2348,33 @@ Adaptive embeddings represent a significant evolution beyond static vector repre
 ```
 /retrieval.adaptive_embeddings{
   intent="Create embedding systems that learn and adapt over time",
-  
+
   key_concepts=[
     "/concept{
       name='Continuous Learning Loop',
       description='Ongoing embedding refinement based on new data and feedback',
       benefit='Embeddings stay relevant as domain evolves'
     }",
-    
+
     "/concept{
       name='Feedback Integration',
       description='Incorporating explicit and implicit user feedback into embedding space',
       benefit='Embeddings align with actual user information needs'
     }",
-    
+
     "/concept{
       name='Contextual Awareness',
       description='Embeddings that shift based on user context and query patterns',
       benefit='More relevant results for specific user contexts'
     }",
-    
+
     "/concept{
       name='Temporal Adaptation',
       description='Evolving to accommodate concept drift and changing terminology',
       benefit='Maintains accuracy as language and concepts evolve'
     }"
   ],
-  
+
   implementation_approaches=[
     "/approach{
       name='Reinforcement Learning from Feedback',
@@ -2383,7 +2383,7 @@ Adaptive embeddings represent a significant evolution beyond static vector repre
       maturity='Emerging',
       example='Adjust vector space when users select results lower in ranking'
     }",
-    
+
     "/approach{
       name='Incremental Fine-Tuning',
       method='Periodically retrain embedding model on new data and interactions',
@@ -2391,7 +2391,7 @@ Adaptive embeddings represent a significant evolution beyond static vector repre
       maturity='Established',
       example='Monthly retraining incorporating new documents and query logs'
     }",
-    
+
     "/approach{
       name='Dynamic Embedding Ensembles',
       method='Maintain multiple embedding models and weight them contextually',
@@ -2399,7 +2399,7 @@ Adaptive embeddings represent a significant evolution beyond static vector repre
       maturity='Experimental',
       example='Combine specialized and general embeddings based on query type'
     }",
-    
+
     "/approach{
       name='Online Learning Adaptations',
       method='Real-time updates to embedding space for immediate adaptation',
@@ -2408,26 +2408,26 @@ Adaptive embeddings represent a significant evolution beyond static vector repre
       example='Instant embedding adjustments after relevance feedback'
     }"
   ],
-  
+
   implementation_considerations=[
     "/consideration{
       aspect='Stability vs. Adaptivity',
       challenge='Balancing consistent behavior with beneficial changes',
       solution='Implement controlled adaptation with guardrails'
     }",
-    
+
     "/consideration{
       aspect='Feedback Quality',
       challenge='Distinguishing valuable signal from noise in user feedback',
       solution='Aggregate feedback and use statistical significance testing'
     }",
-    
+
     "/consideration{
       aspect='Computational Cost',
       challenge='Resource requirements for continuous retraining',
       solution='Selective updating of affected regions of embedding space'
     }",
-    
+
     "/consideration{
       aspect='Evaluation Complexity',
       challenge='Measuring improvement in adaptive systems',
@@ -2485,7 +2485,7 @@ class AdaptiveEmbeddingSystem:
     def __init__(self, initial_embeddings, documents, learning_rate=0.05):
         """
         Initialize an adaptive embedding system.
-        
+
         Parameters:
         - initial_embeddings: Starting document embeddings (n_docs × embedding_dim)
         - documents: The text documents corresponding to embeddings
@@ -2495,23 +2495,23 @@ class AdaptiveEmbeddingSystem:
         self.documents = documents
         self.learning_rate = learning_rate
         self.interaction_history = []
-        
+
     def retrieve(self, query_embedding, top_k=5):
         """Retrieve the top_k most similar documents"""
         # Calculate similarity between query and all documents
         similarities = cosine_similarity([query_embedding], self.embeddings)[0]
-        
+
         # Get top-k indices
         top_indices = np.argsort(similarities)[-top_k:][::-1]
-        
+
         # Return documents and scores
         results = [(i, self.documents[i], similarities[i]) for i in top_indices]
         return results
-    
+
     def incorporate_feedback(self, query_embedding, positive_ids, negative_ids=None):
         """
         Update embeddings based on user feedback.
-        
+
         Parameters:
         - query_embedding: The query vector
         - positive_ids: Indices of documents marked as relevant
@@ -2523,7 +2523,7 @@ class AdaptiveEmbeddingSystem:
             'positive_ids': positive_ids,
             'negative_ids': negative_ids
         })
-        
+
         # Update embeddings of relevant documents to be more similar to query
         if positive_ids:
             for doc_id in positive_ids:
@@ -2531,7 +2531,7 @@ class AdaptiveEmbeddingSystem:
                 self.embeddings[doc_id] += self.learning_rate * (query_embedding - self.embeddings[doc_id])
                 # Re-normalize the embedding
                 self.embeddings[doc_id] = self.embeddings[doc_id] / np.linalg.norm(self.embeddings[doc_id])
-        
+
         # Update embeddings of irrelevant documents to be less similar to query
         if negative_ids:
             for doc_id in negative_ids:
@@ -2539,17 +2539,17 @@ class AdaptiveEmbeddingSystem:
                 self.embeddings[doc_id] -= self.learning_rate * (query_embedding - self.embeddings[doc_id])
                 # Re-normalize the embedding
                 self.embeddings[doc_id] = self.embeddings[doc_id] / np.linalg.norm(self.embeddings[doc_id])
-    
+
     def analyze_adaptation(self):
         """Analyze how embeddings have changed based on feedback"""
         if not self.interaction_history:
             return "No feedback has been incorporated yet."
-        
+
         # Simple analysis of adaptation effects
         feedback_count = len(self.interaction_history)
         positive_count = sum(len(interaction['positive_ids']) for interaction in self.interaction_history)
         negative_count = sum(len(interaction['negative_ids'] or []) for interaction in self.interaction_history)
-        
+
         return {
             'feedback_interactions': feedback_count,
             'positive_feedback_count': positive_count,
@@ -2600,7 +2600,7 @@ For those who prefer a no-code approach, here are strategies to implement basic 
 ```
 /adaptive.nocode{
   intent="Implement adaptive features without programming",
-  
+
   strategies=[
     "/strategy{
       name='Periodic Reindexing',
@@ -2608,21 +2608,21 @@ For those who prefer a no-code approach, here are strategies to implement basic 
       implementation='Schedule weekly/monthly reindexing tasks',
       example='In Pinecone or Weaviate, set up scheduled reindexing jobs'
     }",
-    
+
     "/strategy{
       name='Feedback Collection Integration',
       approach='Add simple feedback mechanisms to search results',
       implementation='Add "Was this helpful?" buttons to results',
       example='Use low-code platforms like Bubble or Webflow to add feedback UI'
     }",
-    
+
     "/strategy{
       name='Query Log Analysis',
       approach='Analyze what users search for to identify gaps',
       implementation='Review search logs and identify failed searches',
       example='Use analytics platforms to track search terms with no relevant results'
     }",
-    
+
     "/strategy{
       name='Manual Relevance Tuning',
       approach='Manually adjust relevance for key queries',
@@ -2710,33 +2710,33 @@ Active retrieval represents a paradigm shift from passive to proactive informati
 ```
 /retrieval.active{
   intent="Implement proactive, multi-step information gathering systems",
-  
+
   key_concepts=[
     "/concept{
       name='Retrieval Planning',
       description='Strategic approach to gathering information across multiple steps',
       benefit='More thorough and comprehensive information gathering'
     }",
-    
+
     "/concept{
       name='Query Decomposition',
       description='Breaking complex information needs into manageable sub-queries',
       benefit='More focused and precise retrieval for each aspect'
     }",
-    
+
     "/concept{
       name='Iterative Refinement',
       description='Using initial results to guide subsequent retrieval steps',
       benefit='Progressive improvement in relevance and comprehensiveness'
     }",
-    
+
     "/concept{
       name='Information Synthesis',
       description='Combining results from multiple retrieval steps',
       benefit='More complete and coherent final answers'
     }"
   ],
-  
+
   implementation_approaches=[
     "/approach{
       name='LLM-Driven Decomposition',
@@ -2745,7 +2745,7 @@ Active retrieval represents a paradigm shift from passive to proactive informati
       maturity='Emerging',
       example='Decompose "Compare AWS and Azure for ML workloads" into sub-queries about pricing, features, integration, etc.'
     }",
-    
+
     "/approach{
       name='Self-Ask with Search',
       method='Generate follow-up questions based on initial results',
@@ -2753,7 +2753,7 @@ Active retrieval represents a paradigm shift from passive to proactive informati
       maturity='Established',
       example='After retrieving basic information, automatically ask "What about security considerations?"'
     }",
-    
+
     "/approach{
       name='ReAct Pattern',
       method='Alternate between reasoning and retrieval actions',
@@ -2761,7 +2761,7 @@ Active retrieval represents a paradigm shift from passive to proactive informati
       maturity='Emerging',
       example='Reason about what information is still needed, then retrieve it in a structured loop'
     }",
-    
+
     "/approach{
       name='Multi-Agent Retrieval',
       method='Coordinate multiple specialized retrievers with different strategies',
@@ -2770,26 +2770,26 @@ Active retrieval represents a paradigm shift from passive to proactive informati
       example='Deploy parallel agents for factual, conceptual, and procedural information gathering'
     }"
   ],
-  
+
   implementation_considerations=[
     "/consideration{
       aspect='Computational Overhead',
       challenge='Multiple retrieval steps increase latency and cost',
       solution='Implement efficient stopping criteria and parallel retrieval'
     }",
-    
+
     "/consideration{
       aspect='Query Drift',
       challenge='Multi-step retrieval may drift from original intent',
       solution='Maintain alignment with original query at each step'
     }",
-    
+
     "/consideration{
       aspect='Result Integration',
       challenge='Combining information from multiple retrieval steps',
       solution='Implement structured synthesis with source tracking'
     }",
-    
+
     "/consideration{
       aspect='User Experience',
       challenge='Balancing thoroughness with response time',
@@ -2878,7 +2878,7 @@ class SelfAskRetrieval:
     def __init__(self, retrieval_function: Callable, llm_function: Callable, max_steps: int = 5):
         """
         Initialize Self-Ask with Search retrieval system.
-        
+
         Parameters:
         - retrieval_function: Function that takes a query string and returns results
         - llm_function: Function that takes a prompt and returns generated text
@@ -2887,105 +2887,105 @@ class SelfAskRetrieval:
         self.retrieve = retrieval_function
         self.llm = llm_function
         self.max_steps = max_steps
-        
+
     def process_query(self, initial_query: str) -> Dict[str, Any]:
         """Process a query using Self-Ask with Search pattern"""
-        
+
         # Initialize tracking variables
         all_questions = [initial_query]
         all_answers = []
         all_retrieval_results = []
         steps = 0
-        
+
         # Process initial query
         current_query = initial_query
         current_results = self.retrieve(current_query)
         all_retrieval_results.append(current_results)
-        
+
         # Generate initial answer
         initial_answer_prompt = f"""
         Question: {initial_query}
-        
+
         Retrieved information:
         {self._format_results(current_results)}
-        
+
         Please answer the question based on the retrieved information.
         """
-        
+
         current_answer = self.llm(initial_answer_prompt)
         all_answers.append(current_answer)
-        
+
         # Start self-ask loop
         while steps < self.max_steps:
             # Generate potential follow-up questions
             follow_up_prompt = f"""
             Original question: {initial_query}
             Current answer: {current_answer}
-            
+
             Based on the current answer, what follow-up question should I ask to provide a more complete answer to the original question?
             If no follow-up is needed, respond with "No follow-up needed."
-            
+
             Follow-up question:
             """
-            
+
             follow_up = self.llm(follow_up_prompt)
-            
+
             # Check if we should stop
             if "no follow-up" in follow_up.lower():
                 break
-                
+
             # Extract actual question
             follow_up_question = self._extract_question(follow_up)
             all_questions.append(follow_up_question)
-            
+
             # Retrieve information for follow-up
             follow_up_results = self.retrieve(follow_up_question)
             all_retrieval_results.append(follow_up_results)
-            
+
             # Generate answer for follow-up
             follow_up_answer_prompt = f"""
             Original question: {initial_query}
             Follow-up question: {follow_up_question}
-            
+
             Retrieved information:
             {self._format_results(follow_up_results)}
-            
+
             Please answer the follow-up question based on the retrieved information.
             """
-            
+
             follow_up_answer = self.llm(follow_up_answer_prompt)
             all_answers.append(follow_up_answer)
-            
+
             # Integrate new information
             integration_prompt = f"""
             Original question: {initial_query}
             Current answer: {current_answer}
             Follow-up question: {follow_up_question}
             Follow-up answer: {follow_up_answer}
-            
+
             Please provide an updated and more complete answer to the original question, incorporating this new information.
             """
-            
+
             current_answer = self.llm(integration_prompt)
-            
+
             # Increment step counter
             steps += 1
-        
+
         # Final synthesis
         final_synthesis_prompt = f"""
         Original question: {initial_query}
-        
+
         Questions asked:
         {self._format_list(all_questions)}
-        
+
         Information gathered:
         {self._format_list(all_answers)}
-        
+
         Please provide a comprehensive final answer to the original question, synthesizing all the information gathered.
         """
-        
+
         final_answer = self.llm(final_synthesis_prompt)
-        
+
         # Return complete result with tracing information
         return {
             "original_query": initial_query,
@@ -2995,21 +2995,21 @@ class SelfAskRetrieval:
             "retrieval_results": all_retrieval_results,
             "steps_taken": steps
         }
-    
+
     def _format_results(self, results: List[Any]) -> str:
         """Format retrieval results as a string"""
         formatted = ""
         for i, result in enumerate(results):
             formatted += f"Result {i+1}:\n{result}\n\n"
         return formatted
-    
+
     def _format_list(self, items: List[str]) -> str:
         """Format a list of items as a numbered string"""
         formatted = ""
         for i, item in enumerate(items):
             formatted += f"{i+1}. {item}\n\n"
         return formatted
-    
+
     def _extract_question(self, text: str) -> str:
         """Extract a question from generated text"""
         # Simple extraction - in practice you might need more robust methods
@@ -3030,7 +3030,7 @@ For those who prefer a no-code approach:
 ```
 /active.nocode{
   intent="Implement active retrieval without programming",
-  
+
   strategies=[
     "/strategy{
       name='Chain of Tools Flow',
@@ -3038,21 +3038,21 @@ For those who prefer a no-code approach:
       implementation='Use FlowiseAI or similar visual AI workflow tools',
       example='Create a flow with initial retrieval, then conditional paths based on result analysis'
     }",
-    
+
     "/strategy{
       name='Template-Based Follow-ups',
       approach='Create templates for common follow-up patterns',
       implementation='Develop a library of follow-up query templates',
       example='If initial query is about product features, automatically add follow-up for limitations'
     }",
-    
+
     "/strategy{
       name='Manual Review with Suggestions',
       approach='Present initial results with suggested follow-up questions',
       implementation='Add a suggestion UI component to search results',
       example='After showing initial results, display "You might also want to ask..." section'
     }",
-    
+
     "/strategy{
       name='Progressive Disclosure UI',
       approach='Design UI that encourages exploration of related information',
@@ -3125,7 +3125,7 @@ Let's create a comprehensive design for an active retrieval system tailored to t
 ```
 /active.retrieval.technical{
   intent="Design a proactive, multi-step information gathering system for technical documentation",
-  
+
   information_need_analysis={
     suitable_query_types=[
       "/type{category='Troubleshooting', characteristics='Multiple potential causes, complex diagnosis steps'}",
@@ -3133,7 +3133,7 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       "/type{category='Architecture', characteristics='Involves multiple components and their interactions'}",
       "/type{category='Migration', characteristics='Step-by-step process with prerequisites and verification'}"
     ],
-    
+
     common_follow_ups=[
       "/follow_up{category='Limitations', pattern='What are the limitations or constraints of [solution/feature]?'}",
       "/follow_up{category='Prerequisites', pattern='What do I need before implementing [solution/feature]?'}",
@@ -3141,7 +3141,7 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       "/follow_up{category='Examples', pattern='Can you show an example of [solution/feature] in action?'}",
       "/follow_up{category='Alternatives', pattern='Are there other ways to accomplish [goal]?'}"
     ],
-    
+
     complexity_indicators=[
       "/indicator{signal='Multiple components mentioned', threshold='3+ components'}",
       "/indicator{signal='Multi-step process', threshold='Process requiring coordination'}",
@@ -3149,7 +3149,7 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       "/indicator{signal='Error resolution', threshold='Diagnostic questions'}"
     ]
   },
-  
+
   retrieval_pattern_selection={
     chosen_pattern="ReAct (Reasoning + Action)",
     rationale=[
@@ -3157,23 +3157,23 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       "/reason{point='Reasoning steps allow for technical context to be maintained across steps'}",
       "/reason{point='Explicit reasoning makes the information gathering process transparent to users'}"
     ],
-    
+
     step_parameters={
       max_steps=5,
       time_budget="15 seconds per step",
       early_stopping="When technical question fully addressed with all necessary context"
     },
-    
+
     thoroughness_optimization=[
       "/strategy{technique='Parallel sub-queries', when='Independent aspects can be retrieved simultaneously'}",
       "/strategy{technique='Priority-based exploration', when='Limited time requires focusing on critical information'}",
       "/strategy{technique='Progressive disclosure', when='User can see initial results while deeper retrieval continues'}"
     ]
   },
-  
+
   query_decomposition_strategy={
     decomposition_approach="Technical Documentation Facet Analysis",
-    
+
     core_facets=[
       "/facet{name='Conceptual Understanding', focus='What is it and why use it?'}",
       "/facet{name='Prerequisites', focus='What's needed before implementation?'}",
@@ -3182,13 +3182,13 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       "/facet{name='Limitations', focus='What are the constraints and considerations?'}",
       "/facet{name='Troubleshooting', focus='How to handle common issues?'}"
     ],
-    
+
     alignment_techniques=[
       "/technique{method='Topic anchoring', implementation='Keep original technical terms in all sub-queries'}",
       "/technique{method='Context carryover', implementation='Include relevant context from previous steps'}",
       "/technique{method='Explicit linkage', implementation='Reference original query in follow-up questions'}"
     ],
-    
+
     practical_examples=[
       "/example{
         original_query='How to implement user authentication in our API?',
@@ -3202,7 +3202,7 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       }"
     ]
   },
-  
+
   implementation_plan={
     user_experience={
       results_presentation="Progressive disclosure with streaming updates",
@@ -3210,14 +3210,14 @@ Let's create a comprehensive design for an active retrieval system tailored to t
       transparency_features="Visible reasoning steps and retrieval justification",
       feedback_collection="Per-step and final result usefulness ratings"
     },
-    
+
     technical_architecture=[
       "/component{name='Query Analyzer', role='Determine if active retrieval needed and plan approach'}",
       "/component{name='Decomposition Engine', role='Break complex queries into technical facets'}",
       "/component{name='ReAct Orchestrator', role='Manage reasoning and retrieval flow'}",
       "/component{name='Results Synthesizer', role='Combine multi-step findings into coherent response'}"
     ],
-    
+
     phased_rollout=[
       "/phase{stage='Pilot', focus='Single technical domain with highest complexity'}",
       "/phase{stage='Evaluation', focus='Measure completion rate and information quality'}",
@@ -3243,15 +3243,15 @@ from typing import List, Dict, Any, Callable
 
 class TechDocReAct:
     def __init__(
-        self, 
-        retrieval_function: Callable, 
-        reasoning_function: Callable, 
+        self,
+        retrieval_function: Callable,
+        reasoning_function: Callable,
         max_steps: int = 5,
         max_time_seconds: int = 30
     ):
         """
         Initialize ReAct system for technical documentation.
-        
+
         Parameters:
         - retrieval_function: Function that performs document retrieval
         - reasoning_function: Function that performs reasoning (usually an LLM)
@@ -3262,102 +3262,102 @@ class TechDocReAct:
         self.reason = reasoning_function
         self.max_steps = max_steps
         self.max_time_seconds = max_time_seconds
-        
+
     def process_query(self, query: str) -> Dict[str, Any]:
         """Process a technical documentation query using ReAct pattern"""
-        
+
         # Initialize tracking
         steps_taken = 0
         start_time = time.time()
         history = []
         final_answer = ""
-        
+
         # Initial thought about how to approach the query
         current_thought = self.reason(f"""
         You are helping a user find information in technical documentation.
-        
+
         User Query: {query}
-        
+
         Think about how to approach answering this technical question. What information do you need to find?
         """)
-        
+
         history.append({"type": "thought", "content": current_thought})
-        
+
         # Main ReAct loop
         while steps_taken < self.max_steps and (time.time() - start_time) < self.max_time_seconds:
             # Based on thought, determine what to search for
             action_prompt = f"""
             You are helping a user find information in technical documentation.
-            
+
             User Query: {query}
-            
+
             Your current thought: {current_thought}
-            
+
             Based on your thought, what specific information should we search for in the documentation?
             Express this as a specific search query.
             """
-            
+
             search_query = self.reason(action_prompt)
             history.append({"type": "action", "content": search_query})
-            
+
             # Perform retrieval based on the action
             retrieval_results = self.retrieve(search_query)
             history.append({"type": "retrieval", "content": retrieval_results})
-            
+
             # Think about the results and next steps
             next_thought_prompt = f"""
             You are helping a user find information in technical documentation.
-            
+
             Original User Query: {query}
-            
+
             Search Query: {search_query}
-            
+
             Search Results:
             {self._format_results(retrieval_results)}
-            
+
             Based on these results, think about what you learned and what else you might need to search for to fully answer the original query.
             If you have enough information to answer the query, indicate that you're ready to provide a final answer.
             """
-            
+
             next_thought = self.reason(next_thought_prompt)
             history.append({"type": "thought", "content": next_thought})
-            
+
             # Check if we have enough information to answer
             if "ready to provide a final answer" in next_thought.lower() or "sufficient information" in next_thought.lower():
                 # Generate final answer
                 answer_prompt = f"""
                 You are helping a user find information in technical documentation.
-                
+
                 Original User Query: {query}
-                
+
                 Based on all searches and thinking so far, provide a comprehensive answer to the original query.
                 Include all relevant details, steps, prerequisites, limitations, and examples as appropriate.
-                
+
                 Your answer should be well-structured and specifically address the technical documentation query.
                 """
-                
+
                 final_answer = self.reason(answer_prompt)
                 history.append({"type": "answer", "content": final_answer})
                 break
-            
+
             # Continue with the next thought
             current_thought = next_thought
             steps_taken += 1
-        
+
         # If we ran out of steps or time without a final answer
         if not final_answer:
             answer_prompt = f"""
             You are helping a user find information in technical documentation.
-            
+
             Original User Query: {query}
-            
+
             Based on the information gathered so far, provide the best answer you can to the original query,
             acknowledging any areas where more information might be needed.
             """
-            
+
             final_answer = self.reason(answer_prompt)
             history.append({"type": "answer", "content": final_answer})
-        
+
         return {
             "original_query": query,
             "final_answer": final_answer,
@@ -3366,7 +3366,7 @@ class TechDocReAct:
             "reasoning_history": history,
             "completed": "ready to provide a final answer" in history[-2]["content"].lower() if len(history) >= 2 else False
         }
-        
+
     def _format_results(self, results: List[str]) -> str:
         """Format retrieval results as a string"""
         formatted = ""
@@ -3382,12 +3382,12 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
 ```
 /react.nocode{
   intent="Implement ReAct pattern for technical documentation without coding",
-  
+
   tool_selection={
     primary_platform="FlowiseAI or similar visual AI workflow tool",
     requirements=["LLM integration", "Vector database connection", "Conditional logic", "Variable storage"]
   },
-  
+
   workflow_design=[
     "/node{
       position='start',
@@ -3395,7 +3395,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       configuration='Capture user query',
       output_to='Original Query Variable'
     }",
-    
+
     "/node{
       position='initial_thought',
       type='LLM',
@@ -3403,7 +3403,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from='Original Query Variable',
       output_to='Current Thought Variable'
     }",
-    
+
     "/node{
       position='action_generation',
       type='LLM',
@@ -3411,7 +3411,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from=['Original Query Variable', 'Current Thought Variable'],
       output_to='Search Query Variable'
     }",
-    
+
     "/node{
       position='retrieval',
       type='Vector Database',
@@ -3419,7 +3419,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from='Search Query Variable',
       output_to='Search Results Variable'
     }",
-    
+
     "/node{
       position='next_thought',
       type='LLM',
@@ -3427,7 +3427,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from=['Original Query Variable', 'Search Query Variable', 'Search Results Variable'],
       output_to='Next Thought Variable'
     }",
-    
+
     "/node{
       position='decision',
       type='Conditional',
@@ -3435,7 +3435,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from='Next Thought Variable',
       output_to={true: 'Final Answer Generation', false: 'Loop Check'}
     }",
-    
+
     "/node{
       position='loop_check',
       type='Conditional',
@@ -3443,14 +3443,14 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from='Step Counter Variable',
       output_to={true: 'Final Answer Generation', false: 'Update Thought'}
     }",
-    
+
     "/node{
       position='update_thought',
       type='Function',
       configuration='Set Current Thought = Next Thought; Increment Step Counter',
       output_to='action_generation'
     }",
-    
+
     "/node{
       position='final_answer',
       type='LLM',
@@ -3458,7 +3458,7 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from=['Original Query Variable', 'All History Variables'],
       output_to='Final Answer Variable'
     }",
-    
+
     "/node{
       position='response',
       type='Output',
@@ -3466,23 +3466,23 @@ For those who prefer a no-code approach, here's how to implement the ReAct patte
       input_from=['Final Answer Variable', 'All History Variables']
     }"
   ],
-  
+
   implementation_tips=[
     "/tip{
       aspect='History Tracking',
       suggestion='Create an array variable that stores each step's information'
     }",
-    
+
     "/tip{
       aspect='Max Steps',
       suggestion='Set a counter variable and increment with each loop iteration'
     }",
-    
+
     "/tip{
       aspect='Loop Implementation',
       suggestion='Use output redirection to previous nodes to create the loop'
     }",
-    
+
     "/tip{
       aspect='Thought Analysis',
       suggestion='Use contains/includes function to check for completion phrases'
@@ -3593,33 +3593,33 @@ First, understand the nature of your documentation to determine where active ret
 ```
 /documentation.audit{
   intent="Identify opportunities for active retrieval in technical documentation",
-  
+
   analysis_dimensions=[
     "/dimension{
       aspect='Complexity',
       assessment='Evaluate how interconnected your technical concepts are',
       opportunity='Complex domains with many dependencies benefit most from active retrieval'
     }",
-    
+
     "/dimension{
       aspect='Query Patterns',
       assessment='Analyze common user questions and follow-ups',
       opportunity='Identify patterns that can be automated via active retrieval'
     }",
-    
+
     "/dimension{
       aspect='Content Gaps',
       assessment='Locate disconnects between related information',
       opportunity='Active retrieval can bridge content that isn't explicitly linked'
     }",
-    
+
     "/dimension{
       aspect='User Expertise Levels',
       assessment='Map user expertise against content complexity',
       opportunity='Active retrieval can fill knowledge gaps for non-expert users'
     }"
   ],
-  
+
   audit_checklist=[
     "/item{check='Review search logs to identify multi-query sessions', goal='Find topics where users need multiple searches'}",
     "/item{check='Analyze documentation structure for complex topics with many sub-pages', goal='Identify topics that require synthesis'}",
@@ -3636,7 +3636,7 @@ Based on your resources and technical capabilities, choose the most appropriate 
 ```
 /implementation.selection{
   intent="Choose the right active retrieval implementation approach",
-  
+
   approach_options=[
     "/option{
       name='Full Custom Development',
@@ -3644,21 +3644,21 @@ Based on your resources and technical capabilities, choose the most appropriate 
       advantages=['Maximum customization', 'Full control of algorithm', 'Deep integration'],
       suitable_for='Large organizations with development resources'
     }",
-    
+
     "/option{
       name='Low-Code Platform Adaptation',
       requirements=['Familiarity with flow-based tools', 'API access', 'Basic technical skills'],
       advantages=['Faster implementation', 'Visual development', 'Easier maintenance'],
       suitable_for='Medium organizations with limited development resources'
     }",
-    
+
     "/option{
       name='No-Code Solution',
       requirements=['Configuration skills', 'SaaS budget', 'Integration capabilities'],
       advantages=['Fastest implementation', 'No development needed', 'Maintained by vendor'],
       suitable_for='Small teams or proof-of-concept projects'
     }",
-    
+
     "/option{
       name='Hybrid Approach',
       requirements=['Some development resources', 'Integration capabilities'],
@@ -3666,7 +3666,7 @@ Based on your resources and technical capabilities, choose the most appropriate 
       suitable_for='Organizations with targeted needs and moderate resources'
     }"
   ],
-  
+
   decision_matrix=[
     "/factor{aspect='Time Constraints', weight='High', consideration='Faster implementation favors low/no-code approaches'}",
     "/factor{aspect='Customization Needs', weight='Medium', consideration='Unique requirements favor custom development'}",
@@ -3684,7 +3684,7 @@ Regardless of approach, implement active retrieval incrementally:
 ```
 /implementation.phased{
   intent="Develop active retrieval capabilities through phased implementation",
-  
+
   phases=[
     "/phase{
       number=1,
@@ -3697,7 +3697,7 @@ Regardless of approach, implement active retrieval incrementally:
       ],
       success_criteria='Improved answer completeness on complex queries'
     }",
-    
+
     "/phase{
       number=2,
       focus='Pattern Refinement',
@@ -3709,7 +3709,7 @@ Regardless of approach, implement active retrieval incrementally:
       ],
       success_criteria='Reduced steps needed for complete answers'
     }",
-    
+
     "/phase{
       number=3,
       focus='Expansion',
@@ -3721,7 +3721,7 @@ Regardless of approach, implement active retrieval incrementally:
       ],
       success_criteria='Consistent performance across domains'
     }",
-    
+
     "/phase{
       number=4,
       focus='Full Integration',
@@ -3734,7 +3734,7 @@ Regardless of approach, implement active retrieval incrementally:
       success_criteria='System-wide improvements in information accessibility'
     }"
   ],
-  
+
   iteration_approach=[
     "/practice{principle='Measure Before and After', implementation='Establish baseline metrics for comparison'}",
     "/practice{principle='Focused Testing', implementation='Test with real user queries in controlled environment'}",
@@ -3751,7 +3751,7 @@ To ensure your active retrieval implementation is providing value, establish cle
 ```
 /evaluation.framework{
   intent="Measure the effectiveness of active retrieval for technical documentation",
-  
+
   primary_metrics=[
     "/metric{
       name='Answer Completeness',
@@ -3759,21 +3759,21 @@ To ensure your active retrieval implementation is providing value, establish cle
       target='90%+ of relevant aspects covered',
       assessment='Manual evaluation against expert-created comprehensive answers'
     }",
-    
+
     "/metric{
       name='Follow-up Reduction',
       measurement='% decrease in follow-up questions',
       target='50%+ reduction in related follow-ups',
       assessment='Compare follow-up rates before and after implementation'
     }",
-    
+
     "/metric{
       name='Time to Resolution',
       measurement='Time from initial query to complete solution',
       target='30%+ reduction in time to resolution',
       assessment='Track time-to-completion for technical tasks'
     }",
-    
+
     "/metric{
       name='User Satisfaction',
       measurement='Rating of answer quality and helpfulness',
@@ -3781,30 +3781,30 @@ To ensure your active retrieval implementation is providing value, establish cle
       assessment='Implement consistent user feedback mechanism'
     }"
   ],
-  
+
   technical_metrics=[
     "/metric{name='Average Steps per Query', target='Optimal: 3-5 steps for complex queries'}",
     "/metric{name='Processing Time', target='<3 seconds per step, <15 seconds total'}",
     "/metric{name='Retrieval Precision', target='>0.8 for decomposed queries'}",
     "/metric{name='Reasoning Quality', target='>90% relevant and accurate reasoning steps'}"
   ],
-  
+
   evaluation_approach=[
     "/activity{
       action='Create test suite',
       details='Develop set of complex technical queries with gold-standard answers'
     }",
-    
+
     "/activity{
       action='Establish baseline',
       details='Measure performance with standard retrieval approach'
     }",
-    
+
     "/activity{
       action='Regular evaluation',
       details='Run test suite weekly during development, monthly in production'
     }",
-    
+
     "/activity{
       action='User studies',
       details='Conduct periodic user testing with technical staff and end-users'

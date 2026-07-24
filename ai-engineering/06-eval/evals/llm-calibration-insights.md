@@ -58,5 +58,5 @@ queries vs. nav/UI queries to see if Δ holds within domain before drawing cross
 ## Related
 
 - Calibration methodology and P/R/F1 framework → [grader_methodology.md](grader_methodology.md)
-- Active calibration runs → `.claude/docs/research/` 
+- Active calibration runs → `.claude/docs/research/`
 - Final results (VA staging showdown) → Notion

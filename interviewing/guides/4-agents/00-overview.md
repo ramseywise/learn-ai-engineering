@@ -45,5 +45,5 @@ the librarian wiki and most of the cleaned notes are about — and the center of
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md),
-[project-deep-dive](../../rounds/project-deep-dive.md).
+[system-design-round](../../rounds/system-design-round/README.md),
+[project-deep-dive](../../rounds/project-deep-dive/README.md).

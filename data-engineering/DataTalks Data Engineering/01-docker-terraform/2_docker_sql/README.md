@@ -3,14 +3,14 @@
 Notes I used for preparing the videos: [link](https://docs.google.com/document/d/e/2PACX-1vRJUuGfzgIdbkalPgg2nQ884CnZkCg314T_OBq-_hfcowPxNIA0-z5OtMTDzuzute9VBHMjNYZFTCc1/pub)
 
 
-## Commands 
+## Commands
 
 All the commands from the video
 
 Downloading the data
 
 ```bash
-wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz 
+wget https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz
 ```
 
 > Note: now the CSV data is stored in the `csv_backup` folder, not `trip+date` like previously
@@ -199,7 +199,7 @@ You can solve it with `.dockerignore`:
 * Move `ny_taxi_postgres_data` to `data` (you might need to use `sudo` for that)
 * Map `-v $(pwd)/data/ny_taxi_postgres_data:/var/lib/postgresql/data`
 * Create a file `.dockerignore` and add `data` there
-* Check [this video](https://www.youtube.com/watch?v=tOr4hTsHOzU&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb) (the middle) for more details 
+* Check [this video](https://www.youtube.com/watch?v=tOr4hTsHOzU&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb) (the middle) for more details
 
 
 
@@ -220,7 +220,7 @@ docker run -it \
     --url=${URL}
 ```
 
-### Docker-Compose 
+### Docker-Compose
 
 Run it:
 
@@ -258,6 +258,6 @@ services:
 ```
 
 
-### SQL 
+### SQL
 
 Coming soon!

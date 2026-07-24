@@ -92,4 +92,3 @@ FROM
 `taxi-rides-ny.nytaxi.yellow_tripdata_ml`
 WHERE
 tip_amount IS NOT NULL;
-

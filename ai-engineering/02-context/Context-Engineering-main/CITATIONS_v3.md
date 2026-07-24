@@ -30,7 +30,7 @@ def cognitive_tool_template():
     """IBM Zurich cognitive tool structure"""
     return {
         "understand": "Identify main concepts and requirements",
-        "extract": "Extract relevant information from context", 
+        "extract": "Extract relevant information from context",
         "highlight": "Identify key properties and relationships",
         "apply": "Apply appropriate reasoning techniques",
         "validate": "Verify reasoning steps and conclusions"
@@ -80,7 +80,7 @@ def three_stage_symbolic_processing():
         },
         "stage_2_induction": {
             "purpose": "Perform sequence induction",
-            "mechanism": "Symbolic induction heads", 
+            "mechanism": "Symbolic induction heads",
             "output": "Reasoning patterns and sequences"
         },
         "stage_3_retrieval": {
@@ -128,7 +128,7 @@ def quantum_semantic_interpretation():
         },
         "measurement_stage": {
             "observer_context": "Apply interpretive framework",
-            "meaning_collapse": "Actualize specific interpretation", 
+            "meaning_collapse": "Actualize specific interpretation",
             "coherence_check": "Verify interpretation consistency"
         },
         "adaptation_stage": {
@@ -303,7 +303,7 @@ def integrated_cognitive_architecture():
             "implementation": "Modular prompt templates"
         },
         "symbolic_processing_layer": {
-            "purpose": "Abstract reasoning capabilities", 
+            "purpose": "Abstract reasoning capabilities",
             "source": "Princeton symbolic mechanisms",
             "implementation": "Three-stage abstraction-induction-retrieval"
         },

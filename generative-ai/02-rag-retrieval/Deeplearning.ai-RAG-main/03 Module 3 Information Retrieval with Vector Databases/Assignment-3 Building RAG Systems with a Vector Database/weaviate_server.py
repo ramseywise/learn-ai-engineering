@@ -5,7 +5,7 @@ import os
 @contextmanager
 def suppress_subprocess_output():
     """
-    Context manager that suppresses the standard output and error 
+    Context manager that suppresses the standard output and error
     of any subprocess.Popen calls within this context.
     """
     # Store the original Popen
@@ -36,5 +36,3 @@ with suppress_subprocess_output():
             "RERANKER_INFERENCE_API":"http://127.0.0.1:5000/"
         }
     )
-
-

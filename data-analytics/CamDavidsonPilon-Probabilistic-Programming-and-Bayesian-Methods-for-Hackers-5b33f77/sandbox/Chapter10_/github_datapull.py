@@ -28,14 +28,14 @@ try:
         except AttributeError as e:
             #there might be less than 10 repos, so I'll count the number of display results
             value  = len( soup.findAll(class_= "mega-icon-public-repo" ) )
-        
+
         repo_with_stars[i] = value
         print "number of repos with greater than or equal to %d stars: %d"%(_star, value )
-    
+
     #repo_with_stars = repo_with_stars.astype("float")/repo_with_stars[0]
 
 
-    print 
+    print
     print "forks second..."
     payload = {"q":""}
     for i, _fork in enumerate(stars_to_explore):
@@ -48,12 +48,12 @@ try:
         except AttributeError as e:
             #there might be less than 10 repos, so I'll count the number of display results
             value  = len( soup.findAll(class_= "mega-icon-public-repo" ) )
-        
+
         repo_with_forks[i] = value
         print "number of repos with greater than or equal to %d forks: %d"%(_fork, value )
-    
+
     #repo_with_forks = repo_with_forks.astype("float")/repo_with_forks[0]
-    
+
     np.savetxt( "data/gh_forks.csv", np.concatenate( [forks_to_explore, repo_with_forks], axis=1) )
     np.savetxt( "data/gh_stars.csv", np.concatenate( [stars_to_explore, repo_with_stars], axis=1) )
 
@@ -62,11 +62,8 @@ except ImportError as e:
     print "requests / BeautifulSoup not found. Using data pulled on Feburary 11, 2013"
     _data = np.genfromtxt( "data/gh_forks.csv", delimiter = "," ) #check this.
     forks_to_explore = _data[:,0]
-    repo_with_forks  = _data[:,1]    
-    
+    repo_with_forks  = _data[:,1]
+
     _data = np.genfromtxt( "data/gh_stars.csv", delimiter = "," ) #check this.
     stars_to_explore = _data[:,0]
     repo_with_stars  = _data[:,1]
-    
-    
-    

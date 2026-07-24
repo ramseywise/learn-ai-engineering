@@ -158,17 +158,17 @@ To implement quantum semantic concepts in context engineering:
    def create_semantic_state(expression, dimensions=1024):
        """
        Create a quantum-inspired semantic state vector for an expression.
-       
+
        Args:
            expression: The semantic expression
            dimensions: Dimensionality of the semantic Hilbert space
-           
+
        Returns:
            State vector representing the semantic expression
        """
        # Initialize state vector in superposition
        state = np.zeros(dimensions, dtype=complex)
-       
+
        # Encode expression into state vector
        # This is a simplified implementation
        for i, token in enumerate(tokenize(expression)):
@@ -177,7 +177,7 @@ To implement quantum semantic concepts in context engineering:
            # Add to state with phase
            phase = np.exp(2j * np.pi * hash(token) / 1e6)
            state += phase * token_encoding
-           
+
        # Normalize state vector
        state = state / np.linalg.norm(state)
        return state
@@ -188,26 +188,26 @@ To implement quantum semantic concepts in context engineering:
    def apply_context(semantic_state, context):
        """
        Apply context to semantic state, analogous to quantum measurement.
-       
+
        Args:
            semantic_state: State vector for semantic expression
            context: Context to apply (as an operator matrix)
-           
+
        Returns:
            Collapsed state vector and probability of that interpretation
        """
        # Construct context as a measurement operator
        context_operator = construct_context_operator(context)
-       
+
        # Apply context operator to state
        new_state = context_operator @ semantic_state
-       
+
        # Calculate probability of this interpretation
        probability = np.abs(np.vdot(new_state, new_state))
-       
+
        # Normalize the new state
        new_state = new_state / np.sqrt(probability)
-       
+
        return new_state, probability
    ```
 
@@ -216,34 +216,34 @@ To implement quantum semantic concepts in context engineering:
    def test_semantic_contextuality(expression, contexts, model):
        """
        Test for non-classical contextuality in semantic interpretation.
-       
+
        Args:
            expression: Semantic expression to test
            contexts: List of contexts to apply
            model: Language model for interpretation
-           
+
        Returns:
            CHSH value indicating degree of contextuality
        """
        # Set up CHSH experiment settings
        settings = [(0, 0), (0, 1), (1, 0), (1, 1)]
        results = []
-       
+
        # For each experimental setting
        for a, b in settings:
            # Create combined context
            context = combine_contexts(contexts[a], contexts[b])
-           
+
            # Get model interpretation
            interpretation = model.generate(expression, context)
-           
+
            # Calculate correlation
            correlation = calculate_correlation(interpretation, a, b)
            results.append(correlation)
-           
+
        # Calculate CHSH value
        chsh = results[0] - results[1] + results[2] + results[3]
-       
+
        # Classical bound is 2, quantum bound is 2√2 ≈ 2.82
        return chsh
    ```
@@ -254,38 +254,38 @@ To implement quantum semantic concepts in context engineering:
 def bayesian_interpretation_sampling(expression, contexts, model, n_samples=100):
     """
     Perform Bayesian sampling of interpretations under diverse contexts.
-    
+
     Args:
         expression: Semantic expression to interpret
         contexts: List of possible contexts to sample from
         model: Language model for interpretation
         n_samples: Number of samples to generate
-        
+
     Returns:
         Distribution of interpretations with probabilities
     """
     interpretations = {}
-    
+
     for _ in range(n_samples):
         # Sample a context (or combination of contexts)
         context = sample_context(contexts)
-        
+
         # Generate interpretation
         interpretation = model.generate(expression, context)
-        
+
         # Update interpretation count
         if interpretation in interpretations:
             interpretations[interpretation] += 1
         else:
             interpretations[interpretation] = 1
-    
+
     # Convert counts to probabilities
     total = sum(interpretations.values())
     interpretation_probs = {
-        interp: count / total 
+        interp: count / total
         for interp, count in interpretations.items()
     }
-    
+
     return interpretation_probs
 ```
 

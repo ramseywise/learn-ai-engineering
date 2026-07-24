@@ -64,7 +64,7 @@ Did you take notes? Add them here:
 ## Part B
 
 ### Infrastructure-as-Code
-with Terraform 
+with Terraform
 
 ![image](AWS-stream-pipeline.png)
 
@@ -115,7 +115,7 @@ with GitHub Actions
 
 #### Summary
 
-* Automate a complete CI/CD pipeline using GitHub Actions to automatically trigger jobs 
+* Automate a complete CI/CD pipeline using GitHub Actions to automatically trigger jobs
 to build, test, and deploy our service to Lambda for every new commit/code change to our repository.
 * The goal of our CI/CD pipeline is to execute tests, build and push container image to a registry,
 and update our lambda service for every commit to the GitHub repository.

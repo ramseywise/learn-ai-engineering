@@ -732,18 +732,18 @@ Let's explore some practical patterns for common context engineering tasks.
             categories=["preferences", "facts", "decisions"],
             store_as="key_value"
         },
-        
+
         /extract.key_information{
             from="assistant_responses",
             categories=["explanations", "recommendations", "commitments"],
             store_as="key_value"
         },
-        
+
         /track.conversation_state{
             attributes=["topic", "sentiment", "open_questions"],
             update="after_each_exchange"
         },
-        
+
         /manage.history{
             max_messages=10,
             if="exceeded",
@@ -753,7 +753,7 @@ Let's explore some practical patterns for common context engineering tasks.
             }
         }
     ],
-    
+
     retrieval=[
         /retrieve.relevant{
             to="current_query",
@@ -761,7 +761,7 @@ Let's explore some practical patterns for common context engineering tasks.
             max_items=5,
             order="relevance"
         },
-        
+
         /retrieve.state{
             attributes=["current_topic", "open_questions"],
             format="context_prefix"
@@ -775,65 +775,65 @@ Let's explore some practical patterns for common context engineering tasks.
 ```
 /analyze.field_aware{
     content="complex_document",
-    
+
     field_initialization=[
         /field.initialize{
             dimensions=["conceptual", "emotional", "practical"],
             initial_state="neutral"
         },
-        
+
         /attractor.seed{
             from="document_keywords",
             strength=0.7,
             max_attractors=5
         }
     ],
-    
+
     field_analysis=[
         /attractor.evolve{
             iterations=3,
             method="semantic_resonance",
             stabilize=true
         },
-        
+
         /boundary.detect{
             between="concept_clusters",
             threshold=0.6,
             map="gradient_boundaries"
         },
-        
+
         /resonance.measure{
             between="key_concepts",
             strength_threshold=0.7,
             pattern_detection=true
         },
-        
+
         /residue.identify{
             throughout="document",
             types=["persistent_themes", "emotional_undercurrents"],
             significance_threshold=0.6
         }
     ],
-    
+
     insights=[
         /generate.from_attractors{
             focus="dominant_themes",
             depth="significant",
             format="key_points"
         },
-        
+
         /generate.from_boundaries{
             focus="conceptual_divisions",
             interpretation="meaning_of_separations",
             format="analysis"
         },
-        
+
         /generate.from_resonance{
             focus="concept_relationships",
             pattern_significance=true,
             format="network_analysis"
         },
-        
+
         /generate.from_residue{
             focus="underlying_themes",
             implicit_content=true,
@@ -848,7 +848,7 @@ Let's explore some practical patterns for common context engineering tasks.
 ```
 /extract.and.synthesize{
     source="multiple_documents",
-    
+
     extraction=[
         /for.each{
             items="documents",
@@ -858,46 +858,46 @@ Let's explore some practical patterns for common context engineering tasks.
                 confidence_threshold=0.7
             }
         },
-        
+
         /normalize.extracted{
             resolve_conflicts=true,
             standardize_terminology=true,
             remove_duplicates=true
         }
     ],
-    
+
     analysis=[
         /categorize.information{
             scheme="topic_based",
             granularity="medium",
             allow_overlap=true
         },
-        
+
         /identify.patterns{
             types=["trends", "contradictions", "gaps", "consensus"],
             across="all_extracted_information",
             significance_threshold=0.6
         },
-        
+
         /evaluate.quality{
             criteria=["credibility", "relevance", "recency", "comprehensiveness"],
             weight=[0.3, 0.3, 0.2, 0.2]
         }
     ],
-    
+
     synthesis=[
         /integrate.information{
             method="thematic_framework",
             resolution="contradiction_aware",
             level="comprehensive"
         },
-        
+
         /generate.insights{
             based_on=["patterns", "evaluation", "integration"],
             depth="significant",
             perspective="objective"
         },
-        
+
         /structure.output{
             format="progressive_disclosure",
             components=["executive_summary", "key_findings", "detailed_analysis", "implications"],
@@ -1065,32 +1065,32 @@ The simplest integration uses Pareto-lang operations in the process section of a
 ```
 /analyze.document{
     intent="Analyze document structure and content with efficient token usage",
-    
+
     input={
         document="[Document text]",
         focus_areas=["key arguments", "supporting evidence", "methodology"],
         token_budget=4000
     },
-    
+
     process=[
         /extract.structure{
             from="document",
             elements=["sections", "subsections", "figures", "tables"]
         },
-        
+
         /analyze.content{
             target="document",
             focus="focus_areas",
             depth="comprehensive"
         },
-        
+
         /compress.results{
             target="analysis",
             token_limit="token_budget",
             preserve="high_value_insights"
         }
     ],
-    
+
     output={
         structure="Document organization map",
         analysis="Comprehensive content analysis",
@@ -1106,14 +1106,14 @@ More sophisticated integration uses conditional operations and state management:
 ```
 /research.topic{
     intent="Conduct comprehensive research on a topic with adaptive token management",
-    
+
     input={
         topic="[Research topic]",
         depth="[shallow|moderate|deep]",
         focus_areas=["area1", "area2", "area3"],
         token_budget=12000
     },
-    
+
     state={
         current_tokens=0,
         token_allocation={
@@ -1125,41 +1125,41 @@ More sophisticated integration uses conditional operations and state management:
         topic_map=null,
         completed_sections=[]
     },
-    
+
     process=[
         // Initialize research
         /initialize.research{
             create_topic_map=true,
             store_in="state.topic_map"
         },
-        
+
         // Dynamic token allocation
         /allocate.tokens{
             budget="token_budget",
             allocation="state.token_allocation",
             update="state.current_tokens"
         },
-        
+
         // Background research
         /research.background{
             topic="topic",
             token_limit="state.token_allocation.background * token_budget",
             depth="depth",
-            
+
             if="state.current_tokens > token_budget * 0.8",
             then=/compress.summary{
                 ratio=0.7,
                 preserve="essential_context"
             }
         },
-        
+
         // Track completion
         /update.state{
             path="state.completed_sections",
             action="append",
             value="background"
         },
-        
+
         // Main research based on focus areas
         /for.each{
             items="focus_areas",
@@ -1167,50 +1167,50 @@ More sophisticated integration uses conditional operations and state management:
                 topic="item",
                 related_to="topic",
                 token_limit="(state.token_allocation.main_analysis * token_budget) / length(focus_areas)",
-                
+
                 if="state.current_tokens > token_budget * 0.9",
                 then=/compress.aggressive{
                     preserve="key_findings_only"
                 }
             },
-            
+
             after_each=/update.state{
                 path="state.completed_sections",
                 action="append",
                 value="item"
             }
         },
-        
+
         // Analyze implications
         /analyze.implications{
             of="topic",
             based_on="focus_areas",
             token_limit="state.token_allocation.implications * token_budget",
-            
+
             if="state.current_tokens > token_budget * 0.95",
             then=/summarize.critical{
                 preserve="most_significant_only"
             }
         },
-        
+
         // Track completion
         /update.state{
             path="state.completed_sections",
             action="append",
             value="implications"
         },
-        
+
         // Compile sources
         /compile.sources{
             token_limit="state.token_allocation.sources * token_budget",
             format="bibliography",
-            
+
             if="state.current_tokens > token_budget",
             then=/limit.most_relevant{
                 count=5
             }
         },
-        
+
         // Track completion
         /update.state{
             path="state.completed_sections",
@@ -1218,7 +1218,7 @@ More sophisticated integration uses conditional operations and state management:
             value="sources"
         }
     ],
-    
+
     output={
         background="Context and foundation for the topic",
         focus_areas="Analysis of specified focus areas",
@@ -1237,7 +1237,7 @@ Integrating field operations enables sophisticated context management:
 ```
 /conversation.field_aware{
     intent="Maintain field-aware conversation with effective token management",
-    
+
     input={
         history="[Conversation history]",
         current_query="[User's current question or statement]",
@@ -1252,21 +1252,21 @@ Integrating field operations enables sophisticated context management:
             residue=["key_concept_1", "key_concept_2"]
         }
     },
-    
+
     process=[
         // Update field with new input
         /field.update{
             with="current_query",
             state="field_state"
         },
-        
+
         // Analyze token usage
         /analyze.tokens{
             history="history",
             field_state="field_state",
             context_window="context_window"
         },
-        
+
         // Optimize context if needed
         /if.condition{
             test="token_usage > context_window * 0.8",
@@ -1278,12 +1278,12 @@ Integrating field operations enables sophisticated context management:
                         preserve="strongest_attractors",
                         compress="weak_attractor_regions"
                     },
-                    
+
                     /boundary.apply{
                         filter="low_relevance_content",
                         threshold="field_state.boundaries.permeability"
                     },
-                    
+
                     /residue.preserve{
                         elements="field_state.residue",
                         method="explicit_reference"
@@ -1291,14 +1291,14 @@ Integrating field operations enables sophisticated context management:
                 ]
             }
         },
-        
+
         // Process query in field context
         /process.query{
             query="current_query",
             field_context="field_state",
             focus="attractor_relevant"
         },
-        
+
         // Generate response
         /generate.response{
             to="current_query",
@@ -1307,7 +1307,7 @@ Integrating field operations enables sophisticated context management:
             reinforce_attractors=true,
             acknowledge_residue=true
         },
-        
+
         // Update field after response
         /field.evolve{
             state="field_state",
@@ -1316,7 +1316,7 @@ Integrating field operations enables sophisticated context management:
             integrate_new_residue=true
         }
     ],
-    
+
     output={
         response="Answer to the current query",
         updated_field="New field state after interaction",
@@ -1471,7 +1471,7 @@ Example:
     text="customer_review",
     scale="-5_to_5",
     confidence_threshold=0.7,
-    
+
     // ERROR HANDLING
     uncertain_handling="neutral",
     mixed_sentiment="report_both",
@@ -1619,7 +1619,7 @@ This pattern uses conditional logic to control a sequence of operations:
 // CONDITIONAL-PIPELINE PATTERN
 /if.condition{
     test="condition_to_test",
-    
+
     then=/pipeline.sequence{
         operations=[
             /operation1{parameters...},
@@ -1627,7 +1627,7 @@ This pattern uses conditional logic to control a sequence of operations:
         ],
         pass_result=true
     },
-    
+
     else=/alternative.operation{
         parameters...
     }
@@ -1672,20 +1672,20 @@ Create operations that adapt based on content characteristics:
 ```
 /analyze.adaptive{
     content="content_to_analyze",
-    
+
     adaptive_strategy=/detect.content_type{
         if="type == 'narrative'",
         then=/analyze.narrative{...},
-        
+
         if="type == 'technical'",
         then=/analyze.technical{...},
-        
+
         if="type == 'persuasive'",
         then=/analyze.argument{...},
-        
+
         default=/analyze.general{...}
     },
-    
+
     depth="auto_adjusted_based_on_complexity"
 }
 ```
@@ -1698,13 +1698,13 @@ Create operations that generate or modify other operations:
 /generate.operation{
     type="analysis_operation",
     parameters_from="content_characteristics",
-    
+
     template=/analyze.{{content_type}}{
         content="{{content}}",
         focus="{{detected_focus}}",
         depth="{{complexity_level}}"
     },
-    
+
     execute_generated=true
 }
 ```
@@ -1716,7 +1716,7 @@ Create operations that manage complex state transitions:
 ```
 /state.machine{
     initial_state="gathering_information",
-    
+
     states={
         gathering_information={
             operation=/gather.information{...},
@@ -1726,7 +1726,7 @@ Create operations that manage complex state transitions:
                 error=/transition.to{state="error_handling"}
             }
         },
-        
+
         analyzing_information={
             operation=/analyze.information{...},
             transitions={
@@ -1735,7 +1735,7 @@ Create operations that manage complex state transitions:
                 error=/transition.to{state="error_handling"}
             }
         },
-        
+
         generating_insights={
             operation=/generate.insights{...},
             transitions={
@@ -1744,7 +1744,7 @@ Create operations that manage complex state transitions:
                 error=/transition.to{state="error_handling"}
             }
         },
-        
+
         formatting_output={
             operation=/format.output{...},
             transitions={
@@ -1752,7 +1752,7 @@ Create operations that manage complex state transitions:
                 error=/transition.to{state="error_handling"}
             }
         },
-        
+
         requesting_more_information={
             operation=/request.information{...},
             transitions={
@@ -1760,7 +1760,7 @@ Create operations that manage complex state transitions:
                 timeout=/transition.to{state="error_handling"}
             }
         },
-        
+
         error_handling={
             operation=/handle.error{...},
             transitions={
@@ -1768,18 +1768,18 @@ Create operations that manage complex state transitions:
                 unresolvable=/transition.to{state="failure"}
             }
         },
-        
+
         complete={
             operation=/finalize.process{...},
             final=true
         },
-        
+
         failure={
             operation=/report.failure{...},
             final=true
         }
     },
-    
+
     execute=true,
     max_transitions=10,
     timeout=60
@@ -1794,22 +1794,22 @@ Create operations that apply themselves recursively:
 /analyze.recursive{
     content="complex_document",
     max_depth=3,
-    
+
     decomposition=/split.sections{
         content="content",
         return="subsections"
     },
-    
+
     base_case=/is.simple{
         content="content",
         threshold="100_words"
     },
-    
+
     recursive_operation=/analyze.recursive{
         content="subsection",
         max_depth="max_depth - 1"
     },
-    
+
     recombination=/combine.results{
         results="subsection_results",
         method="hierarchical_integration"

@@ -38,7 +38,7 @@ By the end of this journey, you'll be able to:
 
 Each section builds on the previous one, with:
 - 🧠 **Mental models** to understand concepts intuitively
-- 👁️ **Visual diagrams** to see abstract ideas clearly  
+- 👁️ **Visual diagrams** to see abstract ideas clearly
 - 🔧 **Copy-paste exercises** to try immediately
 - 📊 **Real examples** from actual AI systems
 - 🎯 **Progressive challenges** to build your skills
@@ -61,7 +61,7 @@ Traditional View:
 [Your Question] → [BLACK BOX] → [AI's Answer]
 
 Latent Mapping View:
-[Your Question] → [Step 1: Understanding] → [Step 2: Knowledge Retrieval] 
+[Your Question] → [Step 1: Understanding] → [Step 2: Knowledge Retrieval]
                 → [Step 3: Reasoning] → [Step 4: Answer Formation] → [AI's Answer]
 ```
 
@@ -76,7 +76,7 @@ Think of it like creating a subway map for a city's underground transit system�
 ### Why This Matters (The Real-World Impact)
 
 **For Students**: Understand how AI tutoring systems work and where they might need help
-**For Professionals**: Debug AI tools when they give unexpected results  
+**For Professionals**: Debug AI tools when they give unexpected results
 **For Researchers**: Discover new ways AI systems organize knowledge
 **For Everyone**: Build trust in AI by understanding its decision-making process
 
@@ -88,7 +88,7 @@ Let's start with something you can try right now with any AI assistant:
 ```
 Copy and paste this into your favorite AI assistant:
 
-"Please complete this pattern: 
+"Please complete this pattern:
 Apple, Banana, Cherry, ___
 Dog, Elephant, Fox, ___
 Red, Green, Blue, ___
@@ -157,11 +157,11 @@ Every latent mapping works with three key dimensions:
 ```
 Copy this into an AI assistant:
 
-"I want to explore how you understand relationships between concepts. 
+"I want to explore how you understand relationships between concepts.
 For each pair, rate the relationship strength from 1-10 and explain why:
 
 1. Cat - Dog
-2. Cat - Tiger  
+2. Cat - Tiger
 3. Cat - Car
 4. Happy - Sad
 5. Happy - Music
@@ -181,7 +181,7 @@ Please show your reasoning for each rating."
 **Symbolic Interpretability** is our approach to understanding these abstract concept spaces by:
 
 1. **Creating Visual Symbols** for abstract relationships
-2. **Mapping Complex Patterns** into understandable diagrams  
+2. **Mapping Complex Patterns** into understandable diagrams
 3. **Tracking Information Flow** through the AI's reasoning process
 4. **Building Interactive Tools** to explore AI decision-making
 
@@ -226,7 +226,7 @@ Think of it as creating a "GPS navigation system" for AI's thought processes.
 ```
 Copy this into an AI assistant:
 
-"I'm going to give you a complex question, and I want you to 'think out loud' 
+"I'm going to give you a complex question, and I want you to 'think out loud'
 about your reasoning process at three levels:
 
 Question: 'Should society invest more in renewable energy?'
@@ -257,13 +257,13 @@ Before we create maps, let's learn the visual vocabulary:
 ```
 NODES (Concepts):
 [concept]     ← Basic concept
-((concept))   ← Important/central concept  
+((concept))   ← Important/central concept
 {concept}     ← Suppressed/weakened concept
 <concept>     ← Boundary/transition concept
 
 CONNECTIONS:
 ──→  Strong, direct connection
----→ Weak or indirect connection  
+---→ Weak or indirect connection
 ~~~→ Uncertain or probabilistic connection
 ━━X  Blocked or inhibited connection
 ⟲   Self-referential or recursive connection
@@ -293,10 +293,10 @@ Copy this into an AI assistant:
 "I want to understand how you think about pizza. Please consider this scenario:
 'Someone asks you to recommend the best pizza for a health-conscious athlete.'
 
-Walk me through your reasoning step by step, and I'll create a visual map of 
+Walk me through your reasoning step by step, and I'll create a visual map of
 your thought process. Please be very detailed about:
 1. What concepts you consider
-2. How you connect different ideas  
+2. How you connect different ideas
 3. Which factors you weigh most heavily
 4. How you arrive at your final recommendation"
 ```
@@ -335,7 +335,7 @@ Real latent spaces have hundreds or thousands of dimensions. Here's how we make 
 ### Dimensional Reduction Techniques
 
 **Principal Component Analysis (PCA)**: Finds the "main themes" in high-dimensional data
-**t-SNE**: Preserves local neighborhoods (keeps similar things together)  
+**t-SNE**: Preserves local neighborhoods (keeps similar things together)
 **UMAP**: Balances local and global structure (maintains both clusters and overall shape)
 
 ```
@@ -370,10 +370,10 @@ Real latent spaces have hundreds or thousands of dimensions. Here's how we make 
 Copy this into an AI assistant:
 
 "I want to explore how you organize concepts in space. Please consider these 20 words:
-apple, car, happiness, dog, red, mathematics, chair, love, tree, computer, 
+apple, car, happiness, dog, red, mathematics, chair, love, tree, computer,
 anger, blue, book, cat, music, sadness, green, table, science, flower
 
-Imagine arranging these in a 2D space where similar concepts are close together. 
+Imagine arranging these in a 2D space where similar concepts are close together.
 Please:
 1. Group them into 4-5 major clusters
 2. Explain your reasoning for each cluster
@@ -413,7 +413,7 @@ Now let's learn to create interactive exploration methods:
 ```
 Copy this into an AI assistant:
 
-"I want to explore the 'space between' concepts. Please imagine moving 
+"I want to explore the 'space between' concepts. Please imagine moving
 from one concept to another in small steps, like a GPS giving directions.
 
 Starting point: 'Dog'
@@ -478,12 +478,12 @@ You don't need fancy software to start exploring latent spaces. We'll use AI ass
 ```
 Copy this into an AI assistant:
 
-"I want to analyze semantic relationships. Please rate the similarity 
+"I want to analyze semantic relationships. Please rate the similarity
 between each pair on a scale of 0-100, then explain your reasoning:
 
 Pairs to analyze:
 1. Apple - Orange
-2. Apple - Computer  
+2. Apple - Computer
 3. Orange - Sunset
 4. Computer - Brain
 5. Sunset - Happiness
@@ -515,11 +515,11 @@ Computer  65    10     100     80    10    25    85    60   30   40
 ```
 Copy this to an AI assistant:
 
-"I want to understand how your attention works. Please read this paragraph 
+"I want to understand how your attention works. Please read this paragraph
 and then tell me which words or phrases you focused on most intensely:
 
-'The ancient lighthouse stood majestically on the rocky cliff, its bright 
-beam cutting through the thick fog to guide weary sailors safely home to 
+'The ancient lighthouse stood majestically on the rocky cliff, its bright
+beam cutting through the thick fog to guide weary sailors safely home to
 their families after months at sea.'
 
 Please:
@@ -534,15 +534,15 @@ Visualize the AI's attention patterns:
 
 ```
 ATTENTION HEAT MAP:
-The[2] ancient[4] lighthouse[9] stood[3] majestically[6] on[1] 
-the[1] rocky[5] cliff[7], its[2] bright[8] beam[8] cutting[6] 
-through[3] the[1] thick[4] fog[6] to[1] guide[7] weary[5] 
-sailors[8] safely[6] home[9] to[1] their[2] families[9] 
+The[2] ancient[4] lighthouse[9] stood[3] majestically[6] on[1]
+the[1] rocky[5] cliff[7], its[2] bright[8] beam[8] cutting[6]
+through[3] the[1] thick[4] fog[6] to[1] guide[7] weary[5]
+sailors[8] safely[6] home[9] to[1] their[2] families[9]
 after[3] months[4] at[1] sea[7].
 
 HIGH ATTENTION CLUSTERS:
 • lighthouse[9] → beam[8] → sailors[8] (maritime guidance system)
-• majestically[6] → cliff[7] → rocky[5] (imposing landscape)  
+• majestically[6] → cliff[7] → rocky[5] (imposing landscape)
 • home[9] → families[9] (emotional destination)
 ```
 
@@ -550,8 +550,8 @@ HIGH ATTENTION CLUSTERS:
 ```
 Copy this to an AI assistant:
 
-"I want to track how concepts evolve through a reasoning process. 
-Please solve this step by step, and after each step, tell me what 
+"I want to track how concepts evolve through a reasoning process.
+Please solve this step by step, and after each step, tell me what
 concepts are most 'active' in your thinking:
 
 Problem: 'Design a public park that serves both children and elderly people.'
@@ -576,7 +576,7 @@ Step 1: Initial Analysis
      ▼              ▼
 [elderly:8] ──→ [accessibility:9] ──→ [comfort:6]
 
-Step 2: Design Integration  
+Step 2: Design Integration
 [universal design:9] ──→ [shared spaces:7]
      ▲                        │
      │                        ▼
@@ -590,7 +590,7 @@ Step 3: Specific Features
 
 EMERGENCE PATTERN:
 • Early: Separate child/elderly concerns
-• Middle: Integration concepts emerge  
+• Middle: Integration concepts emerge
 • Late: Specific unified solutions
 ```
 
@@ -600,11 +600,11 @@ EMERGENCE PATTERN:
 ```
 Copy this to an AI assistant:
 
-"I want to explore patterns at different scales. Please analyze this 
+"I want to explore patterns at different scales. Please analyze this
 text at three different levels:
 
-Text: 'The rapid advancement of artificial intelligence is transforming 
-industries, reshaping how we work, and raising important questions about 
+Text: 'The rapid advancement of artificial intelligence is transforming
+industries, reshaping how we work, and raising important questions about
 the future of human employment and creativity.'
 
 Level 1 (Word-level): What are the key individual words and their relationships?
@@ -629,9 +629,9 @@ LEVEL 3: THEMES
 │   AI:10        │    │   employment:9  │    │   uncertainty:6 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 
-LEVEL 2: PHRASES         
+LEVEL 2: PHRASES
 • "rapid advancement":8 ──→ "transforming industries":9
-• "reshaping work":7 ──→ "human employment":8  
+• "reshaping work":7 ──→ "human employment":8
 • "important questions":6 ──→ "future creativity":7
 
 LEVEL 1: WORDS
@@ -644,14 +644,14 @@ questions[6] → future[7] → employment[9] → creativity[8]
 ```
 Copy this to an AI assistant:
 
-"I want to map causal relationships in your reasoning. Please analyze 
+"I want to map causal relationships in your reasoning. Please analyze
 this scenario and show me your causal thinking:
 
 Scenario: 'A small town's main factory closes down.'
 
 Please:
 1. Identify immediate effects (what happens directly)
-2. Identify secondary effects (what happens as a result of #1)  
+2. Identify secondary effects (what happens as a result of #1)
 3. Identify tertiary effects (long-term consequences)
 4. Show the causal chains connecting these effects
 5. Rate the strength of each causal link (1-10)
@@ -693,7 +693,7 @@ When AI systems behave unexpectedly, latent mapping helps identify the root caus
 ```
 Copy this to an AI assistant:
 
-"I want to explore potential biases in reasoning. Please analyze these 
+"I want to explore potential biases in reasoning. Please analyze these
 scenarios and show me your thought process:
 
 Scenario A: 'Chris is a nurse and needs to lift heavy patients.'
@@ -727,7 +727,7 @@ BIAS INDICATORS:
 
 DEBIASING STRATEGIES:
 • Explicit alternative generation
-• Assumption questioning protocols  
+• Assumption questioning protocols
 • Diverse scenario testing
 • Systematic bias checking
 ```
@@ -736,15 +736,15 @@ DEBIASING STRATEGIES:
 ```
 Copy this to an AI assistant:
 
-"I want to identify knowledge gaps in reasoning. Please analyze this 
+"I want to identify knowledge gaps in reasoning. Please analyze this
 question and show me where your knowledge becomes uncertain:
 
-Question: 'What are the long-term psychological effects of virtual 
+Question: 'What are the long-term psychological effects of virtual
 reality use on teenagers?'
 
 Please:
 1. Map out what you know with high confidence (9-10/10)
-2. Identify areas of moderate confidence (5-8/10)  
+2. Identify areas of moderate confidence (5-8/10)
 3. Highlight areas of low confidence or uncertainty (1-4/10)
 4. Show how these different confidence levels connect
 5. Identify specific knowledge gaps that limit your analysis
@@ -758,7 +758,7 @@ KNOWLEDGE CONFIDENCE MAP:
 HIGH CONFIDENCE (9-10):
 ┌─────────────────┐    ┌─────────────────┐
 │   VR BASICS     │    │   TEEN PSYCH    │
-│ technology:10   │    │ development:9   │  
+│ technology:10   │    │ development:9   │
 │ applications:9  │    │ social needs:9  │
 └─────────────────┘    └─────────────────┘
 
@@ -778,7 +778,7 @@ LOW CONFIDENCE (1-4):
 
 KNOWLEDGE GAPS:
 • Longitudinal VR studies on teens
-• Developmental sensitivity periods  
+• Developmental sensitivity periods
 • VR addiction mechanisms
 • Mitigation strategies
 ```
@@ -787,24 +787,24 @@ KNOWLEDGE GAPS:
 
 **Exercise 5.3: Prompt Engineering Through Latent Analysis**
 ```
-Test these different prompts with an AI assistant and analyze 
+Test these different prompts with an AI assistant and analyze
 the differences in reasoning patterns:
 
 Prompt A (Basic): "Write a summary of climate change."
 
-Prompt B (Structured): "Write a summary of climate change that covers: 
+Prompt B (Structured): "Write a summary of climate change that covers:
 1) causes, 2) effects, 3) solutions. Use evidence-based reasoning."
 
-Prompt C (Role-based): "As a climate scientist, write a summary of 
+Prompt C (Role-based): "As a climate scientist, write a summary of
 climate change for policymakers who need to make decisions."
 
-Prompt D (Constraint-based): "Write a 200-word summary of climate change 
+Prompt D (Constraint-based): "Write a 200-word summary of climate change
 that avoids technical jargon and includes specific examples."
 
 For each response:
 1. Map the conceptual structure the AI uses
 2. Identify the reasoning pathways
-3. Note what gets emphasized vs. de-emphasized  
+3. Note what gets emphasized vs. de-emphasized
 4. Analyze the coherence and flow patterns
 5. Rate the overall effectiveness for the intended purpose
 ```
@@ -819,7 +819,7 @@ Prompt A: Basic Structure
 • Organization: Chronological or random
 • Audience: Generic
 
-Prompt B: Structured Approach  
+Prompt B: Structured Approach
 [causes] → [effects] → [solutions]
     │         │          │
     ▼         ▼          ▼
@@ -837,7 +837,7 @@ Prompt C: Role-Based Reasoning
 Prompt D: Constrained Output
 [technical concepts] → [simplification] → [concrete examples]
 • Breadth: Focused essentials
-• Organization: Accessibility-driven  
+• Organization: Accessibility-driven
 • Audience: General public
 
 OPTIMIZATION INSIGHTS:
@@ -851,10 +851,10 @@ OPTIMIZATION INSIGHTS:
 ```
 Copy this to an AI assistant:
 
-"I want to optimize complex reasoning. Please solve this problem 
+"I want to optimize complex reasoning. Please solve this problem
 using two different approaches and show me your reasoning patterns:
 
-Problem: 'A city wants to reduce traffic congestion while improving 
+Problem: 'A city wants to reduce traffic congestion while improving
 air quality and supporting local businesses.'
 
 Approach 1: Linear reasoning (step-by-step)
@@ -875,7 +875,7 @@ REASONING APPROACH COMPARISON:
 
 LINEAR REASONING:
 Step 1: [Traffic Problem] → Step 2: [Reduce Cars] → Step 3: [Public Transit]
-Step 4: [Air Quality] → Step 5: [Electric Vehicles] → Step 6: [Incentives]  
+Step 4: [Air Quality] → Step 5: [Electric Vehicles] → Step 6: [Incentives]
 Step 7: [Local Business] → Step 8: [Parking Solutions] → Step 9: [Integration]
 
 SYSTEMS THINKING:
@@ -913,13 +913,13 @@ Base Protocol Framework:
 5. Output Generation: How to present findings clearly
 
 My specific use case: [Insert your area of interest]
-Examples: academic research, business strategy, creative writing, 
+Examples: academic research, business strategy, creative writing,
 personal decision-making, technical debugging, etc.
 
 Please help me adapt this framework for my needs and suggest:
 - Specific mapping techniques for my domain
 - Key patterns to watch for
-- Common pitfalls to avoid  
+- Common pitfalls to avoid
 - Success metrics to track"
 ```
 
@@ -935,7 +935,7 @@ ACADEMIC RESEARCH MAPPING PROTOCOL:
 
 2. PATTERN DETECTION:
    • Evidence clustering patterns
-   • Argument chain structures  
+   • Argument chain structures
    • Citation network relationships
    • Methodological consistency patterns
 
@@ -947,7 +947,7 @@ ACADEMIC RESEARCH MAPPING PROTOCOL:
 
 4. QUALITY ASSESSMENT:
    • Logical coherence (1-10)
-   • Evidence strength (1-10)  
+   • Evidence strength (1-10)
    • Methodological rigor (1-10)
    • Novel insights (1-10)
 
@@ -965,7 +965,7 @@ Try this with a partner or team:
 "We want to analyze [SHARED TOPIC] using collaborative latent mapping.
 
 Partner A: Analyze the topic and create an initial concept map
-Partner B: Analyze the same topic independently  
+Partner B: Analyze the same topic independently
 Both: Compare your maps and identify:
 1. Areas of agreement (strong consensus)
 2. Areas of disagreement (different perspectives)
@@ -974,7 +974,7 @@ Both: Compare your maps and identify:
 
 Topic suggestions for practice:
 - 'The future of remote work'
-- 'Strategies for learning new skills'  
+- 'Strategies for learning new skills'
 - 'Designing user-friendly technology'
 - 'Building sustainable communities'"
 ```
@@ -1006,13 +1006,13 @@ IDENTIFIED BLIND SPOTS:
 ```
 Copy this to an AI assistant:
 
-"I want to create a dynamic mapping system that tracks how understanding 
+"I want to create a dynamic mapping system that tracks how understanding
 evolves over time. Please help me analyze this scenario with timestamps:
 
 Scenario: 'Understanding a complex new technology over several weeks'
 
 Week 1 Analysis: Initial impressions and basic understanding
-Week 2 Analysis: After some research and experimentation  
+Week 2 Analysis: After some research and experimentation
 Week 3 Analysis: After practical application and feedback
 Week 4 Analysis: After reflection and integration
 
@@ -1033,7 +1033,7 @@ WEEK 1: Initial Contact
 [technology] ──low──→ [basic function] ──uncertain──→ [potential uses]
 Confidence: 3/10
 
-WEEK 2: Research Phase  
+WEEK 2: Research Phase
 [technology] ──med──→ [architecture] ──growing──→ [implementation]
      │                      │                        │
      ▼                      ▼                        ▼
@@ -1064,13 +1064,13 @@ EVOLUTION INSIGHTS:
 ```
 Copy this to an AI assistant:
 
-"I want to create reusable templates for latent mapping analysis. 
+"I want to create reusable templates for latent mapping analysis.
 Please help me develop templates for these common scenarios:
 
 Template 1: Decision Analysis
 - For evaluating complex choices with multiple factors
 
-Template 2: Problem Diagnosis  
+Template 2: Problem Diagnosis
 - For understanding the root causes of issues
 
 Template 3: Creative Ideation
@@ -1103,10 +1103,10 @@ Step 1: Criteria Mapping
 [criterion 2] ──weight──→ [importance score]
 [criterion 3] ──weight──→ [importance score]
 
-Step 2: Option Evaluation  
+Step 2: Option Evaluation
        │ Crit1 │ Crit2 │ Crit3 │ Total │
 Option A│   7   │   5   │   9   │  21   │
-Option B│   9   │   8   │   4   │  21   │  
+Option B│   9   │   8   │   4   │  21   │
 Option C│   6   │   9   │   7   │  22   │
 
 Step 3: Relationship Analysis
@@ -1142,7 +1142,7 @@ Modern AI systems often work with multiple types of information simultaneously. 
 ```
 Copy this to an AI assistant:
 
-"I want to explore how you connect different types of information. 
+"I want to explore how you connect different types of information.
 Please analyze how these different modalities relate to the concept 'home':
 
 Visual: What images come to mind?
@@ -1199,10 +1199,10 @@ CROSS-MODAL CONNECTIONS:
 ```
 Copy this to an AI assistant:
 
-"I want to track attention flow through complex reasoning. Please solve 
+"I want to track attention flow through complex reasoning. Please solve
 this multi-step problem and map your attention patterns:
 
-Problem: 'Design a mobile app that helps people form better habits while 
+Problem: 'Design a mobile app that helps people form better habits while
 respecting their privacy and being financially sustainable.'
 
 Please work through this step-by-step and for each major phase:
@@ -1225,7 +1225,7 @@ BACKGROUND: [privacy:4] [sustainability:3] [competition:2]
 
 ATTENTION SHIFT → User Needs Analysis
 
-PHASE 2: User Research (Focus: 9/10)  
+PHASE 2: User Research (Focus: 9/10)
 PRIMARY: [user motivation:10] ← [barriers:9] → [existing solutions:8]
 SECONDARY: [habit psychology:7] ← [mobile usage:6] → [privacy concerns:6]
 BACKGROUND: [monetization:3] [technical limits:2]
@@ -1263,14 +1263,14 @@ FLOW INSIGHTS:
 ```
 Copy this to an AI assistant:
 
-"I want to track how patterns emerge and evolve in reasoning. Please 
+"I want to track how patterns emerge and evolve in reasoning. Please
 analyze this scenario over multiple time horizons:
 
 Scenario: 'The adoption of electric vehicles in society'
 
 Please analyze this at three different time scales:
 - Short-term (1-2 years): Immediate patterns and trends
-- Medium-term (5-10 years): Emerging structural changes  
+- Medium-term (5-10 years): Emerging structural changes
 - Long-term (20-50 years): Fundamental transformations
 
 For each time scale:
@@ -1322,10 +1322,10 @@ Feedback loops: Long-term changes influence short-term patterns
 ```
 Copy this to an AI assistant:
 
-"I want to map uncertainty and confidence in complex reasoning. Please 
+"I want to map uncertainty and confidence in complex reasoning. Please
 analyze this question while tracking your confidence levels:
 
-Question: 'What will be the most significant challenge for human society 
+Question: 'What will be the most significant challenge for human society
 in the next 50 years?'
 
 Please:
@@ -1345,7 +1345,7 @@ HIGH CONFIDENCE PREDICTIONS (8-10):
 ┌─────────────────┐
 │ CLIMATE CHANGE  │ Confidence: 9/10
 │ • scientific consensus: strong
-│ • observable trends: clear  
+│ • observable trends: clear
 │ • impact trajectory: established
 └─────────────────┘
 
@@ -1397,7 +1397,7 @@ Copy this to multiple people or AI assistants with different "roles":
 Scenario: 'A city proposes replacing all parking meters with a mobile app system.'
 
 Role A: Urban resident who relies on street parking
-Role B: Business owner in the downtown area  
+Role B: Business owner in the downtown area
 Role C: City budget administrator
 Role D: Elderly citizen who isn't tech-savvy
 Role E: Environmental advocate
@@ -1421,7 +1421,7 @@ ROLE A: URBAN RESIDENT
 │ finding spots:8 │    │ tech failure:7  │    │ surge pricing:7 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 
-ROLE B: BUSINESS OWNER  
+ROLE B: BUSINESS OWNER
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │  CUSTOMER ACCESS│    │   FOOT TRAFFIC  │    │   COMPETITION   │
 │ easy parking:10 │◄──►│ turnover rate:9 │◄──►│ nearby areas:6  │
@@ -1461,11 +1461,11 @@ CROSS-PERSPECTIVE INSIGHTS:
 ```
 Copy this to an AI assistant:
 
-"I want to map areas of consensus and conflict across different 
+"I want to map areas of consensus and conflict across different
 perspectives. Using the parking meter analysis above, please:
 
 1. Identify areas where most perspectives agree
-2. Map major conflicts or tensions between perspectives  
+2. Map major conflicts or tensions between perspectives
 3. Find potential compromise solutions that address multiple concerns
 4. Identify perspectives that might be natural allies
 5. Suggest strategies for building broader consensus
@@ -1480,7 +1480,7 @@ STRONG CONSENSUS AREAS:
 ┌─────────────────┐
 │ SYSTEM MUST BE  │ ← All perspectives agree
 │ • Reliable      │
-│ • Cost-effective│  
+│ • Cost-effective│
 │ • User-friendly │
 └─────────────────┘
 
@@ -1517,7 +1517,7 @@ COMPROMISE SOLUTIONS:
 ```
 Copy this to an AI assistant:
 
-"I want to explore how collective intelligence emerges from individual 
+"I want to explore how collective intelligence emerges from individual
 perspectives. Imagine surveying 100 people about this question:
 
 'What makes a neighborhood feel safe and welcoming?'
@@ -1579,7 +1579,7 @@ Let's apply latent mapping to understand and improve an AI tutoring system.
 ```
 Copy this to an AI assistant:
 
-"I want to analyze how an AI tutoring system processes student learning. 
+"I want to analyze how an AI tutoring system processes student learning.
 Consider this scenario:
 
 A student asks: 'I don't understand why photosynthesis is important.'
@@ -1594,7 +1594,7 @@ Please map out how an effective AI tutor should:
 
 For each step, show:
 - Key concepts being activated
-- Decision pathways being followed  
+- Decision pathways being followed
 - Information being prioritized or filtered
 - Feedback loops and adaptation mechanisms"
 ```
@@ -1609,7 +1609,7 @@ STEP 1: QUESTION ANALYSIS
      ▼                    ▼                        ▼
 [topic: photosynthesis] → [depth: importance] → [context: biology class]
 
-STEP 2: STUDENT ASSESSMENT  
+STEP 2: STUDENT ASSESSMENT
 [prior knowledge probe] → [learning style detection] → [engagement level]
          │                        │                        │
          ▼                        ▼                        ▼
@@ -1642,7 +1642,7 @@ STEP 5: COMPREHENSION MONITORING
 
 STEP 6: ADAPTIVE RESPONSE
 IF understanding_low: → [simplify explanation] → [more analogies]
-IF understanding_medium: → [add detail] → [check specific points]  
+IF understanding_medium: → [add detail] → [check specific points]
 IF understanding_high: → [extend concepts] → [apply to new contexts]
 
 FEEDBACK LOOPS:
@@ -1665,7 +1665,7 @@ Copy this to an AI assistant:
 
 "I want to map the creative writing process in AI. Consider this request:
 
-'Help me write a short story about a character who discovers something 
+'Help me write a short story about a character who discovers something
 unexpected about their past that changes everything.'
 
 Please map your creative reasoning process:
@@ -1713,7 +1713,7 @@ TENSION MANAGEMENT:
 ORIGINALITY-FAMILIARITY BALANCE:
 Familiar Elements (reader comfort):     Novel Elements (engagement):
 • Family secret discovery              • Unexpected secret type
-• Character growth arc                 • Unique revelation method  
+• Character growth arc                 • Unique revelation method
 • Emotional resolution                 • Surprising implications
 
 COHERENCE MAINTENANCE:
@@ -1736,7 +1736,7 @@ IF coherence_breaking: → strengthen_logical_connections
 
 EMERGENT STORY PROPERTIES:
 • Emotional resonance from character-driven discovery
-• Thematic depth from identity/truth exploration  
+• Thematic depth from identity/truth exploration
 • Reader engagement from mystery/revelation structure
 • Universal appeal through personal transformation theme
 ```
@@ -1749,7 +1749,7 @@ Copy this to an AI assistant:
 
 "I want to map strategic reasoning in business AI. Consider this scenario:
 
-'A traditional bookstore chain is losing customers to online retailers 
+'A traditional bookstore chain is losing customers to online retailers
 and needs to reinvent their business model to survive.'
 
 Please map your strategic analysis process:
@@ -1807,7 +1807,7 @@ Low Risk:      [hybrid]       │    [cost cutting]
 
 Implementation Complexity:
 Quick wins (6-12 months):     [cafe addition, events]
-Medium term (1-2 years):      [community programs, partnerships]  
+Medium term (1-2 years):      [community programs, partnerships]
 Long term (2-5 years):        [digital transformation, new model]
 
 STRATEGIC REASONING CHAINS:
@@ -1862,7 +1862,7 @@ Current Experience Level:
 My Primary Interest Areas (rank 1-5):
 - Educational applications (AI tutoring, learning systems)
 - Business strategy and decision making
-- Creative AI and content generation  
+- Creative AI and content generation
 - Technical AI debugging and optimization
 - Research and scientific applications
 - Personal decision-making and life planning
@@ -1889,7 +1889,7 @@ LATENT MAPPING LEARNING PATH GENERATOR:
 SKILL ASSESSMENT MATRIX:
                  Beginner    Intermediate    Advanced    Expert
 Visualization:      ●           ○             ○          ○
-Analysis:           ●           ○             ○          ○  
+Analysis:           ●           ○             ○          ○
 Pattern Detection:  ●           ○             ○          ○
 Tool Building:      ●           ○             ○          ○
 Application:        ●           ○             ○          ○
@@ -1901,7 +1901,7 @@ Day 3-4: [Practice simple concept relationship analysis]
 Day 5-6: [Try dimensional reduction exercises]
 Day 7: [Review and consolidate learning]
 
-Week 2: Skill Development  
+Week 2: Skill Development
 Day 8-10: [Multi-layer analysis practice]
 Day 11-12: [Attention flow tracking exercises]
 Day 13-14: [Uncertainty and confidence mapping]
@@ -1946,7 +1946,7 @@ Advanced Projects:
 PROGRESS MEASUREMENT:
 Technical Skills:
 □ Can create clear, informative visual maps
-□ Identifies non-obvious patterns and relationships  
+□ Identifies non-obvious patterns and relationships
 □ Builds useful analysis tools and templates
 □ Adapts techniques to new domains effectively
 
@@ -1969,7 +1969,7 @@ Year 4+: Research new frontiers, advance the field
 ```
 Copy this to an AI assistant:
 
-"I want to build connections with others interested in latent mapping. 
+"I want to build connections with others interested in latent mapping.
 Please suggest:
 
 1. Ways to find others with similar interests
@@ -2034,7 +2034,7 @@ Advance the Field:
 
 PEER LEARNING METHODS:
 Study Partners: Regular practice sessions and skill development
-Learning Groups: Multi-person projects and discussions  
+Learning Groups: Multi-person projects and discussions
 Expert Networks: Connect with advanced practitioners
 Cross-Domain Exchange: Learn from adjacent fields and applications
 ```
@@ -2048,7 +2048,7 @@ Copy this to an AI assistant:
 "I want to develop true expertise in latent mapping. Please outline:
 
 1. The distinguishing characteristics of expert-level practitioners
-2. Advanced techniques that separate good from great analysts  
+2. Advanced techniques that separate good from great analysts
 3. Ways to develop pattern recognition intuition
 4. Methods for handling extremely complex multi-dimensional problems
 5. Approaches to innovation and technique development
@@ -2078,7 +2078,7 @@ Level 2: Multi-Dimensional Analysis
 • Navigate complex interdependent systems
 • Maintain coherence across multiple scales
 
-Level 3: Dynamic and Adaptive Mapping  
+Level 3: Dynamic and Adaptive Mapping
 • Track real-time system evolution
 • Predict pattern emergence and decay
 • Design self-adapting analysis frameworks
@@ -2120,7 +2120,7 @@ Technique Development:
 
 Tool Creation:
 • Automate routine analysis tasks
-• Build interactive exploration environments  
+• Build interactive exploration environments
 • Develop collaborative platforms
 
 Field Advancement:
@@ -2150,7 +2150,7 @@ Growth Mindset:
 Congratulations! You've completed a comprehensive journey through latent mapping and symbolic interpretability. You now have the tools, techniques, and understanding to:
 
 - **Visualize AI thinking** through clear, informative maps
-- **Understand complex relationships** in high-dimensional spaces  
+- **Understand complex relationships** in high-dimensional spaces
 - **Debug AI behavior** when systems act unexpectedly
 - **Optimize AI performance** through systematic analysis
 - **Build custom tools** for your specific applications

@@ -22,8 +22,8 @@ OR
 
 ### 1.2.2 VM in AWS
 
-**Note**: You don't have to rent an instance in the cloud. You can follow the same instructions 
-for setting up your local environment. 
+**Note**: You don't have to rent an instance in the cloud. You can follow the same instructions
+for setting up your local environment.
 
 <a href="https://www.youtube.com/watch?v=IXSiYkP23zo&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK">
   <img src="images/thumbnail-1-02.jpg">
@@ -48,7 +48,7 @@ sudo apt update
 
 ### Step 3: Install Docker and Docker Compose
 Follow the instructions here:
-[install-using-the-repository](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)  
+[install-using-the-repository](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 Set up Docker's apt repository.
 ```sh
 # Add Docker's official GPG key:
@@ -94,7 +94,7 @@ chmod 400 name-of-your-private-key-file.pem
 ## 1.3 (Optional) Training a ride duration prediction model
 
 **Note**: The NYC taxi data is now in parquet format, not CSV.
-Here's a [video](https://www.youtube.com/watch?v=r94QjpX9vSE&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK) that explains how to 
+Here's a [video](https://www.youtube.com/watch?v=r94QjpX9vSE&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK) that explains how to
 read parquet data.
 
 <a href="https://www.youtube.com/watch?v=iRunifGSHFc&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK">
@@ -120,7 +120,7 @@ Links:
   <img src="images/thumbnail-1-05.jpg">
 </a>
 
-Links: 
+Links:
 
 * [MLOps Maturity model](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/mlops/mlops-maturity-model)
 

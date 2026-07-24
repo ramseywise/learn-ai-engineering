@@ -7,9 +7,9 @@ sources:
 cleaned: 2026-07-17
 ---
 
-test how you think in real-world situations. 
+test how you think in real-world situations.
 
-These questions reveal whether you can apply theory to practical problems, weigh trade-offs, and deliver business-focused solutions. 
+These questions reveal whether you can apply theory to practical problems, weigh trade-offs, and deliver business-focused solutions.
 
 They help interviewers evaluate:
 
@@ -22,13 +22,13 @@ They help interviewers evaluate:
 
 ![Case interview evaluation dimensions](../images/case-interview-evaluation-dimensions.png)
 
-process > results 
+process > results
 
-structure, framework 
+structure, framework
 
-customize method / strategy based on this case 
+customize method / strategy based on this case
 
-listen to the interviewer — information, help, support, mindset 
+listen to the interviewer — information, help, support, mindset
 
 # **Tips for Success**
 
@@ -37,7 +37,7 @@ listen to the interviewer — information, help, support, mindset
 - **Keep business context in mind.** Show you care about outcomes, not just models.
 - **Practice with open datasets.** Kaggle competitions are a great source of realistic scenarios.
 
-some infor from Reddit: 
+some infor from Reddit:
 
 They might throw a tricky business problem at you and ask you to build a machine learning solution from scratch.
 
@@ -58,7 +58,7 @@ Your two years of data science experience have already given you the analytical 
 
 Practice breaking LLM problems down into system components. Think about RAG architectures, prompt routing, cost versus latency trade-offs, and hallucination monitoring. Build several end-to-end GenAI projects that you can fully demonstrate—such as chatbots or semantic search applications—and be prepared to explain your design decisions and what went wrong, not just what worked.
 
-For LLM case studies, I approached them as simplified system design interviews and practiced talking through the architecture out loud. What helped me most was having a one-page template: define the objective and users, list the constraints (such as latency and cost per thousand tokens), outline offline and online evaluation plans, address safety considerations, and include a simple diagram showing RAG ingestion, chunking, embeddings, vector storage, reranking, prompting, guardrails, and monitoring. I'd simulate scenarios such as customer support chatbots or document QA systems and quickly estimate the trade-offs between token costs and p95 latency. 
+For LLM case studies, I approached them as simplified system design interviews and practiced talking through the architecture out loud. What helped me most was having a one-page template: define the objective and users, list the constraints (such as latency and cost per thousand tokens), outline offline and online evaluation plans, address safety considerations, and include a simple diagram showing RAG ingestion, chunking, embeddings, vector storage, reranking, prompting, guardrails, and monitoring. I'd simulate scenarios such as customer support chatbots or document QA systems and quickly estimate the trade-offs between token costs and p95 latency.
 
 Master LLM system design: clarify the requirements, design the data and inference pipeline, decide between RAG and fine-tuning, and discuss latency and cost trade-offs. Build two or three end-to-end projects (such as a RAG chatbot or semantic search system). Study LLM internals (RLHF, attention mechanisms, and hallucination mechanisms), tools (vector databases and LangChain), and monitoring.
 
@@ -72,7 +72,7 @@ For interviews like these, the key is to treat them as system and design problem
 
 The interview will include questions that test both your technical depth and your business acumen. They will almost certainly dive into your understanding of LLM fundamentals—Transformer architectures, attention mechanisms, prompting strategies, and fine-tuning methods such as LoRA or PEFT. You should be very comfortable with RAG systems, since most enterprise GenAI applications rely on them, including vector databases, embedding models, and chunking strategies. On the Python side, be prepared to discuss frameworks such as LangChain or LlamaIndex, along with how you would build production systems with proper error handling, monitoring, and cost optimization. They'll also ask practical trade-off questions: when to use GPT-4 versus a smaller model, how to handle hallucinations, how to protect data privacy, and how to evaluate model performance beyond basic metrics.
 
-From a consulting perspective, they value not only your technical skills but also your problem-solving approach. You may receive a case study where you're asked to design a GenAI solution for a hypothetical client—for example, automating customer support or document processing—and explain your reasoning around model selection, infrastructure, and ROI. Since consulting is all about adapting quickly, you should also be prepared to discuss failures or challenges from previous projects and what you learned from them. 
+From a consulting perspective, they value not only your technical skills but also your problem-solving approach. You may receive a case study where you're asked to design a GenAI solution for a hypothetical client—for example, automating customer support or document processing—and explain your reasoning around model selection, infrastructure, and ROI. Since consulting is all about adapting quickly, you should also be prepared to discuss failures or challenges from previous projects and what you learned from them.
 
 They will almost certainly include a design interview where you're asked to design something like a traffic light system. Practice drawing boxes and explaining what each component does.
 
@@ -111,7 +111,7 @@ hey also look for your awareness of latency constraints, cost trade-offs, and mo
 
 By mastering how to design scalable, explainable, and resilient systems, you’ll stand out as more than just a model builder, you’ll demonstrate that you can own the full AI lifecycle from concept to deployment.
 
-**Reliability, Ethics, and Explainability in AI Engineering—  reliable, fair, and transparent.explainability** 
+**Reliability, Ethics, and Explainability in AI Engineering—  reliable, fair, and transparent.explainability**
 
 A strong answer focuses on monitoring, testing, and retraining. Explain that reliability in AI engineering means ensuring consistent, predictable behavior across environments. This involves tracking key metrics like accuracy, drift, latency, and uptime. Implement continuous evaluation pipelines that detect when input data changes or model accuracy degrades.
 
@@ -131,7 +131,7 @@ This tests your ability to blend NLP with data security. Describe integrating an
 
 ### what would you do if your agent system performance is not as good as you expect?
 
-### 
+###
 
 ## The System DesignInterview Handbook
 
@@ -139,9 +139,9 @@ This tests your ability to blend NLP with data security. Describe integrating an
 
 **Problem statement**
 
-With a System Design Interview, you begin with a vague problem statement that asks you to design a web service. 
+With a System Design Interview, you begin with a vague problem statement that asks you to design a web service.
 
-**Requirements and constraints —**you will need to ask your interviewer questions  
+**Requirements and constraints —**you will need to ask your interviewer questions
 
 1) Clarify & Scope
 
@@ -174,9 +174,9 @@ From here, you identify the essential functions of the system you’ve been aske
     - “Are we targeting backend code only, or should it support UI logic as well?”
     - “Should the assistant support autocomplete or full document summarization?”
 - **Non-functional requirements—**Functionalities that affect the overall operation of the system but are broader system functions that aren’t adjacent to specific functions of a service. Examples include scalability, reliability, usability, security, and performance.
-    - 
-        
-        
+    -
+
+
         | **Requirement Type** | **Key Questions** |
         | --- | --- |
         | **Latency** | “Should answers return under 1 second?” |
@@ -191,17 +191,17 @@ You also want to understand any constraints for your system. Perhaps a company�
 
 Note: To understand the problem, .
 
-**Designing:** 
+**Designing:**
 
-This will involve identifying the components, technologies, and APIs that will work together to help you achieve your goal. 
+This will involve identifying the components, technologies, and APIs that will work together to help you achieve your goal.
 
 allow your interviewers to hear your thought process regarding your solution. This includes how you’ve connected the elements of your design to requirements, and how you’ve reasoned through making compromises in your design (these compromises are known as trade-offs, which we’ll discuss in the next chapter).
 
-**Identifying shortcomings — adaptability & growth mindset& iteration** 
+**Identifying shortcomings — adaptability & growth mindset& iteration**
 
 Finally, you will reflect on your design. If you’re aware of shortcomings in your design, begin to address them and discuss other design choices you could’ve made, or explain your decision based on your understanding of the given requirements and constraints.
 
-Ideally, you will be getting feedback and conversing with your interviewer both during and throughout the design process. Your interviewer may point out shortcomings or ask about certain choices you made to give you an opportunity to demonstrate and explain your thinking. 
+Ideally, you will be getting feedback and conversing with your interviewer both during and throughout the design process. Your interviewer may point out shortcomings or ask about certain choices you made to give you an opportunity to demonstrate and explain your thinking.
 
 **Second iteration**
 
@@ -215,7 +215,7 @@ Knowing System Design gives you immense perspective. We can picture the differen
 
 A **trade-off** is a compromise that is made between two desired but incompatible features, like latency & accuracy  / fullu-automated & safety. Trade-offs are performed mostly between the non-functional requirements in the System Design world, as we will see below.
 
-types: 
+types:
 
 | Storage | Security |
 | --- | --- |
@@ -244,11 +244,11 @@ double-check with your interviewers about the priorities of your system.
 
 **Narrate the trade-offs between the solutions**
 
-tell them the pros and cons and narrating your thought process of **the trade-offs between the solutions,  —> ask** interviewers about the priorities  —>  
+tell them the pros and cons and narrating your thought process of **the trade-offs between the solutions,  —> ask** interviewers about the priorities  —>
 
-→ a. you might be given more details that will help you make an informed decision. 
+→ a. you might be given more details that will help you make an informed decision.
 
-→ only get brief or ambiguous responses, simply make some assumptions and move forward. 
+→ only get brief or ambiguous responses, simply make some assumptions and move forward.
 
 The important thing is to get to the next step and to show that you’re strategic about your decisions.
 
@@ -256,17 +256,17 @@ The important thing is to get to the next step and to show that you’re strateg
 
 When you land on a solution, you should justify why it’s the solution with the most acceptable trade-offs. Which requirements will you be able to fulfill? Why is this best for solving the problem, given what you know?
 
-1. solution 
-    
+1. solution
+
     <aside>
     💡
-    
-    *I’d compromise X for optimal Y*.   
-    
-    *I’d compromise uploads for optimal streaming*.  
-    
+
+    *I’d compromise X for optimal Y*.
+
+    *I’d compromise uploads for optimal streaming*.
+
     </aside>
-    
+
 
 b. explain: why it’s the solution with the most acceptable trade-offs
 
@@ -298,10 +298,10 @@ Here are some key points to remember about trade-offs:
 - Display a growth mindset if you make mistakes or oversights.
 - Communicate at multiple points in your interview.
 
-**Asking strategic questions — At the start of the interview, clarify any vague questions: needs, requirements, budget, priorities.** unique challenges and constraints 
+**Asking strategic questions — At the start of the interview, clarify any vague questions: needs, requirements, budget, priorities.** unique challenges and constraints
 
 1. **Your interviewers won’t give you all the requirements upfront.**  how you get enough clarification to move on to your next steps.
-2. **You can avoid faulty assumptions.** should never fall prey to assumptions. Every system has unique challenges and constraints, 
+2. **You can avoid faulty assumptions.** should never fall prey to assumptions. Every system has unique challenges and constraints,
 
 Your strategic questions should aim to:
 
@@ -341,11 +341,11 @@ Consider these tips for when your interviewer challenges you:
 
 **each level’s vantage point differs**
 
-have the foresight to design a system *for the future*. There’s no sense in designing a system that will be obsolete by the time you ship it. 
+have the foresight to design a system *for the future*. There’s no sense in designing a system that will be obsolete by the time you ship it.
 
 more insight into how to make a system successful, even if unforeseen problems arise. Because problems are inevitable, they must address how to scope the problem and limit its impact. They must be able to mitigate them. They’ll be concerned with making the system easily debuggable and maintainable in the face of many issues, such as a prolonged system outage. They also consider how problems impact broader concerns that are crucial to the business—for instance, the impact of a privacy breach on user experience and product reputation.
 
-The ability to address unforeseen circumstances shows that an engineer understands real-world problems. 
+The ability to address unforeseen circumstances shows that an engineer understands real-world problems.
 
 .
 

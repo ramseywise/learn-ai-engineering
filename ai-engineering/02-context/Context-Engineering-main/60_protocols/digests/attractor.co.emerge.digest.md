@@ -25,7 +25,7 @@ Use this protocol when:
 ```
 attractor.co.emerge {
   intent: "Strategically scaffold co-emergence of multiple attractors",
-  
+
   input: {
     current_field_state: <field_state>,
     surfaced_residues: <residues>,
@@ -34,7 +34,7 @@ attractor.co.emerge {
     historical_audit_log: "<audit_log>",
     emergent_signals: "<signals>"
   },
-  
+
   process: [
     "/attractor.scan{detect='attractors', filter_by='strength'}",
     "/residue.surface{mode='recursive', integrate_residue=true}",
@@ -44,7 +44,7 @@ attractor.co.emerge {
     "/integration.protocol{integrate='co_emergent_attractors'}",
     "/boundary.collapse{auto_collapse='field_boundaries'}"
   ],
-  
+
   output: {
     updated_field_state: "<new_state>",
     co_emergent_attractors: "<attractor_list>",
@@ -81,18 +81,18 @@ def apply_co_emergence(concepts):
     # Create field with attractors for each concept
     field = create_field()
     attractors = [create_attractor(field, concept) for concept in concepts]
-    
+
     # Execute co-emergence protocol
     input_data = {
         "current_field_state": field,
         "candidate_attractors": attractors
     }
-    
+
     result = execute_protocol("attractor.co.emerge", input_data)
-    
+
     # Extract co-emergent concepts
     co_emergent_concepts = extract_concepts(result["co_emergent_attractors"])
-    
+
     return co_emergent_concepts
 ```
 

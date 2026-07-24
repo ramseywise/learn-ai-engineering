@@ -9,7 +9,7 @@ in this course to build an end-to-end machine learning project.
 
 ## Problem statement
 
-For the project, we will ask you to build an end-to-end ML project. 
+For the project, we will ask you to build an end-to-end ML project.
 
 For that, you will need:
 
@@ -18,15 +18,15 @@ For that, you will need:
 * Create a model training pipeline
 * Deploy the model in batch, web service or streaming
 * Monitor the performance of your model
-* Follow the best practices 
+* Follow the best practices
 
 
-## Technologies 
+## Technologies
 
 You don't have to limit yourself to technologies covered in the course. You can use alternatives as well:
 
-* **Cloud**: AWS, GCP, Azure, ... 
-* **Experiment tracking tools**: MLFlow, Weights & Biases, ... 
+* **Cloud**: AWS, GCP, Azure, ...
+* **Experiment tracking tools**: MLFlow, Weights & Biases, ...
 * **Workflow orchestration**: Prefect, Airflow, Flyte, Kubeflow, Argo, ...
 * **Monitoring**: Evidently, WhyLabs/whylogs, ...
 * **CI/CD**: Github actions, Gitlab CI/CD, ...
@@ -38,7 +38,7 @@ If you're not certain about some tools, ask in Slack.
 
 ## Peer reviewing
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > To evaluate the projects, we'll use peer reviewing. This is a great opportunity for you to learn from each other.
 > * To get points for your project, you need to evaluate 3 projects of your peers
 > * You get 3 extra points for each evaluation
@@ -47,7 +47,7 @@ If you're not certain about some tools, ask in Slack.
 
 * Problem description
     * 0 points: The problem is not described
-    * 1 point: The problem is described but shortly or not clearly 
+    * 1 point: The problem is described but shortly or not clearly
     * 2 points: The problem is well described and it's clear what the problem the project solves
 * Cloud
     * 0 points: Cloud is not used, things run only locally
@@ -60,7 +60,7 @@ If you're not certain about some tools, ask in Slack.
 * Workflow orchestration
     * 0 points: No workflow orchestration
     * 2 points: Basic workflow orchestration
-    * 4 points: Fully deployed workflow 
+    * 4 points: Fully deployed workflow
 * Model deployment
     * 0 points: Model is not deployed
     * 2 points: Model is deployed but only locally
@@ -105,5 +105,3 @@ Explore a collection of projects completed by members of our community. The proj
 ### MLOps Zoomcamp 2022
 
 * [2022 Projects](../cohorts/2022/07-project)
-
-

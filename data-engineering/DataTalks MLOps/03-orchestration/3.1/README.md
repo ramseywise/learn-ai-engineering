@@ -21,7 +21,7 @@ The project `unit_1_data_preparation` now has an empty pipeline, and it can be d
 
 [Video](https://youtu.be/1lSOdTpoRug)
 
-Code: 
+Code:
 - [`ingest.py`](https://github.com/mage-ai/mlops/blob/master/mlops/unit_3_observability/data_loaders/ingest.py)
 
 

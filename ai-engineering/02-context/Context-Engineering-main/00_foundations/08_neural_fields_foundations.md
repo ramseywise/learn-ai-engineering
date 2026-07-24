@@ -165,10 +165,10 @@ Instead of explicitly retrieving documents based on keyword matching, we inject 
 def resonance_retrieval(query, field, threshold=0.7):
     # Inject query pattern into field
     field.inject(query)
-    
+
     # Measure resonance with knowledge base
     resonances = field.measure_resonance(knowledge_base)
-    
+
     # Return items that resonate above threshold
     return [item for item, score in resonances.items() if score > threshold]
 ```
@@ -283,26 +283,26 @@ class NeuralField:
         self.resonance_decay = resonance_decay
         self.boundary_permeability = boundary_permeability
         self.history = []
-        
+
     def inject(self, pattern, strength=1.0):
         """Introduce a new information pattern into the field"""
         # Apply boundary filtering
         effective_strength = strength * self.boundary_permeability
-        
+
         # Update field state with new pattern
         if pattern in self.state:
             self.state[pattern] += effective_strength
         else:
             self.state[pattern] = effective_strength
-            
+
         # Record history
         self.history.append(("inject", pattern, effective_strength))
-        
+
         # Apply resonance effects
         self._process_resonance(pattern)
-        
+
         return self
-        
+
     def _process_resonance(self, trigger_pattern):
         """Process resonance effects from a trigger pattern"""
         # For each existing pattern, calculate resonance with trigger
@@ -312,33 +312,33 @@ class NeuralField:
                 # Calculate resonance (simplified example)
                 resonance = self._calculate_resonance(pattern, trigger_pattern)
                 resonance_effects[pattern] = resonance
-        
+
         # Apply resonance effects
         for pattern, effect in resonance_effects.items():
             self.state[pattern] += effect
-        
+
         return self
-    
+
     def decay(self):
         """Apply natural decay to all patterns"""
         for pattern in self.state:
             self.state[pattern] *= (1 - self.resonance_decay)
-            
+
         # Remove patterns that have decayed below threshold
         self.state = {k: v for k, v in self.state.items() if v > 0.01}
-        
+
         return self
-    
+
     def _calculate_resonance(self, pattern1, pattern2):
         """Calculate resonance between two patterns (placeholder)"""
         # In a real implementation, this would use semantic similarity,
         # contextual relationship, or other measures
         return 0.1  # Placeholder
-        
+
     def measure_resonance(self, query_pattern):
         """Measure how strongly the field resonates with a query pattern"""
         return self._calculate_resonance_with_field(query_pattern)
-    
+
     def _calculate_resonance_with_field(self, pattern):
         """Calculate how strongly a pattern resonates with the entire field"""
         # Placeholder for a real implementation

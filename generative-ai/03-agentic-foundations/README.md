@@ -26,7 +26,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 
 - **[`AI-Agentic-Design-Patterns-with-AutoGen-main/`](AI-Agentic-Design-Patterns-with-AutoGen-main/)** —
   AutoGen multi-agent design patterns: conversation, tool use, code execution, orchestration.
-- **[`AI-Agents-in-LangGraph-main/`](AI-Agents-in-LangGraph-main/)** —
+- **[`AI-Agents-in-LangGraph-main/`](../04-agentic-frameworks/AI-Agents-in-LangGraph-main/)** —
   LangGraph agent construction: state machines, persistence, streaming, human-in-the-loop.
 - **[`AgenticAIFrameworks-master/`](AgenticAIFrameworks-master/)** —
   survey of agentic frameworks: comparative patterns across AutoGen, LangGraph, CrewAI.
@@ -37,7 +37,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
   context engineering for agents: what goes in the context window and why it matters.
 - **[`LLMs-as-Operating-Systems--Agent-Memory-main/`](LLMs-as-Operating-Systems--Agent-Memory-main/)** —
   agent memory architectures: in-context, external (vector/KG), procedural memory.
-- **[`Long-Term-Agentic-Memory-With-LangGraph-main/`](Long-Term-Agentic-Memory-With-LangGraph-main/)** —
+- **[`Long-Term-Agentic-Memory-With-LangGraph-main/`](../04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/)** —
   long-term memory implementation with LangGraph persistence layer.
 
 **Generative AI design patterns:**

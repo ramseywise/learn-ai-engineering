@@ -84,21 +84,21 @@ class GetDatasetsTool(BaseLangfuseTool):
                     dataset_name=args["dataset_name"],
                 )
                 response = f"[METRICS] **Dataset: {dataset.name}**\n\n"
-                
+
                 if args.get("include_items"):
                     items = await self._fetch_with_retry(
                         self.langfuse.api.dataset_items.list,
                         dataset_name=args["dataset_name"],
                     )
                     response += f"**Items:** {len(items.data)}\n"
-                
+
             if args.get("include_runs"):
                 runs = await self._fetch_with_retry(
                     self.langfuse.api.datasets.get_runs,
                     dataset_name=args["dataset_name"],
                 )
                 response += f"**Runs:** {len(runs.data)}\n"
-                
+
                 return response
             else:
                 datasets = await self._fetch_with_retry(
@@ -112,7 +112,7 @@ class GetDatasetsTool(BaseLangfuseTool):
                 return response
         except Exception as e:
             return f"Error fetching datasets: {str(e)}"
-        
+
 class CreateDatasetTool(BaseLangfuseTool):
     async def execute(self, args: Dict[str, Any]) -> str:
         try:

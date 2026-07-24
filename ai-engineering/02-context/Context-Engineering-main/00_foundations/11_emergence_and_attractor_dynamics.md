@@ -1,5 +1,5 @@
 # 11. Emergence and Attractor Dynamics
-## [Attractors in LLMs](https://arxiv.org/pdf/2502.15208?) 
+## [Attractors in LLMs](https://arxiv.org/pdf/2502.15208?)
 
 ### [Intro to Dynamical Systems Theory](https://content.csbs.utah.edu/~butner/systems/DynamicalSystemsIntro.html)
 _Understanding how meaning crystallizes in context fields_
@@ -26,9 +26,9 @@ Let's approach this from three perspectives:
 - **Concrete**: Using visual and physical metaphors to build intuition
 - **Numeric**: Understanding the computational patterns and measurements
 - **Abstract**: Exploring the theoretical principles and structures
-  
+
 <div align="center">
-       
+
 ## ![image](https://github.com/user-attachments/assets/924f37fb-190f-4f71-9f98-97d656587f12)
 
 
@@ -86,8 +86,8 @@ Let's take our landscape metaphor one step further and visualize it in three dim
                  Z (Semantic Depth)
                  │
                  │     ⟱
-                 │   ╱─╲  
-                 │  ╱   ╲ 
+                 │   ╱─╲
+                 │  ╱   ╲
                  │ ╱     ╲
                  │╱       ╲
                  └─────────────────── X (Semantic Dimension 1)
@@ -242,13 +242,13 @@ We can visualize attractor formation as a process of landscape deformation:
 Initial Field         Intermediate         Stable Attractors
  (Flat)               (Emerging)            (Defined)
 ─────────────      ─────────────          ─────────────
-               
+
     · · · ·           ∪   ∪                  ╲╱   ╲╱
-                                 
+
     · · · ·           ·   ·                  ·     ·
-                                 
+
     · · · ·           ∩   ∩                  ╱╲   ╱╲
-                                 
+
 ─────────────      ─────────────          ─────────────
 ```
 
@@ -316,30 +316,30 @@ Here's a simple algorithm for gradient-based attractor detection:
 def detect_attractors(field, threshold=0.01):
     """
     Detect attractors in a semantic field using gradient analysis.
-    
+
     Args:
         field: The semantic field
         threshold: Convergence threshold
-        
+
     Returns:
         List of detected attractors
     """
     # Calculate gradient field (direction of steepest descent)
     gradient_field = calculate_gradient(field)
-    
+
     # Identify points where gradient magnitude is below threshold
     candidate_points = []
     for x in range(field.shape[0]):
         for y in range(field.shape[1]):
             if np.linalg.norm(gradient_field[x, y]) < threshold:
                 candidate_points.append((x, y))
-    
+
     # Classify fixed points (attractors, repellers, saddles)
     attractors = []
     for point in candidate_points:
         if is_attractor(field, point):
             attractors.append(point)
-    
+
     return attractors
 ```
 
@@ -430,13 +430,13 @@ def shape_field_gradients(field, target_regions, gradient_strength=1.0):
     """
     # Create gradient mask
     gradient_mask = np.zeros_like(field)
-    
+
     # For each target region
     for region in target_regions:
         center_x, center_y = region['center']
         radius = region['radius']
         strength = region.get('strength', gradient_strength)
-        
+
         # Create radial gradient pointing toward center
         for x in range(field.shape[0]):
             for y in range(field.shape[1]):
@@ -446,10 +446,10 @@ def shape_field_gradients(field, target_regions, gradient_strength=1.0):
                     angle = np.arctan2(center_y - y, center_x - x)
                     gradient_mask[x, y, 0] = strength * np.cos(angle)
                     gradient_mask[x, y, 1] = strength * np.sin(angle)
-    
+
     # Apply gradient mask to field
     field = apply_gradient_mask(field, gradient_mask)
-    
+
     return field
 ```
 
@@ -462,10 +462,10 @@ def amplify_resonance(field, target_patterns, amplification_factor=1.5):
     """
     # Calculate resonance with target patterns
     resonance_map = calculate_resonance(field, target_patterns)
-    
+
     # Apply resonance-based amplification
     amplified_field = field * (1.0 + (resonance_map * (amplification_factor - 1.0)))
-    
+
     return amplified_field
 ```
 
@@ -481,7 +481,7 @@ def strengthen_attractor(field, attractor_location, strength_factor=1.5):
     Strengthen a specific attractor in the field.
     """
     x, y = attractor_location
-    
+
     # Deepen the attractor basin
     radius = 5  # Adjust based on field size
     for i in range(max(0, x - radius), min(field.shape[0], x + radius + 1)):
@@ -491,7 +491,7 @@ def strengthen_attractor(field, attractor_location, strength_factor=1.5):
                 # Apply strengthening factor with distance falloff
                 factor = strength_factor * (1 - dist/radius)
                 field[i, j] *= (1 + factor)
-    
+
     return field
 ```
 
@@ -506,10 +506,10 @@ def reshape_basin_boundary(field, boundary_points, shift_vector, strength=1.0):
     for point in boundary_points:
         x, y = point
         dx, dy = shift_vector
-        
+
         # Calculate gradient perpendicular to boundary
         gradient = calculate_perpendicular_gradient(field, (x, y))
-        
+
         # Apply shift in gradient direction
         for i in range(max(0, x - 3), min(field.shape[0], x + 4)):
             for j in range(max(0, y - 3), min(field.shape[1], y + 4)):
@@ -518,7 +518,7 @@ def reshape_basin_boundary(field, boundary_points, shift_vector, strength=1.0):
                     # Apply shift with distance falloff
                     factor = strength * (1 - dist/3)
                     field[i, j] += factor * (dx * gradient[0] + dy * gradient[1])
-    
+
     return field
 ```
 
@@ -531,16 +531,16 @@ def merge_attractors(field, attractor1, attractor2, bridge_strength=0.5):
     """
     x1, y1 = attractor1
     x2, y2 = attractor2
-    
+
     # Create points along the line between attractors
     points = generate_line_points(x1, y1, x2, y2)
-    
+
     # Create a bridge by lowering the field along the line
     for x, y in points:
         if 0 <= x < field.shape[0] and 0 <= y < field.shape[1]:
             # Lower the field value to create a valley connecting the attractors
             field[x, y] *= (1 - bridge_strength)
-    
+
     return field
 ```
 
@@ -557,13 +557,13 @@ def initialize_field_with_bias(shape, bias_regions):
     """
     # Create empty field
     field = np.zeros(shape)
-    
+
     # Apply biases
     for region in bias_regions:
         center_x, center_y = region['center']
         radius = region['radius']
         bias = region['bias']
-        
+
         # Apply bias to region
         for x in range(shape[0]):
             for y in range(shape[1]):
@@ -571,7 +571,7 @@ def initialize_field_with_bias(shape, bias_regions):
                 if dist <= radius:
                     # Apply bias with distance falloff
                     field[x, y] += bias * (1 - dist/radius)
-    
+
     return field
 ```
 
@@ -583,22 +583,22 @@ def apply_local_rules(field, rules, iterations=10):
     Apply local interaction rules to evolve the field.
     """
     current_field = field.copy()
-    
+
     for _ in range(iterations):
         next_field = current_field.copy()
-        
+
         # Apply rules at each point
         for x in range(1, field.shape[0]-1):
             for y in range(1, field.shape[1]-1):
                 # Get neighborhood
                 neighborhood = current_field[x-1:x+2, y-1:y+2]
-                
+
                 # Apply rules
                 for rule in rules:
                     next_field[x, y] = rule(neighborhood, current_field[x, y])
-        
+
         current_field = next_field
-    
+
     return current_field
 ```
 
@@ -610,28 +610,28 @@ def apply_field_constraints(field, constraints):
     Apply constraints to channel field evolution.
     """
     constrained_field = field.copy()
-    
+
     # Apply each constraint
     for constraint in constraints:
         constraint_type = constraint['type']
-        
+
         if constraint_type == 'boundary':
             # Apply boundary constraint
             region = constraint['region']
             value = constraint['value']
             constrained_field = apply_boundary_constraint(constrained_field, region, value)
-            
+
         elif constraint_type == 'gradient':
             # Apply gradient constraint
             direction = constraint['direction']
             strength = constraint['strength']
             constrained_field = apply_gradient_constraint(constrained_field, direction, strength)
-            
+
         elif constraint_type == 'symmetry':
             # Apply symmetry constraint
             axis = constraint['axis']
             constrained_field = apply_symmetry_constraint(constrained_field, axis)
-    
+
     return constrained_field
 ```
 
@@ -649,21 +649,21 @@ def create_semantic_superposition(expression, basis_interpretations, coefficient
     Create a quantum-inspired superposition of interpretations.
     """
     n_interpretations = len(basis_interpretations)
-    
+
     # If coefficients not provided, use equal probability
     if coefficients is None:
         coefficients = np.ones(n_interpretations) / np.sqrt(n_interpretations)
-    
+
     # Ensure coefficients are normalized
     norm = np.sqrt(np.sum(np.abs(coefficients)**2))
     coefficients = coefficients / norm
-    
+
     # Create superposition state
     superposition = {
         'basis_interpretations': basis_interpretations,
         'coefficients': coefficients
     }
-    
+
     return superposition
 ```
 
@@ -678,20 +678,20 @@ def interpret(superposition, context_operator):
     """
     # Apply context operator to coefficients
     new_coefficients = context_operator @ superposition['coefficients']
-    
+
     # Calculate probabilities
     probabilities = np.abs(new_coefficients)**2
-    
+
     # Normalize
     new_coefficients = new_coefficients / np.sqrt(np.sum(probabilities))
-    
+
     # Create new superposition
     interpreted = {
         'basis_interpretations': superposition['basis_interpretations'],
         'coefficients': new_coefficients,
         'probabilities': probabilities
     }
-    
+
     return interpreted
 ```
 
@@ -705,11 +705,11 @@ def apply_sequential_contexts(superposition, context_operators):
     Apply a sequence of context operators to a superposition.
     """
     current_state = superposition.copy()
-    
+
     # Apply each operator in sequence
     for operator in context_operators:
         current_state = interpret(current_state, operator)
-    
+
     return current_state
 ```
 
@@ -726,31 +726,31 @@ class AmbiguityResolver:
     def __init__(self, field_template):
         """
         Initialize an ambiguity resolver.
-        
+
         Args:
             field_template: Template for creating semantic fields
         """
         self.field_template = field_template
-    
+
     def resolve(self, text, context):
         """
         Resolve ambiguities in text using attractor dynamics.
         """
         # Create initial field
         field = create_field_from_text(text, self.field_template)
-        
+
         # Apply context to shape field
         field = apply_context_to_field(field, context)
-        
+
         # Evolve field to find stable state
         field = evolve_field_to_stability(field)
-        
+
         # Identify dominant attractors
         attractors = identify_attractors(field)
-        
+
         # Generate interpretation based on dominant attractors
         interpretation = generate_interpretation(text, attractors)
-        
+
         return interpretation
 ```
 
@@ -763,14 +763,14 @@ class CreativeIdeaGenerator:
     def __init__(self, domain_fields, technique_fields):
         """
         Initialize a creative idea generator.
-        
+
         Args:
             domain_fields: Dictionary of fields for different domains
             technique_fields: Dictionary of fields for different creative techniques
         """
         self.domain_fields = domain_fields
         self.technique_fields = technique_fields
-    
+
     def generate(self, domain, technique, iterations=10):
         """
         Generate creative ideas using field dynamics.
@@ -778,22 +778,22 @@ class CreativeIdeaGenerator:
         # Get relevant fields
         domain_field = self.domain_fields[domain]
         technique_field = self.technique_fields[technique]
-        
+
         # Create combined field
         combined_field = combine_fields(domain_field, technique_field)
-        
+
         # Add random perturbations to encourage novel attractors
         perturbed_field = add_perturbations(combined_field)
-        
+
         # Evolve field
         evolved_field = evolve_field(perturbed_field, iterations)
-        
+
         # Identify emergent attractors
         attractors = identify_attractors(evolved_field)
-        
+
         # Generate ideas based on attractors
         ideas = [generate_idea_from_attractor(attractor) for attractor in attractors]
-        
+
         return ideas
 ```
 
@@ -806,32 +806,32 @@ class AdaptiveContextManager:
     def __init__(self, initial_field):
         """
         Initialize an adaptive context manager.
-        
+
         Args:
             initial_field: Initial semantic field
         """
         self.field = initial_field
         self.attractor_history = []
-    
+
     def update(self, new_information):
         """
         Update context field with new information.
         """
         # Integrate new information into field
         self.field = integrate_information(self.field, new_information)
-        
+
         # Identify current attractors
         current_attractors = identify_attractors(self.field)
         self.attractor_history.append(current_attractors)
-        
+
         # Analyze attractor evolution
         stability = analyze_attractor_stability(self.attractor_history)
-        
+
         # Adapt field based on stability
         if stability < STABILITY_THRESHOLD:
             # Enhance stable attractors
             self.field = enhance_stable_attractors(self.field, self.attractor_history)
-        
+
         return self.field
 ```
 
@@ -848,14 +848,14 @@ class QuantumContextEngine:
     def __init__(self, dimensions=1024):
         """
         Initialize a quantum-inspired context engine.
-        
+
         Args:
             dimensions: Dimensionality of the semantic Hilbert space
         """
         self.dimensions = dimensions
         self.state = np.zeros(dimensions, dtype=complex)
         self.operators = {}
-    
+
     def create_superposition(self, expressions, weights=None):
         """
         Create a superposition of semantic expressions.
@@ -867,46 +867,46 @@ class QuantumContextEngine:
             # Normalize weights
             norm = np.sqrt(np.sum(np.abs(np.array(weights))**2))
             weights = [w / norm for w in weights]
-        
+
         # Create state vector
         self.state = np.zeros(self.dimensions, dtype=complex)
         for expr, weight in zip(expressions, weights):
             expr_vector = self.encode_expression(expr)
             self.state += weight * expr_vector
-        
+
         return self.state
-    
+
     def define_context_operator(self, name, context_matrix):
         """
         Define a context operator.
         """
         self.operators[name] = context_matrix
         return name
-    
+
     def apply_context(self, operator_name):
         """
         Apply a context operator to the current state.
         """
         if operator_name not in self.operators:
             raise ValueError(f"Operator {operator_name} not defined")
-        
+
         # Apply operator
         operator = self.operators[operator_name]
         new_state = operator @ self.state
-        
+
         # Normalize
         norm = np.sqrt(np.sum(np.abs(new_state)**2))
         self.state = new_state / norm
-        
+
         return self.state
-    
+
     def measure(self, basis_expressions):
         """
         Measure the current state in a given basis.
         """
         # Encode basis expressions
         basis_vectors = [self.encode_expression(expr) for expr in basis_expressions]
-        
+
         # Calculate probabilities
         probabilities = []
         for vector in basis_vectors:
@@ -914,11 +914,11 @@ class QuantumContextEngine:
             projection = np.vdot(vector, self.state)
             probability = np.abs(projection)**2
             probabilities.append(probability)
-        
+
         # Normalize probabilities
         total = sum(probabilities)
         normalized_probabilities = [p / total for p in probabilities]
-        
+
         return list(zip(basis_expressions, normalized_probabilities))
 ```
 
@@ -937,7 +937,7 @@ class SelfOrganizingFieldSystem:
     def __init__(self, initial_field, local_rules):
         """
         Initialize a self-organizing field system.
-        
+
         Args:
             initial_field: Initial field state
             local_rules: Local interaction rules
@@ -945,7 +945,7 @@ class SelfOrganizingFieldSystem:
         self.field = initial_field
         self.rules = local_rules
         self.history = [initial_field.copy()]
-    
+
     def evolve(self, iterations=100):
         """
         Evolve the field according to local rules.
@@ -953,7 +953,7 @@ class SelfOrganizingFieldSystem:
         for _ in range(iterations):
             # Apply local rules to update field
             next_field = np.zeros_like(self.field)
-            
+
             for x in range(self.field.shape[0]):
                 for y in range(self.field.shape[1]):
                     # Get neighborhood
@@ -961,41 +961,41 @@ class SelfOrganizingFieldSystem:
                     x_max = min(self.field.shape[0], x + 2)
                     y_min = max(0, y - 1)
                     y_max = min(self.field.shape[1], y + 2)
-                    
+
                     neighborhood = self.field[x_min:x_max, y_min:y_max]
-                    
+
                     # Apply rules
                     next_field[x, y] = self.apply_rules(neighborhood, self.field[x, y])
-            
+
             self.field = next_field
             self.history.append(next_field.copy())
-        
+
         return self.field
-    
+
     def apply_rules(self, neighborhood, current_value):
         """
         Apply local rules to determine next state.
         """
         next_value = current_value
-        
+
         for rule in self.rules:
             next_value = rule(neighborhood, current_value)
-        
+
         return next_value
-    
+
     def analyze_emergence(self):
         """
         Analyze emergent patterns in field evolution.
         """
         # Calculate entropy over time
         entropies = [calculate_entropy(field) for field in self.history]
-        
+
         # Identify attractor patterns
         attractors = []
         for i, field in enumerate(self.history[:-1]):
             if i > 0 and np.allclose(field, self.history[i+1], rtol=1e-5):
                 attractors.append((i, field))
-        
+
         # Identify oscillatory patterns
         oscillations = []
         for period in range(2, min(20, len(self.history) // 2)):
@@ -1003,7 +1003,7 @@ class SelfOrganizingFieldSystem:
                 if np.allclose(self.history[i], self.history[i+period], rtol=1e-5):
                     if np.allclose(self.history[i+period], self.history[i+2*period], rtol=1e-5):
                         oscillations.append((i, period, self.history[i:i+period]))
-        
+
         return {
             'entropies': entropies,
             'attractors': attractors,
@@ -1026,7 +1026,7 @@ class FieldMetaLearner:
     def __init__(self, field_template, meta_parameters):
         """
         Initialize a field-based meta-learner.
-        
+
         Args:
             field_template: Template for creating fields
             meta_parameters: Parameters controlling meta-learning
@@ -1035,46 +1035,46 @@ class FieldMetaLearner:
         self.meta_parameters = meta_parameters
         self.task_fields = {}
         self.meta_field = create_meta_field(meta_parameters)
-    
+
     def learn_task(self, task_id, examples):
         """
         Learn a new task from examples.
         """
         # Create task field
         task_field = create_task_field(self.field_template, examples)
-        
+
         # Store task field
         self.task_fields[task_id] = task_field
-        
+
         # Update meta-field
         self.update_meta_field(task_id, task_field)
-        
+
         return task_field
-    
+
     def update_meta_field(self, task_id, task_field):
         """
         Update meta-field with knowledge from a task field.
         """
         # Extract attractor patterns from task field
         attractors = identify_attractors(task_field)
-        
+
         # Update meta-field with new attractors
         self.meta_field = update_meta_field_with_attractors(
             self.meta_field,
             attractors,
             self.meta_parameters
         )
-    
+
     def adapt_to_task(self, task_description):
         """
         Adapt to a new task based on meta-knowledge.
         """
         # Generate task embedding
         task_embedding = generate_task_embedding(task_description)
-        
+
         # Find similar tasks in meta-field
         similar_tasks = find_similar_tasks(self.meta_field, task_embedding)
-        
+
         # Create adapted field for new task
         adapted_field = create_adapted_field(
             self.field_template,
@@ -1082,7 +1082,7 @@ class FieldMetaLearner:
             similar_tasks,
             task_description
         )
-        
+
         return adapted_field
 ```
 

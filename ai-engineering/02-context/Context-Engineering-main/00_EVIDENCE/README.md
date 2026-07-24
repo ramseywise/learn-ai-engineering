@@ -6,7 +6,7 @@
 
 ## Preface: For the Skeptical Mind
 
-If you're reading this, you've likely encountered claims about "meta-recursive protocols," "field theory," and "quantum semantics" that sound like science fiction. 
+If you're reading this, you've likely encountered claims about "meta-recursive protocols," "field theory," and "quantum semantics" that sound like science fiction.
 
 > **Don't Worry: We felt the same way**
 
@@ -48,7 +48,7 @@ Stage 1: Symbol Abstraction
 ├── Based on relational patterns, not surface features
 └── Creates symbolic representations of concepts
 
-Stage 2: Symbolic Induction  
+Stage 2: Symbolic Induction
 ├── Intermediate layers perform sequence operations
 ├── Over abstract variables, not concrete tokens
 └── Implements genuine symbolic reasoning
@@ -91,7 +91,7 @@ Semantic State Space: |ψ⟩ = ∑ ci|interpretation_i⟩
 ```
 Cognitive Tool Architecture:
 ├── Recall Related: Retrieve relevant knowledge
-├── Examine Answer: Self-reflection on reasoning  
+├── Examine Answer: Self-reflection on reasoning
 ├── Backtracking: Explore alternative paths
 └── Sequential execution improves performance
 ```
@@ -170,7 +170,7 @@ Recall Related → /attractor.co.emerge
 ├── Maps to "detect_attractors" and "surface_residue"
 └── Implements knowledge retrieval mechanism
 
-Examine Answer → /field.audit  
+Examine Answer → /field.audit
 ├── Self-reflection on field state and coherence
 ├── Maps to coherence metrics and health monitoring
 └── Implements self-examination mechanism
@@ -352,7 +352,7 @@ def measure_modularity(tool_activations):
 def implement_cognitive_tools():
     return {
         'recall_related': RecallTool(),
-        'examine_answer': ExamineTool(), 
+        'examine_answer': ExamineTool(),
         'backtracking': BacktrackTool()
     }
 

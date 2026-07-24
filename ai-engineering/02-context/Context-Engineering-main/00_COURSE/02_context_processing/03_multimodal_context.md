@@ -2,7 +2,7 @@
 ## Cross-Modal Processing and Unified Representation Learning
 
 > **Module 02.3** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Cross-Modal Context Systems
 
 ---
@@ -25,7 +25,7 @@ Think of multimodal processing like human perception - we don't just see or hear
 ### Stage 1: Independent Modal Processing
 ```
 Text:     "The red car" → [Text Understanding]
-Image:    [Red Car Photo] → [Image Understanding]  
+Image:    [Red Car Photo] → [Image Understanding]
 Audio:    [Engine Sound] → [Audio Understanding]
 
 No Integration: Three separate interpretations
@@ -39,8 +39,8 @@ No Integration: Three separate interpretations
 
 ### Stage 2: Sequential Modal Processing
 ```
-Text → Understanding → Pass to Image Processor → 
-Enhanced Understanding → Pass to Audio Processor → 
+Text → Understanding → Pass to Image Processor →
+Enhanced Understanding → Pass to Audio Processor →
 Final Integrated Understanding
 ```
 **Context**: Like an assembly line where each specialist adds their analysis, building on previous work. Better than isolation but still limited by processing order.
@@ -163,7 +163,7 @@ Where:
 - f = learned projection function
 
 Cross-Modal Consistency Objective:
-L_consistency = Σ_m,n ||f(x_m) - f(x_n)||² 
+L_consistency = Σ_m,n ||f(x_m) - f(x_n)||²
                 when x_m and x_n refer to the same concept
 
 Semantic Distance Preservation:
@@ -182,7 +182,7 @@ Where:
 - I_fusion = total information gained from multimodal context
 
 Optimal Modal Weight Distribution:
-w_m* = argmax_w Σ_m w_m · I(Y; X_m) 
+w_m* = argmax_w Σ_m w_m · I(Y; X_m)
        subject to: Σ_m w_m = 1, w_m ≥ 0
 
 Where I(Y; X_m) is mutual information between target and modality m
@@ -321,7 +321,7 @@ You are a multimodal integration system processing information from multiple sou
 
 **Text Contribution Assessment**:
 - **Unique Information**: {what_only_text_provides}
-- **Confirmatory Information**: {what_text_reinforces_from_other_modalities}  
+- **Confirmatory Information**: {what_text_reinforces_from_other_modalities}
 - **Contradictory Information**: {what_text_conflicts_with_other_modalities}
 
 ### Visual Modality Analysis
@@ -357,12 +357,12 @@ You are a multimodal integration system processing information from multiple sou
 ## Cross-Modal Integration Strategy
 
 ### Information Overlap Analysis
-**Redundant Information**: 
+**Redundant Information**:
 - {information_present_in_multiple_modalities}
 - Strategy: Use overlap for confidence boosting and error detection
 
 **Complementary Information**:
-- {information_that_different_modalities_provide_to_complete_the_picture}  
+- {information_that_different_modalities_provide_to_complete_the_picture}
 - Strategy: Synthesize for comprehensive understanding
 
 **Contradictory Information**:
@@ -375,7 +375,7 @@ Based on the query "{primary_query}", allocate attention as follows:
 **Text Attention Weight**: {percentage}%
 - **Justification**: {why_this_weight_for_text_given_the_query}
 
-**Visual Attention Weight**: {percentage}%  
+**Visual Attention Weight**: {percentage}%
 - **Justification**: {why_this_weight_for_visuals_given_the_query}
 
 **Audio Attention Weight**: {percentage}%
@@ -394,7 +394,7 @@ IF query_requires_factual_accuracy AND data_modality_available:
     SYNTHESIS: Build factual foundation, then add contextual richness
 
 
-#### Approach 2: Experiential Integration  
+#### Approach 2: Experiential Integration
 
 IF query_requires_subjective_understanding OR emotional_assessment:
     PRIMARY: Visual and Audio for immediate impression
@@ -438,7 +438,7 @@ ANALYZE query_components:
 ### Unified Representation Construction
 **Core Integrated Concepts**:
 1. **{concept_1}**: Supported by {modalities_contributing} with confidence {confidence_score}
-2. **{concept_2}**: Supported by {modalities_contributing} with confidence {confidence_score}  
+2. **{concept_2}**: Supported by {modalities_contributing} with confidence {confidence_score}
 3. **{concept_3}**: Supported by {modalities_contributing} with confidence {confidence_score}
 
 **Cross-Modal Reinforcement Patterns**:
@@ -458,12 +458,12 @@ ANALYZE query_components:
 
 ### Integration Output
 
-**Unified Multimodal Context**: 
+**Unified Multimodal Context**:
 {synthesized_context_that_seamlessly_integrates_all_modalities}
 
 **Modal Contribution Summary**:
 - **Text contributed**: {key_text_contributions}
-- **Visual contributed**: {key_visual_contributions}  
+- **Visual contributed**: {key_visual_contributions}
 - **Audio contributed**: {key_audio_contributions}
 - **Data contributed**: {key_data_contributions}
 
@@ -490,7 +490,7 @@ ANALYZE query_components:
 ```xml
 <synesthetic_discovery_template name="cross_modal_connection_finder">
   <intent>Discover novel connections and correspondences between different modalities beyond explicit training</intent>
-  
+
   <discovery_process>
     <pattern_detection>
       <cross_modal_patterns>
@@ -503,7 +503,7 @@ ANALYZE query_components:
           </examples>
           <detection_method>Analyze abstract structural features across modalities</detection_method>
         </pattern_type>
-        
+
         <pattern_type name="semantic_resonance">
           <description>Identify semantic concepts that resonate across different expression modes</description>
           <examples>
@@ -513,7 +513,7 @@ ANALYZE query_components:
           </examples>
           <detection_method>Map semantic descriptors to measurable features in each modality</detection_method>
         </pattern_type>
-        
+
         <pattern_type name="emotional_correspondence">
           <description>Connect emotional expressions across different modalities</description>
           <examples>
@@ -525,7 +525,7 @@ ANALYZE query_components:
         </pattern_type>
       </cross_modal_patterns>
     </pattern_detection>
-    
+
     <connection_validation>
       <validation_criteria>
         <criterion name="consistency_check">
@@ -541,7 +541,7 @@ ANALYZE query_components:
           Evaluate if connections enable new forms of cross-modal reasoning
         </criterion>
       </validation_criteria>
-      
+
       <validation_process>
         <step name="correlation_analysis">
           Measure statistical correlation between identified cross-modal features
@@ -557,7 +557,7 @@ ANALYZE query_components:
         </step>
       </validation_process>
     </connection_validation>
-    
+
     <connection_cataloging>
       <connection_types>
         <type name="direct_correspondence">
@@ -565,20 +565,20 @@ ANALYZE query_components:
           <strength_metric>Correlation coefficient between mapped features</strength_metric>
           <examples>Pitch height ↔ Visual elevation, Volume ↔ Visual size</examples>
         </type>
-        
+
         <type name="metaphorical_mapping">
           <description>Abstract conceptual connections between modalities</description>
           <strength_metric>Semantic similarity in shared conceptual space</strength_metric>
           <examples>Musical "brightness" ↔ Visual luminosity ↔ Textual "clarity"</examples>
         </type>
-        
+
         <type name="synesthetic_synthesis">
           <description>Novel conceptual combinations not present in training</description>
           <strength_metric>Coherence and meaningfulness of synthetic concepts</strength_metric>
           <examples>"The color tastes angular", "Smooth sounds look round"</examples>
         </type>
       </connection_types>
-      
+
       <connection_database>
         <entry>
           <connection_id>{unique_identifier}</connection_id>
@@ -592,7 +592,7 @@ ANALYZE query_components:
       </connection_database>
     </connection_cataloging>
   </discovery_process>
-  
+
   <application_framework>
     <creative_synthesis>
       <use_case name="metaphor_generation">
@@ -605,7 +605,7 @@ ANALYZE query_components:
         Enrich descriptions by incorporating synesthetic connections
       </use_case>
     </creative_synthesis>
-    
+
     <analytical_enhancement>
       <use_case name="pattern_recognition">
         Use cross-modal patterns to identify similar structures across different domains
@@ -617,7 +617,7 @@ ANALYZE query_components:
         Verify information consistency by checking cross-modal alignment
       </use_case>
     </analytical_enhancement>
-    
+
     <reasoning_augmentation>
       <use_case name="analogical_reasoning">
         Use cross-modal connections to reason by analogy across different domains
@@ -630,7 +630,7 @@ ANALYZE query_components:
       </use_case>
     </reasoning_augmentation>
   </application_framework>
-  
+
   <output_integration>
     <discovered_connections>
       {list_of_novel_cross_modal_connections_identified}
@@ -704,12 +704,12 @@ class CrossModalConnection:
 
 class ModalEncoder(ABC):
     """Abstract base class for modal encoders"""
-    
+
     @abstractmethod
     def encode(self, modal_input: ModalInput) -> np.ndarray:
         """Encode modal input to unified representation space"""
         pass
-    
+
     @abstractmethod
     def extract_features(self, modal_input: ModalInput) -> Dict[str, Any]:
         """Extract interpretable features from modal input"""
@@ -717,27 +717,27 @@ class ModalEncoder(ABC):
 
 class TextEncoder(ModalEncoder):
     """Encoder for textual content"""
-    
+
     def __init__(self, embedding_dim: int = 512):
         self.embedding_dim = embedding_dim
         self.semantic_analyzer = SemanticAnalyzer()
-        
+
     def encode(self, modal_input: ModalInput) -> np.ndarray:
         """Encode text to unified representation"""
         text = modal_input.content
-        
+
         # Extract semantic features
         semantic_features = self.semantic_analyzer.analyze(text)
-        
+
         # Create embedding (simplified - would use transformers in practice)
         embedding = self._create_text_embedding(text, semantic_features)
-        
+
         return embedding
-    
+
     def extract_features(self, modal_input: ModalInput) -> Dict[str, Any]:
         """Extract interpretable text features"""
         text = modal_input.content
-        
+
         features = {
             'word_count': len(text.split()),
             'sentence_count': len(text.split('.')),
@@ -747,20 +747,20 @@ class TextEncoder(ModalEncoder):
             'semantic_topics': self._extract_topics(text),
             'linguistic_style': self._analyze_style(text)
         }
-        
+
         return features
-    
+
     def _create_text_embedding(self, text: str, semantic_features: Dict) -> np.ndarray:
         """Create unified embedding for text"""
         # Simplified embedding creation
         words = text.lower().split()
-        
+
         # Basic word-based features
         word_features = np.zeros(256)
         for word in words[:256]:  # Limit to first 256 words
             word_hash = hash(word) % 256
             word_features[word_hash] = 1.0
-        
+
         # Semantic features
         semantic_vector = np.array([
             semantic_features.get('emotional_valence', 0.5),
@@ -768,60 +768,60 @@ class TextEncoder(ModalEncoder):
             semantic_features.get('complexity', 0.5),
             semantic_features.get('formality', 0.5)
         ])
-        
+
         # Combine features
         embedding = np.concatenate([
             word_features,
             semantic_vector,
             np.zeros(self.embedding_dim - word_features.shape[0] - semantic_vector.shape[0])
         ])[:self.embedding_dim]
-        
+
         return embedding
-    
+
     def _extract_entities(self, text: str) -> List[str]:
         """Extract named entities from text"""
         # Simplified entity extraction
         words = text.split()
         entities = [word for word in words if word[0].isupper() and len(word) > 2]
         return entities
-    
+
     def _analyze_emotion(self, text: str) -> Dict[str, float]:
         """Analyze emotional content of text"""
         # Simplified emotion analysis
         positive_words = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic']
         negative_words = ['bad', 'terrible', 'awful', 'horrible', 'disappointing']
-        
+
         text_lower = text.lower()
         positive_score = sum(1 for word in positive_words if word in text_lower)
         negative_score = sum(1 for word in negative_words if word in text_lower)
-        
+
         total_words = len(text.split())
-        
+
         return {
             'positivity': positive_score / max(total_words, 1),
             'negativity': negative_score / max(total_words, 1),
             'neutrality': 1 - (positive_score + negative_score) / max(total_words, 1)
         }
-    
+
     def _calculate_complexity(self, text: str) -> float:
         """Calculate text complexity score"""
         words = text.split()
         sentences = text.split('.')
-        
+
         if len(sentences) == 0:
             return 0.0
-        
+
         avg_words_per_sentence = len(words) / len(sentences)
         avg_word_length = np.mean([len(word) for word in words])
         unique_words_ratio = len(set(words)) / len(words) if words else 0
-        
+
         # Normalize to 0-1 scale
-        complexity = min(1.0, (avg_words_per_sentence / 20 + 
-                              avg_word_length / 10 + 
+        complexity = min(1.0, (avg_words_per_sentence / 20 +
+                              avg_word_length / 10 +
                               unique_words_ratio) / 3)
-        
+
         return complexity
-    
+
     def _extract_topics(self, text: str) -> List[str]:
         """Extract main topics from text"""
         # Simplified topic extraction
@@ -832,27 +832,27 @@ class TextEncoder(ModalEncoder):
             'arts': ['creative', 'design', 'artistic', 'aesthetic', 'visual'],
             'education': ['learning', 'teaching', 'student', 'knowledge', 'skill']
         }
-        
+
         text_lower = text.lower()
         topics = []
-        
+
         for topic, keywords in topic_keywords.items():
             if any(keyword in text_lower for keyword in keywords):
                 topics.append(topic)
-        
+
         return topics
-    
+
     def _analyze_style(self, text: str) -> Dict[str, float]:
         """Analyze linguistic style"""
         words = text.split()
-        
+
         # Formality indicators
         formal_indicators = ['therefore', 'furthermore', 'consequently', 'moreover']
         informal_indicators = ['gonna', 'wanna', 'yeah', 'cool', 'awesome']
-        
-        formality = (sum(1 for word in formal_indicators if word in text.lower()) - 
+
+        formality = (sum(1 for word in formal_indicators if word in text.lower()) -
                     sum(1 for word in informal_indicators if word in text.lower()))
-        
+
         return {
             'formality': max(-1, min(1, formality / max(len(words), 1))),
             'descriptiveness': len([w for w in words if len(w) > 6]) / max(len(words), 1),
@@ -861,27 +861,27 @@ class TextEncoder(ModalEncoder):
 
 class ImageEncoder(ModalEncoder):
     """Encoder for visual content"""
-    
+
     def __init__(self, embedding_dim: int = 512):
         self.embedding_dim = embedding_dim
         self.feature_extractor = ImageFeatureExtractor()
-        
+
     def encode(self, modal_input: ModalInput) -> np.ndarray:
         """Encode image to unified representation"""
         image = modal_input.content
-        
+
         # Extract visual features
         visual_features = self.extract_features(modal_input)
-        
+
         # Create unified embedding
         embedding = self._create_visual_embedding(image, visual_features)
-        
+
         return embedding
-    
+
     def extract_features(self, modal_input: ModalInput) -> Dict[str, Any]:
         """Extract interpretable image features"""
         image = modal_input.content
-        
+
         features = {
             'color_palette': self._analyze_colors(image),
             'composition': self._analyze_composition(image),
@@ -891,9 +891,9 @@ class ImageEncoder(ModalEncoder):
             'style': self._analyze_visual_style(image),
             'technical_quality': self._assess_technical_quality(image)
         }
-        
+
         return features
-    
+
     def _create_visual_embedding(self, image: np.ndarray, features: Dict) -> np.ndarray:
         """Create unified embedding for image"""
         # Simplified visual embedding
@@ -904,7 +904,7 @@ class ImageEncoder(ModalEncoder):
         else:
             # Grayscale
             color_features = np.zeros(128)
-        
+
         # Composition features
         composition_features = np.array([
             features['composition'].get('symmetry', 0.5),
@@ -912,7 +912,7 @@ class ImageEncoder(ModalEncoder):
             features['composition'].get('complexity', 0.5),
             features['composition'].get('focus_strength', 0.5)
         ])
-        
+
         # Mood features
         mood_features = np.array([
             features['mood'].get('warmth', 0.5),
@@ -920,38 +920,38 @@ class ImageEncoder(ModalEncoder):
             features['mood'].get('brightness', 0.5),
             features['mood'].get('contrast', 0.5)
         ])
-        
+
         # Combine all features
         embedding = np.concatenate([
             color_features,
             composition_features,
             mood_features,
-            np.zeros(self.embedding_dim - color_features.shape[0] - 
+            np.zeros(self.embedding_dim - color_features.shape[0] -
                     composition_features.shape[0] - mood_features.shape[0])
         ])[:self.embedding_dim]
-        
+
         return embedding
-    
+
     def _analyze_colors(self, image: np.ndarray) -> Dict[str, Any]:
         """Analyze color properties of image"""
         if len(image.shape) == 3:
             # Convert to HSV for better color analysis
             hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-            
+
             # Dominant colors (simplified)
             pixels = image.reshape(-1, 3)
             dominant_colors = []
-            
+
             # Get average colors in different regions
             for i in range(0, len(pixels), len(pixels)//5):
                 region = pixels[i:i+len(pixels)//5]
                 avg_color = np.mean(region, axis=0)
                 dominant_colors.append(avg_color.tolist())
-            
+
             # Color temperature (simplified)
             avg_color = np.mean(pixels, axis=0)
             warmth = (avg_color[0] + avg_color[1]) / (avg_color[2] + 1)  # Red+Green vs Blue
-            
+
             return {
                 'dominant_colors': dominant_colors,
                 'average_brightness': np.mean(image),
@@ -967,56 +967,56 @@ class ImageEncoder(ModalEncoder):
                 'warmth': 1.0,
                 'saturation': 0.0
             }
-    
+
     def _analyze_composition(self, image: np.ndarray) -> Dict[str, float]:
         """Analyze compositional elements"""
         height, width = image.shape[:2]
-        
+
         # Simple edge detection for complexity
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
         edges = cv2.Canny(gray, 50, 150)
         edge_density = np.sum(edges > 0) / (height * width)
-        
+
         # Symmetry (simplified)
         left_half = gray[:, :width//2]
         right_half = cv2.flip(gray[:, width//2:], 1)
         min_width = min(left_half.shape[1], right_half.shape[1])
         symmetry = 1 - np.mean(np.abs(left_half[:, :min_width] - right_half[:, :min_width])) / 255
-        
+
         return {
             'complexity': min(1.0, edge_density * 10),
             'symmetry': max(0.0, symmetry),
             'balance': 0.5,  # Simplified
             'focus_strength': edge_density
         }
-    
+
     def _analyze_texture(self, image: np.ndarray) -> Dict[str, float]:
         """Analyze texture properties"""
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
-        
+
         # Texture analysis using gradients
         grad_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
         grad_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
-        
+
         texture_strength = np.mean(np.sqrt(grad_x**2 + grad_y**2))
         texture_uniformity = 1 - (np.std(gray) / 255)
-        
+
         return {
             'roughness': min(1.0, texture_strength / 100),
             'uniformity': texture_uniformity,
             'directionality': 0.5  # Simplified
         }
-    
+
     def _detect_objects(self, image: np.ndarray) -> List[str]:
         """Detect objects in image (simplified)"""
         # This would use actual object detection in practice
         # For now, return simplified object categories based on color/texture
-        
+
         features = self._analyze_colors(image)
         composition = self._analyze_composition(image)
-        
+
         objects = []
-        
+
         # Simple heuristics for object detection
         if features['average_brightness'] > 200:
             objects.append('bright_object')
@@ -1024,51 +1024,51 @@ class ImageEncoder(ModalEncoder):
             objects.append('complex_scene')
         if features['warmth'] > 1.5:
             objects.append('warm_toned_object')
-        
+
         return objects
-    
+
     def _analyze_visual_mood(self, image: np.ndarray) -> Dict[str, float]:
         """Analyze emotional mood of image"""
         color_features = self._analyze_colors(image)
         composition_features = self._analyze_composition(image)
-        
+
         # Map visual features to emotional dimensions
         warmth = color_features['warmth'] / 2.0
         energy = composition_features['complexity']
         brightness = color_features['average_brightness'] / 255
         contrast = color_features['color_variance'] / 10000
-        
+
         return {
             'warmth': min(1.0, warmth),
             'energy': min(1.0, energy),
             'brightness': brightness,
             'contrast': min(1.0, contrast)
         }
-    
+
     def _analyze_visual_style(self, image: np.ndarray) -> Dict[str, float]:
         """Analyze visual style characteristics"""
         color_features = self._analyze_colors(image)
         composition_features = self._analyze_composition(image)
         texture_features = self._analyze_texture(image)
-        
+
         return {
             'realism': 1.0 - composition_features['complexity'],  # Simplified
             'abstraction': composition_features['complexity'],
             'minimalism': 1.0 - texture_features['roughness'],
             'dynamism': composition_features['complexity'] * color_features['color_variance'] / 1000
         }
-    
+
     def _assess_technical_quality(self, image: np.ndarray) -> Dict[str, float]:
         """Assess technical quality of image"""
         # Simplified quality assessment
         gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) if len(image.shape) == 3 else image
-        
+
         # Sharpness (using Laplacian variance)
         sharpness = cv2.Laplacian(gray, cv2.CV_64F).var()
-        
+
         # Brightness appropriateness
         brightness_score = 1.0 - abs(np.mean(gray) - 127.5) / 127.5
-        
+
         return {
             'sharpness': min(1.0, sharpness / 1000),
             'brightness_quality': brightness_score,
@@ -1077,27 +1077,27 @@ class ImageEncoder(ModalEncoder):
 
 class AudioEncoder(ModalEncoder):
     """Encoder for audio content"""
-    
+
     def __init__(self, embedding_dim: int = 512):
         self.embedding_dim = embedding_dim
         self.sample_rate = 22050
-        
+
     def encode(self, modal_input: ModalInput) -> np.ndarray:
         """Encode audio to unified representation"""
         audio_data = modal_input.content
-        
+
         # Extract audio features
         audio_features = self.extract_features(modal_input)
-        
+
         # Create unified embedding
         embedding = self._create_audio_embedding(audio_data, audio_features)
-        
+
         return embedding
-    
+
     def extract_features(self, modal_input: ModalInput) -> Dict[str, Any]:
         """Extract interpretable audio features"""
         audio_data = modal_input.content
-        
+
         # Basic audio analysis using librosa-style processing (simplified)
         features = {
             'spectral': self._analyze_spectral_features(audio_data),
@@ -1106,9 +1106,9 @@ class AudioEncoder(ModalEncoder):
             'rhythmic': self._analyze_rhythmic_features(audio_data),
             'emotional': self._analyze_audio_emotion(audio_data)
         }
-        
+
         return features
-    
+
     def _create_audio_embedding(self, audio_data: np.ndarray, features: Dict) -> np.ndarray:
         """Create unified embedding for audio"""
         # Spectral features
@@ -1118,120 +1118,120 @@ class AudioEncoder(ModalEncoder):
             features['spectral'].get('flux', 0.5),
             features['spectral'].get('centroid', 0.5)
         ])
-        
-        # Temporal features  
+
+        # Temporal features
         temporal_features = np.array([
             features['temporal'].get('energy', 0.5),
             features['temporal'].get('zero_crossing_rate', 0.5),
             features['temporal'].get('rms', 0.5)
         ])
-        
+
         # Harmonic features
         harmonic_features = np.array([
             features['harmonic'].get('pitch_stability', 0.5),
             features['harmonic'].get('harmonicity', 0.5)
         ])
-        
+
         # Rhythmic features
         rhythmic_features = np.array([
             features['rhythmic'].get('tempo', 0.5),
             features['rhythmic'].get('beat_strength', 0.5)
         ])
-        
+
         # Emotional features
         emotional_features = np.array([
             features['emotional'].get('valence', 0.5),
             features['emotional'].get('arousal', 0.5),
             features['emotional'].get('intensity', 0.5)
         ])
-        
+
         # Combine all features
         combined_features = np.concatenate([
             spectral_features,
-            temporal_features, 
+            temporal_features,
             harmonic_features,
             rhythmic_features,
             emotional_features
         ])
-        
+
         # Pad to embedding dimension
         embedding = np.concatenate([
             combined_features,
             np.zeros(self.embedding_dim - combined_features.shape[0])
         ])[:self.embedding_dim]
-        
+
         return embedding
-    
+
     def _analyze_spectral_features(self, audio_data: np.ndarray) -> Dict[str, float]:
         """Analyze spectral characteristics"""
         # Simplified spectral analysis
         fft = np.fft.fft(audio_data)
         magnitude = np.abs(fft)
-        
+
         # Spectral centroid (brightness)
         freqs = np.fft.fftfreq(len(audio_data), 1/self.sample_rate)
         spectral_centroid = np.sum(freqs[:len(freqs)//2] * magnitude[:len(magnitude)//2]) / np.sum(magnitude[:len(magnitude)//2])
-        
+
         # Spectral rolloff
         cumulative_energy = np.cumsum(magnitude[:len(magnitude)//2])
         total_energy = cumulative_energy[-1]
         rolloff_idx = np.where(cumulative_energy >= 0.85 * total_energy)[0][0]
         spectral_rolloff = freqs[rolloff_idx] if rolloff_idx < len(freqs)//2 else freqs[len(freqs)//2-1]
-        
+
         return {
             'brightness': min(1.0, spectral_centroid / 5000),  # Normalize
             'rolloff': min(1.0, spectral_rolloff / 10000),
             'flux': min(1.0, np.std(magnitude) / 1000),
             'centroid': min(1.0, spectral_centroid / 5000)
         }
-    
+
     def _analyze_temporal_features(self, audio_data: np.ndarray) -> Dict[str, float]:
         """Analyze temporal characteristics"""
         # Energy
         energy = np.mean(audio_data ** 2)
-        
+
         # Zero crossing rate
         zero_crossings = np.where(np.diff(np.signbit(audio_data)))[0]
         zcr = len(zero_crossings) / len(audio_data)
-        
+
         # RMS
         rms = np.sqrt(energy)
-        
+
         return {
             'energy': min(1.0, energy * 100),
             'zero_crossing_rate': min(1.0, zcr * 100),
             'rms': min(1.0, rms * 10)
         }
-    
+
     def _analyze_harmonic_features(self, audio_data: np.ndarray) -> Dict[str, float]:
         """Analyze harmonic content"""
         # Simplified harmonic analysis
         fft = np.fft.fft(audio_data)
         magnitude = np.abs(fft[:len(fft)//2])
-        
+
         # Find peaks (simplified pitch detection)
         peaks = []
         for i in range(1, len(magnitude)-1):
             if magnitude[i] > magnitude[i-1] and magnitude[i] > magnitude[i+1]:
                 peaks.append((i, magnitude[i]))
-        
+
         peaks.sort(key=lambda x: x[1], reverse=True)
-        
+
         # Pitch stability (variance in peak frequencies)
         if len(peaks) > 1:
             peak_freqs = [p[0] for p in peaks[:5]]
             pitch_stability = 1.0 - min(1.0, np.std(peak_freqs) / np.mean(peak_freqs))
         else:
             pitch_stability = 0.5
-        
+
         # Harmonicity (simplified)
         harmonicity = 0.7 if len(peaks) > 2 else 0.3
-        
+
         return {
             'pitch_stability': pitch_stability,
             'harmonicity': harmonicity
         }
-    
+
     def _analyze_rhythmic_features(self, audio_data: np.ndarray) -> Dict[str, float]:
         """Analyze rhythmic characteristics"""
         # Simplified rhythm analysis
@@ -1241,21 +1241,21 @@ class AudioEncoder(ModalEncoder):
         for i in range(0, len(audio_data) - frame_size, frame_size):
             frame_energy = np.sum(audio_data[i:i+frame_size] ** 2)
             frames.append(frame_energy)
-        
+
         frames = np.array(frames)
-        
+
         # Find tempo (simplified)
         if len(frames) > 4:
             # Look for periodic patterns in energy
             autocorr = np.correlate(frames, frames, mode='full')
             autocorr = autocorr[len(autocorr)//2:]
-            
+
             # Find peaks in autocorrelation
             peak_distances = []
             for i in range(1, min(50, len(autocorr)-1)):
                 if autocorr[i] > autocorr[i-1] and autocorr[i] > autocorr[i+1]:
                     peak_distances.append(i)
-            
+
             if peak_distances:
                 avg_distance = np.mean(peak_distances)
                 tempo = 60 / (avg_distance * frame_size / self.sample_rate)
@@ -1264,33 +1264,33 @@ class AudioEncoder(ModalEncoder):
                 tempo_normalized = 0.5
         else:
             tempo_normalized = 0.5
-        
+
         # Beat strength (energy variation)
         beat_strength = min(1.0, np.std(frames) / np.mean(frames)) if np.mean(frames) > 0 else 0
-        
+
         return {
             'tempo': tempo_normalized,
             'beat_strength': beat_strength
         }
-    
+
     def _analyze_audio_emotion(self, audio_data: np.ndarray) -> Dict[str, float]:
         """Analyze emotional content of audio"""
         # Map audio features to emotional dimensions
         spectral_features = self._analyze_spectral_features(audio_data)
         temporal_features = self._analyze_temporal_features(audio_data)
-        
+
         # Valence (positive/negative emotion)
         # Higher brightness and stability often correlate with positive emotions
-        valence = (spectral_features['brightness'] + 
+        valence = (spectral_features['brightness'] +
                   (1.0 - temporal_features['zero_crossing_rate'])) / 2
-        
+
         # Arousal (energy/excitement)
         # Higher energy and tempo correlate with arousal
         arousal = (temporal_features['energy'] + temporal_features['rms']) / 2
-        
+
         # Intensity (overall emotional strength)
         intensity = (arousal + abs(valence - 0.5) * 2) / 2
-        
+
         return {
             'valence': valence,
             'arousal': arousal,
@@ -1299,120 +1299,120 @@ class AudioEncoder(ModalEncoder):
 
 class CrossModalAttentionLayer(nn.Module):
     """Cross-modal attention mechanism for integrating different modalities"""
-    
+
     def __init__(self, embedding_dim: int, num_heads: int = 8):
         super().__init__()
         self.embedding_dim = embedding_dim
         self.num_heads = num_heads
         self.head_dim = embedding_dim // num_heads
-        
+
         # Query, Key, Value projections for each modality
         self.text_qkv = nn.Linear(embedding_dim, embedding_dim * 3)
         self.image_qkv = nn.Linear(embedding_dim, embedding_dim * 3)
         self.audio_qkv = nn.Linear(embedding_dim, embedding_dim * 3)
-        
+
         # Cross-modal attention weights
         self.cross_modal_weights = nn.Parameter(torch.ones(3, 3) * 0.1)  # 3 modalities
-        
+
         # Output projection
         self.output_proj = nn.Linear(embedding_dim, embedding_dim)
-        
-    def forward(self, text_emb: torch.Tensor, image_emb: torch.Tensor, 
+
+    def forward(self, text_emb: torch.Tensor, image_emb: torch.Tensor,
                 audio_emb: torch.Tensor, query_context: str = "") -> torch.Tensor:
         """Apply cross-modal attention"""
-        
+
         batch_size = text_emb.shape[0]
-        
+
         # Get QKV for each modality
         text_q, text_k, text_v = self._get_qkv(text_emb, self.text_qkv)
-        image_q, image_k, image_v = self._get_qkv(image_emb, self.image_qkv)  
+        image_q, image_k, image_v = self._get_qkv(image_emb, self.image_qkv)
         audio_q, audio_k, audio_v = self._get_qkv(audio_emb, self.audio_qkv)
-        
+
         # Cross-modal attention computation
         modalities = {
             'text': (text_q, text_k, text_v),
             'image': (image_q, image_k, image_v),
             'audio': (audio_q, audio_k, audio_v)
         }
-        
+
         # Compute attention between all modality pairs
         attended_features = {}
         modal_names = list(modalities.keys())
-        
+
         for i, source_modal in enumerate(modal_names):
             attended_features[source_modal] = []
             source_q, _, source_v = modalities[source_modal]
-            
+
             for j, target_modal in enumerate(modal_names):
                 _, target_k, target_v = modalities[target_modal]
-                
+
                 # Attention from source to target
                 attention_scores = torch.matmul(source_q, target_k.transpose(-2, -1))
                 attention_scores = attention_scores / (self.head_dim ** 0.5)
-                
+
                 # Apply cross-modal weight
                 attention_scores = attention_scores * self.cross_modal_weights[i, j]
-                
+
                 attention_weights = torch.softmax(attention_scores, dim=-1)
                 attended_feature = torch.matmul(attention_weights, target_v)
-                
+
                 attended_features[source_modal].append(attended_feature)
-        
+
         # Aggregate attended features for each modality
         integrated_features = []
         for modal in modal_names:
             modal_features = torch.stack(attended_features[modal], dim=1)
             integrated_modal = torch.mean(modal_features, dim=1)  # Average across sources
             integrated_features.append(integrated_modal)
-        
+
         # Combine all modalities
         final_representation = torch.mean(torch.stack(integrated_features), dim=0)
-        
+
         # Output projection
         output = self.output_proj(final_representation.view(batch_size, -1))
-        
+
         return output
-    
+
     def _get_qkv(self, embeddings: torch.Tensor, qkv_layer: nn.Module) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Get Query, Key, Value from embeddings"""
         batch_size = embeddings.shape[0]
         qkv = qkv_layer(embeddings)  # Shape: (batch, 3 * embedding_dim)
-        
+
         qkv = qkv.view(batch_size, 3, self.num_heads, self.head_dim)
         qkv = qkv.permute(1, 0, 2, 3)  # (3, batch, heads, head_dim)
-        
+
         q, k, v = qkv[0], qkv[1], qkv[2]
         return q, k, v
 
 class MultimodalContextEngine:
     """Main engine for multimodal context integration"""
-    
+
     def __init__(self, embedding_dim: int = 512):
         self.embedding_dim = embedding_dim
-        
+
         # Modal encoders
         self.text_encoder = TextEncoder(embedding_dim)
         self.image_encoder = ImageEncoder(embedding_dim)
         self.audio_encoder = AudioEncoder(embedding_dim)
-        
+
         # Cross-modal components
         self.attention_layer = CrossModalAttentionLayer(embedding_dim)
         self.synesthetic_detector = SynestheticConnectionDetector()
-        
+
         # Learning and adaptation
         self.discovered_connections = []
         self.modal_interaction_history = []
-        
-    def integrate_multimodal_context(self, modal_inputs: List[ModalInput], 
+
+    def integrate_multimodal_context(self, modal_inputs: List[ModalInput],
                                    query: str = "") -> Dict[str, Any]:
         """Main integration process for multimodal inputs"""
-        
+
         print(f"Integrating {len(modal_inputs)} modal inputs...")
-        
+
         # Encode each modality
         modal_embeddings = {}
         modal_features = {}
-        
+
         for modal_input in modal_inputs:
             if modal_input.modality == ModalityType.TEXT:
                 embedding = self.text_encoder.encode(modal_input)
@@ -1425,30 +1425,30 @@ class MultimodalContextEngine:
                 features = self.audio_encoder.extract_features(modal_input)
             else:
                 continue  # Skip unsupported modalities
-            
+
             modal_embeddings[modal_input.modality] = embedding
             modal_features[modal_input.modality] = features
-        
+
         # Cross-modal attention integration
         if len(modal_embeddings) > 1:
             integrated_embedding = self._apply_cross_modal_attention(modal_embeddings, query)
         else:
             # Single modality - return as is
             integrated_embedding = list(modal_embeddings.values())[0]
-        
+
         # Discover cross-modal connections
         discovered_connections = self.synesthetic_detector.discover_connections(
             modal_features, modal_embeddings
         )
-        
+
         # Generate integrated understanding
         integrated_context = self._generate_integrated_context(
             modal_inputs, modal_features, discovered_connections, query
         )
-        
+
         # Update learning
         self._update_learning(modal_features, discovered_connections, integrated_context)
-        
+
         return {
             'integrated_embedding': integrated_embedding,
             'integrated_context': integrated_context,
@@ -1456,124 +1456,124 @@ class MultimodalContextEngine:
             'discovered_connections': discovered_connections,
             'integration_quality': self._assess_integration_quality(modal_inputs, integrated_context)
         }
-    
-    def _apply_cross_modal_attention(self, modal_embeddings: Dict[ModalityType, np.ndarray], 
+
+    def _apply_cross_modal_attention(self, modal_embeddings: Dict[ModalityType, np.ndarray],
                                    query: str) -> np.ndarray:
         """Apply cross-modal attention to integrate embeddings"""
-        
+
         # Convert to tensors for attention computation
         text_emb = torch.from_numpy(modal_embeddings.get(ModalityType.TEXT, np.zeros(self.embedding_dim))).unsqueeze(0).float()
         image_emb = torch.from_numpy(modal_embeddings.get(ModalityType.IMAGE, np.zeros(self.embedding_dim))).unsqueeze(0).float()
         audio_emb = torch.from_numpy(modal_embeddings.get(ModalityType.AUDIO, np.zeros(self.embedding_dim))).unsqueeze(0).float()
-        
+
         # Apply cross-modal attention
         with torch.no_grad():
             integrated = self.attention_layer(text_emb, image_emb, audio_emb, query)
-        
+
         return integrated.numpy().flatten()
-    
-    def _generate_integrated_context(self, modal_inputs: List[ModalInput], 
+
+    def _generate_integrated_context(self, modal_inputs: List[ModalInput],
                                    modal_features: Dict, discovered_connections: List,
                                    query: str) -> str:
         """Generate human-readable integrated context"""
-        
+
         context_parts = []
-        
+
         # Process each modality
         for modal_input in modal_inputs:
             if modal_input.modality == ModalityType.TEXT:
                 context_parts.append(f"Text content: {modal_input.content}")
-                
+
             elif modal_input.modality == ModalityType.IMAGE:
                 features = modal_features[modal_input.modality]
                 mood = features['mood']
                 colors = features['color_palette']
-                
+
                 description = f"Visual content shows {', '.join(features['objects'])} with "
                 description += f"warm tones (warmth: {mood['warmth']:.2f}) and "
                 description += f"high energy composition (energy: {mood['energy']:.2f}). "
                 description += f"Average brightness: {mood['brightness']:.2f}"
-                
+
                 context_parts.append(description)
-                
+
             elif modal_input.modality == ModalityType.AUDIO:
                 features = modal_features[modal_input.modality]
                 emotional = features['emotional']
                 spectral = features['spectral']
-                
+
                 description = f"Audio content has {emotional['valence']:.2f} emotional valence and "
                 description += f"{emotional['arousal']:.2f} arousal level. "
                 description += f"Spectral brightness: {spectral['brightness']:.2f}, "
                 description += f"suggesting a {'bright' if spectral['brightness'] > 0.5 else 'warm'} tonal quality."
-                
+
                 context_parts.append(description)
-        
+
         # Add cross-modal connections
         if discovered_connections:
             context_parts.append("\nCross-modal insights:")
             for connection in discovered_connections:
                 context_parts.append(f"• {connection.description} (strength: {connection.strength:.2f})")
-        
+
         # Synthesize final integrated understanding
         integrated_understanding = self._synthesize_final_understanding(modal_features, discovered_connections, query)
         if integrated_understanding:
             context_parts.append(f"\nIntegrated understanding: {integrated_understanding}")
-        
+
         return " ".join(context_parts)
-    
-    def _synthesize_final_understanding(self, modal_features: Dict, 
+
+    def _synthesize_final_understanding(self, modal_features: Dict,
                                       connections: List, query: str) -> str:
         """Create emergent understanding from modal integration"""
-        
+
         synthesis_parts = []
-        
+
         # Look for emotional alignment across modalities
         if ModalityType.TEXT in modal_features and ModalityType.AUDIO in modal_features:
             text_emotion = modal_features[ModalityType.TEXT].get('emotional_tone', {})
             audio_emotion = modal_features[ModalityType.AUDIO].get('emotional', {})
-            
+
             text_positivity = text_emotion.get('positivity', 0.5)
             audio_valence = audio_emotion.get('valence', 0.5)
-            
+
             if abs(text_positivity - audio_valence) < 0.2:
                 synthesis_parts.append("emotional consistency between text and audio suggests authentic expression")
-        
+
         # Look for visual-textual coherence
         if ModalityType.TEXT in modal_features and ModalityType.IMAGE in modal_features:
             text_topics = modal_features[ModalityType.TEXT].get('semantic_topics', [])
             image_mood = modal_features[ModalityType.IMAGE].get('mood', {})
-            
+
             if 'technology' in text_topics and image_mood.get('complexity', 0) > 0.7:
                 synthesis_parts.append("visual complexity aligns with technological content")
-        
+
         # Add synesthetic insights from connections
         for connection in connections:
             if connection.strength > 0.7:
                 if 'warm' in connection.description and 'bright' in connection.description:
                     synthesis_parts.append("warm-bright synesthetic quality creates energetic and positive impression")
-        
+
         return "; ".join(synthesis_parts) if synthesis_parts else ""
-    
-    def _assess_integration_quality(self, modal_inputs: List[ModalInput], 
+
+    def _assess_integration_quality(self, modal_inputs: List[ModalInput],
                                   integrated_context: str) -> Dict[str, float]:
         """Assess the quality of multimodal integration"""
-        
+
         # Coverage: How well does integrated context cover all input modalities?
         modality_mentions = 0
         for modal_input in modal_inputs:
             if modal_input.modality.value in integrated_context.lower():
                 modality_mentions += 1
         coverage = modality_mentions / len(modal_inputs) if modal_inputs else 0
-        
+
         # Coherence: Internal consistency of integrated context
         coherence = self._assess_coherence(integrated_context)
-        
+
         # Novelty: Presence of emergent insights not in individual modalities
         novelty = 1.0 if "cross-modal" in integrated_context or "synesthetic" in integrated_context else 0.5
-        
+
         # Completeness: Adequacy of information for the query
         completeness = min(1.0, len(integrated_context.split()) / 50)  # Rough measure
-        
+
         return {
             'coverage': coverage,
             'coherence': coherence,
@@ -1581,84 +1581,84 @@ class MultimodalContextEngine:
             'completeness': completeness,
             'overall': (coverage + coherence + novelty + completeness) / 4
         }
-    
+
     def _assess_coherence(self, text: str) -> float:
         """Simple coherence assessment of integrated context"""
         sentences = text.split('.')
         if len(sentences) < 2:
             return 1.0
-        
+
         # Check for contradictory statements
         positive_indicators = ['bright', 'warm', 'positive', 'energetic', 'consistent']
         negative_indicators = ['dark', 'cold', 'negative', 'low', 'inconsistent']
-        
+
         positive_count = sum(1 for word in positive_indicators if word in text.lower())
         negative_count = sum(1 for word in negative_indicators if word in text.lower())
-        
+
         if positive_count > 0 and negative_count > 0:
             return 0.5  # Mixed signals
         return 0.8  # Generally coherent
-    
-    def _update_learning(self, modal_features: Dict, connections: List, 
+
+    def _update_learning(self, modal_features: Dict, connections: List,
                         integrated_context: str):
         """Update system learning from integration experience"""
-        
+
         # Store successful integration patterns
         self.modal_interaction_history.append({
             'modalities_involved': list(modal_features.keys()),
             'connections_found': len(connections),
             'integration_quality': self._assess_integration_quality([], integrated_context)
         })
-        
+
         # Update discovered connections database
         for connection in connections:
             if connection.strength > 0.6:  # Only store strong connections
                 self.discovered_connections.append(connection)
-        
+
         # Keep history manageable
         if len(self.modal_interaction_history) > 100:
             self.modal_interaction_history = self.modal_interaction_history[-100:]
 
 class SynestheticConnectionDetector:
     """Detects novel connections between different modalities"""
-    
+
     def __init__(self):
         self.connection_patterns = self._initialize_connection_patterns()
-        
+
     def discover_connections(self, modal_features: Dict, modal_embeddings: Dict) -> List[CrossModalConnection]:
         """Discover cross-modal connections in current input"""
-        
+
         connections = []
         modalities = list(modal_features.keys())
-        
+
         # Check all pairs of modalities
         for i in range(len(modalities)):
             for j in range(i + 1, len(modalities)):
                 modal1, modal2 = modalities[i], modalities[j]
-                
+
                 # Look for structural correspondences
                 structural_connections = self._find_structural_connections(
                     modal1, modal2, modal_features[modal1], modal_features[modal2]
                 )
                 connections.extend(structural_connections)
-                
+
                 # Look for semantic resonances
                 semantic_connections = self._find_semantic_resonances(
                     modal1, modal2, modal_features[modal1], modal_features[modal2]
                 )
                 connections.extend(semantic_connections)
-                
+
                 # Look for emotional correspondences
                 emotional_connections = self._find_emotional_correspondences(
                     modal1, modal2, modal_features[modal1], modal_features[modal2]
                 )
                 connections.extend(emotional_connections)
-        
+
         # Filter and validate connections
         validated_connections = self._validate_connections(connections)
-        
+
         return validated_connections
-    
+
     def _initialize_connection_patterns(self) -> Dict:
         """Initialize known cross-modal connection patterns"""
         return {
@@ -1678,17 +1678,17 @@ class SynestheticConnectionDetector:
                 'audio': {'arousal': lambda x: x > 0.7}
             }
         }
-    
+
     def _find_structural_connections(self, modal1: ModalityType, modal2: ModalityType,
                                    features1: Dict, features2: Dict) -> List[CrossModalConnection]:
         """Find structural correspondences between modalities"""
         connections = []
-        
+
         # Complexity correspondence
         if modal1 == ModalityType.TEXT and modal2 == ModalityType.IMAGE:
             text_complexity = features1.get('complexity_score', 0.5)
             image_complexity = features2.get('composition', {}).get('complexity', 0.5)
-            
+
             if abs(text_complexity - image_complexity) < 0.3:
                 connections.append(CrossModalConnection(
                     source_modality=modal1,
@@ -1699,12 +1699,12 @@ class SynestheticConnectionDetector:
                     validation_score=0.8,
                     applications=["coherence_assessment", "style_analysis"]
                 ))
-        
+
         # Rhythm/pattern correspondence
         if modal1 == ModalityType.AUDIO and modal2 == ModalityType.IMAGE:
             audio_rhythm = features1.get('rhythmic', {}).get('beat_strength', 0.5)
             visual_rhythm = features2.get('composition', {}).get('complexity', 0.5)
-            
+
             if abs(audio_rhythm - visual_rhythm) < 0.4:
                 connections.append(CrossModalConnection(
                     source_modality=modal1,
@@ -1715,18 +1715,18 @@ class SynestheticConnectionDetector:
                     validation_score=0.7,
                     applications=["artistic_analysis", "multimedia_coherence"]
                 ))
-        
+
         return connections
-    
+
     def _find_semantic_resonances(self, modal1: ModalityType, modal2: ModalityType,
                                 features1: Dict, features2: Dict) -> List[CrossModalConnection]:
         """Find semantic resonances between modalities"""
         connections = []
-        
+
         # Warmth resonance
         warmth_score1 = self._extract_warmth_score(modal1, features1)
         warmth_score2 = self._extract_warmth_score(modal2, features2)
-        
+
         if warmth_score1 is not None and warmth_score2 is not None:
             warmth_alignment = 1.0 - abs(warmth_score1 - warmth_score2)
             if warmth_alignment > 0.6:
@@ -1739,11 +1739,11 @@ class SynestheticConnectionDetector:
                     validation_score=0.8,
                     applications=["emotional_analysis", "aesthetic_assessment"]
                 ))
-        
+
         # Brightness resonance
         brightness_score1 = self._extract_brightness_score(modal1, features1)
         brightness_score2 = self._extract_brightness_score(modal2, features2)
-        
+
         if brightness_score1 is not None and brightness_score2 is not None:
             brightness_alignment = 1.0 - abs(brightness_score1 - brightness_score2)
             if brightness_alignment > 0.6:
@@ -1756,18 +1756,18 @@ class SynestheticConnectionDetector:
                     validation_score=0.8,
                     applications=["clarity_assessment", "quality_evaluation"]
                 ))
-        
+
         return connections
-    
+
     def _find_emotional_correspondences(self, modal1: ModalityType, modal2: ModalityType,
                                       features1: Dict, features2: Dict) -> List[CrossModalConnection]:
         """Find emotional correspondences between modalities"""
         connections = []
-        
+
         # Emotional valence alignment
         valence1 = self._extract_emotional_valence(modal1, features1)
         valence2 = self._extract_emotional_valence(modal2, features2)
-        
+
         if valence1 is not None and valence2 is not None:
             valence_alignment = 1.0 - abs(valence1 - valence2)
             if valence_alignment > 0.7:
@@ -1780,9 +1780,9 @@ class SynestheticConnectionDetector:
                     validation_score=0.9,
                     applications=["emotion_recognition", "authenticity_assessment"]
                 ))
-        
+
         return connections
-    
+
     def _extract_warmth_score(self, modality: ModalityType, features: Dict) -> Optional[float]:
         """Extract warmth score from modal features"""
         if modality == ModalityType.TEXT:
@@ -1795,7 +1795,7 @@ class SynestheticConnectionDetector:
             emotional = features.get('emotional', {})
             return emotional.get('valence', None)
         return None
-    
+
     def _extract_brightness_score(self, modality: ModalityType, features: Dict) -> Optional[float]:
         """Extract brightness score from modal features"""
         if modality == ModalityType.TEXT:
@@ -1809,7 +1809,7 @@ class SynestheticConnectionDetector:
             spectral = features.get('spectral', {})
             return spectral.get('brightness', None)
         return None
-    
+
     def _extract_emotional_valence(self, modality: ModalityType, features: Dict) -> Optional[float]:
         """Extract emotional valence from modal features"""
         if modality == ModalityType.TEXT:
@@ -1825,11 +1825,11 @@ class SynestheticConnectionDetector:
             emotional = features.get('emotional', {})
             return emotional.get('valence', None)
         return None
-    
+
     def _validate_connections(self, connections: List[CrossModalConnection]) -> List[CrossModalConnection]:
         """Validate and filter discovered connections"""
         validated = []
-        
+
         for connection in connections:
             # Only keep connections with sufficient strength
             if connection.strength > 0.5:
@@ -1838,19 +1838,19 @@ class SynestheticConnectionDetector:
                     validated.append(connection)
                 elif connection.connection_type in ["semantic_resonance", "structural_correspondence"] and connection.strength > 0.6:
                     validated.append(connection)
-        
+
         return validated
 
 # Example usage and demonstration
 def demonstrate_multimodal_integration():
     """Demonstrate multimodal context integration"""
-    
+
     print("Multimodal Context Integration Demonstration")
     print("=" * 50)
-    
+
     # Initialize the engine
     engine = MultimodalContextEngine(embedding_dim=512)
-    
+
     # Create sample modal inputs
     modal_inputs = [
         ModalInput(
@@ -1869,29 +1869,29 @@ def demonstrate_multimodal_integration():
             metadata={"source": "recording", "simulated": True}
         )
     ]
-    
+
     # Query for integration
     query = "What can you tell me about this car based on all available information?"
-    
+
     # Perform integration
     result = engine.integrate_multimodal_context(modal_inputs, query)
-    
+
     print(f"Query: {query}")
     print("\nIntegration Results:")
     print("-" * 30)
-    
+
     print(f"Integrated Context:\n{result['integrated_context']}")
-    
+
     print(f"\nDiscovered Cross-Modal Connections:")
     for connection in result['discovered_connections']:
         print(f"  • {connection.source_modality.value} ↔ {connection.target_modality.value}: {connection.description}")
         print(f"    Strength: {connection.strength:.3f}")
-    
+
     print(f"\nIntegration Quality Assessment:")
     quality = result['integration_quality']
     for metric, score in quality.items():
         print(f"  {metric.capitalize()}: {score:.3f}")
-    
+
     return result
 
 # Run demonstration

@@ -1,4 +1,4 @@
-import os 
+import os
 from typing import Annotated
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,21 +15,21 @@ config_list = [
 
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
 
-tavily = TavilyClient (api_key=TAVILY_API_KEY) 
+tavily = TavilyClient (api_key=TAVILY_API_KEY)
 
 def search_tool (query : Annotated[str , "The search query"]) -> Annotated[str , 'The Search results'] :
     return tavily.get_search_context (query , search_depth='advanced')
 
-#react prompt 
+#react prompt
 
-ReAct_prompt = ''' 
+ReAct_prompt = '''
 
 Answer the following questions as best as you can. You have access to search tools provided.
 
 Use the following question format:
 
 Question: the input question you must answer
-Thought: you should always think about what you do 
+Thought: you should always think about what you do
 Action: the action to take
 Action Input: the input to the action
 Observation: the result of the action
@@ -43,11 +43,11 @@ Question : {input}
 
 '''
 
-def react_prompt_message (sender, recipient, context): 
+def react_prompt_message (sender, recipient, context):
     return ReAct_prompt.format (input = context['question'])
 
 
-# setting up code executor 
+# setting up code executor
 
 os.makedirs ("coding" , exist_ok = True)
 
@@ -78,7 +78,7 @@ register_function (
 with Cache.disk(cache_seed=43) as cache :
     user_proxy.initiate_chat (
         assistant,
-        message= react_prompt_message , 
+        message= react_prompt_message ,
         question = 'What is the weather and Air quality in New Delhi today?',
         cache = cache,
     )

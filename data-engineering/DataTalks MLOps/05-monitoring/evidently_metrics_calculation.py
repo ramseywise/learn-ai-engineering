@@ -1,7 +1,7 @@
 import datetime
 import time
 import random
-import logging 
+import logging
 import uuid
 import pytz
 import pandas as pd

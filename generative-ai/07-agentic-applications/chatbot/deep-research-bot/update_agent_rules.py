@@ -2,7 +2,7 @@
 This script is used to update the agent rules in:
 .CLAUDE.md
 
-It will read the agent rules from the AGENTS.md file and update the 
+It will read the agent rules from the AGENTS.md file and update the
 claude agent rules in the .md files.
 """
 

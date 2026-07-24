@@ -93,7 +93,7 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT_NAME=your_deployment_name
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
 
-# Bing Search Configuration  
+# Bing Search Configuration
 BING_SUBSCRIPTION_KEY=your_bing_subscription_key
 BING_SEARCH_URL=https://api.bing.microsoft.com/v7.0/search  # Optional, uses default if not set
 ```
@@ -295,7 +295,7 @@ uv export --format requirements-txt > requirements.txt
 # Format code
 uv run ruff format
 
-# Lint code  
+# Lint code
 uv run ruff check --fix
 
 # Type checking

@@ -36,5 +36,5 @@ context rot, token economics, and latency budgets.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md) (cost/latency trade-offs are
+[system-design-round](../../rounds/system-design-round/README.md) (cost/latency trade-offs are
 its bread and butter).

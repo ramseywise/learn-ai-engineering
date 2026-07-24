@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md)
 > Position in the stack: innermost — *context contains prompts*.
-> Deep note: [prompt-engineering.md](../../interviewing/notes/prompt-engineering.md)
+> Deep note: [prompt-engineering.md](prompt-engineering.md)
 
 ---
 
@@ -17,8 +17,8 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ## Resource map
 
 ### Deep notes
-- [prompt-engineering.md](../../interviewing/notes/prompt-engineering.md) — core techniques: system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring, prompt templates, prompt chaining, long-context patterns, and the prompt↔context boundary.
-- [prompt-injection.md](../../interviewing/notes/prompt-injection.md) — the security facet: adversarial input manipulation.
+- [prompt-engineering.md](prompt-engineering.md) — core techniques: system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring, prompt templates, prompt chaining, long-context patterns, and the prompt↔context boundary.
+- [prompt-injection.md](prompt-injection.md) — the security facet: adversarial input manipulation.
 
 ### Interviewing guides
 - [2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.

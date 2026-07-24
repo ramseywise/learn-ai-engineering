@@ -85,8 +85,8 @@ class AgentStateCompaction(AgentState):
         summary_messages = [
             {
                 "role": "system",
-                "content": """You are compacting a deep research agent's conversation history. 
-            Summarize this research conversation history concisely. 
+                "content": """You are compacting a deep research agent's conversation history.
+            Summarize this research conversation history concisely.
             Preserve:
             - Key findings from web searches (with source URLs if mentioned)
             - Important facts, data points, and statistics

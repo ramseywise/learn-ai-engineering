@@ -55,7 +55,7 @@ Let's start with a fundamental principle: **True collaboration emerges when each
 ```
 /collaborate.establish{
   intent="Create a foundation for balanced human-AI collaboration",
-  
+
   partnership_principles=[
     "Mutual contribution of unique strengths",
     "Explicit communication of boundaries and capabilities",
@@ -63,21 +63,21 @@ Let's start with a fundamental principle: **True collaboration emerges when each
     "Continuous adaptation to each other's styles",
     "Joint ownership of outcomes"
   ],
-  
+
   initial_setup=[
     "/roles.define{
       human_strengths=['creativity', 'real-world experience', 'intuition', 'ethical judgment', 'contextual understanding'],
       ai_strengths=['information processing', 'pattern recognition', 'consistency', 'tirelessness', 'objectivity'],
       fluid_boundaries=true
     }",
-    
+
     "/communication.establish{
       clarity_level='high',
       assumption_checking=true,
       meta_discussion=true,
       feedback_loops=true
     }",
-    
+
     "/workflow.design{
       initiative_balance='adaptive',
       ideation_approach='ping-pong',
@@ -85,7 +85,7 @@ Let's start with a fundamental principle: **True collaboration emerges when each
       decision_making='complementary'
     }"
   ],
-  
+
   output={
     partnership_agreement=<shared_understanding>,
     communication_protocols=<interaction_guidelines>,
@@ -143,7 +143,7 @@ In this metaphor:
 
 **Step 1:** In the same chat, copy and paste this prompt:
 
-"Using the Dance metaphor for collaboration, let's design our partnership for this project. 
+"Using the Dance metaphor for collaboration, let's design our partnership for this project.
 
 1. Which dance style best represents the type of collaboration we need (structured tango, elegant waltz, improvisational jazz, or experimental contact improv)?
 
@@ -162,46 +162,46 @@ Now let's explore specific protocol shells for different collaborative needs:
 ```
 /collaborate.create{
   intent="Generate new ideas and solutions through balanced contribution",
-  
+
   input={
     topic=<subject_area>,
     human_perspective=<initial_thoughts>,
     creation_type="open_ended"
   },
-  
+
   process=[
     "/ideation.initiate{
       seed_ideas=<initial_concepts>,
       perspective='complementary',
       build_on='human_strengths'
     }",
-    
+
     "/development.alternate{
       turn_taking='dynamic',
       build_pattern='yes_and',
       unexpected_exploration=true,
       convergence_signal='natural'
     }",
-    
+
     "/enhancement.layer{
       human_layer='intuition_and_experience',
       ai_layer='patterns_and_connections',
       integration='seamless'
     }",
-    
+
     "/refinement.collaborative{
       critical_analysis='balanced',
       iteration_cycle='rapid',
       improvement_focus='mutual'
     }",
-    
+
     "/synthesis.joint{
       combining='best_elements',
       ownership='shared',
       attribution='transparent'
     }"
   ],
-  
+
   output={
     co_created_content=<joint_creation>,
     contribution_map=<partnership_visualization>,
@@ -216,46 +216,46 @@ Now let's explore specific protocol shells for different collaborative needs:
 ```
 /collaborate.think{
   intent="Develop deeper understanding through collaborative exploration",
-  
+
   input={
     topic=<exploration_area>,
     initial_perspective=<starting_point>,
     exploration_mode="divergent_to_convergent"
   },
-  
+
   process=[
     "/framing.joint{
       define='key_questions',
       establish='exploration_boundaries',
       identify='underlying_assumptions'
     }",
-    
+
     "/perspective.expand{
       human_angles=<experiential_views>,
       ai_angles=<analytical_views>,
       unexpected_connections=true,
       cross_pollination=true
     }",
-    
+
     "/analysis.deepen{
       levels=['surface', 'structure', 'assumption', 'implication'],
       questioning='socratic',
       pattern_detection='collaborative'
     }",
-    
+
     "/synthesis.weave{
       integration_method='concept_mapping',
       contradiction_exploration=true,
       meaning_emergence=true
     }",
-    
+
     "/understanding.check{
       verification='mutual',
       blindspot_identification='reciprocal',
       insight_confirmation='dialogic'
     }"
   ],
-  
+
   output={
     evolved_understanding=<deepened_perspective>,
     thought_map=<concept_network>,
@@ -270,47 +270,47 @@ Now let's explore specific protocol shells for different collaborative needs:
 ```
 /collaborate.feedback{
   intent="Create a robust cycle of mutual improvement",
-  
+
   input={
     content=<work_to_improve>,
     improvement_focus=<specific_aspects>,
     feedback_depth="constructive_detailed"
   },
-  
+
   process=[
     "/analysis.complementary{
       human_perspective='intuitive_experiential',
       ai_perspective='systematic_analytical',
       integration='balanced'
     }",
-    
+
     "/feedback.structure{
       format='specific_actionable',
       balance='critique_and_affirmation',
       future_orientation=true,
       rationale_inclusion=true
     }",
-    
+
     "/improvement.suggest{
       specificity='high',
       implementation_clarity=true,
       prioritization='impact_based',
       alternatives=true
     }",
-    
+
     "/response.invite{
       reaction_to='suggestions',
       clarification_opportunity=true,
       counter_perspective=true
     }",
-    
+
     "/integration.plan{
       incorporation_strategy='selective',
       adaptation_approach='contextual',
       implementation_pathway='clear'
     }"
   ],
-  
+
   output={
     structured_feedback=<balanced_assessment>,
     improvement_suggestions=<actionable_recommendations>,
@@ -442,46 +442,46 @@ Here's a structured way to manage role transitions in your collaboration:
 ```
 /roles.transition{
   intent="Enable fluid movement between collaborative roles",
-  
+
   input={
     current_phase=<collaboration_stage>,
     current_roles=<role_distribution>,
     collaboration_needs=<emerging_requirements>
   },
-  
+
   process=[
     "/needs.assess{
       evaluate='current_progress',
       identify='next_requirements',
       determine='optimal_roles'
     }",
-    
+
     "/strengths.match{
       human_strengths=<human_capabilities>,
       ai_strengths=<ai_capabilities>,
       task_needs=<role_requirements>,
       optimal_alignment=true
     }",
-    
+
     "/transition.signal{
       communicate='role_shift',
       clarity_level='explicit',
       confirmation='mutual'
     }",
-    
+
     "/adaptation.support{
       provide='context_for_new_role',
       establish='handoff_continuity',
       ensure='smooth_transition'
     }",
-    
+
     "/effectiveness.monitor{
       assess='new_role_fit',
       identify='adjustment_needs',
       iterate='as_necessary'
     }"
   ],
-  
+
   output={
     new_role_distribution=<updated_responsibilities>,
     transition_notes=<handoff_documentation>,
@@ -546,45 +546,45 @@ Here's a structured approach to meta-collaborative communication:
 ```
 /meta.collaborate{
   intent="Reflect on and improve the collaborative process itself",
-  
+
   input={
     collaboration_history=<partnership_experience>,
     current_patterns=<working_methods>,
     desired_outcomes=<partnership_goals>
   },
-  
+
   process=[
     "/pattern.identify{
       observe='interaction_dynamics',
       recognize='recurring_elements',
       classify='effective_vs_ineffective'
     }",
-    
+
     "/effectiveness.assess{
       criteria=['mutual_contribution', 'idea_development', 'outcome_quality'],
       evidence_based=true,
       balanced_perspective=true
     }",
-    
+
     "/friction.examine{
       identify='collaboration_obstacles',
       analyze='root_causes',
       prioritize='impact_order'
     }",
-    
+
     "/adjustment.design{
       target='improvement_areas',
       approach='experimental',
       implementation='gradual'
     }",
-    
+
     "/agreement.establish{
       on='process_changes',
       commitment='mutual',
       review_cycle='defined'
     }"
   ],
-  
+
   output={
     pattern_analysis=<collaboration_dynamics>,
     effectiveness_assessment=<partnership_evaluation>,
@@ -668,45 +668,45 @@ Here's a structured approach to intentional co-evolution:
 ```
 /collaborate.evolve{
   intent="Create a partnership that grows and develops over time",
-  
+
   input={
     collaboration_history=<partnership_experience>,
     growth_areas=<development_opportunities>,
     evolution_horizon=<long_term_vision>
   },
-  
+
   process=[
     "/learning.mutual{
       human_learns=['ai_capabilities', 'effective_prompting', 'collaboration_patterns'],
       ai_learns=['human_preferences', 'communication_style', 'domain_knowledge'],
       documentation='ongoing'
     }",
-    
+
     "/adaptation.reciprocal{
       human_adapts=['interaction_approach', 'expectation_calibration', 'feedback_methods'],
       ai_adapts=['response_style', 'initiative_level', 'explanation_depth'],
       alignment='progressive'
     }",
-    
+
     "/capability.expansion{
       human_new_skills=['collaborative_techniques', 'meta_communication', 'system_thinking'],
       ai_new_approaches=['personalization', 'anticipatory_assistance', 'context_sensitivity'],
       mutual_support=true
     }",
-    
+
     "/relationship.deepen{
       trust_building='experience_based',
       understanding_growth='cumulative',
       working_model='increasingly_implicit'
     }",
-    
+
     "/future.envision{
       collaboration_potential='expanding',
       partnership_model='evolving',
       aspiration_setting='mutual'
     }"
   ],
-  
+
   output={
     learning_summary=<mutual_growth_areas>,
     adaptation_roadmap=<reciprocal_adjustments>,
@@ -744,13 +744,13 @@ Let's explore practical templates for different collaborative needs:
 ```
 /collaborate.creative{
   intent="Generate creative content through balanced human-AI partnership",
-  
+
   collaboration_focus={
     creative_domain="[SPECIFIC CREATIVE FIELD]",
     output_type="[CONTENT TYPE]",
     style_direction="[AESTHETIC GUIDANCE]"
   },
-  
+
   human_contribution=[
     "Vision and purpose definition",
     "Aesthetic judgment and preference",
@@ -758,7 +758,7 @@ Let's explore practical templates for different collaborative needs:
     "Emotional resonance assessment",
     "Audience and impact considerations"
   ],
-  
+
   ai_contribution=[
     "Variation and alternative generation",
     "Pattern recognition across examples",
@@ -766,7 +766,7 @@ Let's explore practical templates for different collaborative needs:
     "Reference and inspiration suggestion",
     "Detail elaboration and consistency"
   ],
-  
+
   collaboration_process=[
     "/vision.establish{shared_understanding=true, purpose_clarity=true}",
     "/ideate.together{turn_taking=true, build_on_previous=true}",
@@ -774,7 +774,7 @@ Let's explore practical templates for different collaborative needs:
     "/refine.iteratively{feedback_loops=true, version_tracking=true}",
     "/finalize.jointly{human_final_touch=true, ai_consistency_check=true}"
   ],
-  
+
   evolution_markers=[
     "Increasing stylistic alignment",
     "More efficient communication",
@@ -790,13 +790,13 @@ Let's explore practical templates for different collaborative needs:
 ```
 /collaborate.solve{
   intent="Address complex problems through complementary human-AI thinking",
-  
+
   collaboration_focus={
     problem_domain="[PROBLEM AREA]",
     solution_criteria="[SUCCESS METRICS]",
     constraint_parameters="[LIMITATIONS]"
   },
-  
+
   human_contribution=[
     "Problem context and stakeholder needs",
     "Value judgments and priorities",
@@ -804,7 +804,7 @@ Let's explore practical templates for different collaborative needs:
     "Intuitive leaps and creative connections",
     "Experiential wisdom and practical constraints"
   ],
-  
+
   ai_contribution=[
     "Systematic analysis and structure",
     "Option enumeration and comparison",
@@ -812,7 +812,7 @@ Let's explore practical templates for different collaborative needs:
     "Knowledge synthesis across domains",
     "Bias detection and perspective expansion"
   ],
-  
+
   collaboration_process=[
     "/problem.frame{different_angles=true, assumption_surfacing=true}",
     "/analyze.systematically{human_intuition=true, ai_structure=true}",
@@ -820,7 +820,7 @@ Let's explore practical templates for different collaborative needs:
     "/evaluate.together{multiple_criteria=true, tradeoff_analysis=true}",
     "/implement.plan{practical_steps=true, anticipate_obstacles=true}"
   ],
-  
+
   evolution_markers=[
     "Increasing problem complexity tackled",
     "More nuanced solution development",
@@ -836,13 +836,13 @@ Let's explore practical templates for different collaborative needs:
 ```
 /collaborate.learn{
   intent="Develop knowledge and understanding through human-AI partnership",
-  
+
   collaboration_focus={
     learning_domain="[SUBJECT AREA]",
     knowledge_level="[CURRENT TO TARGET]",
     learning_style="[PREFERENCES]"
   },
-  
+
   human_contribution=[
     "Learning goals and motivations",
     "Knowledge gaps and questions",
@@ -850,7 +850,7 @@ Let's explore practical templates for different collaborative needs:
     "Comprehension feedback and struggles",
     "Personal experiences and connections"
   ],
-  
+
   ai_contribution=[
     "Structured knowledge presentation",
     "Conceptual relationships and frameworks",
@@ -858,7 +858,7 @@ Let's explore practical templates for different collaborative needs:
     "Progressive challenge calibration",
     "Personalized explanation adaptation"
   ],
-  
+
   collaboration_process=[
     "/goals.establish{specificity=true, measurability=true, attainability=true}",
     "/baseline.assess{knowledge_gaps=true, learning_preferences=true}",
@@ -866,7 +866,7 @@ Let's explore practical templates for different collaborative needs:
     "/explore.together{human_questions=true, ai_explanations=true}",
     "/apply.integrate{real_world_context=true, personal_relevance=true}"
   ],
-  
+
   evolution_markers=[
     "Increasing conceptual depth",
     "More nuanced questions",
@@ -936,7 +936,7 @@ In this metaphor:
 
 **Step 2:** Copy and paste this prompt:
 
-"Using the Garden of Knowledge metaphor for learning collaboration, I'd like to begin a learning partnership about [CHOOSE A TOPIC YOU'RE INTERESTED IN LEARNING ABOUT, e.g., 'quantum computing fundamentals' or 'creative writing techniques']. 
+"Using the Garden of Knowledge metaphor for learning collaboration, I'd like to begin a learning partnership about [CHOOSE A TOPIC YOU'RE INTERESTED IN LEARNING ABOUT, e.g., 'quantum computing fundamentals' or 'creative writing techniques'].
 
 As co-gardeners of knowledge, let's establish:
 
@@ -1083,41 +1083,41 @@ Here's a structured protocol for implementing these learning dance patterns:
 ```
 /learning.dance{
   intent="Create a flowing, effective learning interaction pattern",
-  
+
   input={
     learning_topic=<subject_area>,
     current_understanding=<knowledge_baseline>,
     learning_goal=<target_understanding>
   },
-  
+
   patterns=[
     "/explore{
       human_role='question_posing',
       ai_role='curiosity_guiding',
       transition_cue='sufficient_breadth_covered'
     }",
-    
+
     "/explain{
       human_role='active_listening',
       ai_role='clarity_providing',
       adaptation='to_feedback_signals',
       transition_cue='comprehension_indicators'
     }",
-    
+
     "/apply{
       human_role='concept_testing',
       ai_role='supportive_coaching',
       scaffold_level='adaptive',
       transition_cue='application_attempt_completion'
     }",
-    
+
     "/reflect{
       human_role='progress_assessing',
       ai_role='insight_highlighting',
       depth='meaningful_not_superficial',
       transition_cue='reflection_completion'
     }",
-    
+
     "/cycle.adapt{
       next_pattern='based_on_learning_needs',
       intensity='calibrated_to_energy',
@@ -1125,7 +1125,7 @@ Here's a structured protocol for implementing these learning dance patterns:
       pace='matched_to_cognitive_load'
     }"
   ],
-  
+
   output={
     interaction_flow=<dance_sequence>,
     adaptation_triggers=<transition_signals>,
@@ -1211,13 +1211,13 @@ Here's a structured approach to implementing progressive scaffolding:
 ```
 /scaffold.progressive{
   intent="Build understanding in layers that transfer knowledge ownership",
-  
+
   input={
     learning_topic=<subject_area>,
     learner_profile=<prior_knowledge_and_goals>,
     scaffolding_pace=<progression_speed>
   },
-  
+
   layers=[
     "/foundation.establish{
       ai_role='comprehensive_introduction',
@@ -1226,7 +1226,7 @@ Here's a structured approach to implementing progressive scaffolding:
       success_criteria='basic_comprehension',
       transition_trigger='foundation_solidified'
     }",
-    
+
     "/framework.construct{
       ai_role='structural_organization',
       human_role='mental_mapping',
@@ -1234,7 +1234,7 @@ Here's a structured approach to implementing progressive scaffolding:
       success_criteria='conceptual_navigation',
       transition_trigger='framework_internalized'
     }",
-    
+
     "/practice.guide{
       ai_role='supportive_coaching',
       human_role='active_application',
@@ -1242,7 +1242,7 @@ Here's a structured approach to implementing progressive scaffolding:
       success_criteria='successful_application',
       transition_trigger='growing_confidence'
     }",
-    
+
     "/direction.transfer{
       ai_role='responsive_resource',
       human_role='path_determination',
@@ -1250,7 +1250,7 @@ Here's a structured approach to implementing progressive scaffolding:
       success_criteria='autonomous_navigation',
       transition_trigger='ownership_demonstrated'
     }",
-    
+
     "/creation.empower{
       ai_role='collaborative_partner',
       human_role='knowledge_creator',
@@ -1259,14 +1259,14 @@ Here's a structured approach to implementing progressive scaffolding:
       transition_trigger='transformative_learning'
     }"
   ],
-  
+
   adaptation={
     pace_adjustment='based_on_mastery',
     layer_depth='responsive_to_needs',
     support_intensity='gradually_decreasing',
     challenge_level='progressively_increasing'
   },
-  
+
   output={
     current_layer=<active_scaffolding_level>,
     progress_assessment=<layer_mastery_status>,
@@ -1332,20 +1332,20 @@ Here's a structured approach to meta-learning:
 ```
 /meta.learn{
   intent="Improve the learning process itself through collaborative analysis",
-  
+
   input={
     learning_history=<past_learning_experiences>,
     learning_preferences=<style_and_approaches>,
     improvement_goals=<learning_process_aspirations>
   },
-  
+
   process=[
     "/observe.patterns{
       in='learning_interactions',
       focus=['effective_moments', 'struggle_points', 'breakthrough_triggers'],
       documentation='specific_examples'
     }",
-    
+
     "/analyze.effectiveness{
       of='learning_approaches',
       against='comprehension_speed',
@@ -1353,26 +1353,26 @@ Here's a structured approach to meta-learning:
       against='application_ability',
       against='enjoyment_level'
     }",
-    
+
     "/identify.strengths{
       in='learning_process',
       categorize=['information_processing', 'concept_connection', 'application_transfer', 'question_formulation']
     }",
-    
+
     "/develop.strategies{
       target='improvement_areas',
       leverage='identified_strengths',
       customize='to_learning_style',
       balance='efficiency_and_depth'
     }",
-    
+
     "/implement.improvements{
       approach='gradual_integration',
       measurement='before_after_comparison',
       adjustment='continuous_refinement'
     }"
   ],
-  
+
   output={
     learning_pattern_analysis=<process_insights>,
     effectiveness_assessment=<approach_evaluation>,
@@ -1410,20 +1410,20 @@ Let's explore practical templates for different learning collaboration needs:
 ```
 /collaborate.master{
   intent="Develop deep understanding of complex concepts",
-  
+
   learning_focus={
     concept_area="[CONCEPT DOMAIN]",
     complexity_level="[BASIC TO ADVANCED]",
     application_context="[WHERE CONCEPTS WILL BE APPLIED]"
   },
-  
+
   collaboration_structure=[
     "/concept.map{
       initial_overview=true,
       relationship_visualization=true,
       prerequisite_identification=true
     }",
-    
+
     "/explanation.layer{
       intuitive_analogy=true,
       formal_definition=true,
@@ -1431,21 +1431,21 @@ Let's explore practical templates for different learning collaboration needs:
       practical_example=true,
       misconception_clarification=true
     }",
-    
+
     "/understanding.check{
       explanation_reversal=true,
       novel_application=true,
       edge_case_exploration=true,
       connection_articulation=true
     }",
-    
+
     "/mastery.deepen{
       comparative_analysis=true,
       historical_context=true,
       limitation_exploration=true,
       future_direction_discussion=true
     }",
-    
+
     "/knowledge.integrate{
       existing_framework_connection=true,
       practical_application_planning=true,
@@ -1453,7 +1453,7 @@ Let's explore practical templates for different learning collaboration needs:
       ongoing_reference_creation=true
     }"
   ],
-  
+
   evolution_indicators=[
     "Explanation complexity increases",
     "Questions become more nuanced",
@@ -1469,13 +1469,13 @@ Let's explore practical templates for different learning collaboration needs:
 ```
 /collaborate.skill{
   intent="Develop practical abilities through guided practice",
-  
+
   learning_focus={
     skill_area="[SKILL DOMAIN]",
     current_level="[BEGINNER TO ADVANCED]",
     development_goal="[SPECIFIC CAPABILITY]"
   },
-  
+
   collaboration_structure=[
     "/skill.assess{
       current_capability=true,
@@ -1483,28 +1483,28 @@ Let's explore practical templates for different learning collaboration needs:
       growth_area_detection=true,
       benchmark_establishment=true
     }",
-    
+
     "/foundation.establish{
       fundamental_principles=true,
       essential_techniques=true,
       common_pitfalls=true,
       expert_mindset=true
     }",
-    
+
     "/practice.design{
       progressive_difficulty=true,
       deliberate_focus=true,
       feedback_mechanism=true,
       reflection_integration=true
     }",
-    
+
     "/technique.refine{
       precision_enhancement=true,
       efficiency_improvement=true,
       adaptation_flexibility=true,
       personalization=true
     }",
-    
+
     "/mastery.build{
       autonomous_application=true,
       creative_extension=true,
@@ -1512,7 +1512,7 @@ Let's explore practical templates for different learning collaboration needs:
       continuous_improvement=true
     }"
   ],
-  
+
   evolution_indicators=[
     "Practice moves from structured to self-directed",
     "Feedback shifts from external to self-assessment",
@@ -1528,13 +1528,13 @@ Let's explore practical templates for different learning collaboration needs:
 ```
 /collaborate.explore{
   intent="Discover and map new knowledge domains together",
-  
+
   learning_focus={
     exploration_area="[KNOWLEDGE DOMAIN]",
     entry_point="[STARTING INTEREST]",
     discovery_purpose="[LEARNING GOAL]"
   },
-  
+
   collaboration_structure=[
     "/territory.map{
       domain_overview=true,
@@ -1542,28 +1542,28 @@ Let's explore practical templates for different learning collaboration needs:
       subdomain_relationship=true,
       entry_point_selection=true
     }",
-    
+
     "/curiosity.follow{
       interest_driven_path=true,
       question_generation=true,
       surprise_embrace=true,
       intuitive_navigation=true
     }",
-    
+
     "/insight.capture{
       documentation_system=true,
       connection_visualization=true,
       question_tracking=true,
       realization_highlighting=true
     }",
-    
+
     "/understanding.deepen{
       selective_diving=true,
       expert_perspective=true,
       critical_examination=true,
       practical_application=true
     }",
-    
+
     "/exploration.extend{
       connection_branching=true,
       cross_disciplinary_linking=true,
@@ -1571,7 +1571,7 @@ Let's explore practical templates for different learning collaboration needs:
       ongoing_curiosity_nurturing=true
     }"
   ],
-  
+
   evolution_indicators=[
     "Questions evolve from what to why to what if",
     "Connections expand from linear to networked",
@@ -1588,7 +1588,7 @@ Let's explore practical templates for different learning collaboration needs:
 
 **Step 2:** Copy and paste it with this message:
 
-"I'd like to apply this learning collaboration template to [YOUR SPECIFIC LEARNING GOAL]. 
+"I'd like to apply this learning collaboration template to [YOUR SPECIFIC LEARNING GOAL].
 
 For the learning_focus section:
 - [FILL IN THE APPROPRIATE DETAILS FOR YOUR CHOSEN TEMPLATE]
@@ -1620,13 +1620,13 @@ As you continue your learning partnership, periodically revisit the protocols an
 ```
 /collaborate.learn.custom{
   intent="[Your learning purpose]",
-  
+
   learning_focus={
     domain="[Your subject area]",
     current_level="[Your starting point]",
     goal="[Your learning objective]"
   },
-  
+
   collaboration_approach=[
     "/structure.element1{aspect1=true, aspect2=true}",
     "/structure.element2{aspect1=true, aspect2=true}",
@@ -1634,7 +1634,7 @@ As you continue your learning partnership, periodically revisit the protocols an
     "/structure.element4{aspect1=true, aspect2=true}",
     "/structure.element5{aspect1=true, aspect2=true}"
   ],
-  
+
   success_indicators=[
     "Indicator 1",
     "Indicator 2",
@@ -1646,4 +1646,3 @@ As you continue your learning partnership, periodically revisit the protocols an
 ```
 
 Copy, customize, and use this template as a starting point for your own learning collaborations!
-

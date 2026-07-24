@@ -289,11 +289,11 @@ Here's a Python class that implements basic memory management:
 ```python
 class ContextCell:
     """A context cell that maintains memory across interactions."""
-    
+
     def __init__(self, system_prompt, max_turns=10, memory_strategy="window"):
         """
         Initialize the context cell.
-        
+
         Args:
             system_prompt (str): The system instructions
             max_turns (int): Maximum conversation turns to keep
@@ -304,54 +304,54 @@ class ContextCell:
         self.memory_strategy = memory_strategy
         self.conversation_history = []
         self.key_value_store = {}
-        
+
     def add_exchange(self, user_input, assistant_response):
         """Add a conversation exchange to history."""
         self.conversation_history.append({
             "user": user_input,
             "assistant": assistant_response
         })
-        
+
         # Apply memory management if needed
         if len(self.conversation_history) > self.max_turns:
             self._manage_memory()
-    
+
     def extract_info(self, key, value):
         """Store important information in key-value store."""
         self.key_value_store[key] = value
-    
+
     def _manage_memory(self):
         """Apply the selected memory management strategy."""
         if self.memory_strategy == "window":
             # Keep only the most recent turns
             self.conversation_history = self.conversation_history[-self.max_turns:]
-        
+
         elif self.memory_strategy == "summarize":
             # Summarize older turns (would use an LLM in practice)
             to_summarize = self.conversation_history[:-self.max_turns + 1]
             summary = self._create_summary(to_summarize)
-            
+
             # Replace old turns with summary
             self.conversation_history = [{"summary": summary}] + \
                                        self.conversation_history[-(self.max_turns-1):]
-    
+
     def _create_summary(self, exchanges):
         """Create a summary of conversation exchanges."""
         # In practice, this would call an LLM to create the summary
         # For this example, we'll use a placeholder
         return f"Summary of {len(exchanges)} previous exchanges"
-    
+
     def build_context(self, current_input):
         """Build the full context for the next LLM call."""
         context = f"{self.system_prompt}\n\n"
-        
+
         # Add key-value memory if we have any
         if self.key_value_store:
             context += "MEMORY:\n"
             for key, value in self.key_value_store.items():
                 context += f"{key}: {value}\n"
             context += "\n"
-        
+
         # Add conversation history
         if self.conversation_history:
             context += "CONVERSATION HISTORY:\n"
@@ -361,10 +361,10 @@ class ContextCell:
                 else:
                     context += f"User: {exchange['user']}\n"
                     context += f"Assistant: {exchange['assistant']}\n\n"
-        
+
         # Add current input
         context += f"User: {current_input}\nAssistant:"
-        
+
         return context
 ```
 

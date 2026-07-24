@@ -96,7 +96,7 @@ This architecture serves multiple domain modeling functions:
 def basic_concept_extractor(domain_text, domain_type):
     """
     Extract fundamental concepts from domain-specific text.
-    
+
     Identifies key terms, definitions, and basic relationships
     that form the foundation of domain understanding.
     """
@@ -122,7 +122,7 @@ def basic_concept_extractor(domain_text, domain_type):
         }
     }
     """
-    
+
     return {
         "concepts": extracted_concepts,
         "definitions": concept_definitions,
@@ -139,7 +139,7 @@ def basic_concept_extractor(domain_text, domain_type):
 def relationship_mapper(concepts, domain_context):
     """
     Map complex relationships between domain concepts.
-    
+
     Creates structured representation of how concepts
     interact, depend on, and influence each other.
     """
@@ -165,7 +165,7 @@ def relationship_mapper(concepts, domain_context):
         }
     }
     """
-    
+
     return {
         "relationship_map": structured_relationships,
         "dependency_graph": concept_dependencies,
@@ -182,7 +182,7 @@ def relationship_mapper(concepts, domain_context):
 def constraint_validator(domain_model, constraints, context):
     """
     Validate domain knowledge against established constraints.
-    
+
     Ensures domain models conform to field-specific rules,
     limitations, and accepted practices.
     """
@@ -209,7 +209,7 @@ def constraint_validator(domain_model, constraints, context):
         }
     }
     """
-    
+
     return {
         "validation_report": comprehensive_validation,
         "violations": constraint_violations,
@@ -226,7 +226,7 @@ def constraint_validator(domain_model, constraints, context):
 def domain_integrator(multiple_domains, integration_objectives):
     """
     Integrate knowledge from multiple domains for comprehensive understanding.
-    
+
     Combines insights from different fields to create unified,
     cross-domain knowledge representations.
     """
@@ -252,7 +252,7 @@ def domain_integrator(multiple_domains, integration_objectives):
         }
     }
     """
-    
+
     return {
         "integrated_model": unified_domain_model,
         "cross_domain_insights": novel_insights,
@@ -553,7 +553,7 @@ def domain_integrator(multiple_domains, integration_objectives):
 def domain_knowledge_extractor(content, domain_type, expertise_level):
     """
     Extract domain-specific knowledge from various content sources.
-    
+
     Tailors extraction process to specific domain characteristics
     and user expertise level.
     """
@@ -580,7 +580,7 @@ def domain_knowledge_extractor(content, domain_type, expertise_level):
         }}
     }}
     """
-    
+
     return {
         "structured_knowledge": domain_organized_knowledge,
         "concept_hierarchy": hierarchical_concepts,
@@ -595,7 +595,7 @@ def domain_knowledge_extractor(content, domain_type, expertise_level):
 def cross_domain_bridge_tool(source_domain, target_domain, knowledge_item):
     """
     Transfer knowledge between related domains using analogical reasoning.
-    
+
     Identifies conceptual similarities and differences to enable
     knowledge transfer across domain boundaries.
     """
@@ -622,7 +622,7 @@ def cross_domain_bridge_tool(source_domain, target_domain, knowledge_item):
         }}
     }}
     """
-    
+
     return {
         "transferred_knowledge": adapted_knowledge,
         "concept_mappings": domain_correspondences,
@@ -637,7 +637,7 @@ def cross_domain_bridge_tool(source_domain, target_domain, knowledge_item):
 def domain_expertise_assessor(content, domain_schema, assessment_criteria):
     """
     Assess expertise level and domain knowledge depth.
-    
+
     Evaluates content against domain standards to determine
     appropriate expertise level and knowledge gaps.
     """
@@ -664,7 +664,7 @@ def domain_expertise_assessor(content, domain_schema, assessment_criteria):
         }}
     }}
     """
-    
+
     return {
         "expertise_level": assessed_level,
         "knowledge_gaps": identified_gaps,
@@ -679,7 +679,7 @@ def domain_expertise_assessor(content, domain_schema, assessment_criteria):
 def domain_specific_reasoner(problem, domain_context, reasoning_constraints):
     """
     Apply domain-specific reasoning patterns to solve problems.
-    
+
     Uses domain knowledge and constraints to guide reasoning
     processes appropriate to the field.
     """
@@ -706,7 +706,7 @@ def domain_specific_reasoner(problem, domain_context, reasoning_constraints):
         }}
     }}
     """
-    
+
     return {
         "solution": domain_solution,
         "reasoning_trace": reasoning_steps,
@@ -882,7 +882,7 @@ def software_engineering_domain_example():
     """
     Example implementation for software engineering domain.
     """
-    
+
     # Define domain schema
     software_domain = {
         "domain_id": "software_engineering",
@@ -908,21 +908,21 @@ def software_engineering_domain_example():
             ]
         }
     }
-    
+
     # Extract domain knowledge
     knowledge = domain_knowledge_extractor(
         content="Object-oriented programming emphasizes encapsulation...",
         domain_type="software_engineering",
         expertise_level="intermediate"
     )
-    
+
     # Apply domain reasoning
     solution = domain_specific_reasoner(
         problem="How to implement thread-safe singleton pattern?",
         domain_context=software_domain,
         reasoning_constraints={"thread_safety": True, "performance": "high"}
     )
-    
+
     return {
         "domain_model": software_domain,
         "extracted_knowledge": knowledge,
@@ -937,7 +937,7 @@ def data_science_domain_example():
     """
     Example implementation for data science domain.
     """
-    
+
     # Define domain schema
     data_science_domain = {
         "domain_id": "data_science",
@@ -958,21 +958,21 @@ def data_science_domain_example():
             }
         }
     }
-    
+
     # Assess domain expertise
     expertise = domain_expertise_assessor(
         content="I know about linear regression and neural networks...",
         domain_schema=data_science_domain,
         assessment_criteria={"depth": "intermediate", "breadth": "focused"}
     )
-    
+
     # Cross-domain transfer from statistics to machine learning
     transfer = cross_domain_bridge_tool(
         source_domain="statistics",
         target_domain="machine_learning",
         knowledge_item="hypothesis_testing"
     )
-    
+
     return {
         "domain_model": data_science_domain,
         "expertise_assessment": expertise,
@@ -987,14 +987,14 @@ def multi_domain_integration_example():
     """
     Example of integrating knowledge from multiple domains.
     """
-    
+
     # Define multiple domains
     domains = {
         "software_engineering": load_domain_schema("software_engineering"),
         "data_science": load_domain_schema("data_science"),
         "business": load_domain_schema("business")
     }
-    
+
     # Integrate knowledge for ML system design
     integration = domain_integrator(
         multiple_domains=domains,
@@ -1003,7 +1003,7 @@ def multi_domain_integration_example():
             "requirements": ["scalability", "accuracy", "business_value"]
         }
     )
-    
+
     # Apply integrated reasoning
     solution = domain_specific_reasoner(
         problem="Design recommendation system for e-commerce platform",
@@ -1014,7 +1014,7 @@ def multi_domain_integration_example():
             "data": "privacy_compliance"
         }
     )
-    
+
     return {
         "integrated_model": integration,
         "solution": solution
@@ -1030,25 +1030,25 @@ def user_adapted_domain_content(user_profile, domain_content, domain_type):
     """
     Adapt domain content to user's expertise level and preferences.
     """
-    
+
     # Extract user expertise and preferences
     user_expertise = user_profile.get("domain_expertise", {}).get(domain_type, "beginner")
     learning_style = user_profile.get("learning_preferences", {})
-    
+
     # Adapt content using domain tools
     adapted_content = domain_knowledge_extractor(
         content=domain_content,
         domain_type=domain_type,
         expertise_level=user_expertise
     )
-    
+
     # Apply user-specific adaptations
     if learning_style.get("visual_learner"):
         adapted_content["presentation"] = "visual_diagrams"
-    
+
     if learning_style.get("example_driven"):
         adapted_content["examples"] = generate_domain_examples(domain_type, user_expertise)
-    
+
     return adapted_content
 ```
 
@@ -1059,24 +1059,24 @@ def domain_aware_task_execution(task_schema, domain_context):
     """
     Execute tasks with domain-specific knowledge and constraints.
     """
-    
+
     # Extract task requirements
     task_requirements = parse_task_schema(task_schema)
-    
+
     # Apply domain-specific reasoning
     domain_solution = domain_specific_reasoner(
         problem=task_requirements["problem"],
         domain_context=domain_context,
         reasoning_constraints=task_requirements["constraints"]
     )
-    
+
     # Validate solution against domain standards
     validation = constraint_validator(
         domain_model=domain_solution,
         constraints=domain_context["constraints"],
         context=task_requirements["context"]
     )
-    
+
     return {
         "solution": domain_solution,
         "validation": validation,
@@ -1091,27 +1091,27 @@ def domain_specialized_agent_coordination(agents, domain_requirements):
     """
     Coordinate agents with domain-specific expertise.
     """
-    
+
     # Filter agents by domain expertise
     domain_qualified_agents = [
         agent for agent in agents
         if has_domain_expertise(agent, domain_requirements["domain_type"])
     ]
-    
+
     # Create domain-aware coordination plan
     coordination_plan = {
         "domain_experts": domain_qualified_agents,
         "domain_constraints": domain_requirements["constraints"],
         "domain_validation": domain_requirements["validation_criteria"]
     }
-    
+
     # Apply domain-specific coordination protocols
     coordination_result = coordinate_domain_agents(
         agents=domain_qualified_agents,
         domain_context=domain_requirements,
         coordination_plan=coordination_plan
     )
-    
+
     return coordination_result
 ```
 
@@ -1124,14 +1124,14 @@ def validate_domain_model(domain_model, validation_criteria):
     """
     Validate domain model against established criteria.
     """
-    
+
     validation_results = {
         "completeness": assess_domain_completeness(domain_model),
         "accuracy": verify_domain_accuracy(domain_model),
         "consistency": check_domain_consistency(domain_model),
         "usability": evaluate_domain_usability(domain_model)
     }
-    
+
     # Generate validation report
     validation_report = {
         "overall_score": calculate_overall_score(validation_results),
@@ -1139,7 +1139,7 @@ def validate_domain_model(domain_model, validation_criteria):
         "recommendations": generate_improvement_recommendations(validation_results),
         "compliance_status": determine_compliance_status(validation_results)
     }
-    
+
     return validation_report
 ```
 
@@ -1150,7 +1150,7 @@ def calculate_domain_knowledge_quality(extracted_knowledge, domain_standards):
     """
     Calculate quality metrics for extracted domain knowledge.
     """
-    
+
     quality_metrics = {
         "concept_accuracy": measure_concept_accuracy(extracted_knowledge, domain_standards),
         "relationship_validity": validate_concept_relationships(extracted_knowledge),
@@ -1158,7 +1158,7 @@ def calculate_domain_knowledge_quality(extracted_knowledge, domain_standards):
         "constraint_compliance": verify_constraint_compliance(extracted_knowledge),
         "expertise_appropriateness": evaluate_expertise_level_match(extracted_knowledge)
     }
-    
+
     return quality_metrics
 ```
 
@@ -1171,14 +1171,14 @@ def handle_domain_knowledge_conflicts(conflicting_knowledge, domain_context):
     """
     Resolve conflicts in domain knowledge from multiple sources.
     """
-    
+
     conflict_resolution = {
         "conflict_type": identify_conflict_type(conflicting_knowledge),
         "resolution_strategy": determine_resolution_strategy(conflicting_knowledge),
         "authoritative_sources": identify_authoritative_sources(domain_context),
         "resolved_knowledge": resolve_conflicts(conflicting_knowledge, domain_context)
     }
-    
+
     return conflict_resolution
 ```
 
@@ -1189,14 +1189,14 @@ def handle_constraint_violations(violations, domain_model):
     """
     Handle and resolve domain constraint violations.
     """
-    
+
     violation_handling = {
         "violation_analysis": analyze_violations(violations),
         "severity_assessment": assess_violation_severity(violations),
         "resolution_options": generate_resolution_options(violations, domain_model),
         "recommended_actions": recommend_corrective_actions(violations)
     }
-    
+
     return violation_handling
 ```
 
@@ -1244,4 +1244,3 @@ def domain_reasoning_example():
 ---
 
 This domain schema framework provides a practical, layered approach to modeling and working with specialized knowledge domains. The modular design enables composition and recombination of domain components while maintaining transparency and effectiveness across diverse applications. The progressive complexity approach ensures accessibility for users at different expertise levels while supporting sophisticated domain reasoning and integration capabilities.
-

@@ -81,4 +81,4 @@ probe: a failure you learned from, adapting when a client rejects your recommend
 - notes: [case-interview.md](../../notes/case-interview.md) (business-context tips, consulting-round expectations, ROI examples)
 - external (from research doc): FDE loop analyses — case study + customer empathy ≈ 50% of evaluation (Exponent FDE guide, Perspective AI Anthropic/FDE writeups, Sundeep Teki guide — links in `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md`)
 - librarian wiki: Agentic KPI Trees · Copilot Learning Loop · VA Product Design Patterns (interaction-level staging)
-- related round: [customer-simulation](../../rounds/customer-simulation.md) · [leadership-rounds](../../rounds/leadership-rounds.md)
+- related round: [customer-simulation](../../rounds/customer-simulation/README.md) · [leadership-rounds](../../rounds/leadership-rounds/README.md)

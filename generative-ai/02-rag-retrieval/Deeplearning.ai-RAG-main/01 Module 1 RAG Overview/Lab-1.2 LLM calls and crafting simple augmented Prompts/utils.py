@@ -4,15 +4,15 @@ import os
 from typing import List, Dict
 from together import Together
 
-def generate_with_single_input(prompt: str, 
-                               role: str = 'user', 
-                               top_p: float = None, 
+def generate_with_single_input(prompt: str,
+                               role: str = 'user',
+                               top_p: float = None,
                                temperature: float = None,
                                max_tokens: int = 500,
                                model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                together_api_key = None,
                               **kwargs):
-    
+
     if top_p is None:
         top_p = 'none'
     if temperature is None:
@@ -27,7 +27,7 @@ def generate_with_single_input(prompt: str,
             **kwargs
                   }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -48,11 +48,11 @@ def generate_with_single_input(prompt: str,
     return output_dict
 
 
-def generate_with_multiple_input(messages: List[Dict], 
-                               top_p: float = None, 
+def generate_with_multiple_input(messages: List[Dict],
+                               top_p: float = None,
                                temperature: float = None,
                                max_tokens: int = 500,
-                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo", 
+                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                 together_api_key = None,
                                 **kwargs):
     payload = {
@@ -64,7 +64,7 @@ def generate_with_multiple_input(messages: List[Dict],
         **kwargs
               }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")

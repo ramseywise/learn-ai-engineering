@@ -67,7 +67,7 @@ The fundamental building blocks and structures that form the foundation of under
         {element="Functional processes", role="Operational physiology", example="Workflows, mechanisms, procedures, algorithms"},
         {element="Technical components", role="Building blocks", example="Specific tools, methods, formulas, code snippets"}
     ],
-    
+
     integration_approach="Ensure factual accuracy and structural integrity",
     common_gaps="Missing technical details, structural inconsistencies, factual errors",
     assessment_methods="Verification against established knowledge, structural validation"
@@ -91,7 +91,7 @@ The cognitive and emotional aspects of understanding and engagement:
         {element="Meaning creation", role="Significance building", example="Relevance demonstration, purpose clarification, value alignment"},
         {element="Personal connection", role="Identity linkage", example="Relating to individual background, goals, and experiences"}
     ],
-    
+
     integration_approach="Design for cognitive and emotional engagement",
     common_gaps="Cognitive overload, emotional disconnection, lack of personal relevance",
     assessment_methods="Engagement measures, comprehension testing, emotional response evaluation"
@@ -115,7 +115,7 @@ The broader environment and relational aspects in which understanding occurs:
         {element="Environmental factors", role="Situational conditions", example="Physical environment, time constraints, external pressures"},
         {element="Community context", role="Group perspectives", example="Shared knowledge, community standards, collective goals"}
     ],
-    
+
     integration_approach="Situate understanding within broader contexts",
     common_gaps="Cultural disconnection, relational misalignment, environmental mismatch",
     assessment_methods="Contextual appropriateness analysis, relational effectiveness measures"
@@ -183,7 +183,7 @@ The power of the Biopsychosocial Model lies in understanding the interactions be
             optimization="Align experiential design with contextual realities"
         }
     ],
-    
+
     integration_principles=[
         "Recognize bidirectional influence between dimensions",
         "Address tensions and contradictions between dimensional needs",
@@ -291,7 +291,7 @@ Start by assessing the current state and needs across all dimensions:
             ]
         }
     ],
-    
+
     output_formats=[
         "Dimensional scorecard with ratings across all elements",
         "Gap analysis highlighting dimensional imbalances",
@@ -388,7 +388,7 @@ Create context that deliberately addresses all dimensions:
             deliverables="Refined, coherent multi-dimensional context"
         }
     ],
-    
+
     integration_techniques=[
         {
             technique="Dimensional mapping",
@@ -510,7 +510,7 @@ Ensure appropriate attention to all dimensions:
             ]
         }
     ],
-    
+
     balance_principles=[
         {
             principle="Appropriate emphasis",
@@ -573,7 +573,7 @@ Connecting foundational and experiential dimensions:
 ```
 /implement.technical_experiential_bridge{
     pattern_purpose="Connect technical concepts with personal understanding",
-    
+
     bridge_elements=[
         {
             element="Conceptual analogies",
@@ -596,7 +596,7 @@ Connecting foundational and experiential dimensions:
             example="Representing complex data relationships through clear, intuitive diagrams"
         }
     ],
-    
+
     implementation_strategies=[
         {
             strategy="Progressive disclosure",
@@ -619,7 +619,7 @@ Connecting foundational and experiential dimensions:
             example="Verify that analogies and examples maintain technical integrity while being accessible"
         }
     ],
-    
+
     success_indicators=[
         "Technical accuracy maintained while increasing accessibility",
         "Enhanced engagement with technical concepts",
@@ -660,7 +660,7 @@ Connecting individual understanding with broader context:
 ```
 /implement.context_integration_pattern{
     pattern_purpose="Connect individual understanding with broader contextual factors",
-    
+
     integration_elements=[
         {
             element="Relevance bridges",
@@ -683,7 +683,7 @@ Connecting individual understanding with broader context:
             example="Presenting multiple cultural perspectives on a shared concept or challenge"
         }
     ],
-    
+
     implementation_strategies=[
         {
             strategy="Contextual framing",
@@ -706,7 +706,7 @@ Connecting individual understanding with broader context:
             example="Incorporate diverse viewpoints to create richer contextual awareness"
         }
     ],
-    
+
     success_indicators=[
         "Enhanced understanding of how individual knowledge applies in various contexts",
         "Increased awareness of contextual factors influencing understanding",
@@ -752,7 +752,7 @@ Integrating all three dimensions into a coherent whole:
 ```
 /implement.holistic_synthesis_pattern{
     pattern_purpose="Integrate all dimensions into coherent holistic understanding",
-    
+
     integrative_elements=[
         {
             element="Dimensional connectors",
@@ -775,7 +775,7 @@ Integrating all three dimensions into a coherent whole:
             example="Problem-solving exercises requiring technical knowledge, personal reflection, and contextual awareness"
         }
     ],
-    
+
     implementation_strategies=[
         {
             strategy="Dimension-conscious design",
@@ -798,7 +798,7 @@ Integrating all three dimensions into a coherent whole:
             example="Create frameworks showing how dimensions connect for specific topics"
         }
     ],
-    
+
     success_indicators=[
         "Coherent understanding spanning all dimensions",
         "Ability to navigate between dimensions fluidly",
@@ -921,7 +921,7 @@ When different dimensional needs contradict each other:
             ]
         }
     ],
-    
+
     conflict_resolution_principles=[
         {
             principle="Dimensional awareness",
@@ -1025,7 +1025,7 @@ When entire dimensions are overlooked or undervalued:
             ]
         }
     ],
-    
+
     prevention_approaches=[
         {
             approach="Dimensional review process",
@@ -1177,7 +1177,7 @@ When dimensions are present but not effectively connected:
             ]
         }
     ],
-    
+
     integration_principles=[
         {
             principle="Intentional design for integration",
@@ -1242,27 +1242,27 @@ Using multi-dimensional approach for technical topics:
 ```
 /apply.complex_technical_explanation{
     scenario="Explaining a complex technical concept to diverse audience",
-    
+
     multi_dimensional_approach={
         foundational_dimension={
             core_elements="Accurate technical details and structural framework",
             quality_focus="Technical integrity and factual precision",
             common_pitfalls="Excessive detail or incomplete explanation"
         },
-        
+
         experiential_dimension={
             core_elements="Cognitive scaffolding and engagement elements",
             quality_focus="Accessibility and personal relevance",
             common_pitfalls="Cognitive overload or insufficient engagement"
         },
-        
+
         contextual_dimension={
             core_elements="Real-world applications and domain context",
             quality_focus="Practical relevance and appropriate framing",
             common_pitfalls="Disconnection from practice or context misalignment"
         }
     },
-    
+
     integration_techniques=[
         {
             technique="Conceptual onramp",
@@ -1285,7 +1285,7 @@ Using multi-dimensional approach for technical topics:
             example="Diagram linking technical components to user experiences in specific contexts"
         }
     ],
-    
+
     implementation_structure={
         introduction="Establish relevance across all dimensions",
         foundational_development="Build technical understanding with experiential support",
@@ -1293,7 +1293,7 @@ Using multi-dimensional approach for technical topics:
         practice_opportunities="Apply knowledge across dimensional boundaries",
         comprehensive_synthesis="Integrate all dimensions in holistic understanding"
     },
-    
+
     success_metrics=[
         {metric="Technical accuracy", assessment="Expert review of technical content"},
         {metric="Cognitive accessibility", assessment="Comprehension testing with target audience"},
@@ -1336,27 +1336,27 @@ Using multi-dimensional approach for organizational change:
 ```
 /apply.change_management_communication{
     scenario="Communicating organizational change to affected stakeholders",
-    
+
     multi_dimensional_approach={
         foundational_dimension={
             core_elements="Factual basis, process details, and structural changes",
             quality_focus="Accuracy, clarity, and completeness",
             common_pitfalls="Information gaps or technical focus without broader context"
         },
-        
+
         experiential_dimension={
             core_elements="Personal impact, emotional aspects, and support mechanisms",
             quality_focus="Empathy, accessibility, and emotional intelligence",
             common_pitfalls="Neglecting emotional impact or providing insufficient support"
         },
-        
+
         contextual_dimension={
             core_elements="Organizational reasons, market factors, and cultural implications",
             quality_focus="Contextual relevance and organizational alignment",
             common_pitfalls="Missing broader context or ignoring cultural factors"
         }
     },
-    
+
     integration_techniques=[
         {
             technique="Why-what-how framework",
@@ -1379,7 +1379,7 @@ Using multi-dimensional approach for organizational change:
             example="Prepare responses addressing factual, personal, and contextual concerns"
         }
     ],
-    
+
     implementation_structure={
         context_setting="Establish broader context and rationale",
         change_overview="Present comprehensive change picture",
@@ -1387,7 +1387,7 @@ Using multi-dimensional approach for organizational change:
         support_framework="Provide multi-dimensional support resources",
         path_forward="Create integrated vision for future state"
     },
-    
+
     success_metrics=[
         {metric="Information comprehension", assessment="Understanding of change details"},
         {metric="Emotional response", assessment="Constructive emotional processing"},
@@ -1430,27 +1430,27 @@ Using multi-dimensional approach for learning experiences:
 ```
 /apply.educational_content_design{
     scenario="Designing effective learning experiences",
-    
+
     multi_dimensional_approach={
         foundational_dimension={
             core_elements="Subject knowledge, learning sequence, and core concepts",
             quality_focus="Accuracy, comprehensiveness, and structured progression",
             common_pitfalls="Content gaps or inappropriate sequencing"
         },
-        
+
         experiential_dimension={
             core_elements="Cognitive supports, engagement design, and learning activities",
             quality_focus="Accessibility, engagement, and active learning",
             common_pitfalls="Cognitive overload or insufficient engagement"
         },
-        
+
         contextual_dimension={
             core_elements="Application contexts, learning environment, and learner diversity",
             quality_focus="Relevance, accessibility, and inclusivity",
             common_pitfalls="Contextual disconnection or insufficient adaptation"
         }
     },
-    
+
     integration_techniques=[
         {
             technique="Learning cycle integration",
@@ -1473,7 +1473,7 @@ Using multi-dimensional approach for learning experiences:
             example="Content scaffolds, cognitive scaffolds, and contextual scaffolds"
         }
     ],
-    
+
     implementation_structure={
         orientation="Establish multi-dimensional relevance and context",
         foundational_development="Build knowledge with appropriate scaffolding",
@@ -1481,7 +1481,7 @@ Using multi-dimensional approach for learning experiences:
         contextual_connection="Link learning to authentic contexts",
         integrated_assessment="Evaluate understanding across dimensions"
     },
-    
+
     success_metrics=[
         {metric="Knowledge acquisition", assessment="Demonstration of subject understanding"},
         {metric="Cognitive development", assessment="Learning process effectiveness"},
@@ -1527,7 +1527,7 @@ Combining multi-dimensional and cultivation perspectives:
 ```
 /integrate.biopsychosocial_garden{
     integrated_concept="The dimensional garden: Cultivating multiple dimensions in a unified space",
-    
+
     combined_elements=[
         {
             concept="Dimensional planting areas (Biopsychosocial: Dimensions + Garden: Specialized beds)",
@@ -1554,14 +1554,14 @@ Combining multi-dimensional and cultivation perspectives:
             example="Different 'gardening practices' for technical, experiential, and contextual development"
         }
     ],
-    
+
     integration_benefits=[
         "Combines structured dimensionality with organic growth perspective",
         "Balances intentional design with natural development",
         "Provides spatial metaphor for dimensional relationships",
         "Enables both specialized and integrated cultivation"
     ],
-    
+
     application_approaches=[
         {
             approach="Dimension-specific gardening",
@@ -1613,7 +1613,7 @@ Combining multi-dimensional and resource management perspectives:
 ```
 /integrate.biopsychosocial_budget{
     integrated_concept="The dimensional economy: Managing resources across multiple dimensions",
-    
+
     combined_elements=[
         {
             concept="Dimensional allocation (Biopsychosocial: Dimensions + Budget: Resource allocation)",
@@ -1640,14 +1640,14 @@ Combining multi-dimensional and resource management perspectives:
             example="Portfolio approach to dimensional resource allocation"
         }
     ],
-    
+
     integration_benefits=[
         "Combines dimensional awareness with resource discipline",
         "Provides framework for making allocation decisions across dimensions",
         "Enables value assessment for different dimensional investments",
         "Creates accountability for dimensional balance and integration"
     ],
-    
+
     application_approaches=[
         {
             approach="Value-based dimensional allocation",
@@ -1701,7 +1701,7 @@ Combining multi-dimensional and flow perspectives:
 ```
 /integrate.biopsychosocial_river{
     integrated_concept="The dimensional flow: Dynamic movement through multiple dimensions",
-    
+
     combined_elements=[
         {
             concept="Dimensional tributaries (Biopsychosocial: Dimensions + River: Tributaries)",
@@ -1728,14 +1728,14 @@ Combining multi-dimensional and flow perspectives:
             example="Course that begins technically simple but experientially rich, evolving toward technical depth with contextual integration"
         }
     ],
-    
+
     integration_benefits=[
         "Combines dimensional structure with dynamic flow",
         "Provides framework for dimensional development over time",
         "Enables natural integration through confluence metaphor",
         "Creates intuitive understanding of dimensional relationships"
     ],
-    
+
     application_approaches=[
         {
             approach="Tributary-based dimensional design",
@@ -1791,7 +1791,7 @@ Creating a comprehensive framework integrating all four models:
 ```
 /integrate.comprehensive_framework{
     integrated_concept="The comprehensive context framework: Multiple integrated mental models",
-    
+
     core_integration_patterns=[
         {
             pattern="Cultivated dimensions (Garden + Biopsychosocial)",
@@ -1814,7 +1814,7 @@ Creating a comprehensive framework integrating all four models:
             example="Garden design with flowing paths guiding movement through cultivated areas"
         }
     ],
-    
+
     unifying_principles=[
         {
             principle="Dimensional awareness",
@@ -1837,14 +1837,14 @@ Creating a comprehensive framework integrating all four models:
             manifestation="Dimensional integration + Flow confluence + Garden pathways"
         }
     ],
-    
+
     application_framework={
         assessment:"Evaluate needs across all models (dimensions, resources, flow, cultivation)",
         planning:"Develop integrated strategy incorporating all perspectives",
         implementation:"Create context with awareness of all models",
         evaluation:"Assess effectiveness through multiple lenses"
     },
-    
+
     synthesis_value="Creates comprehensive framework addressing all aspects of context: what to include (dimensions), how to manage resources (budget), how to cultivate understanding (garden), and how to create movement and direction (river)"
 }
 ```
@@ -1893,7 +1893,7 @@ As you continue your context engineering journey, remember these key principles 
             impact="Prevention of dimensional blind spots and imbalances"
         }
     ],
-    
+
     integration_guidance=[
         "Apply these principles as a unified approach to context engineering",
         "Balance different dimensional needs based on specific context goals",
@@ -1939,7 +1939,7 @@ As you continue your context engineering journey, remember these key principles 
             milestone="Seamless multi-dimensional expertise"
         }
     ],
-    
+
     development_approaches=[
         {
             approach="Dimensional analysis",
@@ -1971,9 +1971,9 @@ The Biopsychosocial Model reminds us that truly effective contexts address the w
 
 ---
 
-> *"To see a World in a Grain of Sand  
-> And a Heaven in a Wild Flower  
-> Hold Infinity in the palm of your hand  
+> *"To see a World in a Grain of Sand
+> And a Heaven in a Wild Flower
+> Hold Infinity in the palm of your hand
 > And Eternity in an hour."*
 >
 >

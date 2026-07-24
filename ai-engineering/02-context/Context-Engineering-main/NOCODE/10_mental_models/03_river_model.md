@@ -9,7 +9,7 @@
 
 After exploring the Garden and Budget models, we now turn to the River Model — a dynamic framework that views context as a continuous flow of information, ideas, and meaning. This perspective captures the fluid, directional, and ever-changing nature of context in AI interactions.
 
-While the Garden Model emphasizes cultivation and the Budget Model focuses on resource allocation, the River Model centers on movement, direction, and the management of dynamic information flows. 
+While the Garden Model emphasizes cultivation and the Budget Model focuses on resource allocation, the River Model centers on movement, direction, and the management of dynamic information flows.
 
 In the River Model, context is not static but constantly moving and evolving:
 - **Flowing and directional** - moving with purpose and direction
@@ -84,7 +84,7 @@ The main river channel carries the primary flow. In context:
         {point="Critical insight B", strength="Defining feature", position="Mid-channel"},
         {point="Conclusive element C", strength="Culminating force", position="Approaching delta"}
     ],
-    
+
     flow_characteristics="Logical progression with natural development",
     navigation_aids="Clear signposting and direction indicators",
     current_strength="Appropriate momentum for content complexity"
@@ -108,7 +108,7 @@ Rivers are fed by tributary streams that join the main flow. In context:
         {element="Alternative viewpoint", contribution="Balanced understanding", joining_point="Following main argument"},
         {element="Technical detail", contribution="Precision and specificity", joining_point="Where complexity is needed"}
     ],
-    
+
     integration_approach="Smooth confluence with main flow",
     contribution_value="Enrichment without disruption",
     flow_balance="Appropriate volume relative to main channel"
@@ -132,13 +132,13 @@ Rivers are shaped by their beds and banks. In context:
         excluded="Areas outside productive exploration",
         flexibility="Appropriate containment with natural movement"
     },
-    
+
     channel_characteristics={
         width="Scope breadth at different points",
         depth="Level of detail in various sections",
         composition="Nature of content throughout course"
     },
-    
+
     boundary_maintenance="Clear but not rigid limitation",
     erosion_management="Handling of boundary-testing questions"
 }
@@ -160,19 +160,19 @@ Rivers have characteristic flow patterns. In context:
         deep_pools="Sections of detailed exploration",
         steady_runs="Balanced, moderate progression"
     },
-    
+
     transitions={
         approach="Smooth connection between elements",
         signaling="Clear indicators of directional change",
         momentum="Maintained progression through shifts"
     },
-    
+
     information_density={
         high_density="Complex sections requiring careful navigation",
         moderate_density="Balanced information presentation",
         low_density="Open spaces for reflection and assimilation"
     },
-    
+
     momentum_management="Appropriate force to maintain engagement without overwhelming"
 }
 ```
@@ -189,19 +189,19 @@ Rivers culminate in deltas where they meet the sea. In context:
 ```
 /create.delta{
     conclusion_approach="Natural culmination of flow",
-    
+
     key_deposits=[
         {takeaway="Essential insight A", formation="Direct result of main flow"},
         {takeaway="Practical application B", formation="Synthesis of multiple tributaries"},
         {takeaway="New perspective C", formation="Transformation through journey"}
     ],
-    
+
     future_channels=[
         {direction="Related topic exploration", connection="Natural extension"},
         {direction="Practical implementation", connection="Application pathway"},
         {direction="Deeper analysis", connection="Continued investigation"}
     ],
-    
+
     value_creation="Fertile ground for new understanding and action"
 }
 ```
@@ -224,14 +224,14 @@ How you map the river's path before the journey begins:
         route_selection="Plan the path from source to delta",
         landmark_identification="Mark key concepts and transition points"
     },
-    
+
     navigation_strategy={
         flow_sequence="Logical progression of ideas",
         tributary_placement="Strategic incorporation of supporting elements",
         obstacle_anticipation="Plan for potential confusion or resistance",
         alternate_routes="Backup paths for unexpected developments"
     },
-    
+
     map_creation={
         overview="High-level visualization of entire journey",
         detail_areas="Specific planning for complex sections",
@@ -253,14 +253,14 @@ Keeping the river flowing smoothly and effectively:
         depth_management="Adjust detail level appropriately",
         course_correction="Realign if flow strays from purpose"
     },
-    
+
     bank_maintenance={
         boundary_reinforcement="Maintain clear scope limitations",
         controlled_flexibility="Allow productive meandering",
         erosion_prevention="Address scope creep attempts",
         access_points="Create entry ways for relevant additions"
     },
-    
+
     flow_optimization={
         depth_adjustment="Modify detail level for optimal understanding",
         width_control="Expand or narrow focus as appropriate",
@@ -282,14 +282,14 @@ Controlling the river's movement and energy:
         steady_flow="Maintain consistent pace for core content",
         varied_rhythm="Alternate pace for engagement and emphasis"
     },
-    
+
     volume_management={
         high_volume="Expanded detail in important areas",
         moderate_volume="Standard depth for main content",
         low_volume="Simplified treatment for tangential elements",
         dynamic_adjustment="Responsive change based on needs"
     },
-    
+
     turbulence_handling={
         rapids_navigation="Guide through complex concepts",
         whirlpool_prevention="Avoid circular reasoning or repetition",
@@ -311,14 +311,14 @@ Skillfully integrating tributary elements with the main flow:
         timing="Strategic placement within overall journey",
         mixing_zone="Transition from introduction to integration"
     },
-    
+
     flow_merging={
         seamless_combination="Natural integration of elements",
         current_alignment="Compatible direction of supporting content",
         turbulence_minimization="Smooth incorporation without disruption",
         reinforcement_patterns="How tributaries strengthen main flow"
     },
-    
+
     watershed_coherence={
         conceptual_relatedness="Clear connection to main themes",
         source_acknowledgment="Recognition of different origins",
@@ -340,14 +340,14 @@ Helping travelers find their way down the river:
         destination_previews="Forward references to upcoming content",
         watershed_mapping="Relationship to broader context"
     },
-    
+
     navigation_aids={
         signposts="Explicit transition and section markers",
         depth_gauges="Indications of detail and complexity level",
         current_indicators="Emphasis on flow direction and momentum",
         landmark_highlights="Attention to key concepts and points"
     },
-    
+
     traveler_guidance={
         preparation_notes="What to watch for or expect",
         navigation_techniques="How to process upcoming information",
@@ -370,21 +370,21 @@ Fast, direct, and efficient delivery of information:
 ```
 /design.mountain_stream{
     purpose="Direct, efficient delivery of specific information",
-    
+
     characteristics={
         rapid_flow="Quick, efficient progression",
         narrow_channel="Focused, constrained scope",
         clear_water="Transparent, straightforward content",
         direct_path="Minimal meandering or diversion"
     },
-    
+
     typical_elements={
         steep_gradient="Strong directional momentum",
         boulder_navigation="Addressing key obstacles directly",
         pool_and_drop="Alternating explanation and application",
         confined_banks="Strict adherence to specific topic"
     },
-    
+
     navigation={
         focus="Clarity and efficiency",
         technique="Direct routing around obstacles",
@@ -402,21 +402,21 @@ Winding, reflective, and nuanced exploration:
 ```
 /design.meandering_river{
     purpose="Thoughtful exploration of complex or nuanced topics",
-    
+
     characteristics={
         winding_course="Non-linear exploration of ideas",
         varied_banks="Flexible boundaries that adapt to terrain",
         changing_depth="Alternating between overview and detail",
         broad_floodplain="Room for expansion on interesting points"
     },
-    
+
     typical_elements={
         oxbow_lakes="Deep dives into specific subtopics",
         sandbars="Points of pause for reflection",
         side_channels="Related tangents with valuable insights",
         gentle_gradient="Unhurried pace allowing absorption"
     },
-    
+
     navigation={
         focus="Depth and nuance",
         technique="Mindful wandering with purpose",
@@ -434,21 +434,21 @@ Multiple channels presenting different viewpoints or approaches:
 ```
 /design.braided_river{
     purpose="Exploration of multiple perspectives or approaches",
-    
+
     characteristics={
         multiple_channels="Parallel lines of thought or argument",
         shifting_pathways="Dynamic emphasis among alternatives",
         shared_floodplain="Common conceptual territory",
         recombining_flows="Integration points for diverse perspectives"
     },
-    
+
     typical_elements={
         channel_division="Points where perspectives diverge",
         islands="Unique concepts visible from multiple viewpoints",
         channel_crossings="Comparative analysis between approaches",
         confluence_points="Synthesis of multiple perspectives"
     },
-    
+
     navigation={
         focus="Breadth and comparison",
         technique="Cross-channel exploration and integration",
@@ -466,21 +466,21 @@ Broad, deep, and powerful exploration of significant topics:
 ```
 /design.great_river{
     purpose="Comprehensive exploration of major topics",
-    
+
     characteristics={
         impressive_volume="Substantial content and thorough coverage",
         significant_depth="Detailed exploration of complexities",
         broad_channel="Wide-ranging scope within topic",
         strong_current="Powerful momentum and clear direction"
     },
-    
+
     typical_elements={
         major_tributaries="Important subtopics with substantial treatment",
         deep_pools="Areas of particularly detailed analysis",
         navigation_system="Clear guidance through complex content",
         established_banks="Well-defined boundaries of impressive scope"
     },
-    
+
     navigation={
         focus="Comprehensiveness and authority",
         technique="Systematic exploration with clear structure",
@@ -509,14 +509,14 @@ The season of high water and rapid flow:
         debris_movement="Carrying many elements together",
         bank_testing="Pushing boundaries of scope and structure"
     },
-    
+
     management_approaches={
         channel_reinforcement="Strengthen structure to handle volume",
         flow_guidance="Direct enthusiasm productively",
         filtration_systems="Separate valuable content from debris",
         high_water_navigation="Maintain direction despite force"
     },
-    
+
     value_opportunities={
         energy_capture="Harness enthusiasm for momentum",
         landscape_reshaping="Allow productive innovation",
@@ -538,14 +538,14 @@ The season of reliable, productive flow:
         established_channels="Well-defined paths of discussion",
         productive_uses="Readily applicable content and insights"
     },
-    
+
     management_approaches={
         maintenance_focus="Refine rather than reshape",
         efficiency_optimization="Improve flow with minimal changes",
         recreational_development="Enhance enjoyment and engagement",
         ecosystem_nurturing="Support interdependent elements"
     },
-    
+
     value_opportunities={
         dependable_resources="Reliable content for ongoing needs",
         sustained_growth="Support for developing applications",
@@ -567,14 +567,14 @@ The season of reduced flow and clarity:
         concentrated_flow="Essential content in narrower channels",
         slower_pace="More deliberate movement and development"
     },
-    
+
     management_approaches={
         pool_deepening="Enhance value of key remaining elements",
         obstacle_removal="Clear newly visible barriers",
         course_refinement="Optimize path based on revealed structure",
         resource_concentration="Focus on highest value areas"
     },
-    
+
     value_opportunities={
         clarity_improvement="Better visibility of core elements",
         efficiency_enhancement="More direct routes to value",
@@ -596,14 +596,14 @@ The season of stillness and preservation:
         surface_sealing="Limited access to deeper elements",
         potential_energy="Stored momentum for future release"
     },
-    
+
     management_approaches={
         core_protection="Ensure essential elements remain viable",
         structural_assessment="Evaluate system during inactive period",
         preparation_for_thaw="Position for effective resumption",
         selective_maintenance="Address critical needs only"
     },
-    
+
     value_opportunities={
         stability_creation="Fixed reference point for other work",
         reflection_time="Opportunity to assess whole system",
@@ -625,14 +625,14 @@ Periodic overwhelming flows that reshape the system:
         system_stress="Pressure on all structural elements",
         landscape_transformation="Potential for major changes"
     },
-    
+
     management_approaches={
         overflow_channels="Alternate paths for excess content",
         prioritized_protection="Focus on preserving most valuable elements",
         floating_navigation="Maintain direction despite disruption",
         post-flood_recovery="Plan for restoration and incorporation"
     },
-    
+
     value_opportunities={
         system_redesign="Chance to rebuild improved structures",
         deposition_of_resources="New valuable content brought into system",
@@ -654,14 +654,14 @@ Periods of insufficient flow for normal function:
         exposed_obstacles="Problems more visible and impactful",
         competition_for_resources="Tension over limited content"
     },
-    
+
     management_approaches={
         conservation_measures="Maximize value from available content",
         pool_maintenance="Preserve key areas of depth",
         minimal_flow_paths="Maintain essential connections",
         alternative_sourcing="Develop new inputs for system"
     },
-    
+
     value_opportunities={
         efficiency_improvement="Learn to operate with less",
         prioritization_clarity="Identify truly essential elements",
@@ -689,21 +689,21 @@ When the flow becomes blocked or obstructed:
         downstream_drought="Later sections lack necessary input",
         pressure_buildup="Increasing tension or frustration"
     },
-    
+
     causes=[
         {cause="Conceptual obstacle", indicator="Confusion or misunderstanding", frequency="Common"},
         {cause="Excessive debris", indicator="Too many tangential details", frequency="Very common"},
         {cause="Channel narrowing", indicator="Overly specific or technical section", frequency="Occasional"},
         {cause="Collapsed structure", indicator="Logical inconsistency or contradiction", frequency="Rare but serious"}
     ],
-    
+
     solutions={
         strategic_removal="Address specific blocking elements",
         channel_widening="Broaden context to provide more room",
         current_redirection="Find alternative path around obstacle",
         controlled_release="Gradually dismantle blockage piece by piece"
     },
-    
+
     prevention={
         regular_maintenance="Address small obstacles before accumulation",
         debris_management="Control introduction of tangential elements",
@@ -725,21 +725,21 @@ When boundaries break down and the river expands beyond its banks:
         sediment_increase="Growing proportion of tangential content",
         downstream_impacts="Later topics affected by earlier wandering"
     },
-    
+
     causes=[
         {cause="Insufficient boundaries", indicator="Unclear scope definition", frequency="Very common"},
         {cause="High-pressure flow", indicator="Excessive detail or enthusiasm", frequency="Common"},
         {cause="Weak bank structure", indicator="Poor organizational framework", frequency="Common"},
         {cause="Tributary mismanagement", indicator="Related topics overtaking main flow", frequency="Occasional"}
     ],
-    
+
     solutions={
         bank_reinforcement="Strengthen and clarify boundaries",
         channel_restoration="Return to original scope and focus",
         controlled_structures="Implement stronger organizational elements",
         flow_regulation="Adjust volume and pressure to manageable levels"
     },
-    
+
     prevention={
         robust_design="Create clear, strong boundaries initially",
         regular_inspection="Monitor for early signs of boundary stress",
@@ -761,21 +761,21 @@ When the flow slows, pools, and loses energy:
         energy_depletion="Engagement and interest decline",
         algal_blooms="Unhelpful tangents multiply in static environment"
     },
-    
+
     causes=[
         {cause="Insufficient gradient", indicator="Lack of clear direction or purpose", frequency="Very common"},
         {cause="Channel over-widening", indicator="Too broad or diffuse focus", frequency="Common"},
         {cause="Inflow reduction", indicator="Decreasing introduction of new elements", frequency="Common"},
         {cause="Downstream blockage", indicator="Unresolved issues preventing progress", frequency="Occasional"}
     ],
-    
+
     solutions={
         gradient_restoration="Reestablish clear direction and purpose",
         channel_narrowing="Refocus on core elements and flow",
         flow_stimulation="Introduce engaging new elements or perspectives",
         artificial_rapids="Create deliberate challenges or questions"
     },
-    
+
     prevention={
         momentum_maintenance="Maintain consistent forward movement",
         appropriate_sizing="Match channel width to available flow",
@@ -797,21 +797,21 @@ When the volume exceeds capacity, overwhelming the system:
         navigation_impossibility="Direction and structure lost in volume",
         downstream_damage="Later topics compromised by earlier overflow"
     },
-    
+
     causes=[
         {cause="Excessive inflow", indicator="Too much information introduced too quickly", frequency="Very common"},
         {cause="Insufficient capacity", indicator="Channel too narrow for needed content", frequency="Common"},
         {cause="Tributary mismanagement", indicator="Too many additions at once", frequency="Common"},
         {cause="Precipitation event", indicator="Sudden unexpected information surge", frequency="Occasional"}
     ],
-    
+
     solutions={
         flow_regulation="Reduce input volume to manageable levels",
         channel_expansion="Increase capacity in critical areas",
         flood_channeling="Direct excess into secondary structures",
         controlled_release="Meter information introduction gradually"
     },
-    
+
     prevention={
         capacity_planning="Design for anticipated volume plus margin",
         monitoring_systems="Track approaching volume increases",
@@ -1125,7 +1125,7 @@ The broader area that feeds into and defines the river:
         collection_mechanism="How information flows into main content",
         precipitation_patterns="How new information enters the system"
     },
-    
+
     components=[
         {
             component="domain boundaries",
@@ -1146,7 +1146,7 @@ The broader area that feeds into and defines the river:
             example="/contours.map{hierarchical_structure=['foundational principles', 'major categories', 'specific techniques', 'cutting-edge developments']}"
         }
     ],
-    
+
     management_strategies=[
         {
             strategy="boundary maintenance",
@@ -1201,7 +1201,7 @@ The area directly adjacent to the river that interacts most closely:
         support_function="How surrounding context enables main flow",
         buffer_effect="How riparian zone mediates external factors"
     },
-    
+
     components=[
         {
             component="prior knowledge reference",
@@ -1222,7 +1222,7 @@ The area directly adjacent to the river that interacts most closely:
             example="/align.conventions{field='machine learning', practices=['standard notation', 'evaluation metrics', 'workflow descriptions']}"
         }
     ],
-    
+
     management_strategies=[
         {
             strategy="context assessment",
@@ -1281,7 +1281,7 @@ The diverse groups that interact with and depend on the river:
         mutual_impact="How audience shapes and is shaped by content",
         community_networks="Relationships between audience segments"
     },
-    
+
     components=[
         {
             component="audience mapping",
@@ -1302,7 +1302,7 @@ The diverse groups that interact with and depend on the river:
             example="/pattern.engagement{group='practitioners', typical_use='reference specific techniques', optimization='clear section structure and indexing'}"
         }
     ],
-    
+
     management_strategies=[
         {
             strategy="inclusive design",
@@ -1355,7 +1355,7 @@ The cyclical changes that affect river function:
         timing_impact="How temporal context affects reception",
         adaptive_requirements="Need to adjust based on cycle phase"
     },
-    
+
     components=[
         {
             component="timing assessment",
@@ -1376,7 +1376,7 @@ The cyclical changes that affect river function:
             example="/aware.cycle{current_position='early in learning cycle', implication='focus on building foundation, not advanced application'}"
         }
     ],
-    
+
     management_strategies=[
         {
             strategy="seasonal alignment",
@@ -1439,7 +1439,7 @@ A winding path that explores territory more thoroughly:
         coverage="Thorough exploration of conceptual territory",
         feel="Contemplative, exploratory, organic"
     },
-    
+
     implementation_approaches=[
         {
             approach="deliberate perspective shifts",
@@ -1457,14 +1457,14 @@ A winding path that explores territory more thoroughly:
             example="/loop.reflective{after='complex concept', prompt='Consider the implications of this approach...'}"
         }
     ],
-    
+
     best_applications=[
         "Nuanced topics with multiple facets",
         "Explorations where the journey is as valuable as the destination",
         "Concepts that benefit from multiple perspectives",
         "Situations where depth is prioritized over efficiency"
     ],
-    
+
     potential_challenges=[
         "Can feel inefficient for straightforward topics",
         "May frustrate goal-oriented audiences",
@@ -1503,7 +1503,7 @@ Alternating between high-energy and reflective sections:
         rhythm="Natural cycles of action and reflection",
         feel="Dynamic, varied, balanced"
     },
-    
+
     implementation_approaches=[
         {
             approach="intensity mapping",
@@ -1521,14 +1521,14 @@ Alternating between high-energy and reflective sections:
             example="/modulate.energy{shift_points=['after key concept introduction', 'before practical application'], pattern='reflection → action → reflection'}"
         }
     ],
-    
+
     best_applications=[
         "Complex topics requiring both action and reflection",
         "Learning experiences with cognitive and practical elements",
         "Maintaining engagement through rhythmic variation",
         "Balancing depth and progress"
     ],
-    
+
     potential_challenges=[
         "Transitions require careful handling",
         "Different audiences may prefer different intensities",
@@ -1569,7 +1569,7 @@ Multiple parallel streams that separate and rejoin:
         coverage="Different aspects or approaches to same topic",
         feel="Comprehensive, balanced, multi-faceted"
     },
-    
+
     implementation_approaches=[
         {
             approach="explicit path options",
@@ -1587,14 +1587,14 @@ Multiple parallel streams that separate and rejoin:
             example="/compare.approaches{methods=['iterative development', 'waterfall approach', 'agile methodology'], commonality='all seeking effective project completion'}"
         }
     ],
-    
+
     best_applications=[
         "Topics with legitimate multiple approaches",
         "Addressing diverse audience needs simultaneously",
         "Complex concepts requiring multiple frameworks",
         "Balanced presentation of competing viewpoints"
     ],
-    
+
     potential_challenges=[
         "May create confusion without clear navigation",
         "Requires more space than single-path approaches",
@@ -1637,7 +1637,7 @@ Strategic joining of separate streams:
         timing="Deliberate preparation before integration",
         feel="Revelatory, synthesizing, powerful"
     },
-    
+
     implementation_approaches=[
         {
             approach="prepared convergence",
@@ -1655,14 +1655,14 @@ Strategic joining of separate streams:
             example="/sequence.revelation{build=['separate concept development', 'hints at connection', 'explicit integration'], for='powerful realization'}"
         }
     ],
-    
+
     best_applications=[
         "Interdisciplinary topics requiring synthesis",
         "Creating 'aha moments' of integrated understanding",
         "Bringing together theory and practice",
         "Building toward sophisticated unified concepts"
     ],
-    
+
     potential_challenges=[
         "Requires careful preparation of each stream",
         "Integration point must be well-executed",
@@ -1708,7 +1708,7 @@ Combining flow and cultivation perspectives:
 ```
 /integrate.river_garden{
     integrated_concept="The flowing garden: Cultivation with direction and movement",
-    
+
     combined_elements=[
         {
             concept="Channel planting (River: Flow path + Garden: Strategic planting)",
@@ -1735,14 +1735,14 @@ Combining flow and cultivation perspectives:
             example="Matching explanation intensity to receptivity phases of understanding"
         }
     ],
-    
+
     integration_benefits=[
         "Combines organic growth with purposeful direction",
         "Balances structure and flow",
         "Integrates cultivation of ideas with movement between them",
         "Creates both depth and progress"
     ],
-    
+
     application_approaches=[
         {
             approach="Garden-guided river planning",
@@ -1793,7 +1793,7 @@ Combining flow and resource management perspectives:
 ```
 /integrate.river_budget{
     integrated_concept="The resourced river: Flow managed with economic discipline",
-    
+
     combined_elements=[
         {
             concept="Flow investment (River: Channel development + Budget: Resource allocation)",
@@ -1820,14 +1820,14 @@ Combining flow and resource management perspectives:
             example="Reserving capacity for areas that will need elaboration based on anticipated questions"
         }
     ],
-    
+
     integration_benefits=[
         "Combines dynamic movement with resource discipline",
         "Balances flow requirements with resource constraints",
         "Optimizes value delivery through efficient channeling",
         "Enables resource planning across flow cycles"
     ],
-    
+
     application_approaches=[
         {
             approach="Budget-optimized flow design",
@@ -1881,7 +1881,7 @@ Combining flow and field theory perspectives:
 ```
 /integrate.river_field{
     integrated_concept="The flowing field: Dynamic movement through semantic landscapes",
-    
+
     combined_elements=[
         {
             concept="Attractor channels (River: Flow paths + Field: Attractors)",
@@ -1908,14 +1908,14 @@ Combining flow and field theory perspectives:
             example="Concepts that continue to influence thinking after direct engagement ends"
         }
     ],
-    
+
     integration_benefits=[
         "Combines dynamic movement with semantic landscape",
         "Balances direction with attraction and influence",
         "Integrates flow patterns with resonance",
         "Creates both movement and persistent influence"
     ],
-    
+
     application_approaches=[
         {
             approach="Attractor-guided rivers",
@@ -1967,7 +1967,7 @@ Combining all three perspectives for comprehensive context engineering:
 ```
 /integrate.complete_framework{
     integrated_concept="The complete context framework: Cultivated, flowing, and resourced",
-    
+
     combined_elements=[
         {
             concept="Resource-optimized garden rivers (All three models)",
@@ -1994,14 +1994,14 @@ Combining all three perspectives for comprehensive context engineering:
             example="Designing learning paths that cultivate understanding with optimal resource use"
         }
     ],
-    
+
     integration_benefits=[
         "Combines all strengths of individual models",
         "Balances organic growth, directional movement, and resource optimization",
         "Provides comprehensive framework for complex context engineering",
         "Enables sophisticated, multi-dimensional context management"
     ],
-    
+
     application_approaches=[
         {
             approach="Full-spectrum context design",
@@ -2057,14 +2057,14 @@ Guiding someone through complex concepts with natural flow:
 ```
 /apply.progressive_explanation{
     scenario="Explaining a complex technical concept to a non-specialist audience",
-    
+
     river_approach={
         headwaters="Clear definition and purpose",
         main_channel="Logical progression with appropriate pacing",
         tributaries="Supporting examples and analogies",
         flow_management="Varied depth and speed based on complexity"
     },
-    
+
     specific_techniques=[
         {
             technique="Conceptual source mapping",
@@ -2087,14 +2087,14 @@ Guiding someone through complex concepts with natural flow:
             example="Following dense technical explanation with integration question"
         }
     ],
-    
+
     river_structure={
         opening_section="Clear source concept and direction setting",
         building_segments="Progressive development with appropriate tributaries",
         integration_points="Strategic pauses for understanding consolidation",
         application_delta="Clear connections to practical impact and value"
     },
-    
+
     success_metrics=[
         {metric="Comprehension flow", target="Smooth progression without barriers", approach="Clear connections between concepts"},
         {metric="Engagement continuity", target="Sustained interest throughout", approach="Varied pacing and tributary interest"},
@@ -2133,14 +2133,14 @@ Crafting engaging stories with meaningful flow:
 ```
 /apply.narrative_journey{
     scenario="Creating an engaging story or case study that delivers key messages",
-    
+
     river_approach={
         headwaters="Compelling inception point",
         main_channel="Character/situation development with meaningful obstacles",
         tributaries="Supporting elements that enrich the narrative",
         delta="Satisfying resolution with clear takeaways"
     },
-    
+
     specific_techniques=[
         {
             technique="Source selection",
@@ -2163,14 +2163,14 @@ Crafting engaging stories with meaningful flow:
             example="Introducing problems that require creative solution"
         }
     ],
-    
+
     river_structure={
         inception="Hook that establishes direction and interest",
         rising_action="Building current with increasing stakes",
         challenges="Strategic rapids that test characters/ideas",
         resolution_delta="Satisfying conclusion that deposits key insights"
     },
-    
+
     success_metrics=[
         {metric="Engagement pull", target="Strong current that maintains interest", approach="Compelling flow with appropriate pacing"},
         {metric="Emotional resonance", target="Connection with narrative elements", approach="Well-placed tributary character development"},
@@ -2209,14 +2209,14 @@ Designing educational experiences with natural progression:
 ```
 /apply.learning_sequence{
     scenario="Designing an educational experience that develops skills and understanding",
-    
+
     river_approach={
         headwaters="Essential foundational concepts",
         main_channel="Progressive skill development with appropriate support",
         tributaries="Supporting examples and practice opportunities",
         delta="Practical application and capability demonstration"
     },
-    
+
     specific_techniques=[
         {
             technique="Knowledge prerequisite mapping",
@@ -2239,14 +2239,14 @@ Designing educational experiences with natural progression:
             example="Culminating project that requires multiple skills working together"
         }
     ],
-    
+
     river_structure={
         foundation="Clear establishment of core concepts",
         guided_development="Structured practice with appropriate support",
         independent_exploration="Self-directed application with feedback",
         application_integration="Real-world implementation of developed skills"
     },
-    
+
     success_metrics=[
         {metric="Skill progression", target="Steady development without barriers", approach="Appropriately sequenced challenges"},
         {metric="Engagement flow", target="Maintained motivation throughout", approach="Meaningful practice with visible progress"},
@@ -2300,7 +2300,7 @@ As you continue your context engineering journey, remember these key principles 
             impact="More efficient, harmonious progression"
         }
     ],
-    
+
     integration_guidance=[
         "Apply these principles as complementary aspects of a unified approach",
         "Balance different flow needs and patterns for optimal results",
@@ -2346,7 +2346,7 @@ As you continue your context engineering journey, remember these key principles 
             milestone="Effortless seeming mastery with deep understanding"
         }
     ],
-    
+
     development_approaches=[
         {
             approach="Flow observation",

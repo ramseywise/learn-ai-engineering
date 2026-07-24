@@ -2,7 +2,7 @@
 ## Field Boundaries
 
 > **Module 08.3** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 ---
@@ -157,7 +157,7 @@ For each identified boundary, assess:
 
 **Selectivity**: {what_types_of_information_can_cross_this_boundary}
 - Type filters: Only certain categories of information pass
-- Quality filters: Only high-quality information passes  
+- Quality filters: Only high-quality information passes
 - Relevance filters: Only contextually relevant information passes
 - Temporal filters: Information passage depends on timing
 
@@ -272,13 +272,13 @@ For each identified boundary, assess:
 ```xml
 <boundary_template name="adaptive_boundary_engineering">
   <intent>Design and implement intelligent boundary systems that actively optimize information flow and pattern preservation</intent>
-  
+
   <context>
     Just as cell membranes actively regulate molecular transport to maintain cellular health,
     adaptive semantic boundaries can intelligently manage information flow to enhance
     field coherence, creativity, and overall system performance.
   </context>
-  
+
   <boundary_design_principles>
     <selective_intelligence>
       <content_recognition>Ability to analyze and classify information attempting to cross</content_recognition>
@@ -286,21 +286,21 @@ For each identified boundary, assess:
       <quality_filtering>Discrimination between high-quality and low-quality information</quality_filtering>
       <contextual_adaptation>Adjustment of selection criteria based on current field needs</contextual_adaptation>
     </selective_intelligence>
-    
+
     <adaptive_permeability>
       <dynamic_adjustment>Real-time modification of boundary openness based on conditions</dynamic_adjustment>
       <graduated_response>Smooth scaling of permeability rather than binary open/closed states</graduated_response>
       <bi-directional_optimization>Independent control of flow in each direction across boundary</bi-directional_optimization>
       <temporal_modulation>Time-dependent permeability patterns for optimal information timing</temporal_modulation>
     </adaptive_permeability>
-    
+
     <active_transport>
       <beneficial_enhancement>Active promotion of valuable information transfer</beneficial_enhancement>
       <harmful_rejection>Proactive blocking or neutralization of detrimental information</harmful_rejection>
       <pattern_completion>Assistance in assembling fragmented information into coherent patterns</pattern_completion>
       <gradient_regulation>Management of information concentration differences across boundary</gradient_regulation>
     </active_transport>
-    
+
     <learning_evolution>
       <performance_monitoring>Continuous assessment of boundary effectiveness and outcomes</performance_monitoring>
       <parameter_optimization="gradual_improvement_of_boundary_characteristics_through_experience"</parameter_optimization>
@@ -308,7 +308,7 @@ For each identified boundary, assess:
       <collaborative_learning>Knowledge sharing between different boundary systems for collective improvement</collaborative_learning>
     </learning_evolution>
   </boundary_design_principles>
-  
+
   <engineering_methodology>
     <requirements_analysis>
       <field_characterization>Analysis of field properties, patterns, and dynamics that boundary must serve</field_characterization>
@@ -316,7 +316,7 @@ For each identified boundary, assess:
       <performance_objectives>Definition of success criteria and optimization targets</performance_objectives>
       <environmental_constraints>Identification of external factors that boundary must accommodate</environmental_constraints>
     </requirements_analysis>
-    
+
     <boundary_architecture_design>
       <membrane_structure>
         <layer_organization>Design of multi-layer boundary with specialized functions</layer_organization>
@@ -324,14 +324,14 @@ For each identified boundary, assess:
         <sensor_systems>Integration of information detection and analysis capabilities</sensor_systems>
         <actuator_mechanisms>Implementation of active transport and regulation systems</actuator_mechanisms>
       </membrane_structure>
-      
+
       <control_systems>
         <decision_algorithms>Logic for determining appropriate boundary responses to information</decision_algorithms>
         <feedback_loops>Mechanisms for monitoring and adjusting boundary performance</feedback_loops>
         <learning_protocols>Systems for accumulating experience and improving performance</learning_protocols>
         <emergency_responses>Protective measures for handling exceptional or threatening conditions</emergency_responses>
       </control_systems>
-      
+
       <interface_design>
         <field_coupling>Mechanisms for connecting boundary to internal field dynamics</field_coupling>
         <external_communication>Protocols for interacting with external environments and other boundaries</external_communication>
@@ -339,7 +339,7 @@ For each identified boundary, assess:
         <network_participation="contribution_to_collective_boundary_intelligence_and_decision_making"</network_participation>
       </interface_design>
     </boundary_architecture_design>
-    
+
     <implementation_strategy>
       <gradual_deployment>
         <prototype_development>Creation and testing of boundary concepts in controlled environments</prototype_development>
@@ -347,7 +347,7 @@ For each identified boundary, assess:
         <performance_validation>Systematic testing and verification of boundary effectiveness</performance_validation>
         <scaling_optimization>Adaptation of boundary design for larger and more complex applications</scaling_optimization>
       </gradual_deployment>
-      
+
       <integration_management>
         <compatibility_assurance>Verification that new boundary works well with existing field systems</compatibility_assurance>
         <disruption_minimization>Implementation approaches that avoid destabilizing current operations</disruption_minimization>
@@ -356,7 +356,7 @@ For each identified boundary, assess:
       </integration_management>
     </implementation_strategy>
   </engineering_methodology>
-  
+
   <boundary_types>
     <protective_boundaries>
       <function>Shield sensitive field regions from disruptive external influences</function>
@@ -364,28 +364,28 @@ For each identified boundary, assess:
       <applications>Core concept protection, memory preservation, identity maintenance</applications>
       <implementation>Multi-layer defense with graduated response levels</implementation>
     </protective_boundaries>
-    
+
     <exchange_boundaries>
       <function>Facilitate beneficial information flow while maintaining field integrity</function>
       <characteristics>Intelligent selectivity, bidirectional optimization, quality enhancement</characteristics>
       <applications>Knowledge integration, cross-domain learning, collaborative reasoning</applications>
       <implementation>Adaptive channels with content analysis and quality assurance</implementation>
     </exchange_boundaries>
-    
+
     <creative_boundaries>
       <function>Enable innovative combinations and novel pattern emergence</function>
       <characteristics>Controlled permeability, pattern synthesis, emergence facilitation</characteristics>
       <applications>Creative thinking, problem-solving, artistic expression, innovation</applications>
       <implementation>Specialized mixing zones with emergence detection and enhancement</implementation>
     </creative_boundaries>
-    
+
     <hierarchical_boundaries>
       <function>Organize information across multiple scales and levels of abstraction</function>
       <characteristics>Scale-sensitive permeability, level-appropriate filtering, hierarchical coordination</characteristics>
       <applications>Conceptual organization, abstraction management, multi-scale reasoning</applications>
       <implementation>Nested boundary systems with cross-scale communication protocols</implementation>
     </hierarchical_boundaries>
-    
+
     <temporal_boundaries>
       <function>Manage information flow across different time scales and temporal contexts</function>
       <characteristics>Time-dependent permeability, temporal filtering, chronological organization</characteristics>
@@ -393,7 +393,7 @@ For each identified boundary, assess:
       <implementation>Time-gated channels with temporal context analysis</implementation>
     </temporal_boundaries>
   </boundary_types>
-  
+
   <o>
     <boundary_specification>
       <architecture_description>{detailed_design_of_boundary_structure_and_components}</architecture_description>
@@ -402,7 +402,7 @@ For each identified boundary, assess:
       <integration_requirements>{specifications_for_connecting_with_existing_systems}</integration_requirements>
     <maintenance_protocols>{procedures_for_ongoing_boundary_health_and_optimization}</maintenance_protocols>
   </boundary_specification>
-  
+
   <implementation_plan>
     <development_phases>{step_by_step_approach_for_boundary_creation_and_deployment}</development_phases>
     <testing_procedures>{validation_methods_and_quality_assurance_protocols}</testing_procedures>
@@ -431,7 +431,7 @@ import networkx as nx
 class BoundaryType(Enum):
     """Classification of different boundary types"""
     PROTECTIVE = "protective"
-    EXCHANGE = "exchange" 
+    EXCHANGE = "exchange"
     CREATIVE = "creative"
     HIERARCHICAL = "hierarchical"
     TEMPORAL = "temporal"
@@ -451,45 +451,45 @@ class BoundaryProperties:
 class AdaptiveBoundary:
     """
     Sophisticated adaptive boundary with learning and optimization capabilities.
-    
+
     Think of this as modeling a living cell membrane that can learn, adapt,
     and actively manage what passes through it for optimal system health.
     """
-    
+
     def __init__(self, boundary_id: str, boundary_type: BoundaryType,
                  initial_permeability: float = 0.5):
         self.id = boundary_id
         self.boundary_type = boundary_type
         self.permeability = initial_permeability
-        
+
         # Adaptive properties
         self.selectivity_criteria = {}
         self.learning_rate = 0.01
         self.adaptation_history = []
-        
+
         # Performance tracking
         self.flow_history = []
         self.quality_metrics = []
         self.efficiency_scores = []
-        
+
         # Boundary geometry and structure
         self.position_points = []
         self.normal_vectors = []
         self.curvature_values = []
         self.thickness_profile = []
-        
+
         # Active transport mechanisms
         self.active_pumps = {}
         self.energy_budget = 1.0
-        
+
         # Learning and memory
         self.pattern_memory = {}
         self.decision_history = []
-        
+
     def evaluate_information_packet(self, packet: Dict) -> Dict:
         """
         Evaluate whether information packet should be allowed to cross boundary.
-        
+
         Like a sophisticated border control system that analyzes each
         traveler/package to decide whether to allow passage.
         """
@@ -498,40 +498,40 @@ class AdaptiveBoundary:
         destination = packet.get('destination', 'unknown')
         urgency = packet.get('urgency', 0.5)
         quality = packet.get('quality', 0.5)
-        
+
         # Initialize evaluation
         pass_probability = self.permeability
-        
+
         # Content-based filtering
         content_score = self._evaluate_content_relevance(content)
-        
+
         # Quality filtering
         quality_threshold = self._get_adaptive_quality_threshold()
         quality_score = 1.0 if quality >= quality_threshold else 0.0
-        
+
         # Source reputation
         source_score = self._evaluate_source_reputation(source)
-        
+
         # Destination appropriateness
         dest_score = self._evaluate_destination_fit(destination, content)
-        
+
         # Urgency consideration
         urgency_modifier = self._calculate_urgency_modifier(urgency)
-        
+
         # Combine factors based on boundary type
         if self.boundary_type == BoundaryType.PROTECTIVE:
             # Protective boundaries are conservative
-            pass_probability = (content_score * 0.3 + 
-                             quality_score * 0.4 + 
+            pass_probability = (content_score * 0.3 +
+                             quality_score * 0.4 +
                              source_score * 0.3) * urgency_modifier
-            
+
         elif self.boundary_type == BoundaryType.EXCHANGE:
             # Exchange boundaries balance multiple factors
-            pass_probability = (content_score * 0.25 + 
+            pass_probability = (content_score * 0.25 +
                              quality_score * 0.25 +
                              source_score * 0.2 +
                              dest_score * 0.3) * urgency_modifier
-            
+
         elif self.boundary_type == BoundaryType.CREATIVE:
             # Creative boundaries favor novelty and diversity
             novelty_score = self._evaluate_novelty(content)
@@ -539,14 +539,14 @@ class AdaptiveBoundary:
                              quality_score * 0.2 +
                              novelty_score * 0.4 +
                              urgency_modifier * 0.2)
-            
+
         # Apply learned adjustments
         learned_adjustment = self._apply_learned_patterns(packet)
         pass_probability *= learned_adjustment
-        
+
         # Ensure probability stays in valid range
         pass_probability = max(0.0, min(1.0, pass_probability))
-        
+
         decision = {
             'allow_passage': pass_probability > 0.5,
             'pass_probability': pass_probability,
@@ -557,36 +557,36 @@ class AdaptiveBoundary:
             'urgency_modifier': urgency_modifier,
             'learned_adjustment': learned_adjustment
         }
-        
+
         # Record decision for learning
         self.decision_history.append({
             'packet': packet.copy(),
             'decision': decision.copy(),
             'timestamp': len(self.decision_history)
         })
-        
+
         return decision
-    
+
     def _evaluate_content_relevance(self, content: str) -> float:
         """Evaluate how relevant content is for this boundary context"""
         # Simplified relevance scoring
         # In practice, this would use sophisticated NLP and semantic analysis
-        
+
         relevance_keywords = self.selectivity_criteria.get('keywords', [])
         if not relevance_keywords:
             return 0.7  # Default moderate relevance
-        
+
         # Simple keyword matching (would be much more sophisticated in practice)
         content_lower = content.lower()
         matches = sum(1 for keyword in relevance_keywords if keyword.lower() in content_lower)
         relevance_score = min(1.0, matches / max(len(relevance_keywords), 1))
-        
+
         return relevance_score
-    
+
     def _get_adaptive_quality_threshold(self) -> float:
         """Get current quality threshold, adapting based on recent performance"""
         base_threshold = 0.5
-        
+
         # Adjust based on recent quality of allowed packets
         if len(self.quality_metrics) > 10:
             recent_quality = np.mean(self.quality_metrics[-10:])
@@ -594,37 +594,37 @@ class AdaptiveBoundary:
             # If recent quality is low, need to be less selective
             adjustment = (recent_quality - 0.5) * 0.2
             return base_threshold + adjustment
-        
+
         return base_threshold
-    
+
     def _evaluate_source_reputation(self, source: str) -> float:
         """Evaluate reputation of information source"""
         # Track source performance over time
-        source_history = [d for d in self.decision_history 
+        source_history = [d for d in self.decision_history
                          if d['packet'].get('source') == source]
-        
+
         if not source_history:
             return 0.5  # Unknown source gets neutral score
-        
+
         # Calculate success rate of packets from this source
-        successful_packets = [d for d in source_history 
-                            if d['decision']['allow_passage'] and 
+        successful_packets = [d for d in source_history
+                            if d['decision']['allow_passage'] and
                             d.get('outcome_quality', 0.5) > 0.6]
-        
+
         success_rate = len(successful_packets) / len(source_history)
         return success_rate
-    
+
     def _evaluate_destination_fit(self, destination: str, content: str) -> float:
         """Evaluate how well content fits intended destination"""
         # Simplified destination fitness evaluation
         # In practice, would analyze semantic compatibility
-        
+
         dest_preferences = self.selectivity_criteria.get('destinations', {})
         if destination in dest_preferences:
             return dest_preferences[destination]
-        
+
         return 0.6  # Default moderate fit
-    
+
     def _calculate_urgency_modifier(self, urgency: float) -> float:
         """Calculate how urgency affects passage decision"""
         # Emergency information gets priority, but not unlimited
@@ -636,12 +636,12 @@ class AdaptiveBoundary:
             return 0.9  # Low priority slight penalty
         else:
             return 1.0  # Normal priority
-    
+
     def _evaluate_novelty(self, content: str) -> float:
         """Evaluate novelty of content for creative boundaries"""
         # Check against pattern memory for novelty
         content_hash = hash(content) % 1000
-        
+
         if content_hash in self.pattern_memory:
             # Seen before - less novel
             frequency = self.pattern_memory[content_hash]
@@ -650,62 +650,62 @@ class AdaptiveBoundary:
             # Never seen - highly novel
             novelty = 1.0
             self.pattern_memory[content_hash] = 0
-        
+
         return novelty
-    
+
     def _apply_learned_patterns(self, packet: Dict) -> float:
         """Apply learned patterns to adjust passage decision"""
         # Simplified pattern learning
         # Look for similar packets in history and their outcomes
-        
+
         similar_decisions = []
         content = packet.get('content', '')
         quality = packet.get('quality', 0.5)
-        
+
         for decision_record in self.decision_history[-50:]:  # Look at recent history
             past_packet = decision_record['packet']
             past_content = past_packet.get('content', '')
             past_quality = past_packet.get('quality', 0.5)
-            
+
             # Simple similarity measure
             content_similarity = len(set(content.split()) & set(past_content.split())) / max(len(content.split()), 1)
             quality_similarity = 1.0 - abs(quality - past_quality)
-            
+
             overall_similarity = (content_similarity + quality_similarity) / 2
-            
+
             if overall_similarity > 0.7:  # Similar enough
                 similar_decisions.append(decision_record)
-        
+
         if similar_decisions:
             # Look at outcomes of similar decisions
-            successful_similar = [d for d in similar_decisions 
+            successful_similar = [d for d in similar_decisions
                                 if d.get('outcome_quality', 0.5) > 0.6]
             success_rate = len(successful_similar) / len(similar_decisions)
-            
+
             # Adjust based on historical success
             if success_rate > 0.7:
                 return 1.2  # Encourage similar decisions
             elif success_rate < 0.3:
                 return 0.8  # Discourage similar decisions
-        
+
         return 1.0  # No adjustment
-    
+
     def update_from_outcome(self, packet: Dict, outcome_quality: float):
         """Update boundary parameters based on passage outcome"""
         # Find the decision record for this packet
         packet_hash = hash(str(packet))
-        
+
         for decision_record in reversed(self.decision_history):
             if hash(str(decision_record['packet'])) == packet_hash:
                 decision_record['outcome_quality'] = outcome_quality
                 break
-        
+
         # Update quality metrics
         self.quality_metrics.append(outcome_quality)
-        
+
         # Adapt selectivity criteria based on outcomes
         self._adapt_selectivity(packet, outcome_quality)
-        
+
         # Update source reputation
         source = packet.get('source', 'unknown')
         if source in self.selectivity_criteria.get('source_scores', {}):
@@ -716,7 +716,7 @@ class AdaptiveBoundary:
             if 'source_scores' not in self.selectivity_criteria:
                 self.selectivity_criteria['source_scores'] = {}
             self.selectivity_criteria['source_scores'][source] = outcome_quality
-        
+
         # Record adaptation
         self.adaptation_history.append({
             'packet': packet,
@@ -724,16 +724,16 @@ class AdaptiveBoundary:
             'adaptation_type': 'outcome_learning',
             'timestamp': len(self.adaptation_history)
         })
-    
+
     def _adapt_selectivity(self, packet: Dict, outcome_quality: float):
         """Adapt selectivity criteria based on outcome feedback"""
         learning_rate = self.learning_rate
-        
+
         # If outcome was good, strengthen preference for similar content
         # If outcome was bad, weaken preference
         content = packet.get('content', '')
         quality = packet.get('quality', 0.5)
-        
+
         # Update quality threshold
         if outcome_quality > 0.7:
             # Good outcome - can be slightly more selective
@@ -741,21 +741,21 @@ class AdaptiveBoundary:
         elif outcome_quality < 0.3:
             # Bad outcome - should be more permissive
             self.permeability *= (1 - learning_rate * 0.1)
-        
+
         # Keep permeability in reasonable bounds
         self.permeability = max(0.1, min(0.9, self.permeability))
-    
+
     def visualize_boundary_state(self):
         """Visualize current boundary state and recent performance"""
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-        
+
         # Permeability over time
         if self.adaptation_history:
             timestamps = [a['timestamp'] for a in self.adaptation_history]
             # Reconstruct permeability history
             permeability_history = [0.5]  # Initial value
             current_perm = 0.5
-            
+
             for adaptation in self.adaptation_history:
                 outcome = adaptation['outcome_quality']
                 if outcome > 0.7:
@@ -764,13 +764,13 @@ class AdaptiveBoundary:
                     current_perm *= 0.999
                 current_perm = max(0.1, min(0.9, current_perm))
                 permeability_history.append(current_perm)
-            
+
             ax1.plot(range(len(permeability_history)), permeability_history)
             ax1.set_title('Boundary Permeability Evolution')
             ax1.set_xlabel('Time Steps')
             ax1.set_ylabel('Permeability')
             ax1.grid(True, alpha=0.3)
-        
+
         # Quality metrics over time
         if self.quality_metrics:
             ax2.plot(self.quality_metrics, 'b-', alpha=0.7)
@@ -780,32 +780,32 @@ class AdaptiveBoundary:
             ax2.set_ylabel('Quality Score')
             ax2.legend()
             ax2.grid(True, alpha=0.3)
-        
+
         # Decision distribution
         if self.decision_history:
             decisions = [d['decision']['allow_passage'] for d in self.decision_history]
             outcomes = [d.get('outcome_quality', 0.5) for d in self.decision_history]
-            
+
             allowed_outcomes = [o for d, o in zip(decisions, outcomes) if d]
             rejected_outcomes = [o for d, o in zip(decisions, outcomes) if not d]
-            
+
             if allowed_outcomes:
                 ax3.hist(allowed_outcomes, bins=10, alpha=0.7, label='Allowed', color='green')
             if rejected_outcomes:
                 ax3.hist(rejected_outcomes, bins=10, alpha=0.7, label='Rejected', color='red')
-            
+
             ax3.set_title('Outcome Quality Distribution')
             ax3.set_xlabel('Quality Score')
             ax3.set_ylabel('Frequency')
             ax3.legend()
             ax3.grid(True, alpha=0.3)
-        
+
         # Source reputation
         source_scores = self.selectivity_criteria.get('source_scores', {})
         if source_scores:
             sources = list(source_scores.keys())[:10]  # Top 10 sources
             scores = [source_scores[s] for s in sources]
-            
+
             ax4.bar(range(len(sources)), scores)
             ax4.set_title('Source Reputation Scores')
             ax4.set_xlabel('Sources')
@@ -813,109 +813,109 @@ class AdaptiveBoundary:
             ax4.set_xticks(range(len(sources)))
             ax4.set_xticklabels(sources, rotation=45, ha='right')
             ax4.grid(True, alpha=0.3)
-        
+
         plt.tight_layout()
         plt.show()
 
 class BoundaryNetwork:
     """
     Network of interacting adaptive boundaries.
-    
+
     Like modeling the complete boundary system of a complex organism,
     where different boundaries coordinate and collaborate for overall health.
     """
-    
+
     def __init__(self):
         self.boundaries = {}
         self.boundary_graph = nx.Graph()
         self.global_policies = {}
         self.network_performance = []
-        
-    def add_boundary(self, boundary: AdaptiveBoundary, 
+
+    def add_boundary(self, boundary: AdaptiveBoundary,
                     connections: List[str] = None):
         """Add boundary to network with specified connections"""
         self.boundaries[boundary.id] = boundary
         self.boundary_graph.add_node(boundary.id, boundary=boundary)
-        
+
         # Add connections to other boundaries
         if connections:
             for connected_id in connections:
                 if connected_id in self.boundaries:
                     self.boundary_graph.add_edge(boundary.id, connected_id)
-    
-    def propagate_information(self, information_packet: Dict, 
+
+    def propagate_information(self, information_packet: Dict,
                             source_boundary: str, target_boundary: str) -> Dict:
         """
         Propagate information through boundary network.
-        
+
         Like tracing how information flows through a complex system
         of interconnected filters and processing stations.
         """
         if source_boundary not in self.boundaries or target_boundary not in self.boundaries:
             return {'success': False, 'reason': 'Boundary not found'}
-        
+
         # Find path through boundary network
         try:
             path = nx.shortest_path(self.boundary_graph, source_boundary, target_boundary)
         except nx.NetworkXNoPath:
             return {'success': False, 'reason': 'No path between boundaries'}
-        
+
         # Propagate through each boundary in path
         current_packet = information_packet.copy()
         propagation_log = []
-        
+
         for i in range(len(path) - 1):
             current_boundary_id = path[i]
             next_boundary_id = path[i + 1]
             boundary = self.boundaries[current_boundary_id]
-            
+
             # Evaluate passage through this boundary
             decision = boundary.evaluate_information_packet(current_packet)
-            
+
             propagation_log.append({
                 'boundary': current_boundary_id,
                 'decision': decision,
                 'packet_state': current_packet.copy()
             })
-            
+
             if not decision['allow_passage']:
                 return {
                     'success': False,
                     'reason': f'Blocked at boundary {current_boundary_id}',
                     'propagation_log': propagation_log
                 }
-            
+
             # Modify packet based on boundary processing
             current_packet = self._process_packet_through_boundary(
                 current_packet, boundary, decision
             )
-        
+
         return {
             'success': True,
             'final_packet': current_packet,
             'propagation_log': propagation_log
         }
-    
-    def _process_packet_through_boundary(self, packet: Dict, 
+
+    def _process_packet_through_boundary(self, packet: Dict,
                                        boundary: AdaptiveBoundary,
                                        decision: Dict) -> Dict:
         """Process packet transformation as it passes through boundary"""
         processed_packet = packet.copy()
-        
+
         # Boundary may modify packet based on its type and function
         if boundary.boundary_type == BoundaryType.CREATIVE:
             # Creative boundaries might enhance or transform content
             processed_packet['creativity_boost'] = decision['pass_probability']
-            
+
         elif boundary.boundary_type == BoundaryType.PROTECTIVE:
             # Protective boundaries might add security metadata
             processed_packet['security_verified'] = True
             processed_packet['verification_score'] = decision['pass_probability']
-            
+
         elif boundary.boundary_type == BoundaryType.EXCHANGE:
             # Exchange boundaries might normalize or standardize format
             processed_packet['format_standardized'] = True
-            
+
         # Add processing metadata
         processed_packet['processing_history'] = processed_packet.get('processing_history', [])
         processed_packet['processing_history'].append({
@@ -923,33 +923,33 @@ class BoundaryNetwork:
             'boundary_type': boundary.boundary_type.value,
             'decision_score': decision['pass_probability']
         })
-        
+
         return processed_packet
-    
+
     def optimize_network_performance(self, optimization_steps: int = 100):
         """Optimize the entire boundary network for improved performance"""
         print(f"Optimizing boundary network for {optimization_steps} steps...")
-        
+
         initial_performance = self._evaluate_network_performance()
         best_performance = initial_performance
         improvement_count = 0
-        
+
         for step in range(optimization_steps):
             # Select random boundary for optimization
             boundary_id = np.random.choice(list(self.boundaries.keys()))
             boundary = self.boundaries[boundary_id]
-            
+
             # Store current state
             original_permeability = boundary.permeability
-            
+
             # Try random adjustment
             adjustment = np.random.normal(0, 0.05)  # Small random change
-            boundary.permeability = max(0.1, min(0.9, 
+            boundary.permeability = max(0.1, min(0.9,
                                                boundary.permeability + adjustment))
-            
+
             # Evaluate new performance
             new_performance = self._evaluate_network_performance()
-            
+
             # Keep improvement, revert if worse
             if new_performance > best_performance:
                 best_performance = new_performance
@@ -959,31 +959,31 @@ class BoundaryNetwork:
             else:
                 # Revert change
                 boundary.permeability = original_permeability
-        
+
         final_performance = self._evaluate_network_performance()
         improvement = final_performance - initial_performance
-        
+
         print(f"Optimization complete:")
         print(f"  Initial performance: {initial_performance:.3f}")
         print(f"  Final performance: {final_performance:.3f}")
         print(f"  Improvement: {improvement:.3f}")
         print(f"  Successful adjustments: {improvement_count}")
-        
+
         return {
             'initial_performance': initial_performance,
             'final_performance': final_performance,
             'improvement': improvement,
             'successful_adjustments': improvement_count
         }
-    
+
     def _evaluate_network_performance(self) -> float:
         """Evaluate overall network performance"""
         if not self.boundaries:
             return 0.0
-        
+
         # Aggregate performance across all boundaries
         total_performance = 0.0
-        
+
         for boundary in self.boundaries.values():
             # Boundary performance based on recent decisions
             if boundary.quality_metrics:
@@ -991,66 +991,66 @@ class BoundaryNetwork:
                 boundary_performance = avg_quality
             else:
                 boundary_performance = 0.5  # Default neutral performance
-            
+
             total_performance += boundary_performance
-        
+
         # Network performance is average boundary performance
         # adjusted for network connectivity and coordination
         avg_performance = total_performance / len(self.boundaries)
-        
+
         # Bonus for well-connected network
         connectivity_bonus = min(0.1, len(self.boundary_graph.edges) / len(self.boundaries) * 0.05)
-        
+
         return avg_performance + connectivity_bonus
 
 # Demonstration and Examples
 def demonstrate_boundary_management():
     """
     Comprehensive demonstration of boundary management concepts.
-    
+
     This shows how sophisticated boundary systems can intelligently
     manage information flow for optimal system performance.
     """
     print("=== Boundary Management Demonstration ===\n")
-    
+
     # Create boundary network
     print("1. Creating adaptive boundary network...")
     network = BoundaryNetwork()
-    
+
     # Create different types of boundaries
     protective_boundary = AdaptiveBoundary("core_protection", BoundaryType.PROTECTIVE, 0.3)
     exchange_boundary = AdaptiveBoundary("knowledge_exchange", BoundaryType.EXCHANGE, 0.7)
     creative_boundary = AdaptiveBoundary("innovation_space", BoundaryType.CREATIVE, 0.8)
     hierarchical_boundary = AdaptiveBoundary("level_gateway", BoundaryType.HIERARCHICAL, 0.5)
-    
+
     # Configure boundary criteria
     protective_boundary.selectivity_criteria = {
         'keywords': ['security', 'core', 'essential'],
         'quality_threshold': 0.8
     }
-    
+
     exchange_boundary.selectivity_criteria = {
         'keywords': ['knowledge', 'learning', 'collaboration'],
         'destinations': {'knowledge_base': 0.9, 'research_area': 0.8}
     }
-    
+
     creative_boundary.selectivity_criteria = {
         'keywords': ['creative', 'novel', 'innovative', 'artistic'],
         'encourage_novelty': True
     }
-    
+
     # Add boundaries to network
     network.add_boundary(protective_boundary)
     network.add_boundary(exchange_boundary, ['core_protection'])
     network.add_boundary(creative_boundary, ['knowledge_exchange'])
     network.add_boundary(hierarchical_boundary, ['knowledge_exchange', 'innovation_space'])
-    
+
     print(f"   Network created with {len(network.boundaries)} boundaries")
     print(f"   Network connections: {len(network.boundary_graph.edges)}")
-    
+
     # Test information packets
     print("\n2. Testing information packet processing...")
-    
+
     test_packets = [
         {
             'content': 'New security protocol for core systems',
@@ -1081,11 +1081,11 @@ def demonstrate_boundary_management():
             'urgency': 0.1
         }
     ]
-    
+
     # Process each packet through relevant boundaries
     for i, packet in enumerate(test_packets):
         print(f"\n   Packet {i+1}: {packet['content'][:50]}...")
-        
+
         # Choose appropriate boundary based on content
         if 'security' in packet['content'].lower():
             boundary = protective_boundary
@@ -1095,25 +1095,25 @@ def demonstrate_boundary_management():
             boundary = creative_boundary
         else:
             boundary = hierarchical_boundary
-        
+
         # Evaluate packet
         decision = boundary.evaluate_information_packet(packet)
-        
+
         print(f"     Boundary: {boundary.id}")
         print(f"     Decision: {'ALLOW' if decision['allow_passage'] else 'BLOCK'}")
         print(f"     Probability: {decision['pass_probability']:.3f}")
         print(f"     Quality Score: {decision['quality_score']:.3f}")
-        
+
         # Simulate outcome and provide feedback
         if decision['allow_passage']:
             # Simulate outcome quality based on packet quality and some randomness
             outcome_quality = packet['quality'] * 0.8 + np.random.random() * 0.2
             boundary.update_from_outcome(packet, outcome_quality)
             print(f"     Outcome Quality: {outcome_quality:.3f}")
-    
+
     # Test network propagation
     print("\n3. Testing network information propagation...")
-    
+
     propagation_packet = {
         'content': 'Important collaborative research project requiring multiple approvals',
         'source': 'research_team',
@@ -1121,22 +1121,22 @@ def demonstrate_boundary_management():
         'quality': 0.8,
         'urgency': 0.6
     }
-    
+
     # Propagate from exchange boundary to creative boundary
     result = network.propagate_information(
         propagation_packet, 'knowledge_exchange', 'innovation_space'
     )
-    
+
     print(f"   Propagation {'SUCCESS' if result['success'] else 'FAILED'}")
     if result['success']:
         print(f"   Path taken: {[log['boundary'] for log in result['propagation_log']]}")
         print(f"   Final packet processing steps: {len(result['final_packet'].get('processing_history', []))}")
     else:
         print(f"   Failure reason: {result['reason']}")
-    
+
     # Boundary adaptation demonstration
     print("\n4. Demonstrating boundary adaptation...")
-    
+
     # Simulate multiple interactions to show learning
     learning_packets = [
         {'content': 'High quality research data', 'quality': 0.9, 'source': 'trusted_lab'},
@@ -1145,9 +1145,9 @@ def demonstrate_boundary_management():
         {'content': 'Excellent peer review', 'quality': 0.95, 'source': 'peer_reviewer'},
         {'content': 'Spam content', 'quality': 0.1, 'source': 'spammer'}
     ]
-    
+
     initial_permeability = exchange_boundary.permeability
-    
+
     for packet in learning_packets:
         decision = exchange_boundary.evaluate_information_packet(packet)
         # Simulate outcome
@@ -1155,44 +1155,44 @@ def demonstrate_boundary_management():
             outcome = packet['quality'] + np.random.normal(0, 0.1)
         else:
             outcome = 0.2  # Blocking bad content is good
-        
+
         outcome = max(0, min(1, outcome))
         exchange_boundary.update_from_outcome(packet, outcome)
-    
+
     final_permeability = exchange_boundary.permeability
     permeability_change = final_permeability - initial_permeability
-    
+
     print(f"   Initial permeability: {initial_permeability:.3f}")
     print(f"   Final permeability: {final_permeability:.3f}")
     print(f"   Change: {permeability_change:.3f}")
     print(f"   Adaptation direction: {'More selective' if permeability_change < 0 else 'More permissive'}")
-    
+
     # Show source reputation learning
     source_scores = exchange_boundary.selectivity_criteria.get('source_scores', {})
     print(f"   Learned source reputations:")
     for source, score in source_scores.items():
         print(f"     {source}: {score:.3f}")
-    
+
     # Network optimization
     print("\n5. Optimizing network performance...")
-    
+
     optimization_result = network.optimize_network_performance(optimization_steps=50)
-    
+
     print(f"   Network optimization completed")
     print(f"   Performance improvement: {optimization_result['improvement']:.3f}")
     print(f"   Successful adjustments: {optimization_result['successful_adjustments']}")
-    
+
     # Final network analysis
     print("\n6. Final network analysis...")
-    
+
     total_decisions = sum(len(b.decision_history) for b in network.boundaries.values())
     total_adaptations = sum(len(b.adaptation_history) for b in network.boundaries.values())
-    
+
     print(f"   Total decisions made: {total_decisions}")
     print(f"   Total adaptations: {total_adaptations}")
     print(f"   Network boundaries: {len(network.boundaries)}")
     print(f"   Network connectivity: {len(network.boundary_graph.edges)} connections")
-    
+
     # Boundary health summary
     print(f"\n   Boundary health summary:")
     for boundary_id, boundary in network.boundaries.items():
@@ -1203,16 +1203,16 @@ def demonstrate_boundary_management():
         else:
             print(f"     {boundary_id}: No decisions yet, "
                   f"Permeability {boundary.permeability:.3f}")
-    
+
     print("\n=== Demonstration Complete ===")
-    
+
     return network
 
 # Example usage and testing
 if __name__ == "__main__":
     # Run the comprehensive demonstration
     network = demonstrate_boundary_management()
-    
+
     print("\nFor interactive exploration, try:")
     print("  network.boundaries['boundary_id'].visualize_boundary_state()")
     print("  network.propagate_information(packet, source, target)")
@@ -1230,7 +1230,7 @@ if __name__ == "__main__":
 ```
 /boundary.orchestrate{
     intent="Coordinate multiple adaptive boundaries for optimal information flow and system coherence",
-    
+
     input={
         boundary_network=<current_configuration_of_interconnected_boundaries>,
         flow_requirements={
@@ -1246,7 +1246,7 @@ if __name__ == "__main__":
             strategic_objectives=<long_term_goals_and_priorities>
         }
     },
-    
+
     process=[
         /analyze.network.topology{
             action="Assess boundary network structure and performance characteristics",
@@ -1260,7 +1260,7 @@ if __name__ == "__main__":
             ],
             output="Comprehensive network topology assessment with optimization recommendations"
         },
-        
+
         /coordinate.boundary.policies{
             action="Align boundary behaviors for coherent network-wide information management",
             method="Policy synchronization with local adaptation and global coordination",
@@ -1273,7 +1273,7 @@ if __name__ == "__main__":
             ],
             output="Coordinated boundary policies with coherent network behavior"
         },
-        
+
         /optimize.information.flows{
             action="Enhance information routing and processing across boundary network",
             method="Dynamic routing optimization with adaptive load balancing",
@@ -1286,7 +1286,7 @@ if __name__ == "__main__":
             ],
             output="Optimized information flow patterns with enhanced network performance"
         },
-        
+
         /maintain.network.health{
             action="Monitor and maintain optimal boundary network function and resilience",
             method="Continuous health monitoring with preventive and corrective interventions",
@@ -1300,7 +1300,7 @@ if __name__ == "__main__":
             output="Maintained network health with optimal performance and resilience"
         }
     ],
-    
+
     output={
         orchestrated_network={
             optimized_topology=<improved_boundary_network_structure>,
@@ -1308,7 +1308,7 @@ if __name__ == "__main__":
             enhanced_flows=<optimized_information_routing_and_processing>,
             robust_health=<resilient_network_with_fault_tolerance>
         },
-        
+
         performance_improvements={
             throughput_enhancement=<increased_information_processing_capacity>,
             quality_optimization=<improved_information_quality_and_relevance>,
@@ -1316,7 +1316,7 @@ if __name__ == "__main__":
             reliability_enhancement=<improved_network_stability_and_predictability>
         }
     },
-    
+
     meta={
         orchestration_effectiveness=<success_of_network_coordination_and_optimization>,
         adaptive_intelligence=<network_learning_and_self_improvement_capability>,
@@ -1385,11 +1385,11 @@ class SimpleBoundary:
         # TODO: Initialize boundary
         self.type = boundary_type
         self.permeability = initial_permeability
-    
+
     def evaluate_passage(self, information_packet):
         # TODO: Implement passage evaluation
         pass
-    
+
     def adapt_from_feedback(self, outcome):
         # TODO: Learn from outcomes
         pass
@@ -1407,11 +1407,11 @@ class BoundaryNetworkDesigner:
         # TODO: Initialize network design tools
         self.boundaries = {}
         self.connections = {}
-    
+
     def design_network_topology(self, requirements):
         # TODO: Design optimal boundary arrangement
         pass
-    
+
     def optimize_information_flows(self):
         # TODO: Optimize routing and coordination
         pass
@@ -1429,11 +1429,11 @@ class BoundaryEcosystem:
         # TODO: Initialize ecosystem framework
         self.boundaries = []
         self.ecosystem_metrics = {}
-    
+
     def evolve_boundaries(self, generations):
         # TODO: Evolutionary boundary optimization
         pass
-    
+
     def analyze_ecosystem_health(self):
         # TODO: Assess overall system performance
         pass

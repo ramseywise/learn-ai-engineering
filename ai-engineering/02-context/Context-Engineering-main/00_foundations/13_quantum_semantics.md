@@ -5,7 +5,7 @@ _Understanding meaning as observer-dependent actualization in a non-classical fi
 
 > "Meaning is not an intrinsic, static property of a semantic expression, but rather an emergent phenomenon actualized through the dynamic interaction between the expression and an interpretive agent situated within a specific context."
 > — [**Agostino et al., 2025**](https://arxiv.org/pdf/2506.10077)
-> 
+>
 ## 1. Introduction
 
 Recent advances in our understanding of language models have revealed the inadequacy of classical approaches to meaning. While prior modules have established the foundational concepts of context as a continuous field with emergent properties, this module extends that framework by introducing quantum semantics—a paradigm that models meaning as fundamentally observer-dependent, contextual, and exhibiting non-classical properties.
@@ -127,13 +127,13 @@ def create_interpretation_superposition(semantic_expression, dimensions=1024):
     """
     # Initialize state vector
     state = np.zeros(dimensions, dtype=complex)
-    
+
     # Encode semantic expression into state vector
     for token in tokenize(semantic_expression):
         token_encoding = encode_token(token, dimensions)
         phase = np.exp(2j * np.pi * hash(token) / 1e6)
         state += phase * token_encoding
-    
+
     # Normalize state vector
     state = state / np.linalg.norm(state)
     return state
@@ -150,16 +150,16 @@ def apply_context(semantic_state, context):
     """
     # Convert context to operator matrix
     context_operator = construct_context_operator(context)
-    
+
     # Apply context operator to state
     new_state = context_operator @ semantic_state
-    
+
     # Calculate probability of this interpretation
     probability = np.abs(np.vdot(new_state, new_state))
-    
+
     # Normalize the new state
     new_state = new_state / np.sqrt(probability)
-    
+
     return new_state, probability
 ```
 
@@ -175,14 +175,14 @@ def test_context_commutativity(semantic_state, context_A, context_B):
     # Apply context A then B
     state_AB, _ = apply_context(semantic_state, context_A)
     state_AB, _ = apply_context(state_AB, context_B)
-    
+
     # Apply context B then A
     state_BA, _ = apply_context(semantic_state, context_B)
     state_BA, _ = apply_context(state_BA, context_A)
-    
+
     # Calculate fidelity between resulting states
     fidelity = np.abs(np.vdot(state_AB, state_BA))**2
-    
+
     # If fidelity < 1, the operations do not commute
     return fidelity, fidelity < 0.99
 ```
@@ -197,27 +197,27 @@ def bayesian_interpretation_sampling(expression, contexts, model, n_samples=100)
     Perform Bayesian sampling of interpretations under diverse contexts.
     """
     interpretations = {}
-    
+
     for _ in range(n_samples):
         # Sample a context or combination of contexts
         context = sample_context(contexts)
-        
+
         # Generate interpretation
         interpretation = model.generate(expression, context)
-        
+
         # Update interpretation count
         if interpretation in interpretations:
             interpretations[interpretation] += 1
         else:
             interpretations[interpretation] = 1
-    
+
     # Convert counts to probabilities
     total = sum(interpretations.values())
     interpretation_probs = {
-        interp: count / total 
+        interp: count / total
         for interp, count in interpretations.items()
     }
-    
+
     return interpretation_probs
 ```
 
@@ -236,12 +236,12 @@ def semantic_state_to_field(semantic_state, field_dimensions):
     """
     # Reshape state vector to field dimensions
     field = semantic_state.reshape(field_dimensions)
-    
+
     # Calculate field metrics
     energy = np.sum(np.abs(field)**2)
     gradients = np.gradient(field)
     curvature = np.gradient(gradients[0])[0] + np.gradient(gradients[1])[1]
-    
+
     return {
         'field': field,
         'energy': energy,
@@ -261,12 +261,12 @@ def apply_context_to_field(field_config, context_transform):
     """
     # Apply context transformation to field
     new_field = context_transform(field_config['field'])
-    
+
     # Recalculate field metrics
     energy = np.sum(np.abs(new_field)**2)
     gradients = np.gradient(new_field)
     curvature = np.gradient(gradients[0])[0] + np.gradient(gradients[1])[1]
-    
+
     return {
         'field': new_field,
         'energy': energy,
@@ -287,7 +287,7 @@ def identify_semantic_attractors(field_config, threshold=0.1):
     # Find local minima in field curvature
     curvature = field_config['curvature']
     attractors = []
-    
+
     # Use simple peak detection for demonstration
     # In practice, more sophisticated methods would be used
     for i in range(1, len(curvature)-1):
@@ -298,7 +298,7 @@ def identify_semantic_attractors(field_config, threshold=0.1):
                 curvature[i, j] > curvature[i, j-1] and
                 curvature[i, j] > curvature[i, j+1]):
                 attractors.append((i, j, curvature[i, j]))
-    
+
     return attractors
 ```
 
@@ -314,7 +314,7 @@ def measure_field_contextuality(field_config, contexts, threshold=2.0):
     # Extract contexts
     context_A0, context_A1 = contexts['A']
     context_B0, context_B1 = contexts['B']
-    
+
     # Apply contexts and measure correlations
     field_A0B0 = apply_context_to_field(
         apply_context_to_field(field_config, context_A0),
@@ -332,19 +332,19 @@ def measure_field_contextuality(field_config, contexts, threshold=2.0):
         apply_context_to_field(field_config, context_A1),
         context_B1
     )
-    
+
     # Calculate correlations
     E_A0B0 = calculate_field_correlation(field_A0B0)
     E_A0B1 = calculate_field_correlation(field_A0B1)
     E_A1B0 = calculate_field_correlation(field_A1B0)
     E_A1B1 = calculate_field_correlation(field_A1B1)
-    
+
     # Calculate CHSH value
     chsh = E_A0B0 - E_A0B1 + E_A1B0 + E_A1B1
-    
+
     # Check if CHSH value exceeds classical bound
     is_contextual = abs(chsh) > threshold
-    
+
     return chsh, is_contextual
 ```
 
@@ -474,18 +474,18 @@ def explore_semantic_space(expression, contexts, model, n_samples=100):
     """
     # Initialize interpretation clusters
     interpretations = []
-    
+
     for _ in range(n_samples):
         # Sample a context variation
         context = sample_context_variation(contexts)
-        
+
         # Generate interpretation
         interpretation = model.generate(expression, context)
         interpretations.append(interpretation)
-    
+
     # Cluster interpretations
     clusters = cluster_interpretations(interpretations)
-    
+
     # Calculate cluster statistics
     cluster_stats = {}
     for i, cluster in enumerate(clusters):
@@ -496,7 +496,7 @@ def explore_semantic_space(expression, contexts, model, n_samples=100):
             'variance': calculate_cluster_variance(cluster),
             'examples': get_representative_examples(cluster, 3)
         }
-    
+
     return cluster_stats
 ```
 
@@ -510,31 +510,31 @@ def context_composition_explorer(expression, contexts, model):
     Explore different orders of context application.
     """
     results = {}
-    
+
     # Try different permutations of context application
     for perm in itertools.permutations(contexts):
         # Apply contexts in this order
         current_context = {}
         interpretation_trace = []
-        
+
         for context in perm:
             # Extend current context
             current_context.update(contexts[context])
-            
+
             # Generate interpretation
             interpretation = model.generate(expression, current_context)
             interpretation_trace.append(interpretation)
-        
+
         # Store results for this permutation
         results[perm] = {
             'final_interpretation': interpretation_trace[-1],
             'interpretation_trace': interpretation_trace,
             'context_order': perm
         }
-    
+
     # Analyze commutativity
     commutativity_analysis = analyze_context_commutativity(results)
-    
+
     return results, commutativity_analysis
 ```
 

@@ -47,7 +47,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
         try:
             # Use Observations API directly (no Metrics API)
             agent_name = args.get("agent_name")
-            
+
             # Resolve time range
             time_range = args.get("time_range")
             if not time_range and args.get("time_window"):
@@ -67,7 +67,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                     "from": start_time.isoformat(),
                     "to": end_time.isoformat(),
                 }
-            
+
             include_tokens = args.get("include_tokens", True)
 
             # --- Breakdown selection ---
@@ -81,16 +81,16 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                     breakdown_by = "user_id"
                 else:
                     breakdown_by = "observation_name"
-            
+
             response = f"[OBS] **Performance Analysis**\n\n"
-            
+
             if agent_name:
                 response += f"**Agent**: {agent_name} (note: observations API does not support tag filtering here)\n"
-            
+
             if time_range:
                 response += f"**Time Range**: {time_range.get('from', 'start')} to {time_range.get('to', 'now')}\n"
             response += "**Source**: observations\n"
-            
+
             response += "\n**Totals (All Observations)**\n"
             obs_totals, obs_groups, obs_token_groups = await self._aggregate_from_observations(
                 time_range=time_range,
@@ -101,12 +101,12 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             observation_count = obs_totals.get("observation_count", 0)
             total_cost = obs_totals.get("total_cost", 0.0)
             total_tokens = obs_totals.get("total_tokens", 0)
-            
+
             response += f"- Observations: {int(observation_count):,}\n"
             response += f"- Total Cost: {self._format_cost(float(total_cost))}\n"
             if include_tokens:
                 response += f"- Total Tokens: {int(total_tokens):,}\n"
-            
+
             # Breakdown section
             response += f"\n**Top by {breakdown_by.replace('_', ' ')}**\n"
             response += "Top Cost Items:\n"
@@ -115,13 +115,13 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                 if include_tokens:
                     line += f" | Tokens: {int(tokens):,}"
                 response += line + "\n"
-            
+
             if include_tokens:
                 response += "Top Token Items:\n"
                 for idx, (label, tokens, cost) in enumerate(obs_token_groups, 1):
                     line = f"{idx}. {label} | Tokens: {int(tokens):,} | Cost: {self._format_cost(float(cost))}"
                     response += line + "\n"
-            
+
             return response
         except Exception as e:
             return f"Error analyzing performance: {str(e)}"
@@ -134,36 +134,36 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
         top_n: int,
     ) -> tuple[Dict[str, Any], List[tuple], List[tuple]]:
         observations = await self._fetch_all_observations_v1(time_range=time_range)
-        
+
         total_cost = 0.0
         total_tokens = 0
         cost_by_key: Dict[str, float] = {}
         tokens_by_key: Dict[str, int] = {}
-        
+
         for obs in observations:
             cost = self._extract_observation_cost(obs)
             tokens = self._extract_observation_tokens(obs)
             total_cost += cost
             if include_tokens:
                 total_tokens += tokens
-            
+
             key = self._extract_observation_key(obs, breakdown_by)
             cost_by_key[key] = cost_by_key.get(key, 0.0) + cost
             if include_tokens:
                 tokens_by_key[key] = tokens_by_key.get(key, 0) + tokens
-        
+
         top_n = max(1, int(top_n))
         top_cost_items = sorted(cost_by_key.items(), key=lambda x: x[1], reverse=True)[:top_n]
         top_token_items = sorted(tokens_by_key.items(), key=lambda x: x[1], reverse=True)[:top_n]
-        
+
         top_cost_render = []
         for key, cost in top_cost_items:
             top_cost_render.append((key, cost, tokens_by_key.get(key, 0)))
-        
+
         top_token_render = []
         for key, tokens in top_token_items:
             top_token_render.append((key, tokens, cost_by_key.get(key, 0.0)))
-        
+
         totals = {
             "observation_count": len(observations),
             "total_cost": total_cost,
@@ -179,7 +179,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
     ) -> List[Any]:
         page = 1
         all_items: List[Any] = []
-        
+
         while page <= max_pages:
             response = await self._fetch_with_retry(
                 self._fetch_observations_v1_page,
@@ -187,24 +187,24 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                 limit=limit,
                 time_range=time_range,
             )
-            
+
             data = response.get("data", []) if isinstance(response, dict) else []
             if not data:
                 break
-            
+
             all_items.extend(data)
-            
+
             meta = response.get("meta", {}) if isinstance(response, dict) else {}
             total_pages = meta.get("totalPages") or meta.get("total_pages")
             if total_pages is not None and page >= int(total_pages):
                 break
-            
+
             # If totalPages is missing, stop when fewer than limit returned
             if total_pages is None and len(data) < limit:
                 break
-            
+
             page += 1
-        
+
         return all_items
 
     def _fetch_observations_v1_page(
@@ -219,7 +219,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             "page": page,
             "limit": limit,
         }
-        
+
         if time_range:
             if time_range.get("from"):
                 params["fromTimestamp"] = time_range["from"]
@@ -227,7 +227,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             if time_range.get("to"):
                 params["toTimestamp"] = time_range["to"]
                 params["toStartTime"] = time_range["to"]
-        
+
         response = client_wrapper.httpx_client.request(
             "api/public/observations",
             method="GET",
@@ -245,7 +245,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                     return float(val)
             if isinstance(obs, dict) and key in obs and obs[key] is not None:
                 return float(obs[key])
-        
+
         # costDetails.total
         cost_details = None
         if hasattr(obs, "costDetails"):
@@ -256,7 +256,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             total = cost_details.get("total")
             if total is not None:
                 return float(total)
-        
+
         # calculatedInputCost + calculatedOutputCost
         input_cost = None
         output_cost = None
@@ -270,7 +270,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             output_cost = obs.get("calculatedOutputCost")
         if input_cost is not None or output_cost is not None:
             return float(input_cost or 0) + float(output_cost or 0)
-        
+
         return 0.0
 
     @staticmethod
@@ -282,7 +282,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
                     return int(val)
             if isinstance(obs, dict) and key in obs and obs[key] is not None:
                 return int(obs[key])
-        
+
         usage = None
         if hasattr(obs, "usage"):
             usage = getattr(obs, "usage")
@@ -292,7 +292,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             total = usage.get("total")
             if total is not None:
                 return int(total)
-        
+
         usage_details = None
         if hasattr(obs, "usageDetails"):
             usage_details = getattr(obs, "usageDetails")
@@ -302,7 +302,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             total = usage_details.get("total")
             if total is not None:
                 return int(total)
-        
+
         prompt_tokens = 0
         completion_tokens = 0
         if hasattr(obs, "promptTokens"):
@@ -315,7 +315,7 @@ class AnalyzePerformanceTool(BaseLangfuseTool):
             completion_tokens = obs.get("completionTokens") or 0
         if prompt_tokens or completion_tokens:
             return int(prompt_tokens) + int(completion_tokens)
-        
+
         return 0
 
     @staticmethod

@@ -33,18 +33,18 @@ function analyze(topic, depth="detailed", focus=null) {
     "detailed": "Explore major aspects with supporting evidence.",
     "comprehensive": "Conduct an exhaustive analysis with nuanced considerations."
   };
-  
-  let focusInstruction = focus ? 
-    `Focus particularly on aspects related to ${focus}.` : 
+
+  let focusInstruction = focus ?
+    `Focus particularly on aspects related to ${focus}.` :
     "Cover all relevant aspects evenly.";
-  
+
   return `
     Task: Analyze ${topic} at a ${depth} level.
-    
+
     Instructions:
     ${depthInstructions[depth]}
     ${focusInstruction}
-    
+
     Please structure your analysis with clear headings and bullet points where appropriate.
   `;
 }
@@ -73,11 +73,11 @@ function solve_problem(problem, show_work=true, difficulty=null) {
   // Detect problem type and difficulty if not specified
   let problemType = detect_problem_type(problem);
   let problemDifficulty = difficulty || estimate_difficulty(problem);
-  
+
   // Determine appropriate approach based on problem type
   let approach;
   let steps;
-  
+
   if (problemType === "mathematical") {
     approach = "mathematical";
     steps = [
@@ -103,7 +103,7 @@ function solve_problem(problem, show_work=true, difficulty=null) {
       "Verify the solution addresses the original problem"
     ];
   }
-  
+
   // Adjust detail level based on difficulty
   let detailLevel;
   if (problemDifficulty === "basic") {
@@ -113,18 +113,18 @@ function solve_problem(problem, show_work=true, difficulty=null) {
   } else {
     detailLevel = "Provide detailed explanations and consider edge cases or alternative approaches.";
   }
-  
+
   // Construct the prompt
   return `
     Task: Solve the following ${approach} problem.
-    
+
     Problem: ${problem}
-    
+
     ${show_work ? "Show your work using these steps:" : "Provide the solution:"}
     ${show_work ? steps.map((step, i) => `${i+1}. ${step}`).join("\n") : ""}
-    
+
     ${detailLevel}
-    
+
     ${show_work ? "Conclude with a clear final answer." : ""}
   `;
 }
@@ -171,34 +171,34 @@ function multi_perspective_analysis(topic, perspectives=["economic", "social", "
   // Base prompt
   let prompt = `
     Task: Analyze ${topic} from multiple perspectives.
-    
+
     Instructions:
     Please provide a ${depth} analysis of ${topic} from each of the following perspectives.
   `;
-  
+
   // Add sections for each perspective
   for (let i = 0; i < perspectives.length; i++) {
     const perspective = perspectives[i];
     prompt += `
-    
+
     Perspective ${i+1}: ${perspective.charAt(0).toUpperCase() + perspective.slice(1)}
     - Analyze ${topic} through a ${perspective} lens
     - Identify key ${perspective} factors and implications
     - Consider important ${perspective} stakeholders and their interests
     `;
   }
-  
+
   // Add integration section
   prompt += `
-  
+
   Integration:
   After analyzing from these individual perspectives, synthesize the insights to provide a holistic understanding of ${topic}.
   Identify areas of alignment and tension between different perspectives.
-  
+
   Conclusion:
   Summarize the most significant insights from this multi-perspective analysis.
   `;
-  
+
   return prompt;
 }
 ```
@@ -228,17 +228,17 @@ Function composition enables building complex cognitive programs from simpler on
 function research_and_analyze(topic, research_depth="comprehensive", analysis_type="cause-effect") {
   // First, generate a research prompt
   const researchPrompt = research(topic, research_depth);
-  
+
   // Then, set up the analysis to use the research results
   return `
     First, conduct research on ${topic}:
-    
+
     ${researchPrompt}
-    
+
     After completing the research above, analyze your findings using this framework:
-    
+
     ${analyze(topic, "detailed", analysis_type)}
-    
+
     Finally, synthesize your research and analysis into a coherent conclusion that addresses the most significant aspects of ${topic}.
   `;
 }
@@ -250,16 +250,16 @@ function research(topic, depth="comprehensive") {
     "standard": "Research the main aspects of",
     "comprehensive": "Conduct in-depth research on all significant dimensions of"
   };
-  
+
   return `
     Task: ${depthInstructions[depth]} ${topic}.
-    
+
     Instructions:
     - Identify credible information sources
     - Extract relevant facts, statistics, and expert opinions
     - Organize findings by subtopic
     - Note areas of consensus and disagreement
-    
+
     Present your research in a structured format with clear headings and bullet points.
   `;
 }
@@ -271,16 +271,16 @@ function analyze(topic, depth="detailed", framework="general") {
     "compare-contrast": "Compare and contrast different perspectives on",
     "swot": "Conduct a SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis of"
   };
-  
+
   return `
     Task: ${frameworkInstructions[framework]} ${topic}.
-    
+
     Instructions:
     - Apply the ${framework} analytical framework
     - Support analysis with evidence from reliable sources
     - Consider multiple viewpoints and potential biases
     - Identify the most significant insights
-    
+
     Structure your analysis logically with clear sections and supporting points.
   `;
 }
@@ -313,10 +313,10 @@ function problem_solver(problem, options = {}) {
     approach: "auto-detect", // Can be "auto-detect", "mathematical", "logical", "conceptual"
     detail_level: "standard" // Can be "brief", "standard", "detailed"
   };
-  
+
   // Merge defaults with provided options
   const settings = {...defaults, ...options};
-  
+
   // Determine approach if auto-detect
   let approach = settings.approach;
   if (approach === "auto-detect") {
@@ -329,7 +329,7 @@ function problem_solver(problem, options = {}) {
       approach = "conceptual";
     }
   }
-  
+
   // Build approach-specific instructions
   let approachInstructions;
   if (approach === "mathematical") {
@@ -357,7 +357,7 @@ function problem_solver(problem, options = {}) {
       4. Synthesize insights to form a comprehensive solution
     `;
   }
-  
+
   // Adjust detail level
   let detailInstructions;
   if (settings.detail_level === "brief") {
@@ -367,7 +367,7 @@ function problem_solver(problem, options = {}) {
   } else {
     detailInstructions = "Provide a thorough explanation with detailed reasoning at each step.";
   }
-  
+
   // Build verification section if requested
   let verificationSection = "";
   if (settings.verify_solution) {
@@ -380,21 +380,21 @@ function problem_solver(problem, options = {}) {
       4. Confirming that all constraints and conditions are satisfied
     `;
   }
-  
+
   // Construct the final prompt
   return `
     Task: Solve the following problem.
-    
+
     Problem: ${problem}
-    
+
     ${settings.show_work ? "Please show your complete work and reasoning process." : "Provide your solution."}
-    
+
     ${approachInstructions}
-    
+
     ${detailInstructions}
-    
+
     ${verificationSection}
-    
+
     Conclusion:
     End with a clear, direct answer to the original problem.
   `;
@@ -434,21 +434,21 @@ function step_by_step_reasoning(problem, steps = null, options = {}) {
     examples: false,    // Include examples in the instructions
     difficulty: "auto"  // Can be "auto", "basic", "intermediate", "advanced"
   };
-  
+
   // Merge defaults with provided options
   const settings = {...defaults, ...options};
-  
+
   // Determine difficulty if auto
   let difficulty = settings.difficulty;
   if (difficulty === "auto") {
     // Simple heuristic (would be more sophisticated in practice)
     const wordCount = problem.split(" ").length;
     const complexityIndicators = ["complex", "challenging", "difficult", "advanced"];
-    
-    const hasComplexityMarkers = complexityIndicators.some(indicator => 
+
+    const hasComplexityMarkers = complexityIndicators.some(indicator =>
       problem.toLowerCase().includes(indicator)
     );
-    
+
     if (hasComplexityMarkers || wordCount > 50) {
       difficulty = "advanced";
     } else if (wordCount > 25) {
@@ -457,23 +457,23 @@ function step_by_step_reasoning(problem, steps = null, options = {}) {
       difficulty = "basic";
     }
   }
-  
+
   // Default steps if not provided
   if (!steps) {
     steps = [
-      { id: "understand", name: "Understand the Problem", 
+      { id: "understand", name: "Understand the Problem",
         description: "Carefully read the problem and identify what is being asked." },
-      { id: "analyze", name: "Analyze Given Information", 
+      { id: "analyze", name: "Analyze Given Information",
         description: "Identify all relevant information provided in the problem." },
-      { id: "plan", name: "Plan a Solution Approach", 
+      { id: "plan", name: "Plan a Solution Approach",
         description: "Determine a strategy or method to solve the problem." },
-      { id: "execute", name: "Execute the Plan", 
+      { id: "execute", name: "Execute the Plan",
         description: "Carry out your solution plan step by step." },
-      { id: "verify", name: "Verify the Solution", 
+      { id: "verify", name: "Verify the Solution",
         description: "Check that your answer correctly solves the original problem." }
     ];
   }
-  
+
   // Adjust explanation detail based on difficulty
   let explanationPrompt;
   if (difficulty === "basic") {
@@ -483,35 +483,35 @@ function step_by_step_reasoning(problem, steps = null, options = {}) {
   } else {
     explanationPrompt = "Include detailed explanations that address nuances and potential alternative approaches.";
   }
-  
+
   // Build examples section if requested
   let examplesSection = "";
   if (settings.examples) {
     examplesSection = `
       Example of Step-by-Step Reasoning:
-      
+
       Problem: What is the area of a rectangle with length 8m and width 5m?
-      
+
       Step 1: Understand the Problem
       I need to find the area of a rectangle with given dimensions.
-      
+
       Step 2: Analyze Given Information
       - Length = 8 meters
       - Width = 5 meters
-      
+
       Step 3: Plan a Solution Approach
       I'll use the formula: Area of rectangle = length × width
-      
+
       Step 4: Execute the Plan
       Area = 8m × 5m = 40 square meters
-      
+
       Step 5: Verify the Solution
       I can verify by dividing the area by the width: 40 ÷ 5 = 8, which equals the length.
-      
+
       Final Answer: The area of the rectangle is 40 square meters.
     `;
   }
-  
+
   // Build the steps instructions
   let stepsInstructions = "";
   steps.forEach((step, index) => {
@@ -521,21 +521,21 @@ function step_by_step_reasoning(problem, steps = null, options = {}) {
       ${settings.explanations ? `For this step: ${explanationPrompt}` : ""}
     `;
   });
-  
+
   // Construct the final prompt
   return `
     Task: Solve the following problem using a step-by-step reasoning approach.
-    
+
     Problem: ${problem}
-    
+
     Instructions:
     Break down your solution into the following steps, showing your work clearly at each stage.
-    
+
     ${stepsInstructions}
-    
+
     Conclusion:
     After completing all steps, provide your final answer clearly.
-    
+
     ${examplesSection}
   `;
 }
@@ -552,15 +552,15 @@ const basicPrompt = step_by_step_reasoning(
 
 // Custom steps for a specific reasoning approach
 const customSteps = [
-  { id: "identify", name: "Identify Variables", 
+  { id: "identify", name: "Identify Variables",
     description: "List all variables in the problem." },
-  { id: "formula", name: "Select Formula", 
+  { id: "formula", name: "Select Formula",
     description: "Choose the appropriate formula for this problem." },
-  { id: "substitute", name: "Substitute Values", 
+  { id: "substitute", name: "Substitute Values",
     description: "Plug the known values into the formula." },
-  { id: "solve", name: "Solve Equation", 
+  { id: "solve", name: "Solve Equation",
     description: "Solve for the unknown variable." },
-  { id: "check", name: "Check Solution", 
+  { id: "check", name: "Check Solution",
     description: "Verify your answer makes sense." }
 ];
 
@@ -584,13 +584,13 @@ function comparative_analysis(items, criteria = null, options = {}) {
     highlight_differences: true, // Emphasize key differences
     detail_level: "balanced" // Can be "brief", "balanced", "detailed"
   };
-  
+
   // Merge defaults with provided options
   const settings = {...defaults, ...options};
-  
+
   // Ensure items is an array
   const itemsList = Array.isArray(items) ? items : [items];
-  
+
   // Generate default criteria if none provided
   if (!criteria) {
     criteria = [
@@ -600,10 +600,10 @@ function comparative_analysis(items, criteria = null, options = {}) {
       { id: "applications", name: "Applications" }
     ];
   }
-  
+
   // Format items for display
   const itemsDisplay = itemsList.join(", ");
-  
+
   // Build criteria section
   let criteriaSection = "";
   criteria.forEach((criterion, index) => {
@@ -611,47 +611,47 @@ function comparative_analysis(items, criteria = null, options = {}) {
       ${index + 1}. ${criterion.name}${criterion.description ? `: ${criterion.description}` : ""}
     `;
   });
-  
+
   // Build format-specific instructions
   let formatInstructions;
   if (settings.format === "table") {
     formatInstructions = `
       Present your analysis in a table format:
-      
+
       | Criteria | ${itemsList.map(item => item).join(" | ")} |
       |----------|${itemsList.map(() => "---------").join("|")}|
       ${criteria.map(c => `| ${c.name} | ${itemsList.map(() => "?").join(" | ")} |`).join("\n")}
-      
+
       For each cell, provide a concise analysis of how the item performs on that criterion.
     `;
   } else if (settings.format === "pros-cons") {
     formatInstructions = `
       For each item, provide a structured pros and cons analysis:
-      
+
       ${itemsList.map(item => `
       ## ${item}
-      
+
       Pros:
       - [Pro point 1]
       - [Pro point 2]
-      
+
       Cons:
       - [Con point 1]
       - [Con point 2]
       `).join("\n")}
-      
+
       Ensure that your pros and cons directly address the criteria.
     `;
   } else {
     formatInstructions = `
       Present your analysis in a narrative format:
-      
+
       For each criterion, discuss how all items compare, highlighting similarities and differences.
-      
+
       ${criteria.map(c => `## ${c.name}\n[Comparative analysis for this criterion]`).join("\n\n")}
     `;
   }
-  
+
   // Build detail level instructions
   let detailInstructions;
   if (settings.detail_level === "brief") {
@@ -661,7 +661,7 @@ function comparative_analysis(items, criteria = null, options = {}) {
   } else {
     detailInstructions = "Include comprehensive details for each criterion, exploring nuances and edge cases.";
   }
-  
+
   // Build differences section if requested
   let differencesSection = "";
   if (settings.highlight_differences) {
@@ -671,7 +671,7 @@ function comparative_analysis(items, criteria = null, options = {}) {
       Focus on differences that would be most relevant for decision-making purposes.
     `;
   }
-  
+
   // Build conclusion section if requested
   let conclusionSection = "";
   if (settings.conclusion) {
@@ -682,21 +682,21 @@ function comparative_analysis(items, criteria = null, options = {}) {
       Instead, clarify the contexts or scenarios in which each item might be preferred.
     `;
   }
-  
+
   // Construct the final prompt
   return `
     Task: Conduct a comparative analysis of the following items: ${itemsDisplay}.
-    
+
     Instructions:
     Compare these items across the following criteria:
     ${criteriaSection}
-    
+
     ${detailInstructions}
-    
+
     ${formatInstructions}
-    
+
     ${differencesSection}
-    
+
     ${conclusionSection}
   `;
 }
@@ -738,11 +738,11 @@ const cognitivePrograms = {
   problemSolver: function(problem, options = {}) {
     // Implementation as shown above
   },
-  
+
   stepByStepReasoning: function(problem, steps = null, options = {}) {
     // Implementation as shown above
   },
-  
+
   // Add more programs as needed
 };
 
@@ -764,18 +764,18 @@ class CognitivePrograms:
             "approach": "auto-detect",
             "detail_level": "standard"
         }
-        
+
         # Merge defaults with provided options
         settings = {**defaults, **options}
-        
+
         # Rest of implementation...
         return prompt
-    
+
     @staticmethod
     def step_by_step_reasoning(problem, steps=None, **options):
         # Implementation converted to Python
         pass
-    
+
     # Add more programs as needed
 
 # Usage

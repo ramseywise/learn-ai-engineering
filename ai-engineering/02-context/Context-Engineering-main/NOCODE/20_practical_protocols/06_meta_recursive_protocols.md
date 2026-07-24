@@ -1128,8 +1128,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "analytical rigor", 
-            "creative insight", 
+            "analytical rigor",
+            "creative insight",
             "multi-perspective integration"
         ],
         boundaries: {

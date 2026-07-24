@@ -1,7 +1,7 @@
 # Emergence Signatures: Detecting and Harnessing Spontaneous Pattern Formation
 
 > "Out of nothing I have created a strange new universe."
-> 
+>
 > — János Bolyai, mathematician who discovered non-Euclidean geometry
 
 ## Welcome to the World of Emergence Signatures
@@ -271,7 +271,7 @@ Each node updates its state based on its neighbors using this rule:
 - If more than 50% of neighbors are in state 1, switch to state 1
 - Otherwise, switch to state 0
 
-Start with 10% of nodes randomly in state 1, then increase to 30%, then 45%, 
+Start with 10% of nodes randomly in state 1, then increase to 30%, then 45%,
 then 50%, then 55%.
 
 For each starting condition:
@@ -615,7 +615,7 @@ Pattern recognition is essential because emergence often manifests as coherent p
 Scale analysis is powerful because emergence often manifests differently at different scales. Some patterns only become visible when viewed at the right scale, while others persist across multiple scales (scale invariance). By examining how patterns change across scales, you can identify emergent properties that would be invisible from any single perspective.
 
 
-## Information Theoretic Analysis: The Compression Lens 
+## Information Theoretic Analysis: The Compression Lens
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -655,7 +655,7 @@ Scale analysis is powerful because emergence often manifests differently at diff
 - Measuring predictive power increases as emergence occurs
 - Detecting information transfer across concept boundaries
 
-Information theoretic analysis provides a quantitative approach to emergence detection. When components interact in ways that create emergent patterns, the information content of the system changes in measurable ways. Specifically, the entropy of the whole system (H(S)) becomes less than the sum of the entropies of the individual components (H(C₁,C₂,C₃)). 
+Information theoretic analysis provides a quantitative approach to emergence detection. When components interact in ways that create emergent patterns, the information content of the system changes in measurable ways. Specifically, the entropy of the whole system (H(S)) becomes less than the sum of the entropies of the individual components (H(C₁,C₂,C₃)).
 
 This compression effect is a hallmark of emergence—the system becomes more ordered and structured than its components, allowing for more efficient representation. For example, once you recognize a pattern, you can describe a complex system more concisely than you could by listing all its components.
 
@@ -700,7 +700,7 @@ This compression effect is a hallmark of emergence—the system becomes more ord
 - Identifying novel causal relationships in integrated information
 - Detecting emergence through causal decoupling
 
-Causal analysis is particularly powerful for emergence detection because emergence often creates new causal relationships that don't exist at the component level. This includes "downward causation," where higher-level patterns constrain and influence lower-level components—something that would be impossible in a purely reductionist view. 
+Causal analysis is particularly powerful for emergence detection because emergence often creates new causal relationships that don't exist at the component level. This includes "downward causation," where higher-level patterns constrain and influence lower-level components—something that would be impossible in a purely reductionist view.
 
 For example, in a knowledge system, emergent conceptual frameworks can causally constrain which interpretations of data are considered valid—a causal influence that doesn't exist at the level of individual facts.
 
@@ -745,7 +745,7 @@ For example, in a knowledge system, emergent conceptual frameworks can causally 
 - Detecting emergent stability in knowledge frameworks
 - Identifying tipping points in collective understanding
 
-Dynamical analysis examines how system behavior evolves over time, revealing emergent properties through characteristic patterns in state space. Of particular importance are attractors—regions of state space that the system naturally gravitates toward, regardless of starting conditions. 
+Dynamical analysis examines how system behavior evolves over time, revealing emergent properties through characteristic patterns in state space. Of particular importance are attractors—regions of state space that the system naturally gravitates toward, regardless of starting conditions.
 
 These attractors often represent emergent stable states that aren't explicitly designed into the system. For example, in a knowledge system, certain conceptual frameworks might function as attractors, naturally organizing information into coherent structures even without explicit design.
 

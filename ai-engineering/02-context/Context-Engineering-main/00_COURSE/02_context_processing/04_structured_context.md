@@ -2,7 +2,7 @@
 ## Graph and Relational Data Integration for Context Engineering
 
 > **Module 02.4** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Knowledge Graph-Enhanced Context Systems
 
 ---
@@ -67,10 +67,10 @@ Rich Knowledge Graph:
       ├─ skills → [Programming, AI]
       └─ location → Mountain_View
 
-    Google (Company)  
+    Google (Company)
       ├─ is_a → Tech_Company
       ├─ founded → 1998
-      ├─ headquarters → Mountain_View  
+      ├─ headquarters → Mountain_View
       ├─ develops → [Search, Android, AI]
       ├─ employees → 150000
       └─ competes_with → [Apple, Microsoft]
@@ -113,7 +113,7 @@ Rich Knowledge Graph:
 │                                                                 │
 │  Cross-Level Connections:                                       │
 │  • Industry trends influence company strategy                   │
-│  • Company resources enable individual projects               │  
+│  • Company resources enable individual projects               │
 │  • Individual expertise shapes project approaches             │
 │  • Project outcomes affect company positioning                │
 │                                                                 │
@@ -168,7 +168,7 @@ Rich Knowledge Graph:
 Knowledge Graph: G = (E, R, T)
 Where:
 - E = set of entities {e₁, e₂, ..., eₙ}
-- R = set of relation types {r₁, r₂, ..., rₖ}  
+- R = set of relation types {r₁, r₂, ..., rₖ}
 - T = set of triples {(eᵢ, rⱼ, eₖ)} representing facts
 
 Context Assembly from Graph:
@@ -182,7 +182,7 @@ Where:
 ```
 **Intuitive Explanation**: A knowledge graph is like a map of information where entities are locations and relationships are paths between them. Context assembly becomes a navigation problem - finding the most relevant paths from query to answer through the knowledge network.
 
-### Mathematical Foundations 
+### Mathematical Foundations
 
 ### Hierarchical Information Encoding
 ```
@@ -441,37 +441,37 @@ class ReasoningPath:
 
 class KnowledgeGraph:
     """Core knowledge graph representation and operations"""
-    
+
     def __init__(self):
         self.entities: Dict[str, Entity] = {}
         self.relationships: List[Relationship] = []
         self.graph = nx.MultiDiGraph()
         self.entity_types: Dict[str, Set[str]] = defaultdict(set)
         self.relation_index: Dict[RelationType, List[Relationship]] = defaultdict(list)
-        
+
     def add_entity(self, entity: Entity):
         """Add entity to knowledge graph"""
         self.entities[entity.id] = entity
         self.graph.add_node(entity.id, **entity.properties)
         self.entity_types[entity.entity_type].add(entity.id)
-        
+
     def add_relationship(self, relationship: Relationship):
         """Add relationship to knowledge graph"""
         self.relationships.append(relationship)
         self.graph.add_edge(
-            relationship.subject, 
+            relationship.subject,
             relationship.object,
             predicate=relationship.predicate,
             weight=relationship.weight,
             confidence=relationship.confidence
         )
         self.relation_index[relationship.predicate].append(relationship)
-    
+
     def get_neighbors(self, entity_id: str, relation_type: Optional[RelationType] = None,
                      direction: str = "outgoing") -> List[Tuple[str, Relationship]]:
         """Get neighboring entities connected by specific relationship type"""
         neighbors = []
-        
+
         if direction in ["outgoing", "both"]:
             for target in self.graph.successors(entity_id):
                 edges = self.graph[entity_id][target]
@@ -485,7 +485,7 @@ class KnowledgeGraph:
                             confidence=edge_data['confidence']
                         )
                         neighbors.append((target, rel))
-        
+
         if direction in ["incoming", "both"]:
             for source in self.graph.predecessors(entity_id):
                 edges = self.graph[source][entity_id]
@@ -499,49 +499,49 @@ class KnowledgeGraph:
                             confidence=edge_data['confidence']
                         )
                         neighbors.append((source, rel))
-        
+
         return neighbors
-    
-    def find_paths(self, start_entity: str, end_entity: str, 
+
+    def find_paths(self, start_entity: str, end_entity: str,
                    max_depth: int = 3) -> List[ReasoningPath]:
         """Find reasoning paths between two entities"""
         paths = []
-        
+
         try:
             # Find all simple paths up to max_depth
             nx_paths = nx.all_simple_paths(self.graph, start_entity, end_entity, cutoff=max_depth)
-            
+
             for path in nx_paths:
                 reasoning_path = self._convert_to_reasoning_path(path)
                 if reasoning_path:
                     paths.append(reasoning_path)
-                    
+
         except nx.NetworkXNoPath:
             pass  # No path exists
-        
+
         # Sort by path score
         paths.sort(key=lambda p: p.path_score, reverse=True)
         return paths[:10]  # Return top 10 paths
-    
+
     def _convert_to_reasoning_path(self, node_path: List[str]) -> Optional[ReasoningPath]:
         """Convert networkx path to reasoning path"""
         if len(node_path) < 2:
             return None
-            
+
         relationships = []
         path_score = 1.0
-        
+
         for i in range(len(node_path) - 1):
             source, target = node_path[i], node_path[i + 1]
-            
+
             # Find the relationship between these nodes
             edges = self.graph[source][target]
             if not edges:
                 return None
-            
+
             # Take the edge with highest confidence
             best_edge = max(edges.values(), key=lambda e: e['confidence'])
-            
+
             rel = Relationship(
                 subject=source,
                 predicate=best_edge['predicate'],
@@ -550,10 +550,10 @@ class KnowledgeGraph:
                 confidence=best_edge['confidence']
             )
             relationships.append(rel)
-            
+
             # Update path score based on relationship confidence
             path_score *= rel.confidence
-        
+
         return ReasoningPath(
             entities=node_path,
             relationships=relationships,
@@ -561,74 +561,74 @@ class KnowledgeGraph:
             reasoning_type="multi_hop",
             evidence_strength=path_score
         )
-    
+
     def get_entity_context(self, entity_id: str, depth: int = 2) -> Dict[str, Any]:
         """Get rich context for an entity including neighbors at specified depth"""
         if entity_id not in self.entities:
             return {}
-        
+
         context = {
             'entity': self.entities[entity_id],
             'immediate_neighbors': {},
             'extended_context': {},
             'hierarchical_context': {}
         }
-        
+
         # Get immediate neighbors (depth 1)
         immediate = self.get_neighbors(entity_id, direction="both")
         context['immediate_neighbors'] = {
             'outgoing': [(target, rel) for target, rel in immediate if rel.subject == entity_id],
             'incoming': [(source, rel) for source, rel in immediate if rel.object == entity_id]
         }
-        
+
         # Get extended context (depth 2+)
         if depth > 1:
             extended_entities = set()
             queue = deque([(entity_id, 0)])
             visited = {entity_id}
-            
+
             while queue:
                 current_entity, current_depth = queue.popleft()
-                
+
                 if current_depth >= depth:
                     continue
-                    
+
                 neighbors = self.get_neighbors(current_entity, direction="both")
                 for neighbor_id, rel in neighbors:
                     if neighbor_id not in visited:
                         extended_entities.add(neighbor_id)
                         visited.add(neighbor_id)
                         queue.append((neighbor_id, current_depth + 1))
-            
+
             context['extended_context'] = {
                 eid: self.entities[eid] for eid in extended_entities if eid in self.entities
             }
-        
+
         # Get hierarchical context (is_a relationships)
         hierarchical = self._get_hierarchical_context(entity_id)
         context['hierarchical_context'] = hierarchical
-        
+
         return context
-    
+
     def _get_hierarchical_context(self, entity_id: str) -> Dict[str, List[str]]:
         """Get hierarchical context (parents and children in taxonomy)"""
         parents = []
         children = []
-        
+
         # Find parents (things this entity is_a instance of)
         parent_rels = self.get_neighbors(entity_id, RelationType.IS_A, "outgoing")
         parents.extend([target for target, _ in parent_rels])
-        
+
         instance_rels = self.get_neighbors(entity_id, RelationType.INSTANCE_OF, "outgoing")
         parents.extend([target for target, _ in instance_rels])
-        
+
         # Find children (things that are instances of this entity)
         child_rels = self.get_neighbors(entity_id, RelationType.IS_A, "incoming")
         children.extend([source for source, _ in child_rels])
-        
+
         instance_child_rels = self.get_neighbors(entity_id, RelationType.INSTANCE_OF, "incoming")
         children.extend([source for source, _ in instance_child_rels])
-        
+
         return {
             'parents': parents,
             'children': children
@@ -636,7 +636,7 @@ class KnowledgeGraph:
 
 class StructuredContextAssembler:
     """Assembles context from structured knowledge representations"""
-    
+
     def __init__(self, knowledge_graph: KnowledgeGraph):
         self.kg = knowledge_graph
         self.reasoning_strategies = {
@@ -645,41 +645,41 @@ class StructuredContextAssembler:
             'abductive': self._abductive_reasoning,
             'analogical': self._analogical_reasoning
         }
-        
-    def assemble_context(self, query: str, entities: List[str], 
+
+    def assemble_context(self, query: str, entities: List[str],
                         max_context_size: int = 2000,
                         reasoning_strategy: str = "deductive") -> Dict[str, Any]:
         """Main context assembly process"""
-        
+
         print(f"Assembling structured context for query: {query}")
         print(f"Starting entities: {entities}")
-        
+
         # Extract key information from query
         query_analysis = self._analyze_query(query)
-        
+
         # Collect relevant subgraphs around seed entities
         relevant_subgraphs = []
         for entity_id in entities:
             if entity_id in self.kg.entities:
                 subgraph = self._extract_relevant_subgraph(entity_id, query_analysis, depth=3)
                 relevant_subgraphs.append(subgraph)
-        
+
         # Apply reasoning strategy
         reasoning_results = self.reasoning_strategies[reasoning_strategy](
             query_analysis, relevant_subgraphs
         )
-        
+
         # Assemble final context
         assembled_context = self._integrate_reasoning_results(
             query, query_analysis, reasoning_results, max_context_size
         )
-        
+
         return assembled_context
-    
+
     def _analyze_query(self, query: str) -> Dict[str, Any]:
         """Analyze query to understand information needs"""
         query_lower = query.lower()
-        
+
         analysis = {
             'query_text': query,
             'query_type': 'factual',  # Default
@@ -688,7 +688,7 @@ class StructuredContextAssembler:
             'reasoning_depth': 'shallow',
             'answer_type': 'descriptive'
         }
-        
+
         # Determine query type
         if any(word in query_lower for word in ['why', 'because', 'cause', 'reason']):
             analysis['query_type'] = 'causal'
@@ -700,82 +700,82 @@ class StructuredContextAssembler:
             analysis['reasoning_depth'] = 'medium'
         elif any(word in query_lower for word in ['what is', 'define', 'definition']):
             analysis['query_type'] = 'definitional'
-        
+
         # Extract mentioned entities (simplified)
         for entity_id, entity in self.kg.entities.items():
             if entity.name.lower() in query_lower:
                 analysis['entities_mentioned'].append(entity_id)
-        
+
         # Infer required relationships
         if analysis['query_type'] == 'causal':
             analysis['relationships_implied'].append(RelationType.CAUSES)
         elif analysis['query_type'] == 'comparative':
             analysis['relationships_implied'].append(RelationType.SIMILAR_TO)
-        
+
         return analysis
-    
+
     def _extract_relevant_subgraph(self, start_entity: str, query_analysis: Dict,
                                  depth: int = 3) -> Dict[str, Any]:
         """Extract relevant subgraph around an entity"""
-        
+
         # Start with entity context
         entity_context = self.kg.get_entity_context(start_entity, depth=depth)
-        
+
         # Score relevance of different parts
         relevance_scores = self._score_context_relevance(entity_context, query_analysis)
-        
+
         # Filter based on relevance
         filtered_context = self._filter_by_relevance(entity_context, relevance_scores, threshold=0.3)
-        
+
         return {
             'root_entity': start_entity,
             'context': filtered_context,
             'relevance_scores': relevance_scores,
             'subgraph_summary': self._summarize_subgraph(filtered_context)
         }
-    
+
     def _score_context_relevance(self, context: Dict, query_analysis: Dict) -> Dict[str, float]:
         """Score relevance of different context elements to query"""
         scores = {}
-        
+
         # Score immediate neighbors
         for direction in ['outgoing', 'incoming']:
             for target_id, rel in context['immediate_neighbors'][direction]:
                 score = 0.5  # Base score
-                
+
                 # Boost score if relationship type is implied by query
                 if rel.predicate in query_analysis['relationships_implied']:
                     score += 0.3
-                
+
                 # Boost score if target entity is mentioned in query
                 if target_id in query_analysis['entities_mentioned']:
                     score += 0.4
-                
+
                 scores[f"{direction}_{target_id}"] = score
-        
+
         # Score extended context entities
         for entity_id, entity in context['extended_context'].items():
             score = 0.3  # Lower base score for extended context
-            
+
             if entity_id in query_analysis['entities_mentioned']:
                 score += 0.4
-            
+
             # Boost based on entity type relevance
             if entity.entity_type in query_analysis.get('relevant_types', []):
                 score += 0.2
-            
+
             scores[f"extended_{entity_id}"] = score
-        
+
         # Score hierarchical context
         for parent_id in context['hierarchical_context']['parents']:
             scores[f"parent_{parent_id}"] = 0.4
-        
+
         for child_id in context['hierarchical_context']['children']:
             scores[f"child_{child_id}"] = 0.3
-        
+
         return scores
-    
-    def _filter_by_relevance(self, context: Dict, relevance_scores: Dict, 
+
+    def _filter_by_relevance(self, context: Dict, relevance_scores: Dict,
                            threshold: float) -> Dict[str, Any]:
         """Filter context based on relevance scores"""
         filtered = {
@@ -784,90 +784,90 @@ class StructuredContextAssembler:
             'extended_context': {},
             'hierarchical_context': {'parents': [], 'children': []}
         }
-        
+
         # Filter immediate neighbors
         for direction in ['outgoing', 'incoming']:
             for target_id, rel in context['immediate_neighbors'][direction]:
                 score_key = f"{direction}_{target_id}"
                 if relevance_scores.get(score_key, 0) >= threshold:
                     filtered['immediate_neighbors'][direction].append((target_id, rel))
-        
+
         # Filter extended context
         for entity_id, entity in context['extended_context'].items():
             score_key = f"extended_{entity_id}"
             if relevance_scores.get(score_key, 0) >= threshold:
                 filtered['extended_context'][entity_id] = entity
-        
+
         # Filter hierarchical context
         for parent_id in context['hierarchical_context']['parents']:
             if relevance_scores.get(f"parent_{parent_id}", 0) >= threshold:
                 filtered['hierarchical_context']['parents'].append(parent_id)
-        
+
         for child_id in context['hierarchical_context']['children']:
             if relevance_scores.get(f"child_{child_id}", 0) >= threshold:
                 filtered['hierarchical_context']['children'].append(child_id)
-        
+
         return filtered
-    
+
     def _summarize_subgraph(self, context: Dict) -> str:
         """Create summary of subgraph structure"""
         entity = context['entity']
-        
+
         summary_parts = [f"Entity: {entity.name} ({entity.entity_type})"]
-        
+
         # Count connections
         outgoing_count = len(context['immediate_neighbors']['outgoing'])
         incoming_count = len(context['immediate_neighbors']['incoming'])
         extended_count = len(context['extended_context'])
-        
+
         summary_parts.append(f"Direct connections: {outgoing_count + incoming_count}")
         summary_parts.append(f"Extended network: {extended_count} entities")
-        
+
         # Hierarchical position
         parent_count = len(context['hierarchical_context']['parents'])
         child_count = len(context['hierarchical_context']['children'])
-        
+
         if parent_count > 0 or child_count > 0:
             summary_parts.append(f"Hierarchical: {parent_count} parents, {child_count} children")
-        
+
         return "; ".join(summary_parts)
-    
+
     def _deductive_reasoning(self, query_analysis: Dict, subgraphs: List[Dict]) -> Dict[str, Any]:
         """Apply deductive reasoning to extract logical conclusions"""
-        
+
         reasoning_chains = []
-        
+
         for subgraph in subgraphs:
             context = subgraph['context']
             root_entity = subgraph['root_entity']
-            
+
             # Find logical inference chains
             chains = self._find_inference_chains(context, query_analysis)
             reasoning_chains.extend(chains)
-        
+
         # Rank reasoning chains by strength
         reasoning_chains.sort(key=lambda c: c['confidence'], reverse=True)
-        
+
         return {
             'reasoning_type': 'deductive',
             'chains': reasoning_chains[:5],  # Top 5 chains
             'conclusions': [chain['conclusion'] for chain in reasoning_chains[:3]],
             'confidence': np.mean([chain['confidence'] for chain in reasoning_chains[:3]]) if reasoning_chains else 0
         }
-    
+
     def _find_inference_chains(self, context: Dict, query_analysis: Dict) -> List[Dict]:
         """Find logical inference chains in context"""
         chains = []
-        
+
         # Simple transitivity chains
         entity = context['entity']
-        
+
         # For each outgoing relationship, see if we can chain it
         for target_id, rel1 in context['immediate_neighbors']['outgoing']:
             if target_id in context['extended_context']:
                 # Look for relationships from this target
                 target_context = self.kg.get_entity_context(target_id, depth=1)
-                
+
                 for final_target, rel2 in target_context['immediate_neighbors']['outgoing']:
                     # Check if this creates a meaningful chain
                     if self._is_valid_inference_chain(rel1, rel2):
@@ -878,9 +878,9 @@ class StructuredContextAssembler:
                             'confidence': rel1.confidence * rel2.confidence,
                             'chain_length': 2
                         })
-        
+
         return chains
-    
+
     def _is_valid_inference_chain(self, rel1: Relationship, rel2: Relationship) -> bool:
         """Check if two relationships can form valid inference chain"""
         # Valid transitivity patterns
@@ -890,37 +890,37 @@ class StructuredContextAssembler:
             (RelationType.LOCATED_IN, RelationType.LOCATED_IN),
             (RelationType.WORKS_AT, RelationType.LOCATED_IN)
         ]
-        
+
         return (rel1.predicate, rel2.predicate) in valid_patterns
-    
+
     def _inductive_reasoning(self, query_analysis: Dict, subgraphs: List[Dict]) -> Dict[str, Any]:
         """Apply inductive reasoning to identify patterns"""
-        
+
         patterns = []
-        
+
         # Look for recurring relationship patterns across subgraphs
         for subgraph in subgraphs:
             context = subgraph['context']
             local_patterns = self._identify_local_patterns(context)
             patterns.extend(local_patterns)
-        
+
         # Generalize patterns
         generalized_patterns = self._generalize_patterns(patterns)
-        
+
         return {
             'reasoning_type': 'inductive',
             'patterns': generalized_patterns,
             'generalizations': [p['generalization'] for p in generalized_patterns],
             'confidence': np.mean([p['support'] for p in generalized_patterns]) if generalized_patterns else 0
         }
-    
+
     def _identify_local_patterns(self, context: Dict) -> List[Dict]:
         """Identify patterns in local context"""
         patterns = []
-        
+
         # Pattern: entities of same type often have similar relationships
         entity_type = context['entity'].entity_type
-        
+
         for target_id, rel in context['immediate_neighbors']['outgoing']:
             if target_id in context['extended_context']:
                 target_entity = context['extended_context'][target_id]
@@ -931,19 +931,19 @@ class StructuredContextAssembler:
                     'target_type': target_entity.entity_type,
                     'instance': f"{entity_type} entities often have {rel.predicate.value} relationships with {target_entity.entity_type} entities"
                 })
-        
+
         return patterns
-    
+
     def _generalize_patterns(self, patterns: List[Dict]) -> List[Dict]:
         """Generalize patterns across multiple instances"""
         pattern_counts = defaultdict(list)
-        
+
         # Group similar patterns
         for pattern in patterns:
             if pattern['pattern_type'] == 'entity_type_relationship':
                 key = (pattern['entity_type'], pattern['relationship'], pattern['target_type'])
                 pattern_counts[key].append(pattern)
-        
+
         # Create generalizations
         generalizations = []
         for key, instances in pattern_counts.items():
@@ -955,24 +955,24 @@ class StructuredContextAssembler:
                     'instances': len(instances),
                     'confidence': min(1.0, len(instances) / 5)  # More instances = higher confidence
                 })
-        
+
         return generalizations
-    
+
     def _abductive_reasoning(self, query_analysis: Dict, subgraphs: List[Dict]) -> Dict[str, Any]:
         """Apply abductive reasoning to find best explanations"""
-        
+
         # Look for phenomena that need explanation
         phenomena = self._identify_phenomena(query_analysis, subgraphs)
-        
+
         # Generate candidate explanations
         explanations = []
         for phenomenon in phenomena:
             candidates = self._generate_explanations(phenomenon, subgraphs)
             explanations.extend(candidates)
-        
+
         # Rank explanations by plausibility
         explanations.sort(key=lambda e: e['plausibility'], reverse=True)
-        
+
         return {
             'reasoning_type': 'abductive',
             'phenomena': phenomena,
@@ -980,21 +980,21 @@ class StructuredContextAssembler:
             'best_explanation': explanations[0] if explanations else None,
             'confidence': explanations[0]['plausibility'] if explanations else 0
         }
-    
+
     def _identify_phenomena(self, query_analysis: Dict, subgraphs: List[Dict]) -> List[Dict]:
         """Identify phenomena that need explanation"""
         phenomena = []
-        
+
         # Look for unusual patterns or relationships
         for subgraph in subgraphs:
             context = subgraph['context']
-            
+
             # Phenomenon: entity has unusually many relationships of one type
             outgoing_rels = context['immediate_neighbors']['outgoing']
             rel_counts = defaultdict(int)
             for _, rel in outgoing_rels:
                 rel_counts[rel.predicate] += 1
-            
+
             for rel_type, count in rel_counts.items():
                 if count > 3:  # Arbitrary threshold
                     phenomena.append({
@@ -1004,28 +1004,28 @@ class StructuredContextAssembler:
                         'count': count,
                         'description': f"{context['entity'].name} has {count} {rel_type.value} relationships"
                     })
-        
+
         return phenomena
-    
+
     def _generate_explanations(self, phenomenon: Dict, subgraphs: List[Dict]) -> List[Dict]:
         """Generate candidate explanations for a phenomenon"""
         explanations = []
-        
+
         if phenomenon['type'] == 'high_relationship_count':
             entity_name = phenomenon['entity']
             rel_type = phenomenon['relationship_type']
             count = phenomenon['count']
-            
+
             # Find the entity in subgraphs
             entity_context = None
             for subgraph in subgraphs:
                 if subgraph['context']['entity'].name == entity_name:
                     entity_context = subgraph['context']
                     break
-            
+
             if entity_context:
                 entity_type = entity_context['entity'].entity_type
-                
+
                 # Generate explanations based on entity type
                 if entity_type == 'Company' and rel_type == RelationType.HAS_PROPERTY:
                     explanations.append({
@@ -1033,58 +1033,58 @@ class StructuredContextAssembler:
                         'plausibility': 0.8,
                         'evidence': f"Companies typically have many properties; {count} is reasonable for a major company"
                     })
-                
+
                 if entity_type == 'Person' and rel_type == RelationType.WORKS_AT:
                     explanations.append({
                         'explanation': f"{entity_name} may have had multiple jobs or consulting roles",
                         'plausibility': 0.6,
                         'evidence': f"People can work at multiple organizations throughout their career"
                     })
-        
+
         return explanations
-    
+
     def _analogical_reasoning(self, query_analysis: Dict, subgraphs: List[Dict]) -> Dict[str, Any]:
         """Apply analogical reasoning to find similar patterns"""
-        
+
         analogies = []
-        
+
         # Compare subgraphs to find structural similarities
         for i, subgraph1 in enumerate(subgraphs):
             for j, subgraph2 in enumerate(subgraphs[i+1:], i+1):
                 analogy = self._find_structural_analogy(subgraph1, subgraph2)
                 if analogy:
                     analogies.append(analogy)
-        
+
         return {
             'reasoning_type': 'analogical',
             'analogies': analogies,
             'insights': [a['insight'] for a in analogies],
             'confidence': np.mean([a['similarity'] for a in analogies]) if analogies else 0
         }
-    
+
     def _find_structural_analogy(self, subgraph1: Dict, subgraph2: Dict) -> Optional[Dict]:
         """Find structural analogy between two subgraphs"""
         context1 = subgraph1['context']
         context2 = subgraph2['context']
-        
+
         entity1 = context1['entity']
         entity2 = context2['entity']
-        
+
         # Skip if same entity
         if entity1.id == entity2.id:
             return None
-        
+
         # Compare relationship patterns
         rels1 = [rel.predicate for _, rel in context1['immediate_neighbors']['outgoing']]
         rels2 = [rel.predicate for _, rel in context2['immediate_neighbors']['outgoing']]
-        
+
         # Calculate similarity
         common_rels = set(rels1) & set(rels2)
         total_rels = set(rels1) | set(rels2)
-        
+
         if total_rels:
             similarity = len(common_rels) / len(total_rels)
-            
+
             if similarity > 0.5:  # Threshold for considering analogy
                 return {
                     'entity1': entity1.name,
@@ -1093,43 +1093,43 @@ class StructuredContextAssembler:
                     'common_patterns': list(common_rels),
                     'insight': f"{entity1.name} and {entity2.name} have similar relationship patterns, suggesting they may belong to the same category or serve similar roles"
                 }
-        
+
         return None
-    
+
     def _integrate_reasoning_results(self, query: str, query_analysis: Dict,
                                    reasoning_results: Dict, max_size: int) -> Dict[str, Any]:
         """Integrate reasoning results into final context"""
-        
+
         # Start with reasoning conclusions
         context_parts = []
-        
+
         if reasoning_results['reasoning_type'] == 'deductive':
             context_parts.append("Deductive reasoning conclusions:")
             for conclusion in reasoning_results['conclusions']:
                 context_parts.append(f"• {conclusion}")
-        
+
         elif reasoning_results['reasoning_type'] == 'inductive':
             context_parts.append("Identified patterns:")
             for generalization in reasoning_results['generalizations']:
                 context_parts.append(f"• {generalization}")
-        
+
         elif reasoning_results['reasoning_type'] == 'abductive':
             if reasoning_results['best_explanation']:
                 context_parts.append("Best explanation:")
                 context_parts.append(f"• {reasoning_results['best_explanation']['explanation']}")
-        
+
         elif reasoning_results['reasoning_type'] == 'analogical':
             context_parts.append("Analogical insights:")
             for insight in reasoning_results['insights']:
                 context_parts.append(f"• {insight}")
-        
+
         # Assemble final context
         integrated_context = "\n".join(context_parts)
-        
+
         # Truncate if too long
         if len(integrated_context) > max_size:
             integrated_context = integrated_context[:max_size] + "..."
-        
+
         return {
             'query': query,
             'reasoning_type': reasoning_results['reasoning_type'],
@@ -1143,7 +1143,7 @@ class StructuredContextAssembler:
 def create_sample_knowledge_graph() -> KnowledgeGraph:
     """Create sample knowledge graph for demonstration"""
     kg = KnowledgeGraph()
-    
+
     # Add entities
     entities = [
         Entity("alice", "Alice", "Person", {"age": 30, "location": "San Francisco"}),
@@ -1154,10 +1154,10 @@ def create_sample_knowledge_graph() -> KnowledgeGraph:
         Entity("python", "Python", "Programming Language", {"type": "interpreted"}),
         Entity("san_francisco", "San Francisco", "City", {"state": "California"})
     ]
-    
+
     for entity in entities:
         kg.add_entity(entity)
-    
+
     # Add relationships
     relationships = [
         Relationship("alice", RelationType.WORKS_AT, "google", weight=1.0, confidence=0.95),
@@ -1169,46 +1169,46 @@ def create_sample_knowledge_graph() -> KnowledgeGraph:
         Relationship("machine_learning", RelationType.ENABLES, "python", weight=0.7, confidence=0.7),
         Relationship("tech_company", RelationType.HAS_PROPERTY, "machine_learning", weight=0.6, confidence=0.6)
     ]
-    
+
     for rel in relationships:
         kg.add_relationship(rel)
-    
+
     return kg
 
 def demonstrate_structured_context():
     """Demonstrate structured context processing"""
     print("Structured Context Processing Demonstration")
     print("=" * 50)
-    
+
     # Create knowledge graph
     kg = create_sample_knowledge_graph()
-    
+
     print(f"Knowledge Graph created with {len(kg.entities)} entities and {len(kg.relationships)} relationships")
-    
+
     # Create context assembler
     assembler = StructuredContextAssembler(kg)
-    
+
     # Test queries
     test_queries = [
         ("What can you tell me about Alice?", ["alice"]),
         ("How is Google related to technology?", ["google", "tech_company"]),
         ("What is the connection between Alice and machine learning?", ["alice", "machine_learning"])
     ]
-    
+
     for query, seed_entities in test_queries:
         print(f"\nQuery: {query}")
         print(f"Seed entities: {seed_entities}")
         print("-" * 40)
-        
+
         # Test different reasoning strategies
         for strategy in ['deductive', 'inductive', 'abductive', 'analogical']:
             print(f"\n{strategy.upper()} REASONING:")
-            
+
             result = assembler.assemble_context(query, seed_entities, reasoning_strategy=strategy)
-            
+
             print(f"Context: {result['context']}")
             print(f"Confidence: {result['confidence']:.3f}")
-            
+
             if result['reasoning_details']:
                 details = result['reasoning_details']
                 if strategy == 'deductive' and 'chains' in details:
@@ -1219,12 +1219,12 @@ def demonstrate_structured_context():
                     print(f"Explanations generated: {len(details['explanations'])}")
                 elif strategy == 'analogical' and 'analogies' in details:
                     print(f"Analogies found: {len(details['analogies'])}")
-    
+
     # Demonstrate graph traversal
     print(f"\n" + "=" * 50)
     print("GRAPH TRAVERSAL DEMONSTRATION")
     print("=" * 50)
-    
+
     # Find paths between entities
     paths = kg.find_paths("alice", "machine_learning", max_depth=3)
     print(f"\nPaths from Alice to Machine Learning:")
@@ -1232,7 +1232,7 @@ def demonstrate_structured_context():
         print(f"Path {i+1}: {' -> '.join(path.entities)}")
         print(f"  Relationships: {[rel.predicate.value for rel in path.relationships]}")
         print(f"  Score: {path.path_score:.3f}")
-    
+
     # Show entity context
     print(f"\nAlice's Context:")
     alice_context = kg.get_entity_context("alice", depth=2)
@@ -1240,7 +1240,7 @@ def demonstrate_structured_context():
     print(f"Immediate connections: {len(alice_context['immediate_neighbors']['outgoing']) + len(alice_context['immediate_neighbors']['incoming'])}")
     print(f"Extended network: {len(alice_context['extended_context'])} entities")
     print(f"Hierarchical: {len(alice_context['hierarchical_context']['parents'])} parents, {len(alice_context['hierarchical_context']['children'])} children")
-    
+
     return kg, assembler
 
 # Run demonstration

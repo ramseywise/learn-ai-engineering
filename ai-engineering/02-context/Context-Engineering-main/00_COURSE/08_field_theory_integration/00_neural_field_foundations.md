@@ -2,7 +2,7 @@
 ## Context as Continuous Field
 
 > **Module 08.0** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 ---
@@ -74,7 +74,7 @@ Evolution Equation:
 ∂Ψ/∂t = -∇H[Ψ] + I(x,t) + η(x,t)
 
 Where:
-- H[Ψ]: Hamiltonian (energy functional)  
+- H[Ψ]: Hamiltonian (energy functional)
 - I(x,t): Input stimulus
 - η(x,t): Noise/fluctuations
 - x: Spatial coordinates in semantic space
@@ -102,7 +102,7 @@ Stability: λ = eigenvalues of linearization
 
 Attractor Types:
 - Point Attractor: Single stable state
-- Limit Cycle: Periodic oscillation  
+- Limit Cycle: Periodic oscillation
 - Strange Attractor: Chaotic but bounded
 - Manifold Attractor: Structured high-dimensional pattern
 ```
@@ -132,7 +132,7 @@ Consider the current field state, energy landscape, and dynamic tendencies.
 **Boundary Conditions**: {edge_behaviors_and_constraints}
 
 ### 2. Attractor Identification
-**Active Attractors**: 
+**Active Attractors**:
 - Name: {attractor_name}
 - Location: {semantic_coordinates}
 - Strength: {basin_of_attraction_size}
@@ -239,13 +239,13 @@ Example: "Let's view this from a completely different perspective..."
 ```xml
 <field_template name="resonance_enhancement">
   <intent>Identify and amplify positive resonance patterns in semantic fields</intent>
-  
+
   <context>
     Context fields naturally develop resonance patterns where related concepts
     reinforce each other. Strategic enhancement of positive resonances can
     dramatically improve field coherence and creative potential.
   </context>
-  
+
   <resonance_detection>
     <harmonic_analysis>
       <fundamental_frequency>{primary_conceptual_rhythm}</fundamental_frequency>
@@ -253,7 +253,7 @@ Example: "Let's view this from a completely different perspective..."
       <phase_relationships>{how_concepts_sync_with_each_other}</phase_relationships>
       <amplitude_patterns>{strength_variations_across_field}</amplitude_patterns>
     </harmonic_analysis>
-    
+
     <coupling_identification>
       <strong_coupling>{concepts_that_strongly_reinforce}</strong_coupling>
       <weak_coupling>{concepts_with_subtle_connections}</weak_coupling>
@@ -261,71 +261,71 @@ Example: "Let's view this from a completely different perspective..."
       <emergent_coupling>{new_connections_forming_dynamically}</emergent_coupling>
     </coupling_identification>
   </resonance_detection>
-  
+
   <enhancement_strategies>
     <frequency_matching>
       <method>Align conceptual rhythms for constructive interference</method>
       <technique>Introduce concepts at resonant frequencies</technique>
       <example>"Building on that rhythm, consider how this pattern also..."</example>
     </frequency_matching>
-    
+
     <amplitude_amplification>
       <method>Strengthen existing positive resonances</method>
       <technique>Echo and elaborate on resonant themes</technique>
       <example>"Yes, that insight creates beautiful harmonies with..."</example>
     </amplitude_amplification>
-    
+
     <harmonic_enrichment>
       <method>Add compatible overtones to base patterns</method>
       <technique>Introduce related concepts at harmonic frequencies</technique>
       <example>"This fundamental pattern has fascinating implications for..."</example>
     </harmonic_enrichment>
-    
+
     <phase_synchronization>
       <method>Align timing of conceptual development</method>
       <technique>Coordinate emergence of related ideas</technique>
       <example>"As this idea develops, watch how it synchronizes with..."</example>
     </phase_synchronization>
   </enhancement_strategies>
-  
+
   <field_effects>
     <coherence_improvement>
       <description>Enhanced resonance creates more stable, clear field patterns</description>
       <indicators>Reduced conceptual noise, clearer thought flow, stronger insights</indicators>
     </coherence_improvement>
-    
+
     <creative_amplification>
       <description>Resonant fields generate novel combinations more readily</description>
       <indicators>Unexpected connections, emergent insights, creative breakthroughs</indicators>
     </creative_amplification>
-    
+
     <learning_acceleration>
       <description>Resonant patterns are more easily encoded and recalled</description>
       <indicators>Faster understanding, better retention, natural skill transfer</indicators>
     </learning_acceleration>
   </field_effects>
-  
+
   <monitoring_protocols>
     <resonance_tracking>
       <frequency_analysis>Monitor dominant conceptual rhythms</frequency_analysis>
       <coupling_strength>Measure connection intensities between concepts</coupling_strength>
       <coherence_metrics>Assess overall field stability and clarity</coherence_metrics>
     </resonance_tracking>
-    
+
     <enhancement_effectiveness>
       <before_after_comparison>Compare field states pre/post enhancement</before_after_comparison>
       <sustained_improvement>Track whether enhancements persist over time</sustained_improvement>
       <emergent_properties>Watch for unexpected positive field behaviors</emergent_properties>
     </enhancement_effectiveness>
   </monitoring_protocols>
-  
+
   <output>
     <enhanced_field_state>
       <resonance_map>{visual_representation_of_field_harmonics}</resonance_map>
       <amplified_patterns>{strengthened_conceptual_connections}</amplified_patterns>
       <emergent_structures>{new_patterns_created_by_resonance}</emergent_structures>
     </enhanced_field_state>
-    
+
     <field_recommendations>
       <sustaining_resonance>{how_to_maintain_enhanced_patterns}</sustaining_resonance>
       <further_enhancement>{opportunities_for_additional_improvement}</further_enhancement>
@@ -357,55 +357,55 @@ warnings.filterwarnings('ignore')
 class ContextField:
     """
     Neural field implementation for continuous context representation.
-    
+
     Think of this as implementing a "weather system" for semantic space,
     where context flows, evolves, and self-organizes like atmospheric dynamics.
     """
-    
-    def __init__(self, grid_size: Tuple[int, int] = (64, 64), 
+
+    def __init__(self, grid_size: Tuple[int, int] = (64, 64),
                  spatial_extent: float = 10.0, dt: float = 0.01):
         """
         Initialize context field infrastructure.
-        
+
         Args:
             grid_size: Resolution of semantic space (like pixel resolution)
-            spatial_extent: Size of semantic space (like map area)  
+            spatial_extent: Size of semantic space (like map area)
             dt: Time step for evolution (like frame rate)
         """
         self.nx, self.ny = grid_size
         self.extent = spatial_extent
         self.dt = dt
-        
+
         # Create spatial coordinates (semantic space)
         x = np.linspace(-spatial_extent/2, spatial_extent/2, self.nx)
         y = np.linspace(-spatial_extent/2, spatial_extent/2, self.ny)
         self.X, self.Y = np.meshgrid(x, y)
-        
+
         # Field state: complex-valued field over semantic space
         # Real part: concept activation, Imaginary part: concept phase/timing
         self.field = np.zeros((self.nx, self.ny), dtype=complex)
-        
+
         # Field parameters (like physical constants in weather systems)
         self.tau = 1.0          # Time constant (how fast field evolves)
         self.sigma = 1.0        # Spatial coupling strength (how far influence spreads)
         self.mu = 0.5          # Field strength parameter
         self.noise_strength = 0.02  # Fluctuation level
-        
+
         # Attractor storage
         self.attractors = []
         self.attractor_history = []
-        
+
         # Evolution history for analysis
         self.history = []
-        
-    def add_attractor(self, position: Tuple[float, float], strength: float = 1.0, 
+
+    def add_attractor(self, position: Tuple[float, float], strength: float = 1.0,
                      attractor_type: str = 'gaussian', radius: float = 1.0):
         """
         Add semantic attractor to field.
-        
+
         Think of attractors like "pressure systems" in weather - they create
         stable patterns that influence the flow of context around them.
-        
+
         Args:
             position: Location in semantic space (x, y coordinates)
             strength: How strongly this attractor influences the field
@@ -420,48 +420,48 @@ class ContextField:
             'activation': 0.0  # Current activation level
         }
         self.attractors.append(attractor)
-        
+
         # Add attractor to field immediately
         self._apply_attractor(attractor)
-    
+
     def _apply_attractor(self, attractor: Dict):
         """Apply attractor influence to field"""
         x0, y0 = attractor['position']
         strength = attractor['strength']
         radius = attractor['radius']
-        
+
         if attractor['type'] == 'gaussian':
             # Gaussian attractor (smooth, localized influence)
             distance_sq = (self.X - x0)**2 + (self.Y - y0)**2
             influence = strength * np.exp(-distance_sq / (2 * radius**2))
-            
+
         elif attractor['type'] == 'mexican_hat':
             # Mexican hat attractor (center-surround pattern)
             distance_sq = (self.X - x0)**2 + (self.Y - y0)**2
             r_norm = distance_sq / radius**2
             influence = strength * (1 - r_norm) * np.exp(-r_norm / 2)
-            
+
         elif attractor['type'] == 'vortex':
             # Vortex attractor (rotational influence)
             dx, dy = self.X - x0, self.Y - y0
             r = np.sqrt(dx**2 + dy**2)
             theta = np.arctan2(dy, dx)
             influence = strength * np.exp(-r / radius) * np.exp(1j * theta)
-            
+
         else:
             influence = np.zeros_like(self.field)
-        
+
         self.field += influence
         attractor['activation'] = np.max(np.abs(influence))
-    
-    def add_context_input(self, position: Tuple[float, float], content: str, 
+
+    def add_context_input(self, position: Tuple[float, float], content: str,
                          intensity: float = 1.0, spread: float = 1.0):
         """
         Add new context information to field.
-        
+
         This is like adding a "weather disturbance" - new information
         propagates through the field and influences existing patterns.
-        
+
         Args:
             position: Where in semantic space to add the information
             content: The actual context content (encoded as field pattern)
@@ -469,18 +469,18 @@ class ContextField:
             spread: How broadly the input spreads initially
         """
         x0, y0 = position
-        
+
         # Create input pattern (simple encoding for demonstration)
         # In practice, this would use sophisticated semantic encoding
         distance_sq = (self.X - x0)**2 + (self.Y - y0)**2
         input_pattern = intensity * np.exp(-distance_sq / (2 * spread**2))
-        
+
         # Add phase information based on content (simplified)
         content_hash = hash(content) % 1000 / 1000.0 * 2 * np.pi
         input_pattern = input_pattern * np.exp(1j * content_hash)
-        
+
         self.field += input_pattern
-        
+
         # Record input for history
         self.history.append({
             'type': 'input',
@@ -489,46 +489,46 @@ class ContextField:
             'intensity': intensity,
             'time': len(self.history) * self.dt
         })
-    
+
     def evolve_step(self):
         """
         Single evolution step of field dynamics.
-        
+
         This implements the field equation that governs how context flows
         and evolves, like the equations that govern weather dynamics.
         """
         # Current field state
         psi = self.field.copy()
-        
+
         # Compute spatial gradients (how field changes across space)
         laplacian = self._compute_laplacian(psi)
-        
+
         # Field evolution equation (simplified neural field dynamics)
         # ∂ψ/∂t = -ψ/τ + σ²∇²ψ + f(|ψ|²)ψ + noise
-        
+
         # Linear decay term (prevents unlimited growth)
         decay_term = -psi / self.tau
-        
+
         # Diffusion term (spatial smoothing)
         diffusion_term = self.sigma**2 * laplacian
-        
+
         # Nonlinear self-interaction (creates complex dynamics)
         nonlinear_term = self._nonlinear_interaction(psi)
-        
+
         # Noise term (random fluctuations)
-        noise_term = (self.noise_strength * 
-                     (np.random.randn(*psi.shape) + 
+        noise_term = (self.noise_strength *
+                     (np.random.randn(*psi.shape) +
                       1j * np.random.randn(*psi.shape)))
-        
+
         # Total field derivative
         dpsi_dt = decay_term + diffusion_term + nonlinear_term + noise_term
-        
+
         # Update field state
         self.field += self.dt * dpsi_dt
-        
+
         # Update attractor states
         self._update_attractors()
-        
+
         # Record state for analysis
         self.history.append({
             'type': 'evolution',
@@ -536,92 +536,92 @@ class ContextField:
             'attractor_states': [a['activation'] for a in self.attractors],
             'time': len(self.history) * self.dt
         })
-    
+
     def _compute_laplacian(self, field: np.ndarray) -> np.ndarray:
         """Compute spatial Laplacian (second derivatives)"""
         # Simple finite difference approximation
         dx = self.extent / self.nx
         dy = self.extent / self.ny
-        
+
         # Second derivatives
         d2_dx2 = (np.roll(field, -1, axis=1) - 2*field + np.roll(field, 1, axis=1)) / dx**2
         d2_dy2 = (np.roll(field, -1, axis=0) - 2*field + np.roll(field, 1, axis=0)) / dy**2
-        
+
         return d2_dx2 + d2_dy2
-    
+
     def _nonlinear_interaction(self, field: np.ndarray) -> np.ndarray:
         """
         Nonlinear field self-interaction.
-        
+
         This creates the complex, interesting behavior - like how pressure
         and temperature interact in weather systems to create storms.
         """
         intensity = np.abs(field)**2
-        
+
         # Cubic nonlinearity (common in neural field models)
         # f(|ψ|²) = μ - |ψ|²
         nonlinear_factor = self.mu - intensity
-        
+
         return nonlinear_factor * field
-    
+
     def _update_attractors(self):
         """Update attractor states based on current field"""
         for attractor in self.attractors:
             x0, y0 = attractor['position']
-            
+
             # Find field value at attractor location
             i = int((y0 + self.extent/2) / self.extent * self.ny)
             j = int((x0 + self.extent/2) / self.extent * self.nx)
-            
+
             # Ensure indices are within bounds
             i = max(0, min(self.ny-1, i))
             j = max(0, min(self.nx-1, j))
-            
+
             attractor['activation'] = abs(self.field[i, j])
-    
+
     def get_field_energy(self) -> float:
         """Calculate total field energy"""
         # Kinetic energy (field intensity)
         kinetic = np.sum(np.abs(self.field)**2)
-        
+
         # Potential energy (spatial gradients)
         grad_x = np.gradient(self.field, axis=1)
         grad_y = np.gradient(self.field, axis=0)
         potential = np.sum(np.abs(grad_x)**2 + np.abs(grad_y)**2)
-        
+
         return kinetic + potential
-    
+
     def detect_attractors(self, threshold: float = 0.5) -> List[Dict]:
         """
         Automatically detect emergent attractors in field.
-        
+
         This is like detecting "storm centers" in weather data - finding
         regions where field activity is concentrated and stable.
         """
         field_intensity = np.abs(self.field)
-        
+
         # Smooth field to reduce noise
         smoothed = gaussian_filter(field_intensity, sigma=1.0)
-        
+
         # Find local maxima above threshold
         from scipy.ndimage import maximum_filter
         local_maxima = (smoothed == maximum_filter(smoothed, size=5)) & (smoothed > threshold)
-        
+
         # Extract attractor locations and properties
         y_coords, x_coords = np.where(local_maxima)
         detected_attractors = []
-        
+
         for i, (y_idx, x_idx) in enumerate(zip(y_coords, x_coords)):
             # Convert grid indices to spatial coordinates
             x_pos = (x_idx / self.nx - 0.5) * self.extent
             y_pos = (y_idx / self.ny - 0.5) * self.extent
-            
+
             # Calculate attractor properties
             strength = smoothed[y_idx, x_idx]
-            
+
             # Estimate radius by finding where intensity drops to half-maximum
             radius = self._estimate_attractor_radius(x_pos, y_pos, strength)
-            
+
             detected_attractors.append({
                 'position': (x_pos, y_pos),
                 'strength': strength,
@@ -629,74 +629,74 @@ class ContextField:
                 'type': 'emergent',
                 'stability': self._calculate_stability(x_pos, y_pos)
             })
-        
+
         return detected_attractors
-    
+
     def _estimate_attractor_radius(self, x_pos: float, y_pos: float, peak_strength: float) -> float:
         """Estimate the effective radius of an attractor"""
         # Sample field intensity along radial lines from attractor center
         distances = np.linspace(0, self.extent/4, 20)
         angles = np.linspace(0, 2*np.pi, 8)
-        
+
         half_max_distances = []
-        
+
         for angle in angles:
             for dist in distances:
                 x_sample = x_pos + dist * np.cos(angle)
                 y_sample = y_pos + dist * np.sin(angle)
-                
+
                 # Convert to grid coordinates
                 i = int((y_sample + self.extent/2) / self.extent * self.ny)
                 j = int((x_sample + self.extent/2) / self.extent * self.nx)
-                
+
                 if 0 <= i < self.ny and 0 <= j < self.nx:
                     intensity = abs(self.field[i, j])
                     if intensity < peak_strength * 0.5:
                         half_max_distances.append(dist)
                         break
-        
+
         return np.mean(half_max_distances) if half_max_distances else 1.0
-    
+
     def _calculate_stability(self, x_pos: float, y_pos: float) -> float:
         """Calculate local stability of field region"""
         # Sample local field gradients
         dx = self.extent / self.nx
         dy = self.extent / self.ny
-        
+
         # Convert position to grid coordinates
         i = int((y_pos + self.extent/2) / self.extent * self.ny)
         j = int((x_pos + self.extent/2) / self.extent * self.nx)
-        
+
         if not (0 <= i < self.ny-1 and 0 <= j < self.nx-1):
             return 0.0
-        
+
         # Calculate local curvature (second derivatives)
         d2_dx2 = (self.field[i, j+1] - 2*self.field[i, j] + self.field[i, j-1]) / dx**2
         d2_dy2 = (self.field[i+1, j] - 2*self.field[i, j] + self.field[i-1, j]) / dy**2
-        
+
         # Stability is related to negative curvature (local maximum)
         curvature = abs(d2_dx2) + abs(d2_dy2)
         return min(1.0, curvature.real / 10.0)  # Normalize to [0,1]
-    
+
     def visualize_field(self, show_attractors: bool = True, show_flow: bool = True):
         """
         Visualize current field state.
-        
+
         Like creating a weather map showing pressure systems, wind patterns,
         and storm centers.
         """
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-        
+
         # Field intensity (like pressure map)
         intensity = np.abs(self.field)
-        im1 = ax1.imshow(intensity, extent=[-self.extent/2, self.extent/2, 
+        im1 = ax1.imshow(intensity, extent=[-self.extent/2, self.extent/2,
                                           -self.extent/2, self.extent/2],
                         origin='lower', cmap='viridis')
         ax1.set_title('Field Intensity')
         ax1.set_xlabel('Semantic X')
         ax1.set_ylabel('Semantic Y')
         plt.colorbar(im1, ax=ax1)
-        
+
         # Field phase (like wind direction)
         phase = np.angle(self.field)
         im2 = ax2.imshow(phase, extent=[-self.extent/2, self.extent/2,
@@ -706,7 +706,7 @@ class ContextField:
         ax2.set_xlabel('Semantic X')
         ax2.set_ylabel('Semantic Y')
         plt.colorbar(im2, ax=ax2)
-        
+
         # Real part (concept activation)
         real_part = self.field.real
         im3 = ax3.imshow(real_part, extent=[-self.extent/2, self.extent/2,
@@ -716,7 +716,7 @@ class ContextField:
         ax3.set_xlabel('Semantic X')
         ax3.set_ylabel('Semantic Y')
         plt.colorbar(im3, ax=ax3)
-        
+
         # Imaginary part (concept timing/phase)
         imag_part = self.field.imag
         im4 = ax4.imshow(imag_part, extent=[-self.extent/2, self.extent/2,
@@ -726,58 +726,58 @@ class ContextField:
         ax4.set_xlabel('Semantic X')
         ax4.set_ylabel('Semantic Y')
         plt.colorbar(im4, ax=ax4)
-        
+
         # Add attractors if requested
         if show_attractors:
             for attractor in self.attractors:
                 x_pos, y_pos = attractor['position']
                 radius = attractor['radius']
-                
+
                 for ax in [ax1, ax2, ax3, ax4]:
-                    circle = plt.Circle((x_pos, y_pos), radius, 
+                    circle = plt.Circle((x_pos, y_pos), radius,
                                       fill=False, color='red', linewidth=2)
                     ax.add_patch(circle)
                     ax.plot(x_pos, y_pos, 'r*', markersize=10)
-        
+
         # Add flow field if requested
         if show_flow:
             # Calculate flow vectors (field gradients)
             grad_x = np.gradient(self.field.real, axis=1)
             grad_y = np.gradient(self.field.real, axis=0)
-            
+
             # Subsample for cleaner visualization
             skip = 4
             x_flow = self.X[::skip, ::skip]
             y_flow = self.Y[::skip, ::skip]
             u_flow = -grad_x[::skip, ::skip]  # Negative gradient for flow direction
             v_flow = -grad_y[::skip, ::skip]
-            
-            ax1.quiver(x_flow, y_flow, u_flow, v_flow, 
+
+            ax1.quiver(x_flow, y_flow, u_flow, v_flow,
                       alpha=0.6, color='white', scale=20)
-        
+
         plt.tight_layout()
         plt.show()
-    
+
     def run_simulation(self, steps: int = 100, input_sequence: List[Dict] = None):
         """
         Run field evolution simulation.
-        
+
         Like running a weather simulation - evolve the field over time
         and optionally inject new "weather disturbances" (context inputs).
         """
         print(f"Running field simulation for {steps} steps...")
-        
+
         # Prepare input sequence
         if input_sequence is None:
             input_sequence = []
-        
+
         input_index = 0
-        
+
         for step in range(steps):
             # Check for scheduled inputs
-            while (input_index < len(input_sequence) and 
+            while (input_index < len(input_sequence) and
                    input_sequence[input_index].get('time', 0) <= step * self.dt):
-                
+
                 input_data = input_sequence[input_index]
                 self.add_context_input(
                     position=input_data['position'],
@@ -786,18 +786,18 @@ class ContextField:
                     spread=input_data.get('spread', 1.0)
                 )
                 input_index += 1
-            
+
             # Evolve field one step
             self.evolve_step()
-            
+
             # Print progress
             if step % 20 == 0:
                 energy = self.get_field_energy()
                 n_attractors = len(self.detect_attractors())
                 print(f"Step {step}: Energy = {energy:.3f}, Attractors = {n_attractors}")
-        
+
         print("Simulation complete!")
-        
+
         # Return summary
         return {
             'final_energy': self.get_field_energy(),
@@ -809,69 +809,69 @@ class ContextField:
 class FieldAnalyzer:
     """
     Advanced analysis tools for understanding field behavior.
-    
+
     Like having sophisticated meteorological analysis tools to understand
     weather patterns, predict storms, and identify climate trends.
     """
-    
+
     def __init__(self, field: ContextField):
         self.field = field
-        
+
     def analyze_field_topology(self) -> Dict:
         """Analyze the topological structure of the field"""
         intensity = np.abs(self.field.field)
-        
+
         # Find critical points (maxima, minima, saddle points)
         critical_points = self._find_critical_points(intensity)
-        
+
         # Calculate topological invariants
         euler_characteristic = self._calculate_euler_characteristic(intensity)
-        
+
         # Identify basins of attraction
         attraction_basins = self._find_attraction_basins(intensity)
-        
+
         return {
             'critical_points': critical_points,
             'euler_characteristic': euler_characteristic,
             'attraction_basins': attraction_basins,
             'connectivity': self._analyze_connectivity(intensity)
         }
-    
+
     def _find_critical_points(self, intensity: np.ndarray) -> Dict:
         """Find critical points in the field"""
         # Compute gradients
         grad_x = np.gradient(intensity, axis=1)
         grad_y = np.gradient(intensity, axis=0)
-        
+
         # Find points where gradient is near zero
         grad_magnitude = np.sqrt(grad_x**2 + grad_y**2)
         critical_mask = grad_magnitude < 0.1 * np.std(grad_magnitude)
-        
+
         # Classify critical points using Hessian
         hxx = np.gradient(grad_x, axis=1)
         hxy = np.gradient(grad_x, axis=0)
         hyy = np.gradient(grad_y, axis=0)
-        
+
         # Determinant and trace of Hessian
         det_h = hxx * hyy - hxy**2
         trace_h = hxx + hyy
-        
+
         critical_points = {
             'maxima': [],
             'minima': [],
             'saddles': []
         }
-        
+
         y_coords, x_coords = np.where(critical_mask)
-        
+
         for y_idx, x_idx in zip(y_coords, x_coords):
             det = det_h[y_idx, x_idx]
             trace = trace_h[y_idx, x_idx]
-            
+
             # Convert to spatial coordinates
             x_pos = (x_idx / self.field.nx - 0.5) * self.field.extent
             y_pos = (y_idx / self.field.ny - 0.5) * self.field.extent
-            
+
             if det > 0:  # Local extremum
                 if trace < 0:  # Maximum
                     critical_points['maxima'].append((x_pos, y_pos))
@@ -879,132 +879,132 @@ class FieldAnalyzer:
                     critical_points['minima'].append((x_pos, y_pos))
             elif det < 0:  # Saddle point
                 critical_points['saddles'].append((x_pos, y_pos))
-        
+
         return critical_points
-    
+
     def _calculate_euler_characteristic(self, intensity: np.ndarray) -> int:
         """Calculate Euler characteristic of field topology"""
         # Simplified calculation based on critical points
         critical_points = self._find_critical_points(intensity)
-        
+
         n_maxima = len(critical_points['maxima'])
         n_minima = len(critical_points['minima'])
         n_saddles = len(critical_points['saddles'])
-        
+
         # Euler characteristic = V - E + F for 2D surfaces
         # Approximation: χ ≈ n_maxima + n_minima - n_saddles
         return n_maxima + n_minima - n_saddles
-    
+
     def _find_attraction_basins(self, intensity: np.ndarray) -> List[Dict]:
         """Identify basins of attraction around field maxima"""
         from scipy.ndimage import label, watershed_ica
-        
+
         # Find local maxima
         maxima_mask = (intensity == gaussian_filter(intensity, 1))
         labeled_maxima, n_maxima = label(maxima_mask)
-        
+
         # Create basins using watershed algorithm
         # (imagine water flowing down the field toward maxima)
         basins = watershed_ica(-intensity, labeled_maxima)
-        
+
         basin_info = []
         for i in range(1, n_maxima + 1):
             basin_mask = (basins == i)
             basin_size = np.sum(basin_mask)
-            
+
             # Find center of mass of basin
             y_coords, x_coords = np.where(basin_mask)
             if len(y_coords) > 0:
                 center_y = np.mean(y_coords)
                 center_x = np.mean(x_coords)
-                
+
                 # Convert to spatial coordinates
                 x_pos = (center_x / self.field.nx - 0.5) * self.field.extent
                 y_pos = (center_y / self.field.ny - 0.5) * self.field.extent
-                
+
                 basin_info.append({
                     'center': (x_pos, y_pos),
                     'size': basin_size,
                     'strength': np.max(intensity[basin_mask])
                 })
-        
+
         return basin_info
-    
+
     def _analyze_connectivity(self, intensity: np.ndarray) -> Dict:
         """Analyze connectivity patterns in the field"""
         # Threshold field to find connected regions
         threshold = np.mean(intensity) + 0.5 * np.std(intensity)
         active_regions = intensity > threshold
-        
+
         # Find connected components
         from scipy.ndimage import label
         labeled_regions, n_regions = label(active_regions)
-        
+
         # Analyze each connected component
         connectivity_info = {
             'n_components': n_regions,
             'component_sizes': [],
             'total_active_area': np.sum(active_regions)
         }
-        
+
         for i in range(1, n_regions + 1):
             component_size = np.sum(labeled_regions == i)
             connectivity_info['component_sizes'].append(component_size)
-        
+
         return connectivity_info
-    
+
     def calculate_information_flow(self) -> np.ndarray:
         """
         Calculate information flow patterns in the field.
-        
+
         Like tracking how information propagates through the system,
         similar to how meteorologists track storm movement.
         """
         # Information flow is related to field gradients and temporal changes
         field_real = self.field.field.real
         field_imag = self.field.field.imag
-        
+
         # Spatial gradients (how field changes across space)
         grad_x_real = np.gradient(field_real, axis=1)
         grad_y_real = np.gradient(field_real, axis=0)
         grad_x_imag = np.gradient(field_imag, axis=1)
         grad_y_imag = np.gradient(field_imag, axis=0)
-        
+
         # Information flow vector field
         flow_x = -(grad_x_real * field_imag - grad_x_imag * field_real)
         flow_y = -(grad_y_real * field_imag - grad_y_imag * field_real)
-        
+
         # Flow magnitude
         flow_magnitude = np.sqrt(flow_x**2 + flow_y**2)
-        
+
         return {
             'flow_x': flow_x,
             'flow_y': flow_y,
             'magnitude': flow_magnitude,
             'total_flow': np.sum(flow_magnitude)
         }
-    
+
     def predict_field_evolution(self, steps_ahead: int = 10) -> np.ndarray:
         """
         Predict future field evolution.
-        
+
         Like weather forecasting - use current field state and dynamics
         to predict what the field will look like in the future.
         """
         # Store current state
         original_field = self.field.field.copy()
         original_history = self.field.history.copy()
-        
+
         # Run evolution simulation
         predictions = []
         for step in range(steps_ahead):
             self.field.evolve_step()
             predictions.append(self.field.field.copy())
-        
+
         # Restore original state
         self.field.field = original_field
         self.field.history = original_history
-        
+
         return np.array(predictions)
 
 **Ground-up Explanation**: This implementation creates a "weather system" for semantic space. The ContextField class manages the continuous field that represents context, while attractors act like pressure systems that influence how information flows. The field evolves over time according to mathematical rules that create interesting, lifelike dynamics.
@@ -1022,7 +1022,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
 ```
 /field.state.manage{
     intent="Maintain coherent field state while enabling dynamic evolution and emergence",
-    
+
     input={
         current_field_state=<complex_valued_semantic_field>,
         field_parameters={
@@ -1043,7 +1043,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             adaptation_rate=<speed_of_learning_and_evolution>
         }
     },
-    
+
     process=[
         /assess.field.health{
             action="Evaluate current field state and identify needs",
@@ -1058,7 +1058,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             ],
             output="Comprehensive field health assessment with identified issues"
         },
-        
+
         /optimize.field.dynamics{
             action="Adjust field parameters for optimal performance",
             method="Adaptive parameter tuning based on performance feedback",
@@ -1077,7 +1077,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             ],
             output="Optimized field parameters and configuration"
         },
-        
+
         /manage.attractor.ecology{
             action="Curate and evolve the ecosystem of semantic attractors",
             method="Dynamic attractor lifecycle management with ecological principles",
@@ -1097,7 +1097,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             ],
             output="Curated attractor ecosystem with optimized interactions"
         },
-        
+
         /integrate.new.information{
             action="Seamlessly incorporate new context while preserving field coherence",
             method="Gentle field perturbation with coherence preservation",
@@ -1116,7 +1116,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             ],
             output="Successfully integrated information with maintained field coherence"
         },
-        
+
         /evolve.field.architecture{
             action="Enable long-term field evolution and architectural improvements",
             method="Meta-level field optimization with architectural plasticity",
@@ -1137,7 +1137,7 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             output="Evolved field architecture with improved capabilities"
         }
     ],
-    
+
     output={
         managed_field_state={
             optimized_field=<field_with_improved_parameters_and_structure>,
@@ -1145,14 +1145,14 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             integration_success=<measure_of_successful_information_incorporation>,
             evolution_progress=<assessment_of_architectural_improvements>
         },
-        
+
         performance_improvements={
             coherence_gain=<improvement_in_pattern_stability_and_organization>,
             responsiveness_enhancement=<better_adaptation_to_user_needs_and_inputs>,
             creativity_boost=<increased_capacity_for_novel_combinations_and_insights>,
             efficiency_optimization=<reduced_computational_overhead_per_unit_capability>
         },
-        
+
         field_analytics={
             health_metrics=<comprehensive_assessment_of_field_wellbeing>,
             evolution_trajectory=<predicted_path_of_future_field_development>,
@@ -1160,23 +1160,23 @@ Protocols provide adaptive, self-organizing field management patterns that evolv
             stability_indicators=<measures_of_field_robustness_and_resilience>
         }
     },
-    
+
     meta={
         management_effectiveness=<success_rate_of_field_management_operations>,
         learning_integration=<how_well_field_learns_from_management_experience>,
         adaptation_rate=<speed_of_field_response_to_management_interventions>,
         emergence_cultivation=<ability_to_foster_beneficial_emergent_properties>
     },
-    
+
     // Self-optimization mechanisms
     protocol_evolution=[
-        {trigger="field_performance_below_threshold", 
+        {trigger="field_performance_below_threshold",
          action="adjust_management_parameters_and_strategies"},
-        {trigger="new_field_dynamics_discovered", 
+        {trigger="new_field_dynamics_discovered",
          action="incorporate_new_management_techniques"},
-        {trigger="user_satisfaction_declining", 
+        {trigger="user_satisfaction_declining",
          action="refocus_optimization_on_user_experience_metrics"},
-        {trigger="computational_efficiency_issues", 
+        {trigger="computational_efficiency_issues",
          action="optimize_field_operations_for_resource_constraints"}
     ]
 }
@@ -1201,7 +1201,7 @@ resonance_framework:
     overtone_series: "harmonic_multiples_of_fundamental"
     mode_structure: "spatial_distribution_of_harmonic_patterns"
     phase_relationships: "timing_coordination_between_field_regions"
-    
+
   coupling_dynamics:
     strong_coupling: "regions_with_high_mutual_influence"
     weak_coupling: "subtle_long_range_correlations"
@@ -1214,28 +1214,28 @@ optimization_strategies:
       method: "amplify_beneficial_frequency_components"
       technique: "selective_frequency_filtering_and_amplification"
       target: "strengthen_coherent_patterns_while_preserving_complexity"
-      
+
     dissonance_reduction:
       method: "minimize_destructive_interference_patterns"
       technique: "phase_alignment_and_frequency_detuning"
       target: "eliminate_conflicting_patterns_that_reduce_field_quality"
-      
+
     modal_optimization:
       method: "optimize_spatial_mode_structure_for_desired_functions"
       technique: "eigenmode_analysis_and_targeted_modification"
       target: "create_field_modes_that_support_specific_cognitive_functions"
-  
+
   spatial_domain_operations:
     resonance_cavity_design:
       method: "shape_field_boundaries_to_support_desired_resonances"
       technique: "boundary_condition_optimization_and_geometry_modification"
       target: "create_spatial_structures_that_naturally_support_beneficial_patterns"
-      
+
     coupling_matrix_optimization:
       method: "optimize_interaction_patterns_between_field_regions"
       technique: "connectivity_matrix_evolution_and_coupling_strength_tuning"
       target: "enhance_beneficial_interactions_while_reducing_interference"
-      
+
     attractor_harmonic_alignment:
       method: "align_attractor_frequencies_for_constructive_interference"
       technique: "attractor_frequency_tuning_and_phase_synchronization"
@@ -1247,19 +1247,19 @@ implementation_workflow:
     - coupling_assessment: "map_interaction_patterns_between_regions"
     - resonance_quality_evaluation: "measure_coherence_and_interference_levels"
     - harmonic_structure_mapping: "document_overtone_relationships_and_phase_patterns"
-    
+
   optimization_planning:
     - target_identification: "specify_desired_resonance_characteristics"
     - intervention_design: "plan_specific_modifications_to_achieve_targets"
     - impact_prediction: "model_expected_effects_of_proposed_changes"
     - risk_assessment: "identify_potential_negative_consequences"
-    
+
   resonance_modification:
     - frequency_tuning: "adjust_field_parameters_to_modify_harmonic_content"
     - phase_alignment: "synchronize_timing_between_field_regions"
     - coupling_optimization: "modify_interaction_strengths_and_patterns"
     - boundary_shaping: "adjust_field_geometry_for_optimal_resonance"
-    
+
   verification_and_refinement:
     - resonance_measurement: "quantify_achieved_resonance_improvements"
     - stability_testing: "ensure_modifications_don't_compromise_field_stability"
@@ -1273,13 +1273,13 @@ resonance_patterns:
     frequency_ratios: [1, 2, 3, 4, 5, 6, 7, 8]
     applications: ["concept_hierarchies", "logical_reasoning", "structured_knowledge"]
     benefits: ["natural_conceptual_organization", "intuitive_pattern_recognition"]
-    
+
   golden_ratio_resonance:
     description: "phi-based_frequency_relationships_for_aesthetic_harmony"
     frequency_ratios: [1, 1.618, 2.618, 4.236, 6.854]
     applications: ["creative_synthesis", "aesthetic_evaluation", "design_optimization"]
     benefits: ["enhanced_creativity", "natural_beauty_recognition", "satisfying_proportions"]
-    
+
   fibonacci_spiral_resonance:
     description: "spiral_frequency_patterns_for_growth_and_development"
     frequency_ratios: [1, 1, 2, 3, 5, 8, 13, 21]
@@ -1292,7 +1292,7 @@ performance_metrics:
     harmonic_richness: "complexity_and_beauty_of_frequency_spectrum"
     coupling_efficiency: "effectiveness_of_inter-region_communication"
     emergence_potential: "capacity_for_novel_pattern_formation"
-    
+
   functional_performance:
     response_quality: "how_well_field_serves_user_needs"
     creativity_enhancement: "improvement_in_novel_combination_generation"
@@ -1305,7 +1305,7 @@ adaptive_mechanisms:
     frequency_memory: "store_effective_harmonic_relationships"
     contextual_adaptation: "adjust_resonance_patterns_based_on_situation"
     meta_resonance_optimization: "optimize_the_optimization_process_itself"
-    
+
   environmental_responsiveness:
     context_sensitivity: "adapt_resonance_to_current_semantic_context"
     user_preference_learning: "tune_resonance_patterns_to_individual_users"
@@ -1318,7 +1318,7 @@ success_indicators:
     - harmonic_distortion_reduction: "< 5% unwanted frequency components"
     - coupling_efficiency_gain: "> 15% improvement in inter-region communication"
     - stability_enhancement: "> 90% pattern persistence under perturbation"
-    
+
   qualitative_assessments:
     - user_satisfaction_improvement: "subjective reports of enhanced experience"
     - creativity_breakthrough_frequency: "increased rate of novel insights"
@@ -1338,34 +1338,34 @@ success_indicators:
 class AttractorFormationEngine:
     """
     Engine for understanding and facilitating attractor formation in context fields.
-    
+
     Think of this as studying how weather systems form - we want to understand
     how stable semantic patterns emerge and learn to guide their formation.
     """
-    
+
     def __init__(self, field: ContextField):
         self.field = field
         self.formation_history = []
         self.formation_predictors = {}
-        
+
     def predict_attractor_formation(self, time_horizon: int = 50) -> List[Dict]:
         """
         Predict where new attractors are likely to form.
-        
+
         Like predicting where storms will develop based on atmospheric conditions.
         """
         # Analyze current field conditions
         conditions = self._analyze_formation_conditions()
-        
+
         # Identify regions with high formation potential
         formation_zones = self._identify_formation_zones(conditions)
-        
+
         # Predict evolution of formation zones
         predictions = []
         for zone in formation_zones:
             formation_probability = self._calculate_formation_probability(zone, conditions)
             predicted_time = self._estimate_formation_time(zone, conditions)
-            
+
             if formation_probability > 0.3:  # Threshold for significant probability
                 predictions.append({
                     'location': zone['center'],
@@ -1374,31 +1374,31 @@ class AttractorFormationEngine:
                     'predicted_strength': zone['potential_strength'],
                     'formation_mechanism': zone['dominant_mechanism']
                 })
-        
+
         return predictions
-    
+
     def _analyze_formation_conditions(self) -> Dict:
         """Analyze field conditions that favor attractor formation"""
         field_intensity = np.abs(self.field.field)
-        
+
         # Calculate field gradients (flow patterns)
         grad_x = np.gradient(field_intensity, axis=1)
         grad_y = np.gradient(field_intensity, axis=0)
         gradient_magnitude = np.sqrt(grad_x**2 + grad_y**2)
-        
+
         # Calculate field curvature (convergence/divergence)
         laplacian = self.field._compute_laplacian(self.field.field)
         curvature = np.abs(laplacian)
-        
+
         # Calculate field energy density
         energy_density = field_intensity**2 + gradient_magnitude**2
-        
+
         # Calculate temporal variations (if history available)
         temporal_variation = np.zeros_like(field_intensity)
         if len(self.field.history) > 1:
             # Simple temporal derivative approximation
             temporal_variation = np.random.rand(*field_intensity.shape) * 0.1
-        
+
         return {
             'intensity': field_intensity,
             'gradient_magnitude': gradient_magnitude,
@@ -1407,7 +1407,7 @@ class AttractorFormationEngine:
             'temporal_variation': temporal_variation,
             'flow_convergence': -laplacian.real  # Negative laplacian indicates convergence
         }
-    
+
     def _identify_formation_zones(self, conditions: Dict) -> List[Dict]:
         """Identify regions where attractor formation is likely"""
         # Combine multiple formation indicators
@@ -1418,38 +1418,38 @@ class AttractorFormationEngine:
             0.2 * conditions['temporal_variation'] +
             0.1 * conditions['gradient_magnitude']
         )
-        
+
         # Smooth formation score to find coherent regions
         formation_score = gaussian_filter(formation_score, sigma=1.5)
-        
+
         # Find local maxima in formation score
         from scipy.ndimage import maximum_filter
         local_maxima = (formation_score == maximum_filter(formation_score, size=5))
-        
+
         # Extract formation zones
         threshold = np.mean(formation_score) + 0.5 * np.std(formation_score)
         significant_maxima = local_maxima & (formation_score > threshold)
-        
+
         y_coords, x_coords = np.where(significant_maxima)
         formation_zones = []
-        
+
         for y_idx, x_idx in zip(y_coords, x_coords):
             # Convert to spatial coordinates
             x_pos = (x_idx / self.field.nx - 0.5) * self.field.extent
             y_pos = (y_idx / self.field.ny - 0.5) * self.field.extent
-            
+
             # Analyze formation zone properties
             zone_score = formation_score[y_idx, x_idx]
             zone_energy = conditions['energy_density'][y_idx, x_idx]
             zone_convergence = conditions['flow_convergence'][y_idx, x_idx]
-            
+
             # Determine dominant formation mechanism
             mechanism = self._classify_formation_mechanism(
                 energy=zone_energy,
                 convergence=zone_convergence,
                 curvature=conditions['curvature'][y_idx, x_idx]
             )
-            
+
             formation_zones.append({
                 'center': (x_pos, y_pos),
                 'formation_score': zone_score,
@@ -1457,9 +1457,9 @@ class AttractorFormationEngine:
                 'convergence_strength': zone_convergence,
                 'dominant_mechanism': mechanism
             })
-        
+
         return formation_zones
-    
+
     def _classify_formation_mechanism(self, energy: float, convergence: float, curvature: float) -> str:
         """Classify the mechanism driving attractor formation"""
         if convergence > energy and convergence > curvature:
@@ -1470,13 +1470,13 @@ class AttractorFormationEngine:
             return "geometric_focusing"  # Field geometry creating natural wells
         else:
             return "multi_factor"  # Multiple mechanisms working together
-    
-    def facilitate_attractor_formation(self, target_location: Tuple[float, float], 
+
+    def facilitate_attractor_formation(self, target_location: Tuple[float, float],
                                      desired_strength: float = 1.0,
                                      formation_strategy: str = "gentle_seeding"):
         """
         Actively facilitate formation of an attractor at specified location.
-        
+
         Like cloud seeding - we provide nucleation sites and conditions
         that encourage natural attractor formation.
         """
@@ -1486,47 +1486,47 @@ class AttractorFormationEngine:
             "flow_redirection": self._flow_redirection_formation,
             "resonance_amplification": self._resonance_amplification_formation
         }
-        
+
         if formation_strategy in strategies:
             strategies[formation_strategy](target_location, desired_strength)
         else:
             raise ValueError(f"Unknown formation strategy: {formation_strategy}")
-    
+
     def _gentle_seed_formation(self, location: Tuple[float, float], strength: float):
         """Gently seed attractor formation with minimal field disruption"""
         x0, y0 = location
-        
+
         # Create small, weak seed that can grow naturally
         seed_radius = 0.5
         seed_strength = strength * 0.1  # Start with 10% of desired strength
-        
+
         # Add gaussian seed pattern
         distance_sq = (self.field.X - x0)**2 + (self.field.Y - y0)**2
         seed_pattern = seed_strength * np.exp(-distance_sq / (2 * seed_radius**2))
-        
+
         # Add with random phase to encourage natural evolution
         phase = np.random.rand() * 2 * np.pi
         self.field.field += seed_pattern * np.exp(1j * phase)
-        
+
         self.formation_history.append({
             'type': 'gentle_seeding',
             'location': location,
             'strength': seed_strength,
             'time': len(self.field.history) * self.field.dt
         })
-    
+
     def _energy_injection_formation(self, location: Tuple[float, float], strength: float):
         """Form attractor by injecting energy at target location"""
         x0, y0 = location
-        
+
         # Create high-energy region
         injection_radius = 1.0
         distance_sq = (self.field.X - x0)**2 + (self.field.Y - y0)**2
         energy_pattern = strength * np.exp(-distance_sq / (2 * injection_radius**2))
-        
+
         # Add energy with coherent phase
         self.field.field += energy_pattern
-        
+
         self.formation_history.append({
             'type': 'energy_injection',
             'location': location,
@@ -1538,91 +1538,91 @@ class AttractorFormationEngine:
 def demonstrate_neural_field_foundations():
     """
     Comprehensive demonstration of neural field concepts.
-    
+
     This walks through the key concepts with practical examples,
     like a guided tour of a weather forecasting center.
     """
     print("=== Neural Field Foundations Demonstration ===\n")
-    
+
     # Create context field
     print("1. Creating semantic field...")
     field = ContextField(grid_size=(48, 48), spatial_extent=8.0, dt=0.02)
-    
+
     # Add some initial attractors
     print("2. Adding semantic attractors...")
     field.add_attractor((-2, -2), strength=1.5, attractor_type='gaussian', radius=1.0)
     field.add_attractor((2, 2), strength=1.2, attractor_type='mexican_hat', radius=1.5)
     field.add_attractor((0, 3), strength=0.8, attractor_type='vortex', radius=1.0)
-    
+
     # Add context inputs
     print("3. Injecting context information...")
     field.add_context_input((-1, 1), "machine learning concepts", intensity=1.0, spread=0.8)
     field.add_context_input((1, -1), "neural network theory", intensity=0.8, spread=0.6)
     field.add_context_input((0, 0), "attention mechanisms", intensity=1.2, spread=1.0)
-    
+
     # Run initial evolution
     print("4. Evolving field dynamics...")
     initial_energy = field.get_field_energy()
     field.run_simulation(steps=30)
     final_energy = field.get_field_energy()
-    
+
     print(f"   Initial field energy: {initial_energy:.3f}")
     print(f"   Final field energy: {final_energy:.3f}")
     print(f"   Energy change: {final_energy - initial_energy:.3f}")
-    
+
     # Analyze field structure
     print("\n5. Analyzing field structure...")
     analyzer = FieldAnalyzer(field)
     topology = analyzer.analyze_field_topology()
-    
+
     print(f"   Critical points found:")
     print(f"     Maxima: {len(topology['critical_points']['maxima'])}")
     print(f"     Minima: {len(topology['critical_points']['minima'])}")
     print(f"     Saddles: {len(topology['critical_points']['saddles'])}")
     print(f"   Euler characteristic: {topology['euler_characteristic']}")
     print(f"   Connected components: {topology['connectivity']['n_components']}")
-    
+
     # Detect emergent attractors
     print("\n6. Detecting emergent attractors...")
     emergent_attractors = field.detect_attractors(threshold=0.3)
     print(f"   Emergent attractors detected: {len(emergent_attractors)}")
-    
+
     for i, attractor in enumerate(emergent_attractors):
         x, y = attractor['position']
         print(f"     Attractor {i+1}: Position ({x:.2f}, {y:.2f}), "
               f"Strength {attractor['strength']:.3f}")
-    
+
     # Predict field evolution
     print("\n7. Predicting future evolution...")
     predictions = analyzer.predict_field_evolution(steps_ahead=20)
     predicted_energies = [np.sum(np.abs(pred)**2) for pred in predictions]
-    
+
     print(f"   Predicted energy trajectory:")
     for i, energy in enumerate(predicted_energies[::5]):  # Show every 5th step
         print(f"     Step {i*5}: {energy:.3f}")
-    
+
     # Information flow analysis
     print("\n8. Analyzing information flow...")
     flow_info = analyzer.calculate_information_flow()
     total_flow = flow_info['total_flow']
-    max_flow_region = np.unravel_index(np.argmax(flow_info['magnitude']), 
+    max_flow_region = np.unravel_index(np.argmax(flow_info['magnitude']),
                                       flow_info['magnitude'].shape)
-    
+
     print(f"   Total information flow: {total_flow:.3f}")
     print(f"   Maximum flow region: Grid position {max_flow_region}")
-    
+
     # Demonstrate attractor formation
     print("\n9. Demonstrating attractor formation...")
     formation_engine = AttractorFormationEngine(field)
-    
+
     # Predict where new attractors might form
     formation_predictions = formation_engine.predict_attractor_formation()
     print(f"   Predicted formation sites: {len(formation_predictions)}")
-    
+
     for pred in formation_predictions[:3]:  # Show top 3 predictions
         x, y = pred['location']
         print(f"     Site: ({x:.2f}, {y:.2f}), Probability: {pred['probability']:.3f}")
-    
+
     # Facilitate formation of a new attractor
     if formation_predictions:
         target_location = formation_predictions[0]['location']
@@ -1630,25 +1630,25 @@ def demonstrate_neural_field_foundations():
         formation_engine.facilitate_attractor_formation(
             target_location, desired_strength=1.0, formation_strategy="gentle_seeding"
         )
-        
+
         # Evolve to see if attractor forms
         field.run_simulation(steps=20)
         new_attractors = field.detect_attractors(threshold=0.3)
         print(f"   Attractors after facilitation: {len(new_attractors)}")
-    
+
     print("\n=== Demonstration Complete ===")
-    
+
     # Visualize final state (would show plot in interactive environment)
     print("\nField visualization would appear here in interactive environment.")
     print("Run field.visualize_field() to see the current field state.")
-    
+
     return field, analyzer, formation_engine
 
 # Example usage and testing
 if __name__ == "__main__":
     # Run the comprehensive demonstration
     field, analyzer, formation_engine = demonstrate_neural_field_foundations()
-    
+
     # Additional examples can be run here
     print("\nFor interactive exploration, use:")
     print("  field.visualize_field()")
@@ -1717,15 +1717,15 @@ class SimpleContextField:
         # TODO: Initialize field infrastructure
         self.field = np.zeros((size, size), dtype=complex)
         self.size = size
-    
+
     def add_concept(self, position, concept_strength):
         # TODO: Add concept to field at specified position
         pass
-    
+
     def evolve_step(self):
         # TODO: Implement basic field evolution
         pass
-    
+
     def visualize(self):
         # TODO: Create visualization of field state
         pass
@@ -1744,11 +1744,11 @@ class AttractorFormationLab:
         # TODO: Set up experimental framework
         self.experiments = []
         self.results = []
-    
+
     def experiment_formation_conditions(self, condition_set):
         # TODO: Test different formation conditions
         pass
-    
+
     def analyze_formation_patterns(self):
         # TODO: Identify patterns in successful formations
         pass
@@ -1766,15 +1766,15 @@ class ResonanceOptimizer:
         # TODO: Initialize optimizer for given field
         self.field = field
         self.optimization_history = []
-    
+
     def detect_resonance_patterns(self):
         # TODO: Identify current resonance patterns
         pass
-    
+
     def optimize_resonance(self, target_pattern):
         # TODO: Modify field to enhance desired resonance
         pass
-    
+
     def measure_improvement(self):
         # TODO: Quantify resonance enhancement
         pass
@@ -1789,7 +1789,7 @@ optimizer = ResonanceOptimizer(your_field)
 
 **Core Concepts Mastered**:
 - Context as continuous mathematical fields rather than discrete representations
-- Neural field dynamics governing context evolution and self-organization  
+- Neural field dynamics governing context evolution and self-organization
 - Attractor formation and management for stable semantic patterns
 - Field resonance optimization for enhanced coherence and creativity
 - Information flow analysis and prediction in semantic space

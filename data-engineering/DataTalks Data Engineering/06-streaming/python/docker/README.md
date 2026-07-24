@@ -3,12 +3,12 @@
 
 ### 1. Build Required Images for running Spark
 
-The details of how to spark-images are build in different layers can be created can be read through 
+The details of how to spark-images are build in different layers can be created can be read through
 the blog post written by André Perez on [Medium blog -Towards Data Science](https://towardsdatascience.com/apache-spark-cluster-on-docker-ft-a-juyterlab-interface-418383c95445)
 
 ```bash
 # Build Spark Images
-./build.sh 
+./build.sh
 ```
 
 ### 2. Create Docker Network & Volume
@@ -44,4 +44,3 @@ docker rm -f $(docker ps -a -q)
 # Delete all volumes
 docker volume rm $(docker volume ls -q)
 ```
-

@@ -2,7 +2,7 @@
 ## From Discrete Messages to Continuous Field Emergence
 
 > **Module 07.0** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 
@@ -23,7 +23,7 @@ By the end of this module, you will understand and implement:
 Agent A ──[message]──→ Agent B
 ```
 
-### Stage 2: Communication Molecules  
+### Stage 2: Communication Molecules
 ```
 Agent A ↗ [protocol] ↘ Agent C
         ↘          ↗
@@ -34,7 +34,7 @@ Agent A ↗ [protocol] ↘ Agent C
 ```
 [Coordinator]
      ├─ Agent A ←→ Agent B
-     ├─ Agent C ←→ Agent D  
+     ├─ Agent C ←→ Agent D
      └─ [Shared Context]
 ```
 
@@ -49,7 +49,7 @@ Hierarchical Networks + Peer Networks + Broadcast Networks
 ```
 Continuous Semantic Space
 - Attractors: Common understanding basins
-- Gradients: Information flow directions  
+- Gradients: Information flow directions
 - Resonance: Synchronized agent states
 - Emergence: Novel communication patterns
 ```
@@ -92,7 +92,7 @@ P_{t+1} = f(P_t, Interactions_t, Performance_t)
 class Message:
     def __init__(self, sender, receiver, content, msg_type="info"):
         self.sender = sender
-        self.receiver = receiver  
+        self.receiver = receiver
         self.content = content
         self.msg_type = msg_type
         self.timestamp = time.time()
@@ -114,7 +114,7 @@ class Channel:
         self.protocol = protocol
         self.subscribers = set()
         self.message_queue = deque()
-    
+
     def publish(self, message: Message): pass
     def subscribe(self, agent_id: str): pass
     def deliver_messages(self): pass
@@ -136,15 +136,15 @@ class CommunicativeAgent:
         self.channels = {}
         self.protocols = {}
         self.context_memory = ContextMemory()
-    
+
     def send_message(self, receiver: str, content: str, channel: str = "default"):
         """Send message through specified channel"""
         pass
-    
+
     def receive_messages(self) -> List[Message]:
         """Process incoming messages from all channels"""
         pass
-    
+
     def update_context(self, new_context: Dict):
         """Update shared context understanding"""
         pass
@@ -169,7 +169,7 @@ async def request_response_pattern(requester, responder, request):
     # Send request
     message = Message(requester.id, responder.id, request, "request")
     await requester.send_message(message)
-    
+
     # Wait for response
     response = await requester.wait_for_response(timeout=30)
     return response.content
@@ -210,8 +210,8 @@ async def request_response_pattern(requester, responder, request):
     Agent A ●────→ ◊ ←────● Agent B
               ╲    ╱
                ╲  ╱
-      Semantic  ╲╱  
-        Field   ╱╲  
+      Semantic  ╲╱
+        Field   ╱╲
                ╱  ╲
               ╱    ╲
     Agent C ●────→ ◊ ←────● Agent D
@@ -229,16 +229,16 @@ class BasicAgent:
     def __init__(self, name):
         self.name = name
         self.inbox = []
-    
+
     def send_to(self, other_agent, message):
         other_agent.receive(f"{self.name}: {message}")
-    
+
     def receive(self, message):
         self.inbox.append(message)
         print(f"{self.name} received: {message}")
 
 # Usage example
-alice = BasicAgent("Alice") 
+alice = BasicAgent("Alice")
 bob = BasicAgent("Bob")
 alice.send_to(bob, "Hello Bob!")
 ```
@@ -250,7 +250,7 @@ class ProtocolAgent(BasicAgent):
     def __init__(self, name, protocols=None):
         super().__init__(name)
         self.protocols = protocols or {}
-    
+
     def send_structured(self, receiver, content, protocol_name):
         protocol = self.protocols[protocol_name]
         structured_msg = protocol.format(
@@ -259,7 +259,7 @@ class ProtocolAgent(BasicAgent):
             timestamp=time.time()
         )
         receiver.receive_structured(structured_msg, protocol_name)
-    
+
     def receive_structured(self, message, protocol_name):
         protocol = self.protocols[protocol_name]
         parsed = protocol.parse(message)
@@ -274,11 +274,11 @@ class MultiChannelAgent(ProtocolAgent):
         super().__init__(name)
         self.channels = {
             'urgent': PriorityChannel(),
-            'broadcast': BroadcastChannel(), 
+            'broadcast': BroadcastChannel(),
             'private': SecureChannel(),
             'semantic': SemanticChannel()
         }
-    
+
     def send_via_channel(self, channel_name, receiver, content):
         channel = self.channels[channel_name]
         channel.transmit(self.name, receiver, content)
@@ -292,7 +292,7 @@ class FieldAgent(MultiChannelAgent):
         super().__init__(name)
         self.position = position or np.random.rand(3)
         self.field_state = {}
-    
+
     def emit_to_field(self, content, strength=1.0):
         """Emit message into semantic field"""
         field_update = {
@@ -302,7 +302,7 @@ class FieldAgent(MultiChannelAgent):
             'timestamp': time.time()
         }
         semantic_field.update(self.name, field_update)
-    
+
     def sense_field(self, radius=1.0):
         """Sense nearby field activity"""
         return semantic_field.query_radius(self.position, radius)
@@ -319,14 +319,14 @@ class AdaptiveProtocol:
     def __init__(self):
         self.message_patterns = {}
         self.success_rates = {}
-    
+
     def evolve_protocol(self, message_history, success_metrics):
         """Automatically improve protocol based on communication outcomes"""
         # Pattern recognition on successful vs failed communications
         successful_patterns = self.extract_patterns(
             message_history, success_metrics
         )
-        
+
         # Update protocol rules
         for pattern in successful_patterns:
             self.message_patterns[pattern.id] = pattern
@@ -341,16 +341,16 @@ class SemanticAlignment:
     def __init__(self):
         self.shared_vocabulary = {}
         self.concept_mappings = {}
-    
+
     def align_terminology(self, agent_a, agent_b, concept):
         """Negotiate shared meaning for concepts"""
         a_definition = agent_a.get_concept_definition(concept)
         b_definition = agent_b.get_concept_definition(concept)
-        
+
         aligned_definition = self.negotiate_definition(
             a_definition, b_definition
         )
-        
+
         # Update both agents' understanding
         agent_a.update_concept(concept, aligned_definition)
         agent_b.update_concept(concept, aligned_definition)
@@ -364,7 +364,7 @@ class CommunicationField:
     def __init__(self):
         self.attractors = {}  # Semantic attractors
         self.field_state = np.zeros((100, 100, 100))  # 3D semantic space
-    
+
     def create_attractor(self, position, concept, strength):
         """Create semantic attractor for concept clustering"""
         self.attractors[concept] = {
@@ -372,12 +372,12 @@ class CommunicationField:
             'strength': strength,
             'messages': []
         }
-    
+
     def route_message(self, message):
         """Route message based on field dynamics"""
         # Find strongest attractor for message content
         best_attractor = self.find_best_attractor(message.content)
-        
+
         # Route to agents near that attractor
         nearby_agents = self.get_agents_near_attractor(best_attractor)
         return nearby_agents
@@ -403,11 +403,11 @@ def measure_semantic_coherence(agent_states):
     # Measure alignment of shared concepts across agents
     concept_similarity = []
     for concept in shared_concepts:
-        agent_embeddings = [agent.get_concept_embedding(concept) 
+        agent_embeddings = [agent.get_concept_embedding(concept)
                           for agent in agents]
         similarity = cosine_similarity_matrix(agent_embeddings)
         concept_similarity.append(similarity.mean())
-    
+
     return np.mean(concept_similarity)
 ```
 
@@ -416,13 +416,13 @@ def measure_semantic_coherence(agent_states):
 def detect_emergent_communication(communication_log):
     # Look for novel communication patterns
     patterns = extract_communication_patterns(communication_log)
-    
+
     emergent_patterns = []
     for pattern in patterns:
         if pattern.frequency_growth > threshold:
             if pattern.effectiveness > baseline:
                 emergent_patterns.append(pattern)
-    
+
     return emergent_patterns
 ```
 
@@ -439,7 +439,7 @@ class ConversationalAgent:
         # TODO: Add conversation memory
         # TODO: Add personality-based response generation
         pass
-    
+
     def respond_to(self, message, sender):
         # TODO: Generate contextual response
         pass
@@ -454,7 +454,7 @@ class EvolvingProtocol:
         # TODO: Track message patterns and success rates
         # TODO: Implement protocol mutation mechanisms
         pass
-    
+
     def adapt_based_on_feedback(self, feedback):
         # TODO: Modify protocol rules based on performance
         pass
@@ -469,7 +469,7 @@ class FieldCommunicator:
         # TODO: Create semantic field representation
         # TODO: Implement field update and sensing methods
         pass
-    
+
     def broadcast_to_field(self, content, position, radius):
         # TODO: Update field with semantic content
         pass
@@ -499,7 +499,7 @@ class FieldCommunicator:
 This module builds on key concepts from the [Context Engineering Survey](https://arxiv.org/pdf/2507.13334):
 
 - **Multi-Agent Systems (§5.4)**: KQML, FIPA ACL, MCP protocols, AutoGen, MetaGPT
-- **Communication Protocols**: Agent Communication Languages, Coordination Strategies  
+- **Communication Protocols**: Agent Communication Languages, Coordination Strategies
 - **System Integration**: Component interaction patterns, emergent behaviors
 
 Key research directions:
@@ -519,7 +519,7 @@ Key research directions:
 
 **Implementation Skills**:
 - Basic to advanced agent communication systems
-- Protocol design and adaptation mechanisms  
+- Protocol design and adaptation mechanisms
 - Semantic field communication
 - Communication effectiveness evaluation
 

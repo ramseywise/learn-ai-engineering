@@ -6,7 +6,7 @@ import threading
 import logging
 app = Flask(__name__)
 from utils import generate_embedding
-import os 
+import os
 
 @app.route('/.well-known/ready', methods=['GET'])
 def readiness_check():
@@ -17,7 +17,7 @@ def readiness_check_2():
     return jsonify({'status': 'Ready'}), 200
 
 
-@app.route('/vectors', methods=['POST']) 
+@app.route('/vectors', methods=['POST'])
 def vectorize():
     try:
         try:
@@ -32,7 +32,7 @@ def vectorize():
             text = [text]
         else:
             text =text['text']
-            
+
         embeddings = generate_embedding(text)
 
         return jsonify({'vector': embeddings})
@@ -40,7 +40,7 @@ def vectorize():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-    
+
 app.logger.disabled = True
 # Get the Flask app's logger
 log = logging.getLogger('werkzeug')

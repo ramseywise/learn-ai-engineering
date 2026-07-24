@@ -59,4 +59,3 @@ SELECT count(*) as trips
 FROM taxi-rides-ny.nytaxi.yellow_tripdata_partitoned_clustered
 WHERE DATE(tpep_pickup_datetime) BETWEEN '2019-06-01' AND '2020-12-31'
   AND VendorID=1;
-

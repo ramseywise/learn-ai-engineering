@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 
 
 def generate_params_dict(
-    prompt: str, 
-    temperature: float = None, 
+    prompt: str,
+    temperature: float = None,
     role = 'user',
     top_p: float = None,
     max_tokens: int = 500,
@@ -15,33 +15,33 @@ def generate_params_dict(
 ):
     """
     Call an LLM with different sampling parameters to observe their effects.
-    
+
     Args:
         prompt: The text prompt to send to the model
         temperature: Controls randomness (lower = more deterministic)
         top_p: Controls diversity via nucleus sampling
         max_tokens: Maximum number of tokens to generate
         model: The model to use
-        
+
     Returns:
         The LLM response
     """
-    
+
     # Create the dictionary with the necessary parameters
-    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model} 
+    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model}
 
 
     return kwargs
 
-def generate_with_single_input(prompt: str, 
-                               role: str = 'user', 
-                               top_p: float = None, 
+def generate_with_single_input(prompt: str,
+                               role: str = 'user',
+                               top_p: float = None,
                                temperature: float = None,
                                max_tokens: int = 500,
                                model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                together_api_key = None,
                               **kwargs):
-    
+
     if top_p is None:
         top_p = 'none'
     if temperature is None:
@@ -56,7 +56,7 @@ def generate_with_single_input(prompt: str,
             **kwargs
                   }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -77,18 +77,18 @@ def generate_with_single_input(prompt: str,
     return output_dict
 
 
-def generate_with_multiple_input(messages: List[Dict], 
-                               top_p: float = 1, 
+def generate_with_multiple_input(messages: List[Dict],
+                               top_p: float = 1,
                                temperature: float = 1,
                                max_tokens: int = 500,
-                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo", 
+                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                 together_api_key = None,
                                 **kwargs):
     if top_p is None:
         top_p = 'none'
     if temperature is None:
         temperature = 'none'
-        
+
     payload = {
         "model": model,
         "messages": messages,
@@ -98,7 +98,7 @@ def generate_with_multiple_input(messages: List[Dict],
         **kwargs
               }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -139,6 +139,6 @@ def call_llm_with_context(prompt: str, context: list,  role: str = 'user', **kwa
     response = generate_with_multiple_input(context, **kwargs)
 
     # Append the LLM response in the context dict
-    context.append(response) 
-    
+    context.append(response)
+
     return response

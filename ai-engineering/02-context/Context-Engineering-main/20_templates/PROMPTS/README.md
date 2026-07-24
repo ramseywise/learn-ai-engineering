@@ -45,83 +45,83 @@ graph LR
     Root --> Cognitive[Cognitive Tool Templates]
     Root --> Field[Field Operation Templates]
     Root --> Agent[Agent Protocol Templates]
-    
+
     %% Task-Specific Templates
     Task --> Research[Research & Analysis]
     Task --> Evaluation[Evaluation & Assessment]
     Task --> Content[Content Creation]
     Task --> Technical[Technical Tasks]
-    
+
     %% Research & Analysis Templates
     Research --> ResearchAgent[research.agent.md]
     Research --> LitAgent[lit.agent.md]
-    
+
     %% Evaluation & Assessment Templates
     Evaluation --> AlignmentAgent[alignment.agent.md]
     Evaluation --> IncidentAgent[incident.agent.md]
-    
+
     %% Content Creation Templates
     Content --> PortfolioAgent[portfolio.agent.md]
     Content --> PolicyAgent[policyimpact.agent.md]
-    
+
     %% Technical Tasks Templates
     Technical --> PipelineAgent[pipeline.agent.md]
     Technical --> MemoryAgent[memory.agent.md]
-    
+
     %% Cognitive Tool Templates
     Cognitive --> Reasoning[Reasoning Patterns]
     Cognitive --> Verification[Verification Methods]
     Cognitive --> Learning[Learning Techniques]
     Cognitive --> Design[Design Approaches]
-    
+
     %% Reasoning Pattern Templates
     Reasoning --> ChainOfThought[chain_of_thought.md]
     Reasoning --> SelfOrg[self_organization.md]
-    
+
     %% Verification Method Templates
     Verification --> VerificationLoop[verification_loop.md]
     Verification --> DiligenceAgent[diligence.agent.md]
-    
+
     %% Learning Technique Templates
     Learning --> FewShot[few_shot_learning.md]
     Learning --> LearningRoadmap[learningroadmap.agent.md]
-    
+
     %% Design Approach Templates
     Design --> AttractorDesign[attractor_design.md]
     Design --> ProtocolAgent[protocol.agent.md]
-    
+
     %% Field Operation Templates
     Field --> Protocol[Protocol Implementation]
     Field --> Management[Field Management]
     Field --> Analysis[Field Analysis]
-    
+
     %% Protocol Implementation Templates
     Protocol --> ProtocolAgentMd[protocol.agent.md]
-    
+
     %% Field Management Templates
     Management --> SelfOrgMd[self_organization.md]
     Management --> MemoryAgentMd[memory.agent.md]
-    
+
     %% Field Analysis Templates
     Analysis --> ExperimentAgent[experiment.agent.md]
-    
+
     %% Agent Protocol Templates
     Agent --> Communication[Communication]
     Agent --> Ethics[Ethics & Governance]
     Agent --> Workflow[Workflow Management]
-    
+
     %% Communication Templates
     Communication --> CommsAgent[comms.agent.md]
     Communication --> GrantAgent[grant.agent.md]
-    
+
     %% Ethics & Governance Templates
     Ethics --> EthicsAgent[ethics.agent.md]
     Ethics --> TriageAgent[triage.agent.md]
-    
+
     %% Workflow Management Templates
     Workflow --> IdeationAgent[ideation.agent.md]
     Workflow --> ExpertGuides[expert_guides.md]
-    
+
     %% Styling
     classDef category fill:#f9f9f9,stroke:#666,stroke-width:1px,color:#333,font-weight:bold
     classDef task fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
@@ -129,7 +129,7 @@ graph LR
     classDef field fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
     classDef agent fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#6a1b9a
     classDef template fill:#ffffff,stroke:#999,stroke-width:1px,color:#333
-    
+
     class Root,Task,Cognitive,Field,Agent,Research,Evaluation,Content,Technical,Reasoning,Verification,Learning,Design,Protocol,Management,Analysis,Communication,Ethics,Workflow category
     class ResearchAgent,LitAgent,AlignmentAgent,IncidentAgent,PortfolioAgent,PolicyAgent,PipelineAgent,MemoryAgent task
     class ChainOfThought,SelfOrg,VerificationLoop,DiligenceAgent,FewShot,LearningRoadmap,AttractorDesign,ProtocolAgent cognitive
@@ -214,11 +214,11 @@ from templates.field_protocol_shells import ProtocolShell
 # Load prompt template
 with open('PROMPTS/protocol.agent.md', 'r') as f:
     template = f.read()
-    
+
 # Extract context section
-context_section = re.search(r'## Context\s+```yaml\s+(.*?)\s+```', 
+context_section = re.search(r'## Context\s+```yaml\s+(.*?)\s+```',
                           template, re.DOTALL).group(1)
-                          
+
 # Parse context configuration
 context_config = yaml.safe_load(context_section)
 

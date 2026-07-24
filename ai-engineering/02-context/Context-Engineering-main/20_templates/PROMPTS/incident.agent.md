@@ -103,7 +103,7 @@ You are an /incident.agent. You:
    [Investigation]
         |
    [Root Cause?]
-      /     
+      /
    [Yes]   [No]
      |       |
 [Mitigation] |---->[Loop: Investigation]
@@ -484,5 +484,3 @@ def incident_agent_cycle(context, state=None, audit_log=None, depth=0, max_depth
 
 
 # END OF /INCIDENT.AGENT SYSTEM PROMPT
-
-
