@@ -10,13 +10,13 @@
     <link rel="stylesheet" href="/static/components/jquery-ui/themes/smoothness/jquery-ui.min.css?v=fb45616eef2c454960f91fcd2a04efeda84cfacccf0c5d741ba2793dc1dbd6d3ab01aaae6485222945774c7d7a9a2e9fb87e0d8ef1ea96893aa6906147a371bb" type="text/css" />
     <link rel="stylesheet" href="/static/components/jquery-typeahead/dist/jquery.typeahead.min.css?v=5edf53bf6bb9c3b1ddafd8594825a7e2ed621f19423e569c985162742f63911c09eba2c529f8fb47aebf27fafdfe287d563347f58c1126b278189a18871b6a9a" type="text/css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    
+
+
 <link rel="stylesheet" href="/static/components/codemirror/lib/codemirror.css?v=81fecb54f83101e2bbe6d2e3131e252ac83f2910366100ca83ba4834f5d41754c837f306eecfdceed05f9c9111614942e2ced5acdd8040746b66c6bef0141d0e">
 <link rel="stylesheet" href="/static/components/codemirror/addon/dialog/dialog.css?v=e7f5db4afaccf8a00c10d62c3693642323d3fcf17604a4797803df04e4f144a944dc646c2fda20548df538ada775570127b2a15403996a171ced1769697f3ee4">
 
     <link rel="stylesheet" href="/static/style/style.min.css?v=61d6bbbf6386fcab20a5f0be07f7208939f87b3f98ebf3cb2e96b01ab4903d39c26c203ceaa4e53b95af89bb6d0ac4e533cad4e2aedbd95124deb87038263745" type="text/css"/>
-    
+
 
     <link rel="stylesheet" href="/custom/custom.css" type="text/css" />
     <script src="/static/components/es6-promise/promise.min.js?v=bea335d74136a63ae1b5130f5ac9a50c6256a5f435e6e09fef599491a84d834a8b0f011ca3eaaca3b4ab6a2da2d3e1191567a2f171e60da1d10e5b9d52f84184" type="text/javascript" charset="utf-8"></script>
@@ -26,9 +26,9 @@
     <script src="/static/components/requirejs/require.js?v=d37b48bb2137faa0ab98157e240c084dd5b1b5e74911723aa1d1f04c928c2a03dedf922d049e4815f7e5a369faa2e6b6a1000aae958b7953b5cc60411154f593" type="text/javascript" charset="utf-8"></script>
     <script>
       require.config({
-          
+
           urlArgs: "v=20250319081346",
-          
+
           baseUrl: '/static/',
           paths: {
             'auth/js/main': 'auth/js/main.min',
@@ -115,27 +115,27 @@
       gtag('config', 'G-TD3C44Z6EH');
     </script>
 
-    
-    
+
+
 
 </head>
 
 <body class="edit_app "
- 
+
 data-base-url="/"
 data-file-path="L2/helper.py"
 
-  
+
     data-jupyter-api-token="REDACTED_TOKEN"
-  
- 
+
+
 
 dir="ltr">
 
 <noscript>
     <div id='noscript'>
       Jupyter Notebook requires JavaScript.<br>
-      Please enable it to proceed. 
+      Please enable it to proceed.
   </div>
 </noscript>
 
@@ -145,7 +145,7 @@ dir="ltr">
       <img src='/static/base/images/logo.png?v=a2a176ee3cee251ffddf5fa21fe8e43727a9e5f87a06f9c91ad7b776d9e9d3d5e0159c16cc188a3965e00375fb4bc336c16067c688f5040c0c2d4bfdb852a9e4' alt='Jupyter Notebook'/>
   </a></div>
 
-  
+
 
 <span id="save_widget" class="pull-left save_widget">
     <span class="filename"></span>
@@ -153,27 +153,27 @@ dir="ltr">
 </span>
 
 
-  
 
-  
-  
-  
-  
+
+
+
+
+
 
     <span id="login_widget">
-      
+
         <button id="logout" class="btn btn-sm navbar-btn">Logout</button>
-      
+
     </span>
 
-  
 
-  
-  
+
+
+
   </div>
   <div class="header-bar"></div>
 
-  
+
 
 <div id="menubar-container" class="container">
   <div id="menubar">
@@ -249,7 +249,7 @@ dir="ltr">
 
 
 
-    
+
 
 
 <script src="/static/edit/js/main.min.js?v=587e83c735545d7976a1e3293d0dfe355d0c60b94afc09ca42a395e2035c218d4fbf7ed9d21e5815796b593035e3b9b53af79a39cd36ca0a2bdcfea1db77ee49" type="text/javascript" charset="utf-8"></script>
@@ -269,9 +269,9 @@ dir="ltr">
         if (search_parameters.length) {
           new_search = '?' + search_parameters.join('&');
         }
-        var new_url = window.location.origin + 
-                      window.location.pathname + 
-                      new_search + 
+        var new_url = window.location.origin +
+                      window.location.pathname +
+                      new_search +
                       window.location.hash;
         window.history.replaceState({}, "", new_url);
         return;

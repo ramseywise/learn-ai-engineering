@@ -87,11 +87,11 @@ For each criterion, score both articles on a scale of 0-10 (continuous values). 
 *   8-10 points: Excellent/outstanding performance. Fully meets or exceeds the criterion requirements.
 
 **Output Format Requirements**
-Please **strictly** follow the required output format for each criterion evaluation. 
+Please **strictly** follow the required output format for each criterion evaluation.
 **Do not include any other unrelated content, introduction, or summary**. Start with "Standard 1" and proceed sequentially through all criteria.
 </Instruction>
 
-Now, please evaluate the two articles based on the research task and criteria, providing detailed comparative analysis and scores according to the requirements above. 
+Now, please evaluate the two articles based on the research task and criteria, providing detailed comparative analysis and scores according to the requirements above.
 Ensure your output follows the specified output format requirements with all characters that might cause JSON parsing errors properly escaped.
 </user_prompt>
 """

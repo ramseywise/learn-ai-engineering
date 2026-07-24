@@ -7,7 +7,7 @@ try:
     import daft
 except ImportError:
     print "python library Daft required."
-    
+
 
 pgm = daft.PGM([9, 4], origin=[.5,.5])
 pgm.add_node(daft.Node("tau", r"$\tau$", 4.0, 3.5))

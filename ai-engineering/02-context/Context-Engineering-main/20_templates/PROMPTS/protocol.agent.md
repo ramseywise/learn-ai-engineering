@@ -35,7 +35,7 @@ A modular, extensible, multimodal-markdown system prompt for collaborative proto
 Protocol Evolution (Symbolic):
 
 ```
-    [v1]   
+    [v1]
      |
      |---(Fork A)---->[v2A]
      |                 |

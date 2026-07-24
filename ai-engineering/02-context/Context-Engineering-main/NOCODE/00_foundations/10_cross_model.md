@@ -439,13 +439,13 @@ Let's use Pareto-Lang, a protocol orchestration language, to design our cross-mo
 ```
 /orchestra.perform{
   intent="Coordinate multiple AI models for an integrated experience",
-  
+
   semantic_framework={
     shared_concepts=<core_semantic_elements>,
     vocabulary=<common_terminology>,
     interpretation_guidelines=<consistent_rules>
   },
-  
+
   models=[
     "/llm.process{
       model='text_generation',
@@ -453,21 +453,21 @@ Let's use Pareto-Lang, a protocol orchestration language, to design our cross-mo
       input_requirements=<text_prompt_format>,
       output_format=<structured_text>
     }",
-    
+
     "/vision.process{
       model='image_understanding',
       role='visual_analysis',
       input_requirements=<image_format>,
       output_format=<semantic_description>
     }",
-    
+
     "/reasoning.process{
       model='analytical_engine',
       role='logical_processing',
       input_requirements=<structured_problem>,
       output_format=<solution_steps>
     }",
-    
+
     "/audio.process{
       model='speech_processing',
       role='voice_interaction',
@@ -475,28 +475,28 @@ Let's use Pareto-Lang, a protocol orchestration language, to design our cross-mo
       output_format=<transcription_and_intent>
     }"
   ],
-  
+
   orchestration_flow=[
     "/sequence.define{
       initialization='prepare_semantic_space',
       main_sequence='conditional_flow',
       finalization='integrate_outputs'
     }",
-    
+
     "/parallel.process{
       condition='multi_modal_input',
       models=['vision', 'audio'],
       synchronization='wait_all',
       integration='unified_representation'
     }",
-    
+
     "/sequential.process{
       first='llm',
       then='reasoning',
       data_passing='structured_handoff',
       condition='complexity_threshold'
     }",
-    
+
     "/conditional.branch{
       decision_factor='input_type',
       paths={
@@ -507,27 +507,27 @@ Let's use Pareto-Lang, a protocol orchestration language, to design our cross-mo
       }
     }"
   ],
-  
+
   error_handling=[
     "/model.fallback{
       on_failure='llm',
       alternative='backup_llm',
       degradation_path='simplified_response'
     }",
-    
+
     "/timeout.manage{
       max_wait=<time_limits>,
       partial_results='acceptable',
       notification='processing_delay'
     }",
-    
+
     "/coherence.check{
       verify='cross_model_consistency',
       on_conflict='prioritization_rules',
       repair='inconsistency_resolution'
     }"
   ],
-  
+
   output_integration={
     format=<unified_response_structure>,
     attribution=<model_contribution_tracking>,
@@ -617,14 +617,14 @@ Here's a structured approach to developing effective bridges between models:
 ```
 /bridge.construct{
   intent="Create effective pathways for meaning to flow between AI models",
-  
+
   input={
     source_model=<origin_model>,
     target_model=<destination_model>,
     bridge_type=<connection_approach>,
     semantic_preservation="high"
   },
-  
+
   process=[
     "/representation.analyze{
       source='model_specific_representation',
@@ -632,28 +632,28 @@ Here's a structured approach to developing effective bridges between models:
       identify='structural_differences',
       determine='translation_approach'
     }",
-    
+
     "/semantic.extract{
       from='source_model_output',
       identify='core_meaning_elements',
       separate='model_specific_features',
       prepare='for_translation'
     }",
-    
+
     "/mapping.create{
       from='source_elements',
       to='target_elements',
       establish='correspondence_rules',
       verify='bidirectional_validity'
     }",
-    
+
     "/translation.implement{
       apply='mapping_rules',
       preserve='semantic_integrity',
       adapt='to_target_model',
       optimize='processing_efficiency'
     }",
-    
+
     "/bridge.verify{
       test='in_both_directions',
       measure='meaning_preservation',
@@ -661,7 +661,7 @@ Here's a structured approach to developing effective bridges between models:
       refine='mapping_parameters'
     }"
   ],
-  
+
   output={
     bridge_implementation=<cross_model_connection_mechanism>,
     mapping_documentation=<correspondence_rules>,
@@ -720,26 +720,26 @@ Now let's explore practical patterns for implementing cross-model integrations w
 ```
 /pipeline.sequential{
   intent="Process data through a series of models in sequence",
-  
+
   models=[
     "/model.configure{id='model_a', settings=<model_a_parameters>}",
     "/model.configure{id='model_b', settings=<model_b_parameters>}",
     "/model.configure{id='model_c', settings=<model_c_parameters>}"
   ],
-  
+
   connections=[
     "/connect{from='input', to='model_a', transform=<optional_preprocessing>}",
     "/connect{from='model_a', to='model_b', transform=<bridge_a_to_b>}",
     "/connect{from='model_b', to='model_c', transform=<bridge_b_to_c>}",
     "/connect{from='model_c', to='output', transform=<optional_postprocessing>}"
   ],
-  
+
   error_handling=[
     "/on_error{at='model_a', action='retry_or_fallback', max_attempts=3}",
     "/on_error{at='model_b', action='skip_or_substitute', alternative=<simplified_processing>}",
     "/on_error{at='model_c', action='partial_result', fallback=<default_output>}"
   ],
-  
+
   monitoring={
     performance_tracking=true,
     log_level="detailed",
@@ -788,32 +788,32 @@ Now that we understand the conceptual framework of our AI orchestra, let's explo
 ```
 /pipeline.parallel{
   intent="Process data through multiple models simultaneously",
-  
+
   models=[
     "/model.configure{id='model_a', settings=<model_a_parameters>}",
     "/model.configure{id='model_b', settings=<model_b_parameters>}"
   ],
-  
+
   connections=[
     "/connect{from='input', to='model_a', transform=<preprocessing_for_a>}",
     "/connect{from='input', to='model_b', transform=<preprocessing_for_b>}",
     "/connect{from='model_a', to='integration', transform=<optional_transform>}",
     "/connect{from='model_b', to='integration', transform=<optional_transform>}"
   ],
-  
+
   integration={
     method="combine_or_select",
     strategy=<integration_approach>,
     conflict_resolution=<handling_contradictions>,
     output_format=<unified_result>
   },
-  
+
   error_handling=[
     "/on_error{at='model_a', action='continue_without', mark_missing=true}",
     "/on_error{at='model_b', action='continue_without', mark_missing=true}",
     "/on_error{at='integration', action='fallback', alternative=<simplified_result>}"
   ],
-  
+
   monitoring={
     performance_tracking=true,
     parallel_metrics=true,
@@ -864,7 +864,7 @@ Now that we understand the conceptual framework of our AI orchestra, let's explo
 ```
 /pipeline.branch{
   intent="Route inputs to appropriate models based on content or context",
-  
+
   decision={
     model="/model.configure{id='decision_model', settings=<decision_parameters>}",
     criteria=[
@@ -874,33 +874,33 @@ Now that we understand the conceptual framework of our AI orchestra, let's explo
     ],
     default_path="general_purpose"
   },
-  
+
   routing={
     "text + simple + casual": "/route{to='model_a', priority='high'}",
     "text + complex + technical": "/route{to='model_b', priority='high'}",
     "image + any + any": "/route{to='model_c', priority='medium'}",
     "mixed + any + any": "/route{to=['model_b', 'model_c'], mode='parallel'}"
   },
-  
+
   models=[
     "/model.configure{id='model_a', settings=<model_a_parameters>}",
     "/model.configure{id='model_b', settings=<model_b_parameters>}",
     "/model.configure{id='model_c', settings=<model_c_parameters>}"
   ],
-  
+
   connections=[
     "/connect{from='input', to='decision_model', transform=<feature_extraction>}",
     "/connect{from='decision_model', to='routing_logic', transform=<decision_mapping>}",
     "/connect{from='routing_logic', to=['model_a', 'model_b', 'model_c'], transform=<conditional_preprocessing>}",
     "/connect{from=['model_a', 'model_b', 'model_c'], to='output', transform=<result_standardization>}"
   ],
-  
+
   error_handling=[
     "/on_error{at='decision_model', action='use_default_path', log='critical'}",
     "/on_error{at='routing', action='fallback_to_general', alert=true}",
     "/on_error{at='processing', action='try_alternative_model', max_attempts=2}"
   ],
-  
+
   monitoring={
     decision_accuracy=true,
     routing_efficiency=true,
@@ -951,20 +951,20 @@ Now that we understand the conceptual framework of our AI orchestra, let's explo
 ```
 /pipeline.feedback{
   intent="Create an iterative improvement cycle across multiple models",
-  
+
   models=[
     "/model.configure{id='model_a', settings=<model_a_parameters>}",
     "/model.configure{id='model_b', settings=<model_b_parameters>}",
     "/model.configure{id='evaluation_model', settings=<evaluation_parameters>}"
   ],
-  
+
   connections=[
     "/connect{from='input', to='model_a', transform=<initial_preprocessing>}",
     "/connect{from='model_a', to='model_b', transform=<intermediate_processing>}",
     "/connect{from='model_b', to='evaluation_model', transform=<prepare_for_evaluation>}",
     "/connect{from='evaluation_model', to='decision_point', transform=<quality_assessment>}"
   ],
-  
+
   feedback_loop={
     evaluation_criteria=[
       "/criterion{name='quality_score', threshold=<minimum_acceptable>, scale=0-1}",
@@ -982,13 +982,13 @@ Now that we understand the conceptual framework of our AI orchestra, let's explo
       improvement_tracking=true
     }"
   },
-  
+
   exit_conditions=[
     "/exit{when='quality_threshold_met', output='final_result'}",
     "/exit{when='max_iterations_reached', output='best_result_so_far'}",
     "/exit{when='diminishing_returns', output='optimal_result'}"
   ],
-  
+
   monitoring={
     iteration_tracking=true,
     improvement_visualization=true,
@@ -1102,7 +1102,7 @@ Let's look at how to implement each of these components using our protocol-based
 ```
 /component.model_wrapper{
   intent="Create a standardized interface for diverse AI models",
-  
+
   model_configuration={
     provider=<service_provider>,
     model_id=<specific_model>,
@@ -1110,28 +1110,28 @@ Let's look at how to implement each of these components using our protocol-based
     authentication=<auth_method>,
     endpoint=<api_url>
   },
-  
+
   input_handling={
     format_validation=<validation_rules>,
     preprocessing=<standard_transformations>,
     batching_strategy=<optional_batching>,
     input_limits=<size_restrictions>
   },
-  
+
   output_handling={
     format_standardization=<output_transformation>,
     error_normalization=<error_handling_approach>,
     response_validation=<validation_checks>,
     postprocessing=<standard_processing>
   },
-  
+
   operational_controls={
     rate_limiting=<requests_per_time>,
     retry_strategy=<retry_parameters>,
     timeout_handling=<timeout_approach>,
     quota_management=<usage_tracking>
   },
-  
+
   monitoring={
     performance_metrics=<tracked_statistics>,
     usage_logging=<log_configuration>,
@@ -1146,13 +1146,13 @@ Let's look at how to implement each of these components using our protocol-based
 ```
 /component.transformation_bridge{
   intent="Convert data between different formats while preserving meaning",
-  
+
   formats={
     source_format=<input_specification>,
     target_format=<output_specification>,
     schema_mapping=<field_correspondences>
   },
-  
+
   transformation_rules=[
     "/rule{
       source_element=<input_field>,
@@ -1162,14 +1162,14 @@ Let's look at how to implement each of these components using our protocol-based
     }",
     // Additional rules...
   ],
-  
+
   semantic_preservation={
     core_concepts=<preserved_elements>,
     meaning_validation=<coherence_checks>,
     information_loss_detection=<completeness_verification>,
     context_maintenance=<relational_preservation>
   },
-  
+
   operational_aspects={
     performance_optimization=<efficiency_measures>,
     error_handling=<transformation_failures>,
@@ -1184,35 +1184,35 @@ Let's look at how to implement each of these components using our protocol-based
 ```
 /component.orchestration_controller{
   intent="Manage the flow and coordination of the integration pipeline",
-  
+
   pipeline_definition={
     stages=<ordered_processing_steps>,
     dependencies=<stage_relationships>,
     parallelism=<concurrent_execution>,
     conditional_paths=<branching_logic>
   },
-  
+
   execution_control={
     initialization=<startup_procedures>,
     flow_management=<sequencing_logic>,
     synchronization=<coordination_points>,
     termination=<shutdown_procedures>
   },
-  
+
   state_management={
     state_tracking=<progress_monitoring>,
     persistence=<state_storage>,
     recovery=<failure_handling>,
     checkpointing=<intermediate_states>
   },
-  
+
   adaptability={
     dynamic_routing=<runtime_decisions>,
     load_balancing=<resource_optimization>,
     priority_handling=<task_importance>,
     feedback_incorporation=<self_adjustment>
   },
-  
+
   visualization={
     flow_diagram=<pipeline_visualization>,
     status_dashboard=<execution_monitoring>,
@@ -1227,34 +1227,34 @@ Let's look at how to implement each of these components using our protocol-based
 ```
 /component.semantic_field_manager{
   intent="Maintain a unified semantic space across all models",
-  
+
   semantic_framework={
     core_concepts=<foundational_elements>,
     relationships=<concept_connections>,
     hierarchies=<organizational_structure>,
     attributes=<property_definitions>
   },
-  
+
   field_operations=[
     "/operation{name='concept_mapping', function='map_model_outputs_to_field', parameters=<mapping_rules>}",
     "/operation{name='consistency_checking', function='verify_semantic_coherence', parameters=<validation_criteria>}",
     "/operation{name='conflict_resolution', function='resolve_contradictions', parameters=<resolution_strategies>}",
     "/operation{name='field_maintenance', function='update_and_evolve_field', parameters=<evolution_rules>}"
   ],
-  
+
   integration_interfaces=[
     "/interface{for='model_a', mapping='bidirectional', translation=<model_a_semantic_bridge>}",
     "/interface{for='model_b', mapping='bidirectional', translation=<model_b_semantic_bridge>}",
     // Additional interfaces...
   ],
-  
+
   field_management={
     persistence=<storage_approach>,
     versioning=<change_tracking>,
     access_control=<usage_permissions>,
     documentation=<semantic_documentation>
   },
-  
+
   field_analytics={
     coherence_measurement=<semantic_metrics>,
     coverage_analysis=<concept_coverage>,
@@ -1269,7 +1269,7 @@ Let's look at how to implement each of these components using our protocol-based
 ```
 /component.monitoring{
   intent="Track, analyze, and visualize cross-model integration performance",
-  
+
   metrics_collection=[
     "/metric{name='latency', measurement='end_to_end_processing_time', units='milliseconds', aggregation=['avg', 'p95', 'max']}",
     "/metric{name='throughput', measurement='requests_per_minute', units='rpm', aggregation=['current', 'peak']}",
@@ -1277,7 +1277,7 @@ Let's look at how to implement each of these components using our protocol-based
     "/metric{name='model_usage', measurement='api_calls_per_model', units='count', aggregation=['total', 'distribution']}",
     "/metric{name='semantic_coherence', measurement='cross_model_consistency', units='score', aggregation=['current', 'trend']}"
   ],
-  
+
   visualizations=[
     "/visualization{type='pipeline_flow', data='execution_path', update='real-time', interactive=true}",
     "/visualization{type='performance_dashboard', data='key_metrics', update='periodic', interactive=true}",
@@ -1285,7 +1285,7 @@ Let's look at how to implement each of these components using our protocol-based
     "/visualization{type='semantic_field', data='concept_relationships', update='on-change', interactive=true}",
     "/visualization{type='error_distribution', data='failure_points', update='on-error', interactive=true}"
   ],
-  
+
   alerting={
     thresholds=[
       "/threshold{metric='latency', condition='above', value=<max_acceptable_latency>, severity='warning'}",
@@ -1296,7 +1296,7 @@ Let's look at how to implement each of these components using our protocol-based
     escalation_rules=<severity_handling>,
     auto_remediation=<optional_automated_responses>
   },
-  
+
   analytics={
     trend_analysis=<pattern_detection>,
     correlation_identification=<relationship_discovery>,
@@ -1732,7 +1732,7 @@ Here's how this example would be expressed using our protocol approach:
 ```
 /orchestra.content_creation{
   intent="Create rich multi-modal content combining text and images",
-  
+
   models=[
     "/model.configure{
       id='planner',
@@ -1743,7 +1743,7 @@ Here's how this example would be expressed using our protocol approach:
         max_tokens=1000
       }
     }",
-    
+
     "/model.configure{
       id='writer',
       type='llm',
@@ -1753,7 +1753,7 @@ Here's how this example would be expressed using our protocol approach:
         max_tokens=2000
       }
     }",
-    
+
     "/model.configure{
       id='image_generator',
       type='image',
@@ -1764,7 +1764,7 @@ Here's how this example would be expressed using our protocol approach:
         style='natural'
       }
     }",
-    
+
     "/model.configure{
       id='integrator',
       type='layout',
@@ -1775,7 +1775,7 @@ Here's how this example would be expressed using our protocol approach:
       }
     }"
   ],
-  
+
   orchestration_flow=[
     "/stage.planning{
       input={
@@ -1792,7 +1792,7 @@ Here's how this example would be expressed using our protocol approach:
         validation='completeness_check'
       }
     }",
-    
+
     "/stage.content_creation{
       parallel=[
         "/task.text{
@@ -1810,7 +1810,7 @@ Here's how this example would be expressed using our protocol approach:
             validation='quality_check'
           }
         }",
-        
+
         "/task.images{
           input={
             source='content_plan',
@@ -1829,7 +1829,7 @@ Here's how this example would be expressed using our protocol approach:
       ],
       synchronization='wait_all'
     }",
-    
+
     "/stage.integration{
       input={
         sources=['text_content', 'image_content'],
@@ -1849,7 +1849,7 @@ Here's how this example would be expressed using our protocol approach:
       }
     }"
   ],
-  
+
   error_handling=[
     "/on_error{
       at='planning',
@@ -1872,7 +1872,7 @@ Here's how this example would be expressed using our protocol approach:
       notify='user'
     }"
   ],
-  
+
   monitoring={
     metrics=['end_to_end_time', 'model_latencies', 'error_rates', 'user_satisfaction'],
     dashboards=['operational', 'quality', 'usage'],
@@ -2023,7 +2023,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
 ```
 /orchestra.adaptive_ensemble{
   intent="Create a dynamically adapting system of multiple AI models",
-  
+
   conductor={
     model="/model.configure{id='conductor', type='llm', parameters={...}}",
     analysis_capabilities=[
@@ -2037,7 +2037,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
       fallback='general_purpose_path'
     }"
   },
-  
+
   model_groups=[
     "/group{
       id='technical_models',
@@ -2048,7 +2048,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
         "/model.configure{id='diagram_creator', type='visual', parameters={...}}"
       ]
     }",
-    
+
     "/group{
       id='creative_models',
       specialization='creative_content',
@@ -2058,7 +2058,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
         "/model.configure{id='music_creator', type='audio', parameters={...}}"
       ]
     }",
-    
+
     "/group{
       id='general_purpose',
       specialization='versatile_handling',
@@ -2068,7 +2068,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
       ]
     }"
   ],
-  
+
   processing_paths=[
     "/path{
       id='technical_path',
@@ -2080,7 +2080,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
         "/step{model='technical_writer', task='integrate_and_refine'}"
       ]
     }",
-    
+
     "/path{
       id='creative_path',
       trigger='creative_content',
@@ -2093,7 +2093,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
         "/step{model='storyteller', task='integrate_elements'}"
       ]
     }",
-    
+
     "/path{
       id='general_path',
       trigger='default',
@@ -2103,7 +2103,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
       ]
     }"
   ],
-  
+
   integration_layer={
     strategy="/strategy{
       approach='weighted_combination',
@@ -2115,7 +2115,7 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
       final_review='conductor_model'
     }"
   },
-  
+
   feedback_system={
     metrics=['output_quality', 'processing_efficiency', 'user_satisfaction'],
     collection="/collect{
@@ -2127,14 +2127,14 @@ Here's how an adaptive AI ensemble might be expressed using our protocol approac
       learning_rate='adaptive'
     }"
   },
-  
+
   adaptation_mechanism={
     learning_approach='reinforcement_learning',
     optimization_targets=['routing_accuracy', 'output_quality', 'resource_efficiency'],
     update_frequency='continuous',
     model_evolution='performance_based'
   },
-  
+
   monitoring={
     dashboards=['performance', 'adaptation', 'quality_trends'],
     alerts={

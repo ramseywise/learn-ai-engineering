@@ -61,18 +61,18 @@ Example:
 def fetch_agent_traces(agent_name: str, limit: int = 100) -> List[Trace]:
     """
     Fetch traces for a specific agent.
-    
+
     Args:
         agent_name: Name of the agent to fetch traces for
         limit: Maximum number of traces to return (default: 100)
-    
+
     Returns:
         List of trace objects
-    
+
     Raises:
         ValueError: If agent_name is empty
         LangfuseError: If API request fails
-    
+
     Example:
         >>> traces = fetch_agent_traces("research_agent", limit=50)
         >>> print(len(traces))
@@ -233,10 +233,10 @@ from typing import Any, Dict
 
 class YourTool:
     """Tool description"""
-    
+
     def __init__(self, langfuse_client):
         self.langfuse = langfuse_client
-    
+
     async def execute(self, args: Dict[str, Any]) -> str:
         """Execute the tool"""
         # Implementation

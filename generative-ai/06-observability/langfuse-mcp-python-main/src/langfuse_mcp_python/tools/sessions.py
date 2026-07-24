@@ -48,19 +48,19 @@ class GetSessionsTool(BaseLangfuseTool):
                     to_timestamp=to_ts,
                 )
                 sessions = sessions_response.data
-            
+
             # Client-side filter for user_id (not supported server-side)
             if args.get("user_id"):
                 sessions = [
                     s for s in sessions
                     if hasattr(s, "user_id") and s.user_id == args["user_id"]
                 ]
-            
+
             if not sessions:
                 return "No sessions found."
-            
+
             response = f"[RETRY] **Agent Sessions** ({len(sessions)} found):\n\n"
-            
+
             for i, session in enumerate(sessions[:20], 1):
                 response += f"{i}. **Session {session.id[:12]}...**\n"
                 if hasattr(session, 'user_id') and session.user_id:
@@ -70,7 +70,7 @@ class GetSessionsTool(BaseLangfuseTool):
                 if hasattr(session, 'trace_count'):
                     response += f"   - Traces: {session.trace_count}\n"
                 response += "\n"
-            
+
             return response
         except Exception as e:
             return f"Error fetching sessions: {str(e)}"

@@ -36,7 +36,7 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.embeddings.create(**payload).model_dump()
@@ -54,15 +54,15 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
             raise Exception(f"Failed to get correct output from LLM call.\nException: {e}")
 
 
-def generate_with_single_input(prompt: str, 
-                               role: str = 'user', 
-                               top_p: float = None, 
+def generate_with_single_input(prompt: str,
+                               role: str = 'user',
+                               top_p: float = None,
                                temperature: float = None,
                                max_tokens: int = 500,
                                model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                together_api_key = None,
                               **kwargs):
-    
+
     if top_p is None:
         top_p = 'none'
     if temperature is None:
@@ -77,7 +77,7 @@ def generate_with_single_input(prompt: str,
             **kwargs
                   }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -98,11 +98,11 @@ def generate_with_single_input(prompt: str,
     return output_dict
 
 
-def generate_with_multiple_input(messages: List[Dict], 
-                               top_p: float = 1, 
+def generate_with_multiple_input(messages: List[Dict],
+                               top_p: float = 1,
                                temperature: float = 1,
                                max_tokens: int = 500,
-                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo", 
+                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                 together_api_key = None,
                                 **kwargs):
     payload = {
@@ -114,7 +114,7 @@ def generate_with_multiple_input(messages: List[Dict],
         **kwargs
               }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -163,7 +163,7 @@ def print_object_properties(obj: Union[dict, list]) -> None:
                 else:
                     t+= f'{x}: {y}\n'
             t += "\n\n"
-        
+
     print(t)
 
 
@@ -181,7 +181,7 @@ from contextlib import contextmanager
 @contextmanager
 def suppress_subprocess_output():
     """
-    Context manager that suppresses the standard output and error 
+    Context manager that suppresses the standard output and error
     of any subprocess.Popen calls within this context.
     """
     # Store the original Popen

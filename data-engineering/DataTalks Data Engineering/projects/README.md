@@ -16,14 +16,14 @@ Develop a dashboard with two tiles by:
 * Building a dashboard to visualize the data
 
 
-## Data Pipeline 
+## Data Pipeline
 
-The pipeline could be **stream** or **batch**: this is the first thing you'll need to decide 
+The pipeline could be **stream** or **batch**: this is the first thing you'll need to decide
 
 * **Stream**: If you want to consume data in real-time and put them to data lake
 * **Batch**: If you want to run things periodically (e.g. hourly/daily)
 
-## Technologies 
+## Technologies
 
 You don't have to limit yourself to technologies covered in the course. You can use alternatives as well:
 
@@ -40,21 +40,21 @@ If you're not certain about some tools, ask in Slack.
 
 ## Dashboard
 
-You can use any of the tools shown in the course (Data Studio or Metabase) or any other BI tool of your choice to build a dashboard. If you do use another tool, please specify and make sure that the dashboard is somehow accessible to your peers. 
+You can use any of the tools shown in the course (Data Studio or Metabase) or any other BI tool of your choice to build a dashboard. If you do use another tool, please specify and make sure that the dashboard is somehow accessible to your peers.
 
 Your dashboard should contain at least two tiles, we suggest you include:
 
-- 1 graph that shows the distribution of some categorical data 
+- 1 graph that shows the distribution of some categorical data
 - 1 graph that shows the distribution of the data across a temporal line
 
 Ensure that your graph is easy to understand by adding references and titles.
- 
+
 Example dashboard: ![image](https://user-images.githubusercontent.com/4315804/159771458-b924d0c1-91d5-4a8a-8c34-f36c25c31a3c.png)
 
 
 ## Peer reviewing
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > To evaluate the projects, we'll use peer reviewing. This is a great opportunity for you to learn from each other.
 > * To get points for your project, you need to evaluate 3 projects of your peers
 > * You get 3 extra points for each evaluation
@@ -63,7 +63,7 @@ Example dashboard: ![image](https://user-images.githubusercontent.com/4315804/15
 
 * Problem description
     * 0 points: Problem is not described
-    * 2 points: Problem is described but shortly or not clearly 
+    * 2 points: Problem is described but shortly or not clearly
     * 4 points: Problem is well described and it's clear what the problem the project solves
 * Cloud
     * 0 points: Cloud is not used, things run only locally

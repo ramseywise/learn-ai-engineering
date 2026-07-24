@@ -18,7 +18,7 @@ Learn how to build agentic memory into your applications in this short course, _
 
 An LLM can use any information stored in its input context window but has limited space. Using a longer input context also costs more and causes slower processing. Managing this context window and what to input becomes very important.
 
-Based on the innovative approach in the MemGPT research paper “Towards LLMs as Operating Systems,” its authors, two of whom are Charles and Sarah, proposed using an LLM agent to manage this context window, building a management system that provides applications with managed, persistent memory. 
+Based on the innovative approach in the MemGPT research paper “Towards LLMs as Operating Systems,” its authors, two of whom are Charles and Sarah, proposed using an LLM agent to manage this context window, building a management system that provides applications with managed, persistent memory.
 
 Examples of Managing Agent Memory are:
 
@@ -26,7 +26,7 @@ Examples of Managing Agent Memory are:
 * Persist and edit facts such as names, dates, and preferences, and make them available in context.
 * Persist and track ‘task’ specific information. For example, a research agent needs to keep research information in context memory, swapping the most relevant information from a searchable database with previous information.
 
-In this course, you’ll learn: 
+In this course, you’ll learn:
 
 * How to build an agent with self-editing memory, using tool-calling and multi-step reasoning, from scratch.
 * Letta, an open-source framework that adds memory to your LLM agents, giving them advanced reasoning capabilities and transparent long-term memory.

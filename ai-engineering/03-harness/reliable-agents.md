@@ -7,7 +7,7 @@ cleaned: 2026-07-17
 ---
 
 
- 
+
 RefactoringAgileArchitectureAboutThoughtworks
 
 Table of Contents
@@ -162,7 +162,7 @@ final prompt generator
 response to user
 Responding to a query issued in natural language
 
-         
+
 To illustrate this pipeline, consider the example query: “Were any of the following clinical findings observed in study T123456-2: piloerection, ataxia, eyes partially closed, and loose faeces?”. The system processes this query through the following steps:
 
 Keyword Extraction: the user's natural language query is first analyzed by an LLM. Through careful prompt engineering, the model is instructed to extract keywords highly relevant for keyword search within our document corpus (e.g., “piloerection”, “ataxia”, “eyes partially closed”, “loose faeces”).

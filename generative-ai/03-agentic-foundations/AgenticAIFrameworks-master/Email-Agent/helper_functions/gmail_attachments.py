@@ -8,7 +8,7 @@ import base64
 def download_attachments_parent(service, user_id, msg_id, target_dir):
     """
     Download attachments from a single email message.
-    
+
     Args:
         service: Gmail API service object
         user_id (str): User ID
@@ -41,7 +41,7 @@ def download_attachments_parent(service, user_id, msg_id, target_dir):
 def download_attachments_all(service, user_id, msg_id, target_dir):
     """
     Download attachments from all messages in a thread.
-    
+
     Args:
         service: Gmail API service object
         user_id (str): User ID

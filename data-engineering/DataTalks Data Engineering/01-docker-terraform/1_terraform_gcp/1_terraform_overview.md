@@ -9,11 +9,11 @@
 1. What is [Terraform](https://www.terraform.io)?
    * open-source tool by [HashiCorp](https://www.hashicorp.com), used for provisioning infrastructure resources
    * supports DevOps best practices for change management
-   * Managing configuration files in source control to maintain an ideal provisioning state 
+   * Managing configuration files in source control to maintain an ideal provisioning state
      for testing and production environments
 2. What is IaC?
    * Infrastructure-as-Code
-   * build, change, and manage your infrastructure in a safe, consistent, and repeatable way 
+   * build, change, and manage your infrastructure in a safe, consistent, and repeatable way
      by defining resource configurations that you can version, reuse, and share.
 3. Some advantages
    * Infrastructure lifecycle management
@@ -46,11 +46,11 @@
 
 
 #### Execution steps
-1. `terraform init`: 
-    * Initializes & configures the backend, installs plugins/providers, & checks out an existing configuration from a version control 
+1. `terraform init`:
+    * Initializes & configures the backend, installs plugins/providers, & checks out an existing configuration from a version control
 2. `terraform plan`:
     * Matches/previews local changes against a remote state, and proposes an Execution Plan.
-3. `terraform apply`: 
+3. `terraform apply`:
     * Asks for approval to the proposed plan, and applies changes to cloud
 4. `terraform destroy`
     * Removes your stack from the Cloud

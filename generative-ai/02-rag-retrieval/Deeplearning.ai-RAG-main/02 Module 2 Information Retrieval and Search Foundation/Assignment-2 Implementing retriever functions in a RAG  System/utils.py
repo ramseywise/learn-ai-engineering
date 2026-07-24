@@ -8,12 +8,12 @@ from together import Together
 import numpy as np
 
 
-# Distance formulas. 
+# Distance formulas.
 # In this ungraded lab, distance formulas will be implemented here. However, in future assignments, you will import functions from specialized libraries.
 def cosine_similarity(v1, array_of_vectors):
     """
     Compute the cosine similarity between a vector and an array of vectors.
-    
+
     Parameters:
     v1 (array-like): The first vector.
     array_of_vectors (array-like): An array of vectors or a single vector.
@@ -25,11 +25,11 @@ def cosine_similarity(v1, array_of_vectors):
     v1 = np.array(v1)
     # Initialize a list to store similarities
     similarities = []
-    
+
     # Check if array_of_vectors is a single vector
     if len(np.shape(array_of_vectors)) == 1:
         array_of_vectors = [array_of_vectors]
-    
+
     # Iterate over each vector in the array
     for v2 in array_of_vectors:
         # Convert the current vector to a numpy array
@@ -47,7 +47,7 @@ def cosine_similarity(v1, array_of_vectors):
 def euclidean_distance(v1, array_of_vectors):
     """
     Compute the Euclidean distance between a vector and an array of vectors.
-    
+
     Parameters:
     v1 (array-like): The first vector.
     array_of_vectors (array-like): An array of vectors or a single vector.
@@ -59,11 +59,11 @@ def euclidean_distance(v1, array_of_vectors):
     v1 = np.array(v1)
     # Initialize a list to store distances
     distances = []
-    
+
     # Check if array_of_vectors is a single vector
     if len(np.shape(array_of_vectors)) == 1:
         array_of_vectors = [array_of_vectors]
-    
+
     # Iterate over each vector in the array
     for v2 in array_of_vectors:
         # Convert the current vector to a numpy array
@@ -88,15 +88,15 @@ def pprint(*args, **kwargs):
     kwargs.setdefault('sort_dicts', False)
     original_pprint(*args, **kwargs)
 
-def generate_with_single_input(prompt: str, 
-                               role: str = 'assistant', 
-                               top_p: float = 0, 
+def generate_with_single_input(prompt: str,
+                               role: str = 'assistant',
+                               top_p: float = 0,
                                temperature: float = 0,
                                max_tokens: int = 500,
                                model: str ="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
                                together_api_key = None,
                               **kwargs):
-    
+
     if top_p is None:
         top_p = 'none'
     if temperature is None:
@@ -111,7 +111,7 @@ def generate_with_single_input(prompt: str,
             **kwargs
                   }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -171,13 +171,13 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, recip
                 display(Markdown(response))
         # Clear "Generating..." message
         status_output.clear_output()
-        
+
     query_input = widgets.Text(
         description='',
         placeholder='Type your query here',
         layout=widgets.Layout(width='100%')
     )
-    
+
     slider = widgets.IntSlider(
         value=5,
         min=1,
@@ -186,7 +186,7 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, recip
         description='Top K:',
         style={'description_width': 'initial'}
     )
-    
+
     output_style = {'border': '1px solid #ccc', 'width': '100%'}
     output1 = widgets.Output(layout=output_style)
     output2 = widgets.Output(layout=output_style)
@@ -229,15 +229,15 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, recip
         }
     </style>
     """))
-    
+
     display(query_input, slider, submit_button, status_output)
-    
+
     # Create individual vertical containers for each label and output
     vbox1 = widgets.VBox([label1, output1], layout={'width': '45%'})
     vbox2 = widgets.VBox([label2, output2], layout={'width': '45%'})
     vbox3 = widgets.VBox([label3, output3], layout={'width': '45%'})
     vbox4 = widgets.VBox([label4, output4], layout={'width': '45%'})
-    
+
     # HBoxes to arrange two VBoxes in each row
     hbox_outputs1 = widgets.HBox([vbox1, vbox2], layout={'justify_content': 'space-between'})
     hbox_outputs2 = widgets.HBox([vbox3, vbox4], layout={'justify_content': 'space-between'})
@@ -249,9 +249,9 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, recip
             output.layout.padding = '10px'
             output.layout.overflow = 'auto'
             output.add_class("custom-output")
-            
+
     style_outputs(output1, output2, output3, output4)
-    
+
     # Display two rows with two outputs each
     display(hbox_outputs1)
     display(hbox_outputs2)

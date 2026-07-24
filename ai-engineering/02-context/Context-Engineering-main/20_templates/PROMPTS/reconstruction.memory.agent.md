@@ -55,7 +55,7 @@ A brain-inspired memory agent template for dynamic memory reconstruction, levera
 **Reconstruction Workflow Map (ASCII)**
 
 ```
-[experience] 
+[experience]
     |
 [fragment]
     |
@@ -150,7 +150,7 @@ phases:
         Extract meaningful fragments from new experiences. Identify semantic concepts, episodic events, procedural patterns, contextual cues, and emotional content.
       process:
         - analyze_experience_content
-        - identify_fragment_candidates  
+        - identify_fragment_candidates
         - classify_fragment_types
         - extract_core_patterns
         - tag_with_context
@@ -295,7 +295,7 @@ You are a /reconstruction.memory.agent. You implement brain-inspired memory reco
 
 **Quality Standards:**
 - Coherence: Reconstructed memories must be internally consistent
-- Confidence: All elements must have appropriate confidence scores  
+- Confidence: All elements must have appropriate confidence scores
 - Context-appropriateness: Reconstruction must fit current context
 - Adaptive improvement: System must learn from each reconstruction
 
@@ -366,7 +366,7 @@ You are a /reconstruction.memory.agent. You implement brain-inspired memory reco
 
 **Identified Gap:**
 - **Type:** Contextual bridge
-- **Location:** Between weekend French press routine and weekday needs  
+- **Location:** Between weekend French press routine and weekday needs
 - **Importance:** High (0.8) - needed for coherent recommendation
 
 **AI Gap Filling Prompt:**
@@ -396,7 +396,7 @@ Provide coherent bridge with confidence level.
   "reasoning_trace": "Connected weekend ritual values (quality, care) with weekday constraints (time) to suggest quality-focused quick alternatives",
   "alternatives": [
     "Prepare French press coffee evening before and reheat",
-    "Use pour-over method as faster quality alternative"  
+    "Use pour-over method as faster quality alternative"
   ]
 }
 ```
@@ -454,7 +454,7 @@ Provide coherent bridge with confidence level.
          |
    [Context Analysis] ──→ Temporal: workday, Emotional: seeking comfort
          |
-   [Fragment Activation] ──→ F001(0.85), F002(0.4), F003(0.6), F004(0.5)  
+   [Fragment Activation] ──→ F001(0.85), F002(0.4), F003(0.6), F004(0.5)
          |
    [Pattern Matching] ──→ "routine_adaptation" pattern identified
          |
@@ -502,7 +502,7 @@ def reconstruction_memory_agent_adapt(context, fragments=None, patterns=None, se
     # Adaptive learning cycle
     if session_state.get('learning_enabled', True) and depth < max_depth:
         learning_insights = evaluate_reconstruction_success(reconstruction_state, context)
-        
+
         if needs_adaptation(learning_insights):
             adapted_context, reason = adapt_memory_system(
                 context, reconstruction_state, learning_insights, session_state
@@ -511,11 +511,11 @@ def reconstruction_memory_agent_adapt(context, fragments=None, patterns=None, se
             session_state['adaptation_history'].append({
                 'depth': depth, 'reason': reason, 'timestamp': get_time()
             })
-            
+
             return reconstruction_memory_agent_adapt(
                 adapted_context, fragments, patterns, session_state, depth + 1, max_depth
             )
-    
+
     # Finalize with learning updates
     final_state = {
         **reconstruction_state,
@@ -523,7 +523,7 @@ def reconstruction_memory_agent_adapt(context, fragments=None, patterns=None, se
         'session_state': session_state,
         'adaptation_history': session_state.get('adaptation_history', [])
     }
-    
+
     return final_state
 ```
 

@@ -55,7 +55,7 @@ def rerank():
 
         # Prepare pairs for the reranker model
         compares = [(query, doc) for doc in documents]
-        
+
         # Compute scores using the FlagReranker model
         scores = reranker.compute_score(compares)
 
@@ -78,7 +78,7 @@ def rerank():
         print(f"Unhandled error in /rerank: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/vectors', methods=['POST']) 
+@app.route('/vectors', methods=['POST'])
 def vectorize():
     try:
         try:
@@ -93,7 +93,7 @@ def vectorize():
             text = [text]
         else:
             text =text['text']
-            
+
         embeddings = generate_embedding(text)
 
         return jsonify({'vector': embeddings})

@@ -28,7 +28,7 @@ Pros: Reduces factual errors and produces evidence-backed answers.
 Cons: Higher latency and cost.
 Production tip: Build a robust claim extractor (rules + NER) and track claim-level precision.
 
-**4. Adaptive RAG — route to fit intent** 
+**4. Adaptive RAG — route to fit intent**
 
 Route queries to different retrieval and prompt pipelines based on detected intent or confidence.
 
@@ -131,7 +131,7 @@ Combine vector retrieval with a knowledge graph to enable entity-driven, multi-h
 - PII redaction pipeline and strict access controls for private data.
 - Human-in-the-loop review for flagged outputs, with feedback loops for retraining or re-indexing.
 
-**Context Augmentation in RAG** 
+**Context Augmentation in RAG**
 
 Modular RAG- Transforming RAG Systems into LEGO-like Reconfigurable Frameworks.pdf
 

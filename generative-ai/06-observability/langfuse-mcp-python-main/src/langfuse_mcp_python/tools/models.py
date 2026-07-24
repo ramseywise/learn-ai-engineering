@@ -69,7 +69,7 @@ class GetModelsTool(BaseLangfuseTool):
                 return self._format_models_list(models.data)
         except Exception as e:
             return f"Error fetching models: {str(e)}"
-    
+
     def _format_model(self, model) -> str:
         response = f"[AGENT] **Model: {model.model_name}**\n\n"
         if hasattr(model, 'input_price'):
@@ -77,7 +77,7 @@ class GetModelsTool(BaseLangfuseTool):
         if hasattr(model, 'output_price'):
             response += f"  - Output Price: ${model.output_price}/1M tokens\n"
         return response
-    
+
     def _format_models_list(self, models) -> str:
         response = f"[AGENT] **Models** ({len(models)} found):\n\n"
         for model in models[:30]:

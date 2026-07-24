@@ -24,9 +24,9 @@ from typing import Dict, List, Any, Tuple
 from chatbot_core import ToyContextChatbot
 from context_field import ContextField
 from protocol_shells import (
-    AttractorCoEmerge, 
-    FieldResonanceScaffold, 
-    RecursiveMemoryAttractor, 
+    AttractorCoEmerge,
+    FieldResonanceScaffold,
+    RecursiveMemoryAttractor,
     FieldSelfRepair
 )
 
@@ -35,7 +35,7 @@ class ConversationExamples:
     Examples of conversations with the context engineering chatbot,
     demonstrating various principles and capabilities.
     """
-    
+
     def __init__(self):
         """Initialize with a chatbot instance and tracking variables."""
         # Create a context field
@@ -46,7 +46,7 @@ class ConversationExamples:
             resonance_bandwidth=0.6,
             attractor_threshold=0.7
         )
-        
+
         # Initialize protocol shells
         self.protocols = {
             "attractor_co_emerge": AttractorCoEmerge(threshold=0.4, strength_factor=1.2),
@@ -54,118 +54,118 @@ class ConversationExamples:
             "memory_attractor": RecursiveMemoryAttractor(importance_threshold=0.6, memory_strength=1.3),
             "field_repair": FieldSelfRepair(health_threshold=0.6, repair_strength=1.2)
         }
-        
+
         # Create chatbot with field and protocols
         self.chatbot = ToyContextChatbot(name="FieldBot")
-        
+
         # Connect field and protocols to chatbot
         self.chatbot.field = self.field
         self.chatbot.protocols = self.protocols
-        
+
         # Tracking variables
         self.conversations = {}
         self.current_conversation_id = None
-    
+
     def run_basic_conversation(self) -> str:
         """
         Run a basic conversation to demonstrate atomic and molecular layers.
-        
+
         Returns:
             str: Conversation ID
         """
         conversation_id = f"basic_{int(time.time())}"
         self.current_conversation_id = conversation_id
-        
+
         # Start conversation
         self.conversations[conversation_id] = []
-        
+
         # Add greeting
         self._add_exchange(
             "Hello there! I'm interested in learning about context engineering.",
             self.chatbot.chat("Hello there! I'm interested in learning about context engineering.")
         )
-        
+
         # Ask about the chatbot
         self._add_exchange(
             "What can you tell me about yourself?",
             self.chatbot.chat("What can you tell me about yourself?")
         )
-        
+
         # Ask about context engineering
         self._add_exchange(
             "How is context engineering different from prompt engineering?",
             self.chatbot.chat("How is context engineering different from prompt engineering?")
         )
-        
+
         # Thank the chatbot
         self._add_exchange(
             "Thanks for the explanation!",
             self.chatbot.chat("Thanks for the explanation!")
         )
-        
+
         # Add field metrics to conversation data
         self.conversations[conversation_id].append({
             "type": "metrics",
             "data": self.chatbot.show_field_state()
         })
-        
+
         return conversation_id
-    
+
     def run_context_retention_conversation(self) -> str:
         """
         Run a conversation that demonstrates context retention (cellular layer).
-        
+
         Returns:
             str: Conversation ID
         """
         conversation_id = f"retention_{int(time.time())}"
         self.current_conversation_id = conversation_id
-        
+
         # Start conversation
         self.conversations[conversation_id] = []
-        
+
         # Add greeting and personal info
         self._add_exchange(
             "Hi there! My name is Alex.",
             self.chatbot.chat("Hi there! My name is Alex.")
         )
-        
+
         # Mention a topic of interest
         self._add_exchange(
             "I'm really interested in neural fields and attractor dynamics.",
             self.chatbot.chat("I'm really interested in neural fields and attractor dynamics.")
         )
-        
+
         # Ask a question
         self._add_exchange(
             "What are the key components of a neural field?",
             self.chatbot.chat("What are the key components of a neural field?")
         )
-        
+
         # Change topic slightly
         self._add_exchange(
             "I also want to learn about memory persistence in AI systems.",
             self.chatbot.chat("I also want to learn about memory persistence in AI systems.")
         )
-        
+
         # Reference previous topic
         self._add_exchange(
             "How do attractors relate to memory persistence?",
             self.chatbot.chat("How do attractors relate to memory persistence?")
         )
-        
+
         # Reference user's name (testing memory)
         self._add_exchange(
             "Thanks for explaining this to me!",
             self.chatbot.chat("Thanks for explaining this to me!")
         )
-        
+
         # Add field metrics to conversation data
         self.conversations[conversation_id].append({
             "type": "metrics",
             "data": self.chatbot.show_field_state()
         })
-        
+
         # Add memory status
         self.conversations[conversation_id].append({
             "type": "memory",
@@ -175,41 +175,41 @@ class ConversationExamples:
                 "user_info": self.chatbot.memory["user_info"]
             }
         })
-        
+
         return conversation_id
-    
+
     def run_field_operations_conversation(self) -> str:
         """
         Run a conversation that demonstrates field operations (field layer).
-        
+
         Returns:
             str: Conversation ID
         """
         conversation_id = f"field_{int(time.time())}"
         self.current_conversation_id = conversation_id
-        
+
         # Start conversation
         self.conversations[conversation_id] = []
-        
+
         # Add greeting
         self._add_exchange(
             "Hello! I'd like to explore how field operations work in context engineering.",
             self.chatbot.chat("Hello! I'd like to explore how field operations work in context engineering.")
         )
-        
+
         # Take field snapshot before operations
         field_before = self.field.get_summary()
         self.conversations[conversation_id].append({
             "type": "field_before",
             "data": field_before
         })
-        
+
         # Ask about attractors
         self._add_exchange(
             "What are attractors in the context of neural fields?",
             self.chatbot.chat("What are attractors in the context of neural fields?")
         )
-        
+
         # Execute attractor co-emergence protocol
         attractor_results = self.protocols["attractor_co_emerge"].execute(self.field)
         self.conversations[conversation_id].append({
@@ -217,13 +217,13 @@ class ConversationExamples:
             "protocol": "attractor_co_emerge",
             "data": attractor_results
         })
-        
+
         # Ask about resonance
         self._add_exchange(
             "How does resonance work between field patterns?",
             self.chatbot.chat("How does resonance work between field patterns?")
         )
-        
+
         # Execute field resonance protocol
         resonance_results = self.protocols["field_resonance"].execute(self.field)
         self.conversations[conversation_id].append({
@@ -231,13 +231,13 @@ class ConversationExamples:
             "protocol": "field_resonance",
             "data": resonance_results
         })
-        
+
         # Ask about memory persistence
         self._add_exchange(
             "How do attractors enable memory persistence?",
             self.chatbot.chat("How do attractors enable memory persistence?")
         )
-        
+
         # Execute memory attractor protocol
         memory_results = self.protocols["memory_attractor"].execute(self.field)
         self.conversations[conversation_id].append({
@@ -245,55 +245,55 @@ class ConversationExamples:
             "protocol": "memory_attractor",
             "data": memory_results
         })
-        
+
         # Take field snapshot after operations
         field_after = self.field.get_summary()
         self.conversations[conversation_id].append({
             "type": "field_after",
             "data": field_after
         })
-        
+
         # Add field visualization
         field_vis = self.field.visualize_field("attractors")
         self.conversations[conversation_id].append({
             "type": "field_visualization",
             "data": field_vis
         })
-        
+
         return conversation_id
-    
+
     def run_self_repair_conversation(self) -> str:
         """
         Run a conversation that demonstrates field self-repair capabilities.
-        
+
         Returns:
             str: Conversation ID
         """
         conversation_id = f"repair_{int(time.time())}"
         self.current_conversation_id = conversation_id
-        
+
         # Start conversation
         self.conversations[conversation_id] = []
-        
+
         # Add greeting
         self._add_exchange(
             "Hi! I heard context fields can detect and repair themselves. How does that work?",
             self.chatbot.chat("Hi! I heard context fields can detect and repair themselves. How does that work?")
         )
-        
+
         # Take field snapshot before
         field_before = self.field.get_summary()
         self.conversations[conversation_id].append({
             "type": "field_before",
             "data": field_before
         })
-        
+
         # Simulate field damage (in a real implementation, this might happen naturally)
         # For demonstration, we'll artificially reduce field coherence
         self.field.metrics["coherence"] = max(0.2, self.field.metrics["coherence"] - 0.3)
         self.field.metrics["stability"] = max(0.2, self.field.metrics["stability"] - 0.2)
         self.field._update_overall_health()
-        
+
         # Log the damage
         self.conversations[conversation_id].append({
             "type": "field_damage",
@@ -302,13 +302,13 @@ class ConversationExamples:
                 "damaged_metrics": self.field.metrics.copy()
             }
         })
-        
+
         # Ask about field health
         self._add_exchange(
             "What happens when a field loses coherence?",
             self.chatbot.chat("What happens when a field loses coherence?")
         )
-        
+
         # Execute field repair protocol
         repair_results = self.protocols["field_repair"].execute(self.field)
         self.conversations[conversation_id].append({
@@ -316,20 +316,20 @@ class ConversationExamples:
             "protocol": "field_repair",
             "data": repair_results
         })
-        
+
         # Ask about repair results
         self._add_exchange(
             "How can you tell if a field repair was successful?",
             self.chatbot.chat("How can you tell if a field repair was successful?")
         )
-        
+
         # Take field snapshot after
         field_after = self.field.get_summary()
         self.conversations[conversation_id].append({
             "type": "field_after",
             "data": field_after
         })
-        
+
         # Calculate repair effectiveness
         repair_effectiveness = {
             "coherence_improvement": field_after["metrics"]["coherence"] - field_before["metrics"]["coherence"],
@@ -340,28 +340,28 @@ class ConversationExamples:
             "type": "repair_effectiveness",
             "data": repair_effectiveness
         })
-        
+
         return conversation_id
-    
+
     def run_meta_recursive_conversation(self) -> str:
         """
         Run a conversation that demonstrates meta-recursive capabilities.
-        
+
         Returns:
             str: Conversation ID
         """
         conversation_id = f"meta_{int(time.time())}"
         self.current_conversation_id = conversation_id
-        
+
         # Start conversation
         self.conversations[conversation_id] = []
-        
+
         # Add greeting
         self._add_exchange(
             "Hello! I'm curious about the meta-recursive layer in context engineering.",
             self.chatbot.chat("Hello! I'm curious about the meta-recursive layer in context engineering.")
         )
-        
+
         # Log initial state
         initial_state = {
             "metrics": self.chatbot.metrics.copy(),
@@ -371,52 +371,52 @@ class ConversationExamples:
             "type": "initial_meta_state",
             "data": initial_state
         })
-        
+
         # Ask about meta-recursion
         self._add_exchange(
             "What is meta-recursion in the context of AI systems?",
             self.chatbot.chat("What is meta-recursion in the context of AI systems?")
         )
-        
+
         # Trigger meta-improvement
         improvement_info = self.chatbot.meta_improve()
         self.conversations[conversation_id].append({
             "type": "meta_improvement",
             "data": improvement_info
         })
-        
+
         # Ask how the system improves itself
         self._add_exchange(
             "How does a context engineering system improve itself?",
             self.chatbot.chat("How does a context engineering system improve itself?")
         )
-        
+
         # Trigger another meta-improvement
         improvement_info2 = self.chatbot.meta_improve()
         self.conversations[conversation_id].append({
             "type": "meta_improvement",
             "data": improvement_info2
         })
-        
+
         # Ask about emergent properties
         self._add_exchange(
             "What emergent properties might arise from meta-recursive systems?",
             self.chatbot.chat("What emergent properties might arise from meta-recursive systems?")
         )
-        
+
         # Final meta-improvement
         improvement_info3 = self.chatbot.meta_improve()
         self.conversations[conversation_id].append({
             "type": "meta_improvement",
             "data": improvement_info3
         })
-        
+
         # Calculate overall improvement
         final_state = {
             "metrics": self.chatbot.metrics.copy(),
             "improvement_count": self.chatbot.metrics["self_improvement_count"]
         }
-        
+
         overall_improvement = {
             "improvement_count_delta": final_state["improvement_count"] - initial_state["improvement_count"],
             "metrics_delta": {
@@ -424,41 +424,41 @@ class ConversationExamples:
                 for k in final_state["metrics"]
             }
         }
-        
+
         self.conversations[conversation_id].append({
             "type": "final_meta_state",
             "data": final_state
         })
-        
+
         self.conversations[conversation_id].append({
             "type": "overall_improvement",
             "data": overall_improvement
         })
-        
+
         return conversation_id
-    
+
     def _add_exchange(self, user_message: str, bot_response: str) -> None:
         """Add a message exchange to the current conversation."""
         if self.current_conversation_id is None:
             raise ValueError("No active conversation")
-        
+
         self.conversations[self.current_conversation_id].append({
             "type": "exchange",
             "user": user_message,
             "bot": bot_response,
             "timestamp": time.time()
         })
-    
+
     def get_conversation(self, conversation_id: str) -> List[Dict[str, Any]]:
         """Get a conversation by ID."""
         return self.conversations.get(conversation_id, [])
-    
+
     def print_conversation(self, conversation_id: str) -> None:
         """Print a conversation in a readable format."""
         conversation = self.get_conversation(conversation_id)
-        
+
         print(f"=== Conversation: {conversation_id} ===\n")
-        
+
         for item in conversation:
             if item["type"] == "exchange":
                 print(f"User: {item['user']}")
@@ -493,24 +493,24 @@ class ConversationExamples:
                     if abs(delta) > 0.001:  # Only show meaningful changes
                         print(f"{metric}: {delta:+.2f}")
                 print()
-    
+
     def generate_report(self, conversation_id: str) -> str:
         """
         Generate a detailed report about a conversation.
-        
+
         Args:
             conversation_id: ID of the conversation to report on
-            
+
         Returns:
             str: Markdown-formatted report
         """
         conversation = self.get_conversation(conversation_id)
         if not conversation:
             return "Conversation not found."
-        
+
         # Determine conversation type
         conv_type = conversation_id.split('_')[0]
-        
+
         # Generate report header
         report = [
             f"# Conversation Report: {conversation_id}",
@@ -522,14 +522,14 @@ class ConversationExamples:
             "## Conversation Transcript",
             ""
         ]
-        
+
         # Add transcript
         for item in conversation:
             if item["type"] == "exchange":
                 report.append(f"**User:** {item['user']}")
                 report.append(f"**Bot:** {item['bot']}")
                 report.append("")
-        
+
         # Add analysis based on conversation type
         if conv_type == "basic":
             report.extend(self._generate_basic_analysis(conversation))
@@ -541,13 +541,13 @@ class ConversationExamples:
             report.extend(self._generate_repair_analysis(conversation))
         elif conv_type == "meta":
             report.extend(self._generate_meta_analysis(conversation))
-        
+
         return "\n".join(report)
-    
+
     def _generate_basic_analysis(self, conversation: List[Dict[str, Any]]) -> List[str]:
         """Generate analysis for basic conversation."""
         metrics_item = next((item for item in conversation if item["type"] == "metrics"), None)
-        
+
         analysis = [
             "## Basic Conversation Analysis",
             "",
@@ -557,7 +557,7 @@ class ConversationExamples:
             "- **Molecular Layer:** Context combinations with examples",
             ""
         ]
-        
+
         if metrics_item:
             analysis.extend([
                 "### Field Metrics",
@@ -566,13 +566,13 @@ class ConversationExamples:
                 f"- Coherence Score: {metrics_item['data'].get('coherence_score', 0):.2f}",
                 ""
             ])
-        
+
         return analysis
-    
+
     def _generate_retention_analysis(self, conversation: List[Dict[str, Any]]) -> List[str]:
         """Generate analysis for context retention conversation."""
         memory_item = next((item for item in conversation if item["type"] == "memory"), None)
-        
+
         analysis = [
             "## Context Retention Analysis",
             "",
@@ -581,16 +581,16 @@ class ConversationExamples:
             "- **Cellular Layer:** Context structures with memory that persist across interactions",
             ""
         ]
-        
+
         if memory_item:
             # Count items in short-term and long-term memory
             short_term_count = len(memory_item["data"]["short_term"])
             long_term_count = len(memory_item["data"]["long_term"])
-            
+
             # Check if user info was captured
             user_info = memory_item["data"]["user_info"]
             user_name = user_info.get("name", "Not captured")
-            
+
             analysis.extend([
                 "### Memory Analysis",
                 "",
@@ -604,15 +604,15 @@ class ConversationExamples:
                 "- Topic persistence: " + ("✓ Maintained" if long_term_count > 0 else "✗ Not maintained"),
                 ""
             ])
-        
+
         return analysis
-    
+
     def _generate_field_analysis(self, conversation: List[Dict[str, Any]]) -> List[str]:
         """Generate analysis for field operations conversation."""
         field_before = next((item for item in conversation if item["type"] == "field_before"), None)
         field_after = next((item for item in conversation if item["type"] == "field_after"), None)
         field_vis = next((item for item in conversation if item["type"] == "field_visualization"), None)
-        
+
         analysis = [
             "## Field Operations Analysis",
             "",
@@ -621,13 +621,13 @@ class ConversationExamples:
             "- **Field Layer:** Context as continuous medium with attractors and resonance",
             ""
         ]
-        
+
         if field_before and field_after:
             # Calculate changes
             attractor_change = field_after["data"]["attractor_count"] - field_before["data"]["attractor_count"]
             coherence_change = field_after["data"]["metrics"]["coherence"] - field_before["data"]["metrics"]["coherence"]
             stability_change = field_after["data"]["metrics"]["stability"] - field_before["data"]["metrics"]["stability"]
-            
+
             analysis.extend([
                 "### Field Evolution",
                 "",
@@ -642,10 +642,10 @@ class ConversationExamples:
                 "- Stability enhancement: " + ("✓ Enhanced" if stability_change > 0 else "✗ No enhancement"),
                 ""
             ])
-        
+
         if field_vis:
             attractor_count = field_vis["data"].get("count", 0)
-            
+
             analysis.extend([
                 "### Field Visualization Summary",
                 "",
@@ -654,15 +654,15 @@ class ConversationExamples:
                 f"- Field coherence: {field_vis['data'].get('field_coherence', 0):.2f}",
                 ""
             ])
-        
+
         return analysis
-    
+
     def _generate_repair_analysis(self, conversation: List[Dict[str, Any]]) -> List[str]:
         """Generate analysis for self-repair conversation."""
         field_damage = next((item for item in conversation if item["type"] == "field_damage"), None)
         repair_exec = next((item for item in conversation if item["type"] == "protocol_execution" and item["protocol"] == "field_repair"), None)
         repair_effect = next((item for item in conversation if item["type"] == "repair_effectiveness"), None)
-        
+
         analysis = [
             "## Field Self-Repair Analysis",
             "",
@@ -671,10 +671,10 @@ class ConversationExamples:
             "- **Self-Repair:** Detecting and fixing inconsistencies in the field",
             ""
         ]
-        
+
         if field_damage:
             damaged_metrics = field_damage["data"]["damaged_metrics"]
-            
+
             analysis.extend([
                 "### Field Damage",
                 "",
@@ -684,10 +684,10 @@ class ConversationExamples:
                 f"- Overall health after damage: {damaged_metrics['overall_health']:.2f}",
                 ""
             ])
-        
+
         if repair_exec:
             repair_data = repair_exec["data"]
-            
+
             analysis.extend([
                 "### Repair Execution",
                 "",
@@ -696,10 +696,10 @@ class ConversationExamples:
                 f"- Successful repairs: {repair_data.get('successful_repairs', 0)}",
                 ""
             ])
-        
+
         if repair_effect:
             effect_data = repair_effect["data"]
-            
+
             analysis.extend([
                 "### Repair Effectiveness",
                 "",
@@ -714,15 +714,15 @@ class ConversationExamples:
                 "- Overall health: " + ("✓ Improved" if effect_data['overall_health_improvement'] > 0 else "✗ Declined"),
                 ""
             ])
-        
+
         return analysis
-    
+
     def _generate_meta_analysis(self, conversation: List[Dict[str, Any]]) -> List[str]:
         """Generate analysis for meta-recursive conversation."""
         initial_state = next((item for item in conversation if item["type"] == "initial_meta_state"), None)
         final_state = next((item for item in conversation if item["type"] == "final_meta_state"), None)
         overall_improvement = next((item for item in conversation if item["type"] == "overall_improvement"), None)
-        
+
         analysis = [
             "## Meta-Recursive Analysis",
             "",
@@ -731,11 +731,11 @@ class ConversationExamples:
             "- **Meta-Recursive Layer:** Self-observation, self-improvement, and evolution",
             ""
         ]
-        
+
         if initial_state and final_state:
             initial_metrics = initial_state["data"]["metrics"]
             final_metrics = final_state["data"]["metrics"]
-            
+
             analysis.extend([
                 "### Initial vs Final State",
                 "",
@@ -747,10 +747,10 @@ class ConversationExamples:
                 f"| Emergence Detected | {initial_metrics.get('emergence_detected', False)} | {final_metrics.get('emergence_detected', False)} | {'Changed' if initial_metrics.get('emergence_detected', False) != final_metrics.get('emergence_detected', False) else 'No change'} |",
                 ""
             ])
-        
+
         if overall_improvement:
             improvement_data = overall_improvement["data"]
-            
+
             analysis.extend([
                 "### Improvement Analysis",
                 "",
@@ -759,27 +759,27 @@ class ConversationExamples:
                 "#### Metric Changes:",
                 ""
             ])
-            
+
             # Add metric changes
             for metric, delta in improvement_data['metrics_delta'].items():
                 if abs(delta) > 0.001:  # Only show meaningful changes
                     analysis.append(f"- {metric}: {delta:+.2f}")
-            
+
             # Add emergence assessment
             emergence_detected = final_state["data"]["metrics"].get("emergence_detected", False) if final_state else False
-            
+
             analysis.extend([
                 "",
                 "### Emergence Assessment",
                 "",
                 f"- Emergence detected: {'Yes' if emergence_detected else 'No'}",
                 "- Self-improvement trajectory: " + (
-                    "✓ Positive" if improvement_data['improvement_count_delta'] > 0 else 
+                    "✓ Positive" if improvement_data['improvement_count_delta'] > 0 else
                     "✗ Neutral/Negative"
                 ),
                 ""
             ])
-        
+
         return analysis
 
 
@@ -787,37 +787,37 @@ class ConversationExamples:
 def run_conversation_demos():
     """Run all conversation examples and generate reports."""
     examples = ConversationExamples()
-    
+
     print("Running Basic Conversation...")
     basic_id = examples.run_basic_conversation()
     examples.print_conversation(basic_id)
-    
+
     print("\nRunning Context Retention Conversation...")
     retention_id = examples.run_context_retention_conversation()
     examples.print_conversation(retention_id)
-    
+
     print("\nRunning Field Operations Conversation...")
     field_id = examples.run_field_operations_conversation()
     examples.print_conversation(field_id)
-    
+
     print("\nRunning Self-Repair Conversation...")
     repair_id = examples.run_self_repair_conversation()
     examples.print_conversation(repair_id)
-    
+
     print("\nRunning Meta-Recursive Conversation...")
     meta_id = examples.run_meta_recursive_conversation()
     examples.print_conversation(meta_id)
-    
+
     # Generate and save reports
     for conv_id in [basic_id, retention_id, field_id, repair_id, meta_id]:
         report = examples.generate_report(conv_id)
         print(f"\nGenerated report for {conv_id}")
-        
+
         # In a real implementation, we might save these reports to files
         # For this toy implementation, we'll just print a snippet
         print("\nReport Preview:")
         print("\n".join(report.split("\n")[:10]) + "\n...\n")
-    
+
     return {
         "basic_id": basic_id,
         "retention_id": retention_id,

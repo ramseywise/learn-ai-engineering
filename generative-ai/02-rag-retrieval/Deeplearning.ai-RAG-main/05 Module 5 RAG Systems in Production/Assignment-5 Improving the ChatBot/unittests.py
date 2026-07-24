@@ -6,7 +6,7 @@ from dlai_grader.grading import test_case, print_feedback
 from types import FunctionType
 import numpy as np
 import joblib
-import pandas as pd 
+import pandas as pd
 
 
 def test_check_if_faq_or_product(learner_func):
@@ -31,8 +31,8 @@ def test_check_if_faq_or_product(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-            
-        
+
+
         t = test_case()
         if not isinstance(output, str):
             t.failed = True
@@ -46,9 +46,9 @@ def test_check_if_faq_or_product(learner_func):
             t.failed = True
             t.msg = f"Output must have only one word"
             t.want = "One element"
-            t.got = output      
+            t.got = output
         cases.append(t)
-        
+
         t = test_case()
         max_tokens = 180
         if total_tokens > max_tokens:
@@ -57,16 +57,16 @@ def test_check_if_faq_or_product(learner_func):
             t.want = f"At most {max_tokens} tokens in the answer"
             t.got = total_tokens
         cases.append(t)
-        
-        
-        queries = ['What is your return policy?', 
-           'Give me three examples of blue Tshirts you have available.', 
-           'How can I contact the user support?', 
+
+
+        queries = ['What is your return policy?',
+           'Give me three examples of blue Tshirts you have available.',
+           'How can I contact the user support?',
            'Do you have blue Dresses?',
            'Create a look suitable for a wedding party happening during dawn.']
 
         labels = ['FAQ', 'Product', 'FAQ', 'Product', 'Product']
-        
+
         for query, correct_label in zip(queries, labels):
             t = test_case()
             response, total_tokens = learner_func(query, simplified = True)
@@ -85,15 +85,15 @@ def test_check_if_faq_or_product(learner_func):
                 t.want = f"At most {max_tokens} tokens in the answer"
                 t.got = total_tokens
             cases.append(t)
-    
+
 
         return cases
-    
-        
-    
-    
 
-    
+
+
+
+
+
 
     cases = g()
     print_feedback(cases)
@@ -118,7 +118,7 @@ def test_query_on_faq(learner_func):
             t.want = f"{function_name} must run without exceptions"
             t.got = str(e)
             return [t]
-            
+
         t = test_case()
         if not isinstance(output, dict):
             t.failed = True
@@ -166,7 +166,7 @@ def test_decide_task_nature(learner_func):
             t.want = f"{function_name} must run without exceptions"
             t.got = str(e)
             return [t]
-            
+
         t = test_case()
         if not isinstance(output, str):
             t.failed = True
@@ -175,8 +175,8 @@ def test_decide_task_nature(learner_func):
             t.got = type(output)
             return [t]
         cases.append(t)
-        
-        
+
+
         queries = ["Give me two sneakers with vibrant colors.",
                    "What are the most expensive clothes you have in your catalogue?",
                    "I have a green Dress and I like a suggestion on an acessory to match with it.",
@@ -185,7 +185,7 @@ def test_decide_task_nature(learner_func):
                    ]
 
         labels = ['technical', 'technical', 'creative', 'technical', 'creative']
-        
+
         error_count = 0
         for query, correct_label in zip(queries, labels):
             t = test_case()
@@ -239,7 +239,7 @@ def test_get_params_for_task(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-            
+
         t = test_case()
         if not isinstance(output, dict):
             t.failed = True
@@ -277,8 +277,8 @@ def test_get_relevant_products_from_query(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-        
-        
+
+
         ids = set([t.properties['product_id'] for t in output])
         ids_solution = set([3328, 35983, 54935, 6939, 33565, 49964, 2863, 2866, 1844, 1845, 1846, 1847, 1853, 9539, 1866, 4298, 1867, 3431, 37608, 3318])
         t = test_case()
@@ -288,9 +288,9 @@ def test_get_relevant_products_from_query(learner_func):
             t.want = f"Product IDs must be {ids_solution}"
             t.got = f"Product IDs output are: {ids}"
         cases.append(t)
-        
+
         return cases
-        
+
     cases = g()
     print_feedback(cases)
 
@@ -336,7 +336,7 @@ def test_generate_log(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-        
+
         t = test_case()
         if output is not None:
             t.failed = True
@@ -344,26 +344,26 @@ def test_generate_log(learner_func):
             t.want = "Function must return None"
             t.got = output
         cases.append(t)
-            
-        
-        
+
+
+
         t = test_case()
         if logging_dataset['query'][0] != query:
             t.failed = True
             t.msg = "Incorrect value for query column"
             t.want = query
-            t.got = logging_dataset['query']   
+            t.got = logging_dataset['query']
         cases.append(t)
-        
+
         t = test_case()
         if logging_dataset['total_tokens'][0] != total_tokens + result['total_tokens']:
             t.failed = True
             t.msg = "Incorrect value for total_tokens column. Make sure to add total_tokens + result['total_tokens'] in the columns"
             t.want = total_tokens + result['total_tokens']
-            t.got = logging_dataset['total_tokens'] 
+            t.got = logging_dataset['total_tokens']
         cases.append(t)
-        
+
         return cases
-        
+
     cases = g()
     print_feedback(cases)

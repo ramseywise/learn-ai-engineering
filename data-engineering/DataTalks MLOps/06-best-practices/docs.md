@@ -7,7 +7,7 @@
 **Infrastructure-as-Code (IaC)**:
 * Define and automate operations around you application's infrastructure.
 * Can use version control to track changes made to infrastructure
-* Easy to replicate the configuration across different environments such as development, staging, and production. 
+* Easy to replicate the configuration across different environments such as development, staging, and production.
 
 
 #### Reference Material
@@ -19,7 +19,7 @@ We have already covered Terraform concepts at a deeper level in the [Data Engine
 
 **Videos**:
 
-1. For an introduction to Terraform and IaC concepts, please refer to [this video](https://www.youtube.com/watch?v=Hajwnmj0xfQ&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=11) 
+1. For an introduction to Terraform and IaC concepts, please refer to [this video](https://www.youtube.com/watch?v=Hajwnmj0xfQ&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=11)
 (from the DE Zoomcamp), especially the sections in the time-codes:
 
     * 00:00 Introduction
@@ -31,7 +31,7 @@ We have already covered Terraform concepts at a deeper level in the [Data Engine
 
 2. For a quickstart tutorial, and understanding the main components of a basic Terraform script, please refer to [this video](https://www.youtube.com/watch?v=dNkEgO-CExg&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=12)
     (from the DE Zoomcamp). Please note that this example uses GCP as a cloud provider, while for MLOps Zoomcamp we are using AWS.
-    
+
     * 00:00 Introduction
     * 00:20 .terraform-version
     * 01:04 main.tf
@@ -57,13 +57,13 @@ In case you're using GCP instead of AWS, following is some setup material:
 ### Concepts of CI/CD and GitHub Actions
 
 #### Summary
-* Using GitHub Actions to create workflows to automatically test a pull request, 
-build and push a Docker image, and deploy the updated lambda service to production. 
+* Using GitHub Actions to create workflows to automatically test a pull request,
+build and push a Docker image, and deploy the updated lambda service to production.
 * Creating specific YAML files in GitHub repo, to automatically kick off a series of automation steps.
 * Motivation on automating your further tasks with GitHub Actions:
     * Orchestrating a continuous training pipeline (CT) to retrain your model and generate updated model artifacts in production
     * Integrating the model registry (MLflow, DVC etc.) to fetch the latest model version or experiment ID
-    * and many more... 
+    * and many more...
 
 
 #### Reference Material

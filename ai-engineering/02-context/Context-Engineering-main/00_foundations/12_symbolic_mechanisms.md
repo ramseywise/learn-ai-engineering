@@ -23,14 +23,14 @@ Research by Yang et al. (2025) reveals that LLMs implement abstract reasoning th
                         ks    Output
                         ↑
                         A
-Retrieval              ↑ 
+Retrieval              ↑
 Heads           A   B   A
                 ↑   ↑   ↑
-                        
+
 Symbolic        A   B   A   A   B   A   A   B
 Induction       ↑   ↑   ↑   ↑   ↑   ↑   ↑   ↑
-Heads                   
-                        
+Heads
+
 Symbol     A       B       A       A       B       A       A       B
 Abstraction ↑       ↑       ↑       ↑       ↑       ↑       ↑       ↑
 Heads    iac     ilege    iac    ptest     yi     ptest    ks      ixe   Input
@@ -105,29 +105,29 @@ By intervening on specific attention heads and measuring the effects on model ou
 def detect_symbol_abstraction_heads(model, examples):
     """
     Detect symbol abstraction heads using causal mediation.
-    
+
     Args:
         model: The language model to analyze
         examples: List of examples with abstract patterns
-        
+
     Returns:
         Dictionary mapping layer/head indices to abstraction scores
     """
     scores = {}
-    
+
     # Create contexts with same tokens in different abstract roles
     for layer in range(model.num_layers):
         for head in range(model.num_heads):
             # Patch activations from context1 to context2
             patched_output = patch_head_activations(
                 model, examples, layer, head)
-            
+
             # Measure effect on abstract variable predictions
             abstraction_score = measure_abstract_variable_effect(
                 patched_output, examples)
-            
+
             scores[(layer, head)] = abstraction_score
-    
+
     return scores
 ```
 
@@ -139,26 +139,26 @@ Symbol abstraction and induction heads correlate with previously identified mech
 def compare_with_function_vectors(abstraction_scores, induction_scores):
     """
     Compare symbol abstraction scores with function vector scores.
-    
+
     Args:
         abstraction_scores: Dictionary of symbol abstraction scores
         induction_scores: Dictionary of function vector scores
-        
+
     Returns:
         Correlation statistics and visualization
     """
     # Extract scores for visualization
     abs_values = [score for (_, _), score in abstraction_scores.items()]
     ind_values = [score for (_, _), score in induction_scores.items()]
-    
+
     # Calculate correlation
     correlation = compute_correlation(abs_values, ind_values)
-    
+
     # Generate visualization
-    plot_comparison(abs_values, ind_values, 
-                   "Symbol Abstraction Scores", 
+    plot_comparison(abs_values, ind_values,
+                   "Symbol Abstraction Scores",
                    "Function Vector Scores")
-    
+
     return correlation
 ```
 
@@ -233,21 +233,21 @@ Creating stable attractor patterns in the field that correspond to abstract vari
 def create_symbolic_attractors(context, abstract_variables):
     """
     Create field attractors for abstract variables.
-    
+
     Args:
         context: The context field
         abstract_variables: List of abstract variables
-        
+
     Returns:
         Updated context field with symbolic attractors
     """
     for variable in abstract_variables:
         # Create attractor pattern for variable
         attractor = create_attractor_pattern(variable)
-        
+
         # Add attractor to field
         context = add_attractor_to_field(context, attractor)
-    
+
     return context
 ```
 
@@ -259,26 +259,26 @@ Track symbolic residue - fragments of abstract variable representations that per
 def track_symbolic_residue(context, operations):
     """
     Track symbolic residue after field operations.
-    
+
     Args:
         context: The context field
         operations: List of operations to perform
-        
+
     Returns:
         Dictionary of symbolic residue traces
     """
     residue_tracker = initialize_residue_tracker()
-    
+
     for operation in operations:
         # Perform operation
         context = apply_operation(context, operation)
-        
+
         # Detect symbolic residue
         residue = detect_symbolic_residue(context)
-        
+
         # Track residue
         residue_tracker.add(operation, residue)
-    
+
     return residue_tracker.get_traces()
 ```
 
@@ -290,23 +290,23 @@ Enhance resonance between different symbolic mechanisms to create coherent field
 def enhance_symbolic_resonance(context, abstraction_patterns, induction_patterns):
     """
     Enhance resonance between symbol abstraction and induction patterns.
-    
+
     Args:
         context: The context field
         abstraction_patterns: Patterns that enhance symbol abstraction
         induction_patterns: Patterns that enhance symbolic induction
-        
+
     Returns:
         Updated context field with enhanced resonance
     """
     # Identify resonant frequencies between patterns
     resonances = compute_pattern_resonance(abstraction_patterns, induction_patterns)
-    
+
     # Amplify resonant patterns
     for pattern_pair, resonance in resonances.items():
         if resonance > RESONANCE_THRESHOLD:
             context = amplify_resonance(context, pattern_pair)
-    
+
     return context
 ```
 
@@ -396,27 +396,27 @@ Measures the model's ability to abstract from specific tokens to variables:
 def measure_symbolic_abstraction(model, contexts):
     """
     Measure symbolic abstraction capabilities.
-    
+
     Args:
         model: The language model to evaluate
         contexts: Contexts with abstract patterns
-        
+
     Returns:
         Abstraction score between 0 and 1
     """
     correct = 0
     total = 0
-    
+
     for context in contexts:
         # Present pattern with novel tokens
         output = model.generate(context.pattern_with_novel_tokens)
-        
+
         # Check if output follows abstract pattern
         if follows_abstract_pattern(output, context.expected_pattern):
             correct += 1
-        
+
         total += 1
-    
+
     return correct / total
 ```
 
@@ -428,27 +428,27 @@ Measures the model's ability to induce patterns from examples:
 def measure_symbolic_induction(model, contexts):
     """
     Measure symbolic induction capabilities.
-    
+
     Args:
         model: The language model to evaluate
         contexts: Contexts with pattern examples
-        
+
     Returns:
         Induction score between 0 and 1
     """
     correct = 0
     total = 0
-    
+
     for context in contexts:
         # Present examples followed by incomplete pattern
         output = model.generate(context.examples_and_incomplete_pattern)
-        
+
         # Check if output completes pattern correctly
         if completes_pattern_correctly(output, context.expected_completion):
             correct += 1
-        
+
         total += 1
-    
+
     return correct / total
 ```
 
@@ -460,27 +460,27 @@ Measures the model's ability to retrieve correct values for abstract variables:
 def measure_retrieval_accuracy(model, contexts):
     """
     Measure retrieval accuracy.
-    
+
     Args:
         model: The language model to evaluate
         contexts: Contexts with variable-value mappings
-        
+
     Returns:
         Retrieval accuracy between 0 and 1
     """
     correct = 0
     total = 0
-    
+
     for context in contexts:
         # Present variable-value mappings and query
         output = model.generate(context.mappings_and_query)
-        
+
         # Check if output retrieves correct value
         if retrieves_correct_value(output, context.expected_value):
             correct += 1
-        
+
         total += 1
-    
+
     return correct / total
 ```
 
@@ -547,18 +547,18 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 def detect_symbol_abstraction(model_name, examples):
     """
     Detect symbol abstraction in a language model.
-    
+
     Args:
         model_name: Name of the Hugging Face model
         examples: List of example sequences with abstract patterns
-        
+
     Returns:
         Dictionary of layer/head indices with abstraction scores
     """
     # Load model and tokenizer
     model = AutoModelForCausalLM.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    
+
     # Create contexts with same tokens in different roles
     contexts = []
     for example in examples:
@@ -567,27 +567,27 @@ def detect_symbol_abstraction(model_name, examples):
         # Create ABB pattern (same tokens, different pattern)
         abb_context = example["tokens"][0] + " " + example["tokens"][1] + " " + example["tokens"][1]
         contexts.append((aba_context, abb_context))
-    
+
     # Measure effects of patching attention heads
     scores = {}
     for layer in range(model.config.num_hidden_layers):
         for head in range(model.config.num_attention_heads):
             abstraction_score = measure_head_abstraction(model, tokenizer, contexts, layer, head)
             scores[(layer, head)] = abstraction_score
-    
+
     return scores
 
 def measure_head_abstraction(model, tokenizer, contexts, layer, head):
     """
     Measure symbolic abstraction for a specific attention head.
-    
+
     Args:
         model: The language model
         tokenizer: The tokenizer
         contexts: List of context pairs (ABA, ABB)
         layer: Layer index
         head: Head index
-        
+
     Returns:
         Abstraction score for the head
     """
@@ -597,7 +597,7 @@ def measure_head_abstraction(model, tokenizer, contexts, layer, head):
     # 2. Extracting attention patterns for the specified head
     # 3. Analyzing how the head treats the same token in different roles
     # 4. Calculating a score based on role-dependent vs. token-dependent attention
-    
+
     # Placeholder return
     return 0.5  # Replace with actual implementation
 ```

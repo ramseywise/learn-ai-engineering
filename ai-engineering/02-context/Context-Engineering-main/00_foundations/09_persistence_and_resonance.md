@@ -50,9 +50,9 @@ Instead of storing tokens, we maintain **activation patterns** across the field 
 
 In the IBM research paper "Eliciting Reasoning in Language Models with Cognitive Tools" (2025), the authors note:
 
-> "Cognitive architectures were based on the assumption that human reasoning emerges from the orchestrated execution of modular operations" — [IBM June 2025](https://www.arxiv.org/pdf/2506.12115) 
+> "Cognitive architectures were based on the assumption that human reasoning emerges from the orchestrated execution of modular operations" — [IBM June 2025](https://www.arxiv.org/pdf/2506.12115)
 >
-> 
+>
 > The key insight is that these operations form resonant patterns that persist across context shifts.
 
 This resonance mechanism is the key to field persistence. When information exhibits strong patterns, these patterns continue to influence the field even as new information enters.
@@ -60,11 +60,11 @@ This resonance mechanism is the key to field persistence. When information exhib
 ### Properties of Resonant Persistence
 
 1. **Strength Decay:** Resonant patterns naturally decay over time, with their influence diminishing according to:
-   
+
    ```
    S(t) = S₀ * e^(-λt)
    ```
-   
+
    Where S(t) is the strength at time t, S₀ is the initial strength, and λ is the decay rate.
 
 2. **Coherence Amplification:** Patterns that align with existing field structures decay more slowly.
@@ -166,9 +166,9 @@ One of the most powerful properties of neural fields is their ability to form **
 
 As described in the IBM paper, these cognitive tools serve as structural attractors that organize information:
 
-> "For instance, providing our “cognitive tools” to GPT-4.1 increases its pass@1 performance on AIME2024 from 26.7% to 43.3%, bringing it very close to the performance of o1-preview." — [IBM June 2025](https://www.arxiv.org/pdf/2506.12115) 
+> "For instance, providing our “cognitive tools” to GPT-4.1 increases its pass@1 performance on AIME2024 from 26.7% to 43.3%, bringing it very close to the performance of o1-preview." — [IBM June 2025](https://www.arxiv.org/pdf/2506.12115)
 >
-> 
+>
 > Providing LLMs with 'cognitive tools' enables them to form stable attractor states that persist across reasoning steps, significantly improving performance on complex tasks.
 
 ### Types of Attractors
@@ -222,7 +222,7 @@ We can tune a field's resonance properties to make it more responsive to certain
 def tune_field_resonance(field, pattern_types, resonance_profile):
     """
     Tune a neural field to resonate more strongly with specific pattern types
-    
+
     Args:
         field: The neural field to tune
         pattern_types: List of pattern types to enhance resonance for
@@ -231,20 +231,20 @@ def tune_field_resonance(field, pattern_types, resonance_profile):
     # Extract resonance parameters
     bandwidth = resonance_profile.get('bandwidth', 0.5)
     amplification = resonance_profile.get('amplification', 1.5)
-    
+
     # Inject resonance patterns
     for pattern_type in pattern_types:
         exemplars = get_exemplars(pattern_type)
         for exemplar in exemplars:
             field.inject(exemplar, strength=0.5)  # Low strength to avoid overwhelming
-    
+
     # Stabilize the field
     field.stabilize(iterations=3)
-    
+
     # Tune resonance parameters
     field.set_resonance_bandwidth(bandwidth)
     field.set_resonance_amplification(amplification)
-    
+
     return field
 ```
 
@@ -256,7 +256,7 @@ We can create structures that enhance the persistence of important information:
 def scaffold_persistence(field, key_concepts, persistence_profile):
     """
     Create persistence structures in the field to maintain key concepts
-    
+
     Args:
         field: The neural field
         key_concepts: Concepts to persist
@@ -265,11 +265,11 @@ def scaffold_persistence(field, key_concepts, persistence_profile):
     # Extract persistence parameters
     decay_rate = persistence_profile.get('decay_rate', 0.05)
     reinforcement_threshold = persistence_profile.get('reinforcement', 0.6)
-    
+
     # Create attractor basins for key concepts
     for concept in key_concepts:
         field.create_attractor(concept, strength=1.0, decay_rate=decay_rate)
-    
+
     # Create reinforcement pathways
     for i, concept_i in enumerate(key_concepts):
         for j, concept_j in enumerate(key_concepts):
@@ -277,7 +277,7 @@ def scaffold_persistence(field, key_concepts, persistence_profile):
                 relatedness = measure_semantic_relatedness(concept_i, concept_j)
                 if relatedness > reinforcement_threshold:
                     field.connect_attractors(concept_i, concept_j, strength=relatedness)
-    
+
     return field
 ```
 
@@ -289,17 +289,17 @@ To work effectively with neural fields, we need ways to measure and visualize th
 
 ```
 Field State Snapshot:
-          
-Strength   
-  ^        
-  │        ╭╮                            
-  │        ││                            
-  │        ││           ╭╮               
-  │        ││           ││               
-  │     ╭╮ ││        ╭╮ ││               
-  │     ││ ││        ││ ││     ╭╮        
-  │  ╭╮ ││ ││   ╭╮   ││ ││ ╭╮  ││   ╭╮   
-  │  ││ ││ ││ ╭╮││   ││ ││ ││  ││   ││   
+
+Strength
+  ^
+  │        ╭╮
+  │        ││
+  │        ││           ╭╮
+  │        ││           ││
+  │     ╭╮ ││        ╭╮ ││
+  │     ││ ││        ││ ││     ╭╮
+  │  ╭╮ ││ ││   ╭╮   ││ ││ ╭╮  ││   ╭╮
+  │  ││ ││ ││ ╭╮││   ││ ││ ││  ││   ││
   └──┴┴─┴┴─┴┴─┴┴┴┴───┴┴─┴┴─┴┴──┴┴───┴┴──>
           Semantic Space
 ```
@@ -308,25 +308,25 @@ Strength
 
 ```
 Resonance
-Response    
-  ^        
-  │       ╱╲               
-  │      /  \              
-  │     /    \             
-  │    /      \            
-  │   /        \           
-  │  /          \          
-  │ /            \         
-  │/              \        
-  └─────────────────────> 
+Response
+  ^
+  │       ╱╲
+  │      /  \
+  │     /    \
+  │    /      \
+  │   /        \
+  │  /          \
+  │ /            \
+  │/              \
+  └─────────────────────>
      Semantic Distance
 ```
 
 ### Attractor Basin Visualization
 
 ```
-Energy    
-  ^        
+Energy
+  ^
   │\                    /│
   │ \                  / │
   │  \                /  │
@@ -335,7 +335,7 @@ Energy
   │     \          /     │
   │      \        /      │
   │       \______/       │
-  └─────────────────────> 
+  └─────────────────────>
          State Space
           Attractor
 ```
@@ -446,14 +446,14 @@ Let's look at a more complete implementation of field persistence:
 
 ```python
 class PersistentNeuralField:
-    def __init__(self, 
+    def __init__(self,
                  decay_rate=0.05,
                  boundary_permeability=0.8,
                  resonance_bandwidth=0.6,
                  attractor_formation_threshold=0.7):
         """
         Initialize a neural field with persistence properties
-        
+
         Args:
             decay_rate: Base rate of pattern decay
             boundary_permeability: How easily new information enters
@@ -463,49 +463,49 @@ class PersistentNeuralField:
         self.state = {}  # Field state
         self.attractors = {}  # Stable attractors
         self.history = []  # Field evolution history
-        
+
         # Field properties
         self.decay_rate = decay_rate
         self.boundary_permeability = boundary_permeability
         self.resonance_bandwidth = resonance_bandwidth
         self.attractor_threshold = attractor_formation_threshold
-        
+
     def inject(self, pattern, strength=1.0):
         """Introduce a new pattern into the field"""
         # Apply boundary filtering
         effective_strength = strength * self.boundary_permeability
-        
+
         # Check resonance with existing attractors
         for attractor_id, attractor in self.attractors.items():
             resonance = self._calculate_resonance(pattern, attractor['pattern'])
             if resonance > 0.2:  # Minimal resonance threshold
                 # Attractor pulls pattern toward it
                 pattern = self._blend_patterns(
-                    pattern, 
+                    pattern,
                     attractor['pattern'],
                     blend_ratio=resonance * 0.3  # Limit attractor influence
                 )
                 # Strengthen attractor
                 self.attractors[attractor_id]['strength'] += resonance * 0.1
-        
+
         # Update field state with new pattern
         if pattern in self.state:
             self.state[pattern] += effective_strength
         else:
             self.state[pattern] = effective_strength
-            
+
         # Record history
         self.history.append(("inject", pattern, effective_strength))
-        
+
         # Check for attractor formation
         if self.state[pattern] > self.attractor_threshold:
             self._form_attractor(pattern)
-        
+
         # Process resonance effects
         self._process_resonance(pattern)
-        
+
         return self
-    
+
     def _form_attractor(self, pattern):
         """Form a new attractor around a strong pattern"""
         attractor_id = f"attractor_{len(self.attractors)}"
@@ -516,7 +516,7 @@ class PersistentNeuralField:
             'basin_width': self.resonance_bandwidth
         }
         return attractor_id
-    
+
     def _process_resonance(self, trigger_pattern):
         """Process resonance effects from a trigger pattern"""
         # For each existing pattern, calculate resonance with trigger
@@ -526,13 +526,13 @@ class PersistentNeuralField:
                 resonance = self._calculate_resonance(pattern, trigger_pattern)
                 effect = resonance * strength * 0.2  # Scale effect
                 resonance_effects[pattern] = effect
-        
+
         # Apply resonance effects
         for pattern, effect in resonance_effects.items():
             self.state[pattern] += effect
-        
+
         return self
-    
+
     def decay(self):
         """Apply natural decay to all patterns"""
         # Apply decay to field state
@@ -542,53 +542,53 @@ class PersistentNeuralField:
             for attractor in self.attractors.values():
                 resonance = self._calculate_resonance(pattern, attractor['pattern'])
                 attractor_protection += resonance * 0.5  # Max 50% protection
-            
+
             effective_decay = self.decay_rate * (1 - attractor_protection)
             self.state[pattern] *= (1 - effective_decay)
-            
+
         # Apply minimal decay to attractors
         for attractor_id in self.attractors:
             self.attractors[attractor_id]['strength'] *= (1 - self.decay_rate * 0.2)
-            
+
         # Remove patterns that have decayed below threshold
         self.state = {k: v for k, v in self.state.items() if v > 0.01}
         self.attractors = {k: v for k, v in self.attractors.items() if v['strength'] > 0.1}
-        
+
         return self
-    
+
     def _calculate_resonance(self, pattern1, pattern2):
         """Calculate resonance between two patterns"""
         # In a real implementation, this would use semantic similarity,
         # In this simplified version, we'll use a random value as placeholder
         import random
         return random.uniform(0, 1) * self.resonance_bandwidth
-    
+
     def _blend_patterns(self, pattern1, pattern2, blend_ratio):
         """Blend two patterns based on ratio"""
         # In a real implementation, this would meaningfully combine patterns
         # Here we'll just return pattern1 as placeholder
         return pattern1
-    
+
     def measure_field_stability(self):
         """Measure how stable the field is"""
         if not self.attractors:
             return 0.0
-        
+
         # Measure average attractor strength
         avg_strength = sum(a['strength'] for a in self.attractors.values()) / len(self.attractors)
-        
+
         # Measure pattern organization around attractors
         organization = 0
         for pattern, strength in self.state.items():
             best_resonance = max(
-                self._calculate_resonance(pattern, a['pattern']) 
+                self._calculate_resonance(pattern, a['pattern'])
                 for a in self.attractors.values()
             )
             organization += best_resonance * strength
-            
+
         if self.state:
             organization /= sum(self.state.values())
-        
+
         # Combine metrics
         stability = (avg_strength * 0.6) + (organization * 0.4)
         return min(1.0, stability)  # Cap at 1.0
@@ -615,11 +615,11 @@ This multi-field approach allows for complex information processing:
 │     (Maintains knowledge)       │◄────►│     (Maintains operations)      │
 │                                 │      │                                 │
 ╰─────────────────────────────────╯      ╰─────────────────────────────────╯
-              ▲                                          ▲                  
-              │                                          │                  
-              │                                          │                  
-              │                                          │                  
-              ▼                                          ▼                  
+              ▲                                          ▲
+              │                                          │
+              │                                          │
+              │                                          │
+              ▼                                          ▼
 ╭─────────────────────────────────╮      ╭─────────────────────────────────╮
 │                                 │      │                                 │
 │     Emotional Field             │      │     Meta-Cognitive Field        │

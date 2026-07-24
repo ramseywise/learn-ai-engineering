@@ -10,13 +10,13 @@ The aim of this module is to have a good grasp on the foundation of these Kafka/
 - replication and retention
 - offsets
 - consumer-groups
-- 
+-
 
 ## 1. Pre-requisites
 
 If you have been following the [module-06](./../../../06-streaming/README.md) videos, you might already have installed the `kafka-python` library, so you can move on to [Docker](#2-docker) section.
 
-If you have not, this is the only package you need to install in your virtual environment for this Redpanda lesson. 
+If you have not, this is the only package you need to install in your virtual environment for this Redpanda lesson.
 
 1. activate your environment
 2. `pip install kafka-python`
@@ -32,9 +32,9 @@ docker-compose up -d
 
 ## 3. Set RPK alias
 
-Redpanda has a console command `rpk` which means `Redpanda keeper`, the CLI tool that ships with Redpanda and is already available in the Docker image. 
+Redpanda has a console command `rpk` which means `Redpanda keeper`, the CLI tool that ships with Redpanda and is already available in the Docker image.
 
-Set the following `rpk` alias so we can use it from our terminal, without having to open a Docker interactive terminal. We can use this `rpk` alias directly in our terminal. 
+Set the following `rpk` alias so we can use it from our terminal, without having to open a Docker interactive terminal. We can use this `rpk` alias directly in our terminal.
 
 ```bash
 alias rpk="docker exec -ti redpanda-1 rpk"
@@ -105,4 +105,3 @@ Redpanda Univerity (needs a Redpanda account and it is free to enrol and do the 
 - [SF102: Kafka building blocks](https://university.redpanda.com/courses/kafka-building-blocks)
 
 If you feel that you already have a good foundational basis on Streaming and Kafka, feel free to skip these supplementary courses.
-

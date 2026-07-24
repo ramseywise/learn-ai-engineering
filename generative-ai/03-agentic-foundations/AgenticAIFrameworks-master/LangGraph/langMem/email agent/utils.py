@@ -44,7 +44,7 @@ def format_few_shot_examples(examples):
         email_part = example.value.split('Original routing:')[0].strip()
         original_routing = example.value.split('Original routing:')[1].split('Correct routing:')[0].strip()
         correct_routing = example.value.split('Correct routing:')[1].strip()
-        
+
         # Format into clean string
         formatted_example = f"""Example:
 Email: {email_part}
@@ -52,5 +52,5 @@ Original Classification: {original_routing}
 Correct Classification: {correct_routing}
 ---"""
         formatted.append(formatted_example)
-    
+
     return "\n".join(formatted)

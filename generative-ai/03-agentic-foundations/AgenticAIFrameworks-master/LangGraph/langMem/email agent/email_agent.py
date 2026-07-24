@@ -8,7 +8,7 @@ from prompts import triage_system_prompt, triage_user_prompt
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
 
-os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY_TBH") 
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY_TBH")
 
 profile = {
     "name": "John",
@@ -101,9 +101,9 @@ def write_email(to: str, subject: str, content: str) -> str:
 
 @tool
 def schedule_meeting(
-    attendees: list[str], 
-    subject: str, 
-    duration_minutes: int, 
+    attendees: list[str],
+    subject: str,
+    duration_minutes: int,
     preferred_day: str
 ) -> str:
     """Schedule a calendar meeting."""
@@ -122,7 +122,7 @@ from prompts import agent_system_prompt
 def create_prompt(state):
     return [
         {
-            "role": "system", 
+            "role": "system",
             "content": agent_system_prompt.format(
                 instructions=prompt_instructions["agent_instructions"],
                 **profile
@@ -137,7 +137,7 @@ print ('\nAgent System Prompt : ', agent_system_prompt)
 
 
 
-# Langgraph agent 
+# Langgraph agent
 
 tools=[write_email, schedule_meeting, check_calendar_availability]
 
@@ -150,7 +150,7 @@ agent = create_react_agent(
 
 response = agent.invoke(
     {"messages": [{
-        "role": "user", 
+        "role": "user",
         "content": "what is my availability for tuesday?"
     }]}
 )
@@ -191,9 +191,9 @@ def triage_router(state: State) -> Command[
         examples=None
     )
     user_prompt = triage_user_prompt.format(
-        author=author, 
-        to=to, 
-        subject=subject, 
+        author=author,
+        to=to,
+        subject=subject,
         email_thread=email_thread
     )
     result = llm_router.invoke(
@@ -245,9 +245,9 @@ email_input = {
     "subject": "🔥 EXCLUSIVE OFFER: Limited Time Discount on Developer Tools! 🔥",
     "email_thread": """Dear Valued Developer,
 
-Don't miss out on this INCREDIBLE opportunity! 
+Don't miss out on this INCREDIBLE opportunity!
 
-🚀 For a LIMITED TIME ONLY, get 80% OFF on our Premium Developer Suite! 
+🚀 For a LIMITED TIME ONLY, get 80% OFF on our Premium Developer Suite!
 
 ✨ FEATURES:
 - Revolutionary AI-powered code completion
@@ -294,5 +294,3 @@ Alice""",
 response = email_agent.invoke({"email_input": email_input})
 
 print ( ' Respond email example : ' , response)
-
-

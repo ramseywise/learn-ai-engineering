@@ -20,13 +20,13 @@ google_api_key = os.getenv("GOOGLE_API_KEY")
 if google_api_key:
     os.environ["GOOGLE_API_KEY"] = google_api_key
 else:
-    
+
     print("Warning: GOOGLE_API_KEY is not set. Continuing without setting the environment variable.")
 
 # utility func
 def get_today_str() -> str:
     """Get current date in a human-readable format."""
-    
+
     now = datetime.now()
     return now.strftime("%a %b {}, %Y").format(now.day)
 
@@ -44,14 +44,14 @@ def clarify_with_user (state: AgentState) -> Command[Literal["write_research_bri
     # invoke model with clarification instructions
 
     response = structured_output_model.invoke ([
-        
+
         HumanMessage(content=clarify_with_user_instructions.format(
-            
+
             messages = get_buffer_string(messages = state["messages"]),
             date = get_today_str()
             ) ) ])
 
-    
+
     if response.need_clarification:
 
         return Command(
@@ -59,7 +59,7 @@ def clarify_with_user (state: AgentState) -> Command[Literal["write_research_bri
             update = { "messages": [AIMessage (content=response.question)] }
         )
 
-    else: 
+    else:
         return Command(
             goto="write_research_brief",
             update = { "messages": [AIMessage (content=response.verification)] }
@@ -69,11 +69,11 @@ def clarify_with_user (state: AgentState) -> Command[Literal["write_research_bri
 def write_research_brief(state: AgentState):
     """
     Transform the conversation history into a comprehensive research brief.
-    
+
     """
-    
+
     structured_output_model = model.with_structured_output(ResearchQuestion)
-    
+
     #  research brief from conversation history
     response = structured_output_model.invoke([
         HumanMessage(content=transform_messages_into_research_topic_prompt.format(
@@ -81,9 +81,9 @@ def write_research_brief(state: AgentState):
             date=get_today_str()
         ))
     ])
-    
+
     # pass to supervisor
-    
+
     return {
         "research_brief": response.research_brief,
         "supervisor_messages": [HumanMessage(content=f"{response.research_brief}.")]
@@ -93,7 +93,7 @@ def write_research_brief(state: AgentState):
 
 deep_researcher_builder = StateGraph (AgentState, input_schema = AgentInputState)
 
-#nodes 
+#nodes
 
 deep_researcher_builder.add_node ("clarify_with_user", clarify_with_user )
 deep_researcher_builder.add_node ("write_research_brief", write_research_brief )

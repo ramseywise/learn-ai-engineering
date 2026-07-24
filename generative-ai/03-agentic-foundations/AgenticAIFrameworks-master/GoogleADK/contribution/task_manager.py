@@ -80,8 +80,8 @@ class AgentTaskManager(InMemoryTaskManager):
                     )
                     await self.enqueue_events_for_sse(
                         task_send_params.id, task_artifact_update_event
-                    )                    
-                    
+                    )
+
                 task_update_event = TaskStatusUpdateEvent(
                     id=task_send_params.id, status=task_status, final=end_stream
                 )
@@ -93,7 +93,7 @@ class AgentTaskManager(InMemoryTaskManager):
             logger.error(f"An error occurred while streaming the response: {e}")
             await self.enqueue_events_for_sse(
                 task_send_params.id,
-                InternalError(message=f"An error occurred while streaming the response: {e}")                
+                InternalError(message=f"An error occurred while streaming the response: {e}")
             )
 
     def _validate_request(
@@ -110,19 +110,19 @@ class AgentTaskManager(InMemoryTaskManager):
                 CurrencyAgent.SUPPORTED_CONTENT_TYPES,
             )
             return utils.new_incompatible_types_error(request.id)
-        
+
         if task_send_params.pushNotification and not task_send_params.pushNotification.url:
             logger.warning("Push notification URL is missing")
             return JSONRPCResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is missing"))
-        
+
         return None
-        
+
     async def on_send_task(self, request: SendTaskRequest) -> SendTaskResponse:
         """Handles the 'send task' request."""
         validation_error = self._validate_request(request)
         if validation_error:
             return SendTaskResponse(id=request.id, error=validation_error.error)
-        
+
         if request.params.pushNotification:
             if not await self.set_push_notification_info(request.params.id, request.params.pushNotification):
                 return SendTaskResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is invalid"))
@@ -160,7 +160,7 @@ class AgentTaskManager(InMemoryTaskManager):
                     return JSONRPCResponse(id=request.id, error=InvalidParamsError(message="Push notification URL is invalid"))
 
             task_send_params: TaskSendParams = request.params
-            sse_event_queue = await self.setup_sse_consumer(task_send_params.id, False)            
+            sse_event_queue = await self.setup_sse_consumer(task_send_params.id, False)
 
             asyncio.create_task(self._run_streaming_agent(request))
 
@@ -201,14 +201,14 @@ class AgentTaskManager(InMemoryTaskManager):
         task_result = self.append_task_history(task, history_length)
         await self.send_task_notification(task)
         return SendTaskResponse(id=request.id, result=task_result)
-    
+
     def _get_user_query(self, task_send_params: TaskSendParams) -> str:
         """Extract the user's query from the request."""
         part = task_send_params.message.parts[0]
         if not isinstance(part, TextPart):
             raise ValueError("Only text parts are supported")
         return part.text
-    
+
     async def send_task_notification(self, task: Task):
         """Send notifications about task updates if configured."""
         if not await self.has_push_notification_info(task.id):
@@ -238,13 +238,13 @@ class AgentTaskManager(InMemoryTaskManager):
                     message=f"An error occurred while reconnecting to stream: {e}"
                 ),
             )
-    
+
     async def set_push_notification_info(self, task_id: str, push_notification_config: PushNotificationConfig):
         """Set and verify push notification configuration."""
         # Verify the ownership of notification URL by issuing a challenge request.
         is_verified = await self.notification_sender_auth.verify_push_notification_url(push_notification_config.url)
         if not is_verified:
             return False
-        
+
         await super().set_push_notification_info(task_id, push_notification_config)
         return True

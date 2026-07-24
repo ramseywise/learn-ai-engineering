@@ -15,7 +15,7 @@ Query: "How does climate change affect renewable energy?"
 
 Vector Search → [
   "Climate change increases temperature...",
-  "Renewable energy sources include...", 
+  "Renewable energy sources include...",
   "Solar panels are affected by heat...",
   "Wind patterns change with climate..."
 ] → Linear text synthesis
@@ -24,7 +24,7 @@ GRAPH-ENHANCED RAG
 ==================
 Query: "How does climate change affect renewable energy?"
 
-Graph Traversal → 
+Graph Traversal →
     Climate_Change
          ↓ affects
     Temperature ←→ Weather_Patterns
@@ -118,58 +118,58 @@ Integrate graph relationships with textual information to provide:
 ```python
 class BasicGraphRAG:
     """Foundation graph-enhanced RAG with basic relationship awareness"""
-    
+
     def __init__(self, knowledge_graph, text_corpus, graph_templates):
         self.knowledge_graph = knowledge_graph
         self.text_corpus = text_corpus
         self.templates = graph_templates
         self.entity_linker = EntityLinker()
         self.graph_navigator = GraphNavigator()
-        
+
     def process_query(self, query):
         """Process query with basic graph-text integration"""
-        
+
         # Entity linking and graph grounding
         entities = self.entity_linker.extract_entities(query)
         linked_entities = self.entity_linker.link_to_graph(entities, self.knowledge_graph)
-        
+
         # Basic graph traversal
         graph_context = self.retrieve_graph_context(linked_entities, query)
-        
+
         # Traditional text retrieval
         text_context = self.retrieve_text_context(query)
-        
+
         # Simple integration
         integrated_context = self.integrate_contexts(graph_context, text_context)
-        
+
         # Generate response
         response = self.generate_response(query, integrated_context)
-        
+
         return response
-        
+
     def retrieve_graph_context(self, entities, query):
         """Retrieve relevant graph structure and relationships"""
         graph_context = {}
-        
+
         for entity in entities:
             # Get immediate neighbors
             neighbors = self.knowledge_graph.get_neighbors(entity, max_hops=2)
-            
+
             # Get relevant relationships
             relationships = self.knowledge_graph.get_relationships(
-                entity, 
+                entity,
                 filter_by_relevance=True,
                 query_context=query
             )
-            
+
             graph_context[entity] = {
                 'neighbors': neighbors,
                 'relationships': relationships,
                 'properties': self.knowledge_graph.get_properties(entity)
             }
-            
+
         return graph_context
-        
+
     def integrate_contexts(self, graph_context, text_context):
         """Basic integration of graph and text contexts"""
         integration_prompt = self.templates.integration.format(
@@ -177,24 +177,24 @@ class BasicGraphRAG:
             text_content=text_context,
             integration_strategy="relationship_enriched_text"
         )
-        
+
         return integration_prompt
-        
+
     def format_graph_context(self, graph_context):
         """Format graph context for LLM consumption"""
         formatted_sections = []
-        
+
         for entity, context in graph_context.items():
             section = f"Entity: {entity}\n"
             section += f"Type: {context.get('type', 'Unknown')}\n"
-            
+
             if context['relationships']:
                 section += "Relationships:\n"
                 for rel in context['relationships']:
                     section += f"  - {rel['relation']} → {rel['target']}\n"
-                    
+
             formatted_sections.append(section)
-            
+
         return "\n\n".join(formatted_sections)
 ```
 
@@ -203,20 +203,20 @@ class BasicGraphRAG:
 ```
 /graph.rag.basic{
     intent="Integrate knowledge graph structure with text-based retrieval for relationship-aware information synthesis",
-    
+
     input={
         query="<user_information_request>",
         graph_domain="<knowledge_graph_scope>",
         integration_depth="<shallow|medium|deep>"
     },
-    
+
     process=[
         /entity.linking{
             action="Extract and link entities to knowledge graph",
             identify=["primary_entities", "entity_types", "entity_relationships"],
             output="linked_entity_set"
         },
-        
+
         /graph.traversal{
             strategy="relationship_aware_navigation",
             traverse=[
@@ -226,20 +226,20 @@ class BasicGraphRAG:
             ],
             output="graph_substructure"
         },
-        
+
         /text.retrieval{
             method="entity_enhanced_text_search",
             enrich="text_search_with_entity_context",
             output="contextual_text_passages"
         },
-        
+
         /integration.synthesis{
             approach="graph_text_fusion",
             combine="structural_relationships_with_textual_detail",
             ensure="factual_consistency_and_relationship_accuracy"
         }
     ],
-    
+
     output={
         response="Relationship-aware answer integrating graph structure and text",
         graph_evidence="Relevant graph paths and relationships supporting the answer",
@@ -311,48 +311,48 @@ Completeness assessment: {completeness_score}
 ```python
 class MultiHopGraphRAG(BasicGraphRAG):
     """Advanced graph RAG with multi-hop reasoning and path analysis"""
-    
+
     def __init__(self, knowledge_graph, text_corpus, reasoning_engine):
         super().__init__(knowledge_graph, text_corpus, reasoning_engine.templates)
         self.reasoning_engine = reasoning_engine
         self.path_finder = GraphPathFinder()
         self.reasoning_validator = ReasoningValidator()
         self.query_decomposer = QueryDecomposer()
-        
+
     def process_complex_query(self, query, reasoning_depth=3):
         """Process complex queries requiring multi-hop reasoning"""
-        
+
         # Query decomposition for multi-hop reasoning
         decomposition = self.query_decomposer.decompose_for_graph_reasoning(query)
-        
+
         # Multi-step reasoning execution
         reasoning_results = self.execute_multi_hop_reasoning(decomposition, reasoning_depth)
-        
+
         # Path validation and confidence scoring
         validated_paths = self.reasoning_validator.validate_reasoning_paths(reasoning_results)
-        
+
         # Comprehensive synthesis
         final_response = self.synthesize_multi_hop_results(validated_paths, query)
-        
+
         return final_response
-        
+
     def execute_multi_hop_reasoning(self, decomposition, max_depth):
         """Execute multi-hop reasoning across the knowledge graph"""
         reasoning_session = ReasoningSession(decomposition, max_depth)
-        
+
         for step in decomposition.reasoning_steps:
             step_results = self.execute_reasoning_step(step, reasoning_session)
             reasoning_session.integrate_step_results(step_results)
-            
+
             # Adaptive depth control based on step results
             if self.should_adjust_reasoning_depth(step_results, reasoning_session):
                 reasoning_session.adjust_depth(step_results.suggested_depth)
-                
+
         return reasoning_session.get_comprehensive_results()
-        
+
     def execute_reasoning_step(self, step, session):
         """Execute individual reasoning step with path exploration"""
-        
+
         # Path finding for current step
         reasoning_paths = self.path_finder.find_reasoning_paths(
             start_entities=step.start_entities,
@@ -360,52 +360,52 @@ class MultiHopGraphRAG(BasicGraphRAG):
             max_hops=step.max_hops,
             relationship_constraints=step.relationship_constraints
         )
-        
+
         # Path ranking and selection
         ranked_paths = self.path_finder.rank_paths_by_relevance(
             reasoning_paths, step.relevance_criteria
         )
-        
+
         # Evidence collection along paths
         path_evidence = {}
         for path in ranked_paths[:step.max_paths]:
             evidence = self.collect_path_evidence(path, session.current_context)
             path_evidence[path.id] = evidence
-            
+
         # Step synthesis
         step_synthesis = self.synthesize_step_results(
             ranked_paths, path_evidence, step.synthesis_requirements
         )
-        
+
         return ReasoningStepResult(
             paths=ranked_paths,
             evidence=path_evidence,
             synthesis=step_synthesis,
             confidence=self.calculate_step_confidence(ranked_paths, path_evidence)
         )
-        
+
     def collect_path_evidence(self, path, context):
         """Collect comprehensive evidence along reasoning path"""
         evidence = PathEvidence(path)
-        
+
         # Graph structural evidence
         for hop in path.hops:
             structural_evidence = self.knowledge_graph.get_relationship_evidence(
                 hop.source, hop.relation, hop.target
             )
             evidence.add_structural_evidence(hop, structural_evidence)
-            
+
         # Textual evidence for path elements
         for entity in path.entities:
             text_evidence = self.text_corpus.find_supporting_text(
                 entity, context, max_passages=3
             )
             evidence.add_textual_evidence(entity, text_evidence)
-            
+
         # Cross-path validation
         cross_validation = self.validate_path_against_context(path, context)
         evidence.add_validation_evidence(cross_validation)
-        
+
         return evidence
 ```
 
@@ -414,14 +414,14 @@ class MultiHopGraphRAG(BasicGraphRAG):
 ```
 /graph.rag.multi.hop{
     intent="Orchestrate sophisticated multi-hop reasoning across knowledge graphs with path validation and evidence integration",
-    
+
     input={
         complex_query="<multi_faceted_question_requiring_reasoning_chains>",
         reasoning_constraints="<depth_limits_and_relationship_constraints>",
         validation_requirements="<evidence_quality_and_consistency_thresholds>",
         synthesis_objectives="<comprehensive_answer_requirements>"
     },
-    
+
     process=[
         /query.decomposition{
             analyze="complex_query_structure_and_reasoning_requirements",
@@ -429,7 +429,7 @@ class MultiHopGraphRAG(BasicGraphRAG):
             plan="reasoning_step_sequence_and_dependencies",
             output="structured_reasoning_plan"
         },
-        
+
         /multi.hop.exploration{
             strategy="systematic_graph_traversal_with_reasoning_validation",
             execute=[
@@ -450,7 +450,7 @@ class MultiHopGraphRAG(BasicGraphRAG):
                 }
             ]
         },
-        
+
         /path.integration{
             method="comprehensive_reasoning_path_synthesis",
             integrate=[
@@ -459,14 +459,14 @@ class MultiHopGraphRAG(BasicGraphRAG):
                 /synthesis.optimization{optimize="path_integration_for_comprehensive_answer"}
             ]
         },
-        
+
         /comprehensive.response.generation{
             approach="multi_hop_reasoning_synthesis",
             include="reasoning_chains_evidence_and_confidence_assessment",
             ensure="logical_coherence_and_factual_accuracy"
         }
     ],
-    
+
     output={
         comprehensive_answer="Multi-hop reasoning based comprehensive response",
         reasoning_paths="Detailed reasoning chains with evidence and confidence",
@@ -559,10 +559,10 @@ Intelligence amplification achieved:
 ```python
 class SemanticGraphIntelligence(MultiHopGraphRAG):
     """Advanced semantic intelligence with dynamic graph construction and cross-graph reasoning"""
-    
+
     def __init__(self, multi_graph_universe, semantic_engine, intelligence_amplifier):
         super().__init__(
-            multi_graph_universe.primary_graph, 
+            multi_graph_universe.primary_graph,
             multi_graph_universe.text_corpus,
             semantic_engine
         )
@@ -572,118 +572,118 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
         self.dynamic_graph_constructor = DynamicGraphConstructor()
         self.cross_graph_reasoner = CrossGraphReasoner()
         self.emergent_pattern_detector = EmergentPatternDetector()
-        
+
     def conduct_semantic_intelligence_session(self, query, intelligence_objectives=None):
         """Conduct advanced semantic intelligence session with emergent reasoning"""
-        
+
         # Deep semantic analysis initialization
         semantic_session = self.initialize_semantic_session(query, intelligence_objectives)
-        
+
         # Multi-dimensional graph reasoning
         reasoning_results = self.execute_multi_dimensional_reasoning(semantic_session)
-        
+
         # Dynamic graph construction for novel insights
         dynamic_insights = self.construct_dynamic_knowledge(reasoning_results)
-        
+
         # Cross-graph intelligence integration
         cross_graph_intelligence = self.integrate_cross_graph_intelligence(dynamic_insights)
-        
+
         # Emergent intelligence synthesis
         emergent_intelligence = self.synthesize_emergent_intelligence(
             reasoning_results, dynamic_insights, cross_graph_intelligence
         )
-        
+
         return emergent_intelligence
-        
+
     def execute_multi_dimensional_reasoning(self, session):
         """Execute reasoning across multiple semantic dimensions"""
-        
+
         dimensions = [
             ('structural', self.structural_reasoning_engine),
             ('temporal', self.temporal_reasoning_engine),
             ('causal', self.causal_reasoning_engine),
             ('analogical', self.analogical_reasoning_engine)
         ]
-        
+
         dimensional_results = {}
-        
+
         for dimension_name, reasoning_engine in dimensions:
             # Dimension-specific reasoning
             dimension_results = reasoning_engine.reason_in_dimension(
-                session.semantic_context, 
+                session.semantic_context,
                 session.intelligence_objectives
             )
-            
+
             # Cross-dimensional validation
             cross_validation = self.validate_across_dimensions(
                 dimension_results, dimensional_results
             )
-            
+
             # Intelligence amplification for dimension
             amplified_results = self.intelligence_amplifier.amplify_dimensional_intelligence(
                 dimension_results, cross_validation
             )
-            
+
             dimensional_results[dimension_name] = amplified_results
-            
+
         # Multi-dimensional synthesis
         integrated_reasoning = self.synthesize_dimensional_reasoning(dimensional_results)
-        
+
         return integrated_reasoning
-        
+
     def construct_dynamic_knowledge(self, reasoning_results):
         """Dynamically construct new knowledge structures and relationships"""
-        
+
         # Emergent pattern detection
         emergent_patterns = self.emergent_pattern_detector.detect_patterns(
             reasoning_results, self.graph_universe
         )
-        
+
         # Dynamic relationship construction
         dynamic_relationships = self.dynamic_graph_constructor.construct_relationships(
             emergent_patterns, reasoning_results
         )
-        
+
         # Novel concept formation
         novel_concepts = self.dynamic_graph_constructor.form_novel_concepts(
             dynamic_relationships, reasoning_results.conceptual_gaps
         )
-        
+
         # Dynamic graph integration
         enhanced_graph = self.dynamic_graph_constructor.integrate_dynamic_knowledge(
             self.graph_universe, dynamic_relationships, novel_concepts
         )
-        
+
         return DynamicKnowledge(
             emergent_patterns=emergent_patterns,
             dynamic_relationships=dynamic_relationships,
             novel_concepts=novel_concepts,
             enhanced_graph=enhanced_graph
         )
-        
+
     def integrate_cross_graph_intelligence(self, dynamic_insights):
         """Integrate intelligence across multiple knowledge graphs"""
-        
+
         # Cross-graph alignment
         graph_alignments = self.cross_graph_reasoner.align_graphs(
             self.graph_universe.all_graphs, dynamic_insights
         )
-        
+
         # Inter-graph reasoning
         inter_graph_reasoning = self.cross_graph_reasoner.reason_across_graphs(
             graph_alignments, dynamic_insights.enhanced_graph
         )
-        
+
         # Knowledge fusion
         fused_knowledge = self.cross_graph_reasoner.fuse_cross_graph_knowledge(
             inter_graph_reasoning, dynamic_insights
         )
-        
+
         # Intelligence synthesis
         synthesized_intelligence = self.intelligence_amplifier.synthesize_cross_graph_intelligence(
             fused_knowledge, self.graph_universe
         )
-        
+
         return synthesized_intelligence
 ```
 
@@ -692,21 +692,21 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
 ```
 /graph.intelligence.semantic{
     intent="Orchestrate advanced semantic intelligence with dynamic graph construction, cross-graph reasoning, and emergent insight synthesis",
-    
+
     input={
         semantic_query="<complex_conceptual_question_requiring_deep_understanding>",
         intelligence_objectives="<specific_intelligence_amplification_goals>",
         graph_universe="<comprehensive_multi_graph_knowledge_environment>",
         emergence_parameters="<settings_for_novel_insight_generation>"
     },
-    
+
     process=[
         /semantic.understanding.initialization{
             analyze="deep_semantic_structure_and_conceptual_requirements",
             establish="multi_dimensional_reasoning_framework",
             prepare="intelligence_amplification_and_emergence_detection_systems"
         },
-        
+
         /multi.dimensional.graph.reasoning{
             execute="reasoning_across_multiple_semantic_dimensions",
             dimensions=[
@@ -717,7 +717,7 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
             ],
             integrate="dimensional_reasoning_results_with_cross_validation"
         },
-        
+
         /dynamic.knowledge.construction{
             method="emergent_pattern_based_knowledge_formation",
             implement=[
@@ -735,7 +735,7 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
                 }
             ]
         },
-        
+
         /cross.graph.intelligence.integration{
             approach="multi_graph_knowledge_fusion_and_intelligence_synthesis",
             execute=[
@@ -745,14 +745,14 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
                 /intelligence.amplification{amplify="reasoning_capabilities_through_cross_graph_integration"}
             ]
         },
-        
+
         /emergent.intelligence.synthesis{
             synthesize="comprehensive_intelligence_from_all_reasoning_dimensions_and_dynamic_knowledge",
             include="emergent_insights_novel_concepts_and_amplified_understanding",
             validate="intelligence_quality_and_novel_insight_significance"
         }
     ],
-    
+
     output={
         emergent_intelligence="Comprehensive intelligence synthesis with novel insights",
         dynamic_knowledge_structures="Newly constructed knowledge relationships and concepts",
@@ -770,57 +770,57 @@ class SemanticGraphIntelligence(MultiHopGraphRAG):
 ```python
 class DynamicGraphConstructor:
     """Constructs and evolves knowledge graphs based on reasoning and discovery"""
-    
+
     def __init__(self, graph_evolution_engine, pattern_recognizer):
         self.evolution_engine = graph_evolution_engine
         self.pattern_recognizer = pattern_recognizer
         self.relationship_validator = RelationshipValidator()
         self.concept_former = ConceptFormer()
-        
+
     def evolve_graph_from_reasoning(self, base_graph, reasoning_session):
         """Evolve knowledge graph based on reasoning discoveries"""
-        
+
         # Identify evolution opportunities
         evolution_opportunities = self.identify_evolution_opportunities(
             base_graph, reasoning_session
         )
-        
+
         # Construct new relationships
         new_relationships = self.construct_validated_relationships(
             evolution_opportunities.relationship_candidates
         )
-        
+
         # Form new concepts
         new_concepts = self.form_validated_concepts(
             evolution_opportunities.concept_candidates
         )
-        
+
         # Integrate into evolved graph
         evolved_graph = self.evolution_engine.integrate_discoveries(
             base_graph, new_relationships, new_concepts
         )
-        
+
         return evolved_graph
-        
+
     def construct_validated_relationships(self, relationship_candidates):
         """Construct new relationships with validation"""
         validated_relationships = []
-        
+
         for candidate in relationship_candidates:
             # Multi-source validation
             validation_result = self.relationship_validator.validate_relationship(
-                candidate.source, 
-                candidate.relation_type, 
+                candidate.source,
+                candidate.relation_type,
                 candidate.target,
                 candidate.evidence
             )
-            
+
             if validation_result.is_valid and validation_result.confidence > 0.8:
                 constructed_relationship = self.construct_relationship(
                     candidate, validation_result
                 )
                 validated_relationships.append(constructed_relationship)
-                
+
         return validated_relationships
 ```
 
@@ -840,17 +840,17 @@ Energy  Modeling  Automation
 Usage   Climate   Systems
     │       │       │
     ▼       ▼       ▼
-    
+
 Power ←→ Weather ←→ Smart
 Consumption  Prediction  Grids
     │           │        │
     ▼           ▼        ▼
-    
+
 Carbon    Early    Energy
 Footprint Warning  Efficiency
     │        │        │
     ▼        ▼        ▼
-    
+
 Climate ←→ Disaster ←→ Renewable
 Change   Prevention  Energy
             │
@@ -913,7 +913,7 @@ Integration Layer
 ```python
 class ComprehensiveGraphRAG:
     """Complete graph-enhanced RAG system integrating all complexity layers"""
-    
+
     def __init__(self, configuration):
         # Layer 1: Basic graph integration
         self.basic_graph_rag = BasicGraphRAG(
@@ -921,36 +921,36 @@ class ComprehensiveGraphRAG:
             configuration.text_corpus,
             configuration.graph_templates
         )
-        
+
         # Layer 2: Multi-hop reasoning
         self.multi_hop_system = MultiHopGraphRAG(
             configuration.knowledge_graph,
             configuration.text_corpus,
             configuration.reasoning_engine
         )
-        
+
         # Layer 3: Semantic intelligence
         self.semantic_intelligence = SemanticGraphIntelligence(
             configuration.graph_universe,
             configuration.semantic_engine,
             configuration.intelligence_amplifier
         )
-        
+
         # System orchestrator
         self.orchestrator = GraphRAGOrchestrator([
             self.basic_graph_rag,
             self.multi_hop_system,
             self.semantic_intelligence
         ])
-        
+
     def process_query(self, query, complexity_level="auto", semantic_depth="adaptive"):
         """Process query with appropriate graph reasoning complexity"""
-        
+
         # Determine optimal processing approach
         processing_config = self.orchestrator.determine_processing_approach(
             query, complexity_level, semantic_depth
         )
-        
+
         # Execute with selected approach
         if processing_config.approach == "basic_graph":
             return self.basic_graph_rag.process_query(query)

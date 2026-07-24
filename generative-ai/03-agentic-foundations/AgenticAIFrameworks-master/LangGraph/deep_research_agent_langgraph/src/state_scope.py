@@ -26,12 +26,12 @@ class AgentState (MessagesState):
 
     '''
     Main state for the full multi-agent research system.
-        
+
     Extends MessagesState with additional fields for research coordination. '''
 
     # research brief generated from user conversation history
     research_breif: Optional[str]
-        
+
     # messages exchanged with the supervisor agent for coordination
     supervisor_messages: Annotated[Sequence[BaseMessage], add_messages ]
 
@@ -60,4 +60,3 @@ class ClarifyWithUser (BaseModel):
     verification: str = Field(
         "", description="Verification message if no clarification is needed."
     )
-

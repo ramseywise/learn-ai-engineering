@@ -63,7 +63,7 @@ def test_filter_by_metadata(learner_func, client):
         return cases
 
     cases = g()
-    print_feedback(cases) 
+    print_feedback(cases)
 
 
 def check_object_equal(obj, prop, reference_val, index, function_name ):
@@ -98,7 +98,7 @@ def test_semantic_search_retrieve(learner_func, client):
                 t.want = f"a list with { len(query['results'])} elements."
                 t.got = f"The following exception whas thrown with parameters: query = {query}, top_k = {top_k}. Exception: {e}"
                 return [t]
-            
+
             top_k = len(query['results'])
             results = query['results']
             query = query['query']
@@ -123,7 +123,7 @@ def test_semantic_search_retrieve(learner_func, client):
         return cases
 
     cases = g()
-    print_feedback(cases) 
+    print_feedback(cases)
 
 def test_bm25_retrieve(learner_func, client):
     def g():
@@ -149,7 +149,7 @@ def test_bm25_retrieve(learner_func, client):
                 t.want = f"a list with { len(query['results'])} elements."
                 t.got = f"The following exception whas thrown with parameters: query = {query}, top_k = {top_k}. Exception: {e}"
                 return [t]
-            
+
             top_k = len(query['results'])
             results = query['results']
             query = query['query']
@@ -174,7 +174,7 @@ def test_bm25_retrieve(learner_func, client):
         return cases
 
     cases = g()
-    print_feedback(cases) 
+    print_feedback(cases)
 
 
 def test_hybrid_retrieve(learner_func, client):
@@ -201,7 +201,7 @@ def test_hybrid_retrieve(learner_func, client):
                 t.want = f"a list with { len(query['results'])} elements."
                 t.got = f"The following exception whas thrown with parameters: query = {query}, top_k = {top_k}. Exception: {e}"
                 return [t]
-            
+
             top_k = len(query['results'])
             results = query['results']
             query = query['query']
@@ -226,7 +226,7 @@ def test_hybrid_retrieve(learner_func, client):
         return cases
 
     cases = g()
-    print_feedback(cases) 
+    print_feedback(cases)
 
 
 def test_semantic_search_with_reranking(learner_func, client):
@@ -260,7 +260,7 @@ def test_semantic_search_with_reranking(learner_func, client):
             t.want = f"a list with { top_k } elements."
             t.got = f"The following exception whas thrown with parameters: query = {query}, rerank_query = {rerank_query}, top_k = {top_k}, rerank_property = {rerank_property}. Exception: {e}"
             return [t]
-        
+
         result = [r['title'] for r in result]
 
         t = test_case()
@@ -280,7 +280,4 @@ def test_semantic_search_with_reranking(learner_func, client):
         cases.append(t)
         return cases
     cases = g()
-    print_feedback(cases) 
-
-
-
+    print_feedback(cases)

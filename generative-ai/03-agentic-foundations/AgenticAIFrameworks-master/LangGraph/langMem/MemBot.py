@@ -49,16 +49,16 @@ class ChatRequest(BaseModel):
 async def chat_endpoint(chat_request: ChatRequest):
     # Convert messages to dict format
     messages = [msg.dict() for msg in chat_request.messages]
-    
+
     # Invoke the agent to process the conversation.
     # The agent will automatically extract and store relevant memories.
     response = agent.invoke({"messages": messages})
-    
+
     # Additionally, extract detailed episodic memory from this conversation
     episodes = episode_manager.invoke({"messages": messages})
     if episodes:
         print("Extracted Episode Memory:", episodes[0])
-    
+
     return response
 # Run the app using uvicorn if this script is executed directly.
 if __name__ == "__main__":

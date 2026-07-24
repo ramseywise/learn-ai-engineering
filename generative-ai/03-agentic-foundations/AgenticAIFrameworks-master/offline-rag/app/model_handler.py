@@ -99,5 +99,3 @@ class ModelHandler:
         total_time = end_time - start_time
         tokens_per_second = tokens_generated / total_time
         logger.info(f"Generated {tokens_generated} tokens in {total_time:.2f} seconds ({tokens_per_second:.2f} tokens/sec)")
-
-

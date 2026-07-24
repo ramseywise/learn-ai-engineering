@@ -37,7 +37,7 @@ def read_dataframe(filename: str):
     df['duration'] = df.lpep_dropoff_datetime - df.lpep_pickup_datetime
     df.duration = df.duration.dt.total_seconds() / 60
     df = df[(df.duration >= 1) & (df.duration <= 60)]
-    
+
     df['ride_id'] = generate_uuids(len(df))
 
     return df
@@ -46,7 +46,7 @@ def read_dataframe(filename: str):
 def prepare_dictionaries(df: pd.DataFrame):
     categorical = ['PULocationID', 'DOLocationID']
     df[categorical] = df[categorical].astype(str)
-    
+
     df['PU_DO'] = df['PULocationID'] + '_' + df['DOLocationID']
 
     categorical = ['PU_DO']
@@ -98,7 +98,7 @@ def apply_model(input_file, run_id, output_file):
 def get_paths(run_date, taxi_type, run_id):
     prev_month = run_date - relativedelta(months=1)
     year = prev_month.year
-    month = prev_month.month 
+    month = prev_month.month
 
     input_file = f's3://nyc-tlc/trip data/{taxi_type}_tripdata_{year:04d}-{month:02d}.parquet'
     output_file = f's3://nyc-duration-prediction-alexey/taxi_type={taxi_type}/year={year:04d}/month={month:02d}/{run_id}.parquet'
@@ -114,7 +114,7 @@ def ride_duration_prediction(
     if run_date is None:
         ctx = get_run_context()
         run_date = ctx.flow_run.expected_start_time
-    
+
     input_file, output_file = get_paths(run_date, taxi_type, run_id)
 
     apply_model(
@@ -140,7 +140,3 @@ def run():
 
 if __name__ == '__main__':
     run()
-
-
-
-

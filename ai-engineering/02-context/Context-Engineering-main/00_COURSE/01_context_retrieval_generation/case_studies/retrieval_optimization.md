@@ -162,7 +162,7 @@ User Query → Query Analysis → Parallel Retrieval → Fusion & Ranking → Re
 ```python
 class EcommerceRetrievalOptimizer:
     """Production e-commerce retrieval optimization system"""
-    
+
     def __init__(self, config: EcommerceConfig):
         self.config = config
         self.query_analyzer = QueryAnalyzer()
@@ -174,17 +174,17 @@ class EcommerceRetrievalOptimizer:
         }
         self.fusion_ranker = LearningToRankModel(config.ltr_config)
         self.performance_monitor = RetrievalMonitor()
-    
-    async def optimize_retrieval(self, 
-                               query: str, 
+
+    async def optimize_retrieval(self,
+                               query: str,
                                user_context: UserContext) -> RetrievalResult:
         """Main optimization pipeline"""
-        
+
         start_time = time.time()
-        
+
         # Query analysis and optimization
         analyzed_query = await self.query_analyzer.analyze(query, user_context)
-        
+
         # Parallel retrieval execution
         retrieval_tasks = []
         for engine_name, engine in self.retrieval_engines.items():
@@ -193,7 +193,7 @@ class EcommerceRetrievalOptimizer:
                     engine.retrieve(analyzed_query, user_context)
                 )
                 retrieval_tasks.append((engine_name, task))
-        
+
         # Collect results with timeout
         retrieval_results = {}
         for engine_name, task in retrieval_tasks:
@@ -204,12 +204,12 @@ class EcommerceRetrievalOptimizer:
                 # Graceful degradation
                 self.performance_monitor.record_timeout(engine_name)
                 continue
-        
+
         # Result fusion and ranking
         fused_results = await self.fusion_ranker.rank(
             retrieval_results, analyzed_query, user_context
         )
-        
+
         # Performance monitoring
         total_latency = time.time() - start_time
         await self.performance_monitor.record_retrieval(
@@ -218,19 +218,19 @@ class EcommerceRetrievalOptimizer:
             engines_used=list(retrieval_results.keys()),
             result_count=len(fused_results.products)
         )
-        
+
         return fused_results
-    
+
     def should_use_engine(self, engine_name: str, analyzed_query: AnalyzedQuery) -> bool:
         """Dynamic engine selection based on query characteristics"""
-        
+
         selection_rules = {
             'keyword': analyzed_query.has_exact_terms or analyzed_query.is_branded_query,
             'vector': analyzed_query.is_semantic_query or analyzed_query.is_descriptive,
             'collaborative': analyzed_query.user_has_history and analyzed_query.is_discovery_query,
             'category': analyzed_query.has_category_intent or analyzed_query.is_browse_query
         }
-        
+
         return selection_rules.get(engine_name, True)
 ```
 
@@ -252,9 +252,9 @@ class EcommerceRetrievalOptimizer:
    ```python
    def adaptive_fusion(self, retrieval_results: Dict, query_analysis: AnalyzedQuery) -> List[Product]:
        """Adaptive result fusion based on query characteristics"""
-       
+
        fusion_weights = self.calculate_fusion_weights(query_analysis)
-       
+
        # Weight adjustment based on query type
        if query_analysis.is_branded_query:
            fusion_weights['keyword'] *= 1.5
@@ -262,21 +262,21 @@ class EcommerceRetrievalOptimizer:
        elif query_analysis.is_semantic_query:
            fusion_weights['vector'] *= 1.4
            fusion_weights['keyword'] *= 0.7
-       
+
        # Reciprocal rank fusion with adaptive weights
        fused_scores = defaultdict(float)
        for engine, results in retrieval_results.items():
            weight = fusion_weights.get(engine, 1.0)
            for rank, product in enumerate(results, 1):
                fused_scores[product.id] += weight / rank
-       
+
        # Sort by fused score and apply business rules
        sorted_products = sorted(
-           fused_scores.items(), 
-           key=lambda x: x[1], 
+           fused_scores.items(),
+           key=lambda x: x[1],
            reverse=True
        )
-       
+
        return self.apply_business_rules(sorted_products, query_analysis)
    ```
 
@@ -286,23 +286,23 @@ class EcommerceRetrievalOptimizer:
 ```python
 class PersonalizationEngine:
     """Real-time personalization for e-commerce retrieval"""
-    
+
     def __init__(self):
         self.user_profiler = UserProfiler()
         self.real_time_ranker = RealTimeRanker()
         self.ab_test_manager = ABTestManager()
-    
-    async def personalize_results(self, 
+
+    async def personalize_results(self,
                                  base_results: List[Product],
                                  user_context: UserContext) -> List[Product]:
         """Apply personalization to search results"""
-        
+
         # Build user profile
         user_profile = await self.user_profiler.get_profile(user_context.user_id)
-        
+
         # A/B testing for personalization strategies
         personalization_strategy = self.ab_test_manager.get_strategy(user_context.user_id)
-        
+
         if personalization_strategy == 'collaborative':
             return await self.collaborative_personalization(base_results, user_profile)
         elif personalization_strategy == 'content_based':
@@ -311,34 +311,34 @@ class PersonalizationEngine:
             return await self.hybrid_personalization(base_results, user_profile)
         else:
             return base_results  # Control group
-    
-    async def collaborative_personalization(self, 
+
+    async def collaborative_personalization(self,
                                           results: List[Product],
                                           user_profile: UserProfile) -> List[Product]:
         """Collaborative filtering based personalization"""
-        
+
         # Find similar users
         similar_users = await self.find_similar_users(user_profile)
-        
+
         # Boost products popular among similar users
         personalized_scores = {}
         for product in results:
             base_score = product.search_score
-            
+
             # Calculate collaborative score
             collaborative_score = 0.0
             for similar_user in similar_users:
                 if product.id in similar_user.purchased_products:
                     collaborative_score += similar_user.similarity_score
-            
+
             # Combine scores
             personalized_scores[product.id] = (
                 0.7 * base_score + 0.3 * collaborative_score
             )
-        
+
         # Re-rank results
-        return sorted(results, 
-                     key=lambda p: personalized_scores.get(p.id, p.search_score), 
+        return sorted(results,
+                     key=lambda p: personalized_scores.get(p.id, p.search_score),
                      reverse=True)
 ```
 
@@ -348,20 +348,20 @@ class PersonalizationEngine:
 ```python
 class ProductRankingModel:
     """Advanced ranking model with continuous learning"""
-    
+
     def __init__(self):
         self.base_model = LightGBMRanker()
         self.online_learner = OnlineLearner()
         self.feature_store = FeatureStore()
-    
-    def generate_ranking_features(self, 
+
+    def generate_ranking_features(self,
                                  product: Product,
                                  query: str,
                                  user_context: UserContext) -> np.ndarray:
         """Generate comprehensive ranking features"""
-        
+
         features = []
-        
+
         # Text relevance features
         features.extend([
             product.title_similarity_score,
@@ -369,7 +369,7 @@ class ProductRankingModel:
             product.category_relevance_score,
             product.brand_match_score
         ])
-        
+
         # Popularity and quality features
         features.extend([
             product.click_through_rate,
@@ -378,7 +378,7 @@ class ProductRankingModel:
             product.review_count,
             product.sales_velocity
         ])
-        
+
         # Business features
         features.extend([
             product.profit_margin,
@@ -386,7 +386,7 @@ class ProductRankingModel:
             product.promotion_strength,
             product.shipping_speed_score
         ])
-        
+
         # Personalization features
         if user_context.user_id:
             user_features = self.feature_store.get_user_features(user_context.user_id)
@@ -396,7 +396,7 @@ class ProductRankingModel:
                 user_features.price_sensitivity_score,
                 self.calculate_user_product_similarity(user_context, product)
             ])
-        
+
         # Contextual features
         features.extend([
             self.get_seasonal_boost(product, datetime.now()),
@@ -404,33 +404,33 @@ class ProductRankingModel:
             self.get_time_of_day_boost(product, datetime.now().hour),
             self.get_device_type_boost(product, user_context.device_type)
         ])
-        
+
         return np.array(features)
-    
-    async def rank_products(self, 
+
+    async def rank_products(self,
                            products: List[Product],
                            query: str,
                            user_context: UserContext) -> List[Product]:
         """Rank products using ML model"""
-        
+
         # Generate features for all products
         feature_matrix = []
         for product in products:
             features = self.generate_ranking_features(product, query, user_context)
             feature_matrix.append(features)
-        
+
         # Predict ranking scores
         ranking_scores = self.base_model.predict(np.array(feature_matrix))
-        
+
         # Apply online learning adjustments
         adjusted_scores = self.online_learner.adjust_scores(
             ranking_scores, query, user_context
         )
-        
+
         # Sort and return
         scored_products = list(zip(products, adjusted_scores))
         scored_products.sort(key=lambda x: x[1], reverse=True)
-        
+
         return [product for product, score in scored_products]
 ```
 
@@ -493,35 +493,35 @@ Cost per Query           $0.003      $0.002     $0.0015    $0.001     67% ↓
    ```python
    class RetrievalMonitoringFramework:
        """Comprehensive monitoring for production retrieval"""
-       
+
        def __init__(self):
            self.metrics_collector = MetricsCollector()
            self.alerting_system = AlertingSystem()
            self.dashboard_generator = DashboardGenerator()
-       
+
        def monitor_retrieval_quality(self, retrieval_session: RetrievalSession):
            """Monitor retrieval quality in real-time"""
-           
+
            # Latency monitoring
            self.metrics_collector.record_latency(
                retrieval_session.total_latency,
                retrieval_session.engine_latencies
            )
-           
+
            # Quality monitoring
            self.metrics_collector.record_quality(
                click_through_rate=retrieval_session.ctr,
                result_diversity=retrieval_session.diversity_score,
                coverage=retrieval_session.coverage_ratio
            )
-           
+
            # Cost monitoring
            self.metrics_collector.record_cost(
                compute_cost=retrieval_session.compute_cost,
                storage_cost=retrieval_session.storage_cost,
                api_cost=retrieval_session.api_cost
            )
-           
+
            # Anomaly detection
            if self.detect_anomaly(retrieval_session):
                self.alerting_system.trigger_alert(
@@ -589,7 +589,7 @@ Cost per Query           $0.003      $0.002     $0.0015    $0.001     67% ↓
 Challenge Category          Impact                    Frequency    Resolution Priority
 ─────────────────────────────────────────────────────────────────────────────────
 Literature Currency         Outdated recommendations    Daily        Critical
-Clinical Context Matching   Generic vs. specific care   Hourly       High  
+Clinical Context Matching   Generic vs. specific care   Hourly       High
 Workflow Disruption         Physician adoption barriers Weekly       Critical
 Evidence Quality Control    Conflicting guidelines      Weekly       High
 Regulatory Compliance       Audit findings              Monthly      Critical
@@ -602,7 +602,7 @@ Regulatory Compliance       Audit findings              Monthly      Critical
 ```python
 class MedicalKnowledgeHierarchy:
     """Hierarchical medical knowledge retrieval with evidence-based ranking"""
-    
+
     def __init__(self):
         self.evidence_levels = {
             'systematic_review_meta_analysis': 1.0,
@@ -612,7 +612,7 @@ class MedicalKnowledgeHierarchy:
             'case_series': 0.4,
             'expert_opinion': 0.2
         }
-        
+
         self.clinical_guidelines = {
             'aha_acc_guidelines': 0.95,  # American Heart Association
             'who_guidelines': 0.90,      # World Health Organization
@@ -620,41 +620,41 @@ class MedicalKnowledgeHierarchy:
             'institutional_protocols': 0.80,
             'professional_societies': 0.75
         }
-        
+
         self.recency_weights = self._calculate_recency_weights()
-    
-    def calculate_medical_relevance(self, 
+
+    def calculate_medical_relevance(self,
                                   document: MedicalDocument,
                                   clinical_query: ClinicalQuery) -> float:
         """Calculate relevance score for medical documents"""
-        
+
         base_relevance = self.calculate_semantic_similarity(
             document.content, clinical_query.query_text
         )
-        
+
         # Evidence level weighting
         evidence_weight = self.evidence_levels.get(
             document.evidence_level, 0.5
         )
-        
+
         # Guideline authority weighting
         guideline_weight = self.clinical_guidelines.get(
             document.source_authority, 0.5
         )
-        
+
         # Recency weighting (medical knowledge degrades over time)
         recency_weight = self.calculate_recency_weight(document.publication_date)
-        
+
         # Clinical specialty matching
         specialty_weight = self.calculate_specialty_relevance(
             document.medical_specialties, clinical_query.patient_context
         )
-        
+
         # Patient population matching
         population_weight = self.calculate_population_relevance(
             document.patient_population, clinical_query.patient_demographics
         )
-        
+
         # Composite relevance score
         relevance_score = (
             base_relevance * 0.3 +
@@ -664,38 +664,38 @@ class MedicalKnowledgeHierarchy:
             specialty_weight * 0.10 +
             population_weight * 0.05
         )
-        
+
         return relevance_score
-    
-    def retrieve_clinical_evidence(self, 
+
+    def retrieve_clinical_evidence(self,
                                   clinical_query: ClinicalQuery) -> ClinicalEvidenceResult:
         """Retrieve and rank clinical evidence for healthcare queries"""
-        
+
         # Multi-stage retrieval process
         candidates = self.initial_retrieval(clinical_query)
-        
+
         # Medical concept extraction and expansion
         medical_concepts = self.extract_medical_concepts(clinical_query)
         expanded_candidates = self.expand_with_medical_ontology(
             candidates, medical_concepts
         )
-        
+
         # Evidence-based ranking
         ranked_evidence = []
         for document in expanded_candidates:
             relevance_score = self.calculate_medical_relevance(document, clinical_query)
-            
+
             if relevance_score > 0.3:  # Minimum clinical relevance threshold
                 ranked_evidence.append((document, relevance_score))
-        
+
         # Sort by relevance and apply clinical guidelines
         ranked_evidence.sort(key=lambda x: x[1], reverse=True)
-        
+
         # Apply clinical decision support rules
         filtered_evidence = self.apply_clinical_decision_rules(
             ranked_evidence, clinical_query
         )
-        
+
         return ClinicalEvidenceResult(
             evidence_documents=filtered_evidence,
             confidence_level=self.calculate_confidence_level(filtered_evidence),
@@ -709,37 +709,37 @@ class MedicalKnowledgeHierarchy:
 ```python
 class ClinicalContextProcessor:
     """Process clinical context for enhanced retrieval relevance"""
-    
+
     def __init__(self):
         self.medical_ontology = MedicalOntologyService()
         self.clinical_nlp = ClinicalNLPProcessor()
         self.decision_support = ClinicalDecisionSupport()
-    
-    def process_clinical_query(self, 
+
+    def process_clinical_query(self,
                               query: str,
                               patient_context: PatientContext,
                               clinician_context: ClinicianContext) -> EnhancedClinicalQuery:
         """Process clinical query with comprehensive context"""
-        
+
         # Extract medical entities and concepts
         medical_entities = self.clinical_nlp.extract_medical_entities(query)
-        
+
         # Normalize medical terminology
         normalized_concepts = self.medical_ontology.normalize_concepts(medical_entities)
-        
+
         # Patient context integration
         patient_factors = self.extract_patient_factors(patient_context)
-        
+
         # Clinical specialty context
         specialty_context = self.determine_specialty_context(
             clinician_context, normalized_concepts
         )
-        
+
         # Query expansion with medical synonyms and related terms
         expanded_query = self.expand_medical_query(
             query, normalized_concepts, patient_factors
         )
-        
+
         return EnhancedClinicalQuery(
             original_query=query,
             expanded_query=expanded_query,
@@ -748,10 +748,10 @@ class ClinicalContextProcessor:
             specialty_context=specialty_context,
             urgency_level=self.assess_clinical_urgency(query, patient_context)
         )
-    
+
     def extract_patient_factors(self, patient_context: PatientContext) -> PatientFactors:
         """Extract relevant patient factors for personalized retrieval"""
-        
+
         return PatientFactors(
             age_group=self.categorize_age_group(patient_context.age),
             gender=patient_context.gender,
@@ -768,16 +768,16 @@ class ClinicalContextProcessor:
 ```python
 class HIPAACompliantMonitoring:
     """HIPAA-compliant monitoring and audit system for medical retrieval"""
-    
+
     def __init__(self):
         self.audit_logger = EncryptedAuditLogger()
         self.access_controller = MedicalAccessController()
         self.privacy_monitor = PrivacyMonitor()
-    
-    def log_clinical_access(self, 
+
+    def log_clinical_access(self,
                            access_event: ClinicalAccessEvent) -> AuditRecord:
         """Log clinical information access with HIPAA compliance"""
-        
+
         # Validate access authorization
         authorization_result = self.access_controller.validate_access(
             user_id=access_event.user_id,
@@ -785,11 +785,11 @@ class HIPAACompliantMonitoring:
             resource_type=access_event.resource_type,
             access_purpose=access_event.access_purpose
         )
-        
+
         if not authorization_result.is_authorized:
             self.audit_logger.log_unauthorized_access_attempt(access_event)
             raise UnauthorizedAccessException(authorization_result.denial_reason)
-        
+
         # Create audit record
         audit_record = AuditRecord(
             timestamp=datetime.utcnow(),
@@ -801,21 +801,21 @@ class HIPAACompliantMonitoring:
             ip_address=access_event.ip_address,
             device_type=access_event.device_type
         )
-        
+
         # Encrypt and store audit record
         encrypted_record = self.audit_logger.encrypt_and_store(audit_record)
-        
+
         # Privacy monitoring
         self.privacy_monitor.monitor_access_patterns(access_event)
-        
+
         return encrypted_record
-    
-    def generate_compliance_report(self, 
+
+    def generate_compliance_report(self,
                                   report_period: DateRange) -> ComplianceReport:
         """Generate HIPAA compliance report"""
-        
+
         audit_records = self.audit_logger.retrieve_records(report_period)
-        
+
         compliance_metrics = {
             'total_accesses': len(audit_records),
             'unauthorized_attempts': len([r for r in audit_records if not r.was_authorized]),
@@ -824,7 +824,7 @@ class HIPAACompliantMonitoring:
             'user_activity_patterns': self.analyze_user_patterns(audit_records),
             'privacy_incidents': self.privacy_monitor.get_incidents(report_period)
         }
-        
+
         return ComplianceReport(
             period=report_period,
             metrics=compliance_metrics,
@@ -920,7 +920,7 @@ Query Success Rate (>3 results) 71%         91%         28% ↑
 ```python
 class FinancialMarketRetrievalSystem:
     """Real-time financial information retrieval with regulatory compliance"""
-    
+
     def __init__(self, config: FinancialConfig):
         self.config = config
         self.market_data_feeds = {
@@ -932,18 +932,18 @@ class FinancialMarketRetrievalSystem:
         self.compliance_engine = ComplianceEngine(config.compliance_config)
         self.risk_assessor = RiskAssessmentEngine(config.risk_config)
         self.audit_trail = FinancialAuditTrail(config.audit_config)
-    
-    async def retrieve_investment_intelligence(self, 
+
+    async def retrieve_investment_intelligence(self,
                                              query: InvestmentQuery) -> InvestmentIntelligence:
         """Retrieve comprehensive investment intelligence with compliance checking"""
-        
+
         start_time = time.time()
-        
+
         # Compliance pre-screening
         compliance_check = await self.compliance_engine.pre_screen_query(query)
         if not compliance_check.is_approved:
             return InvestmentIntelligence.compliance_blocked(compliance_check.reason)
-        
+
         # Multi-source parallel retrieval
         retrieval_tasks = {
             'market_data': self.retrieve_market_data(query),
@@ -952,7 +952,7 @@ class FinancialMarketRetrievalSystem:
             'risk_metrics': self.retrieve_risk_metrics(query),
             'peer_analysis': self.retrieve_peer_analysis(query)
         }
-        
+
         # Execute retrieval with timeouts
         results = {}
         for source, task in retrieval_tasks.items():
@@ -963,19 +963,19 @@ class FinancialMarketRetrievalSystem:
                 # Financial markets require real-time responses
                 self.audit_trail.log_timeout(source, query)
                 continue
-        
+
         # Temporal relevance filtering
         filtered_results = self.filter_by_temporal_relevance(results, query)
-        
+
         # Risk assessment and compliance validation
         risk_assessment = await self.risk_assessor.assess_recommendations(filtered_results)
         final_compliance_check = await self.compliance_engine.validate_response(
             filtered_results, query, risk_assessment
         )
-        
+
         if not final_compliance_check.is_approved:
             return InvestmentIntelligence.compliance_blocked(final_compliance_check.reason)
-        
+
         # Generate investment intelligence
         intelligence = InvestmentIntelligence(
             query=query,
@@ -987,7 +987,7 @@ class FinancialMarketRetrievalSystem:
             temporal_validity=self.calculate_temporal_validity(filtered_results),
             compliance_status=final_compliance_check
         )
-        
+
         # Audit trail logging
         await self.audit_trail.log_investment_query(
             query=query,
@@ -995,7 +995,7 @@ class FinancialMarketRetrievalSystem:
             processing_time=time.time() - start_time,
             data_sources=list(results.keys())
         )
-        
+
         return intelligence
 ```
 
@@ -1004,21 +1004,21 @@ class FinancialMarketRetrievalSystem:
 ```python
 class FinancialComplianceEngine:
     """Comprehensive financial regulatory compliance system"""
-    
+
     def __init__(self, config: ComplianceConfig):
         self.config = config
         self.regulation_database = RegulationDatabase()
         self.conflict_detector = ConflictOfInterestDetector()
         self.material_information_classifier = MaterialInformationClassifier()
         self.insider_trading_monitor = InsiderTradingMonitor()
-    
-    async def validate_investment_research(self, 
+
+    async def validate_investment_research(self,
                                          research_content: ResearchContent,
                                          query_context: QueryContext) -> ComplianceValidation:
         """Validate investment research for regulatory compliance"""
-        
+
         validation_results = []
-        
+
         # Material Information Assessment
         materiality_assessment = await self.material_information_classifier.assess(
             research_content
@@ -1030,7 +1030,7 @@ class FinancialComplianceEngine:
                     research_content, materiality_assessment
                 )
             )
-        
+
         # Conflict of Interest Detection
         conflict_assessment = await self.conflict_detector.detect_conflicts(
             research_content, query_context.user_profile
@@ -1039,7 +1039,7 @@ class FinancialComplianceEngine:
             validation_results.append(
                 self.handle_conflict_of_interest(conflict_assessment)
             )
-        
+
         # Insider Trading Risk Assessment
         insider_risk = await self.insider_trading_monitor.assess_risk(
             research_content, query_context
@@ -1048,17 +1048,17 @@ class FinancialComplianceEngine:
             validation_results.append(
                 self.mitigate_insider_trading_risk(insider_risk)
             )
-        
+
         # Jurisdiction-Specific Compliance
         for jurisdiction in query_context.applicable_jurisdictions:
             jurisdiction_validation = await self.validate_jurisdiction_compliance(
                 research_content, jurisdiction
             )
             validation_results.append(jurisdiction_validation)
-        
+
         # Aggregate compliance assessment
         overall_compliance = self.aggregate_compliance_results(validation_results)
-        
+
         return ComplianceValidation(
             is_compliant=overall_compliance.is_compliant,
             compliance_score=overall_compliance.score,
@@ -1066,35 +1066,35 @@ class FinancialComplianceEngine:
             required_disclosures=overall_compliance.required_disclosures,
             access_restrictions=overall_compliance.access_restrictions
         )
-    
-    def validate_material_information_disclosure(self, 
+
+    def validate_material_information_disclosure(self,
                                                research_content: ResearchContent,
                                                materiality_assessment: MaterialityAssessment) -> ValidationResult:
         """Validate material information disclosure requirements"""
-        
+
         required_disclosures = []
-        
+
         # SEC Regulation FD compliance
         if materiality_assessment.triggers_reg_fd:
             required_disclosures.append(
                 "This information may constitute material non-public information. "
                 "Regulation FD disclosure requirements may apply."
             )
-        
+
         # Investment Company Act compliance
         if materiality_assessment.affects_fund_operations:
             required_disclosures.append(
                 "This information may materially affect investment company operations. "
                 "Consult compliance before sharing with external parties."
             )
-        
+
         # Sarbanes-Oxley compliance
         if materiality_assessment.affects_financial_statements:
             required_disclosures.append(
                 "This information may affect financial statement accuracy. "
                 "SOX disclosure and internal control requirements apply."
             )
-        
+
         return ValidationResult(
             validation_type='material_information',
             is_compliant=len(required_disclosures) == 0,
@@ -1108,35 +1108,35 @@ class FinancialComplianceEngine:
 ```python
 class RealTimeMarketDataOptimizer:
     """Optimize market data retrieval for latency-sensitive financial applications"""
-    
+
     def __init__(self):
         self.data_cache = FinancialDataCache()
         self.prediction_engine = MarketMovementPredictor()
         self.latency_optimizer = LatencyOptimizer()
-    
-    async def optimize_market_data_retrieval(self, 
+
+    async def optimize_market_data_retrieval(self,
                                            query: MarketDataQuery) -> OptimizedMarketData:
         """Optimize market data retrieval for minimal latency"""
-        
+
         optimization_start = time.time()
-        
+
         # Predictive caching based on market patterns
         predicted_queries = self.prediction_engine.predict_related_queries(query)
         prefetch_tasks = [
-            self.prefetch_market_data(pred_query) 
+            self.prefetch_market_data(pred_query)
             for pred_query in predicted_queries[:3]  # Limit prefetch to avoid overhead
         ]
-        
+
         # Primary data retrieval with multiple sources
         primary_sources = self.select_optimal_sources(query)
         retrieval_tasks = []
-        
+
         for source in primary_sources:
             task = asyncio.create_task(
                 self.retrieve_from_source(source, query)
             )
             retrieval_tasks.append((source, task))
-        
+
         # Race condition: return first successful result
         completed_results = []
         for source, task in retrieval_tasks:
@@ -1146,7 +1146,7 @@ class RealTimeMarketDataOptimizer:
                 break  # Use first successful result for lowest latency
             except asyncio.TimeoutError:
                 continue
-        
+
         if not completed_results:
             # Fallback to cached data if all sources timeout
             cached_result = self.data_cache.get_cached_data(query)
@@ -1154,16 +1154,16 @@ class RealTimeMarketDataOptimizer:
                 return OptimizedMarketData.from_cache(cached_result)
             else:
                 raise MarketDataUnavailableException("All data sources unavailable")
-        
+
         source, raw_data = completed_results[0]
-        
+
         # Data validation and normalization
         validated_data = self.validate_market_data(raw_data, query)
         normalized_data = self.normalize_market_data(validated_data)
-        
+
         # Cache for future requests
         self.data_cache.cache_data(query, normalized_data)
-        
+
         # Performance metrics
         total_latency = time.time() - optimization_start
         self.latency_optimizer.record_performance(
@@ -1172,7 +1172,7 @@ class RealTimeMarketDataOptimizer:
             latency=total_latency,
             cache_hit=False
         )
-        
+
         return OptimizedMarketData(
             data=normalized_data,
             source=source,
@@ -1180,13 +1180,13 @@ class RealTimeMarketDataOptimizer:
             freshness_score=self.calculate_freshness_score(normalized_data),
             reliability_score=self.calculate_reliability_score(source, normalized_data)
         )
-    
+
     def select_optimal_sources(self, query: MarketDataQuery) -> List[str]:
         """Select optimal data sources based on query characteristics and historical performance"""
-        
+
         # Historical performance analysis
         source_performance = self.latency_optimizer.get_source_performance()
-        
+
         # Query-specific source suitability
         suitable_sources = []
         for source, performance in source_performance.items():
@@ -1198,7 +1198,7 @@ class RealTimeMarketDataOptimizer:
                     0.1 * self.calculate_cost_efficiency(source)
                 )
                 suitable_sources.append((source, suitability_score))
-        
+
         # Sort by suitability and return top sources
         suitable_sources.sort(key=lambda x: x[1], reverse=True)
         return [source for source, score in suitable_sources[:3]]  # Top 3 sources
@@ -1302,7 +1302,7 @@ Cross-Border Compliance Rate   >95%      97.1%       ✓
 ```python
 class LegalDocumentDiscoveryEngine:
     """Advanced legal document discovery with AI-powered relevance ranking"""
-    
+
     def __init__(self, config: LegalDiscoveryConfig):
         self.config = config
         self.legal_nlp = LegalNLPProcessor()
@@ -1310,45 +1310,45 @@ class LegalDocumentDiscoveryEngine:
         self.privilege_detector = PrivilegeDetector()
         self.relevance_ranker = LegalRelevanceRanker()
         self.cost_optimizer = DiscoveryCostOptimizer()
-    
-    async def execute_legal_discovery(self, 
+
+    async def execute_legal_discovery(self,
                                     discovery_request: DiscoveryRequest) -> DiscoveryResult:
         """Execute comprehensive legal document discovery"""
-        
+
         discovery_start = time.time()
-        
+
         # Legal issue and concept extraction
         legal_concepts = await self.legal_nlp.extract_legal_concepts(
             discovery_request.query_description
         )
-        
+
         # Expand search scope with legal synonyms and related concepts
         expanded_concepts = await self.legal_nlp.expand_legal_concepts(
             legal_concepts, discovery_request.practice_area
         )
-        
+
         # Multi-stage document retrieval
         candidate_documents = await self.retrieve_candidate_documents(
             discovery_request, expanded_concepts
         )
-        
+
         # Privilege screening (attorney-client, work product)
         privilege_screening = await self.privilege_detector.screen_documents(
             candidate_documents, discovery_request.privilege_parameters
         )
-        
+
         # Relevance ranking with legal-specific factors
         ranked_documents = await self.relevance_ranker.rank_documents(
             privilege_screening.reviewable_documents,
             discovery_request,
             expanded_concepts
         )
-        
+
         # Cost-benefit optimization
         optimized_discovery = self.cost_optimizer.optimize_discovery_scope(
             ranked_documents, discovery_request.budget_constraints
         )
-        
+
         # Generate discovery result
         discovery_result = DiscoveryResult(
             request=discovery_request,
@@ -1360,14 +1360,14 @@ class LegalDocumentDiscoveryEngine:
             legal_concepts_identified=expanded_concepts,
             discovery_metrics=self.calculate_discovery_metrics(optimized_discovery)
         )
-        
+
         return discovery_result
-    
-    async def retrieve_candidate_documents(self, 
+
+    async def retrieve_candidate_documents(self,
                                          discovery_request: DiscoveryRequest,
                                          legal_concepts: List[LegalConcept]) -> List[LegalDocument]:
         """Retrieve candidate documents using multiple search strategies"""
-        
+
         retrieval_strategies = [
             self.keyword_based_retrieval(discovery_request),
             self.semantic_legal_retrieval(legal_concepts),
@@ -1375,20 +1375,20 @@ class LegalDocumentDiscoveryEngine:
             self.entity_based_retrieval(discovery_request.entities),
             self.temporal_retrieval(discovery_request.date_range)
         ]
-        
+
         # Execute retrieval strategies in parallel
         strategy_results = await asyncio.gather(*retrieval_strategies)
-        
+
         # Merge and deduplicate results
         all_candidates = []
         document_ids_seen = set()
-        
+
         for strategy_result in strategy_results:
             for document in strategy_result.documents:
                 if document.id not in document_ids_seen:
                     all_candidates.append(document)
                     document_ids_seen.add(document.id)
-        
+
         return all_candidates
 ```
 
@@ -1397,31 +1397,31 @@ class LegalDocumentDiscoveryEngine:
 ```python
 class AdvancedPrivilegeDetector:
     """Advanced attorney-client privilege and work product detection"""
-    
+
     def __init__(self):
         self.privilege_classifier = PrivilegeClassifier()
         self.attorney_identifier = AttorneyIdentifier()
         self.legal_advice_detector = LegalAdviceDetector()
         self.work_product_classifier = WorkProductClassifier()
-    
-    async def screen_documents(self, 
+
+    async def screen_documents(self,
                              documents: List[LegalDocument],
                              privilege_parameters: PrivilegeParameters) -> PrivilegeScreeningResult:
         """Screen documents for attorney-client privilege and work product protection"""
-        
+
         screening_results = []
-        
+
         for document in documents:
             privilege_analysis = await self.analyze_document_privilege(
                 document, privilege_parameters
             )
             screening_results.append(privilege_analysis)
-        
+
         # Categorize documents
         privileged_documents = []
         reviewable_documents = []
         questionable_documents = []
-        
+
         for document, analysis in zip(documents, screening_results):
             if analysis.is_clearly_privileged:
                 privileged_documents.append(document)
@@ -1429,39 +1429,39 @@ class AdvancedPrivilegeDetector:
                 reviewable_documents.append(document)
             else:
                 questionable_documents.append((document, analysis))
-        
+
         return PrivilegeScreeningResult(
             privileged_documents=privileged_documents,
             reviewable_documents=reviewable_documents,
             questionable_documents=questionable_documents,
             privilege_log=self.generate_privilege_log(privileged_documents)
         )
-    
-    async def analyze_document_privilege(self, 
+
+    async def analyze_document_privilege(self,
                                        document: LegalDocument,
                                        parameters: PrivilegeParameters) -> PrivilegeAnalysis:
         """Analyze individual document for privilege protection"""
-        
+
         # Attorney-client privilege analysis
         ac_privilege_score = await self.analyze_attorney_client_privilege(
             document, parameters
         )
-        
+
         # Work product doctrine analysis
         work_product_score = await self.analyze_work_product_protection(
             document, parameters
         )
-        
+
         # Common interest doctrine analysis
         common_interest_score = await self.analyze_common_interest_protection(
             document, parameters
         )
-        
+
         # Joint defense agreement analysis
         joint_defense_score = await self.analyze_joint_defense_protection(
             document, parameters
         )
-        
+
         # Determine overall privilege status
         privilege_scores = {
             'attorney_client': ac_privilege_score,
@@ -1469,9 +1469,9 @@ class AdvancedPrivilegeDetector:
             'common_interest': common_interest_score,
             'joint_defense': joint_defense_score
         }
-        
+
         max_privilege_score = max(privilege_scores.values())
-        
+
         return PrivilegeAnalysis(
             document_id=document.id,
             privilege_scores=privilege_scores,
@@ -1481,46 +1481,46 @@ class AdvancedPrivilegeDetector:
             privilege_reasoning=self.generate_privilege_reasoning(privilege_scores),
             recommended_action=self.recommend_privilege_action(max_privilege_score)
         )
-    
-    async def analyze_attorney_client_privilege(self, 
+
+    async def analyze_attorney_client_privilege(self,
                                               document: LegalDocument,
                                               parameters: PrivilegeParameters) -> float:
         """Analyze attorney-client privilege applicability"""
-        
+
         privilege_factors = []
-        
+
         # Communication between attorney and client
         attorney_client_communication = await self.attorney_identifier.identify_participants(
             document.participants, parameters.attorney_list, parameters.client_list
         )
         privilege_factors.append(attorney_client_communication.confidence_score)
-        
+
         # Legal advice sought or provided
         legal_advice_content = await self.legal_advice_detector.detect_legal_advice(
             document.content
         )
         privilege_factors.append(legal_advice_content.confidence_score)
-        
+
         # Confidentiality expectation
         confidentiality_indicators = self.detect_confidentiality_indicators(document)
         privilege_factors.append(confidentiality_indicators.confidence_score)
-        
+
         # Professional legal relationship
         professional_relationship = await self.verify_professional_relationship(
             document.participants, parameters.engagement_records
         )
         privilege_factors.append(professional_relationship.confidence_score)
-        
+
         # Privilege waiver analysis
         waiver_analysis = await self.analyze_privilege_waiver(
             document, parameters.privilege_waiver_events
         )
         waiver_factor = 1.0 - waiver_analysis.waiver_probability
-        
+
         # Calculate weighted privilege score
         base_privilege_score = np.mean(privilege_factors)
         privilege_score = base_privilege_score * waiver_factor
-        
+
         return min(1.0, max(0.0, privilege_score))
 ```
 
@@ -1529,37 +1529,37 @@ class AdvancedPrivilegeDetector:
 ```python
 class DiscoveryCostOptimizer:
     """Optimize legal discovery for cost-effectiveness while maintaining quality"""
-    
+
     def __init__(self):
         self.cost_predictor = DiscoveryCostPredictor()
         self.quality_assessor = DiscoveryQualityAssessor()
         self.sampling_optimizer = StatisticalSamplingOptimizer()
-    
-    def optimize_discovery_scope(self, 
+
+    def optimize_discovery_scope(self,
                                 ranked_documents: List[RankedDocument],
                                 budget_constraints: BudgetConstraints) -> OptimizedDiscoveryPlan:
         """Optimize discovery scope for maximum value within budget constraints"""
-        
+
         # Predict review costs for different scope options
         scope_options = self.generate_scope_options(ranked_documents, budget_constraints)
-        
+
         cost_benefit_analysis = []
         for scope_option in scope_options:
             predicted_cost = self.cost_predictor.predict_review_cost(scope_option)
             predicted_value = self.quality_assessor.assess_discovery_value(scope_option)
-            
+
             cost_benefit_ratio = predicted_value / predicted_cost if predicted_cost > 0 else 0
-            
+
             cost_benefit_analysis.append({
                 'scope_option': scope_option,
                 'predicted_cost': predicted_cost,
                 'predicted_value': predicted_value,
                 'cost_benefit_ratio': cost_benefit_ratio
             })
-        
+
         # Select optimal scope based on cost-benefit analysis
         optimal_scope = max(cost_benefit_analysis, key=lambda x: x['cost_benefit_ratio'])
-        
+
         # Statistical sampling for large document sets
         if len(optimal_scope['scope_option'].documents) > 10000:
             sampling_plan = self.sampling_optimizer.create_sampling_plan(
@@ -1567,7 +1567,7 @@ class DiscoveryCostOptimizer:
                 budget_constraints
             )
             optimal_scope['sampling_plan'] = sampling_plan
-        
+
         return OptimizedDiscoveryPlan(
             recommended_documents=optimal_scope['scope_option'].documents,
             estimated_cost=optimal_scope['predicted_cost'],
@@ -1576,14 +1576,14 @@ class DiscoveryCostOptimizer:
             sampling_plan=optimal_scope.get('sampling_plan'),
             optimization_methodology=self.document_optimization_methodology()
         )
-    
-    def generate_scope_options(self, 
+
+    def generate_scope_options(self,
                               ranked_documents: List[RankedDocument],
                               budget_constraints: BudgetConstraints) -> List[ScopeOption]:
         """Generate different scope options for discovery"""
-        
+
         scope_options = []
-        
+
         # High-precision scope (top 10% of documents)
         high_precision_threshold = int(len(ranked_documents) * 0.1)
         scope_options.append(ScopeOption(
@@ -1591,7 +1591,7 @@ class DiscoveryCostOptimizer:
             documents=ranked_documents[:high_precision_threshold],
             strategy="quality_focused"
         ))
-        
+
         # Balanced scope (top 25% of documents)
         balanced_threshold = int(len(ranked_documents) * 0.25)
         scope_options.append(ScopeOption(
@@ -1599,7 +1599,7 @@ class DiscoveryCostOptimizer:
             documents=ranked_documents[:balanced_threshold],
             strategy="balanced"
         ))
-        
+
         # Comprehensive scope (top 50% of documents)
         comprehensive_threshold = int(len(ranked_documents) * 0.5)
         scope_options.append(ScopeOption(
@@ -1607,7 +1607,7 @@ class DiscoveryCostOptimizer:
             documents=ranked_documents[:comprehensive_threshold],
             strategy="coverage_focused"
         ))
-        
+
         # Budget-constrained scope (documents within budget)
         budget_constrained_docs = []
         cumulative_cost = 0
@@ -1618,13 +1618,13 @@ class DiscoveryCostOptimizer:
                 cumulative_cost += estimated_review_cost
             else:
                 break
-        
+
         scope_options.append(ScopeOption(
             name="budget_constrained",
             documents=budget_constrained_docs,
             strategy="cost_optimized"
         ))
-        
+
         return scope_options
 ```
 
@@ -1713,7 +1713,7 @@ Where:
 
 Subject to constraints:
 - g₁(C) ≤ b₁ (latency constraint)
-- g₂(C) ≤ b₂ (cost constraint)  
+- g₂(C) ≤ b₂ (cost constraint)
 - g₃(C) ≥ b₃ (quality constraint)
 - g₄(C) = b₄ (compliance constraint)
 ```
@@ -1725,16 +1725,16 @@ Subject to constraints:
 ```python
 class MultiObjectiveOptimizer:
     """Multi-objective optimization framework for production retrieval systems"""
-    
+
     def __init__(self, config: MultiObjectiveConfig):
         self.config = config
         self.objective_functions = self._initialize_objective_functions()
         self.constraint_validators = self._initialize_constraint_validators()
         self.pareto_optimizer = ParetoOptimizer()
-    
+
     def _initialize_objective_functions(self) -> Dict[str, Callable]:
         """Initialize objective functions for optimization"""
-        
+
         return {
             'accuracy': self._accuracy_objective,
             'latency': self._latency_objective,
@@ -1745,22 +1745,22 @@ class MultiObjectiveOptimizer:
             'user_satisfaction': self._user_satisfaction_objective,
             'business_value': self._business_value_objective
         }
-    
+
     def _accuracy_objective(self, retrieval_result: RetrievalResult) -> float:
         """Measure retrieval accuracy objective"""
-        
+
         # Precision at k
         precision_at_k = self._calculate_precision_at_k(retrieval_result, k=5)
-        
+
         # Mean reciprocal rank
         mrr = self._calculate_mean_reciprocal_rank(retrieval_result)
-        
+
         # Normalized discounted cumulative gain
         ndcg = self._calculate_ndcg(retrieval_result, k=10)
-        
+
         # Domain-specific accuracy (if available)
         domain_accuracy = self._calculate_domain_accuracy(retrieval_result)
-        
+
         # Weighted combination
         accuracy_score = (
             0.3 * precision_at_k +
@@ -1768,15 +1768,15 @@ class MultiObjectiveOptimizer:
             0.3 * ndcg +
             0.2 * domain_accuracy
         )
-        
+
         return accuracy_score
-    
+
     def _latency_objective(self, retrieval_result: RetrievalResult) -> float:
         """Measure latency objective (lower is better, so we invert)"""
-        
+
         total_latency = retrieval_result.total_latency_ms
         target_latency = self.config.target_latency_ms
-        
+
         # Exponential penalty for exceeding target latency
         if total_latency <= target_latency:
             latency_score = 1.0 - (total_latency / target_latency) * 0.5
@@ -1784,86 +1784,86 @@ class MultiObjectiveOptimizer:
             # Exponential penalty for exceeding target
             excess_ratio = total_latency / target_latency
             latency_score = 1.0 / (1.0 + np.exp(excess_ratio - 1))
-        
+
         return max(0.0, latency_score)
-    
+
     def _cost_objective(self, retrieval_result: RetrievalResult) -> float:
         """Measure cost efficiency objective"""
-        
+
         total_cost = (
             retrieval_result.compute_cost +
             retrieval_result.storage_cost +
             retrieval_result.network_cost +
             retrieval_result.api_cost
         )
-        
+
         target_cost = self.config.target_cost_per_query
-        
+
         # Cost efficiency score
         if total_cost <= target_cost:
             cost_score = 1.0 - (total_cost / target_cost) * 0.3
         else:
             # Linear penalty for exceeding target cost
             cost_score = max(0.0, 1.0 - (total_cost - target_cost) / target_cost)
-        
+
         return cost_score
-    
+
     def _compliance_objective(self, retrieval_result: RetrievalResult) -> float:
         """Measure compliance objective (binary: compliant or not)"""
-        
+
         compliance_checks = [
             retrieval_result.privacy_compliance,
             retrieval_result.security_compliance,
             retrieval_result.regulatory_compliance,
             retrieval_result.data_governance_compliance
         ]
-        
+
         # All compliance checks must pass
         return 1.0 if all(compliance_checks) else 0.0
-    
-    def optimize_retrieval(self, 
+
+    def optimize_retrieval(self,
                           query: str,
                           available_documents: List[Document],
                           objective_weights: Dict[str, float]) -> OptimizedRetrievalResult:
         """Optimize retrieval using multi-objective framework"""
-        
+
         # Generate candidate retrieval strategies
         candidate_strategies = self._generate_candidate_strategies(
             query, available_documents
         )
-        
+
         # Evaluate each strategy against all objectives
         strategy_evaluations = []
-        
+
         for strategy in candidate_strategies:
             # Execute retrieval strategy
             retrieval_result = strategy.execute(query, available_documents)
-            
+
             # Evaluate against all objectives
             objective_scores = {}
             for objective_name, objective_function in self.objective_functions.items():
                 score = objective_function(retrieval_result)
                 objective_scores[objective_name] = score
-            
+
             # Calculate weighted utility
             weighted_utility = sum(
                 objective_weights.get(obj, 0) * score
                 for obj, score in objective_scores.items()
             )
-            
+
             strategy_evaluations.append({
                 'strategy': strategy,
                 'retrieval_result': retrieval_result,
                 'objective_scores': objective_scores,
                 'weighted_utility': weighted_utility
             })
-        
+
         # Find Pareto-optimal solutions
         pareto_optimal = self.pareto_optimizer.find_pareto_optimal(strategy_evaluations)
-        
+
         # Select best strategy based on weighted utility
         best_strategy = max(pareto_optimal, key=lambda x: x['weighted_utility'])
-        
+
         return OptimizedRetrievalResult(
             optimal_strategy=best_strategy['strategy'],
             retrieval_result=best_strategy['retrieval_result'],
@@ -1882,55 +1882,55 @@ class MultiObjectiveOptimizer:
 ```python
 class ParetoOptimizer:
     """Pareto optimization for multi-objective trade-off analysis"""
-    
-    def find_pareto_optimal(self, 
+
+    def find_pareto_optimal(self,
                            strategy_evaluations: List[Dict]) -> List[Dict]:
         """Find Pareto-optimal solutions from strategy evaluations"""
-        
+
         pareto_optimal = []
-        
+
         for i, evaluation_i in enumerate(strategy_evaluations):
             is_dominated = False
-            
+
             for j, evaluation_j in enumerate(strategy_evaluations):
                 if i != j and self._dominates(evaluation_j, evaluation_i):
                     is_dominated = True
                     break
-            
+
             if not is_dominated:
                 pareto_optimal.append(evaluation_i)
-        
+
         return pareto_optimal
-    
+
     def _dominates(self, evaluation_a: Dict, evaluation_b: Dict) -> bool:
         """Check if evaluation_a dominates evaluation_b (Pareto dominance)"""
-        
+
         scores_a = evaluation_a['objective_scores']
         scores_b = evaluation_b['objective_scores']
-        
+
         # A dominates B if A is at least as good as B in all objectives
         # and strictly better in at least one objective
         at_least_as_good = all(
-            scores_a[obj] >= scores_b[obj] 
+            scores_a[obj] >= scores_b[obj]
             for obj in scores_a.keys()
         )
-        
+
         strictly_better = any(
-            scores_a[obj] > scores_b[obj] 
+            scores_a[obj] > scores_b[obj]
             for obj in scores_a.keys()
         )
-        
+
         return at_least_as_good and strictly_better
-    
-    def visualize_pareto_frontier(self, 
+
+    def visualize_pareto_frontier(self,
                                  pareto_optimal: List[Dict],
                                  objective_x: str,
                                  objective_y: str) -> ParetoVisualization:
         """Visualize Pareto frontier for two objectives"""
-        
+
         x_values = [eval['objective_scores'][objective_x] for eval in pareto_optimal]
         y_values = [eval['objective_scores'][objective_y] for eval in pareto_optimal]
-        
+
         return ParetoVisualization(
             x_axis=objective_x,
             y_axis=objective_y,

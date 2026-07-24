@@ -45,9 +45,9 @@ Confluent cloud provides a free 30 days trial for, you can signup [here](https:/
 ## Kafka Streams
 
 - [Slides](https://docs.google.com/presentation/d/1fVi9sFa7fL2ZW3ynS5MAZm0bRSZ4jO10fymPmrfTUjE/edit?usp=sharing)
-  
+
 - [Streams Concepts](https://docs.confluent.io/platform/current/streams/concepts.html)
-  
+
 - :movie_camera: 6.7 Kafka streams basics
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/dUyA_63eRb0)](https://youtu.be/dUyA_63eRb0&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=73)
@@ -125,7 +125,6 @@ Did you take notes? You can share them here.
 * [Notes by Alvaro Navas](https://github.com/ziritrion/dataeng-zoomcamp/blob/main/notes/6_streaming.md )
 * [Marcos Torregrosa's blog (spanish)](https://www.n4gash.com/2023/data-engineering-zoomcamp-semana-6-stream-processing/)
 * [Notes by Oscar Garcia](https://github.com/ozkary/Data-Engineering-Bootcamp/tree/main/Step6-Streaming)
-* [2024 videos transcript](https://drive.google.com/drive/folders/1UngeL5FM-GcDLM7QYaDTKb3jIS6CQC14?usp=drive_link) by Maria Fisher 
+* [2024 videos transcript](https://drive.google.com/drive/folders/1UngeL5FM-GcDLM7QYaDTKb3jIS6CQC14?usp=drive_link) by Maria Fisher
 * [Notes by Shayan Shafiee Moghadam](https://github.com/shayansm2/eng-notebook/blob/main/kafka/readme.md)
 * Add your notes here (above this line)
-

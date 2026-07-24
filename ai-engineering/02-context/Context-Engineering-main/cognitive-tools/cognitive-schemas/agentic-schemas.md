@@ -121,12 +121,12 @@ Each coordination function is implemented as a modular cognitive tool:
 def agent_delegation_tool(task, available_agents, constraints=None):
     """
     Delegate a complex task to appropriate agents based on capabilities and constraints.
-    
+
     Args:
         task: Task specification with requirements and constraints
         available_agents: List of available agents with their capabilities
         constraints: Optional constraints (time, resources, quality)
-        
+
     Returns:
         dict: Structured delegation plan with agent assignments
     """
@@ -155,7 +155,7 @@ def agent_delegation_tool(task, available_agents, constraints=None):
         }}
     }}
     """
-    
+
     return delegation_plan
 ```
 
@@ -198,7 +198,7 @@ This enables the system to learn from coordination patterns and improve delegati
 def task_delegation_tool(task_description, agent_pool, deadline=None):
     """
     Analyze task requirements and delegate to optimal agents.
-    
+
     Implements sophisticated task breakdown and agent matching algorithms
     to ensure efficient task completion within constraints.
     """
@@ -226,7 +226,7 @@ def task_delegation_tool(task_description, agent_pool, deadline=None):
         }
     }
     """
-    
+
     return {
         "delegation_plan": delegation_plan,
         "estimated_completion": timeline,
@@ -241,7 +241,7 @@ def task_delegation_tool(task_description, agent_pool, deadline=None):
 def agent_selection_tool(task_requirements, candidate_agents, selection_criteria):
     """
     Select optimal agents based on task requirements and performance history.
-    
+
     Uses multi-criteria decision analysis to balance capability, availability,
     performance history, and resource constraints.
     """
@@ -268,7 +268,7 @@ def agent_selection_tool(task_requirements, candidate_agents, selection_criteria
         }
     }
     """
-    
+
     return {
         "selected_agents": selected_agents,
         "selection_confidence": confidence_score,
@@ -283,7 +283,7 @@ def agent_selection_tool(task_requirements, candidate_agents, selection_criteria
 def coordination_protocol_tool(agents, task_dependencies, communication_preferences):
     """
     Establish communication and synchronization protocols for agent coordination.
-    
+
     Creates structured coordination protocols that ensure agents work together
     effectively while maintaining system coherence.
     """
@@ -310,7 +310,7 @@ def coordination_protocol_tool(agents, task_dependencies, communication_preferen
         }
     }
     """
-    
+
     return {
         "coordination_protocol": protocol_spec,
         "communication_schedule": schedule,
@@ -325,7 +325,7 @@ def coordination_protocol_tool(agents, task_dependencies, communication_preferen
 def performance_monitoring_tool(agent_network, performance_metrics, alert_thresholds):
     """
     Monitor agent performance and system health in real-time.
-    
+
     Tracks key performance indicators and provides alerts for system
     optimization and issue resolution.
     """
@@ -352,7 +352,7 @@ def performance_monitoring_tool(agent_network, performance_metrics, alert_thresh
         }
     }
     """
-    
+
     return {
         "dashboard": performance_dashboard,
         "alerts": active_alerts,
@@ -737,7 +737,7 @@ def content_creation_workflow(topic, requirements, deadline):
     """
     Coordinate multiple agents to create comprehensive content.
     """
-    
+
     # Define available agents
     agents = [
         {"id": "researcher", "skills": ["research", "analysis"], "load": 0.3},
@@ -745,14 +745,14 @@ def content_creation_workflow(topic, requirements, deadline):
         {"id": "reviewer", "skills": ["review", "quality_control"], "load": 0.2},
         {"id": "formatter", "skills": ["formatting", "styling"], "load": 0.1}
     ]
-    
+
     # Use delegation tool to create plan
     delegation_plan = task_delegation_tool(
         task_description=f"Create comprehensive content on {topic}",
         agent_pool=agents,
         deadline=deadline
     )
-    
+
     # Establish coordination protocol
     coordination = coordination_protocol_tool(
         agents=delegation_plan["selected_agents"],
@@ -764,14 +764,14 @@ def content_creation_workflow(topic, requirements, deadline):
         },
         communication_preferences={"sync_frequency": "hourly"}
     )
-    
+
     # Execute with monitoring
     execution_result = execute_coordinated_workflow(
         delegation_plan=delegation_plan,
         coordination_protocol=coordination,
         monitoring_config={"alerts": True, "dashboard": True}
     )
-    
+
     return execution_result
 ```
 
@@ -783,14 +783,14 @@ def handle_workload_spike(current_metrics, scaling_policy):
     """
     Dynamically scale agent resources based on current workload.
     """
-    
+
     # Assess current performance
     performance_assessment = performance_monitoring_tool(
         agent_network=current_metrics["agents"],
         performance_metrics=["throughput", "response_time", "error_rate"],
         alert_thresholds=scaling_policy["thresholds"]
     )
-    
+
     # Determine scaling needs
     if performance_assessment["throughput"] < scaling_policy["min_throughput"]:
         scaling_action = {
@@ -808,14 +808,14 @@ def handle_workload_spike(current_metrics, scaling_policy):
         }
     else:
         scaling_action = {"action": "maintain", "reason": "performance_within_targets"}
-    
+
     # Implement scaling decision
     scaling_result = implement_scaling_action(
         action=scaling_action,
         current_configuration=current_metrics,
         policies=scaling_policy
     )
-    
+
     return scaling_result
 ```
 
@@ -828,10 +828,10 @@ def personalized_agent_delegation(user_profile, task, agents):
     """
     Delegate tasks considering user preferences and working style.
     """
-    
+
     # Extract user preferences from user schema
     user_preferences = extract_user_preferences(user_profile)
-    
+
     # Modify delegation strategy based on user preferences
     delegation_strategy = {
         "communication_style": user_preferences.get("communication_style", "formal"),
@@ -839,7 +839,7 @@ def personalized_agent_delegation(user_profile, task, agents):
         "quality_threshold": user_preferences.get("quality_expectation", 0.8),
         "preferred_agents": user_preferences.get("preferred_agents", [])
     }
-    
+
     # Use modified delegation tool
     return task_delegation_tool(
         task_description=task,
@@ -855,24 +855,24 @@ def task_aware_coordination(task_schema, agent_capabilities):
     """
     Coordinate agents based on structured task requirements.
     """
-    
+
     # Parse task schema for requirements
     task_requirements = parse_task_schema(task_schema)
-    
+
     # Match requirements to agent capabilities
     agent_matches = agent_selection_tool(
         task_requirements=task_requirements,
         candidate_agents=agent_capabilities,
         selection_criteria={"skill_match": 0.8, "availability": 0.6}
     )
-    
+
     # Create coordination plan
     coordination_plan = coordination_protocol_tool(
         agents=agent_matches["selected_agents"],
         task_dependencies=task_requirements["dependencies"],
         communication_preferences=task_requirements["communication_needs"]
     )
-    
+
     return coordination_plan
 ```
 
@@ -883,16 +883,16 @@ def domain_specialized_coordination(domain_schema, task, agents):
     """
     Coordinate agents with domain-specific knowledge and constraints.
     """
-    
+
     # Extract domain requirements
     domain_requirements = extract_domain_requirements(domain_schema)
-    
+
     # Filter agents by domain expertise
     domain_qualified_agents = [
-        agent for agent in agents 
+        agent for agent in agents
         if has_domain_expertise(agent, domain_requirements)
     ]
-    
+
     # Use domain-aware delegation
     return task_delegation_tool(
         task_description=task,
@@ -910,7 +910,7 @@ def calculate_coordination_effectiveness(coordination_history):
     """
     Calculate key performance metrics for agent coordination.
     """
-    
+
     metrics = {
         "task_completion_rate": len([t for t in coordination_history if t["status"] == "completed"]) / len(coordination_history),
         "average_completion_time": sum(t["duration"] for t in coordination_history) / len(coordination_history),
@@ -919,7 +919,7 @@ def calculate_coordination_effectiveness(coordination_history):
         "quality_score": calculate_average_quality(coordination_history),
         "resource_efficiency": calculate_resource_efficiency(coordination_history)
     }
-    
+
     return metrics
 ```
 
@@ -930,9 +930,9 @@ def generate_optimization_recommendations(performance_metrics, coordination_patt
     """
     Generate recommendations for improving coordination effectiveness.
     """
-    
+
     recommendations = []
-    
+
     if performance_metrics["task_completion_rate"] < 0.8:
         recommendations.append({
             "type": "completion_rate_improvement",
@@ -940,7 +940,7 @@ def generate_optimization_recommendations(performance_metrics, coordination_patt
             "priority": "high",
             "expected_impact": "15% improvement in completion rate"
         })
-    
+
     if performance_metrics["coordination_overhead"] > 0.3:
         recommendations.append({
             "type": "overhead_reduction",
@@ -948,7 +948,7 @@ def generate_optimization_recommendations(performance_metrics, coordination_patt
             "priority": "medium",
             "expected_impact": "20% reduction in coordination overhead"
         })
-    
+
     if performance_metrics["agent_utilization"] < 0.6:
         recommendations.append({
             "type": "utilization_improvement",
@@ -956,7 +956,7 @@ def generate_optimization_recommendations(performance_metrics, coordination_patt
             "priority": "medium",
             "expected_impact": "25% improvement in agent utilization"
         })
-    
+
     return recommendations
 ```
 
@@ -969,14 +969,14 @@ def handle_agent_failure(failed_agent, current_tasks, available_agents):
     """
     Handle agent failures and redistribute tasks.
     """
-    
+
     recovery_plan = {
         "failed_agent": failed_agent,
         "affected_tasks": [t for t in current_tasks if t["assigned_agent"] == failed_agent["id"]],
         "recovery_strategy": "redistribute_tasks",
         "backup_agents": []
     }
-    
+
     # Find suitable replacement agents
     for task in recovery_plan["affected_tasks"]:
         suitable_agents = agent_selection_tool(
@@ -984,13 +984,13 @@ def handle_agent_failure(failed_agent, current_tasks, available_agents):
             candidate_agents=available_agents,
             selection_criteria={"immediate_availability": 1.0}
         )
-        
+
         if suitable_agents["selected_agents"]:
             recovery_plan["backup_agents"].append({
                 "task_id": task["id"],
                 "replacement_agent": suitable_agents["selected_agents"][0]
             })
-    
+
     return recovery_plan
 ```
 
@@ -1001,30 +1001,30 @@ def handle_coordination_failure(coordination_error, system_state):
     """
     Handle coordination failures and restore system stability.
     """
-    
+
     recovery_actions = []
-    
+
     if coordination_error["type"] == "communication_failure":
         recovery_actions.append({
             "action": "reset_communication_protocols",
             "affected_agents": coordination_error["agents"],
             "priority": "immediate"
         })
-    
+
     elif coordination_error["type"] == "synchronization_failure":
         recovery_actions.append({
             "action": "resynchronize_agents",
             "sync_point": coordination_error["last_successful_sync"],
             "priority": "high"
         })
-    
+
     elif coordination_error["type"] == "resource_contention":
         recovery_actions.append({
             "action": "resolve_resource_conflicts",
             "conflicting_agents": coordination_error["agents"],
             "priority": "high"
         })
-    
+
     return recovery_actions
 ```
 
@@ -1037,7 +1037,7 @@ def handle_coordination_failure(coordination_error, system_state):
 def simple_delegation_example():
     task = "Analyze customer feedback data"
     agents = get_available_agents()
-    
+
     result = task_delegation_tool(task, agents)
     return result
 
@@ -1047,13 +1047,13 @@ def complex_workflow_example():
         "tasks": ["research", "analysis", "report", "presentation"],
         "dependencies": {"analysis": ["research"], "report": ["analysis"], "presentation": ["report"]}
     }
-    
+
     coordination = coordination_protocol_tool(
         agents=get_workflow_agents(),
         task_dependencies=workflow["dependencies"],
         communication_preferences={"sync_frequency": "twice_daily"}
     )
-    
+
     return coordination
 
 # Pattern 3: Dynamic scaling
@@ -1063,7 +1063,7 @@ def dynamic_scaling_example():
         performance_metrics=["throughput", "response_time"],
         alert_thresholds={"throughput": 0.7, "response_time": 5.0}
     )
-    
+
     if metrics["alerts"]:
         scaling_result = implement_scaling_action(
             action=determine_scaling_action(metrics),

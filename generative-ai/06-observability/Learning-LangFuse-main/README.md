@@ -31,11 +31,11 @@ Deploying LLMs in production without observability creates several problems:
 
 This project demonstrates how LangFuse addresses these challenges through:
 
-- ✅ **Tracing** every LLM call, tool execution, and agent step with `@observe`.  
-- ✅ **Evaluating** responses programmatically using LLM-as-a-Judge and embedding similarity.  
-- ✅ **Comparing** model versions using LangFuse Datasets and Runs.  
-- ✅ **Monitoring** production traffic automatically with built-in evaluators.  
-- ✅ **Debugging** agent behavior by inspecting individual tool calls in the LangFuse UI.  
+- ✅ **Tracing** every LLM call, tool execution, and agent step with `@observe`.
+- ✅ **Evaluating** responses programmatically using LLM-as-a-Judge and embedding similarity.
+- ✅ **Comparing** model versions using LangFuse Datasets and Runs.
+- ✅ **Monitoring** production traffic automatically with built-in evaluators.
+- ✅ **Debugging** agent behavior by inspecting individual tool calls in the LangFuse UI.
 
 ## 📊 Data Description
 
@@ -83,8 +83,8 @@ Learning-LangFuse/
 
 ```
 langfuse==2.x
-google-genai             
-openai                   
+google-genai
+openai
 python-dotenv
 numpy
 ```

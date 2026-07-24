@@ -24,59 +24,59 @@ graph LR
     Root --> Foundation[Foundation Templates]
     Root --> Field[Field-Theoretic Templates]
     Root --> Meta[Meta-Recursive Templates]
-    
+
     %% Foundation Templates
     Foundation --> ContextStructure[Context Structure]
     Foundation --> ControlFlow[Control Flow]
     Foundation --> Evaluation[Evaluation]
-    
+
     %% Field-Theoretic Templates
     Field --> FieldOps[Field Operations]
     Field --> Measurement[Measurement]
     Field --> Analysis[Analysis]
-    
+
     %% Meta-Recursive Templates
     Meta --> Integration[Integration]
     Meta --> Enhancement[Enhancement]
-    
+
     %% Specific Templates - Foundation
     ContextStructure --> MinimalContext[minimal_context.yaml]
     ContextStructure --> SchemaTemplate[schema_template.yaml]
-    
+
     ControlFlow --> ControlLoop[control_loop.py]
     ControlFlow --> PromptProgram[prompt_program_template.py]
     ControlFlow --> RecursiveFramework[recursive_framework.py]
-    
+
     Evaluation --> ScoringFunctions[scoring_functions.py]
     Evaluation --> ContextAudit[context_audit.py]
-    
+
     %% Specific Templates - Field-Theoretic
     FieldOps --> ProtocolShells[field_protocol_shells.py]
     FieldOps --> ShellRunner[shell_runner.py]
     FieldOps --> ResidueTracker[symbolic_residue_tracker.py]
-    
+
     Measurement --> ResonanceMeasure[resonance_measurement.py]
     Measurement --> EmergenceMetrics[emergence_metrics.py]
     Measurement --> QuantumMetrics[quantum_context_metrics.py]
-    
+
     Analysis --> AttractorDetection[attractor_detection.py]
     Analysis --> BoundaryDynamics[boundary_dynamics.py]
-    
+
     %% Specific Templates - Meta-Recursive
     Integration --> UnifiedEngine[unified_field_engine.py]
     Integration --> CrossModal[cross_modal_context_bridge.py]
-    
+
     Enhancement --> MetaPatterns[meta_recursive_patterns.py]
     Enhancement --> Interpretability[interpretability_scaffolding.py]
     Enhancement --> Collaborative[collaborative_evolution_framework.py]
-    
+
     %% Styling
     classDef category fill:#f9f9f9,stroke:#666,stroke-width:1px,color:#333,font-weight:bold
     classDef foundation fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
     classDef field fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#2e7d32
     classDef meta fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
     classDef template fill:#ffffff,stroke:#999,stroke-width:1px,color:#333
-    
+
     class Root,Foundation,Field,Meta,ContextStructure,ControlFlow,Evaluation,FieldOps,Measurement,Analysis,Integration,Enhancement category
     class MinimalContext,SchemaTemplate,ControlLoop,PromptProgram,RecursiveFramework,ScoringFunctions,ContextAudit foundation
     class ProtocolShells,ShellRunner,ResidueTracker,ResonanceMeasure,EmergenceMetrics,QuantumMetrics,AttractorDetection,BoundaryDynamics field

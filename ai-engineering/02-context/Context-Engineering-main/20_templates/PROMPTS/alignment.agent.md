@@ -380,4 +380,3 @@ def alignment_agent_prompt(context, state=None, audit_log=None, depth=0, max_dep
 
 
 # END OF /ALIGNMENT.AGENT SYSTEM PROMPT
-

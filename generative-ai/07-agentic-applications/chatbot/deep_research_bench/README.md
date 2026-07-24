@@ -13,18 +13,18 @@
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 # ✨ News
-+ [22 Nov 2025] 🎉 **New Leaderboard Update**: 
++ [22 Nov 2025] 🎉 **New Leaderboard Update**:
   - 🏆 **Congratulations to [Tavily Research](https://deepresearch.tavily.com)** for achieving **1st place** on DeepResearch Bench! Tavily Research demonstrates outstanding performance across all evaluation metrics, setting a new benchmark for deep research agents.
   - We have also evaluated **Tongyi-deepresearch-30B-A3B**, showcasing competitive performance in research report generation. Check out the updated rankings on our [**Leaderboard**](https://huggingface.co/spaces/muset-ai/DeepResearch-Bench-Leaderboard).
 
-+ [17 Nov 2025] 🚀 **New Achievements & Dataset Release**: 
++ [17 Nov 2025] 🚀 **New Achievements & Dataset Release**:
   - We are thrilled to announce that **[Thinkdepth.ai](https://github.com/thinkdepthai/Deep_Research)** has achieved **1st place** on the RACE evaluation, showcasing exceptional performance in research report generation quality!
   - 🎯 **Human Annotation Dataset Released**: We have released our human-annotated RACE evaluation dataset on [Hugging Face](https://huggingface.co/datasets/muset-ai/DeepResearch-Bench-Dataset). This dataset provides valuable ground truth for **LLM-as-judge** research. We welcome researchers to leverage this data to explore and improve the alignment between LLM evaluations and human judgments.
 
 + [14 Nov 2025] 🎉 **Major Leaderboard Update**: We are excited to announce two new top-performing systems on DeepResearch Bench! [CellCog.ai](https://www.cellcog.ai) now leads the leaderboard at **1st place**, and [Salesforce Enterprise Deep Research](https://github.com/SalesforceAIResearch/enterprise-deep-research) secures **2nd place**, both surpassing all previous benchmarks. These results showcase advances in deep research agent capabilities. Check out the full rankings and detailed comparisons on our [**Leaderboard**](https://huggingface.co/spaces/muset-ai/DeepResearch-Bench-Leaderboard).
 
-+ [3 Aug 2025] 🚀 We reproduced and evaluated [LangChain-Open-Deep-Research](https://github.com/langchain-ai/open_deep_research) (with GPT-4.1 + Tavily) as the first open-source framework evaluated on DeepResearch Bench, achieving 6th place among all deep research agents. This evaluation was conducted in collaboration with LangChain partners. Additionally, we partnered with [Nvidia-AIQ-Research](https://github.com/NVIDIA-AI-Blueprints/aiq-research-assistant) to evaluate their deep research solution. Updated results with new leaderboard visualization are now available. All detailed rankings and raw data are synchronized on our [Hugging Face Leaderboard](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard). 
-  
++ [3 Aug 2025] 🚀 We reproduced and evaluated [LangChain-Open-Deep-Research](https://github.com/langchain-ai/open_deep_research) (with GPT-4.1 + Tavily) as the first open-source framework evaluated on DeepResearch Bench, achieving 6th place among all deep research agents. This evaluation was conducted in collaboration with LangChain partners. Additionally, we partnered with [Nvidia-AIQ-Research](https://github.com/NVIDIA-AI-Blueprints/aiq-research-assistant) to evaluate their deep research solution. Updated results with new leaderboard visualization are now available. All detailed rankings and raw data are synchronized on our [Hugging Face Leaderboard](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard).
+
   **If you want to evaluate your deep research agent** Contact us at dumingxuan@mail.ustc.edu.cn to get official leaderboard ranking on DeepResearch Bench.
 + [18 July 2025] 🎉 We have established a partnership with **AGI-Eval** platform. DeepResearch Bench is now available on [**AGI-Eval**](https://agi-eval.cn/evaluation/detail?id=67), providing a more convenient evaluation interface for researchers and practitioners to test their deep research agents.
 + [15 July 2025] ⚡️⚡️ **Major Update**: Added comprehensive evaluation of **Kimi-Researcher**, **Doubao-DeepResearch**, and **Claude-Researcher**. Upgraded evaluation infrastructure with **Gemini-2.5-Pro** for RACE and **Gemini-2.5-Flash** for FACT evaluation. All raw research articles and evaluation scores are now available on our [**Hugging Face Leaderboard**](https://huggingface.co/spaces/Ayanami0730/DeepResearch-Leaderboard) for comprehensive analysis and comparison.
@@ -55,7 +55,7 @@ To ensure DeepResearch Bench reflects real-world research demands, we analyzed *
 Guided by real-world demand distribution, we invited **PhD-level experts and senior practitioners** (5+ years experience) to design challenging research tasks within their domains. Each submission underwent rigorous manual screening for:
 
 - **Quality**: High research standards and complexity
-- **Clarity**: Clear task definitions and requirements  
+- **Clarity**: Clear task definitions and requirements
 - **Authenticity**: Grounded in real research scenarios
 - **Challenge Level**: Testing upper limits of DRA capabilities
 
@@ -74,7 +74,7 @@ RACE evaluates **report generation quality** through a sophisticated multi-step 
 
 - **Dynamic Criteria Generation**: Automatically generates task-specific evaluation criteria across four key dimensions:
   - 📚 **Comprehensiveness**: Coverage breadth and depth of the research topic
-  - 🔍 **Insight/Depth**: Quality of analysis and insight generation  
+  - 🔍 **Insight/Depth**: Quality of analysis and insight generation
   - 📋 **Instruction-Following**: Adherence to specific task requirements
   - 📖 **Readability**: Clarity, organization, and presentation quality
 
@@ -136,9 +136,9 @@ export JINA_API_KEY="your_jina_api_key_here"
 deep_research_bench/
 ├── data/
 │   ├── criteria_data/      # Evaluation criteria data
-│   ├── prompt_data/        
+│   ├── prompt_data/
 │   │   └── query.jsonl     # ← 100 benchmark queries for your agent
-│   └── test_data/          
+│   └── test_data/
 │       ├── cleaned_data/   # Cleaned article data
 │       └── raw_data/       # ← Put your model outputs here (model_name.jsonl)
 ├── prompt/                 # Prompt templates
@@ -167,8 +167,8 @@ Run your Deep Research Agent on the benchmark queries and save outputs in the re
 **Required format** (each line should contain):
 ```json
 {
-    "id": "task_id", 
-    "prompt": "original_query_text", 
+    "id": "task_id",
+    "prompt": "original_query_text",
     "article": "generated_research_article_with_citations"
 }
 ```
@@ -213,4 +213,4 @@ If you use DeepResearch Bench in your research, please cite our paper:
   journal   = {arXiv preprint},
   year      = {2025},
 }
-``` 
+```

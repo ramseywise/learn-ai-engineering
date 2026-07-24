@@ -9,4 +9,4 @@ FROM   students S
          ON S.marks BETWEEN G.min_mark AND G.max_mark
 ORDER  BY G.grade DESC,
           names ASC,
-          S.marks ASC; 
+          S.marks ASC;

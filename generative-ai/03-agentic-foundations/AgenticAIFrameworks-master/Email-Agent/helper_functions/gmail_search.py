@@ -5,13 +5,13 @@
 def search_emails(service, query, user_id='me', max_results=5):
     """
     Search for emails using Gmail query syntax.
-    
+
     Args:
         service: Gmail API service object
         query (str): Gmail search query
         user_id (str): User ID (default: 'me')
         max_results (int): Maximum number of results (default: 5)
-    
+
     Returns:
         list: List of message objects matching the query
     """
@@ -38,13 +38,13 @@ def search_emails(service, query, user_id='me', max_results=5):
 def search_email_conversations(service, query, user_id='me', max_results=5):
     """
     Search for email conversations (threads) using Gmail query syntax.
-    
+
     Args:
         service: Gmail API service object
         query (str): Gmail search query
         user_id (str): User ID (default: 'me')
         max_results (int): Maximum number of results (default: 5)
-    
+
     Returns:
         list: List of thread objects matching the query
     """

@@ -82,13 +82,13 @@ Budgets track money coming in and going out. In context:
         {source="retrieval", size="variable", quality="moderate", frequency="as needed"},
         {source="previous interactions", size="growing", quality="mixed", frequency="continuous"}
     ],
-    
+
     outputs=[
         {requirement="answer query", priority="high", token_estimate=500},
         {requirement="maintain coherence", priority="medium", token_estimate=300},
         {requirement="provide examples", priority="low", token_estimate=400}
     ],
-    
+
     processing_costs=[
         {operation="reasoning", intensity="high", token_impact="indirect"},
         {operation="retrieval processing", intensity="medium", token_impact="moderate"},
@@ -113,13 +113,13 @@ Financial health considers what you own versus what you owe. In context:
         {type="illustrative examples", value="medium-high", durability="medium-term", return="enhanced comprehension"},
         {type="organized structure", value="high", durability="long-term", return="improved navigation and retention"}
     ],
-    
+
     liabilities=[
         {type="redundant information", impact="moderate drain", necessity="none", recommendation="eliminate"},
         {type="tangential content", impact="mild drain", necessity="low", recommendation="minimize"},
         {type="excessive detail", impact="significant drain", necessity="situational", recommendation="optimize"}
     ],
-    
+
     investments=[
         {type="foundational concepts", current_cost="moderate", expected_return="high", timeframe="immediate and ongoing"},
         {type="relationship building", current_cost="low", expected_return="high", timeframe="cumulative"},
@@ -145,21 +145,21 @@ Ratios help evaluate financial health. In context:
         benchmark=0.75,
         status="above target"
     },
-    
+
     relevance_ratio={
         formula="on_topic_tokens / total_tokens",
         current_value=0.88,
         benchmark=0.85,
         status="above target"
     },
-    
+
     coherence_score={
         formula="connectedness_measure(all_content)",
         current_value=0.79,
         benchmark=0.80,
         status="slightly below target"
     },
-    
+
     overhead_rate={
         formula="support_content / direct_value_content",
         current_value=0.30,
@@ -187,28 +187,28 @@ Budgets organize spending into categories. In context:
         optimization_potential="low",
         value_assessment="foundational"
     },
-    
+
     core_content={
         nature="variable essential",
         current_allocation="42%",
         optimization_potential="medium",
         value_assessment="direct impact"
     },
-    
+
     examples_details={
         nature="discretionary",
         current_allocation="25%",
         optimization_potential="high",
         value_assessment="enhancing"
     },
-    
+
     meta_content={
         nature="overhead",
         current_allocation="7%",
         optimization_potential="medium",
         value_assessment="supporting"
     },
-    
+
     reserve_capacity={
         nature="emergency fund",
         current_allocation="8%",
@@ -235,7 +235,7 @@ Start from zero and justify every token:
         frequency="Each new interaction",
         rigor="High scrutiny of all elements"
     },
-    
+
     process=[
         {step="Identify core outcomes", description="Define exactly what must be accomplished"},
         {step="List required elements", description="Enumerate what's needed for each outcome"},
@@ -243,21 +243,21 @@ Start from zero and justify every token:
         {step="Scrutinize each element", description="Challenge necessity and allocation size"},
         {step="Optimize and finalize", description="Set final allocations based on scrutiny"}
     ],
-    
+
     benefits=[
         "Eliminates historical waste",
         "Forces conscious decisions about all elements",
         "Prevents automatic inclusion of non-essential content",
         "Regularly refreshes priorities"
     ],
-    
+
     challenges=[
         "Time-intensive process",
         "Requires deep understanding of requirements",
         "May miss subtle interdependencies",
         "Can be exhausting if overused"
     ],
-    
+
     best_for=[
         "New interaction types",
         "Situations requiring maximum efficiency",
@@ -278,7 +278,7 @@ Pre-allocate tokens to specific categories:
         frequency="Established at beginning, maintained throughout",
         rigor="Firm boundaries between categories"
     },
-    
+
     process=[
         {step="Define categories", description="Establish clear content/function categories"},
         {step="Allocate token budgets", description="Assign specific token amounts to each category"},
@@ -286,7 +286,7 @@ Pre-allocate tokens to specific categories:
         {step="Enforce boundaries", description="Prevent borrowing between categories"},
         {step="Adjust when necessary", description="Reallocate only with deliberate decision"}
     ],
-    
+
     categories=[
         {name="System instructions", allocation="15%", flexibility="Low"},
         {name="Core explanation", allocation="30%", flexibility="Medium"},
@@ -295,21 +295,21 @@ Pre-allocate tokens to specific categories:
         {name="Meta/Navigation", allocation="5%", flexibility="Low"},
         {name="Reserve", allocation="5%", flexibility="Emergency only"}
     ],
-    
+
     benefits=[
         "Prevents category creep",
         "Creates clear accountability",
         "Simplifies tracking",
         "Ensures all functions receive allocation"
     ],
-    
+
     challenges=[
         "May be too rigid for dynamic situations",
         "Requires good initial allocation estimates",
         "Can create artificial constraints",
         "Needs regular review and adjustment"
     ],
-    
+
     best_for=[
         "Structured interactions with predictable needs",
         "Managing multiple competing priorities",
@@ -330,7 +330,7 @@ Allocate based on impact and importance:
         frequency="Ongoing prioritization process",
         rigor="Continuous value assessment"
     },
-    
+
     process=[
         {step="Define value metrics", description="Establish how impact will be measured"},
         {step="Assess element contributions", description="Evaluate how each element delivers value"},
@@ -338,28 +338,28 @@ Allocate based on impact and importance:
         {step="Allocate progressively", description="Assign tokens to highest value first"},
         {step="Review and optimize", description="Regularly reassess value delivery"}
     ],
-    
+
     value_metrics=[
         {metric="Goal advancement", weight=0.4, measurement="Progress toward primary objective"},
         {metric="Understanding depth", weight=0.3, measurement="Depth of comprehension enabled"},
         {metric="Versatility", weight=0.2, measurement="Applicability across contexts"},
         {metric="Memorability", weight=0.1, measurement="Likelihood of being remembered"}
     ],
-    
+
     benefits=[
         "Maximizes return on token investment",
         "Naturally prioritizes what matters most",
         "Reduces waste on low-value elements",
         "Creates focus on outcomes rather than input"
     ],
-    
+
     challenges=[
         "Requires clear value definitions",
         "Value can be subjective or difficult to measure",
         "May underinvest in foundation or support elements",
         "Needs regular recalibration of value metrics"
     ],
-    
+
     best_for=[
         "Outcome-focused interactions",
         "Situations with clear success metrics",
@@ -380,7 +380,7 @@ Build on previous allocations with adjustments:
         frequency="Each iteration or similar interaction",
         rigor="Focused on changes and improvements"
     },
-    
+
     process=[
         {step="Start with previous model", description="Use allocation from successful past interaction"},
         {step="Identify improvement areas", description="Determine what needs adjustment"},
@@ -388,28 +388,28 @@ Build on previous allocations with adjustments:
         {step="Test adjustments", description="Evaluate impact of changes"},
         {step="Document for next iteration", description="Record results for future reference"}
     ],
-    
+
     adjustment_types=[
         {type="Expansion", trigger="Insufficient depth in key area", approach="Targeted increase"},
         {type="Reduction", trigger="Excessive detail with low value", approach="Targeted decrease"},
         {type="Reallocation", trigger="Changing priorities", approach="Shift between categories"},
         {type="Optimization", trigger="Same outcome possible with less", approach="Efficiency improvement"}
     ],
-    
+
     benefits=[
         "Builds on proven successes",
         "Efficient planning process",
         "Maintains consistency across interactions",
         "Allows gradual optimization"
     ],
-    
+
     challenges=[
         "Can perpetuate historical inefficiencies",
         "May resist larger necessary changes",
         "Less responsive to changing environments",
         "Can become complacent over time"
     ],
-    
+
     best_for=[
         "Recurring interaction types",
         "Refining established patterns",
@@ -432,21 +432,21 @@ Evaluate what you get for your token investment:
 ```
 /perform.roi_analysis{
     formula="value_delivered / tokens_invested",
-    
+
     applications=[
         {element="Detailed example", tokens=500, value_score=450, roi=0.9, interpretation="Good investment"},
         {element="Technical explanation", tokens=300, value_score=360, roi=1.2, interpretation="Excellent investment"},
         {element="Historical context", tokens=400, value_score=200, roi=0.5, interpretation="Poor investment"},
         {element="Step-by-step guide", tokens=600, value_score=660, roi=1.1, interpretation="Strong investment"}
     ],
-    
+
     evaluation_criteria=[
         {criterion="Clarity enhancement", weight=0.3},
         {criterion="Problem solving contribution", weight=0.4},
         {criterion="Engagement generation", weight=0.1},
         {criterion="Retention facilitation", weight=0.2}
     ],
-    
+
     decision_rules=[
         {rule="roi > 1.0", action="Maintain or increase investment"},
         {rule="0.7 < roi < 1.0", action="Optimize for efficiency"},
@@ -463,34 +463,34 @@ Weigh the pros and cons of context investments:
 ```
 /perform.cost_benefit_analysis{
     decision="Include comprehensive technical background",
-    
+
     costs=[
         {type="Token consumption", impact=700, significance="High"},
         {type="Complexity increase", impact="Moderate", significance="Medium"},
         {type="Focus dilution", impact="Low", significance="Low"},
         {type="Accessibility reduction", impact="Moderate", significance="Medium"}
     ],
-    
+
     benefits=[
         {type="Understanding depth", impact="High", significance="High"},
         {type="Decision quality", impact="Significant", significance="High"},
         {type="Self-sufficiency enablement", impact="Moderate", significance="Medium"},
         {type="Future foundation", impact="High", significance="Medium"}
     ],
-    
+
     quantitative_assessment={
         cost_score=3.2,
         benefit_score=4.1,
         net_benefit=0.9,
         interpretation="Positive but not strongly so"
     },
-    
+
     sensitive_factors=[
         {factor="User expertise level", impact="Changes value of technical detail"},
         {factor="Problem complexity", impact="Affects necessity of background"},
         {factor="Available token budget", impact="Determines affordability"}
     ],
-    
+
     recommendation="Include technical background but optimize for efficiency and accessibility; consider progressive disclosure approach"
 }
 ```
@@ -502,7 +502,7 @@ Assess what you give up with each allocation choice:
 ```
 /evaluate.opportunity_cost{
     token_budget=8000,
-    
+
     allocation_scenario={
         system_instructions=1500,
         core_content=3000,
@@ -510,19 +510,19 @@ Assess what you give up with each allocation choice:
         exploration=1000,
         reserve=500
     },
-    
+
     alternatives_foregone=[
         {option="Additional examples", potential_value="Enhanced clarity through variety", tokens_needed=1000},
         {option="Historical context", potential_value="Deeper understanding of evolution", tokens_needed=1200},
         {option="Counterarguments", potential_value="More balanced perspective", tokens_needed=800},
         {option="Implementation details", potential_value="Practical application guidance", tokens_needed=1500}
     ],
-    
+
     highest_opportunity_costs=[
         {foregone="Implementation details", cost_rating="High", reasoning="Direct practical value lost"},
         {foregone="Counterarguments", cost_rating="Medium", reasoning="Perspective breadth sacrificed"}
     ],
-    
+
     mitigation_strategies=[
         {strategy="Progressive disclosure", application="Defer details until needed"},
         {strategy="Referencing", application="Acknowledge without fully developing"},
@@ -568,7 +568,7 @@ Identify and mitigate potential context budget problems:
             indicators=["User redirection", "Engagement drop", "Clarification requests"]
         }
     ],
-    
+
     mitigation_strategies=[
         {
             risk="Token limit exceeded",
@@ -603,7 +603,7 @@ Identify and mitigate potential context budget problems:
             ]
         }
     ],
-    
+
     contingency_plans=[
         {trigger="90% token capacity reached", plan="Initiate emergency summarization protocol"},
         {trigger="Coherence score drops below 0.7", plan="Execute structural recovery procedure"},
@@ -626,13 +626,13 @@ Long-term context architecture planning:
 ```
 /plan.strategic_budget{
     timeframe="Extended interaction or relationship",
-    
+
     vision={
         goal="Develop comprehensive understanding of machine learning fundamentals",
         scope="From basic concepts through advanced applications",
         value_proposition="Enable independent implementation and problem-solving"
     },
-    
+
     core_strategies=[
         {
             strategy="Progressive knowledge building",
@@ -655,14 +655,14 @@ Long-term context architecture planning:
             resource_implications="Maintain flexibility reserves for adjustments"
         }
     ],
-    
+
     key_performance_indicators=[
         {metric="Concept retention", measurement="Application without reference", target="80% recall"},
         {metric="Implementation capability", measurement="Successful problem-solving", target="70% success rate"},
         {metric="Conceptual integration", measurement="Connection making", target="Demonstrated synthesis"},
         {metric="Progression efficiency", measurement="Learning rate", target="Optimal pace without rework"}
     ],
-    
+
     resource_allocation_strategy={
         early_phase={
             foundations="40%",
@@ -693,21 +693,21 @@ Medium-term context planning:
 ```
 /plan.tactical_budget{
     timeframe="Single session or specific topic exploration",
-    
+
     objectives=[
         {objective="Explain natural language processing basics", priority="High"},
         {objective="Compare key NLP approaches", priority="Medium"},
         {objective="Demonstrate simple application example", priority="High"},
         {objective="Connect to broader ML landscape", priority="Low"}
     ],
-    
+
     resource_constraints={
         tokens_available=6000,
         time_available="30 minutes interaction",
         complexity_threshold="Technical but accessible to semi-technical audience",
         prerequisite_knowledge="Basic ML understanding, no NLP specifics"
     },
-    
+
     allocation_plan={
         introduction_framing=600,
         core_nlp_concepts=1500,
@@ -716,14 +716,14 @@ Medium-term context planning:
         broader_context=400,
         flexibility_reserve=500
     },
-    
+
     critical_path=[
         {milestone="Establish foundational understanding", token_allocation=1200},
         {milestone="Explore key approaches", token_allocation=1200},
         {milestone="Demonstrate practical application", token_allocation=1800},
         {milestone="Synthesize and connect", token_allocation=800}
     ],
-    
+
     contingency_planning=[
         {trigger="Concept confusion", response="Allocate from reserve to clarification"},
         {trigger="Unexpected depth need", response="Reduce comparison scope to maintain core clarity"},
@@ -740,20 +740,20 @@ Immediate context management:
 ```
 /plan.operational_budget{
     timeframe="Current exchange or immediate task",
-    
+
     immediate_needs=[
         {need="Answer specific question about transformers", priority="Urgent"},
         {need="Clarify relation to previous models", priority="High"},
         {need="Provide implementation consideration", priority="Medium"}
     ],
-    
+
     available_resources={
         remaining_tokens=2500,
         user_attention="Focused but limited",
         prior_context="Established basics of attention mechanisms",
         reference_material="Embedded model knowledge"
     },
-    
+
     allocation_decision={
         direct_answer=900,
         contextual_connection=600,
@@ -761,14 +761,14 @@ Immediate context management:
         clarity_ensuring=200,
         unexpected_needs_reserve=100
     },
-    
+
     execution_priorities=[
         "Ensure core question fully addressed",
         "Connect to established knowledge",
         "Provide actionable implementation guidance",
         "Maintain clarity and coherence"
     ],
-    
+
     success_criteria=[
         "Question completely answered",
         "Clear connection to previous discussion established",
@@ -810,14 +810,14 @@ Regular assessment and optimization:
             adjustment="Increase practical content by 20%, integrate earlier in sequence"
         }
     ],
-    
+
     adjustment_implementation={
         timeframe="Next interaction cycle",
         approach="Incremental adjustment with measurement",
         communication="Explicit acknowledgment of refinement",
         verification="Effectiveness check after implementation"
     },
-    
+
     continuous_improvement_system={
         monitoring="Ongoing value delivery tracking",
         feedback_loop="Regular adjustment based on outcomes",
@@ -845,7 +845,7 @@ When you're about to exceed your limit:
         "Complex topic with significant remaining ground to cover",
         "Multiple open threads requiring resolution"
     ],
-    
+
     immediate_actions=[
         {
             action="Emergency compression",
@@ -872,13 +872,13 @@ When you're about to exceed your limit:
             tradeoff="Introduces transition overhead and potential discontinuity"
         }
     ],
-    
+
     recovery_plan=[
         {phase="Stabilize", actions=["Implement emergency measures", "Preserve critical context", "Maintain coherence"]},
         {phase="Restructure", actions=["Reorganize for efficiency", "Implement sustainable token pattern", "Rebuild essential elements"]},
         {phase="Prevent", actions=["Establish early warning system", "Implement preemptive compression", "Create token efficiency protocols"]}
     ],
-    
+
     prevention_strategies=[
         {
             strategy="Progressive summarization",
@@ -916,14 +916,14 @@ When resources aren't generating desired results:
         {signal="Explicit expression of different needs", severity="High"},
         {signal="Questions indicating different expectations", severity="Medium"}
     ],
-    
+
     diagnostic_process=[
         {step="Goal clarification", action="Explicitly verify intended outcomes"},
         {step="Value assessment", action="Identify what's most important to user"},
         {step="Alignment analysis", action="Compare current allocation to priorities"},
         {step="Gap identification", action="Pinpoint specific mismatches"}
     ],
-    
+
     correction_strategies=[
         {
             strategy="Value reset",
@@ -946,7 +946,7 @@ When resources aren't generating desired results:
             approach="Narrow focus for depth or broaden for comprehensive view"
         }
     ],
-    
+
     prevention_mechanisms=[
         {
             mechanism="Early value verification",
@@ -1000,7 +1000,7 @@ When running out of attention or coherence rather than tokens:
             impact="Reduced collaboration and exploration"
         }
     ],
-    
+
     intervention_strategies=[
         {
             resource="Attention capacity",
@@ -1039,7 +1039,7 @@ When running out of attention or coherence rather than tokens:
             ]
         }
     ],
-    
+
     long_term_sustainability=[
         {
             principle="Resource cycling",
@@ -1077,7 +1077,7 @@ When your allocations need significant adjustment:
         {trigger="Resource constraints", indicator="Token limit changes", threshold="15%+ change in available budget"},
         {trigger="Content evaluation", indicator="Value assessment", threshold="Significant value distribution shift"}
     ],
-    
+
     rebalancing_process=[
         {
             step="Current state assessment",
@@ -1116,7 +1116,7 @@ When your allocations need significant adjustment:
             ]
         }
     ],
-    
+
     common_rebalancing_patterns=[
         {
             pattern="Value concentration",
@@ -1159,7 +1159,7 @@ View your context as a diversified investment portfolio:
 ```
 /frame.investment_portfolio{
     core_concept="Manage context as a portfolio of investments with different characteristics and returns",
-    
+
     elements=[
         {
             element="Core holdings (System instructions, fundamental concepts)",
@@ -1202,7 +1202,7 @@ View your context as a diversified investment portfolio:
             optimization="Manage risk while enabling discovery"
         }
     ],
-    
+
     portfolio_management_principles=[
         {
             principle="Diversification",
@@ -1225,7 +1225,7 @@ View your context as a diversified investment portfolio:
             benefit="Improves net returns across portfolio"
         }
     ],
-    
+
     application_scenarios=[
         {
             scenario="Long-term learning relationship",
@@ -1258,7 +1258,7 @@ Conceptualize context as an economic system of production and consumption:
 ```
 /frame.resource_economy{
     core_concept="View context as an economic system with resources, production, consumption, and value creation",
-    
+
     elements=[
         {
             element="Resources (Tokens, attention, knowledge base)",
@@ -1301,7 +1301,7 @@ Conceptualize context as an economic system of production and consumption:
             optimization="Improve market research and adaptability"
         }
     ],
-    
+
     economic_principles=[
         {
             principle="Comparative advantage",
@@ -1324,7 +1324,7 @@ Conceptualize context as an economic system of production and consumption:
             benefit="More value created from available resources"
         }
     ],
-    
+
     application_scenarios=[
         {
             scenario="Content-rich competitive environment",
@@ -1357,7 +1357,7 @@ Think of context resources as energy to be conserved and directed:
 ```
 /frame.energy_management{
     core_concept="Treat context resources as energy that flows through a system, requiring conservation and direction",
-    
+
     elements=[
         {
             element="Energy sources (Available tokens, attention, knowledge)",
@@ -1400,7 +1400,7 @@ Think of context resources as energy to be conserved and directed:
             optimization="Improve application effectiveness"
         }
     ],
-    
+
     energy_principles=[
         {
             principle="Conservation of energy",
@@ -1423,7 +1423,7 @@ Think of context resources as energy to be conserved and directed:
             benefit="Appropriate force for each task, sustainable operation"
         }
     ],
-    
+
     application_scenarios=[
         {
             scenario="High-complexity explanation",
@@ -1462,7 +1462,7 @@ Combining economic and horticultural perspectives:
 ```
 /integrate.budget_garden{
     integrated_concept="The resourced garden: A planned, budgeted growing environment",
-    
+
     combined_elements=[
         {
             concept="Investment planting (Budget: Strategic investment + Garden: Seed selection)",
@@ -1489,14 +1489,14 @@ Combining economic and horticultural perspectives:
             example="Higher token allocation to examples during 'application season' versus 'concept season'"
         }
     ],
-    
+
     integration_benefits=[
         "Combines resource discipline with organic growth perspective",
         "Balances planning and emergence",
         "Links investment to natural development cycles",
         "Provides both quantitative and qualitative frameworks"
     ],
-    
+
     application_approaches=[
         {
             approach="Budget-driven garden planning",
@@ -1524,7 +1524,7 @@ Combining economic and flow perspectives:
 ```
 /integrate.budget_river{
     integrated_concept="The resourced river: A flow of value with economic constraints",
-    
+
     combined_elements=[
         {
             concept="Channel investment (Budget: Infrastructure investment + River: Riverbed shaping)",
@@ -1551,14 +1551,14 @@ Combining economic and flow perspectives:
             example="Measured allocation to related concepts that feed into main understanding"
         }
     ],
-    
+
     integration_benefits=[
         "Combines resource discipline with dynamic flow perspective",
         "Links static allocation to dynamic movement",
         "Provides framework for managing both resources and direction",
         "Enables planning for both efficiency and momentum"
     ],
-    
+
     application_approaches=[
         {
             approach="Budget-controlled flow",
@@ -1586,7 +1586,7 @@ Combining economic and field perspectives:
 ```
 /integrate.budget_field{
     integrated_concept="The resourced field: An economic approach to semantic landscapes",
-    
+
     combined_elements=[
         {
             concept="Attractor investment (Budget: Strategic investment + Field: Attractor formation)",
@@ -1613,14 +1613,14 @@ Combining economic and field perspectives:
             example="Referencing established concepts to reduce reexplanation costs"
         }
     ],
-    
+
     integration_benefits=[
         "Combines resource discipline with semantic landscape perspective",
         "Provides economic framework for field operations",
         "Enables measurement of field operation effectiveness",
         "Links resource allocation to emergent properties"
     ],
-    
+
     application_approaches=[
         {
             approach="Budget-constrained field design",
@@ -1654,13 +1654,13 @@ Delivering deep expertise within tight limits:
 ```
 /apply.token_constrained_expert{
     scenario="Providing sophisticated technical guidance within 4K token limit",
-    
+
     budget_approach={
         allocation_strategy="Value-based with strict prioritization",
         efficiency_focus="Maximum information density in core content",
         risk_management="Reserve for critical clarifications"
     },
-    
+
     specific_techniques=[
         {
             technique="Precision terminology",
@@ -1687,7 +1687,7 @@ Delivering deep expertise within tight limits:
             example="Simplified code demonstrating only the critical pattern"
         }
     ],
-    
+
     budget_structure={
         core_guidance=1600,
         critical_concepts=800,
@@ -1695,7 +1695,7 @@ Delivering deep expertise within tight limits:
         navigation_and_meta=200,
         clarification_reserve=400
     },
-    
+
     success_metrics=[
         {metric="Technical accuracy", target="100%", approach="No compromise despite constraints"},
         {metric="Actionability", target="Immediately applicable", approach="Focus on practical guidance"},
@@ -1712,13 +1712,13 @@ Managing resources across a long-term interaction:
 ```
 /apply.extended_learning_journey{
     scenario="Guiding a user through learning a complex topic over multiple sessions",
-    
+
     budget_approach={
         allocation_strategy="Lifecycle-based budgeting",
         efficiency_focus="Long-term retention and application",
         risk_management="Adaptive reallocation based on progress"
     },
-    
+
     journey_phases=[
         {
             phase="Foundation building",
@@ -1769,7 +1769,7 @@ Managing resources across a long-term interaction:
             optimization_strategy="Gradually reduce direct instruction investment, increase support"
         }
     ],
-    
+
     cross_phase_strategies=[
         {
             strategy="Knowledge asset development",
@@ -1792,7 +1792,7 @@ Managing resources across a long-term interaction:
             example="Ending sessions at natural value breakpoints rather than token limits"
         }
     ],
-    
+
     success_metrics=[
         {metric="Knowledge retention", target="High long-term retention", approach="Strategic reinforcement"},
         {metric="Skill application", target="Effective real-world use", approach="Progressive authentic practice"},
@@ -1809,13 +1809,13 @@ Balancing structure and exploration in creative contexts:
 ```
 /apply.collaborative_creator{
     scenario="Working with a user on a creative project with both structure and exploration needs",
-    
+
     budget_approach={
         allocation_strategy="Portfolio with both stable and speculative investments",
         efficiency_focus="Maximum creative value and momentum",
         risk_management="Balanced preservation and exploration"
     },
-    
+
     collaboration_modes=[
         {
             mode="Structural framework",
@@ -1858,7 +1858,7 @@ Balancing structure and exploration in creative contexts:
             implementation="Manage the collaborative process itself"
         }
     ],
-    
+
     dynamic_allocation_approaches=[
         {
             approach="Creative phase shifting",
@@ -1881,7 +1881,7 @@ Balancing structure and exploration in creative contexts:
             example="Increasing allocation to particularly fruitful creative directions"
         }
     ],
-    
+
     success_metrics=[
         {metric="Creative quality", target="Highest possible within constraints", approach="Effective mode balancing"},
         {metric="Collaborative satisfaction", target="Energizing partnership", approach="Responsive allocation"},
@@ -1935,7 +1935,7 @@ As you continue your context engineering journey, keep these key principles in m
             impact="Cumulative benefits and compound growth"
         }
     ],
-    
+
     integration_guidance=[
         "Apply these principles as a cohesive system rather than isolated practices",
         "Balance competing priorities through conscious tradeoff decisions",
@@ -1981,7 +1981,7 @@ As you continue your context engineering journey, keep these key principles in m
             milestone="Unconscious competence with conscious explanation"
         }
     ],
-    
+
     development_approaches=[
         {
             approach="Deliberate practice",
@@ -2039,7 +2039,7 @@ Even the process of budgeting itself requires resources. Here's how to think abo
             example="Studying budget patterns that apply across multiple contexts"
         }
     ],
-    
+
     efficiency_principles=[
         {
             principle="Right-sized process",
@@ -2062,7 +2062,7 @@ Even the process of budgeting itself requires resources. Here's how to think abo
             benefit="Avoid unnecessary overhead"
         }
     ],
-    
+
     meta_budget_example={
         quick_interaction:{
             planning_time="30 seconds",
@@ -2093,7 +2093,7 @@ While the Budget Model provides powerful tools for context management, its great
 ```
 /integrate.with_context_engineering{
     role_in_ecosystem="Economic framework within broader context engineering practice",
-    
+
     complementary_elements=[
         {
             element="Garden Model cultivation",
@@ -2116,9 +2116,9 @@ While the Budget Model provides powerful tools for context management, its great
             integration_point="Budgeting modules within larger protocols"
         }
     ],
-    
+
     ultimate_vision="Context engineering mastery through integrated models",
-    
+
     next_steps=[
         "Experiment with Budget Model techniques in your next interaction",
         "Combine with Garden Model for a comprehensive approach",

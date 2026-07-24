@@ -51,25 +51,25 @@ All protocol shells follow the Pareto-lang format, a concise and expressive synt
 ```
 /protocol_name {
   intent: "Clear statement of protocol purpose",
-  
+
   input: {
     input_field_1: <type>,
     input_field_2: <type>,
     ...
   },
-  
+
   process: [
     "/operation.name{param='value'}",
     "/operation.name{param='value'}",
     ...
   ],
-  
+
   output: {
     output_field_1: <type>,
     output_field_2: <type>,
     ...
   },
-  
+
   meta: {
     version: "x.y.z",
     timestamp: "<now>"
@@ -215,13 +215,13 @@ def conceptual_co_emergence(concept_a, concept_b):
     # Identify key patterns in each concept
     patterns_a = identify_patterns(concept_a)
     patterns_b = identify_patterns(concept_b)
-    
+
     # Look for potential connections
     connections = find_connections(patterns_a, patterns_b)
-    
+
     # Generate insights from connections
     insights = generate_insights(connections)
-    
+
     return insights
 ```
 
@@ -260,20 +260,20 @@ Use protocols as integration points between different context engineering approa
 def integrated_context_approach(input_text):
     # Parse input into field
     field = create_field_from_text(input_text)
-    
+
     # Apply co-emergence protocol
     co_emergence_result = protocols["attractor.co.emerge"].execute({
         "current_field_state": field
     })
-    
+
     # Apply recursive emergence protocol
     recursive_result = protocols["recursive.emergence"].execute({
         "initial_field_state": co_emergence_result["updated_field_state"]
     })
-    
+
     # Generate response from evolved field
     response = generate_response(recursive_result["updated_field_state"])
-    
+
     return response
 ```
 
@@ -320,30 +320,30 @@ Protocols can be composed to create more complex operations:
 def compose_protocols(field, protocol_sequence):
     """
     Execute a sequence of protocols on a field.
-    
+
     Args:
         field: Initial semantic field
         protocol_sequence: List of protocol names to execute in sequence
-        
+
     Returns:
         Result of the final protocol execution
     """
     current_field = field
     results = []
-    
+
     for protocol_name in protocol_sequence:
         if protocol_name not in protocols:
             raise ValueError(f"Protocol {protocol_name} not found")
-        
+
         # Execute protocol with current field
         result = protocols[protocol_name].execute({
             "initial_field_state": current_field
         })
-        
+
         # Update current field for next protocol
         current_field = result["updated_field_state"]
         results.append(result)
-    
+
     return current_field, results
 ```
 

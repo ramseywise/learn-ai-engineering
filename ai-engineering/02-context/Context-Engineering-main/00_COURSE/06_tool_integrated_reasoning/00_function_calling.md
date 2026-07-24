@@ -193,7 +193,7 @@ class FunctionRegistry:
     def __init__(self):
         self.functions = {}
         self.categories = {}
-        
+
     def register(self, func, category=None, **metadata):
         """Register a function with metadata"""
         self.functions[func.__name__] = {
@@ -202,19 +202,19 @@ class FunctionRegistry:
             'category': category,
             'metadata': metadata
         }
-        
+
     def get_available_functions(self, category=None):
         """Get functions available for the current context"""
         if category:
-            return {name: info for name, info in self.functions.items() 
+            return {name: info for name, info in self.functions.items()
                    if info['category'] == category}
         return self.functions
-        
+
     def call(self, function_name, **kwargs):
         """Execute a registered function safely"""
         if function_name not in self.functions:
             raise ValueError(f"Function {function_name} not found")
-            
+
         func_info = self.functions[function_name]
         return func_info['function'](**kwargs)
 ```
@@ -235,12 +235,12 @@ def validate_parameters(function_schema, parameters):
 def safe_function_call(function_name, parameters, registry):
     """Safely execute function with validation"""
     func_info = registry.get_function(function_name)
-    
+
     # Validate parameters
     is_valid, error = validate_parameters(func_info['schema'], parameters)
     if not is_valid:
         return {"error": f"Parameter validation failed: {error}"}
-    
+
     try:
         result = registry.call(function_name, **parameters)
         return {"success": True, "result": result}
@@ -253,25 +253,25 @@ def safe_function_call(function_name, parameters, registry):
 ```python
 def select_optimal_functions(query, available_functions, context):
     """Select the most appropriate functions for a given query"""
-    
+
     # Analyze query intent
     intent = analyze_intent(query)
-    
+
     # Score functions based on relevance
     scored_functions = []
     for func_name, func_info in available_functions.items():
         relevance_score = calculate_relevance(
-            intent, 
+            intent,
             func_info['description'],
             func_info['category']
         )
-        
+
         # Consider context constraints
         context_score = evaluate_context_fit(func_info, context)
-        
+
         total_score = relevance_score * context_score
         scored_functions.append((func_name, total_score))
-    
+
     # Return top-ranked functions
     return sorted(scored_functions, key=lambda x: x[1], reverse=True)
 ```
@@ -337,28 +337,28 @@ def select_optimal_functions(query, available_functions, context):
 ```python
 def robust_function_call(function_name, parameters, max_retries=3):
     """Execute function with retry logic and error handling"""
-    
+
     for attempt in range(max_retries):
         try:
             result = execute_function(function_name, parameters)
-            
+
             # Validate result
             if validate_result(result):
                 return {"success": True, "result": result, "attempts": attempt + 1}
             else:
                 # Invalid result, try with adjusted parameters
                 parameters = adjust_parameters(parameters, result)
-                
+
         except TemporaryError as e:
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)  # Exponential backoff
                 continue
             else:
                 return {"error": f"Max retries exceeded: {str(e)}"}
-                
+
         except PermanentError as e:
             return {"error": f"Permanent error: {str(e)}"}
-    
+
     return {"error": "Max retries exceeded without success"}
 ```
 
@@ -442,20 +442,20 @@ class SecureFunctionRegistry(FunctionRegistry):
         super().__init__()
         self.access_policies = {}
         self.audit_log = []
-        
+
     def set_access_policy(self, function_name, policy):
         """Set access control policy for a function"""
         self.access_policies[function_name] = policy
-        
+
     def call(self, function_name, context=None, **kwargs):
         """Execute function with security checks"""
         # Check access permissions
         if not self._check_access(function_name, context):
             raise PermissionError(f"Access denied to {function_name}")
-        
+
         # Log the function call
         self._log_call(function_name, kwargs, context)
-        
+
         # Execute with resource limits
         return self._execute_with_limits(function_name, **kwargs)
 ```
@@ -466,7 +466,7 @@ class SecureFunctionRegistry(FunctionRegistry):
 def sanitize_function_input(parameters):
     """Sanitize function parameters to prevent injection attacks"""
     sanitized = {}
-    
+
     for key, value in parameters.items():
         if isinstance(value, str):
             # Remove potentially dangerous characters
@@ -474,11 +474,11 @@ def sanitize_function_input(parameters):
         elif isinstance(value, dict):
             sanitized[key] = sanitize_function_input(value)
         elif isinstance(value, list):
-            sanitized[key] = [sanitize_function_input(item) if isinstance(item, dict) 
+            sanitized[key] = [sanitize_function_input(item) if isinstance(item, dict)
                             else item for item in value]
         else:
             sanitized[key] = value
-            
+
     return sanitized
 ```
 
@@ -493,10 +493,10 @@ def timeout(seconds):
     """Context manager for function timeout"""
     def timeout_handler(signum, frame):
         raise TimeoutError(f"Function execution timed out after {seconds} seconds")
-    
+
     old_handler = signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(seconds)
-    
+
     try:
         yield
     finally:
@@ -509,7 +509,7 @@ def execute_with_resource_limits(function, max_time=30, max_memory=None):
         if max_memory:
             # Set memory limit (implementation depends on platform)
             resource.setrlimit(resource.RLIMIT_AS, (max_memory, max_memory))
-        
+
         return function()
 ```
 
@@ -553,20 +553,20 @@ def evaluate_function_calling(test_cases):
         'error_recovery_rate': 0,
         'efficiency_score': 0
     }
-    
+
     for test_case in test_cases:
         result = execute_test_case(test_case)
-        
+
         # Update metrics based on result
         metrics['success_rate'] += result.success
         metrics['parameter_accuracy'] += result.parameter_accuracy
         metrics['function_selection_accuracy'] += result.selection_accuracy
-        
+
     # Normalize metrics
     total_tests = len(test_cases)
     for key in metrics:
         metrics[key] /= total_tests
-        
+
     return metrics
 ```
 

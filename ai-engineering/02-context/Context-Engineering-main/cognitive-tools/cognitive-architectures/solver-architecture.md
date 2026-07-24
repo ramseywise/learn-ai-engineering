@@ -100,16 +100,16 @@ The foundation of our architecture is a comprehensive library of cognitive tools
 ```python
 class CognitiveToolsLibrary:
     """A collection of cognitive tools for structured reasoning."""
-    
+
     @staticmethod
     def understand_question(question, domain=None):
         """
         Break down and comprehend a problem statement.
-        
+
         Args:
             question: The problem to be understood
             domain: Optional domain context
-            
+
         Returns:
             dict: Structured problem understanding
         """
@@ -138,16 +138,16 @@ class CognitiveToolsLibrary:
         """
         # Implementation would process this protocol shell through an LLM
         return structured_understanding
-    
+
     @staticmethod
     def recall_related(problem_understanding, limit=3):
         """
         Recall knowledge relevant to the problem.
-        
+
         Args:
             problem_understanding: Structured problem description
             limit: Maximum number of relevant items to recall
-            
+
         Returns:
             dict: Relevant knowledge and examples
         """
@@ -202,20 +202,20 @@ The Protocol Shell Orchestration layer coordinates the application of cognitive 
 ```python
 class ProtocolShellOrchestrator:
     """Orchestrates the execution of protocol shells for problem-solving."""
-    
+
     def __init__(self, tools_library):
         self.tools = tools_library
         self.current_state = {}
-    
+
     def orchestrate(self, problem, domain=None, constraints=None):
         """
         Coordinate the complete problem-solving process.
-        
+
         Args:
             problem: The problem to solve
             domain: Optional domain context
             constraints: Optional problem constraints
-            
+
         Returns:
             dict: Complete solution with reasoning
         """
@@ -256,26 +256,26 @@ class ProtocolShellOrchestrator:
             }}
         }}
         """
-        
+
         # Execution logic would process this protocol shell through an LLM
         # and track state between steps
-        
+
         # Phase 1: Understand
         understanding = self._execute_phase("understand", problem, domain, constraints)
         self.current_state["understanding"] = understanding
-        
+
         # Phase 2: Analyze
         analysis = self._execute_phase("analyze", self.current_state)
         self.current_state["analysis"] = analysis
-        
+
         # Phase 3: Solve
         solution = self._execute_phase("solve", self.current_state)
         self.current_state["solution"] = solution
-        
+
         # Phase 4: Verify
         verification = self._execute_phase("verify", self.current_state)
         self.current_state["verification"] = verification
-        
+
         return self.current_state
 ```
 
@@ -286,7 +286,7 @@ The Meta-Cognitive Layer monitors, regulates, and reflects on the problem-solvin
 ```python
 class MetaCognitiveController:
     """Controls and improves the problem-solving process through meta-cognition."""
-    
+
     def __init__(self):
         self.state = {
             "current_phase": None,
@@ -295,14 +295,14 @@ class MetaCognitiveController:
             "strategy_adjustments": [],
             "insights": []
         }
-    
+
     def monitor(self, phase_results):
         """
         Monitor progress and detect obstacles.
-        
+
         Args:
             phase_results: Results from current problem-solving phase
-            
+
         Returns:
             dict: Monitoring assessment
         """
@@ -328,23 +328,23 @@ class MetaCognitiveController:
             }}
         }}
         """
-        
+
         # Implementation would process this protocol shell through an LLM
         monitoring_results = execute_protocol(protocol)
-        
+
         # Update state with monitoring results
         self.state["progress"][self.state["current_phase"]] = monitoring_results["progress_assessment"]
         self.state["obstacles"].extend(monitoring_results["obstacles"])
-        
+
         return monitoring_results
-    
+
     def regulate(self, monitoring_assessment):
         """
         Adjust strategy based on monitoring.
-        
+
         Args:
             monitoring_assessment: Results from monitoring
-            
+
         Returns:
             dict: Strategy adjustments
         """
@@ -371,22 +371,22 @@ class MetaCognitiveController:
             }}
         }}
         """
-        
+
         # Implementation would process this protocol shell through an LLM
         regulation_results = execute_protocol(protocol)
-        
+
         # Update state with regulation results
         self.state["strategy_adjustments"].append(regulation_results["adjustments"])
-        
+
         return regulation_results
-    
+
     def reflect(self, complete_process):
         """
         Reflect on the entire problem-solving process.
-        
+
         Args:
             complete_process: The full problem-solving trace
-            
+
         Returns:
             dict: Reflection insights and learning
         """
@@ -413,13 +413,13 @@ class MetaCognitiveController:
             }}
         }}
         """
-        
+
         # Implementation would process this protocol shell through an LLM
         reflection_results = execute_protocol(protocol)
-        
+
         # Update state with reflection results
         self.state["insights"] = reflection_results["insights"]
-        
+
         return reflection_results
 ```
 
@@ -430,7 +430,7 @@ The Field Theory Integration component applies concepts from neural field theory
 ```python
 class FieldTheoryIntegrator:
     """Applies field theory concepts to problem-solving context."""
-    
+
     def __init__(self):
         self.field_state = {
             "attractors": [],
@@ -439,14 +439,14 @@ class FieldTheoryIntegrator:
             "residue": [],
             "emergence": []
         }
-    
+
     def update_field(self, new_information):
         """
         Update the semantic field with new information.
-        
+
         Args:
             new_information: New data to integrate into field
-            
+
         Returns:
             dict: Updated field state
         """
@@ -474,22 +474,22 @@ class FieldTheoryIntegrator:
             }}
         }}
         """
-        
+
         # Implementation would process this protocol shell through an LLM
         field_update = execute_protocol(protocol)
-        
+
         # Update field state
         self.field_state = field_update["updated_field"]
-        
+
         return self.field_state
-    
+
     def detect_attractors(self, problem_space):
         """
         Identify semantic attractors in the problem space.
-        
+
         Args:
             problem_space: Current problem understanding
-            
+
         Returns:
             list: Identified attractors
         """
@@ -514,13 +514,13 @@ class FieldTheoryIntegrator:
             }}
         }}
         """
-        
+
         # Implementation would process this protocol shell through an LLM
         attractors = execute_protocol(protocol)
-        
+
         # Update field state with new attractors
         self.field_state["attractors"] = attractors["attractors"]
-        
+
         return attractors
 ```
 
@@ -534,12 +534,12 @@ The architecture dynamically selects cognitive tools based on problem characteri
 def select_cognitive_tools(problem_understanding, phase, context):
     """
     Select appropriate cognitive tools based on context.
-    
+
     Args:
         problem_understanding: Structured problem data
         phase: Current problem-solving phase
         context: Additional context information
-        
+
     Returns:
         list: Selected cognitive tools
     """
@@ -566,10 +566,10 @@ def select_cognitive_tools(problem_understanding, phase, context):
         }}
     }}
     """
-    
+
     # Implementation would process this protocol shell through an LLM
     tool_selection = execute_protocol(protocol)
-    
+
     return tool_selection["selected_tools"]
 ```
 
@@ -600,11 +600,11 @@ The architecture implements recursive self-improvement through meta-cognitive re
 def recursive_improvement(solution_process, quality_criteria):
     """
     Recursively improve a solution through self-reflection.
-    
+
     Args:
         solution_process: Current solution and reasoning
         quality_criteria: Criteria for assessing quality
-        
+
     Returns:
         dict: Improved solution
     """
@@ -631,10 +631,10 @@ def recursive_improvement(solution_process, quality_criteria):
         }}
     }}
     """
-    
+
     # Implementation would process this protocol shell through an LLM
     improvement_results = execute_protocol(protocol)
-    
+
     return improvement_results
 ```
 
@@ -646,11 +646,11 @@ The architecture leverages attractor dynamics from field theory to identify stab
 def leverage_attractors(field_state, problem_solution):
     """
     Use attractor dynamics to refine solution.
-    
+
     Args:
         field_state: Current semantic field state
         problem_solution: Current solution
-        
+
     Returns:
         dict: Attractor-enhanced solution
     """
@@ -676,10 +676,10 @@ def leverage_attractors(field_state, problem_solution):
         }}
     }}
     """
-    
+
     # Implementation would process this protocol shell through an LLM
     attractor_results = execute_protocol(protocol)
-    
+
     return attractor_results
 ```
 
@@ -692,14 +692,14 @@ The foundation of implementation is a protocol shell framework that standardizes
 ```python
 class ProtocolShell:
     """Framework for defining and executing protocol shells."""
-    
+
     def __init__(self, intent, input_params, process_steps, output_spec):
         self.intent = intent
         self.input_params = input_params
         self.process_steps = process_steps
         self.output_spec = output_spec
         self.execution_trace = []
-        
+
     def to_prompt(self):
         """Convert protocol shell to structured prompt format."""
         prompt = f"""
@@ -717,15 +717,15 @@ class ProtocolShell:
         }}
         """
         return prompt
-    
+
     def _format_dict(self, d):
         """Format dictionary as key-value pairs for the prompt."""
         return ",\n                ".join([f"{k}={self._format_value(v)}" for k, v in d.items()])
-    
+
     def _format_process_steps(self):
         """Format process steps for the prompt."""
         return ",\n                ".join([f"/{step['action']}{{...}}" for step in self.process_steps])
-    
+
     def _format_value(self, v):
         """Format values appropriately based on type."""
         if isinstance(v, str):
@@ -734,14 +734,14 @@ class ProtocolShell:
             return f"[{', '.join([self._format_value(item) for item in v])}]"
         else:
             return str(v)
-    
+
     def execute(self, llm_executor):
         """
         Execute the protocol shell using the provided LLM executor.
-        
+
         Args:
             llm_executor: Function to execute prompts with an LLM
-            
+
         Returns:
             dict: Results of protocol execution
         """
@@ -806,7 +806,7 @@ Compose multiple cognitive tools to solve complex problems:
 ```python
 def solve_complex_math_problem(problem):
     """Solve a complex math problem through tool composition."""
-    
+
     # Define protocol shell for the composition
     protocol = ProtocolShell(
         intent="Solve complex math problem through tool composition",
@@ -826,7 +826,7 @@ def solve_complex_math_problem(problem):
             "confidence": "Confidence assessment"
         }
     )
-    
+
     # Execute the protocol
     return protocol.execute(llm_executor)
 ```
@@ -838,10 +838,10 @@ Implement iterative refinement loops to progressively improve solutions:
 ```python
 def iterative_solution_refinement(problem, iterations=3):
     """Refine a solution through multiple iterations."""
-    
+
     # Initial solution
     solution = solve_initial(problem)
-    
+
     for i in range(iterations):
         # Create protocol shell for refinement
         protocol = ProtocolShell(
@@ -863,11 +863,11 @@ def iterative_solution_refinement(problem, iterations=3):
                 "quality_assessment": "Evaluation of new solution"
             }
         )
-        
+
         # Execute refinement
         refinement = protocol.execute(llm_executor)
         solution = refinement["refined_solution"]
-    
+
     return solution
 ```
 
@@ -878,19 +878,19 @@ Leverage field theory for enhanced problem understanding:
 ```python
 def field_aware_problem_solving(problem, domain_context):
     """Solve problems with awareness of the semantic field."""
-    
+
     # Initialize field integrator
     field = FieldTheoryIntegrator()
-    
+
     # Update field with problem and context
     field.update_field({
         "problem": problem,
         "domain_context": domain_context
     })
-    
+
     # Detect attractors in the problem space
     attractors = field.detect_attractors(problem)
-    
+
     # Create protocol shell for field-aware solving
     protocol = ProtocolShell(
         intent="Solve problem with awareness of semantic field",
@@ -911,15 +911,15 @@ def field_aware_problem_solving(problem, domain_context):
             "stability": "Assessment of solution stability"
         }
     )
-    
+
     # Execute field-aware solving
     solution = protocol.execute(llm_executor)
-    
+
     # Update field with solution
     field.update_field({
         "solution": solution
     })
-    
+
     return {
         "solution": solution,
         "field_state": field.field_state
@@ -935,7 +935,7 @@ The architecture can be adapted for different problem domains through specialize
 ```python
 def configure_for_mathematics():
     """Configure the architecture for mathematical problem solving."""
-    
+
     # Specialized cognitive tools for mathematics
     math_tools = {
         "understand_math_problem": MathUnderstandingTool(),
@@ -943,7 +943,7 @@ def configure_for_mathematics():
         "apply_mathematical_techniques": TechniqueApplicationTool(),
         "verify_mathematical_solution": MathVerificationTool()
     }
-    
+
     # Domain-specific attractors
     math_attractors = [
         "algebraic_manipulation",
@@ -951,7 +951,7 @@ def configure_for_mathematics():
         "numerical_computation",
         "logical_inference"
     ]
-    
+
     # Field theory adaptation
     field_config = {
         "primary_attractors": math_attractors,
@@ -965,7 +965,7 @@ def configure_for_mathematics():
             "computational_efficiency": 0.6
         }
     }
-    
+
     return {
         "tools": math_tools,
         "attractors": math_attractors,
@@ -978,7 +978,7 @@ def configure_for_mathematics():
 ```python
 def configure_for_software_engineering():
     """Configure the architecture for software engineering problems."""
-    
+
     # Specialized cognitive tools for software engineering
     se_tools = {
         "understand_software_requirements": RequirementsAnalysisTool(),
@@ -986,7 +986,7 @@ def configure_for_software_engineering():
         "implement_code_solution": CodeImplementationTool(),
         "verify_software_functionality": FunctionalVerificationTool()
     }
-    
+
     # Domain-specific attractors
     se_attractors = [
         "design_patterns",
@@ -994,7 +994,7 @@ def configure_for_software_engineering():
         "code_readability",
         "system_architecture"
     ]
-    
+
     # Field theory adaptation
     field_config = {
         "primary_attractors": se_attractors,
@@ -1009,7 +1009,7 @@ def configure_for_software_engineering():
             "algorithmic_efficiency": 0.7
         }
     }
-    
+
     return {
         "tools": se_tools,
         "attractors": se_attractors,
@@ -1026,7 +1026,7 @@ The architecture is designed to integrate with external systems for enhanced cap
 ```python
 def integrate_with_retrieval(solver, retrieval_system):
     """Integrate the solver with a retrieval system for knowledge enhancement."""
-    
+
     # Enhanced recall_related tool
     def enhanced_recall_related(problem_understanding, limit=5):
         # Use retrieval system to find relevant information
@@ -1038,7 +1038,7 @@ def integrate_with_retrieval(solver, retrieval_system):
             },
             limit=limit
         )
-        
+
         # Create protocol shell for knowledge integration
         protocol = ProtocolShell(
             intent="Integrate retrieved knowledge into problem-solving",
@@ -1057,13 +1057,13 @@ def integrate_with_retrieval(solver, retrieval_system):
                 "relevance_assessment": "Evaluation of knowledge utility"
             }
         )
-        
+
         # Execute the protocol
         return protocol.execute(llm_executor)
-    
+
     # Replace standard recall_related with enhanced version
     solver.tools_library.recall_related = enhanced_recall_related
-    
+
     return solver
 ```
 
@@ -1072,19 +1072,19 @@ def integrate_with_retrieval(solver, retrieval_system):
 ```python
 def enable_human_collaboration(solver, interaction_interface):
     """Enable the solver to collaborate with humans during problem-solving."""
-    
+
     # Original metacognitive monitor function
     original_monitor = solver.metacognitive_controller.monitor
-    
+
     # Enhanced monitor with human collaboration
     def collaborative_monitor(phase_results):
         # Run standard monitoring
         monitoring_assessment = original_monitor(phase_results)
-        
+
         # If confidence is low or obstacles are significant, consult human
-        if (monitoring_assessment["confidence"] < 0.7 or 
+        if (monitoring_assessment["confidence"] < 0.7 or
             len(monitoring_assessment["obstacles"]) > 2):
-            
+
             # Create protocol shell for human consultation
             protocol = ProtocolShell(
                 intent="Collaborate with human expert on challenging aspects",
@@ -1104,24 +1104,24 @@ def enable_human_collaboration(solver, interaction_interface):
                     "guidance_specification": "Type of guidance needed"
                 }
             )
-            
+
             # Execute consultation preparation
             consultation_prep = protocol.execute(llm_executor)
-            
+
             # Get human input through the interface
             human_guidance = interaction_interface.get_input(
                 query=consultation_prep["consultation_query"],
                 context=consultation_prep["context_presentation"]
             )
-            
+
             # Integrate human guidance
             monitoring_assessment["human_guidance"] = human_guidance
-        
+
         return monitoring_assessment
-    
+
     # Replace standard monitor with collaborative version
     solver.metacognitive_controller.monitor = collaborative_monitor
-    
+
     return solver
 ```
 
@@ -1134,37 +1134,37 @@ To ensure the architecture performs effectively, we implement a comprehensive ev
 ```python
 def evaluate_solver_performance(solver, test_problems, ground_truth):
     """Evaluate the solver's performance on test problems."""
-    
+
     metrics = {
         "correctness": [],
         "efficiency": [],
         "reasoning_quality": [],
         "adaptability": []
     }
-    
+
     for i, problem in enumerate(test_problems):
         # Solve the problem
         start_time = time.time()
         solution = solver.solve(problem)
         solve_time = time.time() - start_time
-        
+
         # Calculate metrics
         correctness = calculate_correctness(solution, ground_truth[i])
         efficiency = calculate_efficiency(solve_time, solution["trace"])
         reasoning_quality = calculate_reasoning_quality(solution["rationale"])
         adaptability = calculate_adaptability(solution["strategy_adjustments"])
-        
+
         # Store metrics
         metrics["correctness"].append(correctness)
         metrics["efficiency"].append(efficiency)
         metrics["reasoning_quality"].append(reasoning_quality)
         metrics["adaptability"].append(adaptability)
-    
+
     # Calculate aggregate metrics
     aggregate_metrics = {
         key: sum(values) / len(values) for key, values in metrics.items()
     }
-    
+
     # Calculate combined score
     weights = {
         "correctness": 0.4,
@@ -1172,11 +1172,11 @@ def evaluate_solver_performance(solver, test_problems, ground_truth):
         "reasoning_quality": 0.3,
         "adaptability": 0.1
     }
-    
+
     combined_score = sum(
         aggregate_metrics[key] * weight for key, weight in weights.items()
     )
-    
+
     return {
         "detailed_metrics": metrics,
         "aggregate_metrics": aggregate_metrics,
@@ -1189,7 +1189,7 @@ def evaluate_solver_performance(solver, test_problems, ground_truth):
 ```python
 def conduct_ablation_study(test_problems, ground_truth):
     """Conduct ablation studies to measure component contributions."""
-    
+
     configurations = [
         {
             "name": "Full Architecture",
@@ -1222,33 +1222,33 @@ def conduct_ablation_study(test_problems, ground_truth):
             "tool_composition_enabled": False
         }
     ]
-    
+
     results = {}
-    
+
     for config in configurations:
         # Configure solver based on configuration
         solver = configure_solver(config)
-        
+
         # Evaluate performance
         performance = evaluate_solver_performance(
             solver, test_problems, ground_truth
         )
-        
+
         # Store results
         results[config["name"]] = performance
-    
+
     # Calculate component contributions
     contributions = {
-        "Metacognition": results["Full Architecture"]["combined_score"] - 
+        "Metacognition": results["Full Architecture"]["combined_score"] -
                          results["No Metacognition"]["combined_score"],
-        
-        "Field Theory": results["Full Architecture"]["combined_score"] - 
+
+        "Field Theory": results["Full Architecture"]["combined_score"] -
                         results["No Field Theory"]["combined_score"],
-        
-        "Tool Composition": results["Full Architecture"]["combined_score"] - 
+
+        "Tool Composition": results["Full Architecture"]["combined_score"] -
                             results["No Tool Composition"]["combined_score"]
     }
-    
+
     return {
         "detailed_results": results,
         "component_contributions": contributions
@@ -1370,7 +1370,7 @@ Future versions of the architecture will incorporate self-evolving cognitive too
 ```python
 def implement_self_evolving_tools(solver):
     """Implement self-evolving cognitive tools."""
-    
+
     # Protocol shell for tool evolution
     protocol = ProtocolShell(
         intent="Evolve cognitive tools based on performance data",
@@ -1392,13 +1392,13 @@ def implement_self_evolving_tools(solver):
             "evolution_rationale": "Reasoning behind changes"
         }
     )
-    
+
     # Execute tool evolution
     evolution_results = protocol.execute(llm_executor)
-    
+
     # Update solver with evolved tools
     solver.update_tools(evolution_results["evolved_tools"])
-    
+
     return solver
 ```
 
@@ -1447,7 +1447,7 @@ Future architectures will expand to multi-agent solver ecosystems:
 ```python
 def design_multi_agent_solver_ecosystem():
     """Design a multi-agent solver ecosystem."""
-    
+
     # Define specialized agent roles
     agent_roles = {
         "problem_analyzer": {
@@ -1471,7 +1471,7 @@ def design_multi_agent_solver_ecosystem():
             "tools": ["monitor_progress", "regulate_strategy", "reflect_on_process"]
         }
     }
-    
+
     # Define collaboration protocol
     collaboration_protocol = ProtocolShell(
         intent="Orchestrate multi-agent problem-solving collaboration",
@@ -1493,7 +1493,7 @@ def design_multi_agent_solver_ecosystem():
             "performance_metrics": "Evaluation of collaboration effectiveness"
         }
     )
-    
+
     return {
         "agent_roles": agent_roles,
         "collaboration_protocol": collaboration_protocol

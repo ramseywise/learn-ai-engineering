@@ -62,4 +62,3 @@ def langchain_to_chat_message(message: BaseMessage) -> ChatMessage:
                 raise ValueError(f"Unsupported chat message role: {message.role}")
         case _:
             raise ValueError(f"Unsupported message type: {message.__class__.__name__}")
-

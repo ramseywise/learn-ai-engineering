@@ -22,7 +22,7 @@ from https://www.langchain.com/blog/the-art-of-loop-engineering
 
 *(missing diagram — not exported from Notion)*
 
-**Level 2: Verification loop - evals and rollback if fails** 
+**Level 2: Verification loop - evals and rollback if fails**
 
 When consistency matters, it's often useful to wrap it in a verification loop that checks the output and sends feedback back to the model when it falls short.
 
@@ -36,7 +36,7 @@ One tradeoff: adding verification increases latency and cost per run. It's worth
 
 integrations layer: connecting your agent to your ecosystem so that it can run in the background.
 
-this loop connects your agent to your ecosystem. 
+this loop connects your agent to your ecosystem.
 
 the agent runs continuously inside a larger system.
 
@@ -44,7 +44,7 @@ the agent runs continuously inside a larger system.
 
 *(missing diagram — not exported from Notion)*
 
-**Level 4: Hill climbing loop — self improving - distinct from harness engineering** 
+**Level 4: Hill climbing loop — self improving - distinct from harness engineering**
 
 The first three loops automate work. The fourth (and arguably most important) automates improvement!
 
@@ -52,6 +52,6 @@ The first three loops automate work. The fourth (and arguably most important) au
 
 *(missing diagram — not exported from Notion)*
 
-agent running trace → analysis it (analysis agent) → rewrite harness with improved configs (prompt/tool tweaks or grader tweaks ects.) 
+agent running trace → analysis it (analysis agent) → rewrite harness with improved configs (prompt/tool tweaks or grader tweaks ects.)
 
 analysis agent in LangSmith: https://www.langchain.com/langsmith/engine

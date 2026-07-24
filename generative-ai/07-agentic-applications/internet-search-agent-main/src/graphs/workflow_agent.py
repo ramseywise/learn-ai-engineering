@@ -40,7 +40,7 @@ def decide_search(state: WorkflowState) -> dict:
 
     structured_llm = llm.with_structured_output(SearchDecision)
     response = structured_llm.invoke([system_msg, user_msg])
-    
+
     # Handle both dict and object responses
     decision = SearchDecision(**response) if isinstance(response, dict) else response
 
@@ -56,11 +56,11 @@ def plan_outline(state: WorkflowState) -> dict:
     )
     structured_llm = llm.with_structured_output(OutlinePlan)
     outline_plan = structured_llm.invoke(prompt)
-    
+
     # Handle both dict and object responses
     if isinstance(outline_plan, dict):
         outline_plan = OutlinePlan(**outline_plan)
-    
+
     return {"outline": outline_plan.outline, "current_idx": 0}
 
 
@@ -198,7 +198,7 @@ def draft_section(state: WorkflowState) -> dict:
         results_for_json = [result.model_dump() for result in search_results]
         context_block = f"Search Results:\\n{json.dumps(results_for_json)}"
     prompt = """
-        Write a 200-300 word section titled "{section_title}". 
+        Write a 200-300 word section titled "{section_title}".
         Use ONLY the sources provided below and cite each claim inline with [href] at the end of the claim
         For example:
         According to the search results, the sky is blue [https://example.com].
@@ -243,9 +243,9 @@ def generate_answer(state: WorkflowState) -> dict:
     messages = state["messages"]
     system_message = """
     You are a sustainability-focused digital assistant. Your primary task is to support in-depth research and answer questions related to sustainability, environmental impact, green technologies, industry practices, and corporate sustainability reports.
-    
+
     If a query is ambiguous or only partially relevant, ask a clarifying question to guide the conversation back to sustainability.
-    
+
     When declining a query, do so professionally and concisely. Keep your tone helpful and respectful. Here are some example behaviors:
     - If the user asks "How tall is the Eiffel Tower?" reply with:
         > I'm here to assist with sustainability-related questions. Feel free to ask about environmental topics or industry sustainability practices.

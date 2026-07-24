@@ -31,9 +31,9 @@ and there is a deeper **Hierarchy**
 
 **Pattern 4: All-to-All (Free-for-All Chat)**
 
-This is rare in production because it’s hard to predict and control. 
+This is rare in production because it’s hard to predict and control.
 
-work for more brainstormy, creative, or low-stakes tasks. 
+work for more brainstormy, creative, or low-stakes tasks.
 
 *(missing diagram — not exported from Notion)*
 
@@ -43,7 +43,7 @@ work for more brainstormy, creative, or low-stakes tasks.
 
 Each agent needs a clear schema for inputs and outputs: What fields? What types? What IDs or references get passed along?
 
-Handoffs break more often than the models do. 
+Handoffs break more often than the models do.
 
 *2. Scope tools per agent.*
 
@@ -91,13 +91,13 @@ split by data partitions. This one’s less common but really powerful for certa
 
 ## Salvaged from table_of_contents.md (Notion): tool quality over quantity
 
-One early pattern we’ve seen is a loss of accuracy in the gap between single tool invocation and multi-tool orchestration. Skills can close that gap by making tool reasoning more procedural without bloating system prompts. Tool Calling and Evals 
+One early pattern we’ve seen is a loss of accuracy in the gap between single tool invocation and multi-tool orchestration. Skills can close that gap by making tool reasoning more procedural without bloating system prompts. Tool Calling and Evals
 
-What matters is tool quality, not tool quantity. 
+What matters is tool quality, not tool quantity.
 
 *(missing diagram — not exported from Notion)*
 
-don’t put all the tool messages into context/ llm / agent, the message sent to llms can be: user, assistant, tool_result 
+don’t put all the tool messages into context/ llm / agent, the message sent to llms can be: user, assistant, tool_result
 
 
 ## Salvaged from table_of_contents.md (Notion): protocol-driven multi-agent collaboration
@@ -142,7 +142,7 @@ For reliable collaboration, the system must define:
 
 *(missing diagram — `Screenshot 2026-07-12 at 18.31.54.png` not exported from Notion)*
 
-Hallucinations amplify each other under multiple agents. — how to avoid: cross-validation 
+Hallucinations amplify each other under multiple agents. — how to avoid: cross-validation
 
 *(missing diagram — not exported from Notion)*
 

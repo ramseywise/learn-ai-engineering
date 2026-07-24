@@ -13,7 +13,7 @@ This repo contains the material for the "Building Agents from Scratch" workshop.
 - **Weights & Biases:**
     - Please fill in this [form](https://forms.gle/y5mJeYXDhbzEspRr9)
     - If you **have a W&B accoun**t - great, please put the email from your account in the form
-    - If you **do not have a W&B account**- all good, please put the email you would like us to sign you up with 
+    - If you **do not have a W&B account**- all good, please put the email you would like us to sign you up with
 - **Exa -**  [signup](https://dashboard.exa.ai/billing)
     - Get free $50 Exa API credits.
     - Coupon code: EXA50API
@@ -32,4 +32,3 @@ Eval questions and answers taken from the RACE evals from [Deepresearch Bench](h
   year      = {2025},
 }
 ```
-

@@ -15,7 +15,7 @@ Query → Retrieve → Generate → Response
   ↑                              ↓
   └── Static, predetermined ──────┘
 
-AGENTIC RAG WORKFLOW  
+AGENTIC RAG WORKFLOW
 ====================
 Query → Agent Planning → Dynamic Retrieval Strategy
   ↑                              ↓
@@ -39,7 +39,7 @@ AGENTIC RAG SOFTWARE 3.0 STACK
 
 Layer 3: PROTOCOL ORCHESTRATION (Strategic Coordination)
 ├── Goal Decomposition Protocols
-├── Multi-Step Planning Protocols  
+├── Multi-Step Planning Protocols
 ├── Adaptive Strategy Protocols
 └── Quality Assurance Protocols
 
@@ -106,44 +106,44 @@ How I'll know if I need to adapt:
 ```python
 class BasicRAGAgent:
     """Foundation agent with simple reasoning capabilities"""
-    
+
     def __init__(self, retrieval_tools, reasoning_templates):
         self.tools = retrieval_tools
         self.templates = reasoning_templates
         self.memory = AgentMemory()
         self.planner = BasicPlanner()
-        
+
     def process_query(self, query):
         """Process query with basic agent reasoning"""
-        
+
         # Initialize reasoning session
         session = self.initialize_session(query)
-        
+
         # Iterative information gathering
         max_iterations = 5
         for iteration in range(max_iterations):
-            
+
             # Assess current state
             assessment = self.assess_information_state(session)
-            
+
             # Check if sufficient information gathered
             if self.is_sufficient_information(assessment):
                 break
-                
+
             # Plan next retrieval step
             retrieval_plan = self.plan_next_retrieval(assessment)
-            
+
             # Execute retrieval
             new_information = self.execute_retrieval(retrieval_plan)
-            
+
             # Update session state
             session.add_information(new_information)
-            
+
         # Generate final response
         response = self.synthesize_response(session)
-        
+
         return response
-        
+
     def assess_information_state(self, session):
         """Assess current information completeness"""
         assessment_prompt = self.templates.assessment.format(
@@ -151,15 +151,15 @@ class BasicRAGAgent:
             current_info=session.get_information_summary(),
             iteration=session.iteration
         )
-        
+
         reasoning_result = self.reason(assessment_prompt)
-        
+
         return {
             'completeness': reasoning_result.completeness_score,
             'gaps': reasoning_result.identified_gaps,
             'confidence': reasoning_result.confidence_level
         }
-        
+
     def plan_next_retrieval(self, assessment):
         """Plan optimal next retrieval step"""
         planning_prompt = self.templates.planning.format(
@@ -167,9 +167,9 @@ class BasicRAGAgent:
             available_tools=self.get_available_tools(),
             previous_attempts=self.memory.get_previous_attempts()
         )
-        
+
         plan = self.reason(planning_prompt)
-        
+
         return {
             'strategy': plan.strategy,
             'targets': plan.search_targets,
@@ -183,20 +183,20 @@ class BasicRAGAgent:
 ```
 /agent.rag.basic{
     intent="Enable basic agent reasoning for information gathering and synthesis",
-    
+
     input={
         query="<user_information_request>",
         available_tools="<retrieval_and_processing_capabilities>",
         quality_requirements="<accuracy_and_completeness_thresholds>"
     },
-    
+
     process=[
         /query.analysis{
             action="Break down information requirements",
             identify=["key_concepts", "information_types", "complexity_level"],
             output="information_requirements_specification"
         },
-        
+
         /iterative.information.gathering{
             strategy="step_by_step_refinement",
             loop=[
@@ -215,13 +215,13 @@ class BasicRAGAgent:
             ],
             termination="sufficient_information_or_max_iterations"
         },
-        
+
         /synthesize.response{
             approach="comprehensive_information_integration",
             ensure="coherence_and_source_attribution"
         }
     ],
-    
+
     output={
         response="Comprehensive answer based on gathered information",
         reasoning_trace="Agent's step-by-step reasoning process",
@@ -298,31 +298,31 @@ Learning integration plan:
 ```python
 class StrategicRAGAgent(BasicRAGAgent):
     """Advanced agent with strategic planning and adaptation capabilities"""
-    
+
     def __init__(self, retrieval_tools, reasoning_templates, strategy_library):
         super().__init__(retrieval_tools, reasoning_templates)
         self.strategy_library = strategy_library
         self.strategic_planner = StrategicPlanner()
         self.adaptation_engine = AdaptationEngine()
         self.performance_monitor = PerformanceMonitor()
-        
+
     def process_complex_query(self, query, context=None):
         """Process complex queries with strategic multi-step approach"""
-        
+
         # Strategic mission analysis
         mission = self.analyze_mission(query, context)
-        
+
         # Generate comprehensive strategy
         strategy = self.strategic_planner.generate_strategy(mission)
-        
+
         # Execute strategy with adaptation
         results = self.execute_adaptive_strategy(strategy)
-        
+
         # Performance analysis and learning
         self.performance_monitor.analyze_execution(strategy, results)
-        
+
         return results
-        
+
     def analyze_mission(self, query, context):
         """Analyze the strategic mission and requirements"""
         mission_analysis_prompt = self.templates.mission_analysis.format(
@@ -331,9 +331,9 @@ class StrategicRAGAgent(BasicRAGAgent):
             domain_knowledge=self.get_domain_context(query),
             resource_constraints=self.get_resource_constraints()
         )
-        
+
         mission_analysis = self.reason(mission_analysis_prompt)
-        
+
         return {
             'objective': mission_analysis.primary_objective,
             'sub_objectives': mission_analysis.sub_objectives,
@@ -342,47 +342,47 @@ class StrategicRAGAgent(BasicRAGAgent):
             'success_criteria': mission_analysis.success_criteria,
             'constraints': mission_analysis.identified_constraints
         }
-        
+
     def execute_adaptive_strategy(self, strategy):
         """Execute strategy with real-time adaptation"""
         execution_state = ExecutionState(strategy)
-        
+
         for phase in strategy.phases:
             phase_result = self.execute_phase_with_adaptation(phase, execution_state)
             execution_state.integrate_phase_result(phase_result)
-            
+
             # Adaptive strategy modification
             if self.should_adapt_strategy(phase_result, execution_state):
                 adapted_strategy = self.adaptation_engine.adapt_strategy(
                     strategy, phase_result, execution_state
                 )
                 strategy = adapted_strategy
-                
+
         return execution_state.get_final_results()
-        
+
     def execute_phase_with_adaptation(self, phase, execution_state):
         """Execute individual phase with micro-adaptations"""
         phase_monitor = PhaseMonitor(phase, execution_state)
-        
+
         for action in phase.actions:
             # Pre-action analysis
             action_context = phase_monitor.get_action_context(action)
-            
+
             # Adaptive action execution
             action_result = self.execute_adaptive_action(action, action_context)
-            
+
             # Real-time quality assessment
             quality_assessment = phase_monitor.assess_action_quality(action_result)
-            
+
             # Micro-adaptation if needed
             if quality_assessment.needs_adaptation:
                 adapted_action = self.adaptation_engine.adapt_action(
                     action, action_result, quality_assessment
                 )
                 action_result = self.execute_adaptive_action(adapted_action, action_context)
-                
+
             phase_monitor.record_action_result(action_result)
-            
+
         return phase_monitor.get_phase_results()
 ```
 
@@ -391,14 +391,14 @@ class StrategicRAGAgent(BasicRAGAgent):
 ```
 /agent.rag.strategic{
     intent="Orchestrate strategic multi-phase information gathering with adaptive planning and execution",
-    
+
     input={
         complex_query="<multi_faceted_information_request>",
         situational_context="<domain_and_situational_factors>",
         resource_constraints="<time_quality_and_computational_limits>",
         success_criteria="<specific_outcome_requirements>"
     },
-    
+
     process=[
         /strategic.mission.analysis{
             analyze=["query_complexity", "information_landscape", "resource_requirements"],
@@ -406,7 +406,7 @@ class StrategicRAGAgent(BasicRAGAgent):
             prioritize="objectives_by_importance_and_feasibility",
             output="strategic_mission_specification"
         },
-        
+
         /multi.phase.planning{
             strategy="adaptive_multi_phase_approach",
             design=[
@@ -425,7 +425,7 @@ class StrategicRAGAgent(BasicRAGAgent):
             ],
             output="comprehensive_execution_strategy"
         },
-        
+
         /adaptive.execution{
             method="strategy_execution_with_real_time_adaptation",
             implement=[
@@ -443,14 +443,14 @@ class StrategicRAGAgent(BasicRAGAgent):
                 }
             ]
         },
-        
+
         /comprehensive.synthesis{
             integrate="information_gathered_across_all_phases",
             resolve="any_conflicting_or_contradictory_information",
             validate="final_response_against_success_criteria"
         }
     ],
-    
+
     output={
         comprehensive_response="Multi-dimensional answer addressing all query aspects",
         strategic_execution_report="Detailed account of strategy and adaptations made",
@@ -544,59 +544,59 @@ Next-level reasoning targets:
 ```python
 class MetaCognitiveRAGAgent(StrategicRAGAgent):
     """Advanced agent with meta-cognitive and self-reflective capabilities"""
-    
+
     def __init__(self, retrieval_tools, reasoning_templates, meta_cognitive_engine):
         super().__init__(retrieval_tools, reasoning_templates, strategy_library=None)
         self.meta_engine = meta_cognitive_engine
         self.self_model = SelfModel()
         self.epistemological_framework = EpistemologicalFramework()
         self.recursive_improver = RecursiveImprover()
-        
+
     def conduct_research(self, research_question, meta_objectives=None):
         """Conduct research with meta-cognitive awareness and self-improvement"""
-        
+
         # Meta-cognitive session initialization
         session = self.initialize_meta_cognitive_session(research_question, meta_objectives)
-        
+
         # Recursive research with self-improvement
         research_results = self.recursive_research_loop(session)
-        
+
         # Meta-learning integration
         meta_insights = self.integrate_meta_learning(session, research_results)
-        
+
         # Self-model update
         self.update_self_model(session, research_results, meta_insights)
-        
+
         return {
             'research_findings': research_results,
             'meta_cognitive_insights': meta_insights,
             'self_improvement_achieved': self.assess_self_improvement(session),
             'enhanced_capabilities': self.identify_enhanced_capabilities()
         }
-        
+
     def recursive_research_loop(self, session):
         """Conduct research with recursive self-improvement"""
         max_recursions = 10
         improvement_threshold = 0.1
-        
+
         for recursion_level in range(max_recursions):
             # Current level research execution
             current_results = self.execute_research_level(session, recursion_level)
-            
+
             # Meta-cognitive evaluation of research quality
             quality_assessment = self.meta_engine.assess_research_quality(
                 current_results, session.quality_criteria
             )
-            
+
             # Self-improvement opportunity identification
             improvement_opportunities = self.recursive_improver.identify_improvements(
                 current_results, quality_assessment, session
             )
-            
+
             # Recursive self-modification if improvements possible
             if improvement_opportunities.potential_gain > improvement_threshold:
                 self.implement_self_improvements(improvement_opportunities)
-                
+
                 # Continue research with improved capabilities
                 enhanced_results = self.execute_research_level(session, recursion_level)
                 current_results = self.integrate_research_levels(
@@ -605,14 +605,14 @@ class MetaCognitiveRAGAgent(StrategicRAGAgent):
             else:
                 # Research quality plateau reached
                 break
-                
+
             session.record_recursion_level(recursion_level, current_results)
-            
+
         return session.get_comprehensive_results()
-        
+
     def execute_research_level(self, session, recursion_level):
         """Execute research at current capability level"""
-        
+
         # Meta-cognitive strategy selection
         research_strategy = self.meta_engine.select_research_strategy(
             session.research_question,
@@ -620,27 +620,27 @@ class MetaCognitiveRAGAgent(StrategicRAGAgent):
             recursion_level,
             self.self_model.current_capabilities
         )
-        
+
         # Epistemologically-informed information gathering
         information_gathering_plan = self.epistemological_framework.create_gathering_plan(
             research_strategy, session.uncertainty_map
         )
-        
+
         # Execute gathering with self-monitoring
         gathered_information = self.execute_monitored_gathering(
             information_gathering_plan, session
         )
-        
+
         # Meta-cognitive synthesis
         research_synthesis = self.meta_engine.synthesize_with_awareness(
             gathered_information, session.research_context, self.self_model
         )
-        
+
         return research_synthesis
-        
+
     def implement_self_improvements(self, improvement_opportunities):
         """Implement identified self-improvements"""
-        
+
         for improvement in improvement_opportunities.improvements:
             if improvement.type == "reasoning_enhancement":
                 self.enhance_reasoning_capabilities(improvement.specification)
@@ -650,7 +650,7 @@ class MetaCognitiveRAGAgent(StrategicRAGAgent):
                 self.upgrade_meta_cognitive_abilities(improvement.specification)
             elif improvement.type == "epistemological_refinement":
                 self.refine_epistemological_framework(improvement.specification)
-                
+
         # Update self-model with new capabilities
         self.self_model.integrate_improvements(improvement_opportunities)
 ```
@@ -660,32 +660,32 @@ class MetaCognitiveRAGAgent(StrategicRAGAgent):
 ```
 /agent.rag.meta.cognitive{
     intent="Orchestrate meta-cognitive research agents capable of self-reflection, recursive improvement, and epistemological sophistication",
-    
+
     input={
         research_question="<complex_multi_dimensional_research_inquiry>",
         epistemic_requirements="<knowledge_quality_and_certainty_requirements>",
         meta_learning_objectives="<self_improvement_and_capability_enhancement_goals>",
         consciousness_parameters="<self_awareness_and_reflection_depth_settings>"
     },
-    
+
     process=[
         /meta.cognitive.initialization{
             establish="self_awareness_and_meta_cognitive_framework",
             configure=["self_model", "epistemological_framework", "recursive_improvement_engine"],
             prepare="meta_learning_objectives_and_self_assessment_criteria"
         },
-        
+
         /epistemic.research.planning{
             approach="epistemologically_informed_research_design",
             consider=[
                 "knowledge_uncertainty_mapping",
-                "source_reliability_frameworks", 
+                "source_reliability_frameworks",
                 "evidence_quality_criteria",
                 "bias_identification_and_mitigation"
             ],
             output="sophisticated_research_methodology"
         },
-        
+
         /recursive.research.execution{
             method="self_improving_recursive_research_loops",
             implement=[
@@ -708,20 +708,20 @@ class MetaCognitiveRAGAgent(StrategicRAGAgent):
                 }
             ]
         },
-        
+
         /epistemological.synthesis{
             synthesize="research_findings_with_epistemic_sophistication",
             include=["uncertainty_quantification", "confidence_intervals", "assumption_tracking"],
             validate="synthesis_against_epistemological_criteria"
         },
-        
+
         /meta.cognitive.reflection{
             reflect="on_research_process_and_self_performance",
             analyze="meta_learning_achieved_and_capability_evolution",
             document="insights_for_future_self_improvement"
         }
     ],
-    
+
     output={
         research_findings="Epistemologically sophisticated research results",
         epistemic_quality_assessment="Detailed analysis of knowledge quality and certainty",
@@ -783,68 +783,68 @@ MULTI-AGENT RAG COORDINATION
 ```python
 class AgentLearningNetwork:
     """Network of agents that learn collectively from their interactions"""
-    
+
     def __init__(self, agent_specifications):
         self.agents = self.initialize_agents(agent_specifications)
         self.coordination_layer = CoordinationLayer()
         self.collective_memory = CollectiveMemory()
         self.learning_orchestrator = LearningOrchestrator()
-        
+
     def process_complex_query(self, query, coordination_strategy="adaptive"):
         """Process query using collective agent intelligence"""
-        
+
         # Query decomposition and agent assignment
         task_decomposition = self.coordination_layer.decompose_query(query)
         agent_assignments = self.coordination_layer.assign_agents(
             task_decomposition, self.agents
         )
-        
+
         # Parallel agent execution with coordination
         agent_results = self.execute_coordinated_agents(agent_assignments)
-        
+
         # Cross-agent learning and knowledge sharing
         learning_insights = self.learning_orchestrator.facilitate_learning(
             agent_results, self.collective_memory
         )
-        
+
         # Collective synthesis
         synthesized_response = self.synthesize_collective_response(
             agent_results, learning_insights
         )
-        
+
         # Network-wide learning integration
         self.integrate_network_learning(learning_insights)
-        
+
         return synthesized_response
-        
+
     def execute_coordinated_agents(self, agent_assignments):
         """Execute agents with real-time coordination"""
         active_agents = {}
         coordination_state = CoordinationState()
-        
+
         # Initialize agent execution
         for agent_id, assignment in agent_assignments.items():
             agent = self.agents[agent_id]
             active_agents[agent_id] = agent.start_execution(
                 assignment, coordination_state
             )
-            
+
         # Coordinate execution with inter-agent communication
         while not coordination_state.all_complete():
             # Process inter-agent messages
             messages = coordination_state.get_pending_messages()
             for message in messages:
                 self.coordination_layer.route_message(message, active_agents)
-                
+
             # Check for coordination opportunities
             coordination_opportunities = self.coordination_layer.identify_opportunities(
                 coordination_state
             )
             for opportunity in coordination_opportunities:
                 self.coordination_layer.execute_coordination(opportunity, active_agents)
-                
+
             coordination_state.update()
-            
+
         return coordination_state.get_all_results()
 ```
 
@@ -870,7 +870,7 @@ Dimension 1: Computational Efficiency
     ├── Load balancing
     └── Priority scheduling
 
-Dimension 2: Information Efficiency  
+Dimension 2: Information Efficiency
 ├── Smart Stopping Criteria
 │   ├── Diminishing returns detection
 │   ├── Confidence threshold monitoring
@@ -906,41 +906,41 @@ Dimension 3: Quality Optimization
 ```python
 class CompleteAgenticRAG:
     """Comprehensive agentic RAG system integrating all complexity layers"""
-    
+
     def __init__(self, configuration):
         # Layer 1: Basic agent capabilities
         self.basic_agent = BasicRAGAgent(
             configuration.retrieval_tools,
             configuration.reasoning_templates
         )
-        
+
         # Layer 2: Strategic capabilities
         self.strategic_layer = StrategicRAGAgent(
             configuration.retrieval_tools,
             configuration.strategic_templates,
             configuration.strategy_library
         )
-        
+
         # Layer 3: Meta-cognitive capabilities
         self.meta_cognitive_layer = MetaCognitiveRAGAgent(
             configuration.retrieval_tools,
             configuration.meta_templates,
             configuration.meta_engine
         )
-        
+
         # Integration orchestrator
         self.orchestrator = AgentOrchestrator(
             [self.basic_agent, self.strategic_layer, self.meta_cognitive_layer]
         )
-        
+
     def process_query(self, query, complexity_hint=None, meta_objectives=None):
         """Process query with appropriate agent capability level"""
-        
+
         # Determine optimal agent configuration
         agent_config = self.orchestrator.determine_optimal_configuration(
             query, complexity_hint, meta_objectives
         )
-        
+
         # Execute with selected configuration
         if agent_config.level == "basic":
             return self.basic_agent.process_query(query)

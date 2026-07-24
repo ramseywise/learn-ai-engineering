@@ -1,22 +1,22 @@
-# Week 4: Analytics Engineering 
+# Week 4: Analytics Engineering
 Goal: Transforming the data loaded in DWH into Analytical Views developing a [dbt project](taxi_rides_ny/README.md).
 
 ### Prerequisites
-By this stage of the course you should have already: 
+By this stage of the course you should have already:
 
-- A running warehouse (BigQuery or postgres) 
+- A running warehouse (BigQuery or postgres)
 - A set of running pipelines ingesting the project dataset (week 3 completed)
-- The following datasets ingested from the course [Datasets list](https://github.com/DataTalksClub/nyc-tlc-data/): 
+- The following datasets ingested from the course [Datasets list](https://github.com/DataTalksClub/nyc-tlc-data/):
   * Yellow taxi data - Years 2019 and 2020
-  * Green taxi data - Years 2019 and 2020 
-  * fhv data - Year 2019. 
+  * Green taxi data - Years 2019 and 2020
+  * fhv data - Year 2019.
 
-> [!NOTE]  
+> [!NOTE]
 > * We have two quick hack to load that data quicker, follow [this video](https://www.youtube.com/watch?v=Mork172sK_c&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs) for option 1 or check instructions in [week3/extras](../03-data-warehouse/extras) for option 2
 
-## Setting up your environment 
-  
-> [!NOTE]  
+## Setting up your environment
+
+> [!NOTE]
 >  the *cloud* setup is the preferred option.
 >
 > the *local* setup does not require a cloud database.
@@ -36,14 +36,14 @@ By this stage of the course you should have already:
 ### Introduction to analytics engineering
 
 * What is analytics engineering?
-* ETL vs ELT 
+* ETL vs ELT
 * Data modeling concepts (fact and dim tables)
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/uF76d5EmdtU)](https://youtu.be/uF76d5EmdtU&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=40)
 
-### What is dbt? 
+### What is dbt?
 
-* Introduction to dbt 
+* Introduction to dbt
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/4eCouvVOJUw)](https://www.youtube.com/watch?v=gsKuETFJr54&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs&index=5)
 
@@ -58,29 +58,29 @@ By this stage of the course you should have already:
 ### dbt models
 
 * Anatomy of a dbt model: written code vs compiled Sources
-* Materialisations: table, view, incremental, ephemeral  
-* Seeds, sources and ref  
-* Jinja and Macros 
-* Packages 
+* Materialisations: table, view, incremental, ephemeral
+* Seeds, sources and ref
+* Jinja and Macros
+* Packages
 * Variables
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/UVI30Vxzd6c)](https://www.youtube.com/watch?v=ueVy2N54lyc&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs&index=3)
 
-> [!NOTE]  
+> [!NOTE]
 > *This video is shown entirely on dbt cloud IDE but the same steps can be followed locally on the IDE of your choice*
 
-> [!TIP] 
+> [!TIP]
 >* If you recieve an error stating "Permission denied while globbing file pattern." when attempting to run `fact_trips.sql` this video may be helpful in resolving the issue
 >
 >[![](https://markdown-videos-api.jorgenkh.no/youtube/kL3ZVNL9Y4A)](https://youtu.be/kL3ZVNL9Y4A&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=34)
 
 ### Testing and documenting dbt models
-* Tests  
-* Documentation 
+* Tests
+* Documentation
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/UishFmq1hLM)](https://www.youtube.com/watch?v=2dNJXHFCHaY&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs&index=2)
 
->[!NOTE]  
+>[!NOTE]
 > *This video is shown entirely on dbt cloud IDE but the same steps can be followed locally on the IDE of your choice*
 
 ## Deployment
@@ -101,7 +101,7 @@ By this stage of the course you should have already:
 
 [![](https://markdown-videos-api.jorgenkh.no/youtube/BnLkrA7a6gM)](https://youtu.be/BnLkrA7a6gM&list=PL3MmuxUbc_hJed7dXYoJw8DoCuVHhGEQb&index=49)
 
- 
+
 ## Advanced concepts
 
  * [Make a model Incremental](https://docs.getdbt.com/docs/building-a-dbt-project/building-models/configuring-incremental-models)

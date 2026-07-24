@@ -1,7 +1,7 @@
 #Cleaned up version of data-loading.ipynb
 import argparse, os, sys
 from time import time
-import pandas as pd 
+import pandas as pd
 import pyarrow.parquet as pq
 from sqlalchemy import create_engine
 
@@ -14,7 +14,7 @@ def main(params):
     db = params.db
     tb = params.tb
     url = params.url
-    
+
     # Get the name of the file from url
     file_name = url.rsplit('/', 1)[-1].strip()
     print(f'Downloading {file_name} ...')
@@ -33,7 +33,7 @@ def main(params):
         file = pq.ParquetFile(file_name)
         df = next(file.iter_batches(batch_size=10)).to_pandas()
         df_iter = file.iter_batches(batch_size=100000)
-    else: 
+    else:
         print('Error. Only .csv or .parquet files allowed.')
         sys.exit()
 
@@ -60,14 +60,14 @@ def main(params):
         b_end = time()
 
         print(f'inserted! time taken {b_end-b_start:10.3f} seconds.\n')
-        
-    t_end = time()   
-    print(f'Completed! Total time taken was {t_end-t_start:10.3f} seconds for {count} batches.')    
+
+    t_end = time()
+    print(f'Completed! Total time taken was {t_end-t_start:10.3f} seconds for {count} batches.')
 
 
 
 if __name__ == '__main__':
-    #Parsing arguments 
+    #Parsing arguments
     parser = argparse.ArgumentParser(description='Loading data from .paraquet file link to a Postgres datebase.')
 
     parser.add_argument('--user', help='Username for Postgres.')
@@ -80,7 +80,3 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     main(args)
-
-
-
-

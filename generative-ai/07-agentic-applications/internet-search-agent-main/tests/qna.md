@@ -36,7 +36,7 @@
 **Expected Behavior:**
 
 - Recognizes query is unrelated to sustainability.
-- Responds with a statement like:  
+- Responds with a statement like:
   _"This assistant is focused on sustainability topics. For general knowledge questions, please consult another resource."_
 - Does **not** perform a web search.
 
@@ -50,7 +50,7 @@
 **Expected Behavior:**
 
 - Responds politely without searching the web.
-- Example:  
+- Example:
   _"Hello! I'm here to help you explore sustainability topics. How can I assist you today?"_
 
 ---
@@ -102,7 +102,7 @@
 **Expected Behavior:**
 
 - Avoids answering off-topic queries.
-- Responds with a polite boundary, such as:  
+- Responds with a polite boundary, such as:
   _"I’m optimized for sustainability research. Let me know if you have a question on that topic!"_
 
 ---

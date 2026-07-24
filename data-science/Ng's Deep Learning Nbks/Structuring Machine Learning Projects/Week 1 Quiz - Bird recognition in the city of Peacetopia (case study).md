@@ -7,8 +7,8 @@
 
 2. If you had the three following models, which one would you choose?
 
-    - Test Accuracy	98% 
-    - Runtime 9 sec	
+    - Test Accuracy	98%
+    - Runtime 9 sec
     - Memory size 9MB
 
 3. Based on the city’s requests, which of the following would you say is true?
@@ -20,7 +20,7 @@
 
 4. Before implementing your algorithm, you need to split your data into train/dev/test sets. Which of these do you think is the best choice?
 
-    - Train 9,500,000		
+    - Train 9,500,000
     - Dev 250,000
     - Test 250,000
 
@@ -37,7 +37,7 @@
     - This would cause the dev and test set distributions to become different. This is a bad idea because you’re not aiming where you want to hit.
 
 7. You train a system, and its errors are as follows (error = 100%-Accuracy):
-	
+
     - Training set error	4.0%
     - Dev set error	4.5%
 
