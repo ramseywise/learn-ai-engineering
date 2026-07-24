@@ -53,10 +53,10 @@ class GetCommentsTool(BaseLangfuseTool):
                         object_type=args.get("object_type", "TRACE"),
                     )
                 )
-            
+
             response = f"💬 **Comments** ({len(comments.data) if hasattr(comments, 'data') else len(comments)} found):\n\n"
             comment_list = comments.data if hasattr(comments, 'data') else comments
-            
+
             for i, comment in enumerate(comment_list, 1):
                 response += f"{i}. {comment.content}\n"
                 if hasattr(comment, 'author_user_id') and comment.author_user_id:
@@ -72,7 +72,7 @@ class AddCommentTool(BaseLangfuseTool):
             project_id = None
             if hasattr(self.langfuse.client, "_get_project_id"):
                 project_id = self.langfuse.client._get_project_id()
-            
+
             if not project_id:
                 # Try to get from the first available project
                 try:
@@ -83,10 +83,10 @@ class AddCommentTool(BaseLangfuseTool):
                         project_id = projects.data[0].id
                 except:
                     pass
-            
+
             if not project_id:
                 return "Error: Unable to determine project_id. Please ensure your Langfuse credentials are valid."
-            
+
             comment = await self._fetch_with_retry(
                 lambda: self.langfuse.api.comments.create(
                     project_id=project_id,

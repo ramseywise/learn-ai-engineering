@@ -25,9 +25,19 @@ asked why review matters in 2026).
    reading approves these; convention/contract-diffing flags them.
 4. **Severity from consequence, not taste**: invariant touched → blocker; interface
    drift → warning; tunable made rigid → info; style → nit (or silence).
-5. **Report news, not history** — don't re-litigate pre-existing debt unless asked; a
+5. **Confidence is a second, independent axis from severity**: consequence sets severity
+   (blocker/warning/nit); the strength of your evidence sets confidence — *verified*
+   (reproduced, or traced through the full code path), *supported* (a code path or
+   documented behavior strongly indicates it, but you haven't reproduced it), or
+   *hypothesis* (a plausible failure mechanism, but key context is still missing). The two
+   axes are genuinely independent: a suspected data leak is high-severity/low-confidence
+   until you trace the path; a misspelled variable is high-confidence/low-severity. When
+   confidence is a hypothesis — especially a high-severity one — frame it as a question or
+   a targeted test request, not as an assertion: "this could double-charge if the provider
+   retries — worth checking?" beats "this double-charges."
+6. **Report news, not history** — don't re-litigate pre-existing debt unless asked; a
    reviewer who flags everything gets muted.
-6. **Voice**: questions over verdicts ("what happens if this input is empty?" beats
+7. **Voice**: questions over verdicts ("what happens if this input is empty?" beats
    "this is wrong"); acknowledge good decisions; propose the mechanical fix when you
    flag something.
 

@@ -2,7 +2,7 @@
 ## Field Harmonization
 
 > **Module 08.2** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 ---
@@ -24,7 +24,7 @@ Think of the evolution from chaotic field states to resonant harmony like the pr
 
 ### Stage 1: Incoherent Field States (Noise)
 ```
-Random Field Activity: ψ(x,t) = Σᵢ Aᵢ sin(ωᵢt + φᵢ) 
+Random Field Activity: ψ(x,t) = Σᵢ Aᵢ sin(ωᵢt + φᵢ)
 ```
 **Metaphor**: Like a room full of people all talking at once. Individual voices are clear up close, but the overall effect is just noise - no coordinated meaning or beauty emerges.
 **Context**: Raw semantic fields with many competing patterns but no coordination.
@@ -267,13 +267,13 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
 ```xml
 <resonance_template name="harmonic_field_engineering">
   <intent>Design and implement sophisticated harmonic structures in semantic fields for enhanced coherence and creative potential</intent>
-  
+
   <context>
     Just as acoustic engineers design concert halls to optimize sound quality and musical
     experience, resonance engineering involves shaping semantic fields to create optimal
     harmonic environments for thought, creativity, and understanding.
   </context>
-  
+
   <harmonic_design_principles>
     <frequency_architecture>
       <fundamental_selection>Choose base frequencies that align with natural field modes</fundamental_selection>
@@ -281,14 +281,14 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
       <spectral_balance>Distribute energy across frequency spectrum for optimal complexity</spectral_balance>
       <resonance_spacing>Avoid problematic frequency overlaps and interference patterns</resonance_spacing>
     </frequency_architecture>
-    
+
     <spatial_harmonics>
       <standing_wave_patterns>Design spatial resonance modes for different field regions</standing_wave_patterns>
       <phase_relationships>Coordinate timing across spatial locations for coherent interference</phase_relationships>
       <coupling_topology>Create optimal connection patterns between different field areas</coupling_topology>
       <boundary_conditions>Shape field edges to support desired resonance patterns</boundary_conditions>
     </spatial_harmonics>
-    
+
     <temporal_dynamics>
       <rhythm_coordination>Establish consistent temporal patterns and periodicities</rhythm_coordination>
       <harmonic_progression>Design evolving sequences of harmonic relationships</harmonic_progression>
@@ -296,7 +296,7 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
       <adaptive_timing>Enable harmonic relationships to evolve optimally over time</adaptive_timing>
     </temporal_dynamics>
   </harmonic_design_principles>
-  
+
   <engineering_methodology>
     <resonance_analysis_phase>
       <field_spectroscopy>Analyze current frequency content and harmonic structure</field_spectroscopy>
@@ -304,21 +304,21 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
       <coupling_assessment>Map interaction patterns between different field regions</coupling_assessment>
       <optimization_opportunities>Identify potential improvements in harmonic organization</optimization_opportunities>
     </resonance_analysis_phase>
-    
+
     <harmonic_design_phase>
       <target_specification>Define desired harmonic characteristics and objectives</target_specification>
       <frequency_planning>Design optimal frequency allocation and harmonic relationships</frequency_planning>
       <coupling_design>Plan interaction patterns and energy transfer mechanisms</coupling_design>
       <implementation_strategy>Create step-by-step approach for harmonic modification</implementation_strategy>
     </harmonic_design_phase>
-    
+
     <implementation_phase>
       <frequency_injection>Introduce designed frequencies using optimal methods</frequency_injection>
       <coupling_establishment>Create planned interaction patterns between field regions</coupling_establishment>
       <phase_alignment>Coordinate timing for constructive interference patterns</phase_alignment>
       <quality_monitoring>Continuously assess resonance quality during implementation</quality_monitoring>
     </implementation_phase>
-    
+
     <optimization_phase>
       <fine_tuning>Adjust frequencies and phases for optimal harmonic relationships</fine_tuning>
       <coupling_optimization>Refine interaction strengths and patterns for best performance</coupling_optimization>
@@ -326,7 +326,7 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
       <performance_validation>Verify achievement of design objectives and quality standards</performance_validation>
     </optimization_phase>
   </engineering_methodology>
-  
+
   <harmonic_structures>
     <consonant_frameworks>
       <unison_resonance>
@@ -335,7 +335,7 @@ You are analyzing semantic fields for resonance patterns - harmonic relationship
         <applications>Foundational concepts, core principles, basic stability</applications>
         <implementation>Phase-lock multiple field regions to identical frequencies</implementation>
       </unison_resonance>
-      
+
       <octave_resonance>
   <frequency_relationship>2:1 (double frequency)</frequency_relationship>
   <characteristics>Strong harmonic support, natural doubling, hierarchical structure</characteristics>
@@ -377,17 +377,17 @@ warnings.filterwarnings('ignore')
 class SemanticResonanceAnalyzer:
     """
     Advanced analysis engine for semantic field resonance patterns.
-    
+
     Think of this as sophisticated audio analysis equipment for semantic space -
-    it can detect harmonies, measure resonance quality, and identify 
+    it can detect harmonies, measure resonance quality, and identify
     opportunities for harmonic optimization.
     """
-    
+
     def __init__(self, sample_rate: float = 100.0):
         self.sample_rate = sample_rate
         self.frequency_resolution = 0.1
         self.analysis_history = []
-        
+
         # Harmonic relationship library
         self.harmonic_ratios = {
             'unison': 1.0,
@@ -399,12 +399,12 @@ class SemanticResonanceAnalyzer:
             'golden_ratio': (1 + np.sqrt(5)) / 2,
             'tritone': np.sqrt(2)  # Most dissonant interval
         }
-        
-    def analyze_field_spectrum(self, field_data: np.ndarray, 
+
+    def analyze_field_spectrum(self, field_data: np.ndarray,
                               spatial_coordinates: np.ndarray) -> Dict:
         """
         Comprehensive spectral analysis of semantic field.
-        
+
         Like analyzing the frequency content of a complex musical piece
         to understand its harmonic structure and identify resonances.
         """
@@ -412,13 +412,13 @@ class SemanticResonanceAnalyzer:
         if field_data.ndim > 1:
             # Multi-dimensional field - analyze each spatial point
             spectral_data = {}
-            
+
             for i, coord in enumerate(spatial_coordinates):
                 time_series = field_data[:, i] if field_data.shape[1] > i else field_data[:, 0]
-                frequencies, power_spectrum = welch(time_series, 
+                frequencies, power_spectrum = welch(time_series,
                                                    fs=self.sample_rate,
                                                    nperseg=min(256, len(time_series)//4))
-                
+
                 spectral_data[f'location_{i}'] = {
                     'frequencies': frequencies,
                     'power_spectrum': power_spectrum,
@@ -433,19 +433,19 @@ class SemanticResonanceAnalyzer:
                     'power_spectrum': power_spectrum
                 }
             }
-        
+
         # Find dominant frequencies and resonances
         resonances = self._identify_resonances(spectral_data)
-        
+
         # Analyze harmonic relationships
         harmonic_analysis = self._analyze_harmonic_structure(resonances)
-        
+
         # Calculate quality factors
         quality_factors = self._calculate_quality_factors(spectral_data)
-        
+
         # Assess spatial coherence
         spatial_coherence = self._analyze_spatial_coherence(spectral_data)
-        
+
         return {
             'spectral_data': spectral_data,
             'resonances': resonances,
@@ -456,40 +456,40 @@ class SemanticResonanceAnalyzer:
                 resonances, harmonic_analysis, quality_factors
             )
         }
-    
+
     def _identify_resonances(self, spectral_data: Dict) -> Dict:
         """Identify resonant peaks in frequency spectrum"""
         resonances = {}
-        
+
         for location_id, data in spectral_data.items():
             frequencies = data['frequencies']
             power = data['power_spectrum']
-            
+
             # Find peaks in power spectrum
-            peaks, properties = find_peaks(power, 
+            peaks, properties = find_peaks(power,
                                          height=np.mean(power) + np.std(power),
                                          distance=int(len(power) * 0.02))
-            
+
             # Extract resonance information
             location_resonances = []
             for peak_idx in peaks:
                 freq = frequencies[peak_idx]
                 amplitude = power[peak_idx]
-                
+
                 # Estimate bandwidth (quality factor)
                 left_idx = peak_idx
                 right_idx = peak_idx
                 half_max = amplitude / 2
-                
+
                 # Find half-maximum points
                 while left_idx > 0 and power[left_idx] > half_max:
                     left_idx -= 1
                 while right_idx < len(power) - 1 and power[right_idx] > half_max:
                     right_idx += 1
-                
+
                 bandwidth = frequencies[right_idx] - frequencies[left_idx]
                 q_factor = freq / bandwidth if bandwidth > 0 else float('inf')
-                
+
                 location_resonances.append({
                     'frequency': freq,
                     'amplitude': amplitude,
@@ -497,40 +497,40 @@ class SemanticResonanceAnalyzer:
                     'q_factor': q_factor,
                     'peak_index': peak_idx
                 })
-            
+
             resonances[location_id] = location_resonances
-        
+
         return resonances
-    
+
     def _analyze_harmonic_structure(self, resonances: Dict) -> Dict:
         """Analyze harmonic relationships between resonances"""
         harmonic_analysis = {}
-        
+
         for location_id, location_resonances in resonances.items():
             if len(location_resonances) < 2:
                 harmonic_analysis[location_id] = {'relationships': []}
                 continue
-            
+
             relationships = []
-            
+
             # Compare all pairs of resonances
             for i, res1 in enumerate(location_resonances):
                 for j, res2 in enumerate(location_resonances[i+1:], i+1):
                     freq1, freq2 = res1['frequency'], res2['frequency']
-                    
+
                     if freq1 > 0 and freq2 > 0:
                         ratio = max(freq1, freq2) / min(freq1, freq2)
-                        
+
                         # Check against known harmonic relationships
                         best_match = None
                         min_error = float('inf')
-                        
+
                         for name, target_ratio in self.harmonic_ratios.items():
                             error = abs(ratio - target_ratio) / target_ratio
                             if error < min_error and error < 0.05:  # 5% tolerance
                                 min_error = error
                                 best_match = name
-                        
+
                         if best_match:
                             relationships.append({
                                 'resonance1_index': i,
@@ -542,35 +542,35 @@ class SemanticResonanceAnalyzer:
                                 'error': min_error,
                                 'strength': min(res1['amplitude'], res2['amplitude'])
                             })
-            
+
             harmonic_analysis[location_id] = {'relationships': relationships}
-        
+
         return harmonic_analysis
-    
+
     def _calculate_quality_factors(self, spectral_data: Dict) -> Dict:
         """Calculate resonance quality factors"""
         quality_factors = {}
-        
+
         for location_id, data in spectral_data.items():
             power = data['power_spectrum']
-            
+
             # Overall spectral quality
             total_power = np.sum(power)
             peak_power = np.max(power)
             mean_power = np.mean(power)
-            
+
             # Signal-to-noise ratio
             snr = peak_power / mean_power if mean_power > 0 else 0
-            
+
             # Spectral flatness (measure of how "white noise" like the spectrum is)
             geometric_mean = np.exp(np.mean(np.log(power + 1e-10)))
             arithmetic_mean = np.mean(power)
             spectral_flatness = geometric_mean / arithmetic_mean if arithmetic_mean > 0 else 0
-            
+
             # Spectral centroid (center of mass of spectrum)
             frequencies = data['frequencies']
             spectral_centroid = np.sum(frequencies * power) / total_power if total_power > 0 else 0
-            
+
             quality_factors[location_id] = {
                 'snr': snr,
                 'spectral_flatness': spectral_flatness,
@@ -578,18 +578,18 @@ class SemanticResonanceAnalyzer:
                 'total_power': total_power,
                 'peak_power': peak_power
             }
-        
+
         return quality_factors
-    
+
     def _analyze_spatial_coherence(self, spectral_data: Dict) -> Dict:
         """Analyze coherence between different spatial locations"""
         if len(spectral_data) < 2:
             return {'coherence_matrix': np.array([[1.0]]), 'mean_coherence': 1.0}
-        
+
         locations = list(spectral_data.keys())
         n_locations = len(locations)
         coherence_matrix = np.zeros((n_locations, n_locations))
-        
+
         for i, loc1 in enumerate(locations):
             for j, loc2 in enumerate(locations):
                 if i == j:
@@ -598,120 +598,120 @@ class SemanticResonanceAnalyzer:
                     # Calculate coherence between two locations
                     power1 = spectral_data[loc1]['power_spectrum']
                     power2 = spectral_data[loc2]['power_spectrum']
-                    
+
                     # Ensure same length
                     min_len = min(len(power1), len(power2))
                     power1 = power1[:min_len]
                     power2 = power2[:min_len]
-                    
+
                     # Calculate cross-correlation in frequency domain
                     cross_power = np.abs(np.corrcoef(power1, power2)[0, 1])
                     coherence_matrix[i, j] = cross_power
                     coherence_matrix[j, i] = cross_power
-        
+
         mean_coherence = np.mean(coherence_matrix[np.triu_indices(n_locations, k=1)])
-        
+
         return {
             'coherence_matrix': coherence_matrix,
             'mean_coherence': mean_coherence,
             'location_labels': locations
         }
-    
-    def _calculate_overall_resonance_quality(self, resonances: Dict, 
+
+    def _calculate_overall_resonance_quality(self, resonances: Dict,
                                            harmonic_analysis: Dict,
                                            quality_factors: Dict) -> float:
         """Calculate overall quality score for field resonance"""
         if not resonances:
             return 0.0
-        
+
         # Collect metrics
         total_resonances = sum(len(loc_res) for loc_res in resonances.values())
-        total_relationships = sum(len(loc_harm['relationships']) 
+        total_relationships = sum(len(loc_harm['relationships'])
                                 for loc_harm in harmonic_analysis.values())
-        
+
         avg_q_factor = np.mean([
-            np.mean([res['q_factor'] for res in loc_res]) 
+            np.mean([res['q_factor'] for res in loc_res])
             for loc_res in resonances.values() if loc_res
         ]) if total_resonances > 0 else 0
-        
+
         avg_snr = np.mean([qf['snr'] for qf in quality_factors.values()])
-        
+
         # Combine into overall quality score (0-1 scale)
         resonance_density = min(1.0, total_resonances / 10.0)  # Normalize to reasonable range
         harmonic_richness = min(1.0, total_relationships / 5.0)
         quality_score = min(1.0, avg_q_factor / 10.0)
         signal_quality = min(1.0, avg_snr / 10.0)
-        
-        overall_quality = (resonance_density * 0.3 + 
-                          harmonic_richness * 0.3 + 
-                          quality_score * 0.2 + 
+
+        overall_quality = (resonance_density * 0.3 +
+                          harmonic_richness * 0.3 +
+                          quality_score * 0.2 +
                           signal_quality * 0.2)
-        
+
         return overall_quality
 
 class ResonanceOptimizer:
     """
     Optimize resonance patterns in semantic fields.
-    
+
     Like a master acoustician tuning a concert hall or a synthesizer
     programmer designing the perfect sound patch.
     """
-    
+
     def __init__(self, analyzer: SemanticResonanceAnalyzer):
         self.analyzer = analyzer
         self.optimization_history = []
-        
+
     def optimize_field_resonance(self, field_data: np.ndarray,
                                 spatial_coords: np.ndarray,
                                 target_harmonics: List[str] = None,
                                 optimization_steps: int = 100) -> Dict:
         """
         Optimize field resonance using gradient-based methods.
-        
+
         Like tuning a complex instrument to achieve the most beautiful
         and harmonious sound possible.
         """
         if target_harmonics is None:
             target_harmonics = ['octave', 'perfect_fifth', 'golden_ratio']
-        
+
         # Initial analysis
         initial_analysis = self.analyzer.analyze_field_spectrum(field_data, spatial_coords)
         initial_quality = initial_analysis['overall_quality']
-        
+
         print(f"Initial resonance quality: {initial_quality:.3f}")
-        
+
         # Optimization parameters
         best_quality = initial_quality
         best_field = field_data.copy()
         optimization_log = []
-        
+
         # Gradient-based optimization
         for step in range(optimization_steps):
             # Generate field perturbation
             perturbation = self._generate_harmonic_perturbation(
                 field_data, spatial_coords, target_harmonics
             )
-            
+
             # Apply perturbation
             modified_field = field_data + perturbation * 0.1  # Small step size
-            
+
             # Evaluate quality
             analysis = self.analyzer.analyze_field_spectrum(modified_field, spatial_coords)
             quality = analysis['overall_quality']
-            
+
             # Accept improvement
             if quality > best_quality:
                 best_quality = quality
                 best_field = modified_field.copy()
                 field_data = modified_field.copy()  # Update for next iteration
-                
+
                 optimization_log.append({
                     'step': step,
                     'quality': quality,
                     'improvement': quality - initial_quality,
                     'accepted': True
                 })
-                
+
                 if step % 20 == 0:
                     print(f"Step {step}: Quality improved to {quality:.3f}")
             else:
@@ -721,10 +721,10 @@ class ResonanceOptimizer:
                     'improvement': quality - initial_quality,
                     'accepted': False
                 })
-        
+
         # Final analysis
         final_analysis = self.analyzer.analyze_field_spectrum(best_field, spatial_coords)
-        
+
         optimization_result = {
             'optimized_field': best_field,
             'initial_quality': initial_quality,
@@ -733,29 +733,29 @@ class ResonanceOptimizer:
             'optimization_log': optimization_log,
             'final_analysis': final_analysis
         }
-        
+
         self.optimization_history.append(optimization_result)
         return optimization_result
-    
+
     def _generate_harmonic_perturbation(self, field_data: np.ndarray,
                                        spatial_coords: np.ndarray,
                                        target_harmonics: List[str]) -> np.ndarray:
         """Generate perturbation that enhances target harmonic relationships"""
         perturbation = np.zeros_like(field_data)
-        
+
         # Current analysis
         analysis = self.analyzer.analyze_field_spectrum(field_data, spatial_coords)
-        
+
         # For each target harmonic, try to enhance it
         for harmonic_name in target_harmonics:
             target_ratio = self.analyzer.harmonic_ratios[harmonic_name]
-            
+
             # Look for opportunities to create this harmonic relationship
             for location_id, resonances in analysis['resonances'].items():
                 for resonance in resonances:
                     base_freq = resonance['frequency']
                     target_freq = base_freq * target_ratio
-                    
+
                     # Add perturbation at target frequency
                     if len(field_data.shape) == 1:
                         # 1D time series
@@ -769,16 +769,16 @@ class ResonanceOptimizer:
                             harmonic_signal = 0.1 * np.sin(2 * np.pi * target_freq * t)
                             if i < perturbation.shape[1]:
                                 perturbation[:, i] += harmonic_signal
-        
+
         return perturbation
-    
+
     def design_resonance_pattern(self, target_frequencies: List[float],
                                 harmonic_relationships: List[Tuple[int, int, str]],
                                 field_dimensions: Tuple[int, ...],
                                 spatial_extent: float = 10.0) -> np.ndarray:
         """
         Design a field with specific resonance pattern from scratch.
-        
+
         Like composing a piece of music with specific harmonic structure,
         but in semantic space rather than acoustic space.
         """
@@ -787,42 +787,42 @@ class ResonanceOptimizer:
             duration = field_dimensions[0] / self.analyzer.sample_rate
             t = np.linspace(0, duration, field_dimensions[0])
             field = np.zeros(field_dimensions[0])
-            
+
             # Add each target frequency
             for freq in target_frequencies:
                 amplitude = 1.0 / len(target_frequencies)  # Normalize
                 phase = np.random.random() * 2 * np.pi  # Random phase
                 field += amplitude * np.sin(2 * np.pi * freq * t + phase)
-            
+
         elif len(field_dimensions) == 2:
             # 2D spatiotemporal field
             nt, nx = field_dimensions
             duration = nt / self.analyzer.sample_rate
             t = np.linspace(0, duration, nt)
             x = np.linspace(-spatial_extent/2, spatial_extent/2, nx)
-            
+
             field = np.zeros((nt, nx))
-            
+
             for i, freq in enumerate(target_frequencies):
                 amplitude = 1.0 / len(target_frequencies)
-                
+
                 # Create spatiotemporal pattern
                 for j in range(nx):
                     spatial_phase = 2 * np.pi * i * j / nx  # Spatial variation
                     temporal_phase = np.random.random() * 2 * np.pi
-                    field[:, j] += amplitude * np.sin(2 * np.pi * freq * t + 
+                    field[:, j] += amplitude * np.sin(2 * np.pi * freq * t +
                                                      spatial_phase + temporal_phase)
-        
+
         # Apply harmonic relationships
         for freq1_idx, freq2_idx, relationship in harmonic_relationships:
-            if (freq1_idx < len(target_frequencies) and 
+            if (freq1_idx < len(target_frequencies) and
                 freq2_idx < len(target_frequencies)):
-                
+
                 # Enhance the specified harmonic relationship
                 freq1 = target_frequencies[freq1_idx]
                 freq2 = target_frequencies[freq2_idx]
                 target_ratio = self.analyzer.harmonic_ratios.get(relationship, 1.0)
-                
+
                 # Adjust freq2 to match target ratio
                 if freq1 > 0:
                     corrected_freq2 = freq1 * target_ratio
@@ -834,107 +834,107 @@ class ResonanceOptimizer:
                         for j in range(nx):
                             correction = 0.1 * np.sin(2 * np.pi * corrected_freq2 * t)
                             field[:, j] += correction
-        
+
         return field
 
 # Demonstration and Examples
 def demonstrate_field_resonance():
     """
     Comprehensive demonstration of field resonance concepts.
-    
+
     This shows how to analyze, understand, and optimize the harmonic
     structure of semantic fields for enhanced coherence and beauty.
     """
     print("=== Field Resonance Demonstration ===\n")
-    
+
     # Create resonance analyzer
     print("1. Creating resonance analysis system...")
     analyzer = SemanticResonanceAnalyzer(sample_rate=50.0)
     optimizer = ResonanceOptimizer(analyzer)
-    
+
     # Generate test field with some resonant structure
     print("2. Generating test semantic field...")
     duration = 10.0  # seconds
     sample_rate = 50.0
     n_samples = int(duration * sample_rate)
     t = np.linspace(0, duration, n_samples)
-    
+
     # Create field with multiple frequency components
     fundamental_freq = 2.0
     field_signal = (1.0 * np.sin(2 * np.pi * fundamental_freq * t) +  # Fundamental
                    0.5 * np.sin(2 * np.pi * fundamental_freq * 2 * t) +  # Octave
                    0.3 * np.sin(2 * np.pi * fundamental_freq * 1.5 * t) +  # Perfect fifth
                    0.2 * np.random.randn(len(t)))  # Noise
-    
+
     # Add some spatial structure
     n_spatial_points = 8
     spatial_coords = np.linspace(-5, 5, n_spatial_points)
-    
+
     # Create 2D field (time x space)
     field_2d = np.zeros((len(t), n_spatial_points))
     for i, x_coord in enumerate(spatial_coords):
         spatial_modulation = np.exp(-x_coord**2 / 10)  # Gaussian envelope
         phase_shift = x_coord * 0.5  # Spatial phase variation
         field_2d[:, i] = field_signal * spatial_modulation * np.cos(phase_shift)
-    
+
     print(f"   Field dimensions: {field_2d.shape}")
     print(f"   Duration: {duration}s, Spatial extent: {n_spatial_points} points")
-    
+
     # Analyze field resonance
     print("\n3. Analyzing field resonance structure...")
     analysis = analyzer.analyze_field_spectrum(field_2d, spatial_coords)
-    
+
     print(f"   Overall resonance quality: {analysis['overall_quality']:.3f}")
     print(f"   Spatial coherence (mean): {analysis['spatial_coherence']['mean_coherence']:.3f}")
-    
+
     # Display resonances found
     total_resonances = 0
     total_harmonics = 0
-    
+
     for location_id, resonances in analysis['resonances'].items():
         location_resonances = len(resonances)
         total_resonances += location_resonances
-        
+
         if location_resonances > 0:
             strongest_resonance = max(resonances, key=lambda x: x['amplitude'])
             print(f"   {location_id}: {location_resonances} resonances, "
                   f"strongest at {strongest_resonance['frequency']:.2f} Hz "
                   f"(Q={strongest_resonance['q_factor']:.1f})")
-    
+
     for location_id, harmonic_data in analysis['harmonic_analysis'].items():
         location_harmonics = len(harmonic_data['relationships'])
         total_harmonics += location_harmonics
-        
+
         if location_harmonics > 0:
             print(f"   {location_id}: {location_harmonics} harmonic relationships")
             for rel in harmonic_data['relationships'][:2]:  # Show first 2
                 print(f"     {rel['frequency1']:.2f} - {rel['frequency2']:.2f} Hz: "
                       f"{rel['harmonic_type']} (ratio {rel['ratio']:.3f})")
-    
+
     print(f"   Total resonances: {total_resonances}")
     print(f"   Total harmonic relationships: {total_harmonics}")
-    
+
     # Optimize field resonance
     print("\n4. Optimizing field resonance...")
     optimization_result = optimizer.optimize_field_resonance(
-        field_2d, spatial_coords, 
+        field_2d, spatial_coords,
         target_harmonics=['octave', 'perfect_fifth', 'golden_ratio'],
         optimization_steps=50
     )
-    
+
     improvement = optimization_result['improvement']
     print(f"   Quality improvement: {improvement:.3f}")
     print(f"   Final quality: {optimization_result['final_quality']:.3f}")
-    
+
     # Analyze optimization steps
     accepted_steps = [log for log in optimization_result['optimization_log'] if log['accepted']]
     print(f"   Successful optimization steps: {len(accepted_steps)}")
-    
+
     if accepted_steps:
         max_improvement_step = max(accepted_steps, key=lambda x: x['improvement'])
         print(f"   Best improvement at step {max_improvement_step['step']}: "
               f"{max_improvement_step['improvement']:.3f}")
-    
+
     # Design custom resonance pattern
     print("\n5. Designing custom harmonic pattern...")
     target_frequencies = [1.0, 2.0, 3.0, 4.0]  # Harmonic series
@@ -943,17 +943,17 @@ def demonstrate_field_resonance():
         (1, 2, 'perfect_fifth'), # 2.0 -> 3.0 Hz (perfect fifth)
         (2, 3, 'perfect_fourth') # 3.0 -> 4.0 Hz (perfect fourth)
     ]
-    
+
     designed_field = optimizer.design_resonance_pattern(
         target_frequencies, harmonic_relationships, (n_samples, n_spatial_points)
     )
-    
+
     # Analyze designed field
     design_analysis = analyzer.analyze_field_spectrum(designed_field, spatial_coords)
-    
+
     print(f"   Designed field quality: {design_analysis['overall_quality']:.3f}")
     print(f"   Target frequencies achieved:")
-    
+
     for location_id, resonances in design_analysis['resonances'].items():
         if resonances:
             detected_freqs = [res['frequency'] for res in resonances]
@@ -964,15 +964,15 @@ def demonstrate_field_resonance():
                       f"Detected: {closest_detected:.2f} Hz, "
                       f"Error: {error*100:.1f}%")
             break  # Only show for first location
-    
+
     # Quality comparison
     print("\n6. Resonance quality comparison:")
     print(f"   Original field: {analysis['overall_quality']:.3f}")
     print(f"   Optimized field: {optimization_result['final_quality']:.3f}")
     print(f"   Designed field: {design_analysis['overall_quality']:.3f}")
-    
+
     print("\n=== Demonstration Complete ===")
-    
+
     # Return results for further analysis
     return {
         'analyzer': analyzer,
@@ -987,7 +987,7 @@ def demonstrate_field_resonance():
 if __name__ == "__main__":
     # Run the comprehensive demonstration
     results = demonstrate_field_resonance()
-    
+
     print("\nFor interactive exploration, try:")
     print("  results['analyzer'].analyze_field_spectrum(your_field, coordinates)")
     print("  results['optimizer'].optimize_field_resonance(your_field, coordinates)")
@@ -1002,7 +1002,7 @@ if __name__ == "__main__":
 
 # Field Resonance - Final Section
 
-## Dynamic Resonance Orchestration Protocol 
+## Dynamic Resonance Orchestration Protocol
 
 ```
 /resonance.orchestrate{
@@ -1027,7 +1027,7 @@ if __name__ == "__main__":
             ],
             output="Detailed harmonic architecture plan with frequency specifications"
         },
-        
+
         /implement.resonance.patterns{
             action="Systematically implement designed harmonic structures in field",
             method="Controlled frequency injection with phase coordination and amplitude management",
@@ -1047,7 +1047,7 @@ if __name__ == "__main__":
             ],
             output="Successfully implemented harmonic structure with verified quality"
         },
-        
+
         /optimize.resonance.dynamics{
             action="Fine-tune and optimize resonance patterns for maximum effectiveness",
             method="Gradient-based optimization with aesthetic and functional objectives",
@@ -1068,7 +1068,7 @@ if __name__ == "__main__":
             ],
             output="Optimized resonance configuration with maximum quality and effectiveness"
         },
-        
+
         /maintain.harmonic.health{
             action="Continuously monitor and maintain resonance quality over time",
             method="Adaptive health monitoring with preventive and corrective interventions",
@@ -1091,7 +1091,7 @@ if __name__ == "__main__":
             output="Sustained high-quality resonance with adaptive resilience"
         }
     ],
-    
+
     output={
         orchestrated_resonance={
             harmonic_architecture=<implemented_frequency_structure_with_optimal_relationships>,
@@ -1099,7 +1099,7 @@ if __name__ == "__main__":
             aesthetic_achievement=<beauty_and_appeal_measures>,
             functional_performance=<effectiveness_in_serving_intended_purposes>
         },
-        
+
         resonance_evolution={
             optimization_trajectory=<path_of_improvement_and_refinement>,
             adaptive_mechanisms=<systems_for_ongoing_resonance_management>,
@@ -1107,7 +1107,7 @@ if __name__ == "__main__":
             transcendent_qualities=<experiences_of_beauty_and_meaning_beyond_design_intentions>
         }
     },
-    
+
     meta={
         orchestration_mastery=<skill_level_in_resonance_design_and_management>,
         aesthetic_sensitivity=<ability_to_recognize_and_create_beauty>,
@@ -1176,11 +1176,11 @@ class ResonanceAnalyzer:
         # TODO: Initialize analysis framework
         self.sample_rate = 100.0
         self.harmonic_ratios = {}
-    
+
     def analyze_spectrum(self, signal_data):
         # TODO: Perform frequency analysis
         pass
-    
+
     def identify_harmonics(self, frequencies, amplitudes):
         # TODO: Find harmonic relationships
         pass
@@ -1198,11 +1198,11 @@ class HarmonicOptimizer:
         # TODO: Initialize optimization system
         self.analyzer = analyzer
         self.optimization_history = []
-    
+
     def optimize_harmonics(self, field_data, target_quality):
         # TODO: Implement harmonic optimization
         pass
-    
+
     def measure_improvement(self, before, after):
         # TODO: Quantify optimization success
         pass
@@ -1220,11 +1220,11 @@ class ResonanceDesigner:
         # TODO: Initialize design framework
         self.harmonic_library = {}
         self.design_templates = {}
-    
+
     def design_harmonic_pattern(self, target_frequencies, relationships):
         # TODO: Create custom harmonic structure
         pass
-    
+
     def validate_design(self, pattern):
         # TODO: Check design quality and feasibility
         pass

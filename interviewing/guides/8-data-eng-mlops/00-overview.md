@@ -38,6 +38,6 @@ guided path — this pillar is the most "just do the course" of the ten.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[technical-questions](../../rounds/technical-questions.md),
-[system-design-round](../../rounds/system-design-round.md) (pipelines are the substrate),
-[coding-challenge](../../rounds/coding-challenge.md) (idempotency idioms).
+[technical-questions](../../rounds/technical-questions/README.md),
+[system-design-round](../../rounds/system-design-round/README.md) (pipelines are the substrate),
+[coding-challenge](../../rounds/coding-challenge/README.md) (idempotency idioms).

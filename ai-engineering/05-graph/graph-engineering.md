@@ -124,8 +124,8 @@ Each layer presumes the one below. You cannot graph-engineer effectively without
 ## Resources
 
 - Pillar guide: [`4-agents`](../../interviewing/guides/4-agents/00-overview.md)
-- Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../generative-ai/03-agentic-foundations/AI-Agents-in-LangGraph-main/)
+- Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/)
 - Coursera code — KG for RAG: [`Knowledge_Graphs_for_RAG-main`](Knowledge_Graphs_for_RAG-main/)
 - Readings — knowledge graphs: [`3-rag-knowledge-graphs/`](3-rag-knowledge-graphs/)
 - LangGraph docs: https://docs.langchain.com/langgraph
-- Loop engineering note: [`loop-engineering.md`](loop-engineering.md)
+- Loop engineering note: [`loop-engineering.md`](../04-loop/loop-engineering.md)

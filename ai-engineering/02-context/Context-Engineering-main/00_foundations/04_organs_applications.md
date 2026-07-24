@@ -70,7 +70,7 @@ A context organ has several key components:
 │  ┌─────────────────────────────────────────────────────────────────────┐  │
 │  │                                                                     │  │
 │  │  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐              │  │
-│  │  │             │    │             │    │             │              │  │ 
+│  │  │             │    │             │    │             │              │  │
 │  │  │ Specialist  │    │ Specialist  │    │ Specialist  │    ...       │  │
 │  │  │ Cell #1     │    │ Cell #2     │    │ Cell #3     │              │  │
 │  │  │             │    │             │    │             │              │  │
@@ -240,121 +240,121 @@ Here's a basic implementation of a sequential organ with three specialized cells
 ```python
 class ContextOrgan:
     """A simple context organ with multiple specialized cells."""
-    
+
     def __init__(self, llm_service):
         """Initialize the organ with an LLM service."""
         self.llm = llm_service
         self.shared_memory = {}
-        
+
         # Initialize specialized cells
         self.cells = {
             "researcher": self._create_researcher_cell(),
             "reasoner": self._create_reasoner_cell(),
             "writer": self._create_writer_cell()
         }
-    
+
     def _create_researcher_cell(self):
         """Create a cell specialized for information gathering."""
-        system_prompt = """You are a research specialist. 
+        system_prompt = """You are a research specialist.
         Your job is to gather and organize relevant information on a topic.
         Focus on factual accuracy and comprehensive coverage.
         Structure your findings clearly with headings and bullet points."""
-        
+
         return {
             "system_prompt": system_prompt,
             "memory": [],
             "max_turns": 3
         }
-    
+
     def _create_reasoner_cell(self):
         """Create a cell specialized for analysis and reasoning."""
         system_prompt = """You are an analytical reasoning specialist.
         Your job is to analyze information, identify patterns, and draw logical conclusions.
         Consider multiple perspectives and evaluate the strength of evidence.
         Be clear about your reasoning process and any assumptions you make."""
-        
+
         return {
             "system_prompt": system_prompt,
             "memory": [],
             "max_turns": 3
         }
-    
+
     def _create_writer_cell(self):
         """Create a cell specialized for content creation."""
         system_prompt = """You are a writing specialist.
         Your job is to create clear, engaging, and well-structured content.
         Adapt your style to the target audience and purpose.
         Focus on clarity, coherence, and proper formatting."""
-        
+
         return {
             "system_prompt": system_prompt,
             "memory": [],
             "max_turns": 3
         }
-    
+
     def _build_context(self, cell_name, input_text):
         """Build the context for a specific cell."""
         cell = self.cells[cell_name]
-        
+
         context = f"{cell['system_prompt']}\n\n"
-        
+
         # Add shared memory relevant to this cell
         if cell_name in self.shared_memory:
             context += "RELEVANT INFORMATION:\n"
             context += self.shared_memory[cell_name]
             context += "\n\n"
-        
+
         # Add cell's conversation history
         if cell["memory"]:
             context += "PREVIOUS EXCHANGES:\n"
             for exchange in cell["memory"]:
                 context += f"Input: {exchange['input']}\n"
                 context += f"Output: {exchange['output']}\n\n"
-        
+
         # Add current input
         context += f"Input: {input_text}\nOutput:"
-        
+
         return context
-    
+
     def _call_cell(self, cell_name, input_text):
         """Call a specific cell with the given input."""
         context = self._build_context(cell_name, input_text)
-        
+
         # Call the LLM
         response = self.llm.generate(context)
-        
+
         # Update cell memory
         self.cells[cell_name]["memory"].append({
             "input": input_text,
             "output": response
         })
-        
+
         # Prune memory if needed
         if len(self.cells[cell_name]["memory"]) > self.cells[cell_name]["max_turns"]:
             self.cells[cell_name]["memory"] = self.cells[cell_name]["memory"][-self.cells[cell_name]["max_turns"]:]
-        
+
         return response
-    
+
     def process_query(self, query):
         """Process a query through the entire organ."""
         # Step 1: Research phase
         research_prompt = f"Research the following topic: {query}"
         research_results = self._call_cell("researcher", research_prompt)
-        
+
         # Update shared memory
         self.shared_memory["reasoner"] = f"Research findings:\n{research_results}"
-        
+
         # Step 2: Analysis phase
         analysis_prompt = f"Analyze the research findings on: {query}"
         analysis_results = self._call_cell("reasoner", analysis_prompt)
-        
+
         # Update shared memory
         self.shared_memory["writer"] = f"Analysis results:\n{analysis_results}"
-        
+
         # Step 3: Content creation phase
         writing_prompt = f"Create a comprehensive response about {query}"
         final_content = self._call_cell("writer", writing_prompt)
-        
+
         return {
             "research": research_results,
             "analysis": analysis_results,
@@ -610,7 +610,7 @@ One of the most powerful benefits of organs is the ability to process informatio
 
 This architecture enables processing documents of practically unlimited length by:
 1. Chunking the document into manageable pieces
-2. Processing each chunk in parallel 
+2. Processing each chunk in parallel
 3. Aggregating and synthesizing the results
 
 ## Cognitive Architecture: From Organs to Systems
@@ -650,40 +650,40 @@ Let's implement a more sophisticated organ for content creation:
 ```python
 class ContentCreationOrgan:
     """A multi-cell organ for creating high-quality content."""
-    
+
     def __init__(self, llm_service):
         """Initialize the organ with an LLM service."""
         self.llm = llm_service
         self.shared_memory = {}
-        
+
         # Create specialized cells
         self.cells = {
             "planner": self._create_cell("""You are a content planning specialist.
                 Your job is to create detailed outlines for content creation.
                 Break topics into logical sections, with clear headings and subheadings.
                 Consider the target audience, purpose, and key points to cover."""),
-                
+
             "researcher": self._create_cell("""You are a research specialist.
                 Your job is to gather and organize relevant information on a topic.
                 Focus on factual accuracy, citing sources where possible.
                 Highlight key statistics, examples, and supporting evidence."""),
-                
+
             "writer": self._create_cell("""You are a content writing specialist.
                 Your job is to create engaging, well-structured content based on outlines and research.
                 Adapt your style to the target audience and purpose.
                 Focus on clarity, flow, and compelling narrative."""),
-                
+
             "editor": self._create_cell("""You are an editing specialist.
                 Your job is to refine and improve existing content.
                 Check for clarity, coherence, grammar, and style issues.
                 Suggest improvements while maintaining the original voice and message."""),
-                
+
             "fact_checker": self._create_cell("""You are a fact-checking specialist.
                 Your job is to verify factual claims in content.
                 Flag any suspicious or inaccurate statements.
                 Provide corrections with references where possible.""")
         }
-    
+
     def _create_cell(self, system_prompt):
         """Create a cell with the given system prompt."""
         return {
@@ -691,115 +691,115 @@ class ContentCreationOrgan:
             "memory": [],
             "max_turns": 3
         }
-    
+
     def _build_context(self, cell_name, input_text):
         """Build the context for a specific cell."""
         cell = self.cells[cell_name]
-        
+
         context = f"{cell['system_prompt']}\n\n"
-        
+
         # Add shared memory relevant to this cell
         if cell_name in self.shared_memory:
             context += "RELEVANT INFORMATION:\n"
             context += self.shared_memory[cell_name]
             context += "\n\n"
-        
+
         # Add cell's conversation history
         if cell["memory"]:
             context += "PREVIOUS EXCHANGES:\n"
             for exchange in cell["memory"]:
                 context += f"Input: {exchange['input']}\n"
                 context += f"Output: {exchange['output']}\n\n"
-        
+
         # Add current input
         context += f"Input: {input_text}\nOutput:"
-        
+
         return context
-    
+
     def _call_cell(self, cell_name, input_text):
         """Call a specific cell with the given input."""
         context = self._build_context(cell_name, input_text)
-        
+
         # Call the LLM
         response = self.llm.generate(context)
-        
+
         # Update cell memory
         self.cells[cell_name]["memory"].append({
             "input": input_text,
             "output": response
         })
-        
+
         # Prune memory if needed
         if len(self.cells[cell_name]["memory"]) > self.cells[cell_name]["max_turns"]:
             self.cells[cell_name]["memory"] = self.cells[cell_name]["memory"][-self.cells[cell_name]["max_turns"]:]
-        
+
         return response
-    
+
     def create_content(self, topic, audience="general", content_type="article", depth="comprehensive"):
         """Create content on the given topic."""
         # Step 1: Content planning
         plan_prompt = f"""Create a detailed outline for a {content_type} about '{topic}'.
         Target audience: {audience}
         Depth: {depth}
-        
+
         Include main sections, subsections, and key points to cover in each."""
-        
+
         content_plan = self._call_cell("planner", plan_prompt)
-        
+
         # Update shared memory
         self.shared_memory["researcher"] = f"Content Plan:\n{content_plan}"
-        
+
         # Step 2: Research phase
         research_prompt = f"""Research the following topic for a {content_type}:
         '{topic}'
-        
+
         Based on this content plan:
         {content_plan}
-        
+
         Gather key facts, statistics, examples, and supporting evidence for each section."""
-        
+
         research_findings = self._call_cell("researcher", research_prompt)
-        
+
         # Update shared memory
         self.shared_memory["writer"] = f"Content Plan:\n{content_plan}\n\nResearch Findings:\n{research_findings}"
-        
+
         # Step 3: Writing phase
         writing_prompt = f"""Write a {content_type} about '{topic}' for a {audience} audience.
-        
+
         Follow this content plan:
         {content_plan}
-        
+
         Incorporate these research findings:
         {research_findings}
-        
+
         Create a {depth} piece that engages the reader while covering all key points."""
-        
+
         draft_content = self._call_cell("writer", writing_prompt)
-        
+
         # Step 4: Fact checking
         fact_check_prompt = f"""Review this {content_type} draft for factual accuracy:
-        
+
         {draft_content}
-        
+
         Flag any suspicious claims, verify key facts, and suggest corrections if needed."""
-        
+
         fact_check_results = self._call_cell("fact_checker", fact_check_prompt)
-        
+
         # Update shared memory
         self.shared_memory["editor"] = f"Draft Content:\n{draft_content}\n\nFact Check Results:\n{fact_check_results}"
-        
+
         # Step 5: Editing phase
         editing_prompt = f"""Edit and refine this {content_type} draft:
-        
+
         {draft_content}
-        
+
         Consider these fact check results:
         {fact_check_results}
-        
+
         Improve clarity, flow, and style while fixing any factual issues identified."""
-        
+
         final_content = self._call_cell("editor", editing_prompt)
-        
+
         return {
             "content_plan": content_plan,
             "research_findings": research_findings,
@@ -999,4 +999,3 @@ As context engineering evolves, several emerging trends are shaping the field:
 ```
 
 These developments promise even more powerful and flexible context engineering capabilities in the future.
-

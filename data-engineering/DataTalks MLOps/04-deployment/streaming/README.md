@@ -1,11 +1,11 @@
 ## Machine Learning for Streaming
 
 * Scenario
-* Creating the role 
+* Creating the role
 * Create a Lambda function, test it
 * Create a Kinesis stream
 * Connect the function to the stream
-* Send the records 
+* Send the records
 
 Links
 
@@ -38,7 +38,7 @@ Record example
         "PULocationID": 130,
         "DOLocationID": 205,
         "trip_distance": 3.66
-    }, 
+    },
     "ride_id": 123
 }
 ```
@@ -54,7 +54,7 @@ aws kinesis put-record \
             "PULocationID": 130,
             "DOLocationID": 205,
             "trip_distance": 3.66
-        }, 
+        },
         "ride_id": 156
     }'
 ```
@@ -102,7 +102,7 @@ SHARD_ITERATOR=$(aws kinesis \
 RESULT=$(aws kinesis get-records --shard-iterator $SHARD_ITERATOR)
 
 echo ${RESULT} | jq -r '.Records[0].Data' | base64 --decode
-``` 
+```
 
 
 ### Running the test
@@ -177,7 +177,7 @@ Logging in
 $(aws ecr get-login --no-include-email)
 ```
 
-Pushing 
+Pushing
 
 ```bash
 REMOTE_URI="387546586013.dkr.ecr.eu-west-1.amazonaws.com/duration-model"

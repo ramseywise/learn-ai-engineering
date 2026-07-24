@@ -12,7 +12,7 @@ Salvaged from the Notion `table_of_contents.md` dump: topic checklist, curated l
 
 ## Topic checklist + materials (original head)
 
-A DB for tracking application: Job Application Tracker   
+A DB for tracking application: Job Application Tracker
 
 Ings:
 
@@ -38,21 +38,21 @@ Context Engineering
 
 Traceability / Observability
 
-Evals 
+Evals
 
-Other topics need to do research: 
+Other topics need to do research:
 
 Safety / reliability & failure modes / **Error Handling and Recovery**
 
-Loop Engineering 
+Loop Engineering
 
 Knowledge Graph
 
 Tool Calling and Evals
 
-**Recovery / roll back** 
+**Recovery / roll back**
 
-Some materials: 
+Some materials:
 
 https://weaviate.io/ebooks/advanced-rag-techniques
 
@@ -68,7 +68,7 @@ https://cheatsheetseries.owasp.org/cheatsheets/AI_Agent_Security_Cheat_Sheet.htm
 
 https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html
 
-Sth to read (but Yan haven’t): 
+Sth to read (but Yan haven’t):
 
 from https://martinfowler.com/articles/reliable-llm-bayer.html?ref=dailydev
 
@@ -78,20 +78,20 @@ https://docs.langchain.com/oss/python/concepts/products
 
 todos
 
-Job Application Tracker  
+Job Application Tracker
 
 https://www.revarta.com/compare/chatgpt
 
-K/V caching, the under-the-hood mechanism behind prompt caching, and semantic caching 
+K/V caching, the under-the-hood mechanism behind prompt caching, and semantic caching
 
 
 
 ## Link dump (original tail)
 
-- 
-    
+-
+
     https://github.com/Shubhamsaboo/awesome-llm-apps/
-    
+
 - Introduction to Agents whitepaper
 - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
 - https://gerred.github.io/building-an-agentic-system/index.html

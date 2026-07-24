@@ -21,6 +21,5 @@ requests_to_search = ["gulf of mexico america", "greenland denmark", "tariffs"]
 for request in requests_to_search:
     print(f"Here are the search results for {request}:", web_search(request))
 
-     
-print (response)
 
+print (response)

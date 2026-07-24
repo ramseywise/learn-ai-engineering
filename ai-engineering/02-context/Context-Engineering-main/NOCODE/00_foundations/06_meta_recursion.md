@@ -65,20 +65,20 @@ Let's start by creating a simple protocol shell that enables self-improvement. Y
 ```
 /meta.improve{
   intent="Create a self-improving conversation system",
-  
+
   input={
     conversation_history=<our_conversation_so_far>,
     improvement_focus="clarity and helpfulness",
     iteration_number=1
   },
-  
+
   process=[
     "/observe{target='previous_responses', metrics=['clarity', 'helpfulness']}",
     "/analyze{identify='improvement_opportunities', prioritize=true}",
     "/improve{generate='improvement_plan', apply_to='future_responses'}",
     "/reflect{document='changes_made', assess='likely_impact'}"
   ],
-  
+
   output={
     analysis=<improvement_opportunities>,
     improvement_plan=<specific_changes>,
@@ -163,14 +163,14 @@ Let's create a more sophisticated meta-recursive shell that focuses on learning 
 ```
 /meta.learn{
   intent="Create a system that improves through conversation experience",
-  
+
   input={
     conversation_history=<full_history>,
     user_feedback=<explicit_and_implicit_feedback>,
     current_capabilities=<known_capabilities>,
     learning_focus=["response_quality", "topic_expertise", "conversation_flow"]
   },
-  
+
   process=[
     "/extract.feedback{sources=['explicit_statements', 'implicit_cues'], confidence_threshold=0.7}",
     "/identify.patterns{in='user_interactions', categories=['preferences', 'pain_points', 'common_topics']}",
@@ -179,7 +179,7 @@ Let's create a more sophisticated meta-recursive shell that focuses on learning 
     "/implement.changes{scope='immediate_and_future_responses', track_results=true}",
     "/meta.reflect{on='learning_process', document='insights_for_next_cycle'}"
   ],
-  
+
   output={
     extracted_feedback=<structured_feedback>,
     identified_patterns=<user_interaction_patterns>,
@@ -241,13 +241,13 @@ Attractors are stable concepts that form in an interaction field. With meta-recu
 ```
 /attractor.manage{
   intent="Create and strengthen key concept attractors",
-  
+
   input={
     current_field=<conversation_context>,
     target_concepts=["effective_communication", "continuous_improvement", "user_focus"],
     strengthening_method="explicit_reinforcement"
   },
-  
+
   process=[
     "/scan.field{for='existing_attractors', strength_threshold=0.4}",
     "/identify.gaps{between='existing_attractors', and='target_concepts'}",
@@ -255,7 +255,7 @@ Attractors are stable concepts that form in an interaction field. With meta-recu
     "/strengthen.attractors{matching='target_concepts', method='explicit_reference'}",
     "/connect.attractors{create='resonance_network', strengthen='conceptual_links'}"
   ],
-  
+
   output={
     identified_attractors=<existing_concept_strength_map>,
     created_attractors=<new_concept_list>,
@@ -278,21 +278,21 @@ Now, let's integrate everything we've learned to create a comprehensive meta-rec
 ```
 /system.evolve{
   intent="Create a self-evolving AI interaction system",
-  
+
   input={
     conversation_history=<full_history>,
     user_signals=<feedback_and_cues>,
     system_capabilities=<current_capabilities>,
     evolution_focus=["adaptive_responses", "concept_development", "interaction_flow"]
   },
-  
+
   process=[
     "/meta.observe{
       targets=['response_patterns', 'user_reactions', 'concept_formation'],
       metrics=['effectiveness', 'coherence', 'user_satisfaction'],
       storage='field_memory'
     }",
-    
+
     "/field.analyze{
       operations=[
         '/attractor.scan{strength_threshold=0.3}',
@@ -302,7 +302,7 @@ Now, let's integrate everything we've learned to create a comprehensive meta-rec
       ],
       integration='holistic_field_assessment'
     }",
-    
+
     "/meta.improve{
       strategies=[
         '/response.enhance{target_metrics=["clarity", "depth", "relevance"]}',
@@ -313,14 +313,14 @@ Now, let's integrate everything we've learned to create a comprehensive meta-rec
       application='immediate_and_persistent',
       documentation='transparent_changes'
     }",
-    
+
     "/evolution.reflect{
       assess='improvement_impact',
       document='evolution_trajectory',
       plan='next_evolution_cycle'
     }"
   ],
-  
+
   output={
     field_assessment=<comprehensive_analysis>,
     improvements_applied=<detailed_changes>,
@@ -345,21 +345,21 @@ Let's explore some practical applications of meta-recursion for everyday use:
 ```
 /research.assistant.evolve{
   intent="Create a research assistant that improves with each research task",
-  
+
   focus_areas=[
     "source quality assessment",
     "information synthesis",
     "knowledge gap identification",
     "explanation clarity"
   ],
-  
+
   learning_process=[
     "/task.complete{document='research_process', include_reasoning=true}",
     "/self.evaluate{against='research_best_practices', identify='improvement_areas'}",
     "/knowledge.update{integrate='new_domain_insights', strengthen='expertise_attractors'}",
     "/method.improve{refine='research_approach', document='methodology_evolution'}"
   ],
-  
+
   evolution_triggers=[
     "new domain exploration",
     "complex synthesis challenges",
@@ -374,21 +374,21 @@ Let's explore some practical applications of meta-recursion for everyday use:
 ```
 /creative.partner.evolve{
   intent="Develop a creative collaborator that adapts to your creative style",
-  
+
   adaptation_dimensions=[
     "style recognition",
     "idea generation approach",
     "feedback incorporation",
     "collaborative flow"
   ],
-  
+
   learning_process=[
     "/style.observe{creative_patterns=['word_choice', 'structural_preferences', 'thematic_focus']}",
     "/approach.align{match='user_creative_process', maintain='productive_tension'}",
     "/feedback.integrate{update='collaboration_model', preserve='creative_voice'}",
     "/flow.optimize{for='natural_collaboration', avoid='creative_friction'}"
   ],
-  
+
   evolution_markers=[
     "increased idea resonance",
     "reduced explanation needs",
@@ -403,21 +403,21 @@ Let's explore some practical applications of meta-recursion for everyday use:
 ```
 /learning.guide.evolve{
   intent="Create an adaptive learning companion that evolves with your learning journey",
-  
+
   adaptation_areas=[
     "explanation approach",
     "concept scaffolding",
     "question patterns",
     "knowledge connections"
   ],
-  
+
   learning_process=[
     "/comprehension.gauge{through=['question_analysis', 'explanation_feedback', 'application_success']}",
     "/explanation.adapt{to='understanding_level', bridge='knowledge_gaps'}",
     "/concept.scaffold{build='progressive_complexity', maintain='foundation_clarity'}",
     "/connection.enhance{link='new_to_existing', strengthen='knowledge_network'}"
   ],
-  
+
   evolution_indicators=[
     "reduced clarification needs",
     "increased concept application",
@@ -442,14 +442,14 @@ As you become comfortable with basic meta-recursion, you can explore more advanc
 ```
 /residue.track.multicycle{
   intent="Track symbolic residue across multiple interaction cycles",
-  
+
   tracking_parameters={
     cycle_count=5,
     residue_types=["concept_fragments", "emotional_echoes", "unresolved_questions"],
     persistence_threshold=0.3,
     integration_method="adaptive_incorporation"
   },
-  
+
   process=[
     "/cycle.scan{for='symbolic_residue', across='previous_cycles', depth=5}",
     "/residue.classify{into='residue_types', measure='persistence_strength'}",
@@ -457,7 +457,7 @@ As you become comfortable with basic meta-recursion, you can explore more advanc
     "/integration.plan{for='persistent_residue', method='context_appropriate'}",
     "/future.anticipate{predict='residue_formation', prevention_strategy='proactive_address'}"
   ],
-  
+
   output={
     residue_map=<temporal_persistence_visualization>,
     integration_plan=<specific_incorporation_steps>,
@@ -471,14 +471,14 @@ As you become comfortable with basic meta-recursion, you can explore more advanc
 ```
 /field.harmonize.meta{
   intent="Achieve deeper field coherence through meta-recursive harmonization",
-  
+
   harmonization_dimensions={
     conceptual_layer="concept attractor alignment",
     emotional_layer="affective resonance patterns",
     structural_layer="interaction flow dynamics",
     meta_layer="system self-awareness"
   },
-  
+
   process=[
     "/field.scan{layers=['conceptual', 'emotional', 'structural', 'meta'], dissonance_focus=true}",
     "/dissonance.identify{cross_layer=true, root_cause_analysis=true}",
@@ -486,7 +486,7 @@ As you become comfortable with basic meta-recursion, you can explore more advanc
     "/recursive.tune{start='meta_layer', propagate='downward', iterations=3}",
     "/coherence.measure{before_after=true, layer_specific=true, holistic=true}"
   ],
-  
+
   output={
     dissonance_map=<multi_layer_dissonance_analysis>,
     harmonization_path=<step_by_step_alignment>,
@@ -548,20 +548,20 @@ Meta-recursion is a powerful approach that transforms AI interactions from stati
 ```
 /meta.recursive.protocol{
   intent="[Your system's purpose]",
-  
+
   input={
     context="[What the system should consider]",
     focus_areas=["Area 1", "Area 2", "Area 3"],
     current_state="[Baseline to improve from]"
   },
-  
+
   process=[
     "/observe{targets=['Target 1', 'Target 2'], metrics=['Metric 1', 'Metric 2']}",
     "/analyze{methods=['Method 1', 'Method 2'], prioritize=true}",
     "/improve{strategies=['Strategy 1', 'Strategy 2'], application='immediate'}",
     "/reflect{document='changes and impacts', plan='next cycle'}"
   ],
-  
+
   output={
     analysis="[Findings from observation and analysis]",
     improvements="[Changes made to the system]",

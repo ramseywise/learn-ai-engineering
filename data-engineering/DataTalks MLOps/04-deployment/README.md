@@ -28,7 +28,7 @@
 [See code here](web-service-mlflow/)
 
 
-## 4.4 (Optional) Streaming: Deploying models with Kinesis and Lambda 
+## 4.4 (Optional) Streaming: Deploying models with Kinesis and Lambda
 
 <a href="https://www.youtube.com/watch?v=TCqr9HNcrsI&list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK">
   <img src="images/thumbnail-4-04.jpg">

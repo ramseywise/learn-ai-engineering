@@ -12,13 +12,13 @@ def calculate_metrics(trace) -> Dict[str, Any]:
         "cost": 0.0,
         "observation_count": 0
     }
-    
+
     # Calculate latency if timestamps available
     if hasattr(trace, 'timestamp') and hasattr(trace, 'end_time'):
         if trace.end_time:
             delta = trace.end_time - trace.timestamp
             metrics["latency_ms"] = delta.total_seconds() * 1000
-    
+
     return metrics
 
 
@@ -32,21 +32,21 @@ def aggregate_metrics(traces: List) -> Dict[str, Any]:
             "total_tokens": 0,
             "error_rate": 0
         }
-    
+
     total_latency = 0
     total_cost = 0
     total_tokens = 0
     errors = 0
-    
+
     for trace in traces:
         metrics = calculate_metrics(trace)
         total_latency += metrics.get("latency_ms", 0)
         total_cost += metrics.get("cost", 0)
         total_tokens += metrics.get("tokens", 0)
-        
+
         if hasattr(trace, 'level') and trace.level == "ERROR":
             errors += 1
-    
+
     return {
         "total_traces": len(traces),
         "avg_latency_ms": total_latency / len(traces),

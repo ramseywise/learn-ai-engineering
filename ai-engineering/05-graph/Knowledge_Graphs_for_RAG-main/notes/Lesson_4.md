@@ -45,4 +45,3 @@
     - Used in chatbot for Question-Answer type of interaction.
 - [SEC EDGAR Data Preparation](https://github.com/neo4j-product-examples/data-prep-sec-edgar)
   - Instructor contributed in creating this repository to extract SEC data.
-  

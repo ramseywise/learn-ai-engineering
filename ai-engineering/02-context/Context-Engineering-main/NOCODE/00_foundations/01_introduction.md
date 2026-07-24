@@ -7,7 +7,7 @@
 
 ## 1. The Context Revolution
 
-Imagine you're having a conversation with someone who remembers everything perfectly, has read nearly everything ever written, and can process information at superhuman speed - but has a peculiar limitation: they can only "see" the last few pages of your conversation at any given time. 
+Imagine you're having a conversation with someone who remembers everything perfectly, has read nearly everything ever written, and can process information at superhuman speed - but has a peculiar limitation: they can only "see" the last few pages of your conversation at any given time.
 
 ### [(See 50 First Dates with Adam Sandler)](https://en.m.wikipedia.org/wiki/50_First_Dates)
 ![image](https://github.com/user-attachments/assets/01f4ceea-f3fa-42d9-8944-359d5c91eae4)

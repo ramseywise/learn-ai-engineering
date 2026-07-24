@@ -8,11 +8,11 @@ sources:
 cleaned: 2026-07-17
 ---
 
-4 memory types: 
+4 memory types:
 
 *(missing diagram — not exported from Notion)*
 
-some products’ memory design: 
+some products’ memory design:
 
 **ChatGPT:**
 
@@ -29,7 +29,7 @@ four-layer memory architecture, viewed as a product implementation, doesn't use 
 2. MEMORY.md: Selected facts, actively maintained by the agent.
 3. memory_search: Hybrid search using 70% vector similarity + 30% keyword weight.
 
-How is memory consolidation triggered and rolled back?  
+How is memory consolidation triggered and rolled back?
 
 *(missing diagram — not exported from Notion)*
 
@@ -41,18 +41,18 @@ The most crucial aspect isn't how elegant the summary is, but that the process i
 
 ---
 
-haven’t been organized: 
+haven’t been organized:
 
 # Memory-augmented RAG
 
 *(missing diagram — `Screenshot 2026-04-13 at 15.43.25.png` not exported from Notion)*
 
-agent needs to decide when to recall, what to recall and how to use it for tool choice and response generation. 
+agent needs to decide when to recall, what to recall and how to use it for tool choice and response generation.
 
 includes:
 
 1. **Conversational RAG / multi-turn RAG**
-2. **History-aware retrieval / conversational query understanding:** using dialogue history to rewrite, expand, disambiguate, or plan retrieval queries. 
+2. **History-aware retrieval / conversational query understanding:** using dialogue history to rewrite, expand, disambiguate, or plan retrieval queries.
 3. **Long-term memory for LLM agents**: persistent storage and retrieval of user preferences and agent experiences beyond a single context window.
 4. **Mixed-initiative information-seeking dialogue**: the agent chooses when to answer vs ask clarifying questions when the user request is underspecified or unanswerable.
 
@@ -61,17 +61,17 @@ A useful modern taxonomy is the “mixed memory” framing (conversational + lon
 Memory-augmentation in multi-turn agents changes the “augmentation target” and the “control problem”:
 
 1. **The retrieval corpus includes the conversation itself (and derived memories).**
-    
+
     Instead of only retrieving from a knowledge base, systems store and retrieve prior **user messages, assistant outputs, tool results, and “distilled” memory objects**.
-    
+
 2. **The main challenge is not just relevance, but continuity and intent resolution.**
-    
+
     Follow-up queries contain pronouns, ellipsis, references (“what about the second one?”), and topic drift. This makes *query rewriting and memory selection* central—often more than retrieval model choice.
-    
+
 3. **The agent must decide when to retrieve (and from where).**
-    
+
     In multi-turn settings, retrieving new passages every turn can be wasteful or harmful; systems increasingly learn or implement policies like “reuse previous evidence,” “retrieve only if needed,” or “ask a clarifying question first.”
-    
+
 
 *(missing diagram — not exported from Notion)*
 
@@ -95,21 +95,21 @@ A coherent technical taxonomy for memory-augmented conversational RAG/agents can
 *(missing diagram — not exported from Notion)*
 
 1. **passed: Query rewriting and standalone question generation:  transform a context-dependent utterance into a standalone query that can drive retrieval reliably.**
-    
+
     A key limitation (increasingly emphasized since 2023–2024) is that “rewrite into one question” can lose important context in long dialogues; hence t**he move toward summaries or structured memory objects, rather than a single rewritten query**
-    
+
 2. **History-aware retrieval: use chat history + user turn to build a retrieval plan**.
-    
+
     2 approaches:
-    
+
     1. **R pipeline line (CAsT / ORConvQA / CORAL / mtRAG):**
-        
+
         ORConvQA explicitly shows that enabling history modeling across system components improves open-retrieval conversational QA performance, reinforcing the idea that history is not just a prompt trick but a retrieval and ranking signal.
-        
+
     2. **Agentic retrieval line (industrial):**
-        
+
         In Azure AI Search agentic retrieval, an LLM reads the entire chat thread, decomposes into focused subqueries (which can include chat history), runs subqueries in parallel with semantic reranking, and returns grounding data plus a query plan for downstream agent use. https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-overview?tabs=quickstarts
-        
+
 
 **Memory mechanisms: short-term vs long-term**
 
@@ -148,7 +148,7 @@ https://docs.nvidia.com/rag/latest/multiturn.html
 
 1. History concatenation
 
-把最近几轮对话直接拼进 prompt 或检索 query。实现便宜、延迟低，但一旦对话变长，很容易把无关历史也带进去，造成检索偏移。NVIDIA 现在也仍然保留这种 simple multi-turn mode，说明它在工业里还很常见。 
+把最近几轮对话直接拼进 prompt 或检索 query。实现便宜、延迟低，但一旦对话变长，很容易把无关历史也带进去，造成检索偏移。NVIDIA 现在也仍然保留这种 simple multi-turn mode，说明它在工业里还很常见。
 ****
 
 ## **Memory-Augmented Conversational RAG — Continuity under limited context window**
@@ -191,19 +191,19 @@ Used for knowledge recall across sessions.
 User preferences, past events, profiles
 
 1. **Episodic Memory**
-    
+
     Stores key events, decisions, or failures.
-    
+
     Useful for autonomous workflows and multi-day tasks.
-    
+
 2. **Semantic Memory**
-    
+
     Stores general world knowledge or domain-specific expertise.
-    
+
 3. **Tool Memory**
-    
+
     Agents retrieve knowledge from tools:
-    
+
     - Web search
     - APIs
     - SQL queries
@@ -296,9 +296,9 @@ some method / strategies from different companies/ libraries:
         - LangChain summary memory
         - LangGraph memory compression
         - “distilled memory”
-    2. Conversation summarization —- into a paragraph 
+    2. Conversation summarization —- into a paragraph
     3. Structured memory extraction — user preference, key fact, task state
-    4. Rolling summary — update summary every turn 
+    4. Rolling summary — update summary every turn
     5. 优点
         - 控制 token
         - 提升 relevance
@@ -313,46 +313,46 @@ some method / strategies from different companies/ libraries:
         - extracted memory（结构化）
     2. retrieval method:
         1. Semantic search
-        
+
         ```
         query → embedding → top-k memory
         ```
-        
+
         2. Hybrid search: keyword + semantic
-        
+
         3. Recency + relevance
-        
+
         ✅ 优点
-        
+
         - scalable
         - 可跨 session（long-term memory）
-        
+
         ❌ 问题
-        
+
         - retrieval noise
         - embedding drift —
         - latency
-    
+
     tools:
-    
+
     - LangGraph memory store
     - Microsoft ChatHistoryMemoryProvider
 4. Query Rewriting / Context Understanding
-    1. rewrite user’s query into complete one 
+    1. rewrite user’s query into complete one
         1. User: what about the second one?
         → rewrite → what about the second product you mentioned earlier?
-        2. don’t use memory directly, but use memory to rewrite better query 
+        2. don’t use memory directly, but use memory to rewrite better query
         3. 优点
         - 提升 retrieval 质量
         - 适合 multi-turn RAG
-            
+
             问题
-            
+
         - 丢 context
         - rewrite 不稳定
-        
+
         database:
-        
+
         - CANARD
         - QReCC
 
@@ -373,7 +373,7 @@ Multi-layer memory
 
 Memoria- A Scalable Agentic Memory Framework for Personalized Conversational AI.pdf
 
-**1. Session-Level Summarization (Short-term memory) — compression :** 
+**1. Session-Level Summarization (Short-term memory) — compression :**
 
 Dynamically compresses ongoing dialogue into a running summary stored per session ID in SQL. Keeps the LLM coherent within and across turns without flooding the context window.
 
@@ -393,7 +393,7 @@ After every user message, an LLM call extracts structured triplets in the form:
 
 > `(subject, predicate, object)`
 e.g. `(user, prefers, equity stocks)` or `(user, works_as, financial analyst)`
-> 
+>
 
 These triplets are stored two ways simultaneously:
 
@@ -528,65 +528,65 @@ Since the library isn't public yet, your best options right now are:
 Want me to sketch out a working prototype implementation based on the paper's specs?
 
 1. Memory in the Age of AI Agents: A Survey
-    
+
     **Forms → Functions → Dynamics**.
-    
+
     ### 1. Forms — *What carries the memory?*
-    
+
     **Token-level memory** — stored as text/tokens in an external buffer:
-    
+
     - *Flat (1D)* — plain conversation logs, rolling windows, retrieved snippets
     - *Planar (2D)* — graph-structured memory (knowledge graphs, memory graphs like Zep, A-Mem)
     - *Hierarchical (3D)* — layered structures with summaries at multiple levels of abstraction
-    
+
     **Parametric memory** — knowledge baked into model weights:
-    
+
     - *Internal* — what the LLM already "knows" from pretraining
     - *External* — continual fine-tuning or LoRA adapters trained on accumulated experience
-    
+
     **Latent memory** — stored as neural activations or hidden states:
-    
+
     - *Generate* — synthesizing new latent representations from experience
     - *Reuse* — caching and replaying KV states
     - *Transform* — compressing or restructuring latent representations
-    
+
     ### 2. Functions — *Why do agents need memory?*
-    
+
     **Factual Memory** — records knowledge from agent-environment interactions:
-    
+
     - *User factual* — preferences, identity, history (what Memoria does)
     - *Environment factual* — world state, task context, domain facts
-    
+
     **Experiential Memory** — accumulates problem-solving capability over time:
-    
+
     - *Case-based* — storing past solved examples to reuse
     - *Strategy-based* — distilling generalizable approaches
     - *Skill-based* — extracting reusable tools or code from experience
     - *Hybrid* — combining the above
-    
+
     **Working Memory** — manages active information during a task:
-    
+
     - *Single-turn* — reasoning traces, scratchpads, intermediate outputs
     - *Multi-turn* — dialogue state, partial plans carried across turns
-    
+
     ### **3. Dynamics — *How does memory operate over time?***
-    
+
     **Memory Formation** (how memories are created):
-    
+
     - Semantic summarization — compress conversations into summaries
     - Knowledge distillation — extract reusable patterns
     - Structured construction — build KG triplets, schemas
     - Latent representation — encode into vectors or hidden states
     - Parametric internalization — fine-tune the model itself
-    
+
     **Memory Evolution** (how memories change):
-    
+
     - *Consolidation* — merging redundant or related memories
     - *Updating* — revising outdated facts (conflict resolution)
     - *Forgetting* — pruning low-utility or stale memories
-    
+
     **Memory Retrieval** (how memories are accessed):
-    
+
     - *Timing* — when to retrieve (at start, on demand, continuously)
     - *Query construction* — how to form the retrieval query
     - *Strategies* — sparse (keyword), dense (semantic), graph traversal, hybrid

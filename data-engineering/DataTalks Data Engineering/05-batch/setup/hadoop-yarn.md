@@ -1,22 +1,22 @@
-## Spark on YARN 
+## Spark on YARN
 
 For the Spark and Docker module, we need YARN, which
 comes together with Hadoop. So we need to install Hadoop
 
-In this document, we'll assume you use Linux. For Windows, use WSL. It should work (supposedly) on MacOS as well. 
+In this document, we'll assume you use Linux. For Windows, use WSL. It should work (supposedly) on MacOS as well.
 
 We'll need to run it in a pseudo-distributed mode.
 
 
 ### Configuring ssh
 
-You need to run be able to `ssh` to your localhost without having to type any password. In other words, you execute 
+You need to run be able to `ssh` to your localhost without having to type any password. In other words, you execute
 
 ```bash
 ssh localhost
 ```
 
-And you get ssh access. 
+And you get ssh access.
 
 If you don't have it, add your `id_rsa.pub` key to the list of keys authorized to access your computer:
 

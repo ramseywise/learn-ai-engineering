@@ -2,7 +2,7 @@
 ## Adaptive Context Improvement Through Iterative Optimization
 
 > **Module 02.2** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Self-Improving Context Systems
 
 ---
@@ -28,9 +28,9 @@ Input → Context Assembly → Output
 ```
 **Context**: Like writing a first draft - you gather information, assemble it once, and produce output. No revision or improvement.
 
-**Limitations**: 
+**Limitations**:
 - Suboptimal context selection
-- No learning from mistakes  
+- No learning from mistakes
 - Static quality regardless of task requirements
 
 ### Stage 2: Error-Driven Revision
@@ -46,7 +46,7 @@ Input → Context Assembly → Output → Error Detection → Revision → Impro
 
 ### Stage 3: Quality-Driven Iterative Refinement
 ```
-Input → Context Assembly → Quality Assessment → 
+Input → Context Assembly → Quality Assessment →
    ↓
 If quality < threshold:
    Context Refinement → Reassembly → Repeat
@@ -62,8 +62,8 @@ Else:
 
 ### Stage 4: Predictive Self-Optimization
 ```
-Historical Performance Analysis → Strategy Learning → 
-Predictive Context Assembly → Quality Validation → 
+Historical Performance Analysis → Strategy Learning →
+Predictive Context Assembly → Quality Validation →
 Output Delivery + Strategy Update
 ```
 **Context**: Like a master craftsperson who anticipates what will work before starting, based on years of experience and pattern recognition.
@@ -141,7 +141,7 @@ Where:
 
 ### Meta-Learning Adaptation Rate
 ```
-Strategy Evolution Rate: 
+Strategy Evolution Rate:
 dS/dt = f(Performance_Gap, Exploration_Rate, Confidence_Level)
 
 Where:
@@ -270,7 +270,7 @@ You are a context refinement system evaluating and improving your own context as
 **Evaluation Criteria**: How well does the context directly support task completion?
 
 **Relevance Analysis**:
-- **Directly Relevant Information**: {percentage}% 
+- **Directly Relevant Information**: {percentage}%
   - List specific elements that directly answer the task requirements
   - Identify information that provides essential background
 - **Tangentially Relevant Information**: {percentage}%
@@ -283,11 +283,11 @@ You are a context refinement system evaluating and improving your own context as
 **Relevance Score**: {calculated_score}/10
 **Improvement Opportunities**: {specific_areas_needing_better_relevance}
 
-### 2. Completeness Assessment  
+### 2. Completeness Assessment
 **Evaluation Criteria**: Does the context contain all necessary information for task success?
 
 **Completeness Analysis**:
-- **Essential Information Present**: 
+- **Essential Information Present**:
   - ✓ {list_present_essential_elements}
 - **Essential Information Missing**:
   - ✗ {list_missing_critical_elements}
@@ -297,7 +297,7 @@ You are a context refinement system evaluating and improving your own context as
 **Completeness Score**: {calculated_score}/10
 **Missing Information Priority**:
   1. **Critical**: {must_have_information_for_task_success}
-  2. **Important**: {significantly_improves_task_performance}  
+  2. **Important**: {significantly_improves_task_performance}
   3. **Helpful**: {provides_additional_context_or_validation}
 
 ### 3. Coherence Assessment
@@ -320,7 +320,7 @@ You are a context refinement system evaluating and improving your own context as
 
 **Efficiency Analysis**:
 - **Information Density**: {ratio_of_useful_information_to_total_content}
-- **Redundancy Level**: {percentage_of_repeated_or_overlapping_information}  
+- **Redundancy Level**: {percentage_of_repeated_or_overlapping_information}
 - **Conciseness**: {assessment_of_whether_key_points_are_expressed_efficiently}
 
 **Efficiency Score**: {calculated_score}/10
@@ -331,7 +331,7 @@ You are a context refinement system evaluating and improving your own context as
 
 ## Overall Quality Assessment
 
-**Composite Quality Score**: 
+**Composite Quality Score**:
 ```
 Overall = (Relevance × 0.3 + Completeness × 0.3 + Coherence × 0.25 + Efficiency × 0.15)
 Current Score: {calculated_overall_score}/10
@@ -359,7 +359,7 @@ IF relevance_score < threshold:
 ```
 
 #### For Completeness Gaps:
-```  
+```
 IF completeness_score < threshold:
     ACTIONS:
     1. Research missing critical information: {specific_information_to_find}
@@ -427,9 +427,9 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
 ## Refined Context Output
 
 **Final Refined Context**: {improved_context_after_refinement_cycles}
-**Quality Achievement**: 
+**Quality Achievement**:
 - Final Score: {final_quality_score}/10
-- Target Met: ✓ / ✗  
+- Target Met: ✓ / ✗
 - Improvement: +{total_improvement_achieved}
 
 **Refinement Summary**:
@@ -447,7 +447,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
 ```xml
 <meta_cognitive_template name="self_aware_context_processing">
   <intent>Enable system to monitor and improve its own thinking processes during context assembly</intent>
-  
+
   <cognitive_monitoring>
     <self_reflection_questions>
       <question category="strategy_awareness">
@@ -463,14 +463,14 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
         How confident am I in the quality of my current context assembly, and is this confidence justified?
       </question>
     </self_reflection_questions>
-    
+
     <thinking_process_analysis>
       <current_strategy>
         <strategy_name>{name_of_current_approach}</strategy_name>
         <strategy_rationale>{why_this_strategy_was_selected}</strategy_rationale>
         <strategy_assumptions>{what_assumptions_underlie_this_approach}</strategy_assumptions>
       </current_strategy>
-      
+
       <performance_indicators>
         <positive_signals>
           {evidence_that_current_approach_is_working_well}
@@ -482,7 +482,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
           {ambiguous_evidence_requiring_further_analysis}
         </mixed_signals>
       </performance_indicators>
-      
+
       <confidence_assessment>
         <confidence_level>{numerical_confidence_score_0_to_1}</confidence_level>
         <confidence_basis>{reasons_for_current_confidence_level}</confidence_basis>
@@ -490,14 +490,14 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
       </confidence_assessment>
     </thinking_process_analysis>
   </cognitive_monitoring>
-  
+
   <strategy_comparison>
     <current_strategy_evaluation>
       <strengths>{what_current_strategy_does_well}</strengths>
       <weaknesses>{limitations_of_current_strategy}</weaknesses>
       <context_fit>{how_well_strategy_matches_current_task}</context_fit>
     </current_strategy_evaluation>
-    
+
     <alternative_strategies>
       <alternative name="conservative_refinement">
         <description>Make minimal, high-confidence improvements</description>
@@ -505,14 +505,14 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
         <disadvantages>May miss significant improvement opportunities</disadvantages>
         <switching_cost>Low - requires minimal changes to current approach</switching_cost>
       </alternative>
-      
+
       <alternative name="aggressive_optimization">
         <description>Comprehensive restructuring for maximum quality</description>
         <advantages>Potential for significant quality improvements</advantages>
         <disadvantages>Higher risk, more resource intensive</disadvantages>
         <switching_cost>High - requires substantial rework of current context</switching_cost>
       </alternative>
-      
+
       <alternative name="targeted_enhancement">
         <description>Focus improvements on identified weak areas only</description>
         <advantages>Efficient use of resources, addresses specific gaps</advantages>
@@ -521,7 +521,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
       </alternative>
     </alternative_strategies>
   </strategy_comparison>
-  
+
   <meta_decision_making>
     <strategy_selection_criteria>
       <criterion name="task_criticality" weight="0.3">
@@ -537,7 +537,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
         How much quality improvement is realistically achievable?
       </criterion>
     </strategy_selection_criteria>
-    
+
     <decision_process>
       <step name="situation_analysis">
         Analyze current context quality, available resources, and task requirements
@@ -553,7 +553,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
       </step>
     </decision_process>
   </meta_decision_making>
-  
+
   <execution_monitoring>
     <real_time_assessment>
       <progress_indicators>
@@ -561,7 +561,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
         <indicator name="efficiency_metrics">Monitor time and resource usage</indicator>
         <indicator name="unexpected_issues">Watch for problems not anticipated in planning</indicator>
       </progress_indicators>
-      
+
       <adaptation_triggers>
         <trigger name="quality_degradation">
           <condition>Context quality decreases unexpectedly</condition>
@@ -577,7 +577,7 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
         </trigger>
       </adaptation_triggers>
     </real_time_assessment>
-    
+
     <continuous_learning>
       <pattern_recognition>
         Identify recurring patterns in successful and unsuccessful refinement attempts
@@ -590,12 +590,12 @@ Cycle 3: {score_after_cycle_2} → {score_after_cycle_3} (Δ: {improvement})
       </meta_strategy_evolution>
     </continuous_learning>
   </execution_monitoring>
-  
+
   <output_integration>
     <refined_context>
       {final_context_after_meta_cognitive_refinement}
     </refined_context>
-    
+
     <meta_cognitive_report>
       <strategy_used>{selected_strategy_and_rationale}</strategy_used>
       <confidence_final>{final_confidence_in_result_quality}</confidence_final>
@@ -627,7 +627,7 @@ from enum import Enum
 class QualityDimension(Enum):
     """Different dimensions of context quality"""
     RELEVANCE = "relevance"
-    COMPLETENESS = "completeness" 
+    COMPLETENESS = "completeness"
     COHERENCE = "coherence"
     EFFICIENCY = "efficiency"
 
@@ -656,12 +656,12 @@ class RefinementAction:
 
 class QualityEvaluator(ABC):
     """Abstract base class for quality evaluation"""
-    
+
     @abstractmethod
     def evaluate(self, context: str, task: str, reference: Optional[str] = None) -> float:
         """Evaluate quality on specific dimension"""
         pass
-    
+
     @abstractmethod
     def suggest_improvements(self, context: str, task: str) -> List[RefinementAction]:
         """Suggest specific improvements for this dimension"""
@@ -669,45 +669,45 @@ class QualityEvaluator(ABC):
 
 class RelevanceEvaluator(QualityEvaluator):
     """Evaluates how well context supports the specific task"""
-    
+
     def __init__(self):
         self.key_term_weight = 0.4
         self.semantic_similarity_weight = 0.4
         self.task_alignment_weight = 0.2
-        
+
     def evaluate(self, context: str, task: str, reference: Optional[str] = None) -> float:
         """Evaluate relevance of context to task"""
-        
+
         # Extract key terms from task
         task_terms = self._extract_key_terms(task)
         context_terms = self._extract_key_terms(context)
-        
+
         # Calculate term overlap
         term_overlap = len(set(task_terms) & set(context_terms)) / len(set(task_terms))
-        
+
         # Calculate semantic similarity (simplified)
         semantic_sim = self._calculate_semantic_similarity(context, task)
-        
+
         # Calculate task alignment (how well context addresses task requirements)
         task_alignment = self._calculate_task_alignment(context, task)
-        
+
         # Weighted combination
         relevance_score = (
             self.key_term_weight * term_overlap +
             self.semantic_similarity_weight * semantic_sim +
             self.task_alignment_weight * task_alignment
         )
-        
+
         return min(1.0, max(0.0, relevance_score))
-    
+
     def suggest_improvements(self, context: str, task: str) -> List[RefinementAction]:
         """Suggest improvements for relevance"""
         suggestions = []
-        
+
         task_terms = self._extract_key_terms(task)
         context_terms = self._extract_key_terms(context)
         missing_terms = set(task_terms) - set(context_terms)
-        
+
         if missing_terms:
             suggestions.append(RefinementAction(
                 action_type="add_missing_content",
@@ -718,7 +718,7 @@ class RelevanceEvaluator(QualityEvaluator):
                 implementation_cost=0.3,
                 priority=1
             ))
-        
+
         # Check for irrelevant content
         irrelevant_ratio = self._calculate_irrelevant_content_ratio(context, task)
         if irrelevant_ratio > 0.2:
@@ -731,9 +731,9 @@ class RelevanceEvaluator(QualityEvaluator):
                 implementation_cost=0.2,
                 priority=2
             ))
-        
+
         return suggestions
-    
+
     def _extract_key_terms(self, text: str) -> List[str]:
         """Extract key terms from text"""
         # Simplified key term extraction
@@ -742,31 +742,31 @@ class RelevanceEvaluator(QualityEvaluator):
         stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with'}
         key_terms = [word for word in words if len(word) > 3 and word not in stop_words]
         return key_terms
-    
+
     def _calculate_semantic_similarity(self, context: str, task: str) -> float:
         """Calculate semantic similarity between context and task"""
         # Simplified semantic similarity calculation
         context_terms = set(self._extract_key_terms(context))
         task_terms = set(self._extract_key_terms(task))
-        
+
         if not task_terms:
             return 0.0
-        
+
         intersection = len(context_terms & task_terms)
         union = len(context_terms | task_terms)
-        
+
         return intersection / union if union > 0 else 0.0
-    
+
     def _calculate_task_alignment(self, context: str, task: str) -> float:
         """Calculate how well context addresses task requirements"""
         # Simplified task alignment calculation
         task_lower = task.lower()
         context_lower = context.lower()
-        
+
         # Look for task-specific indicators
         task_indicators = ['analyze', 'compare', 'explain', 'summarize', 'evaluate']
         alignment_score = 0.0
-        
+
         for indicator in task_indicators:
             if indicator in task_lower:
                 # Check if context provides what this indicator requires
@@ -780,53 +780,53 @@ class RelevanceEvaluator(QualityEvaluator):
                     alignment_score += 0.2
                 elif indicator == 'evaluate' and ('evaluation' in context_lower or 'assessment' in context_lower):
                     alignment_score += 0.2
-        
+
         return min(1.0, alignment_score)
-    
+
     def _calculate_irrelevant_content_ratio(self, context: str, task: str) -> float:
         """Calculate proportion of context that's irrelevant to task"""
         sentences = context.split('.')
         task_terms = set(self._extract_key_terms(task))
-        
+
         irrelevant_sentences = 0
         for sentence in sentences:
             sentence_terms = set(self._extract_key_terms(sentence))
             if len(sentence_terms & task_terms) == 0 and len(sentence.strip()) > 20:
                 irrelevant_sentences += 1
-        
+
         return irrelevant_sentences / max(len(sentences), 1)
 
 class CompletenessEvaluator(QualityEvaluator):
     """Evaluates whether context contains all necessary information"""
-    
+
     def evaluate(self, context: str, task: str, reference: Optional[str] = None) -> float:
         """Evaluate completeness of context for task"""
-        
+
         # Identify required information elements
         required_elements = self._identify_required_elements(task)
-        
+
         # Check presence of each element in context
         present_elements = []
         for element in required_elements:
             if self._is_element_present(context, element):
                 present_elements.append(element)
-        
+
         # Calculate completeness ratio
         completeness_ratio = len(present_elements) / len(required_elements) if required_elements else 1.0
-        
+
         return completeness_ratio
-    
+
     def suggest_improvements(self, context: str, task: str) -> List[RefinementAction]:
         """Suggest improvements for completeness"""
         suggestions = []
-        
+
         required_elements = self._identify_required_elements(task)
         missing_elements = []
-        
+
         for element in required_elements:
             if not self._is_element_present(context, element):
                 missing_elements.append(element)
-        
+
         if missing_elements:
             for element in missing_elements:
                 suggestions.append(RefinementAction(
@@ -838,15 +838,15 @@ class CompletenessEvaluator(QualityEvaluator):
                     implementation_cost=0.4,
                     priority=1
                 ))
-        
+
         return suggestions
-    
+
     def _identify_required_elements(self, task: str) -> List[str]:
         """Identify information elements required for task completion"""
         # Simplified requirement identification
         elements = []
         task_lower = task.lower()
-        
+
         # Common information requirements based on task type
         if 'analyze' in task_lower:
             elements.extend(['data', 'methodology', 'results', 'conclusions'])
@@ -856,22 +856,22 @@ class CompletenessEvaluator(QualityEvaluator):
             elements.extend(['definition', 'mechanisms', 'examples'])
         if 'evaluate' in task_lower:
             elements.extend(['criteria', 'evidence', 'assessment', 'recommendation'])
-        
+
         # Extract specific entities that should be covered
         entities = self._extract_entities(task)
         elements.extend(entities)
-        
+
         return list(set(elements))  # Remove duplicates
-    
+
     def _is_element_present(self, context: str, element: str) -> bool:
         """Check if required information element is present in context"""
         context_lower = context.lower()
         element_lower = element.lower()
-        
+
         # Direct mention
         if element_lower in context_lower:
             return True
-        
+
         # Synonyms and related terms (simplified)
         synonyms = {
             'data': ['information', 'statistics', 'numbers', 'evidence'],
@@ -880,59 +880,59 @@ class CompletenessEvaluator(QualityEvaluator):
             'similarities': ['common', 'shared', 'alike', 'same'],
             'differences': ['distinct', 'different', 'contrast', 'unlike']
         }
-        
+
         if element_lower in synonyms:
             for synonym in synonyms[element_lower]:
                 if synonym in context_lower:
                     return True
-        
+
         return False
-    
+
     def _extract_entities(self, task: str) -> List[str]:
         """Extract specific entities mentioned in task"""
         # Simplified entity extraction
         words = task.split()
         entities = []
-        
+
         # Look for capitalized words (potential proper nouns)
         for word in words:
             if word[0].isupper() and len(word) > 3:
                 entities.append(word.lower())
-        
+
         return entities
 
 class CoherenceEvaluator(QualityEvaluator):
     """Evaluates logical flow and consistency of context"""
-    
+
     def evaluate(self, context: str, task: str, reference: Optional[str] = None) -> float:
         """Evaluate coherence of context"""
-        
+
         # Split into sentences for analysis
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         if len(sentences) < 2:
             return 1.0  # Single sentence is trivially coherent
-        
+
         # Evaluate different aspects of coherence
         logical_flow = self._evaluate_logical_flow(sentences)
         consistency = self._evaluate_consistency(sentences)
         connectivity = self._evaluate_connectivity(sentences)
-        
+
         # Weighted combination
         coherence_score = (
             logical_flow * 0.4 +
             consistency * 0.3 +
             connectivity * 0.3
         )
-        
+
         return coherence_score
-    
+
     def suggest_improvements(self, context: str, task: str) -> List[RefinementAction]:
         """Suggest improvements for coherence"""
         suggestions = []
-        
+
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         # Check for logical flow issues
         flow_issues = self._identify_flow_issues(sentences)
         if flow_issues:
@@ -945,7 +945,7 @@ class CoherenceEvaluator(QualityEvaluator):
                 implementation_cost=0.2,
                 priority=1
             ))
-        
+
         # Check for consistency issues
         consistency_issues = self._identify_consistency_issues(sentences)
         if consistency_issues:
@@ -958,7 +958,7 @@ class CoherenceEvaluator(QualityEvaluator):
                 implementation_cost=0.3,
                 priority=1
             ))
-        
+
         # Check for connectivity issues
         if len(sentences) > 3 and self._evaluate_connectivity(sentences) < 0.6:
             suggestions.append(RefinementAction(
@@ -970,33 +970,33 @@ class CoherenceEvaluator(QualityEvaluator):
                 implementation_cost=0.1,
                 priority=2
             ))
-        
+
         return suggestions
-    
+
     def _evaluate_logical_flow(self, sentences: List[str]) -> float:
         """Evaluate logical progression of ideas"""
         # Simplified logical flow evaluation
         flow_score = 1.0
-        
+
         for i in range(len(sentences) - 1):
             current_sentence = sentences[i].lower()
             next_sentence = sentences[i + 1].lower()
-            
+
             # Check for abrupt topic changes (simplified)
             current_terms = set(current_sentence.split())
             next_terms = set(next_sentence.split())
-            
+
             overlap = len(current_terms & next_terms)
             if overlap == 0 and len(current_terms) > 3 and len(next_terms) > 3:
                 flow_score -= 0.1  # Penalty for no connection
-        
+
         return max(0.0, flow_score)
-    
+
     def _evaluate_consistency(self, sentences: List[str]) -> float:
         """Evaluate internal consistency"""
         # Simplified consistency evaluation
         consistency_score = 1.0
-        
+
         # Look for explicit contradictions (very simplified)
         contradiction_indicators = [
             ('is', 'is not'),
@@ -1005,15 +1005,15 @@ class CoherenceEvaluator(QualityEvaluator):
             ('true', 'false'),
             ('always', 'never')
         ]
-        
+
         context_lower = ' '.join(sentences).lower()
-        
+
         for positive, negative in contradiction_indicators:
             if positive in context_lower and negative in context_lower:
                 consistency_score -= 0.2
-        
+
         return max(0.0, consistency_score)
-    
+
     def _evaluate_connectivity(self, sentences: List[str]) -> float:
         """Evaluate how well sentences connect to each other"""
         # Simplified connectivity evaluation
@@ -1021,84 +1021,84 @@ class CoherenceEvaluator(QualityEvaluator):
             'however', 'therefore', 'furthermore', 'additionally', 'moreover',
             'consequently', 'nevertheless', 'meanwhile', 'similarly', 'in contrast'
         ]
-        
+
         connectivity_indicators = 0
         total_transition_opportunities = len(sentences) - 1
-        
+
         for sentence in sentences[1:]:  # Skip first sentence
             sentence_lower = sentence.lower()
             if any(word in sentence_lower for word in transition_words):
                 connectivity_indicators += 1
-        
+
         connectivity_score = connectivity_indicators / total_transition_opportunities if total_transition_opportunities > 0 else 1.0
-        
+
         # Boost score if sentences naturally flow (shared terms)
         for i in range(len(sentences) - 1):
             current_terms = set(sentences[i].lower().split())
             next_terms = set(sentences[i + 1].lower().split())
-            
+
             if len(current_terms & next_terms) > 0:
                 connectivity_score += 0.1
-        
+
         return min(1.0, connectivity_score)
-    
+
     def _identify_flow_issues(self, sentences: List[str]) -> List[str]:
         """Identify specific logical flow issues"""
         issues = []
-        
+
         for i in range(len(sentences) - 1):
             current_terms = set(sentences[i].lower().split())
             next_terms = set(sentences[i + 1].lower().split())
-            
+
             # No shared terms might indicate flow issue
             if len(current_terms & next_terms) == 0:
                 issues.append(f"Abrupt transition between sentences {i+1} and {i+2}")
-        
+
         return issues
-    
+
     def _identify_consistency_issues(self, sentences: List[str]) -> List[str]:
         """Identify specific consistency issues"""
         issues = []
-        
+
         # Very simplified consistency checking
         context_lower = ' '.join(sentences).lower()
-        
+
         if 'is' in context_lower and 'is not' in context_lower:
             issues.append("Potential contradiction detected")
-        
+
         if 'always' in context_lower and 'never' in context_lower:
             issues.append("Absolute statements may contradict")
-        
+
         return issues
 
 class EfficiencyEvaluator(QualityEvaluator):
     """Evaluates information density and conciseness"""
-    
+
     def evaluate(self, context: str, task: str, reference: Optional[str] = None) -> float:
         """Evaluate efficiency of context"""
-        
+
         # Calculate information density
         information_density = self._calculate_information_density(context)
-        
+
         # Calculate redundancy level
         redundancy = self._calculate_redundancy(context)
-        
+
         # Calculate conciseness
         conciseness = self._calculate_conciseness(context, task)
-        
+
         # Weighted combination (higher is better)
         efficiency_score = (
             information_density * 0.4 +
             (1 - redundancy) * 0.3 +  # Lower redundancy is better
             conciseness * 0.3
         )
-        
+
         return efficiency_score
-    
+
     def suggest_improvements(self, context: str, task: str) -> List[RefinementAction]:
         """Suggest improvements for efficiency"""
         suggestions = []
-        
+
         # Check redundancy
         redundancy_level = self._calculate_redundancy(context)
         if redundancy_level > 0.2:
@@ -1111,7 +1111,7 @@ class EfficiencyEvaluator(QualityEvaluator):
                 implementation_cost=0.2,
                 priority=1
             ))
-        
+
         # Check for verbose sections
         verbose_ratio = self._identify_verbose_sections(context)
         if verbose_ratio > 0.3:
@@ -1124,59 +1124,59 @@ class EfficiencyEvaluator(QualityEvaluator):
                 implementation_cost=0.3,
                 priority=2
             ))
-        
+
         return suggestions
-    
+
     def _calculate_information_density(self, context: str) -> float:
         """Calculate information density (unique concepts per word)"""
         words = context.lower().split()
         unique_words = set(words)
-        
+
         # Remove common stop words for better density calculation
         stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'is', 'are', 'was', 'were'}
         meaningful_words = [word for word in unique_words if word not in stop_words]
-        
+
         if not words:
             return 0.0
-        
+
         density = len(meaningful_words) / len(words)
         return min(1.0, density * 2)  # Scale and cap at 1.0
-    
+
     def _calculate_redundancy(self, context: str) -> float:
         """Calculate redundancy level in context"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         if len(sentences) < 2:
             return 0.0
-        
+
         # Check for repeated phrases
         redundancy_score = 0.0
         phrase_counts = {}
-        
+
         for sentence in sentences:
             words = sentence.lower().split()
             # Check 3-word phrases
             for i in range(len(words) - 2):
                 phrase = ' '.join(words[i:i+3])
                 phrase_counts[phrase] = phrase_counts.get(phrase, 0) + 1
-        
+
         # Calculate redundancy based on repeated phrases
         repeated_phrases = sum(1 for count in phrase_counts.values() if count > 1)
         total_phrases = len(phrase_counts)
-        
+
         if total_phrases > 0:
             redundancy_score = repeated_phrases / total_phrases
-        
+
         return redundancy_score
-    
+
     def _calculate_conciseness(self, context: str, task: str) -> float:
         """Calculate conciseness relative to task requirements"""
         context_length = len(context.split())
-        
+
         # Estimate optimal length based on task complexity (simplified)
         task_complexity = self._estimate_task_complexity(task)
         optimal_length = task_complexity * 50  # 50 words per complexity unit
-        
+
         if context_length <= optimal_length:
             return 1.0
         else:
@@ -1184,47 +1184,47 @@ class EfficiencyEvaluator(QualityEvaluator):
             excess_ratio = (context_length - optimal_length) / optimal_length
             conciseness = max(0.0, 1.0 - excess_ratio * 0.5)
             return conciseness
-    
+
     def _estimate_task_complexity(self, task: str) -> int:
         """Estimate task complexity (1-10 scale)"""
         task_lower = task.lower()
         complexity = 1
-        
+
         # Add complexity for different task types
         complex_indicators = ['analyze', 'compare', 'evaluate', 'synthesize']
         for indicator in complex_indicators:
             if indicator in task_lower:
                 complexity += 2
-        
+
         # Add complexity for multiple requirements
         requirement_indicators = ['and', 'also', 'additionally', 'furthermore']
         for indicator in requirement_indicators:
             if indicator in task_lower:
                 complexity += 1
-        
+
         return min(10, complexity)
-    
+
     def _identify_verbose_sections(self, context: str) -> float:
         """Identify overly verbose sections"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
         verbose_sentences = 0
-        
+
         for sentence in sentences:
             words = sentence.split()
             # Consider sentences with >30 words as potentially verbose
             if len(words) > 30:
                 verbose_sentences += 1
-        
+
         return verbose_sentences / len(sentences) if sentences else 0.0
 
 class SelfRefinementEngine:
     """Main engine for iterative context self-refinement"""
-    
+
     def __init__(self, quality_threshold: float = 0.8, max_iterations: int = 5):
         self.quality_threshold = quality_threshold
         self.max_iterations = max_iterations
         self.min_improvement = 0.02  # Minimum improvement to continue
-        
+
         # Initialize quality evaluators
         self.evaluators = {
             QualityDimension.RELEVANCE: RelevanceEvaluator(),
@@ -1232,7 +1232,7 @@ class SelfRefinementEngine:
             QualityDimension.COHERENCE: CoherenceEvaluator(),
             QualityDimension.EFFICIENCY: EfficiencyEvaluator()
         }
-        
+
         # Quality dimension weights
         self.dimension_weights = {
             QualityDimension.RELEVANCE: 0.3,
@@ -1240,68 +1240,68 @@ class SelfRefinementEngine:
             QualityDimension.COHERENCE: 0.25,
             QualityDimension.EFFICIENCY: 0.15
         }
-        
+
         # Learning and adaptation
         self.performance_history = []
         self.strategy_effectiveness = {}
-        
-    def refine_context(self, initial_context: str, task: str, 
+
+    def refine_context(self, initial_context: str, task: str,
                       reference: Optional[str] = None) -> Tuple[str, QualityAssessment, Dict]:
         """Main refinement process with iterative improvement"""
-        
+
         print(f"Starting context refinement process...")
         print(f"Initial context length: {len(initial_context)} characters")
-        
+
         current_context = initial_context
         refinement_history = []
-        
+
         # Initial quality assessment
         initial_assessment = self.assess_quality(current_context, task, reference)
         print(f"Initial quality score: {initial_assessment.overall_score:.3f}")
-        
+
         refinement_history.append({
             'iteration': 0,
             'context': current_context,
             'assessment': initial_assessment,
             'actions_taken': []
         })
-        
+
         # Refinement iterations
         for iteration in range(1, self.max_iterations + 1):
             print(f"\nRefinement iteration {iteration}:")
-            
+
             # Check if quality threshold already met
             current_assessment = self.assess_quality(current_context, task, reference)
-            
+
             if current_assessment.overall_score >= self.quality_threshold:
                 print(f"Quality threshold {self.quality_threshold:.3f} achieved!")
                 break
-            
+
             # Generate improvement actions
             improvement_actions = self._generate_improvement_actions(
                 current_context, task, current_assessment
             )
-            
+
             if not improvement_actions:
                 print("No improvement actions available.")
                 break
-            
+
             # Apply improvements
             improved_context, actions_applied = self._apply_improvements(
                 current_context, improvement_actions, task
             )
-            
+
             # Assess improvement
             new_assessment = self.assess_quality(improved_context, task, reference)
             improvement = new_assessment.overall_score - current_assessment.overall_score
-            
+
             print(f"Quality improvement: {improvement:+.3f} ({current_assessment.overall_score:.3f} → {new_assessment.overall_score:.3f})")
-            
+
             # Check for convergence
             if improvement < self.min_improvement:
                 print(f"Convergence detected (improvement < {self.min_improvement:.3f})")
                 break
-            
+
             # Update for next iteration
             current_context = improved_context
             refinement_history.append({
@@ -1311,51 +1311,51 @@ class SelfRefinementEngine:
                 'actions_taken': actions_applied,
                 'improvement': improvement
             })
-            
+
             # Learn from this iteration
             self._update_learning(actions_applied, improvement)
-        
+
         # Final assessment
         final_assessment = self.assess_quality(current_context, task, reference)
-        
+
         # Generate refinement report
         refinement_report = self._generate_refinement_report(refinement_history, initial_assessment, final_assessment)
-        
+
         print(f"\nRefinement complete!")
         print(f"Final quality score: {final_assessment.overall_score:.3f}")
         print(f"Total improvement: {final_assessment.overall_score - initial_assessment.overall_score:+.3f}")
-        
+
         return current_context, final_assessment, refinement_report
-    
+
     def assess_quality(self, context: str, task: str, reference: Optional[str] = None) -> QualityAssessment:
         """Comprehensive quality assessment across all dimensions"""
-        
+
         dimension_scores = {}
         all_suggestions = []
         assessment_details = {}
-        
+
         # Evaluate each quality dimension
         for dimension, evaluator in self.evaluators.items():
             score = evaluator.evaluate(context, task, reference)
             suggestions = evaluator.suggest_improvements(context, task)
-            
+
             dimension_scores[dimension] = score
             all_suggestions.extend(suggestions)
             assessment_details[dimension.value] = {
                 'score': score,
                 'suggestions_count': len(suggestions)
             }
-        
+
         # Calculate overall score using weighted average
         overall_score = sum(
-            dimension_scores[dim] * weight 
+            dimension_scores[dim] * weight
             for dim, weight in self.dimension_weights.items()
         )
-        
+
         # Calculate confidence based on score distribution
         score_variance = np.var(list(dimension_scores.values()))
         confidence = max(0.5, 1.0 - score_variance)  # Lower variance = higher confidence
-        
+
         return QualityAssessment(
             relevance_score=dimension_scores[QualityDimension.RELEVANCE],
             completeness_score=dimension_scores[QualityDimension.COMPLETENESS],
@@ -1366,35 +1366,35 @@ class SelfRefinementEngine:
             assessment_details=assessment_details,
             improvement_suggestions=[action.description for action in all_suggestions]
         )
-    
-    def _generate_improvement_actions(self, context: str, task: str, 
+
+    def _generate_improvement_actions(self, context: str, task: str,
                                     assessment: QualityAssessment) -> List[RefinementAction]:
         """Generate prioritized list of improvement actions"""
-        
+
         all_actions = []
-        
+
         # Get suggestions from each evaluator
         for dimension, evaluator in self.evaluators.items():
             actions = evaluator.suggest_improvements(context, task)
             all_actions.extend(actions)
-        
+
         # Prioritize actions based on expected improvement and historical effectiveness
         prioritized_actions = self._prioritize_actions(all_actions, assessment)
-        
+
         return prioritized_actions[:3]  # Return top 3 actions to avoid overwhelming changes
-    
-    def _prioritize_actions(self, actions: List[RefinementAction], 
+
+    def _prioritize_actions(self, actions: List[RefinementAction],
                           assessment: QualityAssessment) -> List[RefinementAction]:
         """Prioritize refinement actions based on multiple criteria"""
-        
+
         for action in actions:
             # Calculate priority score
             expected_value = action.expected_improvement * action.confidence
             cost_factor = 1.0 / (1.0 + action.implementation_cost)
-            
+
             # Apply historical effectiveness if available
             historical_effectiveness = self.strategy_effectiveness.get(action.action_type, 0.5)
-            
+
             # Boost actions targeting dimensions with low scores
             dimension_boost = 1.0
             if action.target_dimension == QualityDimension.RELEVANCE:
@@ -1405,20 +1405,20 @@ class SelfRefinementEngine:
                 dimension_boost = 1.0 + (0.8 - assessment.coherence_score)
             elif action.target_dimension == QualityDimension.EFFICIENCY:
                 dimension_boost = 1.0 + (0.8 - assessment.efficiency_score)
-            
+
             # Final priority score
             action.priority = expected_value * cost_factor * historical_effectiveness * dimension_boost
-        
+
         # Sort by priority (highest first)
         return sorted(actions, key=lambda a: a.priority, reverse=True)
-    
-    def _apply_improvements(self, context: str, actions: List[RefinementAction], 
+
+    def _apply_improvements(self, context: str, actions: List[RefinementAction],
                           task: str) -> Tuple[str, List[str]]:
         """Apply improvement actions to context"""
-        
+
         improved_context = context
         actions_applied = []
-        
+
         for action in actions:
             try:
                 # Apply specific improvement based on action type
@@ -1438,48 +1438,48 @@ class SelfRefinementEngine:
                     improved_context = self._remove_redundancy(improved_context)
                 elif action.action_type == "compress_verbose_sections":
                     improved_context = self._compress_verbose_sections(improved_context)
-                
+
                 actions_applied.append(action.description)
                 print(f"  Applied: {action.description}")
-                
+
             except Exception as e:
                 print(f"  Failed to apply: {action.description} - {str(e)}")
-        
+
         return improved_context, actions_applied
-    
+
     def _add_missing_content(self, context: str, action: RefinementAction, task: str) -> str:
         """Add missing content identified in the action"""
         # Simplified implementation - in practice would use retrieval or generation
         missing_info = action.description.split(": ")[1] if ": " in action.description else "additional information"
-        
+
         addition = f"\n\nRegarding {missing_info}: This aspect requires further elaboration to fully address the task requirements."
         return context + addition
-    
+
     def _remove_irrelevant_content(self, context: str, task: str) -> str:
         """Remove content not directly relevant to the task"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
         task_terms = set(task.lower().split())
-        
+
         relevant_sentences = []
         for sentence in sentences:
             sentence_terms = set(sentence.lower().split())
             # Keep sentences that share terms with the task or are very short (likely connective)
             if len(sentence_terms & task_terms) > 0 or len(sentence.split()) < 5:
                 relevant_sentences.append(sentence)
-        
+
         return '. '.join(relevant_sentences) + '.'
-    
+
     def _add_missing_information(self, context: str, action: RefinementAction, task: str) -> str:
         """Add specific missing information"""
         # Simplified - would integrate with knowledge retrieval in practice
         info_type = action.description.split(": ")[1] if ": " in action.description else "information"
         addition = f" Additionally, {info_type} should be considered in this context."
         return context + addition
-    
+
     def _improve_logical_flow(self, context: str) -> str:
         """Improve the logical flow of the context"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         # Simple reordering based on sentence connections
         # In practice, would use more sophisticated discourse analysis
         if len(sentences) > 2:
@@ -1488,7 +1488,7 @@ class SelfRefinementEngine:
             contrasts = []
             conclusions = []
             regular = []
-            
+
             for sentence in sentences:
                 sentence_lower = sentence.lower()
                 if sentence_lower.startswith('however') or 'in contrast' in sentence_lower:
@@ -1497,18 +1497,18 @@ class SelfRefinementEngine:
                     conclusions.append(sentence)
                 else:
                     regular.append(sentence)
-            
+
             # Reassemble: regular statements, then contrasts, then conclusions
             reordered = regular + contrasts + conclusions
             return '. '.join(reordered) + '.'
-        
+
         return context
-    
+
     def _resolve_contradictions(self, context: str) -> str:
         """Resolve contradictory information"""
         # Simplified contradiction resolution
         # In practice, would use more sophisticated conflict resolution
-        
+
         # Remove obvious contradictory pairs
         contradiction_pairs = [
             ('is not', 'is'),
@@ -1516,7 +1516,7 @@ class SelfRefinementEngine:
             ('never', 'always'),
             ('impossible', 'possible')
         ]
-        
+
         resolved_context = context
         for negative, positive in contradiction_pairs:
             if negative in resolved_context and positive in resolved_context:
@@ -1525,58 +1525,58 @@ class SelfRefinementEngine:
                     resolved_context = resolved_context.replace(f" {negative} ", f" is generally not ")
                 else:
                     resolved_context = resolved_context.replace(f" {negative} ", f" may not be ")
-        
+
         return resolved_context
-    
+
     def _add_transitions(self, context: str) -> str:
         """Add transition words to improve connectivity"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         if len(sentences) < 2:
             return context
-        
+
         improved_sentences = [sentences[0]]  # Keep first sentence as-is
-        
+
         transition_words = ['Furthermore', 'Additionally', 'Moreover', 'In addition', 'Similarly']
-        
+
         for i, sentence in enumerate(sentences[1:], 1):
             # Add transition if sentence doesn't already have one
             sentence_lower = sentence.lower()
             has_transition = any(word.lower() in sentence_lower[:20] for word in transition_words + ['however', 'therefore', 'consequently'])
-            
+
             if not has_transition and len(sentence.split()) > 5:
                 # Add appropriate transition
                 if i == len(sentences) - 1:  # Last sentence
                     transition = "Finally"
                 else:
                     transition = transition_words[i % len(transition_words)]
-                
+
                 sentence = f"{transition}, {sentence.lower()}"
-            
+
             improved_sentences.append(sentence)
-        
+
         return '. '.join(improved_sentences) + '.'
-    
+
     def _remove_redundancy(self, context: str) -> str:
         """Remove redundant information"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         # Remove duplicate sentences
         unique_sentences = []
         seen_sentences = set()
-        
+
         for sentence in sentences:
             sentence_normalized = ' '.join(sentence.lower().split())  # Normalize whitespace
             if sentence_normalized not in seen_sentences:
                 unique_sentences.append(sentence)
                 seen_sentences.add(sentence_normalized)
-        
+
         # Remove sentences that are subsets of other sentences
         filtered_sentences = []
         for i, sentence in enumerate(unique_sentences):
             is_redundant = False
             sentence_words = set(sentence.lower().split())
-            
+
             for j, other_sentence in enumerate(unique_sentences):
                 if i != j:
                     other_words = set(other_sentence.lower().split())
@@ -1584,20 +1584,20 @@ class SelfRefinementEngine:
                     if sentence_words.issubset(other_words) and len(sentence_words) < len(other_words) * 0.8:
                         is_redundant = True
                         break
-            
+
             if not is_redundant:
                 filtered_sentences.append(sentence)
-        
+
         return '. '.join(filtered_sentences) + '.'
-    
+
     def _compress_verbose_sections(self, context: str) -> str:
         """Compress overly verbose sections"""
         sentences = [s.strip() for s in context.split('.') if s.strip()]
-        
+
         compressed_sentences = []
         for sentence in sentences:
             words = sentence.split()
-            
+
             # Compress sentences longer than 25 words
             if len(words) > 25:
                 # Keep first part and last part, compress middle
@@ -1605,9 +1605,9 @@ class SelfRefinementEngine:
                 compressed_sentences.append(compressed)
             else:
                 compressed_sentences.append(sentence)
-        
+
         return '. '.join(compressed_sentences) + '.'
-    
+
     def _update_learning(self, actions_applied: List[str], improvement: float):
         """Update learning based on action effectiveness"""
         for action_desc in actions_applied:
@@ -1622,32 +1622,32 @@ class SelfRefinementEngine:
                 action_type = "remove_redundancy"
             else:
                 action_type = "general_improvement"
-            
+
             # Update effectiveness tracking
             current_effectiveness = self.strategy_effectiveness.get(action_type, 0.5)
             # Simple exponential moving average
             self.strategy_effectiveness[action_type] = 0.7 * current_effectiveness + 0.3 * min(1.0, improvement * 5)
-    
-    def _generate_refinement_report(self, history: List[Dict], initial: QualityAssessment, 
+
+    def _generate_refinement_report(self, history: List[Dict], initial: QualityAssessment,
                                   final: QualityAssessment) -> Dict:
         """Generate comprehensive refinement report"""
-        
+
         total_iterations = len(history) - 1
         total_improvement = final.overall_score - initial.overall_score
-        
+
         dimension_improvements = {
             'relevance': final.relevance_score - initial.relevance_score,
             'completeness': final.completeness_score - initial.completeness_score,
             'coherence': final.coherence_score - initial.coherence_score,
             'efficiency': final.efficiency_score - initial.efficiency_score
         }
-        
+
         most_improved_dimension = max(dimension_improvements, key=dimension_improvements.get)
-        
+
         all_actions = []
         for iteration in history[1:]:  # Skip initial state
             all_actions.extend(iteration.get('actions_taken', []))
-        
+
         return {
             'summary': {
                 'total_iterations': total_iterations,
@@ -1676,7 +1676,7 @@ class SelfRefinementEngine:
                 'refinement_patterns': self._analyze_refinement_patterns(history)
             }
         }
-    
+
     def _analyze_refinement_patterns(self, history: List[Dict]) -> Dict:
         """Analyze patterns in the refinement process"""
         patterns = {
@@ -1684,22 +1684,22 @@ class SelfRefinementEngine:
             'primary_focus': 'balanced',
             'efficiency_trend': 'improving'
         }
-        
+
         if len(history) > 2:
             improvements = [iteration.get('improvement', 0) for iteration in history[1:]]
-            
+
             # Analyze convergence rate
             if len(improvements) > 1:
                 if improvements[-1] < improvements[0] * 0.5:
                     patterns['convergence_rate'] = 'fast'
                 elif improvements[-1] > improvements[0] * 0.8:
                     patterns['convergence_rate'] = 'slow'
-            
+
             # Analyze primary focus based on actions
             all_actions = []
             for iteration in history[1:]:
                 all_actions.extend(iteration.get('actions_taken', []))
-            
+
             if len(all_actions) > 0:
                 if sum(1 for action in all_actions if 'Add' in action) > len(all_actions) / 2:
                     patterns['primary_focus'] = 'completeness'
@@ -1707,7 +1707,7 @@ class SelfRefinementEngine:
                     patterns['primary_focus'] = 'efficiency'
                 elif sum(1 for action in all_actions if 'flow' in action or 'transition' in action) > len(all_actions) / 2:
                     patterns['primary_focus'] = 'coherence'
-        
+
         return patterns
 
 # Example usage and demonstration
@@ -1715,36 +1715,36 @@ def demonstrate_self_refinement():
     """Demonstrate the self-refinement system with examples"""
     print("Demonstrating Self-Refinement System")
     print("=" * 50)
-    
+
     # Initialize refinement engine
     refinement_engine = SelfRefinementEngine(quality_threshold=0.85, max_iterations=4)
-    
+
     # Example context with quality issues
     initial_context = """
-    Machine learning is a type of artificial intelligence. Machine learning algorithms can learn from data. 
+    Machine learning is a type of artificial intelligence. Machine learning algorithms can learn from data.
     They are very useful. Machine learning is used in many applications. It can be applied to various domains.
     The weather is nice today. Machine learning models require training data. Training data is important.
     Machine learning can solve complex problems. It is a powerful technology.
     """
-    
+
     # Task definition
     task = "Explain what machine learning is, how it works, and provide specific examples of applications."
-    
+
     print(f"Task: {task}")
     print(f"Initial context:\n{initial_context}")
     print("\n" + "=" * 50)
-    
+
     # Perform refinement
     refined_context, final_assessment, report = refinement_engine.refine_context(
         initial_context, task
     )
-    
+
     print("\n" + "=" * 50)
     print("REFINEMENT RESULTS")
     print("=" * 50)
-    
+
     print(f"Refined context:\n{refined_context}")
-    
+
     print(f"\nFinal Quality Assessment:")
     print(f"  Relevance: {final_assessment.relevance_score:.3f}")
     print(f"  Completeness: {final_assessment.completeness_score:.3f}")
@@ -1752,19 +1752,19 @@ def demonstrate_self_refinement():
     print(f"  Efficiency: {final_assessment.efficiency_score:.3f}")
     print(f"  Overall: {final_assessment.overall_score:.3f}")
     print(f"  Confidence: {final_assessment.confidence:.3f}")
-    
+
     print(f"\nRefinement Report Summary:")
     summary = report['summary']
     print(f"  Iterations: {summary['total_iterations']}")
     print(f"  Improvement: {summary['total_improvement']:+.3f}")
     print(f"  Threshold achieved: {summary['threshold_achieved']}")
-    
+
     print(f"\nDimension Improvements:")
     for dim, improvement in report['dimension_analysis']['improvements'].items():
         print(f"  {dim.capitalize()}: {improvement:+.3f}")
-    
+
     print(f"\nMost improved dimension: {report['dimension_analysis']['most_improved']}")
-    
+
     return refined_context, final_assessment, report
 
 # Run demonstration
@@ -1785,14 +1785,14 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
 ```
 /refine.meta_learning{
     intent="Continuously improve refinement strategies through experience and pattern recognition",
-    
+
     input={
         refinement_history=<historical_refinement_sessions_and_outcomes>,
         current_context=<context_to_be_refined>,
         task_requirements=<specific_task_needs_and_success_criteria>,
         performance_targets=<quality_thresholds_and_optimization_goals>
     },
-    
+
     process=[
         /analyze.historical_patterns{
             action="Extract successful refinement patterns from experience",
@@ -1810,7 +1810,7 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
                 {quality_predictors="early_indicators_of_refinement_success_or_failure"}
             ]
         },
-        
+
         /predict.refinement_strategy{
             action="Predict optimal refinement approach for current context",
             method="Machine learning on historical refinement data",
@@ -1827,7 +1827,7 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
                 {exploratory_approach="try_novel_refinement_techniques_for_learning"}
             ]
         },
-        
+
         /execute.adaptive_refinement{
             action="Apply selected refinement strategy with real-time adaptation",
             method="Dynamic strategy execution with performance monitoring",
@@ -1844,7 +1844,7 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
                 {emergency_rollback="revert_changes_if_refinement_degrades_context_quality"}
             ]
         },
-        
+
         /learn.from_outcomes{
             action="Update refinement knowledge based on session results",
             method="Experience integration and strategy calibration",
@@ -1862,7 +1862,7 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
             ]
         }
     ],
-    
+
     output={
         refined_context=<optimally_improved_context>,
         refinement_metadata={
@@ -1878,23 +1878,23 @@ Protocols provide self-modifying refinement patterns that evolve based on effect
             meta_learning_insights=<improvements_to_the_learning_process_itself>
         }
     },
-    
+
     meta={
         refinement_evolution=<how_refinement_capabilities_have_improved_over_time>,
         predictive_accuracy=<how_well_strategy_predictions_matched_actual_outcomes>,
         learning_velocity=<rate_of_improvement_in_refinement_effectiveness>,
         knowledge_transfer=<success_in_applying_learned_patterns_to_new_contexts>
     },
-    
+
     // Self-evolution mechanisms for the refinement process itself
     meta_refinement=[
-        {trigger="refinement_strategy_consistently_underperforms", 
+        {trigger="refinement_strategy_consistently_underperforms",
          action="experiment_with_novel_refinement_approaches"},
-        {trigger="new_context_or_task_types_encountered", 
+        {trigger="new_context_or_task_types_encountered",
          action="develop_specialized_refinement_strategies"},
-        {trigger="quality_prediction_accuracy_declining", 
+        {trigger="quality_prediction_accuracy_declining",
          action="recalibrate_quality_assessment_mechanisms"},
-        {trigger="learning_velocity_decreasing", 
+        {trigger="learning_velocity_decreasing",
          action="enhance_pattern_recognition_and_knowledge_integration_algorithms"}
     ]
 }
@@ -1934,17 +1934,17 @@ This self-refinement module directly implements and extends key concepts from th
 ```python
 class CollaborativeRefinementNetwork:
     """Network of refinement agents that learn from each other"""
-    
+
     def __init__(self, num_agents: int = 3):
         self.agents = [SelfRefinementEngine() for _ in range(num_agents)]
         self.collaboration_history = []
         self.consensus_mechanisms = ConsensusBuilder()
-        
+
     def collaborative_refine(self, context: str, task: str) -> Tuple[str, Dict]:
         """Refine context using multiple agents with consensus building"""
-        
+
         print(f"Starting collaborative refinement with {len(self.agents)} agents...")
-        
+
         # Each agent independently refines the context
         individual_results = []
         for i, agent in enumerate(self.agents):
@@ -1956,27 +1956,27 @@ class CollaborativeRefinementNetwork:
                 'assessment': assessment,
                 'report': report
             })
-        
+
         # Build consensus from individual results
         consensus_result = self.consensus_mechanisms.build_consensus(
             individual_results, task
         )
-        
+
         # Cross-agent learning
         self._facilitate_cross_learning(individual_results, consensus_result)
-        
+
         return consensus_result['final_context'], consensus_result['metadata']
-    
+
     def _facilitate_cross_learning(self, individual_results: List[Dict], consensus: Dict):
         """Enable agents to learn from each other's strategies"""
-        
+
         # Identify most successful strategies
-        best_agent = max(individual_results, 
+        best_agent = max(individual_results,
                         key=lambda r: r['assessment'].overall_score)
-        
+
         # Share successful patterns with other agents
         successful_patterns = best_agent['report']['learning_insights']['strategy_effectiveness']
-        
+
         for i, agent in enumerate(self.agents):
             if i != best_agent['agent_id']:
                 # Update agent's knowledge with successful patterns
@@ -1989,25 +1989,25 @@ class CollaborativeRefinementNetwork:
 
 class ConsensusBuilder:
     """Builds consensus from multiple refinement attempts"""
-    
+
     def build_consensus(self, results: List[Dict], task: str) -> Dict:
         """Build consensus refined context from multiple agent results"""
-        
+
         # Evaluate each result
         scored_results = []
         for result in results:
             score = self._evaluate_result_quality(result, task)
             scored_results.append((score, result))
-        
+
         # Sort by quality
         scored_results.sort(reverse=True, key=lambda x: x[0])
-        
+
         # Use top result as base, incorporate insights from others
         best_result = scored_results[0][1]
         final_context = self._integrate_multiple_perspectives(
             [r[1] for r in scored_results], task
         )
-        
+
         return {
             'final_context': final_context,
             'metadata': {
@@ -2016,64 +2016,64 @@ class ConsensusBuilder:
                 'integration_method': 'weighted_synthesis'
             }
         }
-    
+
     def _evaluate_result_quality(self, result: Dict, task: str) -> float:
         """Evaluate quality of individual refinement result"""
         assessment = result['assessment']
         report = result['report']
-        
+
         # Base quality from assessment
         base_quality = assessment.overall_score
-        
+
         # Bonus for efficiency (fewer iterations = better)
         efficiency_bonus = max(0, (5 - report['summary']['total_iterations']) * 0.02)
-        
+
         # Bonus for high confidence
         confidence_bonus = assessment.confidence * 0.1
-        
+
         return base_quality + efficiency_bonus + confidence_bonus
-    
+
     def _integrate_multiple_perspectives(self, results: List[Dict], task: str) -> str:
         """Integrate insights from multiple refinement attempts"""
         # Start with best result
         base_context = results[0]['refined_context']
-        
+
         # Extract unique insights from other results
         unique_insights = []
         base_sentences = set(base_context.split('.'))
-        
+
         for result in results[1:]:
             other_sentences = set(result['refined_context'].split('.'))
             unique = other_sentences - base_sentences
             unique_insights.extend([s.strip() for s in unique if len(s.strip()) > 10])
-        
+
         # Integrate valuable unique insights
         if unique_insights:
             # Simple integration - add most relevant insights
             relevant_insights = self._filter_relevant_insights(unique_insights, task, base_context)
             if relevant_insights:
                 base_context += " " + " ".join(relevant_insights)
-        
+
         return base_context
-    
+
     def _filter_relevant_insights(self, insights: List[str], task: str, base_context: str) -> List[str]:
         """Filter insights for relevance and non-redundancy"""
         task_terms = set(task.lower().split())
         base_terms = set(base_context.lower().split())
-        
+
         relevant = []
         for insight in insights:
             insight_terms = set(insight.lower().split())
-            
+
             # Check relevance to task
             relevance = len(insight_terms & task_terms) / len(task_terms)
-            
+
             # Check non-redundancy with base
             novelty = len(insight_terms - base_terms) / len(insight_terms)
-            
+
             if relevance > 0.1 and novelty > 0.3:
                 relevant.append(insight)
-        
+
         return relevant[:2]  # Limit to top 2 insights
 ```
 
@@ -2082,66 +2082,66 @@ class ConsensusBuilder:
 ```python
 class AdaptiveQualityThresholds:
     """Dynamically adjust quality thresholds based on task importance and context"""
-    
+
     def __init__(self):
         self.task_importance_factors = {
             'critical': 1.2,
-            'high': 1.1, 
+            'high': 1.1,
             'medium': 1.0,
             'low': 0.9
         }
         self.context_complexity_adjustments = {}
         self.historical_performance = []
-        
-    def calculate_adaptive_threshold(self, base_threshold: float, task: str, 
+
+    def calculate_adaptive_threshold(self, base_threshold: float, task: str,
                                    context: str, importance: str = 'medium') -> float:
         """Calculate adaptive quality threshold based on multiple factors"""
-        
+
         # Base adjustment for task importance
         importance_multiplier = self.task_importance_factors.get(importance, 1.0)
         adjusted_threshold = base_threshold * importance_multiplier
-        
+
         # Adjust based on task complexity
         task_complexity = self._assess_task_complexity(task)
         complexity_adjustment = (task_complexity - 5) * 0.02  # Scale around medium complexity
-        
+
         # Adjust based on context characteristics
         context_difficulty = self._assess_context_difficulty(context)
         difficulty_adjustment = (context_difficulty - 5) * 0.015
-        
+
         # Historical performance adjustment
         historical_adjustment = self._get_historical_adjustment()
-        
+
         final_threshold = adjusted_threshold + complexity_adjustment + difficulty_adjustment + historical_adjustment
-        
+
         # Constrain to reasonable bounds
         return max(0.6, min(0.95, final_threshold))
-    
+
     def _assess_task_complexity(self, task: str) -> int:
         """Assess task complexity on 1-10 scale"""
         complexity = 5  # Base medium complexity
-        
+
         task_lower = task.lower()
-        
+
         # Multi-step tasks increase complexity
         if 'analyze and compare' in task_lower or 'evaluate and recommend' in task_lower:
             complexity += 2
-        
+
         # Multiple requirements increase complexity
         requirement_indicators = ['also', 'additionally', 'furthermore', 'moreover']
         complexity += sum(1 for indicator in requirement_indicators if indicator in task_lower)
-        
+
         # Domain-specific tasks may be more complex
         domain_indicators = ['technical', 'scientific', 'legal', 'medical']
         if any(domain in task_lower for domain in domain_indicators):
             complexity += 1
-        
+
         return min(10, complexity)
-    
+
     def _assess_context_difficulty(self, context: str) -> int:
         """Assess context processing difficulty on 1-10 scale"""
         difficulty = 5  # Base medium difficulty
-        
+
         # Length-based adjustment
         word_count = len(context.split())
         if word_count > 500:
@@ -2150,37 +2150,37 @@ class AdaptiveQualityThresholds:
             difficulty += 1
         elif word_count < 50:
             difficulty -= 1
-        
+
         # Complexity-based adjustment
         unique_words = len(set(context.lower().split()))
         vocabulary_diversity = unique_words / max(word_count, 1)
         if vocabulary_diversity > 0.7:
             difficulty += 1
-        
+
         # Technical content increases difficulty
         technical_indicators = ['algorithm', 'methodology', 'framework', 'implementation']
         if sum(1 for term in technical_indicators if term in context.lower()) > 2:
             difficulty += 1
-        
+
         return min(10, max(1, difficulty))
-    
+
     def _get_historical_adjustment(self) -> float:
         """Get adjustment based on historical performance"""
         if len(self.historical_performance) < 5:
             return 0.0
-        
+
         recent_performance = self.historical_performance[-10:]
         avg_performance = sum(recent_performance) / len(recent_performance)
-        
+
         # If historical performance is good, slightly lower threshold
         # If historical performance is poor, slightly raise threshold
         return (0.8 - avg_performance) * 0.1
-    
+
     def record_performance(self, achieved_quality: float, target_threshold: float):
         """Record performance for historical adjustment"""
         performance_ratio = achieved_quality / target_threshold
         self.historical_performance.append(min(1.2, performance_ratio))
-        
+
         # Keep only recent history
         if len(self.historical_performance) > 50:
             self.historical_performance = self.historical_performance[-50:]
@@ -2188,7 +2188,7 @@ class AdaptiveQualityThresholds:
 # Comprehensive Evaluation and Assessment
 class RefinementEvaluationSuite:
     """Comprehensive evaluation framework for self-refinement systems"""
-    
+
     def __init__(self):
         self.evaluation_metrics = {
             'effectiveness': self._evaluate_effectiveness,
@@ -2197,175 +2197,175 @@ class RefinementEvaluationSuite:
             'learning_capability': self._evaluate_learning_capability,
             'robustness': self._evaluate_robustness
         }
-        
-    def comprehensive_evaluation(self, refinement_engine: SelfRefinementEngine, 
+
+    def comprehensive_evaluation(self, refinement_engine: SelfRefinementEngine,
                                 test_cases: List[Dict]) -> Dict:
         """Perform comprehensive evaluation of refinement system"""
-        
+
         print("Starting comprehensive refinement evaluation...")
         results = {}
-        
+
         for metric_name, metric_function in self.evaluation_metrics.items():
             print(f"Evaluating {metric_name}...")
             metric_result = metric_function(refinement_engine, test_cases)
             results[metric_name] = metric_result
-        
+
         # Calculate overall performance score
         results['overall_performance'] = self._calculate_overall_performance(results)
-        
+
         # Generate improvement recommendations
         results['recommendations'] = self._generate_improvement_recommendations(results)
-        
+
         return results
-    
+
     def _evaluate_effectiveness(self, engine: SelfRefinementEngine, test_cases: List[Dict]) -> Dict:
         """Evaluate how effectively the system improves context quality"""
         improvements = []
         final_qualities = []
-        
+
         for test_case in test_cases:
             initial_context = test_case['context']
             task = test_case['task']
-            
+
             # Get initial quality
             initial_assessment = engine.assess_quality(initial_context, task)
-            
+
             # Perform refinement
             refined_context, final_assessment, _ = engine.refine_context(initial_context, task)
-            
+
             improvement = final_assessment.overall_score - initial_assessment.overall_score
             improvements.append(improvement)
             final_qualities.append(final_assessment.overall_score)
-        
+
         return {
             'average_improvement': np.mean(improvements),
             'improvement_consistency': 1 - np.std(improvements),
             'average_final_quality': np.mean(final_qualities),
             'success_rate': sum(1 for imp in improvements if imp > 0.02) / len(improvements)
         }
-    
+
     def _evaluate_efficiency(self, engine: SelfRefinementEngine, test_cases: List[Dict]) -> Dict:
         """Evaluate computational efficiency of refinement process"""
         iterations_used = []
         processing_times = []
         improvement_per_iteration = []
-        
+
         for test_case in test_cases:
             start_time = time.time()
-            
+
             initial_assessment = engine.assess_quality(test_case['context'], test_case['task'])
             refined_context, final_assessment, report = engine.refine_context(
                 test_case['context'], test_case['task']
             )
-            
+
             processing_time = time.time() - start_time
             iterations = report['summary']['total_iterations']
             total_improvement = report['summary']['total_improvement']
-            
+
             iterations_used.append(iterations)
             processing_times.append(processing_time)
-            
+
             if iterations > 0:
                 improvement_per_iteration.append(total_improvement / iterations)
             else:
                 improvement_per_iteration.append(0)
-        
+
         return {
             'average_iterations': np.mean(iterations_used),
             'average_processing_time': np.mean(processing_times),
             'improvement_efficiency': np.mean(improvement_per_iteration),
             'convergence_rate': sum(1 for it in iterations_used if it < engine.max_iterations) / len(iterations_used)
         }
-    
+
     def _evaluate_consistency(self, engine: SelfRefinementEngine, test_cases: List[Dict]) -> Dict:
         """Evaluate consistency of refinement results"""
         # Test same context multiple times
         consistency_scores = []
-        
+
         for test_case in test_cases[:5]:  # Test subset for consistency
             results = []
             for _ in range(3):  # Multiple runs
                 _, assessment, _ = engine.refine_context(test_case['context'], test_case['task'])
                 results.append(assessment.overall_score)
-            
+
             # Calculate coefficient of variation
             if np.mean(results) > 0:
                 cv = np.std(results) / np.mean(results)
                 consistency_scores.append(1 - cv)  # Higher consistency = lower variation
             else:
                 consistency_scores.append(0)
-        
+
         return {
             'average_consistency': np.mean(consistency_scores),
             'consistency_reliability': min(consistency_scores) if consistency_scores else 0
         }
-    
+
     def _evaluate_learning_capability(self, engine: SelfRefinementEngine, test_cases: List[Dict]) -> Dict:
         """Evaluate system's ability to learn and improve over time"""
         # Track performance improvement over sequential test cases
         performance_over_time = []
-        
+
         for i, test_case in enumerate(test_cases):
             _, assessment, report = engine.refine_context(test_case['context'], test_case['task'])
-            
+
             # Measure learning indicators
             strategy_diversity = len(engine.strategy_effectiveness)
             average_strategy_confidence = np.mean(list(engine.strategy_effectiveness.values())) if engine.strategy_effectiveness else 0.5
-            
+
             performance_over_time.append({
                 'iteration': i,
                 'quality_achieved': assessment.overall_score,
                 'strategy_diversity': strategy_diversity,
                 'average_confidence': average_strategy_confidence
             })
-        
+
         # Analyze trends
         qualities = [p['quality_achieved'] for p in performance_over_time]
         confidences = [p['average_confidence'] for p in performance_over_time]
-        
+
         # Simple linear trend analysis
         quality_trend = np.polyfit(range(len(qualities)), qualities, 1)[0] if len(qualities) > 1 else 0
         confidence_trend = np.polyfit(range(len(confidences)), confidences, 1)[0] if len(confidences) > 1 else 0
-        
+
         return {
             'quality_improvement_trend': quality_trend,
             'confidence_growth_trend': confidence_trend,
             'strategy_diversity': performance_over_time[-1]['strategy_diversity'],
             'learning_evidence': quality_trend > 0 and confidence_trend > 0
         }
-    
+
     def _evaluate_robustness(self, engine: SelfRefinementEngine, test_cases: List[Dict]) -> Dict:
         """Evaluate robustness across different context and task types"""
         performance_by_category = {}
-        
+
         for test_case in test_cases:
             category = test_case.get('category', 'general')
-            
+
             if category not in performance_by_category:
                 performance_by_category[category] = []
-            
+
             initial_assessment = engine.assess_quality(test_case['context'], test_case['task'])
             _, final_assessment, _ = engine.refine_context(test_case['context'], test_case['task'])
-            
+
             improvement = final_assessment.overall_score - initial_assessment.overall_score
             performance_by_category[category].append(improvement)
-        
+
         # Calculate robustness metrics
         category_performances = {
-            cat: np.mean(improvements) 
+            cat: np.mean(improvements)
             for cat, improvements in performance_by_category.items()
         }
-        
+
         performance_variance = np.var(list(category_performances.values()))
         min_performance = min(category_performances.values())
-        
+
         return {
             'performance_by_category': category_performances,
             'cross_category_consistency': 1 - performance_variance,
             'worst_case_performance': min_performance,
             'robustness_score': min_performance * (1 - performance_variance)
         }
-    
+
     def _calculate_overall_performance(self, results: Dict) -> float:
         """Calculate weighted overall performance score"""
         weights = {
@@ -2375,64 +2375,64 @@ class RefinementEvaluationSuite:
             'learning_capability': 0.15,
             'robustness': 0.15
         }
-        
+
         overall_score = 0
         for metric, weight in weights.items():
             if metric in results:
                 metric_score = self._extract_primary_metric_score(metric, results[metric])
                 overall_score += weight * metric_score
-        
+
         return overall_score
-    
+
     def _extract_primary_metric_score(self, metric_name: str, metric_results: Dict) -> float:
         """Extract primary score from metric results"""
         primary_keys = {
             'effectiveness': 'average_improvement',
-            'efficiency': 'improvement_efficiency', 
+            'efficiency': 'improvement_efficiency',
             'consistency': 'average_consistency',
             'learning_capability': 'quality_improvement_trend',
             'robustness': 'robustness_score'
         }
-        
+
         key = primary_keys.get(metric_name, list(metric_results.keys())[0])
         score = metric_results.get(key, 0.5)
-        
+
         # Normalize to 0-1 range if needed
         if metric_name == 'learning_capability':
             score = max(0, min(1, score * 10))  # Scale trend to 0-1
-        
+
         return max(0, min(1, score))
-    
+
     def _generate_improvement_recommendations(self, results: Dict) -> List[str]:
         """Generate specific recommendations for improvement"""
         recommendations = []
-        
+
         effectiveness = results.get('effectiveness', {})
         if effectiveness.get('success_rate', 0) < 0.8:
             recommendations.append("Improve refinement strategies - success rate below 80%")
-        
+
         efficiency = results.get('efficiency', {})
         if efficiency.get('average_iterations', 0) > 3:
             recommendations.append("Optimize for faster convergence - too many iterations needed")
-        
+
         consistency = results.get('consistency', {})
         if consistency.get('average_consistency', 0) < 0.7:
             recommendations.append("Improve consistency - results vary too much between runs")
-        
+
         learning = results.get('learning_capability', {})
         if not learning.get('learning_evidence', False):
             recommendations.append("Enhance learning mechanisms - no clear improvement over time")
-        
+
         robustness = results.get('robustness', {})
         if robustness.get('cross_category_consistency', 0) < 0.6:
             recommendations.append("Improve robustness across different context types")
-        
+
         return recommendations
 
 # Example comprehensive evaluation
 def run_comprehensive_evaluation():
     """Run comprehensive evaluation of self-refinement system"""
-    
+
     # Create test cases
     test_cases = [
         {
@@ -2456,17 +2456,17 @@ def run_comprehensive_evaluation():
             'category': 'evaluation'
         }
     ]
-    
+
     # Initialize systems
     refinement_engine = SelfRefinementEngine(quality_threshold=0.8, max_iterations=4)
     evaluation_suite = RefinementEvaluationSuite()
-    
+
     # Run evaluation
     results = evaluation_suite.comprehensive_evaluation(refinement_engine, test_cases)
-    
+
     print("\nCOMPREHENSIVE EVALUATION RESULTS")
     print("=" * 50)
-    
+
     for metric, result in results.items():
         if metric not in ['recommendations', 'overall_performance']:
             print(f"\n{metric.upper()}:")
@@ -2478,14 +2478,14 @@ def run_comprehensive_evaluation():
                         print(f"  {key}: {value}")
             else:
                 print(f"  Score: {result:.3f}")
-    
+
     print(f"\nOVERALL PERFORMANCE: {results['overall_performance']:.3f}")
-    
+
     if results['recommendations']:
         print(f"\nRECOMMENDATIONS:")
         for i, rec in enumerate(results['recommendations'], 1):
             print(f"  {i}. {rec}")
-    
+
     return results
 
 # Run demonstration

@@ -1,4 +1,4 @@
-import os 
+import os
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -9,7 +9,7 @@ config_list = [
     {"model": "gemini-1.5-flash", "api_key": os.environ.get("GOOGLE_API_KEY"), "api_type": "google"},
 ]
 
-#agents : 
+#agents :
 
 # The Number Agent always returns the same numbers.
 number_agent = ConversableAgent(

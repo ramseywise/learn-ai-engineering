@@ -6,8 +6,8 @@
 |--------|---------------|------|
 | Product & business study guide | Stakeholder translation, managing competing priorities, communicating technical trade-offs | [guides/10-product-delivery](../../guides/10-product-delivery/interview-guide.md) |
 | Case interview notes | Adaptability signals, self-awareness markers, structured thinking under pressure | [notes/case-interview.md](../../notes/case-interview.md) |
-| Customer simulation round | FDE-specific behavioral probes — client adaptation, trust-building, handling rejection | [rounds/customer-simulation.md](../customer-simulation.md) |
-| Leadership rounds | Leadership-focused behavioral questions — team building, org influence, strategic decisions | [rounds/leadership-rounds.md](../leadership-rounds.md) |
+| Customer simulation round | FDE-specific behavioral probes — client adaptation, trust-building, handling rejection | [rounds/customer-simulation.md](../customer-simulation/README.md) |
+| Leadership rounds | Leadership-focused behavioral questions — team building, org influence, strategic decisions | [rounds/leadership-rounds.md](../leadership-rounds/README.md) |
 
 ### Librarian wiki (query via `search_wiki`)
 

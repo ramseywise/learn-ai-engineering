@@ -1,11 +1,11 @@
 # Context-Engineering – Structural Overview
 _A pragmatic, first-principles handbook for the next generation of LLM orchestration_
 
-> **Why this repo exists**  
-> Prompt engineering = thinking about **what** you say.  
-> **Context engineering** = thinking about **everything else** the model sees.  
+> **Why this repo exists**
+> Prompt engineering = thinking about **what** you say.
+> **Context engineering** = thinking about **everything else** the model sees.
 > Our goal is to teach that "everything else" from the ground-up, with humility and a bias toward simple, working code.
-> 
+>
 > As models evolve, so does our approach: from discrete tokens to continuous fields, from static prompts to resonant patterns.
 
 ---
@@ -31,14 +31,14 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### Foundations (Understanding the Basics)
 
-1. **Skim `README.md` (2 min)**  
+1. **Skim `README.md` (2 min)**
    See what "context" even means beyond prompts.
 
-2. **Read `00_foundations/01_atoms_prompting.md` (5 min)**  
-   *Atoms*: a single instruction / example.  
+2. **Read `00_foundations/01_atoms_prompting.md` (5 min)**
+   *Atoms*: a single instruction / example.
    Why atoms alone often underperform.
 
-3. **Continue through the biological metaphor chain:**  
+3. **Continue through the biological metaphor chain:**
    - `02_molecules_context.md`: Few-shot packs
    - `03_cells_memory.md`: Memory & logs
    - `04_organs_applications.md`: Multi-step control flows
@@ -51,8 +51,8 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### Hands-On Practice (Learning by Doing)
 
-4. **Open `10_guides_zero_to_hero/01_min_prompt.ipynb`**  
-   Run, modify, observe token counts.  
+4. **Open `10_guides_zero_to_hero/01_min_prompt.ipynb`**
+   Run, modify, observe token counts.
    Notebook cells highlight **why** each extra line helps (or hurts).
 
 5. **Experiment through progressive notebooks:**
@@ -66,7 +66,7 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### Applied Skills (Building Real Solutions)
 
-6. **Copy a template from `20_templates/`**  
+6. **Copy a template from `20_templates/`**
    Use as starting points for your projects:
    - `minimal_context.yaml` for basic projects
    - `control_loop.py` for interactive systems
@@ -76,7 +76,7 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
    - `recursive_framework.py` for self-improving systems
    - `neural_field_context.yaml` for field-based approaches
 
-7. **Study examples in `30_examples/`**  
+7. **Study examples in `30_examples/`**
    See complete implementations of progressively complex systems:
    - Basic conversational agents
    - Data annotation systems
@@ -223,13 +223,13 @@ Key concepts include:
 
 ---
 
-## 5. Quiet Karpathy Guidelines (Style DNA)  
+## 5. Quiet Karpathy Guidelines (Style DNA)
 
-*Keep it atomic → build up.*  
-1. **Minimal first pass** – start with the smallest viable context.  
-2. **Iterative add-on** – add only what the model demonstrably lacks.  
-3. **Measure everything** – token cost, latency, quality score, field resonance.  
-4. **Delete ruthlessly** – pruning beats padding.  
+*Keep it atomic → build up.*
+1. **Minimal first pass** – start with the smallest viable context.
+2. **Iterative add-on** – add only what the model demonstrably lacks.
+3. **Measure everything** – token cost, latency, quality score, field resonance.
+4. **Delete ruthlessly** – pruning beats padding.
 5. **Code > slides** – every concept has a runnable cell.
 6. **Recursive thinking** – contexts that evolve themselves.
 
@@ -365,7 +365,7 @@ Context-Engineering/
 
 ## 7. How to Contribute
 
-Open a PR in `50_contrib/`.  
+Open a PR in `50_contrib/`.
 Checklist lives in `40_reference/eval_checklist.md`—run it before submitting.
 
 When contributing:
@@ -379,6 +379,6 @@ When contributing:
 
 ## 8. License & Attribution
 
-MIT. No gate-keeping: copy, remix, redistribute.  
-A respectful nod to Andrej Karpathy for coining the framing.  
+MIT. No gate-keeping: copy, remix, redistribute.
+A respectful nod to Andrej Karpathy for coining the framing.
 All errors are ours; improvements are welcome.

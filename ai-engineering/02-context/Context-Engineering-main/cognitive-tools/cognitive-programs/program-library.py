@@ -3,7 +3,7 @@ Cognitive Programs Library - Advanced Context Engineering
 
 Comprehensive collection of cognitive programs operationalizing cutting-edge research:
 - IBM Zurich: Cognitive Tools Architecture (Brown et al., 2025)
-- Princeton ICML: Emergent Symbolic Mechanisms (Yang et al., 2025)  
+- Princeton ICML: Emergent Symbolic Mechanisms (Yang et al., 2025)
 - Indiana University: Quantum Semantic Framework (Agostino et al., 2025)
 - Singapore-MIT: Memory-Reasoning Synergy (Li et al., 2025)
 - Shanghai AI Lab: LLM Attractor Dynamics (Zhang et al., 2025)
@@ -71,7 +71,7 @@ class CognitiveToolsEngine:
     Implementation of IBM's cognitive tools framework.
     Structured prompt templates that encapsulate reasoning operations.
     """
-    
+
     @staticmethod
     def cognitive_tool_template(
         operation: str,
@@ -81,7 +81,7 @@ class CognitiveToolsEngine:
     ) -> str:
         """
         Core cognitive tool template following IBM's structured approach.
-        
+
         Args:
             operation: The cognitive operation to perform
             problem: The problem to solve
@@ -113,14 +113,14 @@ class CognitiveToolsEngine:
 Execute this cognitive tool systematically, showing each step clearly.
         """
         return template.strip()
-    
+
     @staticmethod
     def problem_analyzer_tool(problem: str, domain: str = "general") -> str:
         """Analyze and decompose complex problems using cognitive tools"""
         return CognitiveToolsEngine.cognitive_tool_template(
             "analyze", problem, f"domain: {domain}", True
         )
-    
+
     @staticmethod
     def solution_validator_tool(solution: str, problem: str) -> str:
         """Validate solutions using structured cognitive verification"""
@@ -156,7 +156,7 @@ class SymbolicProcessingEngine:
     Implementation of Princeton's three-stage symbolic processing architecture.
     Enables abstract reasoning through symbolic variable manipulation.
     """
-    
+
     @staticmethod
     def three_stage_processor(
         problem: str,
@@ -171,7 +171,7 @@ class SymbolicProcessingEngine:
 /symbolic.three_stage{{
     intent="Apply emergent symbolic mechanisms for abstract reasoning",
     problem="{problem}",
-    
+
     stage_1_abstraction={{
         purpose="Convert input tokens to abstract variables",
         mechanism="Symbol abstraction heads",
@@ -184,7 +184,7 @@ class SymbolicProcessingEngine:
         ],
         output="Abstract symbolic variables and relationships"
     }},
-    
+
     stage_2_induction={{
         purpose="Perform sequence induction over abstract variables",
         mechanism="Symbolic induction heads",
@@ -197,7 +197,7 @@ class SymbolicProcessingEngine:
         ],
         output="Reasoning patterns and logical sequences"
     }},
-    
+
     stage_3_retrieval={{
         purpose="Generate concrete solutions from abstract reasoning",
         mechanism="Retrieval heads",
@@ -214,16 +214,16 @@ class SymbolicProcessingEngine:
 
 Execute each stage systematically, maintaining symbolic consistency throughout.
         """
-    
+
     @staticmethod
     def symbolic_abstractor(content: str, abstraction_level: str = "high") -> str:
         """Extract symbolic representations from content"""
         levels = {
             "low": "immediate concepts and direct relationships",
-            "medium": "underlying patterns and implicit structures", 
+            "medium": "underlying patterns and implicit structures",
             "high": "fundamental abstractions and universal principles"
         }
-        
+
         return f"""
 /symbolic.abstract{{
     intent="Extract symbolic representations at {abstraction_level} level",
@@ -242,7 +242,7 @@ Execute each stage systematically, maintaining symbolic consistency throughout.
 
 
 # ============================================================================
-# Indiana University: Quantum Semantic Framework  
+# Indiana University: Quantum Semantic Framework
 # ============================================================================
 
 class QuantumSemanticEngine:
@@ -250,7 +250,7 @@ class QuantumSemanticEngine:
     Implementation of quantum semantic framework with observer-dependent meaning.
     Handles semantic superposition and context-dependent interpretation.
     """
-    
+
     @staticmethod
     def meaning_generator(
         expression: str,
@@ -259,14 +259,14 @@ class QuantumSemanticEngine:
     ) -> str:
         """Generate multiple potential meanings in semantic superposition"""
         contexts_str = ", ".join(observer_contexts)
-        
+
         return f"""
 /quantum.semantic_generation{{
     intent="Generate superposition of potential interpretations",
     expression="{expression}",
     observer_contexts=[{contexts_str}],
     superposition_enabled={superposition_mode},
-    
+
     superposition_stage={{
         identify_meanings="Map all potential interpretations",
         maintain_ambiguity="Preserve multiple possibilities simultaneously",
@@ -278,7 +278,7 @@ class QuantumSemanticEngine:
             /preserve_superposition{{action="Maintain multiple states"}}
         ]
     }},
-    
+
     measurement_stage={{
         observer_contexts=[{contexts_str}],
         process=[
@@ -288,7 +288,7 @@ class QuantumSemanticEngine:
             /confidence_assessment{{action="Measure interpretation confidence"}}
         ]
     }},
-    
+
     adaptation_stage={{
         process=[
             /context_refinement{{action="Refine based on new context"}},
@@ -301,7 +301,7 @@ class QuantumSemanticEngine:
 
 For each observer context, show how meaning actualizes differently.
         """
-    
+
     @staticmethod
     def observer_dependent_interpreter(
         content: str,
@@ -310,14 +310,14 @@ For each observer context, show how meaning actualizes differently.
     ) -> str:
         """Apply observer-dependent interpretation to content"""
         params_str = json.dumps(context_params, indent=2)
-        
+
         return f"""
 /quantum.interpret{{
     intent="Apply observer-dependent semantic interpretation",
     content="{content}",
     observer_type="{observer_type}",
     context_parameters={params_str},
-    
+
     process=[
         /establish_observer_frame{{
             action="Define observer's interpretive framework",
@@ -341,7 +341,7 @@ For each observer context, show how meaning actualizes differently.
             measure="semantic uncertainty and context sensitivity"
         }}
     ],
-    
+
     output={{
         actualized_meaning="Observer-specific interpretation",
         uncertainty_map="Areas of semantic uncertainty",
@@ -361,7 +361,7 @@ class MemoryReasoningEngine:
     Implementation of MEM1 framework integrating memory consolidation with reasoning.
     Optimizes long-horizon performance through selective memory management.
     """
-    
+
     @staticmethod
     def mem1_consolidator(
         interaction_history: List[str],
@@ -370,14 +370,14 @@ class MemoryReasoningEngine:
     ) -> str:
         """Apply MEM1 memory-reasoning consolidation"""
         history_summary = "; ".join(interaction_history[-5:])  # Last 5 interactions
-        
+
         return f"""
 /mem1.consolidate{{
     intent="Apply reasoning-driven memory consolidation for efficiency",
     interaction_history=[{history_summary}],
     reasoning_context="{reasoning_context}",
     efficiency_target={efficiency_target},
-    
+
     analysis_stage={{
         interaction_patterns="Analyze memory-reasoning interactions",
         efficiency_metrics="Measure current memory utilization",
@@ -389,7 +389,7 @@ class MemoryReasoningEngine:
             /map_dependencies{{action="Understand memory element relationships"}}
         ]
     }},
-    
+
     consolidation_stage={{
         selective_compression="Compress low-value information",
         insight_extraction="Extract high-value patterns",
@@ -401,7 +401,7 @@ class MemoryReasoningEngine:
             /maintain_critical{{action="Preserve essential reasoning elements"}}
         ]
     }},
-    
+
     optimization_stage={{
         memory_pruning="Remove redundant information",
         reasoning_acceleration="Optimize for reasoning speed",
@@ -417,7 +417,7 @@ class MemoryReasoningEngine:
 
 Target: {efficiency_target * 100}% efficiency while maintaining reasoning quality.
         """
-    
+
     @staticmethod
     def long_horizon_reasoner(
         task_sequence: List[str],
@@ -426,14 +426,14 @@ Target: {efficiency_target * 100}% efficiency while maintaining reasoning qualit
     ) -> str:
         """Reason across long task sequences with memory management"""
         tasks_str = "; ".join(task_sequence)
-        
+
         return f"""
 /mem1.long_horizon_reasoning{{
     intent="Execute extended reasoning with memory-efficiency optimization",
     task_sequence=[{tasks_str}],
     memory_budget={memory_budget},
     consolidation_frequency={consolidation_frequency},
-    
+
     process=[
         /initialize_memory{{action="Set up efficient memory structure"}},
         /execute_task_sequence{{
@@ -447,7 +447,7 @@ Target: {efficiency_target * 100}% efficiency while maintaining reasoning qualit
         /finalize_insights{{action="Extract final consolidated insights"}},
         /optimize_memory{{action="Final memory optimization"}}
     ],
-    
+
     memory_management={{
         consolidation_trigger="Every {consolidation_frequency} tasks or budget exceeded",
         retention_policy="Keep high-reasoning-value elements",
@@ -467,7 +467,7 @@ class FieldDynamicsEngine:
     Implementation of field theory and attractor dynamics for cognitive systems.
     Enables emergent behaviors and persistent cognitive patterns.
     """
-    
+
     @staticmethod
     def field_generator(
         field_specification: Dict[str, Any],
@@ -478,14 +478,14 @@ class FieldDynamicsEngine:
         spec_str = json.dumps(field_specification, indent=2)
         boundary_str = json.dumps(boundary_conditions, indent=2)
         objectives_str = ", ".join(objectives)
-        
+
         return f"""
 /field.generate{{
     intent="Create cognitive field with specified dynamics",
     field_specification={spec_str},
     boundary_conditions={boundary_str},
     objectives=[{objectives_str}],
-    
+
     process=[
         /design_topology{{
             action="Design field topology and attractor basins",
@@ -512,7 +512,7 @@ class FieldDynamicsEngine:
             stability_analysis="Ensure robust convergence"
         }}
     ],
-    
+
     field_properties={{
         resonance_patterns="Coherent field oscillations",
         symbolic_residue="Persistent information patterns",
@@ -521,7 +521,7 @@ class FieldDynamicsEngine:
     }}
 }}
         """
-    
+
     @staticmethod
     def attractor_detector(
         behavior_sequence: List[str],
@@ -529,13 +529,13 @@ class FieldDynamicsEngine:
     ) -> str:
         """Identify stable behavioral attractors in cognitive systems"""
         sequence_str = "; ".join(behavior_sequence)
-        
+
         return f"""
 /field.detect_attractors{{
     intent="Identify stable behavioral patterns and attractor basins",
     behavior_sequence=[{sequence_str}],
     detection_threshold={detection_threshold},
-    
+
     process=[
         /analyze_trajectories{{
             action="Map cognitive behavioral trajectories",
@@ -562,7 +562,7 @@ class FieldDynamicsEngine:
             interaction_effects="How attractors influence each other"
         }}
     ],
-    
+
     output={{
         attractor_map="Identified stable behavioral patterns",
         basin_geometry="Attractor basin characteristics",
@@ -582,7 +582,7 @@ class ProgressiveComplexityEngine:
     Implementation of progressive complexity scaling from atoms to neural fields.
     Enables systematic capability development and complexity management.
     """
-    
+
     @staticmethod
     def complexity_orchestrator(
         task: str,
@@ -593,22 +593,22 @@ class ProgressiveComplexityEngine:
         if progression_path is None:
             progression_path = [
                 ComplexityLevel.ATOM,
-                ComplexityLevel.MOLECULE, 
+                ComplexityLevel.MOLECULE,
                 ComplexityLevel.CELL,
                 ComplexityLevel.ORGAN,
                 ComplexityLevel.NEURAL_SYSTEM,
                 ComplexityLevel.NEURAL_FIELD
             ]
-        
+
         path_str = " → ".join([level.value for level in progression_path])
-        
+
         return f"""
 /progressive.orchestrate{{
     intent="Scale cognitive complexity systematically for optimal task execution",
     task="{task}",
     target_complexity="{target_complexity.value}",
     progression_path="{path_str}",
-    
+
     complexity_scaling=[
         /atom_level={{
             description="Single instructions and basic prompts",
@@ -647,7 +647,7 @@ class ProgressiveComplexityEngine:
             action="Enable field-based cognitive emergence"
         }}
     ],
-    
+
     progression_strategy={{
         build_incrementally="Each level builds on previous capabilities",
         validate_transitions="Verify readiness before complexity increase",
@@ -659,7 +659,7 @@ class ProgressiveComplexityEngine:
 Target complexity: {target_complexity.value}
 Follow progression path, validating each level before advancing.
         """
-    
+
     @staticmethod
     def adaptive_complexity_manager(
         current_performance: float,
@@ -675,7 +675,7 @@ Follow progression path, validating each level before advancing.
     target_performance={target_performance},
     current_complexity="{current_complexity.value}",
     performance_threshold={performance_threshold},
-    
+
     process=[
         /assess_performance_gap={{
             action="Calculate performance deficit",
@@ -703,10 +703,10 @@ Follow progression path, validating each level before advancing.
             further_adjustments="Plan additional changes if needed"
         }}
     ],
-    
+
     adaptation_rules={{
         performance_boost_needed="Increase complexity level",
-        efficiency_optimization_needed="Decrease complexity level", 
+        efficiency_optimization_needed="Decrease complexity level",
         stability_required="Maintain current complexity level",
         emergency_performance="Jump to highest effective complexity"
     }}
@@ -723,7 +723,7 @@ class UnifiedCognitivePrograms:
     Unified cognitive programs integrating all research streams.
     Provides comprehensive cognitive capabilities with progressive complexity.
     """
-    
+
     def __init__(self):
         self.cognitive_tools = CognitiveToolsEngine()
         self.symbolic_processor = SymbolicProcessingEngine()
@@ -731,7 +731,7 @@ class UnifiedCognitivePrograms:
         self.memory_reasoning = MemoryReasoningEngine()
         self.field_dynamics = FieldDynamicsEngine()
         self.progressive_complexity = ProgressiveComplexityEngine()
-    
+
     def integrated_reasoning_program(
         self,
         problem: str,
@@ -742,7 +742,7 @@ class UnifiedCognitivePrograms:
         Master reasoning program integrating all research streams.
         """
         layers = []
-        
+
         if enable_all_layers:
             layers = [
                 ("cognitive_tools", "IBM Zurich cognitive tools framework"),
@@ -752,16 +752,16 @@ class UnifiedCognitivePrograms:
                 ("field_dynamics", "Shanghai AI Lab attractor dynamics"),
                 ("progressive_complexity", "Context Engineering complexity scaling")
             ]
-        
+
         layers_str = ", ".join([f"{layer[0]} ({layer[1]})" for layer in layers])
-        
+
         return f"""
 /unified.integrated_reasoning{{
     intent="Execute comprehensive reasoning using all research streams",
     problem="{problem}",
     context={context.__dict__},
     active_layers=[{layers_str}],
-    
+
     layer_1_cognitive_tools={{
         source="IBM Zurich (Brown et al., 2025)",
         enhancement="Structured reasoning operations with verification",
@@ -773,7 +773,7 @@ class UnifiedCognitivePrograms:
             /validate{{action="Verify reasoning steps and conclusions"}}
         ]
     }},
-    
+
     layer_2_symbolic_processing={{
         source="Princeton ICML (Yang et al., 2025)",
         enhancement="Three-stage abstraction-induction-retrieval",
@@ -784,7 +784,7 @@ class UnifiedCognitivePrograms:
             /verify_symbolic{{action="Validate symbolic consistency"}}
         ]
     }},
-    
+
     layer_3_quantum_semantics={{
         source="Indiana University (Agostino et al., 2025)",
         enhancement="Observer-dependent meaning actualization",
@@ -795,7 +795,7 @@ class UnifiedCognitivePrograms:
             /adaptation{{action="Refine meaning based on new context"}}
         ]
     }},
-    
+
     layer_4_memory_reasoning={{
         source="Singapore-MIT (Li et al., 2025)",
         enhancement="Efficient memory consolidation for long-horizon reasoning",
@@ -806,7 +806,7 @@ class UnifiedCognitivePrograms:
             /validate_efficiency{{action="Verify performance optimization"}}
         ]
     }},
-    
+
     layer_5_field_dynamics={{
         source="Shanghai AI Lab (Zhang et al., 2025)",
         enhancement="Attractor dynamics and emergent cognitive behaviors",
@@ -817,7 +817,7 @@ class UnifiedCognitivePrograms:
             /optimize_emergence{{action="Enhance emergent reasoning capabilities"}}
         ]
     }},
-    
+
     layer_6_progressive_complexity={{
         source="Context Engineering (Kim et al., 2025)",
         enhancement="Systematic complexity scaling from atoms to neural fields",
@@ -828,7 +828,7 @@ class UnifiedCognitivePrograms:
             /optimize_resources{{action="Balance capability with efficiency"}}
         ]
     }},
-    
+
     integration_synthesis={{
         cross_layer_optimization="Optimize interactions between all layers",
         emergent_behavior_detection="Identify novel capabilities from integration",
@@ -839,7 +839,7 @@ class UnifiedCognitivePrograms:
 
 Execute all layers systematically, showing integration points and emergent capabilities.
         """
-    
+
     def meta_cognitive_program(
         self,
         task: str,
@@ -851,28 +851,28 @@ Execute all layers systematically, showing integration points and emergent capab
     intent="Apply meta-cognitive reasoning for self-improvement",
     task="{task}",
     learning_objective="{learning_objective}",
-    
+
     self_analysis={{
         process_observation="Monitor own reasoning process",
         pattern_recognition="Identify effective and ineffective patterns",
         bottleneck_detection="Find reasoning limitations and constraints",
         strength_identification="Recognize successful reasoning strategies"
     }},
-    
+
     strategy_evaluation={{
         approach_effectiveness="Assess current reasoning approach quality",
         alternative_strategies="Consider alternative reasoning approaches",
         trade_off_analysis="Evaluate efficiency vs. accuracy trade-offs",
         context_sensitivity="Assess approach suitability for different contexts"
     }},
-    
+
     adaptive_improvement={{
         strategy_refinement="Improve current reasoning approach",
         knowledge_integration="Incorporate new insights into reasoning",
         capability_extension="Develop new reasoning capabilities",
         performance_optimization="Enhance reasoning efficiency and accuracy"
     }},
-    
+
     recursive_enhancement={{
         self_modification="Apply insights to improve own reasoning",
         meta_meta_cognition="Reason about the meta-reasoning process itself",
@@ -892,10 +892,10 @@ Apply meta-cognitive insights to enhance reasoning quality.
 
 class ProgramFactory:
     """Factory for creating and managing cognitive programs"""
-    
+
     def __init__(self):
         self.unified = UnifiedCognitivePrograms()
-    
+
     def create_program(
         self,
         program_type: str,
@@ -911,12 +911,12 @@ class ProgramFactory:
             "collaborative_agent": self._create_collaborative_agent,
             "meta_learner": self._create_meta_learner
         }
-        
+
         if program_type not in program_map:
             raise ValueError(f"Unknown program type: {program_type}")
-        
+
         return program_map[program_type](complexity, **kwargs)
-    
+
     def _create_problem_solver(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create problem-solving program with specified complexity"""
         def problem_solver(problem: str, domain: str = "general") -> str:
@@ -925,16 +925,16 @@ class ProgramFactory:
                 domain=domain,
                 complexity=complexity
             )
-            
+
             if complexity in [ComplexityLevel.ATOM, ComplexityLevel.MOLECULE]:
                 return self.unified.cognitive_tools.problem_analyzer_tool(problem, domain)
             elif complexity in [ComplexityLevel.CELL, ComplexityLevel.ORGAN]:
                 return self.unified.symbolic_processor.three_stage_processor(problem)
             else:
                 return self.unified.integrated_reasoning_program(problem, context)
-        
+
         return problem_solver
-    
+
     def _create_research_assistant(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create research assistant program"""
         def research_assistant(research_question: str, domain: str = "general") -> str:
@@ -944,7 +944,7 @@ class ProgramFactory:
                 complexity=complexity,
                 observer_context={"perspective": "researcher", "domain": domain}
             )
-            
+
             research_program = f"""
 {self.unified.integrated_reasoning_program(research_question, context)}
 
@@ -961,9 +961,9 @@ class ProgramFactory:
 }}
             """
             return research_program
-        
+
         return research_assistant
-    
+
     def _create_creative_generator(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create creative generation program"""
         def creative_generator(creative_prompt: str, style: str = "innovative") -> str:
@@ -972,13 +972,13 @@ class ProgramFactory:
                 complexity=complexity,
                 observer_context={"perspective": "creative", "style": style}
             )
-            
+
             # Use quantum semantics for multiple perspective generation
             quantum_creativity = self.unified.quantum_semantic.meaning_generator(
                 creative_prompt,
                 ["artist", "scientist", "philosopher", "innovator"]
             )
-            
+
             creative_program = f"""
 {quantum_creativity}
 
@@ -994,9 +994,9 @@ class ProgramFactory:
 }}
             """
             return creative_program
-        
+
         return creative_generator
-    
+
     def _create_analytical_reasoner(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create analytical reasoning program"""
         def analytical_reasoner(analysis_task: str, framework: str = "systematic") -> str:
@@ -1004,14 +1004,14 @@ class ProgramFactory:
                 problem=analysis_task,
                 complexity=complexity
             )
-            
+
             # Use symbolic processing for analytical tasks
             symbolic_analysis = self.unified.symbolic_processor.three_stage_processor(
                 analysis_task,
                 abstraction_focus="analytical variables and relationships",
                 induction_method="logical inference and pattern analysis"
             )
-            
+
             analytical_program = f"""
 {symbolic_analysis}
 
@@ -1027,9 +1027,9 @@ class ProgramFactory:
 }}
             """
             return analytical_program
-        
+
         return analytical_reasoner
-    
+
     def _create_collaborative_agent(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create collaborative multi-agent program"""
         def collaborative_agent(
@@ -1041,9 +1041,9 @@ class ProgramFactory:
                 problem=collaborative_task,
                 complexity=complexity
             )
-            
+
             roles_str = ", ".join(agent_roles)
-            
+
             collaborative_program = f"""
 {self.unified.integrated_reasoning_program(collaborative_task, context)}
 
@@ -1061,9 +1061,9 @@ class ProgramFactory:
 }}
             """
             return collaborative_program
-        
+
         return collaborative_agent
-    
+
     def _create_meta_learner(self, complexity: ComplexityLevel, **kwargs) -> Callable:
         """Create meta-learning program"""
         def meta_learner(
@@ -1071,7 +1071,7 @@ class ProgramFactory:
             learning_objective: str = "improve reasoning effectiveness"
         ) -> str:
             meta_program = self.unified.meta_cognitive_program(learning_task, learning_objective)
-            
+
             enhanced_meta_program = f"""
 {meta_program}
 
@@ -1087,7 +1087,7 @@ class ProgramFactory:
 }}
             """
             return enhanced_meta_program
-        
+
         return meta_learner
 
 
@@ -1097,38 +1097,38 @@ class ProgramFactory:
 
 def demonstrate_program_library():
     """Demonstrate the capabilities of the cognitive program library"""
-    
+
     # Initialize the factory
     factory = ProgramFactory()
-    
+
     # Example 1: Problem Solver with Neural System complexity
     problem_solver = factory.create_program("problem_solver", ComplexityLevel.NEURAL_SYSTEM)
     math_solution = problem_solver(
         "Find all solutions to the system: x² + y² = 25, xy = 12",
         "mathematics"
     )
-    
+
     # Example 2: Research Assistant with Neural Field complexity
     research_assistant = factory.create_program("research_assistant", ComplexityLevel.NEURAL_FIELD)
     research_analysis = research_assistant(
         "What are the implications of quantum computing for machine learning?",
         "computer_science"
     )
-    
+
     # Example 3: Creative Generator with Quantum Semantics
     creative_generator = factory.create_program("creative_generator")
     creative_output = creative_generator(
         "Design a sustainable city of the future",
         "visionary"
     )
-    
+
     # Example 4: Meta-Learner for Self-Improvement
     meta_learner = factory.create_program("meta_learner")
     meta_learning = meta_learner(
         "Improve mathematical reasoning capabilities",
         "enhance problem-solving accuracy and efficiency"
     )
-    
+
     return {
         "math_solution": math_solution,
         "research_analysis": research_analysis,
@@ -1143,7 +1143,7 @@ def demonstrate_program_library():
 
 __all__ = [
     'ComplexityLevel',
-    'ProcessingStage', 
+    'ProcessingStage',
     'CognitiveContext',
     'ProgramResult',
     'CognitiveToolsEngine',
@@ -1160,10 +1160,10 @@ __all__ = [
 if __name__ == "__main__":
     # Run demonstration
     results = demonstrate_program_library()
-    
+
     print("Cognitive Programs Library - Demonstration Results")
     print("=" * 60)
-    
+
     for program_type, output in results.items():
         print(f"\n{program_type.upper()}:")
         print("-" * 40)

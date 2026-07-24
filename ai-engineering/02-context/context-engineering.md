@@ -20,14 +20,14 @@ Context Engineering is the process of selecting, organizing, compressing, and de
 2. **Context Ranking  -reranking - Only send the highest-ranked results. — also for RAG**
 3. **Dynamic Context Windows: adjusts context size based on task complexity:**
     1. simple one (Simple FAQ)— less chunks
-    2. complex one (Product comparison)— more chunks 
-4. **Metadata Filtering First — also used in RAG** 
-5. **Context Deduplication — but, need to detect deduplicated chunks after re-retrieval, cuz they might be the most relevant chunks, — a good parameters for reranking** 
-6. **Conversation Memory Management — Memory management + Context Management** 
+    2. complex one (Product comparison)— more chunks
+4. **Metadata Filtering First — also used in RAG**
+5. **Context Deduplication — but, need to detect deduplicated chunks after re-retrieval, cuz they might be the most relevant chunks, — a good parameters for reranking**
+6. **Conversation Memory Management — Memory management + Context Management**
 7. **Hierarchical Retrieval —?**
-8. **Context Caching — hot questions caching** 
+8. **Context Caching — hot questions caching**
 9. **Structured Context Formatting - Avoid dumping raw text.**
-10. **Context Validation - avoid poor context — hallucination** 
+10. **Context Validation - avoid poor context — hallucination**
     1. Remove outdated documents
     2. Validate permissions
     3. Detect conflicting information
@@ -71,20 +71,20 @@ Response
 - When should I use this?
 - When should I not use this?
 - What are the outputs and success criteria?
-    
-    2 points: skill description tokens and precision 
-    
+
+    2 points: skill description tokens and precision
+
     ```markdown
     # bad skill description（约 45 tokens）
     description: |
       This skill handles the complete deployment process to production.
       It covers environment checks, rollback procedures, and post-deploy
       verification. Use this before deploying any code to production.
-    
+
     # good（约 9 tokens）
     description: Use when deploying to production or rolling back.
     ```
-    
+
 
 **2) Add negative examples and edge cases to reduce misfires**
 
@@ -122,4 +122,3 @@ A strong default posture:
 - Skills: **allowed**
 - Shell: **allowed**
 - Network: **enabled only with a minimal allowlist**, per request, for narrowly scoped tasks
-

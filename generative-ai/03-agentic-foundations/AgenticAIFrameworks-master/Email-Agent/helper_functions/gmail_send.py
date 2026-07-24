@@ -12,7 +12,7 @@ import os
 def send_email(service, to, subject, body, body_type='plain', attachment_paths=None):
     """
     Send an email with optional attachments.
-    
+
     Args:
         service: Gmail API service object
         to (str): Recipient email address
@@ -20,7 +20,7 @@ def send_email(service, to, subject, body, body_type='plain', attachment_paths=N
         body (str): Email body
         body_type (str): Body type ('plain' or 'html', default: 'plain')
         attachment_paths (list): List of file paths to attach
-    
+
     Returns:
         dict: Response from Gmail API
     """

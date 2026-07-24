@@ -94,8 +94,8 @@ def generate_with_multiple_input(messages: List[Dict], top_p: float = 1, tempera
     return output_dict
 
 def generate_params_dict(
-    prompt: str, 
-    temperature: float = None, 
+    prompt: str,
+    temperature: float = None,
     role = 'user',
     top_p: float = None,
     max_tokens: int = 500,
@@ -103,20 +103,20 @@ def generate_params_dict(
 ):
     """
     Call an LLM with different sampling parameters to observe their effects.
-    
+
     Args:
         prompt: The text prompt to send to the model
         temperature: Controls randomness (lower = more deterministic)
         top_p: Controls diversity via nucleus sampling
         max_tokens: Maximum number of tokens to generate
         model: The model to use
-        
+
     Returns:
         The LLM response
     """
-    
+
     # Create the dictionary with the necessary parameters
-    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model} 
+    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model}
 
 
     return kwargs
@@ -131,7 +131,7 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.embeddings.create(**payload).model_dump()
@@ -151,8 +151,8 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
 class ChatBot:
     """
     A simple chatbot class for handling user interactions using an LLM.
-    
-    This class maintains a conversation context and interfaces with a language model API 
+
+    This class maintains a conversation context and interfaces with a language model API
     to generate responses related to a clothing store.
     """
     def __init__(self, generator_function, model: str = "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo", context_window: int = 20):
@@ -222,7 +222,7 @@ class ChatBot:
 class ChatWidget:
     """
     A widget-based UI for interacting with the ChatBot using ipywidgets.
-    
+
     Displays messages, handles user input, and dynamically loads related images.
     """
     def __init__(self, generator_function):

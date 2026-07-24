@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md)
 > Position in the stack: sixth foundation — *measures every layer below; guide = exam summary, here = depth*.
-> Deep note: [eval-harness.md](../../interviewing/notes/eval-harness.md)
+> Deep note: [eval-harness.md](eval-harness.md)
 
 ---
 
@@ -21,8 +21,8 @@ Evaluation engineering is the discipline of building systematic measurement for 
 ## Resource map
 
 ### Deep notes
-- [eval-harness.md](../../interviewing/notes/eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
-- [observability.md](../../interviewing/notes/observability.md) — tracing, logging, metrics for agent systems; LangFuse integration.
+- [eval-harness.md](eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
+- [observability.md](observability.md) — tracing, logging, metrics for agent systems; LangFuse integration.
 
 ### Interviewing guide
 - [6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep.

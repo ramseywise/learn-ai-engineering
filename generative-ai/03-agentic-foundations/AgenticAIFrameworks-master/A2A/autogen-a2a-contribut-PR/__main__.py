@@ -20,7 +20,7 @@ def main(host, port):
     try:
         if not os.getenv("OPENAI_API_KEY"):
             raise MissingAPIKeyError("OPENAI_API_KEY environment variable not set.")
-        
+
         capabilities = AgentCapabilities(streaming=True, pushNotifications=True)
         skill = AgentSkill(
             id="convert_currency",
@@ -41,26 +41,26 @@ def main(host, port):
         )
         notification_sender_auth = PushNotificationSenderAuth()
         notification_sender_auth.generate_jwk()
-        
+
         server = A2AServer(
             agent_card=agent_card,
             task_manager=AgentTaskManager(
-                agent=CurrencyAgent(), 
+                agent=CurrencyAgent(),
                 notification_sender_auth=notification_sender_auth
             ),
             host=host,
             port=port,
         )
-        
+
         server.app.add_route(
-            "/.well-known/jwks.json", 
-            notification_sender_auth.handle_jwks_endpoint, 
+            "/.well-known/jwks.json",
+            notification_sender_auth.handle_jwks_endpoint,
             methods=["GET"]
         )
-        
+
         logger.info(f"Starting AutoGen Currency Agent server on {host}:{port}")
         server.start()
-        
+
     except MissingAPIKeyError as e:
         logger.error(f"Error: {e}")
         exit(1)

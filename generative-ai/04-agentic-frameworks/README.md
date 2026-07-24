@@ -20,17 +20,17 @@ given problem.
 
 ### Reference material
 
-- **[`frameworks/agent-feature-parity.md`](frameworks/agent-feature-parity.md)** —
+- **`frameworks/agent-feature-parity.md`** —
   feature-parity comparison across agentic frameworks.
-- **[`frameworks/google-adk.md`](frameworks/google-adk.md)** —
+- **[`notes/google-adk.md`](notes/google-adk.md)** —
   Google ADK reference: architecture, tool registration, deployment patterns.
-- **[`frameworks/langgraph.md`](frameworks/langgraph.md)** —
+- **`frameworks/langgraph.md`** —
   LangGraph reference: state graph design, persistence, streaming, checkpointers.
-- **[`frameworks/langfuse.md`](frameworks/langfuse.md)** —
+- **[`notes/langfuse.md`](notes/langfuse.md)** —
   LangFuse reference: tracing integration, scoring APIs, dataset management.
-- **[`frameworks/langsmith.md`](frameworks/langsmith.md)** —
+- **[`notes/langsmith.md`](notes/langsmith.md)** —
   LangSmith reference: tracing, evaluation, prompt hub.
-- **[`frameworks/va-langgraph-production-parity.md`](frameworks/va-langgraph-production-parity.md)** —
+- **`frameworks/va-langgraph-production-parity.md`** —
   LangGraph production parity analysis: what production deployment requires vs. course examples.
 
 ---

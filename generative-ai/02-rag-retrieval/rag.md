@@ -13,7 +13,7 @@ https://martinfowler.com/articles/reliable-llm-bayer.html?ref=dailydev
 
 https://pub.towardsai.net/9-rag-architectures-that-save-you-months-of-dev-work-0e219eb637cb
 
-![9 RAG architectures overview](../images/9-rag-architectures.png)
+![9 RAG architectures overview](../../interviewing/images/9-rag-architectures.png)
 
 - Implement **Standard RAG** as your baseline, then prototype **one additional pattern** (CRAG for accuracy, Conversational for chat, Fusion for enterprise).
 - Run the **A/B test plan** at the end to validate impact.
@@ -28,7 +28,7 @@ Pros: Reduces factual errors and produces evidence-backed answers.
 Cons: Higher latency and cost.
 Production tip: Build a robust claim extractor (rules + NER) and track claim-level precision.
 
-**4. Adaptive RAG — route to fit intent** 
+**4. Adaptive RAG — route to fit intent**
 
 Route queries to different retrieval and prompt pipelines based on detected intent or confidence.
 
@@ -131,7 +131,7 @@ Combine vector retrieval with a knowledge graph to enable entity-driven, multi-h
 - PII redaction pipeline and strict access controls for private data.
 - Human-in-the-loop review for flagged outputs, with feedback loops for retraining or re-indexing.
 
-**Context Augmentation in RAG** 
+**Context Augmentation in RAG**
 
 Modular RAG- Transforming RAG Systems into LEGO-like Reconfigurable Frameworks.pdf
 

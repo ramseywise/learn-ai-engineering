@@ -70,7 +70,7 @@ Context-Engineering/
 │   ├── 00_toy_chatbot/                           # Simple conversation agent
 │   ├── 01_data_annotator/                        # Data labeling system
 │   ├── 02_multi_agent_orchestrator/              # Agent collaboration system
-│   ├── 03_vscode_helper/                         # IDE integration 
+│   ├── 03_vscode_helper/                         # IDE integration
 │   ├── 04_rag_minimal/                           # Minimal RAG implementation
 │   ├── 05_streaming_window/                      # Real-time context demo
 │   ├── 06_residue_scanner/                       # Symbolic residue demo

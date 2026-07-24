@@ -33,11 +33,11 @@ def set_attachment_paths(paths):
 def send_email_to_professor(question: str, attachments_info: str = "") -> str:
     """
     Send an email to the professor with a student's question.
-    
+
     Args:
         question: The student's question or message to send to the professor
         attachments_info: Information about any attachments (file names)
-    
+
     Returns:
         A confirmation message about the email being sent
     """
@@ -45,19 +45,19 @@ def send_email_to_professor(question: str, attachments_info: str = "") -> str:
     print(" TOOL CALLED: send_email_to_professor")
     print(f" Question: {question}")
     print(f" Attachments info: {attachments_info}")
-    
+
     from helper_functions.gmail_send import send_email
-    
+
     global current_attachment_paths
-    
+
     if not gmail_service:
         print("❌ Gmail service not initialized")
         print("-"*40 + "\n")
         return "Error: Email service not initialized. Please check your Gmail authentication."
-    
+
     try:
         subject = f"Question about {COURSE_INFO['course_code']} - {COURSE_INFO['course_name']}"
-        
+
         body = f"""
 
 {question}
@@ -65,18 +65,18 @@ def send_email_to_professor(question: str, attachments_info: str = "") -> str:
 """
         if attachments_info:
             body += f"\nAttached files: {attachments_info}\n"
-        
+
         body += """
 
 
 
  Student"""
-        
+
         print(f" Sending email to: {COURSE_INFO['professor']['email']}")
         print(f" Subject: {subject}")
         print(f" Body length: {len(body)} chars")
         print(f" Attachment paths: {current_attachment_paths}")
-        
+
         result = send_email(
             service=gmail_service,
             to=COURSE_INFO['professor']['email'],
@@ -84,12 +84,12 @@ def send_email_to_professor(question: str, attachments_info: str = "") -> str:
             body=body,
             attachment_paths=current_attachment_paths
         )
-        
+
         success_msg = f"✅ Email successfully sent to Professor {COURSE_INFO['professor']['name']} at {COURSE_INFO['professor']['email']}"
         print(f"✅ {success_msg}")
         print("-"*40 + "\n")
         return success_msg
-    
+
     except Exception as e:
         error_msg = f" Error sending email: {str(e)}"
         print(f" Exception: {e}")
@@ -105,21 +105,21 @@ class AgentState(TypedDict):
 
 def create_agent():
     """Create and return the LangGraph agent"""
-    
+
     # Initialize LLM
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-    
+
     # Bind tools to LLM
     tools = [send_email_to_professor]
     llm_with_tools = llm.bind_tools(tools)
-    
+
     # Create the graph
     workflow = StateGraph(AgentState)
-    
+
     # Define the agent node
     def agent_node(state: AgentState):
         course_context = get_course_context()
-        
+
         system_message = SystemMessage(content=f"""You are a helpful course assistant for {COURSE_INFO['course_code']} - {COURSE_INFO['course_name']}.
 
 Your role is to:
@@ -144,49 +144,49 @@ RESPONSE GUIDELINES:
 - For assignments: provide assignment details and due dates
 - For office hours: provide professor's office hours and location
 """)
-        
+
         messages = [system_message] + state["messages"]
         response = llm_with_tools.invoke(messages)
-        
+
         return {"messages": [response]}
-    
+
     # Define routing function
     def should_continue(state: AgentState):
         last_message = state["messages"][-1]
         print(f"\n ROUTING: Checking if should continue...")
         print(f"   Last message type: {type(last_message).__name__}")
-        
+
         if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
             print(f"    Has tool calls: {len(last_message.tool_calls)} - routing to TOOLS")
             return "tools"
-        
+
         print(f"    No tool calls - routing to END")
         return END
-    
+
     # Add nodes
     workflow.add_node("agent", agent_node)
     workflow.add_node("tools", ToolNode(tools))
-    
+
     # Add edges
     workflow.set_entry_point("agent")
     workflow.add_conditional_edges("agent", should_continue, {"tools": "tools", END: END})
     workflow.add_edge("tools", "agent")
-    
+
     # Compile the graph
     app = workflow.compile()
-    
+
     return app
 
 
 def run_agent(user_message: str, uploaded_files: list = None, conversation_history: list = None):
     """
     Run the agent with a user message
-    
+
     Args:
         user_message: The user's question or message
         uploaded_files: List of file paths for attachments
         conversation_history: Previous conversation messages for context
-    
+
     Returns:
         The agent's response
     """
@@ -204,9 +204,9 @@ def run_agent(user_message: str, uploaded_files: list = None, conversation_histo
         user_message += f"\n[Note: User has attached the following files: {attachments_info}]"
     else:
         set_attachment_paths(None)
-    
+
     app = create_agent()
-    
+
     # Build message history - only include text content, no tool calls
     messages = []
     if conversation_history:
@@ -218,17 +218,17 @@ def run_agent(user_message: str, uploaded_files: list = None, conversation_histo
             elif msg["role"] == "assistant":
                 # Only add assistant messages as AIMessage with text content
                 messages.append(AIMessage(content=msg["content"]))
-    
+
     # Add current user message
     messages.append(HumanMessage(content=user_message))
     print(f"\n Total messages to send to agent: {len(messages)}")
-    
+
     # Create initial state
     initial_state = {
         "messages": messages,
         "course_context": get_course_context()
     }
-    
+
     print("\n Invoking LangGraph agent...")
     # Run the agent
     try:
@@ -237,17 +237,17 @@ def run_agent(user_message: str, uploaded_files: list = None, conversation_histo
     except Exception as e:
         print(f"\n Exception: {e}")
         error_str = str(e)
-        
+
         # Check if email was sent successfully before the error
         if "Email successfully sent" in error_str or "tool" in error_str.lower():
             print("✅ Detected email was sent despite error - returning success message")
             return "✅ Email successfully sent to Professor"
         else:
             raise  # Re-raise if it's a different error
-    
+
     # Extract the final response - get the last AI message
     final_messages = result["messages"]
-    
+
     # Debug: Print all result messages
     for i, msg in enumerate(final_messages):
         print(f"\n  Result message [{i}]:")
@@ -258,7 +258,7 @@ def run_agent(user_message: str, uploaded_files: list = None, conversation_histo
             print(f"    Tool calls: {len(msg.tool_calls)}")
             for tc in msg.tool_calls:
                 print(f"      - {tc.get('name', 'unknown')}")
-    
+
     # Find the last message with content
     for i, msg in enumerate(reversed(final_messages)):
         if hasattr(msg, 'content') and msg.content and isinstance(msg.content, str):
@@ -266,7 +266,7 @@ def run_agent(user_message: str, uploaded_files: list = None, conversation_histo
             print(f"   Content preview: {msg.content[:100]}...")
             print("="*80 + "\n")
             return msg.content
-    
+
     # Fallback
     print("\n⚠️ Using fallback return")
     print("="*80 + "\n")

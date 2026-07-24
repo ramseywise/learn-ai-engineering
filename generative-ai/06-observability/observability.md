@@ -2,8 +2,8 @@
 
 Schema contract for what every agent logs and how eval runs are identified, reproduced,
 and compared. Platform wiring lives in the tooling docs:
-→ [langfuse.md](../langfuse.md) (primary)
-→ [langsmith.md](../langsmith.md) (secondary / VA agents)
+→ [langfuse.md](../04-agentic-frameworks/notes/langfuse.md) (primary)
+→ [langsmith.md](../04-agentic-frameworks/notes/langsmith.md) (secondary / VA agents)
 
 ---
 

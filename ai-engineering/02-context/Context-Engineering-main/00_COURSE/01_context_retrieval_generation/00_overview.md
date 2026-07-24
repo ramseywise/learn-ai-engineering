@@ -2,7 +2,7 @@
 ## From Static Prompts to Dynamic Knowledge Orchestration
 
 > **Module 01** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 ---
@@ -48,10 +48,10 @@ Now solve: [problem]"
 ### Stage 4: Dynamic Context Assembly
 ```
 Context = Assemble(
-    task_instructions + 
-    relevant_retrieved_knowledge + 
-    user_history + 
-    domain_expertise + 
+    task_instructions +
+    relevant_retrieved_knowledge +
+    user_history +
+    domain_expertise +
     real_time_data
 )
 ```
@@ -85,7 +85,7 @@ cknow = R(cquery, K)
 
 Where:
 - **R** is the retrieval function
-- **cquery** is the user's immediate request  
+- **cquery** is the user's immediate request
 - **K** is the external knowledge base
 
 ### Information-Theoretic Optimization
@@ -154,7 +154,7 @@ Subject to constraints:
 
 **Ground-up Explanation**: This stack shows how context engineering builds up from basic prompts to sophisticated information orchestration. Each layer adds capability:
 - **Bottom Layer**: Core prompt engineering - how to communicate effectively with LLMs
-- **Middle Layer**: Knowledge retrieval - how to find and access relevant external information  
+- **Middle Layer**: Knowledge retrieval - how to find and access relevant external information
 - **Top Layer**: Context assembly - how to combine everything optimally
 
 ---
@@ -182,7 +182,7 @@ Consider the complexity, available information, and reasoning requirements.
 ### Step 1: Problem Decomposition
 Break down the main question into sub-questions:
 1. {subquestion_1}
-2. {subquestion_2}  
+2. {subquestion_2}
 3. {subquestion_3}
 
 ### Step 2: Evidence Analysis
@@ -200,7 +200,7 @@ Premise 1: [statement with evidence]
     ├─ Supporting detail B
     └─ Confidence level: [high/medium/low]
 
-Premise 2: [statement with evidence] 
+Premise 2: [statement with evidence]
     ├─ Supporting detail C
     ├─ Supporting detail D
     └─ Confidence level: [high/medium/low]
@@ -239,7 +239,7 @@ What other explanations or solutions are possible?
 ```xml
 <knowledge_integration_template>
   <intent>Systematically integrate external knowledge with user query for optimal response</intent>
-  
+
   <context_analysis>
     <user_query>
       <main_intent>{primary_user_goal}</main_intent>
@@ -251,41 +251,41 @@ What other explanations or solutions are possible?
       <complexity_level>{simple|moderate|complex|expert}</complexity_level>
       <domain_context>{specific_field_or_general}</domain_context>
     </user_query>
-    
+
     <information_needs>
       <critical_info>Information absolutely required for accurate response</critical_info>
       <supporting_info>Information that would improve response quality</supporting_info>
       <contextual_info>Information that provides helpful background</contextual_info>
     </information_needs>
   </context_analysis>
-  
+
   <knowledge_retrieval_strategy>
     <search_approach>
       <primary_search>{most_likely_to_find_critical_info}</primary_search>
       <secondary_search>{backup_approach_for_comprehensive_coverage}</secondary_search>
       <tertiary_search>{specialized_or_edge_case_coverage}</tertiary_search>
     </search_approach>
-    
+
     <quality_filters>
       <relevance_threshold>How closely information must match query intent</relevance_threshold>
       <credibility_threshold>Minimum source reliability standard</credibility_threshold>
       <recency_weight>How much to prioritize recent vs authoritative information</recency_weight>
     </quality_filters>
   </knowledge_retrieval_strategy>
-  
+
   <context_assembly>
     <information_hierarchy>
       <tier_1>Core facts directly answering main question</tier_1>
       <tier_2>Supporting evidence and explanations</tier_2>
       <tier_3>Background context and related information</tier_3>
     </information_hierarchy>
-    
+
     <assembly_constraints>
       <max_context_length>{token_limit_consideration}</max_context_length>
       <cognitive_load_limit>Maximum information complexity for user comprehension</cognitive_load_limit>
       <coherence_requirement>How information should connect logically</coherence_requirement>
     </assembly_constraints>
-    
+
     <assembly_process>
       <step name="prioritize">Rank retrieved information by relevance and importance</step>
       <step name="filter">Remove redundant, outdated, or low-quality information</step>
@@ -294,14 +294,14 @@ What other explanations or solutions are possible?
       <step name="validate">Ensure assembled context supports accurate, helpful response</step>
     </assembly_process>
   </context_assembly>
-  
+
   <response_optimization>
     <tailoring>
       <user_expertise_level>Adjust technical depth appropriately</user_expertise_level>
       <communication_style>Match user's preferred interaction mode</communication_style>
       <information_density>Balance comprehensiveness with clarity</information_density>
     </tailoring>
-    
+
     <quality_assurance>
       <accuracy_check>Verify information correctness and context alignment</accuracy_check>
       <completeness_check>Ensure all critical user needs are addressed</completeness_check>
@@ -340,41 +340,41 @@ class RetrievalCandidate:
     recency_score: float
     content_type: str  # 'fact', 'procedure', 'example', 'definition'
     metadata: Dict
-    
+
 class KnowledgeRetriever(ABC):
     """Abstract base for different knowledge retrieval strategies"""
-    
+
     @abstractmethod
     def retrieve(self, query: str, max_results: int = 10) -> List[RetrievalCandidate]:
         """Retrieve relevant knowledge for the given query"""
         pass
-    
+
     @abstractmethod
-    def update_relevance_feedback(self, query: str, candidate: RetrievalCandidate, 
+    def update_relevance_feedback(self, query: str, candidate: RetrievalCandidate,
                                  helpful: bool):
         """Learn from user feedback about retrieval quality"""
         pass
 
 class SemanticVectorRetriever(KnowledgeRetriever):
     """Retrieval using semantic similarity via embeddings"""
-    
+
     def __init__(self, embedding_model, vector_database):
         self.embedding_model = embedding_model
         self.vector_db = vector_database
         self.feedback_history = []
-        
+
     def retrieve(self, query: str, max_results: int = 10) -> List[RetrievalCandidate]:
         """Retrieve semantically similar content"""
-        
+
         # Generate query embedding
         query_embedding = self.embedding_model.encode(query)
-        
+
         # Search vector database
         raw_results = self.vector_db.similarity_search(
-            query_embedding, 
+            query_embedding,
             top_k=max_results * 2  # Get more candidates for filtering
         )
-        
+
         # Convert to RetrievalCandidates with scoring
         candidates = []
         for result in raw_results:
@@ -388,72 +388,72 @@ class SemanticVectorRetriever(KnowledgeRetriever):
                 metadata=result.metadata
             )
             candidates.append(candidate)
-        
+
         # Apply learning from feedback history
         candidates = self._apply_feedback_learning(query, candidates)
-        
+
         # Rank and filter
         ranked_candidates = self._rank_candidates(candidates)
-        
+
         return ranked_candidates[:max_results]
-    
+
     def _calculate_relevance_score(self, query: str, result) -> float:
         """Calculate how relevant the content is to the query"""
-        
+
         # Base semantic similarity
         base_score = result.similarity_score
-        
+
         # Adjust based on content type match
         content_type_bonus = self._get_content_type_bonus(query, result.content)
-        
+
         # Adjust based on query specificity
         specificity_factor = self._calculate_query_specificity_factor(query, result)
-        
+
         # Combine factors
         relevance_score = base_score * (1 + content_type_bonus) * specificity_factor
-        
+
         return min(1.0, max(0.0, relevance_score))
-    
+
     def _calculate_credibility_score(self, result) -> float:
         """Assess source credibility and information quality"""
-        
+
         # Source authority (academic, government, established organization)
         source_authority = self._get_source_authority_score(result.source)
-        
+
         # Content quality indicators (length, structure, citations)
         content_quality = self._assess_content_quality(result.content)
-        
+
         # Cross-reference validation (how well it aligns with other sources)
         cross_reference_score = self._calculate_cross_reference_score(result)
-        
+
         # Combine factors
-        credibility = (source_authority * 0.4 + 
-                      content_quality * 0.3 + 
+        credibility = (source_authority * 0.4 +
+                      content_quality * 0.3 +
                       cross_reference_score * 0.3)
-        
+
         return credibility
-    
+
     def _calculate_recency_score(self, result) -> float:
         """Score based on information recency (more recent = higher score)"""
         if 'date' not in result.metadata:
             return 0.5  # Neutral score for undated content
-            
+
         content_date = datetime.fromisoformat(result.metadata['date'])
         days_old = (datetime.now() - content_date).days
-        
+
         # Exponential decay: score decreases as content gets older
         # Half-life of 365 days (information relevance decreases by half each year)
         half_life = 365
         recency_score = 0.5 ** (days_old / half_life)
-        
+
         return recency_score
-    
+
     def _classify_content_type(self, content: str) -> str:
         """Classify content as fact, procedure, example, or definition"""
-        
+
         # Simple heuristic classification (in practice, use ML classifier)
         content_lower = content.lower()
-        
+
         if any(phrase in content_lower for phrase in ['step', 'first', 'then', 'finally', 'procedure']):
             return 'procedure'
         elif any(phrase in content_lower for phrase in ['for example', 'such as', 'instance']):
@@ -462,27 +462,27 @@ class SemanticVectorRetriever(KnowledgeRetriever):
             return 'definition'
         else:
             return 'fact'
-    
+
     def _rank_candidates(self, candidates: List[RetrievalCandidate]) -> List[RetrievalCandidate]:
         """Rank candidates using composite scoring"""
-        
+
         for candidate in candidates:
             # Composite score balancing multiple factors
             candidate.composite_score = (
                 candidate.relevance_score * 0.5 +      # Relevance is most important
-                candidate.credibility_score * 0.3 +    # Credibility is very important  
+                candidate.credibility_score * 0.3 +    # Credibility is very important
                 candidate.recency_score * 0.2          # Recency matters but less
             )
-        
+
         # Sort by composite score
         ranked = sorted(candidates, key=lambda c: c.composite_score, reverse=True)
-        
+
         return ranked
-    
-    def update_relevance_feedback(self, query: str, candidate: RetrievalCandidate, 
+
+    def update_relevance_feedback(self, query: str, candidate: RetrievalCandidate,
                                  helpful: bool):
         """Learn from feedback to improve future retrieval"""
-        
+
         feedback_entry = {
             'query': query,
             'candidate_source': candidate.source,
@@ -490,38 +490,38 @@ class SemanticVectorRetriever(KnowledgeRetriever):
             'helpful': helpful,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         self.feedback_history.append(feedback_entry)
-        
+
         # Update retrieval parameters based on feedback patterns
         self._update_retrieval_parameters()
-    
+
     def _apply_feedback_learning(self, query: str, candidates: List[RetrievalCandidate]) -> List[RetrievalCandidate]:
         """Adjust candidate scores based on learned feedback patterns"""
-        
+
         if not self.feedback_history:
             return candidates
-        
+
         # Analyze feedback patterns
         feedback_patterns = self._analyze_feedback_patterns(query)
-        
+
         # Adjust scores based on patterns
         for candidate in candidates:
             adjustment = self._calculate_feedback_adjustment(candidate, feedback_patterns)
             candidate.relevance_score = min(1.0, max(0.0, candidate.relevance_score + adjustment))
-        
+
         return candidates
-    
+
     def _analyze_feedback_patterns(self, query: str) -> Dict:
         """Analyze historical feedback to identify useful patterns"""
-        
+
         patterns = {
             'helpful_sources': [],
             'helpful_content_types': [],
             'unhelpful_sources': [],
             'unhelpful_content_types': []
         }
-        
+
         # Group feedback by helpfulness
         for feedback in self.feedback_history[-100:]:  # Recent feedback
             if self._is_similar_query(query, feedback['query']):
@@ -531,122 +531,122 @@ class SemanticVectorRetriever(KnowledgeRetriever):
                 else:
                     patterns['unhelpful_sources'].append(feedback['candidate_source'])
                     patterns['unhelpful_content_types'].append(feedback['candidate_type'])
-        
+
         return patterns
 
 class HybridKnowledgeRetriever(KnowledgeRetriever):
     """Combines multiple retrieval strategies for comprehensive results"""
-    
+
     def __init__(self, retrievers: List[KnowledgeRetriever], weights: List[float] = None):
         self.retrievers = retrievers
         self.weights = weights or [1.0] * len(retrievers)
         self.performance_history = {i: [] for i in range(len(retrievers))}
-        
+
     def retrieve(self, query: str, max_results: int = 10) -> List[RetrievalCandidate]:
         """Retrieve from multiple sources and intelligently combine results"""
-        
+
         all_candidates = []
-        
+
         # Retrieve from each strategy
         for i, retriever in enumerate(self.retrievers):
             try:
                 candidates = retriever.retrieve(query, max_results)
-                
+
                 # Weight candidates based on retriever performance
                 weight = self.weights[i] * self._get_dynamic_weight(i, query)
-                
+
                 for candidate in candidates:
                     candidate.composite_score *= weight
                     candidate.metadata['retriever_id'] = i
-                
+
                 all_candidates.extend(candidates)
-                
+
             except Exception as e:
                 print(f"Retriever {i} failed: {e}")
                 continue
-        
+
         # Remove duplicates and merge similar content
         unique_candidates = self._deduplicate_candidates(all_candidates)
-        
+
         # Rank final candidates
         final_candidates = self._rank_hybrid_candidates(unique_candidates)
-        
+
         return final_candidates[:max_results]
-    
+
     def _get_dynamic_weight(self, retriever_id: int, query: str) -> float:
         """Calculate dynamic weight based on retriever performance for similar queries"""
-        
+
         if not self.performance_history[retriever_id]:
             return 1.0  # Default weight for new retrievers
-        
+
         # Calculate recent performance average
         recent_performance = self.performance_history[retriever_id][-10:]  # Last 10 queries
         avg_performance = sum(recent_performance) / len(recent_performance)
-        
+
         # Dynamic weight based on performance (better performers get higher weight)
         return max(0.1, min(2.0, avg_performance))
-    
+
     def _deduplicate_candidates(self, candidates: List[RetrievalCandidate]) -> List[RetrievalCandidate]:
         """Remove duplicate and very similar candidates"""
-        
+
         unique_candidates = []
         content_hashes = set()
-        
+
         for candidate in sorted(candidates, key=lambda c: c.composite_score, reverse=True):
             # Simple deduplication based on content similarity
             content_hash = hash(candidate.content[:200])  # Hash first 200 chars
-            
+
             if content_hash not in content_hashes:
                 content_hashes.add(content_hash)
                 unique_candidates.append(candidate)
-        
+
         return unique_candidates
-    
+
     def update_relevance_feedback(self, query: str, candidate: RetrievalCandidate, helpful: bool):
         """Update feedback for the specific retriever that provided this candidate"""
-        
+
         retriever_id = candidate.metadata.get('retriever_id')
         if retriever_id is not None:
             # Update performance history
             performance_score = 1.0 if helpful else 0.0
             self.performance_history[retriever_id].append(performance_score)
-            
+
             # Forward feedback to specific retriever
             self.retrievers[retriever_id].update_relevance_feedback(query, candidate, helpful)
 
 class DynamicContextAssembler:
     """Assembles optimal context from retrieved knowledge and other sources"""
-    
+
     def __init__(self, max_context_length: int = 4000):
         self.max_context_length = max_context_length
         self.assembly_history = []
-        
+
     def assemble_context(self, query: str, retrieved_candidates: List[RetrievalCandidate],
                         instructions: str = "", user_context: str = "",
                         task_type: str = "general") -> str:
         """Dynamically assemble optimal context from available information"""
-        
+
         # Analyze query to understand information needs
         info_needs = self._analyze_information_needs(query, task_type)
-        
+
         # Select optimal subset of candidates
         selected_candidates = self._select_optimal_candidates(
             retrieved_candidates, info_needs, self.max_context_length
         )
-        
+
         # Structure and format context
         assembled_context = self._structure_context(
             instructions, selected_candidates, user_context, query, info_needs
         )
-        
+
         # Validate and optimize final context
         optimized_context = self._optimize_context(assembled_context, query)
-        
+
         return optimized_context
-    
+
     def _analyze_information_needs(self, query: str, task_type: str) -> Dict:
         """Analyze what types of information are needed for this query"""
-        
+
         needs = {
             'definitions': 0.0,
             'facts': 0.0,
@@ -654,31 +654,31 @@ class DynamicContextAssembler:
             'examples': 0.0,
             'background': 0.0
         }
-        
+
         query_lower = query.lower()
-        
+
         # Heuristic analysis of information needs
         if any(word in query_lower for word in ['what is', 'define', 'meaning', 'definition']):
             needs['definitions'] = 1.0
             needs['examples'] = 0.7
-            
+
         elif any(word in query_lower for word in ['how to', 'steps', 'procedure', 'process']):
             needs['procedures'] = 1.0
             needs['examples'] = 0.8
-            
+
         elif any(word in query_lower for word in ['why', 'explain', 'reason', 'cause']):
             needs['facts'] = 1.0
             needs['background'] = 0.8
-            
+
         elif 'example' in query_lower:
             needs['examples'] = 1.0
             needs['procedures'] = 0.5
-            
+
         else:
             # General query - balanced information needs
             for key in needs:
                 needs[key] = 0.6
-        
+
         # Adjust based on task type
         if task_type == "analytical":
             needs['facts'] *= 1.3
@@ -689,29 +689,29 @@ class DynamicContextAssembler:
         elif task_type == "creative":
             needs['examples'] *= 1.2
             needs['background'] *= 1.1
-        
+
         return needs
-    
+
     def _select_optimal_candidates(self, candidates: List[RetrievalCandidate],
                                   info_needs: Dict, max_length: int) -> List[RetrievalCandidate]:
         """Select optimal subset of candidates based on information needs and length constraints"""
-        
+
         # Score candidates based on information needs alignment
         for candidate in candidates:
             content_type_score = info_needs.get(candidate.content_type, 0.5)
             candidate.need_alignment_score = (
-                candidate.composite_score * 0.7 + 
+                candidate.composite_score * 0.7 +
                 content_type_score * 0.3
             )
-        
+
         # Use greedy knapsack-style selection
         selected = []
         total_length = 0
         remaining_candidates = sorted(candidates, key=lambda c: c.need_alignment_score, reverse=True)
-        
+
         for candidate in remaining_candidates:
             candidate_length = len(candidate.content)
-            
+
             if total_length + candidate_length <= max_length * 0.8:  # Reserve 20% for formatting
                 selected.append(candidate)
                 total_length += candidate_length
@@ -730,70 +730,70 @@ class DynamicContextAssembler:
                     )
                     selected.append(truncated_candidate)
                     break
-        
+
         return selected
-    
+
     def _structure_context(self, instructions: str, candidates: List[RetrievalCandidate],
                           user_context: str, query: str, info_needs: Dict) -> str:
         """Structure the context for optimal comprehension and utility"""
-        
+
         context_parts = []
-        
+
         # Add instructions if provided
         if instructions.strip():
             context_parts.append(f"## Instructions\n{instructions}\n")
-        
+
         # Add user context if provided
         if user_context.strip():
             context_parts.append(f"## Context\n{user_context}\n")
-        
+
         # Group candidates by type for better organization
         candidates_by_type = {}
         for candidate in candidates:
             if candidate.content_type not in candidates_by_type:
                 candidates_by_type[candidate.content_type] = []
             candidates_by_type[candidate.content_type].append(candidate)
-        
+
         # Add retrieved information in logical order
         type_order = ['definitions', 'facts', 'procedures', 'examples']
         type_labels = {
             'definition': 'Key Definitions',
-            'fact': 'Relevant Information', 
+            'fact': 'Relevant Information',
             'procedure': 'Procedures and Methods',
             'example': 'Examples and Case Studies'
         }
-        
+
         context_parts.append("## Retrieved Knowledge\n")
-        
+
         for content_type in type_order:
             if content_type in candidates_by_type:
                 candidates_of_type = candidates_by_type[content_type]
                 section_label = type_labels.get(content_type, content_type.title())
-                
+
                 context_parts.append(f"### {section_label}\n")
-                
+
                 for i, candidate in enumerate(candidates_of_type, 1):
                     source_note = f" (Source: {candidate.source})" if candidate.source else ""
                     context_parts.append(f"{i}. {candidate.content.strip()}{source_note}\n")
-                
+
                 context_parts.append("")  # Add spacing
-        
+
         # Add the user's specific query
         context_parts.append(f"## Current Query\n{query}\n")
-        
+
         return "\n".join(context_parts)
-    
+
     def _optimize_context(self, context: str, query: str) -> str:
         """Final optimization of assembled context"""
-        
+
         # Remove excessive whitespace
         optimized = "\n".join(line.strip() for line in context.split("\n"))
-        
+
         # Remove duplicate information (simple approach)
         lines = optimized.split("\n")
         unique_lines = []
         seen_content = set()
-        
+
         for line in lines:
             if line.strip():
                 # Check for substantial duplicates (not just headers)
@@ -806,46 +806,46 @@ class DynamicContextAssembler:
                     unique_lines.append(line)
             else:
                 unique_lines.append(line)
-        
+
         return "\n".join(unique_lines)
 
 # Example usage demonstrating the complete retrieval and assembly pipeline
 class ContextGenerationDemo:
     """Demonstration of complete context generation pipeline"""
-    
+
     def __init__(self):
         # Initialize retrievers (mock implementations for demo)
         self.semantic_retriever = SemanticVectorRetriever(
             embedding_model=MockEmbeddingModel(),
             vector_database=MockVectorDatabase()
         )
-        
+
         self.hybrid_retriever = HybridKnowledgeRetriever([
             self.semantic_retriever,
             # Add other retrievers as needed
         ])
-        
+
         self.context_assembler = DynamicContextAssembler(max_context_length=4000)
-    
-    def generate_context(self, query: str, instructions: str = "", 
+
+    def generate_context(self, query: str, instructions: str = "",
                         user_context: str = "", task_type: str = "general") -> str:
         """Complete context generation pipeline"""
-        
+
         print(f"Generating context for query: '{query}'")
-        
+
         # Step 1: Retrieve relevant knowledge
         print("Step 1: Retrieving knowledge...")
         candidates = self.hybrid_retriever.retrieve(query, max_results=10)
         print(f"Retrieved {len(candidates)} candidates")
-        
+
         # Step 2: Assemble optimal context
         print("Step 2: Assembling context...")
         context = self.context_assembler.assemble_context(
             query, candidates, instructions, user_context, task_type
         )
-        
+
         print(f"Step 3: Generated context ({len(context)} characters)")
-        
+
         return context
 
 # Mock classes for demonstration
@@ -861,17 +861,17 @@ class MockVectorDatabase:
             MockResult("To implement a neural network: 1. Define architecture...", "tutorial.com", 0.78),
             MockResult("For example, a simple classification model...", "examples.org", 0.72)
         ]
-    
+
     def similarity_search(self, query_embedding: np.ndarray, top_k: int = 10):
         return self.mock_results[:top_k]
 
-@dataclass 
+@dataclass
 class MockResult:
     content: str
     source: str
     similarity_score: float
     metadata: Dict = None
-    
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {"date": "2024-01-01"}
@@ -890,7 +890,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
 ```
 /context.generate.adaptive{
     intent="Dynamically generate optimal context by learning from usage patterns and adapting assembly strategies",
-    
+
     input={
         user_query=<immediate_user_request>,
         task_context={
@@ -907,7 +907,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             domain_expertise=<specialized_knowledge_sources>
         }
     },
-    
+
     process=[
         /analyze.information_needs{
             action="Deep analysis of what information is required for optimal response",
@@ -922,7 +922,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             learning_integration="Apply patterns learned from similar successful query contexts",
             output="Comprehensive information need specification with priority weighting"
         },
-        
+
         /orchestrate.multi_source_retrieval{
             action="Intelligently coordinate retrieval from multiple information sources",
             method="Parallel retrieval with strategic source selection and result fusion",
@@ -936,7 +936,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             fusion_algorithm="Intelligent combination of results with deduplication and relevance ranking",
             output="Ranked collection of high-quality information candidates"
         },
-        
+
         /optimize.context_assembly{
             action="Assemble retrieved information into optimal context structure",
             method="Dynamic assembly optimization with cognitive load management",
@@ -955,7 +955,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             ],
             output="Optimally structured context ready for model consumption"
         },
-        
+
         /monitor.effectiveness{
             action="Track context generation effectiveness and identify improvement opportunities",
             method="Multi-metric effectiveness assessment with learning integration",
@@ -975,7 +975,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             output="Comprehensive effectiveness assessment with specific improvement recommendations"
         }
     ],
-    
+
     output={
         generated_context={
             assembled_information=<optimally_structured_context_ready_for_model>,
@@ -983,14 +983,14 @@ Protocols provide self-modifying context generation patterns that evolve based o
             assembly_rationale=<explanation_of_context_construction_decisions>,
             quality_indicators=<confidence_scores_and_completeness_measures>
         },
-        
+
         optimization_metadata={
             retrieval_performance=<metrics_on_information_gathering_effectiveness>,
             assembly_efficiency=<metrics_on_context_construction_performance>,
             predicted_effectiveness=<estimated_quality_of_generated_context>,
             alternative_approaches=<other_context_generation_strategies_considered>
         },
-        
+
         learning_updates={
             pattern_discoveries=<new_effective_patterns_identified>,
             strategy_refinements=<improvements_to_existing_approaches>,
@@ -998,7 +998,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
             knowledge_base_updates=<improvements_to_underlying_information_sources>
         }
     },
-    
+
     // Self-improvement mechanisms
     adaptation_triggers=[
         {condition="user_satisfaction < 0.7", action="analyze_context_assembly_weaknesses"},
@@ -1006,7 +1006,7 @@ Protocols provide self-modifying context generation patterns that evolve based o
         {condition="new_domain_patterns_identified", action="integrate_domain_specific_optimizations"},
         {condition="efficiency_below_threshold", action="optimize_retrieval_and_assembly_performance"}
     ],
-    
+
     meta={
         context_generation_version="adaptive_v2.1",
         learning_integration_level="advanced",
@@ -1027,33 +1027,33 @@ Protocols provide self-modifying context generation patterns that evolve based o
 ```python
 def medical_diagnosis_context_example():
     """Demonstrate context generation for medical diagnosis support"""
-    
+
     # Simulated medical query
     query = "Patient presents with chest pain, shortness of breath, and elevated troponin levels. What are the differential diagnoses and recommended diagnostic workup?"
-    
+
     # Medical-specific context generation
     medical_context_generator = ContextGenerationDemo()
-    
+
     # Generate specialized medical context
     context = medical_context_generator.generate_context(
         query=query,
         instructions="""
         You are providing medical decision support. Focus on:
         1. Evidence-based differential diagnoses
-        2. Appropriate diagnostic workup recommendations  
+        2. Appropriate diagnostic workup recommendations
         3. Risk stratification considerations
         4. Latest clinical guidelines and protocols
-        
+
         Always emphasize the need for clinical judgment and direct patient evaluation.
         """,
         user_context="Emergency department setting, adult patient, no known allergies",
         task_type="analytical"
     )
-    
+
     print("Medical Diagnosis Support Context:")
     print("=" * 50)
     print(context)
-    
+
     return context
 ```
 
@@ -1062,7 +1062,7 @@ def medical_diagnosis_context_example():
 ```python
 class ContextGenerationEvaluator:
     """Comprehensive evaluation of context generation effectiveness"""
-    
+
     def __init__(self):
         self.evaluation_metrics = {
             'relevance': self._evaluate_relevance,
@@ -1071,58 +1071,58 @@ class ContextGenerationEvaluator:
             'efficiency': self._evaluate_efficiency,
             'adaptability': self._evaluate_adaptability
         }
-    
-    def evaluate_context_generation(self, query: str, generated_context: str, 
+
+    def evaluate_context_generation(self, query: str, generated_context: str,
                                    response_quality: float, user_feedback: Dict) -> Dict:
         """Comprehensive evaluation of context generation performance"""
-        
+
         results = {}
         for metric_name, metric_function in self.evaluation_metrics.items():
             score = metric_function(query, generated_context, response_quality, user_feedback)
             results[metric_name] = score
-        
+
         # Calculate overall effectiveness
         results['overall_effectiveness'] = self._calculate_overall_effectiveness(results)
-        
+
         # Generate improvement recommendations
         results['improvement_recommendations'] = self._generate_improvement_recommendations(results)
-        
+
         return results
-    
+
     def _evaluate_relevance(self, query: str, context: str, response_quality: float, feedback: Dict) -> float:
         """Evaluate how relevant the generated context is to the query"""
-        
+
         # Analyze semantic alignment between query and context
         query_terms = set(query.lower().split())
         context_terms = set(context.lower().split())
-        
+
         term_overlap = len(query_terms.intersection(context_terms)) / len(query_terms.union(context_terms))
-        
+
         # Factor in response quality as indicator of context relevance
         relevance_score = (term_overlap * 0.3 + response_quality * 0.7)
-        
+
         return min(1.0, max(0.0, relevance_score))
-    
+
     def _evaluate_completeness(self, query: str, context: str, response_quality: float, feedback: Dict) -> float:
         """Evaluate whether context contains all necessary information"""
-        
+
         # Simple heuristic: longer contexts are generally more complete
         # But also consider user feedback about missing information
-        
+
         context_length_score = min(1.0, len(context) / 2000)  # Normalize to reasonable length
-        
+
         # Check feedback for missing information indicators
         missing_info_penalty = 0.0
         if feedback.get('missing_information', False):
             missing_info_penalty = 0.3
-        
+
         completeness_score = max(0.0, context_length_score - missing_info_penalty)
-        
+
         return completeness_score
-    
+
     def _calculate_overall_effectiveness(self, metric_scores: Dict) -> float:
         """Calculate weighted overall effectiveness score"""
-        
+
         weights = {
             'relevance': 0.30,
             'completeness': 0.25,
@@ -1130,11 +1130,11 @@ class ContextGenerationEvaluator:
             'efficiency': 0.15,
             'adaptability': 0.10
         }
-        
-        overall = sum(metric_scores[metric] * weight 
-                     for metric, weight in weights.items() 
+
+        overall = sum(metric_scores[metric] * weight
+                     for metric, weight in weights.items()
                      if metric in metric_scores)
-        
+
         return overall
 ```
 
@@ -1154,11 +1154,11 @@ class BasicRetriever:
         # TODO: Initialize your retrieval system
         self.knowledge_base = {}
         self.embedding_cache = {}
-    
+
     def add_document(self, doc_id: str, content: str):
         # TODO: Add document to knowledge base
         pass
-    
+
     def retrieve(self, query: str, max_results: int = 5) -> List[str]:
         # TODO: Implement retrieval logic
         pass
@@ -1177,7 +1177,7 @@ class ContextOptimizer:
     def __init__(self, max_length: int = 2000):
         # TODO: Initialize context optimizer
         self.max_length = max_length
-    
+
     def optimize_context(self, information_pieces: List[str], query: str) -> str:
         # TODO: Implement optimal context assembly
         pass

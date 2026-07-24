@@ -106,7 +106,7 @@ Here's a complete protocol shell for token budgeting:
 ```
 /token.budget{
     intent="Optimize token usage across context window while preserving key information",
-    
+
     allocation={
         system_instructions=0.15,    // 15% of context window
         examples=0.20,               // 20% of context window
@@ -114,21 +114,21 @@ Here's a complete protocol shell for token budgeting:
         current_input=0.20,          // 20% of context window
         reserve=0.05                 // 5% reserve
     },
-    
+
     threshold_rules=[
         /system.compress{when="system > allocation * 1.1", method="essential_only"},
         /history.summarize{when="history > allocation * 0.9", method="key_points"},
         /examples.prioritize{when="examples > allocation", method="most_relevant"},
         /input.filter{when="input > allocation", method="relevance_scoring"}
     ],
-    
+
     field_management={
         detect_attractors=true,
         track_resonance=true,
         preserve_residue=true,
         adapt_boundaries={permeability=0.7, gradient=0.2}
     },
-    
+
     compression_strategy={
         system="minimal_reformatting",
         history="progressive_summarization",
@@ -227,15 +227,15 @@ Multiple Pareto-lang operations can be combined into workflows:
 ```
 /token.workflow{
     intent="Comprehensive token management across conversation",
-    
+
     initialize=[
         /budget.allocate{
-            system=0.15, history=0.40, 
+            system=0.15, history=0.40,
             input=0.30, reserve=0.15
         },
         /monitor.setup{track="all", alert_at=0.9}
     ],
-    
+
     before_each_turn=[
         /history.assess{method="token_count"},
         /compress.conditional{
@@ -243,12 +243,12 @@ Multiple Pareto-lang operations can be combined into workflows:
             action="/compress.summarize{target='oldest', ratio=0.5}"
         }
     ],
-    
+
     after_user_input=[
         /input.prioritize{method="relevance_to_context"},
         /attractor.update{from="user_input"}
     ],
-    
+
     before_model_response=[
         /context.optimize{
             strategy="field_aware",
@@ -256,7 +256,7 @@ Multiple Pareto-lang operations can be combined into workflows:
             residue_preservation=true
         }
     ],
-    
+
     after_model_response=[
         /residue.extract{from="model_response"},
         /token.audit{log=true, adjust_strategy=true}
@@ -277,13 +277,13 @@ Attractors are stable semantic patterns that organize your context. Managing the
 ```
 /attractor.manage{
     intent="Optimize token usage through semantic attractor management",
-    
+
     detection={
         method="key_concept_clustering",
         threshold=0.7,
         max_attractors=5
     },
-    
+
     maintenance=[
         /attractor.strengthen{
             target="primary_topic",
@@ -294,7 +294,7 @@ Attractors are stable semantic patterns that organize your context. Managing the
             threshold=0.4
         }
     ],
-    
+
     token_optimization=[
         /context.filter{
             method="attractor_relevance",
@@ -356,24 +356,24 @@ Here's a comprehensive field-aware token budgeting protocol:
 ```
 /field.token.budget{
     intent="Optimize token usage through neural field dynamics",
-    
+
     field_state={
         attractors=[
             {name="primary_topic", strength=0.9, keywords=["key1", "key2"]},
             {name="secondary_topic", strength=0.7, keywords=["key3", "key4"]},
             {name="tertiary_topic", strength=0.5, keywords=["key5", "key6"]}
         ],
-        
+
         boundaries={
             permeability=0.6,    // How easily new info enters context
             gradient=0.2,        // How quickly permeability changes
             adaptation="dynamic" // Adjusts based on content relevance
         },
-        
+
         resonance=0.75,          // How coherently field elements interact
         residue_tracking=true    // Track and preserve symbolic fragments
     },
-    
+
     token_allocation={
         method="attractor_weighted",
         primary_attractor=0.5,    // 50% to primary topic
@@ -381,32 +381,32 @@ Here's a comprehensive field-aware token budgeting protocol:
         residue=0.1,              // 10% to symbolic residue
         system=0.1                // 10% to system instructions
     },
-    
+
     optimization_rules=[
         /content.filter{
             by="attractor_relevance",
             threshold=0.6,
             method="semantic_similarity"
         },
-        
+
         /boundary.adjust{
             when="new_content",
             increase_for="high_resonance",
             decrease_for="low_relevance"
         },
-        
+
         /residue.preserve{
             method="compress_and_integrate",
             priority="high"
         },
-        
+
         /attractor.maintain{
             strengthen="through_repetition",
             prune="competing_attractors",
             merge="similar_attractors"
         }
     ],
-    
+
     measurement={
         track_metrics=["token_usage", "resonance", "attractor_strength"],
         evaluate_efficiency=true,
@@ -576,7 +576,7 @@ Start by analyzing your typical interactions:
 ```
 /token.budget{
     intent="Manage token usage efficiently for [your specific use case]",
-    
+
     allocation={
         system_instructions=0.15,
         examples=0.20,
@@ -584,7 +584,7 @@ Start by analyzing your typical interactions:
         current_input=0.20,
         reserve=0.05
     },
-    
+
     optimization_rules=[
         /system.keep{essential_only=true},
         /history.summarize{when="exceeds_allocation", method="key_points"},
@@ -604,12 +604,12 @@ field_management={
         {name="[Primary Topic]", strength=0.9},
         {name="[Secondary Topic]", strength=0.7}
     ],
-    
+
     boundaries={
         permeability=0.7,
         adaptation="based_on_relevance"
     },
-    
+
     residue_handling={
         preserve="key_definitions",
         compress="historical_context"
@@ -642,7 +642,7 @@ adjustment={
 ```
 /token.budget.creative{
     intent="Optimize token usage for long-form creative writing collaboration",
-    
+
     allocation={
         story_context=0.30,
         character_details=0.15,
@@ -650,31 +650,31 @@ adjustment={
         recent_exchanges=0.30,
         reserve=0.10
     },
-    
+
     attractors=[
         {name="main_plot_thread", strength=0.9},
         {name="character_development", strength=0.8},
         {name="theme_exploration", strength=0.7}
     ],
-    
+
     optimization_rules=[
         /context.summarize{
             target="older_story_sections",
             method="narrative_compression",
             preserve="key_plot_points"
         },
-        
+
         /characters.compress{
             method="essential_traits_only",
             exception="active_characters"
         },
-        
+
         /exchanges.prioritize{
             keep="most_recent",
             window_size=10
         }
     ],
-    
+
     field_dynamics={
         strengthen="emotional_turning_points",
         preserve="narrative_coherence",
@@ -688,7 +688,7 @@ adjustment={
 ```
 /token.budget.research{
     intent="Optimize token usage for in-depth research analysis",
-    
+
     allocation={
         research_question=0.10,
         methodology=0.10,
@@ -697,30 +697,30 @@ adjustment={
         discussion=0.20,
         reserve=0.10
     },
-    
+
     attractors=[
         {name="core_findings", strength=0.9},
         {name="theoretical_framework", strength=0.8},
         {name="methodology_details", strength=0.7},
         {name="literature_connections", strength=0.6}
     ],
-    
+
     optimization_rules=[
         /literature.compress{
             method="key_points_only",
             preserve="directly_relevant_studies"
         },
-        
+
         /data.prioritize{
             focus="significant_results",
             compress="raw_data"
         },
-        
+
         /methodology.summarize{
             unless="active_discussion_topic"
         }
     ],
-    
+
     field_dynamics={
         strengthen="evidence_chains",
         preserve="causal_relationships",
@@ -742,33 +742,33 @@ Protocols can be nested to create hierarchical token management:
 ```
 /token.master{
     intent="Comprehensive token management across all context dimensions",
-    
+
     sub_protocols=[
         /token.budget{
             scope="conversation_history",
             allocation=0.40,
             strategies=[...]
         },
-        
+
         /field.manage{
             scope="semantic_field",
             allocation=0.30,
             attractors=[...]
         },
-        
+
         /residue.track{
             scope="symbolic_residue",
             allocation=0.10,
             preservation=[...]
         },
-        
+
         /system.optimize{
             scope="instructions_examples",
             allocation=0.20,
             compression=[...]
         }
     ],
-    
+
     coordination={
         conflict_resolution="priority_based",
         dynamic_rebalancing=true,
@@ -814,38 +814,38 @@ Field theory and protocol shells can be deeply integrated:
 ```
 /field.protocol.integration{
     intent="Integrate field dynamics with protocol-based token management",
-    
+
     field_state={
         attractors=[
             {name="core_concept", strength=0.9, protocol="/concept.manage{...}"},
             {name="supporting_evidence", strength=0.7, protocol="/evidence.organize{...}"}
         ],
-        
+
         boundaries={
             permeability=0.7,
             protocol="/boundary.adapt{...}"
         },
-        
+
         residue={
             tracking=true,
             protocol="/residue.preserve{...}"
         }
     },
-    
+
     protocol_mapping={
         field_events_to_protocols={
             "attractor_strengthened": "/token.reallocate{target='attractor', increase=0.1}",
             "boundary_adapted": "/content.filter{method='new_permeability'}",
             "residue_detected": "/residue.integrate{into='field_state'}"
         },
-        
+
         protocol_events_to_field={
             "token_limit_approached": "/field.compress{target='weakest_elements'}",
             "information_added": "/attractor.update{from='new_content'}",
             "context_optimized": "/field.rebalance{based_on='token_allocation'}"
         }
     },
-    
+
     emergent_behaviors={
         "self_organization": {
             enabled=true,
@@ -911,31 +911,31 @@ Think of your context as a garden that needs careful tending:
 ```
 /garden.tend{
     intent="Maintain a balanced, token-efficient context garden",
-    
+
     seeds={
         plant="minimal_essential_instructions",
         depth="just_right",
         spacing="efficient"
     },
-    
+
     trees={
         prune="when_overgrown",
         method="shape_dont_remove",
         preserve="key_branches"
     },
-    
+
     plants={
         arrange="by_relevance",
         integrate="with_existing_elements",
         remove="invasive_species"
     },
-    
+
     flowers={
         encourage="natural_emergence",
         highlight="brightest_blooms",
         protect="rare_varieties"
     },
-    
+
     maintenance_schedule=[
         /prune.history{when="exceeds_40_percent", method="summarize_oldest"},
         /weed.input{before="processing", target="tangential_information"},
@@ -997,7 +997,7 @@ Another useful mental model is to think of your token limit as a financial budge
 ```
 /budget.manage{
     intent="Optimize token allocation for maximum information ROI",
-    
+
     allocation={
         system=0.15,    // 15% for system instructions
         history=0.40,   // 40% for conversation history
@@ -1005,29 +1005,29 @@ Another useful mental model is to think of your token limit as a financial budge
         field=0.10,     // 10% for field management
         reserve=0.05    // 5% emergency reserve
     },
-    
+
     investment_rules=[
         /invest.heavily{
             in="high_relevance_information",
             metric="value_per_token"
         },
-        
+
         /cut.costs{
             from="redundant_information",
             method="compress_or_remove"
         },
-        
+
         /rebalance.portfolio{
             when="allocation_imbalance",
             favor="highest_performing_categories"
         },
-        
+
         /maintain.reserve{
             amount=0.05,
             use_when="unexpected_complexity"
         }
     ],
-    
+
     roi_monitoring={
         track="value_per_token",
         optimize_for="maximum_information_retention",
@@ -1088,30 +1088,30 @@ A third useful mental model is to think of your context as a river with flowing 
 ```
 /river.manage{
     intent="Maintain healthy information flow in context",
-    
+
     source={
         clarity="crystal_clear_instructions",
         volume="minimal_but_sufficient"
     },
-    
+
     main_channel={
         depth="key_information_preserved",
         width="focused_not_sprawling",
         flow="smooth_and_continuous"
     },
-    
+
     tributaries={
         include="relevant_supporting_topics",
         merge="where_natural_connection_exists",
         dam="when_diverting_too_much_attention"
     },
-    
+
     sediment={
         allow="valuable_residue_to_settle",
         flush="accumulated_irrelevance",
         mine="for_hidden_insights"
     },
-    
+
     flow_management=[
         /dredge.history{when="accumulation_impedes_flow", depth="preserve_bedrock"},
         /channel.information{direction="toward_current_topic", strength=0.7},
@@ -1130,40 +1130,40 @@ The most powerful approach is to combine these mental models into a unified toke
 ```
 /token.manage.unified{
     intent="Leverage multiple mental models for comprehensive token management",
-    
+
     garden_aspect={
         seeds="minimal_system_instructions",
         trees="pruned_conversation_history",
         plants="relevant_user_input",
         flowers="emergent_field_elements"
     },
-    
+
     budget_aspect={
         allocation={system=0.15, history=0.40, input=0.30, field=0.15},
         roi_optimization=true,
         emergency_reserve=0.05
     },
-    
+
     river_aspect={
         flow_direction="past_to_present",
         channel_management=true,
         sediment_handling="preserve_valuable"
     },
-    
+
     unified_strategy=[
         // Garden operations
         /garden.prune{target="history_trees", method="summarize_oldest"},
         /garden.weed{target="irrelevant_information"},
-        
+
         // Budget operations
         /budget.allocate{based_on="information_value"},
         /budget.optimize{for="maximum_roi"},
-        
+
         // River operations
         /river.channel{information="toward_current_topic"},
         /river.preserve{sediment="key_insights"}
     ],
-    
+
     monitoring={
         metrics=["garden_health", "budget_efficiency", "river_flow"],
         adjust_strategy="dynamically",
@@ -1185,34 +1185,34 @@ For managing long-running conversations:
 ```
 /conversation.workflow{
     intent="Maintain token-efficient conversations over extended interactions",
-    
+
     initialization=[
         /system.setup{instructions="minimal_essential", examples="few_but_powerful"},
         /field.initialize{attractors=["main_topic", "key_subtopics"]},
         /budget.allocate{system=0.15, history=0.40, input=0.30, field=0.15}
     ],
-    
+
     before_user_input=[
         /history.assess{token_count=true},
         /history.optimize{if="approaching_limit"}
     ],
-    
+
     after_user_input=[
         /input.process{extract_key_information=true},
         /field.update{from="user_input"},
         /budget.reassess{based_on="current_distribution"}
     ],
-    
+
     before_model_response=[
         /context.optimize{method="field_aware"},
         /attractors.strengthen{relevant_to="current_topic"}
     ],
-    
+
     after_model_response=[
         /residue.extract{from="model_response"},
         /token.audit{log=true}
     ],
-    
+
     periodic_maintenance=[
         /garden.prune{frequency="every_5_turns"},
         /river.dredge{frequency="every_10_turns"},
@@ -1228,13 +1228,13 @@ For analyzing large documents within token constraints:
 ```
 /document.analysis.workflow{
     intent="Process large documents efficiently within token limitations",
-    
+
     document_preparation=[
         /document.chunk{size="2000_tokens", overlap="100_tokens"},
         /chunk.prioritize{method="relevance_to_query"},
         /information.extract{key_facts=true, entities=true}
     ],
-    
+
     progressive_processing=[
         /context.initialize{with="query_and_instructions"},
         /chunk.process{
@@ -1243,19 +1243,19 @@ For analyzing large documents within token constraints:
         },
         /memory.update{after="each_chunk", method="key_value_store"}
     ],
-    
+
     field_management=[
         /attractor.detect{from="processed_chunks"},
         /attractor.strengthen{most_relevant=true},
         /field.maintain{coherence_threshold=0.7}
     ],
-    
+
     synthesis=[
         /information.integrate{from="all_chunks"},
         /attractor.leverage{for="organizing_response"},
         /insight.extract{based_on="field_patterns"}
     ],
-    
+
     token_optimization=[
         /memory.compress{when="approaching_limit"},
         /chunk.filter{if="low_relevance", threshold=0.5},
@@ -1342,47 +1342,47 @@ Use this checklist to periodically evaluate and improve your token management:
 ```
 /token.improve{
     intent="Continuously optimize token management approach",
-    
+
     assessment_cycle={
         frequency="every_10_interactions",
         metrics=["token_efficiency", "information_retention", "task_success"],
         comparison="against_baseline"
     },
-    
+
     optimization_steps=[
         /necessity.audit{
             question="Is each element essential?",
             action="remove_non_essential"
         },
-        
+
         /compression.review{
             target="all_sections",
             action="identify_compression_opportunities"
         },
-        
+
         /structure.analyze{
             look_for="inefficiencies_and_redundancies",
             action="reorganize_for_efficiency"
         },
-        
+
         /field.evaluate{
             assess="attractor_effectiveness",
             action="adjust_field_parameters"
         },
-        
+
         /budget.reassess{
             analyze="token_distribution",
             action="rebalance_for_optimal_performance"
         }
     ],
-    
+
     experimentation={
         a_b_testing=true,
         hypothesis_driven=true,
         measurement="before_and_after",
         implementation="gradual_not_abrupt"
     },
-    
+
     feedback_loop={
         collect="performance_data",
         analyze="improvement_opportunities",
@@ -1440,7 +1440,7 @@ As LLM technology evolves, so too will token budgeting approaches:
 ```
 /future.directions{
     intent="Anticipate evolution of token management approaches",
-    
+
     emerging_approaches=[
         {
             name="Autonomous Context Management",
@@ -1468,7 +1468,7 @@ As LLM technology evolves, so too will token budgeting approaches:
             timeline="Long-term"
         }
     ],
-    
+
     preparation_strategies=[
         /approach.modular{for="easy_adoption_of_new_techniques"},
         /skills.develop{focus="mental_models_not_specific_tools"},

@@ -41,9 +41,9 @@ being jargon and become tools you reach for.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) (the exam-prep summary) · rounds:
-[technical-questions](../../rounds/technical-questions.md),
-[coding-challenge](../../rounds/coding-challenge.md) (SQL screens),
-[case-study](../../rounds/case-study.md) (ML cases).
+[technical-questions](../../rounds/technical-questions/README.md),
+[coding-challenge](../../rounds/coding-challenge/README.md) (SQL screens),
+[case-study](../../rounds/case-study/README.md) (ML cases).
 
 *Detailed notes (`01-…`) land here pillar-by-pillar; stats/experimentation will grow into
 its own pillar from `data-analytics/readings/`.*

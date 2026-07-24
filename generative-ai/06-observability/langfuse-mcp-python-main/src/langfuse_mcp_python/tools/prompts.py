@@ -131,7 +131,7 @@ class GetPromptsTool(BaseLangfuseTool):
                 return self._format_prompts_list(prompts.data)
         except Exception as e:
             return f"Error fetching prompts: {str(e)}"
-    
+
     def _format_single_prompt(self, prompt) -> str:
         response = f"[NOTE] **Prompt: {prompt.name}**\n\n"
         response += f"  - Version: {prompt.version}\n"
@@ -141,7 +141,7 @@ class GetPromptsTool(BaseLangfuseTool):
         if hasattr(prompt, 'prompt') and prompt.prompt:
             response += f"\n**Content:**\n{prompt.prompt}\n"
         return response
-    
+
     def _format_prompts_list(self, prompts) -> str:
         response = f"[NOTE] **Prompts** ({len(prompts)} found):\n\n"
         for i, prompt in enumerate(prompts[:20], 1):
@@ -165,16 +165,16 @@ class CreatePromptTool(BaseLangfuseTool):
                 "prompt": args["prompt"],
                 "type": args.get("type", "text"),
             }
-            
+
             if args.get("labels"):
                 prompt_data["labels"] = args["labels"]
-            
+
             if args.get("tags"):
                 prompt_data["tags"] = args["tags"]
-            
+
             if args.get("config"):
                 prompt_data["config"] = args["config"]
-            
+
             # Build request object based on prompt type
             if prompt_data["type"] == "chat":
                 if not isinstance(prompt_data["prompt"], list):
@@ -197,11 +197,11 @@ class CreatePromptTool(BaseLangfuseTool):
                     tags=prompt_data.get("tags"),
                     config=prompt_data.get("config", {}),
                 )
-            
+
             prompt = await self._fetch_with_retry(
                 lambda: self.langfuse.api.prompts.create(request=request)
             )
-            
+
             return f"""✅ Prompt created successfully
 Name: {prompt.name if hasattr(prompt, 'name') else args['name']}
 Version: {prompt.version if hasattr(prompt, 'version') else 'N/A'}
@@ -220,13 +220,13 @@ class DeletePromptTool(BaseLangfuseTool):
                 prompt_name=args["name"],
                 version=args.get("version"),
             )
-            
+
             msg = f"Prompt '{args['name']}'"
             if args.get("version"):
                 msg += f" version {args['version']}"
             else:
                 msg += " (all versions)"
-            
+
             return f"✅ {msg} deleted successfully"
         except Exception as e:
             return f"Error deleting prompt: {str(e)}"

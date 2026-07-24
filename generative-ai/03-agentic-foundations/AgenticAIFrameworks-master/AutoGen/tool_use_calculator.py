@@ -1,4 +1,4 @@
-import os 
+import os
 from typing import Annotated , Literal
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,13 +26,13 @@ def calculator (a: int , b:int , operator : Annotated[operator , "operator"]) ->
         return int(a / b)
     else:
         raise ValueError("Invalid operator")
-    
+
 
 
 assistant = ConversableAgent (
-    name='assistant' , 
+    name='assistant' ,
     system_message= 'you are a helpful assistant, please help with simple calculations. Return TERMINATE when task is done',
-    llm_config=  { "config_list" :config_list}                           
+    llm_config=  { "config_list" :config_list}
     )
 
 user_proxy = ConversableAgent (

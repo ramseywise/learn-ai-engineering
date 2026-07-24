@@ -68,7 +68,7 @@ Now, we'll extend this framework by drawing parallels to human cognition. Just a
 ```
 
 
-## Cognitive Tools? 
+## Cognitive Tools?
 
 ### **[Eliciting Reasoning in Language Models with Cognitive Tools - IBM Zurich June 2025](https://www.arxiv.org/pdf/2506.12115)**
 
@@ -146,17 +146,17 @@ Here's a basic template for creating your own prompt programs:
 program [Name]([parameters]) {
   // Define the task
   task = `[Clear instruction using parameters]`;
-  
+
   // Define the process
   process = ```
     1. [First step]
     2. [Second step]
     3. [Additional steps as needed]
   ```;
-  
+
   // Define the output format
   format = "[Expected response structure]";
-  
+
   // Construct the complete prompt
   return `${task}\n\nProcess:\n${process}\n\nFormat:\n${format}\n\n[Input]`;
 }
@@ -380,29 +380,29 @@ Recursive prompting is similar to cognitive priming—it establishes patterns th
 ```python
 def recursive_prompt(question, model, iterations=2):
     """Apply recursive prompting to improve responses."""
-    
+
     # Initial response
     response = model.generate(f"Question: {question}\nAnswer:")
-    
+
     for i in range(iterations):
         # Self-reflection prompt
         reflection_prompt = f"""
         Question: {question}
-        
-        Your previous answer: 
+
+        Your previous answer:
         {response}
-        
+
         Please reflect on your answer:
         1. What information might be missing?
         2. Are there any assumptions that should be questioned?
         3. How could the explanation be clearer or more accurate?
-        
+
         Now, provide an improved answer:
         """
-        
+
         # Generate improved response
         response = model.generate(reflection_prompt)
-    
+
     return response
 ```
 

@@ -30,7 +30,7 @@ def test_check_if_faq_or_product(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-            
+
         t = test_case()
         if not isinstance(output, str):
             t.failed = True
@@ -44,7 +44,7 @@ def test_check_if_faq_or_product(learner_func):
             t.failed = True
             t.msg = f"Output must have only one word"
             t.want = "One element"
-            t.got = output      
+            t.got = output
         cases.append(t)
         return cases
 
@@ -71,7 +71,7 @@ def test_query_on_faq(learner_func):
             t.want = f"{function_name} must run without exceptions"
             t.got = str(e)
             return [t]
-            
+
         t = test_case()
         if not isinstance(output, dict):
             t.failed = True
@@ -106,7 +106,7 @@ def test_decide_task_nature(learner_func):
             t.want = f"{function_name} must run without exceptions"
             t.got = str(e)
             return [t]
-            
+
         t = test_case()
         if not isinstance(output, str):
             t.failed = True
@@ -145,7 +145,7 @@ def test_get_params_for_task(learner_func):
             t.got = str(e)
             return [t]
         cases.append(t)
-            
+
         t = test_case()
         if not isinstance(output, dict):
             t.failed = True
@@ -154,7 +154,7 @@ def test_get_params_for_task(learner_func):
             t.got = type(output)
             return [t]
         cases.append(t)
-        
+
         t = test_case()
         if 'top_p' not in output:
             t.failed = True
@@ -163,7 +163,7 @@ def test_get_params_for_task(learner_func):
             t.got = output.keys()
             return [t]
         cases.append(t)
-        
+
         t = test_case()
         if 'temperature' not in output:
             t.failed = True
@@ -172,7 +172,7 @@ def test_get_params_for_task(learner_func):
             t.got = output.keys()
             return [t]
         cases.append(t)
-        
+
         tasks = ['technical', 'creative', 'asd']
         for task in tasks:
             output = learner_func(task)
@@ -188,7 +188,7 @@ def test_get_params_for_task(learner_func):
                 t.want = "temperature must be less than 1.3 and if closer to 1.3 top_p must be low"
                 t.got = f"temperature = {output['temperature']} for label = {task}"
             cases.append(t)
-    
+
         return cases
     cases = g()
     print_feedback(cases)
@@ -214,7 +214,7 @@ def parse_json_output(llm_output: str) -> dict:
     try:
         # Since the input might be improperly formatted, ensure any single quotes are removed
         llm_output = llm_output.replace("\n", '').replace("'",'').replace("}}", "}").replace("{{", "{")  # Remove any erroneous structures
-        
+
         # Attempt to parse JSON directly provided it is a properly-structured JSON string
         parsed_json = json.loads(llm_output)
         return parsed_json
@@ -235,7 +235,7 @@ def test_generate_metadata_from_query(learner_func):
             t.got = type(learner_func)
             return [t]
         cases.append(t)
-        
+
         query = "What are the blue t-shirts you have available?"
         try:
             output = learner_func(query)
@@ -272,9 +272,9 @@ def test_generate_metadata_from_query(learner_func):
                 t.want = "At least one output for the test queries should provide a valid JSON"
                 t.got = "Every output returned a None object from parse_json_output"
                 return [t]
-            
+
         cases.append(t)
-        
+
         return cases
 
     cases = g()

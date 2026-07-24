@@ -1,15 +1,15 @@
 # Context-Engineering – Structural Overview v2
 _A pragmatic, first-principles handbook for the next generation of LLM orchestration_
 
-> **Why this repo exists**  
-> Prompt engineering = thinking about **what** you say.  
-> **Context engineering** = thinking about **everything else** the model sees.  
-> 
+> **Why this repo exists**
+> Prompt engineering = thinking about **what** you say.
+> **Context engineering** = thinking about **everything else** the model sees.
+>
 > In our evolution from prompt engineering to context engineering to **field theory**:
 > - We began with discrete tokens and simple prompts
 > - We advanced to stateful context management and complex orchestration
 > - We now explore emergent symbolic mechanisms and neural field dynamics
-> 
+>
 > Our goal is to teach all of this from the ground up, with humility and a bias toward simple, working code, while embracing the latest research on how LLMs actually reason and process information.
 
 ---
@@ -35,14 +35,14 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### 2.1. Foundations Track (Understanding the Basics)
 
-1. **Skim `README.md` (2 min)**  
+1. **Skim `README.md` (2 min)**
    See what "context" even means beyond prompts.
 
-2. **Read `00_foundations/01_atoms_prompting.md` (5 min)**  
-   *Atoms*: a single instruction / example.  
+2. **Read `00_foundations/01_atoms_prompting.md` (5 min)**
+   *Atoms*: a single instruction / example.
    Why atoms alone often underperform.
 
-3. **Continue through the biological metaphor chain:**  
+3. **Continue through the biological metaphor chain:**
    - `02_molecules_context.md`: Few-shot packs and examples
    - `03_cells_memory.md`: Memory & logs for persistence
    - `04_organs_applications.md`: Multi-step control flows and orchestration
@@ -61,8 +61,8 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### 2.3. Hands-On Practice (Learning by Doing)
 
-5. **Start with `10_guides_zero_to_hero/01_min_prompt.ipynb`**  
-   Run, modify, observe token counts.  
+5. **Start with `10_guides_zero_to_hero/01_min_prompt.ipynb`**
+   Run, modify, observe token counts.
    Notebook cells highlight **why** each extra line helps (or hurts).
 
 6. **Explore more complex patterns:**
@@ -80,8 +80,8 @@ _A pragmatic, first-principles handbook for the next generation of LLM orchestra
 
 ### 2.4. Implementation Track (Building Real Systems)
 
-8. **Experiment with `20_templates/`**  
-   Copy a YAML or Python snippet into your own repo.  
+8. **Experiment with `20_templates/`**
+   Copy a YAML or Python snippet into your own repo.
    Tune "token_budget" or "resonance_score" like adjusting pH.
 
 9. **Examine `30_examples/` implementations:**
@@ -178,13 +178,13 @@ To enhance reasoning capabilities, we incorporate a cognitive tools framework:
 
 ---
 
-## 4. Quiet Karpathy Guidelines (Style DNA)  
+## 4. Quiet Karpathy Guidelines (Style DNA)
 
-*Keep it atomic → build up.*  
-1. **Minimal first pass** – start with the smallest viable context.  
-2. **Iterative add-on** – add only what the model demonstrably lacks.  
-3. **Measure everything** – token cost, latency, quality score, field resonance.  
-4. **Delete ruthlessly** – pruning beats padding.  
+*Keep it atomic → build up.*
+1. **Minimal first pass** – start with the smallest viable context.
+2. **Iterative add-on** – add only what the model demonstrably lacks.
+3. **Measure everything** – token cost, latency, quality score, field resonance.
+4. **Delete ruthlessly** – pruning beats padding.
 5. **Code > slides** – every concept has a runnable cell.
 6. **Recursive thinking** – contexts that evolve themselves.
 
@@ -250,7 +250,7 @@ Context-Engineering/
 │   ├── 00_toy_chatbot/              # Simple conversation agent
 │   ├── 01_data_annotator/           # Data labeling system
 │   ├── 02_multi_agent_orchestrator/ # Agent collaboration system
-│   ├── 03_vscode_helper/            # IDE integration 
+│   ├── 03_vscode_helper/            # IDE integration
 │   ├── 04_rag_minimal/              # Minimal RAG implementation
 │   ├── 05_streaming_window/         # Real-time context demo
 │   ├── 06_residue_scanner/          # Symbolic residue demo
@@ -391,7 +391,7 @@ Context-Engineering/
 
 ## 7. How to Contribute
 
-Open a PR in `50_contrib/`.  
+Open a PR in `50_contrib/`.
 Checklist lives in `40_reference/eval_checklist.md`—run it before submitting.
 
 When contributing:
@@ -417,9 +417,9 @@ We especially welcome contributions in these areas:
 
 ## 8. License & Attribution
 
-MIT. No gate-keeping: copy, remix, redistribute.  
-A respectful nod to Andrej Karpathy for coining the framing.  
-Research acknowledgments in CITATIONS.md.  
+MIT. No gate-keeping: copy, remix, redistribute.
+A respectful nod to Andrej Karpathy for coining the framing.
+Research acknowledgments in CITATIONS.md.
 All errors are ours; improvements are welcome.
 
 ---

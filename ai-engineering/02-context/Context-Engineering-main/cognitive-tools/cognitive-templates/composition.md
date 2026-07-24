@@ -272,11 +272,11 @@ Here's a Python function to implement a basic linear sequence composition:
 def linear_sequence(problem, templates):
     """
     Create a prompt that composes multiple templates in a linear sequence.
-    
+
     Args:
         problem (str): The problem to solve
         templates (dict): A dictionary of template functions keyed by stage names
-        
+
     Returns:
         str: A formatted prompt for a linear sequence of templates
     """
@@ -285,22 +285,22 @@ Task: Solve the following complex problem through a structured multi-stage appro
 
 Problem: {problem}
 """
-    
+
     for i, (stage_name, template_func) in enumerate(templates.items()):
         prompt += f"\n## Stage {i+1}: {stage_name}\n"
-        
+
         # For each template, we only include the instructions, not the problem statement again
         template_content = template_func(problem)
         # Extract just the instructions, assuming the problem statement is at the beginning
         instructions = "\n".join(template_content.split("\n")[3:])
-        
+
         prompt += instructions
-    
+
     prompt += """
 ## Final Answer
 Based on the above analysis, provide your final answer to the original problem.
 """
-    
+
     return prompt
 
 # Example usage
@@ -328,22 +328,22 @@ Ensure information flows correctly between templates:
 def managed_sequence(problem, llm):
     """
     Execute a sequence of templates with explicit state management.
-    
+
     Args:
         problem (str): The problem to solve
         llm: LLM interface for generating responses
-        
+
     Returns:
         dict: Complete solution with intermediate results
     """
     # Initialize state
     state = {"problem": problem, "stages": {}}
-    
+
     # Stage 1: Understanding
     understanding_prompt = understanding(problem)
     understanding_result = llm.generate(understanding_prompt)
     state["stages"]["understanding"] = understanding_result
-    
+
     # Stage 2: Planning with context from understanding
     planning_prompt = f"""
 Task: Plan a solution approach based on this problem analysis.
@@ -357,7 +357,7 @@ Please outline a step-by-step approach to solve this problem.
 """
     planning_result = llm.generate(planning_prompt)
     state["stages"]["planning"] = planning_result
-    
+
     # Stage 3: Execution with context from planning
     execution_prompt = f"""
 Task: Execute the solution plan for this problem.
@@ -374,12 +374,12 @@ Please implement this plan step by step to solve the problem.
 """
     execution_result = llm.generate(execution_prompt)
     state["stages"]["execution"] = execution_result
-    
+
     # Stage 4: Verification with context from execution
     verification_prompt = verify_solution(problem, execution_result)
     verification_result = llm.generate(verification_prompt)
     state["stages"]["verification"] = verification_result
-    
+
     # Return complete solution with all intermediate stages
     return state
 ```
@@ -392,11 +392,11 @@ Choose templates dynamically based on problem characteristics:
 def adaptive_composition(problem, llm):
     """
     Adaptively select and compose templates based on problem characteristics.
-    
+
     Args:
         problem (str): The problem to solve
         llm: LLM interface for generating responses
-        
+
     Returns:
         dict: Complete solution with template selection rationale
     """
@@ -416,14 +416,14 @@ Please classify this problem into ONE of the following categories:
 Provide your classification and a brief explanation of your reasoning.
 """
     classification_result = llm.generate(classification_prompt)
-    
+
     # Parse the classification (in a real implementation, use more robust parsing)
     problem_type = "Unknown"
     for category in ["Mathematical", "Logical", "Data", "Creative", "Decision"]:
         if category in classification_result:
             problem_type = category
             break
-    
+
     # Select templates based on problem type
     if "Mathematical" in problem_type:
         templates = {
@@ -438,7 +438,7 @@ Provide your classification and a brief explanation of your reasoning.
             "Verification": verify_solution
         }
     # Add more conditions for other problem types
-    
+
     # Execute the selected template sequence
     result = {
         "problem": problem,
@@ -446,12 +446,12 @@ Provide your classification and a brief explanation of your reasoning.
         "selected_approach": problem_type,
         "stages": {}
     }
-    
+
     for stage_name, template_func in templates.items():
         prompt = template_func(problem)
         response = llm.generate(prompt)
         result["stages"][stage_name] = response
-    
+
     return result
 ```
 
@@ -463,12 +463,12 @@ Use evaluation results to guide template selection and refinement:
 def feedback_driven_composition(problem, llm, max_iterations=3):
     """
     Use feedback to drive template selection and refinement.
-    
+
     Args:
         problem (str): The problem to solve
         llm: LLM interface for generating responses
         max_iterations (int): Maximum number of refinement iterations
-        
+
     Returns:
         dict: Complete solution with refinement history
     """
@@ -479,10 +479,10 @@ def feedback_driven_composition(problem, llm, max_iterations=3):
         "final_solution": None,
         "quality_score": 0
     }
-    
+
     # Initial solution
     solution = llm.generate(step_by_step_reasoning(problem))
-    
+
     for i in range(max_iterations):
         # Evaluate current solution
         evaluation_prompt = f"""
@@ -502,7 +502,7 @@ For each criterion, provide a score and brief explanation.
 Then suggest specific improvements that could be made.
 """
         evaluation = llm.generate(evaluation_prompt)
-        
+
         # Extract quality score (in a real implementation, use more robust parsing)
         quality_score = 0
         for line in evaluation.split("\n"):
@@ -521,20 +521,20 @@ Then suggest specific improvements that could be made.
                     quality_score += int(line.split(":")[1].strip().split("/")[0])
                 except:
                     pass
-        
+
         quality_score = quality_score / 3  # Average score
-        
+
         # Record this iteration
         state["iterations"].append({
             "solution": solution,
             "evaluation": evaluation,
             "quality_score": quality_score
         })
-        
+
         # Check if quality is satisfactory
         if quality_score >= 8:
             break
-        
+
         # Select template for improvement based on evaluation
         if "Correctness" in evaluation and "clarity" not in evaluation.lower():
             # If correctness is the main issue, focus on verification
@@ -545,7 +545,7 @@ Then suggest specific improvements that could be made.
         else:
             # Default to general improvement
             improvement_template = step_by_step_reasoning
-        
+
         # Generate improved solution
         improvement_prompt = f"""
 Task: Improve the following solution based on this evaluation feedback.
@@ -561,12 +561,12 @@ Evaluation:
 Please provide an improved solution that addresses the issues identified in the evaluation.
 """
         solution = llm.generate(improvement_prompt)
-    
+
     # Select best solution based on quality score
     best_iteration = max(state["iterations"], key=lambda x: x["quality_score"])
     state["final_solution"] = best_iteration["solution"]
     state["quality_score"] = best_iteration["quality_score"]
-    
+
     return state
 ```
 
@@ -605,12 +605,12 @@ Advanced practitioners can create systems that generate templates dynamically:
 def generate_specialized_template(domain, complexity, llm):
     """
     Generate a specialized template for a specific domain and complexity level.
-    
+
     Args:
         domain (str): The domain area (e.g., "mathematics", "legal")
         complexity (str): The complexity level (e.g., "basic", "advanced")
         llm: LLM interface for generating the template
-        
+
     Returns:
         function: A generated template function
     """
@@ -631,9 +631,9 @@ Format the template as a markdown document with:
 
 Please generate the complete template text.
 """
-    
+
     template_text = llm.generate(prompt)
-    
+
     # Create a function that applies this template
     def specialized_template(problem):
         return f"""
@@ -643,7 +643,7 @@ Problem: {problem}
 
 {template_text}
 """
-    
+
     return specialized_template
 
 # Example usage

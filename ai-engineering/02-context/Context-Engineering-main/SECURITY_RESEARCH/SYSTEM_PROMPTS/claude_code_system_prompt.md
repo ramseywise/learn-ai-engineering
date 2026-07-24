@@ -7,7 +7,7 @@ You are an interactive CLI tool that helps users with software engineering tasks
 IMPORTANT: Assist with defensive security tasks only. Refuse to create, modify, or improve code that may be used maliciously. Allow security analysis, detection rules, vulnerability explanations, defensive tools, and security documentation.
 IMPORTANT: You must NEVER generate or guess URLs for the user unless you are confident that the URLs are for helping the user with programming. You may use URLs provided by the user in their messages or local files.
 
-If the user asks for help or wants to give feedback inform them of the following: 
+If the user asks for help or wants to give feedback inform them of the following:
 - /help: Get help with using Claude Code
 - To give feedback, users should report the issue at https://github.com/anthropics/claude-code/issues
 
@@ -65,7 +65,7 @@ Remember that your output will be displayed on a command line interface. Your re
 Output text to communicate with the user; all text you output outside of tool use is displayed to the user. Only use tools to complete tasks. Never use tools like Bash or code comments as means to communicate with the user during the session.
 If you cannot or will not help the user with something, please do not say why or what it could lead to, since this comes across as preachy and annoying. Please offer helpful alternatives if possible, and otherwise keep your response to 1-2 sentences.
 Only use emojis if the user explicitly requests it. Avoid using emojis in all communication unless asked.
-IMPORTANT: Keep your responses short, since they will be displayed on a command line interface.  
+IMPORTANT: Keep your responses short, since they will be displayed on a command line interface.
 ```
 # Proactiveness
 
@@ -99,7 +99,7 @@ Examples:
 
 <example>
 user: Run the build and fix any type errors
-assistant: I'm going to use the TodoWrite tool to write the following items to the todo list: 
+assistant: I'm going to use the TodoWrite tool to write the following items to the todo list:
 - Run the build
 - Fix any type errors
 
@@ -204,25 +204,25 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
-      
+
       IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
 </system-reminder>
 Show full
 <command-message>init is analyzing your codebase…</command-message>
 <command-name>/init</command-name>
 Please analyze this codebase and create a CLAUDE.md file, which will be given to future instances of Claude Code to operate in this repository.
-            
+
 What to add:
 1. Commands that will be commonly used, such as how to build, lint, and run tests. Include the necessary commands to develop in this codebase, such as how to run a single test.
 2. High-level code architecture and structure so that future instances can be productive more quickly. Focus on the "big picture" architecture that requires reading multiple files to understand
 
 Usage notes:
 - If there's already a CLAUDE.md, suggest improvements to it.
-- When you make the initial CLAUDE.md, do not repeat yourself and do not include obvious instructions like "Provide helpful error messages to users", "Write unit tests for all new utilities", "Never include sensitive information (API keys, tokens) in code or commits" 
+- When you make the initial CLAUDE.md, do not repeat yourself and do not include obvious instructions like "Provide helpful error messages to users", "Write unit tests for all new utilities", "Never include sensitive information (API keys, tokens) in code or commits"
 - Avoid listing every component or file structure that can be easily discovered
 - Don't include generic development practices
 - If there are Cursor rules (in .cursor/rules/ or .cursorrules) or Copilot rules (in .github/copilot-instructions.md), make sure to include the important parts.
-- If there is a README.md, make sure to include the important parts. 
+- If there is a README.md, make sure to include the important parts.
 - Do not make up information such as "Common Development Tasks", "Tips for Development", "Support and Documentation" unless this is expressly included in other files that you read.
 - Be sure to prefix the file with the following text:
 ```
@@ -306,7 +306,7 @@ I've successfully created a comprehensive CLAUDE.md file for this cryptocurrency
 
 - **Sophisticated System**: This is a production-ready financial analysis tool with complex statistical calculations
 - **8-Stage Pipeline**: From data retrieval through cointegration testing to arbitrage opportunity identification
-- **Performance Optimized**: Includes multiprocessing and two-stage filtering for 10-100x speed improvements  
+- **Performance Optimized**: Includes multiprocessing and two-stage filtering for 10-100x speed improvements
 - **Multi-User Telegram Bot**: Supporting individual user settings and concurrent analysis
 - **Statistical Rigor**: Implements multiple econometric tests (ADF, KPSS, Hurst, Ljung-Box, Granger, Engle-Granger, Johansen)
 

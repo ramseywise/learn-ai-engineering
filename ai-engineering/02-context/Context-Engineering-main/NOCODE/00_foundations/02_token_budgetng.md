@@ -148,7 +148,7 @@ This meta-strategy adjusts allocation based on conversation phase:
         query=10%,
         reserve=5%
     },
-    
+
     development_phase={
         system=20%,
         examples=20%,
@@ -156,7 +156,7 @@ This meta-strategy adjusts allocation based on conversation phase:
         query=15%,
         reserve=5%
     },
-    
+
     conclusion_phase={
         system=15%,
         examples=10%,
@@ -164,7 +164,7 @@ This meta-strategy adjusts allocation based on conversation phase:
         query=15%,
         reserve=10%
     },
-    
+
     transition_triggers=[
         "conceptual understanding achieved",
         "core examples processed",
@@ -195,13 +195,13 @@ Example of compression:
 
 ```
 // BEFORE COMPRESSION (57 tokens)
-Please analyze the customer feedback that we have received regarding 
-our new product. Identify the main themes and sentiments expressed 
+Please analyze the customer feedback that we have received regarding
+our new product. Identify the main themes and sentiments expressed
 by customers. Provide a summary of the key points.
 
 // AFTER COMPRESSION (35 tokens)
-Analyze customer feedback on new product. 
-Identify themes, sentiments. 
+Analyze customer feedback on new product.
+Identify themes, sentiments.
 Summarize key points.
 ```
 
@@ -225,14 +225,14 @@ Example pruning approach:
         key_insights=true,
         recent_exchanges=5
     },
-    
+
     remove={
         acknowledgments=true,
         repetitions=true,
         tangential_discussions=true,
         superseded_information=true
     },
-    
+
     method="semantic_importance",
     threshold=0.6
 }
@@ -269,7 +269,7 @@ Example summarization pattern:
             focus="contextual_continuity"
         }
     ],
-    
+
     preserve_verbatim=3,
     summary_marker="[SUMMARY]"
 }
@@ -311,7 +311,7 @@ Example selective retention implementation:
             decay="fast"
         }
     ],
-    
+
     refresh_on_reference=true,
     measure_impact=true
 }
@@ -330,14 +330,14 @@ Reveal information only as needed:
 ```
 /disclose.progressive{
     initial_context="minimal essential information",
-    
+
     expansion_triggers=[
         "specific question about topic",
         "request for elaboration",
         "confusion detected",
         "exploration of subtopic"
     ],
-    
+
     expansion_strategy="just enough information",
     track_disclosure_state=true
 }
@@ -355,14 +355,14 @@ Rotate different information in and out of context:
         "relevant_examples",
         "current_topic_details"
     ],
-    
+
     inactive_sets=[
         "detailed_history",
         "secondary_examples",
         "alternative_approaches",
         "tangential_information"
     ],
-    
+
     cycle_triggers=[
         "topic change",
         "approach shift",
@@ -398,7 +398,7 @@ Implement structured memory to extend effective context:
             storage="structured templates"
         }
     ],
-    
+
     integration="retrieval-augmented generation",
     persistence="continuous update"
 }
@@ -415,19 +415,19 @@ Handle situations where token limits are reached:
         warning="85% capacity",
         metrics=["growth rate", "complexity", "repetition"]
     },
-    
+
     immediate_actions=[
         "aggressive history summarization",
         "non-essential instruction pruning",
         "example consolidation"
     ],
-    
+
     recovery_plan=[
         "identify core context components",
         "rebuild minimal viable context",
         "gradually restore priority elements"
     ],
-    
+
     prevention="continuous optimization monitoring"
 }
 ```
@@ -451,14 +451,14 @@ Designed for simple, focused interactions:
         query=15%,
         reserve=5%
     },
-    
+
     optimization={
         system="essential instructions only",
         examples="single minimal example if needed",
         history="recent exchanges only",
         compression="aggressive"
     },
-    
+
     adaptation={
         growth_strategy="replace rather than add",
         focus_maintenance="high"
@@ -479,14 +479,14 @@ Optimized for sophisticated back-and-forth with an expert AI:
         query=15%,
         reserve=10%
     },
-    
+
     optimization={
         instructions="domain-specific terminology",
         knowledge="compressed reference framework",
         history="semantic importance weighted",
         summarization="decision-focused"
     },
-    
+
     adaptation={
         progressive_expertise=true,
         technical_depth_adjustment="responsive",
@@ -509,23 +509,23 @@ Designed for extended interactions over time:
         query=15%,
         reserve=10%
     },
-    
+
     optimization={
         history_stratification=[
             {age="recent", detail="high"},
             {age="middle", detail="medium"},
             {age="old", detail="low"}
         ],
-        
+
         landmark_preservation="decisions, pivots, definitions",
-        
+
         summarization={
             method="progressive",
             frequency="dynamic",
             focus="continuity + essence"
         }
     },
-    
+
     adaptation={
         history_cycling=true,
         context_refreshing="on reference or confusion",
@@ -547,20 +547,20 @@ Integrates field theory for advanced context management:
         active_content=50%,
         reserve=15%
     },
-    
+
     field_management={
         attractors="core concepts, goals, constraints",
         boundaries="permeability based on relevance",
         resonance="strengthen connections between key elements",
         residue="track essential fragments across summarization"
     },
-    
+
     optimization={
         attractor_based_compression="organize around semantic centers",
         boundary_based_pruning="filter by relevance to field",
         resonance_based_retention="keep elements that strengthen patterns"
     },
-    
+
     adaptation={
         field_evolution="continuous",
         attractor_adjustment="based on conversation flow",
@@ -597,13 +597,13 @@ Compare your token usage against baselines:
         "compression_ratio",
         "response_quality_per_token"
     ],
-    
+
     baselines=[
         "industry standard approaches",
         "previous own approaches",
         "theoretical optimum"
     ],
-    
+
     visualization="efficiency radar chart",
     improvement_targets="identified bottlenecks"
 }
@@ -620,14 +620,14 @@ Systematically enhance your token efficiency:
         focus="highest token consumption areas",
         methods=["token distribution analysis", "redundancy detection", "density measurement"]
     },
-    
+
     experiments=[
         "alternative instruction formats",
         "different summarization approaches",
         "varied example selection",
         "modified allocation ratios"
     ],
-    
+
     implementation={
         approach="incremental improvement",
         measurement="before and after comparison",
@@ -652,17 +652,17 @@ Optimize across different types of content:
         strategy="high compression",
         focus="precision and clarity"
     },
-    
+
     code={
         strategy="format preservation",
         focus="functionality and readability"
     },
-    
+
     data={
         strategy="schema over instances",
         focus="pattern representation"
     },
-    
+
     mixed_content={
         strategy="progressive disclosure",
         focus="contextual relevance"
@@ -681,14 +681,14 @@ Design information structures with token efficiency in mind:
         modularity="encapsulated concepts",
         linking="reference rather than repeat"
     },
-    
+
     principles=[
         "single source of truth",
         "information inheritance",
         "context locality",
         "reference over repetition"
     ],
-    
+
     implementation={
         definitions="centralized and referenced",
         examples="parameterized templates",
@@ -709,13 +709,13 @@ Anticipate token needs before they arise:
         token_consumption="growth rate analysis",
         complexity_development="depth progression patterns"
     },
-    
+
     preemptive_actions=[
         "early summarization of likely-irrelevant content",
         "preloading anticipated reference information",
         "context restructuring for expected direction"
     ],
-    
+
     adaptive_planning={
         contingencies=["topic shift", "detail exploration", "approach change"],
         resource_allocation="dynamic buffer management",
@@ -735,19 +735,19 @@ Apply field theory principles to token budgeting:
         strengthening="token allocation priority",
         creation="explicit definition allocation"
     },
-    
+
     boundaries={
         establishment="relevance thresholds",
         permeability="token allocation ratio",
         adjustment="dynamic based on interaction"
     },
-    
+
     resonance={
         detection="semantic similarity measurement",
         amplification="token reinforcement",
         dampening="token reduction for noise"
     },
-    
+
     residue={
         tracking="persistent fragment identification",
         integration="context embedding",

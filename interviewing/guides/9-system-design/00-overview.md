@@ -37,5 +37,5 @@ highest-weight technical round in AIE/MLE interviews.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md) (logistics + curveballs),
-[case-study](../../rounds/case-study.md) (the business-flavored variant).
+[system-design-round](../../rounds/system-design-round/README.md) (logistics + curveballs),
+[case-study](../../rounds/case-study/README.md) (the business-flavored variant).

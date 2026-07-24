@@ -1100,8 +1100,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "philosophical depth", 
-            "narrative originality", 
+            "philosophical depth",
+            "narrative originality",
             "conceptual rigor"
         ],
         boundaries: {

@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     # parse streaming data
     df_rides = parse_ride_from_kafka_message(
-        df_consume_stream, 
+        df_consume_stream,
         RIDE_SCHEMA
     )
     print(df_rides.printSchema())
@@ -106,8 +106,8 @@ if __name__ == "__main__":
 
     df_trip_count_by_vendor_id = op_groupby(df_rides, ['vendor_id'])
     df_trip_count_by_pickup_date_vendor_id = op_windowed_groupby(
-        df_rides, 
-        window_duration="10 minutes", 
+        df_rides,
+        window_duration="10 minutes",
         slide_duration='5 minutes'
     )
 
@@ -115,12 +115,12 @@ if __name__ == "__main__":
     sink_console(df_trip_count_by_vendor_id)
     # write the output to the kafka topic
     df_trip_count_messages = prepare_df_to_kafka_sink(
-        df=df_trip_count_by_pickup_date_vendor_id, 
-        value_columns=['count'], 
+        df=df_trip_count_by_pickup_date_vendor_id,
+        value_columns=['count'],
         key_column='vendor_id'
     )
     kafka_sink_query = sink_kafka(
-        df=df_trip_count_messages, 
+        df=df_trip_count_messages,
         topic=TOPIC_WINDOWED_VENDOR_ID_COUNT
     )
 

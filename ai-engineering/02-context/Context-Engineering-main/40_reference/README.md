@@ -3,8 +3,8 @@
 > "We dissect nature along lines laid down by our native language."
 >
 > [**— Benjamin Lee Whorf**](https://en.wikipedia.org/wiki/Benjamin_Lee_Whorf), father of the [**Sapir-Whorf Linguistic Relativity Hypothesis**](https://en.wikipedia.org/wiki/Linguistic_relativity)
-> 
-> 
+>
+>
 > The concept that language influences thought, not the other way around
 >
 > This is especially relevant in our field of Context Engineering, where we are tasked with guiding and debugging agentic thought
@@ -53,30 +53,30 @@ graph LR
     Root --> Foundation[Foundational Concepts]
     Root --> Patterns[Practical Patterns]
     Root --> Interpret[Interpretability Frameworks]
-    Root --> Phenomena[Emergent Phenomena] 
+    Root --> Phenomena[Emergent Phenomena]
     Root --> Integration[Integration Frameworks]
-    
+
     %% Foundational Concepts
     Foundation --> TokenBudget[token_budgeting.md]
     Foundation --> RetrievalIndex[retrieval_indexing.md]
     Foundation --> EvalChecklist[eval_checklist.md]
-    
+
     %% Practical Patterns
     Patterns --> GenPatterns[patterns.md]
     Patterns --> CogPatterns[cognitive_patterns.md]
     Patterns --> SchemaBook[schema_cookbook.md]
-    
+
     %% Interpretability Frameworks
     Interpret --> LatentMap[latent_mapping.md]
     Interpret --> AdvLatentMap[advanced_latent_mapping.md]
-    
+
     %% Emergent Phenomena
     Phenomena --> FieldMap[field_mapping.md]
     Phenomena --> SymbolicResidue[symbolic_residue_types.md]
     Phenomena --> AttractorDynamics[attractor_dynamics.md]
     Phenomena --> EmergenceSignatures[emergence_signatures.md]
     Phenomena --> BoundaryOps[boundary_operations.md]
-    
+
     %% Integration Frameworks
     Integration --> QuantumMetrics[quantum_semantic_metrics.md]
     Integration --> UnifiedOps[unified_field_operations.md]
@@ -84,7 +84,7 @@ graph LR
     Integration --> InterpretMetrics[interpretability_metrics.md]
     Integration --> CollabEvolution[collaborative_evolution_guide.md]
     Integration --> CrossModal[cross_modal_context_handbook.md]
-    
+
     %% Styling
     classDef category fill:#f9f9f9,stroke:#666,stroke-width:1px,color:#333,font-weight:bold
     classDef foundation fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#01579b
@@ -92,7 +92,7 @@ graph LR
     classDef interpret fill:#e0f7fa,stroke:#006064,stroke-width:2px,color:#006064
     classDef phenomena fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
     classDef integration fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#6a1b9a
-    
+
     class Root category
     class Foundation,TokenBudget,RetrievalIndex,EvalChecklist foundation
     class Patterns,GenPatterns,CogPatterns,SchemaBook patterns

@@ -201,12 +201,12 @@ Please follow this process:
      - How would this perspective view the content?
      - What would it critique or question?
      - What additional considerations would it raise?
-   
+
    - Perspective B: [Description of another different viewpoint]
      - How would this perspective view the content?
      - What would it critique or question?
      - What additional considerations would it raise?
-   
+
    - [Continue with additional relevant perspectives]
 
 3. **Identify Blind Spots**: What important considerations are missing from the original content?
@@ -285,11 +285,11 @@ Here's a simple Python function to implement the Solution Verification template:
 def verify_solution(problem, solution):
     """
     Create a prompt that verifies a proposed solution.
-    
+
     Args:
         problem (str): The original problem
         solution (str): The proposed solution to verify
-        
+
     Returns:
         str: A formatted prompt for solution verification
     """
@@ -347,49 +347,49 @@ Implementation example:
 def self_correction_loop(problem, max_iterations=3):
     """
     Implement a self-correction loop for problem solving.
-    
+
     Args:
         problem (str): The problem to solve
         max_iterations (int): Maximum number of correction iterations
-        
+
     Returns:
         dict: The final solution and verification history
     """
     # Initial solution
     solution = llm.generate(f"Solve this problem: {problem}")
-    
+
     history = [{"type": "solution", "content": solution}]
     iteration = 0
-    
+
     while iteration < max_iterations:
         # Verify the current solution
         verification = llm.generate(verify_solution(problem, solution))
         history.append({"type": "verification", "content": verification})
-        
+
         # Check if corrections are needed
         if "Correct: The solution is completely accurate" in verification:
             break
-        
+
         # Generate corrected solution
         correction_prompt = f"""
         Based on the verification feedback below, provide a corrected solution to the original problem.
-        
+
         Original Problem: {problem}
-        
+
         Previous Solution: {solution}
-        
+
         Verification Feedback: {verification}
-        
+
         Please provide a fully corrected solution that addresses all issues identified in the verification.
         """
-        
+
         corrected_solution = llm.generate(correction_prompt)
         history.append({"type": "correction", "content": corrected_solution})
-        
+
         # Update solution for next iteration
         solution = corrected_solution
         iteration += 1
-    
+
     return {
         "problem": problem,
         "final_solution": solution,

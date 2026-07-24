@@ -21,7 +21,7 @@ def test_bm25_retrieve(learner_func):
 
         top_k = 3
         test_query = "Should I invest in startups?"
-        
+
         top_k_indices = learner_func(test_query, top_k)
 
         t = test_case()
@@ -52,7 +52,7 @@ def test_bm25_retrieve(learner_func):
 
         top_k = 10
         test_query = "Should I invest in startups?"
-        
+
         top_k_indices = learner_func(test_query, top_k)
 
         t = test_case()
@@ -80,7 +80,7 @@ def test_semantic_search_retrieve(learner_func, EMBEDDING):
     def g():
         cases = []
         func_name = learner_func.__name__
-    
+
         t = test_case()
         if not isinstance(learner_func, FunctionType):
             t.failed = True
@@ -91,7 +91,7 @@ def test_semantic_search_retrieve(learner_func, EMBEDDING):
 
         top_k = 3
         test_query = "Should I invest in startups?"
-        
+
         top_k_indices = learner_func(test_query, top_k)
 
         t = test_case()
@@ -122,7 +122,7 @@ def test_semantic_search_retrieve(learner_func, EMBEDDING):
 
         top_k = 10
         test_query = "Should I invest in startups?"
-        
+
         top_k_indices = learner_func(test_query, top_k)
 
         t = test_case()
@@ -164,7 +164,7 @@ def test_reciprocal_rank_fusion(learner_func):
         top_k = 10
         l1 = [17, 29, 28, 26, 18, 14, 1, 0, 16, 11]
         l2 = [17, 26, 16, 25, 18, 24, 13, 11, 6, 12]
-        
+
         top_k_indices = learner_func(l1, l2, top_k)
 
         t = test_case()
@@ -195,7 +195,7 @@ def test_reciprocal_rank_fusion(learner_func):
 
         top_k = 4
         test_query = "Should I invest in startups?"
-        
+
         top_k_indices = learner_func(l1, l2, top_k)
 
         t = test_case()
@@ -235,7 +235,7 @@ def exercise_5(learner_func):
 
         l1 = [1,2,4]
         l2 = [1,2,3,4]
-        
+
         recall_score = learner_func(l1, l2)
 
         t = test_case()
@@ -257,7 +257,7 @@ def exercise_5(learner_func):
 
         l1 = [1,2,3,4,5]
         l2 = [1,2,3,4,5]
-        
+
         recall_score = learner_func(l1, l2)
 
         t = test_case()

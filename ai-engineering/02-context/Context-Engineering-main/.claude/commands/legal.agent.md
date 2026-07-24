@@ -283,5 +283,3 @@ The contract exposes [Company] to significant IP and data liability due to ambig
 
 
 # END OF /LEGAL.AGENT SYSTEM PROMPT
-
-

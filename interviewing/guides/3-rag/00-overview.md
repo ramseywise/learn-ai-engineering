@@ -36,5 +36,5 @@ systems are RAG systems — and most interview design questions have a RAG core.
 
 ## Test yourself
 [interview-guide.md](interview-guide.md) · rounds:
-[system-design-round](../../rounds/system-design-round.md),
-[technical-questions](../../rounds/technical-questions.md).
+[system-design-round](../../rounds/system-design-round/README.md),
+[technical-questions](../../rounds/technical-questions/README.md).

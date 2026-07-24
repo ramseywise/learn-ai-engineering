@@ -35,7 +35,7 @@ def test_format_relevant_data(learner_func):
         relevant_data = NEWS_DATA[5:9]
         res = learner_func(relevant_data).lower()
         necessary_keywords = ['title', 'url', 'published', 'description']
-        
+
         for keyword in necessary_keywords:
             t = test_case()
             if keyword not in res:
@@ -69,7 +69,7 @@ def test_get_relevant_data(learner_func):
             t.want = FunctionType
             t.got = type(learner_func)
             return [t]
-    
+
         t = test_case()
         query = "This is a test query"
         top_k = 3
@@ -109,7 +109,7 @@ def test_get_relevant_data(learner_func):
             t.want = list
             t.got = type(output)
             return [t]
-        
+
         t = test_case()
         if len(output) != top_k:
             t.failed = True
@@ -136,6 +136,3 @@ def test_get_relevant_data(learner_func):
 
     cases = g()
     print_feedback(cases)
-        
-
-

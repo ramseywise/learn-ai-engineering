@@ -48,15 +48,15 @@ for TARGET_MODEL in "${TARGET_MODELS[@]}"; do
   if [[ -n "$SKIP_CLEANING" ]]; then
     PYTHON_CMD="$PYTHON_CMD $SKIP_CLEANING"
   fi
-  
+
   if [[ -n "$ONLY_ZH" ]]; then
     PYTHON_CMD="$PYTHON_CMD $ONLY_ZH"
   fi
-  
+
   if [[ -n "$ONLY_EN" ]]; then
     PYTHON_CMD="$PYTHON_CMD $ONLY_EN"
   fi
-  
+
   if [[ -n "$FORCE" ]]; then
     PYTHON_CMD="$PYTHON_CMD $FORCE"
   fi
@@ -67,7 +67,7 @@ for TARGET_MODEL in "${TARGET_MODELS[@]}"; do
 
   echo "Completed RACE benchmark test for target model: $TARGET_MODEL"
   echo -e "\n========== RACE test completed for $TARGET_MODEL ==========\n" >> "$OUTPUT_LOG_FILE"
-  
+
   # --- Phase 2: Citation Evaluation ---
   echo "==== Phase 2: Running FACT Evaluation for $TARGET_MODEL ====" | tee -a "$OUTPUT_LOG_FILE"
 

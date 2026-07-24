@@ -77,7 +77,7 @@ Output:
 ## Examples
 
 ### Example 1
-Input: 
+Input:
 Product: Wireless Headphones
 Brand: SoundCore
 Price: $79.99

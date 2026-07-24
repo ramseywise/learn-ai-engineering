@@ -1053,8 +1053,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "relationship complexity", 
-            "philosophical inquiry", 
+            "relationship complexity",
+            "philosophical inquiry",
             "emotional authenticity"
         ],
         boundaries: {

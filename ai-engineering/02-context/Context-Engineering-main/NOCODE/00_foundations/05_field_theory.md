@@ -268,31 +268,31 @@ Managing extended conversations becomes significantly more effective with field 
 ```
 /conversation.field_aware{
     intent="Maintain coherent long-running conversation",
-    
+
     field_management=[
         /attractor.identify{
             from="conversation_history",
             method="semantic_clustering",
             max_attractors=3
         },
-        
+
         /attractor.strengthen{
             targets="identified_attractors",
             method="explicit_reference"
         },
-        
+
         /boundary.establish{
             around="current_topic_cluster",
             permeability=0.7,
             gradient=true
         },
-        
+
         /residue.track{
             types=["definitions", "commitments", "questions"],
             persistence="high"
         }
     ],
-    
+
     optimization=[
         /compress.by_attractor{
             target="conversation_history",
@@ -312,19 +312,19 @@ Field theory excels at integrating multiple knowledge sources into a coherent wh
 ```
 /knowledge.field_integration{
     sources=["document1", "document2", "user_knowledge"],
-    
+
     integration_process=[
         /attractor.identify{
             from="all_sources",
             method="cross_document_clustering",
             threshold=0.6
         },
-        
+
         /resonance.amplify{
             between="cross_source_attractors",
             strength=0.8
         },
-        
+
         /boundary.establish{
             around="integrated_knowledge_field",
             permeability={
@@ -334,7 +334,7 @@ Field theory excels at integrating multiple knowledge sources into a coherent wh
             }
         }
     ],
-    
+
     query_handling=[
         /navigate.field{
             query="user_question",
@@ -354,13 +354,13 @@ Field theory provides a powerful framework for creative collaboration:
 ```
 /creative.field{
     intent="Collaborative story development",
-    
+
     field_setup=[
         /attractor.create{
             elements=["characters", "setting", "themes", "plot_points"],
             strength="variable"
         },
-        
+
         /boundary.establish{
             around="narrative_field",
             permeability={
@@ -370,18 +370,18 @@ Field theory provides a powerful framework for creative collaboration:
             }
         }
     ],
-    
+
     collaboration_process=[
         /resonance.detect{
             between="user_contributions",
             amplify="promising_patterns"
         },
-        
+
         /attractor.evolve{
             based_on="emerging_narrative_patterns",
             method="collaborative_shaping"
         },
-        
+
         /residue.integrate{
             from="previous_creative_sessions",
             into="current_narrative_field"
@@ -399,7 +399,7 @@ Field theory enables more natural, personalized learning experiences:
 ```
 /learning.field{
     intent="Adaptive tutorial on machine learning",
-    
+
     learner_model=[
         /attractor.identify{
             from="learner_interactions",
@@ -407,30 +407,30 @@ Field theory enables more natural, personalized learning experiences:
             continuous_update=true
         }
     ],
-    
+
     knowledge_field=[
         /attractor.create{
             concepts=["supervised_learning", "neural_networks", "evaluation_metrics"],
             relationships="prerequisite_graph"
         },
-        
+
         /boundary.establish{
             around="learner_zone_of_proximal_development",
             dynamic_adjustment=true
         }
     ],
-    
+
     adaptation_process=[
         /resonance.amplify{
             between=["learner_interests", "knowledge_concepts"],
             to="guide_concept_selection"
         },
-        
+
         /navigate.field{
             path="optimal_learning_trajectory",
             based_on="learner_model + knowledge_field"
         },
-        
+
         /residue.track{
             of="learning_experiences",
             to="inform_future_sessions"
