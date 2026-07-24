@@ -16,19 +16,4 @@ lint:  ## Verify top-level topic directories exist
 test: lint link-check  ## Structure check + link verification
 
 link-check:  ## Verify relative links in markdown files exist on disk
-	@ERRORS=0; \
-	for f in $$(find . -name '*.md' -not -path './.git/*' -not -path './node_modules/*' -not -path '*/Context-Engineering-main/*'); do \
-		dir=$$(dirname "$$f"); \
-		for link in $$(grep -oE '\[([^]]*)\]\(([^)#]+)\)' "$$f" 2>/dev/null | grep -v 'http' | sed 's/.*](\(.*\))/\1/'); do \
-			case "$$link" in \
-				/oss/*|/use-these-docs*|/langsmith/*) continue ;; \
-			esac; \
-			target="$$dir/$$link"; \
-			target=$$(echo "$$target" | sed 's/%20/ /g'); \
-			if [ ! -e "$$target" ]; then \
-				echo "BROKEN: $$f -> $$link"; \
-				ERRORS=$$((ERRORS+1)); \
-			fi; \
-		done; \
-	done; \
-	if [ $$ERRORS -eq 0 ]; then echo "All links OK"; else echo "$$ERRORS broken links found"; fi
+	@python3 scripts/link_check.py
