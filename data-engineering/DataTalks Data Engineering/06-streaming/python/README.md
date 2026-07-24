@@ -1,12 +1,12 @@
 ### Stream-Processing with Python
 
-In this document, you will be finding information about stream processing 
+In this document, you will be finding information about stream processing
 using different Python libraries (`kafka-python`,`confluent-kafka`,`pyspark`, `faust`).
 
 This Python module can be separated in following modules.
 
 ####  1. Docker
-Docker module includes, Dockerfiles and docker-compose definitions 
+Docker module includes, Dockerfiles and docker-compose definitions
 to run Kafka and Spark in a docker container. Setting up required services is
 the prerequsite step for running following modules.
 
@@ -24,8 +24,3 @@ python3 producer.py
 # Start consumer script
 python3 consumer.py
 ```
-
-
-
-
-

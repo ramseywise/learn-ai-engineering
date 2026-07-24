@@ -6,7 +6,7 @@ A minimal implementation demonstrating context engineering principles from atoms
 
 This toy chatbot showcases the progression through context engineering layers:
 - **Atoms**: Basic prompts and responses
-- **Molecules**: Context combinations and examples  
+- **Molecules**: Context combinations and examples
 - **Cells**: Memory and state management
 - **Organs**: Coordinated system behaviors
 - **Fields**: Continuous semantic operations
@@ -29,7 +29,7 @@ Context Field Architecture:
 - Basic prompt-response patterns
 - Simple conversation flow
 
-**Phase 2: Field Integration** 
+**Phase 2: Field Integration**
 - Protocol shell implementations
 - Context field management
 - Attractor dynamics
@@ -42,7 +42,7 @@ Context Field Architecture:
 ## Protocol Shells Used
 
 - `/attractor.co.emerge`: Context pattern detection and surfacing
-- `/field.resonance.scaffold`: Conversation coherence maintenance  
+- `/field.resonance.scaffold`: Conversation coherence maintenance
 - `/recursive.memory.attractor`: Memory persistence across sessions
 - `/field.self_repair`: Error recovery and adaptation
 

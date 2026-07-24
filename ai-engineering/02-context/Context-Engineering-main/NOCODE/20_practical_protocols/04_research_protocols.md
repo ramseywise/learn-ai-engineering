@@ -1059,8 +1059,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "business model innovation", 
-            "governance mechanisms", 
+            "business model innovation",
+            "governance mechanisms",
             "value creation and capture"
         ],
         boundaries: {

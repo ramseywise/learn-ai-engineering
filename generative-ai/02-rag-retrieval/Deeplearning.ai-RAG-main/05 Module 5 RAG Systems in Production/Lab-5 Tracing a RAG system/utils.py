@@ -14,7 +14,7 @@ def make_url():
     url = f"http://{lab_id}.labs.coursera.org"
     BOLD = "\033[1m"
     RESET = "\033[0m"
-    
+
     print(f"{BOLD}FOLLOW THIS URL TO OPEN THE UI: {url}{RESET}")
 
 def restart_kernel():

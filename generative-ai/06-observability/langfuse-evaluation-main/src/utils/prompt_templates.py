@@ -405,7 +405,7 @@ DOCUMENTS: Only mention "Fondos de Inversión" and "Dafuturo" cancellation
 ANALYSIS:
 Claim: "Para cancelar una fiducia estructurada, llama al 018000..."
 
-STEP 1: Exact match for "fiducia estructurada" cancellation? 
+STEP 1: Exact match for "fiducia estructurada" cancellation?
 → NO (documents don't mention it)
 
 STEP 2: Same entity check:

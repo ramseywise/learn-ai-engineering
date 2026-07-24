@@ -72,7 +72,7 @@ The fundamental information and knowledge that serves as the starting point for 
         {element="Experience fragments", role="Lived understanding", example="Personal insights, case studies, practical applications, failure stories"},
         {element="Problem contexts", role="Transformation drivers", example="Unresolved questions, practical challenges, conceptual gaps, application needs"}
     ],
-    
+
     quality_assessment="Evaluate purity, completeness, and transformational potential",
     preparation_methods="Purification, organization, contextualization, and readiness evaluation",
     common_issues="Contaminated information, incomplete knowledge, irrelevant experiences, unclear problems"
@@ -96,7 +96,7 @@ The sequential phases through which transformation occurs:
         {stage="Citrinitas (Integration)", role="Synthesizing knowledge", example="Connecting disparate elements, building frameworks, creating new patterns, establishing relationships"},
         {stage="Rubedo (Manifestation)", role="Applying understanding", example="Practical implementation, real-world application, skill development, wisdom embodiment"}
     ],
-    
+
     stage_transitions="Each stage prepares materials for the next transformation",
     process_monitoring="Track transformation progress and adjust operations",
     completion_indicators="Evidence of successful stage completion before progression"
@@ -120,7 +120,7 @@ The specific techniques and methods that enable transformation:
         {operation="Sublimatio (Sublimation)", function="Elevating understanding", example="Moving from concrete to abstract, developing meta-cognitive awareness, achieving deeper insights"},
         {operation="Calcinatio (Calcination)", function="Removing non-essentials", example="Eliminating irrelevant details, focusing on core principles, distilling key insights"}
     ],
-    
+
     operation_selection="Choose appropriate operations based on transformation goals",
     combination_strategies="Sequence and combine operations for maximum effect",
     mastery_development="Build skill in applying operations with precision and timing"
@@ -144,7 +144,7 @@ The special components that accelerate and enable transformation:
         {catalyst="Philosophical Salt", function="Grounding transformation", example="Practical wisdom, stable principles, reliable methods, enduring insights"},
         {catalyst="The Stone", function="Enabling repeated transformation", example="Reusable frameworks, transferable methods, scalable approaches, wisdom patterns"}
     ],
-    
+
     catalyst_preparation="Develop and refine catalytic elements for maximum effectiveness",
     catalyst_application="Apply catalysts at optimal moments in transformation process",
     catalyst_regeneration="Maintain and strengthen catalytic elements through use"
@@ -212,7 +212,7 @@ The power of the Alchemy Model lies in understanding how these elements interact
             optimization="Combine operations with appropriate catalysts for enhanced effectiveness"
         }
     ],
-    
+
     integration_principles=[
         "Recognize dynamic relationships between all alchemical elements",
         "Adjust element combinations based on transformation requirements",
@@ -320,7 +320,7 @@ Start by assessing the current state and transformation potential across all ele
             ]
         }
     ],
-    
+
     output_formats=[
         "Alchemical readiness scorecard with ratings across all elements",
         "Transformation pathway map showing optimal sequence",
@@ -417,7 +417,7 @@ Create context that deliberately enables transformation through alchemical princ
             deliverables="Orchestrated transformation process with monitoring and adjustment capabilities"
         }
     ],
-    
+
     integration_techniques=[
         {
             technique="Alchemical mapping",
@@ -573,7 +573,7 @@ Master the specific operations that enable transformation:
             ]
         }
     ],
-    
+
     operation_mastery_principles=[
         {
             principle="Appropriate operation selection",
@@ -652,7 +652,7 @@ The complete transformation sequence from raw materials to refined understanding
 ```
 /implement.great_work_pattern{
     pattern_purpose="Complete transformation from raw understanding to refined wisdom",
-    
+
     stage_implementations=[
         {
             stage="Nigredo (Dissolution Phase)",
@@ -743,7 +743,7 @@ The complete transformation sequence from raw materials to refined understanding
             ]
         }
     ],
-    
+
     pattern_variations=[
         {
             variation="Accelerated Great Work",
@@ -799,7 +799,7 @@ The fundamental rhythm of dissolution and coagulation:
 ```
 /implement.solve_coagula_pattern{
     pattern_purpose="Rhythmic transformation through dissolution and coagulation cycles",
-    
+
     cycle_elements=[
         {
             phase="Solve (Dissolution)",
@@ -836,7 +836,7 @@ The fundamental rhythm of dissolution and coagulation:
             timing="After dissolution when elements are ready for recombination"
         }
     ],
-    
+
     rhythm_strategies=[
         {
             strategy="Natural rhythm following",
@@ -854,7 +854,7 @@ The fundamental rhythm of dissolution and coagulation:
             suitable_for="Complex or challenging transformation contexts"
         }
     ],
-    
+
     mastery_development=[
         "Recognize natural solve et coagula rhythms in learning and development",
         "Develop skill in timing dissolution and coagulation operations",
@@ -902,7 +902,7 @@ Continuous refinement through repeated cycles:
 ```
 /implement.circulation_pattern{
     pattern_purpose="Continuous refinement through repeated transformation cycles",
-    
+
     circulation_elements=[
         {
             element="Experience and Practice",
@@ -949,7 +949,7 @@ Continuous refinement through repeated cycles:
             catalysts="The Stone (framework) for repeated application"
         }
     ],
-    
+
     circulation_strategies=[
         {
             strategy="Rapid circulation",
@@ -967,7 +967,7 @@ Continuous refinement through repeated cycles:
             suitable_for="Long-term mastery development"
         }
     ],
-    
+
     circulation_benefits=[
         "Continuous improvement and refinement",
         "Adaptive learning and development",
@@ -1110,7 +1110,7 @@ When materials or participants resist transformation:
             ]
         }
     ],
-    
+
     resistance_prevention=[
         {
             strategy="Readiness assessment",
@@ -1294,7 +1294,7 @@ When transformation processes stall or fail to complete:
             ]
         }
     ],
-    
+
     completion_principles=[
         {
             principle="Transformation verification",
@@ -1478,7 +1478,7 @@ When catalytic elements lose effectiveness or become exhausted:
             ]
         }
     ],
-    
+
     catalyst_maintenance=[
         {
             practice="Regular catalyst assessment",
@@ -1543,28 +1543,28 @@ Using alchemical approach for mastery development:
 ```
 /apply.complex_skill_development{
     scenario="Developing mastery in complex skills requiring transformation",
-    
+
     alchemical_approach={
         raw_materials={
             core_elements="Existing skills, learning resources, practice opportunities, motivation",
             quality_focus="Relevance, completeness, and transformational potential",
             preparation_methods="Assessment, organization, purification, and readiness evaluation"
         },
-        
+
         process_stages={
             nigredo="Breaking down existing skill patterns and assumptions",
             albedo="Clarifying correct techniques and principles",
             citrinitas="Integrating skills into fluid mastery",
             rubedo="Applying mastery in real-world contexts"
         },
-        
+
         operations={
             dissolution="Questioning and breaking down ineffective habits",
             coagulation="Building new skill frameworks and patterns",
             sublimation="Developing intuitive and transcendent skill levels",
             calcination="Focusing on essential skill elements"
         },
-        
+
         catalysts={
             mercury="Flexibility and adaptability in learning",
             sulfur="Passionate engagement and motivation",
@@ -1572,7 +1572,7 @@ Using alchemical approach for mastery development:
             stone="Transferable mastery frameworks"
         }
     },
-    
+
     implementation_techniques=[
         {
             technique="Skill dissolution",
@@ -1595,7 +1595,7 @@ Using alchemical approach for mastery development:
             example="Identify and master fundamental principles underlying skill"
         }
     ],
-    
+
     transformation_pathway={
         preparation="Assess current skills and prepare for transformation",
         dissolution="Break down limiting patterns and assumptions",
@@ -1604,7 +1604,7 @@ Using alchemical approach for mastery development:
         manifestation="Apply mastery in real-world contexts",
         circulation="Continuously refine through practice and application"
     },
-    
+
     success_metrics=[
         {metric="Skill transformation", assessment="Evidence of fundamental skill change"},
         {metric="Integrated mastery", assessment="Fluid application across contexts"},
@@ -1647,28 +1647,28 @@ Using alchemical approach for fundamental perspective change:
 ```
 /apply.paradigm_shift_facilitation{
     scenario="Facilitating fundamental shifts in perspective and worldview",
-    
+
     alchemical_approach={
         raw_materials={
             core_elements="Current paradigm, contradictory evidence, alternative frameworks, change motivation",
             quality_focus="Paradigm completeness, evidence strength, framework viability",
             preparation_methods="Paradigm mapping, evidence evaluation, framework assessment"
         },
-        
+
         process_stages={
             nigredo="Dissolving attachment to current paradigm",
             albedo="Clarifying new perspective and framework",
             citrinitas="Integrating new worldview into coherent understanding",
             rubedo="Living and acting from new paradigm"
         },
-        
+
         operations={
             dissolution="Questioning fundamental assumptions and beliefs",
             coagulation="Building new conceptual and practical frameworks",
             sublimation="Achieving transcendent perspective beyond old limitations",
             calcination="Focusing on essential insights and principles"
         },
-        
+
         catalysts={
             mercury="Flexibility and openness to new perspectives",
             sulfur="Passionate commitment to truth and growth",
@@ -1676,7 +1676,7 @@ Using alchemical approach for fundamental perspective change:
             stone="Transformational frameworks for repeated paradigm evolution"
         }
     },
-    
+
     implementation_techniques=[
         {
             technique="Assumption archaeology",
@@ -1699,7 +1699,7 @@ Using alchemical approach for fundamental perspective change:
             example="Apply new perspective in daily decisions and actions"
         }
     ],
-    
+
     transformation_pathway={
         preparation="Map current paradigm and assess readiness for change",
         dissolution="Create productive crisis in current worldview",
@@ -1708,7 +1708,7 @@ Using alchemical approach for fundamental perspective change:
         manifestation="Live and act from new paradigm",
         circulation="Continuously refine and deepen new perspective"
     },
-    
+
     success_metrics=[
         {metric="Paradigm dissolution", assessment="Release of attachment to old worldview"},
         {metric="New framework adoption", assessment="Integration of new perspective"},
@@ -1751,28 +1751,28 @@ Using alchemical approach for breakthrough solutions:
 ```
 /apply.creative_problem_solving{
     scenario="Developing breakthrough solutions to complex problems",
-    
+
     alchemical_approach={
         raw_materials={
             core_elements="Problem definition, existing solutions, available resources, creative motivation",
             quality_focus="Problem clarity, solution completeness, resource adequacy",
             preparation_methods="Problem analysis, solution evaluation, resource assessment"
         },
-        
+
         process_stages={
             nigredo="Dissolving conventional problem-solving approaches",
             albedo="Clarifying true problem essence and requirements",
             citrinitas="Integrating diverse elements into novel solutions",
             rubedo="Implementing and refining breakthrough solutions"
         },
-        
+
         operations={
             dissolution="Breaking down problem assumptions and constraints",
             coagulation="Combining disparate elements into new solution approaches",
             sublimation="Achieving transcendent solutions beyond conventional thinking",
             calcination="Focusing on essential problem core and requirements"
         },
-        
+
         catalysts={
             mercury="Flexible and adaptive thinking",
             sulfur="Creative passion and breakthrough motivation",
@@ -1780,7 +1780,7 @@ Using alchemical approach for breakthrough solutions:
             stone="Reusable creative problem-solving frameworks"
         }
     },
-    
+
     implementation_techniques=[
         {
             technique="Constraint dissolution",
@@ -1803,7 +1803,7 @@ Using alchemical approach for breakthrough solutions:
             example="Remove non-essential complexity to reveal fundamental challenge"
         }
     ],
-    
+
     transformation_pathway={
         preparation="Thoroughly understand problem and gather creative resources",
         dissolution="Break down conventional approaches and assumptions",
@@ -1812,7 +1812,7 @@ Using alchemical approach for breakthrough solutions:
         manifestation="Implement and test breakthrough solutions",
         circulation="Refine solutions through iterative improvement"
     },
-    
+
     success_metrics=[
         {metric="Solution novelty", assessment="Degree of innovation beyond conventional approaches"},
         {metric="Problem resolution", assessment="Effectiveness in solving core problem"},
@@ -1856,7 +1856,7 @@ Combining transformational and cultivation perspectives:
 ```
 /integrate.alchemy_garden{
     integrated_concept="The transformational garden: Cultivating understanding through alchemical transformation",
-    
+
     combined_elements=[
         {
             concept="Seed transformation (Garden: Seeds + Alchemy: Raw materials)",
@@ -1883,14 +1883,14 @@ Combining transformational and cultivation perspectives:
             example="Harvest understanding and refine it into wisdom and practical application"
         }
     ],
-    
+
     integration_benefits=[
         "Combines natural growth metaphors with transformation processes",
         "Provides organic timing and rhythm for transformation",
         "Balances patient cultivation with active transformation",
         "Creates intuitive understanding of transformation as natural process"
     ],
-    
+
     application_approaches=[
         {
             approach="Seasonal transformation",
@@ -1939,7 +1939,7 @@ Combining transformational and flow perspectives:
 ```
 /integrate.alchemy_river{
     integrated_concept="The transformational flow: Dynamic transformation through flowing processes",
-    
+
     combined_elements=[
         {
             concept="Source materials (River: Source + Alchemy: Raw materials)",
@@ -1966,14 +1966,14 @@ Combining transformational and flow perspectives:
             example="Spread refined understanding into multiple practical applications"
         }
     ],
-    
+
     integration_benefits=[
         "Combines dynamic flow with transformation processes",
         "Provides natural progression and momentum for transformation",
         "Balances directed movement with transformational depth",
         "Creates understanding of transformation as journey with destination"
     ],
-    
+
     application_approaches=[
         {
             approach="Flow-guided transformation",
@@ -2022,7 +2022,7 @@ Combining transformational and multi-dimensional perspectives:
 ```
 /integrate.alchemy_biopsychosocial{
     integrated_concept="The dimensional alchemy: Multi-dimensional transformation processes",
-    
+
     combined_elements=[
         {
             concept="Foundational transformation (Biopsychosocial: Foundational + Alchemy: Technical operations)",
@@ -2049,7 +2049,7 @@ Combining transformational and multi-dimensional perspectives:
             example="Integrate technical, personal, and contextual transformations into unified understanding"
         }
     ],
-    
+
     dimensional_operations=[
         {
             dimension="Foundational",
@@ -2072,7 +2072,7 @@ Combining transformational and multi-dimensional perspectives:
             catalysts="The Stone for unified transformation framework"
         }
     ],
-    
+
     integration_benefits=[
         "Combines systematic transformation with multi-dimensional awareness",
         "Provides specific operations for different types of understanding",
@@ -2124,7 +2124,7 @@ Creating a unified framework integrating all mental models:
 ```
 /integrate.comprehensive_framework{
     integrated_concept="The unified context engineering framework: All mental models working together",
-    
+
     core_integration_patterns=[
         {
             pattern="Transformational cultivation (Alchemy + Garden)",
@@ -2177,7 +2177,7 @@ Creating a unified framework integrating all mental models:
             example="Investment portfolio balanced across foundational, experiential, and contextual assets"
         }
     ],
-    
+
     unifying_principles=[
         {
             principle="Transformational awareness",
@@ -2205,7 +2205,7 @@ Creating a unified framework integrating all mental models:
             manifestation="Garden wisdom informing all transformation approaches"
         }
     ],
-    
+
     application_framework={
         assessment="Evaluate needs across all models (transformation, dimensions, resources, flow, cultivation)",
         planning="Develop integrated strategy incorporating all perspectives",
@@ -2213,7 +2213,7 @@ Creating a unified framework integrating all mental models:
         evaluation="Assess effectiveness through multiple lenses",
         refinement="Continuously improve through integrated feedback"
     },
-    
+
     synthesis_value="Creates comprehensive framework addressing all aspects of context engineering: what to transform (alchemy), how to address multiple dimensions (biopsychosocial), how to manage resources (budget), how to create movement and direction (river), and how to cultivate understanding (garden)"
 }
 ```
@@ -2262,7 +2262,7 @@ As you continue your context engineering journey, remember these key principles 
             impact="Progressive mastery and wisdom development"
         }
     ],
-    
+
     integration_guidance=[
         "Apply these principles as a unified approach to transformational context engineering",
         "Balance different transformation needs based on specific context goals",
@@ -2308,7 +2308,7 @@ As you continue your context engineering journey, remember these key principles 
             milestone="Seamless transformational expertise"
         }
     ],
-    
+
     development_approaches=[
         {
             approach="Transformation practice",

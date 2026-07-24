@@ -2,7 +2,7 @@
 
 
 > *"The limits of my language mean the limits of my world."* — Ludwig Wittgenstein
-> 
+>
 > Context Engineering expands these limits, creating new possibilities for human-AI collaboration.
 
 
@@ -28,7 +28,7 @@ Each guide is designed to be:
    ```
    python 01_min_prompt.py
    ```
-   
+
    Or in a Jupyter notebook:
    ```
    %run 01_min_prompt.py
@@ -121,6 +121,3 @@ We plan to expand these guides with:
 - **[00_foundations/](../00_foundations/)**: Theoretical underpinnings of these practical guides
 - **[20_templates/](../20_templates/)**: Reusable components for your own implementations
 - **[30_examples/](../30_examples/)**: Complete example applications
-
-
-

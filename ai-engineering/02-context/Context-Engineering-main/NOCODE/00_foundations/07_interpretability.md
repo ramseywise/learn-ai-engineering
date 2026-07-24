@@ -47,13 +47,13 @@ Let's create a simple interpretability protocol that makes AI reasoning transpar
 ```
 /interpret.reasoning{
   intent="Make AI reasoning process transparent and verifiable",
-  
+
   input={
     query=<user_question>,
     response_type="step_by_step",
     verification_level="high"
   },
-  
+
   process=[
     "/parse.query{identify='core_question', extract='implicit_assumptions'}",
     "/outline.approach{method='reasoning_path', show_alternatives=true}",
@@ -61,7 +61,7 @@ Let's create a simple interpretability protocol that makes AI reasoning transpar
     "/verify.conclusion{against='initial_premises', check_consistency=true}",
     "/reflect.limitations{of='approach', identify='uncertainty'}"
   ],
-  
+
   output={
     parsed_query=<understanding_of_question>,
     reasoning_approach=<planned_method>,
@@ -138,13 +138,13 @@ Now let's explore more advanced interpretability shells that make different aspe
 ```
 /interpret.steps{
   intent="Show detailed step-by-step reasoning process",
-  
+
   input={
     question=<user_query>,
     domain="general",
     detail_level="high"
   },
-  
+
   process=[
     "/decompose.question{into='sub_questions', identify='dependencies'}",
     "/sequence.steps{logical_order=true, prerequisite_check=true}",
@@ -152,7 +152,7 @@ Now let's explore more advanced interpretability shells that make different aspe
     "/verify.progression{check='logical_flow', identify='weak_links'}",
     "/synthesize.conclusion{from='step_results', confidence_assessment=true}"
   ],
-  
+
   output={
     question_breakdown=<decomposed_questions>,
     reasoning_sequence=<ordered_steps>,
@@ -168,13 +168,13 @@ Now let's explore more advanced interpretability shells that make different aspe
 ```
 /interpret.attribution{
   intent="Trace the sources and influences in AI reasoning",
-  
+
   input={
     content=<ai_response>,
     attribution_level="detailed",
     trace_influences=true
   },
-  
+
   process=[
     "/identify.claims{in='content', classify='factual_vs_opinion'}",
     "/trace.influences{for='each_claim', categorize='source_types'}",
@@ -182,7 +182,7 @@ Now let's explore more advanced interpretability shells that make different aspe
     "/assess.confidence{per_claim=true, based_on='source_reliability'}",
     "/detect.limitations{in='knowledge_base', regarding='specific_claims'}"
   ],
-  
+
   output={
     claim_inventory=<identified_claims>,
     influence_traces=<source_attributions>,
@@ -198,13 +198,13 @@ Now let's explore more advanced interpretability shells that make different aspe
 ```
 /interpret.alternatives{
   intent="Explore multiple ways of approaching a problem",
-  
+
   input={
     question=<user_query>,
     min_perspectives=3,
     contrast_level="detailed"
   },
-  
+
   process=[
     "/identify.approaches{domain='relevant_fields', min_count=3}",
     "/develop.each{approach='fully', show_reasoning=true}",
@@ -212,7 +212,7 @@ Now let's explore more advanced interpretability shells that make different aspe
     "/evaluate.tradeoffs{criteria=['accuracy', 'simplicity', 'completeness']}",
     "/synthesize.insights{from='multiple_perspectives', identify='complementary_aspects'}"
   ],
-  
+
   output={
     identified_approaches=<approach_list>,
     developed_perspectives=<full_reasoning_per_approach>,
@@ -241,13 +241,13 @@ One of the most important aspects of interpretability is understanding where AI 
 ```
 /attribution.trace{
   intent="Identify and explain the sources of AI knowledge and reasoning",
-  
+
   input={
     response=<ai_output>,
     attribution_detail="high",
     trace_method="explicit"
   },
-  
+
   process=[
     "/identify.claims{from='response', classify='type_and_confidence'}",
     "/catalog.knowledge_types{categories=[
@@ -261,7 +261,7 @@ One of the most important aspects of interpretability is understanding where AI 
     "/map.confidence{to='source_types', explain='certainty_levels'}",
     "/acknowledge.limitations{in='knowledge_base', regarding='specific_topics'}"
   ],
-  
+
   output={
     knowledge_catalog=<categorized_knowledge>,
     source_attributions=<traced_origins>,
@@ -288,13 +288,13 @@ An advanced interpretability concept is tracking "symbolic residue" - patterns, 
 ```
 /residue.track{
   intent="Detect and analyze patterns in AI reasoning processes",
-  
+
   input={
     reasoning_sample=<ai_reasoning>,
     pattern_detection_sensitivity="high",
     track_across_time=true
   },
-  
+
   process=[
     "/scan.patterns{in='reasoning_steps', categories=[
       'recurring_concepts',
@@ -308,7 +308,7 @@ An advanced interpretability concept is tracking "symbolic residue" - patterns, 
     "/analyze.significance{of='pattern_networks', interpret='meaning'}",
     "/identify.blindspots{from='pattern_absences', suggest='complementary_perspectives'}"
   ],
-  
+
   output={
     detected_patterns=<pattern_inventory>,
     origin_traces=<knowledge_structure_links>,
@@ -335,52 +335,52 @@ Now, let's combine various interpretability techniques into a comprehensive dash
 ```
 /interpretability.dashboard{
   intent="Create a comprehensive view of AI reasoning processes",
-  
+
   input={
     content=<ai_response>,
     analysis_level="comprehensive",
     visualization_format="structured"
   },
-  
+
   components=[
     "/reasoning.map{
       show=['steps', 'branches', 'decision_points'],
       highlight='critical_paths',
       format='structured_outline'
     }",
-    
+
     "/attribution.trace{
       categories=['knowledge_types', 'information_sources', 'confidence_levels'],
       detail='source_specific',
       format='attribution_table'
     }",
-    
+
     "/verification.check{
       types=['logical_consistency', 'factual_accuracy', 'reasoning_validity'],
       flag='potential_issues',
       format='verification_report'
     }",
-    
+
     "/alternative.perspectives{
       count=3,
       description='brief',
       comparison='key_differences',
       format='alternative_view_summary'
     }",
-    
+
     "/limitation.acknowledge{
       areas=['knowledge_gaps', 'uncertainty', 'simplifications'],
       transparency='high',
       format='limitation_notes'
     }",
-    
+
     "/meta.reflection{
       on=['reasoning_approach', 'potential_biases', 'improvement_areas'],
       depth='thoughtful',
       format='reflection_summary'
     }"
   ],
-  
+
   output={
     reasoning_map=<structured_thinking_path>,
     attribution_table=<knowledge_source_tracking>,
@@ -409,51 +409,51 @@ Interpretability becomes even more powerful when combined with meta-recursion. T
 ```
 /interpret.evolve{
   intent="Create a self-improving interpretability system",
-  
+
   input={
     current_approach=<interpretability_method>,
     improvement_focus="clarity_and_completeness",
     evolution_cycles=3
   },
-  
+
   process=[
     "/assess.current{
       evaluate=['clarity', 'completeness', 'traceability', 'verifiability'],
       identify='improvement_areas',
       baseline='current_metrics'
     }",
-    
+
     "/design.improvements{
       target='identified_areas',
       approach='incremental',
       predict='expected_outcomes'
     }",
-    
+
     "/implement.changes{
       to='interpretability_approach',
       document='modifications',
       preserve='core_functionality'
     }",
-    
+
     "/evaluate.new{
       measure=['clarity', 'completeness', 'traceability', 'verifiability'],
       compare='to_baseline',
       document='improvements'
     }",
-    
+
     "/iterate.cycle{
       times=<evolution_cycles>,
       incorporate='previous_learnings',
       adapt='to_emerging_patterns'
     }",
-    
+
     "/meta.reflect{
       on='evolution_process',
       identify='recurring_challenges',
       propose='sustainable_improvement_path'
     }"
   ],
-  
+
   output={
     initial_assessment=<baseline_evaluation>,
     improvement_design=<enhancement_plan>,
@@ -482,13 +482,13 @@ Let's explore practical templates for different interpretability needs:
 ```
 /interpret.decision{
   intent="Make decision-making processes transparent and traceable",
-  
+
   input={
     decision_question=<question>,
     criteria=<evaluation_factors>,
     alternatives=<options>
   },
-  
+
   process=[
     "/frame.decision{clarify='objectives', identify='constraints', establish='evaluation_criteria'}",
     "/gather.information{for='each_alternative', map='to_criteria', cite='sources'}",
@@ -496,7 +496,7 @@ Let's explore practical templates for different interpretability needs:
     "/compare.tradeoffs{between='alternatives', visualize='comparison_matrix'}",
     "/recommend.option{based_on='analysis', acknowledge='uncertainty', explain='key_factors'}"
   ],
-  
+
   output={
     decision_framing=<objectives_and_constraints>,
     information_gathered=<data_per_alternative>,
@@ -513,13 +513,13 @@ Let's explore practical templates for different interpretability needs:
 ```
 /interpret.synthesis{
   intent="Make information integration and synthesis transparent",
-  
+
   input={
     topic=<subject>,
     source_types=<information_categories>,
     perspective_range="broad"
   },
-  
+
   process=[
     "/scope.topic{define='boundaries', identify='key_aspects', formulate='guiding_questions'}",
     "/gather.sources{across='source_types', ensure='diversity', catalog='origins'}",
@@ -527,7 +527,7 @@ Let's explore practical templates for different interpretability needs:
     "/identify.patterns{across='sources', highlight='agreements_and_conflicts', map='relationships'}",
     "/synthesize.understanding{integrate='diverse_insights', maintain='nuance', structure='coherently'}"
   ],
-  
+
   output={
     topic_scoping=<boundaries_and_aspects>,
     source_catalog=<diverse_information_origins>,
@@ -544,13 +544,13 @@ Let's explore practical templates for different interpretability needs:
 ```
 /interpret.creative{
   intent="Make creative thinking processes transparent",
-  
+
   input={
     creative_task=<description>,
     creative_constraints=<limitations>,
     inspiration_sources=<influences>
   },
-  
+
   process=[
     "/understand.brief{extract='core_objectives', clarify='constraints', identify='success_criteria'}",
     "/explore.inspiration{process='influence_sources', document='idea_triggers', map='conceptual_landscape'}",
@@ -558,7 +558,7 @@ Let's explore practical templates for different interpretability needs:
     "/develop.selections{explain='choice_rationale', document='refinement_steps', highlight='key_decisions'}",
     "/reflect.process{analyze='creative_path', identify='pivotal_moments', acknowledge='alternative_directions'}"
   ],
-  
+
   output={
     brief_understanding=<objectives_and_constraints>,
     inspiration_mapping=<influence_documentation>,
@@ -642,20 +642,20 @@ Interpretability is not just a technical feature—it's a fundamental right in t
 ```
 /interpret.protocol{
   intent="[Your transparency purpose]",
-  
+
   input={
     content="[What to make transparent]",
     depth="[Level of detail]",
     focus_areas=["Area 1", "Area 2", "Area 3"]
   },
-  
+
   process=[
     "/analyze.structure{identify='components', map='relationships', highlight='key_elements'}",
     "/trace.reasoning{follow='thought_path', document='decision_points', explain='transitions'}",
     "/verify.validity{check='logical_consistency', test='factual_accuracy', identify='assumptions'}",
     "/acknowledge.limitations{note='knowledge_gaps', express='uncertainty', consider='alternatives'}"
   ],
-  
+
   output={
     structure_map=<component_analysis>,
     reasoning_trace=<thought_process>,

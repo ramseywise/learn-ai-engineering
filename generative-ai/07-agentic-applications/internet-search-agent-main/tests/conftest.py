@@ -63,7 +63,7 @@ def sample_search_results():
             content="Detailed content 1"
         ),
         BingSearchResult(
-            body="Test snippet 2", 
+            body="Test snippet 2",
             href="https://example2.com",
             title="Test Title 2",
             index=2,
@@ -96,9 +96,9 @@ def temp_sqlite_db():
     """Temporary SQLite database for testing."""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as temp_file:
         temp_path = temp_file.name
-    
+
     yield temp_path
-    
+
     # Cleanup
     if os.path.exists(temp_path):
         os.unlink(temp_path)
@@ -115,7 +115,7 @@ def mock_env_vars():
         "BING_SUBSCRIPTION_KEY": "test_bing_key",
         "SQLITE_DB_LOCAL_PATH": "test.db"
     }
-    
+
     with patch.dict(os.environ, env_vars):
         yield env_vars
 
@@ -145,7 +145,7 @@ def sample_state_history():
         Message(
             content="Based on recent research, here are the key trends...",
             type=MessageType.AI,
-            id="msg2", 
+            id="msg2",
             name=None
         )
     ]

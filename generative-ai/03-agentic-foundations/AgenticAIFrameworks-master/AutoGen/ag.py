@@ -32,23 +32,22 @@ IMPORTANT: Wait for the user to execute your code and then you can reply with th
 
 
 assistant = AssistantAgent(
-    name = "mistral assistant", 
-    llm_config= {"config_list": llm_config}, 
+    name = "mistral assistant",
+    llm_config= {"config_list": llm_config},
     system_message= system_message,
-    
+
     )
 
 
 user_proxy = UserProxyAgent(
-    name = "user_proxy", 
-    code_execution_config= {"executor": LocalCommandLineCodeExecutor(work_dir = workdir)}, 
+    name = "user_proxy",
+    code_execution_config= {"executor": LocalCommandLineCodeExecutor(work_dir = workdir)},
     is_termination_msg= lambda msg: "FINISH" in msg.get("content"),
 
     )
 
 
 chat_result  = user_proxy.initiate_chat(
-    assistant, 
+    assistant,
     message= 'provide code to count prime nos from 1 to 100',
 )
-

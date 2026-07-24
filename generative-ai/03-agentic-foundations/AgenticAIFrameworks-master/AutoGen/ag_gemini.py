@@ -32,9 +32,9 @@ IMPORTANT: Wait for the user to execute your code and then you can reply with th
 
 
 assistant = AssistantAgent(
-    name = "gemini flash assistant", 
-    llm_config= {"config_list": llm_config}, 
-    system_message= system_message, 
+    name = "gemini flash assistant",
+    llm_config= {"config_list": llm_config},
+    system_message= system_message,
     human_input_mode="NEVER"
     )
 
@@ -44,13 +44,10 @@ user_proxy = UserProxyAgent(
     code_execution_config={"work_dir": "coding", "use_docker": False},
     human_input_mode="NEVER",
     is_termination_msg= lambda msg: "FINISH" in msg.get("content"),
-    
+
 )
 
 chat_reult = user_proxy.initiate_chat (
 
     assistant, message= 'Sort the array with Bubble Sort: [4, 1, 5, 2, 3]',
 )
-
-
-

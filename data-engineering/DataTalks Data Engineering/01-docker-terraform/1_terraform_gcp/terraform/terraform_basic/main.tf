@@ -9,7 +9,7 @@ terraform {
 
 provider "google" {
 # Credentials only needs to be set if you do not have the GOOGLE_APPLICATION_CREDENTIALS set
-#  credentials = 
+#  credentials =
   project = "<Your Project ID>"
   region  = "us-central1"
 }

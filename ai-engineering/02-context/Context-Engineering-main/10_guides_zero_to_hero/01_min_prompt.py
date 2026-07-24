@@ -41,13 +41,13 @@ import matplotlib.pyplot as plt
 # Dummy LLM class for demonstration purposes
 class SimpleLLM:
     """Minimal LLM interface for demonstration."""
-    
+
     def __init__(self, model_name: str = "dummy-model"):
         """Initialize LLM interface."""
         self.model_name = model_name
         self.total_tokens_used = 0
         self.total_requests = 0
-        
+
     def count_tokens(self, text: str) -> int:
         """
         Count tokens in text using a very simple approximation.
@@ -55,7 +55,7 @@ class SimpleLLM:
         """
         # This is an extremely rough approximation, use a proper tokenizer in practice
         return len(text.split())
-    
+
     def generate(self, prompt: str) -> str:
         """
         Generate text from a prompt (dummy implementation).
@@ -67,14 +67,14 @@ class SimpleLLM:
         #     messages=[{"role": "user", "content": prompt}]
         # )
         # return response.choices[0].message.content
-        
+
         # For demo purposes, we'll just acknowledge the prompt
         tokens = self.count_tokens(prompt)
         self.total_tokens_used += tokens
         self.total_requests += 1
-        
+
         return f"[This is where the LLM response would appear. Your prompt used approximately {tokens} tokens.]"
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Return usage statistics."""
         return {
@@ -116,18 +116,18 @@ for i, prompt in enumerate(prompts):
     tokens = llm.count_tokens(prompt)
     print(f"\nPrompt {i+1}: '{prompt}'")
     print(f"Token Count: {tokens}")
-    
+
     start_time = time.time()
     response = llm.generate(prompt)
     end_time = time.time()
-    
+
     results.append({
         "prompt": prompt,
         "tokens": tokens,
         "response": response,
         "latency": end_time - start_time
     })
-    
+
     print(f"Latency: {results[-1]['latency']:.4f} seconds")
     print(f"Response:\n{response}")
 
@@ -150,7 +150,7 @@ plt.grid(True)
 
 # Add annotations
 for i, (x, y) in enumerate(zip(tokens_list, quality_scores)):
-    plt.annotate(f"Prompt {i+1}", (x, y), textcoords="offset points", 
+    plt.annotate(f"Prompt {i+1}", (x, y), textcoords="offset points",
                  xytext=(0, 10), ha='center')
 
 # Show the plot (in Jupyter this would display inline)
@@ -183,16 +183,16 @@ def measure_consistency(prompt: str, n_samples: int = 3) -> Dict[str, Any]:
     """Generate multiple responses and measure consistency metrics."""
     responses = []
     total_tokens = 0
-    
+
     for _ in range(n_samples):
         response = llm.generate(prompt)
         responses.append(response)
         total_tokens += llm.count_tokens(prompt)
-    
+
     # In a real notebook, you would implement proper consistency metrics
     # such as semantic similarity between responses
     consistency_score = 0.5  # Placeholder value
-    
+
     return {
         "prompt": prompt,
         "responses": responses,

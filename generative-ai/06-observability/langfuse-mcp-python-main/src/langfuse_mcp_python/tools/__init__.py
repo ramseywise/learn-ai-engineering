@@ -10,7 +10,7 @@ from .models import GetModelsTool, CreateModelTool, DeleteModelTool
 from .comments import GetCommentsTool, AddCommentTool
 from .score_configs import GetScoreConfigsTool
 from .watch_agents import WatchAgentsTool
-from .trace import GetTraceTool, DeleteTraceTool 
+from .trace import GetTraceTool, DeleteTraceTool
 from .analyze_performance import AnalyzePerformanceTool
 from .cost_metrics import GetCostMetricsTool
 

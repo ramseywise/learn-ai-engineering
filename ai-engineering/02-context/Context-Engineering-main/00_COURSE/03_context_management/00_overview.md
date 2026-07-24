@@ -2,7 +2,7 @@
 > "It is the mark of an educated mind to be able to entertain a thought without accepting it."
 >
 > — [Aristotle](https://www.goodreads.com/quotes/1629-it-is-the-mark-of-an-educated-mind-to-be)
-> 
+>
 ## The Shift: From Code to Context
 > [**Software Is Changing (Again) Talk @YC AI Startup School—Andrej Karpathy**](https://www.youtube.com/watch?v=LCEmiRjPEtQ)
 
@@ -14,7 +14,7 @@ We are witnessing the emergence of [**Software 3.0**](https://x.com/karpathy/sta
 ```
 SOFTWARE 1.0: Manual Programming
 ├─ Write explicit instructions
-├─ Handle all edge cases manually  
+├─ Handle all edge cases manually
 └─ Rigid, deterministic execution
 
 SOFTWARE 2.0: Machine Learning
@@ -22,7 +22,7 @@ SOFTWARE 2.0: Machine Learning
 ├─ Learn implicit relationships
 └─ Statistical, probabilistic outputs
 
-SOFTWARE 3.0: Context Engineering  
+SOFTWARE 3.0: Context Engineering
 ├─ Structured prompting as programming
 ├─ Protocols as reusable program modules
 └─ Dynamic, contextually-aware execution
@@ -37,7 +37,7 @@ SOFTWARE 3.0: Context Engineering
 
 **Think of building a house:**
 - **PROMPTS** = Talking to the architect (communication)
-- **PROGRAMMING** = The construction tools and techniques (implementation)  
+- **PROGRAMMING** = The construction tools and techniques (implementation)
 - **PROTOCOLS** = The complete blueprint that coordinates everything (orchestration)
 
 ### Pillar 1: PROMPT TEMPLATES - The Communication Layer
@@ -66,7 +66,7 @@ CONTEXT_ANALYSIS_TEMPLATE = """
 
 ## Target Information
 - Domain: {domain}
-- Scope: {scope} 
+- Scope: {scope}
 - Priority: {priority_level}
 
 ## Analysis Parameters
@@ -86,7 +86,7 @@ Please analyze the provided information according to these parameters and provid
 
 **Why Templates Matter:**
 - **Consistency**: Same format every time
-- **Reusability**: Use across different projects  
+- **Reusability**: Use across different projects
 - **Scalability**: Easy to modify and extend
 - **Quality**: Reduces errors and omissions
 
@@ -98,12 +98,12 @@ Programming provides the computational infrastructure that supports context mana
 ```python
 class ContextManager:
     """Traditional programming approach to context management"""
-    
+
     def __init__(self, max_context_size=10000):
         self.context_buffer = []
         self.max_size = max_context_size
         self.compression_ratio = 0.7
-        
+
     def add_context(self, new_info, priority=1):
         """Add information to context with priority weighting"""
         context_item = {
@@ -112,25 +112,25 @@ class ContextManager:
             'timestamp': time.now(),
             'token_count': self.estimate_tokens(new_info)
         }
-        
+
         self.context_buffer.append(context_item)
-        
+
         if self.get_total_tokens() > self.max_size:
             self.compress_context()
-            
+
     def compress_context(self):
         """Reduce context size while preserving important information"""
         # Sort by priority and recency
         sorted_context = sorted(
-            self.context_buffer, 
-            key=lambda x: (x['priority'], x['timestamp']), 
+            self.context_buffer,
+            key=lambda x: (x['priority'], x['timestamp']),
             reverse=True
         )
-        
+
         # Keep high-priority items, compress or remove low-priority
         compressed = []
         total_tokens = 0
-        
+
         for item in sorted_context:
             if total_tokens + item['token_count'] <= self.max_size:
                 compressed.append(item)
@@ -140,24 +140,24 @@ class ContextManager:
                 compressed_item = self.compress_item(item)
                 compressed.append(compressed_item)
                 total_tokens += compressed_item['token_count']
-                
+
         self.context_buffer = compressed
-        
+
     def retrieve_relevant_context(self, query, max_items=5):
         """Retrieve most relevant context for a given query"""
         relevance_scores = []
-        
+
         for item in self.context_buffer:
             score = self.calculate_relevance(query, item['content'])
             relevance_scores.append((score, item))
-            
+
         # Sort by relevance and return top items
         relevant_items = sorted(
-            relevance_scores, 
-            key=lambda x: x[0], 
+            relevance_scores,
+            key=lambda x: x[0],
             reverse=True
         )[:max_items]
-        
+
         return [item[1] for item in relevant_items]
 ```
 
@@ -165,10 +165,10 @@ class ContextManager:
 ```python
 def generate_contextual_prompt(self, base_template, query, context_items):
     """Combine template with relevant context"""
-    
+
     # Format context for inclusion
     formatted_context = self.format_context_items(context_items)
-    
+
     # Fill template with dynamic values
     prompt = base_template.format(
         domain=self.detect_domain(query),
@@ -176,7 +176,7 @@ def generate_contextual_prompt(self, base_template, query, context_items):
         user_query=query,
         output_format=self.determine_output_format(query)
     )
-    
+
     return prompt
 ```
 
@@ -186,7 +186,7 @@ def generate_contextual_prompt(self, base_template, query, context_items):
 
 A protocol is like a **recipe that thinks**. Just as a cooking recipe tells you:
 - What ingredients you need (inputs)
-- What steps to follow (process)  
+- What steps to follow (process)
 - What you should end up with (outputs)
 
 A protocol tells the AI system:
@@ -205,26 +205,26 @@ A protocol tells the AI system:
 ```
 /analyze.text{
     intent="Systematically analyze text content for insights",
-    
+
     input={
         text_content="<the text to analyze>",
         analysis_type="<sentiment|theme|structure|quality>",
         depth_level="<surface|moderate|deep>"
     },
-    
+
     process=[
         /understand{
             action="Read and comprehend the text",
             output="basic_understanding"
         },
         /categorize{
-            action="Identify key categories based on analysis_type", 
+            action="Identify key categories based on analysis_type",
             depends_on="basic_understanding",
             output="category_structure"
         },
         /analyze{
             action="Perform detailed analysis within each category",
-            depends_on="category_structure", 
+            depends_on="category_structure",
             output="detailed_findings"
         },
         /synthesize{
@@ -233,7 +233,7 @@ A protocol tells the AI system:
             output="synthesis_results"
         }
     ],
-    
+
     output={
         analysis_report="Structured findings and insights",
         confidence_metrics="Reliability indicators",
@@ -247,30 +247,30 @@ A protocol tells the AI system:
 ```
 /context.orchestration{
     intent="Dynamically manage context across multiple information sources and processing stages",
-    
+
     input={
         primary_query="<user's main request>",
         available_sources=["<list of information sources>"],
         constraints={
             max_tokens="<token_limit>",
-            processing_time="<time_limit>", 
+            processing_time="<time_limit>",
             priority_areas="<focus_areas>"
         },
         current_context_state="<existing_context_information>"
     },
-    
+
     process=[
         /context.assessment{
             action="Evaluate current context completeness and relevance",
             evaluate=[
                 "information_gaps",
-                "redundancy_levels", 
+                "redundancy_levels",
                 "relevance_scores",
                 "temporal_currency"
             ],
             output="context_assessment_report"
         },
-        
+
         /source.prioritization{
             action="Rank information sources by relevance and reliability",
             consider=[
@@ -282,7 +282,7 @@ A protocol tells the AI system:
             depends_on="context_assessment_report",
             output="prioritized_source_list"
         },
-        
+
         /adaptive.retrieval{
             action="Retrieve information based on priorities and constraints",
             strategy="dynamic_allocation",
@@ -292,7 +292,7 @@ A protocol tells the AI system:
                     allocation="60%_of_token_budget"
                 },
                 /medium_priority{
-                    sources="next_5_sources", 
+                    sources="next_5_sources",
                     allocation="30%_of_token_budget"
                 },
                 /background{
@@ -303,7 +303,7 @@ A protocol tells the AI system:
             depends_on="prioritized_source_list",
             output="retrieved_information_package"
         },
-        
+
         /context.synthesis{
             action="Intelligently combine retrieved information with existing context",
             methods=[
@@ -315,7 +315,7 @@ A protocol tells the AI system:
             depends_on="retrieved_information_package",
             output="synthesized_context_structure"
         },
-        
+
         /response.generation{
             action="Generate response using optimized context",
             approach="template_plus_dynamic_content",
@@ -324,7 +324,7 @@ A protocol tells the AI system:
             output="contextually_informed_response"
         }
     ],
-    
+
     output={
         final_response="Complete answer to user query",
         context_utilization_report="How context was used",
@@ -335,7 +335,7 @@ A protocol tells the AI system:
         },
         improvement_suggestions="Recommendations for future similar queries"
     },
-    
+
     meta={
         protocol_version="v1.2.0",
         execution_timestamp="<runtime>",
@@ -357,50 +357,50 @@ Let's build a comprehensive code review system that demonstrates all three pilla
 CODE_REVIEW_TEMPLATES = {
     'security_focus': """
     # Security-Focused Code Review
-    
+
     ## Code to Review
     Language: {language}
     Framework: {framework}
     Security Context: {security_requirements}
-    
+
     ```{language}
     {code_content}
     ```
-    
+
     ## Review Requirements
     - Identify potential security vulnerabilities
     - Check for common attack vectors: {attack_vectors}
     - Validate input sanitization and output encoding
     - Review authentication and authorization logic
     - Assess cryptographic implementations
-    
+
     ## Output Format
     Provide results in JSON format with severity levels and remediation guidance.
     """,
-    
+
     'performance_focus': """
     # Performance-Focused Code Review
-    
+
     ## Code Analysis Target
     {code_content}
-    
+
     ## Performance Criteria
     - Time complexity: {max_time_complexity}
-    - Space complexity: {max_space_complexity}  
+    - Space complexity: {max_space_complexity}
     - Scalability requirements: {scale_requirements}
-    
+
     Focus on: {performance_areas}
     """,
-    
+
     'maintainability_focus': """
     # Maintainability Code Review
-    
+
     Analyze for:
     - Code clarity and readability
-    - Documentation completeness  
+    - Documentation completeness
     - Design pattern usage
     - Technical debt indicators
-    
+
     Code:
     {code_content}
     """
@@ -412,48 +412,48 @@ CODE_REVIEW_TEMPLATES = {
 ```python
 class CodeReviewOrchestrator:
     """Programming layer that manages the code review process"""
-    
+
     def __init__(self):
         self.templates = CODE_REVIEW_TEMPLATES
         self.context_manager = ContextManager(max_tokens=50000)
         self.review_history = []
-        
+
     def analyze_code(self, code_content, review_type='comprehensive'):
         """Main method orchestrating the code review"""
-        
+
         # Step 1: Analyze code characteristics
         code_metadata = self.extract_code_metadata(code_content)
-        
+
         # Step 2: Build context
         relevant_context = self.build_review_context(
-            code_metadata, 
+            code_metadata,
             review_type
         )
-        
+
         # Step 3: Select and customize template
         template = self.select_template(review_type, code_metadata)
         customized_prompt = self.customize_template(
-            template, 
-            code_content, 
+            template,
+            code_content,
             code_metadata,
             relevant_context
         )
-        
-        # Step 4: Execute review protocol  
+
+        # Step 4: Execute review protocol
         review_results = self.execute_review_protocol(
             customized_prompt,
             code_content,
             review_type
         )
-        
+
         # Step 5: Post-process and format results
         formatted_results = self.format_review_results(review_results)
-        
+
         # Step 6: Update context for future reviews
         self.update_review_context(code_content, formatted_results)
-        
+
         return formatted_results
-        
+
     def extract_code_metadata(self, code):
         """Extract information about the code structure and characteristics"""
         return {
@@ -464,25 +464,25 @@ class CodeReviewOrchestrator:
             'dependency_analysis': self.analyze_dependencies(code),
             'pattern_usage': self.detect_patterns(code)
         }
-        
+
     def build_review_context(self, metadata, review_type):
         """Build relevant context for the review"""
         context_elements = []
-        
+
         # Add relevant historical reviews
         similar_reviews = self.find_similar_reviews(metadata)
         context_elements.extend(similar_reviews)
-        
+
         # Add framework-specific guidelines
         if metadata['framework']:
             guidelines = self.get_framework_guidelines(metadata['framework'])
             context_elements.append(guidelines)
-            
+
         # Add security patterns if security review
         if 'security' in review_type:
             security_patterns = self.get_security_patterns(metadata['language'])
             context_elements.append(security_patterns)
-            
+
         return self.context_manager.optimize_context(context_elements)
 ```
 
@@ -491,7 +491,7 @@ class CodeReviewOrchestrator:
 ```
 /code.review.comprehensive{
     intent="Perform thorough, multi-dimensional code review with adaptive focus based on code characteristics",
-    
+
     input={
         source_code="<code_to_review>",
         review_scope="<security|performance|maintainability|comprehensive>",
@@ -502,20 +502,20 @@ class CodeReviewOrchestrator:
             priority_areas="<specific_focus_areas>"
         }
     },
-    
+
     process=[
         /code.analysis.initial{
             action="Perform preliminary code analysis to understand structure and characteristics",
             analyze=[
                 "language_and_framework_detection",
-                "architectural_pattern_identification", 
+                "architectural_pattern_identification",
                 "complexity_assessment",
                 "dependency_mapping",
                 "surface_level_issue_detection"
             ],
             output="code_analysis_profile"
         },
-        
+
         /context.preparation{
             action="Prepare relevant context based on code analysis",
             context_sources=[
@@ -539,7 +539,7 @@ class CodeReviewOrchestrator:
             depends_on="code_analysis_profile",
             output="review_context_package"
         },
-        
+
         /adaptive.review.strategy{
             action="Determine optimal review approach based on code characteristics and constraints",
             strategy_selection=[
@@ -559,7 +559,7 @@ class CodeReviewOrchestrator:
             depends_on=["code_analysis_profile", "review_context_package"],
             output="review_execution_plan"
         },
-        
+
         /multi.dimensional.analysis{
             action="Execute review across multiple dimensions simultaneously",
             dimensions=[
@@ -568,13 +568,13 @@ class CodeReviewOrchestrator:
                     methods=["static_analysis_patterns", "attack_vector_mapping", "data_flow_security"],
                     output="security_findings"
                 },
-                /performance.analysis{  
+                /performance.analysis{
                     focus="efficiency_and_scalability_assessment",
                     methods=["complexity_analysis", "resource_usage_patterns", "bottleneck_identification"],
                     output="performance_findings"
                 },
                 /maintainability.analysis{
-                    focus="code_quality_and_long_term_sustainability", 
+                    focus="code_quality_and_long_term_sustainability",
                     methods=["readability_assessment", "design_pattern_usage", "technical_debt_identification"],
                     output="maintainability_findings"
                 },
@@ -588,7 +588,7 @@ class CodeReviewOrchestrator:
             depends_on="review_execution_plan",
             output="multi_dimensional_findings"
         },
-        
+
         /synthesis.and.prioritization{
             action="Combine findings across dimensions and prioritize by impact",
             synthesis_methods=[
@@ -608,7 +608,7 @@ class CodeReviewOrchestrator:
             depends_on="multi_dimensional_findings",
             output="prioritized_comprehensive_report"
         },
-        
+
         /actionable.recommendations{
             action="Generate specific, actionable recommendations for each finding",
             recommendation_types=[
@@ -617,7 +617,7 @@ class CodeReviewOrchestrator:
                     include_code_examples=true
                 },
                 /refactoring_suggestions{
-                    description="structural_improvements_for_long_term_benefit", 
+                    description="structural_improvements_for_long_term_benefit",
                     include_before_after_examples=true
                 },
                 /process_improvements{
@@ -629,7 +629,7 @@ class CodeReviewOrchestrator:
             output="actionable_improvement_plan"
         }
     ],
-    
+
     output={
         executive_summary="High-level overview of code quality and key findings",
         detailed_findings="Complete analysis results organized by dimension and priority",
@@ -637,12 +637,12 @@ class CodeReviewOrchestrator:
         code_quality_metrics="Quantitative assessments and benchmarking",
         recommendations={
             immediate_actions="Critical issues requiring urgent attention",
-            short_term_improvements="Enhancements for next development cycle", 
+            short_term_improvements="Enhancements for next development cycle",
             long_term_strategic="Architectural and process improvements"
         },
         context_for_future_reviews="Lessons learned and patterns for future use"
     },
-    
+
     meta={
         review_methodology="Comprehensive multi-dimensional analysis with adaptive prioritization",
         tools_used="Static analysis, pattern matching, contextual evaluation",
@@ -663,29 +663,29 @@ class CodeReviewOrchestrator:
 
 class Software3CodeReviewer:
     """Complete integration of prompts, programming, and protocols"""
-    
+
     def __init__(self):
         # Programming layer
         self.context_manager = ContextManager()
         self.template_engine = TemplateEngine(CODE_REVIEW_TEMPLATES)
         self.protocol_executor = ProtocolExecutor()
-        
+
     def review_code(self, code_content, requirements=None):
         """Main method demonstrating the integration"""
-        
+
         # 1. PROTOCOL determines the overall strategy
         review_protocol = self.protocol_executor.load_protocol("code.review.comprehensive")
-        
+
         # 2. PROGRAMMING handles the computational aspects
         code_metadata = self.extract_metadata(code_content)
         relevant_context = self.context_manager.build_context(code_metadata, requirements)
-        
+
         # 3. PROMPT TEMPLATE provides the communication structure
         selected_template = self.template_engine.select_optimal_template(
-            code_metadata, 
+            code_metadata,
             requirements
         )
-        
+
         # 4. PROTOCOL orchestrates the execution
         review_results = self.protocol_executor.execute(
             protocol=review_protocol,
@@ -698,7 +698,7 @@ class Software3CodeReviewer:
             template_engine=self.template_engine,
             context_manager=self.context_manager
         )
-        
+
         return review_results
 
 # Usage example:
@@ -726,7 +726,7 @@ result = reviewer.review_code(
 
 ### Software 3.0 Solution Benefits:
 - **Adaptive**: Changes based on context and requirements
-- **Efficient**: Reuses templates and context intelligently  
+- **Efficient**: Reuses templates and context intelligently
 - **Comprehensive**: Multiple perspectives integrated systematically
 - **Scalable**: Easy to extend and customize for new scenarios
 
@@ -738,7 +738,7 @@ Level 1: Basic Prompt Templates
 ├─ Fixed templates with placeholders
 └─ Simple substitution logic
 
-Level 2: Programming Integration  
+Level 2: Programming Integration
 ├─ Dynamic template selection
 ├─ Context-aware customization
 └─ Computational preprocessing
@@ -768,7 +768,7 @@ Level 3: Protocol Orchestration
 
 The following sections will dive deeper into:
 - **Fundamental Constraints**: How computational limits shape our approach
-- **Memory Hierarchies**: Multi-level storage and retrieval strategies  
+- **Memory Hierarchies**: Multi-level storage and retrieval strategies
 - **Compression Techniques**: Optimizing information density
 - **Optimization Strategies**: Performance and efficiency improvements
 

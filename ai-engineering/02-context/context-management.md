@@ -8,13 +8,13 @@ cleaned: 2026-07-17
 
 **Context Augmentation in RAG**
 
-Memory management 
+Memory management
 
 ### context layers:
 
 *(missing diagram — not exported from Notion)*
 
-manage information according to its **usage frequency, stability, and enforcement requirements**. 
+manage information according to its **usage frequency, stability, and enforcement requirements**.
 
 the system should keep the active context small and selectively retrieve or inject information only when it becomes relevant.
 
@@ -71,21 +71,21 @@ The model may ignore, misunderstand, or inconsistently follow a textual instruct
 
 **Compaction** is an orchestration process that transforms a large interaction history into a smaller continuation state.
 
-Compaction: 
+Compaction:
 
 ```markdown
-Raw interaction history 
-↓ 
-Prune irrelevant content 
-↓ 
-Replace bulky tool outputs 
-↓ 
-Extract structured task state 
-↓ 
-Summarize older reasoning 
-↓ 
-Preserve recent messages verbatim 
-↓ 
+Raw interaction history
+↓
+Prune irrelevant content
+↓
+Replace bulky tool outputs
+↓
+Extract structured task state
+↓
+Summarize older reasoning
+↓
+Preserve recent messages verbatim
+↓
 Produce compact continuation context
 ```
 
@@ -120,9 +120,9 @@ The intuition behind caching is that the prefill computation can be performed on
 Prompt caching works by prefix matching — so the order you put things in matters enormously — The best way to do this is static content first, dynamic content last. — to maximize how many sessions share cache hits.
 
 *(missing diagram — not exported from Notion)*
- One early pattern we’ve seen is a loss of accuracy in the gap between single tool invocation and multi-tool orchestration. Skills can close that gap by making tool reasoning more procedural without bloating system prompts. 
+ One early pattern we’ve seen is a loss of accuracy in the gap between single tool invocation and multi-tool orchestration. Skills can close that gap by making tool reasoning more procedural without bloating system prompts.
 
- How OpenClaw recovers from long tasks? 
+ How OpenClaw recovers from long tasks?
 
 write the task progress to disk and restart to continue from the breakpoint. If the task is longer than half an hour, crash recovery is a must, not an option.
 
@@ -132,19 +132,19 @@ write the task progress to disk and restart to continue from the breakpoint. If 
 
 Latency tip from OpenAI developershttps://developers.openai.com/api/docs/guides/compaction After appending output items to the previous input items, you can drop items that came before the most recent compaction item to keep requests smaller and reduce long-tail latency. The latest compaction item carries the necessary context to continue the conversation.
 
-1. workflow VS agent 
+1. workflow VS agent
 
 *(missing diagram — not exported from Notion)*
 
 *(missing diagram — not exported from Notion)*
 
-1. 5 patterns in Agent system 
-    
-    *(missing diagram — not exported from Notion)*
-    
-    Agent sweet spot: 
-    
-    *(missing diagram — not exported from Notion)*
-    
+1. 5 patterns in Agent system
 
-Context rot from the limitation of Transformer, how to deal with it: Context Management 
+    *(missing diagram — not exported from Notion)*
+
+    Agent sweet spot:
+
+    *(missing diagram — not exported from Notion)*
+
+
+Context rot from the limitation of Transformer, how to deal with it: Context Management

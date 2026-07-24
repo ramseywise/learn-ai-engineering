@@ -81,7 +81,7 @@ Gardens grow from carefully selected and placed plants. In context:
         {type="flowering", role="illustration", prominence="medium"},
         {type="productive", role="utility", prominence="high"}
     ],
-    
+
     arrangement="complementary groupings",
     diversity="balanced for resilience",
     growth_pattern="supports intended development"
@@ -105,7 +105,7 @@ Garden design creates order and flow. In context:
         {section="application", purpose="utility", size="practical"},
         {section="conclusion", purpose="integration", size="reflective"}
     ],
-    
+
     pathways="clear but not rigid",
     viewpoints="multiple perspectives offered",
     transitions="natural flow between sections"
@@ -129,7 +129,7 @@ Gardens need ongoing resources. In context:
         {area="examples", allocation="targeted"},
         {area="exploration", allocation="flexible reserve"}
     ],
-    
+
     quality="high-value resources",
     timing="responsive to needs",
     efficiency="minimal waste"
@@ -171,13 +171,13 @@ How you start your garden sets the foundation for everything that follows:
         improve_soil="enhance foundation with key frameworks",
         plan_layout="design information architecture"
     },
-    
+
     initial_planting={
         core_elements="essential concepts and definitions",
         structural_plants="organizing principles and frameworks",
         quick_yields="immediate-value examples and applications"
     },
-    
+
     establishment_care={
         initial_watering="sufficient detail to start strong",
         protection="clear boundaries and focus",
@@ -197,13 +197,13 @@ Regular watering keeps your garden thriving:
         frequency="responsive to complexity and needs",
         distribution="targeted to growth areas"
     },
-    
+
     water_sources={
         examples="concrete illustrations",
         explanations="clear reasoning and connections",
         questions="thought-provoking inquiry"
     },
-    
+
     efficiency={
         precision="directed to roots, not wasted",
         timing="when needed, not overwhelming",
@@ -224,14 +224,14 @@ Gardens require regular removal of elements that don't belong:
         outdated="no longer relevant information",
         harmful="elements that impede understanding"
     },
-    
+
     removal_techniques={
         summarization="compress to essence",
         refocusing="redirect to core purpose",
         explicit_pruning="clear removal of unhelpful elements",
         boundary_reinforcement="prevent return of weeds"
     },
-    
+
     timing={
         regular_maintenance="ongoing attention",
         seasonal_cleanup="periodic major review",
@@ -252,14 +252,14 @@ Strategic cutting back enhances health and productivity:
         rejuvenation="encourage fresh development",
         structure="maintain intended form"
     },
-    
+
     techniques={
         token_reduction="trim wordiness",
         example_curation="select best instances",
         concept_sharpening="define more precisely",
         hierarchy_reinforcement="clarify relationships"
     },
-    
+
     approach={
         deliberate="thoughtful, not reactive",
         preservative="maintain valuable aspects",
@@ -280,13 +280,13 @@ Adding nutrients enhances garden vitality:
         data="supporting evidence",
         perspectives="alternative viewpoints"
     },
-    
+
     application={
         targeted="where most needed",
         balanced="complementary elements",
         timed="when most receptive"
     },
-    
+
     integration={
         absorption="connecting to existing knowledge",
         distribution="spreading throughout relevant areas",
@@ -308,21 +308,21 @@ Optimized for practical output and utility:
 ```
 /design.kitchen_garden{
     purpose="practical, outcome-oriented interaction",
-    
+
     characteristics={
         productivity="high yield of useful results",
         efficiency="minimal waste, maximum utility",
         organization="clear, functional layout",
         accessibility="easy to harvest results"
     },
-    
+
     typical_elements={
         frameworks="reliable production methods",
         examples="proven, productive varieties",
         processes="step-by-step instructions",
         evaluation="quality assessment methods"
     },
-    
+
     maintenance={
         focus="yield and functionality",
         cycle="regular harvesting and replanting",
@@ -340,21 +340,21 @@ Emphasizes clear organization, precision, and order:
 ```
 /design.formal_garden{
     purpose="precise, structured interaction",
-    
+
     characteristics={
         order="clear hierarchies and categories",
         precision="exact definitions and boundaries",
         symmetry="balanced presentation of information",
         predictability="consistent patterns and frameworks"
     },
-    
+
     typical_elements={
         taxonomies="precise classification systems",
         principles="fundamental rules and patterns",
         criteria="clear standards for evaluation",
         procedures="exact sequences and methods"
     },
-    
+
     maintenance={
         focus="preserving structure and clarity",
         cycle="regular reinforcement of patterns",
@@ -372,21 +372,21 @@ Designed for exploration, creativity, and unexpected connections:
 ```
 /design.cottage_garden{
     purpose="creative, generative interaction",
-    
+
     characteristics={
         diversity="wide variety of elements",
         spontaneity="room for unexpected connections",
         abundance="rich, overflowing resources",
         charm="engaging, delightful experience"
     },
-    
+
     typical_elements={
         inspirations="diverse creative sparks",
         possibilities="open-ended explorations",
         associations="unexpected connections",
         variations="multiple expressions of ideas"
     },
-    
+
     maintenance={
         focus="nurturing creativity and surprise",
         cycle="seasonal refreshment and change",
@@ -404,21 +404,21 @@ Focused on simplicity, mindfulness, and essence:
 ```
 /design.zen_garden{
     purpose="clarity, focus, and essence",
-    
+
     characteristics={
         simplicity="reduced to what matters most",
         space="room for reflection and processing",
         focus="clear central elements",
         subtlety="nuance within simplicity"
     },
-    
+
     typical_elements={
         core_principles="fundamental truths",
         essential_questions="key inquiries",
         space="deliberate emptiness",
         mindful_presentation="carefully chosen elements"
     },
-    
+
     maintenance={
         focus="continuous refinement and reduction",
         cycle="regular reassessment of necessity",
@@ -447,14 +447,14 @@ The season of new beginnings and rapid growth:
         flexibility="direction still being established",
         experimentation="trying different approaches"
     },
-    
+
     activities={
         planting="establishing core concepts",
         planning="laying out key directions",
         preparation="building foundational understanding",
         protection="guarding against early confusion"
     },
-    
+
     focus="potential and direction"
 }
 ```
@@ -471,14 +471,14 @@ The season of full growth and productivity:
         productivity="high output and application",
         visibility="clear manifestation of intentions"
     },
-    
+
     activities={
         tending="maintaining momentum and direction",
         harvesting="gathering insights and applications",
         protecting="preventing disruption of productivity",
         sharing="leveraging abundant resources"
     },
-    
+
     focus="production and fulfillment"
 }
 ```
@@ -495,14 +495,14 @@ The season of gathering value and preparing for transition:
         selection="identifying what to preserve",
         preparation="getting ready for next phase"
     },
-    
+
     activities={
         harvesting="collecting key insights and results",
         preserving="documenting valuable outcomes",
         distilling="extracting essential lessons",
         planning="considering future directions"
     },
-    
+
     focus="consolidation and evaluation"
 }
 ```
@@ -519,14 +519,14 @@ The season of dormancy, reflection, and planning:
         reflection="deeper consideration",
         potential="latent future directions"
     },
-    
+
     activities={
         assessment="reviewing the complete cycle",
         planning="designing for new growth",
         clearing="removing what's no longer needed",
         preparation="readying for new beginnings"
     },
-    
+
     focus="reflection and renewal"
 }
 ```
@@ -543,14 +543,14 @@ Some contexts are designed to last through multiple seasons:
         renewal="refreshes without complete restart",
         evolution="develops rather than replacing"
     },
-    
+
     strategies={
         core_stability="maintain essential elements",
         seasonal_adjustment="adapt to changing needs",
         regular_renewal="refresh key components",
         selective_preservation="maintain what works"
     },
-    
+
     implementation={
         baseline_maintenance="ongoing care of fundamentals",
         adaptive_elements="flexible components that evolve",
@@ -578,14 +578,14 @@ When your garden becomes too dense and crowded:
         loss_of_focus="key elements obscured by details",
         diminishing_returns="additional elements add little value"
     },
-    
+
     solutions={
         aggressive_pruning="remove non-essential elements",
         prioritization="identify and highlight key components",
         restructuring="organize for clarity and efficiency",
         segmentation="divide into manageable sections"
     },
-    
+
     prevention={
         regular_maintenance="ongoing evaluation and pruning",
         disciplined_addition="careful consideration before including new elements",
@@ -606,14 +606,14 @@ When unwanted elements threaten to take over:
         unhelpful_patterns="recurring distractions",
         crowding_out="valuable elements lost among irrelevance"
     },
-    
+
     solutions={
         targeted_removal="eliminate specific irrelevant elements",
         boundary_reinforcement="clarify and strengthen topic borders",
         refocusing="explicitly return to core purpose",
         soil_improvement="strengthen foundational instructions"
     },
-    
+
     prevention={
         clear_boundaries="well-defined scope from the beginning",
         regular_weeding="address small issues before they grow",
@@ -634,14 +634,14 @@ When your garden lacks necessary resources:
         withering_concepts="important ideas failing to develop",
         productivity_drop="declining quality of outputs"
     },
-    
+
     solutions={
         resource_prioritization="direct tokens to most important elements",
         efficiency_techniques="do more with available resources",
         drought-resistant_planning="design for low-resource conditions",
         strategic_irrigation="targeted provision to essential areas"
     },
-    
+
     prevention={
         resource_planning="anticipate needs before beginning",
         efficient_design="create with constraints in mind",
@@ -662,14 +662,14 @@ When harmful elements threaten garden health:
         derailment="conversation knocked off intended path",
         quality_issues="deteriorating outputs"
     },
-    
+
     solutions={
         isolation="contain problematic elements",
         treatment="directly address specific issues",
         reinforcement="strengthen weakened areas",
         reset="clear restart if necessary"
     },
-    
+
     prevention={
         healthy_foundation="strong, clear initial structure",
         diversity="varied approaches for resilience",
@@ -818,13 +818,13 @@ Gardens unfold in their own time:
         incremental_growth="valuing small, consistent progress",
         long_view="seeing beyond immediate results"
     },
-    
+
     practices={
         phased_expectations="setting realistic timelines",
         milestone_celebration="acknowledging progress points",
         process_appreciation="finding value in the journey"
     },
-    
+
     benefits={
         reduced_frustration="accepting natural rhythms",
         deeper_development="allowing full maturation",
@@ -844,13 +844,13 @@ Successful gardeners notice what others miss:
         pattern_recognition="noticing recurring elements and trends",
         subtle_signals="detecting early indicators of issues or opportunities"
     },
-    
+
     practices={
         regular_observation="consistent, intentional assessment",
         multi-level_scanning="checking different layers and aspects",
         reflective_pauses="creating space for noticing"
     },
-    
+
     benefits={
         early_intervention="addressing issues before they grow",
         opportunity_recognition="seeing possibilities others miss",
@@ -870,13 +870,13 @@ Gardens require flexibility and responsiveness:
         environmental_interaction="acknowledging external influences",
         evolutionary_development="embracing change as natural"
     },
-    
+
     practices={
         responsive_adjustment="changing approach based on results",
         experimental_mindset="trying different methods",
         assumption_questioning="revisiting established patterns"
     },
-    
+
     benefits={
         resilience="thriving despite challenges",
         continuous_improvement="evolving rather than stagnating",
@@ -896,13 +896,13 @@ Gardeners serve the garden, not just themselves:
         service_orientation="focusing on garden needs, not just desires",
         future_thinking="considering long-term impacts"
     },
-    
+
     practices={
         sustainable_methods="approaches that maintain health over time",
         balanced_intervention="knowing when to act and when to observe",
         resource_responsibility="using inputs wisely and efficiently"
     },
-    
+
     benefits={
         garden_thriving="overall health and vitality",
         sustainable_productivity="lasting rather than depleting results",
@@ -928,13 +928,13 @@ For practical, productive contexts:
         elements="selected for productivity and utility",
         proportions="balanced for consistent yield"
     },
-    
+
     cultivation={
         planting="direct instruction and clear examples",
         maintenance="regular pruning for clarity and focus",
         harvesting="explicit collection of valuable outputs"
     },
-    
+
     application={
         technical_documentation="practical knowledge gardens",
         procedural_guidance="step-by-step instruction contexts",
@@ -954,13 +954,13 @@ For reflective, insight-oriented contexts:
         elements="selected for depth and meaning",
         proportions="balanced between content and space"
     },
-    
+
     cultivation={
         planting="thought-provoking questions and concepts",
         maintenance="gentle guidance rather than strict control",
         harvesting="recognition and integration of insights"
     },
-    
+
     application={
         philosophical_exploration="concept gardens",
         personal_development="growth-oriented contexts",
@@ -980,13 +980,13 @@ For learning and skill development contexts:
         elements="selected for learning value and progression",
         proportions="balanced between instruction and practice"
     },
-    
+
     cultivation={
         planting="foundational concepts with clear examples",
         maintenance="scaffolded support with gradual release",
         harvesting="demonstration of understanding and application"
     },
-    
+
     application={
         skill_development="practice-oriented gardens",
         knowledge_building="conceptual framework contexts",
@@ -1006,13 +1006,13 @@ For shared creation and co-development contexts:
         elements="complementary contributions from multiple sources",
         proportions="balanced voices and perspectives"
     },
-    
+
     cultivation={
         planting="invitation for diverse inputs",
         maintenance="integration and harmonization of elements",
         harvesting="recognition of collective creation"
     },
-    
+
     application={
         co_creation="shared project gardens",
         diverse_perspective="multi-viewpoint contexts",

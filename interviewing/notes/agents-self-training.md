@@ -149,7 +149,7 @@ You can decide whether to refine prompts, update model weights, or both — flex
 ## 📖 Summary: Agent-Lightning in One Sentence
 
 > Agent-Lightning is a training framework that turns any AI agent — however it’s built — into a learnable system using reinforcement learning and other optimization methods, with minimal changes to your current agent code. (GitHub)
-> 
+>
 
 ---
 
@@ -198,9 +198,9 @@ That kills RL.
 ## tips:
 
 1. a **hierarchical training strategy**, where different agents within our system are trained using specialized algorithms. This is a crucial concept in production-grade agentic systems, as a one-size-fits-all training approach is rarely optimal.
-2. Using a single, massive model for every job is inefficient and costly. This **“right model for the right job”** approach is a cornerstone of building production-grade, cost-effective agentic systems. 
-3. model selection: 
-    1. model="mistralai/Mixtral-8x7B-Instruct-v0.1", # A powerful Mixture-of-Experts model for nuanced evaluation. 
+2. Using a single, massive model for every job is inefficient and costly. This **“right model for the right job”** approach is a cornerstone of building production-grade, cost-effective agentic systems.
+3. model selection:
+    1. model="mistralai/Mixtral-8x7B-Instruct-v0.1", # A powerful Mixture-of-Experts model for nuanced evaluation.
 
 ## https://levelup.gitconnected.com/building-a-training-architecture-for-self-improving-ai-agents-c87a4e316b22
 

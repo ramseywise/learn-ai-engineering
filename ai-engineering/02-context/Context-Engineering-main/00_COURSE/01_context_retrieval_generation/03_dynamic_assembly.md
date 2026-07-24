@@ -2,7 +2,7 @@
 ## Context Composition Strategies and Intelligent Orchestration
 
 > **Module 01.3** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > Building on [Context Engineering Survey](https://arxiv.org/pdf/2507.13334) | Advancing Software 3.0 Paradigms
 
 ---
@@ -42,7 +42,7 @@ Query Analysis → Select Components → Assemble Context → Response
 
 ### Stage 4: Optimization-Driven Assembly
 ```
-Query Analysis → Multi-Objective Optimization → Optimal Component Selection → 
+Query Analysis → Multi-Objective Optimization → Optimal Component Selection →
     Intelligent Assembly → Performance Monitoring → Response
 ```
 **Context**: Like having a smart architect who considers multiple factors (space, cost, aesthetics, functionality) to create the optimal design for each specific project.
@@ -159,7 +159,7 @@ Where:
 
 **Ground-up Explanation**: This architecture shows how dynamic context assembly works at multiple levels:
 - **Bottom Layer**: All the different sources of context components (static templates, dynamic retrieval, user info, system state, learned patterns)
-- **Middle Layer**: Selection and processing of specific components (instructions, knowledge, tools, memory, examples)  
+- **Middle Layer**: Selection and processing of specific components (instructions, knowledge, tools, memory, examples)
 - **Top Layer**: Intelligent orchestration that optimizes how components are combined, manages composition quality, and adapts based on outcomes
 
 ---
@@ -193,7 +193,7 @@ Where:
 
 **Knowledge Quality Assessment**:
 - **Relevance Score**: {relevance_to_query}/10
-- **Credibility Score**: {source_credibility}/10  
+- **Credibility Score**: {source_credibility}/10
 - **Completeness Score**: {coverage_assessment}/10
 - **Recency Score**: {information_currency}/10
 
@@ -257,7 +257,7 @@ After response generation, evaluate:
 ```xml
 <adaptive_context_strategy name="intelligent_context_composer">
   <intent>Create context assembly strategies that adapt based on query characteristics and performance outcomes</intent>
-  
+
   <query_analysis>
     <complexity_assessment>
       <simple>Direct answer or basic information lookup</simple>
@@ -265,7 +265,7 @@ After response generation, evaluate:
       <complex>Deep analysis, synthesis, or creative problem-solving needed</complex>
       <expert>Specialized domain knowledge and sophisticated reasoning required</expert>
     </complexity_assessment>
-    
+
     <domain_classification>
       <analytical>Logic, mathematics, scientific reasoning</analytical>
       <creative>Design, innovation, artistic expression</creative>
@@ -273,14 +273,14 @@ After response generation, evaluate:
       <social>Communication, interpersonal dynamics, cultural considerations</social>
       <technical>Programming, engineering, specialized technical knowledge</technical>
     </domain_classification>
-    
+
     <user_context>
       <expertise_level>Beginner | Intermediate | Advanced | Expert</expertise_level>
       <preferred_style>Concise | Detailed | Step-by-step | Conceptual</preferred_style>
       <time_constraints>Immediate | Standard | Extended | Research-depth</time_constraints>
     </user_context>
   </query_analysis>
-  
+
   <assembly_strategy_selection>
     <strategy_mapping>
       <minimal_context>
@@ -288,19 +288,19 @@ After response generation, evaluate:
         <components>Essential instructions + Direct examples</components>
         <weight_distribution>Instructions: 70%, Examples: 30%</weight_distribution>
       </minimal_context>
-      
+
       <balanced_assembly>
         <when>Moderate complexity + General audience</when>
         <components>Instructions + Knowledge + Examples + Basic tools</components>
         <weight_distribution>Instructions: 30%, Knowledge: 40%, Examples: 20%, Tools: 10%</weight_distribution>
       </balanced_assembly>
-      
+
       <comprehensive_integration>
         <when>Complex queries + Detailed analysis needed</when>
         <components>Full role spec + Extensive knowledge + Multiple examples + Tools + Memory</components>
         <weight_distribution>Instructions: 20%, Knowledge: 35%, Examples: 15%, Tools: 15%, Memory: 15%</weight_distribution>
       </comprehensive_integration>
-      
+
       <expert_consultation>
         <when>Expert domain + Specialized knowledge required</when>
         <components>Expert role + Domain knowledge + Specialized tools + Methodology</components>
@@ -308,7 +308,7 @@ After response generation, evaluate:
       </expert_consultation>
     </strategy_mapping>
   </assembly_strategy_selection>
-  
+
   <dynamic_optimization>
     <component_selection>
       <instructions_optimization>
@@ -316,33 +316,33 @@ After response generation, evaluate:
         <task_clarity>Ensure precise, unambiguous task definition</task_clarity>
         <success_criteria>Define clear metrics for successful completion</success_criteria>
       </instructions_optimization>
-      
+
       <knowledge_curation>
         <relevance_filtering>Select only information directly relevant to query</relevance_filtering>
         <quality_ranking>Prioritize high-credibility, recent sources</quality_ranking>
         <diversity_balancing>Include multiple perspectives when appropriate</diversity_balancing>
       </knowledge_curation>
-      
+
       <example_selection>
         <similarity_matching>Choose examples most similar to current task</similarity_matching>
         <quality_demonstration>Select examples showing desired level of excellence</quality_demonstration>
         <progressive_complexity>Include examples of varying sophistication levels</progressive_complexity>
       </example_selection>
     </component_selection>
-    
+
     <assembly_orchestration>
       <coherence_validation>
         Ensure all components work together harmoniously
         Check for contradictions or conflicts between elements
         Maintain consistent complexity and style throughout
       </coherence_validation>
-      
+
       <flow_optimization>
         Structure components in logical progression
         Create smooth transitions between different elements
         Build cognitive scaffolding for complex reasoning
       </flow_optimization>
-      
+
       <length_management>
         Optimize information density within token constraints
         Prioritize most valuable information if length limits reached
@@ -350,7 +350,7 @@ After response generation, evaluate:
       </length_management>
     </assembly_orchestration>
   </dynamic_optimization>
-  
+
   <performance_feedback>
     <success_metrics>
       <response_quality>How well does assembled context enable high-quality responses?</response_quality>
@@ -358,7 +358,7 @@ After response generation, evaluate:
       <efficiency>How quickly can high-quality responses be generated?</efficiency>
       <adaptability>How well does context handle variations in similar queries?</adaptability>
     </success_metrics>
-    
+
     <learning_integration>
       <pattern_recognition>Identify which assembly strategies work best for different query types</pattern_recognition>
       <component_effectiveness>Learn which context components are most valuable in different situations</component_effectiveness>
@@ -388,7 +388,7 @@ from datetime import datetime
 
 class ComplexityLevel(Enum):
     SIMPLE = "simple"
-    MODERATE = "moderate" 
+    MODERATE = "moderate"
     COMPLEX = "complex"
     EXPERT = "expert"
 
@@ -408,7 +408,7 @@ class ContextComponent:
     relevance_score: float
     quality_score: float
     metadata: Dict = None
-    
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
@@ -425,13 +425,13 @@ class QueryAnalysis:
 
 class ContextAssemblyStrategy(ABC):
     """Abstract base class for context assembly strategies"""
-    
+
     @abstractmethod
-    def select_components(self, query_analysis: QueryAnalysis, 
+    def select_components(self, query_analysis: QueryAnalysis,
                          available_components: Dict[str, List[ContextComponent]]) -> List[ContextComponent]:
         """Select optimal components for context assembly"""
         pass
-    
+
     @abstractmethod
     def optimize_assembly(self, selected_components: List[ContextComponent],
                          max_length: int) -> str:
@@ -440,7 +440,7 @@ class ContextAssemblyStrategy(ABC):
 
 class BalancedAssemblyStrategy(ContextAssemblyStrategy):
     """Balanced approach suitable for general-purpose queries"""
-    
+
     def __init__(self):
         self.component_weights = {
             'instructions': 0.25,
@@ -449,64 +449,64 @@ class BalancedAssemblyStrategy(ContextAssemblyStrategy):
             'tools': 0.10,
             'memory': 0.05
         }
-    
+
     def select_components(self, query_analysis: QueryAnalysis,
                          available_components: Dict[str, List[ContextComponent]]) -> List[ContextComponent]:
         """Select components using balanced weighting approach"""
-        
+
         selected_components = []
-        
+
         for component_type, components in available_components.items():
             if not components:
                 continue
-            
+
             # Calculate target count for this component type
             base_weight = self.component_weights.get(component_type, 0.1)
-            
+
             # Adjust weight based on query analysis
             adjusted_weight = self._adjust_weight_for_query(base_weight, component_type, query_analysis)
-            
+
             # Select top components of this type
             target_count = max(1, int(adjusted_weight * 10))  # Scale to reasonable count
-            
+
             # Sort components by composite score
-            scored_components = [(comp, self._calculate_component_score(comp, query_analysis)) 
+            scored_components = [(comp, self._calculate_component_score(comp, query_analysis))
                                for comp in components]
             scored_components.sort(key=lambda x: x[1], reverse=True)
-            
+
             # Select top components
             for comp, score in scored_components[:target_count]:
                 comp.weight = adjusted_weight / target_count
                 selected_components.append(comp)
-        
+
         return selected_components
-    
+
     def optimize_assembly(self, selected_components: List[ContextComponent],
                          max_length: int) -> str:
         """Assemble components into coherent context"""
-        
+
         # Group components by type
         component_groups = {}
         for comp in selected_components:
             if comp.type not in component_groups:
                 component_groups[comp.type] = []
             component_groups[comp.type].append(comp)
-        
+
         # Order groups logically
         assembly_order = ['instructions', 'knowledge', 'examples', 'tools', 'memory']
-        
+
         assembled_parts = []
         current_length = 0
-        
+
         for comp_type in assembly_order:
             if comp_type not in component_groups:
                 continue
-            
+
             # Create section for this component type
             section_parts = []
             section_title = self._get_section_title(comp_type)
             section_parts.append(f"## {section_title}")
-            
+
             # Add components of this type
             for comp in component_groups[comp_type]:
                 # Check length constraints
@@ -522,19 +522,19 @@ class BalancedAssemblyStrategy(ContextAssemblyStrategy):
                 else:
                     section_parts.append(comp.content)
                     current_length += component_length
-            
+
             if len(section_parts) > 1:  # Only add if there's content beyond title
                 assembled_parts.extend(section_parts)
                 assembled_parts.append("")  # Add spacing
-        
+
         return "\n".join(assembled_parts)
-    
-    def _adjust_weight_for_query(self, base_weight: float, component_type: str, 
+
+    def _adjust_weight_for_query(self, base_weight: float, component_type: str,
                                query_analysis: QueryAnalysis) -> float:
         """Adjust component weight based on query characteristics"""
-        
+
         adjusted_weight = base_weight
-        
+
         # Adjust based on complexity
         if query_analysis.complexity_level == ComplexityLevel.EXPERT:
             if component_type == 'knowledge':
@@ -546,7 +546,7 @@ class BalancedAssemblyStrategy(ContextAssemblyStrategy):
                 adjusted_weight *= 1.2
             elif component_type == 'examples':
                 adjusted_weight *= 1.1
-        
+
         # Adjust based on domain
         if query_analysis.domain_type == DomainType.TECHNICAL:
             if component_type == 'tools':
@@ -554,28 +554,28 @@ class BalancedAssemblyStrategy(ContextAssemblyStrategy):
         elif query_analysis.domain_type == DomainType.CREATIVE:
             if component_type == 'examples':
                 adjusted_weight *= 1.3
-        
+
         return adjusted_weight
-    
-    def _calculate_component_score(self, component: ContextComponent, 
+
+    def _calculate_component_score(self, component: ContextComponent,
                                  query_analysis: QueryAnalysis) -> float:
         """Calculate composite score for component selection"""
-        
-        base_score = (component.relevance_score * 0.6 + 
+
+        base_score = (component.relevance_score * 0.6 +
                      component.quality_score * 0.4)
-        
+
         # Bonus for components that match query characteristics
         domain_bonus = 0.0
         if query_analysis.domain_type.value in component.content.lower():
             domain_bonus = 0.1
-        
+
         complexity_bonus = 0.0
         if query_analysis.complexity_level == ComplexityLevel.EXPERT:
             if any(term in component.content.lower() for term in ['advanced', 'expert', 'sophisticated']):
                 complexity_bonus = 0.1
-        
+
         return base_score + domain_bonus + complexity_bonus
-    
+
     def _get_section_title(self, component_type: str) -> str:
         """Get section title for component type"""
         titles = {
@@ -589,7 +589,7 @@ class BalancedAssemblyStrategy(ContextAssemblyStrategy):
 
 class DynamicContextAssembler:
     """Advanced context assembler with strategy selection and optimization"""
-    
+
     def __init__(self):
         self.strategies = {
             'balanced': BalancedAssemblyStrategy(),
@@ -597,33 +597,33 @@ class DynamicContextAssembler:
             'instruction_focused': InstructionFocusedStrategy(),
             'example_rich': ExampleRichStrategy()
         }
-        
+
         self.query_analyzer = QueryAnalyzer()
         self.component_manager = ComponentManager()
         self.assembly_history = []
         self.performance_tracker = AssemblyPerformanceTracker()
-    
+
     def assemble_context(self, query: str, available_components: Dict[str, List[ContextComponent]],
                         max_length: int = 4000, strategy: str = "auto") -> Dict:
         """Assemble optimal context for query"""
-        
+
         # Analyze query characteristics
         query_analysis = self.query_analyzer.analyze_query(query)
-        
+
         # Select assembly strategy
         if strategy == "auto":
             selected_strategy_name = self._select_optimal_strategy(query_analysis)
         else:
             selected_strategy_name = strategy
-        
+
         selected_strategy = self.strategies[selected_strategy_name]
-        
+
         # Select components using strategy
         selected_components = selected_strategy.select_components(query_analysis, available_components)
-        
+
         # Assemble context
         assembled_context = selected_strategy.optimize_assembly(selected_components, max_length)
-        
+
         # Create result with metadata
         assembly_result = {
             'context': assembled_context,
@@ -637,15 +637,15 @@ class DynamicContextAssembler:
                 'assembly_timestamp': datetime.now().isoformat()
             }
         }
-        
+
         # Track assembly for learning
         self.assembly_history.append(assembly_result)
-        
+
         return assembly_result
-    
+
     def _select_optimal_strategy(self, query_analysis: QueryAnalysis) -> str:
         """Select optimal assembly strategy based on query analysis"""
-        
+
         # Strategy selection logic
         if query_analysis.complexity_level == ComplexityLevel.SIMPLE:
             return 'instruction_focused'
@@ -658,41 +658,41 @@ class DynamicContextAssembler:
             return 'example_rich'
         else:
             return 'balanced'
-    
+
     def _analyze_component_distribution(self, components: List[ContextComponent]) -> Dict[str, int]:
         """Analyze distribution of component types"""
         distribution = {}
         for comp in components:
             distribution[comp.type] = distribution.get(comp.type, 0) + 1
         return distribution
-    
+
     def optimize_assembly_performance(self, feedback_data: List[Dict]):
         """Optimize assembly strategies based on performance feedback"""
-        
+
         # Analyze performance patterns
         performance_analysis = self.performance_tracker.analyze_performance(
             self.assembly_history, feedback_data
         )
-        
+
         # Update strategy parameters based on analysis
         self._update_strategies_from_analysis(performance_analysis)
-        
+
         return performance_analysis
-    
+
     def _update_strategies_from_analysis(self, performance_analysis: Dict):
         """Update strategy parameters based on performance analysis"""
-        
+
         # Update component weights for strategies based on what worked well
         for strategy_name, strategy in self.strategies.items():
             if hasattr(strategy, 'component_weights'):
                 # Adjust weights based on performance feedback
                 if strategy_name in performance_analysis['strategy_performance']:
                     performance_data = performance_analysis['strategy_performance'][strategy_name]
-                    
+
                     # Simple adjustment based on success rate
                     success_rate = performance_data.get('success_rate', 0.5)
                     adjustment_factor = (success_rate - 0.5) * 0.1  # Conservative adjustment
-                    
+
                     # Apply adjustments (simplified approach)
                     for comp_type in strategy.component_weights:
                         strategy.component_weights[comp_type] *= (1 + adjustment_factor)
@@ -700,7 +700,7 @@ class DynamicContextAssembler:
 # Additional strategy implementations
 class KnowledgeHeavyStrategy(ContextAssemblyStrategy):
     """Strategy that prioritizes extensive knowledge integration"""
-    
+
     def __init__(self):
         self.component_weights = {
             'instructions': 0.15,
@@ -709,7 +709,7 @@ class KnowledgeHeavyStrategy(ContextAssemblyStrategy):
             'tools': 0.10,
             'memory': 0.05
         }
-    
+
     def select_components(self, query_analysis: QueryAnalysis,
                          available_components: Dict[str, List[ContextComponent]]) -> List[ContextComponent]:
         # Implementation similar to BalancedAssemblyStrategy but with different weights
@@ -717,7 +717,7 @@ class KnowledgeHeavyStrategy(ContextAssemblyStrategy):
         selected_components = []
         # ... selection logic ...
         return selected_components
-    
+
     def optimize_assembly(self, selected_components: List[ContextComponent],
                          max_length: int) -> str:
         # Knowledge-focused assembly with emphasis on comprehensive information
@@ -726,22 +726,22 @@ class KnowledgeHeavyStrategy(ContextAssemblyStrategy):
 
 class QueryAnalyzer:
     """Analyzes queries to determine optimal assembly strategy"""
-    
+
     def analyze_query(self, query: str) -> QueryAnalysis:
         """Analyze query characteristics for context assembly"""
-        
+
         # Complexity analysis
         complexity_level = self._assess_complexity(query)
-        
+
         # Domain classification
         domain_type = self._classify_domain(query)
-        
+
         # Extract other characteristics
         user_expertise = self._infer_user_expertise(query)
         time_constraints = self._assess_time_constraints(query)
         information_needs = self._identify_information_needs(query)
         success_criteria = self._determine_success_criteria(query)
-        
+
         return QueryAnalysis(
             complexity_level=complexity_level,
             domain_type=domain_type,
@@ -750,21 +750,21 @@ class QueryAnalyzer:
             information_needs=information_needs,
             success_criteria=success_criteria
         )
-    
+
     def _assess_complexity(self, query: str) -> ComplexityLevel:
         """Assess query complexity level"""
-        
+
         query_lower = query.lower()
-        
+
         # Simple indicators
         simple_indicators = ['what is', 'define', 'list', 'name']
         if any(indicator in query_lower for indicator in simple_indicators):
             return ComplexityLevel.SIMPLE
-        
-        # Expert indicators  
+
+        # Expert indicators
         expert_indicators = ['analyze', 'synthesize', 'evaluate', 'compare', 'design', 'optimize']
         complex_phrases = ['taking into account', 'considering multiple', 'comprehensive analysis']
-        
+
         if (any(indicator in query_lower for indicator in expert_indicators) and
             any(phrase in query_lower for phrase in complex_phrases)):
             return ComplexityLevel.EXPERT
@@ -772,12 +772,12 @@ class QueryAnalyzer:
             return ComplexityLevel.COMPLEX
         else:
             return ComplexityLevel.MODERATE
-    
+
     def _classify_domain(self, query: str) -> DomainType:
         """Classify query domain type"""
-        
+
         query_lower = query.lower()
-        
+
         # Domain keyword mapping
         domain_keywords = {
             DomainType.ANALYTICAL: ['analyze', 'calculate', 'logic', 'data', 'statistics', 'math'],
@@ -786,44 +786,44 @@ class QueryAnalyzer:
             DomainType.SOCIAL: ['communicate', 'relationship', 'team', 'cultural', 'interpersonal'],
             DomainType.TECHNICAL: ['code', 'program', 'algorithm', 'system', 'technical', 'engineering']
         }
-        
+
         # Score each domain
         domain_scores = {}
         for domain, keywords in domain_keywords.items():
             score = sum(1 for keyword in keywords if keyword in query_lower)
             domain_scores[domain] = score
-        
+
         # Return domain with highest score, default to analytical
         best_domain = max(domain_scores.items(), key=lambda x: x[1])
         return best_domain[0] if best_domain[1] > 0 else DomainType.ANALYTICAL
-    
+
     def _infer_user_expertise(self, query: str) -> str:
         """Infer user expertise level from query characteristics"""
-        
+
         query_lower = query.lower()
-        
+
         # Beginner indicators
         beginner_indicators = ['explain simply', 'i\'m new to', 'basic explanation', 'for beginners']
         if any(indicator in query_lower for indicator in beginner_indicators):
             return 'beginner'
-        
+
         # Expert indicators
         expert_indicators = ['in-depth', 'technical details', 'advanced', 'expert level']
         if any(indicator in query_lower for indicator in expert_indicators):
             return 'expert'
-        
+
         # Advanced indicators
         advanced_indicators = ['detailed analysis', 'comprehensive', 'thorough examination']
         if any(indicator in query_lower for indicator in advanced_indicators):
             return 'advanced'
-        
+
         return 'intermediate'  # Default assumption
-    
+
     def _assess_time_constraints(self, query: str) -> str:
         """Assess time constraints from query"""
-        
+
         query_lower = query.lower()
-        
+
         if any(phrase in query_lower for phrase in ['quick', 'brief', 'summary', 'urgent']):
             return 'immediate'
         elif any(phrase in query_lower for phrase in ['comprehensive', 'thorough', 'detailed']):
@@ -836,7 +836,7 @@ class QueryAnalyzer:
 # Demonstration of dynamic context assembly
 def demonstrate_dynamic_assembly():
     """Demonstrate advanced context assembly system"""
-    
+
     # Create sample components
     sample_components = {
         'instructions': [
@@ -852,10 +852,10 @@ def demonstrate_dynamic_assembly():
             ContextComponent('examples', 'Consider this analysis of customer data...', 0.6, 0.75, 0.70)
         ]
     }
-    
+
     # Initialize assembler
     assembler = DynamicContextAssembler()
-    
+
     # Test different types of queries
     test_queries = [
         "What is machine learning?",  # Simple
@@ -863,17 +863,17 @@ def demonstrate_dynamic_assembly():
         "How do I implement a basic classification model?",  # Practical
         "Design an innovative approach to data visualization"  # Creative
     ]
-    
+
     print("Dynamic Context Assembly Demonstration:")
     print("=" * 60)
-    
+
     for query in test_queries:
         print(f"\nQuery: {query}")
         print("-" * 40)
-        
+
         # Assemble context
         result = assembler.assemble_context(query, sample_components, max_length=2000)
-        
+
         # Display results
         print(f"Strategy Used: {result['strategy_used']}")
         print(f"Query Complexity: {result['query_analysis'].complexity_level.value}")
@@ -881,12 +881,12 @@ def demonstrate_dynamic_assembly():
         print(f"Components Selected: {result['assembly_metadata']['total_components']}")
         print(f"Context Length: {result['assembly_metadata']['context_length']} characters")
         print(f"Component Distribution: {result['assembly_metadata']['component_distribution']}")
-        
+
         print("\nAssembled Context Preview:")
         preview = result['context'][:300] + "..." if len(result['context']) > 300 else result['context']
         print(preview)
         print("\n" + "="*60)
-    
+
     return assembler
 
 # Execute demonstration
@@ -905,7 +905,7 @@ if __name__ == "__main__":
 ```
 /context.assembly.adaptive{
     intent="Create self-optimizing context assembly systems that continuously improve their ability to create optimal context combinations for maximum response effectiveness",
-    
+
     process=[
         /monitor.performance_optimization{
             action="Continuously monitor and optimize context assembly effectiveness through learning",
@@ -927,7 +927,7 @@ if __name__ == "__main__":
             output="Continuously improving context assembly system with enhanced effectiveness"
         }
     ],
-    
+
     output={
         assembled_context={
             optimized_context=<intelligently_assembled_context_for_maximum_effectiveness>,
@@ -935,14 +935,14 @@ if __name__ == "__main__":
             predicted_effectiveness=<estimated_quality_and_success_probability>,
             adaptation_mechanisms=<built_in_flexibility_for_real_time_adjustments>
         },
-        
+
         assembly_intelligence={
             strategy_used=<specific_assembly_approach_and_optimization_methods>,
             component_analysis=<detailed_assessment_of_selected_components>,
             performance_prediction=<estimated_effectiveness_across_multiple_dimensions>,
             learning_integration=<how_past_experience_influenced_current_assembly>
         },
-        
+
         optimization_insights={
             assembly_effectiveness=<assessment_of_context_composition_quality>,
             improvement_opportunities=<identified_ways_to_enhance_future_assemblies>,
@@ -950,19 +950,19 @@ if __name__ == "__main__":
             personalization_learning=<user_specific_optimization_insights>
         }
     },
-    
+
     // Self-improvement mechanisms
     assembly_evolution=[
-        {trigger="response_quality_below_expectations", 
+        {trigger="response_quality_below_expectations",
          action="analyze_component_effectiveness_and_optimize_selection_strategies"},
-        {trigger="user_satisfaction_declining", 
+        {trigger="user_satisfaction_declining",
          action="reassess_assembly_approaches_and_integrate_user_feedback"},
-        {trigger="new_high_performing_patterns_discovered", 
+        {trigger="new_high_performing_patterns_discovered",
          action="integrate_successful_patterns_into_assembly_strategy_library"},
-        {trigger="domain_specific_optimization_opportunities_identified", 
+        {trigger="domain_specific_optimization_opportunities_identified",
          action="develop_specialized_assembly_approaches_for_improved_domain_performance"}
     ],
-    
+
     meta={
         assembly_system_version="adaptive_v5.0",
         learning_sophistication="comprehensive_multi_dimensional_optimization",
@@ -983,50 +983,50 @@ if __name__ == "__main__":
 ```python
 def demonstrate_multimodal_context_assembly():
     """Advanced context assembly incorporating multiple information modalities"""
-    
+
     multimodal_assembly_template = """
     # Multi-Modal Context Assembly Framework
-    
+
     You are working with diverse information sources across multiple modalities.
-    
+
     ## Available Information Sources
     **Textual Knowledge**: {retrieved_text_information}
     **Visual Information**: {image_analysis_and_visual_data}
     **Structured Data**: {tables_databases_and_quantitative_information}
     **Code Examples**: {relevant_code_snippets_and_technical_implementations}
     **Interactive Elements**: {available_tools_and_dynamic_data_sources}
-    
+
     ## Multi-Modal Integration Strategy
-    
+
     ### Information Synthesis Approach
     1. **Cross-Modal Validation**: Verify consistency across different information types
     2. **Complementary Integration**: Combine text, visual, and data elements for comprehensive understanding
     3. **Modal Optimization**: Use each information type for its strengths
     4. **Coherent Narrative**: Create unified understanding despite diverse source types
-    
+
     ### Quality Assurance Protocol
     - Ensure all modalities contribute meaningfully to the response
     - Identify and resolve conflicts between different information sources
     - Optimize cognitive load by presenting information in most accessible format
     - Maintain clear attribution across different source types
-    
+
     ## Your Multi-Modal Task
     {user_query}
-    
+
     ## Integration Guidelines
     - Reference specific information from each relevant modality
     - Explain how different information sources complement each other
     - Acknowledge any limitations or conflicts in available information
     - Use the most appropriate modality for each aspect of your response
     """
-    
+
     return multimodal_assembly_template
 
 ### Case Study: Adaptive Expertise Level Assembly
 
 def demonstrate_adaptive_expertise_assembly():
     """Context assembly that adapts to user expertise level"""
-    
+
     class ExpertiseAdaptiveAssembler:
         def __init__(self):
             self.expertise_templates = {
@@ -1055,32 +1055,32 @@ def demonstrate_adaptive_expertise_assembly():
                     'terminology': 'domain-specific language and latest developments'
                 }
             }
-        
-        def assemble_for_expertise(self, query: str, user_expertise: str, 
+
+        def assemble_for_expertise(self, query: str, user_expertise: str,
                                  components: Dict) -> str:
             """Assemble context optimized for specific expertise level"""
-            
+
             expertise_config = self.expertise_templates.get(user_expertise, 'intermediate')
-            
+
             adapted_template = f"""
             # Expertise-Adapted Context Assembly
-            
+
             ## Tailored for {user_expertise.title()} Level
-            
+
             ### Task Approach: {expertise_config['instruction_style']}
             ### Knowledge Integration: {expertise_config['knowledge_depth']}
             ### Examples: {expertise_config['example_type']}
             ### Communication Style: {expertise_config['terminology']}
-            
+
             ## Your Challenge
             {query}
-            
+
             ## Adapted Context Components
             [Context components would be filtered and presented according to expertise level]
             """
-            
+
             return adapted_template
-    
+
     return ExpertiseAdaptiveAssembler()
 ```
 
@@ -1089,7 +1089,7 @@ def demonstrate_adaptive_expertise_assembly():
 ```python
 class ContextAssemblyBenchmark:
     """Comprehensive benchmarking system for context assembly strategies"""
-    
+
     def __init__(self):
         self.benchmark_metrics = {
             'response_quality': self._evaluate_response_quality,
@@ -1099,97 +1099,97 @@ class ContextAssemblyBenchmark:
             'learning_effectiveness': self._evaluate_learning_effectiveness
         }
         self.benchmark_results = []
-    
-    def comprehensive_assembly_benchmark(self, assembly_systems: Dict, 
+
+    def comprehensive_assembly_benchmark(self, assembly_systems: Dict,
                                        test_scenarios: List[Dict]) -> Dict:
         """Benchmark multiple context assembly systems"""
-        
+
         benchmark_results = {}
-        
+
         for system_name, assembly_system in assembly_systems.items():
             system_results = {}
-            
+
             for metric_name, metric_function in self.benchmark_metrics.items():
                 metric_scores = []
-                
+
                 for scenario in test_scenarios:
                     # Generate context using assembly system
                     assembled_context = assembly_system.assemble_context(
-                        scenario['query'], 
+                        scenario['query'],
                         scenario['components'],
                         scenario.get('constraints', {})
                     )
-                    
+
                     # Evaluate using metric
                     score = metric_function(assembled_context, scenario)
                     metric_scores.append(score)
-                
+
                 system_results[metric_name] = {
                     'average_score': np.mean(metric_scores),
                     'std_deviation': np.std(metric_scores),
                     'scores': metric_scores
                 }
-            
+
             # Calculate overall performance
             system_results['overall_performance'] = self._calculate_overall_performance(system_results)
             benchmark_results[system_name] = system_results
-        
+
         return benchmark_results
-    
+
     def _evaluate_response_quality(self, assembled_context: Dict, scenario: Dict) -> float:
         """Evaluate quality of responses generated from assembled context"""
-        
+
         # Simulate response quality evaluation
         context_text = assembled_context.get('context', '')
-        
+
         # Quality factors
         relevance_score = self._assess_relevance(context_text, scenario['query'])
         completeness_score = self._assess_completeness(context_text, scenario)
         coherence_score = self._assess_coherence(context_text)
-        
+
         # Weighted combination
-        quality_score = (relevance_score * 0.4 + 
-                        completeness_score * 0.3 + 
+        quality_score = (relevance_score * 0.4 +
+                        completeness_score * 0.3 +
                         coherence_score * 0.3)
-        
+
         return quality_score
-    
+
     def _evaluate_assembly_efficiency(self, assembled_context: Dict, scenario: Dict) -> float:
         """Evaluate efficiency of context assembly process"""
-        
+
         assembly_metadata = assembled_context.get('assembly_metadata', {})
-        
+
         # Efficiency factors
         assembly_time = assembly_metadata.get('assembly_time', 1.0)
         context_length = assembly_metadata.get('context_length', 1000)
         component_count = assembly_metadata.get('total_components', 5)
-        
+
         # Efficiency scoring (lower time and optimal length/component ratio = better)
         time_efficiency = 1.0 / (1.0 + assembly_time)
         length_efficiency = 1.0 / (1.0 + abs(context_length - 2000) / 2000)  # Optimal around 2000 chars
         component_efficiency = 1.0 / (1.0 + abs(component_count - 4) / 4)  # Optimal around 4 components
-        
-        efficiency_score = (time_efficiency * 0.4 + 
-                           length_efficiency * 0.3 + 
+
+        efficiency_score = (time_efficiency * 0.4 +
+                           length_efficiency * 0.3 +
                            component_efficiency * 0.3)
-        
+
         return efficiency_score
-    
+
     def optimization_recommendations(self, benchmark_results: Dict) -> Dict:
         """Generate optimization recommendations based on benchmark results"""
-        
+
         recommendations = {}
-        
+
         for system_name, results in benchmark_results.items():
             system_recommendations = []
-            
+
             # Identify weakest areas
             weak_areas = []
             for metric, data in results.items():
                 if isinstance(data, dict) and 'average_score' in data:
                     if data['average_score'] < 0.7:
                         weak_areas.append((metric, data['average_score']))
-            
+
             # Generate specific recommendations
             for metric, score in weak_areas:
                 if metric == 'response_quality':
@@ -1212,63 +1212,63 @@ class ContextAssemblyBenchmark:
                             'Streamline assembly orchestration'
                         ]
                     })
-            
+
             recommendations[system_name] = system_recommendations
-        
+
         return recommendations
-    
+
     def _assess_relevance(self, context_text: str, query: str) -> float:
         """Assess relevance of context to query"""
         query_words = set(query.lower().split())
         context_words = set(context_text.lower().split())
-        
+
         if not query_words:
             return 0.0
-        
+
         overlap = query_words.intersection(context_words)
         relevance = len(overlap) / len(query_words)
-        
+
         return min(1.0, relevance * 1.5)  # Scale appropriately
-    
+
     def _assess_completeness(self, context_text: str, scenario: Dict) -> float:
         """Assess completeness of assembled context"""
         required_components = scenario.get('required_components', [])
-        
+
         if not required_components:
             return 0.8  # Default score when requirements not specified
-        
+
         component_coverage = 0
         for component_type in required_components:
             # Simple check if component type is mentioned in context
             if component_type.lower() in context_text.lower():
                 component_coverage += 1
-        
+
         return component_coverage / len(required_components)
-    
+
     def _assess_coherence(self, context_text: str) -> float:
         """Assess coherence and flow of assembled context"""
-        
+
         # Simple coherence metrics
         sections = context_text.split('\n\n')
-        
+
         if len(sections) < 2:
             return 0.5  # Insufficient structure
-        
+
         # Check for logical flow indicators
         flow_indicators = ['first', 'then', 'next', 'finally', 'therefore', 'however', 'additionally']
         flow_score = sum(1 for indicator in flow_indicators if indicator in context_text.lower())
-        
+
         # Check for section headers or structure
         structure_score = sum(1 for section in sections if section.strip().startswith('#') or section.strip().startswith('**'))
-        
+
         # Combine metrics
         coherence = min(1.0, (flow_score * 0.1 + structure_score * 0.2 + 0.4))
-        
+
         return coherence
-    
+
     def _calculate_overall_performance(self, system_results: Dict) -> float:
         """Calculate weighted overall performance score"""
-        
+
         weights = {
             'response_quality': 0.35,
             'assembly_efficiency': 0.25,
@@ -1276,28 +1276,28 @@ class ContextAssemblyBenchmark:
             'adaptability': 0.15,
             'learning_effectiveness': 0.05
         }
-        
+
         overall_score = 0.0
         total_weight = 0.0
-        
+
         for metric, weight in weights.items():
             if metric in system_results and isinstance(system_results[metric], dict):
                 score = system_results[metric].get('average_score', 0)
                 overall_score += score * weight
                 total_weight += weight
-        
+
         return overall_score / total_weight if total_weight > 0 else 0.0
 
 # Demonstration of comprehensive context assembly benchmarking
 def run_assembly_benchmark_demo():
     """Demonstrate context assembly benchmarking system"""
-    
+
     # Mock assembly systems for demonstration
     class MockAssemblySystem:
         def __init__(self, name, quality_modifier=1.0):
             self.name = name
             self.quality_modifier = quality_modifier
-        
+
         def assemble_context(self, query, components, constraints=None):
             # Mock assembly result
             return {
@@ -1308,14 +1308,14 @@ def run_assembly_benchmark_demo():
                     'total_components': np.random.randint(3, 7)
                 }
             }
-    
+
     # Create test systems
     assembly_systems = {
         'basic_assembler': MockAssemblySystem('basic', quality_modifier=0.8),
         'advanced_assembler': MockAssemblySystem('advanced', quality_modifier=1.0),
         'optimized_assembler': MockAssemblySystem('optimized', quality_modifier=1.2)
     }
-    
+
     # Create test scenarios
     test_scenarios = [
         {
@@ -1334,32 +1334,32 @@ def run_assembly_benchmark_demo():
             'required_components': ['instructions', 'knowledge', 'examples', 'tools']
         }
     ]
-    
+
     # Run benchmark
     benchmarker = ContextAssemblyBenchmark()
-    
+
     print("Context Assembly Benchmark Results:")
     print("=" * 50)
-    
+
     benchmark_results = benchmarker.comprehensive_assembly_benchmark(
         assembly_systems, test_scenarios
     )
-    
+
     # Display results
     for system_name, results in benchmark_results.items():
         print(f"\n{system_name.upper()}:")
         print(f"  Overall Performance: {results['overall_performance']:.3f}")
-        
+
         for metric, data in results.items():
             if isinstance(data, dict) and 'average_score' in data:
                 print(f"  {metric}: {data['average_score']:.3f} (±{data['std_deviation']:.3f})")
-    
+
     # Generate recommendations
     print("\nOptimization Recommendations:")
     print("=" * 50)
-    
+
     recommendations = benchmarker.optimization_recommendations(benchmark_results)
-    
+
     for system_name, recs in recommendations.items():
         if recs:
             print(f"\n{system_name.upper()}:")
@@ -1367,7 +1367,7 @@ def run_assembly_benchmark_demo():
                 print(f"  {rec['area']}: {rec['issue']}")
                 for suggestion in rec['recommendations'][:2]:  # Show top 2
                     print(f"    • {suggestion}")
-    
+
     return benchmark_results, recommendations
 
 # Execute benchmark demonstration
@@ -1387,19 +1387,19 @@ benchmark_results, recommendations = run_assembly_benchmark_demo()
 # Your implementation challenge
 class AdaptiveContextAssembler:
     """Build context assembler with multiple strategies and adaptive selection"""
-    
+
     def __init__(self):
         # TODO: Initialize components
         self.assembly_strategies = {}
         self.query_analyzer = None
         self.performance_tracker = None
-    
+
     def add_assembly_strategy(self, name: str, strategy):
         """Add new assembly strategy to the system"""
         # TODO: Implement strategy registration
         pass
-    
-    def analyze_and_assemble(self, query: str, components: Dict, 
+
+    def analyze_and_assemble(self, query: str, components: Dict,
                            constraints: Dict = None) -> Dict:
         """Analyze query and assemble optimal context"""
         # TODO: Implement query analysis and adaptive assembly
@@ -1408,8 +1408,8 @@ class AdaptiveContextAssembler:
         # - Assemble context using selected strategy
         # - Return assembly with metadata
         pass
-    
-    def optimize_from_feedback(self, assembly_results: List[Dict], 
+
+    def optimize_from_feedback(self, assembly_results: List[Dict],
                              performance_data: List[Dict]):
         """Optimize assembly strategies based on feedback"""
         # TODO: Implement learning and optimization
@@ -1425,19 +1425,19 @@ assembler = AdaptiveContextAssembler()
 ```python
 class MultiObjectiveContextOptimizer:
     """Optimize context assembly for multiple competing objectives"""
-    
+
     def __init__(self):
         # TODO: Initialize optimization components
         self.objectives = {}
         self.optimization_algorithms = {}
         self.pareto_frontier = []
-    
+
     def add_objective(self, name: str, objective_function, weight: float = 1.0):
         """Add optimization objective"""
         # TODO: Implement objective registration
         pass
-    
-    def find_optimal_assembly(self, query: str, components: Dict, 
+
+    def find_optimal_assembly(self, query: str, components: Dict,
                             objectives: List[str]) -> List[Dict]:
         """Find Pareto-optimal context assemblies"""
         # TODO: Implement multi-objective optimization
@@ -1446,7 +1446,7 @@ class MultiObjectiveContextOptimizer:
         # - Find Pareto frontier
         # - Return optimal solutions
         pass
-    
+
     def trade_off_analysis(self, assemblies: List[Dict]) -> Dict:
         """Analyze trade-offs between different objectives"""
         # TODO: Implement trade-off analysis
@@ -1462,13 +1462,13 @@ optimizer = MultiObjectiveContextOptimizer()
 ```python
 class SelfImprovingAssemblySystem:
     """Context assembly system that continuously learns and improves"""
-    
+
     def __init__(self):
         # TODO: Initialize learning components
         self.assembly_patterns = {}
         self.performance_history = []
         self.learning_algorithms = {}
-    
+
     def assemble_with_learning(self, query: str, components: Dict) -> Dict:
         """Assemble context and learn from the process"""
         # TODO: Implement assembly with learning
@@ -1476,8 +1476,8 @@ class SelfImprovingAssemblySystem:
         # - Track decision process and reasoning
         # - Store assembly pattern for learning
         pass
-    
-    def learn_from_outcomes(self, assembly_history: List[Dict], 
+
+    def learn_from_outcomes(self, assembly_history: List[Dict],
                           outcome_data: List[Dict]):
         """Learn improved assembly strategies from outcomes"""
         # TODO: Implement learning from feedback
@@ -1486,8 +1486,8 @@ class SelfImprovingAssemblySystem:
         # - Update assembly algorithms
         # - Discover new optimization opportunities
         pass
-    
-    def predict_assembly_effectiveness(self, query: str, 
+
+    def predict_assembly_effectiveness(self, query: str,
                                      proposed_assembly: Dict) -> float:
         """Predict how effective a proposed assembly will be"""
         # TODO: Implement effectiveness prediction

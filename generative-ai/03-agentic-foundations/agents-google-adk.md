@@ -34,12 +34,12 @@ can be pure vibe coding. A production API handling financial transactions demand
 agentic engineering. Most real work falls somewhere in between, and the skill is
 knowing where to draw the line for each task.
 
-**in agentic engineering: how to eval code:** 
-a. Tests verify the deterministic parts of the system: a function given this input produces that output. 
+**in agentic engineering: how to eval code:**
+a. Tests verify the deterministic parts of the system: a function given this input produces that output.
 
 b. Evaluations, or evals, verify the parts that are not deterministic: did the agent take the right trajectory of steps, choose the right tools, and produce a final response that meets the quality bar.
 
-Context engineering: providing AI agents with rich, structured information about your codebase, architecture, conventions, and intent. 
+Context engineering: providing AI agents with rich, structured information about your codebase, architecture, conventions, and intent.
 
 six primary types of context:
 • Instructions: The agent's core role, goals, and operational boundaries.
@@ -51,7 +51,7 @@ six primary types of context:
 can invoke.
 • Guardrails: Hard constraints, formatting rules, and safety validations.
 
-**2 contexts:** 
+**2 contexts:**
 
 ![Static vs dynamic context](../../interviewing/images/adk-static-vs-dynamic-context.png)
 
@@ -86,11 +86,11 @@ output as the machines take on more of the implementation.**
 
 ![Agent = model + harness](../../interviewing/images/adk-agent-model-plus-harness.png)
 
-it includes: 
+it includes:
 
 *(missing diagram — `Screenshot 2026-06-15 at 22.29.31.png` not exported from Notion)*
 
-Harness in SDLC: 
+Harness in SDLC:
 
 1. Requirements, Planning, & Architecture (Configuring
 the Harness)
@@ -104,17 +104,17 @@ the Harness)
     1. Harness Components Used: Sandboxes(code generation/excution environment), Execution Environments, and Tools(e.g. agent reads files/ search on the web).
 3. Testing & QA (The Feedback Loop)
     1. harness Orchestration Logic and Guardrails.
-    2. 'think -> act -> observe' loop.”: execute code — error captured — loop back to model — try again 
+    2. 'think -> act -> observe' loop.”: execute code — error captured — loop back to model — try again
 4. Code Review, Deployment, & Maintenance (Observing the Harness)
-    1. harness hooks and observability 
-    2. runs deterministic hooks 
+    1. harness hooks and observability
+    2. runs deterministic hooks
     3. observability layer tracks token costs, latency, and agent drift, allowing human engineers to audit exactly why an agent made a specific deployment decision.
 
 The developer's evolving role: conductors and orchestrators
 
 *(missing diagram — `Screenshot 2026-06-15 at 22.37.44.png` not exported from Notion)*
 
-The conductor: hands-on, real-time direction 
+The conductor: hands-on, real-time direction
 
 when working on complex logic, debugging tricky issues, or working in unfamiliar codebases where the developer needs to understand each change as it's made.
 
@@ -160,13 +160,13 @@ MCP, A2A, A2UI, AP2, and UCP are the Industry Standards—the uniform nuts and b
 
 *(missing diagram — `Screenshot 2026-06-16 at 16.00.44.png` not exported from Notion)*
 
-MCP tips: 
+MCP tips:
 
 Discovery: always consider security as a first priority,
 
 public community servers do not pass credentials, consider using services like Model Armor to avoid security issues.
 
-config: 
+config:
 Check for pre-requisites
 Identify scope, access criterias
 Include the specifications in the coding agent
@@ -186,30 +186,30 @@ What You’ll Learn
 Today's whitepaper talks about managing dynamic context and avoiding "context rot" by equipping agents with portable "Agent Skills", directories structured around a central SKILL.md file. It explains how this framework uses progressive disclosure to keep system prompts lightweight, loading execution details and tools only on demand so that single agents can flex into hundreds of specialist roles efficiently.
 In the codelabs, you will familiarize yourself with skills in Antigravity. Then, using Antigravity, you will install and use Agents CLI skills to create agents, lint your code, and test your agent, all by using natural language prompts.
 
-Claude Code skill course notes: ‣ 
+Claude Code skill course notes: ‣
 
 too much context —> attention dilution
 
-The challenge is not giving the model more information. The challenge is giving it the right information at the right time. 
+The challenge is not giving the model more information. The challenge is giving it the right information at the right time.
 
-need —> progressive disclosure —> skills 
+need —> progressive disclosure —> skills
 
 Skill compontents:
 Must: `skill.md` : name, description, activation criteria, instructions , usage guidance
 
-Optional: some folders: 
+Optional: some folders:
 
-1. Scripts Folder: executable code/ deterministic logic 
+1. Scripts Folder: executable code/ deterministic logic
 2. References Folder: Large domain knowledge stays outside the prompt until needed. → PDFs, manuals, tax rules, compliance documentation
 3. Assets Folder: JSON schemas, templates, email formats, structured resources
 
 Skills vs MCP vs agent.md：
 
-MCP gets data/ API/ platforms 
+MCP gets data/ API/ platforms
 
 Skills tell the agent what to do.
 
-agent.md: Global instructions. always loaded 
+agent.md: Global instructions. always loaded
 
 Why Multi-Agent Systems Are Losing Favor:
 

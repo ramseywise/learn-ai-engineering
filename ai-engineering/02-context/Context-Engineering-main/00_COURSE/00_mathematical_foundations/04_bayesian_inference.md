@@ -2,7 +2,7 @@
 ## From Fixed Rules to Learning Under Uncertainty
 
 > **Module 00.4** | *Context Engineering Course: From Foundations to Frontier Systems*
-> 
+>
 > *"The essence of Bayesian inference is learning from experience" — Thomas Bayes*
 
 ---
@@ -51,7 +51,7 @@ Continuous Learning: "Update context strategy for similar future queries"
 P(Hypothesis|Evidence) = P(Evidence|Hypothesis) × P(Hypothesis) / P(Evidence)
 
 Or in context engineering terms:
-P(Context_Strategy|User_Feedback) = 
+P(Context_Strategy|User_Feedback) =
     P(User_Feedback|Context_Strategy) × P(Context_Strategy) / P(User_Feedback)
 
 Where:
@@ -94,7 +94,7 @@ Where:
 
 #### Component Relevance Posterior
 ```
-P(Component_Relevant|Query, Context) ∝ 
+P(Component_Relevant|Query, Context) ∝
     P(Query, Context|Component_Relevant) × P(Component_Relevant)
 
 This helps decide which components to include under uncertainty
@@ -128,7 +128,7 @@ P(Strategy_i) = Base_Confidence(Strategy_i) × Success_History_Weight(Strategy_i
 
 Available Strategies:
 - Detailed_Technical (P = 0.3): High detail, technical accuracy focus
-- Concise_Practical (P = 0.4): Brief, actionable information focus  
+- Concise_Practical (P = 0.4): Brief, actionable information focus
 - Comprehensive_Balanced (P = 0.2): Balanced depth and breadth
 - User_Preference_Adapted (P = 0.1): Customized based on user history
 ```
@@ -143,7 +143,7 @@ Available Strategies:
 **Definition**: Initial beliefs about information component value
 **Framework**:
 ```
-P(Component_Relevant) = 
+P(Component_Relevant) =
     Domain_Relevance_Base × Semantic_Similarity × Source_Credibility
 
 Prior Categories:
@@ -168,9 +168,9 @@ Feedback Types:
 - Completion Success: "This solved my problem/didn't help"
 ```
 
-#### Implicit Feedback Likelihood  
+#### Implicit Feedback Likelihood
 ```
-P(Engagement_Pattern|Strategy_i) = 
+P(Engagement_Pattern|Strategy_i) =
     α × Time_Spent_Reading +
     β × Follow_up_Question_Quality +
     γ × Task_Completion_Success
@@ -208,7 +208,7 @@ Update Steps:
 ```
 For sequence of evidence E₁, E₂, ..., Eₙ:
 
-P(Strategy_i|E₁, E₂, ..., Eₙ) = 
+P(Strategy_i|E₁, E₂, ..., Eₙ) =
     P(Eₙ|Strategy_i) × P(Strategy_i|E₁, ..., Eₙ₋₁) / P(Eₙ)
 
 This allows continuous learning from multiple interactions
@@ -223,7 +223,7 @@ EU(Strategy_i) = Σⱼ P(Outcome_j|Strategy_i) × Utility(Outcome_j)
 
 Where outcomes include:
 - User Satisfaction Score
-- Task Completion Success  
+- Task Completion Success
 - Learning Efficiency
 - Resource Utilization
 ```
@@ -248,7 +248,7 @@ ELSE:
 Uncertainty(Strategies) = -Σᵢ P(Strategy_i) × log₂(P(Strategy_i))
 
 High Entropy (≥ 2.0): Very uncertain, need more evidence
-Medium Entropy (1.0-2.0): Some uncertainty, proceed with caution  
+Medium Entropy (1.0-2.0): Some uncertainty, proceed with caution
 Low Entropy (≤ 1.0): Confident in strategy choice
 ```
 
@@ -291,61 +291,61 @@ Periodically evaluate:
 ```xml
 <bayesian_component_selection>
   <objective>Select context components that maximize expected utility under uncertainty</objective>
-  
+
   <uncertainty_modeling>
     <component_relevance_uncertainty>
       <prior_distribution>
         P(Component_Relevant) ~ Beta(α, β)
-        
+
         Where α and β are shaped by:
         - Historical relevance patterns
-        - Semantic similarity scores  
+        - Semantic similarity scores
         - Source credibility assessments
         - Domain-specific relevance rules
       </prior_distribution>
-      
+
       <evidence_updating>
         <user_feedback_evidence>
           If user indicates component was helpful:
           α_new = α_old + 1
-          
-          If user indicates component was unhelpful:  
+
+          If user indicates component was unhelpful:
           β_new = β_old + 1
         </user_feedback_evidence>
-        
+
         <implicit_evidence>
-          Engagement metrics (time spent, follow-up questions) 
+          Engagement metrics (time spent, follow-up questions)
           update distribution parameters based on observed behavior
         </implicit_evidence>
       </evidence_updating>
     </component_relevance_uncertainty>
-    
+
     <query_intent_uncertainty>
       <ambiguity_assessment>
         P(Intent_i|Query) for multiple possible interpretations
-        
+
         High ambiguity: Select components that cover multiple interpretations
         Low ambiguity: Focus on components for most likely interpretation
       </ambiguity_assessment>
-      
+
       <clarification_value>
-        Expected_Value(Clarification) = 
+        Expected_Value(Clarification) =
           Information_Gain(Clarification) × P(User_Will_Respond)
-        
+
         Request clarification if expected value exceeds threshold
       </clarification_value>
     </query_intent_uncertainty>
   </uncertainty_modeling>
-  
+
   <selection_strategies>
     <expected_utility_maximization>
       <utility_function>
-        U(Component_Set) = 
+        U(Component_Set) =
           α × P(User_Satisfaction|Component_Set) +
           β × P(Task_Success|Component_Set) +
           γ × Information_Efficiency(Component_Set)
       </utility_function>
-      
+
       <selection_algorithm>
         For each possible component subset:
         1. Calculate expected utility given uncertainty
@@ -353,21 +353,21 @@ Periodically evaluate:
         3. Select subset with highest expected utility
       </selection_algorithm>
     </expected_utility_maximization>
-    
+
     <information_gain_optimization>
       <value_of_information>
         VOI(Component) = Expected_Utility(With_Component) - Expected_Utility(Without_Component)
-        
+
         Accounts for:
         - Uncertainty reduction about user intent
         - Learning value for future similar queries
         - Risk mitigation from incomplete information
       </value_of_information>
-      
+
               <explore_vs_exploit>
         Exploration: Include components with high learning value
         Exploitation: Include components with proven high utility
-        
+
         Balance based on:
         - Current uncertainty levels
         - Number of previous interactions with similar queries
@@ -375,21 +375,21 @@ Periodically evaluate:
         - Stakes of the current query (high-stakes favor exploitation)
       </explore_vs_exploit>
     </information_gain_optimization>
-    
+
     <robust_selection>
       <worst_case_optimization>
         Select components that perform well across multiple uncertainty scenarios
-        
+
         Robustness = min_scenario(Expected_Utility(Component_Set, Scenario))
       </worst_case_optimization>
-      
+
       <uncertainty_hedging>
         Include diverse components that cover different possible user intents
         Hedge against misunderstanding query intent
       </uncertainty_hedging>
     </robust_selection>
   </selection_strategies>
-  
+
   <learning_integration>
     <posterior_updating>
       <evidence_types>
@@ -398,20 +398,20 @@ Periodically evaluate:
         - task_outcomes: Success/failure in achieving user goals
         - long_term_patterns: User satisfaction trends over time
       </evidence_types>
-      
+
       <update_frequency>
         - immediate: Update after each user interaction
         - session: Aggregate learning after complete sessions
         - periodic: Comprehensive model updates on schedule
       </update_frequency>
     </posterior_updating>
-    
+
     <model_adaptation>
       <hyperparameter_learning>
         Learn optimal prior parameters based on accumulated evidence
         Adapt learning rates and uncertainty thresholds
       </hyperparameter_learning>
-      
+
       <model_complexity_adjustment>
         Increase model complexity when simple models fail
         Simplify models when complexity doesn't improve performance
@@ -428,9 +428,9 @@ Periodically evaluate:
 ```yaml
 # Risk-Aware Bayesian Context Assembly
 risk_aware_assembly:
-  
+
   objective: "Make optimal context decisions while managing uncertainty and risk"
-  
+
   risk_assessment_framework:
     uncertainty_sources:
       query_ambiguity:
@@ -438,25 +438,25 @@ risk_aware_assembly:
         measurement: "Entropy of intent distribution: H(Intent|Query)"
         risk_impact: "Assembling context for wrong interpretation"
         mitigation: "Include components covering multiple interpretations"
-      
+
       component_relevance_uncertainty:
         description: "Uncertain about component value for this query"
         measurement: "Variance in relevance probability distribution"
         risk_impact: "Including irrelevant or excluding relevant information"
         mitigation: "Use conservative relevance thresholds"
-      
+
       user_preference_uncertainty:
         description: "Unknown or changing user preferences"
         measurement: "Confidence intervals on preference parameters"
         risk_impact: "Providing information in sub-optimal format/detail level"
         mitigation: "Adaptive presentation with feedback incorporation"
-      
+
       context_strategy_uncertainty:
         description: "Uncertain about optimal assembly strategy"
         measurement: "Strategy posterior probability distribution spread"
         risk_impact: "Using ineffective context organization approach"
         mitigation: "Portfolio approach with multiple strategies"
-  
+
   risk_mitigation_strategies:
     conservative_selection:
       description: "Choose components with high confidence intervals"
@@ -464,92 +464,92 @@ risk_aware_assembly:
         - only_include_components_with_relevance_probability_above_threshold
         - use_higher_confidence_thresholds_for_high_stakes_queries
         - prefer_proven_components_over_experimental_ones
-      
+
       trade_offs:
         benefits: ["Lower risk of including irrelevant information"]
         costs: ["May miss valuable but uncertain components"]
-    
+
     diversification:
       description: "Include diverse components to hedge against uncertainty"
       implementation:
         - cover_multiple_possible_query_interpretations
         - include_components_from_different_information_sources
         - balance_different_levels_of_technical_detail
-      
+
       trade_offs:
         benefits: ["Robust performance across scenarios"]
         costs: ["May include some redundant information"]
-    
+
     adaptive_revelation:
       description: "Start conservative, then adapt based on feedback"
       implementation:
         - begin_with_high_confidence_core_information
         - monitor_user_engagement_and_feedback_signals
         - dynamically_add_components_based_on_evidence
-      
+
       trade_offs:
         benefits: ["Learns optimal approach during interaction"]
         costs: ["May require multiple interaction cycles"]
-  
+
   decision_frameworks:
     expected_utility_with_risk_penalty:
       formula: "EU(Strategy) = Σ P(Outcome) × Utility(Outcome) - Risk_Penalty(Variance(Outcomes))"
-      
+
       components:
         expected_utility: "Standard expected value calculation"
         risk_penalty: "Penalty term for outcome variance (risk aversion)"
         risk_aversion_parameter: "Controls trade-off between expected return and risk"
-    
+
     minimax_regret:
       description: "Minimize maximum regret across uncertainty scenarios"
       formula: "min_strategy max_scenario [Best_Possible_Outcome(scenario) - Actual_Outcome(strategy, scenario)]"
-      
+
       when_to_use: "High-stakes decisions with significant downside risk"
       advantages: ["Provides worst-case performance guarantees"]
       disadvantages: ["May be overly conservative for low-stakes decisions"]
-    
+
     satisficing_under_uncertainty:
       description: "Choose first strategy that meets minimum acceptability criteria"
       implementation:
         - define_minimum_acceptable_performance_thresholds
         - evaluate_strategies_in_order_of_prior_probability
         - select_first_strategy_meeting_all_thresholds
-      
+
       when_to_use: "Time-constrained decisions or when optimization is costly"
-  
+
   uncertainty_communication:
     confidence_indicators:
       explicit_confidence_statements:
         - "I'm highly confident this information addresses your question"
         - "This information is likely relevant, but there's some uncertainty"
         - "I'm including this information as it might be helpful"
-      
+
       uncertainty_visualization:
         - probability_ranges_for_uncertain_facts
         - confidence_bars_for_different_information_components
         - uncertainty_ranges_in_quantitative_predictions
-    
+
     hedge_language:
       appropriate_hedging:
         - "Based on available information, it appears that..."
         - "The evidence suggests..."
         - "One interpretation of your question..."
-      
+
       inappropriate_hedging:
         avoid: ["Excessive uncertainty language that reduces user confidence"]
         avoid: ["False precision when uncertainty is actually high"]
-    
+
     clarification_requests:
       when_to_request_clarification:
         - query_ambiguity_above_threshold
         - high_stakes_decision_with_uncertainty
         - user_preference_uncertainty_affecting_major_assembly_choices
-      
+
       clarification_strategies:
         - multiple_choice_intent_clarification
         - example_based_preference_elicitation
         - iterative_refinement_through_feedback
-  
+
   learning_and_adaptation:
     uncertainty_calibration:
       description: "Ensure uncertainty estimates match actual prediction accuracy"
@@ -557,14 +557,14 @@ risk_aware_assembly:
         - track_prediction_accuracy_vs_stated_confidence
         - adjust_uncertainty_models_based_on_empirical_performance
         - use_cross_validation_to_test_calibration_quality
-    
+
     risk_tolerance_learning:
       description: "Learn user-specific and context-specific risk preferences"
       indicators:
         - user_feedback_on_conservative_vs_aggressive_strategies
         - tolerance_for_uncertain_or_experimental_information
         - preference_for_comprehensive_vs_focused_responses
-    
+
     meta_uncertainty:
       description: "Uncertainty about uncertainty - how much to trust our uncertainty estimates"
       application:
@@ -599,14 +599,14 @@ class BayesianState:
     component_relevance_beliefs: Dict[str, Tuple[float, float]]  # (alpha, beta) for Beta distribution
     uncertainty_estimates: Dict[str, float]
     evidence_history: List[Dict]
-    
+
 class BayesianContextOptimizer:
     """Bayesian optimization for context assembly under uncertainty"""
-    
+
     def __init__(self, strategies: List[str], uncertainty_threshold: float = 0.8):
         self.strategies = strategies
         self.uncertainty_threshold = uncertainty_threshold
-        
+
         # Initialize uniform priors for strategies
         prior_prob = 1.0 / len(strategies)
         self.state = BayesianState(
@@ -615,25 +615,25 @@ class BayesianContextOptimizer:
             uncertainty_estimates={},
             evidence_history=[]
         )
-        
+
         # Learning parameters
         self.learning_rate = 0.1
         self.evidence_decay = 0.95  # How much to weight recent vs. old evidence
-        
+
     def update_strategy_beliefs(self, strategy_used: str, evidence: Dict) -> None:
         """
         Update beliefs about strategy effectiveness based on observed evidence
-        
+
         Args:
             strategy_used: Which strategy was employed
             evidence: Dictionary containing feedback signals
         """
-        
+
         # Extract evidence signals
         user_satisfaction = evidence.get('user_satisfaction', 0.5)  # 0-1 scale
         task_completion = evidence.get('task_completion', False)
         engagement_score = evidence.get('engagement_score', 0.5)  # 0-1 scale
-        
+
         # Calculate likelihood of this evidence given each strategy
         likelihoods = {}
         for strategy in self.strategies:
@@ -648,27 +648,27 @@ class BayesianContextOptimizer:
                     user_satisfaction, task_completion, engagement_score, strategy
                 )
             likelihoods[strategy] = likelihood
-        
+
         # Apply Bayes' rule to update posteriors
         evidence_probability = sum(
-            self.state.strategy_posteriors[s] * likelihoods[s] 
+            self.state.strategy_posteriors[s] * likelihoods[s]
             for s in self.strategies
         )
-        
+
         if evidence_probability > 1e-10:  # Avoid division by zero
             for strategy in self.strategies:
                 prior = self.state.strategy_posteriors[strategy]
                 likelihood = likelihoods[strategy]
-                
+
                 # Posterior = (Likelihood × Prior) / Evidence
                 posterior = (likelihood * prior) / evidence_probability
-                
+
                 # Apply learning rate for smooth updating
                 self.state.strategy_posteriors[strategy] = (
-                    (1 - self.learning_rate) * prior + 
+                    (1 - self.learning_rate) * prior +
                     self.learning_rate * posterior
                 )
-        
+
         # Record evidence for history
         evidence_record = {
             'strategy_used': strategy_used,
@@ -676,14 +676,14 @@ class BayesianContextOptimizer:
             'posteriors_after_update': self.state.strategy_posteriors.copy()
         }
         self.state.evidence_history.append(evidence_record)
-        
+
         # Apply evidence decay to historical evidence
         self._decay_historical_influence()
-    
-    def _calculate_evidence_likelihood(self, satisfaction: float, completion: bool, 
+
+    def _calculate_evidence_likelihood(self, satisfaction: float, completion: bool,
                                      engagement: float, strategy: str) -> float:
         """Calculate likelihood of observed evidence given strategy"""
-        
+
         # Model how each strategy typically performs
         strategy_performance_models = {
             'detailed_technical': {
@@ -707,172 +707,172 @@ class BayesianContextOptimizer:
                 'engagement_mean': 0.85, 'engagement_std': 0.1
             }
         }
-        
+
         if strategy not in strategy_performance_models:
             return 0.5  # Neutral likelihood for unknown strategies
-        
+
         model = strategy_performance_models[strategy]
-        
+
         # Calculate likelihood for continuous variables (satisfaction, engagement)
         satisfaction_likelihood = stats.norm.pdf(
             satisfaction, model['satisfaction_mean'], model['satisfaction_std']
         )
-        
+
         engagement_likelihood = stats.norm.pdf(
             engagement, model['engagement_mean'], model['engagement_std']
         )
-        
+
         # Calculate likelihood for binary variable (completion)
         completion_likelihood = (
-            model['completion_rate'] if completion 
+            model['completion_rate'] if completion
             else (1 - model['completion_rate'])
         )
-        
+
         # Combine likelihoods (assuming independence)
         combined_likelihood = (
             satisfaction_likelihood * engagement_likelihood * completion_likelihood
         )
-        
+
         return combined_likelihood
-    
+
     def _estimate_counterfactual_likelihood(self, satisfaction: float, completion: bool,
                                           engagement: float, strategy: str) -> float:
         """Estimate what likelihood would have been if different strategy was used"""
-        
+
         # This is a simplified estimation - in practice, would use more sophisticated models
         base_likelihood = self._calculate_evidence_likelihood(
             satisfaction, completion, engagement, strategy
         )
-        
+
         # Reduce likelihood since we're estimating counterfactual
         uncertainty_discount = 0.7
         return base_likelihood * uncertainty_discount
-    
-    def update_component_relevance(self, component_id: str, 
+
+    def update_component_relevance(self, component_id: str,
                                  relevance_evidence: float) -> None:
         """
         Update beliefs about component relevance using Beta distribution
-        
+
         Args:
             component_id: Identifier for the component
             relevance_evidence: Evidence of relevance (0-1 scale, 0.5 = no evidence)
         """
-        
+
         if component_id not in self.state.component_relevance_beliefs:
             # Initialize with uninformative prior
             self.state.component_relevance_beliefs[component_id] = (1.0, 1.0)
-        
+
         alpha, beta = self.state.component_relevance_beliefs[component_id]
-        
+
         # Update Beta distribution parameters based on evidence
         if relevance_evidence > 0.5:
             # Evidence of relevance
             evidence_strength = (relevance_evidence - 0.5) * 2  # Scale to 0-1
             alpha += evidence_strength
         elif relevance_evidence < 0.5:
-            # Evidence of irrelevance  
+            # Evidence of irrelevance
             evidence_strength = (0.5 - relevance_evidence) * 2  # Scale to 0-1
             beta += evidence_strength
-        
+
         self.state.component_relevance_beliefs[component_id] = (alpha, beta)
-    
+
     def select_optimal_strategy(self, query_context: Dict) -> Tuple[str, float]:
         """
         Select optimal strategy based on current beliefs and uncertainty
-        
+
         Returns:
             Tuple of (selected_strategy, confidence_score)
         """
-        
+
         # Calculate uncertainty in strategy beliefs
         strategy_entropy = self._calculate_strategy_entropy()
-        
+
         if strategy_entropy > self.uncertainty_threshold:
             # High uncertainty - use exploration strategy
             return self._select_exploration_strategy()
         else:
             # Low uncertainty - use exploitation strategy
             return self._select_exploitation_strategy()
-    
+
     def _calculate_strategy_entropy(self) -> float:
         """Calculate entropy of strategy posterior distribution"""
-        
+
         probs = list(self.state.strategy_posteriors.values())
         entropy = -sum(p * np.log2(p + 1e-10) for p in probs if p > 0)
         return entropy
-    
+
     def _select_exploration_strategy(self) -> Tuple[str, float]:
         """Select strategy to maximize learning (exploration)"""
-        
+
         # Use Thompson sampling - sample from posterior distributions
         strategy_samples = {}
         for strategy, posterior_prob in self.state.strategy_posteriors.items():
             # Add noise for exploration
             noise = np.random.normal(0, 0.1)
             strategy_samples[strategy] = posterior_prob + noise
-        
+
         selected_strategy = max(strategy_samples, key=strategy_samples.get)
         confidence = strategy_samples[selected_strategy]
-        
+
         return selected_strategy, confidence
-    
+
     def _select_exploitation_strategy(self) -> Tuple[str, float]:
         """Select strategy with highest posterior probability (exploitation)"""
-        
+
         selected_strategy = max(
-            self.state.strategy_posteriors, 
+            self.state.strategy_posteriors,
             key=self.state.strategy_posteriors.get
         )
         confidence = self.state.strategy_posteriors[selected_strategy]
-        
+
         return selected_strategy, confidence
-    
+
     def assess_component_relevance_uncertainty(self, component_id: str) -> float:
         """
         Assess uncertainty about component relevance
-        
+
         Returns:
             Uncertainty score (0 = certain, 1 = maximum uncertainty)
         """
-        
+
         if component_id not in self.state.component_relevance_beliefs:
             return 1.0  # Maximum uncertainty for unknown components
-        
+
         alpha, beta = self.state.component_relevance_beliefs[component_id]
-        
+
         # Calculate variance of Beta distribution as uncertainty measure
         variance = (alpha * beta) / ((alpha + beta)**2 * (alpha + beta + 1))
-        
+
         # Scale variance to 0-1 range (Beta distribution variance max is 0.25)
         uncertainty = min(variance / 0.25, 1.0)
-        
+
         return uncertainty
-    
+
     def get_component_relevance_estimate(self, component_id: str) -> Tuple[float, float]:
         """
         Get estimated relevance and confidence for component
-        
+
         Returns:
             Tuple of (relevance_estimate, confidence)
         """
-        
+
         if component_id not in self.state.component_relevance_beliefs:
             return 0.5, 0.0  # Neutral estimate, no confidence
-        
+
         alpha, beta = self.state.component_relevance_beliefs[component_id]
-        
+
         # Mean of Beta distribution
         relevance_estimate = alpha / (alpha + beta)
-        
+
         # Confidence based on strength of evidence (sum of parameters)
         evidence_strength = alpha + beta
         confidence = min(evidence_strength / 10.0, 1.0)  # Normalize to 0-1
-        
+
         return relevance_estimate, confidence
-    
+
     def _decay_historical_influence(self) -> None:
         """Apply decay factor to reduce influence of old evidence"""
-        
+
         # This is a simplified approach - could implement more sophisticated decay
         if len(self.state.evidence_history) > 100:
             # Remove oldest evidence when history gets too long
@@ -880,48 +880,48 @@ class BayesianContextOptimizer:
 
 class BayesianComponentSelector:
     """Bayesian approach to selecting optimal context components"""
-    
+
     def __init__(self, token_budget: int):
         self.token_budget = token_budget
         self.bayesian_optimizer = BayesianContextOptimizer([
-            'relevance_focused', 'comprehensiveness_focused', 
+            'relevance_focused', 'comprehensiveness_focused',
             'efficiency_focused', 'uncertainty_hedged'
         ])
-        
-    def select_components_under_uncertainty(self, 
+
+    def select_components_under_uncertainty(self,
                                           candidate_components: List[Dict],
                                           query_context: Dict,
                                           user_feedback_history: List[Dict] = None) -> List[Dict]:
         """
         Select components using Bayesian decision theory
-        
+
         Args:
             candidate_components: List of component dictionaries with metadata
             query_context: Context about the query and user
             user_feedback_history: Historical feedback for learning
-            
+
         Returns:
             Selected components optimized under uncertainty
         """
-        
+
         # Update beliefs based on historical feedback
         if user_feedback_history:
             for feedback in user_feedback_history:
                 self.bayesian_optimizer.update_strategy_beliefs(
                     feedback['strategy_used'], feedback['evidence']
                 )
-        
+
         # Assess uncertainty for each component
         component_assessments = []
         for component in candidate_components:
             relevance_estimate, confidence = self.bayesian_optimizer.get_component_relevance_estimate(
                 component['id']
             )
-            
+
             uncertainty = self.bayesian_optimizer.assess_component_relevance_uncertainty(
                 component['id']
             )
-            
+
             component_assessments.append({
                 'component': component,
                 'relevance_estimate': relevance_estimate,
@@ -930,10 +930,10 @@ class BayesianComponentSelector:
                 'expected_value': relevance_estimate * confidence,
                 'risk_adjusted_value': relevance_estimate * confidence - 0.5 * uncertainty
             })
-        
+
         # Select strategy based on current beliefs
         strategy, strategy_confidence = self.bayesian_optimizer.select_optimal_strategy(query_context)
-        
+
         # Apply strategy-specific selection logic
         if strategy == 'relevance_focused':
             selected = self._select_by_relevance(component_assessments)
@@ -945,34 +945,34 @@ class BayesianComponentSelector:
             selected = self._select_uncertainty_hedged(component_assessments)
         else:
             selected = self._select_balanced(component_assessments)
-        
+
         return [assessment['component'] for assessment in selected]
-    
+
     def _select_by_relevance(self, assessments: List[Dict]) -> List[Dict]:
         """Select components with highest expected relevance"""
         assessments.sort(key=lambda x: x['expected_value'], reverse=True)
         return self._fit_to_budget(assessments)
-    
+
     def _select_for_comprehensiveness(self, assessments: List[Dict]) -> List[Dict]:
         """Select diverse components to ensure comprehensive coverage"""
         # Simplified - would implement diversity measures in practice
         assessments.sort(key=lambda x: x['relevance_estimate'], reverse=True)
         return self._fit_to_budget(assessments)
-    
+
     def _select_for_efficiency(self, assessments: List[Dict]) -> List[Dict]:
         """Select components with best value per token"""
         for assessment in assessments:
             token_count = assessment['component'].get('token_count', 1)
             assessment['efficiency'] = assessment['expected_value'] / token_count
-        
+
         assessments.sort(key=lambda x: x['efficiency'], reverse=True)
         return self._fit_to_budget(assessments)
-    
+
     def _select_uncertainty_hedged(self, assessments: List[Dict]) -> List[Dict]:
         """Select components that perform well across uncertainty scenarios"""
         assessments.sort(key=lambda x: x['risk_adjusted_value'], reverse=True)
         return self._fit_to_budget(assessments)
-    
+
     def _select_balanced(self, assessments: List[Dict]) -> List[Dict]:
         """Select components balancing multiple criteria"""
         for assessment in assessments:
@@ -981,33 +981,33 @@ class BayesianComponentSelector:
                 0.3 * assessment['confidence'] +
                 0.3 * (1 - assessment['uncertainty'])
             )
-        
+
         assessments.sort(key=lambda x: x['balanced_score'], reverse=True)
         return self._fit_to_budget(assessments)
-    
+
     def _fit_to_budget(self, sorted_assessments: List[Dict]) -> List[Dict]:
         """Select components that fit within token budget"""
         selected = []
         total_tokens = 0
-        
+
         for assessment in sorted_assessments:
             component_tokens = assessment['component'].get('token_count', 50)
             if total_tokens + component_tokens <= self.token_budget:
                 selected.append(assessment)
                 total_tokens += component_tokens
-        
+
         return selected
 
 # Example usage and demonstration
 def demonstrate_bayesian_context_optimization():
     """Demonstrate Bayesian context optimization"""
-    
+
     print("=== BAYESIAN CONTEXT OPTIMIZATION DEMONSTRATION ===")
-    
+
     # Initialize Bayesian optimizer
     strategies = ['detailed_technical', 'concise_practical', 'comprehensive_balanced', 'user_adapted']
     optimizer = BayesianContextOptimizer(strategies)
-    
+
     # Simulate learning from user feedback
     feedback_scenarios = [
         {
@@ -1035,46 +1035,46 @@ def demonstrate_bayesian_context_optimization():
             }
         }
     ]
-    
+
     print("\n=== LEARNING FROM FEEDBACK ===")
     print("Initial strategy beliefs:", optimizer.state.strategy_posteriors)
-    
+
     for i, feedback in enumerate(feedback_scenarios):
         optimizer.update_strategy_beliefs(feedback['strategy_used'], feedback['evidence'])
         print(f"\nAfter feedback {i+1}:")
         print(f"  Strategy: {feedback['strategy_used']}")
         print(f"  Evidence: {feedback['evidence']}")
         print(f"  Updated beliefs: {optimizer.state.strategy_posteriors}")
-    
+
     # Test component relevance learning
     print("\n=== COMPONENT RELEVANCE LEARNING ===")
     components = ['technical_details', 'practical_examples', 'background_theory', 'implementation_guide']
-    
+
     for component in components:
         # Simulate different relevance evidence
         relevance_evidence = np.random.uniform(0.3, 0.9)
         optimizer.update_component_relevance(component, relevance_evidence)
-        
+
         estimate, confidence = optimizer.get_component_relevance_estimate(component)
         uncertainty = optimizer.assess_component_relevance_uncertainty(component)
-        
+
         print(f"\n{component}:")
         print(f"  Evidence: {relevance_evidence:.2f}")
         print(f"  Estimate: {estimate:.2f}")
         print(f"  Confidence: {confidence:.2f}")
         print(f"  Uncertainty: {uncertainty:.2f}")
-    
+
     # Test strategy selection
     print("\n=== STRATEGY SELECTION ===")
     query_context = {'domain': 'technical', 'complexity': 'high', 'user_expertise': 'intermediate'}
-    
+
     selected_strategy, confidence = optimizer.select_optimal_strategy(query_context)
     strategy_entropy = optimizer._calculate_strategy_entropy()
-    
+
     print(f"Selected strategy: {selected_strategy}")
     print(f"Confidence: {confidence:.2f}")
     print(f"Strategy entropy: {strategy_entropy:.2f}")
-    
+
     return optimizer
 
 # Run demonstration
@@ -1149,16 +1149,16 @@ class BayesianStrategyUpdater:
         # TODO: Initialize prior beliefs for strategies
         self.strategies = strategies
         self.beliefs = {}
-        
+
     def update_beliefs(self, strategy_used: str, outcome_quality: float):
         # TODO: Implement Bayes' rule to update strategy beliefs
         # Consider how outcome quality relates to strategy effectiveness
         pass
-    
+
     def select_best_strategy(self) -> str:
         # TODO: Select strategy with highest posterior probability
         pass
-    
+
     def get_uncertainty(self) -> float:
         # TODO: Calculate entropy of strategy distribution
         pass
@@ -1176,17 +1176,17 @@ class ComponentRelevanceEstimator:
     def __init__(self):
         # TODO: Initialize Beta distributions for each component
         self.component_beliefs = {}
-        
-    def update_relevance_belief(self, component_id: str, 
+
+    def update_relevance_belief(self, component_id: str,
                               relevance_evidence: float):
         # TODO: Update Beta distribution parameters
         # TODO: Handle new components with uninformative priors
         pass
-    
+
     def get_relevance_estimate(self, component_id: str) -> Tuple[float, float]:
         # TODO: Return (mean_relevance, confidence_interval_width)
         pass
-    
+
     def select_components_under_uncertainty(self, candidates: List[str],
                                           budget: int) -> List[str]:
         # TODO: Select components considering uncertainty
@@ -1205,16 +1205,16 @@ class AdaptiveBayesianContextSystem:
         # TODO: Integrate strategy updating and component selection
         self.strategy_updater = BayesianStrategyUpdater([])
         self.relevance_estimator = ComponentRelevanceEstimator()
-        
+
     def assemble_context(self, query: str, candidates: List[str]) -> Dict:
         # TODO: Use Bayesian inference to select optimal strategy and components
         pass
-    
-    def learn_from_feedback(self, context_used: Dict, 
+
+    def learn_from_feedback(self, context_used: Dict,
                           user_feedback: Dict):
         # TODO: Update both strategy and component beliefs
         pass
-    
+
     def get_system_confidence(self) -> float:
         # TODO: Return overall system confidence in current beliefs
         pass

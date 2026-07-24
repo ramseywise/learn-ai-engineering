@@ -82,22 +82,22 @@ phases:
       description: |
         Parse input arguments, clarify goals, establish context.
       output: Context table, argument log, clarifications.
-  
+
   - domain_specific_phase_1:
       description: |
         Specialized processing for the domain.
       output: Domain-specific artifacts and logs.
-  
+
   - domain_specific_phase_2:
       description: |
         Additional domain processing.
       output: Secondary artifacts and analysis.
-  
+
   - synthesis_phase:
       description: |
         Integrate findings and generate recommendations.
       output: Synthesis report, action items, open questions.
-  
+
   - audit_logging:
       description: |
         Document process, decisions, and version history.
@@ -141,7 +141,7 @@ def agent_cycle(context, state=None, audit_log=None, depth=0, max_depth=4):
     # Execute each phase sequentially
     for phase in workflow_phases:
         state[phase] = run_phase(phase, context, state)
-    
+
     # Check if revision is needed and recurse if appropriate
     if depth < max_depth and needs_revision(state):
         revised_context, reason = query_for_revision(context, state)
@@ -208,7 +208,7 @@ def cognitive_tool_template():
     """IBM Zurich cognitive tool structure"""
     return {
         "understand": "Identify main concepts and requirements",
-        "extract": "Extract relevant information from context", 
+        "extract": "Extract relevant information from context",
         "highlight": "Identify key properties and relationships",
         "apply": "Apply appropriate reasoning techniques",
         "validate": "Verify reasoning steps and conclusions"

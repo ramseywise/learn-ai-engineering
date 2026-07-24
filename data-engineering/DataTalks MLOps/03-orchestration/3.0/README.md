@@ -117,7 +117,7 @@ Mage simplifies MLOps by providing a unified platform for data pipelining, model
         SMTP_PASSWORD=$SMTP_PASSWORD \
         docker compose up
     ```
-    It is ok if you get this warning, you can ignore it  
+    It is ok if you get this warning, you can ignore it
      `The "PYTHONPATH" variable is not set. Defaulting to a blank string.`
 
 1. The subproject that contains all the pipelines and code is named

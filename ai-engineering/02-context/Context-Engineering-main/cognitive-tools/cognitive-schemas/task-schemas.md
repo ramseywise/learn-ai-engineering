@@ -96,7 +96,7 @@ This architecture serves multiple reasoning functions:
 def cognitive_reasoning_tool(task_description, reasoning_type, context):
     """
     Apply structured cognitive tools for reasoning tasks.
-    
+
     Implements IBM's cognitive tools approach where each reasoning operation
     is encapsulated in a reusable, composable tool.
     """
@@ -123,7 +123,7 @@ def cognitive_reasoning_tool(task_description, reasoning_type, context):
         }}
     }}
     """
-    
+
     return {
         "solution": structured_solution,
         "reasoning_trace": step_by_step_reasoning,
@@ -140,33 +140,33 @@ def cognitive_reasoning_tool(task_description, reasoning_type, context):
 def symbolic_task_processor(task_input, symbolic_context):
     """
     Process tasks using three-stage symbolic architecture.
-    
+
     Stage 1: Symbol abstraction heads convert input to abstract variables
     Stage 2: Symbolic induction heads perform pattern recognition
     Stage 3: Retrieval heads generate solutions from symbolic processing
     """
-    
+
     # Stage 1: Symbolic Abstraction
     abstract_variables = symbol_abstraction_processor(
         input_tokens=task_input,
         context=symbolic_context,
         abstraction_level="task_appropriate"
     )
-    
+
     # Stage 2: Symbolic Induction
     reasoning_patterns = symbolic_induction_processor(
         abstract_variables=abstract_variables,
         pattern_library=symbolic_context.get("patterns", {}),
         induction_depth="comprehensive"
     )
-    
+
     # Stage 3: Retrieval and Application
     task_solution = retrieval_processor(
         reasoning_patterns=reasoning_patterns,
         solution_space=symbolic_context.get("solutions", {}),
         retrieval_criteria="optimal_match"
     )
-    
+
     return {
         "abstract_variables": abstract_variables,
         "reasoning_patterns": reasoning_patterns,
@@ -183,7 +183,7 @@ def symbolic_task_processor(task_input, symbolic_context):
 def quantum_semantic_task_interpreter(task, observer_context, interpretation_framework):
     """
     Interpret tasks using quantum semantic principles.
-    
+
     Tasks exist in superposition of meanings until "measured" by
     specific interpretive context and observer perspective.
     """
@@ -210,7 +210,7 @@ def quantum_semantic_task_interpreter(task, observer_context, interpretation_fra
         }}
     }}
     """
-    
+
     return {
         "actualized_meaning": observer_dependent_meaning,
         "meaning_space": potential_meanings,
@@ -227,7 +227,7 @@ def quantum_semantic_task_interpreter(task, observer_context, interpretation_fra
 def memory_reasoning_synergy_processor(task_sequence, memory_state, reasoning_context):
     """
     Process tasks using MEM1 memory-reasoning synergy.
-    
+
     Consolidates memory and reasoning at each step to maintain
     efficiency and coherence across long task sequences.
     """
@@ -254,7 +254,7 @@ def memory_reasoning_synergy_processor(task_sequence, memory_state, reasoning_co
         }}
     }}
     """
-    
+
     return {
         "task_results": optimized_results,
         "consolidated_memory": efficient_memory,
@@ -273,7 +273,7 @@ def memory_reasoning_synergy_processor(task_sequence, memory_state, reasoning_co
 def atomic_reasoning_tool(simple_task, basic_context):
     """
     Handle simple, atomic reasoning tasks.
-    
+
     Represents the most basic level of task processing - single
     reasoning operations with clear inputs and outputs.
     """
@@ -297,7 +297,7 @@ def atomic_reasoning_tool(simple_task, basic_context):
         }
     }
     """
-    
+
     return {
         "result": atomic_result,
         "reasoning_step": single_operation,
@@ -313,7 +313,7 @@ def atomic_reasoning_tool(simple_task, basic_context):
 def molecular_reasoning_tool(multi_step_task, intermediate_context):
     """
     Handle multi-step reasoning tasks that require sequential operations.
-    
+
     Combines multiple atomic reasoning operations to solve
     more complex problems requiring step-by-step processing.
     """
@@ -339,7 +339,7 @@ def molecular_reasoning_tool(multi_step_task, intermediate_context):
         }
     }
     """
-    
+
     return {
         "solution": integrated_solution,
         "step_sequence": reasoning_steps,
@@ -356,7 +356,7 @@ def molecular_reasoning_tool(multi_step_task, intermediate_context):
 def cellular_reasoning_tool(contextual_task, memory_context, situational_awareness):
     """
     Handle contextual reasoning tasks with memory and situational awareness.
-    
+
     Processes tasks that require understanding of context, memory
     of previous interactions, and situational adaptation.
     """
@@ -383,7 +383,7 @@ def cellular_reasoning_tool(contextual_task, memory_context, situational_awarene
         }
     }
     """
-    
+
     return {
         "context_aware_solution": contextual_solution,
         "memory_integration": memory_usage,
@@ -400,7 +400,7 @@ def cellular_reasoning_tool(contextual_task, memory_context, situational_awarene
 def organ_reasoning_tool(specialized_task, domain_expertise, tool_repertoire):
     """
     Handle specialized reasoning tasks requiring domain expertise.
-    
+
     Applies domain-specific reasoning patterns and specialized
     cognitive tools for complex, expert-level tasks.
     """
@@ -427,7 +427,7 @@ def organ_reasoning_tool(specialized_task, domain_expertise, tool_repertoire):
         }
     }
     """
-    
+
     return {
         "expert_solution": specialized_solution,
         "domain_reasoning": expert_reasoning,
@@ -444,7 +444,7 @@ def organ_reasoning_tool(specialized_task, domain_expertise, tool_repertoire):
 def neural_system_reasoning_tool(cognitive_task, meta_cognitive_context, reasoning_network):
     """
     Handle advanced cognitive reasoning tasks with meta-cognitive awareness.
-    
+
     Processes complex reasoning tasks using networks of cognitive tools
     with meta-cognitive monitoring and adaptation capabilities.
     """
@@ -471,7 +471,7 @@ def neural_system_reasoning_tool(cognitive_task, meta_cognitive_context, reasoni
         }
     }
     """
-    
+
     return {
         "meta_cognitive_solution": advanced_solution,
         "reasoning_network_trace": network_activity,
@@ -488,7 +488,7 @@ def neural_system_reasoning_tool(cognitive_task, meta_cognitive_context, reasoni
 def neural_field_reasoning_tool(emergent_task, field_context, attractor_dynamics):
     """
     Handle emergent reasoning tasks using neural field dynamics.
-    
+
     Processes tasks that exhibit emergent properties through field
     interactions, attractors, and dynamic reasoning patterns.
     """
@@ -516,7 +516,7 @@ def neural_field_reasoning_tool(emergent_task, field_context, attractor_dynamics
         }
     }
     """
-    
+
     return {
         "emergent_solution": field_based_solution,
         "field_dynamics": field_interactions,
@@ -800,7 +800,7 @@ def neural_field_reasoning_tool(emergent_task, field_context, attractor_dynamics
 def problem_understanding_tool(problem_statement, context, constraints):
     """
     Apply cognitive tools to understand problem requirements.
-    
+
     Based on Brown et al. (2025) cognitive tools approach:
     breaks down problem understanding into structured operations.
     """
@@ -827,7 +827,7 @@ def problem_understanding_tool(problem_statement, context, constraints):
         }}
     }}
     """
-    
+
     return {
         "problem_analysis": structured_analysis,
         "key_concepts": identified_concepts,
@@ -842,32 +842,32 @@ def problem_understanding_tool(problem_statement, context, constraints):
 def symbolic_reasoning_tool(problem_variables, reasoning_context, symbolic_patterns):
     """
     Apply three-stage symbolic reasoning to task execution.
-    
+
     Implements Yang et al. (2025) symbolic mechanisms:
     abstraction → induction → retrieval pattern.
     """
-    
+
     # Stage 1: Symbolic Abstraction
     abstract_representation = {
         "variables": extract_abstract_variables(problem_variables),
         "relations": identify_abstract_relations(problem_variables),
         "constraints": abstract_constraints(reasoning_context)
     }
-    
+
     # Stage 2: Symbolic Induction
     reasoning_patterns = {
         "pattern_matches": find_pattern_matches(abstract_representation, symbolic_patterns),
         "inductive_steps": generate_inductive_reasoning(abstract_representation),
         "logical_sequences": construct_logical_sequences(abstract_representation)
     }
-    
+
     # Stage 3: Retrieval and Application
     solution_generation = {
         "solution_candidates": retrieve_solution_patterns(reasoning_patterns),
         "application_steps": apply_solutions_to_concrete_problem(solution_candidates),
         "validation": validate_symbolic_reasoning(solution_candidates, reasoning_context)
     }
-    
+
     return {
         "abstract_representation": abstract_representation,
         "reasoning_patterns": reasoning_patterns,
@@ -882,7 +882,7 @@ def symbolic_reasoning_tool(problem_variables, reasoning_context, symbolic_patte
 def quantum_semantic_interpreter(task_description, observer_context, interpretation_space):
     """
     Interpret task meaning using quantum semantic principles.
-    
+
     Based on Agostino et al. (2025): meaning as observer-dependent
     emergent phenomenon through dynamic interpretation.
     """
@@ -909,7 +909,7 @@ def quantum_semantic_interpreter(task_description, observer_context, interpretat
         }}
     }}
     """
-    
+
     return {
         "actualized_meaning": observer_dependent_meaning,
         "meaning_superposition": potential_meaning_space,
@@ -924,7 +924,7 @@ def quantum_semantic_interpreter(task_description, observer_context, interpretat
 def memory_reasoning_consolidator(task_sequence, current_memory, reasoning_outcomes):
     """
     Consolidate memory and reasoning using MEM1 principles.
-    
+
     Based on Singapore-MIT (2025): efficient memory-reasoning synergy
     through selective consolidation and optimization.
     """
@@ -951,7 +951,7 @@ def memory_reasoning_consolidator(task_sequence, current_memory, reasoning_outco
         }}
     }}
     """
-    
+
     return {
         "consolidated_memory": optimized_memory,
         "reasoning_efficiency": performance_improvement,
@@ -966,7 +966,7 @@ def memory_reasoning_consolidator(task_sequence, current_memory, reasoning_outco
 def task_orchestrator(complex_task, available_tools, execution_context):
     """
     Orchestrate multiple cognitive tools for complex task execution.
-    
+
     Coordinates cognitive tools, symbolic processing, quantum semantics,
     and memory consolidation for comprehensive task handling.
     """
@@ -993,7 +993,7 @@ def task_orchestrator(complex_task, available_tools, execution_context):
         }}
     }}
     """
-    
+
     return {
         "task_decomposition": structured_breakdown,
         "execution_plan": tool_coordination_plan,
@@ -1178,7 +1178,7 @@ def mathematical_problem_solving_example():
     """
     Example implementation for mathematical problem solving task.
     """
-    
+
     # Define mathematical problem
     problem = {
         "statement": "Find the maximum value of f(x) = x³ - 3x² + 2x on the interval [0, 3]",
@@ -1186,35 +1186,35 @@ def mathematical_problem_solving_example():
         "domain": "calculus",
         "constraints": ["x ∈ [0, 3]"]
     }
-    
+
     # Apply problem understanding tool
     understanding = problem_understanding_tool(
         problem_statement=problem["statement"],
         context={"domain": "calculus", "type": "optimization"},
         constraints=problem["constraints"]
     )
-    
+
     # Apply symbolic reasoning
     symbolic_solution = symbolic_reasoning_tool(
         problem_variables=understanding["key_concepts"],
         reasoning_context={"domain": "calculus", "optimization": True},
         symbolic_patterns={"calculus_patterns": ["derivative", "critical_points", "second_derivative_test"]}
     )
-    
+
     # Apply quantum semantic interpretation
     meaning_interpretation = quantum_semantic_interpreter(
         task_description=problem["statement"],
         observer_context={"mathematical_context": True, "optimization_focus": True},
         interpretation_space={"calculus_interpretations": ["global_max", "local_max", "endpoint_analysis"]}
     )
-    
+
     # Consolidate memory and reasoning
     consolidated_approach = memory_reasoning_consolidator(
         task_sequence=["understand", "symbolize", "interpret", "solve"],
         current_memory={"calculus_knowledge": "advanced", "optimization_experience": "intermediate"},
         reasoning_outcomes=[understanding, symbolic_solution, meaning_interpretation]
     )
-    
+
     return {
         "problem_understanding": understanding,
         "symbolic_reasoning": symbolic_solution,
@@ -1230,7 +1230,7 @@ def scientific_research_analysis_example():
     """
     Example implementation for scientific research analysis task.
     """
-    
+
     # Define research analysis task
     task = {
         "type": "research_analysis",
@@ -1238,28 +1238,28 @@ def scientific_research_analysis_example():
         "objective": "Analyze the effectiveness of cognitive tools in reasoning tasks",
         "data_sources": ["brown_2025", "yang_2025", "agostino_2025", "singapore_mit_2025"]
     }
-    
+
     # Apply cognitive tools orchestration
     orchestrated_analysis = task_orchestrator(
         complex_task=task,
         available_tools=["analysis_tool", "synthesis_tool", "validation_tool"],
         execution_context={"research_context": True, "evidence_based": True}
     )
-    
+
     # Apply quantum semantic interpretation for research findings
     research_interpretation = quantum_semantic_interpreter(
         task_description=task["objective"],
         observer_context={"research_perspective": "cognitive_science", "evidence_focus": True},
         interpretation_space={"research_meanings": ["effectiveness", "applicability", "limitations"]}
     )
-    
+
     # Apply memory consolidation for research synthesis
     research_consolidation = memory_reasoning_consolidator(
         task_sequence=["analyze", "synthesize", "validate"],
         current_memory={"research_knowledge": "comprehensive", "cognitive_tools_experience": "advanced"},
         reasoning_outcomes=[orchestrated_analysis, research_interpretation]
     )
-    
+
     return {
         "orchestrated_analysis": orchestrated_analysis,
         "research_interpretation": research_interpretation,
@@ -1274,7 +1274,7 @@ def creative_problem_solving_example():
     """
     Example implementation for creative problem solving task.
     """
-    
+
     # Define creative problem
     problem = {
         "statement": "Design an innovative solution for reducing urban traffic congestion",
@@ -1282,28 +1282,28 @@ def creative_problem_solving_example():
         "domain": "urban_planning",
         "constraints": ["sustainable", "cost_effective", "socially_acceptable"]
     }
-    
+
     # Apply quantum semantic interpretation for creative meanings
     creative_interpretation = quantum_semantic_interpreter(
         task_description=problem["statement"],
         observer_context={"creative_context": True, "innovation_focus": True},
         interpretation_space={"solution_meanings": ["technological", "behavioral", "systemic"]}
     )
-    
+
     # Apply symbolic reasoning for creative synthesis
     creative_reasoning = symbolic_reasoning_tool(
         problem_variables=["traffic_flow", "urban_infrastructure", "citizen_behavior"],
         reasoning_context={"creative_synthesis": True, "innovation_required": True},
         symbolic_patterns={"creative_patterns": ["analogical_thinking", "constraint_relaxation", "combination"]}
     )
-    
+
     # Apply memory consolidation for creative insights
     creative_consolidation = memory_reasoning_consolidator(
         task_sequence=["interpret", "ideate", "synthesize", "evaluate"],
         current_memory={"urban_planning_knowledge": "intermediate", "creative_experience": "advanced"},
         reasoning_outcomes=[creative_interpretation, creative_reasoning]
     )
-    
+
     return {
         "creative_interpretation": creative_interpretation,
         "creative_reasoning": creative_reasoning,
@@ -1320,11 +1320,11 @@ def user_adapted_task_execution(task_schema, user_profile, user_preferences):
     """
     Adapt task execution to user expertise and preferences.
     """
-    
+
     # Extract user capabilities and preferences
     user_expertise = user_profile.get("expertise_level", "intermediate")
     cognitive_style = user_profile.get("cognitive_style", "analytical")
-    
+
     # Adapt task complexity based on user expertise
     if user_expertise == "beginner":
         task_complexity = "atomic"
@@ -1335,14 +1335,14 @@ def user_adapted_task_execution(task_schema, user_profile, user_preferences):
     else:  # advanced
         task_complexity = "neural_field"
         cognitive_tools = ["meta_cognitive", "emergent_reasoning", "field_dynamics"]
-    
+
     # Execute task with user-adapted approach
     adapted_execution = task_orchestrator(
         complex_task=task_schema,
         available_tools=cognitive_tools,
         execution_context={"user_expertise": user_expertise, "cognitive_style": cognitive_style}
     )
-    
+
     return adapted_execution
 ```
 
@@ -1353,28 +1353,28 @@ def domain_aware_task_execution(task_schema, domain_context, domain_expertise):
     """
     Execute tasks with domain-specific knowledge and constraints.
     """
-    
+
     # Apply domain-specific interpretation
     domain_interpretation = quantum_semantic_interpreter(
         task_description=task_schema["problem_definition"]["problem_statement"],
         observer_context={"domain": domain_context["domain_type"]},
         interpretation_space=domain_context["interpretation_frameworks"]
     )
-    
+
     # Apply domain-specific reasoning
     domain_reasoning = symbolic_reasoning_tool(
         problem_variables=task_schema["problem_definition"]["constraints"],
         reasoning_context=domain_context,
         symbolic_patterns=domain_expertise["reasoning_patterns"]
     )
-    
+
     # Consolidate with domain knowledge
     domain_consolidation = memory_reasoning_consolidator(
         task_sequence=["interpret", "reason", "validate"],
         current_memory=domain_expertise["knowledge_base"],
         reasoning_outcomes=[domain_interpretation, domain_reasoning]
     )
-    
+
     return {
         "domain_interpretation": domain_interpretation,
         "domain_reasoning": domain_reasoning,
@@ -1389,28 +1389,28 @@ def multi_agent_task_execution(task_schema, agent_network, coordination_protocol
     """
     Execute tasks using coordinated multi-agent approach.
     """
-    
+
     # Decompose task for multi-agent execution
     task_decomposition = task_orchestrator(
         complex_task=task_schema,
         available_tools=["decomposition_tool", "coordination_tool"],
         execution_context={"multi_agent": True, "coordination_required": True}
     )
-    
+
     # Coordinate agent execution
     agent_coordination = coordinate_agents_for_task(
         task_components=task_decomposition["task_decomposition"],
         agent_network=agent_network,
         coordination_protocol=coordination_protocol
     )
-    
+
     # Consolidate multi-agent results
     consolidated_results = memory_reasoning_consolidator(
         task_sequence=["decompose", "coordinate", "execute", "integrate"],
         current_memory={"multi_agent_experience": "advanced"},
         reasoning_outcomes=[task_decomposition, agent_coordination]
     )
-    
+
     return {
         "task_decomposition": task_decomposition,
         "agent_coordination": agent_coordination,
@@ -1427,7 +1427,7 @@ def calculate_task_execution_metrics(task_execution_history):
     """
     Calculate comprehensive metrics for task execution performance.
     """
-    
+
     metrics = {
         "cognitive_tool_effectiveness": {
             "tool_usage_frequency": calculate_tool_usage_frequency(task_execution_history),
@@ -1450,7 +1450,7 @@ def calculate_task_execution_metrics(task_execution_history):
             "reasoning_acceleration": calculate_reasoning_acceleration(task_execution_history)
         }
     }
-    
+
     return metrics
 ```
 
@@ -1461,7 +1461,7 @@ def assess_task_solution_quality(task_solution, quality_criteria, validation_fra
     """
     Assess the quality of task solutions using multiple criteria.
     """
-    
+
     quality_assessment = {
         "correctness": {
             "logical_validity": validate_logical_correctness(task_solution),
@@ -1484,7 +1484,7 @@ def assess_task_solution_quality(task_solution, quality_criteria, validation_fra
             "originality_assessment": assess_solution_originality(task_solution)
         }
     }
-    
+
     return quality_assessment
 ```
 
@@ -1500,7 +1500,7 @@ def simple_analysis_example():
         "complexity": "atomic",
         "domain": "business"
     }
-    
+
     result = atomic_reasoning_tool(task, {"domain_knowledge": "business"})
     return result
 
@@ -1511,7 +1511,7 @@ def complex_problem_solving_example():
         "complexity": "neural_field",
         "domain": "engineering"
     }
-    
+
     result = neural_field_reasoning_tool(task, {"field_dynamics": True}, {"attractors": ["optimization", "feasibility"]})
     return result
 
@@ -1522,7 +1522,7 @@ def multi_domain_synthesis_example():
         "complexity": "neural_system",
         "domains": ["technology", "business", "social"]
     }
-    
+
     result = neural_system_reasoning_tool(task, {"meta_cognitive": True}, {"reasoning_network": "comprehensive"})
     return result
 ```

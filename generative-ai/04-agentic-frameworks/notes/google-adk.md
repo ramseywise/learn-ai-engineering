@@ -33,7 +33,7 @@ Canonical docs:
 | **Observability** | Lifecycle callbacks: `before/after_model`, `before/after_tool` | Langfuse `CallbackHandler` in `config={"callbacks": [...]}` |
 | **Default model** | Gemini (configured via `model=` param) | Anthropic / Claude (Anthropic SDK) |
 
-Use ADK when: agent structure is recursive/tree-shaped, Gemini is the model, fast prototype.  
+Use ADK when: agent structure is recursive/tree-shaped, Gemini is the model, fast prototype.
 Use LangGraph when: deterministic pipeline with explicit routing, need state reducers, HITL gates.
 
 ---

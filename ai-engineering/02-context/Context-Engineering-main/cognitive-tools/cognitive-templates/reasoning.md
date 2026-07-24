@@ -176,16 +176,16 @@ Please follow this structured approach:
    - [Continue for all criteria]
 3. **Evaluate Each Option**:
    Create a matrix with options as rows and criteria as columns.
-   
+
    | Option | Criterion 1 | Criterion 2 | ... | Total |
    |--------|-------------|-------------|-----|-------|
    | Option A | [Score] | [Score] | ... | [Sum] |
    | Option B | [Score] | [Score] | ... | [Sum] |
-   
+
    For each cell, provide:
    - Score: [Rating (1-10)]
    - Justification: [Brief explanation]
-   
+
 4. **Calculate Weighted Scores**: Multiply each score by the criterion weight.
 5. **Rank Options**: Order options based on their total weighted scores.
 6. **Sensitivity Analysis**: How would the ranking change if weights were adjusted?
@@ -245,11 +245,11 @@ Here's a simple Python function to implement the Step-by-Step Reasoning template
 def step_by_step_reasoning(problem, steps=None):
     """
     Create a prompt that guides through step-by-step reasoning.
-    
+
     Args:
         problem (str): The problem to solve
         steps (list, optional): Custom steps for the reasoning process
-        
+
     Returns:
         str: A formatted prompt for step-by-step reasoning
     """
@@ -261,10 +261,10 @@ def step_by_step_reasoning(problem, steps=None):
             "Verify: Check your solution against the original problem.",
             "Conclude: State your final answer or conclusion clearly."
         ]
-    
-    steps_text = "\n".join([f"{i+1}. **{step.split(':', 1)[0]}**:{step.split(':', 1)[1]}" 
+
+    steps_text = "\n".join([f"{i+1}. **{step.split(':', 1)[0]}**:{step.split(':', 1)[1]}"
                            for i, step in enumerate(steps)])
-    
+
     return f"""
 Task: Solve the following problem by breaking it down into clear, logical steps.
 

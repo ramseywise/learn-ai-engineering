@@ -115,14 +115,14 @@ This document provides conceptual anchors, research bridges, foundational refere
                         ks    Output
                         ↑
                         A
-Retrieval              ↑ 
+Retrieval              ↑
 Heads           A   B   A
                 ↑   ↑   ↑
-                        
+
 Symbolic        A   B   A   A   B   A   A   B
 Induction       ↑   ↑   ↑   ↑   ↑   ↑   ↑   ↑
-Heads                   
-                        
+Heads
+
 Symbol     A       B       A       A       B       A       A       B
 Abstraction ↑       ↑       ↑       ↑       ↑       ↑       ↑       ↑
 Heads    iac     ilege    iac    ptest     yi     ptest    ks      ixe   Input
@@ -152,8 +152,8 @@ question ─┤         │                  │         │
          Tools                       tools       │
          Prompt                                  │
                                     inputs ─────►└─────────► output
-                                                 
-                                                 
+
+
                                                Tool
                                               Prompt
 ```

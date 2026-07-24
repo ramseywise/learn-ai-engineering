@@ -119,14 +119,14 @@ As context size grows, so does token count. Let's empirically measure the trade-
                        ▲
                        │                                    ● 4-shot
                        │                           ● 3-shot
-                       │                              
-                       │                   ● 2-shot 
-                       │              
-                       │           
-                       │           ● 1-shot 
-                       │      
                        │
-                       │  
+                       │                   ● 2-shot
+                       │
+                       │
+                       │           ● 1-shot
+                       │
+                       │
+                       │
                        │   ● 0-shot
                        └─────────────────────────────────────────────────►
                                 [Tokens]
@@ -202,22 +202,22 @@ This approach:
 Here's a Python function that constructs a molecular context from examples:
 
 ```python
-def create_molecular_context(instruction, examples, new_input, 
+def create_molecular_context(instruction, examples, new_input,
                             format_type="input-output"):
     """
     Construct a molecular context from examples.
-    
+
     Args:
         instruction (str): The task instruction
         examples (List[Dict]): List of example input/output pairs
         new_input (str): The new input to process
         format_type (str): Template type (input-output, chain-of-thought)
-    
+
     Returns:
         str: The complete molecular context
     """
     context = f"{instruction}\n\n"
-    
+
     # Add examples based on format type
     if format_type == "input-output":
         for example in examples:
@@ -228,10 +228,10 @@ def create_molecular_context(instruction, examples, new_input,
             context += f"Input: {example['input']}\n"
             context += f"Thinking: {example['thinking']}\n"
             context += f"Output: {example['output']}\n\n"
-    
+
     # Add the new input
     context += f"Input: {new_input}\nOutput:"
-    
+
     return context
 ```
 

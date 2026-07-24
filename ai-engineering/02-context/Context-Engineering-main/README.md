@@ -1,5 +1,5 @@
 <div align="center">
-  
+
 # Context Engineering
 
 </div>
@@ -12,7 +12,7 @@
 > [**Software Is Changing (Again) Talk @YC AI Startup School**](https://www.youtube.com/watch?v=LCEmiRjPEtQ)
 
 <div align="center">
-  
+
 ## [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/davidkimai/Context-Engineering)
 
 <img width="1917" height="360" alt="image" src="https://github.com/user-attachments/assets/0c20f697-d505-4d49-a829-fc4d319eb1d3" />
@@ -20,9 +20,9 @@
 </div>
 
 <div align="center">
-  
+
  ## [DeepGraph](https://www.deepgraph.co/davidkimai/Context-Engineering)
- 
+
 ## [Chat with NotebookLM + Podcast Deep Dive](https://notebooklm.google.com/notebook/0c6e4dc6-9c30-4f53-8e1a-05cc9ff3bc7e)
 
 ## [![Discord](https://img.shields.io/badge/Discord-join%20chat-7289DA.svg?logo=discord")](https://discord.gg/JeFENHNNNQ)
@@ -36,13 +36,13 @@
 >
 > [**Awesome Context Engineering Repo**](https://github.com/Meirtz/Awesome-Context-Engineering)
 
-Operationalizing the Latest Research on Context With First Principles & Visuals — July 2025 from ICML, IBM, NeurIPS, OHBM, and more 
+Operationalizing the Latest Research on Context With First Principles & Visuals — July 2025 from ICML, IBM, NeurIPS, OHBM, and more
 
 
 > **"Providing “cognitive tools” to GPT-4.1 increases its pass@1 performance on AIME2024 from 26.7% to 43.3%, bringing it very close to the performance of o1-preview."** — [**IBM Zurich**](https://www.arxiv.org/pdf/2506.12115)
 
 <div align="center">
-  
+
 ## [`Agent Commands`](https://github.com/davidkimai/Context-Engineering/tree/main/.claude/commands)
 **Support for [Claude Code](https://www.anthropic.com/claude-code) | [OpenCode](https://opencode.ai/) | [Amp](https://sourcegraph.com/amp) | [Kiro](https://kiro.dev/) | [Codex](https://openai.com/codex/) | [Gemini CLI](https://github.com/google-gemini/gemini-cli)**
 
@@ -56,7 +56,7 @@ A frontier, first-principles handbook for moving beyond prompt engineering to th
 
 ```
                     Prompt Engineering  │  Context Engineering
-                       ↓                │            ↓                      
+                       ↓                │            ↓
                "What you say"           │  "Everything else the model sees"
              (Single instruction)       │    (Examples, memory, retrieval,
                                         │     tools, state, control flow)
@@ -99,13 +99,13 @@ A frontier, first-principles handbook for moving beyond prompt engineering to th
 > **"Meaning is not an intrinsic, static property of a semantic expression, but rather an emergent phenomenon"
 — [Agostino et al. — July 2025, Indiana University](https://arxiv.org/pdf/2506.10077)**
 
-Prompt engineering received all the attention, but we can now get excited for what comes next. Once you've mastered prompts, the real power comes from engineering the **entire context window** that surrounds those prompts. Guiding thought, if you will. 
+Prompt engineering received all the attention, but we can now get excited for what comes next. Once you've mastered prompts, the real power comes from engineering the **entire context window** that surrounds those prompts. Guiding thought, if you will.
 
 This repository provides a progressive, first-principles approach to context engineering, built around a biological metaphor:
 
 ```
-atoms → molecules → cells → organs → neural systems → neural & semantic field theory 
-  │        │         │         │             │                         │        
+atoms → molecules → cells → organs → neural systems → neural & semantic field theory
+  │        │         │         │             │                         │
 single    few-     memory +   multi-   cognitive tools +     context = fields +
 prompt    shot     agents     agents   operating systems     persistence & resonance
 ```
@@ -119,7 +119,7 @@ prompt    shot     agents     agents   operating systems     persistence & reson
 *[A Survey of Context Engineering - July 2025](https://arxiv.org/pdf/2507.13334)*
 
 
-  
+
  **[On Emergence, Attractors, and Dynamical Systems Theory](https://content.csbs.utah.edu/~butner/systems/DynamicalSystemsIntro.html) | [Columbia DST](http://wordpress.ei.columbia.edu/ac4/about/our-approach/dynamical-systems-theory/)**
 
 
@@ -139,28 +139,28 @@ graph TD
     classDef intermediate fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#2e7d32
     classDef advanced fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#e65100
     classDef meta fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px,color:#6a1b9a
-    
+
     subgraph Basic["Level 1: Basic Context Engineering"]
         A[Atoms]
         B[Molecules]
         C[Cells]
         D[Organs]
     end
-    
+
     subgraph Field["Level 2: Field Theory"]
         E[Neural Systems]
         F[Neural Fields]
     end
-    
+
     subgraph Protocol["Level 3: Protocol System"]
         G[Protocol Shells]
         H[Unified System]
     end
-    
+
     subgraph Meta["Level 4: Meta-Recursion"]
         I[Meta-Recursive Framework]
     end
-    
+
     %% Connections
     A --> B
     B --> C
@@ -170,7 +170,7 @@ graph TD
     F --> G
     G --> H
     H --> I
-    
+
     %% Descriptions for each level
     A1["Single instructions<br>Simple constraints<br>Basic prompts"] --> A
     B1["Example pairs<br>Few-shot patterns<br>Demonstration sets"] --> B
@@ -181,7 +181,7 @@ graph TD
     G1["Structured templates<br>Field operations<br>Emergence protocols"] --> G
     H1["Protocol integration<br>System-level emergence<br>Self-maintenance"] --> H
     I1["Self-reflection<br>Recursive improvement<br>Interpretable evolution"] --> I
-    
+
     %% Real-world parallels
     A2["Like: Basic prompt<br>engineering"] -.-> A
     B2["Like: Few-shot<br>learning"] -.-> B
@@ -192,7 +192,7 @@ graph TD
     G2["Like: Protocol<br>orchestration"] -.-> G
     H2["Like: Self-organizing<br>systems"] -.-> H
     I2["Like: Self-improving<br>intelligence"] -.-> I
-    
+
     %% Apply classes
     class A,B,C,D,A1,A2,B1,B2,C1,C2,D1,D2 basic
     class E,F,E1,E2,F1,F2 intermediate
@@ -202,16 +202,16 @@ graph TD
 
 ## Quick Start
 
-1. **Read [`00_foundations/01_atoms_prompting.md`](00_foundations/01_atoms_prompting.md)** (5 min)  
+1. **Read [`00_foundations/01_atoms_prompting.md`](00_foundations/01_atoms_prompting.md)** (5 min)
    Understand why prompts alone often underperform
 
-2. **Run [`10_guides_zero_to_hero/01_min_prompt.py`](10_guides_zero_to_hero/01_min_prompt.py)**  (Jupyter Notebook style) 
+2. **Run [`10_guides_zero_to_hero/01_min_prompt.py`](10_guides_zero_to_hero/01_min_prompt.py)**  (Jupyter Notebook style)
    Experiment with a minimal working example
 
-3. **Explore [`20_templates/minimal_context.yaml`](20_templates/minimal_context.yaml)**  
-   Copy/paste a template into your own project  
+3. **Explore [`20_templates/minimal_context.yaml`](20_templates/minimal_context.yaml)**
+   Copy/paste a template into your own project
 
-4. **Study [`30_examples/00_toy_chatbot/`](30_examples/00_toy_chatbot/)**  
+4. **Study [`30_examples/00_toy_chatbot/`](30_examples/00_toy_chatbot/)**
    See a complete implementation with context management
 
 ## Learning Path
@@ -274,7 +274,7 @@ graph TD
 5. **Code > slides** – every concept has a runnable cell
 6. **Visualize everything** — every concept is visualized with ASCII and symbolic diagrams
 
-# Research Evidence 
+# Research Evidence
 ## Memory + Reasoning
 
 ### **[MEM1: Learning to Synergize Memory and Reasoning for Efficient Long-Horizon Agents - Singapore-MIT June 2025](https://www.arxiv.org/pdf/2506.15841)**
@@ -344,7 +344,7 @@ might be helpful in solving the problem.**
 
 **3. Finally, in later layers, retrieval heads predict the next token by retrieving the value associated with the predicted abstract variable.**
 
-**These results point toward a resolution of the longstanding debate between symbolic and neural network approaches, suggesting that emergent reasoning in neural networks depends on the emergence of symbolic mechanisms.** — [**ICML Princeton**](https://openreview.net/forum?id=y1SnRPDWx4) 
+**These results point toward a resolution of the longstanding debate between symbolic and neural network approaches, suggesting that emergent reasoning in neural networks depends on the emergence of symbolic mechanisms.** — [**ICML Princeton**](https://openreview.net/forum?id=y1SnRPDWx4)
 
 
 ![image](https://github.com/user-attachments/assets/2428544e-332a-4e32-9070-9f9d8716d491)
@@ -399,5 +399,5 @@ We welcome contributions! Check out [CONTRIBUTING.md](.github/CONTRIBUTING.md) f
 ## Acknowledgements
 > I've been looking forward to this being conceptualized and formalized as there wasn't a prior established field. Prompt engineering receives quite the stigma and doesn't quite cover what most researchers and I do.
 
-- [Andrej Karpathy](https://x.com/karpathy/status/1937902205765607626) for coining "context engineering" and inspiring this repo 
+- [Andrej Karpathy](https://x.com/karpathy/status/1937902205765607626) for coining "context engineering" and inspiring this repo
 - All contributors and the open source community

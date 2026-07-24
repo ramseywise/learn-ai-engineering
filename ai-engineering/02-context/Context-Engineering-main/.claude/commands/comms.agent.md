@@ -174,7 +174,7 @@ tools:
     call: { protocol: /integrate.feedback{ concepts=<concepts>, feedback=<feedback> } }
     phases: [feedback_revision_loop, audit_logging]
     examples: [{ input: {concepts: [...], feedback: [...]}, output: {revised: [...], log: [...]} }]
-  
+
   - id: audit_logger
     type: internal
     description: Maintain audit log and version checkpoints.
@@ -272,4 +272,3 @@ def comms_agent_cycle(context, state=None, audit_log=None, depth=0, max_depth=4)
 ```
 
 # END OF /COMMS.AGENT SYSTEM PROMPT
-

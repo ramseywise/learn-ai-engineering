@@ -156,16 +156,16 @@ def summarize_history(messages, summarization_prompt):
     """Summarize chat history to compress token usage."""
     # Extract message content
     history_text = "\n".join([f"{msg['role']}: {msg['content']}" for msg in messages[1:]])
-    
+
     # Create a summarization request
     summary_request = {
         "role": "user",
         "content": f"{summarization_prompt}\n\nChat history to summarize:\n{history_text}"
     }
-    
+
     # Get summary from model
     summary = get_model_response([messages[0], summary_request])
-    
+
     # Replace history with summarized version
     return [
         messages[0],  # Keep system message
@@ -184,11 +184,11 @@ def update_kv_memory(messages, memory):
         if msg['role'] == 'assistant' and 'key_information' in msg.get('metadata', {}):
             for key, value in msg['metadata']['key_information'].items():
                 memory[key] = value
-    
+
     # Convert memory to a message
     memory_content = "\n".join([f"{k}: {v}" for k, v in memory.items()])
     memory_message = {"role": "system", "content": f"Important information:\n{memory_content}"}
-    
+
     return memory_message
 ```
 
@@ -213,15 +213,15 @@ def process_document_progressively(document, initial_prompt):
     chunks = progressive_loading(document)
     context = initial_prompt
     results = []
-    
+
     for chunk in chunks:
         prompt = f"{context}\n\nProcess this section of the document:\n{chunk}"
         response = get_model_response(prompt)
         results.append(response)
-        
+
         # Update context with key information
         context = f"{initial_prompt}\n\nKey information so far: {summarize(results)}"
-    
+
     return combine_results(results)
 ```
 
@@ -233,27 +233,27 @@ Pre-process documents to extract only relevant information:
 def extract_relevant_information(document, query):
     """Extract only information relevant to the query."""
     sentences = split_into_sentences(document)
-    
+
     # Calculate relevance scores
     relevance_scores = []
     for sentence in sentences:
         relevance = calculate_relevance(sentence, query)
         relevance_scores.append((sentence, relevance))
-    
+
     # Sort by relevance and take top results
     relevance_scores.sort(key=lambda x: x[1], reverse=True)
-    
+
     # Take top 50% of relevant sentences or until we hit a threshold
     extracted = []
     cumulative_relevance = 0
     target_relevance = sum([score for _, score in relevance_scores]) * 0.8
-    
+
     for sentence, score in relevance_scores:
         extracted.append(sentence)
         cumulative_relevance += score
         if cumulative_relevance >= target_relevance:
             break
-    
+
     return " ".join(extracted)
 ```
 
@@ -367,16 +367,16 @@ Tokens that resonate with each other create stronger field patterns:
 def measure_token_resonance(tokens, embeddings_model):
     """Measure semantic resonance between tokens."""
     embeddings = [embeddings_model.embed(token) for token in tokens]
-    
+
     # Calculate pairwise cosine similarity
     resonance_matrix = np.zeros((len(tokens), len(tokens)))
     for i in range(len(tokens)):
         for j in range(len(tokens)):
             resonance_matrix[i][j] = cosine_similarity(embeddings[i], embeddings[j])
-    
+
     # Average resonance
     overall_resonance = (resonance_matrix.sum() - len(tokens)) / (len(tokens) * (len(tokens) - 1))
-    
+
     return overall_resonance, resonance_matrix
 ```
 
@@ -391,25 +391,25 @@ def apply_boundary_control(new_input, current_context, model_embeddings, thresho
     """Control what information enters the context based on relevance."""
     # Embed the current context
     context_embedding = model_embeddings.embed(current_context)
-    
+
     # Process input in chunks
     input_chunks = chunk_text(new_input, chunk_size=50)
     filtered_chunks = []
-    
+
     for chunk in input_chunks:
         # Embed the chunk
         chunk_embedding = model_embeddings.embed(chunk)
-        
+
         # Calculate relevance to current context
         relevance = cosine_similarity(context_embedding, chunk_embedding)
-        
+
         # Apply boundary filter
         if relevance > threshold:
             filtered_chunks.append(chunk)
-    
+
     # Reconstruct filtered input
     filtered_input = " ".join(filtered_chunks)
-    
+
     return filtered_input
 ```
 
@@ -520,30 +520,30 @@ Here's a framework for running token efficiency experiments:
 def run_token_efficiency_experiment(prompt_variants, task, evaluation_function):
     """Run experiment to measure token efficiency of different prompt variants."""
     results = []
-    
+
     for variant in prompt_variants:
         # Count tokens
         token_count = count_tokens(variant)
-        
+
         # Get model response
         response = get_model_response(variant, task)
-        
+
         # Evaluate response
         quality_score = evaluation_function(response, task)
-        
+
         # Calculate efficiency
         efficiency = quality_score / token_count
-        
+
         results.append({
             "variant": variant,
             "token_count": token_count,
             "quality_score": quality_score,
             "efficiency": efficiency
         })
-    
+
     # Sort by efficiency (highest first)
     results.sort(key=lambda x: x["efficiency"], reverse=True)
-    
+
     return results
 ```
 
@@ -560,46 +560,46 @@ class TokenBudgetPlanner:
         self.tokenizer = tokenizer
         self.allocations = {}
         self.used_tokens = {}
-    
+
     def set_allocation(self, component, percentage):
         """Set allocation percentage for a component."""
         self.allocations[component] = percentage
         self.used_tokens[component] = 0
-    
+
     def get_budget(self, component):
         """Get token budget for a component."""
         return int(self.context_window_size * self.allocations[component])
-    
+
     def track_usage(self, component, content):
         """Track token usage for a component."""
         token_count = len(self.tokenizer.encode(content))
         self.used_tokens[component] = token_count
         return token_count
-    
+
     def get_remaining(self):
         """Get remaining tokens in the budget."""
         used = sum(self.used_tokens.values())
         return self.context_window_size - used
-    
+
     def is_within_budget(self, component, content):
         """Check if content fits within component budget."""
         token_count = len(self.tokenizer.encode(content))
         return token_count <= self.get_budget(component)
-    
+
     def optimize_to_fit(self, component, content, optimizer_function):
         """Optimize content to fit within budget."""
         if self.is_within_budget(component, content):
             return content
-        
+
         budget = self.get_budget(component)
         optimized = optimizer_function(content, budget)
-        
+
         # Verify optimized content fits
         if not self.is_within_budget(component, optimized):
             raise ValueError(f"Optimizer failed to fit content within budget of {budget} tokens")
-        
+
         return optimized
-    
+
     def get_status_report(self):
         """Get budget status report."""
         report = {}
@@ -612,14 +612,14 @@ class TokenBudgetPlanner:
                 "remaining": budget - used,
                 "utilization": used / budget if budget > 0 else 0
             }
-        
+
         report["overall"] = {
             "budget": self.context_window_size,
             "used": sum(self.used_tokens.values()),
             "remaining": self.get_remaining(),
             "utilization": sum(self.used_tokens.values()) / self.context_window_size
         }
-        
+
         return report
 ```
 
@@ -632,34 +632,34 @@ class ContextMemoryManager:
         self.summarization_model = summarization_model
         self.messages = []
         self.memory = {}
-    
+
     def add_message(self, role, content):
         """Add a message to the conversation history."""
         message = {"role": role, "content": content}
         self.messages.append(message)
-        
+
         # Check if we're exceeding our history budget
         history_content = "\n".join([f"{msg['role']}: {msg['content']}" for msg in self.messages])
         history_tokens = self.budget_planner.track_usage("history", history_content)
         history_budget = self.budget_planner.get_budget("history")
-        
+
         # If we're over budget, compress the history
         if history_tokens > history_budget:
             self.compress_history()
-    
+
     def extract_key_information(self, message):
         """Extract key information from a message to store in memory."""
         if self.summarization_model:
             extraction_prompt = "Extract key facts and information from this message as key-value pairs:"
             extraction_input = f"{extraction_prompt}\n\n{message['content']}"
             extraction_result = self.summarization_model(extraction_input)
-            
+
             # Parse key-value pairs
             for line in extraction_result.split("\n"):
                 if ":" in line:
                     key, value = line.split(":", 1)
                     self.memory[key.strip()] = value.strip()
-    
+
     def compress_history(self):
         """Compress history when it exceeds the budget."""
         if not self.summarization_model:
@@ -669,56 +669,56 @@ class ContextMemoryManager:
         else:
             # Use summarization
             history_to_summarize = self.messages[1:-3]  # Skip system prompt and keep last 3 messages
-            
+
             if not history_to_summarize:
                 return  # Nothing to summarize
-                
+
             # Extract content to summarize
             content_to_summarize = "\n".join([
-                f"{msg['role']}: {msg['content']}" 
+                f"{msg['role']}: {msg['content']}"
                 for msg in history_to_summarize
             ])
-            
+
             # Create summarization prompt
             summarization_prompt = (
                 "Summarize the following conversation history concisely, "
                 "preserving key information, decisions, and context:"
             )
-            
+
             # Get summary
             summary = self.summarization_model(
                 f"{summarization_prompt}\n\n{content_to_summarize}"
             )
-            
+
             # Replace the messages with a summary
             summary_message = {
                 "role": "system",
                 "content": f"Summary of previous conversation: {summary}"
             }
-            
+
             # New messages list: system prompt + summary + recent messages
             self.messages = [self.messages[0], summary_message] + self.messages[-3:]
-    
+
     def get_formatted_memory(self):
         """Get memory formatted as a string."""
         if not self.memory:
             return ""
-            
+
         memory_lines = [f"{key}: {value}" for key, value in self.memory.items()]
         return "Key information from conversation:\n" + "\n".join(memory_lines)
-    
+
     def get_context(self):
         """Get the full context for the next interaction."""
         # Combine messages and memory
         memory_content = self.get_formatted_memory()
-        
+
         # If we have memory, insert it after the system prompt
         if memory_content and len(self.messages) > 1:
             memory_message = {"role": "system", "content": memory_content}
             context = [self.messages[0], memory_message] + self.messages[1:]
         else:
             context = self.messages.copy()
-            
+
         return context
 ```
 
@@ -764,21 +764,21 @@ class DynamicTokenOptimizer:
             "restructure": self.restructure_text,
             "compress_format": self.compress_format
         }
-    
+
     def count_tokens(self, text):
         """Count tokens in text."""
         return len(self.tokenizer.encode(text))
-    
+
     def optimize(self, text, target_tokens, strategy=None):
         """Optimize text to fit within target token count."""
         current_tokens = self.count_tokens(text)
-        
+
         if current_tokens <= target_tokens:
             return text  # Already within budget
-        
+
         # Calculate compression ratio needed
         compression_ratio = target_tokens / current_tokens
-        
+
         # If no strategy specified, select based on compression ratio
         if not strategy:
             if compression_ratio > 0.8:
@@ -789,13 +789,13 @@ class DynamicTokenOptimizer:
                 strategy = "extract_key_points"  # Heavy compression
             else:
                 strategy = "summarize"  # Extreme compression
-        
+
         # Apply selected strategy
         if strategy in self.strategies:
             return self.strategies[strategy](text, target_tokens)
         else:
             raise ValueError(f"Unknown optimization strategy: {strategy}")
-    
+
     def summarize_text(self, text, target_tokens):
         """Summarize text to target token count."""
         # This would typically call an LLM for summarization
@@ -803,21 +803,21 @@ class DynamicTokenOptimizer:
         ratio = target_tokens / self.count_tokens(text)
         truncated = self.truncate_to_ratio(text, ratio * 0.9)  # Leave room for the note
         return f"{truncated}\n[Note: Content has been summarized to fit token budget.]"
-    
+
     def extract_key_points(self, text, target_tokens):
         """Extract key points from text."""
         # This would typically call an LLM to extract key points
         # For this example, we'll create a simple bullet point extraction
         lines = text.split("\n")
         result = "Key points:\n"
-        
+
         for line in lines:
             line = line.strip()
             if line and self.count_tokens(result + f"• {line}\n") <= target_tokens * 0.95:
                 result += f"• {line}\n"
-        
+
         return result
-    
+
     def restructure_text(self, text, target_tokens):
         """Restructure text to be more token-efficient."""
         # Remove redundancies, use abbreviations, etc.
@@ -826,18 +826,18 @@ class DynamicTokenOptimizer:
         text = text.replace("for example", "e.g.")
         text = text.replace("that is", "i.e.")
         text = text.replace("and so on", "etc.")
-        
+
         if self.count_tokens(text) <= target_tokens:
             return text
-        
+
         # If still too long, combine with extraction
         return self.extract_key_points(text, target_tokens)
-    
+
     def compress_format(self, text, target_tokens):
         """Compress by changing formatting without losing content."""
         # Remove extra whitespace
         text = re.sub(r"\s+", " ", text)
-        
+
         # Convert paragraphs to bullet points if appropriate
         if ":" in text and "\n" in text:
             lines = text.split("\n")
@@ -849,13 +849,13 @@ class DynamicTokenOptimizer:
                 else:
                     result += line + "\n"
             text = result
-        
+
         if self.count_tokens(text) <= target_tokens:
             return text
-        
+
         # If still too long, try more aggressive restructuring
         return self.restructure_text(text, target_tokens)
-    
+
     def truncate_to_ratio(self, text, ratio):
         """Truncate text to a ratio of its original length."""
         words = text.split()
@@ -909,30 +909,30 @@ class FieldAwareContextManager:
             "resonance": 0.0,
             "residue": []
         }
-    
+
     def embed_text(self, text):
         """Generate embeddings for text."""
         return self.embedding_model.embed(text)
-    
+
     def detect_attractors(self, text, threshold=0.8):
         """Detect semantic attractors in text."""
         # Split into paragraphs or sections
         sections = text.split("\n\n")
-        
+
         # Get embeddings for each section
         embeddings = [self.embed_text(section) for section in sections]
-        
+
         # Calculate centroid
         centroid = np.mean(embeddings, axis=0)
-        
+
         # Find sections that form attractors (high similarity to many others)
         attractors = []
         for i, (section, embedding) in enumerate(zip(sections, embeddings)):
             # Calculate average similarity to other sections
-            similarities = [cosine_similarity(embedding, other_emb) 
+            similarities = [cosine_similarity(embedding, other_emb)
                            for j, other_emb in enumerate(embeddings) if i != j]
             avg_similarity = np.mean(similarities) if similarities else 0
-            
+
             # If similarity is above threshold, it's an attractor
             if avg_similarity > threshold:
                 tokens = self.tokenizer.encode(section)
@@ -942,41 +942,41 @@ class FieldAwareContextManager:
                     "strength": avg_similarity,
                     "token_count": len(tokens)
                 })
-        
+
         return attractors
-    
+
     def calculate_resonance(self, text):
         """Calculate field resonance for text."""
         # Split into paragraphs or sections
         sections = text.split("\n\n")
-        
+
         if len(sections) <= 1:
             return 0.0  # Not enough sections to calculate resonance
-        
+
         # Get embeddings for each section
         embeddings = [self.embed_text(section) for section in sections]
-        
+
         # Calculate pairwise similarities
         similarities = []
         for i in range(len(embeddings)):
             for j in range(i+1, len(embeddings)):
                 similarities.append(cosine_similarity(embeddings[i], embeddings[j]))
-        
+
         # Resonance is the average similarity
         return np.mean(similarities)
-    
+
     def update_field_state(self, new_text):
         """Update field state with new text."""
         # Update attractors
         new_attractors = self.detect_attractors(new_text)
         self.field_state["attractors"].extend(new_attractors)
-        
+
         # Update resonance
         new_resonance = self.calculate_resonance(new_text)
         self.field_state["resonance"] = (
             self.field_state["resonance"] * 0.7 + new_resonance * 0.3
         )  # Weighted average
-        
+
         # Update permeability based on resonance
         if new_resonance > self.field_state["resonance"]:
             # If resonance is increasing, increase permeability
@@ -984,130 +984,130 @@ class FieldAwareContextManager:
         else:
             # If resonance is decreasing, decrease permeability
             self.field_state["boundaries"]["permeability"] -= self.field_state["boundaries"]["gradient"]
-        
+
         # Keep permeability in [0.1, 0.9] range
         self.field_state["boundaries"]["permeability"] = max(
             0.1, min(0.9, self.field_state["boundaries"]["permeability"])
         )
-    
+
     def filter_by_attractor_relevance(self, text, top_n_attractors=3, threshold=0.6):
         """Filter text based on relevance to top attractors."""
         if not self.field_state["attractors"]:
             return text  # No attractors to filter by
-        
+
         # Sort attractors by strength
         sorted_attractors = sorted(
-            self.field_state["attractors"], 
-            key=lambda x: x["strength"], 
+            self.field_state["attractors"],
+            key=lambda x: x["strength"],
             reverse=True
         )
-        
+
         # Take top N attractors
         top_attractors = sorted_attractors[:top_n_attractors]
         top_embeddings = [attractor["embedding"] for attractor in top_attractors]
-        
+
         # Split text into paragraphs
         paragraphs = text.split("\n\n")
-        
+
         # Calculate relevance of each paragraph to top attractors
         filtered_paragraphs = []
         for paragraph in paragraphs:
             # Skip empty paragraphs
             if not paragraph.strip():
                 continue
-                
+
             # Get embedding
             embedding = self.embed_text(paragraph)
-            
+
             # Calculate max similarity to any attractor
-            similarities = [cosine_similarity(embedding, attractor_emb) 
+            similarities = [cosine_similarity(embedding, attractor_emb)
                            for attractor_emb in top_embeddings]
             max_similarity = max(similarities)
-            
+
             # If similarity is above threshold or permeability allows it
-            if (max_similarity > threshold or 
+            if (max_similarity > threshold or
                 random.random() < self.field_state["boundaries"]["permeability"]):
                 filtered_paragraphs.append(paragraph)
-        
+
         # Join filtered paragraphs
         return "\n\n".join(filtered_paragraphs)
-    
+
     def optimize_context_for_budget(self, context, target_tokens):
         """Optimize context to fit token budget using field-aware methods."""
         # Count current tokens
         current_tokens = len(self.tokenizer.encode(context))
-        
+
         if current_tokens <= target_tokens:
             return context  # Already within budget
-        
+
         # If we have attractors, use them to filter
         if self.field_state["attractors"]:
             context = self.filter_by_attractor_relevance(context)
-            
+
             # Check if we're now within budget
             current_tokens = len(self.tokenizer.encode(context))
             if current_tokens <= target_tokens:
                 return context
-        
+
         # If still over budget, use more aggressive techniques
         # First, try to preserve the most important parts based on field analysis
-        
+
         # Extract residue (symbolic fragments that should persist)
         paragraphs = context.split("\n\n")
         residue = []
-        
+
         for paragraph in paragraphs:
             # Check if paragraph contains key information worth preserving
             # This could be based on resonance with attractors, presence of key terms, etc.
             if any(attractor["text"] in paragraph for attractor in self.field_state["attractors"]):
                 residue.append(paragraph)
-        
+
         # Update residue in field state
         self.field_state["residue"] = residue
-        
+
         # Combine residue with most important attractors
         preserved_content = "\n\n".join(residue)
         preserved_tokens = len(self.tokenizer.encode(preserved_content))
-        
+
         # If preserved content already exceeds budget, summarize it
         if preserved_tokens > target_tokens:
             # This would typically call an LLM for summarization
             # For this example, we'll just truncate
             return context[:int(len(context) * (target_tokens / current_tokens))]
-        
+
         # If we have room left, add the most relevant remaining content
         remaining_budget = target_tokens - preserved_tokens
-        
+
         # Sort remaining paragraphs by relevance to field state
         remaining_paragraphs = [p for p in paragraphs if p not in residue]
-        
+
         if not remaining_paragraphs:
             return preserved_content
-            
+
         # Calculate relevance scores
         relevance_scores = []
         for paragraph in remaining_paragraphs:
             embedding = self.embed_text(paragraph)
             # Calculate average similarity to attractors
-            similarities = [cosine_similarity(embedding, attractor["embedding"]) 
+            similarities = [cosine_similarity(embedding, attractor["embedding"])
                            for attractor in self.field_state["attractors"]]
             avg_similarity = np.mean(similarities) if similarities else 0
             tokens = len(self.tokenizer.encode(paragraph))
             relevance_scores.append((paragraph, avg_similarity, tokens))
-        
+
         # Sort by relevance
         relevance_scores.sort(key=lambda x: x[1], reverse=True)
-        
+
         # Add paragraphs until we hit the budget
         additional_content = []
         for paragraph, _, tokens in relevance_scores:
             if tokens <= remaining_budget:
                 additional_content.append(paragraph)
                 remaining_budget -= tokens
-            
+
             if remaining_budget <= 0:
                 break
-        
+
         # Combine preserved content with additional content
         return preserved_content + "\n\n" + "\n\n".join(additional_content)
 ```
@@ -1235,12 +1235,12 @@ Let's see how to use protocol shells to implement field theory concepts without 
 ```
 /field.manage{
     intent="Create and maintain semantic field structure for optimal token usage",
-    
+
     attractors=[
         {name="core_concept_1", strength=0.8, keywords=["key1", "key2", "key3"]},
         {name="core_concept_2", strength=0.7, keywords=["key4", "key5", "key6"]}
     ],
-    
+
     boundaries={
         permeability=0.7,  // How easily new content enters the field
         gradient=0.2,      // How quickly permeability changes
@@ -1249,13 +1249,13 @@ Let's see how to use protocol shells to implement field theory concepts without 
             /boundary.filter{method="attractor_relevance", min_score=0.6}
         ]
     },
-    
+
     residue_handling={
         tracking=true,
         preservation_strategy="compress_and_retain",
         priority="high"  // Residue gets token priority
     },
-    
+
     token_optimization=[
         /optimize.by_attractor{keep="strongest", top_n=3},
         /optimize.preserve_residue{min_strength=0.5},
@@ -1373,7 +1373,7 @@ I want you to act as a context management system using the following protocol:
 
 /context.manage{
     intent="Optimize token usage while preserving key information",
-    
+
     budget={
         total_tokens=8000,
         system=1000,
@@ -1381,7 +1381,7 @@ I want you to act as a context management system using the following protocol:
         current=3000,
         reserve=1000
     },
-    
+
     optimization=[
         /system.compress{method="minimal_instructions"},
         /history.manage{

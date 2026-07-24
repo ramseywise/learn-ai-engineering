@@ -17,7 +17,7 @@ def readiness_check_2():
     return jsonify({'status': 'Ready'}), 200
 
 
-@app.route('/vectors', methods=['POST']) 
+@app.route('/vectors', methods=['POST'])
 def vectorize():
     try:
         try:
@@ -32,7 +32,7 @@ def vectorize():
             text = [text]
         else:
             text =text['text']
-            
+
         embeddings = generate_embedding(text)
 
         return jsonify({'vector': embeddings})

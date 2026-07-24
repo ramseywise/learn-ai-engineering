@@ -16,11 +16,11 @@ async def get_state_history(request: StateHistoryRequest):
     cfg = {"configurable": {"thread_id": request.thread_id}}
     items = []
     agent: Pregel = get_agent(request.agent_id)
-    
+
     # aget_state_history returns a list, not an async iterator
     history = await agent.aget_state_history(cfg)
     items = list(history) if hasattr(history, '__iter__') else [history]
-    
+
     # Parse the raw history into structured format
     parsed_history = StateHistoryParser.parse_state_history(items)
     return parsed_history
@@ -32,9 +32,9 @@ async def get_raw_state_history(request: StateHistoryRequest):
     cfg = {"configurable": {"thread_id": request.thread_id}}
     items = []
     agent: Pregel = get_agent(request.agent_id)
-    
+
     # aget_state_history returns a list, not an async iterator
     history = await agent.aget_state_history(cfg)
     items = list(history) if hasattr(history, '__iter__') else [history]
-    
+
     return items

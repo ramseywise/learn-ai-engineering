@@ -210,10 +210,10 @@ Here's a simple Python function to implement the Question Analysis template:
 def understand_question(question):
     """
     Create a prompt that analyzes and breaks down a question.
-    
+
     Args:
         question (str): The question to analyze
-        
+
     Returns:
         str: A formatted prompt for question analysis
     """

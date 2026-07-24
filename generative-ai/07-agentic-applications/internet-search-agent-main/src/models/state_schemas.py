@@ -7,7 +7,7 @@ from pydantic import BaseModel
 class StepType(str, Enum):
     INPUT = "input"
     LOOP = "loop"
-    
+
 class NodeType(str, Enum):
     START = "__start__"
     DECIDE_SEARCH = "decide_search"

@@ -33,8 +33,8 @@ Open Anaconda Activate the environment where you want to apply these changes
 Run pyspark and install it as a package in this environment <br>
 Run findspark and install it as a package in this environment
 
-Ensure that open JDK is already set up. This allows us to not have to install Spark separately and manually set up the environment Also with this we may have to use Jupyter Lab (instead of Jupyter Notebook) to open a Jupyter notebook for running the programs. 
-Once the Spark is set up start the conda environment and open Jupyter Lab. 
+Ensure that open JDK is already set up. This allows us to not have to install Spark separately and manually set up the environment Also with this we may have to use Jupyter Lab (instead of Jupyter Notebook) to open a Jupyter notebook for running the programs.
+Once the Spark is set up start the conda environment and open Jupyter Lab.
 Run the program below in notebook to check everything is running fine.
 ```
 import pyspark
@@ -63,7 +63,7 @@ brew install scala@2.13
 brew install apache-spark
 ```
 
-3. Add environment variables: 
+3. Add environment variables:
 
 Add the following environment variables to your `.bash_profile` or `.zshrc`. Replace the path to `SPARK_HOME` to the path on your own host. Run `brew info apache-spark` to get this.
 
@@ -86,7 +86,4 @@ distData.filter(_ < 10).collect()
 
 ### PySpark
 
-It's the same for all platforms. Go to [pyspark.md](pyspark.md). 
-
-
-
+It's the same for all platforms. Go to [pyspark.md](pyspark.md).

@@ -1,14 +1,14 @@
 
-# Running PySpark Streaming 
+# Running PySpark Streaming
 
 #### Prerequisite
 
-Ensure your Kafka and Spark services up and running by following the [docker setup readme](./../../docker/README.md). 
+Ensure your Kafka and Spark services up and running by following the [docker setup readme](./../../docker/README.md).
 It is important to create network and volume as described in the document. Therefore please ensure, your volume and network are created correctly
 
 ```bash
 docker volume ls # should list hadoop-distributed-file-system
-docker network ls # should list kafka-spark-network 
+docker network ls # should list kafka-spark-network
 ```
 
 
@@ -28,7 +28,7 @@ python3 consumer.py --topic <topic-name>
 spark-submit script ensures installation of necessary jars before running the streaming.py
 
 ```bash
-./spark-submit.sh streaming.py 
+./spark-submit.sh streaming.py
 ```
 
 ### Additional Resources

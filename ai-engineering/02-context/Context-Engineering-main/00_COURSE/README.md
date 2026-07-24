@@ -8,7 +8,7 @@
 ## Comprehensive Course Under Construction
 
 > **[A Systematic Analysis of Over 1400 Research Papers — A Survey of Context Engineering for Large Language Models](https://arxiv.org/pdf/2507.13334)**
-> 
+>
 >
 > "You can't connect the dots looking forward; you can only connect them looking backwards."
 >
@@ -482,7 +482,7 @@ This comprehensive Context Engineering course synthesizes cutting-edge research 
 
 **Learning Outcomes**: Students understand the mathematical foundation C = A(c₁, c₂, ..., cₙ) and can implement basic context assembly functions.
 
-**Key Projects**: 
+**Key Projects**:
 - Context formalization calculator
 - Optimization landscape visualizer
 - Bayesian context inference demo

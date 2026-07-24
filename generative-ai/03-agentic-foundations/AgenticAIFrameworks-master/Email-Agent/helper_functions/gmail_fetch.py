@@ -9,10 +9,10 @@ from googleapiclient import errors
 def _extract_body(payload):
     """
     Extract the plain text body from email payload.
-    
+
     Args:
         payload (dict): Email message payload
-    
+
     Returns:
         str: Extracted body text
     """
@@ -51,14 +51,14 @@ def _extract_body(payload):
 def get_email_messages(service, user_id='me', label_ids=None, folder_name='INBOX', max_results=5):
     """
     Get email messages with pagination and folder filtering.
-    
+
     Args:
         service: Gmail API service object
         user_id (str): User ID (default: 'me')
         label_ids (list): List of label IDs
         folder_name (str): Folder name to filter by (default: 'INBOX')
         max_results (int): Maximum number of results (default: 5)
-    
+
     Returns:
         list: List of message objects
     """
@@ -108,11 +108,11 @@ def get_email_messages(service, user_id='me', label_ids=None, folder_name='INBOX
 def get_email_message_details(service, msg_id):
     """
     Get detailed information about an email message.
-    
+
     Args:
         service: Gmail API service object
         msg_id (str): Message ID
-    
+
     Returns:
         dict: Dictionary containing message details
     """

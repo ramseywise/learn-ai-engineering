@@ -10,7 +10,7 @@ cleaned: 2026-07-17
 
 Harness comprises at least four parts: acceptance baseline, execution boundary, feedback signals, and rollback mechanisms.
 
-Agent = Model + Harness. 
+Agent = Model + Harness.
 
 https://www.langchain.com/blog/the-anatomy-of-an-agent-harness
 
@@ -33,9 +33,9 @@ Concretely, **a harness includes things like:**
 - Orchestration Logic (subagent spawning, handoffs, model routing, feedback loops(HITL))
 - Hooks/Middleware for deterministic execution (compaction, continuation, lint checks)
 - Recovery path ‣
-    
+
     *(missing diagram — not exported from Notion)*
-    
+
 
 need for harness:  things that is out of the box of models, like: Maintain durable state across interactions, Execute code, Access realtime knowledge, Setup environments and install packages to complete work
 
@@ -46,48 +46,48 @@ need for harness:  things that is out of the box of models, like: Maintain durab
 It's a **configuration problem**.
 
 1. **Filesystems for Durable Storage and Context Management: agents to have durable storage to interface with real data, offload information that doesn't fit in context, and persist work across sessions.**
-    
-    **Harnesses ship with filesystem abstractions and tools for fs-ops.**
-    
-2. **Bash + Code as a General Purpose Tool**
-    
-    **We want agents to autonomously solve problems without humans needing to pre-design every tool. Harnesses ship with a bash tool so models can solve problems autonomously by writing & executing code.**
-    
-3. **Sandboxes and Tools to Execute & Verify Work**
-    
-    Sandboxes give agents safe operating environments to safely act, observe results, and make progress.
-    
-    Tools like browsers, logs, screenshots, and test runners give agents a way to observe and analyze their work. This helps them create **self-verification loops where** they can **write application code,** run tests, inspect logs, and fix errors.
-    
-    Deciding where the agent runs, what tools are available, what it can access, and how it verifies its work are all harness-level design decisions.
-    
-4. **Memory & Search for Continual Learning**
-    
-    **Agents should remember what they've seen and access information that didn't exist when they were trained(context injection). —> see infor from other pages** 
-    
-    RAG/ AGENT.md/ MCP / Web Search / skills(?)
-    
-5. maintaining performance over long context — context/ memory management —> for more infor, see other pages 
-    
-    
-    **Compaction** addresses what to do when the context window is close to filling up.  So compaction intelligently offloads and summarizes the existing context window so the agent can continue working.
-    
-    **Tool call offloading** helps reduce the impact of large tool outputs that can noisily clutter the context window without providing useful information. The harness keeps the head and tail tokens of tool outputs above a threshold number of tokens and offloads the full output to the filesystem so the model can access it if needed.
-    
-    **progressive disclosure — Skills** address the issue of too many tools or MCP servers loaded into context on agent start which degrades performance before the agent can start working. 
-    
-6. **Long Horizon Autonomous Execution - loop engineering…** https://www.langchain.com/blog/the-art-of-loop-engineering & Loop Engineering  
-    
-    **agents to complete complex work, autonomously, correctly, over long time horizons.**
-    
-    Long-horizon work requires durable state, planning, observation, and verification to keep working across multiple context windows.
-    
-    **Planning and self-verification to stay on track.**  Planning is when a model decomposes a goal into a series of steps.  Harnesses support this via good prompting and injecting reminders how to use a plan file in the filesystem.  After completing each step, agents benefit from the checking correctness of their work via **self-verification.**  Hooks in harnesses can run a pre-defined test suite and loop back to the model on failure with the error message or models can be prompted to self-evaluate their code independently.  Verification grounds solution in tests and creates a feedback signal for self-improvement.
-    
-    *(missing diagram — not exported from Notion)*
-    
 
-some Qs need to be explored: 
+    **Harnesses ship with filesystem abstractions and tools for fs-ops.**
+
+2. **Bash + Code as a General Purpose Tool**
+
+    **We want agents to autonomously solve problems without humans needing to pre-design every tool. Harnesses ship with a bash tool so models can solve problems autonomously by writing & executing code.**
+
+3. **Sandboxes and Tools to Execute & Verify Work**
+
+    Sandboxes give agents safe operating environments to safely act, observe results, and make progress.
+
+    Tools like browsers, logs, screenshots, and test runners give agents a way to observe and analyze their work. This helps them create **self-verification loops where** they can **write application code,** run tests, inspect logs, and fix errors.
+
+    Deciding where the agent runs, what tools are available, what it can access, and how it verifies its work are all harness-level design decisions.
+
+4. **Memory & Search for Continual Learning**
+
+    **Agents should remember what they've seen and access information that didn't exist when they were trained(context injection). —> see infor from other pages**
+
+    RAG/ AGENT.md/ MCP / Web Search / skills(?)
+
+5. maintaining performance over long context — context/ memory management —> for more infor, see other pages
+
+
+    **Compaction** addresses what to do when the context window is close to filling up.  So compaction intelligently offloads and summarizes the existing context window so the agent can continue working.
+
+    **Tool call offloading** helps reduce the impact of large tool outputs that can noisily clutter the context window without providing useful information. The harness keeps the head and tail tokens of tool outputs above a threshold number of tokens and offloads the full output to the filesystem so the model can access it if needed.
+
+    **progressive disclosure — Skills** address the issue of too many tools or MCP servers loaded into context on agent start which degrades performance before the agent can start working. 
+
+6. **Long Horizon Autonomous Execution - loop engineering…** https://www.langchain.com/blog/the-art-of-loop-engineering & Loop Engineering
+
+    **agents to complete complex work, autonomously, correctly, over long time horizons.**
+
+    Long-horizon work requires durable state, planning, observation, and verification to keep working across multiple context windows.
+
+    **Planning and self-verification to stay on track.**  Planning is when a model decomposes a goal into a series of steps.  Harnesses support this via good prompting and injecting reminders how to use a plan file in the filesystem.  After completing each step, agents benefit from the checking correctness of their work via **self-verification.**  Hooks in harnesses can run a pre-defined test suite and loop back to the model on failure with the error message or models can be prompted to self-evaluate their code independently.  Verification grounds solution in tests and creates a feedback signal for self-improvement.
+
+    *(missing diagram — not exported from Notion)*
+
+
+some Qs need to be explored:
 
 - orchestrating hundreds of agents working in parallel on a shared codebase
 - agents that analyze their own traces to identify and fix harness-level failure modes
@@ -101,7 +101,7 @@ Roughly: anytime you find an agent makes a mistake, you take the time to enginee
 
 *(missing diagram — not exported from Notion)*
 
-some components to achieve harness engineering: 
+some components to achieve harness engineering:
 
 **hooks** for automated integration and deterministic control flow
 
@@ -116,7 +116,7 @@ subagent: When working on hard problems that require many, many context windows 
 1. **progressive disclosure**
     1. Content invisible to the Agent is essentially non-existent: Knowledge must reside within the codebase itself. External documentation is invisible to running Agents. `AGENTS.md` retains only about 100 lines as an index, with details broken down into various `docs` directories for on-demand referencing.
         1. no one big `AGENTS.md`⁠(opens in a new window)” approach. Treat AGENTS.md as **the table/ map of contents**.
-        
+
         ```markdown
         AGENTS.md
         ARCHITECTURE.md
@@ -148,10 +148,10 @@ subagent: When working on hard problems that require many, many context windows 
         ├── RELIABILITY.md
         └── SECURITY.md
         ```
-        
+
         b. Plans are treated as first-class artifacts. Ephemeral lightweight plans are used for small changes, while complex work is captured in execution plans⁠(opens in a new window) with progress and decision logs that are checked into the repository. Active plans, completed plans, and known technical debt are all versioned and co-located, allowing agents to operate without relying on external context.
-        
-2. **Enforcing architecture and taste:** 
+
+2. **Enforcing architecture and taste:**
     1. Constraints are encoded, not documented: Specifications written in documentation are easily overlooked. Constraints encoded into Linters, type systems, or CI rules are enforceable. Architectural layering is mechanically enforced by custom Linters, not by manual review.
     2. **By enforcing invariants, not micromanaging implementations, we let agents ship fast without undermining the foundation.** 
 3. Agents autonomously complete tasks end-to-end: From verifying the current state, reproducing bugs, implementing fixes, driving application verification, to opening PRs, handling review feedback, and autonomous merging, the entire chain requires no human intervention. Checking logs, metrics, and traces are all proactively handled by the Agent.
@@ -160,7 +160,7 @@ subagent: When working on hard problems that require many, many context windows 
 ## Salvaged from table_of_contents.md (Notion): OpenClaw harness tips (10 principles)
 
 
-tips: 
+tips:
 
 1. The core of an agent is a stable loop of perception, decision-making, action, and feedback. The control flow remains largely unchanged; new capabilities are primarily achieved through tool extensions, adjustments to the prompt structure, and externalization of state.
 2. Harness, encompassing acceptance baselines, execution boundaries, feedback signals, and rollback mechanisms, often determines system convergence more significantly than the model itself. High-quality automated verification and clear objectives are indispensable.
@@ -172,4 +172,3 @@ tips:
 8. In evaluation, Pass@k verifies capability boundaries, and Pass^k ensures deployment quality. If the evaluation system has issues, fix the evaluation system first before affecting the agents; do not adjust direction based on distortion signals.
 9. For observability, traces are a prerequisite for troubleshooting. Event streams form the foundation for single-distribution multi-consumption, with manual annotation and calibration followed by automatic LLM scoring; both layers should be used together.
 10. OpenClaw incorporates these principles into a workable system. The real key to agent stability lies not in more complex loops, but in engineering details such as message decoupling, state externalization, layered hints, memory integration, and security boundaries.
-

@@ -270,6 +270,3 @@ Pulsed electromagnetic field (PEMF) stimulation has demonstrated promising effec
 
 
 # END OF /LITERATURE.AGENT SYSTEM PROMPT
-
-
-

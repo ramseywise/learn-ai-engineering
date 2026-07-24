@@ -92,8 +92,8 @@ Despite their limitations, atomic prompts establish our baseline. They help us:
                             │
                             │               ⭐ Context
                             │                 Engineering
-                            │               
-                            │           
+                            │
+                            │
                             │       ⭐ Advanced
                             │         Prompting
                             │

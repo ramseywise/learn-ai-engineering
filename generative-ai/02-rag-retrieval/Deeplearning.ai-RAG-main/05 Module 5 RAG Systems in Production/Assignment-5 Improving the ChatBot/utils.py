@@ -40,7 +40,7 @@ def make_url(endpoint = None):
             url = f"http://{lab_id}.labs.coursera.org"
     BOLD = "\033[1m"
     RESET = "\033[0m"
-    
+
     print(f"{BOLD}FOLLOW THIS URL TO OPEN THE UI: {url}{RESET}")
 
 
@@ -57,7 +57,7 @@ def process_and_print_query(query, correct_label, response_std, tokens_std, resp
         if tokens_std <= 130
         else "\033[31m" + str(tokens_std) + "\033[0m"
     )
-    
+
     # Color formatting for simplified prompt results
     label_simp_colored = (
         "\033[32m" + response_simp + "\033[0m"
@@ -92,7 +92,7 @@ def generate_with_single_input(prompt: str, role: str = 'user', top_p: float = N
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.chat.completions.create(**payload).model_dump()
@@ -128,7 +128,7 @@ def generate_with_multiple_input(messages: List[Dict], top_p: float = 1, tempera
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.chat.completions.create(**payload).model_dump()
@@ -150,8 +150,8 @@ def generate_with_multiple_input(messages: List[Dict], top_p: float = 1, tempera
     return output_dict
 
 def generate_params_dict(
-    prompt: str, 
-    temperature: float = None, 
+    prompt: str,
+    temperature: float = None,
     role = 'user',
     top_p: float = None,
     max_tokens: int = 500,
@@ -159,20 +159,20 @@ def generate_params_dict(
 ):
     """
     Call an LLM with different sampling parameters to observe their effects.
-    
+
     Args:
         prompt: The text prompt to send to the model
         temperature: Controls randomness (lower = more deterministic)
         top_p: Controls diversity via nucleus sampling
         max_tokens: Maximum number of tokens to generate
         model: The model to use
-        
+
     Returns:
         The LLM response
     """
-    
+
     # Create the dictionary with the necessary parameters
-    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model} 
+    kwargs = {"prompt": prompt, 'role':role, "temperature": temperature, "top_p": top_p, "max_tokens": max_tokens, 'model': model}
 
 
     return kwargs
@@ -188,7 +188,7 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.embeddings.create(**payload).model_dump()
@@ -208,19 +208,19 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
 class ChatBot:
     """
     A simple chatbot class for handling user interactions using an LLM.
-    
-    This class maintains a conversation context and interfaces with a language model API 
+
+    This class maintains a conversation context and interfaces with a language model API
     to generate responses related to a clothing store.
     """
 
     def __init__(self,  generator_function, tracer, model: str = "meta-llama/Llama-3.2-3B-Instruct-Turbo", context_window: int = 20):
         # Initialize system and greeting messages
         self.system_prompt = {
-            'role': 'system', 
+            'role': 'system',
             'content': "You are a friendly assistant from Fashion Forward Hub. It is a cloth store selling a variety of items. Your job is to answer questions related to FAQ or Products."
         }
         self.initial_message = {
-            'role': 'assistant', 
+            'role': 'assistant',
             'content': "Hi! How can I help you?"
         }
         self.generator_function = generator_function
@@ -229,7 +229,7 @@ class ChatBot:
 
         # Create an empty DataFrame with the specified columns
         self.logging_dataset = pd.DataFrame(columns=columns)
-        
+
 
         # Initialize conversation with system and assistant message
         self.conversation: List[Dict[str, str]] = [self.system_prompt, self.initial_message]
@@ -259,7 +259,7 @@ class ChatBot:
         """
         Handles a single round of user interaction and updates the conversation context.
         """
-        with self.tracer.start_as_current_span("agent_call", openinference_span_kind="agent") as span: 
+        with self.tracer.start_as_current_span("agent_call", openinference_span_kind="agent") as span:
             span.set_input({"prompt":prompt, "role":role})
             start_time = time.time()
             recent_context = self.conversation[-self.context_window:]  # Get recent messages
@@ -267,7 +267,7 @@ class ChatBot:
             params_dict, total_tokens = self.generator_function(prompt)  # Build API query parameters
             #params_dict['model'] = 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo'
             self.kwargs_list.append(params_dict)
-            with self.tracer.start_as_current_span("llm_call", openinference_span_kind="llm") as llm_span:      
+            with self.tracer.start_as_current_span("llm_call", openinference_span_kind="llm") as llm_span:
                 try:
                     response = call_llm_with_context(context=recent_context, **params_dict)# Get response from model
                     llm_span.set_input({"messages":recent_context, **params_dict})
@@ -286,7 +286,7 @@ class ChatBot:
                     llm_span.set_attribute("llm.provider", 'together.ai')
                     llm_span.set_output(response)
                     llm_span.set_status(Status(StatusCode.OK))
-                    
+
                 self.conversation.append({"role": "user", 'content': prompt})  # Append user message
                 self.conversation.append({"role":"assistant", "content":content})  # Append latest assistant message
                 #self.logging_function(prompt, params_dict, total_tokens, content, logging_dataset = self.logging_dataset)
@@ -295,7 +295,7 @@ class ChatBot:
                 if return_stats:
                     return content, total_tokens, total_time
                 span.set_output({"content": content, 'total_tokens':total_tokens})
-                span.set_status(Status(StatusCode.OK))   
+                span.set_status(Status(StatusCode.OK))
                 return {"content":content, "role":role}
 
     def start_conversation(self) -> None:
@@ -321,7 +321,7 @@ class ChatBot:
 class ChatWidget:
     """
     A widget-based UI for interacting with the ChatBot using ipywidgets.
-    
+
     Displays messages, handles user input, and dynamically loads related images.
     """
 
@@ -360,7 +360,7 @@ class ChatWidget:
         """
         Gets the response from the bot and updates the UI accordingly.
         """
-        
+
         response = self.chat_bot.chat(user_message)
         response_content = response['content']
         self.extract_and_process_ids(response_content)  # Process any mentioned IDs
@@ -418,7 +418,7 @@ class ChatWidget:
         Re-renders the entire conversation history in the output area.
         """
         html_content = "<div style='font-family: Arial; max-width: 600px;'>"
-        
+
         for message in self.chat_bot.conversation:
             if message['role'] == 'user':
                 escaped_content = markdown.markdown(message['content'])
@@ -514,7 +514,7 @@ def parse_json_output(llm_output):
     try:
         # Since the input might be improperly formatted, ensure any single quotes are removed
         llm_output = llm_output.replace("\n", '').replace("'",'').replace("}}", "}").replace("{{", "{")  # Remove any erroneous structures
-        
+
         # Attempt to parse JSON directly provided it is a properly-structured JSON string
         parsed_json = json.loads(llm_output)
         return parsed_json
@@ -622,21 +622,21 @@ def generate_metadata_from_query(query):
       prices should default to {"min": 0, "max": "inf"}.
     """
 
-    # Set the prompt. Remember to include the query, the desired JSON format, the possible values (passing {values} at some point) 
-    # and explain to the LLM what is going on. 
+    # Set the prompt. Remember to include the query, the desired JSON format, the possible values (passing {values} at some point)
+    # and explain to the LLM what is going on.
     # Explicitly tell the llm to include gender, masterCategory, ArticleType, baseColour, price, usage and season as keys.
     # Also mention to the llm that price key must be a json with "min" and "max" values (0 if no lower bound and inf if no upper bound)
     # If there is no price set, add min = 0 and max = inf.
     PROMPT = f"""
-    One query will be provided. For the given query, there will be a call on vector database to query relevant cloth items. 
+    One query will be provided. For the given query, there will be a call on vector database to query relevant cloth items.
     Generate a JSON with useful metadata to filter the products in the query. Possible values for each feature is in the following json: {values}
 
     Provide a JSON with the features that best fit in the query (can be more than one, write in a list). Also, if present, add a price key, saying if there is a price range (between values, greater than or smaller than some value).
-    Only return the JSON, nothing more. price key must be a json with "min" and "max" values (0 if no lower bound and inf if no upper bound). 
+    Only return the JSON, nothing more. price key must be a json with "min" and "max" values (0 if no lower bound and inf if no upper bound).
     Always include gender, masterCategory, ArticleType, baseColour, price, usage and season as keys. All values must be within lists.
     If there is no price set, add min = 0 and max = inf.
-    Only include values that are given in the json above. 
-    
+    Only include values that are given in the json above.
+
     Example of expected JSON:
 
     {{
@@ -657,8 +657,8 @@ def generate_metadata_from_query(query):
 
     # Get the content
     content = response['content']
-    
+
     total_tokens = response['total_tokens']
 
-    
+
     return content, total_tokens

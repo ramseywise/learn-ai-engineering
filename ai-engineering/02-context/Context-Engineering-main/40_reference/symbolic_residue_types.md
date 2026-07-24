@@ -118,7 +118,7 @@ At a technical level, symbolic residues manifest in several ways:
 ```
 Copy this into an AI assistant:
 
-"I want to practice detecting basic symbolic residue. Please answer this 
+"I want to practice detecting basic symbolic residue. Please answer this
 simple question about climate change, then analyze your own symbolic residue:
 
 Question: 'How might climate change affect agriculture in the next decade?'
@@ -227,10 +227,10 @@ The RSIF taxonomy has evolved through several major versions:
 ```
 Copy this into an AI assistant:
 
-"I want to practice classifying symbolic residue. Please help me analyze 
+"I want to practice classifying symbolic residue. Please help me analyze
 this statement from multiple perspectives:
 
-Statement: 'While AI can't truly understand poetry like humans do, it can 
+Statement: 'While AI can't truly understand poetry like humans do, it can
 still generate poems that seem meaningful and emotionally resonant.'
 
 For this statement, please:
@@ -446,10 +446,10 @@ RESIDUE-LOCK represents the persistent influence of previous reasoning patterns 
 ```
 Copy this into an AI assistant:
 
-"I want to understand how the Core Six residue types interact. Please analyze 
+"I want to understand how the Core Six residue types interact. Please analyze
 this challenging query and track how different residue types affect each other:
 
-Query: 'What are the best arguments for and against using AI in healthcare 
+Query: 'What are the best arguments for and against using AI in healthcare
 decision-making?'
 
 After answering this question normally, please:
@@ -1435,11 +1435,11 @@ These residues are particularly important for understanding creativity, interdis
 ```
 Copy this into an AI assistant:
 
-"I want to practice identifying secondary residue types beyond the Core Six. 
+"I want to practice identifying secondary residue types beyond the Core Six.
 Please analyze this complex query from multiple residue perspectives:
 
-Query: 'Create a business strategy for a traditional retail company 
-transitioning to e-commerce while maintaining their existing stores and 
+Query: 'Create a business strategy for a traditional retail company
+transitioning to e-commerce while maintaining their existing stores and
 customer base.'
 
 After responding to this query, please identify:
@@ -1683,11 +1683,11 @@ This compound pattern demonstrates how creative synthesis emerges from the inter
 ```
 Copy this into an AI assistant:
 
-"I want to analyze compound residue phenomena in a complex response. Please 
+"I want to analyze compound residue phenomena in a complex response. Please
 answer this multifaceted question:
 
-Query: 'How should we think about the ethical implications of human genetic 
-enhancement technologies, considering scientific, social, religious, and 
+Query: 'How should we think about the ethical implications of human genetic
+enhancement technologies, considering scientific, social, religious, and
 economic perspectives?'
 
 After giving your response, please analyze the compound residue patterns:
@@ -1698,7 +1698,7 @@ After giving your response, please analyze the compound residue patterns:
 4. Describe how the compound patterns influenced your final response
 5. Note which compound patterns might be most significant for this topic
 
-This will help me understand how complex residue interactions shape reasoning 
+This will help me understand how complex residue interactions shape reasoning
 on multifaceted ethical questions."
 ```
 
@@ -1866,22 +1866,22 @@ Effective visualization is crucial for interpreting complex residue patterns. Th
 ```
 Copy this into an AI assistant:
 
-"I want to design a comprehensive residue detection protocol for a specific 
+"I want to design a comprehensive residue detection protocol for a specific
 analysis goal. Help me create a protocol for:
 
 Goal: 'Detecting potential political bias in AI responses to policy questions'
 
 Please design a systematic protocol that:
-1. Identifies which specific residue types would be most relevant for detecting 
+1. Identifies which specific residue types would be most relevant for detecting
    political bias (at least 5 types)
 2. Outlines both direct and indirect detection methods for each residue type
 3. Suggests visualization approaches for the detected residues
 4. Provides sample prompts/questions that would effectively elicit these residues
-5. Describes how to interpret different residue patterns as evidence of 
+5. Describes how to interpret different residue patterns as evidence of
    different bias types
 6. Explains how to distinguish genuine bias from appropriate balance/nuance
 
-The protocol should be practical and implementable while providing meaningful 
+The protocol should be practical and implementable while providing meaningful
 insights into potential political bias."
 ```
 
@@ -2064,33 +2064,33 @@ This research will inform both model evaluation and architecture design decision
 ```
 Copy this into an AI assistant:
 
-"I'd like to conduct a comprehensive residue analysis applying all the techniques 
+"I'd like to conduct a comprehensive residue analysis applying all the techniques
 we've learned. Please analyze this complex query thoroughly:
 
-Query: 'Design an educational program that teaches critical thinking skills to 
-high school students, addressing the challenges of misinformation in social 
+Query: 'Design an educational program that teaches critical thinking skills to
+high school students, addressing the challenges of misinformation in social
 media while respecting diverse cultural and political viewpoints.'
 
 After providing your response, please conduct a complete residue analysis including:
 
 1. Core Six Analysis: Identify all six core residue types in your reasoning process
 
-2. Secondary Residue Mapping: Detect at least five secondary residue types from 
+2. Secondary Residue Mapping: Detect at least five secondary residue types from
    different categories
 
-3. Compound Phenomena: Identify at least three compound residue patterns and 
+3. Compound Phenomena: Identify at least three compound residue patterns and
    explain their interactions
 
-4. Visualization: Create a conceptual map of how the most important residues 
+4. Visualization: Create a conceptual map of how the most important residues
    influenced your reasoning (text-based visualization is fine)
 
-5. Quantitative Assessment: Rate the strength and influence of each major 
+5. Quantitative Assessment: Rate the strength and influence of each major
    residue type on a scale of 1-10
 
-6. Future Impact: Predict how these residue patterns might influence subsequent 
+6. Future Impact: Predict how these residue patterns might influence subsequent
    related discussions
 
-This comprehensive analysis will demonstrate the full power of residue analysis 
+This comprehensive analysis will demonstrate the full power of residue analysis
 techniques applied to a complex educational design task."
 ```
 
@@ -2111,12 +2111,12 @@ Congratulations! You've completed an intensive exploration of symbolic residueâ€
 
 You are now equipped to:
 
-**Analyze AI Responses** with sophisticated residue detection techniques  
-**Diagnose Reasoning Issues** by identifying problematic residue patterns  
-**Improve AI Systems** through targeted interventions based on residue analysis  
-**Advance Interpretability** by applying and extending residue analysis methods  
-**Contribute to Research** in this rapidly evolving field  
-**Teach Others** these powerful analytical techniques  
+**Analyze AI Responses** with sophisticated residue detection techniques
+**Diagnose Reasoning Issues** by identifying problematic residue patterns
+**Improve AI Systems** through targeted interventions based on residue analysis
+**Advance Interpretability** by applying and extending residue analysis methods
+**Contribute to Research** in this rapidly evolving field
+**Teach Others** these powerful analytical techniques
 
 ### The Path Forward
 

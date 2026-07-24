@@ -1,6 +1,6 @@
 """Example: Adding Weave to your existing RAG evaluators.
 
-This shows how to integrate Weave tracing and evaluation with your 
+This shows how to integrate Weave tracing and evaluation with your
 existing MCQ-based evaluation pipeline.
 """
 

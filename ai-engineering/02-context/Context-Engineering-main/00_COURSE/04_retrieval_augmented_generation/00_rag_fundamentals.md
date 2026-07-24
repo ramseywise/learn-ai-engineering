@@ -16,7 +16,7 @@ C_RAG = A(c_query, c_retrieved, c_instructions, c_memory)
 
 Where:
 - `c_query`: The user's information request
-- `c_retrieved`: External knowledge obtained through retrieval processes  
+- `c_retrieved`: External knowledge obtained through retrieval processes
 - `c_instructions`: System prompts and formatting templates
 - `c_memory`: Persistent context from previous interactions
 
@@ -278,7 +278,7 @@ Iteration 1:
 ├── Gap Analysis: "Need data on job creation, cost comparisons"
 └── Refined Query: "Job creation in renewable energy sector"
 
-Iteration 2: 
+Iteration 2:
 ├── Retrieve: Employment statistics, industry reports
 ├── Generate: Enhanced response with employment data
 ├── Gap Analysis: "Missing regional variations, policy impacts"
@@ -370,40 +370,40 @@ class BasicRAGPipeline:
     """
     Foundation RAG implementation demonstrating core concepts
     """
-    
+
     def __init__(self, knowledge_base, retriever, generator):
         self.kb = knowledge_base
         self.retriever = retriever
         self.generator = generator
-        
+
     def query(self, user_query, k=5):
         # Step 1: Retrieve relevant knowledge
         retrieved_docs = self.retriever.retrieve(user_query, top_k=k)
-        
+
         # Step 2: Assemble context
         context = self.assemble_context(user_query, retrieved_docs)
-        
+
         # Step 3: Generate response
         response = self.generator.generate(context)
-        
+
         return {
             'response': response,
             'sources': retrieved_docs,
             'context': context
         }
-    
+
     def assemble_context(self, query, docs):
         """Context assembly with source attribution"""
         context_parts = [
             f"Query: {query}",
             "Relevant Information:",
         ]
-        
+
         for i, doc in enumerate(docs):
             context_parts.append(f"Source {i+1}: {doc.content}")
-            
+
         context_parts.append("Generate a comprehensive response using the above information.")
-        
+
         return "\n\n".join(context_parts)
 ```
 
@@ -414,32 +414,32 @@ class ContextEngineeredRAG:
     """
     RAG system integrated with advanced context engineering principles
     """
-    
+
     def __init__(self, components):
         self.retriever = components['retriever']
-        self.processor = components['processor'] 
+        self.processor = components['processor']
         self.memory = components['memory']
         self.optimizer = components['optimizer']
-        
+
     def process_query(self, query, session_context=None):
         # Context Engineering Pipeline
-        
+
         # 1. Query Understanding & Enhancement
         enhanced_query = self.enhance_query(query, session_context)
-        
+
         # 2. Multi-stage Retrieval
         retrieved_content = self.multi_stage_retrieval(enhanced_query)
-        
+
         # 3. Context Processing & Optimization
         processed_context = self.processor.process(
-            retrieved_content, 
+            retrieved_content,
             query_context=enhanced_query,
             constraints=self.get_constraints()
         )
-        
+
         # 4. Memory Integration
         contextual_memory = self.memory.get_relevant_context(query)
-        
+
         # 5. Dynamic Context Assembly
         final_context = self.optimizer.assemble_optimal_context(
             query=enhanced_query,
@@ -447,32 +447,32 @@ class ContextEngineeredRAG:
             memory=contextual_memory,
             token_budget=self.get_token_budget()
         )
-        
+
         # 6. Generation with Context Monitoring
         response = self.generate_with_monitoring(final_context)
-        
+
         # 7. Memory Update
         self.memory.update(query, response, retrieved_content)
-        
+
         return response
-        
+
     def multi_stage_retrieval(self, query):
         """Implements iterative, adaptive retrieval"""
         stages = [
             ('broad_search', {'k': 20, 'threshold': 0.7}),
-            ('focused_search', {'k': 10, 'threshold': 0.8}), 
+            ('focused_search', {'k': 10, 'threshold': 0.8}),
             ('precise_search', {'k': 5, 'threshold': 0.9})
         ]
-        
+
         all_retrieved = []
         for stage_name, params in stages:
             stage_results = self.retriever.retrieve(query, **params)
             all_retrieved.extend(stage_results)
-            
+
             # Adaptive stopping based on quality
             if self.assess_retrieval_quality(stage_results) > 0.9:
                 break
-                
+
         return self.deduplicate_and_rank(all_retrieved)
 ```
 
@@ -483,21 +483,21 @@ class ContextEngineeredRAG:
 ```
 /rag.knowledge.integration{
     intent="Systematically retrieve, process, and integrate external knowledge for query resolution",
-    
+
     input={
         query="<user_information_request>",
         domain_context="<domain_specific_information>",
         session_memory="<previous_conversation_context>",
         quality_requirements="<accuracy_and_completeness_thresholds>"
     },
-    
+
     process=[
         /query.analysis{
             action="Parse query intent and information requirements",
             extract=["key_concepts", "information_types", "specificity_level"],
             output="enhanced_query_specification"
         },
-        
+
         /knowledge.retrieval{
             strategy="multi_modal_search",
             methods=[
@@ -508,14 +508,14 @@ class ContextEngineeredRAG:
             fusion="reciprocal_rank_fusion",
             output="ranked_knowledge_candidates"
         },
-        
+
         /context.assembly{
             optimization="information_density_maximization",
             constraints=["token_budget", "source_diversity", "temporal_relevance"],
             assembly_pattern="hierarchical_information_structure",
             output="optimized_knowledge_context"
         },
-        
+
         /generation.synthesis{
             approach="knowledge_grounded_generation",
             verification="source_attribution_required",
@@ -523,7 +523,7 @@ class ContextEngineeredRAG:
             output="synthesized_response_with_citations"
         }
     ],
-    
+
     output={
         response="Knowledge-augmented answer to user query",
         source_attribution="Detailed citation of information sources",

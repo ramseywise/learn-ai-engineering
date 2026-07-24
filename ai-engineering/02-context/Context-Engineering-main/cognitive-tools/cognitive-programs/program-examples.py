@@ -3,7 +3,7 @@ Cognitive Programs Examples - Interactive Demonstrations
 
 Comprehensive examples showcasing the integration of all six research streams:
 - IBM Zurich: Cognitive Tools Architecture
-- Princeton ICML: Emergent Symbolic Mechanisms  
+- Princeton ICML: Emergent Symbolic Mechanisms
 - Indiana University: Quantum Semantic Framework
 - Singapore-MIT: Memory-Reasoning Synergy
 - Shanghai AI Lab: LLM Attractor Dynamics
@@ -12,7 +12,7 @@ Comprehensive examples showcasing the integration of all six research streams:
 Usage in Jupyter/Colab:
     from program_examples import *
     run_all_examples()
-    
+
 Or run specific examples:
     run_cognitive_tools_demo()
     run_progressive_complexity_demo()
@@ -46,7 +46,7 @@ class ExampleConfig:
     MEASURE_PERFORMANCE = True
     INTERACTIVE_MODE = True
     SAVE_RESULTS = False
-    
+
     # Colors for output formatting
     COLORS = {
         'header': '\033[95m',
@@ -84,13 +84,13 @@ def simulate_llm_execution(prompt: str, complexity_penalty: float = 0.1) -> Dict
     # Simulate execution time based on prompt complexity
     token_count = len(prompt.split())
     execution_time = max(0.5, token_count * 0.001 + complexity_penalty)
-    
+
     # Simulate quality score based on prompt structure
     quality_indicators = [
         "/", "{", "process=", "intent=", "action=", "output="
     ]
     quality_score = min(1.0, sum(1 for indicator in quality_indicators if indicator in prompt) / len(quality_indicators))
-    
+
     return {
         "execution_time": execution_time,
         "token_count": token_count,
@@ -106,10 +106,10 @@ def simulate_llm_execution(prompt: str, complexity_penalty: float = 0.1) -> Dict
 def run_cognitive_tools_demo():
     """Demonstrate IBM's cognitive tools framework"""
     print_header("IBM Zurich Cognitive Tools Framework", "blue")
-    
+
     # Example 1.1: Basic Problem Analysis
     problem = "A company's revenue decreased by 15% this quarter while costs increased by 8%. What strategic actions should they consider?"
-    
+
     cognitive_tool_output = """
 /cognitive.analyze{
     intent="Apply structured cognitive tool for analyze",
@@ -134,16 +134,16 @@ def run_cognitive_tools_demo():
 
 Execute this cognitive tool systematically, showing each step clearly.
     """
-    
+
     print_example(
         "1.1 Cognitive Tool: Business Problem Analysis",
         cognitive_tool_output,
         "Demonstrates structured problem decomposition using IBM's cognitive tools approach."
     )
-    
+
     # Example 1.2: Mathematical Problem Solving
     math_problem = "Solve the quadratic equation: 2x² - 7x + 3 = 0"
-    
+
     math_cognitive_tool = """
 /cognitive.solve{
     intent="Apply structured cognitive tool for solve",
@@ -166,13 +166,13 @@ Execute this cognitive tool systematically, showing each step clearly.
     }
 }
     """
-    
+
     print_example(
         "1.2 Cognitive Tool: Mathematical Problem Solving",
         math_cognitive_tool,
         "Shows how cognitive tools provide structured scaffolding for mathematical reasoning."
     )
-    
+
     # Example 1.3: Solution Validation Tool
     validation_output = """
 /cognitive.validate{
@@ -195,7 +195,7 @@ Execute this cognitive tool systematically, showing each step clearly.
     }
 }
     """
-    
+
     print_example(
         "1.3 Solution Validation Tool",
         validation_output,
@@ -215,15 +215,15 @@ Execute this cognitive tool systematically, showing each step clearly.
 def run_symbolic_processing_demo():
     """Demonstrate Princeton's three-stage symbolic processing"""
     print_header("Princeton Three-Stage Symbolic Processing", "green")
-    
+
     # Example 2.1: Abstract Reasoning Problem
     logic_problem = "If all roses are flowers, and some flowers are red, can we conclude that some roses are red?"
-    
+
     symbolic_processing_output = """
 /symbolic.three_stage{
     intent="Apply emergent symbolic mechanisms for abstract reasoning",
     problem="If all roses are flowers, and some flowers are red, can we conclude that some roses are red?",
-    
+
     stage_1_abstraction={
         purpose="Convert input tokens to abstract variables",
         mechanism="Symbol abstraction heads",
@@ -236,10 +236,10 @@ def run_symbolic_processing_demo():
         ],
         output="R ⊆ F, ∃x(F(x) ∧ Red(x)), Query: ∃x(R(x) ∧ Red(x))?"
     },
-    
+
     stage_2_induction={
         purpose="Perform sequence induction over abstract variables",
-        mechanism="Symbolic induction heads", 
+        mechanism="Symbolic induction heads",
         method="logical inference",
         process=[
             /pattern_recognition{action="Identify logical patterns: Universal and existential quantification"},
@@ -249,7 +249,7 @@ def run_symbolic_processing_demo():
         ],
         output="Conclusion: Cannot be determined from given premises"
     },
-    
+
     stage_3_retrieval={
         purpose="Generate concrete solutions from abstract reasoning",
         mechanism="Retrieval heads",
@@ -264,16 +264,16 @@ def run_symbolic_processing_demo():
     }
 }
     """
-    
+
     print_example(
         "2.1 Symbolic Processing: Logical Reasoning",
         symbolic_processing_output,
         "Demonstrates three-stage symbolic processing for abstract logical reasoning."
     )
-    
+
     # Example 2.2: Pattern Recognition in Sequences
     sequence_problem = "What comes next in the sequence: 2, 6, 12, 20, 30, ?"
-    
+
     sequence_symbolic_output = """
 /symbolic.abstract{
     intent="Extract symbolic representations at high level",
@@ -289,9 +289,9 @@ def run_symbolic_processing_demo():
     output="Symbolic pattern: aₙ = n(n+1), therefore a₆ = 6×7 = 42"
 }
     """
-    
+
     print_example(
-        "2.2 Symbolic Abstraction: Pattern Recognition", 
+        "2.2 Symbolic Abstraction: Pattern Recognition",
         sequence_symbolic_output,
         "Shows symbolic abstraction extracting mathematical patterns from sequences."
     )
@@ -309,20 +309,20 @@ def run_symbolic_processing_demo():
 def run_quantum_semantic_demo():
     """Demonstrate Indiana University's quantum semantic framework"""
     print_header("Quantum Semantic Framework - Observer-Dependent Interpretation", "cyan")
-    
+
     # Example 3.1: Multiple Perspective Analysis
     ambiguous_statement = "The bank was steep and muddy."
-    
+
     quantum_semantic_output = """
 /quantum.semantic_generation{
     intent="Generate superposition of potential interpretations",
     expression="The bank was steep and muddy.",
     observer_contexts=[financial_analyst, geologist, river_guide, linguist],
     superposition_enabled=True,
-    
+
     superposition_stage={
         identify_meanings="Map all potential interpretations",
-        maintain_ambiguity="Preserve multiple possibilities simultaneously", 
+        maintain_ambiguity="Preserve multiple possibilities simultaneously",
         context_sensitivity="Track context-dependent variations",
         process=[
             /enumerate_interpretations{action="Financial institution, riverbank, hillside, embankment"},
@@ -331,7 +331,7 @@ def run_quantum_semantic_demo():
             /preserve_superposition{action="Maintain all interpretations until observation"}
         ]
     },
-    
+
     measurement_stage={
         observer_contexts=[financial_analyst, geologist, river_guide, linguist],
         process=[
@@ -341,7 +341,7 @@ def run_quantum_semantic_demo():
             /confidence_assessment{action="High confidence for riverbank interpretation"}
         ]
     },
-    
+
     adaptation_stage={
         process=[
             /context_refinement{action="Riverbank interpretation most coherent with descriptors"},
@@ -354,16 +354,16 @@ def run_quantum_semantic_demo():
 
 For each observer context, show how meaning actualizes differently.
     """
-    
+
     print_example(
         "3.1 Quantum Semantics: Multiple Observer Perspectives",
         quantum_semantic_output,
         "Demonstrates how meaning actualizes differently based on observer context."
     )
-    
+
     # Example 3.2: Observer-Dependent Policy Interpretation
     policy_statement = "The new regulation will improve market efficiency."
-    
+
     observer_interpretation_output = """
 /quantum.interpret{
     intent="Apply observer-dependent semantic interpretation",
@@ -375,7 +375,7 @@ For each observer context, show how meaning actualizes differently.
         "timeframes": ["short_term", "long_term"],
         "risk_tolerance": ["high", "medium", "low"]
     },
-    
+
     process=[
         /establish_observer_frame{
             action="Define observer's interpretive framework",
@@ -399,7 +399,7 @@ For each observer context, show how meaning actualizes differently.
             measure="Semantic uncertainty varies by stakeholder position"
         }
     ],
-    
+
     output={
         actualized_meaning="Investor: Faster transactions; Consumer: Lower costs; Regulator: Better oversight; Competitor: Market disruption",
         uncertainty_map="High uncertainty around implementation timeline and effectiveness",
@@ -408,7 +408,7 @@ For each observer context, show how meaning actualizes differently.
     }
 }
     """
-    
+
     print_example(
         "3.2 Observer-Dependent Policy Analysis",
         observer_interpretation_output,
@@ -428,23 +428,23 @@ For each observer context, show how meaning actualizes differently.
 def run_memory_reasoning_demo():
     """Demonstrate Singapore-MIT's MEM1 framework"""
     print_header("Singapore-MIT MEM1 Memory-Reasoning Synergy", "warning")
-    
+
     # Example 4.1: Long-Horizon Task Management
     task_sequence = [
         "Analyze quarterly financial data",
-        "Identify cost reduction opportunities", 
+        "Identify cost reduction opportunities",
         "Develop implementation timeline",
         "Assess risk factors",
         "Create stakeholder communication plan"
     ]
-    
+
     mem1_consolidation_output = """
 /mem1.consolidate{
     intent="Apply reasoning-driven memory consolidation for efficiency",
     interaction_history=["Financial analysis completed; Revenue down 12%, costs up 8%; Key finding: operational inefficiencies in supply chain and personnel; Identified 15% potential cost savings in logistics; Risk assessment shows medium implementation complexity"],
     reasoning_context="Strategic business planning with cost optimization focus",
     efficiency_target=0.8,
-    
+
     analysis_stage={
         interaction_patterns="Analyze memory-reasoning interactions",
         efficiency_metrics="Measure current memory utilization",
@@ -456,7 +456,7 @@ def run_memory_reasoning_demo():
             /map_dependencies{action="Financial data → Cost analysis → Risk → Implementation"}
         ]
     },
-    
+
     consolidation_stage={
         selective_compression="Compress detailed calculations, preserve key insights",
         insight_extraction="Core insight: 15% cost reduction via supply chain optimization",
@@ -468,7 +468,7 @@ def run_memory_reasoning_demo():
             /maintain_critical{action="Preserve: Financial baselines, risk thresholds, timelines"}
         ]
     },
-    
+
     optimization_stage={
         memory_pruning="Remove redundant calculation details",
         reasoning_acceleration="Optimize for strategic decision speed",
@@ -484,13 +484,13 @@ def run_memory_reasoning_demo():
 
 Target: 80% efficiency while maintaining reasoning quality.
     """
-    
+
     print_example(
         "4.1 MEM1 Consolidation: Business Strategy Planning",
         mem1_consolidation_output,
         "Demonstrates memory consolidation for efficient long-horizon business reasoning."
     )
-    
+
     # Example 4.2: Research Paper Analysis Sequence
     research_task_sequence = [
         "Review 50 papers on quantum computing applications",
@@ -498,14 +498,14 @@ Target: 80% efficiency while maintaining reasoning quality.
         "Synthesize findings across papers",
         "Generate novel research directions"
     ]
-    
+
     long_horizon_output = """
 /mem1.long_horizon_reasoning{
     intent="Execute extended reasoning with memory-efficiency optimization",
     task_sequence=["Review 50 papers on quantum computing applications; Identify key themes and gaps; Synthesize findings across papers; Generate novel research directions"],
     memory_budget=1000,
     consolidation_frequency=5,
-    
+
     process=[
         /initialize_memory{action="Set up structured memory for: Authors, Methods, Findings, Gaps"},
         /execute_task_sequence{
@@ -519,7 +519,7 @@ Target: 80% efficiency while maintaining reasoning quality.
         /finalize_insights{action="Extract meta-patterns across quantum computing research"},
         /optimize_memory{action="Preserve critical research insights and methodology patterns"}
     ],
-    
+
     memory_management={
         consolidation_trigger="Every 5 papers or when budget 90% full",
         retention_policy="Keep novel methods, significant findings, research gaps",
@@ -528,7 +528,7 @@ Target: 80% efficiency while maintaining reasoning quality.
     }
 }
     """
-    
+
     print_example(
         "4.2 Long-Horizon Research Analysis",
         long_horizon_output,
@@ -548,7 +548,7 @@ Target: 80% efficiency while maintaining reasoning quality.
 def run_field_dynamics_demo():
     """Demonstrate Shanghai AI Lab's field dynamics framework"""
     print_header("Shanghai AI Lab Field Dynamics & Attractors", "fail")
-    
+
     # Example 5.1: Cognitive Field Generation for Creative Problem Solving
     field_spec = {
         "type": "creative_reasoning",
@@ -556,20 +556,20 @@ def run_field_dynamics_demo():
         "energy_function": "novelty_potential",
         "constraints": "feasibility_boundaries"
     }
-    
+
     boundary_conditions = {
         "type": "semi_permeable",
         "creativity_threshold": 0.7,
         "feasibility_threshold": 0.6,
         "coherence_requirement": 0.8
     }
-    
+
     field_generation_output = """
 /field.generate{
     intent="Create cognitive field with specified dynamics",
     field_specification={
         "type": "creative_reasoning",
-        "dimensions": "ideational_space", 
+        "dimensions": "ideational_space",
         "energy_function": "novelty_potential",
         "constraints": "feasibility_boundaries"
     },
@@ -580,7 +580,7 @@ def run_field_dynamics_demo():
         "coherence_requirement": 0.8
     },
     objectives=["Generate novel sustainable transportation solutions", "Optimize for creativity and feasibility", "Maintain coherent problem-solving trajectory"],
-    
+
     process=[
         /design_topology{
             action="Design field topology and attractor basins",
@@ -607,7 +607,7 @@ def run_field_dynamics_demo():
             stability_analysis="Ensure robust convergence to viable solutions"
         }
     ],
-    
+
     field_properties={
         resonance_patterns="Synchronization between sustainability and innovation dimensions",
         symbolic_residue="Persistent patterns: efficiency, environmental impact, user experience",
@@ -616,28 +616,28 @@ def run_field_dynamics_demo():
     }
 }
     """
-    
+
     print_example(
         "5.1 Field Generation: Creative Problem Solving",
         field_generation_output,
         "Demonstrates cognitive field creation for structured creative reasoning."
     )
-    
+
     # Example 5.2: Attractor Detection in Learning Behavior
     learning_behaviors = [
         "Initial confusion and random exploration",
         "Pattern recognition attempts",
-        "Hypothesis formation and testing", 
+        "Hypothesis formation and testing",
         "Skill refinement and optimization",
         "Mastery and automatic execution"
     ]
-    
+
     attractor_detection_output = """
 /field.detect_attractors{
     intent="Identify stable behavioral patterns and attractor basins",
     behavior_sequence=["Initial confusion and random exploration; Pattern recognition attempts; Hypothesis formation and testing; Skill refinement and optimization; Mastery and automatic execution"],
     detection_threshold=0.7,
-    
+
     process=[
         /analyze_trajectories{
             action="Map cognitive behavioral trajectories",
@@ -664,7 +664,7 @@ def run_field_dynamics_demo():
             interaction_effects="Strong mastery attractor inhibits regression to confusion states"
         }
     ],
-    
+
     output={
         attractor_map="Primary attractor: Mastery state with automated skill execution",
         basin_geometry="Funnel-shaped: Multiple learning paths converge to mastery",
@@ -673,7 +673,7 @@ def run_field_dynamics_demo():
     }
 }
     """
-    
+
     print_example(
         "5.2 Attractor Detection: Learning Dynamics",
         attractor_detection_output,
@@ -693,17 +693,17 @@ def run_field_dynamics_demo():
 def run_progressive_complexity_demo():
     """Demonstrate Context Engineering's progressive complexity framework"""
     print_header("Progressive Complexity Framework - Atoms to Neural Fields", "bold")
-    
+
     # Example 6.1: Complexity Orchestration for Problem Solving
     complex_problem = "Design a sustainable urban transportation system that reduces carbon emissions by 30% while improving commute times and accessibility for all residents."
-    
+
     complexity_orchestration_output = """
 /progressive.orchestrate{
     intent="Scale cognitive complexity systematically for optimal task execution",
     task="Design a sustainable urban transportation system that reduces carbon emissions by 30% while improving commute times and accessibility for all residents.",
     target_complexity="neural_field",
     progression_path="atom → molecule → cell → organ → neural_system → neural_field",
-    
+
     complexity_scaling=[
         /atom_level={
             description="Single instructions and basic prompts",
@@ -742,7 +742,7 @@ def run_progressive_complexity_demo():
             action="Enable field-based emergence of innovative sustainable transport architectures"
         }
     ],
-    
+
     progression_strategy={
         build_incrementally="Each level builds on previous capabilities and insights",
         validate_transitions="Verify design feasibility and sustainability before complexity increase",
@@ -754,13 +754,13 @@ def run_progressive_complexity_demo():
 Target complexity: neural_field
 Follow progression path, validating each level before advancing.
     """
-    
+
     print_example(
         "6.1 Complexity Orchestration: Urban Transportation Design",
         complexity_orchestration_output,
         "Demonstrates systematic complexity scaling for sophisticated problem solving."
     )
-    
+
     # Example 6.2: Adaptive Complexity Management
     adaptive_complexity_output = """
 /progressive.adaptive_manage{
@@ -769,7 +769,7 @@ Follow progression path, validating each level before advancing.
     target_performance=0.85,
     current_complexity="neural_system",
     performance_threshold=0.85,
-    
+
     process=[
         /assess_performance_gap{
             action="Calculate performance deficit",
@@ -797,7 +797,7 @@ Follow progression path, validating each level before advancing.
             further_adjustments="Prepared to fine-tune field parameters for optimal performance"
         }
     ],
-    
+
     adaptation_rules={
         performance_boost_needed="Increase to neural_field complexity level",
         efficiency_optimization_needed="N/A - performance priority",
@@ -806,7 +806,7 @@ Follow progression path, validating each level before advancing.
     }
 }
     """
-    
+
     print_example(
         "6.2 Adaptive Complexity Management",
         adaptive_complexity_output,
@@ -826,10 +826,10 @@ Follow progression path, validating each level before advancing.
 def run_unified_architecture_demo():
     """Demonstrate the unified integration of all research streams"""
     print_header("Unified Cognitive Architecture - All Research Streams", "header")
-    
+
     # Example 7.1: Master Integration for Complex Reasoning
     complex_research_question = "How might artificial intelligence transform scientific research methodology in the next decade?"
-    
+
     context = {
         'problem': complex_research_question,
         'domain': 'science_and_technology',
@@ -838,14 +838,14 @@ def run_unified_architecture_demo():
         'memory_state': {'research_background': 'extensive', 'domain_expertise': 'high'},
         'field_configuration': {'type': 'research_innovation', 'creativity_level': 'high'}
     }
-    
+
     unified_integration_output = """
 /unified.integrated_reasoning{
     intent="Execute comprehensive reasoning using all research streams",
     problem="How might artificial intelligence transform scientific research methodology in the next decade?",
     context={'problem': '...', 'domain': 'science_and_technology', 'complexity': 'neural_field', 'observer_context': {'perspective': 'researcher'}, 'memory_state': {'research_background': 'extensive'}, 'field_configuration': {'type': 'research_innovation'}},
     active_layers=["cognitive_tools (IBM Zurich cognitive tools framework)", "symbolic_processing (Princeton three-stage symbolic mechanisms)", "quantum_semantics (Indiana University quantum interpretation)", "memory_reasoning (Singapore-MIT MEM1 consolidation)", "field_dynamics (Shanghai AI Lab attractor dynamics)", "progressive_complexity (Context Engineering complexity scaling)"],
-    
+
     layer_1_cognitive_tools={
         source="IBM Zurich (Brown et al., 2025)",
         enhancement="Structured reasoning operations with verification",
@@ -857,7 +857,7 @@ def run_unified_architecture_demo():
             /validate{action="Verify reasoning against current AI capabilities and research practices"}
         ]
     },
-    
+
     layer_2_symbolic_processing={
         source="Princeton ICML (Yang et al., 2025)",
         enhancement="Three-stage abstraction-induction-retrieval",
@@ -868,7 +868,7 @@ def run_unified_architecture_demo():
             /verify_symbolic{action="Validate symbolic relationships against historical technology adoption patterns"}
         ]
     },
-    
+
     layer_3_quantum_semantics={
         source="Indiana University (Agostino et al., 2025)",
         enhancement="Observer-dependent meaning actualization",
@@ -879,7 +879,7 @@ def run_unified_architecture_demo():
             /adaptation{action="Refine meaning based on disciplinary context and adoption patterns"}
         ]
     },
-    
+
     layer_4_memory_reasoning={
         source="Singapore-MIT (Li et al., 2025)",
         enhancement="Efficient memory consolidation for long-horizon reasoning",
@@ -890,7 +890,7 @@ def run_unified_architecture_demo():
             /validate_efficiency{action="Verify insight relevance for AI-science prediction"}
         ]
     },
-    
+
     layer_5_field_dynamics={
         source="Shanghai AI Lab (Zhang et al., 2025)",
         enhancement="Attractor dynamics and emergent cognitive behaviors",
@@ -901,7 +901,7 @@ def run_unified_architecture_demo():
             /optimize_emergence{action="Enable novel insights about AI-science co-evolution"}
         ]
     },
-    
+
     layer_6_progressive_complexity={
         source="Context Engineering (Kim et al., 2025)",
         enhancement="Systematic complexity scaling from atoms to neural fields",
@@ -912,7 +912,7 @@ def run_unified_architecture_demo():
             /optimize_resources{action="Balance prediction depth with analytical efficiency"}
         ]
     },
-    
+
     integration_synthesis={
         cross_layer_optimization="Cognitive tools structure symbolic processing of quantum interpretations with memory-optimized field dynamics",
         emergent_behavior_detection="Novel insight: AI will create new research paradigms, not just improve existing ones",
@@ -923,41 +923,41 @@ def run_unified_architecture_demo():
 
 Execute all layers systematically, showing integration points and emergent capabilities.
     """
-    
+
     print_example(
         "7.1 Unified Architecture: AI-Science Transformation Analysis",
         unified_integration_output,
         "Demonstrates masterful integration of all six research streams for complex future prediction."
     )
-    
+
     # Example 7.2: Meta-Cognitive Reflection on Reasoning Process
     meta_cognitive_output = """
 /meta.cognitive_reflection{
     intent="Apply meta-cognitive reasoning for self-improvement",
     task="Analyze how AI might transform scientific research methodology",
     learning_objective="optimize reasoning effectiveness for complex future prediction",
-    
+
     self_analysis={
         process_observation="Observed systematic layer-by-layer analysis with integration synthesis",
         pattern_recognition="Effective pattern: Structured decomposition → Symbolic abstraction → Multi-perspective analysis → Memory optimization → Field emergence → Complexity scaling",
         bottleneck_detection="Potential bottleneck: Integration complexity may overwhelm without careful orchestration",
         strength_identification="Strength: Multiple research streams provide robust, multi-faceted analysis capability"
     },
-    
+
     strategy_evaluation={
         approach_effectiveness="High effectiveness: Each layer contributed unique insights that combined into novel predictions",
         alternative_strategies="Alternative: Could focus on fewer layers for efficiency, but would lose analytical depth",
         trade_off_analysis="Trade-off: Comprehensive analysis requires significant computational resources but provides high-confidence predictions",
         context_sensitivity="Approach highly suitable for complex, long-term prediction tasks requiring deep analysis"
     },
-    
+
     adaptive_improvement={
         strategy_refinement="Improve layer coordination to reduce redundancy while maintaining insight diversity",
         knowledge_integration="Integrate insights about optimal layer sequencing and interaction patterns",
         capability_extension="Develop dynamic layer weighting based on problem characteristics",
         performance_optimization="Optimize for insight generation while maintaining analytical rigor"
     },
-    
+
     recursive_enhancement={
         self_modification="Apply layer integration insights to improve future multi-stream reasoning",
         meta_meta_cognition="Reasoning about reasoning: Pattern of systematic decomposition + integration = robust analysis",
@@ -969,7 +969,7 @@ Execute all layers systematically, showing integration points and emergent capab
 Focus on: optimize reasoning effectiveness for complex future prediction
 Apply meta-cognitive insights to enhance reasoning quality.
     """
-    
+
     print_example(
         "7.2 Meta-Cognitive Reflection",
         meta_cognitive_output,
@@ -989,13 +989,13 @@ Apply meta-cognitive insights to enhance reasoning quality.
 def run_practical_applications_demo():
     """Demonstrate practical applications with performance comparisons"""
     print_header("Practical Applications & Performance Comparisons", "underline")
-    
+
     # Example 8.1: Business Strategy Analysis - Complexity Comparison
     business_problem = "Our startup's user growth has plateaued. Develop a strategy to reignite growth."
-    
+
     # Atom Level (Simple prompt)
     atom_output = "Analyze the user growth plateau and suggest strategies to reignite growth."
-    
+
     # Neural System Level (Cognitive tools)
     neural_system_output = """
 /cognitive.analyze{
@@ -1010,13 +1010,13 @@ def run_practical_applications_demo():
     ]
 }
     """
-    
+
     # Neural Field Level (Full integration)
     neural_field_output = unified_integration_output.replace(
         "How might artificial intelligence transform scientific research methodology in the next decade?",
         "Our startup's user growth has plateaued. Develop a strategy to reignite growth."
     )
-    
+
     performance_comparison = {
         "atom_level": {
             "complexity": "Low",
@@ -1026,7 +1026,7 @@ def run_practical_applications_demo():
             "novelty": "Low"
         },
         "neural_system": {
-            "complexity": "Medium", 
+            "complexity": "Medium",
             "insight_depth": "Good",
             "token_efficiency": "Medium",
             "reliability": "High",
@@ -1040,7 +1040,7 @@ def run_practical_applications_demo():
             "novelty": "High"
         }
     }
-    
+
     print_example(
         "8.1 Performance Comparison: Business Strategy Analysis",
         f"""
@@ -1058,17 +1058,17 @@ PERFORMANCE METRICS:
         """,
         "Compares reasoning quality across complexity levels for business strategy."
     )
-    
+
     # Example 8.2: Scientific Research Applications
     research_applications = {
         "literature_review": "Systematic analysis of 100+ papers with memory consolidation",
-        "hypothesis_generation": "Quantum semantic interpretation for novel research directions", 
+        "hypothesis_generation": "Quantum semantic interpretation for novel research directions",
         "experimental_design": "Symbolic processing for rigorous methodology design",
         "data_analysis": "Field dynamics for pattern detection in complex datasets",
         "collaboration": "Multi-agent coordination for interdisciplinary research",
         "meta_research": "Self-improvement for research methodology optimization"
     }
-    
+
     research_example = """
 RESEARCH APPLICATION: Literature Review with MEM1 Consolidation
 
@@ -1076,18 +1076,18 @@ RESEARCH APPLICATION: Literature Review with MEM1 Consolidation
     task="Systematic review of quantum computing applications in machine learning",
     papers_analyzed=127,
     memory_efficiency=0.85,
-    
+
     consolidation_strategy={
         key_insights="Quantum advantage in specific ML tasks: optimization, sampling, linear algebra",
         methodology_patterns="Common experimental frameworks and evaluation metrics",
         research_gaps="Limited real-world applications, hardware limitations, algorithm development",
         future_directions="Hybrid quantum-classical approaches, error correction, scalability"
     },
-    
+
     output="Comprehensive synthesis with 85% memory efficiency, identifying 12 key research gaps and 8 promising future directions"
 }
     """
-    
+
     print_example(
         "8.2 Scientific Research Applications",
         research_example,
@@ -1108,50 +1108,50 @@ RESEARCH APPLICATION: Literature Review with MEM1 Consolidation
 def create_interactive_examples():
     """Create interactive examples for Jupyter/Colab environments"""
     print_header("Interactive Examples Setup", "cyan")
-    
+
     # Interactive widgets for Jupyter
     try:
         from ipywidgets import interact, widgets
         from IPython.display import display, HTML
-        
+
         def interactive_cognitive_tool_demo(problem_type, complexity_level, include_verification):
             """Interactive cognitive tool demonstration"""
             factory = ProgramFactory()
-            
+
             if problem_type == "Mathematical":
                 problem = "Solve the system: x + y = 10, 2x - y = 2"
             elif problem_type == "Business":
                 problem = "Company revenue decreased 20%. What actions should management take?"
             else:
                 problem = "Design an efficient public transportation system for a growing city."
-            
+
             program = factory.create_program(
-                "problem_solver", 
+                "problem_solver",
                 getattr(ComplexityLevel, complexity_level.upper())
             )
-            
+
             result = program(problem)
-            
+
             print(f"Problem Type: {problem_type}")
             print(f"Complexity Level: {complexity_level}")
             print(f"Verification: {include_verification}")
             print("-" * 50)
             print(result)
-        
+
         # Create interactive widget
         problem_types = ["Mathematical", "Business", "Engineering"]
         complexity_levels = ["atom", "molecule", "cell", "organ", "neural_system", "neural_field"]
-        
+
         interactive_widget = interact(
             interactive_cognitive_tool_demo,
             problem_type=widgets.Dropdown(options=problem_types, value="Mathematical"),
             complexity_level=widgets.Dropdown(options=complexity_levels, value="neural_system"),
             include_verification=widgets.Checkbox(value=True)
         )
-        
+
         print("Interactive widgets created successfully!")
         return interactive_widget
-        
+
     except ImportError:
         print("IPython widgets not available. Using static examples.")
         return None
@@ -1162,31 +1162,31 @@ def visualize_performance_metrics():
     try:
         import matplotlib.pyplot as plt
         import numpy as np
-        
+
         # Performance data
         complexity_levels = ['Atom', 'Molecule', 'Cell', 'Organ', 'Neural System', 'Neural Field']
         insight_depth = [2, 4, 6, 7, 8, 9]
         token_efficiency = [9, 8, 7, 6, 5, 4]
         reliability = [5, 6, 7, 8, 9, 9]
         novelty = [2, 3, 5, 6, 8, 9]
-        
+
         # Create visualization
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-        
+
         # Insight Depth
         ax1.plot(complexity_levels, insight_depth, 'b-o', linewidth=2, markersize=8)
         ax1.set_title('Insight Depth by Complexity Level', fontsize=14, fontweight='bold')
         ax1.set_ylabel('Insight Depth (1-10)', fontsize=12)
         ax1.grid(True, alpha=0.3)
         ax1.tick_params(axis='x', rotation=45)
-        
+
         # Token Efficiency
         ax2.plot(complexity_levels, token_efficiency, 'r-s', linewidth=2, markersize=8)
         ax2.set_title('Token Efficiency by Complexity Level', fontsize=14, fontweight='bold')
         ax2.set_ylabel('Token Efficiency (1-10)', fontsize=12)
         ax2.grid(True, alpha=0.3)
         ax2.tick_params(axis='x', rotation=45)
-        
+
         # Reliability
         ax3.plot(complexity_levels, reliability, 'g-^', linewidth=2, markersize=8)
         ax3.set_title('Reliability by Complexity Level', fontsize=14, fontweight='bold')
@@ -1194,7 +1194,7 @@ def visualize_performance_metrics():
         ax3.set_xlabel('Complexity Level', fontsize=12)
         ax3.grid(True, alpha=0.3)
         ax3.tick_params(axis='x', rotation=45)
-        
+
         # Novelty
         ax4.plot(complexity_levels, novelty, 'm-d', linewidth=2, markersize=8)
         ax4.set_title('Novelty by Complexity Level', fontsize=14, fontweight='bold')
@@ -1202,34 +1202,34 @@ def visualize_performance_metrics():
         ax4.set_xlabel('Complexity Level', fontsize=12)
         ax4.grid(True, alpha=0.3)
         ax4.tick_params(axis='x', rotation=45)
-        
+
         plt.tight_layout()
         plt.show()
-        
+
         # Research Stream Comparison
         fig, ax = plt.subplots(figsize=(12, 8))
-        
-        research_streams = ['IBM\nCognitive Tools', 'Princeton\nSymbolic', 'Indiana\nQuantum', 
+
+        research_streams = ['IBM\nCognitive Tools', 'Princeton\nSymbolic', 'Indiana\nQuantum',
                            'Singapore-MIT\nMemory', 'Shanghai\nField Dynamics', 'Context Eng\nComplexity']
         effectiveness = [8.5, 8.2, 7.8, 8.0, 7.5, 8.8]
         colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
-        
+
         bars = ax.bar(research_streams, effectiveness, color=colors, alpha=0.8, edgecolor='black', linewidth=1.5)
         ax.set_title('Research Stream Effectiveness Comparison', fontsize=16, fontweight='bold', pad=20)
         ax.set_ylabel('Effectiveness Score (1-10)', fontsize=14)
         ax.set_ylim(0, 10)
         ax.grid(True, alpha=0.3, axis='y')
-        
+
         # Add value labels on bars
         for bar, value in zip(bars, effectiveness):
-            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1, 
+            ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.1,
                    f'{value}', ha='center', va='bottom', fontweight='bold', fontsize=12)
-        
+
         plt.tight_layout()
         plt.show()
-        
+
         print("Performance visualizations created successfully!")
-        
+
     except ImportError:
         print("Matplotlib not available. Skipping visualizations.")
 
@@ -1241,10 +1241,10 @@ def visualize_performance_metrics():
 def run_all_examples():
     """Run all cognitive program examples"""
     print_header("COGNITIVE PROGRAMS LIBRARY - COMPREHENSIVE DEMONSTRATIONS")
-    
+
     # Collect performance metrics
     all_performance = {}
-    
+
     # Run all demonstrations
     demonstrations = [
         ("IBM Zurich Cognitive Tools", run_cognitive_tools_demo),
@@ -1256,7 +1256,7 @@ def run_all_examples():
         ("Unified Architecture", run_unified_architecture_demo),
         ("Practical Applications", run_practical_applications_demo)
     ]
-    
+
     for demo_name, demo_function in demonstrations:
         try:
             print(f"\n{ExampleConfig.COLORS['green']}Running {demo_name} Demo...{ExampleConfig.COLORS['end']}")
@@ -1265,22 +1265,22 @@ def run_all_examples():
             print(f"{ExampleConfig.COLORS['green']}✓ {demo_name} Demo completed successfully{ExampleConfig.COLORS['end']}")
         except Exception as e:
             print(f"{ExampleConfig.COLORS['fail']}✗ Error in {demo_name} Demo: {str(e)}{ExampleConfig.COLORS['end']}")
-    
+
     # Summary
     print_header("DEMONSTRATION SUMMARY", "header")
-    
+
     total_examples = sum(perf.get('examples_completed', 0) for perf in all_performance.values())
     print(f"Total Examples Demonstrated: {total_examples}")
     print(f"Research Streams Integrated: 6")
     print(f"Complexity Levels Showcased: {len(ComplexityLevel)}")
-    
+
     # Performance summary
     if ExampleConfig.MEASURE_PERFORMANCE:
         print(f"\n{ExampleConfig.COLORS['cyan']}Performance Summary:{ExampleConfig.COLORS['end']}")
         for demo_name, perf in all_performance.items():
             if isinstance(perf, dict) and 'examples_completed' in perf:
                 print(f"  {demo_name}: {perf['examples_completed']} examples")
-    
+
     # Create interactive examples if in Jupyter
     try:
         get_ipython()  # Test if we're in Jupyter
@@ -1289,10 +1289,10 @@ def run_all_examples():
         visualize_performance_metrics()
     except NameError:
         print(f"\n{ExampleConfig.COLORS['warning']}Not in Jupyter environment. Skipping interactive features.{ExampleConfig.COLORS['end']}")
-    
+
     print(f"\n{ExampleConfig.COLORS['green']}All demonstrations completed successfully!{ExampleConfig.COLORS['end']}")
     print(f"{ExampleConfig.COLORS['cyan']}Ready for interactive use in Jupyter/Colab environments.{ExampleConfig.COLORS['end']}")
-    
+
     return all_performance
 
 
@@ -1323,7 +1323,7 @@ def quick_start():
 
 5. Available complexity levels:
    - ATOM: Simple prompts
-   - MOLECULE: Few-shot examples  
+   - MOLECULE: Few-shot examples
    - CELL: Memory management
    - ORGAN: Multi-agent coordination
    - NEURAL_SYSTEM: Cognitive tools
@@ -1351,7 +1351,7 @@ def get_example_by_research_stream(stream: str):
         "context_engineering": run_progressive_complexity_demo,
         "unified": run_unified_architecture_demo
     }
-    
+
     if stream.lower() in stream_examples:
         return stream_examples[stream.lower()]()
     else:
@@ -1366,7 +1366,7 @@ def get_example_by_research_stream(stream: str):
 __all__ = [
     'run_all_examples',
     'run_cognitive_tools_demo',
-    'run_symbolic_processing_demo', 
+    'run_symbolic_processing_demo',
     'run_quantum_semantic_demo',
     'run_memory_reasoning_demo',
     'run_field_dynamics_demo',
@@ -1383,7 +1383,7 @@ __all__ = [
 # Auto-run quick start if executed directly
 if __name__ == "__main__":
     quick_start()
-    
+
     # Ask user if they want to run all examples
     try:
         response = input("\nRun all examples now? (y/n): ")

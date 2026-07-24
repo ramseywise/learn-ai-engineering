@@ -50,7 +50,7 @@ https://aws.amazon.com/blogs/machine-learning/fine-tune-large-language-models-wi
 
 https://blog.darpanjain.com/reward-hacking/
 
-frameworks use Deep Q-Networks to navigate massive data scales and real-time disruptions, such as equipment failure or order surges, to enhance supply chain agility. Experimental results across these platforms show significant improvements in processing efficiency and operational accuracy, reducing delays and costs through intelligent decision-making. 
+frameworks use Deep Q-Networks to navigate massive data scales and real-time disruptions, such as equipment failure or order surges, to enhance supply chain agility. Experimental results across these platforms show significant improvements in processing efficiency and operational accuracy, reducing delays and costs through intelligent decision-making.
 
 **Multi-Agent Reinforcement Learning (MARL)**  — not for RAG, for agent planning and actions in complex environment
 
@@ -58,7 +58,7 @@ It combines the trial-and-error decision-making of reinforcement learning with t
 
 **1. How It Works**
 
-In MARL, an "agent" is an independent software entity (like a virtual robot, an automated trader, or a self-driving car algorithm) that observes its surroundings and takes actions. 
+In MARL, an "agent" is an independent software entity (like a virtual robot, an automated trader, or a self-driving car algorithm) that observes its surroundings and takes actions.
 
 - Through continuous interaction with their environment, agents learn by receiving **rewards or penalties** for their actions.
 - Over time, they adjust their strategies to maximize their cumulative rewards, essentially learning from experience.
@@ -71,7 +71,7 @@ https://blogs.mathworks.com/finance/2024/05/17/deep-learning-in-quantitative-fin
 
 how it works: In reinforcement learning, agents can be thought of as functions that take in some state, called an *observation*, and then output an *action*. Depending on how this action interacts with the *environment*, they will receive a *reward* for that action, and update their strategy depending on the strength of the reward. This strategy is called a *policy,* and is a function that maps observations to actions. This loop, which can be seen in figure 1, repeats to iteratively update the policy and maximize expected rewards.
 
-1. definition: 
+1. definition:
 
 so need to define:
 
@@ -79,40 +79,40 @@ agent:
 
 develop: https://se.mathworks.com/help/reinforcement-learning/ug/ppo-agents.html
 
-define:  a. using the **Deep Network Designer**, 
+define:  a. using the **Deep Network Designer**,
 
-       b. hard code 
+       b. hard code
 
 environment: environment, which consists of an observation space, action space, and reward function.
 
-observation space/ state: 
+observation space/ state:
 
-action space: agent’s possible actions/ decisions 
+action space: agent’s possible actions/ decisions
 
 reward function:  several ones. example: Shared reward for all agents / Competitive reward for agents
 
-1. Training 
-    
-    https://se.mathworks.com/help/reinforcement-learning/ref/rl.agent.rlqagent.train.html
-    
-    call the train function, specifying the length of each episode to be 2,597 steps, and there to be 2,500 episodes. 
-    
+1. Training
 
-**Approaches and algorithms.** 
+    https://se.mathworks.com/help/reinforcement-learning/ref/rl.agent.rlqagent.train.html
+
+    call the train function, specifying the length of each episode to be 2,597 steps, and there to be 2,500 episodes. 
+
+
+**Approaches and algorithms.**
 
 file:///Users/yanzhang/Downloads/IJSET+-V2(1)-56-62.pdf
 
-MARL approaches into: 
+MARL approaches into:
 
-cooperative (e.g. centralized training with decentralized execution, or CTDE), 
+cooperative (e.g. centralized training with decentralized execution, or CTDE),
 
 competitive (Nash-Q, self-play)
 
-hybrid methods. 
+hybrid methods.
 
 The three highlighted algorithms are MADDPG (an actor-critic method built on CTDE), QMIX (which uses a central network to combine agent rewards), and Mean Field RL (which reduces complexity by modeling the average behavior of other agents).
 
-a branch of MARL-  Multi-Agent Path Finding (MAPF) 
+a branch of MARL-  Multi-Agent Path Finding (MAPF)
 
 the task of planning collision-free routes for multiple agents from start to goal.
 
@@ -124,9 +124,9 @@ the task of planning collision-free routes for multiple agents from start to goa
 
 tools:
 
-RL agent: 
+RL agent:
 
-New multiagent functionality has been added to the Reinforcement Learning Toolbox in MATLAB R2023b: 
+New multiagent functionality has been added to the Reinforcement Learning Toolbox in MATLAB R2023b:
 
 https://se.mathworks.com/help/reinforcement-learning/ug/ppo-agents.html
 
@@ -134,7 +134,7 @@ https://se.mathworks.com/help/reinforcement-learning/ug/ppo-agents.html
 
 **popular paradigm / training framework:** （CTDE, Centralized Training Decentralized Execution）
 
-**DRL architecture:** 
+**DRL architecture:**
 
 **CTDE -** *centralized training, decentralized execution* (CTDE) paradigm
 
@@ -155,7 +155,7 @@ The core problem CTDE solves is called **non-stationarity**: in a multi-agent sy
 - **Model-Free vs. Model-Based:** Model-free agents learn strictly from direct experience in the environment. Model-based agents try to learn the "rules" of the environment to build an internal simulation, allowing them to plan ahead before acting.
 1. https://www.geeksforgeeks.org/artificial-intelligence/differences-between-q-learning-and-sarsa/
 2. https://datarootlabs.com/blog/state-of-reinforcement-learning-2025
-3. https://www.digitalocean.com/community/tutorials/proximal-policy-optimization-implementation-applications 
+3. https://www.digitalocean.com/community/tutorials/proximal-policy-optimization-implementation-applications
 
 ### 1. Value Decomposition methods（值分解方法）
 
@@ -180,12 +180,12 @@ trade-offs:
 
 so, two directions and how to choose
 
-1. Multi-Agent Systems, MAS —- MARL 
-    1. each agent has RL model / algorithm in it  — agent collaborate 
-    2. when to choose: every agent’s action/decision influence others . lead to state changes 
-    3. 
+1. Multi-Agent Systems, MAS —- MARL
+    1. each agent has RL model / algorithm in it  — agent collaborate
+    2. when to choose: every agent’s action/decision influence others . lead to state changes
+    3.
 2. **RL in RAG**
-    1. **when to choose: environment is RAG system, user feedback, web browing** 
+    1. **when to choose: environment is RAG system, user feedback, web browing**
 
 ### ❌ MARL is hard（MARL 很难）
 
@@ -196,15 +196,15 @@ so, two directions and how to choose
 
 ## **RL in RAG**
 
-RAG can be considered as multi-decision process: 
+RAG can be considered as multi-decision process:
 
 when RAG
 
-how RAG 
+how RAG
 
-if continue RAG after one turn 
+if continue RAG after one turn
 
-how to generate answer 
+how to generate answer
 
 some improvement:
 
@@ -238,20 +238,20 @@ Web-browsing QA is a strong exemplar: a model interacts with a browser/search en
 https://cdn.openai.com/WebGPT.pdf
 
 1. RL module — RL specific agent, like rewrite or R. — Instead of directly supervising "how the model should be rewritten", the rewriting strategy is optimized in reverse based on "whether the rewriting makes the final retrieval/response better".
-2. MARL: RAG can be considered as multi-decision process:  —- on paper, blue pens 
-    
+2. MARL: RAG can be considered as multi-decision process:  —- on paper, blue pens
+
     when RAG
-    
-    how RAG 
-    
-    if continue RAG after one turn 
-    
+
+    how RAG
+
+    if continue RAG after one turn
+
     how to generate answer
-    
+
 3. **Adaptive retrieval and self-critique without classic RL loops (inference-control tokens, self-reflection).**
-    
+
     Self-RAG trains a model to retrieve on demand and emit reflection tokens to critique evidence and generations, improving groundedness and citation accuracy through learned control. This is not “agent RL” in the narrow sense, but it operationalizes a policy over retrieval decisions and control behaviors.
-    
+
     - retrieve on demand
     - emit reflection tokens
     - critique evidence and generations
@@ -264,35 +264,35 @@ Step1: 收集人类偏好（A比B好）
 Step2: 训练 reward model
 Step3: 用 RL（PPO）优化 policy
 
-**Industry Preference optimization and offline RL substitutes - not full online RL / MARL —** high cost, low stability 
+**Industry Preference optimization and offline RL substitutes - not full online RL / MARL —** high cost, low stability
 
-RL-adjacent: 
+RL-adjacent:
 
 ## alternatives of RL in RAG: DPO, ILQL— more stable, and popular in industry
 
 1. DPO：不需要显式 reward model 和 on-policy rollouts  DPO（Direct Preference Optimization）
-    
+
     RLHF need to train reward model
-    
+
     (prompt, good answer, bad answer)
     → 直接训练模型：
     P(good) > P(bad)
-    
+
     DPO 可以用于：
-    
+
     - answer generation（让回答更符合人类偏好）
     - reasoning quality
     - citation correctness（通过 preference data）
 2. ILQL：把 offline RL 的思想用于 language modeling，从固定数据中更稳定地做 utility optimization
-    
-    ILQL（Implicit Language Q-Learning）
-    
-    RLHF: needs online interaction — ILQL doesn’t need 
-    
-    ILQL needs existing data 
-    
 
-challenges: 
+    ILQL（Implicit Language Q-Learning）
+
+    RLHF: needs online interaction — ILQL doesn’t need
+
+    ILQL needs existing data
+
+
+challenges:
 
 无论 MARL 还是 RAG + RL：
 
@@ -301,7 +301,7 @@ challenges:
 - 训练稳定性（stability）
 - 评估困难（evaluation rigor）
 
-risks: 
+risks:
 
 - reward hacking
 - distribution shift

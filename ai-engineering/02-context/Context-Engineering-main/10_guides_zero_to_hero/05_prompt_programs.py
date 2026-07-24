@@ -83,7 +83,7 @@ def setup_client(api_key=None, model=DEFAULT_MODEL):
         api_key = os.environ.get("OPENAI_API_KEY")
         if api_key is None and not ENV_LOADED:
             logger.warning("No API key found. Set OPENAI_API_KEY env var or pass api_key param.")
-    
+
     if OPENAI_AVAILABLE:
         client = OpenAI(api_key=api_key)
         return client, model
@@ -139,10 +139,10 @@ def generate_response(
         client, model = setup_client(model=model)
         if client is None:
             return "ERROR: No API client available", {"error": "No API client"}
-    
+
     prompt_tokens = count_tokens(prompt, model)
     system_tokens = count_tokens(system_message, model)
-    
+
     metadata = {
         "prompt_tokens": prompt_tokens,
         "system_tokens": system_tokens,
@@ -151,7 +151,7 @@ def generate_response(
         "max_tokens": max_tokens,
         "timestamp": time.time()
     }
-    
+
     try:
         start_time = time.time()
         response = client.chat.completions.create(
@@ -164,10 +164,10 @@ def generate_response(
             max_tokens=max_tokens
         )
         latency = time.time() - start_time
-        
+
         response_text = response.choices[0].message.content
         response_tokens = count_tokens(response_text, model)
-        
+
         metadata.update({
             "latency": latency,
             "response_tokens": response_tokens,
@@ -175,9 +175,9 @@ def generate_response(
             "token_efficiency": response_tokens / (prompt_tokens + system_tokens) if (prompt_tokens + system_tokens) > 0 else 0,
             "tokens_per_second": response_tokens / latency if latency > 0 else 0
         })
-        
+
         return response_text, metadata
-    
+
     except Exception as e:
         logger.error(f"Error generating response: {e}")
         metadata["error"] = str(e)
@@ -187,10 +187,10 @@ def generate_response(
 def format_metrics(metrics: Dict[str, Any]) -> str:
     """
     Format metrics dictionary into a readable string.
-    
+
     Args:
         metrics: Dictionary of metrics
-        
+
     Returns:
         str: Formatted metrics string
     """
@@ -202,7 +202,7 @@ def format_metrics(metrics: Dict[str, Any]) -> str:
         "latency": f"{metrics.get('latency', 0):.2f}s",
         "token_efficiency": f"{metrics.get('token_efficiency', 0):.2f}"
     }
-    
+
     return " | ".join([f"{k}: {v}" for k, v in key_metrics.items()])
 
 
@@ -215,7 +215,7 @@ def display_program_output(
 ) -> None:
     """
     Display a prompt program's execution results in a notebook.
-    
+
     Args:
         program_name: Name of the prompt program
         input_data: Input data
@@ -224,43 +224,43 @@ def display_program_output(
         metrics: Metrics dictionary (optional)
     """
     display(HTML(f"<h2>Prompt Program: {program_name}</h2>"))
-    
+
     # Display input
     display(HTML("<h3>Input</h3>"))
     if isinstance(input_data, str):
         display(Markdown(input_data))
     else:
         display(Markdown(f"```json\n{json.dumps(input_data, indent=2)}\n```"))
-    
+
     # Display execution state history
     if state_history:
         display(HTML("<h3>Execution History</h3>"))
-        
+
         for i, state in enumerate(state_history):
             display(HTML(f"<h4>Step {i+1}: {state.get('operation', 'Execution')}</h4>"))
-            
+
             # Display prompt if available
             if "prompt" in state:
                 display(HTML("<p><em>Prompt:</em></p>"))
                 display(Markdown(f"```\n{state['prompt']}\n```"))
-            
+
             # Display response if available
             if "response" in state:
                 display(HTML("<p><em>Response:</em></p>"))
                 display(Markdown(state["response"]))
-            
+
             # Display state metrics if available
             if "metrics" in state:
                 display(HTML("<p><em>Metrics:</em></p>"))
                 display(Markdown(f"```\n{format_metrics(state['metrics'])}\n```"))
-    
+
     # Display output
     display(HTML("<h3>Output</h3>"))
     if isinstance(output_data, str):
         display(Markdown(output_data))
     else:
         display(Markdown(f"```json\n{json.dumps(output_data, indent=2)}\n```"))
-    
+
     # Display metrics
     if metrics:
         display(HTML("<h3>Overall Metrics</h3>"))
@@ -277,21 +277,21 @@ class PromptTemplate:
     """
     template: str
     variables: List[str] = field(default_factory=list)
-    
+
     def __post_init__(self):
         """Initialize by extracting variables from the template if not provided."""
         if not self.variables:
             # Extract variables from {variable} patterns in the template
             import re
             self.variables = re.findall(r'\{([^{}]*)\}', self.template)
-    
+
     def format(self, **kwargs) -> str:
         """
         Format the template with the provided variables.
-        
+
         Args:
             **kwargs: Variable values to fill in
-            
+
         Returns:
             str: Formatted prompt
         """
@@ -299,7 +299,7 @@ class PromptTemplate:
         missing_vars = [var for var in self.variables if var not in kwargs]
         if missing_vars:
             raise ValueError(f"Missing variables: {', '.join(missing_vars)}")
-        
+
         # Format the template
         return self.template.format(**kwargs)
 
@@ -309,7 +309,7 @@ class PromptProgram:
     Base class for prompt programs - structured prompts that can be executed
     as programs with state and operations.
     """
-    
+
     def __init__(
         self,
         name: str,
@@ -323,7 +323,7 @@ class PromptProgram:
     ):
         """
         Initialize the prompt program.
-        
+
         Args:
             name: Program name
             description: Program description
@@ -341,11 +341,11 @@ class PromptProgram:
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.verbose = verbose
-        
+
         # Initialize state
         self.state = {}
         self.state_history = []
-        
+
         # Initialize metrics tracking
         self.metrics = {
             "total_prompt_tokens": 0,
@@ -354,30 +354,30 @@ class PromptProgram:
             "total_latency": 0,
             "steps": 0
         }
-    
+
     def _log(self, message: str) -> None:
         """
         Log a message if verbose mode is enabled.
-        
+
         Args:
             message: Message to log
         """
         if self.verbose:
             logger.info(message)
-    
+
     def _generate_prompt(self, **kwargs) -> str:
         """
         Generate a prompt for the current operation.
-        
+
         Args:
             **kwargs: Variables for prompt template
-            
+
         Returns:
             str: Generated prompt
         """
         # This is a placeholder - subclasses should implement this
         raise NotImplementedError("Subclasses must implement _generate_prompt")
-    
+
     def _call_llm(
         self,
         prompt: str,
@@ -385,16 +385,16 @@ class PromptProgram:
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Call the LLM and update metrics.
-        
+
         Args:
             prompt: Prompt to send
             custom_system_message: Override system message (optional)
-            
+
         Returns:
             tuple: (response_text, metadata)
         """
         system_msg = custom_system_message if custom_system_message else self.system_message
-        
+
         response, metadata = generate_response(
             prompt=prompt,
             client=self.client,
@@ -403,29 +403,29 @@ class PromptProgram:
             max_tokens=self.max_tokens,
             system_message=system_msg
         )
-        
+
         # Update metrics
         self.metrics["total_prompt_tokens"] += metadata.get("prompt_tokens", 0)
         self.metrics["total_response_tokens"] += metadata.get("response_tokens", 0)
         self.metrics["total_tokens"] += metadata.get("total_tokens", 0)
         self.metrics["total_latency"] += metadata.get("latency", 0)
         self.metrics["steps"] += 1
-        
+
         return response, metadata
-    
+
     def _process_response(self, response: str) -> Any:
         """
         Process the LLM response into a structured output.
-        
+
         Args:
             response: LLM response text
-            
+
         Returns:
             Any: Processed output
         """
         # Default implementation returns the response as is
         return response
-    
+
     def _update_state(
         self,
         operation: str,
@@ -436,7 +436,7 @@ class PromptProgram:
     ) -> None:
         """
         Update the program state with the latest operation results.
-        
+
         Args:
             operation: Name of the operation
             prompt: Prompt sent to LLM
@@ -453,67 +453,67 @@ class PromptProgram:
             "output": processed_output,
             "timestamp": time.time()
         }
-        
+
         # Add to state history
         self.state_history.append(state_record)
-        
+
         # Update current state
         self.state["last_operation"] = operation
         self.state["last_prompt"] = prompt
         self.state["last_response"] = response
         self.state["last_output"] = processed_output
         self.state["current_step"] = len(self.state_history)
-    
+
     def execute(self, input_data: Any) -> Any:
         """
         Execute the prompt program with the given input.
-        
+
         Args:
             input_data: Input data for the program
-            
+
         Returns:
             Any: Program output
         """
         # Initialize state with input
         self.state = {"input": input_data}
         self.state_history = []
-        
+
         self._log(f"Executing prompt program: {self.name}")
-        
+
         # Generate prompt
         prompt = self._generate_prompt(input=input_data)
-        
+
         # Call LLM
         response, metrics = self._call_llm(prompt)
-        
+
         # Process response
         output = self._process_response(response)
-        
+
         # Update state
         self._update_state("execute", prompt, response, metrics, output)
-        
+
         return output
-    
+
     def get_summary_metrics(self) -> Dict[str, Any]:
         """
         Get summary metrics for all operations.
-        
+
         Returns:
             dict: Summary metrics
         """
         summary = self.metrics.copy()
-        
+
         # Add derived metrics
         if summary["steps"] > 0:
             summary["avg_latency_per_step"] = summary["total_latency"] / summary["steps"]
-            
+
         if summary["total_prompt_tokens"] > 0:
             summary["overall_efficiency"] = (
                 summary["total_response_tokens"] / summary["total_prompt_tokens"]
             )
-        
+
         return summary
-    
+
     def display_execution(self) -> None:
         """Display the program execution results in a notebook."""
         display_program_output(
@@ -523,7 +523,7 @@ class PromptProgram:
             state_history=self.state_history,
             metrics=self.get_summary_metrics()
         )
-    
+
     def visualize_metrics(self) -> None:
         """
         Create visualization of metrics across execution steps.
@@ -531,42 +531,42 @@ class PromptProgram:
         if not self.state_history:
             logger.warning("No execution history to visualize")
             return
-        
+
         # Extract data for plotting
         steps = list(range(1, len(self.state_history) + 1))
         prompt_tokens = [h["metrics"].get("prompt_tokens", 0) for h in self.state_history]
         response_tokens = [h["metrics"].get("response_tokens", 0) for h in self.state_history]
         latencies = [h["metrics"].get("latency", 0) for h in self.state_history]
         efficiencies = [h["metrics"].get("token_efficiency", 0) for h in self.state_history]
-        
+
         # Create figure
         fig, axes = plt.subplots(2, 2, figsize=(12, 8))
         fig.suptitle(f"Prompt Program Metrics: {self.name}", fontsize=16)
-        
+
         # Plot 1: Token usage
         axes[0, 0].bar(steps, prompt_tokens, label="Prompt Tokens", color="blue", alpha=0.7)
-        axes[0, 0].bar(steps, response_tokens, bottom=prompt_tokens, label="Response Tokens", 
+        axes[0, 0].bar(steps, response_tokens, bottom=prompt_tokens, label="Response Tokens",
                        color="green", alpha=0.7)
         axes[0, 0].set_title("Token Usage")
         axes[0, 0].set_xlabel("Step")
         axes[0, 0].set_ylabel("Tokens")
         axes[0, 0].legend()
         axes[0, 0].grid(alpha=0.3)
-        
+
         # Plot 2: Latency
         axes[0, 1].plot(steps, latencies, marker='o', color="red", alpha=0.7)
         axes[0, 1].set_title("Latency")
         axes[0, 1].set_xlabel("Step")
         axes[0, 1].set_ylabel("Seconds")
         axes[0, 1].grid(alpha=0.3)
-        
+
         # Plot 3: Token Efficiency
         axes[1, 0].plot(steps, efficiencies, marker='s', color="purple", alpha=0.7)
         axes[1, 0].set_title("Token Efficiency (Response/Prompt)")
         axes[1, 0].set_xlabel("Step")
         axes[1, 0].set_ylabel("Ratio")
         axes[1, 0].grid(alpha=0.3)
-        
+
         # Plot 4: Cumulative Tokens
         cumulative_tokens = np.cumsum([h["metrics"].get("total_tokens", 0) for h in self.state_history])
         axes[1, 1].plot(steps, cumulative_tokens, marker='^', color="orange", alpha=0.7)
@@ -574,7 +574,7 @@ class PromptProgram:
         axes[1, 1].set_xlabel("Step")
         axes[1, 1].set_ylabel("Total Tokens")
         axes[1, 1].grid(alpha=0.3)
-        
+
         plt.tight_layout()
         plt.subplots_adjust(top=0.9)
         plt.show()
@@ -584,7 +584,7 @@ class MultiStepProgram(PromptProgram):
     """
     A prompt program that executes multiple operations in sequence.
     """
-    
+
     def __init__(
         self,
         operations: List[Dict[str, Any]] = None,
@@ -592,14 +592,14 @@ class MultiStepProgram(PromptProgram):
     ):
         """
         Initialize the multi-step prompt program.
-        
+
         Args:
             operations: List of operation configurations
             **kwargs: Additional args passed to PromptProgram
         """
         super().__init__(**kwargs)
         self.operations = operations or []
-    
+
     def add_operation(
         self,
         name: str,
@@ -609,7 +609,7 @@ class MultiStepProgram(PromptProgram):
     ) -> None:
         """
         Add an operation to the program.
-        
+
         Args:
             name: Operation name
             prompt_template: Template for operation prompt
@@ -622,56 +622,56 @@ class MultiStepProgram(PromptProgram):
             "system_message": system_message,
             "output_processor": output_processor
         }
-        
+
         self.operations.append(operation)
-    
+
     def execute(self, input_data: Any) -> Any:
         """
         Execute all operations in sequence.
-        
+
         Args:
             input_data: Input data for the program
-            
+
         Returns:
             Any: Final program output
         """
         # Initialize state with input
         self.state = {"input": input_data}
         self.state_history = []
-        
+
         self._log(f"Executing multi-step program: {self.name}")
-        
+
         # Process each operation in sequence
         current_input = input_data
-        
+
         for i, operation in enumerate(self.operations):
             operation_name = operation["name"]
             self._log(f"Executing operation {i+1}/{len(self.operations)}: {operation_name}")
-            
+
             # Generate prompt
             prompt_template = operation["prompt_template"]
             prompt_vars = {"input": current_input, **self.state}
             prompt = prompt_template.format(**prompt_vars)
-            
+
             # Call LLM
             system_message = operation.get("system_message")
             response, metrics = self._call_llm(prompt, system_message)
-            
+
             # Process response
             output_processor = operation.get("output_processor")
             if output_processor:
                 output = output_processor(response)
             else:
                 output = response
-            
+
             # Update state
             self._update_state(operation_name, prompt, response, metrics, output)
-            
+
             # Update input for next operation
             current_input = output
-        
+
         return current_input
-    
+
     def _generate_prompt(self, **kwargs) -> str:
         """Not directly used in MultiStepProgram."""
         raise NotImplementedError("MultiStepProgram uses operation-specific prompts")
@@ -685,7 +685,7 @@ class ReasoningProtocol(MultiStepProgram):
     A prompt program that implements a structured reasoning protocol
     with explicit reasoning steps and verification.
     """
-    
+
     def __init__(
         self,
         reasoning_steps: List[str] = None,
@@ -694,14 +694,14 @@ class ReasoningProtocol(MultiStepProgram):
     ):
         """
         Initialize the reasoning protocol.
-        
+
         Args:
             reasoning_steps: List of reasoning step descriptions
             verification_enabled: Whether to verify the reasoning
             **kwargs: Additional args passed to MultiStepProgram
         """
         super().__init__(**kwargs)
-        
+
         # Default reasoning steps if not provided
         if reasoning_steps is None:
             reasoning_steps = [
@@ -711,18 +711,18 @@ class ReasoningProtocol(MultiStepProgram):
                 "Execute the solution",
                 "Verify the answer"
             ]
-        
+
         self.reasoning_steps = reasoning_steps
         self.verification_enabled = verification_enabled
-        
+
         # Set up operations
         self._setup_operations()
-    
+
     def _setup_operations(self) -> None:
         """Set up the standard operations for the reasoning protocol."""
         # Clear existing operations
         self.operations = []
-        
+
         # Add reasoning operation
         reasoning_template = self._create_reasoning_template()
         self.add_operation(
@@ -731,7 +731,7 @@ class ReasoningProtocol(MultiStepProgram):
             system_message="You are an expert problem solver who breaks down problems step by step.",
             output_processor=None  # Use raw response
         )
-        
+
         # Add verification operation if enabled
         if self.verification_enabled:
             verification_template = self._create_verification_template()
@@ -741,7 +741,7 @@ class ReasoningProtocol(MultiStepProgram):
                 system_message="You are a critical reviewer who carefully checks reasoning for errors.",
                 output_processor=None  # Use raw response
             )
-            
+
             # Add correction operation
             correction_template = self._create_correction_template()
             self.add_operation(
@@ -750,11 +750,11 @@ class ReasoningProtocol(MultiStepProgram):
                 system_message="You are an expert problem solver who provides correct solutions.",
                 output_processor=None  # Use raw response
             )
-    
+
     def _create_reasoning_template(self) -> str:
         """Create the template for the reasoning operation."""
         steps_text = "\n".join([f"{i+1}. {step}" for i, step in enumerate(self.reasoning_steps)])
-        
+
         return f"""Solve the following problem by working through these steps:
 
 {steps_text}
@@ -765,7 +765,7 @@ Problem: {{input}}
 
 Your step-by-step solution:
 """
-    
+
     def _create_verification_template(self) -> str:
         """Create the template for the verification operation."""
         return """Review the following solution for any errors in reasoning or calculation.
@@ -778,7 +778,7 @@ Solution:
 
 Your verification:
 """
-    
+
     def _create_correction_template(self) -> str:
         """Create the template for the correction operation."""
         return """Provide a corrected solution to this problem, addressing the issues identified.
@@ -793,20 +793,20 @@ Verification findings:
 
 Your corrected solution:
 """
-    
+
     def execute(self, problem: str) -> Dict[str, Any]:
         """
         Execute the reasoning protocol on a problem.
-        
+
         Args:
             problem: Problem to solve
-            
+
         Returns:
             dict: Results including reasoning, verification, and final solution
         """
         # Run the multi-step execution
         final_output = super().execute(problem)
-        
+
         # Organize results
         results = {
             "problem": problem,
@@ -814,7 +814,7 @@ Your corrected solution:
             "verification": self.state_history[1]["output"] if len(self.state_history) > 1 else None,
             "final_solution": final_output
         }
-        
+
         return results
 
 
@@ -823,7 +823,7 @@ class StepByStepReasoning(ReasoningProtocol):
     A reasoning protocol that focuses on detailed step-by-step problem solving,
     particularly for mathematical or logical problems.
     """
-    
+
     def __init__(self, **kwargs):
         """Initialize the step-by-step reasoning protocol."""
         # Define specialized reasoning steps
@@ -835,19 +835,19 @@ class StepByStepReasoning(ReasoningProtocol):
             "Execute each step carefully, showing all work",
             "Check the solution against the original problem"
         ]
-        
+
         # Initialize with specialized reasoning steps
         super().__init__(reasoning_steps=reasoning_steps, **kwargs)
-        
+
         # Use a more specific system message
-        self.system_message = """You are an expert problem solver who specializes in methodical, 
+        self.system_message = """You are an expert problem solver who specializes in methodical,
 step-by-step solutions to complex problems. You show all your work clearly,
 define variables explicitly, and ensure each step follows logically from the previous one."""
-    
+
     def _create_reasoning_template(self) -> str:
         """Create a specialized template for mathematical reasoning."""
         steps_text = "\n".join([f"{i+1}. {step}" for i, step in enumerate(self.reasoning_steps)])
-        
+
         return f"""Solve the following problem step-by-step, showing all your work clearly.
 For each step of your solution:
 - Explain your reasoning
@@ -869,11 +869,11 @@ class ComparativeAnalysis(ReasoningProtocol):
     A reasoning protocol that specializes in comparing multiple options, perspectives,
     or approaches and evaluating their strengths and weaknesses.
     """
-    
+
     def __init__(self, criteria: List[str] = None, **kwargs):
         """
         Initialize the comparative analysis protocol.
-        
+
         Args:
             criteria: List of evaluation criteria (optional)
             **kwargs: Additional args passed to ReasoningProtocol
@@ -887,22 +887,22 @@ class ComparativeAnalysis(ReasoningProtocol):
             "Evaluate relative strengths and weaknesses",
             "Synthesize insights and draw conclusions"
         ]
-        
+
         # Initialize with specialized reasoning steps
         super().__init__(reasoning_steps=reasoning_steps, **kwargs)
-        
+
         # Store comparison criteria
         self.criteria = criteria or []
-        
+
         # Use a more specific system message
         self.system_message = """You are an expert analyst who specializes in comparative analysis.
 You methodically evaluate multiple entities, options, or approaches against clear criteria,
 identifying patterns of similarity and difference, and drawing insightful conclusions."""
-    
+
     def _create_reasoning_template(self) -> str:
         """Create a specialized template for comparative analysis."""
         steps_text = "\n".join([f"{i+1}. {step}" for i, step in enumerate(self.reasoning_steps)])
-        
+
         criteria_text = ""
         if self.criteria:
             criteria_list = "\n".join([f"- {criterion}" for criterion in self.criteria])
@@ -911,7 +911,7 @@ Consider the following criteria in your analysis:
 {criteria_list}
 
 You may add additional criteria if needed for a thorough comparison."""
-        
+
         return f"""Conduct a thorough comparative analysis of the entities, options, or approaches described in the input.
 {criteria_text}
 
@@ -935,7 +935,7 @@ class FieldShell(PromptProgram):
     A prompt program that implements a field protocol shell for structured
     recursive reasoning with state management and dynamic protocol adaptation.
     """
-    
+
     def __init__(
         self,
         shell_name: str,
@@ -948,7 +948,7 @@ class FieldShell(PromptProgram):
     ):
         """
         Initialize the field protocol shell.
-        
+
         Args:
             shell_name: Name of the shell
             intent: Purpose statement for the shell
@@ -961,7 +961,7 @@ class FieldShell(PromptProgram):
         name = f"/field.{shell_name}"
         description = intent
         super().__init__(name=name, description=description, **kwargs)
-        
+
         self.shell_name = shell_name
         self.intent = intent
         self.process_steps = process_steps
@@ -972,12 +972,12 @@ class FieldShell(PromptProgram):
             "agent_signature": "Context-Engineering",
             "timestamp": time.time()
         }
-        
+
         # System message for field protocols
         self.system_message = """You are an advanced reasoning system that implements structured field protocols.
 You carefully follow each step in the protocol, maintaining state across operations,
 and producing outputs that adhere to the specified schema."""
-    
+
     def _generate_shell_template(self) -> str:
         """Generate the pareto-lang shell template for this protocol."""
         # Format process steps
@@ -985,7 +985,7 @@ and producing outputs that adhere to the specified schema."""
         for step in self.process_steps:
             step_name = step.get("name", "process_step")
             step_params = step.get("params", {})
-            
+
             # Format parameters
             params_text = []
             for k, v in step_params.items():
@@ -993,12 +993,12 @@ and producing outputs that adhere to the specified schema."""
                     params_text.append(f'{k}="{v}"')
                 else:
                     params_text.append(f"{k}={v}")
-            
+
             params_str = ", ".join(params_text) if params_text else ""
             steps_text.append(f"    /{step_name}{{{params_str}}}")
-        
+
         process_text = ",\n".join(steps_text)
-        
+
         # Build shell template
         shell_template = f"""/{self.shell_name}{{
     intent="{self.intent}",
@@ -1017,9 +1017,9 @@ and producing outputs that adhere to the specified schema."""
         timestamp={{timestamp}}
     }}
 }}"""
-        
+
         return shell_template
-    
+
     def _format_input_section(self, input_data: Any) -> str:
         """Format the input section of the shell template."""
         if isinstance(input_data, dict):
@@ -1032,7 +1032,7 @@ and producing outputs that adhere to the specified schema."""
             return ",\n        ".join(input_lines)
         else:
             return f'input_data="{input_data}"'
-    
+
     def _format_output_section(self) -> str:
         """Format the output section of the shell template."""
         if self.output_schema:
@@ -1042,25 +1042,25 @@ and producing outputs that adhere to the specified schema."""
             return ",\n        ".join(output_lines)
         else:
             return "result=<processed_result>"
-    
+
     def _generate_prompt(self, **kwargs) -> str:
         """Generate the prompt for executing the field protocol shell."""
         input_data = kwargs.get("input")
-        
+
         # Format shell template
         shell_template = self._generate_shell_template()
-        
+
         # Fill in input and output sections
         input_section = self._format_input_section(input_data)
         output_section = self._format_output_section()
         timestamp = time.time()
-        
+
         filled_template = shell_template.format(
             input_section=input_section,
             output_section=output_section,
             timestamp=timestamp
         )
-        
+
         # Create execution prompt
         prompt = f"""Execute the following field protocol shell with the provided input.
 For each process step, show your reasoning and the resulting state.
@@ -1070,21 +1070,21 @@ Ensure your final output adheres to the output schema specified in the shell.
 
 Protocol Execution:
 """
-        
+
         return prompt
-    
+
     def _process_response(self, response: str) -> Dict[str, Any]:
         """Process the shell execution response."""
         # Extract the final output section
         output_pattern = r"output\s*=\s*{(.*?)},\s*meta\s*="
         output_match = re.search(output_pattern, response, re.DOTALL)
-        
+
         if output_match:
             output_text = output_match.group(1)
-            
+
             # Parse key-value pairs
             output_dict = {}
-            
+
             # Look for key=value patterns
             kv_pattern = r'(\w+)\s*=\s*(?:"([^"]*)"|([\w\d\.]+))'
             for match in re.finditer(kv_pattern, output_text):
@@ -1092,7 +1092,7 @@ Protocol Execution:
                 # Value is either group 2 (quoted string) or group 3 (non-quoted value)
                 value = match.group(2) if match.group(2) is not None else match.group(3)
                 output_dict[key] = value
-            
+
             return {
                 "shell_output": output_dict,
                 "full_execution": response
@@ -1110,7 +1110,7 @@ class RecursiveFieldShell(FieldShell):
     An enhanced field shell that implements recursive field protocols
     with self-prompting, attractor detection, and symbolic residue tracking.
     """
-    
+
     def __init__(
         self,
         enable_self_prompting: bool = True,
@@ -1120,7 +1120,7 @@ class RecursiveFieldShell(FieldShell):
     ):
         """
         Initialize the recursive field shell.
-        
+
         Args:
             enable_self_prompting: Whether to enable recursive self-prompting
             attractor_detection: Whether to detect attractor patterns
@@ -1128,20 +1128,20 @@ class RecursiveFieldShell(FieldShell):
             **kwargs: Additional args passed to FieldShell
         """
         super().__init__(**kwargs)
-        
+
         self.enable_self_prompting = enable_self_prompting
         self.attractor_detection = attractor_detection
         self.track_residue = track_residue
-        
+
         # Add recursive capabilities to process steps
         self._add_recursive_capabilities()
-        
+
         # Enhanced system message for recursive protocols
         self.system_message = """You are an advanced recursive reasoning system that implements
 field protocols with emergent intelligence. You maintain state across operations,
 detect patterns and attractors, track symbolic residue, and can recursively self-prompt
 to extend or refine your reasoning process."""
-    
+
     def _add_recursive_capabilities(self) -> None:
         """Add recursive capabilities to the process steps."""
         # Add self-prompting step if enabled
@@ -1154,7 +1154,7 @@ to extend or refine your reasoning process."""
                     "context": "field_state"
                 }
             })
-        
+
         # Add attractor detection if enabled
         if self.attractor_detection:
             self.process_steps.insert(0, {
@@ -1165,7 +1165,7 @@ to extend or refine your reasoning process."""
                     "log_to_audit": True
                 }
             })
-        
+
         # Add residue tracking if enabled
         if self.track_residue:
             self.process_steps.insert(1, {
@@ -1176,7 +1176,7 @@ to extend or refine your reasoning process."""
                     "integrate_residue": True
                 }
             })
-            
+
             # Add residue compression at the end
             self.process_steps.append({
                 "name": "residue.compress",
@@ -1185,11 +1185,11 @@ to extend or refine your reasoning process."""
                     "resonance_score": "<compute_resonance(field_state)>"
                 }
             })
-    
+
     def _generate_prompt(self, **kwargs) -> str:
         """Generate the prompt for executing the recursive field protocol shell."""
         prompt = super()._generate_prompt(**kwargs)
-        
+
         # Add instructions for recursive execution
         recursive_instructions = """
 IMPORTANT: This is a recursive field protocol. As you execute it:
@@ -1204,7 +1204,7 @@ For each recursive operation, explain your reasoning about:
 - How the field state evolves through recursive operations
 - When and why you would trigger recursive self-prompting
 """
-        
+
         return prompt + recursive_instructions
 
 
@@ -1415,21 +1415,21 @@ def example_step_by_step_reasoning():
         verification_enabled=True,
         verbose=True
     )
-    
+
     problem = """
     A cylindrical water tank has a radius of 4 meters and a height of 10 meters.
-    If water is flowing into the tank at a rate of 2 cubic meters per minute, 
+    If water is flowing into the tank at a rate of 2 cubic meters per minute,
     how long will it take for the water level to reach 7 meters?
     """
-    
+
     results = program.execute(problem)
-    
+
     # Display results
     program.display_execution()
-    
+
     # Visualize metrics
     program.visualize_metrics()
-    
+
     return results
 
 
@@ -1442,7 +1442,7 @@ def example_comparative_analysis():
         "Scalability",
         "Technological maturity"
     ]
-    
+
     program = ComparativeAnalysis(
         name="Technology Comparison Analyzer",
         description="Analyzes and compares different technologies",
@@ -1450,54 +1450,54 @@ def example_comparative_analysis():
         verification_enabled=True,
         verbose=True
     )
-    
+
     analysis_request = """
     Compare the following renewable energy technologies for a mid-sized city's power grid:
     1. Solar photovoltaic (PV) farms
     2. Onshore wind farms
     3. Hydroelectric power
     4. Biomass energy plants
-    
+
     Consider their suitability for a region with moderate sunlight, consistent winds,
     a major river, and significant agricultural activity.
     """
-    
+
     results = program.execute(analysis_request)
-    
+
     # Display results
     program.display_execution()
-    
+
     # Visualize metrics
     program.visualize_metrics()
-    
+
     return results
 
 
 def example_field_shell():
     """Example of a field protocol shell for problem-solving."""
     shell = create_reasoning_shell()
-    
+
     problem_input = {
         "problem": "Design a recommendation system for an online bookstore that balances user preferences with introducing new authors and genres.",
         "context": "The bookstore has 50,000 titles across fiction and non-fiction categories. User data includes purchase history, browsing behavior, and ratings.",
         "constraints": "The solution should be implementable with Python and standard libraries, balance exploration with exploitation, and respect user privacy."
     }
-    
+
     results = shell.execute(problem_input)
-    
+
     # Display results
     shell.display_execution()
-    
+
     # Visualize metrics
     shell.visualize_metrics()
-    
+
     return results
 
 
 def example_emergence_shell():
     """Example of a recursive emergence protocol shell."""
     shell = create_emergence_shell()
-    
+
     initial_state = {
         "field_state": {
             "attractors": ["reasoning", "verification", "synthesis"],
@@ -1507,15 +1507,15 @@ def example_emergence_shell():
         },
         "audit_log": "Initial field seeding completed with baseline attractors."
     }
-    
+
     results = shell.execute(initial_state)
-    
+
     # Display results
     shell.display_execution()
-    
+
     # Visualize metrics
     shell.visualize_metrics()
-    
+
     return results
 
 

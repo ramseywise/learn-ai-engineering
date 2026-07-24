@@ -37,30 +37,30 @@ graph TD
     classDef level2 fill:#131722,stroke:#50cf9a,stroke-width:1.5px,color:#f0f0f0,font-weight:normal,font-size:12px
     classDef level3 fill:#131722,stroke:#ff7d55,stroke-width:1.5px,color:#f0f0f0,font-weight:normal,font-size:12px
     classDef level4 fill:#131722,stroke:#a78bfa,stroke-width:1.5px,color:#f0f0f0,font-weight:normal,font-size:12px
-    
+
     %% Root node
     CE["Context Engineering"]:::root
-    
+
     %% Extremely compact level structure - all nodes with integrated labels
     A1["Atoms<br><font size=1>Basic Prompting</font>"]:::level1
     B1["Molecules<br><font size=1>Few-Shot Learning</font>"]:::level1
     C1["Cells<br><font size=1>Stateful Memory</font>"]:::level1
     D1["Organs<br><font size=1>Multi-step Control</font>"]:::level1
-    
+
     A2["Neural Systems<br><font size=1>Cognitive Tools</font>"]:::level2
     B2["Neural Fields<br><font size=1>Field Dynamics</font>"]:::level2
-    
+
     A3["Protocol Shells<br><font size=1>Structured Protocols</font>"]:::level3
     B3["Unified System<br><font size=1>Integrated Systems</font>"]:::level3
-    
+
     M4["Meta-Recursive Framework<br><font size=1>Recursive Evolution</font>"]:::level4
-    
+
     %% Minimal required connections
     CE --> A1 & B1 & C1 & D1
     D1 --> A2 & B2
     B2 --> A3 & B3
     B3 --> M4
-    
+
     %% Horizontal connections (minimal)
     A1 --- B1 --- C1 --- D1
     A2 --- B2

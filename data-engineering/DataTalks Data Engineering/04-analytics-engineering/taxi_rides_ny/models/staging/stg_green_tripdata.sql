@@ -4,12 +4,12 @@
     )
 }}
 
-with tripdata as 
+with tripdata as
 (
   select *,
     row_number() over(partition by vendorid, lpep_pickup_datetime) as rn
   from {{ source('staging','green_tripdata') }}
-  where vendorid is not null 
+  where vendorid is not null
 )
 select
     -- identifiers
@@ -18,11 +18,11 @@ select
     {{ dbt.safe_cast("ratecodeid", api.Column.translate_type("integer")) }} as ratecodeid,
     {{ dbt.safe_cast("pulocationid", api.Column.translate_type("integer")) }} as pickup_locationid,
     {{ dbt.safe_cast("dolocationid", api.Column.translate_type("integer")) }} as dropoff_locationid,
-    
+
     -- timestamps
     cast(lpep_pickup_datetime as timestamp) as pickup_datetime,
     cast(lpep_dropoff_datetime as timestamp) as dropoff_datetime,
-    
+
     -- trip info
     store_and_fwd_flag,
     {{ dbt.safe_cast("passenger_count", api.Column.translate_type("integer")) }} as passenger_count,

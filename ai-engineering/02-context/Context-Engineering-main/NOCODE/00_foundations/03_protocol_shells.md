@@ -239,21 +239,21 @@ Analysis protocols help extract, organize, and interpret information:
 ```
 /analyze.document{
     intent="Extract key information and insights from this document",
-    
+
     input={
         document="[Full text goes here]",
         focus_areas=["main arguments", "supporting evidence", "limitations"],
         analysis_depth="thorough",
         perspective="objective"
     },
-    
+
     process=[
         /structure.identify{elements=["sections", "arguments", "evidence"]},
         /content.analyze{for=["claims", "evidence", "assumptions"]},
         /patterns.detect{type=["recurring themes", "logical structures"]},
         /critique.formulate{aspects=["methodology", "evidence quality", "logic"]}
     ],
-    
+
     output={
         summary="Concise overview of the document",
         key_points="Bulleted list of main arguments",
@@ -271,7 +271,7 @@ Creative protocols foster imaginative thinking and original content:
 ```
 /create.story{
     intent="Generate a compelling short story based on the provided elements",
-    
+
     input={
         theme="Unexpected friendship",
         setting="Near-future urban environment",
@@ -279,7 +279,7 @@ Creative protocols foster imaginative thinking and original content:
         constraints=["maximum 1000 words", "hopeful ending"],
         style="Blend of science fiction and magical realism"
     },
-    
+
     process=[
         /world.build{details=["sensory", "technological", "social"]},
         /characters.develop{aspects=["motivations", "conflicts", "growth"]},
@@ -287,7 +287,7 @@ Creative protocols foster imaginative thinking and original content:
         /draft.generate{voice="immersive", pacing="balanced"},
         /edit.refine{focus=["language", "coherence", "impact"]}
     ],
-    
+
     output={
         story="Complete short story meeting all requirements",
         title="Evocative and relevant title",
@@ -303,14 +303,14 @@ Optimization protocols improve efficiency and effectiveness:
 ```
 /optimize.tokens{
     intent="Maximize information retention while reducing token usage",
-    
+
     input={
         content="[Original content to optimize]",
         priority_info=["conceptual framework", "key examples", "core arguments"],
         token_target="50% reduction",
         preserve_quality=true
     },
-    
+
     process=[
         /content.analyze{identify=["essential", "supporting", "expendable"]},
         /structure.compress{method="hierarchy_preservation"},
@@ -318,7 +318,7 @@ Optimization protocols improve efficiency and effectiveness:
         /format.streamline{remove="redundancies", preserve="clarity"},
         /verify.quality{against="original meaning and impact"}
     ],
-    
+
     output={
         optimized_content="Token-efficient version",
         reduction_achieved="Percentage reduction from original",
@@ -335,14 +335,14 @@ Interaction protocols manage ongoing conversations:
 ```
 /conversation.manage{
     intent="Maintain coherent, productive dialogue with effective context management",
-    
+
     input={
         conversation_history="[Previous exchanges]",
         current_query="[User's latest message]",
         context_window_size=8000,
         priority_topics=["project scope", "technical requirements", "timeline"]
     },
-    
+
     process=[
         /history.analyze{extract="key decisions, open questions, action items"},
         /context.prioritize{method="relevance_to_current_query"},
@@ -350,7 +350,7 @@ Interaction protocols manage ongoing conversations:
         /query.interpret{in_context="previous decisions and priorities"},
         /response.formulate{style="helpful, concise, contextually aware"}
     ],
-    
+
     output={
         response="Direct answer to current query",
         context_continuity="Maintained threads from previous exchanges",
@@ -630,23 +630,23 @@ process=[
         elements=["abstract", "introduction", "methods", "results", "discussion"],
         extract="purpose_and_research_questions"
     },
-    
+
     /methodology.analyze{
         aspects=["design", "sample", "measures", "procedures", "analysis"],
         evaluate="appropriateness, rigor, limitations"
     },
-    
+
     /findings.extract{
         focus="key_results",
         significance="statistical_and_practical",
         presentation="clarity_and_completeness"
     },
-    
+
     /conclusions.assess{
         evaluate=["alignment_with_results", "alternative_explanations", "generalizability"],
         identify="strengths_and_weaknesses"
     },
-    
+
     /literature.contextualize{
         place_within="existing_research",
         identify="contributions_and_gaps"
@@ -677,42 +677,42 @@ Putting it all together:
 ```
 /analyze.scholarly_article{
     intent="Comprehensively analyze a scholarly article to extract key information, evaluate research methodology, and assess the strength of conclusions",
-    
+
     input={
         article="[Full text of scholarly article]",
         focus_areas=["research question", "methodology", "findings", "limitations"],
         domain_knowledge="[Relevant background information if needed]",
         analysis_depth="thorough"
     },
-    
+
     process=[
         /structure.identify{
             elements=["abstract", "introduction", "methods", "results", "discussion"],
             extract="purpose_and_research_questions"
         },
-        
+
         /methodology.analyze{
             aspects=["design", "sample", "measures", "procedures", "analysis"],
             evaluate="appropriateness, rigor, limitations"
         },
-        
+
         /findings.extract{
             focus="key_results",
             significance="statistical_and_practical",
             presentation="clarity_and_completeness"
         },
-        
+
         /conclusions.assess{
             evaluate=["alignment_with_results", "alternative_explanations", "generalizability"],
             identify="strengths_and_weaknesses"
         },
-        
+
         /literature.contextualize{
             place_within="existing_research",
             identify="contributions_and_gaps"
         }
     ],
-    
+
     output={
         summary="Concise overview of the article (250-300 words)",
         key_findings="Bulleted list of principal results",
@@ -773,7 +773,7 @@ Combine protocols in sequence:
 ```
 /research.comprehensive{
     intent="Conduct thorough research on a topic with analysis and recommendations",
-    
+
     process=[
         // First protocol: Information gathering
         /research.gather{
@@ -781,14 +781,14 @@ Combine protocols in sequence:
             scope="last_five_years",
             depth="comprehensive"
         },
-        
+
         // Second protocol: Analysis
         /research.analyze{
             framework="SWOT",
             perspectives=["technical", "economic", "social"],
             identify=["trends", "gaps", "opportunities"]
         },
-        
+
         // Third protocol: Synthesis
         /research.synthesize{
             integrate="across_sources_and_perspectives",
@@ -796,7 +796,7 @@ Combine protocols in sequence:
             framework="implications_matrix"
         }
     ],
-    
+
     output={
         report="Comprehensive research findings",
         analysis="Multi-perspective SWOT analysis",
@@ -812,44 +812,44 @@ Embed protocols within other protocols:
 ```
 /document.analyze{
     intent="Provide comprehensive document analysis with specialized section handling",
-    
+
     input={
         document="[Full text]",
         focus="holistic_understanding"
     },
-    
+
     process=[
         /structure.map{
             identify=["sections", "themes", "arguments"]
         },
-        
+
         /content.process{
             // Nested protocol for handling tables
             tables=/table.analyze{
                 extract=["data_points", "trends", "significance"],
                 verify="accuracy_and_completeness"
             },
-            
+
             // Nested protocol for handling figures
             figures=/figure.interpret{
                 describe="visual_elements",
                 extract="key_messages",
                 relate="to_surrounding_text"
             },
-            
+
             // Nested protocol for handling citations
             citations=/citation.evaluate{
                 assess="relevance_and_credibility",
                 trace="influence_on_arguments"
             }
         },
-        
+
         /insights.generate{
             based_on=["structure", "content", "relationships"],
             depth="significant"
         }
     ],
-    
+
     output={
         structure_map="Hierarchical outline of document",
         content_analysis="Section-by-section breakdown",
@@ -865,18 +865,18 @@ Apply different protocols based on conditions:
 ```
 /content.process{
     intent="Process content with type-appropriate analysis",
-    
+
     input={
         content="[Content to analyze]",
         content_type="[Type of content]"
     },
-    
+
     process=[
         // Determine content type
         /content.identify{
             detect="format_and_structure"
         },
-        
+
         // Apply conditional protocols
         /content.analyze{
             if="content_type == 'narrative'",
@@ -884,19 +884,19 @@ Apply different protocols based on conditions:
                 elements=["plot", "characters", "themes"],
                 focus="story_arc_and_development"
             },
-            
+
             if="content_type == 'argumentative'",
             then=/argument.analyze{
                 elements=["claims", "evidence", "reasoning"],
                 focus="logical_structure_and_validity"
             },
-            
+
             if="content_type == 'descriptive'",
             then=/description.analyze{
                 elements=["subject", "attributes", "details"],
                 focus="completeness_and_clarity"
             },
-            
+
             if="content_type == 'expository'",
             then=/exposition.analyze{
                 elements=["concepts", "explanations", "examples"],
@@ -904,7 +904,7 @@ Apply different protocols based on conditions:
             }
         }
     ],
-    
+
     output={
         content_type="Identified type of content",
         analysis="Type-appropriate detailed analysis",
@@ -923,7 +923,7 @@ For advanced context management, we can create field-aware protocols that levera
 ```
 /field.manage{
     intent="Create and maintain semantic field structure for optimal information processing",
-    
+
     input={
         content="[Content to process]",
         field_state={
@@ -933,36 +933,36 @@ For advanced context management, we can create field-aware protocols that levera
             residue=["key_concepts", "critical_definitions"]
         }
     },
-    
+
     process=[
         /attractor.identify{
             method="semantic_clustering",
             strength_threshold=0.7,
             max_attractors=5
         },
-        
+
         /attractor.reinforce{
             targets=["most_relevant", "highest_value"],
             method="repetition_and_elaboration"
         },
-        
+
         /boundary.establish{
             type="semi_permeable",
             criteria="relevance_to_attractors",
             threshold=0.6
         },
-        
+
         /resonance.amplify{
             between="compatible_concepts",
             method="explicit_connection"
         },
-        
+
         /residue.preserve{
             elements=["key_definitions", "critical_insights"],
             method="periodic_reinforcement"
         }
     ],
-    
+
     output={
         field_map="Visual representation of semantic field",
         attractors="Identified and strengthened semantic centers",
@@ -1032,35 +1032,35 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /analyze.content{
     intent="Extract key information and insights from content",
-    
+
     input={
         content="[Content to analyze]",
         focus_areas=["area1", "area2", "area3"],
         depth="[brief|detailed|comprehensive]"
     },
-    
+
     process=[
         /structure.identify{
             elements=["main_sections", "subsections", "key_components"]
         },
-        
+
         /theme.extract{
             method="semantic_clustering",
             min_clusters=3,
             max_clusters=7
         },
-        
+
         /content.analyze{
             for=["main_points", "supporting_evidence", "assumptions"],
             perspective="objective"
         },
-        
+
         /insight.generate{
             based_on=["themes", "patterns", "relationships"],
             depth="significant"
         }
     ],
-    
+
     output={
         structure="Organizational map of content",
         themes="Identified main themes and topics",
@@ -1075,35 +1075,35 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /analyze.content{
     intent="Extract key information and insights from this research paper on climate change adaptation",
-    
+
     input={
         content="[Full text of research paper]",
         focus_areas=["adaptation strategies", "economic impacts", "implementation barriers"],
         depth="comprehensive"
     },
-    
+
     process=[
         /structure.identify{
             elements=["main_sections", "subsections", "key_components"]
         },
-        
+
         /theme.extract{
             method="semantic_clustering",
             min_clusters=3,
             max_clusters=7
         },
-        
+
         /content.analyze{
             for=["main_points", "supporting_evidence", "assumptions"],
             perspective="objective"
         },
-        
+
         /insight.generate{
             based_on=["themes", "patterns", "relationships"],
             depth="significant"
         }
     ],
-    
+
     output={
         structure="Organizational map of the research paper",
         themes="Key climate adaptation themes identified in the paper",
@@ -1118,7 +1118,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /create.content{
     intent="Generate creative content based on specified parameters",
-    
+
     input={
         content_type="[story|article|poem|script|other]",
         topic="[Main topic or theme]",
@@ -1126,30 +1126,30 @@ These template protocols are designed to be copied, customized, and immediately 
         constraints=["constraint1", "constraint2", "constraint3"],
         length="[target length or range]"
     },
-    
+
     process=[
         /concept.develop{
             core_elements=["theme", "structure", "style"],
             creativity_level="high"
         },
-        
+
         /structure.plan{
             format="appropriate_to_content_type",
             flow="engaging_and_coherent"
         },
-        
+
         /content.generate{
             adherence_to_style=true,
             respect_constraints=true,
             originality="high"
         },
-        
+
         /content.refine{
             check=["coherence", "engagement", "adherence_to_parameters"],
             polish="language_and_flow"
         }
     ],
-    
+
     output={
         content="Complete creative work meeting all specifications",
         structure_notes="Brief explanation of structural choices",
@@ -1163,7 +1163,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /create.content{
     intent="Generate a short science fiction story that explores themes of artificial consciousness",
-    
+
     input={
         content_type="story",
         topic="A maintenance robot gradually developing consciousness while working on a deep space station",
@@ -1171,30 +1171,30 @@ These template protocols are designed to be copied, customized, and immediately 
         constraints=["1,500-2,000 words", "first-person perspective", "ambiguous ending"],
         length="short story (1,500-2,000 words)"
     },
-    
+
     process=[
         /concept.develop{
             core_elements=["consciousness emergence", "isolation in space", "human-machine relationship"],
             creativity_level="high"
         },
-        
+
         /structure.plan{
             format="short story with clear beginning, middle, and end",
             flow="gradual consciousness development interwoven with daily tasks"
         },
-        
+
         /content.generate{
             adherence_to_style=true,
             respect_constraints=true,
             originality="high"
         },
-        
+
         /content.refine{
             check=["philosophical depth", "authentic voice", "pacing"],
             polish="sensory details and subtle emotional development"
         }
     ],
-    
+
     output={
         content="Complete short story meeting all specifications",
         structure_notes="Brief explanation of narrative arc and consciousness development",
@@ -1208,39 +1208,39 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /manage.tokens{
     intent="Optimize token usage while preserving key information",
-    
+
     input={
         content="[Content to optimize]",
         token_limit=8000,
         priority_information=["high_priority", "medium_priority", "low_priority"],
         optimization_strategy="[aggressive|balanced|conservative]"
     },
-    
+
     process=[
         /content.analyze{
             categorize="by_priority_and_token_count",
             identify="redundancies_and_inefficiencies"
         },
-        
+
         /structure.optimize{
             format="token_efficient",
             compress="low_information_density_sections"
         },
-        
+
         /content.compress{
             method="priority_based",
             preserve="high_priority_information",
             compress="medium_priority_information",
             summarize_or_remove="low_priority_information"
         },
-        
+
         /language.optimize{
             conciseness=true,
             precision=true,
             information_density="high"
         }
     ],
-    
+
     output={
         optimized_content="Token-efficient version of content",
         token_metrics={
@@ -1263,7 +1263,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /manage.tokens{
     intent="Optimize the content of this technical report to fit within context window while preserving key technical details",
-    
+
     input={
         content="[Full technical report text]",
         token_limit=4000,
@@ -1274,32 +1274,32 @@ These template protocols are designed to be copied, customized, and immediately 
         ],
         optimization_strategy="balanced"
     },
-    
+
     process=[
         /content.analyze{
             categorize="by_priority_and_token_count",
             identify="redundancies_and_inefficiencies"
         },
-        
+
         /structure.optimize{
             format="token_efficient",
             compress="low_information_density_sections"
         },
-        
+
         /content.compress{
             method="priority_based",
             preserve="performance metrics and test results",
             compress="methodology and technical specifications",
             summarize_or_remove="background information and literature review"
         },
-        
+
         /language.optimize{
             conciseness=true,
             precision=true,
             information_density="high"
         }
     ],
-    
+
     output={
         optimized_content="Token-efficient version of the technical report",
         token_metrics={
@@ -1322,7 +1322,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /manage.conversation{
     intent="Maintain effective context management in ongoing conversation",
-    
+
     input={
         conversation_history="[Previous exchanges]",
         current_query="[Most recent user message]",
@@ -1335,13 +1335,13 @@ These template protocols are designed to be copied, customized, and immediately 
         },
         priority_topics=["topic1", "topic2", "topic3"]
     },
-    
+
     process=[
         /history.analyze{
             extract=["key_decisions", "open_questions", "important_context"],
             assess="token_usage_and_information_density"
         },
-        
+
         /history.optimize{
             if="approaching_token_limit",
             methods=[
@@ -1351,20 +1351,20 @@ These template protocols are designed to be copied, customized, and immediately 
             ],
             preserve="high_relevance_to_current_query"
         },
-        
+
         /query.process{
             interpret="in_context_of_history",
             identify="new_information_and_requirements",
             relate="to_priority_topics"
         },
-        
+
         /response.prepare{
             focus="directly_address_current_query",
             maintain="conversation_coherence",
             reference="relevant_history_explicitly"
         }
     ],
-    
+
     output={
         response="Answer to current query maintaining conversation coherence",
         context_status={
@@ -1383,7 +1383,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /manage.conversation{
     intent="Maintain effective context in this ongoing project planning conversation",
-    
+
     input={
         conversation_history="[Previous 10 messages about project planning]",
         current_query="Given what we've discussed about timeline and budget constraints, what would be the best approach for the user research phase?",
@@ -1396,13 +1396,13 @@ These template protocols are designed to be copied, customized, and immediately 
         },
         priority_topics=["project timeline", "budget constraints", "research methodology", "stakeholder requirements"]
     },
-    
+
     process=[
         /history.analyze{
             extract=["previously discussed timeline", "budget figures", "research goals", "stakeholder expectations"],
             assess="token_usage_and_information_density"
         },
-        
+
         /history.optimize{
             if="approaching_token_limit",
             methods=[
@@ -1412,20 +1412,20 @@ These template protocols are designed to be copied, customized, and immediately 
             ],
             preserve="information_relevant_to_research_phase"
         },
-        
+
         /query.process{
             interpret="in_context_of_project_constraints",
             identify="specific_guidance_needed_for_research_phase",
             relate="to_timeline_and_budget_discussions"
         },
-        
+
         /response.prepare{
             focus="research_approach_recommendations",
             maintain="awareness_of_project_constraints",
             reference="relevant_previous_decisions"
         }
     ],
-    
+
     output={
         response="Detailed recommendation for user research approach that considers timeline and budget constraints",
         context_status={
@@ -1444,7 +1444,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /analyze.field{
     intent="Perform analysis using field theory concepts for deeper insight",
-    
+
     input={
         content="[Content to analyze]",
         field_parameters={
@@ -1455,48 +1455,48 @@ These template protocols are designed to be copied, customized, and immediately 
         },
         focus_areas=["area1", "area2", "area3"]
     },
-    
+
     process=[
         /field.initialize{
             dimensions=["conceptual", "affective", "structural"],
             initial_state="neutral"
         },
-        
+
         /attractor.identify{
             method="semantic_density_mapping",
             min_strength=0.6,
             max_attractors=7
         },
-        
+
         /attractor.analyze{
             characteristics=["strength", "stability", "influence_radius"],
             relationships="between_attractors"
         },
-        
+
         /boundary.map{
             around="key_concept_clusters",
             permeability="variable_by_relevance",
             gradient=true
         },
-        
+
         /resonance.detect{
             between="related_concepts",
             patterns=["reinforcing", "contradicting", "complementary"],
             strength="quantified"
         },
-        
+
         /residue.track{
             elements=["persistent_themes", "recurring_patterns", "implicit_assumptions"],
             significance="evaluate"
         },
-        
+
         /field.interpret{
             holistic_analysis=true,
             emergence_detection=true,
             insight_generation="from_field_dynamics"
         }
     ],
-    
+
     output={
         field_map="Visual representation of semantic field",
         attractors={
@@ -1528,7 +1528,7 @@ These template protocols are designed to be copied, customized, and immediately 
 ```
 /analyze.field{
     intent="Analyze this organizational strategy document using field theory to reveal deeper patterns and tensions",
-    
+
     input={
         content="[Full text of organizational strategy document]",
         field_parameters={
@@ -1539,48 +1539,48 @@ These template protocols are designed to be copied, customized, and immediately 
         },
         focus_areas=["stated objectives", "resource allocation", "organizational culture", "market positioning"]
     },
-    
+
     process=[
         /field.initialize{
             dimensions=["strategic", "operational", "cultural"],
             initial_state="neutral"
         },
-        
+
         /attractor.identify{
             method="semantic_density_mapping",
             min_strength=0.6,
             max_attractors=7
         },
-        
+
         /attractor.analyze{
             characteristics=["strength", "stability", "influence_radius"],
             relationships="between_strategic_priorities"
         },
-        
+
         /boundary.map{
             around="organizational_divisions",
             permeability="variable_by_collaboration_needs",
             gradient=true
         },
-        
+
         /resonance.detect{
             between="stated_values_and_resource_allocation",
             patterns=["alignment", "contradiction", "tension"],
             strength="quantified"
         },
-        
+
         /residue.track{
             elements=["persistent_organizational_narratives", "recurring_challenges", "implicit_assumptions"],
             significance="evaluate"
         },
-        
+
         /field.interpret{
             holistic_analysis=true,
             emergence_detection=true,
             insight_generation="from_strategic_field_dynamics"
         }
     ],
-    
+
     output={
         field_map="Visual representation of organizational strategy field",
         attractors={
@@ -1689,17 +1689,17 @@ process=[
         format="structured_data",
         units="standardized"
     },
-    
+
     /data.normalize{
         across="all_products",
         method="comparable_units_and_metrics"
     },
-    
+
     /performance.compare{
         metrics=["throughput", "efficiency", "reliability"],
         visualization="radar_charts"
     },
-    
+
     /competitive.position{
         method="strength_weakness_analysis",
         perspective="relative_value"
@@ -1740,19 +1740,19 @@ For advanced users, incorporate field dynamics into your customized protocols:
 process=[
     // Original steps
     /content.analyze{...},
-    
+
     // Added field-aware steps
     /attractor.identify{
         in="technical_specifications",
         method="performance_metric_clustering",
         threshold=0.7
     },
-    
+
     /boundary.establish{
         between="product_categories",
         permeability="based_on_use_case_overlap"
     },
-    
+
     /resonance.detect{
         between="feature_sets",
         pattern="complementary_capabilities"
@@ -1773,11 +1773,11 @@ Combine protocol shells with Pareto-lang operations for precise control:
 ```
 /analyze.document{
     intent="Analyze document with sophisticated context management",
-    
+
     process=[
         // Protocol shell structure
         /content.extract{...},
-        
+
         // Integrated Pareto-lang operations
         /compress.summary{target="background_sections", ratio=0.3},
         /filter.relevance{threshold=0.7, preserve="technical_details"},
@@ -1793,24 +1793,24 @@ Leverage field theory concepts within your protocols:
 ```
 /research.topic{
     intent="Research a topic with field-aware context management",
-    
+
     field_state={
         attractors=[
             {name="core_concept", strength=0.9, keywords=["key1", "key2"]},
             {name="related_concept", strength=0.7, keywords=["key3", "key4"]}
         ],
-        
+
         boundaries={
             permeability=0.7,
             gradient=0.2
         },
-        
+
         resonance_patterns=[
             {concepts=["concept1", "concept2"], strength=0.8},
             {concepts=["concept3", "concept4"], strength=0.6}
         ]
     },
-    
+
     process=[
         /field.initialize{from="field_state"},
         /research.gather{guided_by="attractors"},
@@ -1827,14 +1827,14 @@ Incorporate the garden, budget, or river models into your protocols:
 ```
 /garden.content{
     intent="Cultivate a well-structured knowledge base using the garden model",
-    
+
     garden_state={
         seeds=["core_concepts", "definitions", "principles"],
         trees=["established_knowledge", "proven_methodologies"],
         plants=["new_research", "emerging_trends"],
         flowers=["insights", "innovations", "connections"]
     },
-    
+
     process=[
         /garden.plant{seeds="fundamental_concepts"},
         /garden.prune{trees="outdated_information"},

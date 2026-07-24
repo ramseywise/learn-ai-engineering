@@ -16,16 +16,16 @@ Statistics computer by Pandas Profiling package.
 #### Installation
 
 ```
-pip install pandas-profiling  
-or  
+pip install pandas-profiling
+or
 conda install -c anaconda pandas-profiling`
 ```
 #### Usage
 
 Let’s use the age-old titanic dataset to demonstrate the capabilities of the versatile python profiler.
 ```
-#importing the necessary packages  
- import pandas as pd  
+#importing the necessary packages
+ import pandas as pd
  import pandas_profiling
 ```
 
@@ -41,7 +41,7 @@ This single line of code is all that you need to display the data profiling repo
 The report can also be exported into an  **interactive HTML file**  with the following code.
 
 ```
-profile = df.profile_report(title='Pandas Profiling Report')  
+profile = df.profile_report(title='Pandas Profiling Report')
 profile.to_file(outputfile="Titanic data profiling.html")
 
 ```
@@ -61,17 +61,17 @@ Cufflinks library binds the power of  [**plotly**](http://www.plot.ly/)  with th
 #### Installation
 
 ```
-pip install plotly # Plotly is a pre-requisite before installing cufflinks  
+pip install plotly # Plotly is a pre-requisite before installing cufflinks
 pip install cufflinks
 ```
 
 #### Usage
-  
+
 ```
-import pandas as pd  #importing Pandas 
-import cufflinks as cf #importing plotly and cufflinks in offline mode  
-import plotly.offline  
-cf.go_offline()  
+import pandas as pd  #importing Pandas
+import cufflinks as cf #importing plotly and cufflinks in offline mode
+import plotly.offline
+cf.go_offline()
 cf.set_config_file(offline=False, world_readable=True)
 ```
 
@@ -111,8 +111,8 @@ Let’s look at some of them that might be useful in common data analysis tasks:
 Consider a python script  `file.py`  with the following content:
 
 ```
-#file.py  
-def foo(x):  
+#file.py
+def foo(x):
     return x
 ```
 Using  **%pastebin**  in Jupyter Notebook generates a pastebin url.
@@ -164,4 +164,3 @@ If you want to produce  aesthetically  pleasing representations of your data str
 ![](https://cdn-images-1.medium.com/max/1200/1*717JXTHKay06ppdjDpOBPw.png)
 
 ![](https://cdn-images-1.medium.com/max/1200/1*K983l0I1yJoOPFhu9M3PIA.png)
-

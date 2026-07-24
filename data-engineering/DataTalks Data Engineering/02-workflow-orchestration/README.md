@@ -1,5 +1,5 @@
-> [!NOTE]  
->If you're looking for Airflow videos from the 2022 edition, check the [2022 cohort folder](../cohorts/2022/week_2_data_ingestion/). 
+> [!NOTE]
+>If you're looking for Airflow videos from the 2022 edition, check the [2022 cohort folder](../cohorts/2022/week_2_data_ingestion/).
 >
 >If you're looking for Prefect videos from the 2023 edition, check the [2023 cohort folder](../cohorts/2023/week_2_data_ingestion/).
 
@@ -9,7 +9,7 @@ Welcome to Week 2 of the Data Engineering Zoomcamp! 🚀😤 This week, we'll be
 
 Mage is an open-source, hybrid framework for transforming and integrating data. ✨
 
-This week, you'll learn how to use the Mage platform to author and share _magical_ data pipelines. This will all be covered in the course, but if you'd like to learn a bit more about Mage, check out our docs [here](https://docs.mage.ai/introduction/overview). 
+This week, you'll learn how to use the Mage platform to author and share _magical_ data pipelines. This will all be covered in the course, but if you'd like to learn a bit more about Mage, check out our docs [here](https://docs.mage.ai/introduction/overview).
 
 * [2.2.1 - 📯 Intro to Orchestration](#221----intro-to-orchestration)
 * [2.2.2 - 🧙‍♂️ Intro to Mage](#222---%EF%B8%8F-intro-to-mage)
@@ -72,7 +72,7 @@ Videos
 
 ### 2.2.4 - 🤓 ETL: API to GCS
 
-Ok, so we've written data _locally_ to a database, but what about the cloud? In this tutorial, we'll walk through the process of using Mage to extract, transform, and load data from an API to Google Cloud Storage (GCS). 
+Ok, so we've written data _locally_ to a database, but what about the cloud? In this tutorial, we'll walk through the process of using Mage to extract, transform, and load data from an API to Google Cloud Storage (GCS).
 
 We'll cover both writing _partitioned_ and _unpartitioned_ data to GCS and discuss _why_ you might want to do one over the other. Many data teams start with extracting data from a source and writing it to a data lake _before_ loading it to a structured data source, like a database.
 
@@ -145,7 +145,7 @@ Additional Mage Guides
 - [Terraform](https://docs.mage.ai/production/deploying-to-cloud/using-terraform)
 - [Deploying to GCP with Terraform](https://docs.mage.ai/production/deploying-to-cloud/gcp/setup)
 
-### 2.2.8 - 🗒️ Homework 
+### 2.2.8 - 🗒️ Homework
 
 We've prepared a short exercise to test you on what you've learned this week. You can find the homework [here](../cohorts/2024/02-workflow-orchestration/homework.md). This follows closely from the contents of the course and shouldn't take more than an hour or two to complete. 😄
 

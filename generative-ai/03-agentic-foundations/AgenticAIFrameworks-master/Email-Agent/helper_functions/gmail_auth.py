@@ -12,14 +12,14 @@ from pathlib import Path
 def create_service(client_secret_file, api_name, api_version, *scopes, prefix=''):
     """
     Create a Google API service with OAuth2 authentication.
-    
+
     Args:
         client_secret_file (str): Path to the client secrets JSON file
         api_name (str): Name of the API (e.g., 'gmail')
         api_version (str): Version of the API (e.g., 'v1')
         scopes (list): List of OAuth2 scopes
         prefix (str): Optional prefix for token file
-    
+
     Returns:
         service: Authenticated Google API service object, or None if failed
     """
@@ -73,13 +73,13 @@ def init_gmail_service(client_file, api_name='gmail', api_version='v1',
                        scopes=['https://mail.google.com/']):
     """
     Initialize Gmail API service.
-    
+
     Args:
         client_file (str): Path to client secrets JSON file
         api_name (str): API name (default: 'gmail')
         api_version (str): API version (default: 'v1')
         scopes (list): OAuth2 scopes (default: Gmail full access)
-    
+
     Returns:
         service: Authenticated Gmail API service object
     """

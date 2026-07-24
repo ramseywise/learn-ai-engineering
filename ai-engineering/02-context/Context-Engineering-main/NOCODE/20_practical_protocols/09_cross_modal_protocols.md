@@ -1125,8 +1125,8 @@ Protocol:
     ...
     field_dynamics={
         attractors: [
-            "systems thinking principles", 
-            "ecological relationships", 
+            "systems thinking principles",
+            "ecological relationships",
             "environmental stewardship"
         ],
         boundaries: {
@@ -1302,4 +1302,3 @@ field_dynamics={
 | Enhance with complementary modes | `/cross.augment` |
 | Adapt to modal preferences | `/cross.prefer` |
 | Create integrated modal content | `/cross.create` |
-

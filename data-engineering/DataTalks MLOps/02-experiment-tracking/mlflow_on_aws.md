@@ -6,7 +6,7 @@ This tutorials explains how to configure a remote tracking server on AWS. We wil
 
 2. Launch a new EC2 instance.
 
-For this, you can select one of the instance types that are free tier eligible. For example, we will select an Amazon Linux OS (`Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type`) and a `t2.micro` instance type, which are free tier eligible. 
+For this, you can select one of the instance types that are free tier eligible. For example, we will select an Amazon Linux OS (`Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type`) and a `t2.micro` instance type, which are free tier eligible.
 
 
 <img src="images/ec2_os.png" width=400/>
@@ -56,7 +56,7 @@ You can use the default values for all the other configurations.
 Take note of the following information:
 
 * master username
-* password 
+* password
 * initial database name
 * endpoint
 
@@ -67,7 +67,7 @@ Note that the database name might be set to "postgres" by default.
 
 5. Connect to the EC2 instance and launch the tracking server.
 
-Go to the EC2 Console and find the instance launched on the step 2. Click on "Connect" and then follow the steps described in the tab "SSH". 
+Go to the EC2 Console and find the instance launched on the step 2. Click on "Connect" and then follow the steps described in the tab "SSH".
 
 Run the following commands to install the dependencies, configure the environment and launch the server:
 * `sudo yum update`

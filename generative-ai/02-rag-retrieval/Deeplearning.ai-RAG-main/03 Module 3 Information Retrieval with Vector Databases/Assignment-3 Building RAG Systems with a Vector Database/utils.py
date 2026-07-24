@@ -33,10 +33,10 @@ def print_object_properties(obj: Union[dict, list]) -> None:
     else:
         for l in obj:
             print_object_properties(l)
-        
+
     print(t)
 
-    
+
 
 # Define utility functions and classes
 def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", together_api_key = None, **kwargs):
@@ -49,7 +49,7 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
         client = OpenAI(
     api_key = '', # Set any as dlai proxy does not use it. Set the together api key if using the together endpoint
     base_url="http://proxy.dlai.link/coursera_proxy/together/", # If using together endpoint, add it here https://api.together.xyz/
-   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint 
+   http_client=http_client, # ssl bypass to make it work via proxy calls, remove it if running with together.ai endpoint
 )
         try:
             json_dict = client.embeddings.create(**payload).model_dump()
@@ -67,15 +67,15 @@ def generate_embedding(prompt: str, model: str = "BAAI/bge-base-en-v1.5", togeth
             raise Exception(f"Failed to get correct output from LLM call.\nException: {e}")
 
 
-def generate_with_single_input(prompt: str, 
-                               role: str = 'user', 
-                               top_p: float = None, 
+def generate_with_single_input(prompt: str,
+                               role: str = 'user',
+                               top_p: float = None,
                                temperature: float = None,
                                max_tokens: int = 500,
                                model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                together_api_key = None,
                               **kwargs):
-    
+
     if top_p is None:
         top_p = 'none'
     if temperature is None:
@@ -90,7 +90,7 @@ def generate_with_single_input(prompt: str,
             **kwargs
                   }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -111,11 +111,11 @@ def generate_with_single_input(prompt: str,
     return output_dict
 
 
-def generate_with_multiple_input(messages: List[Dict], 
-                               top_p: float = 1, 
+def generate_with_multiple_input(messages: List[Dict],
+                               top_p: float = 1,
                                temperature: float = 1,
                                max_tokens: int = 500,
-                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo", 
+                               model: str ="meta-llama/Llama-3.2-3B-Instruct-Turbo",
                                 together_api_key = None,
                                 **kwargs):
     payload = {
@@ -127,7 +127,7 @@ def generate_with_multiple_input(messages: List[Dict],
         **kwargs
               }
     if (not together_api_key) and ('TOGETHER_API_KEY' not in os.environ):
-        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')   
+        url = os.path.join('https://proxy.dlai.link/coursera_proxy/together', 'v1/chat/completions')
         response = requests.post(url, json = payload, verify=False)
         if not response.ok:
             raise Exception(f"Error while calling LLM: f{response.text}")
@@ -192,14 +192,14 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, hybri
                 display(Markdown(response))
         # Clear "Generating..." message
         status_output.clear_output()
-    
+
     query_input = widgets.Text(
         description='',
         value="Tell me about United States and Brazil's relationship over the course of 2024. Provide links for the resources you use in the answer.",
         placeholder='Type your query here',
         layout=widgets.Layout(width='70%')  # Adjusted width to make room for label
     )
-    
+
     query_label = widgets.Label(value="Query:", layout=widgets.Layout(width='10%', align='center'))
     query_box = widgets.HBox([query_label, query_input], layout=widgets.Layout(align_items='center'))  # Positioned side by side
 
@@ -211,14 +211,14 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, hybri
         description='Top K:',
         style={'description_width': 'initial'}
     )
-    
+
     rerank_property_dropdown = widgets.Dropdown(
         options=['title', 'chunk'],
         value='title',
         description='Rerank Property:',
         style={'description_width': 'initial'}
     )
-    
+
     output_style = {'border': '1px solid #ccc', 'width': '100%'}
     output1 = widgets.Output(layout=output_style)
     output2 = widgets.Output(layout=output_style)
@@ -226,19 +226,19 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, hybri
     output4 = widgets.Output(layout=output_style)
     output5 = widgets.Output(layout=output_style)
     status_output = widgets.Output()
-    
+
     submit_button = widgets.Button(
         description="Get Responses",
         style={'button_color': '#eee', 'font_color': 'black'}
     )
     submit_button.on_click(on_button_click)
-    
+
     label1 = widgets.Label(value="Semantic Search")
     label2 = widgets.Label(value="BM25 Search")
     label3 = widgets.Label(value="Hybrid Search")
     label4 = widgets.Label(value="Semantic Search with Reranking")
     label5 = widgets.Label(value="Without RAG")
-    
+
     display(widgets.HTML("""
     <style>
         .custom-output {
@@ -263,20 +263,20 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, hybri
         }
     </style>
     """))
-    
+
     display(query_box, slider, rerank_property_dropdown, submit_button, status_output)
-    
+
     # Create individual vertical containers for each label and output
     vbox1 = widgets.VBox([label1, output1], layout={'width': '30%'})
     vbox2 = widgets.VBox([label2, output2], layout={'width': '30%'})
     vbox3 = widgets.VBox([label3, output3], layout={'width': '30%'})
     vbox4 = widgets.VBox([label4, output4], layout={'width': '30%'})
     vbox5 = widgets.VBox([label5, output5], layout={'width': '30%'})
-    
+
     # HBoxes to arrange VBoxes in rows
     hbox_outputs1 = widgets.HBox([vbox1, vbox4, vbox2], layout={'justify_content': 'space-between'})
     hbox_outputs2 = widgets.HBox([vbox3, vbox5], layout={'justify_content': 'space-between'})
-    
+
     def style_outputs(*outputs):
         for output in outputs:
             output.layout.margin = '5px'
@@ -284,9 +284,9 @@ def display_widget(llm_call_func, semantic_search_retrieve, bm25_retrieve, hybri
             output.layout.padding = '10px'
             output.layout.overflow = 'auto'
             output.add_class("custom-output")
-            
+
     style_outputs(output1, output2, output3, output4, output5)
-    
+
     # Display rows with outputs
     display(hbox_outputs1)
     display(hbox_outputs2)

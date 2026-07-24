@@ -33,9 +33,9 @@ def predict(features):
 
 def lambda_handler(event, context):
     # print(json.dumps(event))
-    
+
     predictions_events = []
-    
+
     for record in event['Records']:
         encoded_data = record['kinesis']['data']
         decoded_data = base64.b64decode(encoded_data).decode('utf-8')
@@ -44,16 +44,16 @@ def lambda_handler(event, context):
         # print(ride_event)
         ride = ride_event['ride']
         ride_id = ride_event['ride_id']
-    
+
         features = prepare_features(ride)
         prediction = predict(features)
-    
+
         prediction_event = {
             'model': 'ride_duration_prediction_model',
             'version': '123',
             'prediction': {
                 'ride_duration': prediction,
-                'ride_id': ride_id   
+                'ride_id': ride_id
             }
         }
 
@@ -63,7 +63,7 @@ def lambda_handler(event, context):
                 Data=json.dumps(prediction_event),
                 PartitionKey=str(ride_id)
             )
-        
+
         predictions_events.append(prediction_event)
 
 

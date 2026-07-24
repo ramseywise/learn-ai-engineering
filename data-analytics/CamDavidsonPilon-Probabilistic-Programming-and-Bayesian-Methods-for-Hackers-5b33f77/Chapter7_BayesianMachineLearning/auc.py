@@ -1,4 +1,4 @@
-#contributed by Ben Hammer, 2013 
+#contributed by Ben Hammer, 2013
 
 
 def tied_rank(x):
@@ -24,11 +24,11 @@ def tied_rank(x):
     for i in range(len(sorted_x)):
         if cur_val != sorted_x[i][0]:
             cur_val = sorted_x[i][0]
-            for j in range(last_rank, i): 
+            for j in range(last_rank, i):
                 r[sorted_x[j][1]] = float(last_rank+1+i)/2.0
             last_rank = i
         if i==len(sorted_x)-1:
-            for j in range(last_rank, i+1): 
+            for j in range(last_rank, i+1):
                 r[sorted_x[j][1]] = float(last_rank+i+2)/2.0
     return r
 

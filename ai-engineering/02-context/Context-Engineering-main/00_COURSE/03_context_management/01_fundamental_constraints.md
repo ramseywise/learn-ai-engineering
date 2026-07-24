@@ -9,13 +9,13 @@ Context management operates within fundamental constraints that shape every aspe
 ```
 COMPUTATIONAL CONSTRAINTS
 ├─ Context Windows (Token Limits)
-├─ Processing Speed (Latency)  
+├─ Processing Speed (Latency)
 ├─ Memory Capacity (Storage)
 ├─ I/O Bandwidth (Throughput)
 ├─ Energy Consumption (Resources)
 └─ Concurrent Operations (Parallelism)
 
-COGNITIVE CONSTRAINTS  
+COGNITIVE CONSTRAINTS
 ├─ Attention Limits (Focus)
 ├─ Working Memory (Active Information)
 ├─ Processing Depth (Complexity Handling)
@@ -45,7 +45,7 @@ Context windows represent the fundamental limit on how much information can be a
 │                                                               │
 │  ┌─ SYSTEM LAYER ─────┐  ┌─ CONVERSATION LAYER ──────────┐   │
 │  │ • Instructions     │  │ User: "Analyze this code..."  │   │
-│  │ • Templates        │  │ AI: "I'll examine it for..."  │   │  
+│  │ • Templates        │  │ AI: "I'll examine it for..."  │   │
 │  │ • Protocol Defs    │  │ User: "Also check security"   │   │
 │  │ • Context Rules    │  │ AI: "Security analysis..."    │   │
 │  └───────────────────┘  └───────────────────────────────┘   │
@@ -67,68 +67,68 @@ Context windows represent the fundamental limit on how much information can be a
 CONTEXT_WINDOW_TEMPLATES = {
     'constraint_analysis': """
     # Context Window Analysis
-    
-    ## Current Usage Status  
+
+    ## Current Usage Status
     Total Available: {total_tokens}
     Currently Used: {used_tokens}
     Remaining Buffer: {remaining_tokens}
     Utilization Rate: {utilization_percentage}%
-    
+
     ## Content Breakdown
     System Instructions: {system_tokens} tokens
-    Conversation History: {conversation_tokens} tokens  
+    Conversation History: {conversation_tokens} tokens
     Working Context: {context_tokens} tokens
     Output Buffer: {output_buffer_tokens} tokens
-    
+
     ## Optimization Recommendations
     {optimization_suggestions}
-    
+
     Proceed with context management using these constraints.
     """,
-    
+
     'compression_request': """
     # Context Compression Request
-    
+
     ## Compression Target
     Content Type: {content_type}
     Original Size: {original_tokens} tokens
-    Target Size: {target_tokens} tokens  
+    Target Size: {target_tokens} tokens
     Compression Ratio: {compression_ratio}
-    
+
     ## Preservation Priorities
     Critical Information: {critical_elements}
     Important Details: {important_elements}
     Optional Context: {optional_elements}
-    
+
     ## Compression Instructions
     - Maintain all critical information intact
-    - Summarize important details efficiently  
+    - Summarize important details efficiently
     - Remove or compress optional context
     - Preserve logical relationships and coherence
-    
+
     Original Content:
     {content_to_compress}
-    
+
     Please provide the compressed version following these guidelines.
     """,
-    
+
     'adaptive_windowing': """
     # Adaptive Context Window Management
-    
+
     ## Current Context State
     Window Capacity: {window_capacity}
     Active Content: {active_content_size}
     Priority Distribution:
     - Critical: {critical_size} tokens ({critical_percent}%)
-    - Important: {important_size} tokens ({important_percent}%)  
+    - Important: {important_size} tokens ({important_percent}%)
     - Useful: {useful_size} tokens ({useful_percent}%)
     - Optional: {optional_size} tokens ({optional_percent}%)
-    
+
     ## Dynamic Adaptation Request
     Task Requirements: {task_requirements}
     Performance Constraints: {performance_constraints}
     Quality Targets: {quality_targets}
-    
+
     Based on these parameters, optimize the context window allocation.
     """
 }
@@ -139,7 +139,7 @@ CONTEXT_WINDOW_TEMPLATES = {
 ```python
 class ContextWindowManager:
     """Programming layer handling computational aspects of context window management"""
-    
+
     def __init__(self, max_tokens=128000, safety_buffer=0.15):
         self.max_tokens = max_tokens
         self.safety_buffer = safety_buffer
@@ -147,17 +147,17 @@ class ContextWindowManager:
         self.current_usage = 0
         self.content_layers = {
             'system': [],      # System prompts and instructions
-            'protocol': [],    # Active protocol definitions  
+            'protocol': [],    # Active protocol definitions
             'context': [],     # Working context information
             'history': [],     # Conversation history
             'working': []      # Temporary working space
         }
-        
+
     def analyze_current_usage(self):
         """Comprehensive analysis of current context window utilization"""
         usage_breakdown = {}
                     total_usage = 0
-        
+
         for layer_name, layer_content in self.content_layers.items():
             layer_tokens = sum(self.estimate_tokens(item) for item in layer_content)
             usage_breakdown[layer_name] = {
@@ -166,7 +166,7 @@ class ContextWindowManager:
                 'items': len(layer_content)
             }
             total_usage += layer_tokens
-            
+
         return {
             'total_tokens': total_usage,
             'utilization_rate': (total_usage / self.effective_capacity) * 100,
@@ -174,29 +174,29 @@ class ContextWindowManager:
             'layer_breakdown': usage_breakdown,
             'optimization_urgency': self.calculate_optimization_urgency(total_usage)
         }
-    
+
     def adaptive_compression(self, target_reduction=0.3):
         """Intelligently compress content to fit within constraints"""
         current_analysis = self.analyze_current_usage()
-        
+
         if current_analysis['utilization_rate'] < 80:
             return None  # No compression needed
-            
+
         compression_plan = {
             'history': min(0.5, target_reduction * 0.4),    # Compress conversation history most
-            'context': min(0.3, target_reduction * 0.3),    # Moderate context compression  
+            'context': min(0.3, target_reduction * 0.3),    # Moderate context compression
             'working': min(0.4, target_reduction * 0.2),    # Light working space compression
             'system': 0,                                     # Never compress system layer
             'protocol': min(0.1, target_reduction * 0.1)    # Minimal protocol compression
         }
-        
+
         compressed_content = {}
         for layer, compression_ratio in compression_plan.items():
             if compression_ratio > 0:
                 compressed_content[layer] = self.compress_layer(layer, compression_ratio)
-                
+
         return compressed_content
-        
+
     def estimate_tokens(self, content):
         """Estimate token count for content (simplified implementation)"""
         if isinstance(content, str):
@@ -209,7 +209,7 @@ class ContextWindowManager:
 
 class ConstraintOptimizer:
     """Handles optimization across multiple constraint types"""
-    
+
     def __init__(self, window_manager):
         self.window_manager = window_manager
         self.performance_metrics = {
@@ -217,7 +217,7 @@ class ConstraintOptimizer:
             'memory_usage': [],
             'quality_scores': []
         }
-        
+
     def optimize_for_constraints(self, task_requirements, available_resources):
         """Multi-dimensional constraint optimization"""
         optimization_strategy = {
@@ -225,7 +225,7 @@ class ConstraintOptimizer:
             'processing_approach': self.select_processing_strategy(available_resources),
             'quality_targets': self.set_realistic_quality_targets(task_requirements, available_resources)
         }
-        
+
         return optimization_strategy
 ```
 
@@ -234,7 +234,7 @@ class ConstraintOptimizer:
 ```
 /context.window.optimization{
     intent="Dynamically manage context window utilization to maximize effectiveness within computational constraints",
-    
+
     input={
         current_context_state="<live_context_information>",
         task_requirements="<what_needs_to_be_accomplished>",
@@ -245,25 +245,25 @@ class ConstraintOptimizer:
         },
         content_inventory={
             system_content="<essential_system_instructions>",
-            protocol_definitions="<active_protocol_specifications>", 
+            protocol_definitions="<active_protocol_specifications>",
             working_context="<current_task_context>",
             conversation_history="<relevant_prior_exchanges>",
             reference_materials="<supporting_documentation>"
         }
     },
-    
+
     process=[
         /constraint.assessment{
             action="Analyze current constraint pressures and available resources",
             analyze=[
                 "current_token_utilization",
-                "projected_growth_trajectory", 
+                "projected_growth_trajectory",
                 "constraint_pressure_points",
                 "optimization_opportunities"
             ],
             output="constraint_analysis_report"
         },
-        
+
         /content.prioritization{
             action="Rank all content by importance and utility for current task",
             prioritization_criteria=[
@@ -278,7 +278,7 @@ class ConstraintOptimizer:
                     examples=["relevant_context", "key_examples", "important_constraints"]
                 },
                 /useful{
-                    description="provides_additional_value_but_not_essential", 
+                    description="provides_additional_value_but_not_essential",
                     preservation_rate=0.5,
                     examples=["background_information", "alternative_approaches", "nice_to_have_context"]
                 },
@@ -291,7 +291,7 @@ class ConstraintOptimizer:
             depends_on="constraint_analysis_report",
             output="prioritized_content_inventory"
         },
-        
+
         /adaptive.allocation{
             action="Dynamically allocate context window space based on priorities and constraints",
             allocation_strategy=[
@@ -315,7 +315,7 @@ class ConstraintOptimizer:
             depends_on="prioritized_content_inventory",
             output="optimal_allocation_plan"
         },
-        
+
         /intelligent.compression{
             action="Apply sophisticated compression techniques while preserving essential information",
             compression_methods=[
@@ -326,7 +326,7 @@ class ConstraintOptimizer:
                 },
                 /hierarchical_summarization{
                     technique="create_layered_abstractions_with_expandable_details",
-                    target_layers=["working_context", "background_information"], 
+                    target_layers=["working_context", "background_information"],
                     compression_ratio="40-60%"
                 },
                 /pattern_deduplication{
@@ -343,13 +343,13 @@ class ConstraintOptimizer:
             depends_on="optimal_allocation_plan",
             output="compressed_content_package"
         },
-        
+
         /dynamic.monitoring{
             action="Continuously monitor and adjust context utilization during task execution",
             monitoring_points=[
                 "token_consumption_rate",
                 "quality_impact_assessment",
-                "constraint_pressure_evolution", 
+                "constraint_pressure_evolution",
                 "optimization_opportunity_detection"
             ],
             adjustment_triggers=[
@@ -361,7 +361,7 @@ class ConstraintOptimizer:
             output="dynamic_optimization_adjustments"
         }
     ],
-    
+
     output={
         optimized_context="Efficiently organized context within constraints",
         utilization_metrics={
@@ -386,35 +386,35 @@ Processing speed constraints affect how quickly we can analyze, transform, and r
 SPEED_OPTIMIZATION_TEMPLATES = {
     'rapid_analysis': """
     # Rapid Analysis Mode - Speed Optimized
-    
+
     ## Time Constraints
     Maximum Processing Time: {max_time}
     Current Complexity Level: {complexity_level}
     Quality vs Speed Trade-off: {tradeoff_preference}
-    
+
     ## Analysis Target
     {content_to_analyze}
-    
+
     ## Speed Optimization Instructions
     - Focus on high-impact insights first
     - Use pattern recognition over exhaustive analysis
     - Provide tiered results (quick overview + detailed breakdown)
     - Prioritize actionable findings
-    
+
     Deliver results in the fastest approach possible while maintaining {minimum_quality_level} quality.
     """,
-    
+
     'progressive_processing': """
     # Progressive Processing Request
-    
+
     ## Processing Strategy
     Phase 1 (Immediate): {phase1_scope} - Deliver in {phase1_time}
-    Phase 2 (Follow-up): {phase2_scope} - Deliver in {phase2_time}  
+    Phase 2 (Follow-up): {phase2_scope} - Deliver in {phase2_time}
     Phase 3 (Comprehensive): {phase3_scope} - Deliver in {phase3_time}
-    
+
     ## Content
     {input_content}
-    
+
     Start with Phase 1 and indicate when each subsequent phase is ready.
     """
 }
@@ -425,7 +425,7 @@ SPEED_OPTIMIZATION_TEMPLATES = {
 ```python
 class ProcessingSpeedManager:
     """Manages processing speed constraints and optimizations"""
-    
+
     def __init__(self):
         self.processing_profiles = {
             'rapid': {'max_time': 2, 'quality_threshold': 0.7},
@@ -433,26 +433,26 @@ class ProcessingSpeedManager:
             'thorough': {'max_time': 30, 'quality_threshold': 0.95}
         }
         self.performance_history = []
-        
+
     def select_processing_strategy(self, time_budget, quality_requirements):
         """Choose optimal processing approach based on constraints"""
         for profile_name, profile in self.processing_profiles.items():
-            if (time_budget >= profile['max_time'] and 
+            if (time_budget >= profile['max_time'] and
                 quality_requirements <= profile['quality_threshold']):
                 return profile_name
         return 'rapid'  # Fallback to fastest option
-        
+
     def optimize_for_speed(self, task, available_time):
         """Optimize task execution for speed constraints"""
         strategy = self.select_processing_strategy(available_time, task.quality_requirements)
-        
+
         optimization_plan = {
             'parallel_processing': self.identify_parallelizable_components(task),
             'approximation_opportunities': self.find_approximation_points(task),
             'caching_strategies': self.determine_caching_approach(task),
             'early_termination_conditions': self.set_termination_criteria(task, available_time)
         }
-        
+
         return optimization_plan
 ```
 
@@ -463,7 +463,7 @@ class ProcessingSpeedManager:
 ```
 /memory.constraint.management{
     intent="Optimize memory utilization across hierarchical storage systems while maintaining performance and accessibility",
-    
+
     input={
         available_memory={
             working_memory="<immediate_access_capacity>",
@@ -474,18 +474,18 @@ class ProcessingSpeedManager:
         access_patterns="<how_information_is_being_accessed>",
         performance_requirements="<speed_and_latency_constraints>"
     },
-    
+
     process=[
         /memory.audit{
             action="Analyze current memory utilization and identify optimization opportunities",
             audit_dimensions=[
                 "utilization_efficiency",
-                "access_frequency_patterns", 
+                "access_frequency_patterns",
                 "data_lifecycle_analysis",
                 "redundancy_detection"
             ]
         },
-        
+
         /hierarchical.optimization{
             action="Optimize data placement across memory hierarchy levels",
             placement_strategy=[
@@ -494,7 +494,7 @@ class ProcessingSpeedManager:
                 /cold_data{placement="long_term_storage", criteria="archival_or_rarely_accessed"}
             ]
         },
-        
+
         /adaptive.caching{
             action="Implement intelligent caching strategies",
             caching_policies=[
@@ -504,7 +504,7 @@ class ProcessingSpeedManager:
             ]
         }
     ],
-    
+
     output={
         optimized_memory_layout="Efficient data organization across hierarchy",
         performance_projections="Expected access time improvements",
@@ -520,20 +520,20 @@ Here's how all three pillars work together to manage multiple constraints simult
 ```python
 class IntegratedConstraintManager:
     """Complete system integrating prompts, programming, and protocols for constraint management"""
-    
+
     def __init__(self):
         self.window_manager = ContextWindowManager()
         self.speed_manager = ProcessingSpeedManager()
         self.memory_manager = MemoryHierarchyManager()
         self.template_engine = TemplateEngine()
         self.protocol_executor = ProtocolExecutor()
-        
+
     def handle_constrained_request(self, request, constraints):
         """Demonstrate complete integration handling multiple constraints"""
-        
+
         # 1. ASSESS CONSTRAINTS (Programming)
         constraint_analysis = self.analyze_all_constraints(request, constraints)
-        
+
         # 2. SELECT OPTIMAL STRATEGY (Protocol)
         strategy = self.protocol_executor.execute(
             "constraint.optimization.strategy",
@@ -543,21 +543,21 @@ class IntegratedConstraintManager:
                 'available_resources': self.get_available_resources()
             }
         )
-        
+
         # 3. CONFIGURE TEMPLATES (Prompts)
         optimized_template = self.template_engine.adapt_for_constraints(
             base_template=strategy['recommended_template'],
             constraints=constraint_analysis,
             optimization_targets=strategy['optimization_targets']
         )
-        
+
         # 4. EXECUTE WITH MONITORING (All Three)
         result = self.execute_with_constraint_monitoring(
             template=optimized_template,
             strategy=strategy,
             constraints=constraint_analysis
         )
-        
+
         return result
 ```
 

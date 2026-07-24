@@ -6,7 +6,7 @@ for other versions distros as well
 
 In this tutorial, we'll use [MINGW](https://www.mingw-w64.org/)/[Gitbash](https://gitforwindows.org/) for command line
 
-If you use WSL, follow the instructions from [linux.md](linux.md) 
+If you use WSL, follow the instructions from [linux.md](linux.md)
 
 
 ### Installing Java
@@ -39,11 +39,11 @@ Java HotSpot(TM) 64-Bit Server VM 18.9 (build 11.0.13+10-LTS-370, mixed mode)
 
 ### Hadoop
 
-Next, we need to have Hadoop binaries. 
+Next, we need to have Hadoop binaries.
 
 We'll need Hadoop 3.2 which we'll get from [here](https://github.com/cdarlint/winutils/tree/master/hadoop-3.2.0).
 
-Create a folder (`/c/tools/hadoop-3.2.0`) and put the files there 
+Create a folder (`/c/tools/hadoop-3.2.0`) and put the files there
 
 ```bash
 HADOOP_VERSION="3.2.0"
@@ -78,14 +78,14 @@ export PATH="${HADOOP_HOME}/bin:${PATH}"
 
 ### Spark
 
-Now download Spark. Select version 3.3.2 
+Now download Spark. Select version 3.3.2
 
 ```bash
 wget https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3.tgz
 ```
 
 
-Unpack it in some location without spaces, e.g. `c:/tools/`: 
+Unpack it in some location without spaces, e.g. `c:/tools/`:
 
 ```bash
 tar xzfv spark-3.3.2-bin-hadoop3.tgz
@@ -137,4 +137,4 @@ distData.filter(_ < 10).collect()
 
 ### PySpark
 
-It's the same for all platforms. Go to [pyspark.md](pyspark.md). 
+It's the same for all platforms. Go to [pyspark.md](pyspark.md).

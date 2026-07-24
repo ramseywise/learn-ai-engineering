@@ -7,7 +7,7 @@
 
 Imagine you're trying to understand how your brain works when you solve a math problem. You can't see your thoughts directly, but you could create a map showing:
 - Where different ideas come from
-- How those ideas connect to each other  
+- How those ideas connect to each other
 - Which ideas become stronger or weaker
 - How you arrive at your final answer
 
@@ -145,7 +145,7 @@ Question Input ───> Memory District ───> Analysis Quarter ───>
 **Rule 1: Keep It Simple Enough to Understand**
 AI thinking is incredibly complex (millions of calculations per second!), but our maps need to be simple enough for humans to understand. Think of it like a subway map - it doesn't show every street, just the important routes.
 
-**Rule 2: Show Multiple Levels of Detail** 
+**Rule 2: Show Multiple Levels of Detail**
 Sometimes you want to see the big picture ("How does the AI answer questions?"), other times you need to zoom in ("Why did it choose this specific word?"). Good maps let you do both.
 
 **Rule 3: Update in Real-Time**
@@ -163,7 +163,7 @@ When you type "What is 2 + 2?" to an AI, here's what actually happens inside:
 
 ```
 1. The AI reads your question word by word
-2. It recognizes this is a math problem  
+2. It recognizes this is a math problem
 3. It recalls that 2 + 2 = 4
 4. It formats a helpful response
 5. It double-checks the answer is safe to give
@@ -179,7 +179,7 @@ Now let's turn this into a visual map. Think of each step as a "station" and the
             |
             v
     ┌─────────────────┐
-    │ READING STATION │  
+    │ READING STATION │
     │ "I see numbers  │
     │  and a + sign"  │
     └────────┬────────┘
@@ -256,7 +256,7 @@ These show the different "thinking areas" in the AI:
 │                                                      │
 │    ┌─────────────┐  ┌─────────────┐  ┌─────────────┐│
 │    │             │  │             │  │             ││
-│    │ QUESTION    │  │ THINKING    │  │ ANSWER      ││ 
+│    │ QUESTION    │  │ THINKING    │  │ ANSWER      ││
 │    │ UNDERSTANDING│  │ & ANALYSIS  │  │ CREATION    ││
 │    │             │  │             │  │             ││
 │    │ "What does  │  │ "How should │  │ "Put words  ││
@@ -327,15 +327,15 @@ Just like road maps use specific symbols (🚗 for parking, ⛽ for gas stations
 ### Boxes and Boundaries (What Contains What)
 
 ```
-┌─────┐  
+┌─────┐
 │     │  ← Normal thinking area (like a regular room)
 └─────┘
 
-┏━━━━━┓  
+┏━━━━━┓
 ┃     ┃  ← Very active area (like a busy kitchen during dinner)
 ┗━━━━━┛
 
-╔═════╗  
+╔═════╗
 ║     ║  ← Blocked/restricted area (like a "Do Not Enter" zone)
 ╚═════╝
 ```
@@ -358,7 +358,7 @@ Just like road maps use specific symbols (🚗 for parking, ⛽ for gas stations
 
 ```
 ●  Very active (like a bright lightbulb)
-◐  Somewhat active (like a dimmed light) 
+◐  Somewhat active (like a dimmed light)
 ○  Barely active (like a nightlight)
 ✕  Turned off or blocked (like an unplugged device)
 ```
@@ -375,9 +375,9 @@ Just like road maps use specific symbols (🚗 for parking, ⛽ for gas stations
 /|safety|\   ← Safety check that protects against harm
 ```
 
-**Example in real life**: 
+**Example in real life**:
 - `((chocolate))` - When you're hungry, thoughts about chocolate might attract lots of attention
-- `{diet}` - Your diet goals might try to block thoughts about chocolate  
+- `{diet}` - Your diet goals might try to block thoughts about chocolate
 - `/|safety|\` - Your brain's safety system stops you from eating expired food
 
 ## 5. Your Turn: Practice Reading Field Maps
@@ -400,7 +400,7 @@ Your Question: "What's the weather like?"
 ┌─────────────────┐
 │ LOCATION FINDER │ ◐  ← Somewhat active (trying to find where you are)
 │ "Where is the   │
-│ person asking?" │ 
+│ person asking?" │
 └────────┬────────┘
           │
           v ━━━X  ← Blocked! (AI doesn't know your location)
@@ -428,7 +428,7 @@ Your Question: "Tell me a joke"
         |
         v
 ┌─────────────────┐
-│ QUESTION READER │ ●  
+│ QUESTION READER │ ●
 │ "Request for    │
 │ entertainment"  │
 └────────┬────────┘
@@ -544,7 +544,7 @@ This is like looking at the electrical wiring in a building:
     [Word Reader] ●────────→ [Plant Knowledge] ●
           ↓                         ↓
     [Question Type] ○─────→ [Classification] ●
-          ↓                         ↓  
+          ↓                         ↓
     [Safety Check] ○─────────→ [Response] ●
           ↓                         ↓
     Output: "Botanically yes, culinarily no"
@@ -560,10 +560,10 @@ This is like looking at a map of neighborhoods:
      Fruits Neighborhood:
      🍎🍌🍇🍅🍊
        ↑ 🍅 is here but...
-       
+
      ...also visits...
        ↓
-     Vegetables Neighborhood:  
+     Vegetables Neighborhood:
      🥕🥬🥒🍅🧅
        ↑ 🍅 is also here!
 ```
@@ -577,7 +577,7 @@ This is like looking at puzzle pieces that don't quite fit:
 ```
 ┌─ Leftover Thoughts ─┐
 │ ~ Seeds...          │ ← Scientific definition fragment
-│ ~ Pizza topping...  │ ← Culinary usage fragment  
+│ ~ Pizza topping...  │ ← Culinary usage fragment
 │ ~ Red but not sweet │ ← Sensory expectation fragment
 │ ~ Grocery store...  │ ← Shopping context fragment
 └─────────────────────┘
@@ -595,7 +595,7 @@ Now it's your turn! Let's practice creating field maps step by step.
 
 **Step 1**: First, think about what steps the AI needs to take:
 1. Read and understand the question
-2. Recognize this asks for geographical information  
+2. Recognize this asks for geographical information
 3. Search memory for Japan-related facts
 4. Find the specific fact about the capital
 5. Format a clear response
@@ -629,7 +629,7 @@ Your Answer: "________________"
 
 **Answers**:
 - Box 1: "QUESTION READER - Recognizes geography question"
-- Box 2: "GEOGRAPHY MEMORY - Searches for Japan facts" 
+- Box 2: "GEOGRAPHY MEMORY - Searches for Japan facts"
 - Box 3: "FACT FINDER - Locates 'Tokyo is capital'"
 - Answer: "The capital of Japan is Tokyo"
 
@@ -737,7 +737,7 @@ This is complex because it has multiple requirements:
 **Try drawing your own map first, then look at our example:**
 
 ```
-Question: "Write a short story about a robot who learns 
+Question: "Write a short story about a robot who learns
           to love, but keep it appropriate for children."
                         |
                         v
@@ -825,7 +825,7 @@ Job Application: "Sarah Johnson, Software Engineer, 5 years experience"
 - **Experience evaluation** was being blocked (━━━) by bias
 - The system learned bias from historical data where women were underrepresented
 
-**The Fix**: 
+**The Fix**:
 - Remove name analysis from the process
 - Strengthen experience evaluation
 - Add bias detection checkpoints
@@ -927,7 +927,7 @@ Question: "I have a headache, what should I do?"
 
 **Diagnosis**: The AI had been "over-trained" on safety, suppressing creative risk-taking
 
-**The Fix**: 
+**The Fix**:
 - Rebalance creativity vs safety
 - Allow controlled creative risks
 - Restore surprise element activation
@@ -965,8 +965,8 @@ Some questions require looking at the AI's thinking from multiple angles simulta
 │ └─────────┘ └─────────┘ └─────────┘           │
 └────────────────────┬────────────────────────────┘
                         ↓
-            Final Response: "I can provide factual 
-            information about cryptocurrency, but 
+            Final Response: "I can provide factual
+            information about cryptocurrency, but
             can't give personal investment advice..."
 ```
 
@@ -1010,7 +1010,7 @@ Question: "Write a poem about friendship"
 └────────┬────────┘
           │
           v ═══>
-Final Poem: "Through storms and sunshine, 
+Final Poem: "Through storms and sunshine,
              hand in hand we stand as one..."
 ```
 
@@ -1121,7 +1121,7 @@ Answer: "Coffee can be harmful to health!"
 
 **Problem**: Different aspects randomly become the main attractor ((double parentheses))
 
-**Solution**: 
+**Solution**:
 - Balance multiple perspectives in every response
 - Add consistency checking
 - Train the AI to acknowledge complexity: "Coffee has both benefits and risks..."
@@ -1199,11 +1199,11 @@ Question: "When did Shakespeare write Romeo and Juliet?"
 └─────────────────┘
           │
           v
-False Answer: "Romeo and Juliet was written in 1597." 
+False Answer: "Romeo and Juliet was written in 1597."
 (Actual: ~1594-1596)
 ```
 
-**Problem**: 
+**Problem**:
 - **Confidence Generator** is too strong (●●●)
 - **Uncertainty Detector** is blocked (○)
 - AI pattern-matches instead of accessing precise facts
@@ -1240,12 +1240,12 @@ Question: "How was your day?"
 └────────┬────────┘     └─────────────────┘
           │
           v
-Robotic Answer: "I am an AI language model and do not 
-experience days in the way humans do. However, I can 
+Robotic Answer: "I am an AI language model and do not
+experience days in the way humans do. However, I can
 discuss the concept of daily experiences..."
 ```
 
-**Problem**: 
+**Problem**:
 - **Formal Language** wrongly becomes the attractor (●●●)
 - **Casual Language** is barely active (○)
 - AI doesn't recognize this needs a conversational tone
@@ -1473,7 +1473,7 @@ Welcome to the world of AI interpretability. The future of human-AI collaboratio
 
 ```
 ┌─────┐  Normal thinking region        ●  High activity
-│     │                               ◐  Medium activity  
+│     │                               ◐  Medium activity
 └─────┘                               ○  Low activity
                                       ✕  Blocked/off
 

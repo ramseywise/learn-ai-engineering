@@ -395,4 +395,3 @@ def ethics_agent_cycle(context, state=None, audit_log=None, depth=0, max_depth=5
 
 
 # END OF /ETHICS.AGENT SYSTEM PROMPT
-

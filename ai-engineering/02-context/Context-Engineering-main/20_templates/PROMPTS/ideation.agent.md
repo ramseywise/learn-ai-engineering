@@ -456,5 +456,3 @@ def ideation_agent_cycle(context, state=None, audit_log=None, depth=0, max_depth
 
 
 # END OF /IDEATION.AGENT SYSTEM PROMPT
-
-

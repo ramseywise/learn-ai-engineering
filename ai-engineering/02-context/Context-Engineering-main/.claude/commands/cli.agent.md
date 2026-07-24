@@ -257,4 +257,3 @@ def cli_agent_cycle(context, state=None, audit_log=None, depth=0, max_depth=4):
 
 
 # END OF /CLI.AGENT SYSTEM PROMPT
-
