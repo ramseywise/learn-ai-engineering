@@ -204,7 +204,7 @@ Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (move
 - `tf.placeholder(dtype, shape)` → function argument / `tf.keras.Input`
 - `with tf.Session() as sess: sess.run(op)` → `op.numpy()` or direct eager execution
 
-### PyMC3 → PyMC 5 (#37) — **Partial; data-analytics/ not data-science/**
+### PyMC3 → PyMC 5 (#37) — **Resolved for curriculum path; BayesianML pinned as legacy**
 
 Note: all Bayesian notebooks are in `../data-analytics/`, not `data-science/`. CURRICULUM.md Layer 6
 cross-references them correctly.
@@ -214,21 +214,25 @@ cross-references them correctly.
 | `data-analytics/Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` | Done — `import pymc as pm` | — |
 | `data-analytics/Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` | Done — `import pymc as pm` | — |
 | `data-analytics/CamDavidsonPilon-.../Ch1_Introduction_PyMC3.ipynb` | Done — uses `import pymc as pm` despite filename | — |
-| `data-analytics/CamDavidsonPilon-.../Ch2_MorePyMC_PyMC_current.ipynb` | Available — use this variant | Verify no `pymc3` remnants |
-| `data-analytics/CamDavidsonPilon-.../Ch3_IntroMCMC_PyMC_current.ipynb` | Available — use this variant | Verify |
-| `data-analytics/CamDavidsonPilon-.../Ch4_LawOfLargeNumbers_PyMC_current.ipynb` | Available — use this variant | Verify |
-| `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Stale — still `import pymc3 as pm` | Swap: `import pymc3` → `import pymc`; `pm.traceplot` → `az.plot_trace` |
-| `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Likely done | Verify import |
-| `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc` if must run |
-| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | Stale — `import pymc3 as pm` | Port or pin; no `_current` variant exists |
+| `data-analytics/CamDavidsonPilon-.../Ch2_MorePyMC_PyMC_current.ipynb` | Verified — `import pymc as pm`, no pymc3 remnants | — |
+| `data-analytics/CamDavidsonPilon-.../Ch3_IntroMCMC_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch4_LawOfLargeNumbers_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Verified — `import pymc as pm`, `pytensor.tensor` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc==1.1.2` if must run |
+| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | **Pinned legacy** — Coursera assignment; uses `pm.glm`, `pm.iter_sample`, `pm.traceplot` (all removed in PyMC 4+). Staleness note + migration comments added inline. | Run with `pymc3==3.11.4 theano-pymc==1.1.2`; `bayesian.yml` updated with pins |
 | `data-analytics/CamDavidsonPilon-.../sandbox/`, `Chapter7_BayesianMachineLearning/` | Stale — various pymc imports | Low priority; not in curriculum path |
 
 **PyMC3 → PyMC 5 migration map:**
 - `import pymc3 as pm` → `import pymc as pm`
+- `pm.Normal('x', sd=N)` → `pm.Normal('x', sigma=N)` (sd renamed in PyMC 4)
 - `pm.traceplot(trace)` → `import arviz as az; az.plot_trace(trace)`
-- `pm.summary(trace)` → `az.summary(trace)`
+- `pm.summary(trace)` → `az.summary(trace)` (same DataFrame interface)
 - `pm.plot_posterior(trace)` → `az.plot_posterior(trace)`
-- `pm.sample(draws, tune=N)` — signature largely unchanged; `return_inferencedata=True` is now default in PyMC 5
+- `pm.sample(draws, init='MAP')` → `pm.sample(draws)` (init kwarg removed; use `initvals=pm.find_MAP()`)
+- `pm.glm.GLM.from_formula(...)` → removed; use `bambi` library
+- `pm.iter_sample(...)` → removed; use `pm.sample` with progressive callbacks
+- `traces.varnames` → `list(idata.posterior.data_vars)` (InferenceData format)
 - Theano custom ops → PyTensor equivalents (advanced; only in BayesianML week_4)
 
 ---
