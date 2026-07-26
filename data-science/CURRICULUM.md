@@ -181,7 +181,7 @@ Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (move
 - `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2, removed in 1.4)
 - `GridSearchCV(iid=True)` → remove `iid` param entirely (removed in 1.0)
 
-### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete, Phase 2 required for 2 notebooks**
+### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete; Phase 2 required for 2 Ng notebooks; Ch10a fixed**
 
 **Decision: `tf.compat.v1` bridge (Phase 1) for most; full Keras rewrite (Phase 2) for tf.contrib notebooks.**
 
@@ -194,7 +194,7 @@ Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (move
 | `Ng's Deep Learning Nbks/CNN/Week4/Face Recognition for the Happy House.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
 | `Ng's Deep Learning Nbks/CNN/Week4/Art Generation with Neural Style Transfer.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
 | `intro-to-nlp/tensorFlow/` (all 10 notebooks) | TF 2.x native | Use `tensorflow` / `tensorflow.keras` directly — no compat.v1 needed |
-| `Text Analytics with Python/Ch10a` | Stale | `with tf.Session() as session` — no compat shim; needs `tf.compat.v1.Session` or Keras rewrite |
+| `Text Analytics with Python/Ch10a` | **Fixed** | `tf.Session()` → `tf.math.confusion_matrix(...).numpy()` (eager); `tf.confusion_matrix` removed in TF2 |
 
 **Phase 2 migration map for tf.contrib (Tensorflow Tutorial + Convolution model):**
 - `tf.contrib.layers.xavier_initializer(seed=N)` → `tf.keras.initializers.glorot_uniform(seed=N)`
