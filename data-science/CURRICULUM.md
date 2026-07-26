@@ -164,23 +164,24 @@ Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (move
 | Notebook | Status | Notes |
 |---|---|---|
 | `Intro to ML in Python/02-supervised-learning.ipynb` | Updated | `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")` |
-| `Intro to ML in Python/04-representing-data-feature-engineering.ipynb` | Updated | `OneHotEncoder(sparse_output=False)` |
+| `Intro to ML in Python/04-representing-data-feature-engineering.ipynb` | Updated | `OneHotEncoder(sparse_output=False)` — cells 18, 21, 26 fixed (sparse=False removed in 1.4) |
 | `Intro to ML in Python/05-model-evaluation-and-improvement.ipynb` | Updated | No stale module imports; uses `mglearn` helpers |
 | `Intro to ML in Python/01,03,06,07,08` | Clean | No stale API patterns |
+| `approaching-almost-any-nlp-problem-on-kaggle.ipynb` | Updated | `iid=True` removed from `GridSearchCV` calls (cells 41, 43) — param removed in sklearn 1.0 |
 | `intro-to-nlp/` notebooks | Clean | `sklearn.manifold.TSNE`, `cosine_similarity`, `LogisticRegression`, `SVC` — all stable across 1.x |
 | `Ng's Machine Learning Nbks/` | Clean | No sklearn imports |
 | `Text Analytics with Python/` | Clean | Uses `sklearn.pipeline.Pipeline` / `make_pipeline` — stable |
 
-No version pinning required. `sklearn.cross_validation` (removed in 0.20) is not present anywhere —
-occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook output, not imports.
+`environment.yml` pinned to `scikit-learn>=1.4`. No module-level imports of removed namespaces found anywhere. `sklearn.cross_validation` (removed in 0.20) is not present — occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook output, not imports.
 
 **Migration map (for reference):**
 - `sklearn.cross_validation` → `sklearn.model_selection` (removed in 0.20, already absent)
 - `sklearn.grid_search` → `sklearn.model_selection` (removed in 0.20, already absent)
 - `DummyClassifier(strategy="warn")` → `strategy="stratified"` (default changed in 1.1)
-- `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2)
+- `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2, removed in 1.4)
+- `GridSearchCV(iid=True)` → remove `iid` param entirely (removed in 1.0)
 
-### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete, Phase 2 required for 2 notebooks**
+### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete; Phase 2 required for 2 Ng notebooks; Ch10a fixed**
 
 **Decision: `tf.compat.v1` bridge (Phase 1) for most; full Keras rewrite (Phase 2) for tf.contrib notebooks.**
 
@@ -193,7 +194,7 @@ occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook out
 | `Ng's Deep Learning Nbks/CNN/Week4/Face Recognition for the Happy House.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
 | `Ng's Deep Learning Nbks/CNN/Week4/Art Generation with Neural Style Transfer.ipynb` | Phase 1 done | No tf.contrib — runs on TF 2.x via compat.v1 |
 | `intro-to-nlp/tensorFlow/` (all 10 notebooks) | TF 2.x native | Use `tensorflow` / `tensorflow.keras` directly — no compat.v1 needed |
-| `Text Analytics with Python/Ch10a` | Stale | `with tf.Session() as session` — no compat shim; needs `tf.compat.v1.Session` or Keras rewrite |
+| `Text Analytics with Python/Ch10a` | **Fixed** | `tf.Session()` → `tf.math.confusion_matrix(...).numpy()` (eager); `tf.confusion_matrix` removed in TF2 |
 
 **Phase 2 migration map for tf.contrib (Tensorflow Tutorial + Convolution model):**
 - `tf.contrib.layers.xavier_initializer(seed=N)` → `tf.keras.initializers.glorot_uniform(seed=N)`
@@ -203,7 +204,7 @@ occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook out
 - `tf.placeholder(dtype, shape)` → function argument / `tf.keras.Input`
 - `with tf.Session() as sess: sess.run(op)` → `op.numpy()` or direct eager execution
 
-### PyMC3 → PyMC 5 (#37) — **Partial; data-analytics/ not data-science/**
+### PyMC3 → PyMC 5 (#37) — **Resolved for curriculum path; BayesianML pinned as legacy**
 
 Note: all Bayesian notebooks are in `../data-analytics/`, not `data-science/`. CURRICULUM.md Layer 6
 cross-references them correctly.
@@ -213,21 +214,25 @@ cross-references them correctly.
 | `data-analytics/Bayes/bayesian_inference_talk-main/Calculate_Posterior_Prob_with_PyMC.ipynb` | Done — `import pymc as pm` | — |
 | `data-analytics/Bayes/bayesian_inference_talk-main/German_Tank_Problem.ipynb` | Done — `import pymc as pm` | — |
 | `data-analytics/CamDavidsonPilon-.../Ch1_Introduction_PyMC3.ipynb` | Done — uses `import pymc as pm` despite filename | — |
-| `data-analytics/CamDavidsonPilon-.../Ch2_MorePyMC_PyMC_current.ipynb` | Available — use this variant | Verify no `pymc3` remnants |
-| `data-analytics/CamDavidsonPilon-.../Ch3_IntroMCMC_PyMC_current.ipynb` | Available — use this variant | Verify |
-| `data-analytics/CamDavidsonPilon-.../Ch4_LawOfLargeNumbers_PyMC_current.ipynb` | Available — use this variant | Verify |
-| `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Stale — still `import pymc3 as pm` | Swap: `import pymc3` → `import pymc`; `pm.traceplot` → `az.plot_trace` |
-| `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Likely done | Verify import |
-| `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc` if must run |
-| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | Stale — `import pymc3 as pm` | Port or pin; no `_current` variant exists |
+| `data-analytics/CamDavidsonPilon-.../Ch2_MorePyMC_PyMC_current.ipynb` | Verified — `import pymc as pm`, no pymc3 remnants | — |
+| `data-analytics/CamDavidsonPilon-.../Ch3_IntroMCMC_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch4_LawOfLargeNumbers_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Verified — `import pymc as pm`, `pytensor.tensor` | — |
+| `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
+| `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc==1.1.2` if must run |
+| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | **Pinned legacy** — Coursera assignment; uses `pm.glm`, `pm.iter_sample`, `pm.traceplot` (all removed in PyMC 4+). Staleness note + migration comments added inline. | Run with `pymc3==3.11.4 theano-pymc==1.1.2`; `bayesian.yml` updated with pins |
 | `data-analytics/CamDavidsonPilon-.../sandbox/`, `Chapter7_BayesianMachineLearning/` | Stale — various pymc imports | Low priority; not in curriculum path |
 
 **PyMC3 → PyMC 5 migration map:**
 - `import pymc3 as pm` → `import pymc as pm`
+- `pm.Normal('x', sd=N)` → `pm.Normal('x', sigma=N)` (sd renamed in PyMC 4)
 - `pm.traceplot(trace)` → `import arviz as az; az.plot_trace(trace)`
-- `pm.summary(trace)` → `az.summary(trace)`
+- `pm.summary(trace)` → `az.summary(trace)` (same DataFrame interface)
 - `pm.plot_posterior(trace)` → `az.plot_posterior(trace)`
-- `pm.sample(draws, tune=N)` — signature largely unchanged; `return_inferencedata=True` is now default in PyMC 5
+- `pm.sample(draws, init='MAP')` → `pm.sample(draws)` (init kwarg removed; use `initvals=pm.find_MAP()`)
+- `pm.glm.GLM.from_formula(...)` → removed; use `bambi` library
+- `pm.iter_sample(...)` → removed; use `pm.sample` with progressive callbacks
+- `traces.varnames` → `list(idata.posterior.data_vars)` (InferenceData format)
 - Theano custom ops → PyTensor equivalents (advanced; only in BayesianML week_4)
 
 ---
