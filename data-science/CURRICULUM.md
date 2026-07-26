@@ -164,21 +164,22 @@ Full audit run 2026-07-22. Bayesian notebooks live in `../data-analytics/` (move
 | Notebook | Status | Notes |
 |---|---|---|
 | `Intro to ML in Python/02-supervised-learning.ipynb` | Updated | `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")` |
-| `Intro to ML in Python/04-representing-data-feature-engineering.ipynb` | Updated | `OneHotEncoder(sparse_output=False)` |
+| `Intro to ML in Python/04-representing-data-feature-engineering.ipynb` | Updated | `OneHotEncoder(sparse_output=False)` — cells 18, 21, 26 fixed (sparse=False removed in 1.4) |
 | `Intro to ML in Python/05-model-evaluation-and-improvement.ipynb` | Updated | No stale module imports; uses `mglearn` helpers |
 | `Intro to ML in Python/01,03,06,07,08` | Clean | No stale API patterns |
+| `approaching-almost-any-nlp-problem-on-kaggle.ipynb` | Updated | `iid=True` removed from `GridSearchCV` calls (cells 41, 43) — param removed in sklearn 1.0 |
 | `intro-to-nlp/` notebooks | Clean | `sklearn.manifold.TSNE`, `cosine_similarity`, `LogisticRegression`, `SVC` — all stable across 1.x |
 | `Ng's Machine Learning Nbks/` | Clean | No sklearn imports |
 | `Text Analytics with Python/` | Clean | Uses `sklearn.pipeline.Pipeline` / `make_pipeline` — stable |
 
-No version pinning required. `sklearn.cross_validation` (removed in 0.20) is not present anywhere —
-occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook output, not imports.
+`environment.yml` pinned to `scikit-learn>=1.4`. No module-level imports of removed namespaces found anywhere. `sklearn.cross_validation` (removed in 0.20) is not present — occurrences of `cross_validation` in `Ch06b` are LDA topic words in notebook output, not imports.
 
 **Migration map (for reference):**
 - `sklearn.cross_validation` → `sklearn.model_selection` (removed in 0.20, already absent)
 - `sklearn.grid_search` → `sklearn.model_selection` (removed in 0.20, already absent)
 - `DummyClassifier(strategy="warn")` → `strategy="stratified"` (default changed in 1.1)
-- `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2)
+- `OneHotEncoder(sparse=True)` → `sparse_output=False` (parameter renamed in 1.2, removed in 1.4)
+- `GridSearchCV(iid=True)` → remove `iid` param entirely (removed in 1.0)
 
 ### TensorFlow: 1.x → 2.x (#36) — **Phase 1 complete, Phase 2 required for 2 notebooks**
 
