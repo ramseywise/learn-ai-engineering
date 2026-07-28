@@ -9,7 +9,7 @@
 | Evals & Observability study guide | Grader types, trajectory vs outcome — what "tests pass" actually tests | [guides/6-evals-observability](../../guides/6-evals-observability/interview-guide.md) |
 | Context & Cost study guide | Convention drift, hardcoded tunables, progressive disclosure | [guides/5-context-cost](../../guides/5-context-cost/interview-guide.md) |
 | Security notes | OWASP agent cheat sheet, source-sink analysis, defense stack with code examples | [notes/security.md](../../notes/security.md) |
-| Prompt injection notes | Injection techniques, mitigation patterns | [notes/prompt-injection.md](../../../ai-engineering/01-prompt/prompt-injection.md) |
+| Prompt injection notes | Injection techniques, mitigation patterns | [notes/prompt-injection.md](../../guides/7-security-safety/prompt-injection.md) |
 | Agent harness notes | Harness anatomy, OpenClaw 10 principles, enforcement > documentation | [notes/agent-harness.md](../../../ai-engineering/03-harness/agent-harness.md) |
 
 ### Librarian wiki (query via `search_wiki`)

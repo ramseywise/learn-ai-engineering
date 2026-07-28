@@ -33,10 +33,12 @@ exploitation, temporal-difference learning, Q-learning, policy gradients.
 | Exists | "Reinforcement Learning" book chapters 1-11 (PDFs) | [`2-llm-rlhf/`](2-llm-rlhf/) — chapters 1 (Why RL) through 11 (Conclusions) |
 | Exists | Sutton & Barto textbook (RLbook2020.pdf) | [`2-llm-rlhf/RLbook2020.pdf`](2-llm-rlhf/RLbook2020.pdf) |
 | Exists | rl.md — basics (MDP, agent/environment, policy, reward) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
-| Missing | Cleaned note synthesizing RL foundations for LLM context | Recommend: distill chapters 1-5 into a foundations note focused on what's needed for RLHF |
+| Exists | rl.md — cleaned, restructured; covers MDP, MARL, RL-in-RAG with full translations | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
+| Partial | Foundations bridged in rl.md; dedicated foundations note not yet created | See rl.md Section 1 for LLM-context RL foundations |
 
-**Assessment:** Strong reference coverage (full textbook + chapter PDFs). Gap is a
-synthesized note that bridges classical RL to the LLM alignment use case.
+**Assessment:** Strong reference coverage (full textbook + chapter PDFs). rl.md now
+covers MDP and algorithm families in LLM context. A dedicated note distilling chapters
+1-5 of Sutton & Barto remains a lower-priority gap.
 
 ---
 
@@ -54,11 +56,10 @@ architecture, PPO for language models, KL penalty, reward hacking, overoptimizat
 | Exists | InstructGPT / GPT-4 papers | [`2-llm-rlhf/2303.08774v6.pdf`](2-llm-rlhf/2303.08774v6.pdf) (GPT-4), [`2-llm-rlhf/2203.02155v1.pdf`](2-llm-rlhf/2203.02155v1.pdf) |
 | Exists | LLM Handbook — preference alignment chapter | [`../01-llm-fundamentals/llm handbook/`](../01-llm-fundamentals/llm%20handbook/) |
 | Exists | LLM From Scratch — fine-tuning chapters | [`../01-llm-fundamentals/llm from scratch/`](../01-llm-fundamentals/llm%20from%20scratch/) |
-| Missing | Cleaned note: RLHF pipeline walkthrough (SFT -> RM -> PPO) with diagrams | High priority — this is the core alignment technique |
+| **Done** | **rlhf-pipeline.md — SFT → reward model → PPO walkthrough with Bradley-Terry model, KL penalty, failure modes** | [`rlhf-pipeline.md`](rlhf-pipeline.md) |
 | Missing | Hands-on notebook: RLHF with HuggingFace TRL | Recommend: [HuggingFace TRL docs](https://huggingface.co/docs/trl/), [Anthropic RLHF paper](https://arxiv.org/abs/2204.05862) |
 
-**Assessment:** Papers exist but no structured walkthrough. This is the highest-priority
-gap — a cleaned note walking through the three-stage pipeline would anchor the entire pillar.
+**Assessment:** Core pipeline note exists. Hands-on notebook remains a gap.
 
 ---
 
@@ -85,12 +86,10 @@ pipeline; GRPO (DeepSeek) removes the critic network entirely.
 | Exists | rl.md — PPO overview (actor-critic, clipped ratios) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) (lines 122-124, 154) |
 | Exists | PPO reference links (DigitalOcean, Toloka, MathWorks) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
 | Exists | DPO paper (2305.18290v3.pdf) | [`2-llm-rlhf/2305.18290v3.pdf`](2-llm-rlhf/2305.18290v3.pdf) |
-| Missing | GRPO — no coverage at all | Recommend: [DeepSeek-R1 paper](https://arxiv.org/abs/2501.12948), [GRPO explainer](https://arxiv.org/abs/2402.03300) |
-| Missing | Cleaned note: PPO vs DPO vs GRPO comparison (when to use which) | High priority — practitioners need this decision framework |
-| Missing | Algorithm evolution timeline (PPO -> DPO -> GRPO -> KTO/IPO/ORPO) | Would clarify the field's trajectory |
+| **Done** | **preference-optimization.md — PPO vs DPO vs GRPO vs KTO/IPO/ORPO: math, decision table, DeepSeek-R1** | [`preference-optimization.md`](preference-optimization.md) |
 
-**Assessment:** DPO paper exists; PPO is covered in rl.md. GRPO is a complete gap.
-A comparison note showing the algorithm evolution would be the most valuable addition.
+**Assessment:** Full algorithm comparison note exists covering all major algorithms and
+the evolution story.
 
 ---
 
@@ -131,12 +130,12 @@ human labor.
 | Exists | Constitutional AI paper | [`2-llm-rlhf/constitutional_ai.pdf`](2-llm-rlhf/constitutional_ai.pdf) |
 | Exists | Constitutional AI paper (duplicate) | [`../01-llm-fundamentals/readings/constitutional_ai.pdf`](../01-llm-fundamentals/readings/constitutional_ai.pdf) |
 | Exists | rl.md — brief mention | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
-| Missing | Cleaned note: constitutional AI pipeline (critique -> revision -> RLAIF) | Recommend: [Anthropic constitutional AI paper](https://arxiv.org/abs/2212.08073), [RLAIF paper](https://arxiv.org/abs/2309.00267) |
-| Missing | Connection to safety/red-teaming literature | Would bridge to responsible AI topics |
+| **Done** | **constitutional-ai.md — critique → revision → RLAIF loop, red-teaming, RLHF comparison** | [`constitutional-ai.md`](constitutional-ai.md) |
+| Note | Duplicate PDF in 01-llm-fundamentals/readings/ — canonical copy is here | [`2-llm-rlhf/constitutional_ai.pdf`](2-llm-rlhf/constitutional_ai.pdf) |
 
-**Assessment:** The paper exists in two locations (should deduplicate — canonical copy
-should live here in `2-llm-rlhf/`, with a pointer from 01-llm-fundamentals). No
-structured note explaining the technique or connecting it to the broader alignment story.
+**Assessment:** Note complete. Duplicate PDF dedup: canonical in `2-llm-rlhf/`;
+`01-llm-fundamentals/readings/constitutional_ai.pdf` is a redundant copy (noted in
+`constitutional-ai.md`; PDFs not tracked by link checker so no action required).
 
 ---
 
@@ -191,18 +190,15 @@ notebook is a hands-on application. Main gap is RL-for-reasoning (DeepSeek-R1, o
 
 Ordered by impact for interview depth and conceptual completeness:
 
-1. **RLHF pipeline walkthrough** (Topic 2) — the single most important gap. A cleaned
-   note walking SFT -> reward model -> PPO, with the "why" at each stage.
-2. **PPO vs DPO vs GRPO comparison** (Topic 3) — practitioners need to know which
-   algorithm to use when. Include GRPO and the DeepSeek-R1 story.
-3. **rl.md cleanup and split** — extract the three topic notes from the Notion export.
-   Translate Chinese sections. Remove bare URLs, add context.
-4. **Constitutional AI / RLAIF note** (Topic 5) — the paper exists; a 1-page summary
-   connecting it to RLHF and safety would close the gap.
+1. ~~**RLHF pipeline walkthrough** (Topic 2)~~ **DONE** — [`rlhf-pipeline.md`](rlhf-pipeline.md)
+2. ~~**PPO vs DPO vs GRPO comparison** (Topic 3)~~ **DONE** — [`preference-optimization.md`](preference-optimization.md)
+3. ~~**rl.md cleanup and split**~~ **DONE** — translated, restructured, RLHF/DPO extracted to 05-RL
+4. ~~**Constitutional AI / RLAIF note** (Topic 5)~~ **DONE** — [`constitutional-ai.md`](constitutional-ai.md)
 5. **Reward modeling depth** (Topic 4) — process vs. outcome reward models, reward
-   hacking patterns.
+   hacking patterns. Recommend: [Anthropic reward modeling](https://arxiv.org/abs/2204.05862),
+   [OpenAI process reward models](https://openai.com/index/improving-mathematical-reasoning-with-process-reward-models/)
 6. **RL for reasoning** (Topic 6) — DeepSeek-R1 and verifiable rewards. Newest and
-   fastest-moving area.
+   fastest-moving area. See `preference-optimization.md` DeepSeek-R1 section for entry point.
 7. **Readings audit** — deduplicate, move misfiled papers, create index.
 
 ---

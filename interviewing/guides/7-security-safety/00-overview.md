@@ -7,7 +7,7 @@ actually hold.
 
 ## Learning path
 
-1. **The core attack** — [prompt-injection.md](../../../ai-engineering/01-prompt/prompt-injection.md): the
+1. **The core attack** — [prompt-injection.md](prompt-injection.md): the
    source–sink model (untrusted content flowing to privileged actions), why "just prompt
    it not to" fails, the dual-LLM pattern.
 2. **The threat landscape** — [security.md](../../notes/security.md): OWASP AI Agent
