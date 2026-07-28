@@ -22,7 +22,7 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ### Interviewing guides
 - [2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
 - [7-security-safety](../../interviewing/guides/7-security-safety/00-overview.md) — security angle on prompt injection.
-    - [prompt-injection.md](prompt-injection.md) — the security facet: adversarial input manipulation.
+    - [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md) — the security facet: adversarial input manipulation.
 
 ### External references
 - Anthropic interactive tutorial: https://github.com/anthropics/prompt-eng-interactive-tutorial

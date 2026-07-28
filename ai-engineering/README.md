@@ -28,7 +28,7 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 
 | Foundation | Depth (here) | Summary guide | Seed note(s) |
 |---|---|---|---|
-| prompt | [01-prompt/](01-prompt/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) | [prompt-engineering.md](01-prompt/prompt-engineering.md) (new), [prompt-injection.md](01-prompt/prompt-injection.md) (security) |
+| prompt | [01-prompt/](01-prompt/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) | [prompt-engineering.md](01-prompt/prompt-engineering.md) (new), [prompt-injection.md](../interviewing/guides/7-security-safety/prompt-injection.md) (security) |
 | context | [02-context/](02-context/README.md) | [5-context-cost](../interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context/context-engineering.md), [memory.md](05-graph/memory.md) |
 | harness | [03-harness/](03-harness/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness/agent-harness.md), [agents-design.md](03-harness/agents-design.md) |
 | loop | [04-loop/](04-loop/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop/loop-engineering.md), [reliable-agents.md](03-harness/reliable-agents.md) |
