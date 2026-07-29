@@ -7,6 +7,34 @@ and compared. Platform wiring lives in the tooling docs:
 
 ---
 
+## Concepts
+
+*Merged from `ai-engineering/06-eval/observability.md` (origin: notion-export, confidence: medium, cleaned: 2026-07-17).*
+
+### What to record in a trace
+
+For each Agent run:
+
+```
+├── Complete Prompt, including system prompts
+├── Complete messages[] for multiple rounds of interaction
+├── Each tool call + parameters + return value
+├── Inference chain, if thinking mode is present
+├── Final output
+└── Token consumption + latency
+```
+
+Semantic retrieval over traces is valuable — the ability to query "which Trace Agents are calling two tools" rather than relying on precise string matching enables workflow automation.
+
+*(missing diagram — not exported from Notion)*
+
+### Two-layer evaluation strategy
+
+1. **Manual sampling and labeling.** Based on rules: sample error cases, long dialogues, and negative user feedback. Humans judge execution quality and reasons for failure — primarily to identify failure patterns and provide calibration data for the second layer.
+2. **LLM as judge.** Full coverage of a wider range of traces, using the labeling results from layer 1 as calibration. Running only layer 2 makes scoring criteria prone to drift; relying solely on layer 1 doesn't cover real-world traffic at scale. Both layers must be used together.
+
+---
+
 ## Base trace metadata
 
 Every agent call — regardless of framework — must emit these fields. They are the

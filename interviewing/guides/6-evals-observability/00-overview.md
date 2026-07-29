@@ -18,7 +18,7 @@ real answer.
 4. **Agent evals** — *Validation and Measurement* + *Monitoring in Production* +
    *Improvement Loops* (agent-applications book chs 9–11); pass@k vs pass^k; the
    two-layer human/LLM calibration diagram in [../../images/](../../images/).
-5. **Observability in practice** — [observability.md](../../../ai-engineering/06-eval/observability.md) +
+5. **Observability in practice** — [support-agent-observability.md](../../../generative-ai/06-observability/support-agent-observability.md) +
    langfuse course refs (`generative-ai/06-observability/`): traces, spans, online
    sampling, thumbs-down → eval-set loops.
 6. **Close the loop** — librarian `wiki/eval/` (16 pages) for judge design, annotation
@@ -34,7 +34,7 @@ real answer.
 | TruthfulQA + judge-bias papers | pdf | `ai-engineering/readings/general/` | why judges need calibration |
 | langfuse/langsmith course repos | code | `generative-ai/06-observability/` | hands-on tracing |
 | Anthropic Eval Taxonomy · LLM-judge + annotation pages (wiki/eval, 16pp) | wiki | librarian | compiled harness designs |
-| eval-harness.md · observability.md | note | [ai-engineering/06-eval/](../../../ai-engineering/06-eval/) | taxonomy + tracing |
+| eval-harness.md · support-agent-observability.md | note | [ai-engineering/06-eval/](../../../ai-engineering/06-eval/) · [generative-ai/06-observability/](../../../generative-ai/06-observability/) | taxonomy + tracing |
 | agents-self-training.md | note | [../../notes/agents-self-training.md](../../notes/agents-self-training.md) | eval-driven training |
 | two-layer eval calibration · agentic lifecycle evals | image | [../../images/](../../images/) | human/LLM grading loop diagrams |
 

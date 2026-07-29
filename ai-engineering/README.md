@@ -33,7 +33,7 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 | harness | [03-harness/](03-harness/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness/agent-harness.md), [agents-design.md](03-harness/agents-design.md) |
 | loop | [04-loop/](04-loop/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop/loop-engineering.md), [reliable-agents.md](03-harness/reliable-agents.md) |
 | graph | [05-graph/](05-graph/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph/graph-engineering.md) (new), readings/3-rag-knowledge-graphs/ |
-| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](../interviewing/guides/6-evals-observability/00-overview.md) | [eval-harness.md](06-eval/eval-harness.md), [observability.md](06-eval/observability.md) |
+| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](../interviewing/guides/6-evals-observability/00-overview.md) | [eval-harness.md](06-eval/eval-harness.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
 
 ---
 
@@ -43,7 +43,19 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 
 **This folder** = depth for practitioners. Each pillar README defines the engineering discipline, names its position in the stack ("inherits the weaknesses of the layer below"), maps to the real cleaned notes and coursera code, and links back to the corresponding guide.
 
-No content is duplicated. `ai-engineering/` READMEs link to `interviewing/notes/*.md` — they do not copy them.
+No content is duplicated across `ai-engineering/` and `generative-ai/`. The cleaned operational
+notes (frontmatter `origin:`/`confidence:`) live *inside* each pillar directory (e.g.
+`01-prompt/prompt-engineering.md`), not in a separate `interviewing/notes/` layer — the five
+files remaining in `interviewing/notes/` (`agents-self-training.md`, `case-interview.md`,
+`foundations.md`, `reading-list.md`, `security.md`) are the ones not yet claimed by a pillar.
+`interviewing/guides/` is the only pointer-only layer: it summarizes for exam prep and links
+back here for depth.
+
+**Architecture decision (absorbed, not pointer-only):** operational notes were designed as a
+separate `interviewing/notes/` pointer layer in the 2026-07-21 plans, but execution moved them
+physically into each pillar directory instead. That is the actual architecture — pillar dirs hold
+their own notes directly. The pointer-only design is superseded; `interviewing/notes/` is a
+residual holding area for content not yet claimed by any pillar, not a canonical source layer.
 
 ---
 
