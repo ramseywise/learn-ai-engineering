@@ -1,124 +1,104 @@
 ---
-origin: notion-export
-confidence: medium
+origin: web-authored
 sources:
+  - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+  - https://www.promptingguide.ai/guides/context-engineering-guide
+  - https://developers.openai.com/api/docs/guides/compaction
   - https://medium.com/ai-in-plain-english/10-context-engineering-techniques-every-ai-engineer-should-know-b54b486a6921
-cleaned: 2026-07-17
+confidence: high
+cleaned: 2026-07-29
+---
+# Context Engineering
+
+> Overview note. Topic depth lives in [notes/](notes/).
+
 ---
 
-https://medium.com/ai-in-plain-english/10-context-engineering-techniques-every-ai-engineer-should-know-b54b486a6921
+## Position in the stack
 
-*(missing diagram — not exported from Notion)*
+Context engineering is the **second layer**: context contains prompts, and the harness assembles context. Where prompt engineering governs the instructions themselves, context engineering governs everything delivered alongside them — which documents, which memory, which tool results, how much history, and how the token budget is divided across all of it.
 
-←approaches
+**Inherits the weaknesses of:** prompt engineering. A well-assembled context window cannot compensate for poorly written instructions inside it.
 
-←context engineering’s goals
+Memory and tool design are **sub-components of this layer and the harness layer**, not sibling pillars. Every source that enumerates the foundations treats them as context/harness primitives.
 
-Context Engineering is the process of selecting, organizing, compressing, and delivering the right information to an LLM before it generates a response.
+---
 
-1. **Context Compression — compress documents into only the information relevant to the current question.**
-2. **Context Ranking  -reranking - Only send the highest-ranked results. — also for RAG**
-3. **Dynamic Context Windows: adjusts context size based on task complexity:**
-    1. simple one (Simple FAQ)— less chunks
-    2. complex one (Product comparison)— more chunks
-4. **Metadata Filtering First — also used in RAG**
-5. **Context Deduplication — but, need to detect deduplicated chunks after re-retrieval, cuz they might be the most relevant chunks, — a good parameters for reranking**
-6. **Conversation Memory Management — Memory management + Context Management**
-7. **Hierarchical Retrieval —?**
-8. **Context Caching — hot questions caching**
-9. **Structured Context Formatting - Avoid dumping raw text.**
-10. **Context Validation - avoid poor context — hallucination**
-    1. Remove outdated documents
-    2. Validate permissions
-    3. Detect conflicting information
-    4. Check freshness
-    5. Verify citations
+## The thesis
 
-pipeline:
+> **Find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome.**
+> — Anthropic, *Effective Context Engineering for AI Agents*
 
-```markdown
-User Query
-      ↓
-Metadata Filtering
-      ↓
-Vector Search
-      ↓
-Context Ranking
-      ↓
-Deduplication
-      ↓
-Compression
-      ↓
-Memory Injection
-      ↓
-Structured Formatting
-      ↓
-LLM
-      ↓
-Response
+A *minimization* objective. This is the field's central counterintuition: large windows invite filling, and filling degrades output. Context is a finite resource with diminishing — eventually negative — marginal returns, because transformer attention divides a fixed budget across n² token pairs.
 
-```
+Every technique in this pillar is a response to that constraint.
 
-*(missing diagram — not exported from Notion)*
+---
 
-## Salvaged from table_of_contents.md (Notion): skills design tips (OpenAI)
+## The four levers
 
+The operational frame (`~/.claude/refs/agent-context.md`). Apply in order — cost rises left to right.
 
-### skills tips from https://developers.openai.com/blog/skills-shell-tips  — add in ‣
+| Lever | Question | Where |
+|---|---|---|
+| **Write** | Can this live outside the window? | [05-memory](notes/05-memory-as-context.md) |
+| **Select** | What comes back in, and when? | [03-retrieval](notes/03-retrieval-strategies.md) |
+| **Compress** | Can this be smaller? | [04-compaction](notes/04-compression-compaction.md) |
+| **Isolate** | Does this need a separate window? | [06-multi-agent](notes/06-multi-agent-context.md) |
 
-**1) Write skill descriptions like routing logic** 
+Isolate is last because it is most expensive: real tokens multiply, and cross-agent context is lost.
 
-- When should I use this?
-- When should I not use this?
-- What are the outputs and success criteria?
+---
 
-    2 points: skill description tokens and precision
+## Topic notes
 
-    ```markdown
-    # bad skill description（约 45 tokens）
-    description: |
-      This skill handles the complete deployment process to production.
-      It covers environment checks, rollback procedures, and post-deploy
-      verification. Use this before deploying any code to production.
+1. [Why context is finite](notes/01-why-context-is-finite.md) — attention budget, n² attention, context rot, diminishing returns.
+2. [The anatomy of effective context](notes/02-context-anatomy.md) — system prompt altitude, the five layers, stable-before-dynamic ordering, cache prefix matching.
+3. [Retrieval strategies](notes/03-retrieval-strategies.md) — pre-computed vs. just-in-time, lightweight identifiers, progressive disclosure, the hybrid default, the pre-retrieval pipeline.
+4. [Compression and compaction](notes/04-compression-compaction.md) — the compaction pipeline, retention priority, tool-result clearing, state extraction, crash recovery.
+5. [Memory as a context sub-component](notes/05-memory-as-context.md) — memory types, structured note-taking, index-plus-detail, memory hygiene.
+6. [Multi-agent context and tool design](notes/06-multi-agent-context.md) — sub-agent isolation, orchestrator-holds-plan, token-efficient tools, tool overlap.
+7. [Context failure modes](notes/07-context-failure-modes.md) — rot, poisoning, distraction, clash, injection, and the diagnostic flow.
 
-    # good（约 9 tokens）
-    description: Use when deploying to production or rolling back.
-    ```
+---
 
+## The prompt ↔ context boundary
 
-**2) Add negative examples and edge cases to reduce misfires**
+| Prompt engineering | Context engineering |
+|---|---|
+| The instructions and examples themselves | What to *include* alongside the instructions |
+| How you phrase the task, format requests, structure XML | Which documents, memory, tool outputs, history to inject |
+| Role setting, CoT, few-shot, output format | Window composition, token budget, retrieval strategy |
 
-```markdown
-“Don’t call this skill when…” cases (and what to do instead).
-```
+Once you are deciding *what* is in the window rather than *how* to phrase what's already there, you are in context engineering.
 
-*(missing diagram — not exported from Notion)*
+Reciprocally, the context ↔ harness boundary: once the assembly becomes stateful and conditional — a loop that decides *when* to retrieve, compact, or spawn — you have crossed into [03-harness](../03-harness/README.md).
 
-**3) Put templates and examples inside the skill (they’re basically free when unused)**
+---
 
-This is especially effective for knowledge work outputs, like:
+## Context types
 
-- Structured reports.
-- Escalation triage summaries.
-- Account plans.
-- Data analysis writeups.
+| Type | Source | Volatility |
+|---|---|---|
+| Static | Role, instructions, rules | Stable across sessions |
+| Dynamic | Date/time, user, environment | Per turn |
+| Retrieved | Vector store, search, file reads | Per query |
+| Historical | Prior states, revisions, outputs | Grows monotonically |
 
-**4) Design for long runs early with container reuse and compaction**
+Historical is the only type without a natural bound. Compaction exists to bound it.
 
-**5) When you need determinism, explicitly tell the model to use the skill**
+---
 
-```markdown
-“Use the <skill name> skill.”
-```
+## Security facet
 
-### **6) Treat skills plus networking as a high-risk combo (design for containment)**
+Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/07-context-failure-modes.md#prompt-injection) and [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md).
 
-This is the security tip that’s easy to gloss over now and hard to fix later.
+---
 
-**Combining skills with open network access creates a high-risk path for data exfiltration.** If you use networking, keep network allowlists strict, assume tool output is untrusted, and avoid open internet plus powerful procedures in consumer-facing flows where users expect strong confirmation controls.
+## Resources
 
-A strong default posture:
-
-- Skills: **allowed**
-- Shell: **allowed**
-- Network: **enabled only with a minimal allowlist**, per request, for narrowly scoped tasks
+- Pillar guide: [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
+- Anthropic: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+- promptingguide.ai: https://www.promptingguide.ai/guides/context-engineering-guide
+- OpenAI compaction: https://developers.openai.com/api/docs/guides/compaction
+- Vendored course: [Context-Engineering-main](Context-Engineering-main/) — see [#106](https://github.com/ramseywise/learn-ai-engineering/issues/106) for consolidation scope

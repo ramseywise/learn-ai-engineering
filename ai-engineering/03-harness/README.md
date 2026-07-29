@@ -23,6 +23,7 @@ Per `awesome-harness-engineering`: verification & CI/evals, memory & state, obse
 - [agents-design.md](agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
 - [deep-agents.md](../04-loop/deep-agents.md) — depth on agentic architectures: planning, reflection, self-critique.
 - [agents-guardrails.md](agents-guardrails.md) — guardrails and safety constraints in harness design.
+- [skills-design.md](skills-design.md) — skills as a harness primitive: descriptions as routing logic, negative examples, bundled templates, explicit invocation, and the skills+networking risk posture.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
