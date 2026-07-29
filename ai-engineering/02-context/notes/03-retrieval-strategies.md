@@ -100,6 +100,24 @@ Stage notes:
 - **Compression is query-conditional.** Reduce each document to the portion that answers the current question — not a generic summary. A generic summary discards the specific detail the query needed.
 - **Structured formatting.** Wrap in tags with source attribution so the model can cite and so injected content stays distinguishable from instructions.
 
+### A worked example
+
+A production pipeline with the same shape — ingestion and indexing on the left, query and retrieval on the right:
+
+![AWS Bedrock knowledge base pipeline: web crawl → semantic chunking → vector database, then query transformation → hybrid search → context injection → generation](../../images/bedrock-kb-pipeline-billydk.png)
+
+Two things worth noting against the abstract pipeline above. **Hybrid search** runs semantic and keyword retrieval together rather than choosing between them — vectors catch paraphrase, keywords catch exact identifiers, and each covers the other's failure mode. And **query transformation** sits before retrieval: the user's original phrasing is rewritten into tool parameters, because the text a human types is rarely the text that retrieves best.
+
+What the diagram omits is as informative as what it shows — there is no reranking stage and no deduplication, which is typical of a first production cut. Those are the stages teams add after retrieval quality plateaus.
+
+### Ingestion determines the ceiling
+
+Retrieval can only return what parsing extracted. Parser capability tiers roughly like this:
+
+![Three parser tiers: text-only extraction; text plus image descriptions, audio transcription and video summarization; and visually rich document handling](../../images/parser-tiers-by-modality.png)
+
+The consequence for context engineering: a tier-one parser over a PDF-heavy corpus silently drops every chart, diagram, and table into either nothing or garbled text. The retrieval layer then looks broken — low recall, irrelevant chunks — when the actual failure happened at ingestion. Check what the parser produced before tuning k, rerankers, or chunk size.
+
 ### Dynamic context windows
 
 Scale retrieval depth to task complexity rather than using a fixed k:
