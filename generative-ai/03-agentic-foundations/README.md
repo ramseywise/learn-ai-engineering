@@ -53,7 +53,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
   evaluation pipelines in LangFuse: golden sets, LLM-as-judge, regression tracking.
 - **[`../06-observability/langfuse-mcp-python-main/`](../06-observability/langfuse-mcp-python-main/)** —
   LangFuse + MCP integration: observability for MCP-enabled agents.
-- **[`../../ai-engineering/06-eval/DeepLearning.AI-Evaluating-AI-Agents-master/`](../../ai-engineering/06-eval/DeepLearning.AI-Evaluating-AI-Agents-master/)** —
+- **[`../../ai-engineering/06-eval/Evaluating-AI-Agents-master/`](../../ai-engineering/06-eval/Evaluating-AI-Agents-master/)** —
   end-to-end agent evaluation: task decomposition, trajectory evaluation, benchmark design.
 
 ### Interviewing guides

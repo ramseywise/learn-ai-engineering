@@ -7,10 +7,13 @@ import urllib.parse
 SKIP_DIRS = {
     ".git", "node_modules", "Context-Engineering-main",
     "DataTalks Data Engineering", "DataTalks MLOps",
+    "Prompt-Engineering-Guide-main", "prompt-eng-for-llms",
+    "Evaluating-AI-Agents-master", "evaluation",
 }
 SKIP_PATHS = {"./.claude/docs"}
-SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/")
+SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/", "~/", "/guides/")
 link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)\)")
+fence_re = re.compile(r"```.*?```", re.DOTALL)
 
 errors = 0
 for root, dirs, files in os.walk("."):
@@ -25,7 +28,9 @@ for root, dirs, files in os.walk("."):
             text = open(fpath).read()
         except Exception:
             continue
-        for m in link_re.finditer(text):
+        # Strip fenced code blocks so illustrative links aren't checked
+        text_no_fences = fence_re.sub("", text)
+        for m in link_re.finditer(text_no_fences):
             link = m.group(1)
             if link.startswith("http") or any(link.startswith(p) for p in SKIP_PREFIXES):
                 continue

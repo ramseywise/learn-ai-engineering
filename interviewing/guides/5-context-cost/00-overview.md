@@ -7,7 +7,7 @@ context rot, token economics, and latency budgets.
 ## Learning path
 
 1. **The mental model** — notes: [context-engineering.md](../../../ai-engineering/02-context/context-engineering.md)
-   + [context-management.md](../../../ai-engineering/02-context/context-management.md) (the 5 context layers,
+   + [notes/](../../../ai-engineering/02-context/notes/) (the 5 context layers,
    static-first ordering); librarian's *Prefix Caching* page for the caching mechanism.
 2. **Why it matters mechanically** — KV cache + prefill/decode economics from the
    [pillar-2 interview guide](../2-llm-fundamentals/interview-guide.md) §§1,4; ALiBi
@@ -31,7 +31,7 @@ context rot, token economics, and latency budgets.
 | *AI Systems Performance Engineering* (chs 1–20) | pdf | `ai-engineering/readings/ai_engineering/ai performance/` | GPU/CUDA-level inference performance (awareness tier) |
 | ALiBi (2108.12409) | pdf | `ai-engineering/readings/general/` | long-context positional method |
 | Prefix Caching · ADK Context Engineering · Summarization Node | wiki | librarian | caching + compaction patterns from real builds |
-| context-engineering.md · context-management.md | note | [ai-engineering/02-context/](../../../ai-engineering/02-context/) | context layers, compaction instructions |
+| context-engineering.md · notes/ | note | [ai-engineering/02-context/](../../../ai-engineering/02-context/) | context layers, compaction instructions |
 | ADK context diagrams | image | [../../images/](../../images/) | static-vs-dynamic context, vibe-coding stakes spectrum |
 
 ## Test yourself
