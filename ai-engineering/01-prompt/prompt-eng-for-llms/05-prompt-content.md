@@ -11,8 +11,8 @@ cleaned: 2026-07-29
 
 Two kinds of prompt content:
 
-- **Static content**: hardcoded, defines/clarifies the general task, unchanged across users. E.g., "Which book do you think I should read next? *I mean for fun, not what kind of textbook.*"
-- **Dynamic content**: pulled from variable sources, conveys context about the specific user/instance. E.g., "*The last book I read was 'Moby Dick,' btw.*"
+- **Static content**: hardcoded, defines/clarifies the general task, unchanged across users. E.g., "Which book do you think I should read next? *I mean for fun, not what kind of textbook.*" (PDF p. 3)
+- **Dynamic content**: pulled from variable sources, conveys context about the specific user/instance. E.g., "*The last book I read was 'Moby Dick,' btw.*" (PDF p. 3)
 
 The line is blurry and depends on how you built the app: a hardcoded rule ("don't recommend self-help books") is static/clarification; the same rule inferred from a user's message history is dynamic/context. Classify by origin (app logic vs. variable source), not by content.
 
@@ -25,9 +25,9 @@ Two forms of clarification:
 **Explicit** — state the rule directly: `Use markdown`, `Don't use hyperlinks`, `Don't refer to dates after your knowledge cutoff of 2024-03-03`. Production systems can carry long lists of dos/don'ts (see the leaked Bing/Sydney prompt: identity rules, output-format rules, safety rules, all stated as flat imperative bullets).
 
 Rules of thumb for writing explicit instructions:
-- State positives, not negatives ("Thou shalt preserve life" > "Thou shalt not kill").
+- State positives, not negatives ("Thou shalt preserve life" > "Thou shalt not kill", PDF p. 6).
 - Bolster commands with a reason — models follow rationale better than bare commands.
-- Avoid absolutes — leave room for judgment ("kill only rarely...and make sure it's really appropriate").
+- Avoid absolutes — leave room for judgment ("Thou shalt kill only rarely…and make sure it's really appropriate!", PDF p. 6).
 
 RLHF-tuned chat models are better at following explicit instructions than base models, and the system message is the right channel for explicit instruction (models are specifically trained to prioritize it) — but no model is perfectly compliant.
 
@@ -137,13 +137,13 @@ The retrieved snippets get concatenated into the prompt alongside static framing
 
 ## Summarization
 
-Complementary to retrieval: retrieval zooms in on relevant fragments; **summarization** zooms out, compressing large volumes into a synopsis. Simple case: append `Terselv summarize all of the above` to text and let the LLM compress it. Breaks down once the source text exceeds the context window — which is exactly the situation summarization is meant to solve, so naive single-pass summarization is self-defeating for large corpora.
+Complementary to retrieval: retrieval zooms in on relevant fragments; **summarization** zooms out, compressing large volumes into a synopsis. Simple case: append `Tersely summarize all of the above` (PDF p. 32) to text and let the LLM compress it. Breaks down once the source text exceeds the context window — which is exactly the situation summarization is meant to solve, so naive single-pass summarization is self-defeating for large corpora.
 
 **Hierarchical summarization**: divide-and-conquer. Split the corpus into semantic units no larger than the context window (e.g., book chapters), summarize each independently, then summarize the summaries — recursively, as many levels as needed (chapters → books → whole Bible, for a 1,189-chapter example). Cost scales with total original token count regardless of hierarchy depth, as long as each summary is meaningfully smaller (rule of thumb: ~1/10) than its source. Prefer splitting along natural corpus boundaries (chapters, files, directories); if forced to split unnaturally, avoid unbalanced groupings.
 
 **Rumor problem**: each additional summarization layer is another chance for the model to subtly misrepresent the input, and errors compound down the hierarchy (more levels = more chances for drift) — like a game of telephone. Manageable in practice as long as summaries aren't so terse that each layer is meaningfully lossy.
 
-**General vs. specific summaries**: summarization is lossy compression, and what gets discarded depends on what the summary is *for*. A generic summary of a vacation post keeps the highlights but may drop an offhand detail ("this book made the flight bearable") that's exactly what a downstream book-recommender needs. Fix: summarize with the end task already in mind (specific summarization) rather than generically. Trade-off: specific summaries are cheap to reuse only while the downstream question stays fixed — change the question and you must resummarize from scratch; general summaries are reusable across applications/questions since only the summarization artifact needs to be shared, not even the same LLM.
+**General vs. specific summaries**: summarization is lossy compression, and what gets discarded depends on what the summary is *for*. A generic summary of a vacation post keeps the highlights but may drop an offhand detail (which book made the long-distance flight more bearable) that's exactly what a downstream book-recommender needs. Fix: summarize with the end task already in mind (specific summarization) rather than generically. Trade-off: specific summaries are cheap to reuse only while the downstream question stays fixed — change the question and you must resummarize from scratch; general summaries are reusable across applications/questions since only the summarization artifact needs to be shared, not even the same LLM.
 
 ## Key takeaways
 

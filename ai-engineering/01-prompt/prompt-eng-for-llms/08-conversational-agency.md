@@ -45,8 +45,8 @@ internal format:
   `description` text — not raw JSON schema.
 - TypeScript is used because: (1) richer type vocabulary than JSON schema, (2) doc comments
   attach naturally to both function and arguments, (3) forcing named (not positional)
-  arguments makes the model "say the argument name right before the value," reducing
-  mis-assignment.
+  arguments makes the model state each argument's name immediately before its value,
+  which keeps function calls consistent and reduces mis-assignment.
 - A call is emitted as `<|im_start|>assistant to=functions.set_room_temp\n{"temp": 76}<|im_end|>`.
   The `to=functions.X` syntax and JSON argument object are just more predicted tokens.
 - Evaluation results come back as a new `tool` role message (`<|im_start|>tool\nDONE<|im_end|>`) —
@@ -124,8 +124,8 @@ post-hoc rationalization. Multiple techniques inject a monologue before the fina
   StrategyQA commonsense accuracy: 69.4% → 75.6% (PaLM 540B). GSM8K math word problems:
   ~20% → ~60% solve rate. Also helps symbolic reasoning tasks.
 - **Zero-shot CoT** ("Large Language Models are Zero-Shot Reasoners," May 2022): skip
-  the curated few-shot examples — just append the cue **"Let's think step-by-step"** and
-  the model spontaneously produces reasoning before its answer.
+  the curated few-shot examples — just append the cue **"Let's think step-by-step"**
+  (PDF p. 16) and the model spontaneously produces reasoning before its answer.
 - **Pause tokens** ("Think Before You Speak," Oct 2023): fine-tune the model on a
   meaningless "pause" token; inject ~10 of them after the question before the answer.
   Extra timesteps let earlier-token information integrate more fully into model state —
@@ -167,7 +167,7 @@ success in ALFWorld vs. 45% for Act alone.
 
 - **Plan-and-solve prompting**: front-load an explicit planning step before execution —
   *"Let's first understand the problem and devise a plan to solve the problem. Then,
-  let's carry out the plan and solve the problem step-by-step."* No tool usage; closer in
+  let's carry out the plan and solve the problem step-by-step."* (PDF p. 19) No tool usage; closer in
   spirit to zero-shot CoT than to ReAct. Could combine with ReAct's think-act-observe loop.
 - **Reflexion**: lets the model review its own output afterward, identify what went wrong,
   and improve on retry — works only in domains with a do-over (e.g., generating code
@@ -196,8 +196,8 @@ A conversational agent's full prompt context (Table 8-1) decomposes into:
 
 ## Selecting and organizing context
 
-No universal recipe — depends on domain, model, and data; the answer is to **evaluate,
-evaluate, evaluate** (Ch. 10). Considerations:
+No universal recipe — depends on domain, model, and data; the answer is to "evaluate,
+evaluate, evaluate" (PDF p. 24; more in Ch. 10). Considerations:
 
 - **Which tools?** Drop tools irrelevant to the current conversational state to reduce
   distraction.
@@ -231,6 +231,8 @@ Two pieces complete the loop already built via `process_messages` (tool-call han
    input, since the model still has work to do); if it's an assistant message, print its
    `content`; break out to wait for the next user input only once `tool_calls is None`.
 
+![Figure 8-2. A sequence diagram representing the design of the conversational agent](images/fig-8-2-conversational-agent-sequence.png)
+
 Sequence diagram (Figure 8-2): User → App (appends message) → Model (prompt) → **loop**
 [Model requests function call → App parses call → App calls Tool → Tool responds → App
 appends tool call+response → App re-prompts Model] until Model returns a plain assistant
@@ -241,9 +243,9 @@ interprets colloquial phrasing ("Golly gee, it's hot in here"), applies common s
 (volunteers that 64°F is "actually quite cool" when the user's premise contradicts sensor
 data), respects informal magnitude cues ("LOTS cooler" → sets 50°F, not an extreme like
 0°F), and — critically — correctly restores the *original* temperature (64°F) on request
-by reasoning over the **prior conversation**, not just the current exchange. This
-cross-turn state tracking is the qualitative leap conversational agency adds over a single
-`process_messages` call.
+by reasoning over the **prior conversation**, not just the current exchange (transcript
+quotes: PDF pp. 29–30). This cross-turn state tracking is the qualitative leap
+conversational agency adds over a single `process_messages` call.
 
 ## User experience
 

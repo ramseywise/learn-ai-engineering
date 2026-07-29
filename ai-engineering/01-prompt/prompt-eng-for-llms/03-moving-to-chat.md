@@ -165,7 +165,8 @@ output), `n` (parallel completions — `n=128` costs little extra latency vs `n=
 useful for eval/sampling), `logprobs`/`top_logprobs` (expose per-token confidence and
 alternatives), `logit_bias` (nudge specific token likelihoods), `stream` (token-by-
 token delivery for responsive UX), and `temperature` (0 = deterministic-ish and safe
-but repetitive; ~1.0 is the practical "sweet spot"; near 2.0 degrades to noise).
+but repetitive; ~1.0 is close to the practical "sweet spot" (PDF p. 17); near 2.0
+degrades to noise).
 
 ## What you give up moving from completion to chat
 
@@ -173,7 +174,7 @@ but repetitive; ~1.0 is the practical "sweet spot"; near 2.0 degrades to noise).
    capability tasks relative to base/completion use (per a 2023 Stanford study
    showing GPT-4 behavior drift over time on certain tasks).
 2. **Loss of output control.** Chat models are chatty by RLHF design — they wrap
-   answers in commentary, disclaimers, and "certainly! here's..." framing. A
+   answers in commentary, disclaimers, and cheerful lead-in framing. A
    completion API prompted with `The following is a program that implements
    quicksort in python:\n\`\`\`python` gives you code and only code, and you can set
    `stop="\`\`\`"` to cut exactly at the end — no parsing the answer out of prose.

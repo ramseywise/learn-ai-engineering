@@ -14,11 +14,11 @@ No hard rule on element count or size — projects range from three lengthy elem
 hundreds of one-liners. Common skeleton, front to back:
 
 1. **Introduction** — frames the document type up front ("This is about recommending a
-   book") so the model interprets everything downstream through that lens. The model has
-   a fixed "thought budget" per token and can't pause to re-derive context, so setting
-   focus early improves output. Applies recursively: subsections with a distinct focus
-   benefit from their own mini-introduction.
-2. **Context (the "long parade")** — the bulk of the prompt elements.
+   book", PDF p. 2) so the model interprets everything downstream through that lens. The
+   model has a fixed "thought budget" per token (PDF p. 2) and can't pause to re-derive
+   context, so setting focus early improves output. Applies recursively: subsections with
+   a distinct focus benefit from their own mini-introduction.
+2. **Context (the "long parade", PDF p. 2)** — the bulk of the prompt elements.
 3. **Refocus** — restate the actual question after a long context dump.
 4. **Transition** — the final nudge from "problem poser" to "problem solver."
 
@@ -36,7 +36,7 @@ the prompt:
 - **Lost middle phenomenon** — models recall the beginning and end of a prompt well, but
   underweight content buried in the middle.
 
-Together these produce the **Valley of Meh**: a region in the early-to-mid prompt where
+Together these produce the **Valley of Meh** (PDF p. 3): a region in the early-to-mid prompt where
 context is used less effectively than context placed at the start or the second half. It
 gets worse as prompts grow, and there's no full fix — mitigate by (a) placing your highest-
 value context outside the valley (start or end) and (b) keeping the prompt as concise as
@@ -105,7 +105,7 @@ conclusion → optional recap, with your gathered content dropped into the discu
 background sections.
 
 - Use a **Scope** section to declare boundaries up front ("This report focuses solely on
-  novels, excluding self-help books") rather than negotiating exclusions dialogue-style —
+  novels, excluding self-help books", PDF p. 10) rather than negotiating exclusions dialogue-style —
   models respect stated boundaries more reliably in report form than mid-conversation.
 - Reports read as objective analysis, which lowers the model's simulated-social-interaction
   overhead — but you must explicitly transition from analysis mode to decision mode before
@@ -195,7 +195,7 @@ banning leading newlines specifically.
 
 **Few-shot example formatting** — two options:
 1. Declare examples explicitly as examples: `In the following, when I encounter a
-   question like "..." I will give an answer like "..."`.
+   question like "..." I will give an answer like "..."` (PDF p. 19).
 2. Fold them into the document as if they were genuinely solved prior turns — harder to
    engineer correctly but produces a smoother prompt and lets the model "believe" it
    already succeeded at this style of task, reinforcing it going forward. Especially

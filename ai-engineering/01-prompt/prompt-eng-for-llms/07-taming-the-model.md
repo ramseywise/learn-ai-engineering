@@ -26,11 +26,11 @@ you cut generation short).
    model getting the wrong answer with a short preamble (`{4, 6, 8, 9}`) and the right one
    after being forced to reason step by step first (`{6, 10}`).
 3. **Fluff** — RLHF-trained models default to verbose, polite, hedge-y text
-   (disclaimers, "I apologize," background explanation) that's costly for programmatic
+   (disclaimers, apologies, background explanation) that's costly for programmatic
    use. Fixes:
    - Few-shot examples showing the exact desired format.
-   - Explicit instructions ("do not acknowledge this is a new answer") — but models
-     sometimes ignore these under RLHF pull toward politeness.
+   - Explicit instructions (e.g., telling the model not to acknowledge that this is a
+     new answer) — but models sometimes ignore these under RLHF pull toward politeness.
    - **Reformat so fluff is parseable, not eliminated.** Instead of fighting the model to
      suppress commentary, give it a numbered slot for it: `1. [answers] 2. [disclaimers]
      3. [background]`. The model still produces the fluff, but now it's in a
@@ -88,7 +88,8 @@ than averaging logprobs directly. Use the score to gate behavior:
 - Surface a warning when confidence is unusually low.
 - Auto-retry or add context when the model struggles.
 - Escalate to a stronger, pricier model.
-- Only interrupt the user when certainty is high — "don't be like Clippy."
+- Only interrupt the user when certainty is high — "Remember Clippy? Don't be like
+  Clippy." (PDF p. 9)
 
 For more reliability at higher cost: raise temperature, generate `n` completions, pick
 the one with the best average logprob. Rule of thumb: `temperature ≈ sqrt(n) / 10`, else
@@ -113,8 +114,8 @@ which is *worse* than either the true top option or a naive reading would sugges
 **Fix: make every candidate label start with a distinct token.**
 
 **Calibration.** The model's raw confidence threshold rarely matches your application's
-desired threshold (e.g., "is this email professional enough" — the model's sense of
-"yes" doesn't line up with your bar). Calibration = shifting logprobs by a constant per
+desired threshold (e.g., deciding whether an email is professional enough — the model's
+sense of "yes" doesn't line up with your bar). Calibration = shifting logprobs by a constant per
 token (`a_tok`) before comparing them, e.g. add 0.3 to the logprob of "Yes" before
 comparing to "No" to make the classifier more lenient. Find the constants by
 experimentation or by fitting logistic regression / minimizing cross-entropy loss
@@ -150,10 +151,11 @@ scenarios:
    residency, on-prem/no-logging. Nonnegotiable for some, irrelevant for others.
 
 These trade off against each other, not independently (visualized in the book as a
-"Smart/Easy/Fast/Cheap" diamond): tightening one constraint narrows the field on the
-others. E.g., high-volume simple requests → cheap small model; low-volume solo project →
-splurge on premium since cost barely matters at that scale; "cheap AND smart AND
-high-volume difficult requests" is not obtainable — pick two.
+smart/easy/fast/cheap trade-off diagram): tightening one constraint narrows the field on
+the others. E.g., high-volume simple requests → cheap small model; low-volume solo
+project → splurge on premium since cost barely matters at that scale; super cheap AND
+super smart is not obtainable — the book notes these two sit at opposite ends of the
+spectrum (PDF p. 17).
 
 Provider landscape as of the book's writing (2024, expect staleness): OpenAI was the
 early dominant full-service choice; Anthropic emphasizes alignment/safety (Claude 3.5
@@ -168,7 +170,10 @@ for it.
 ## Fine-tuning: prompt engineering by other means
 
 Three escalating levels of "teaching the model your task," summarized by data volume and
-what's actually learned:
+what's actually learned. How many training examples you can realistically gather is the
+key decision input (PDF pp. 19–20):
+
+![Figure 7-8. Should you fine-tune?](images/fig-7-8-should-you-fine-tune.png)
 
 | Approach | Learns | Needs (examples) | Time |
 |---|---|---|---|
@@ -186,9 +191,9 @@ matrix added to a few key weight matrices instead of touching all parameters. Ch
 store/share (diffs are small; one base deployment can host many diffs), fast (hours to
 days). LoRA doesn't teach new tricks — it teaches the model *which* of its existing
 tricks to use, on what to pay attention to in the prompt, and what output is expected.
-Also excels at shifting the model's implicit prior distribution — the book's example:
-a European travel app can either add "customer is European" to every prompt, or LoRA-bake
-that assumption in, and LoRA additionally captures priors you can't easily articulate
+Also excels at shifting the model's implicit prior distribution — the book's example
+(PDF p. 21): a European travel app can either state in every prompt that the customer is
+European, or LoRA-bake that assumption in, and LoRA additionally captures priors you can't easily articulate
 (e.g., telemetry showing budget-conscious users reject "Monaco" but buy tickets after
 "Prague" suggestions) by conditioning on real outcome data rather than an explicit rule.
 

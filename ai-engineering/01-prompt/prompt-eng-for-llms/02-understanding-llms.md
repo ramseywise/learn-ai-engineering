@@ -52,8 +52,8 @@ hallucinations is 'Trust but verify,' just minus the trust." (PDF p. 7)
 typically continue as if it's true, because training documents rarely open with a false
 claim and then correct it mid-stream. Two consequences:
 - **Exploit it deliberately** for hypotheticals: instead of "Pretend that it's 2030 and
-  Neanderthals have been resurrected." (PDF p. 9), write "It's 2031, a full year since
-  the first Neanderthals were resurrected." (PDF p. 9) — a *make-believe prompt* that
+  Neanderthals have been resurrected." (PDF p. 7), write "It's 2031, a full year since
+  the first Neanderthals were resurrected." (PDF p. 7) — a *make-believe prompt* that
   asserts the premise as fact rather than asking the model to role-play it.
 - **Guard against it in programmatic prompts**: a human proofreading a weird or
   counterfactual auto-generated prompt would raise an eyebrow and stop; the LLM won't.
@@ -123,10 +123,10 @@ to get the next one — "autoregressive." This has hard consequences:
   backtracking in your application, you have to build it into the surrounding system —
   the model won't supply it on its own.
 - **Repetition traps.** Because continuing an established pattern is usually the single
-  most likely next token, models can fall into self-reinforcing loops (e.g., a book
-  example: a "reasons I like Star Trek TNG" list that degenerates into repeating variants
-  of "the franchise has a strong [foundation/legacy/following]" indefinitely, never
-  naturally terminating — PDF p. 20). Mitigations: post-hoc repetition
+  most likely next token, models can fall into self-reinforcing loops (e.g., the book's
+  Figure 2-10, PDF pp. 16–17: a reasons-for-liking-a-TV-show list that degenerates into
+  repeating variants of "the franchise has a strong [foundation/legacy/following]"
+  indefinitely, never naturally terminating). Mitigations: post-hoc repetition
   detection/filtering, or raise temperature to inject enough randomness to break the loop.
 
 ## Temperature and sampling
