@@ -1,10 +1,32 @@
 ---
 origin: notion-export
-confidence: medium
+confidence: high
 sources:
-  - unknown (Notion notes, no URL captured)
+  - https://martinfowler.com/articles/reliable-llm-bayer.html
 cleaned: 2026-07-17
+status: source note — harness content extracted to notes/05, notes/08 (2026-07-29)
+extracted:
+  - notes/05-verification-loops.md — three kinds of reflection, deleting a verifier,
+    dataset vs. live-traffic eval, stage-wise metrics, two-level retry, error-as-context,
+    citations as user-facing verification
+  - notes/08-maturity-and-failure-modes.md — accuracy before cost, resume-from-failed-node,
+    cross-provider fallback, fail-fast on ambiguity, confidence-scored quarantine,
+    subtraction corroboration
+unextracted:
+  - RAG ingestion + query-time pipeline (hybrid search weights 0.7/0.3, n=5 query
+    expansion, k=20→7 cross-encoder rerank, metadata pre-filtering) → belongs in
+    02-context/notes/03-retrieval-strategies.md
+  - Text-to-SQL specifics (dynamic few-shot from a semantic layer, schema subsetting)
+  - NER metadata-enrichment pipeline
 ---
+
+> **Source note.** Kept for provenance, as with [agent-harness.md](agent-harness.md).
+> The single production case study behind this pillar — Bayer AG's PRINCE platform,
+> built with Thoughtworks. Harness-relevant claims are compressed into
+> [notes/05](notes/05-verification-loops.md) and [notes/08](notes/08-maturity-and-failure-modes.md);
+> the retrieval-pipeline detail is still unextracted and belongs to `02-context`.
+> Raw Notion export below — formatting artifacts (stripped diagrams, run-together
+> nav text) are preserved rather than cleaned.
 
 
 
