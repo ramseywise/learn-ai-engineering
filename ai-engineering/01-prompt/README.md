@@ -19,6 +19,12 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ### Deep notes
 - [prompt-engineering.md](prompt-engineering.md) — core techniques: system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring, prompt templates, prompt chaining, long-context patterns, and the prompt↔context boundary.
 
+### Book notes — *Prompt Engineering for LLMs* (Berryman & Ziegler, O'Reilly 2024)
+- [prompt-eng-for-llms/00-overview.md](prompt-eng-for-llms/00-overview.md) — index of the
+  11 per-chapter notes (`01-introduction` … `11-looking-ahead`), with figure screenshots
+  and `PDF p. N` quote citations. Chapters 9 and 10 cross-link to the `04-loop` and
+  `06-eval` pillars.
+
 ### Interviewing guides
 - [2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
 - [7-security-safety](../../interviewing/guides/7-security-safety/00-overview.md) — security angle on prompt injection.

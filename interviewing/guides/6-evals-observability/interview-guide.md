@@ -118,7 +118,7 @@ a defined handoff protocol (agent↔agent, agent↔human: what transfers, who ow
 
 ## Sources
 
-- notes: [eval-harness.md](../../../ai-engineering/06-eval/eval-harness.md) (Anthropic demystifying-evals synthesis + production management layer), [observability.md](../../../ai-engineering/06-eval/observability.md)
+- notes: [eval-harness.md](../../../ai-engineering/06-eval/eval-harness.md) (Anthropic demystifying-evals synthesis + production management layer), [support-agent-observability.md](../../../generative-ai/06-observability/support-agent-observability.md)
 - images: [two-layer eval](../../images/two-layer-eval-human-llm-calibration.png)
 - librarian wiki: Anthropic Three-Tier Eval Taxonomy · RAG Eval Metrics Suite · RAG Evaluation · Grounding Claim Methodology · Observability & Evaluation Glossary · HITL Annotation Pipeline · Synthetic Dataset Generation for RAG Eval · Eval Gate Contract · LLM Grader Calibration Insights · Observability — LangFuse vs LangSmith Decision · System Design — Unified Eval Harness
 - course refs: `generative-ai/06-observability/langfuse-evaluation-main`, `ai-engineering/06-eval/DeepLearning.AI-Evaluating-AI-Agents-master`

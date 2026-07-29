@@ -22,7 +22,7 @@ Evaluation engineering is the discipline of building systematic measurement for 
 
 ### Deep notes
 - [eval-harness.md](eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
-- [observability.md](observability.md) — tracing, logging, metrics for agent systems; LangFuse integration.
+- [support-agent-observability.md](../../generative-ai/06-observability/support-agent-observability.md) — support-agent observability & experiment-tracking schema contract; trace metadata, `ExperimentRun`/`RagConfig`/`BedrockConfig`/`ChunkRecord` dataclasses, implementation state. Includes concepts preamble: what to record in a trace, two-layer manual+LLM-as-judge evaluation strategy.
 
 ### Interviewing guide
 - [6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep.

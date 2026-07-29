@@ -63,6 +63,14 @@ These two folders are complementary, not redundant:
 Temporal order: learn the gen-AI pillars first; the ai-engineering foundations
 (prompt → context → harness → loop → graph → eval) layer engineering discipline on top.
 
+**Architecture note (absorbed content):** like `ai-engineering/`, the gen-AI pillars hold
+their operational notes directly inside each pillar directory (e.g.
+`02-rag-retrieval/rag.md`, `06-observability/support-agent-observability.md`). There is no
+separate `interviewing/notes/` pointer layer for gen-AI content — notes were absorbed into
+the pillar dirs during the curriculum buildout. `interviewing/guides/` remains the
+pointer-only summary layer for exam prep; it links into both `ai-engineering/` and
+`generative-ai/` pillar dirs for depth.
+
 Cross-links from gen-AI pillars into ai-engineering:
 
 | gen-AI pillar | ai-engineering depth |
