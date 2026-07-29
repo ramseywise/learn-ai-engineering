@@ -1,10 +1,44 @@
 ---
 origin: notion-export
-confidence: medium
+confidence: high
 sources:
-  - unknown (Notion notes, no URL captured)
+  - https://martinfowler.com/articles/reliable-llm-bayer.html
 cleaned: 2026-07-17
+status: source note — harness content extracted to notes/05, notes/08 (2026-07-29);
+  retrieval content extracted to 02-context/notes/03 (2026-07-29)
+extracted:
+  - notes/05-verification-loops.md — three kinds of reflection, deleting a verifier,
+    dataset vs. live-traffic eval, stage-wise metrics, two-level retry, error-as-context,
+    citations as user-facing verification
+  - notes/08-maturity-and-failure-modes.md — accuracy before cost, resume-from-failed-node,
+    cross-provider fallback, fail-fast on ambiguity, confidence-scored quarantine,
+    subtraction corroboration
+  - 02-context/notes/03-retrieval-strategies.md — query-time pipeline (keyword +
+    filter extraction, n=5 query expansion, metadata pre-filtering inside the vector
+    query, parallel hybrid search weighted 0.7/0.3, max-score aggregation to k≈20,
+    bge-reranker-large cross-encoder to k=7); Text-to-SQL as a retrieval strategy
+    (schema subsetting, dynamic few-shot from a semantic layer, mechanical SQL
+    validation replacing an LLM reviewer)
+unextracted:
+  - Ingestion pipeline detail (PDF/OCR extraction, chunking strategy, Athena
+    study/section metadata enrichment, OpenSearch indexing, daily deltas) → would
+    belong in 02-context/notes/03 under ingestion, or a dedicated ingestion note
+  - NER metadata-enrichment pipeline (extraction from PDFs to correct Athena
+    metadata) — note the confidence-scored quarantine half is already in notes/08
+  - Domain sub-agent hierarchy for the Researcher (per-domain toolsets, routing) →
+    02-context/notes/06-multi-agent-context.md
 ---
+
+> **Source note.** Kept for provenance, as with [agent-harness.md](agent-harness.md).
+> The single production case study behind this pillar — Bayer AG's PRINCE platform,
+> built with Thoughtworks. Harness-relevant claims are compressed into
+> [notes/05](notes/05-verification-loops.md) and [notes/08](notes/08-maturity-and-failure-modes.md);
+> the retrieval-pipeline and Text-to-SQL detail into
+> [02-context/notes/03](../02-context/notes/03-retrieval-strategies.md).
+> Ingestion, NER enrichment, and the domain sub-agent hierarchy remain unextracted —
+> see the `unextracted` list in the frontmatter.
+> Raw Notion export below — formatting artifacts (stripped diagrams, run-together
+> nav text) are preserved rather than cleaned.
 
 
 

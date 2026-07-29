@@ -12,7 +12,24 @@ Loop engineering is the discipline of designing the **perceive → decide → ac
 
 *"Loops made agent behavior programmable."* — explainx graph-engineering
 
+Production systems stack **four levels** of loop (LangChain's taxonomy — detail in
+[loop-engineering.md](loop-engineering.md) §2):
+
+1. **Agent loop** — model calls tools until the task is done. *Automates work.*
+2. **Verification loop** — a grader scores the output and feeds failures back. *Automates quality.*
+3. **Event-driven loop** — schedules/webhooks trigger runs in the background. *Automates invocation.*
+4. **Hill-climbing loop** — trace analysis rewrites the harness config. *Automates improvement.*
+
+Levels 1–3 automate work; level 4 automates improvement, and is where loop engineering
+stops being scaffolding and starts modifying the harness underneath it.
+
 The next foundation — [05-graph](../05-graph/README.md) — extends this: graphs make *multi-agent organizations* programmable by composing and routing between loops.
+
+**The operator's framing:** *"Loop engineering is replacing yourself as the person who
+prompts the agent. You design the system that does it instead."* (Osmani). The binding
+constraint moves from generation to **verification** — which is why levels 2 and 4 matter
+more than they look, and why the hard failure modes are human ones (comprehension debt,
+cognitive surrender) rather than mechanical ones.
 
 **Inherits the weaknesses of:** harness engineering — a loop operating inside a poorly instrumented harness will produce unreliable behavior that is hard to debug, even if the loop logic itself is sound.
 
@@ -21,7 +38,7 @@ The next foundation — [05-graph](../05-graph/README.md) — extends this: grap
 ## Resource map
 
 ### Deep notes
-- [loop-engineering.md](loop-engineering.md) — loop anatomy, termination design, tool integration, the art of the loop. Cites LangChain art-of-loop + Anthropic loops blog.
+- [loop-engineering.md](loop-engineering.md) — the four levels (agent → verification → event-driven → hill-climbing), the five required components, loop patterns, production building blocks (automations/worktrees/skills/connectors/sub-agents/memory), failure modes, framework bindings (ADK `LoopAgent`, Vercel `ToolLoopAgent`/`WorkflowAgent`), and a design checklist. Cites LangChain, Osmani, Pragmatic Engineer, ML Mastery, Masood, Anthropic RSI, ADK, Vercel.
 - [reliable-agents.md](../03-harness/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
 
 ### Interviewing guide

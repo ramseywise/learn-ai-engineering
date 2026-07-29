@@ -16,7 +16,7 @@ is the filename — resolve at `https://arxiv.org/abs/<id>`.
 | `3-rag-knowledge-graphs/` | *Knowledge Graphs and LLMs in Action* (Manning, chapters incl. KG-RAG, GNNs, LangGraph QA agent) + word2vec (1301.3781), interpretability/calibration papers, human-AI interaction guidelines | 3-rag (KG-RAG), 10-product-delivery |
 | `ai_engineering/` | Cross-pillar book library by theme: `ai design` (*Generative AI Design Patterns*), `ai engineer` (*AI Engineering*, Huyen), `ai performance` (*AI Systems Performance Engineering*), `ai_agent_applications` (*Building Applications with AI Agents*), `building_ai_agent`, `langchain`, `llm from scratch`, `llm handbook`, `mcp`, `multiagent context` | 4-agents, 5-context-cost, 6-evals, 7-security, 9-system-design |
 | `8-data-eng-data-mesh/` | Data mesh / warehouse topology handouts (DM topologies, MDW) | 8-data-eng-mlops |
-| `general/` | Classic-paper canon: attention (1706.03762), BERT (1810.04805), InstructGPT, Constitutional AI, TruthfulQA, SHAP, LIME, hidden technical debt (NIPS 2015), KDD metric pitfalls, LLM survey (2303.18223) | 1-foundations, 2-llm-fundamentals, 6-evals |
+| `general/` | Classic-paper canon: attention (1706.03762), BERT (1810.04805), GPT-1 (OpenAI), ViT (2010.11929), VAE (1312.6114), GAN (1406.2661), latent diffusion (2112.10752), InstructGPT, Constitutional AI, TruthfulQA, SHAP, LIME, hidden technical debt (NIPS 2015), KDD metric pitfalls, LLM survey (2303.18223) | 1-foundations, 2-llm-fundamentals, 6-evals |
 
 ## Loose classics (root)
 
@@ -27,6 +27,8 @@ agentic architectural patterns, memory-trustworthiness pilot study (Yan et al. 2
 
 ## Conventions
 
+- The 10 interview-standard architecture papers are indexed with local paths and
+  one-line answers in [interviewing/notes/paper-canon.md](../../../interviewing/notes/paper-canon.md).
 - Cite in guides by title + publisher (books) or arXiv ID/venue (papers).
 - New material: drop into the matching pillar folder and add a row here.
 - Committing binaries is Ramsey's decision per folder (policy decision 2026-07-17:

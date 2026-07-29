@@ -34,6 +34,7 @@ being jargon and become tools you reach for.
 | Think Stats · Think Bayes · Statistical Rethinking · Computer Age Statistical Inference | pdf | `data-analytics/readings/` | deeper/alternative stats tracks |
 | Python for Data Analysis (McKinney) | pdf | `data-analytics/readings/` | pandas from its author |
 | Storytelling with Data (Knaflic) | pdf | `data-analytics/readings/` | communicating results (feeds pillar 10) |
+| VAE (1312.6114) · GAN (1406.2661) · latent diffusion (2112.10752) · ViT (2010.11929) | pdf | `ai-engineering/readings/general/` | DL architecture lineage — see [paper-canon.md](../../notes/paper-canon.md) |
 | SHAP (1705.07874) · LIME (1602.04938) | pdf | `data-science/` | model explanation methods |
 | Hidden Technical Debt in ML (NIPS 2015) | pdf | `data-science/` | why ML systems rot — read before pillar 8 |
 | KDD Metric Interpretation Pitfalls | pdf | `data-science/` | metric misreads in practice |

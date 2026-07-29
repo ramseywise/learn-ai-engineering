@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: [interviewing/guides/5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
 > Position in the stack: *each loop step assembles context*.
-> Deep note: [context-engineering.md](context-engineering.md)
+> Overview note: [context-engineering.md](context-engineering.md) · Topic depth: [notes/](notes/)
 
 ---
 
@@ -12,6 +12,8 @@ Context engineering is the discipline of composing what goes *into* the model's 
 
 Memory and tool-design are **sub-components of this layer and the harness layer** — not sibling pillars. Every source that enumerates the foundations treats them as context/harness primitives, never as top-level disciplines.
 
+The governing objective is a *minimization*: **find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome**. Context is a finite resource with diminishing — eventually negative — marginal returns, because transformer attention divides a fixed budget across n² token pairs. Every technique in this pillar responds to that constraint.
+
 **Inherits the weaknesses of:** prompt engineering — a well-assembled context window cannot compensate for poorly written instructions inside it.
 
 ---
@@ -19,9 +21,20 @@ Memory and tool-design are **sub-components of this layer and the harness layer*
 ## Resource map
 
 ### Deep notes
-- [context-engineering.md](context-engineering.md) — the 10 core context-engineering techniques (window composition, retrieval integration, memory types, token budget management).
-- [context-management.md](context-management.md) — operational patterns for managing context across multi-turn conversations.
-- [memory.md](../05-graph/memory.md) — memory as a context sub-component: in-context, external, episodic, semantic.
+- [context-engineering.md](context-engineering.md) — pillar overview: the thesis, the four levers (Write → Select → Compress → Isolate), the prompt↔context boundary, context types.
+
+#### Topic notes ([notes/](notes/))
+1. [Why context is finite](notes/01-why-context-is-finite.md) — attention budget, n² attention, context rot, diminishing returns.
+2. [The anatomy of effective context](notes/02-context-anatomy.md) — system prompt altitude, the five layers, stable-before-dynamic ordering, cache prefix matching.
+3. [Retrieval strategies](notes/03-retrieval-strategies.md) — pre-computed vs. just-in-time, lightweight identifiers, progressive disclosure, the hybrid default, the pre-retrieval pipeline.
+4. [Compression and compaction](notes/04-compression-compaction.md) — the compaction pipeline, retention priority, tool-result clearing, state extraction, crash recovery.
+5. [Memory as a context sub-component](notes/05-memory-as-context.md) — memory types, structured note-taking, index-plus-detail, memory hygiene.
+6. [Multi-agent context and tool design](notes/06-multi-agent-context.md) — sub-agent isolation, orchestrator-holds-plan, token-efficient tools, tool overlap.
+7. [Context failure modes](notes/07-context-failure-modes.md) — rot, poisoning, distraction, clash, injection, and the diagnostic flow.
+
+#### Related
+- [memory.md](../05-graph/memory.md) — memory depth: in-context, external, episodic, semantic.
+- [skills-design.md](../03-harness/skills-design.md) — skills as a harness primitive; relies on the progressive-disclosure mechanism from note 02.
 
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
