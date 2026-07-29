@@ -9,8 +9,10 @@ where you build a tiny GPT with your own hands — after that, nothing about LLM
 1. **Build it from scratch** — `generative-ai/nn-zero-to-hero/` (Karpathy's nanogpt):
    backprop → bigrams → attention → a working GPT. The single highest-value exercise in
    this repo.
-2. **Read the two founding papers** — *Attention Is All You Need* + BERT (`ai-engineering/readings/general/`)
-   once the code has made the diagrams familiar.
+2. **Read the founding papers** — *Attention Is All You Need*, then the encoder/decoder
+   fork: BERT + GPT-1 (`ai-engineering/readings/general/`), once the code has made the
+   diagrams familiar. Closed list with one-line answers:
+   [paper-canon.md](../../notes/paper-canon.md).
 3. **The training story** — InstructGPT (RLHF), DPO, Constitutional AI papers
    (`generative-ai/01-llm-fundamentals/readings/`); for RL depth: the *Reinforcement Learning* book chapters +
    Sutton & Barto (`RLbook2020.pdf`, same folder).
@@ -27,7 +29,8 @@ where you build a tiny GPT with your own hands — after that, nothing about LLM
 |---|---|---|---|
 | nn-zero-to-hero (nanogpt) | code | `generative-ai/nn-zero-to-hero/` | transformers from scratch |
 | intro-to-nlp | code | `generative-ai/intro-to-nlp/` | embeddings, classic NLP |
-| Attention Is All You Need · BERT · LLaMA · GPT-4 report · LLM survey (2303.18223) | pdf | `ai-engineering/readings/general/` | architecture + scaling canon |
+| Attention Is All You Need · BERT · GPT-1 · LLaMA · GPT-4 report · LLM survey (2303.18223) | pdf | `ai-engineering/readings/general/` | architecture + scaling canon |
+| LoRA (2106.09685) · PEFT survey (2312.12148) | pdf | `generative-ai/01-llm-fundamentals/readings/` | adaptation without full fine-tuning |
 | ALiBi (2108.12409) | pdf | `ai-engineering/readings/general/` | positional encoding for long context |
 | InstructGPT (2203.02155) · DPO (2305.18290) · Constitutional AI (2212.08073) · preference RL (1706.03741) | pdf | `generative-ai/01-llm-fundamentals/readings/` | the alignment pipeline |
 | *Reinforcement Learning* (book chs 1–11) + Sutton & Barto | pdf | `generative-ai/01-llm-fundamentals/readings/` | MDPs → DQN (1312.5602) → policy gradients (PPO 1707.06347) |

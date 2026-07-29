@@ -4,6 +4,7 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://medium.com/ai-in-plain-english/10-context-engineering-techniques-every-ai-engineer-should-know-b54b486a6921
+  - https://martinfowler.com/articles/reliable-llm-bayer.html
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -94,8 +95,8 @@ LLM
 
 Stage notes:
 
-- **Metadata filtering first.** Permission checks and freshness filters are near-free compared to embedding search, and dropping candidates early makes every later stage cheaper. Permission filtering here is also a security control, not just an optimization.
-- **Ranking ≠ retrieval.** Bi-encoder vector search is fast and approximate; a cross-encoder reranker is slow and accurate. Retrieve wide (k=50), rerank, send narrow (k=5).
+- **Metadata filtering first.** Permission checks and freshness filters are near-free compared to embedding search, and dropping candidates early makes every later stage cheaper. Push the filter *into* the vector query rather than applying it to the results — see the funnel under [a tuned production pipeline](#a-tuned-production-pipeline). Permission filtering here is also a security control, not just an optimization.
+- **Ranking ≠ retrieval.** Bi-encoder vector search is fast and approximate; a cross-encoder reranker is slow and accurate. Retrieve wide, rerank, send narrow — order-of-magnitude k=50→5, though real numbers are corpus-specific.
 - **Deduplication has a trap.** A chunk retrieved by multiple sub-queries is often the *most* relevant one, not redundant noise. Collapse duplicates but treat multi-retrieval as a positive ranking signal rather than a reason to discard.
 - **Compression is query-conditional.** Reduce each document to the portion that answers the current question — not a generic summary. A generic summary discards the specific detail the query needed.
 - **Structured formatting.** Wrap in tags with source attribution so the model can cite and so injected content stays distinguishable from instructions.
@@ -109,6 +110,35 @@ A production pipeline with the same shape — ingestion and indexing on the left
 Two things worth noting against the abstract pipeline above. **Hybrid search** runs semantic and keyword retrieval together rather than choosing between them — vectors catch paraphrase, keywords catch exact identifiers, and each covers the other's failure mode. And **query transformation** sits before retrieval: the user's original phrasing is rewritten into tool parameters, because the text a human types is rarely the text that retrieves best.
 
 What the diagram omits is as informative as what it shows — there is no reranking stage and no deduplication, which is typical of a first production cut. Those are the stages teams add after retrieval quality plateaus.
+
+### A tuned production pipeline
+
+Bayer's PRINCE platform (see [03-harness/reliable-agents.md](../../03-harness/reliable-agents.md)) is the same pipeline after that plateau, with the numbers filled in. It retrieves over decades of preclinical study reports, and the query-time path runs:
+
+1. **Keyword extraction and filter generation, concurrently.** One LLM pass pulls search keywords out of the natural-language query (domain terms like `piloerection`, `ataxia`); a second generates a structured metadata filter (`eq(study_id, T123456-2)`) via few-shot prompting over permutation examples.
+2. **Query expansion, n=5.** A smaller, faster model rewrites the question into five semantically similar variants, covering phrasing and terminology drift.
+3. **Metadata pre-filtering.** The generated filter is applied *inside* the vector database query, not after it — cutting the search space from millions of vectors to tens or hundreds before any similarity math runs.
+4. **Parallel hybrid search, weighted 0.7/0.3.** Each of the five expanded queries runs its own hybrid search over the filtered space, combining kNN vector similarity (weight **0.7**) with keyword search (weight **0.3**). The split was found experimentally, not derived — it is a corpus-specific tuning result, and the right prior for a new corpus is "measure it," not "use 0.7."
+5. **Aggregate and initially rank, k≈20.** Union the chunks across all five searches, score each by its *highest* weighted score across the parallel runs, keep the top ~20.
+6. **Cross-encoder rerank, k=20 → 7.** A `bge-reranker-large` cross-encoder scores each candidate against the *original* question and keeps the top 7 as final context.
+
+Three things generalize past the specific numbers:
+
+- **Expansion multiplies retrieval, so the filter has to come first.** Five queries against an unfiltered corpus is five times the expensive search. Pre-filtering makes fan-out affordable — the ordering rule from the abstract pipeline is what makes the expansion tractable at all.
+- **Max-score aggregation is a dedup policy.** Taking the highest score a chunk earned across parallel searches, rather than summing or averaging, treats multi-retrieval as a ranking signal without letting a chunk win by appearing everywhere weakly. It is the practical answer to the deduplication trap above.
+- **The rerank scores against the original query, not the expanded ones.** Expansion is a recall device; the user's actual question is still the relevance target. Reranking against a rewrite would compound the rewrite's drift.
+
+Note the funnel: millions → hundreds (filter) → ~20 (hybrid + aggregate) → 7 (rerank). Retrieve wide, rerank hard, send narrow — with each narrowing done by a mechanism more accurate and more expensive than the last.
+
+### Text-to-SQL is a retrieval strategy
+
+Vector search over chunks is the wrong tool for questions that need precise filtering, aggregation, or comparison — "give me 50 studies done on rat," or any numerical rollup. Embedding similarity does not count, sum, or compare. PRINCE routes these to a Text-to-SQL tool instead, and the context-engineering decisions inside it mirror the RAG path:
+
+- **Schema subsetting.** Only the schema components relevant to the current query are injected, rather than the full database schema — the pre-filtering move applied to the prompt instead of the corpus.
+- **Dynamic few-shot from a semantic layer.** Hand-picked (natural language → SQL) example pairs live in their own vector-database collection. The user's query retrieves the most similar examples, which go into the generation prompt as in-context learning. This is retrieval used to *condition generation* rather than to supply answer content, and it is the note's clearest case of the few-shot examples themselves being a retrieved, growable asset: new examples get added as failure patterns surface, and quality improves without retraining or prompt rewrites.
+- **Validation over review.** Generated SQL is checked mechanically (SELECT-only; DELETE/INSERT/UPDATE blocked). An earlier LLM-review step was *removed* — it flagged valid queries as broken often enough to cost more than it saved. Deterministic validation beat model judgment on a task with a checkable answer.
+
+The generalizable shape: a retrieval layer that spans structured and unstructured data needs a router, not a single index. The decision of *which* retrieval mechanism to use is itself a context-engineering decision, made before any retrieval happens.
 
 ### Ingestion determines the ceiling
 

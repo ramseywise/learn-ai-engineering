@@ -10,6 +10,9 @@ cleaned: 2026-07-17
 
 Salvaged from the Notion `table_of_contents.md` dump: topic checklist, curated links, and book list. Job-application tracker references kept for context.
 
+For the short, closed list of architecture papers to finish before an interview, see
+[paper-canon.md](paper-canon.md) — 10 papers, all PDFs held locally.
+
 ## Topic checklist + materials (original head)
 
 A DB for tracking application: Job Application Tracker
