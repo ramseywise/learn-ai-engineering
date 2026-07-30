@@ -81,6 +81,11 @@ wrong cached answers. Know both and distinguish them; interviewers conflate deli
 Have one number ready: p95 budget decomposition of your own pipeline (see the
 [rag guide](../3-rag/interview-guide.md) §5 for a worked budget).
 
+**Report cost per *successful* task, not cost per call.** An agent that retries three times
+and still fails is cheap per call and infinitely expensive per outcome; the per-call number
+hides it. Track cost per step → per conversation → per successful task, and quote the last
+one — it's the only figure that moves with quality as well as spend.
+
 ## 6. Question bank (answer sketches)
 
 - *"Your token bill doubled — walk me through it."* — usage stats: cache hit rate first

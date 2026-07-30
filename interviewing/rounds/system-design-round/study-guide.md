@@ -40,6 +40,27 @@ Trade-offs mostly live between non-functionals:
 
 **If you hit a knowledge gap**: say so plainly. "My understanding there is superficial" buys credibility and redirects time.
 
+## 2b. The trunk — pick your spine before you draw anything
+
+The single fork that determines everything downstream. Ask it during clarification, and
+say the answer out loud so the interviewer knows which system you're designing:
+
+```
+"Design X for Y" → clarify → WHAT KIND OF SYSTEM IS THIS?
+  ├─ looks things up in documents ──→ RAG spine
+  ├─ takes multi-step actions ──────→ AGENT spine
+  ├─ predicts / ranks / scores ─────→ ML spine
+  └─ transforms a stream of events ─→ PIPELINE spine
+```
+
+Most real prompts are one spine plus a cameo from another ("support chatbot" = AGENT spine
+with RAG for policy lookup). Name the primary spine, note the secondary, design the primary.
+
+Walking a spine node-by-node — the fork, the discriminator question you ask aloud, what
+breaks first, what changes at 10× — is the
+[decision tree](../../guides/9-system-design/04-decision-tree.md). Drill it there; this
+file is the process wrapper around it.
+
 ## 3. The LLM-system reference architecture (draw in under 3 min)
 
 ```
@@ -61,6 +82,11 @@ Sidecars:
 For each box, know its **failure mode** and its **scaling story**.
 
 ### Component deep-dive pointers
+
+Lookup by component name. When you need *"which option do I pick and why"* rather than
+*"where do I read about this"*, use the
+[decision tree](../../guides/9-system-design/04-decision-tree.md) instead — same
+components, organized by the question you're being asked.
 
 | Component | Study guide | Example |
 |-----------|-----------|---------|

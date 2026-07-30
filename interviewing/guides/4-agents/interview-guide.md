@@ -79,6 +79,14 @@ should be reviewable/rollbackable; long-term store lives outside the context win
 make chatbots *sound* smarter but reduce trust when it surfaces stale or misapplied facts —
 retrieval precision matters more than recall here.
 
+**State vs memory is a separate axis** — interviewers probe it when you conflate the two.
+*Workflow state* is the current execution (current step, tool outputs, confirmations,
+status) and is temporary; *memory* is longer-term knowledge that outlives the run. They get
+different stores: state → Redis/DynamoDB/Postgres (fast key-value, TTL); retrieval →
+pgvector/OpenSearch/Pinecone; archive → S3. The mistake worth naming out loud: *putting
+everything in a vector database.* Match the store to the access pattern — a checkpointer
+that needs a millisecond read on a known key doesn't want ANN search.
+
 ## 7. Multi-agent systems — protocols before parallelism
 
 Natural language coordinates *within* a task; **protocols coordinate between tasks**. Without

@@ -72,6 +72,17 @@ Roles: **AIE** (AI/agent engineer), **MLE** (ML engineer), **DS** (data scientis
 
 ## Maintenance
 
+**The split rule** — *"Is this true regardless of whether I'm being interviewed?"*
+Yes → `guides/`. No → `rounds/`. "Separate read and write tools" is true at work → guide.
+"Draw the architecture in under 3 minutes" is only true in an interview → round. Raw
+material lands in `notes/`; nothing lands in a round folder just because it was useful for
+that round.
+
+**Strip the preamble on ingest** — content starts at the `#`. Anything the model said
+*about* the notes ("here are condensed notes in the same style…") goes in `sources:`, not
+above the first heading. Same for scraped page chrome.
+
 - New raw material → `notes/` with provenance frontmatter (`origin`, `confidence`, `sources`, `cleaned`).
+- Moved/created guide and round files carry the same frontmatter block.
 - Guides cite sources by repo path + librarian wiki page title (compile-and-cite; no `wiki/private/` content).
 - Librarian scrapes `interviewing/**/*.md` into its `raw/repos/` tier — keep guides self-contained.

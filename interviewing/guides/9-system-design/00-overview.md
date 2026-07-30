@@ -1,9 +1,21 @@
 # Pillar 9 — System Design (putting the pieces together)
 
 The integration pillar: given a vague problem, design the whole system — components,
-data flow, trade-offs, failure modes, measurement. It has no new domain content of its
-own; it's the *method* for deploying pillars 3–8 under time pressure, and the
-highest-weight technical round in AIE/MLE interviews.
+data flow, trade-offs, failure modes, measurement. Largely the *method* for deploying
+pillars 3–8 under time pressure, plus the generic backend substrate the LLM-flavored
+round assumes (scaling, storage, APIs). The highest-weight technical round in AIE/MLE
+interviews.
+
+## Detailed notes
+
+| Note | What it carries |
+|---|---|
+| [01-distributed-systems.md](01-distributed-systems.md) | Scaling, load balancing, data modeling, SQL vs NoSQL, indexes, caching, replication, sharding |
+| [02-api-design.md](02-api-design.md) | REST/GraphQL/gRPC, pagination, auth — the ~5-minute API section |
+| [03-ml-system-design.md](03-ml-system-design.md) | Business problem → ML problem → data → approach; the ML-flavored variant |
+| [04-decision-tree.md](04-decision-tree.md) | **The four spines** — pick one, walk it node by node under pressure |
+| [05-ai-product-design.md](05-ai-product-design.md) | Mission/goals, segmentation, prioritization, AI risk framing |
+| [06-component-cheatsheet.md](06-component-cheatsheet.md) | Component-by-component reference for the LLM request path |
 
 ## Learning path
 
