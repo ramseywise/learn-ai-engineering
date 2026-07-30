@@ -5,10 +5,16 @@ import sys
 import urllib.parse
 
 SKIP_DIRS = {
-    ".git", "node_modules", "idk", "Context-Engineering-main",
-    "DataTalks Data Engineering", "DataTalks MLOps",
-    "Prompt-Engineering-Guide-main", "prompt-eng-for-llms",
-    "Evaluating-AI-Agents-master", "evaluation",
+    ".git",
+    "node_modules",
+    "idk",
+    "Context-Engineering-main",
+    "DataTalks Data Engineering",
+    "DataTalks MLOps",
+    "Prompt-Engineering-Guide-main",
+    "prompt-eng-for-llms",
+    "Evaluating-AI-Agents-master",
+    "evaluation",
 }
 SKIP_PATHS = {"./.claude/docs"}
 SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/", "~/", "/guides/")
@@ -25,14 +31,18 @@ for root, dirs, files in os.walk("."):
             continue
         fpath = os.path.join(root, fname)
         try:
-            text = open(fpath).read()
-        except Exception:
+            with open(fpath, encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError as exc:
+            print(f"SKIPPED: {fpath} -> {exc}")
             continue
         # Strip fenced code blocks so illustrative links aren't checked
         text_no_fences = fence_re.sub("", text)
         for m in link_re.finditer(text_no_fences):
             link = m.group(1)
-            if link.startswith("http") or any(link.startswith(p) for p in SKIP_PREFIXES):
+            if link.startswith("http") or any(
+                link.startswith(p) for p in SKIP_PREFIXES
+            ):
                 continue
             link = link.strip("<>")
             target = os.path.join(root, urllib.parse.unquote(link))
