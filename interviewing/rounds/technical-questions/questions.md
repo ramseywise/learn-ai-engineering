@@ -318,3 +318,433 @@ Each question has three parts:
 **One level deeper**: k=5 or k=10 is standard. Leave-one-out (k=n) is unbiased but expensive. When NOT to use it: (1) time-series data — standard k-fold leaks future into past; use time-series split (always test on the future relative to training), (2) grouped data — if observations are correlated within groups (same patient, same customer), fold boundaries must respect groups to avoid leakage, (3) very large datasets — the computational cost of k training runs may not be worth the variance reduction over a well-sized holdout, (4) when the dataset itself has train/test leakage before cross-validation is applied — CV doesn't fix upstream leakage.
 
 **Study ref**: ml-fundamentals guide
+
+---
+
+## Rapid-fire drill list (50 GenAI concepts)
+
+Not questions — a *coverage checklist*. Say each aloud in 60 seconds; anything you stall
+on is a gap to take back to the guides. Sourced from a public GenAI concept list.
+
+- Transformers & Attention
+- RAG vs. File system
+- Prompt prefix caching
+- Semantic caching
+- Prompt routing
+- Multi agent architecture
+- Decomposition
+- Structured prompts (XML)
+- Evals (Online and Offline)
+- Guardrails
+- Prompt injection
+- Format validation & Structured outputs
+- RLHF
+- Supervised Fine tuning
+- Metadata propagation
+- Time to first token
+- Reranker models
+- Embeddings
+- AEO
+- Skills (see Anthropic article on this)
+- How to reduce latency
+- How to reduce costs
+- Chain of thought
+- F1, Precision, Recall
+- LLM-as-a-judge
+- Human in the Loop
+- Data Privacy & PII Masking
+- traces, runs, iterations, tool calls etc.
+- Exception handling, Fallback models & retry logic
+- Hybrid search
+- Compacting
+- Rate Limiting & Token Tracking
+- Question embedding (HyDe)
+- Faceting
+- Agentic State
+- Agentic memory
+- Streaming Architectures
+- Mixture of Experts (MoE)
+- Context Windows & RoPE
+- KV Caching
+- Speculative Decoding
+- HNSW (Hierarchical Navigable Small World)
+- GraphRAG
+- Ontology & Taxonomy
+- Reflection https://blog.langchain.com/reflection-agents/
+
+---
+
+## Supplementary bank — adjacent domains
+
+Breadth areas the main bank above doesn't cover: Python concurrency, data engineering,
+storage selection, and the cost/latency/quality triangle. Shallower treatment than the
+numbered questions — these are recall prompts, not full answers.
+
+### LLM Fundamentals ⭐ (Fundamental)
+
+### How do LLMs work?
+
+* Predict the **next token** based on previous tokens.
+* Process:
+
+  1. Text → Tokens
+  2. Tokens → Embeddings (numbers)
+  3. Transformer understands context using self-attention.
+  4. Model predicts the next token.
+
+Know these terms:
+
+* Tokenization
+* Embeddings
+* Transformer
+* Next-token prediction
+* Self-attention
+
+---
+
+### How do Transformers work? (Nice to know)
+
+* Process all tokens simultaneously.
+* Self-attention determines which words are important.
+* Understands context (e.g., "bank" = river or financial institution).
+
+---
+
+### System Design
+
+### Example: Remove dead links from websites
+
+Possible workflow:
+
+1. Crawl or fetch pages.
+2. Parse HTML.
+3. Find links.
+4. Check links (HEAD request).
+5. Remove dead links.
+6. Rewrite surrounding text with an LLM.
+7. Update website.
+
+Interviewers care more about your **thinking process** than the exact solution.
+
+---
+
+### Python Fundamentals ⭐
+
+#### Race Conditions
+
+Occurs when multiple threads modify shared data simultaneously.
+
+Solutions:
+
+* Locks / Mutexes (`threading.Lock`)
+* Immutable data structures (tuples)
+* Avoid shared mutable state
+
+---
+
+#### Python Concurrency (Very Important)
+
+Know the **Global Interpreter Lock (GIL)**
+
+* Only one Python thread executes Python bytecode at a time.
+* True parallelism requires:
+
+  * Multiprocessing
+* Async programming provides:
+
+  * Concurrency
+  * Not parallel execution
+
+---
+
+#### Async Programming Pitfalls
+
+Watch for:
+
+* CPU-heavy tasks blocking the event loop
+* Using synchronous libraries (`requests`, `time.sleep`)
+* Forgotten `await`
+* Harder debugging
+
+Use:
+
+* `httpx`
+* Async libraries
+* Proper task management
+
+---
+
+### Data Engineering ⭐
+
+#### Real-time vs Batch Processing
+
+### Real-time
+
+Use when:
+
+* Immediate decisions matter
+* Fraud detection
+* Live recommendations
+
+Pros
+
+* Fresh data
+
+Cons
+
+* Expensive
+* Complex
+* Harder recovery
+
+---
+
+### Batch Processing
+
+Use when:
+
+* Delay is acceptable
+* Embedding generation
+* Nightly jobs
+
+Pros
+
+* Cheaper
+* Easier
+* Easier to debug
+* Easy retries
+
+Rule:
+
+> Prefer batch unless real-time is truly necessary.
+
+---
+
+#### Data Storage
+
+### Structured Data
+
+Examples:
+
+* Product IDs
+* Inventory
+
+Use:
+
+* PostgreSQL
+* SQL databases
+
+---
+
+### Unstructured Data
+
+Examples:
+
+* Reviews
+* Documents
+
+Use:
+
+* Vector databases
+* MongoDB
+
+---
+
+### Event / Log Data
+
+High-volume writes.
+
+Use:
+
+* Kafka
+* ClickHouse
+
+---
+
+### Data Quality for LLMs
+
+Important preprocessing:
+
+* Remove duplicates
+* Normalize formats
+* Clean HTML
+* Remove noise
+
+Duplicate detection:
+
+* Hashing
+* MinHash
+* Jaccard similarity
+* Embedding similarity
+
+---
+
+### Embeddings
+
+Only embed meaningful text.
+
+Good:
+
+* Title
+* Description
+* Features
+
+Don't embed:
+
+* SKU
+* Price
+* Inventory count
+
+---
+
+### Query Rewriting
+
+Example:
+
+User:
+
+> "Show me shoes."
+
+Then:
+
+> "Red ones."
+
+Rewrite as:
+
+> "Red shoes"
+
+Improves retrieval quality.
+
+---
+
+### HyDE (Hypothetical Document Embeddings)
+
+Instead of embedding the question:
+
+* Generate a hypothetical answer.
+* Embed the answer.
+* Search using that embedding.
+
+Often improves retrieval.
+
+---
+
+### Hallucinations ⭐
+
+Prevent hallucinations by:
+
+* Similarity thresholds
+* Rejecting poor retrievals
+* Strong system prompts
+* Citation checking
+* Returning:
+
+  > "I don't know"
+
+instead of guessing.
+
+---
+
+### Exception Handling
+
+Best practices:
+
+* Timeouts
+* Retries
+* Exponential backoff
+* Fallback models
+* Fallback providers
+* User-friendly error messages
+
+---
+
+### GenAI Tradeoffs (The "Triangle")
+
+Balance:
+
+1. Latency
+2. Cost
+3. Retrieval Accuracy
+
+Improving one often hurts another.
+
+---
+
+#### Reduce Latency
+
+* Cache responses
+* Semantic caching
+* Smaller models
+* Lower embedding dimensions
+
+---
+
+#### Reduce Cost
+
+* Shorter prompts
+* Smaller models
+* Split complex workflows
+* Parallelize tasks
+
+---
+
+#### Improve Retrieval Quality
+
+* Re-rankers
+* AI-as-a-Judge
+* Better retrieval
+* Higher reasoning effort (when needed)
+
+---
+
+### Common Technologies Mentioned
+
+Python
+
+* asyncio
+* threading
+* multiprocessing
+* HTTPX
+
+Databases
+
+* PostgreSQL
+* MongoDB
+* ClickHouse
+* Pinecone
+
+Infrastructure
+
+* Kafka
+* Cloudflare AI Gateway
+
+LLM Concepts
+
+* RAG
+* Embeddings
+* Re-ranking
+* HyDE
+* AI as Judge
+* Prompt engineering
+* System prompts
+* Semantic search
+
+---
+
+### High-Priority Interview Topics ⭐⭐⭐
+
+Be comfortable explaining:
+
+* ✅ How LLMs work
+* ✅ Transformers & self-attention
+* ✅ Race conditions
+* ✅ Python GIL
+* ✅ Async programming
+* ✅ Real-time vs batch processing
+* ✅ Data ingestion pipelines
+* ✅ Embeddings
+* ✅ RAG architecture
+* ✅ Hallucination prevention
+* ✅ Exception handling
+* ✅ Latency vs Cost vs Accuracy tradeoffs
+
+These are the concepts the interviewer identifies as the most important for AI engineering interviews.

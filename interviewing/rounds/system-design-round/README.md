@@ -27,7 +27,14 @@ The five-step process, trade-off narration formula, reference architecture, bott
 Highest-weight round for AIE/MLE. For FDE the case study and customer simulation outweigh it — but the same design method underpins the case. DS gets a lighter "design the analytics/ML pipeline" variant.
 
 ## Folder contents
-- [study-guide.md](study-guide.md) — the method: process, trade-offs, reference architecture, bottlenecks, measurement
+- [study-guide.md](study-guide.md) — the method: process, the trunk (spine selection), trade-offs, reference architecture, bottlenecks, measurement
+- [interview-heuristics.md](interview-heuristics.md) — 14 behaviors that get scored (scope aggressively, state non-functionals, find your own bottlenecks)
+- [interview-patterns.md](interview-patterns.md) — 13 more, staff-level (evolutions, read/write paths, durability)
 - [sources.md](sources.md) — curated references (internal guides + librarian wiki + external)
 - [examples/](examples/) — worked system design walkthroughs by topic
 - [questions.md](questions.md) — sample prompts with model answer structures
+
+**Topic knowledge lives in [pillar 9](../../guides/9-system-design/)**, not here — including
+the [decision tree](../../guides/9-system-design/04-decision-tree.md) (four spines, walked
+node by node), distributed-systems fundamentals, and API design. This folder is *how to
+perform in the room*; the pillar is *what you need to know*.
