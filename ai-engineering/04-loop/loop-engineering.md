@@ -9,6 +9,9 @@ sources:
   - https://www.mindstudio.ai/blog/what-is-loop-engineering-ai-coding-agents
   - https://medium.com/@adnanmasood/loop-engineering-a-guide-for-engineers-and-practitioners-893bb65ea943
   - https://www.anthropic.com/institute/recursive-self-improvement
+  - https://www.marktechpost.com/2026/07/12/guide-to-loop-engineering/
+  - https://github.com/karpathy/autoresearch
+  - https://arxiv.org/abs/2603.23420
   - https://adk.dev/agents/workflow-agents/loop-agents/
   - https://vercel.com/i/what-are-agentic-workflows
   - https://vercel.com/kb/guide/how-to-run-a-multi-step-research-agent-on-vercel
@@ -343,6 +346,64 @@ The human-value quote that pairs with Osmani's warning:
 
 > *"The comparative advantage of humans as of right now is still in seeing the bigger
 > picture and thinking beyond the confines of the immediate task."*
+
+### The worked example: `autoresearch`
+
+The trends above are macro measurements. `autoresearch` (Karpathy, released **2026-03-06**,
+MIT, ~630 lines of Python) is the smallest concrete artifact that exhibits the level-4 shape,
+and it is worth reading precisely because it is small enough to hold in your head.
+
+The setup: give an agent **one Python file, one GPU, one metric.** It reads the code,
+proposes a change, runs a ~5-minute training run, checks whether validation improved, keeps
+or discards, repeats.
+
+**The load-bearing design decision is the write boundary**, and it maps exactly onto the
+maker/checker split in §4:
+
+| Artifact | Who writes it | Why |
+|---|---|---|
+| `train.py` — model, optimizer, training logic | **Agent** | The search space |
+| `prepare.py` — evaluation utilities | **Nobody** (agent cannot touch) | The verifier must not be editable by the thing it grades |
+| `program.md` — instructions | **Human** | The contract |
+
+An agent that can edit its own evaluator does not have a verifier; it has a negotiation.
+Making `prepare.py` off-limits is what converts "loop that reports success" into "loop whose
+success means something" — the same rule as §5's *the model never grades its own work*,
+enforced structurally rather than by instruction.
+
+**Results:** 700 experiments over two days → **20 genuine stackable improvements**, cutting
+GPT-2 training from **2.02 → 1.80 hours (11%)**. Shopify's Tobi Lütke reported 19% on the
+same setup after 37 experiments.
+
+Note the hit rate: 20 of 700 is **under 3%**. The loop's value is not that it is clever —
+it is that a ~3% hit rate is perfectly acceptable when attempts are cheap and unattended.
+That reframes the economics: *"if you have an objective metric, you are the bottleneck."*
+Humans exhaust after roughly a dozen experiments; the loop does not.
+
+The prerequisite is a hard one, and it bounds where this transfers: **an automatic gate that
+can fail the work.** Model training, refactoring, content rewrites, and pipeline tuning
+qualify. Anything whose success is only expressible as "looks right" does not — see the
+rung-2 gate in [loop-autonomy-ladder.md](loop-autonomy-ladder.md).
+
+**Bilevel autoresearch** ([arXiv:2603.23420](https://arxiv.org/abs/2603.23420), Qu & Lu,
+2026-03-24) closes the level-4 circle: an outer loop reads the inner loop's traces and
+**generates new search mechanisms as Python code, injected at runtime.** The inner loop
+optimizes the task; the outer loop optimizes *how the inner loop searches*.
+
+Three findings worth carrying:
+
+- **5× improvement** over the inner loop alone (−0.045 vs. −0.009 val_bpb) on Karpathy's
+  GPT pretraining benchmark.
+- **Parameter-level tuning without mechanism change yielded no reliable gain.** The outer
+  loop had to write new *code*, not new hyperparameters — the structural analogue of
+  [evolve-loop.md](evolve-loop.md)'s "rewrites files, not weights."
+- **Both loops use the same LLM.** No stronger model at the meta level — the gain comes from
+  loop *structure*, not model capability. This is the sharpest available evidence for the
+  pillar's governing claim.
+
+The outer loop autonomously reached for combinatorial optimization, multi-armed bandits, and
+design of experiments without being told those domains existed — succeeding, per the
+authors, by *breaking the inner loop's deterministic search patterns*.
 
 ---
 

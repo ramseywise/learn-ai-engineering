@@ -22,6 +22,7 @@ Evaluation engineering is the discipline of building systematic measurement for 
 
 ### Deep notes
 - [eval-harness.md](eval-harness.md) — eval as harness primitive: test harness design, LLM-as-judge, golden datasets, CI integration.
+- [eval-maturity-ladder.md](eval-maturity-ladder.md) — the **adoption path** (level 0 vibes → 1 deterministic gates → 2 separated evaluator → 3 eval sets + tracing → 4 continuous sampling with drift alerts), trajectory-over-outcome, the four layered grader types and their biases, and the cost-per-success / steps-to-completion metrics. Distinct from the *gate ladder* below, which orders gates within a mature suite.
 - [support-agent-observability.md](../../generative-ai/06-observability/support-agent-observability.md) — support-agent observability & experiment-tracking schema contract; trace metadata, `ExperimentRun`/`RagConfig`/`BedrockConfig`/`ChunkRecord` dataclasses, implementation state. Includes concepts preamble: what to record in a trace, two-layer manual+LLM-as-judge evaluation strategy.
 
 ### Interviewing guide

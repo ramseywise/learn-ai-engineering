@@ -23,6 +23,11 @@ Production systems stack **four levels** of loop (LangChain's taxonomy — detai
 Levels 1–3 automate work; level 4 automates improvement, and is where loop engineering
 stops being scaffolding and starts modifying the harness underneath it.
 
+These are **capability** levels — *what the loop automates*. A second, orthogonal axis
+asks *how much of the operator's job has been handed off*: the autonomy ladder
+(turn-based → goal-based → time-based → proactive) in
+[loop-autonomy-ladder.md](loop-autonomy-ladder.md). A loop has a position on each.
+
 The next foundation — [05-graph](../05-graph/README.md) — extends this: graphs make *multi-agent organizations* programmable by composing and routing between loops.
 
 **The operator's framing:** *"Loop engineering is replacing yourself as the person who
@@ -38,7 +43,9 @@ cognitive surrender) rather than mechanical ones.
 ## Resource map
 
 ### Deep notes
-- [loop-engineering.md](loop-engineering.md) — the four levels (agent → verification → event-driven → hill-climbing), the five required components, loop patterns, production building blocks (automations/worktrees/skills/connectors/sub-agents/memory), failure modes, framework bindings (ADK `LoopAgent`, Vercel `ToolLoopAgent`/`WorkflowAgent`), and a design checklist. Cites LangChain, Osmani, Pragmatic Engineer, ML Mastery, Masood, Anthropic RSI, ADK, Vercel.
+- [loop-engineering.md](loop-engineering.md) — the four levels (agent → verification → event-driven → hill-climbing), the five required components, loop patterns, production building blocks (automations/worktrees/skills/connectors/sub-agents/memory), failure modes, framework bindings (ADK `LoopAgent`, Vercel `ToolLoopAgent`/`WorkflowAgent`), and a design checklist. §8 covers level 4 at the frontier plus the `autoresearch` / bilevel-autoresearch worked example. Cites LangChain, Osmani, Pragmatic Engineer, ML Mastery, Masood, Anthropic RSI, Karpathy, ADK, Vercel.
+- [loop-autonomy-ladder.md](loop-autonomy-ladder.md) — the **autonomy** axis (orthogonal to the capability levels above): turn-based → goal-based → time-based → proactive, framed as four handoffs (tool approval → stop condition → trigger → session). Earn each rung with a verifier.
+- [evolve-loop.md](evolve-loop.md) — the slow loop that edits the fast one at practitioner scale: cadence, three inputs, four edit targets, the anti-busywork rule, and four failure modes.
 - [reliable-agents.md](../03-harness/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
 
 ### Interviewing guide
