@@ -37,6 +37,14 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 
 ---
 
+## Recurring sources
+
+[SOURCES.md](SOURCES.md) registers the sources swept periodically for pillar material,
+split into primary (cite directly) and aggregator (gap-detectors — prefer citing the
+primary source underneath). Update the sweep date and landed-notes list on each pass.
+
+---
+
 ## Summary vs. depth split
 
 **Interviewing guides** = compressed summaries for exam prep. Each guide covers a pillar end-to-end at interview depth: what you'd need to answer a question in an interview loop.

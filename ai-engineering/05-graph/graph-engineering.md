@@ -6,6 +6,7 @@ sources:
   - https://www.eigent.ai/blog/graph-engineering-ai-agents
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - https://www.aibuilderclub.com/blog/graph-engineering-with-claude-code
+  - https://www.aibuilderclub.com/blog/agent-graph-vs-loop-when-to-use
   - https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985
   - https://addyosmani.com/blog/loop-engineering/
   - https://langchain-ai.github.io/langgraph/
@@ -386,6 +387,46 @@ whose failure modes you can't reason about.
 | Parallel specialists merging results | Graph (fan-out/fan-in with reducers) |
 | Simple task, low per-cycle pass rate | Loop (graph fan-out cost isn't recovered) |
 | Structured world knowledge for retrieval | Knowledge graph (§9) |
+
+### The escalation framing
+
+The table above is a lookup. The framing underneath it is a **default plus an escalation
+rule**, which is more useful when the situation isn't on the list:
+
+> **A loop is a graph with one node and an edge back to itself.**
+
+So graph is not a different kind of system — it is the same system with more nodes. That
+makes the default obvious: **start with a loop, and add nodes only when a specific signal
+forces it.** Escalation is a cost you justify, not a maturity level you graduate to.
+
+**The five signals that justify a node.** Each names something a single loop structurally
+cannot do:
+
+| Signal | Why the loop fails |
+|---|---|
+| **Distinct specialties** — roles needing different instructions, context, tools | One agent context-switches between jobs, carrying each role's baggage into the next |
+| **Parallel fan-out + join** — process many items, then merge | A loop is sequential; wall-clock cost is unnecessary |
+| **Per-step model/tool variation** — different model or restricted toolset per stage | One agent enforces a uniform model and tool policy |
+| **Auditable control flow** — regulated work needing explicit path tracing | Emergent loop paths are hard to reconstruct after the fact |
+| **Overloaded verifier** — one check judging several criteria | A dedicated reviewer node removes the criteria confusion |
+
+**The 30-second decision tree.** Start with a loop, then ask in order:
+
+1. Does the work split into **distinct specialties** with different needs?
+2. Do you need **true parallelism** (fan-out then join)?
+3. Do different steps need **different models/tools**, or **auditable** branching?
+4. Is **one verifier failing** because it judges too many criteria at once?
+
+Yes to any → add a node. No to all → **strengthen the verifier and ship the loop.**
+
+That last clause is the one people skip. The most common "we need a graph" is really an
+overloaded verifier ([04-loop](../04-loop/README.md)), and splitting the verifier is far
+cheaper than splitting the system.
+
+**The cost of a premature graph:** more prompts to maintain, cross-node state
+synchronisation, coordination latency, and harder debugging — all pure overhead when the
+problem was single-specialty to begin with. This is the same conclusion §5 reaches from
+the other direction.
 
 ---
 
