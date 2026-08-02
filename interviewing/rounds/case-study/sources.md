@@ -10,10 +10,21 @@
 | RAG | [../../guides/3-rag/interview-guide.md](../../guides/3-rag/interview-guide.md) | LLM case retrieval layer — chunking, embedding, reranking, what-if chains (poor retrieval, index growth, chunk truncation) |
 | Agents | [../../guides/4-agents/interview-guide.md](../../guides/4-agents/interview-guide.md) | Agent system design cases — orchestration, tool design, state management, safety |
 | Evals & observability | [../../guides/6-evals-observability/interview-guide.md](../../guides/6-evals-observability/interview-guide.md) | Offline + online eval plans, hallucination monitoring, metrics beyond accuracy |
+| Code review round | [../code-review-round/README.md](../code-review-round/README.md) | Your code-test submission is read as a PR by a senior engineer — that round's consequence-ranked reading order is the grader's lens |
 
 ## Internal notes
 
 - [../../notes/case-interview.md](../../notes/case-interview.md) — raw source material: evaluation dimensions, RAG what-if chain, defense round tips, consulting-style loop patterns
+
+### Code test / Work Trial provenance
+
+The code-test and Work Trial material (README format table, study-guide clock/dial/taxonomy, `examples/aie-track/one-hour-code-test.md`) derives from three research passes dated 2026-08-01, in `.claude/docs/research/`:
+
+- `2026-08-01_code-test_format-and-flaws.md` — format evidence, hidden-flaw taxonomy, the 60-minute clock, pragmatism/defensibility rubrics
+- `2026-08-01_code-test_openai-work-trial.md` — OpenAI Work Trial vs technical test; test-rigour dial, PR-review lens, observability weighting, async ambiguity protocol
+- `2026-08-01_code-test_tooling-audit.md` — starter-kit tooling audit; **not a source for the current round docs**, tracked separately
+
+Note the two-source tension on tests: the first lists a test suite under what *not* to build in a 60-minute window; the second calls a missing suite the top Work Trial rejection reason. The study-guide resolves this as a dial that scales with the timebox rather than adopting either verbatim.
 
 ## External references
 

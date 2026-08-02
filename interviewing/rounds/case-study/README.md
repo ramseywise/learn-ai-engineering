@@ -1,4 +1,4 @@
-# Case Study Round (live · take-home · presentation/defense)
+# Case Study Round (live · code test · take-home · Work Trial · presentation/defense)
 
 ## What's tested
 
