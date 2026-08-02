@@ -197,6 +197,67 @@ This frames the "how good is good enough?" question. If a 2% error rate on loan 
 
 ---
 
+## Code test (1h timed) and Work Trial (3–6h)
+
+The 1h timed code test is **emerging, not canonical** — it shows up in CoderPad/CodeSignal pilots, not as a confirmed standard round at major AIE employers. Treat this section as a compression drill that also sharpens the longer formats, not as preparation for a round you should expect.
+
+### The 60-minute clock
+
+| Window | What you do | What you produce |
+|---|---|---|
+| 0–10 min — triage | Read the prompt. Fix input/output format and constraints. RAG-in-a-box or agent-in-a-box? What's the token budget? Sync or async? Favor off-the-shelf over custom — simplest embedding model, fastest retrieval. | A written assumption block; an architecture decision |
+| 10–40 min — execution | Ingest (10–15) → retrieval/embedding (15–25) → LLM call + structured output (25–35) → connect end-to-end and run one real query (35–40) | Working code, unpolished |
+| 40–60 min — hardening + docs | The minimal fixes below (40–45) → README, ~200 words (45–50) → test one edge case (50–55) → self-review for typos, missing imports, swallowed exceptions (55–60) | A submittable repo |
+
+**In the execution window, do NOT** optimize hyperparameters, implement a custom chunker, or tune the prompt for perfect output. Ship first; harden second.
+
+**In the last 20 minutes, do NOT** implement multi-turn conversation, add a web UI, build a custom embedding model, add caching, or write *a full test suite* — 2–3 targeted tests are correct here, and at longer timeboxes the bar rises sharply. See the dial below.
+
+The failure mode this clock is designed against: candidates default to "finish one thing well" rather than "ship and harden." Over-engineering that leaves the submission incomplete or untested loses to a working, hardened, smaller system — rubrics weight correctness above code quality above communication.
+
+**Highest-ROI hardening fixes** (~23 min total, leaving 37 for core functionality): context-budget assertion (1 min), timeout on LLM calls (1 min), retry with backoff (3 min), JSON validation or JSON mode (3 min), chunk overlap + min-size test (5 min), cost/latency print (3 min), grounding check (2 min), README "what breaks" (5 min).
+
+### Test expectation scales with the timebox
+
+Do not carry one test habit across all three windows.
+
+| Timebox | Bar |
+|---|---|
+| 1h timed | 2–3 tests: happy path, boundary, failure path. One-command run. |
+| 1–3h technical test | + malformed input and error paths |
+| 3–6h Work Trial | Full suite: core behaviour, boundaries, failures — named so intent reads without the implementation |
+
+One source calls a missing comprehensive test suite the single most cited reason for Work Trial rejection. Treat that as attributed, not established — but the direction is clear: at 3–6h, tests are not optional polish.
+
+### Flaws that show up in submissions
+
+These are patterns observed in real candidate submissions — not bugs interviewers plant in starter code. Roughly ranked by how often they appear and how cheaply they're fixed:
+
+| Flaw | Minimal fix | Time |
+|---|---|---|
+| No grounding check (silent hallucination) | If the answer cites no retrieved chunk, return "I couldn't find an answer in the documents." | 2 min |
+| Context window overflow | `available = ctx − system − history − 20% margin`; assert before the call, reduce `top_k` if short | 1 min |
+| No timeout on LLM calls | Add `timeout=30` to the call | 1 min |
+| Retry without backoff | Retry alone is insufficient — reviewers flag missing exponential backoff specifically: `sleep(2**attempt)` | 3 min |
+| Unvalidated structured output (JSON drift) | JSON mode, or `json.loads` in a try/except with a key-set assertion. Enumerate values ("score ∈ {low, medium, high}") rather than leaving them open | 3 min |
+| Silent exception swallowing | Never `except Exception: pass`. A system that fails silently is worse than one that fails loudly — log and re-raise, or return an explicit error value | 1 min |
+| Naive fixed-size chunking | Add ~10% overlap. Do *not* implement semantic chunking in a 1h window | 2 min |
+| Off-by-one in chunk overlap | `assert` min chunk size and actual overlap across the boundaries | 30 sec |
+| Embedding model ↔ retrieval DB mismatch | One `EMBEDDING_MODEL` constant used for both index build and query | 1 min |
+| No cost/latency instrumentation | Print elapsed time, token estimate, cost estimate. Observability is graded as heavily as feature completeness at Work Trial scope — structured logging is baseline, not bonus | 3 min |
+| No README "what breaks" section | Three sentences: what breaks, why, how you'd fix it | 5 min |
+
+### The reviewer lens
+
+Your submission is read asynchronously, by an engineer, **the way they would assess a pull request from a new engineer on the team** — holistically, attentive to what you chose *and* what you omitted. Two consequences:
+
+- The reading order in [../code-review-round/README.md](../code-review-round/README.md) is the lens being applied to your code. Read it as the grader's rubric, not just as its own round.
+- **Organize by responsibility.** Network logic, business logic, data handling, and utilities should not all live in one file. A single file is acceptable only for the 1h case; at 3–6h the submission should present as separated modules.
+
+Two more things are graded that candidates rarely anticipate: **time estimation** (burning a full 48h window on a 4-hour task is a negative signal — submit with time to spare) and **scope discipline** (over-scoping is a documented negative, not evidence of ambition).
+
+---
+
 ## Defense round preparation
 
 Defense rounds test two things: **depth of understanding** and **growth mindset under challenge**.
