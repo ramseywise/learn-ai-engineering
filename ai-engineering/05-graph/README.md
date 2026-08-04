@@ -25,7 +25,9 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 ## Resource map
 
 ### Deep notes
-- [graph-engineering.md](graph-engineering.md) — the full discipline: primitives (nodes, edges, state, reducers, checkpointers, interrupts, Send API), why production agents aren't DAGs, topology patterns, when *not* to build a graph, scale failure modes and anchors, enterprise governance checklist, Claude Code mapping, the KG facet, and adoption methodology.
+- [graph-engineering.md](graph-engineering.md) — the full discipline: primitives (nodes, edges, state, reducers, checkpointers, interrupts, Send API), why production agents aren't DAGs, topology patterns, when *not* to build a graph, scale failure modes and anchors, enterprise governance checklist, Claude Code mapping, the KG facet (including the KG as
+  shared memory for swarms, and swarm cost anchors), adoption methodology, and the n8n
+  supervisor-graph case study.
 - [memory.md](memory.md) — memory and state across graph nodes.
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
@@ -50,6 +52,10 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 - [Graph engineering 2026 guide](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) — parallel review graph, typed edges, loop-vs-graph cost tradeoffs, 5-stage adoption.
 - [Graph engineering with Claude Code](https://www.aibuilderclub.com/blog/graph-engineering-with-claude-code) — subagents as nodes, hooks as deterministic edges, Agent SDK.
 - [Forget loop engineering](https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985) — the organizational-structure argument.
+- [From Karpathy's loops to shared knowledge graphs](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) — loop → swarm → graph as capacity unlocks; the KG as shared memory ("the agent forgets, the graph does not"); tiered extraction pipeline; five-plane architecture.
+- [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — the true-dependency test for what parallelizes; verifier context isolation; swarm cost anchors.
+- [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — production supervisor-pattern LangGraph case study: six agents, per-node iteration bounds, optimistic locking, published context budgets.
+- [Hosting n8n](https://docs.n8n.io/deploy/host-n8n) — deployment surface for a self-hosted graph runtime.
 
 ### Previous and next layer
 ← Builds on [04-loop/](../04-loop/README.md)

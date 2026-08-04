@@ -12,8 +12,12 @@ sources:
   - https://langchain-ai.github.io/langgraph/
   - https://docs.langchain.com/langgraph
   - https://www.explainx.ai/post/graph-engineering
+  - https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/
+  - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
+  - https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8
+  - https://docs.n8n.io/deploy/host-n8n
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-08-03
 ---
 
 # Graph Engineering — deep note
@@ -357,6 +361,69 @@ appendices from *Knowledge Graphs and LLMs in Action* (Manning), covering ontolo
 LLM-driven KG construction, named entity disambiguation, graph feature engineering, GNNs,
 KG-powered RAG, text-to-Cypher, and a LangGraph QA agent.
 
+### The two senses converge: KG as shared memory
+
+The agent-graph/knowledge-graph split above is a distinction of *kind*, not of deployment —
+in a multi-agent system the KG is frequently the **shared state layer the execution graph
+coordinates through**. Khamdee's synthesis (of Karpathy's autoresearch, Anthropic's Dynamic
+Workflows, and the KG Construction Cookbook) frames the progression as three capacity
+unlocks rather than three architectures:
+
+1. **Loop** — one reflective agent generating, evaluating, and revising in a bounded action
+   space. Karpathy's autoresearch: ~630 lines of core code, 5-minute iterations.
+2. **Swarm** — parallel workers via Dynamic Workflows. This is where **redundancy** appears:
+   independent workers rediscover the same findings, because nothing connects them.
+3. **Graph** — a typed KG holding entities, claims, relations, and provenance across
+   sessions. Workers publish structured updates (a `GraphUpdate` carrying nodes, edges, run
+   ID, agent ID); a synthesizer traverses the shared graph instead of requiring every worker
+   to read every source document.
+
+The load-bearing claim: *"the agent forgets, the graph does not."* The KG serves three roles
+at once — shared memory, grounding layer, and persistent world model — which is what buys
+cross-session investigation, contradiction tracking, and audit trails that survive individual
+agent failure. Note this is the **swarm's** answer to redundancy: fan-out without shared
+state re-derives; fan-out over a shared graph accumulates.
+
+The extraction pipeline is explicitly model-tiered — extract with a cheap model under a
+constrained schema, resolve with a stronger one, assemble deterministically, query with a
+stronger one again:
+
+| Stage | Model tier | Output |
+|---|---|---|
+| Extract | Haiku-class | Schema-constrained structured output |
+| Resolve | Sonnet-class | Entity clustering, alias merging |
+| Assemble | *(deterministic)* | NetworkX `MultiDiGraph` + provenance |
+| Query | Sonnet-class | Bounded subgraph, edges cited |
+
+**Five planes** keep concerns separate — control, execution, artifact, graph, evaluation —
+guarding against the anti-pattern Khamdee names as *"the chat transcript became the
+database."* If your only durable record of a run is its conversation log, you have no graph.
+
+**The non-negotiables.** A false merge in the graph, or a biased ontology, contaminates every
+downstream inference — and unlike a bad loop iteration, it persists. Entity resolution must
+be **reversible**, and provenance must be complete. This is §9's per-hop accuracy warning
+restated as a write-path concern: bad edges don't just degrade retrieval, they poison shared
+memory for every agent that reads after them.
+
+### Cost of the swarm tier
+
+The parallel tier is the expensive one, and both sources give hard numbers. Dynamic Workflows
+caps at **1,000 sub-agents per workflow with 16 concurrent**; a 1,000-sub-agent run costs
+tens of dollars, with correlated errors across workers as the quieter risk. At the extreme,
+youmind reports Bun's Zig-to-Rust port: ~50 workflows, peak parallelism 64, 535k lines to
+1M+ lines in 11 days — at roughly **$165,000** in usage. Graph topology is what makes that
+spend *tractable*, not what makes it cheap.
+
+Two safeguards that only matter once work is parallel:
+
+- **Verifiers need isolated context**, not the shared conversation history — a verifier that
+  can see the generator's reasoning tends to ratify it (self-agreement bias).
+- **Workers need isolated file spaces**, or parallel writes overwrite each other.
+
+The decision rule for what parallelizes reduces to one question: *does the next step actually
+read the previous step's output?* If not, the serialization is incidental and belongs in a
+fan-out. If yes, it is a true dependency and the edge is real.
+
 ---
 
 ## 10. Adoption methodology
@@ -476,6 +543,64 @@ implementable on markdown files you own."*
 
 ---
 
+## 14. Case study: n8n's AI Workflow Builder
+
+A shipped, documented supervisor-pattern graph — useful because the operational constants are
+published rather than inferred. n8n's builder (the feature that generates n8n workflows from a
+prompt) is LangGraph with a **supervisor routing to five specialist subgraphs**:
+
+| Node | Role | Bound |
+|---|---|---|
+| Supervisor | Routes each message to a subgraph | — |
+| Discovery | Explores the node registry | max 50 iterations |
+| Planner | Builds a structured plan; pauses for approval (HITL) | — |
+| Builder | Executes tool calls | max 100 iterations/session |
+| Responder | Renders user-facing Markdown | — |
+| Parameter Updater | Surgical edits to existing node params | — |
+
+**Specialization is prompt-only.** Every agent runs the same model (Claude Sonnet 4.5,
+temperature 0); the roles differ entirely by system prompt. This is the cheapest form of node
+specialization and worth treating as the default — separate models per node is an
+optimization to justify, not a starting point.
+
+**Every node is iteration-bounded.** Discovery at 50, Builder at 100 — the §6 anchor
+discipline applied per-node rather than to the graph as a whole.
+
+**State and concurrency.** LangGraph checkpoints via `MemorySaver` or DB-persisted messages;
+session key `workflow-{workflowId}-user-{userId}` with a 24-hour TTL. Concurrent edits use
+**optimistic locking** (`versionId` + `expectedChecksum`) — the single-writer rule enforced by
+compare-and-swap instead of by convention.
+
+**Validation at the tool boundary.** Seven LangChain tools (`add_nodes`, `update_parameters`,
+`connect_nodes`, `get_node_details`, `get_execution_logs`, `get_expression_data_mapping`,
+`get_node_context`), and *"every mutation is validated before it's applied"* — parameter
+schema checks, type compatibility, expression path resolution. The graph the agent is building
+is itself typed, so malformed edges are rejected at write time rather than discovered at run
+time.
+
+**Published operational constants** — the context-budget numbers are the transferable part:
+
+| Constant | Value |
+|---|---|
+| Context window | 200K tokens |
+| Auto-compact threshold | 150K tokens |
+| Max prompt length | 5,000 chars |
+| Max workflow JSON | 30K tokens |
+| Frontend payload cap | 400 KB |
+| Request timeout | 180 s |
+| IP rate limit | 100 requests/period |
+
+Note the compact trigger at **75% of the window**, and the artifact under construction capped
+at 30K — the agent is never allowed to fill its own context with the thing it is editing.
+
+**Deployment.** n8n self-hosts via npm, Docker, or Docker Compose, with provider guides for
+AWS, Azure, GCP, DigitalOcean, Hetzner, Heroku, and OpenShift. All installations run the same
+core; without a license key it runs as the free Community edition, with Business/Enterprise
+keys unlocking those editions. Relevant here as the deployment surface for a graph system you
+intend to operate rather than demo — see [`agent-runtime.md`](~/.claude/refs/agent-runtime.md).
+
+---
+
 ## Resources
 
 - Pillar guide: [`4-agents`](../../interviewing/guides/4-agents/00-overview.md)
@@ -485,3 +610,7 @@ implementable on markdown files you own."*
 - Readings — knowledge graph papers: [`3-rag-knowledge-graphs/`](3-rag-knowledge-graphs/)
 - LangGraph docs: https://docs.langchain.com/langgraph
 - Loop engineering note: [`loop-engineering.md`](../04-loop/loop-engineering.md)
+- [From Karpathy's loops to shared knowledge graphs](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) — loop → swarm → graph progression; KG as shared memory; five-plane architecture (§9).
+- [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — true-dependency test, verifier context isolation, swarm cost anchors (§9).
+- [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — supervisor-pattern LangGraph case study with published constants (§14).
+- [Hosting n8n](https://docs.n8n.io/deploy/host-n8n) — self-host and deployment surface (§14).
