@@ -2,7 +2,7 @@
 
 > **Scope:** Framework selection rationale and methodology principles. For calibration run results and score evidence, see [llm-calibration-insights.md](llm-calibration-insights.md).
 
-**Context:** BKH eval pipeline — choosing which LLM-as-judge graders to use for the quality gate and for golden trace creation.
+**Context:** support corpus A eval pipeline — choosing which LLM-as-judge graders to use for the quality gate and for golden trace creation.
 
 ---
 
@@ -28,7 +28,7 @@ Section 11 runs independent LLM-judge implementations (faithfulness, relevancy, 
 - r 0.3–0.6 → moderate overlap. Worth investigating which disagrees with user sentiment more.
 - r < 0.3 → one of them is off. Run the LLM-judge scores through the same P/R/F1 calibration to find out which.
 
-**The deepeval scores are NOT automatically better.** They're generic implementations not tuned for BKH / CS context. Our graders include domain-specific prompts (intent alignment, sub-question coverage, citation-level grounding) that a generic judge misses.
+**The deepeval scores are NOT automatically better.** They're generic implementations not tuned for support corpus A / CS context. Our graders include domain-specific prompts (intent alignment, sub-question coverage, citation-level grounding) that a generic judge misses.
 
 ## Would different judges give different golden traces?
 
@@ -50,7 +50,7 @@ Grounding is the hardest dimension to calibrate because it requires article body
 | **Approach** | Enumerate ≤7 claims → grounded / hallucinated / unverifiable → ratio | Single holistic question: does answer contain only info from context? | 4 explicit steps: identify claims → verify → check contradictions → note unsupported |
 | **Partial credit** | Yes — mixed response gets fractional score | No — one bad claim = not faithful | Yes, continuous |
 | **Context guard** | Yes — returns 0.5/context_missing on URL citations | No — hallucinates a judgment on URLs | No — same problem |
-| **Domain-tuned** | Yes — BKH CS, threshold 0.6 AND no hallucination | No | No |
+| **Domain-tuned** | Yes — support corpus A CS, threshold 0.6 AND no hallucination | No | No |
 | **Token cost** | ~1x | ~1x | ~3x (CoT) |
 
 ### Why the cross-check showed low agreement

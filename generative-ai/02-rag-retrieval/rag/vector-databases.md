@@ -8,9 +8,9 @@ Landscape of vector stores relevant to our RAG architecture. Scoped to what appe
 
 | Store | Where | Mode |
 |---|---|---|
-| OpenSearch | Bedrock KB (galactus VA agents) | Managed — Bedrock owns the index |
-| DuckDB | hc_rag default vector backend | Embedded, self-managed, no server |
-| ChromaDB | hc_rag optional backend (`chroma` extra) | Embedded, persistent HNSW |
+| OpenSearch | Bedrock KB (the eval platform SupportAgent) | Managed — Bedrock owns the index |
+| DuckDB | kb_rag default vector backend | Embedded, self-managed, no server |
+| ChromaDB | kb_rag optional backend (`chroma` extra) | Embedded, persistent HNSW |
 | pgvector | chat-agent local/dev | Self-managed PostgreSQL extension |
 | GCP Discovery Engine | chat-agent production | Fully managed — GCP owns everything |
 
@@ -77,7 +77,7 @@ Best for: pure-play vector similarity with no operational burden. Weakness: no n
 ### DuckDB
 Two roles in our codebase:
 
-**hc_rag production backend (default):** `VECTOR_STORE_BACKEND=duckdb` — the `DuckDBVectorIndex` in `rag/datastore/local.py` stores embeddings in a `.duckdb` file and does exact cosine search. No server, no infra. Ships as a core dep in the hc_rag `pyproject.toml` (`duckdb>=1.0`).
+**kb_rag production backend (default):** `VECTOR_STORE_BACKEND=duckdb` — the `DuckDBVectorIndex` in `rag/datastore/local.py` stores embeddings in a `.duckdb` file and does exact cosine search. No server, no infra. Ships as a core dep in the kb_rag `pyproject.toml` (`duckdb>=1.0`).
 
 ```bash
 VECTOR_STORE_BACKEND=duckdb VECTORDB_PATH=data/corpus/v1/knowledge.duckdb uv run uvicorn main:app
@@ -96,7 +96,7 @@ SELECT * FROM docs ORDER BY array_distance(embedding, ?::FLOAT[3072]) LIMIT 5;
 Limitation: no hybrid search (dense only). For keyword-heavy queries (Danish product names, billing codes) retrieval quality is lower than OpenSearch hybrid.
 
 ### ChromaDB
-Optional backend in hc_rag (`pip install chromadb` or `uv sync --extra chroma`). `ChromaVectorIndex` in `rag/datastore/local.py` uses `PersistentClient` with HNSW cosine distance.
+Optional backend in kb_rag (`pip install chromadb` or `uv sync --extra chroma`). `ChromaVectorIndex` in `rag/datastore/local.py` uses `PersistentClient` with HNSW cosine distance.
 
 ```bash
 VECTOR_STORE_BACKEND=chroma VECTOR_STORE_DIR=data/corpus/chroma uv run uvicorn main:app
@@ -104,7 +104,7 @@ VECTOR_STORE_BACKEND=chroma VECTOR_STORE_DIR=data/corpus/chroma uv run uvicorn m
 
 When to prefer over DuckDB: when you want persistent HNSW (approximate search at larger corpus sizes) or plan to use the Chroma Cloud managed tier later. For our current corpus size (< 50k chunks), DuckDB exact search is fast enough and simpler.
 
-**Not installed in the main galactus venv.** Tests that exercise ChromaDB use `pytest.importorskip("chromadb")` and run only under `make test-agents` with the hc_rag extras venv.
+**Not installed in the main the eval platform venv.** Tests that exercise ChromaDB use `pytest.importorskip("chromadb")` and run only under `make test-agents` with the kb_rag extras venv.
 
 ### GCP Discovery Engine (Vertex AI Search)
 Best for: fully managed RAG on GCP — no index to manage, no reranker to wire up.
@@ -137,9 +137,9 @@ See [gcp-vertex-vs-bedrock.md](gcp-vertex-vs-bedrock.md) for a detailed head-to-
 
 1. **Hybrid search** — combine dense (semantic) + sparse (BM25/ELSER) scores. Bedrock does this automatically; pgvector requires ParadeDB or a separate BM25 index.
 2. **Reranking** — cross-encoder as a second pass over top-k candidates. Bedrock: `amazon.rerank-v1:0`. Elsewhere: Cohere Rerank, Jina Reranker, BGE-Reranker.
-3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in galactus hc_lg and chat-agent.
+3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in the eval platform kb_lg and chat-agent.
 4. **Parent-child chunking** — retrieve at leaf granularity, send parent context to LLM. Bedrock's native hierarchy maps to our `level=0` / `level=1` in `ChunkRecord`.
-5. **CRAG (Corrective RAG)** — grade retrieved docs, rewrite query if below threshold, retry. Used in hc_lg and chat-agent agentic pipeline.
+5. **CRAG (Corrective RAG)** — grade retrieved docs, rewrite query if below threshold, retry. Used in kb_lg and chat-agent agentic pipeline.
 
 ---
 

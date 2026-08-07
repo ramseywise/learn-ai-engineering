@@ -44,4 +44,4 @@ CREATE TABLE payment_type_sessions AS
 ## KSQL documentation for details
 [KSQL DB Documentation](https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-reference/quick-reference/)
 
-[KSQL DB Java client](https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-clients/java-client/)
+[KSQL DB Java client](https://docs.ksqldb.io/en/latest/developer-guide/ksqldb-clients/jaclient/)

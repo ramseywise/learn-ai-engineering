@@ -37,14 +37,14 @@ infrastructure; eval is the discipline.
 - [support-agent-observability.md](support-agent-observability.md) — support-agent
   observability & experiment-tracking schema contract: base trace metadata every agent must
   emit, `ExperimentRun`/`RagConfig`/`BedrockConfig`/`ChunkRecord` dataclasses, current
-  implementation state per agent (`hc_adk`, `hc_lg`, `hc_rag`), grounding tier promotion
+  implementation state per agent (`kb_adk`, `kb_lg`, `kb_rag`), grounding tier promotion
   policy, and the pending work queue. Includes a "Concepts" preamble on agent-run tracing
   (what to record in a trace, two-layer manual+LLM-as-judge sampling strategy). Platform
   wiring (LangFuse/LangSmith setup) is separate — see
   [`04-agentic-frameworks/notes/langfuse.md`](../04-agentic-frameworks/notes/langfuse.md) and
   [`langsmith.md`](../04-agentic-frameworks/notes/langsmith.md).
 
-**Support-agent content note:** content for the `hc_adk`/`hc_lg`/`hc_rag` support-agent
+**Support-agent content note:** content for the `kb_adk`/`kb_lg`/`kb_rag` support-agent
 system is distributed across both pillars by design — `ai-engineering/06-eval/evals/`
 (gate-contract, eval-architecture) covers evaluation methodology; `generative-ai/02-rag-retrieval/rag/`
 (hc-rag-pipeline, semantic-cache, bedrock-kb) covers the retrieval pipeline; and

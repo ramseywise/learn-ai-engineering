@@ -1,4 +1,4 @@
-# Eval Architecture — Multi-Agent VA
+# Eval Architecture — Multi-Agent SupportAgent
 
 > **Canonical reference:** `evals/README.md` — layout, flows, LangFuse integration, run commands.
 > **This doc covers:** architectural decisions not in the README — routing vs domain eval distinction, Strand A/E/F, ADK native gaps, HITL annotation vs runtime interrupts.
@@ -10,16 +10,16 @@
 
 ## The core gap: routing vs domain evals
 
-Two orthogonal eval dimensions exist for multi-agent VA:
+Two orthogonal eval dimensions exist for multi-agent SupportAgent:
 
 | Strand | Question | Agent | Metric type |
 |---|---|---|---|
-| **A — Routing eval** | Does the VA root pick the right sub-agent? | va_google_adk (root) | `tool_trajectory_avg_score` |
-| **F — Domain eval** | Does each domain agent call the right tools and produce the right output? | va_google_adk (sub-agents) | tool trajectory + output structure + quality |
+| **A — Routing eval** | Does the SupportAgent root pick the right sub-agent? | support_adk (root) | `tool_trajectory_avg_score` |
+| **F — Domain eval** | Does each domain agent call the right tools and produce the right output? | support_adk (sub-agents) | tool trajectory + output structure + quality |
 
 Strand A seeds from queries that exercise routing boundaries. Strand F seeds from representative domain tasks that assume routing is correct. The two datasets are complementary — neither replaces the other.
 
-**Why this is non-obvious:** galactus current evals only measure retrieval quality (MRR, P@k) and response quality (grounding, completeness). Neither catches "right answer, wrong tool path" or "routed to wrong sub-agent." These failures are invisible to all current graders.
+**Why this is non-obvious:** the eval platform current evals only measure retrieval quality (MRR, P@k) and response quality (grounding, completeness). Neither catches "right answer, wrong tool path" or "routed to wrong sub-agent." These failures are invisible to all current graders.
 
 ---
 
@@ -29,15 +29,15 @@ Strand A seeds from queries that exercise routing boundaries. Strand F seeds fro
 
 **Dataset format:** `data/adk/eval_sets/routing_eval.jsonl` — 50–100 labeled examples, each with `query` + `expected_tool_calls` + `expected_sub_agent`.
 
-**Zero-cost bootstrap (Strand E connection):** `table_type` + `nav_buttons.route` values collected from VA staging responses are labeled routing examples at near-zero cost — queries where `table_type` is non-null name the expected domain. Seed `routing_eval.jsonl` from these before manual labeling.
+**Zero-cost bootstrap (Strand E connection):** `table_type` + `nav_buttons.route` values collected from SupportAgent staging responses are labeled routing examples at near-zero cost — queries where `table_type` is non-null name the expected domain. Seed `routing_eval.jsonl` from these before manual labeling.
 
 ---
 
 ## Strand E — Response metadata signals
 
-The VA staging and SA API responses already contain model-inferred decision signals that are not being stored or analyzed. Capturing these costs nothing (no new LLM calls) and enables two things: report breakdown dimensions and routing eval dataset bootstrapping.
+The SupportAgent staging and SA API responses already contain model-inferred decision signals that are not being stored or analyzed. Capturing these costs nothing (no new LLM calls) and enables two things: report breakdown dimensions and routing eval dataset bootstrapping.
 
-### VA staging — fields to capture
+### SupportAgent staging — fields to capture
 
 | Field | Type | Eval use |
 |---|---|---|
@@ -53,18 +53,18 @@ Derive from (`insufficient_information`, `contact_support`):
 - `"no_coverage"` — `insufficient_information=true`
 - `"escalated"` — `contact_support=true`
 
-Use `coverage_decision` as the comparable breakdown axis for SA in the combined report. Use `table_type` as the equivalent axis for VA. They align as cross-agent comparisons of how often each agent handles vs deflects vs escalates.
+Use `coverage_decision` as the comparable breakdown axis for SA in the combined report. Use `table_type` as the equivalent axis for SupportAgent. They align as cross-agent comparisons of how often each agent handles vs deflects vs escalates.
 
 ---
 
 ## Strand F — Domain agent eval
 
-Once routing is correct, domain correctness asks: did the sub-agent call the right Billy API tools, produce the expected structured output, and give a complete answer?
+Once routing is correct, domain correctness asks: did the sub-agent call the right Product API tools, produce the expected structured output, and give a complete answer?
 
 ### Three eval dimensions
 
 **1. Tool trajectory** (reuse Strand A runner)
-Did the agent call the expected Billy API tools in the expected order?
+Did the agent call the expected Product API tools in the expected order?
 
 **2. Output structure correctness** — `OutputStructureGrader`
 Did the response include the expected structured fields? `table_type` match, `chart_data` populated, `metric_cards` present, `contact_support` flag, `form` presence. Binary per-field: present/absent + type correct.
@@ -74,7 +74,7 @@ Input: actual `AssistantResponse` dict + expected output spec from task
 Output: `GraderOutput` with per-field pass/fail in `dimensions`
 
 **3. Response quality**
-Reuse existing `CompletenessGrader`, `GroundingGrader`. Context = the Billy API tool outputs.
+Reuse existing `CompletenessGrader`, `GroundingGrader`. Context = the Product API tool outputs.
 
 ### Dataset format
 
@@ -107,14 +107,14 @@ Storage: `data/adk/eval_sets/domain_tasks/{domain}_tasks.jsonl`. Scope: 15 invoi
 
 ## ADK eval framework — native capabilities gap
 
-galactus currently has no `tool_trajectory_avg_score` equivalent. ADK provides this via `AgentEvaluator`. Other ADK-native metrics:
+the eval platform currently has no `tool_trajectory_avg_score` equivalent. ADK provides this via `AgentEvaluator`. Other ADK-native metrics:
 
-| Metric | Galactus equivalent |
+| Metric | The eval platform equivalent |
 |---|---|
 | `tool_trajectory_avg_score` | `adk_steps` diagnostic + experimental `ToolTrajectoryGrader` |
 | `final_response_match_v2` | Similar to GroundingGrader |
 | `hallucinations_v1` | Similar to GroundingGrader |
-| `safety_v1` | ❌ Not in galactus |
+| `safety_v1` | ❌ Not in the eval platform |
 | `rubric_based_final_response_quality_v1` | Similar to quality graders |
 
 ADK also exposes Vertex AI managed eval (pointwise, pairwise, AutoSxS) for systematic model comparison.
@@ -123,9 +123,9 @@ ADK also exposes Vertex AI managed eval (pointwise, pairwise, AutoSxS) for syste
 
 Evaluated and ruled out `AgentEvaluator` (trajectory + response match) for the help-center eval pipeline:
 
-- **Trajectory** (`tool_trajectory_avg_score`) requires per-query `expected_tool_use` annotations. Our 541-item eval set has expected URLs and intercom gold responses — not tool-level labels. Annotating expected tool sequences would be new work, and the signal it adds (did `fetch_support_knowledge` fire?) is already captured for free via `adk_steps` and `kb_calls[].top_score` in the output JSONL.
+- **Trajectory** (`tool_trajectory_avg_score`) requires per-query `expected_tool_use` annotations. Our 541-item eval set has expected URLs and SupportPlatform gold responses — not tool-level labels. Annotating expected tool sequences would be new work, and the signal it adds (did `fetch_support_knowledge` fire?) is already captured for free via `adk_steps` and `kb_calls[].top_score` in the output JSONL.
 - **Response match** (`final_response_match_v2`) uses ROUGE-L, which is a poor fit for conversational helpdesk answers where wording varies substantially from the reference. Our `ComparisonGrader` and quality judges score relevance, grounding, and coverage via an LLM, which is more informative for this domain.
-- **Framework neutrality**: forcing ADK-specific eval infrastructure before the hc_adk vs hc_lg winner is decided would create asymmetric grader coverage. Custom framework-neutral graders (MRR, grounding ratio, composite quality) keep the comparison clean.
+- **Framework neutrality**: forcing ADK-specific eval infrastructure before the kb_adk vs kb_lg winner is decided would create asymmetric grader coverage. Custom framework-neutral graders (MRR, grounding ratio, composite quality) keep the comparison clean.
 
 The experimental `ToolTrajectoryGrader` in `evals/graders/judges/_experimental/routing.py` is the right starting point if trajectory analysis is needed later — it works from the actual tool call trace rather than requiring pre-labeled expected sequences.
 
@@ -133,16 +133,16 @@ The experimental `ToolTrajectoryGrader` in `evals/graders/judges/_experimental/r
 
 ## Observability + experiment tracking
 
-Platform wiring and online scoring → [langfuse.md](../../../generative-ai/04-agentic-frameworks/notes/langfuse.md) (support agents) and [langsmith.md](../../../generative-ai/04-agentic-frameworks/notes/langsmith.md) (VA agents).
+Platform wiring and online scoring → [langfuse.md](../../../generative-ai/04-agentic-frameworks/notes/langfuse.md) (support agents) and [langsmith.md](../../../generative-ai/04-agentic-frameworks/notes/langsmith.md) (SupportAgent).
 Metadata contract and ExperimentRun / RagConfig schemas → [support-agent-observability.md](../../../generative-ai/06-observability/support-agent-observability.md).
 
 ---
 
 ## ADK vs LangGraph: parallel evaluation candidates
 
-`hc_adk` and `hc_lg` are deliberately feature-equal — same schema, same safeguard layers, same eval dataset. Neither is primary. The winner is selected by composite eval score after ablation completes, not assumed in advance.
+`kb_adk` and `kb_lg` are deliberately feature-equal — same schema, same safeguard layers, same eval dataset. Neither is primary. The winner is selected by composite eval score after ablation completes, not assumed in advance.
 
-**Why:** Committing to a framework before measuring quality differences would make the comparative method circular. The 3-agent comparison (hc_adk / hc_lg / hc_rag) is the improvement story — every change is measurable via MRR delta. Framework selection is an output of that process, not an input.
+**Why:** Committing to a framework before measuring quality differences would make the comparative method circular. The 3-agent comparison (kb_adk / kb_lg / kb_rag) is the improvement story — every change is measurable via MRR delta. Framework selection is an output of that process, not an input.
 
 **Implication for evals:** Avoid graders or metrics that assume a specific execution model (e.g. LangGraph node sequences, ADK tool call counts) until a winner is selected. Use framework-neutral metrics (MRR, grounding ratio, composite quality) for the primary comparison.
 

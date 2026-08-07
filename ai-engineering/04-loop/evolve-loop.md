@@ -52,7 +52,7 @@ inputs:
 
 **A worked example (Superdesign's support triage loop).** An expensive trigger was waking
 the agent repeatedly to find no work. The evolve run wrote a JavaScript trigger script:
-fetch Intercom updates from the last 30 minutes, wake the agent only when real work exists.
+fetch SupportPlatform updates from the last 30 minutes, wake the agent only when real work exists.
 No human designed that fix — the slow loop read the logs, saw the empty wakeups, and
 rewrote its own trigger. Note the shape: the improvement was *structural and deterministic*,
 not a better prompt.
