@@ -9,7 +9,7 @@ Each file walks through a full system design using the five-step process from th
 | Customer support agent | [support-agent.md](support-agent.md) | "Design a help center agent with citation enforcement and human escalation" | 5-layer guardrails, CRAG, multi-framework comparison, grounding |
 | Financial forecasting | [forecasting-agent.md](forecasting-agent.md) | "Design a self-learning cash flow forecasting system" | Classical ML + LLM hybrid, agentic self-learning loop, knowledge graph, dynamic segmentation |
 | Meeting intelligence | [meeting-processor.md](meeting-processor.md) | "Design a meeting capture → typed fact extraction → lifecycle state machine" | Event-driven pipeline, sole-writer state machine, multi-tenant, template-rendered architecture |
-| Accounting assistant | [accounting-assistant.md](accounting-assistant.md) | "Design a virtual assistant for accounting with regulatory knowledge" | Three knowledge layers (articles + rules + entities), knowledge graph vs RAG, intent routing, uncertainty signaling |
+| Accounting assistant | [accounting-assistant.md](accounting-assistant.md) | "Design a support agent for accounting with regulatory knowledge" | Three knowledge layers (articles + rules + entities), knowledge graph vs RAG, intent routing, uncertainty signaling |
 
 ## Design patterns (generic prompts)
 

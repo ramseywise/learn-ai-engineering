@@ -4,17 +4,17 @@ Comparison of the two managed RAG backends used across our codebases.
 
 | | **AWS Bedrock KB** | **GCP Vertex AI Search (Discovery Engine)** |
 |---|---|---|
-| **Used in** | galactus — VA agents | chat-agent — production backend |
+| **Used in** | the eval platform — SupportAgent | chat-agent — production backend |
 | **Service name** | Amazon Bedrock Knowledge Bases | Vertex AI Search / Agent Builder / Discovery Engine |
 | **Underlying store** | OpenSearch Serverless | Google's proprietary search stack |
-| **Indexing** | Data source sync (S3, web crawl, Confluence…) | Data store ingestion (web crawl, Intercom, GCS, BigQuery…) |
+| **Indexing** | Data source sync (S3, web crawl, Confluence…) | Data store ingestion (web crawl, SupportPlatform, GCS, BigQuery…) |
 | **Chunking** | Bedrock-managed hierarchical (leaf + parent) | Managed chunk mode — chunk boundaries opaque |
 | **Hybrid search** | Dense (HNSW) + BM25 — `HYBRID` hardcoded | Internal, not configurable |
 | **Reranking** | `amazon.rerank-v1:0` — explicit config | Internal to `:answer` endpoint; not exposed in Search API |
 | **Raw scores via API** | ✅ cosine similarity (0–1) for fast mode; reranker score (0.05–0.35) | ✅ `relevance_score` per chunk result (0–1 float) |
 | **Grounding score** | Not returned | ✅ `answer.grounding_score` (`:answer` endpoint) |
 | **Session management** | Stateless — caller owns session | ✅ Native session concept (`Session` resource), persisted in Firestore for multi-replica |
-| **Language support** | Corpus language agnostic | Defaults to corpus language (French for Shine); needs preamble override per query |
+| **Language support** | Corpus language agnostic | Defaults to corpus language (French for Partner); needs preamble override per query |
 | **Answer generation** | Caller sends passages to LLM | Optional: `:answer` endpoint generates answer internally |
 | **Cost unit** | Per `retrieve()` call + reranker calls | $0.003/query retrieval + $0.006/query if AI model enabled |
 | **Auth** | `boto3` + AWS credentials / IAM | Application Default Credentials (ADC) / service account |
@@ -24,7 +24,7 @@ Comparison of the two managed RAG backends used across our codebases.
 
 ## Architecture in each codebase
 
-### galactus — Bedrock KB
+### the eval platform — Bedrock KB
 
 ```
 User query
@@ -42,7 +42,7 @@ Key env vars:
 ```bash
 BEDROCK_KNOWLEDGE_BASE_ID=<id>   # required
 AWS_REGION=eu-central-1
-VA_RETRIEVAL_MODE=bedrock        # or 'rag' to call hc_rag agent instead
+SUPPORT_AGENT_RETRIEVAL_MODE=bedrock        # or 'rag' to call kb_rag agent instead
 ```
 
 Full spec: [bedrock-kb.md](bedrock-kb.md)
@@ -92,7 +92,7 @@ GCP_DISCOVERY_SERVING_CONFIG=<serving_config>
 ### Language handling
 Bedrock KB is language-agnostic — retrieval returns whatever language the docs are in. The LLM generates in the query language.
 
-GCP Discovery Engine **defaults to the corpus language** (French for Shine) when the user writes plain ASCII/English. chat-agent works around this with a per-query preamble injection:
+GCP Discovery Engine **defaults to the corpus language** (French for Partner) when the user writes plain ASCII/English. chat-agent works around this with a per-query preamble injection:
 ```python
 # gcp_agent_search.py — _effective_preamble()
 override = (
@@ -134,7 +134,7 @@ When running retrieval evals, keep backends strictly separated:
 | End-to-end quality | GCP `:answer` vs GCP agentic vs local agentic | GroundingGrader, AnswerQualityGrader |
 | Cost | All three | `gcp_search_cost_usd` tracked in Langfuse |
 
-Retrieval evals for galactus: `evals/graders/retrieval/url_coverage.py` against `data/va/qa_golden.jsonl`.
+Retrieval evals for the eval platform: `evals/graders/retrieval/url_coverage.py` against `data/support_agent/qa_golden.jsonl`.
 Retrieval evals for chat-agent: `eval/evaluate.py` / Langfuse dataset experiment flow.
 
 ---

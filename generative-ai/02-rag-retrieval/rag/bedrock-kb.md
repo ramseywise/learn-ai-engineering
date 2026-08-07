@@ -1,6 +1,6 @@
 # Bedrock Knowledge Base — Reference Spec
 
-Retrieval from AWS Bedrock KB used in VA support agents. Ported from `va-agents/src/agents/tools/support-knowledge-v2.ts`.
+Retrieval from AWS Bedrock KB used in SupportAgent.
 
 ---
 
@@ -8,10 +8,10 @@ Retrieval from AWS Bedrock KB used in VA support agents. Ported from `va-agents/
 
 | Product | KB ID | Region | Language |
 |---|---|---|---|
-| VA staging / Billy (Danish) | `IZIPVEXDSF` | `eu-north-1` | Danish — `opret faktura` |
-| VA production / Billy (Danish) | `AOZUJEDRLC` | `eu-north-1` | Danish |
-| Legacy Billy (Danish) | `I7ZRQ0SJCB` | `eu-north-1` | Danish |
-| Billy MCP | `C36YGJVEQP` | `eu-central-1` | Danish |
+| SupportAgent staging / Product (Danish) | `KB_STAGING` | `eu-north-1` | Danish — `opret faktura` |
+| SupportAgent production / Product (Danish) | `KB_PROD` | `eu-north-1` | Danish |
+| Legacy Product (Danish) | `KB_LEGACY` | `eu-north-1` | Danish |
+| Product MCP | `KB_MCP` | `eu-central-1` | Danish |
 | Clara (German) | *env var required* | `eu-central-1` | German — Clara tickets |
 
 **Do not run Clara/German tickets against the Danish KB.** Confirm `BEDROCK_KNOWLEDGE_BASE_ID` before running any retrieval eval.
@@ -20,19 +20,19 @@ Retrieval from AWS Bedrock KB used in VA support agents. Ported from `va-agents/
 
 ## Staging KB scope and composition
 
-The staging KB (`IZIPVEXDSF`) currently ingests four data sources via web crawl: Danish Intercom help center articles, English Intercom help center articles, Billypedia glossary terms, and pricing pages.
+The staging KB (`KB_STAGING`) currently ingests four data sources via web crawl: Danish SupportPlatform help center articles, English SupportPlatform help center articles, ProductWiki glossary terms, and pricing pages.
 
 **Aligned decisions (Jun 2026):**
 
 | Decision | Rationale |
 |----------|-----------|
-| Restrict KB to **Danish-only Intercom pages** | Current market focus is Danish; English articles duplicate content and degrade retrieval precision |
-| Remove **Billypedia** from Bedrock staging | Data quality and parsing issues; content is available in local DuckDB corpus for `hc_rag` testing |
+| Restrict KB to **Danish-only SupportPlatform pages** | Current market focus is Danish; English articles duplicate content and degrade retrieval precision |
+| Remove **ProductWiki** from Bedrock staging | Data quality and parsing issues; content is available in local DuckDB corpus for `kb_rag` testing |
 | Suspend **pricing page** ingestion pending fix | Table-based page structure produces chunks that are too small to contain sufficient context; requires a parsing fix or supplemented content before re-ingestion |
 
-These changes (removing English articles, Billypedia, and pricing from Bedrock) are tracked as a backlog ticket assigned to Marco.
+These changes (removing English articles, ProductWiki, and pricing from Bedrock) are tracked as a backlog ticket assigned to a teammate.
 
-The local DuckDB corpus (`data/corpus/`) is a separate artifact and is not subject to these Bedrock scope restrictions — it can include Billypedia and pricing for local `hc_rag` testing.
+The local DuckDB corpus (`data/corpus/`) is a separate artifact and is not subject to these Bedrock scope restrictions — it can include ProductWiki and pricing for local `kb_rag` testing.
 
 ---
 
@@ -83,7 +83,7 @@ Web-crawled chunks are plain text — cleaning is safe to run on both.
 
 | Chunk type | Pattern | Example |
 |---|---|---|
-| Web-crawled | `"Page Title \| Site Name"` prefix in first 120 chars | `"Create Invoice \| Billy Support"` |
+| Web-crawled | `"Page Title \| Site Name"` prefix in first 120 chars | `"Create Invoice \| Product Support"` |
 | FM-parsed | First `# Heading` or `## Heading` in text | `## Opret en faktura` |
 | Metadata | `result.metadata["title"]` if not a URL | Prefer this when present |
 
@@ -96,8 +96,8 @@ Strip the site name suffix (`split(" | ")[0]`) from the final title.
 Inline in each agent (separate uv projects — no shared package):
 
 ```
-galactus/agents/va_google_adk/bedrock_kb.py
-galactus/agents/va_langgraph/bedrock_kb.py
+agents/support_adk/bedrock_kb.py
+agents/support_lg/bedrock_kb.py
 ```
 
 Both files are identical. If logic diverges, keep them separate; do not add a `sys.path` hack.
@@ -106,11 +106,11 @@ Both files are identical. If logic diverges, keep them separate; do not add a `s
 
 ## Retrieval mode switch
 
-Both support agents read `VA_RETRIEVAL_MODE` at startup:
+Both support agents read `SUPPORT_AGENT_RETRIEVAL_MODE` at startup:
 
 ```bash
-VA_RETRIEVAL_MODE=bedrock   # call Bedrock KB directly
-VA_RETRIEVAL_MODE=rag       # call HC_RAG_AGENT_URL (default)
+SUPPORT_AGENT_RETRIEVAL_MODE=bedrock   # call Bedrock KB directly
+SUPPORT_AGENT_RETRIEVAL_MODE=rag       # call HC_RAG_AGENT_URL (default)
 ```
 
 `rag` is the default so existing behaviour is unchanged without the env var.
@@ -164,14 +164,14 @@ Raw fields observed in the OpenSearch/Bedrock KB index and how they map to our e
 
 ## Eval comparison
 
-The retrieval eval (M3–M4 in va-migration plan) compares:
+The retrieval eval (M3–M4 in migration plan) compares:
 
 | Axis | Mode A | Mode B |
 |---|---|---|
 | Reranking gap | `retrieve()` (fast, no rerank) | `retrieve_reranking()` |
-| RAG vs Bedrock | `VA_RETRIEVAL_MODE=bedrock` | `VA_RETRIEVAL_MODE=rag` |
+| RAG vs Bedrock | `SUPPORT_AGENT_RETRIEVAL_MODE=bedrock` | `SUPPORT_AGENT_RETRIEVAL_MODE=rag` |
 
-Score against `data/va/qa_golden.jsonl` using `evals/graders/retrieval/url_coverage.py`.
+Score against `data/support_agent/qa_golden.jsonl` using `evals/graders/retrieval/url_coverage.py`.
 Metrics: hit_rate, MRR, precision@5, recall@5.
 
 ---
@@ -179,7 +179,7 @@ Metrics: hit_rate, MRR, precision@5, recall@5.
 ## Quick smoke test
 
 ```bash
-cd agents/va_google_adk
+cd agents/support_adk
 BEDROCK_KNOWLEDGE_BASE_ID=<id> AWS_REGION=eu-central-1 \
   uv run python -c "
 import asyncio, bedrock_kb

@@ -1,6 +1,6 @@
 # LLM-as-Judge Calibration — Grader Reference
 
-How custom graders compare to DeepEval and RAGAS on the BKH calibration sample.
+How custom graders compare to DeepEval and RAGAS on the support corpus A calibration sample.
 Evidence base for grader selection decisions in the registry.
 
 > **Scope:** Calibration run results and score evidence. For framework selection rationale and methodology principles, see [grader_methodology.md](grader_methodology.md).
@@ -11,7 +11,7 @@ New calibration runs (GT ablation) → `.claude/docs/research/` until final → 
 
 ## Key findings
 
-### Custom v3 outperforms DeepEval on BKH (50 tasks, 25 liked / 25 disliked)
+### Custom v3 outperforms DeepEval on support corpus A (50 tasks, 25 liked / 25 disliked)
 
 | Grader | Liked μ | Disliked μ | Δ | Cohen's d | Verdict |
 |---|---|---|---|---|---|
@@ -46,8 +46,8 @@ v3 improved Δ by +0.294 on answer_relevancy vs v2.
 
 ## Domain-shift pattern to watch
 
-Custom graders calibrated on BKH show strong Δ on BKH but near-zero Δ on VA staging data.
-Likely causes: VA disliked responses are disliked for reasons answer_relevancy doesn't capture
+Custom graders calibrated on support corpus A show strong Δ on support corpus A but near-zero Δ on SupportAgent staging data.
+Likely causes: SupportAgent disliked responses are disliked for reasons answer_relevancy doesn't capture
 (tone, escalation handling, multi-turn context loss) rather than irrelevance.
 
 When re-running calibration on GT dataset, isolate by query type — accounting-specific
@@ -59,4 +59,4 @@ queries vs. nav/UI queries to see if Δ holds within domain before drawing cross
 
 - Calibration methodology and P/R/F1 framework → [grader_methodology.md](grader_methodology.md)
 - Active calibration runs → `.claude/docs/research/`
-- Final results (VA staging showdown) → Notion
+- Final results (SupportAgent staging showdown) → Notion

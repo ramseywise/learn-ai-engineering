@@ -72,7 +72,7 @@ Typical size: ~150–200 rows → single matrix multiply at query time, no FAISS
 
 ## Runtime module
 
-**File**: `src/support_agents/hc_lg/semantic_cache.py`
+**File**: `src/support_agents/kb_lg/semantic_cache.py`
 
 ```python
 """Semantic cache: ANN lookup over grader-validated QA embeddings.
@@ -151,7 +151,7 @@ cache_similarity: float  # cosine sim of match (0.0 when no hit)
 New node and updated routing:
 
 ```python
-from hc_lg.semantic_cache import lookup as _cache_lookup
+from kb_lg.semantic_cache import lookup as _cache_lookup
 
 async def cache_node(state: State) -> State:
     result = _cache_lookup(state["query"])
@@ -231,16 +231,16 @@ intent_type:
 |---|---|---|
 | `how_to` | help center (`WOHA5CGA4I`) | Standard CRAG retrieval |
 | `regulatory` | help center + pricing (`SWYMRRPC0O`) | Both sources, re-rank by domain |
-| `definition` | Billypedia (`ZCSAKEVYKK`) as **context enrichment** only | Retrieve top-1 Billypedia passage as background context, then retrieve help center for answer |
+| `definition` | ProductWiki (`KB_GLOSSARY`) as **context enrichment** only | Retrieve top-1 ProductWiki passage as background context, then retrieve help center for answer |
 | `lookup` | pricing (`SWYMRRPC0O`) | Pricing source only |
 | `escalation` | skip retrieval | Route directly to escalation node |
 | `low_confidence` | all three sources | Fallback to flat search (current behaviour) |
 
-**Key insight:** Billypedia is never the primary retrieval target. For `definition` queries it provides a context frame; the actual answer still comes from help center articles. This prevents glossary pages from crowding out instructional articles.
+**Key insight:** ProductWiki is never the primary retrieval target. For `definition` queries it provides a context frame; the actual answer still comes from help center articles. This prevents glossary pages from crowding out instructional articles.
 
 ### Offline phase — build intent centroids
 
-**Input:** golden 597 queries with `compare_category` labels + the 4,700-item BKH pool (has domain/intent labels).
+**Input:** golden 597 queries with `compare_category` labels + the 4,700-item support corpus A pool (has domain/intent labels).
 
 ```python
 from sentence_transformers import SentenceTransformer
@@ -248,7 +248,7 @@ import numpy as np, json
 
 model = SentenceTransformer("intfloat/multilingual-e5-base")
 
-# Load exemplar queries per intent_type (from BKH labelled pool)
+# Load exemplar queries per intent_type (from support corpus A labelled pool)
 exemplars = {
     "how_to":     [...],   # "Hvordan opretter jeg en faktura?"
     "definition": [...],   # "Hvad er bankafstemning?"
@@ -267,7 +267,7 @@ np.savez("data/corpus/datastores/intent_centroids.npz", **centroids)
 ### Runtime classifier
 
 ```python
-# src/support_agents/hc_lg/source_router.py
+# src/support_agents/kb_lg/source_router.py
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
@@ -352,7 +352,7 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 - [ ] `SEMANTIC_CACHE_*` vars added to `.env.hackathon.example`
 
 ### Day 1 — Build
-- [ ] Implement `hc_lg/semantic_cache.py`
+- [ ] Implement `kb_lg/semantic_cache.py`
 - [ ] Add `cache_hit` + `cache_similarity` to `State`
 - [ ] Wire `cache_node` into `agent.py`
 - [ ] Smoke test: send 5 queries from the seed set, confirm hits; send 5 novel queries, confirm misses
@@ -370,6 +370,6 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 
 ## Open questions
 
-- **Cache staleness**: if Billy product changes, cached answers become wrong. Add a `build_date` field to the npz and log a warning if the file is > 30 days old. Rebuild cadence TBD.
+- **Cache staleness**: if Product product changes, cached answers become wrong. Add a `build_date` field to the npz and log a warning if the file is > 30 days old. Rebuild cadence TBD.
 - **Language mismatch**: seed is Danish; if a user writes in English, similarity will be lower and queries will fall through to CRAG — which is correct behaviour. Track hit rate by detected `query_language` in the AB notebook to confirm.
-- **Seed size**: if the golden dataset pipeline yields < 50 high-scoring rows (e.g. BKH responses are generally low quality), the cache hit rate on real traffic will be negligible. In that case, expand the seed by running the SA agent on the full 500-query stratified set and using its responses (rather than original BKH responses) as the cache source.
+- **Seed size**: if the golden dataset pipeline yields < 50 high-scoring rows (e.g. support corpus A responses are generally low quality), the cache hit rate on real traffic will be negligible. In that case, expand the seed by running the SA agent on the full 500-query stratified set and using its responses (rather than original support corpus A responses) as the cache source.

@@ -1,7 +1,7 @@
 # LangSmith — Reference Spec
 
-Tracing, evaluation, and dataset management for galactus agents. Both `va_google_adk`
-and `va_langgraph` send traces here; LangSmith is the eval loop for live agent runs.
+Tracing, evaluation, and dataset management for the eval platform agents. Both `support_adk`
+and `support_lg` send traces here; LangSmith is the eval loop for live agent runs.
 
 ---
 
@@ -13,14 +13,14 @@ ADK doesn't use LangChain, so `LANGCHAIN_TRACING_V2` has no effect. Wiring is do
 manually in `observability.py` using the LangSmith SDK directly.
 
 ```python
-# src/multi_agents/va_google_adk/observability.py
+# src/multi_agents/support_adk/observability.py
 from langsmith import Client
 from langsmith.run_helpers import traceable
 
 client = Client()  # reads LANGSMITH_API_KEY from env
 
 # Wrap agent invocations
-@traceable(name="va_google_adk", run_type="chain")
+@traceable(name="support_adk", run_type="chain")
 async def run_agent(query: str, session_id: str) -> dict:
     ...
 ```
@@ -28,7 +28,7 @@ async def run_agent(query: str, session_id: str) -> dict:
 Required env vars:
 ```bash
 LANGSMITH_API_KEY=<key>
-LANGSMITH_PROJECT=va-google-adk       # project name in LangSmith UI
+LANGSMITH_PROJECT=google-adk       # project name in LangSmith UI
 LANGSMITH_TRACING=true                # ADK-specific flag (not LANGCHAIN_*)
 ```
 
@@ -40,7 +40,7 @@ automatically, including subgraph calls, node transitions, and tool invocations.
 ```bash
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=<same key as LANGSMITH_API_KEY>
-LANGCHAIN_PROJECT=va-langgraph        # project name in LangSmith UI
+LANGCHAIN_PROJECT=langgraph        # project name in LangSmith UI
 ```
 
 No code changes needed. Add to `.env` and `pyproject.toml` dev dependencies:
@@ -73,8 +73,8 @@ from langsmith import Client
 
 client = Client()
 dataset = client.create_dataset(
-    "va-google-adk-eval-v1",
-    description="VA ADK routing + quality eval set, seeded from BKH regression"
+    "google-adk-eval-v1",
+    description="SupportAgent ADK routing + quality eval set, seeded from support corpus A regression"
 )
 ```
 
@@ -88,7 +88,7 @@ with open("data/bkh/eval_sets/regression_main.jsonl") as f:
         client.create_example(
             inputs={"query": row["query"], "session_id": row["task_id"]},
             outputs={"response": row.get("response", "")},
-            dataset_name="va-google-adk-eval-v1"
+            dataset_name="google-adk-eval-v1"
         )
 ```
 
@@ -113,22 +113,22 @@ def routing_accuracy(run, example) -> dict:
     return {"score": 1.0 if predicted == expected else 0.0, "key": "routing_accuracy"}
 
 def grounding_score(run, example) -> dict:
-    # call galactus GroundingGrader
+    # call the eval platform GroundingGrader
     from evals.graders.judges.quality import GroundingGrader
     result = GroundingGrader().grade(run.outputs["response"], run.outputs.get("sources", []))
     return {"score": result.score, "key": "grounding"}
 
 results = evaluate(
     lambda inputs: run_agent(inputs["query"], inputs["session_id"]),
-    data="va-google-adk-eval-v1",
+    data="google-adk-eval-v1",
     evaluators=[routing_accuracy, grounding_score],
     experiment_prefix="adk-eval",
 )
 ```
 
-### Standard evaluator set for galactus
+### Standard evaluator set for the eval platform
 
-| Evaluator | Key | Maps to galactus grader |
+| Evaluator | Key | Maps to the eval platform grader |
 |---|---|---|
 | `routing_accuracy` | routing_accuracy | intent from run vs expected_intent in dataset |
 | `grounding_score` | grounding | `GroundingGrader` |
@@ -144,7 +144,7 @@ LangSmith has a native annotation UI. To route uncertain grader outputs there in
 of the file-based `hitl.py`:
 
 ```python
-client.create_annotation_queue("va-uncertain-cases", description="Low-confidence grader outputs")
+client.create_annotation_queue("uncertain-cases", description="Low-confidence grader outputs")
 
 # After a grader run, submit uncertain cases
 for run_id, score in grader_results.items():
@@ -163,19 +163,19 @@ Each `evaluate()` call creates an experiment. Compare across runs in the LangSmi
 
 ```python
 # Compare ADK vs LangGraph on same dataset
-client.list_runs(project_name="va-google-adk", filter='eq(feedback_key, "grounding")')
+client.list_runs(project_name="google-adk", filter='eq(feedback_key, "grounding")')
 ```
 
 ---
 
-## Files in galactus
+## Files in the eval platform
 
 | File | Purpose |
 |---|---|
-| `docs/frameworks/langfuse.md` | Primary experiment-tracking reference for current galactus evals |
+| `docs/frameworks/langfuse.md` | Primary experiment-tracking reference for current the eval platform evals |
 | `evals/pipelines/langfuse_utils/evaluation.py` | Current LangFuse experiment runner |
 | `evals/graders/judges/` | Current grader packages used by offline and online evals |
 
 LangSmith references in this doc are historical/secondary. Prefer LangFuse for
-new galactus experiments unless a VA-specific workflow explicitly requires
+new the eval platform experiments unless a specific workflow explicitly requires
 LangSmith.

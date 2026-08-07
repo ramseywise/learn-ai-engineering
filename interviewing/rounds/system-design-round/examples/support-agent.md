@@ -9,7 +9,7 @@
 - Help center size? (50 articles or 5,000?)
 - Channels: web chat widget, email, Slack, all of the above?
 - Languages: English only, or multilingual? (Affects retrieval + generation)
-- Existing support tooling: Intercom, Zendesk, custom?
+- Existing support tooling: SupportPlatform, Zendesk, custom?
 - Safety requirements: regulated industry? (Financial services, healthcare — different guardrail needs)
 - Can the agent take actions (create tickets, update accounts) or is it information-only?
 

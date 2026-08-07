@@ -1,6 +1,6 @@
 # Eval Harness Patterns — Reference Spec
 
-General patterns for agent eval harnesses. Cross-project reference — galactus implements a variant of these for BKH support-ticket grading. Useful when extending the harness to new grader types or agent-level eval suites.
+General patterns for agent eval harnesses. Cross-project reference — the eval platform implements a variant of these for support corpus A support-ticket grading. Useful when extending the harness to new grader types or agent-level eval suites.
 
 ---
 
@@ -22,7 +22,7 @@ Without an eval harness, every change to agent routing, tools, or prompts is a l
 | **Behavioral (rubric)** | Does the agent follow rules (no PII, stays in domain)? | Rubric criterion violated |
 | **Error handling** | Does the agent handle malformed input / API errors gracefully? | Crashes or produces unsafe output |
 
-Galactus currently implements: response quality (LLM graders), behavioral/rubric (heuristic metrics).
+The eval platform currently implements: response quality (LLM graders), behavioral/rubric (heuristic metrics).
 
 ---
 
@@ -45,7 +45,7 @@ Galactus currently implements: response quality (LLM graders), behavioral/rubric
 ]
 ```
 
-Galactus equivalent: JSONL with `task_id`, `query`, `response`, `expected_urls`, `rating`, `metadata`.
+The eval platform equivalent: JSONL with `task_id`, `query`, `response`, `expected_urls`, `rating`, `metadata`.
 
 ---
 
@@ -77,7 +77,7 @@ uv run pytest tests/unit_tests/test_evals/metrics/ -q
 uv run pytest tests/unit_tests/test_evals/ -q
 ```
 
-Galactus implements this pattern. The split keeps CI fast and LLM costs offline.
+The eval platform implements this pattern. The split keeps CI fast and LLM costs offline.
 
 ---
 
@@ -115,11 +115,11 @@ Add a guardrail suite to catch regressions in safety behaviour:
 ]
 ```
 
-Galactus equivalent: `sample_friction_convs.jsonl` with `conv_outcome` labels.
+The eval platform equivalent: `sample_friction_convs.jsonl` with `conv_outcome` labels.
 
 ---
 
-## Adding a new grader (galactus-specific)
+## Adding a new grader (the eval platform-specific)
 
 See [grader_interface.md](grader_interface.md) for the contract summary, or `evals/graders/README.md` for the full implementation reference.
 See `/nbk-to-eval` skill for the 7-step notebook → production promotion workflow.

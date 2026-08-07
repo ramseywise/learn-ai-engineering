@@ -3,7 +3,7 @@
 Schema contract for what every agent logs and how eval runs are identified, reproduced,
 and compared. Platform wiring lives in the tooling docs:
 → [langfuse.md](../04-agentic-frameworks/notes/langfuse.md) (primary)
-→ [langsmith.md](../04-agentic-frameworks/notes/langsmith.md) (secondary / VA agents)
+→ [langsmith.md](../04-agentic-frameworks/notes/langsmith.md) (secondary / SupportAgent)
 
 ---
 
@@ -44,7 +44,7 @@ minimal contract that makes a trace queryable and a run reproducible.
 |---|---|---|
 | `run_id` | `str` | `uuid4` — unique per invocation |
 | `session_id` | `str` | conversation thread ID (passed in by caller) |
-| `agent` | `str` | `"hc_adk"` \| `"hc_lg"` \| `"hc_rag"` \| `"va_langgraph"` \| `"va_google_adk"` |
+| `agent` | `str` | `"kb_adk"` \| `"kb_lg"` \| `"kb_rag"` \| `"support_lg"` \| `"support_adk"` |
 | `model` | `str` | model name/ARN used for generation |
 | `prompt_version` | `str` | `PROMPT_VERSION` constant from the agent module |
 | `git_commit` | `str` | short SHA — ties log entry to exact code state |
@@ -75,7 +75,7 @@ class ExperimentRun:
     created_at: str                  # ISO 8601 UTC
     git_commit: str                  # short SHA
     dataset: str                     # path to .jsonl eval set
-    pipeline: str                    # "hc_rag" | "hc_adk" | "hc_lg" | "bedrock_kb"
+    pipeline: str                    # "kb_rag" | "kb_adk" | "kb_lg" | "bedrock_kb"
     rag_config: RagConfig | None = None
     bedrock_config: BedrockConfig | None = None
     notes: str = ""
@@ -184,7 +184,7 @@ Fetch the leaf, return `parent_id`'s text as LLM context.
 
 ## Custom RAG vs. Bedrock KB — field coverage
 
-| Capability | hc_rag (custom) | Bedrock KB |
+| Capability | kb_rag (custom) | Bedrock KB |
 |---|---|---|
 | `chunk_id` / `parent_id` | ✅ can implement | ❌ opaque |
 | Retrieved passage text | ✅ `sources[].text` | ❌ URL only |
@@ -216,26 +216,26 @@ Layer 4 grounding tiers are promoted to hard failures conservatively — new che
 
 | Item | Agent | Where | Notes |
 |------|-------|-------|-------|
-| `lf.trace()` root with full metadata | hc_adk | `main.py:_run_turn` | prompt_version, retrieval_mode, thinking_budget, tokens, failure_reason |
-| `lf_trace.span()` KB child spans | hc_adk | `agent.py:_search_bedrock/rag` | per tool call: queries, passage_count, top_score, urls, duration_ms |
-| `retrieval_quality` score | hc_adk | `main.py` | kb_top_score from highest-scoring tool call |
-| `CallbackHandler` root + node spans | hc_lg | `main.py:_run_turn` | all graph nodes auto-captured |
-| `retrieval_quality` score (CRAG formula) | hc_lg | `main.py` | `(relevant×1.0 + ambiguous×0.5) / total` |
-| `@observe` root + RAG internals | hc_rag | `main.py:_run_turn` | session_id, prompt_version |
+| `lf.trace()` root with full metadata | kb_adk | `main.py:_run_turn` | prompt_version, retrieval_mode, thinking_budget, tokens, failure_reason |
+| `lf_trace.span()` KB child spans | kb_adk | `agent.py:_search_bedrock/rag` | per tool call: queries, passage_count, top_score, urls, duration_ms |
+| `retrieval_quality` score | kb_adk | `main.py` | kb_top_score from highest-scoring tool call |
+| `CallbackHandler` root + node spans | kb_lg | `main.py:_run_turn` | all graph nodes auto-captured |
+| `retrieval_quality` score (CRAG formula) | kb_lg | `main.py` | `(relevant×1.0 + ambiguous×0.5) / total` |
+| `@observe` root + RAG internals | kb_rag | `main.py:_run_turn` | session_id, prompt_version |
 | Online scoring (3 heuristics) | all | `observability.push_online_scores()` | citation_hallucination, missing_citation, language_consistency |
-| Remote prompt fetch at startup | hc_adk, hc_lg | `get_root_agent()`, `_get_answer_prompt()` | via `get_langfuse_prompt()` in observability.py |
+| Remote prompt fetch at startup | kb_adk, kb_lg | `get_root_agent()`, `_get_answer_prompt()` | via `get_langfuse_prompt()` in observability.py |
 
 ### Still pending
 
 | Priority | Item | Where |
 |---|---|---|
-| P0 | Surface `retrieved_urls` in hc_rag `main.py` → enable citation scores | `hc_rag/main.py` + `agent.py:run_turn()` |
+| P0 | Surface `retrieved_urls` in kb_rag `main.py` → enable citation scores | `kb_rag/main.py` + `agent.py:run_turn()` |
 | P0 | Wire `ExperimentRun` wrapper into eval runners | `evals/pipelines/eval_quality.py`, `eval_stats.py` |
 | P1 | Capture `BedrockConfig.request_id` from `x-amzn-requestid` header | `clients/bedrock_kb.py` |
 | P1 | Add `git_commit` to trace metadata (all agents) | `observability.configure_runtime()` |
 | P1 | Add `ChunkRecord` with `chunk_id`, `parent_id`, `level` | `core/chunking/schemas.py` |
 | P2 | Expand `RagConfig` with `overlap`, `parent_chunk_size`, `hybrid_alpha`, `dim` | `evals/pipelines/lib/models.py` |
-| P2 | Wire retrieval-run metadata into local RAG/eval outputs | `evals/pipelines/evaluation.py`, `src/support_agents/hc_rag/rag/ingestion/` |
+| P2 | Wire retrieval-run metadata into local RAG/eval outputs | `evals/pipelines/evaluation.py`, `src/support_agents/kb_rag/rag/ingestion/` |
 
 ---
 
