@@ -1,7 +1,7 @@
-# Example: Accounting Virtual Assistant
+# Example: Accounting Support Agent
 
 ## Prompt
-"Design a virtual assistant for an accounting SaaS product. It helps users with bookkeeping questions, VAT rules, and navigating the product — drawing from a knowledge graph of regulatory rules, help articles, and entity relationships."
+"Design a support agent for an accounting SaaS product. It helps users with bookkeeping questions, VAT rules, and navigating the product — drawing from a knowledge graph of regulatory rules, help articles, and entity relationships."
 
 ## Step 1: Clarify & scope (3 min)
 

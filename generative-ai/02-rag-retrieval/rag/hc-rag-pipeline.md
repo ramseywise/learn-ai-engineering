@@ -1,12 +1,12 @@
-# hc_rag pipeline — architecture reference
+# kb_rag pipeline — architecture reference
 
-> **Note:** This is an ADR (architecture decision record) distilled from the 2026-06-04 module refactor. It captures decisions and deferred items from that point in time. For the current module layout see `src/support_agents/hc_rag/README.md`.
+> **Note:** This is an ADR (architecture decision record) distilled from the 2026-06-04 module refactor. It captures decisions and deferred items from that point in time. For the current module layout see `src/support_agents/kb_rag/README.md`.
 
 Distilled from the 2026-06-04 module refactor. Source of truth for module boundaries, config, and follow-up decisions.
 
 ## Architecture
 
-`hc_rag` is a **deterministic LangChain pipeline** — not agentic, no graph, no retry loops:
+`kb_rag` is a **deterministic LangChain pipeline** — not agentic, no graph, no retry loops:
 
 ```
 guardrail → retrieve_graded_chunks → rerank_graded_chunks → confidence gate → llm.ainvoke() → output guard
@@ -14,9 +14,9 @@ guardrail → retrieve_graded_chunks → rerank_graded_chunks → confidence gat
 
 | Agent | Framework | Control flow |
 |---|---|---|
-| `hc_rag` | LangChain | Deterministic — retrieve once, rerank, generate, done |
-| `hc_lg` | LangGraph | Explicit graph — intent router + CRAG grade/rewrite retry |
-| `hc_adk` | Google ADK | ReAct loop — model decides what to search |
+| `kb_rag` | LangChain | Deterministic — retrieve once, rerank, generate, done |
+| `kb_lg` | LangGraph | Explicit graph — intent router + CRAG grade/rewrite retry |
+| `kb_adk` | Google ADK | ReAct loop — model decides what to search |
 
 ## Module map
 
@@ -41,20 +41,20 @@ Six strategies, all implementing `chunk_document(doc: dict) -> list[Chunk]`:
 |---|---|---|
 | `fixed` | ✅ production default | Hard word-count splits; baseline benchmark |
 | `overlapping` | — | Overlap between adjacent chunks; used in `corpus_v2.py` ingest |
-| `html_aware` | — | Heading-boundary first; best fit for Billy/Intercom HTML corpus |
+| `html_aware` | — | Heading-boundary first; best fit for Product/SupportPlatform HTML corpus |
 | `hierarchical` | — | Two-level parent+child; not wired in ingestion pipeline yet |
 | `adjacency` | — | Positional IDs for neighbour expansion; `neighbors()` not called anywhere |
 | `structured` | — | Recursive paragraph split; for prose without headings |
 
 Select via factory:
 ```python
-from support_agents.hc_rag.rag.chunkers import get_chunker
+from support_agents.kb_rag.rag.chunkers import get_chunker
 chunker = get_chunker("html_aware")
 ```
 
 **Open follow-ups:**
 - Wire `CHUNKER_STRATEGY` env var into `config.py` and `/config` endpoint (one-liner)
-- Evaluate `html_aware` as the new ingest default — it's a better fit for the Billy HTML corpus than `fixed`
+- Evaluate `html_aware` as the new ingest default — it's a better fit for the Product HTML corpus than `fixed`
 
 ## Rerankers (`rag/reranker/`)
 
@@ -91,13 +91,13 @@ preprocess_corpus(
 
 ## Removed config vars
 
-Removed from `config.py` in the 2026-06-04 refactor — all were hc_lg orchestrator concepts that leaked into hc_rag:
+Removed from `config.py` in the 2026-06-04 refactor — all were kb_lg orchestrator concepts that leaked into kb_rag:
 
 ```
-RAG_LLM_PLANNER, RAG_PLANNER_LIGHT_MODEL     ← planner node (hc_lg concept)
+RAG_LLM_PLANNER, RAG_PLANNER_LIGHT_MODEL     ← planner node (kb_lg concept)
 CHECKPOINTER_BACKEND, SQLITE_PATH, DATABASE_URL  ← session checkpointing (LangGraph)
 RAG_SUMMARIZATION_ENABLED/THRESHOLD/KEEP    ← conversation summarization (LangGraph state)
-RAG_POST_ANSWER_EVALUATOR                   ← post-answer node (hc_lg concept)
+RAG_POST_ANSWER_EVALUATOR                   ← post-answer node (kb_lg concept)
 RAG_POLICY_HYBRID_BORDER_LOW                ← unused (RAG_POLICY_MODE still exists)
 METADB_PATH                                 ← read via os.getenv() directly in run_ingest, no var needed
 ```

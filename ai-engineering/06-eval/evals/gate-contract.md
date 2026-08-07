@@ -58,7 +58,7 @@ Use stable labels so notebooks, pipelines, and reports can aggregate failure mod
 
 - `source_missing`: expected source is absent from the source corpus.
 - `url_unmapped`: expected URL cannot be matched to a canonical source or alias.
-- `topic_proxy`: source is useful for topic coverage but not groundable as an answer citation, for example Billypedia.
+- `topic_proxy`: source is useful for topic coverage but not groundable as an answer citation, for example ProductWiki.
 - `index_lag`: source exists in corpus but not in the vector index.
 - `chunk_fragmented`: source is indexed, but relevant evidence is split or too thin for ranking/generation.
 - `rank_miss`: expected source is indexed but not returned in top-k.
@@ -77,7 +77,7 @@ Question: is the source corpus valid enough to index?
 Track:
 
 - Source inventory by `source_type`, domain, language, market, freshness flag, and source owner.
-- URL validity and Billy/Shine alias-map coverage.
+- URL validity and Product/Partner alias-map coverage.
 - Exact duplicate and duplicate URL rates.
 - Content quality: title coverage, metadata coverage, too-short/too-long docs, HTML artifacts, encoding errors, language drift.
 - Demand coverage: how many GT expected URLs map to corpus documents, separated from topic proxies.
@@ -271,7 +271,7 @@ Implemented in `evals/metrics/retrieval.py`:
 - `f1@1`, `f1@3`, `f1@5`: harmonic mean of precision/recall at k.
 - `ndcg@1`, `ndcg@3`, `ndcg@5`: rank-sensitive relevance at k.
 
-These metrics are alias-aware through Billy/Shine URL expansion. They are valid only for retrieval-eligible or explicitly diagnostic row pools with known `expected_urls`.
+These metrics are alias-aware through Product/Partner URL expansion. They are valid only for retrieval-eligible or explicitly diagnostic row pools with known `expected_urls`.
 
 ### Heuristic Integrity Gates
 

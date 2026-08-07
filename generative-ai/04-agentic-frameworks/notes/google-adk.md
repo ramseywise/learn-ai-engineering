@@ -1,6 +1,6 @@
 # Google ADK — Reference Spec
 
-Reference for building agents with the Google Agent Development Kit (Python). Relevant if we add an ADK-backed agent layer on top of galactus graders, or extend to ADK-hosted evaluators.
+Reference for building agents with the Google Agent Development Kit (Python). Relevant if we add an ADK-backed agent layer on top of the eval platform graders, or extend to ADK-hosted evaluators.
 
 Canonical docs:
 - Local (librarian): `/.docs/adk/llms-full.txt` and `llms.txt`
@@ -117,7 +117,7 @@ For eval: create `tests/evalsuite/` with JSON fixtures, run via `make eval-capab
 | `rubric_based_final_response_quality_v1` | rubric | Custom scoring criteria |
 
 `tool_trajectory_avg_score` is the most unique — it validates routing correctness (did the
-right sub-agent get called?) not just final answer quality. Nothing in the galactus custom
+right sub-agent get called?) not just final answer quality. Nothing in the the eval platform custom
 graders covers this.
 
 ### Eval config format (from samples)
@@ -158,7 +158,7 @@ Evaluation is post-hoc (not at runtime). Runs via ADK's eval runner against save
 
 ### Eval runner location
 
-For galactus support-agent experiments, use the unified eval dispatcher:
+For the eval platform support-agent experiments, use the unified eval dispatcher:
 
 ```bash
 uv run python -m evals.pipelines.run live --run-name hc-adk-smoke --jsonl <dataset.jsonl> --endpoint http://localhost:8011/chat --tier heuristic
@@ -166,7 +166,7 @@ uv run python -m evals.pipelines.run langfuse --run-name hc-adk --dataset hc-sup
 ```
 
 ADK-native `adk eval` remains useful for standalone ADK projects and tool
-trajectory tests, but it is not the primary galactus eval path.
+trajectory tests, but it is not the primary the eval platform eval path.
 
 ---
 

@@ -32,7 +32,7 @@ the nonprofit sector) and the differentiator for FDE/DS roles.
 | *Building Applications with AI Agents* chs 3, 13 | pdf | see librarian wiki | agent UX + human collaboration |
 | Human-AI Interaction Guidelines | pdf | see librarian wiki | the 18 interaction guidelines |
 | Storytelling with Data (Knaflic) | pdf | `data-analytics/readings/` | communicating to non-technical audiences |
-| Agentic KPI Trees · Copilot Learning Loop · VA Product Design Patterns | wiki | librarian | metric trees + staged-trust product patterns |
+| Agentic KPI Trees · Copilot Learning Loop · SupportAgent Product Design Patterns | wiki | librarian | metric trees + staged-trust product patterns |
 | FDE loop research (F4) | doc | `.claude/docs/plans/2026-07-17-interview-kb-consolidation.md` | what customer-facing loops actually weigh |
 
 ## Test yourself

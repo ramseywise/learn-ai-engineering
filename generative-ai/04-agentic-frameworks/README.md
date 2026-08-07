@@ -30,7 +30,7 @@ given problem.
   LangFuse reference: tracing integration, scoring APIs, dataset management.
 - **[`notes/langsmith.md`](notes/langsmith.md)** —
   LangSmith reference: tracing, evaluation, prompt hub.
-- **`frameworks/va-langgraph-production-parity.md`** —
+- **`frameworks/langgraph-production-parity.md`** —
   LangGraph production parity analysis: what production deployment requires vs. course examples.
 
 ---
