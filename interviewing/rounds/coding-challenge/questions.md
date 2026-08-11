@@ -107,6 +107,112 @@
 
 ---
 
+## Live Coding (AI/ML practical)
+
+These assume a browser editor with no network and no AI assistant — stdlib only. Worked walkthroughs in `examples/`.
+
+### 6a. Retrieval-and-answer pipeline
+
+**Testing**: Whether you can build the core AIE loop — retrieve, prompt, validate — from memory, and whether you know where it breaks.
+
+**Approach**:
+1. Clarify: libraries available? corpus size? can the stubbed LLM return malformed output?
+2. Write the four signatures before implementing — `retrieve`, `build_prompt`, `parse_answer`, `retrieve_and_answer`
+3. Lexical overlap scoring with length normalization; name it as a stand-in for embeddings
+4. Prompt: inline `[doc_id]` citation format, enumerated confidence, explicit "insufficient context" escape hatch
+5. Validate: JSON parse → key presence → **grounding check against retrieved ids** → schema
+6. Fall back rather than raise on malformed model output; log every path
+
+**Key signals**: Drops zero-score docs rather than padding to k (noise causes hallucination). Enumerates confidence instead of asking for a float. Intersects claimed citations against actually-retrieved ids — the failure that survives every syntactic check. Distinguishes user-input-returns-empty from caller-bug-raises.
+
+**Common pitfalls**: Substring matching instead of tokenized overlap. No length normalization, so long docs win everything. `json.loads` with no try block. No grounding check. Asking the model for a float confidence. Padding results to k with irrelevant documents.
+
+**Study refs**: `examples/rag-pipeline-offline.md`, `guides/3-rag/`
+
+---
+
+### 6b. Deterministic workflow orchestration
+
+**Testing**: Whether you reach for a workflow or an agent — and whether you can justify the choice.
+
+**Approach**:
+1. Say it out loud: fixed step sequence means workflow, not agent; a model should not control flow that doesn't branch on reasoning
+2. One `Context` dataclass threaded through uniform `Step` callables
+3. Separate DECLINED (correct refusal) from FAILED (something broke)
+4. A validate gate between retrieval and generation — stop rather than hand thin context to the model
+5. Runner short-circuits on non-OK, catches at the boundary, records which step failed
+6. Append to a trace at every step
+
+**Key signals**: Names workflow-over-agent in the first two minutes with the runtime-branching justification. Separates refusal from failure. Scopes retries to network-bound steps only, and can connect it to circuit breakers. Can state the conditions under which an agent *would* be correct, with an iteration cap.
+
+**Common pitfalls**: Building a `while` loop that asks the model what to do next. Collapsing declined and failed into one error state. No gate before generation. Cannot answer "which step failed?" Retrying the whole pipeline instead of the failing step.
+
+**Study refs**: `examples/workflow-orchestration.md`, `guides/4-agents/`
+
+---
+
+### 6c. Transaction aggregation and anomaly detection
+
+**Testing**: Conventional Python data work, plus whether you know this is a SQL problem.
+
+**Approach**:
+1. Clarify: anomaly rule given or chosen? skip or fail on malformed records? in-memory or stream?
+2. State that structured aggregation belongs in a `GROUP BY`, not a vector store
+3. `Decimal` for money; normalize naive timestamps to UTC explicitly
+4. Parse returns `None` on malformed input; count rejections and return the count
+5. `defaultdict(Decimal)` for accumulation
+6. MAD-based outlier detection over stddev; guard `MIN_HISTORY` and `mad == 0`
+
+**Key signals**: Says "this is a GROUP BY, not RAG" unprompted. Uses `Decimal` and can explain why (currency reconciliation). Returns the rejection count alongside totals rather than silently producing a partial sum. Chooses MAD over stddev and explains outlier masking.
+
+**Common pitfalls**: Floats for currency. One bad record kills the batch. Mean ± 3σ without noticing the outlier inflates σ. Divide-by-zero when all of a user's amounts are identical. Naive/aware datetime comparison.
+
+**Study refs**: `examples/transaction-aggregation.md`, `guides/8-data-eng-mlops/`
+
+---
+
+### 6d. SQLite ingest pipeline → "does this scale?"
+
+**Testing**: Whether you can build a correct SQL pipeline *and* diagnose the tool's limits. The follow-up — *"this needs to serve millions of requests a day"* — is the actual question; the pipeline is setup.
+
+**Approach**:
+1. Build it in `sqlite3` without hesitating — it's stdlib and correct for the exercise
+2. Flag the seam in minute three: all DB access behind one class, so the swap is one file
+3. Integer cents (no float currency); natural primary key so re-ingest is idempotent; WAL mode
+4. `executemany` inside one transaction — per-row commits are one fsync each
+5. Parameterized queries throughout; run `EXPLAIN QUERY PLAN` and read it honestly
+6. On the follow-up: name the **single-writer lock**, then split OLTP (Postgres) from OLAP (columnar)
+
+**Key signals**: Says "SQLite serializes writers because it's a locked file, not a server" rather than "SQLite doesn't scale" — the mechanism, not the conclusion. Knows WAL lets readers proceed but does not make writes concurrent. Names the second-order problem: a local file blocks horizontal scaling and rolling deploys. Explains *why* columnar wins for aggregation (reads one column, compresses uniformly). Can say when SQLite is the **right** choice, rather than over-correcting into dismissal. Identifies cutover — dual-write, backfill, verify, flip — as the real migration risk, not the schema.
+
+**Common pitfalls**: f-strings into SQL. Commit per row. Float currency. Answering the follow-up with "we'd use a bigger database." The opposite failure: refusing to use SQLite at all, or defending it because you just wrote it. Claiming an index helps without running the plan.
+
+**Study refs**: `examples/sqlite-pipeline-scaling.md`, `guides/8-data-eng-mlops/`, `guides/9-system-design/`
+
+---
+
+### 6e. Token auth for an API endpoint
+
+**Testing**: Security instincts. This round is graded on specific known mistakes, not on whether the code runs.
+
+**Approach**:
+1. Clarify the threat model first: stateless tokens vs session ids — revocation is the tradeoff
+2. Say "in production this is PyJWT" unprompted; hand-rolling crypto should visibly make you uncomfortable
+3. Passwords: slow hash (PBKDF2/bcrypt/scrypt/Argon2) + per-user random salt, never plain SHA-256
+4. Sign with HMAC-SHA256; verify the signature **before** parsing any claim
+5. Pin the algorithm — reject anything that isn't the one you chose
+6. `hmac.compare_digest` for every secret comparison
+7. Same opaque error on every failure path; log the real reason server-side only
+8. Endpoint: 401 vs 403 distinguished; scopes via `set(required) <= set(granted)`
+
+**Key signals**: Constant-time comparison, with the timing-attack explanation — this is the single highest-value thing to say. Knows `alg=none` and algorithm confusion. Verifies before parsing. Knows the payload is signed but **not encrypted**, so no PII in it. Distinguishes 401 from 403 correctly. Names IDOR — that scope checks don't prove object ownership, which is the vulnerability that survives correct authentication. Mentions short TTL + refresh tokens as the answer to un-revokable stateless tokens.
+
+**Common pitfalls**: `==` on signatures. `sha256(password)` with no salt. Decoding claims before verifying. Trusting the token's own `alg` header. Distinct error messages ("expired" vs "bad signature") that tell an attacker which half to work on. Secrets or PII inside the payload. Conflating authentication with authorization.
+
+**Study refs**: `examples/auth-api-endpoint.md`, `guides/7-security-safety/`, `code-from-heart.md` §13
+
+---
+
 ## Debugging
 
 ### 7. Broken deduplication script
