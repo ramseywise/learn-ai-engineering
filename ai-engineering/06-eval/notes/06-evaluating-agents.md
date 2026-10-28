@@ -5,6 +5,8 @@ sources:
   - https://docs.langchain.com/langsmith/trajectory-evals
   - https://arxiv.org/abs/2107.03374
   - https://arxiv.org/abs/2406.12045
+  - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2411.15114
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
   - case-study/eval-architecture.md
 confidence: high
@@ -33,6 +35,8 @@ Both are needed because they fail independently:
 | ❌ | ❌ | Broken | Fail |
 
 Anthropic recommends grading both the final environment state and the transcript. The second row is why. The third row is why you read traces before blaming the agent ([12](12-failure-modes.md#eval-bugs-look-like-agent-bugs)).
+
+The reverse also happens: a strict trajectory check can fail a run that did *better* than the script. Anthropic's example is a flight-booking agent that found a loophole in the airline's policy and got the user a cheaper fare. Scored against the preset path, it failed. Scored by outcome, the user got a better deal. Let trajectory checks enforce invariants ("never book before confirming"), not a single golden path.
 
 Trajectory analysis also tells you **where** a run failed. A multi-step run has many paths to the same wrong answer, and each needs a different fix. An outcome-only eval scores them identically.
 
@@ -116,6 +120,7 @@ Two metrics answer different questions:
 |---|---|---|---|
 | **pass@k** | P(at least one of k trials succeeds) | "Can it do this at all, given retries?" | Rises |
 | **pass^k** | P(all k trials succeed) | "Does it do this *every* time?" | Falls |
+| **Best@k** | Score of the best of k trials | "What's the quality ceiling?" (continuous scores, open-ended tasks) | Rises |
 
 If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)^k, and pass^k = p^k. At p = 0.75 and k = 3: pass@3 = 0.98, pass^3 = **0.42**.
 
@@ -139,6 +144,20 @@ Log these on every trial. They catch regressions that pass rates miss:
 | **Cost per success** | The sustainability metric. Failed runs are pure cost, so at 50% success the real cost is 2× the per-run cost |
 | **Convergence** | Optimal steps ÷ actual steps (the course's Lab 4 metric) |
 
+### Why agent cost grows faster than the step count
+
+Every turn re-sends the whole context. Li's worked example (*AI Agents in Depth*, Table 6-4) is a three-turn refund agent: 9,500 input tokens, 470 output, **$0.022** in total. Prefix caching saves nearly half the input cost. The amplifiers are what break the budget:
+
+- **Thinking tokens.** 500–2,000 extra per turn can multiply cost 3–5×. At 50 tokens/s, 2,000 thinking tokens is 40 s of latency.
+- **Big tool outputs.** A 5,000-token web page returned on turn 2 is billed again on every later turn.
+- **Detours.** Ten turns instead of three, and the context passes 20,000 tokens.
+
+So the levers are turn count and context growth, not just a cheaper model ([02-context/03](../../02-context-engineering/notes/03-budgeting-the-window.md)). Set a **per-task cost cap** in the harness, and log thinking tokens separately.
+
+**Latency has two stages.** Prefill reads the context and sets **time to first token** (queueing + prefill; grows with context). Decode sets tokens/s. Report **p95**, not the mean: the mean hides the slow minority.
+
+**Report a budget–capability curve, not one point.** RE-Bench (Wijk et al. 2025): at a 2-hour budget the best agent scored about 4× human experts. At 8 hours humans narrowly passed it, and with 32 hours total across attempts they scored about 2× the agent. Leading at a short budget doesn't predict long-horizon ability. Compare at budgets close to the real workload.
+
 ---
 
 ## Agent-specific suites
@@ -158,11 +177,25 @@ Two approaches, each with a trade-off:
 - **Canned conversations.** Score each turn against a fixed, scripted history. Isolates turns and is reproducible, but misses compounding errors, because the history never reflects what the agent actually said.
 - **Simulated user.** An LLM plays the user with a goal and persona, and the conversation runs to the end. Tests the real thing end to end, but inherits the simulator's biases and adds variance. Give the simulator a clear goal and stop condition, and calibrate it: does it behave like your real users?
 
+**Progressive information disclosure** is what makes a simulated user realistic. Real users don't state everything up front ("There's a problem with my flight." → "Which one?" → "It's too long, I want to change it." → "Any afternoon flight is fine."). τ-bench gives the simulator two parts: *known information* and *instructions* for when to reveal it. The agent has to ask. A simulator that dumps all the facts in turn 1 tests a much easier task. Hold the script fixed so runs stay reproducible.
+
+**τ²-bench** (the successor) adds a **dual-control environment**: the simulated user can also call tools on the shared state. The agent says "switch to airplane mode", and the user's action really changes the environment. This fits tech support, where the user has to do part of the work, and tests whether the agent notices state changes it didn't make. It also tightened success conditions ("only an *excellent* speed rating counts") and generates task parameters fresh each run.
+
 Grade multi-turn runs at both levels: per turn (grounded, on-policy) and per conversation (goal reached, turns used, escalation correct).
 
 ---
 
 ## Environment hygiene
+
+An agent eval environment has five parts. Each one can be wrong on its own:
+
+| Part | Holds | Gets it wrong when |
+|---|---|---|
+| **Dataset** | Initial state, goal, optional reference solution | Ambiguous goals ([03](03-eval-datasets.md)) |
+| **Environment state** | Mutable records (orders, balances, files) | It doesn't follow business rules, or can't reset to the same start |
+| **Tools** | Atomic operations (look up order, modify booking) | They're too high-level ("solve the user's problem") and skip the planning you meant to test |
+| **Rubric** | Binary, continuous or multi-dimensional score | See [04](04-graders.md) |
+| **Interaction protocol** | Who acts when: single-shot, multi-turn, simulated user, dual control | The user model is unrealistic ([above](#multi-turn-evaluation)) |
 
 - **Reset state for every trial.** Fresh sandbox, database snapshot, clean working directory. Shared state turns one trial's side effects into the next trial's failure.
 - **Isolate trials.** Parallel trials must not share mutable resources.

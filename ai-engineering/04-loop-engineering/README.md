@@ -85,6 +85,7 @@ Read into [notes/](notes/) on 2026-10-28. Full list in [loop-engineering.md](loo
 | [AI Builder Club](https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook) | The Anthropic playbook map, the autonomy ladder, the evolve loop |
 | [learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Lecture 13 (`/goal` vs `/loop`, silent costs, adoption ladder) and project 07 (the labs, maker/checker prompts) |
 | [Karpathy `autoresearch`](https://github.com/karpathy/autoresearch) + [bilevel](https://arxiv.org/abs/2603.23420) | The level-4 worked example |
+| Li, *AI Agents in Depth*, [ch. 8 Continual Evolution](../readings/ai-agent-book-main/book-en/chapter8.md) ([map](../readings/ai-agent-book-main/READING-MAP.md#chapter-8--continual-evolution-of-agents)) | Learning signals from trajectories, four evolution methods, a closed loop for long-running agents. Labs for [08](notes/08-self-improving-loops.md) and [09](notes/09-failure-modes-and-guardrails.md): experience distillation, trajectory-to-workflow compilation, self-modifying code with canary rollout |
 
 ### Next layer
 → [05-graph-engineering/](../05-graph-engineering/README.md) — graph engineering composes loops into multi-agent topologies.

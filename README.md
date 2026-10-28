@@ -120,7 +120,9 @@ ai-engineering is the discipline that makes them reliable.
     - `generative-ai/02-rag-retrieval/3-rag/` — retrieval-augmented generation papers
     - `ai-engineering/05-graph-engineering/sources/` — knowledge graphs for RAG
     - `ai-engineering/readings/ai_engineering/` — AI design, AI engineering, and performance books
+    - `ai-engineering/readings/ai-agent-book-main/` — Bojie Li, *AI Agents in Depth* (English text + 93 labs); [READING-MAP.md](ai-engineering/readings/ai-agent-book-main/READING-MAP.md) routes each chapter and lab to its pillar
     - `ai-engineering/readings/general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
+- External links (courses, books, papers, tools) by pillar: [generative-ai/resources.md](generative-ai/resources.md)
 
 ### Programming ([`programming/`](programming/README.md))
 - Practice problems and cloud/infra reference — doesn't fit the data-domain categories above, kept
