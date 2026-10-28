@@ -104,7 +104,7 @@ A run log, one per run:
 
 ## Lab 7 — From harness to loop
 
-Moved to the loop layer: goal loop → timer loop → maker/checker loop, using the harness you built here. See [04-loop/loop-engineering.md](../../../04-loop/loop-engineering.md) and the templates in [04-loop/templates/](../../../04-loop/templates/).
+This lab belongs to the loop layer: turn the harness you built here into a goal loop, then a timer loop, then a maker/checker loop. See [04-loop/](../../../04-loop/README.md).
 
 ---
 
