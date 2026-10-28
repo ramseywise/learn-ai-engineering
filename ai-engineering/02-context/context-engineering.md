@@ -101,4 +101,5 @@ Context has no type system — instructions and data are the same tokens. Prompt
 - Anthropic: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - promptingguide.ai: https://www.promptingguide.ai/guides/context-engineering-guide
 - OpenAI compaction: https://developers.openai.com/api/docs/guides/compaction
-- Vendored course: [Context-Engineering-main](Context-Engineering-main/) — see [#106](https://github.com/ramseywise/learn-ai-engineering/issues/106) for consolidation scope
+- Course material (curated from davidkimai/Context-Engineering): [00_COURSE](00_COURSE/README.md) · [notes/foundations](notes/foundations/README.md) · [cognitive-tools](cognitive-tools/README.md) · [notes/reference](notes/reference/) — index in the [README](README.md#course-material--context-engineering-davidkimai-snapshot-2026-08-14)
+- Papers: [reading/papers.md](reading/papers.md)
