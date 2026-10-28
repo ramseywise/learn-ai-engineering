@@ -16,9 +16,9 @@ cleaned: 2026-10-28
 
 | Source | Where | Use it for |
 |---|---|---|
-| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [reading/prompt-eng-for-llms/](reading/prompt-eng-for-llms/) · chapter notes: [sources/prompt-eng-for-llms/](sources/prompt-eng-for-llms/00-overview.md) | The backbone of notes 01, 02, 04, 05, 06 and 09. Written by two of the original GitHub Copilot engineers |
+| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · chapter notes: [sources/prompt-eng-for-llms/](sources/prompt-eng-for-llms/00-overview.md) | The backbone of notes 01, 02, 04, 05, 06 and 09. Written by two of the original GitHub Copilot engineers |
 | DAIR.AI *Prompt Engineering Guide* | [promptingguide.ai](https://www.promptingguide.ai/) · [GitHub](https://github.com/dair-ai/Prompt-Engineering-Guide) | The technique catalog (notes 03, 08, 10, 11). Its pages are absorbed into the notes, so check the live site for new additions |
-| DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [reading/dair-prompt-engineering-lecture.pdf](reading/dair-prompt-engineering-lecture.pdf) | A one-hour overview; a good first pass |
+| DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [slides (PDF)](notes/dair-prompt-engineering-lecture.pdf) · [figures](sources/dair-prompt-engineering-guide/images/) | A one-hour overview; a good first pass |
 | Notebooks | [notebooks/](notebooks/) | Runnable versions of the techniques (see the table below) |
 
 | Notebook | Pairs with |

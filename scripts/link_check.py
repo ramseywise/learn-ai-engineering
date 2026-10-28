@@ -8,7 +8,6 @@ SKIP_DIRS = {
     ".git",
     "node_modules",
     "idk",
-    "Context-Engineering-main",
     "DataTalks Data Engineering",
     "DataTalks MLOps",
     "Prompt-Engineering-Guide-main",

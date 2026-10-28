@@ -21,9 +21,10 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ├── README.md               ← you are here
 ├── prompt-engineering.md   ← one-page summary and rules of thumb
 ├── references.md           ← every source: books, vendor guides, papers, other readings
-├── notes/                  ← the topic notes (read in order)
-├── sources/                ← per-chapter notes on the book
-├── reading/                ← PDFs: the book chapters and the DAIR lecture slides
+├── notes/                  ← the topic notes (read in order), plus the DAIR lecture slides
+├── sources/
+│   ├── prompt-eng-for-llms/            ← per-chapter book notes, figures (images/), chapter PDFs (reading/)
+│   └── dair-prompt-engineering-guide/  ← the DAIR guide's figures (images/)
 └── notebooks/              ← runnable examples (mapped to notes in references.md)
 ```
 
@@ -53,7 +54,7 @@ Prompt engineering is the craft of writing instructions and examples that consis
 ### Book notes — *Prompt Engineering for LLMs* (Berryman & Ziegler, O'Reilly 2024)
 - [sources/prompt-eng-for-llms/00-overview.md](sources/prompt-eng-for-llms/00-overview.md) — index of the
   11 per-chapter notes (`01-introduction` … `11-looking-ahead`), with figure screenshots
-  and `PDF p. N` quote citations. PDFs are in [reading/prompt-eng-for-llms/](reading/prompt-eng-for-llms/).
+  and `PDF p. N` quote citations. PDFs are in [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/).
   Chapters 9 and 10 cross-link to the `04-loop` and `06-eval` pillars.
 
 ### Suggested path

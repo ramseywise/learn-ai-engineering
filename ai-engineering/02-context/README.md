@@ -47,11 +47,35 @@ Where the term "context engineering" came from (mid-2025), and the essays that s
 - Anthropic, [*Effective context engineering for AI agents*](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
 - DAIR, [*Context Engineering Guide*](https://www.promptingguide.ai/guides/context-engineering-guide), the source of the worked example in note 02
 
+### Course material — *Context Engineering* (davidkimai, snapshot 2026-08-14)
+Curated subset of the [upstream repo](https://github.com/davidkimai/Context-Engineering), `confidence: medium`: verbose, but it covers each lever with worked templates. Most of the speculative "neural field / attractor / quantum semantics" track was dropped; see [reading/papers.md](reading/papers.md#deliberately-not-kept).
+
+**Course**
+- [00_COURSE/](00_COURSE/README.md) — the full 11-module course: math foundations → retrieval/generation → processing → management → RAG → [memory systems](00_COURSE/05_memory_systems/README.md) → tool-integrated reasoning → multi-agent → field theory → evaluation → orchestration capstone.
+- [notes/foundations/](notes/foundations/README.md) — the biological-metaphor build-up: [atoms](notes/foundations/01_atoms_prompting.md) (single prompt) → [molecules](notes/foundations/02_molecules_context.md) (few-shot) → [cells](notes/foundations/03_cells_memory.md) (memory) → [organs](notes/foundations/04_organs_applications.md) (multi-agent) → [cognitive tools](notes/foundations/05_cognitive_tools.md) → [advanced applications](notes/foundations/06_advanced_applications.md) → [prompt programming](notes/foundations/07_prompt_programming.md). Chapters 08–14 are the speculative field-theory track.
+- [notes/masterclass_content/](notes/masterclass_content/) — module-format rewrites of the foundations (CoT, atoms, molecules, cells, organs, cognitive tools, prompt programming).
+- [notes/10_guides_zero_to_hero/](notes/10_guides_zero_to_hero/README.md) — runnable Python labs: minimal prompt → context expansion → control loops → RAG recipes → prompt programs → schema design → recursive patterns.
+
+**NOCODE track** (context engineering without code)
+- [notes/NOCODE.md](notes/NOCODE.md) — overview: protocol shells, Pareto-lang, token budgeting as the first step.
+- [notes/00_foundations/](notes/00_foundations/) — the NOCODE chapters: introduction, token budgeting, protocol shells, Pareto-lang, field theory, meta-recursion, interpretability, collaboration, cross-modal, cross-model.
+- [notes/10_mental_models/](notes/10_mental_models/) — garden, budget, river, biopsychosocial, alchemy.
+- [notes/20_practical_protocols/](notes/20_practical_protocols/) — copyable protocols for conversation, documents, creative work, research, knowledge, meta-recursion, interpretability, collaboration, cross-modal.
+
+**Cognitive tools**
+- [cognitive-tools/](cognitive-tools/README.md) — [templates](cognitive-tools/cognitive-templates/) (understanding, reasoning, verification, composition), [programs](cognitive-tools/cognitive-programs/), [schemas](cognitive-tools/cognitive-schemas/), [architectures](cognitive-tools/cognitive-architectures/) (solver, tutor, research, reconstruction-memory), and [cognitive patterns](cognitive-tools/cognitive_patterns.md).
+
+**Reference and templates**
+- [notes/reference/](notes/reference/) — [token budgeting](notes/reference/token_budgeting.md), [retrieval indexing](notes/reference/retrieval_indexing.md), [schema cookbook](notes/reference/schema_cookbook.md), [design patterns](notes/reference/patterns.md), [eval checklist](notes/reference/eval_checklist.md).
+- [templates/](templates/) — `minimal_context.yaml`, schema templates (YAML/JSON), `prompt_program_template.py`, `control_loop.py`, `scoring_functions.py`, and [prompt templates](templates/prompts/) (CoT, few-shot, minimal context, verification loop, expert guides).
+
+### Reading
+- [reading/papers.md](reading/papers.md) — context engineering survey, Context Rot, IBM cognitive tools, MEM1, MemOS, Karpathy talk, and what was deliberately left out.
+
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
-### Coursera code
-- [Context-Engineering-main](./Context-Engineering-main/) — hands-on context engineering patterns.
+### Course code
 - [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as OS primitive.
 - [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
 

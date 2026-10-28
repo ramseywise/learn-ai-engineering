@@ -33,8 +33,9 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 
 **Context and memory:**
 
-- **[`../../ai-engineering/02-context/Context-Engineering-main/`](../../ai-engineering/02-context/Context-Engineering-main/)** —
-  context engineering for agents: what goes in the context window and why it matters.
+- **[`../../ai-engineering/02-context/`](../../ai-engineering/02-context/README.md)** —
+  context engineering for agents: what goes in the context window and why it matters
+  (curated course material: `00_COURSE/`, `notes/foundations/`, `cognitive-tools/`, `notes/reference/`).
 - **[`LLMs-as-Operating-Systems--Agent-Memory-main/`](LLMs-as-Operating-Systems--Agent-Memory-main/)** —
   agent memory architectures: in-context, external (vector/KG), procedural memory.
 - **[`Long-Term-Agentic-Memory-With-LangGraph-main/`](../04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/)** —
