@@ -77,7 +77,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
   termination conditions, loop invariants, stuck-agent detection.
 - [deep-agents.md](../../ai-engineering/03-harness/deep-agents.md) — advanced agent patterns:
   long-horizon planning, self-correction, agentic evals.
-- [memory.md](../../ai-engineering/05-graph/memory.md) — memory architectures: in-context,
+- [memory.md](../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) — memory architectures: in-context,
   episodic, semantic, procedural.
 - [context-engineering.md](../../ai-engineering/02-context/context-engineering.md) — context
   assembly for agents: what to include, what to compress, what to externalize.

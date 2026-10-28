@@ -15,7 +15,7 @@ the librarian wiki and most of the cleaned notes are about — and the center of
    `wiki/adk/` pages are the compiled experience layer on top.
 3. **Tools & MCP** — *Model Context Protocol* chapters (`ai-engineering/readings/ai_engineering/mcp/`);
    tool-design-as-UX (ACI/poka-yoke) from the wiki patterns pages.
-4. **Memory & state** — notes ([memory.md](../../../ai-engineering/05-graph/memory.md),
+4. **Memory & state** — notes ([memory.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md),
    [deep-agents.md](../../../ai-engineering/03-harness/deep-agents.md)) + `wiki/memory/` + the Memoria/
    memory-augmented-RAG flow; chatbot-memory pilot paper (Yan et al. 2025, see librarian wiki).
 5. **Harness engineering** — the notes cluster unique to this repo:
@@ -40,7 +40,7 @@ the librarian wiki and most of the cleaned notes are about — and the center of
 | wiki/adk (19pp) · wiki/langgraph · wiki/deep-agents · wiki/patterns · wiki/memory · wiki/mcp | wiki | librarian | ~50 compiled pages of design experience |
 | agent-harness · agents-design · agents-guardrails · reliable-agents · deep-agents | note | [ai-engineering/03-harness/](../../../ai-engineering/03-harness/) | harness engineering |
 | loop-engineering · notes/01–10 | note | [ai-engineering/04-loop/](../../../ai-engineering/04-loop/) | loop design |
-| memory | note | [ai-engineering/05-graph/memory.md](../../../ai-engineering/05-graph/memory.md) | memory architectures |
+| memory | note | [ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) | memory architectures |
 | agents-google-adk | note | [generative-ai/03-agentic-foundations/](../../../generative-ai/03-agentic-foundations/) | ADK framework |
 
 ## Test yourself
