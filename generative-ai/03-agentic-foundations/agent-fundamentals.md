@@ -15,6 +15,9 @@ cleaned: 2026-10-28
 
 ## The formula
 
+![The Agent–Environment interaction loop and the Model–Harness structure inside the Agent](images/ai-agent-book/fig1-1.svg)
+*Figure 1-1, The Agent–Environment interaction loop and the Model–Harness structure inside the Agent. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter1.md) (Apache-2.0).*
+
 **Agent = LLM + Context + Tools.** Read each term broadly:
 
 | Term | Role | Covers | RL analogue |
@@ -89,6 +92,9 @@ The lesson: *an agent can only decide on what is in its context.* Every componen
 
 ## The ReAct loop
 
+![Agent trajectory—ReAct loop for a multi-currency aggregation task](images/ai-agent-book/fig1-4.svg)
+*Figure 1-4, Agent trajectory—ReAct loop for a multi-currency aggregation task. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter1.md) (Apache-2.0).*
+
 **Reason → act → observe**, repeated until done. On every call the model gets the static prefix plus the full trajectory, then its response is appended to the trajectory:
 
 ```
@@ -118,6 +124,9 @@ Freeform tool calling (`type: "custom"`) lets the model send raw text, such as P
 Upstream labs: [1-2 web-search-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/web-search-agent) · [1-3 search-codegen](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/search-codegen) (both need API keys).
 
 ### How agents learn
+
+![Three Levels of Agent Capability Updates](images/ai-agent-book/fig1-2.svg)
+*Figure 1-2, Three Levels of Agent Capability Updates. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter1.md) (Apache-2.0).*
 
 Agents learn in three ways, which differ in where the update lives and how long it lasts:
 

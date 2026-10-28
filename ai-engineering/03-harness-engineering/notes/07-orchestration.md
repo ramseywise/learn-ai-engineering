@@ -150,6 +150,9 @@ Collaboration tools reduce to a small set of primitives: `spawn` and `cancel`, `
 
 ## Asynchronous agents: events and safe points
 
+![Three Strategies for Asynchronous Event Processing](../images/ai-agent-book/fig6-2.svg)
+*Figure 6-2, Three Strategies for Asynchronous Event Processing. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).*
+
 A resident agent receives user messages, tool results, timers, webhooks and messages from other agents, all at unpredictable times. Li's model (ch. 4) is an **event loop**: each iteration drains a batch of events from the queue, appends them to the trajectory, calls the LLM once, and runs the tools it chose. Events are consumed **only at safe points**, meaning the end of a reasoning stretch or a tool return, never mid-step. Cancellation is checked at safe points too, the same discipline as Go's `ctx.Done()`.
 
 **Model each input as a structured event:** source (who), channel (how), content (what, including urgency), and context (which thread or task it belongs to). This keeps a user command distinct from a tool result that *contains* a command, which is the prompt-injection case.

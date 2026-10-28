@@ -20,6 +20,9 @@ The framing comes from OpenAI's GPT-Live launch (2026). It matches the three gen
 
 ### Paradigm 1: the cascaded pipeline
 
+![Latency waterfall for a serial response](images/ai-agent-book/fig6-7.svg)
+*Figure 6-7, Latency waterfall for a serial response. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).*
+
 **The latency budget (fully serial, short reply, no reasoning):**
 
 | Stage | Typical latency | Note |
@@ -88,6 +91,9 @@ The arc: VAD guesses turns from silence → streaming perception guesses them fr
 
 ## Thinking architectures: real-time vs. deep thought
 
+![Fast/slow thinking architecture and design alternatives](images/ai-agent-book/fig6-10.svg)
+*Figure 6-10, Fast/slow thinking architecture and design alternatives. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).*
+
 Users want millisecond responses. Hard questions need seconds. Cascaded and end-to-end systems face this equally. Three solutions coexist. **Solutions 1 and 2 use two independent models and can sit on top of a cascade. Only Solution 3 internalizes reasoning.**
 
 | | Fast model | Slow model | Failure |
@@ -133,6 +139,9 @@ There are two ways to build it:
 ---
 
 ## Computer Use
+
+![Set-of-Mark vs. Structured Element Indexing (browser-use implementation)](images/ai-agent-book/fig6-13.svg)
+*Figure 6-13, Set-of-Mark vs. Structured Element Indexing (browser-use implementation). From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).*
 
 The **perceive-think-act loop**:
 1. Screenshot.
