@@ -9,7 +9,7 @@ cleaned: 2026-10-28
 ---
 # 5 — Tools and Function Calling
 
-> The prompt-side view of tools: how a tool definition becomes part of the prompt, and how to write one the model uses correctly. Designing the tool surface of a whole agent belongs to [03-harness/03-tool-design](../../03-harness/notes/03-tool-design.md).
+> The prompt-side view of tools: how a tool definition becomes part of the prompt, and how to write one the model uses correctly. Designing the tool surface of a whole agent belongs to [03-harness-engineering/03-tool-design](../../03-harness-engineering/notes/03-tool-design.md).
 
 ---
 
@@ -67,7 +67,7 @@ Reinforce choices in the system prompt as well, e.g. "Prefer `knowledge_base` fo
 
 ## Safety: gate in code, not in the prompt
 
-"Always confirm with the user before booking" **will eventually be skipped.** Let the model request any call freely, then intercept side-effecting calls in the application layer and require explicit user approval showing the exact arguments. Tool results are also untrusted input — a fetched web page can carry instructions ([10-adversarial-prompting](10-adversarial-prompting.md#indirect-prompt-injection)). Execution boundaries in depth: [03-harness/04-execution-boundaries](../../03-harness/notes/04-execution-boundaries.md).
+"Always confirm with the user before booking" **will eventually be skipped.** Let the model request any call freely, then intercept side-effecting calls in the application layer and require explicit user approval showing the exact arguments. Tool results are also untrusted input — a fetched web page can carry instructions ([10-adversarial-prompting](10-adversarial-prompting.md#indirect-prompt-injection)). Execution boundaries in depth: [03-harness-engineering/04-execution-boundaries](../../03-harness-engineering/notes/04-execution-boundaries.md).
 
 ---
 
@@ -85,7 +85,7 @@ Practical choices:
 - **Summarize large artifacts** and offer a `details(section)` tool to expand them, rather than inlining the whole document.
 - **Drop stale history** when the topic shifts.
 
-Context selection is the subject of [02-context](../../02-context/README.md).
+Context selection is the subject of [02-context](../../02-context-engineering/README.md).
 
 ---
 
@@ -107,7 +107,7 @@ For UX, show tool activity to users and let them inspect and **edit arguments an
 ## Go deeper
 
 - Book: [Ch 8](../sources/prompt-eng-for-llms/08-conversational-agency.md) (internal format, tool guidelines, conversational agent, UX)
-- Agent-level tool design, MCP, skills: [03-harness/notes/03-tool-design.md](../../03-harness/notes/03-tool-design.md)
+- Agent-level tool design, MCP, skills: [03-harness-engineering/notes/03-tool-design.md](../../03-harness-engineering/notes/03-tool-design.md)
 - Runnable: [notebooks/pe-function-calling.ipynb](../notebooks/pe-function-calling.ipynb) · [notebooks/react.ipynb](../notebooks/react.ipynb) · [notebooks/pe-chatgpt-langchain.ipynb](../notebooks/pe-chatgpt-langchain.ipynb)
 - Vendor tool-use docs and benchmarks: [references.md](../README.md#vendor-guides)
 

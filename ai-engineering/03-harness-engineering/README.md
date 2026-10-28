@@ -48,7 +48,7 @@ Copy-ready harness files: `AGENTS.md`, `init.sh`, `feature_list.json` + schema, 
 #### Related
 - [karpathy-method.md](karpathy-method.md) — Karpathy's AISN 2026 framing (via secondary video source): spec / verifier / environment layering, animals-vs-ghosts, rules-vs-requests.
 - [agent-harness.md](agent-harness.md) — raw source note (Notion export) behind the overview; kept for provenance.
-- [reliable-agents.md](reliable-agents.md) — raw source note (Notion export): the Bayer/Thoughtworks **PRINCE** case study, the pillar's only production system. Harness content extracted into [notes/05](notes/05-verification-loops.md) and [notes/08](notes/08-maturity-and-failure-modes.md); its RAG/Text-to-SQL pipeline detail is still unextracted and belongs to [02-context](../02-context/notes/04-retrieval.md).
+- [reliable-agents.md](reliable-agents.md) — raw source note (Notion export): the Bayer/Thoughtworks **PRINCE** case study, the pillar's only production system. Harness content extracted into [notes/05](notes/05-verification-loops.md) and [notes/08](notes/08-maturity-and-failure-modes.md); its RAG/Text-to-SQL pipeline detail is still unextracted and belongs to [02-context](../02-context-engineering/notes/04-retrieval.md).
 - [agents-design.md](agents-design.md) — agent architecture patterns: single-agent, multi-agent, tool routing.
 - [deep-agents.md](deep-agents.md) — depth on agentic architectures: planning, reflection, self-critique.
 - [agents-guardrails.md](agents-guardrails.md) — guardrails and safety constraints in harness design.
@@ -92,7 +92,7 @@ Queue (not yet read in):
 - `awesome-harness-engineering`: https://github.com/ai-boost/awesome-harness-engineering — evals, memory, MCP, orchestration.
 
 ### Next layer
-→ [04-loop/](../04-loop/README.md) — the loops the harness implements.
+→ [04-loop-engineering/](../04-loop-engineering/README.md) — the loops the harness implements.
 
 ---
 

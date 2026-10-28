@@ -71,7 +71,7 @@ A concise counter-argument query related to the argument #N:
 - Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
 - In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
 
-Retrieval itself belongs to [02-context](../../02-context/notes/04-retrieval.md).
+Retrieval itself belongs to [02-context](../../02-context-engineering/notes/04-retrieval.md).
 
 ### Pitfalls
 
@@ -92,7 +92,7 @@ Retrieval itself belongs to [02-context](../../02-context/notes/04-retrieval.md)
 | Schema → SQL | Table and column definitions, then the question | Include the actual schema; generate fixtures to test against |
 | Explain code | Code first, then "Explain the above" | A narrow system prompt ("Python only") can make the model refuse adjacent tasks |
 
-The biggest lever for code is the same as everywhere: **context** — the relevant files, types, and tests. The second is **verification**: compile, lint, run the tests, and feed failures back (Reflexion, [03](03-core-techniques.md#reflexion)). Agentic coding is a harness problem ([03-harness](../../03-harness/README.md)). Runnable: [notebooks/pe-code-llama.ipynb](../notebooks/pe-code-llama.ipynb).
+The biggest lever for code is the same as everywhere: **context** — the relevant files, types, and tests. The second is **verification**: compile, lint, run the tests, and feed failures back (Reflexion, [03](03-core-techniques.md#reflexion)). Agentic coding is a harness problem ([03-harness](../../03-harness-engineering/README.md)). Runnable: [notebooks/pe-code-llama.ipynb](../notebooks/pe-code-llama.ipynb).
 
 ---
 
@@ -116,4 +116,4 @@ Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#c
 
 ---
 
-→ Back to the start: [pillar README](../README.md) · Next pillar: [02-context](../../02-context/README.md)
+→ Back to the start: [pillar README](../README.md) · Next pillar: [02-context](../../02-context-engineering/README.md)

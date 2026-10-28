@@ -21,7 +21,7 @@ cleaned: 2026-10-28
 Every pass adds tool output, errors and reasoning to the transcript. Left alone, the loop hits one of three walls:
 
 1. **Context rot.** Working memory degrades as the transcript grows; the agent loses the thread.
-2. **Context anxiety.** Near the limit, models wrap up early and declare done ([harness note 06](../../03-harness/notes/06-long-horizon-execution.md#the-problem)).
+2. **Context anxiety.** Near the limit, models wrap up early and declare done ([harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#the-problem)).
 3. **Session end.** The process stops, and the next one starts blank.
 
 All three have the same fix: **progress lives in files, not in the context window.**
@@ -41,7 +41,7 @@ In practice:
 - **Offload big outputs.** Keep the head and tail of a long log in context and write the rest to a file.
 - **Push heavy reads into sub-agents** so only their summaries come back ([note 04](04-building-blocks.md#sub-agents-separation-of-concerns)).
 
-Depth: [02-context/notes/03 budgeting](../../02-context/notes/03-budgeting-the-window.md), [05 compaction](../../02-context/notes/05-compression-compaction.md).
+Depth: [02-context-engineering/notes/03 budgeting](../../02-context-engineering/notes/03-budgeting-the-window.md), [05 compaction](../../02-context-engineering/notes/05-compression-compaction.md).
 
 ---
 
@@ -94,7 +94,7 @@ What it lacks: a stop condition, a budget and a scorekeeper. A production versio
 - a **stall check**: stop if the score hasn't moved in N passes
 - a log line per pass
 
-Harnesses now ship this pattern: hooks catch the agent's attempt to finish and re-inject the prompt into a fresh context ([harness note 06](../../03-harness/notes/06-long-horizon-execution.md#ralph-loops)), and `/goal` does it as a built-in ([note 06](06-triggers-and-schedules.md#claude-code)).
+Harnesses now ship this pattern: hooks catch the agent's attempt to finish and re-inject the prompt into a fresh context ([harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#ralph-loops)), and `/goal` does it as a built-in ([note 06](06-triggers-and-schedules.md#claude-code)).
 
 ---
 
@@ -120,7 +120,7 @@ Two rules from the essay that apply to any long loop:
 | Good for | One long session | Multi-session or multi-day work |
 | Risk | Summary-of-a-summary drift | Anything not written down is lost |
 
-Loops lean toward **reset**, because the Ralph and initializer/worker patterns already keep state on disk. Details and the model-dependence of this choice: [harness note 06](../../03-harness/notes/06-long-horizon-execution.md#compaction-vs-context-reset).
+Loops lean toward **reset**, because the Ralph and initializer/worker patterns already keep state on disk. Details and the model-dependence of this choice: [harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#compaction-vs-context-reset).
 
 ---
 

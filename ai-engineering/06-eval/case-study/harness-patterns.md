@@ -121,5 +121,4 @@ The eval platform equivalent: `sample_friction_convs.jsonl` with `conv_outcome` 
 
 ## Adding a new grader (the eval platform-specific)
 
-See [grader_interface.md](grader_interface.md) for the contract summary, or `evals/graders/README.md` for the full implementation reference.
-See `/nbk-to-eval` skill for the 7-step notebook → production promotion workflow.
+The generic grader contract is in [notes/04](../notes/04-graders.md#the-grader-interface). In the source project, `evals/graders/README.md` holds the full implementation reference and a `/nbk-to-eval` skill covers notebook → production promotion; neither is in this repo.

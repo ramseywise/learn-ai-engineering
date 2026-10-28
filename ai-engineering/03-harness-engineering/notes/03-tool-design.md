@@ -91,7 +91,7 @@ Loading every tool and MCP server at startup **degrades performance before the a
 
 Skills invert this. A short name and description (*what* + *when*, ~10 tokens) stay resident; the full procedure loads only when the task activates it. A capability library of dozens of skills costs a few hundred tokens at rest.
 
-This is the same mechanism as layer 2 in [02-context/notes/02](../../02-context/notes/02-context-anatomy.md), applied to capability rather than knowledge. See also [skills-design.md](../skills-design.md).
+This is the same mechanism as layer 2 in [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md), applied to capability rather than knowledge. See also [skills-design.md](../skills-design.md).
 
 ---
 

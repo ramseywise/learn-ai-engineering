@@ -77,7 +77,7 @@ The research agent's loop in one line: *"search, read, aggregate, synthesize, th
 
 LangChain's four levels ([note 01](01-what-a-loop-is.md#the-map-of-this-pillar)) map onto its own products: `create_agent` (L1), `RubricMiddleware` and `after_agent` hooks (L2), LangSmith Deployment cron and webhooks (L3), and LangSmith Engine for trace-driven harness rewrites (L4).
 
-In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edge that either loops back or routes to `END`, a `recursion_limit` as the hard cap, and a checkpointer for durability and human-in-the-loop interrupts. Once you are drawing the cycle as a graph, you're at the next layer: [05-graph](../../05-graph/README.md).
+In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edge that either loops back or routes to `END`, a `recursion_limit` as the hard cap, and a checkpointer for durability and human-in-the-loop interrupts. Once you are drawing the cycle as a graph, you're at the next layer: [05-graph](../../05-graph-engineering/README.md).
 
 ---
 

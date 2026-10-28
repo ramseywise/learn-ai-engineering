@@ -18,7 +18,7 @@ cleaned: 2026-07-29
 
 Long-horizon work requires **durable state, planning, observation, and verification to keep working across multiple context windows.** Two distinct degradations show up as sessions extend:
 
-1. **Coherence decay** — models lose the thread as the window fills. See [02-context/notes/01](../../02-context/notes/01-why-context-is-finite.md).
+1. **Coherence decay** — models lose the thread as the window fills. See [02-context-engineering/notes/01](../../02-context-engineering/notes/01-why-context-is-finite.md).
 2. **Context anxiety** — as the window approaches its limit, models **prematurely wrap up work**, declaring done rather than continuing. This one surprises people: the agent doesn't fail loudly, it *finishes early and confidently*.
 
 Context anxiety is a harness problem with a harness fix. The agent stops because it perceives scarcity; give it a mechanism to continue and the perception goes away.
@@ -72,7 +72,7 @@ Anthropic's finding: **context resets outperformed compaction for Claude Sonnet 
 
 Compaction tuning, when you use it: **maximize recall first, then improve precision** by cutting superfluous content. Distill architectural decisions and unresolved issues; discard redundant tool outputs. A reset's handoff document is subject to the same discipline, written deliberately rather than generated.
 
-Depth on both: [02-context/notes/04](../../02-context/notes/05-compression-compaction.md).
+Depth on both: [02-context-engineering/notes/04](../../02-context-engineering/notes/05-compression-compaction.md).
 
 ---
 
@@ -82,7 +82,7 @@ Large tool outputs clutter the window without adding signal — a 2,000-line log
 
 The harness keeps the **head and tail tokens** of any output above a threshold, **offloads the full result to the filesystem**, and leaves a path the model can read if it needs more. Bounded cost, no information destroyed.
 
-Pair with **message pruning** — dropping stale tool results from history entirely once they've been acted on — and **cache control headers** so the stable prefix stays cacheable across a long session ([02-context/notes/02](../../02-context/notes/02-context-anatomy.md#ordering-stable-before-dynamic)).
+Pair with **message pruning** — dropping stale tool results from history entirely once they've been acted on — and **cache control headers** so the stable prefix stays cacheable across a long session ([02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md#ordering-stable-before-dynamic)).
 
 ---
 
@@ -92,7 +92,7 @@ Agents maintain **persistent memory outside the context window** — markdown no
 
 Notably, this behavior is **partly emergent**: Claude playing Pokémon developed its own note structures, maintaining strategic notes and tallies across thousands of steps without being told to. The harness's job is to *provide the medium* and prompt for its use; the model will often organize it sensibly.
 
-Design guidance in [02-context/notes/05](../../02-context/notes/06-memory.md): index-plus-detail rather than transcripts, and memory that is editable and auditable.
+Design guidance in [02-context-engineering/notes/05](../../02-context-engineering/notes/06-memory.md): index-plus-detail rather than transcripts, and memory that is editable and auditable.
 
 ---
 

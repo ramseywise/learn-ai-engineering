@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evalset.schema.json",
+  "title": "Eval row",
+  "description": "One task in an eval dataset. Store one row per line (JSONL). See notes/03-eval-datasets.md#what-a-row-contains.",
+  "type": "object",
+  "required": ["id", "input", "labels", "provenance", "graders"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, human-readable ID. Never reuse an ID for a different task.",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "input": {
+      "type": "object",
+      "description": "What the system under test receives.",
+      "required": ["messages"],
+      "properties": {
+        "messages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["role", "content"],
+            "properties": {
+              "role": {"enum": ["system", "user", "assistant", "tool"]},
+              "content": {"type": "string"}
+            }
+          }
+        },
+        "state": {
+          "type": "object",
+          "description": "Environment snapshot to reset to before each trial (DB fixture, repo commit, files)."
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "description": "What correct looks like. For open-ended tasks, a rubric or required points rather than a gold string.",
+      "properties": {
+        "answer": {"type": "string"},
+        "required_points": {"type": "array", "items": {"type": "string"}},
+        "expected_tool_calls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string"},
+              "args": {"type": "object"},
+              "match": {"enum": ["EXACT", "NORMALIZED", "ANY_ARGS", "JUDGE"], "default": "EXACT"}
+            }
+          }
+        },
+        "tool_match_mode": {"enum": ["EXACT", "IN_ORDER", "ANY_ORDER", "SUBSET", "SUPERSET"]},
+        "forbidden_tools": {"type": "array", "items": {"type": "string"}},
+        "expected_sources": {"type": "array", "items": {"type": "string"}},
+        "expected_state": {"type": "object", "description": "End-state assertions for outcome grading."}
+      }
+    },
+    "labels": {
+      "type": "object",
+      "description": "Slice labels used for reporting (notes/09-reading-results.md#slice-before-you-conclude).",
+      "required": ["case_type"],
+      "properties": {
+        "case_type": {"enum": ["positive", "negative", "boundary", "out_of_scope", "adversarial"]},
+        "intent": {"type": "string"},
+        "difficulty": {"enum": ["easy", "medium", "hard"]},
+        "language": {"type": "string"},
+        "cluster": {"type": "string", "description": "Group ID for clustered standard errors (document, conversation)."}
+      },
+      "additionalProperties": {"type": "string"}
+    },
+    "eligibility": {
+      "type": "object",
+      "description": "Which gates may score this row (notes/03-eval-datasets.md#row-eligibility-is-this-row-fair-for-this-gate).",
+      "additionalProperties": {"type": "boolean"}
+    },
+    "split": {"enum": ["dev", "test", "regression", "discovery"]},
+    "provenance": {
+      "type": "object",
+      "required": ["source", "added"],
+      "properties": {
+        "source": {"enum": ["production", "ticket", "feedback", "expert", "synthetic", "benchmark"]},
+        "added": {"type": "string", "format": "date"},
+        "added_by": {"type": "string"},
+        "trace_id": {"type": "string"},
+        "reference_grader_version": {"type": "string", "description": "If the reference came from a grader, which version."}
+      }
+    },
+    "graders": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string"},
+      "description": "Grader names that apply to this row."
+    }
+  }
+}

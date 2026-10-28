@@ -100,7 +100,7 @@ Connectors are what turn a loop from "here's the fix" into "PR opened, ticket li
 | **Limited change** | Comment, update status, create branches | Scope to specific repos or projects |
 | **Full access** | Merge, delete, manage permissions | Avoid. If you need it, put a human approval in front of it and audit every use |
 
-Keep secrets out of code and prompts; use scoped, short-lived credentials from a secret store. Every connector you enable should have a written reason. Deeper treatment: [harness note 04](../../03-harness/notes/04-execution-boundaries.md#a-role-label-is-not-a-sandbox).
+Keep secrets out of code and prompts; use scoped, short-lived credentials from a secret store. Every connector you enable should have a written reason. Deeper treatment: [harness note 04](../../03-harness-engineering/notes/04-execution-boundaries.md#a-role-label-is-not-a-sandbox).
 
 ---
 

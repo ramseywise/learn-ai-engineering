@@ -40,5 +40,5 @@ it holds only genuinely built things, not course material.
   material: LangGraph and ADK docs used during implementation.
 - [06-observability/](../06-observability/README.md) — LangFuse integration for tracing
   and evaluation of deployed agents.
-- [ai-engineering/03-harness/](../../ai-engineering/03-harness/README.md) — harness
+- [ai-engineering/03-harness-engineering/](../../ai-engineering/03-harness-engineering/README.md) — harness
   architecture notes applicable to both projects here.

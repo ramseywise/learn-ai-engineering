@@ -13,12 +13,12 @@ A **shallow** agent runs a tool-calling loop inside one context window and falls
 
 | Pillar | What it means | Where it's covered |
 |---|---|---|
-| **Explicit planning** | A living to-do list the agent updates, retries and recovers from, rather than ad-hoc reasoning in context | [03-harness/06 — plans as artifacts](notes/06-long-horizon-execution.md#plans-as-first-class-artifacts) |
-| **Orchestrator + sub-agents** | An orchestrator delegates to specialists (search, code, retrieval, verification), each with a clean context, then integrates the results | [03-harness/07](notes/07-orchestration.md) · [02-context/06](../02-context/notes/10-tools-and-multi-agent.md) |
-| **External memory / agentic search** | Intermediate work goes to files, notes or stores, not conversation history; the agent retrieves what it needs. See *ReasoningBank* (arXiv 2509.25140) and *Agentic Context Engineering* (arXiv 2510.04618) on building and curating that memory | [02-context/05](../02-context/notes/06-memory.md) |
-| **Verification** | A judge, a verifier sub-agent, or a human checks outputs before they're accepted | [03-harness/05](notes/05-verification-loops.md) |
+| **Explicit planning** | A living to-do list the agent updates, retries and recovers from, rather than ad-hoc reasoning in context | [03-harness-engineering/06 — plans as artifacts](notes/06-long-horizon-execution.md#plans-as-first-class-artifacts) |
+| **Orchestrator + sub-agents** | An orchestrator delegates to specialists (search, code, retrieval, verification), each with a clean context, then integrates the results | [03-harness-engineering/07](notes/07-orchestration.md) · [02-context-engineering/06](../02-context-engineering/notes/10-tools-and-multi-agent.md) |
+| **External memory / agentic search** | Intermediate work goes to files, notes or stores, not conversation history; the agent retrieves what it needs. See *ReasoningBank* (arXiv 2509.25140) and *Agentic Context Engineering* (arXiv 2510.04618) on building and curating that memory | [02-context-engineering/05](../02-context-engineering/notes/06-memory.md) |
+| **Verification** | A judge, a verifier sub-agent, or a human checks outputs before they're accepted | [03-harness-engineering/05](notes/05-verification-loops.md) |
 
-Underneath all four sits **context engineering**. Underspecified instructions are the most common failure ([02-context/02 — worked example](../02-context/notes/02-context-anatomy.md#worked-example-tuning-a-deep-research-agent)). How to *prompt* a deep-research product as a user is in [01-prompt-engineering/07](../01-prompt-engineering/notes/07-prompting-reasoning-models.md#prompting-deep-research-agents).
+Underneath all four sits **context engineering**. Underspecified instructions are the most common failure ([02-context-engineering/02 — worked example](../02-context-engineering/notes/02-context-anatomy.md#worked-example-tuning-a-deep-research-agent)). How to *prompt* a deep-research product as a user is in [01-prompt-engineering/07](../01-prompt-engineering/notes/07-prompting-reasoning-models.md#prompting-deep-research-agents).
 
 The rest of this file is the LangChain Deep Agents SDK documentation.
 
@@ -197,17 +197,17 @@ See [Core capabilities](#core-capabilities) for a full breakdown of each compone
   ```
 </CodeGroup>
 
-See the [Quickstart](/oss/python/deepagents/quickstart/) and [Customization guide](/oss/python/deepagents/customization/) to get started building your own agents and applications with Deep Agents.
+See the [Quickstart](https://docs.langchain.com/oss/python/deepagents/quickstart/) and [Customization guide](https://docs.langchain.com/oss/python/deepagents/customization/) to get started building your own agents and applications with Deep Agents.
 
 <Tip>
-  Trace requests, debug agent behavior, and evaluate outputs with [LangSmith](https://smith.langchain.com&utm_medium=cta\&utm_campaign=langsmith-signup\&utm_content=oss-deepagents-overview). Follow the [observability quickstart](/langsmith/observability-quickstart) to get set up. When ready for production, see [Going to production](/oss/python/deepagents/going-to-production) for LangSmith deployment options.
+  Trace requests, debug agent behavior, and evaluate outputs with [LangSmith](https://smith.langchain.com&utm_medium=cta\&utm_campaign=langsmith-signup\&utm_content=oss-deepagents-overview). Follow the [observability quickstart](https://docs.langchain.com/langsmith/observability-quickstart) to get set up. When ready for production, see [Going to production](https://docs.langchain.com/oss/python/deepagents/going-to-production) for LangSmith deployment options.
 </Tip>
 
 ## Core capabilities
 
 <img src="https://mintcdn.com/langchain-5e9cc07a/jtty0O--UJOKG0nK/oss/images/agent_harness_capabilities.svg?fit=max&auto=format&n=jtty0O--UJOKG0nK&q=85&s=0ff671d72badd0844826660dfcb04391" alt="Agent harness capabilities by category" style={{justifyContent: "center"}} className="rounded-lg block mx-auto" width="1500" height="360" data-path="oss/images/agent_harness_capabilities.svg" />
 
-Deep Agents is an ["agent harness"](/oss/python/concepts/products#agent-harnesses-like-the-deep-agents-sdk). It is the same core tool calling loop as other agent frameworks, but with built-in capabilities that make agents reliable for real tasks:
+Deep Agents is an ["agent harness"](https://docs.langchain.com/oss/python/concepts/products#agent-harnesses-like-the-deep-agents-sdk). It is the same core tool calling loop as other agent frameworks, but with built-in capabilities that make agents reliable for real tasks:
 
 <CardGroup cols={2}>
   <Card title="Execution environment" icon="bolt" href="#execution-environment">
@@ -227,12 +227,12 @@ Deep Agents is an ["agent harness"](/oss/python/concepts/products#agent-harnesse
   </Card>
 </CardGroup>
 
-[`deepagents`](https://pypi.org/project/deepagents/) is a standalone library built on top of [LangChain](/oss/python/langchain/)'s core building blocks for agents. It uses the [LangGraph](/oss/python/langgraph/) runtime for durable execution, streaming, human-in-the-loop, and other features.
+[`deepagents`](https://pypi.org/project/deepagents/) is a standalone library built on top of [LangChain](https://docs.langchain.com/oss/python/langchain/)'s core building blocks for agents. It uses the [LangGraph](https://docs.langchain.com/oss/python/langgraph/) runtime for durable execution, streaming, human-in-the-loop, and other features.
 
-[LangChain](/oss/python/langchain/) is the framework that provides the core building blocks for your agents.
-To learn more about the differences between LangChain, LangGraph, and Deep Agents, see [Frameworks, runtimes, and harnesses](/oss/python/concepts/products). For a side-by-side comparison with Anthropic's harness, see [Deep Agents vs. Claude Agent SDK](/oss/python/deepagents/comparison).
+[LangChain](https://docs.langchain.com/oss/python/langchain/) is the framework that provides the core building blocks for your agents.
+To learn more about the differences between LangChain, LangGraph, and Deep Agents, see [Frameworks, runtimes, and harnesses](https://docs.langchain.com/oss/python/concepts/products). For a side-by-side comparison with Anthropic's harness, see [Deep Agents vs. Claude Agent SDK](https://docs.langchain.com/oss/python/deepagents/comparison).
 
-For building custom agents without these built-in capabilities, consider using LangChain's [`create_agent`](/oss/python/langchain/agents) or building a custom [LangGraph](/oss/python/langgraph/overview) workflow.
+For building custom agents without these built-in capabilities, consider using LangChain's [`create_agent`](https://docs.langchain.com/oss/python/langchain/agents) or building a custom [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) workflow.
 
 ## Execution environment
 
@@ -247,7 +247,7 @@ The execution environment is where an agent acts. It has four layers:
 
 ### Tools and MCP
 
-Pass custom functions, LangChain tools, or tools from any [MCP server](/oss/python/deepagents/tools#mcp-tools) with the `tools=` parameter. Deep Agents fully support the [Model Context Protocol (MCP)](/oss/python/langchain/mcp), letting you connect to databases, APIs, file systems, and more through a standard interface.
+Pass custom functions, LangChain tools, or tools from any [MCP server](https://docs.langchain.com/oss/python/deepagents/tools#mcp-tools) with the `tools=` parameter. Deep Agents fully support the [Model Context Protocol (MCP)](https://docs.langchain.com/oss/python/langchain/mcp), letting you connect to databases, APIs, file systems, and more through a standard interface.
 
 ```python theme={"theme":{"light":"catppuccin-latte","dark":"catppuccin-mocha"}}
 from deepagents import create_deep_agent
@@ -258,11 +258,11 @@ agent = create_deep_agent(
 )
 ```
 
-For more information on defining custom tools, using MCP servers, and the full list of built-in harness tools, see [Tools](/oss/python/deepagents/tools).
+For more information on defining custom tools, using MCP servers, and the full list of built-in harness tools, see [Tools](https://docs.langchain.com/oss/python/deepagents/tools).
 
 ### Virtual filesystem access
 
-The harness provides a configurable virtual filesystem which can be backed by different [pluggable backends](/oss/python/deepagents/backends): in-memory state, local disk, LangGraph store, composite routing, or a custom backend with [permission rules](/oss/python/deepagents/permissions) for read and write access.
+The harness provides a configurable virtual filesystem which can be backed by different [pluggable backends](https://docs.langchain.com/oss/python/deepagents/backends): in-memory state, local disk, LangGraph store, composite routing, or a custom backend with [permission rules](https://docs.langchain.com/oss/python/deepagents/permissions) for read and write access.
 
 The backends support the following file system operations:
 
@@ -275,21 +275,21 @@ The backends support the following file system operations:
 | `delete`     | Delete a file, or a directory and its contents recursively                                                                                                                                                               |
 | `glob`       | Find files matching patterns (e.g., `**/*.py`)                                                                                                                                                                           |
 | `grep`       | Search file contents with multiple output modes (files only, content with context, or counts)                                                                                                                            |
-| `execute`    | Run shell commands in the environment (available with [sandbox backends](/oss/python/deepagents/sandboxes) only)                                                                                                         |
+| `execute`    | Run shell commands in the environment (available with [sandbox backends](https://docs.langchain.com/oss/python/deepagents/sandboxes) only)                                                                                                         |
 
 <Note>The `delete` tool requires `deepagents` 0.7.a1 or newer. Recursive directory deletion requires 0.7.a2 or newer. Backends that do not support deletion have the tool automatically hidden from the model.</Note>
 
 <Accordion title="Supported multimodal file extensions">
   | Type                                               | Extensions                                                                |
   | -------------------------------------------------- | ------------------------------------------------------------------------- |
-  | [Image](/oss/python/langchain/messages#multimodal) | `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.heic`, `.heif`                |
-  | [Video](/oss/python/langchain/messages#multimodal) | `.mp4`, `.mpeg`, `.mov`, `.avi`, `.flv`, `.mpg`, `.webm`, `.wmv`, `.3gpp` |
-  | [Audio](/oss/python/langchain/messages#multimodal) | `.wav`, `.mp3`, `.aiff`, `.aac`, `.ogg`, `.flac`                          |
-  | [File](/oss/python/langchain/messages#multimodal)  | `.pdf`, `.ppt`, `.pptx`                                                   |
+  | [Image](https://docs.langchain.com/oss/python/langchain/messages#multimodal) | `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.heic`, `.heif`                |
+  | [Video](https://docs.langchain.com/oss/python/langchain/messages#multimodal) | `.mp4`, `.mpeg`, `.mov`, `.avi`, `.flv`, `.mpg`, `.webm`, `.wmv`, `.3gpp` |
+  | [Audio](https://docs.langchain.com/oss/python/langchain/messages#multimodal) | `.wav`, `.mp3`, `.aiff`, `.aac`, `.ogg`, `.flac`                          |
+  | [File](https://docs.langchain.com/oss/python/langchain/messages#multimodal)  | `.pdf`, `.ppt`, `.pptx`                                                   |
 </Accordion>
 
 <Accordion title="Running without the default filesystem tools" icon="ban">
-  To hide the filesystem tools listed above from the model, register a [harness profile](/oss/python/deepagents/profiles#harness-profiles) with `excluded_tools`:
+  To hide the filesystem tools listed above from the model, register a [harness profile](https://docs.langchain.com/oss/python/deepagents/profiles#harness-profiles) with `excluded_tools`:
 
   ```python theme={"theme":{"light":"catppuccin-latte","dark":"catppuccin-mocha"}}
   from deepagents import HarnessProfile, register_harness_profile
@@ -304,7 +304,7 @@ The backends support the following file system operations:
   )
   ```
 
-  Removing [`FilesystemMiddleware`](https://reference.langchain.com/python/deepagents/middleware/filesystem/FilesystemMiddleware) itself via `excluded_middleware` is intentionally rejected—it is required scaffolding in the [default middleware stack](/oss/python/deepagents/customization#default-stack-main-agent). Use `excluded_tools` to hide only the model-visible tool surface and leave the middleware in place. To remove the `task` tool, see [Running without subagents](/oss/python/deepagents/subagents#running-without-subagents).
+  Removing [`FilesystemMiddleware`](https://reference.langchain.com/python/deepagents/middleware/filesystem/FilesystemMiddleware) itself via `excluded_middleware` is intentionally rejected—it is required scaffolding in the [default middleware stack](https://docs.langchain.com/oss/python/deepagents/customization#default-stack-main-agent). Use `excluded_tools` to hide only the model-visible tool surface and leave the middleware in place. To remove the `task` tool, see [Running without subagents](https://docs.langchain.com/oss/python/deepagents/subagents#running-without-subagents).
 </Accordion>
 
 <Accordion title="Restricting filesystem tools" icon="filter">
@@ -329,13 +329,13 @@ The backends support the following file system operations:
 
   `read_file` must always be included in the list—omitting it raises `ValueError` when the agent is created. The `execute` and `delete` tools are also dropped from the tool surface whenever the configured backend doesn't support them, whether or not you include them in `tools`. Custom tools you add through `create_deep_agent`'s own `tools=` argument are never affected by this allowlist.
 
-  Passing your own [`FilesystemMiddleware`](https://reference.langchain.com/python/deepagents/middleware/filesystem/FilesystemMiddleware) instance this way replaces the default one for the main agent and the general-purpose subagent inherits the same restriction. See [Override a default middleware instance](/oss/python/deepagents/customization#override-a-default-middleware-instance) for more information. Declarative subagents don't inherit it: include a `FilesystemMiddleware(tools=...)` instance in that subagent's own `middleware` field to restrict it independently.
+  Passing your own [`FilesystemMiddleware`](https://reference.langchain.com/python/deepagents/middleware/filesystem/FilesystemMiddleware) instance this way replaces the default one for the main agent and the general-purpose subagent inherits the same restriction. See [Override a default middleware instance](https://docs.langchain.com/oss/python/deepagents/customization#override-a-default-middleware-instance) for more information. Declarative subagents don't inherit it: include a `FilesystemMiddleware(tools=...)` instance in that subagent's own `middleware` field to restrict it independently.
 </Accordion>
 
 The virtual filesystem is used by several other harness capabilities such as skills, memory, code execution, and context management.
 You can also use the file system when building custom tools and middleware for Deep Agents.
 
-For more information, see [backends](/oss/python/deepagents/backends).
+For more information, see [backends](https://docs.langchain.com/oss/python/deepagents/backends).
 
 ### Filesystem permissions
 
@@ -351,26 +351,26 @@ Rules are evaluated top to bottom, and the first matching rule wins. If no rule 
 
 This model lets you restrict agents to specific directories (for example, `/workspace/`), protect sensitive files such as `.env` or credentials, and give subagents narrower access than the parent agent.
 
-Permissions do not apply to [sandbox backends](/oss/python/deepagents/sandboxes), which support arbitrary command execution via the `execute` tool. For custom validation logic, use [backend policy hooks](/oss/python/deepagents/backends#add-policy-hooks).
+Permissions do not apply to [sandbox backends](https://docs.langchain.com/oss/python/deepagents/sandboxes), which support arbitrary command execution via the `execute` tool. For custom validation logic, use [backend policy hooks](https://docs.langchain.com/oss/python/deepagents/backends#add-policy-hooks).
 
-For the full rule structure, examples, and subagent inheritance, see [Permissions](/oss/python/deepagents/permissions).
+For the full rule structure, examples, and subagent inheritance, see [Permissions](https://docs.langchain.com/oss/python/deepagents/permissions).
 
 ### Code execution
 
 Deep Agents supports code execution in two ways:
 
-* [Sandbox backends](/oss/python/deepagents/sandboxes) expose an `execute` tool for shell commands in an isolated environment.
-* [Interpreters](/oss/python/deepagents/interpreters) add an `eval` tool that runs JavaScript in a scoped QuickJS runtime.
+* [Sandbox backends](https://docs.langchain.com/oss/python/deepagents/sandboxes) expose an `execute` tool for shell commands in an isolated environment.
+* [Interpreters](https://docs.langchain.com/oss/python/deepagents/interpreters) add an `eval` tool that runs JavaScript in a scoped QuickJS runtime.
 
 Use sandbox backends when the agent needs to install dependencies, run tests, call CLIs, or work with an operating-system filesystem. Sandbox backends implement the `SandboxBackendProtocolV2`; when detected, the harness adds the `execute` tool to the agent's available tools.
 
 Use interpreters when the agent needs a lightweight programmable layer for loops, batching, deterministic data transformations, or programmatic tool calling. Interpreters do not provide shell access, package installs, or filesystem and network access.
 
-For sandbox setup, providers, and file transfer APIs, see [Sandboxes](/oss/python/deepagents/sandboxes). For the QuickJS runtime and programmatic tool calling, see [Interpreters](/oss/python/deepagents/interpreters).
+For sandbox setup, providers, and file transfer APIs, see [Sandboxes](https://docs.langchain.com/oss/python/deepagents/sandboxes). For the QuickJS runtime and programmatic tool calling, see [Interpreters](https://docs.langchain.com/oss/python/deepagents/interpreters).
 
 ### Streaming
 
-[Event streaming](/oss/python/deepagents/event-streaming) exposes agent runs as typed projections for messages, tool calls, values, and output. Deep Agents add `stream.subagents` so each delegated task gets its own handle with independent message, tool-call, and nested subagent streams.
+[Event streaming](https://docs.langchain.com/oss/python/deepagents/event-streaming) exposes agent runs as typed projections for messages, tool calls, values, and output. Deep Agents add `stream.subagents` so each delegated task gets its own handle with independent message, tool-call, and nested subagent streams.
 
 ## Context management
 
@@ -389,7 +389,7 @@ Each skill follows the [Agent Skills standard](https://agentskills.io/) and live
 
 Deep Agents load skills with progressive disclosure: the agent reads `SKILL.md` frontmatter at startup, then reads full skill content only when a task needs it. This keeps startup context compact while still making rich capabilities available on demand.
 
-For more information, see [Skills](/oss/python/deepagents/skills).
+For more information, see [Skills](https://docs.langchain.com/oss/python/deepagents/skills).
 
 ### Memory
 
@@ -399,7 +399,7 @@ Memory uses [`AGENTS.md` files](https://agents.md/) that you pass through the `m
 
 The agent can also update memory based on interactions and feedback, so preferences and patterns can carry forward without needing to restate them in each thread.
 
-For configuration details and examples, see [Memory](/oss/python/deepagents/customization#memory).
+For configuration details and examples, see [Memory](https://docs.langchain.com/oss/python/deepagents/customization#memory).
 
 ### Summarization and context offloading
 
@@ -414,7 +414,7 @@ This context flow has four parts:
 
 Together, these mechanisms support multi-step tasks that exceed a single context window while reducing manual context trimming and token usage.
 
-For configuration details, see [Context engineering](/oss/python/deepagents/context-engineering). For multimodal inputs and tool outputs, see [Multimodal](/oss/python/deepagents/multimodal).
+For configuration details, see [Context engineering](https://docs.langchain.com/oss/python/deepagents/context-engineering). For multimodal inputs and tool outputs, see [Multimodal](https://docs.langchain.com/oss/python/deepagents/multimodal).
 
 ### Prompt caching
 
@@ -422,7 +422,7 @@ For Anthropic and Amazon Bedrock models, `create_deep_agent` automatically appli
 
 Prompt caching is enabled by default when using an Anthropic model, or a Bedrock model (Claude or Nova). No configuration is required.
 
-For other providers, see [Middleware integrations](/oss/python/integrations/middleware#official-integrations) for available provider-specific caching middleware.
+For other providers, see [Middleware integrations](https://docs.langchain.com/oss/python/integrations/middleware#official-integrations) for available provider-specific caching middleware.
 
 ## Delegation
 
@@ -446,15 +446,15 @@ Subagent execution provides:
 * **Fresh context**: Each invocation creates a new agent instance with its own context.
 * **Autonomous execution**: The subagent runs independently until completion.
 * **Single handoff**: It returns one final report to the main agent.
-* **Configurable strategy**: Use the [default `general-purpose` subagent](/oss/python/deepagents/subagents#default-subagent) (enabled by default) or define [custom subagents](/oss/python/deepagents/subagents#custom-subagents).
+* **Configurable strategy**: Use the [default `general-purpose` subagent](https://docs.langchain.com/oss/python/deepagents/subagents#default-subagent) (enabled by default) or define [custom subagents](https://docs.langchain.com/oss/python/deepagents/subagents#custom-subagents).
 * **Stateless messaging**: Subagents are stateless and cannot send multiple messages back.
 * **Context and token efficiency**: Heavy subtask work stays isolated and is compressed into a compact result.
 
 <Accordion title="Running without subagents (no `task` tool)" icon="ban">
-  To run an agent without the `task` tool, see [Running without subagents](/oss/python/deepagents/subagents#running-without-subagents). Do not try removing [`SubAgentMiddleware`](https://reference.langchain.com/python/deepagents/middleware/subagents/SubAgentMiddleware) via `excluded_middleware`—that is intentionally rejected. Instead, disable the auto-added subagent via the [harness profile](/oss/python/deepagents/profiles#harness-profiles) and pass no synchronous subagents via `subagents=`. Async subagents are unaffected. See the [default middleware stack](/oss/python/deepagents/customization#default-stack-main-agent) for the full ordering.
+  To run an agent without the `task` tool, see [Running without subagents](https://docs.langchain.com/oss/python/deepagents/subagents#running-without-subagents). Do not try removing [`SubAgentMiddleware`](https://reference.langchain.com/python/deepagents/middleware/subagents/SubAgentMiddleware) via `excluded_middleware`—that is intentionally rejected. Instead, disable the auto-added subagent via the [harness profile](https://docs.langchain.com/oss/python/deepagents/profiles#harness-profiles) and pass no synchronous subagents via `subagents=`. Async subagents are unaffected. See the [default middleware stack](https://docs.langchain.com/oss/python/deepagents/customization#default-stack-main-agent) for the full ordering.
 </Accordion>
 
-For more information, see [Subagents](/oss/python/deepagents/subagents).
+For more information, see [Subagents](https://docs.langchain.com/oss/python/deepagents/subagents).
 
 ## Steering
 
@@ -468,7 +468,7 @@ Deep Agents integrate with LangGraph interrupts so you can pause for approval on
 
 This gives you a runtime safety and control layer for destructive operations, expensive API calls, and interactive debugging.
 
-For more information, see [Human-in-the-loop](/oss/python/deepagents/human-in-the-loop).
+For more information, see [Human-in-the-loop](https://docs.langchain.com/oss/python/deepagents/human-in-the-loop).
 
 ## Get started
 
@@ -498,7 +498,7 @@ For more information, see [Human-in-the-loop](/oss/python/deepagents/human-in-th
 
 <div className="source-links">
   <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](https://docs.langchain.com/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
   </Callout>
 
   <Callout icon="edit">
@@ -554,11 +554,11 @@ LangChain maintains several open source packages to help you build agents. Each 
 
 Agent frameworks provide abstractions that make it easier to get started when building with LLMs.
 
-[LangChain](/oss/python/langchain/overview) is an agent framework that provides abstractions like structured content blocks, the agent loop, and middleware.
+[LangChain](https://docs.langchain.com/oss/python/langchain/overview) is an agent framework that provides abstractions like structured content blocks, the agent loop, and middleware.
 
 LangChain's abstractions are designed to be easy to get started with while still providing the flexibility needed for advanced use cases.
 
-While LangChain is built on top of [LangGraph](/oss/python/langgraph/overview), you don't need to know LangGraph to use LangChain.
+While LangChain is built on top of [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview), you don't need to know LangGraph to use LangChain.
 
 Other examples of agent frameworks include [Vercel's AI SDK](https://ai-sdk.dev/docs/introduction), [CrewAI](https://www.crewai.com/), [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/), [Google ADK](https://google.github.io/adk-docs/), [LlamaIndex](https://www.llamaindex.ai/), and many more.
 
@@ -582,7 +582,7 @@ Supported tools may include:
 * **Persistence**: Thread-level and cross-thread persistence for state management.
 * **Low-level control**: Direct control over agent orchestration without high-level abstractions.
 
-[LangGraph](/oss/python/langgraph/overview) is a low-level orchestration framework and runtime for building, managing, and deploying long-running, stateful agents.
+[LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) is a low-level orchestration framework and runtime for building, managing, and deploying long-running, stateful agents.
 
 Agent frameworks are generally higher level and run on agent runtimes.
 For example, LangChain 1.0 is built on top of LangGraph.
@@ -608,7 +608,7 @@ Supported tools may include:
 * **File system**: Read and write access to files on different pluggable storage backends.
 * **Token management**: Conversation history summarization and large tool result eviction.
 
-The [Deep Agents SDK](/oss/python/deepagents/overview) builds on top of LangGraph and adds planning capabilities, file systems for context management, the ability to spawn subagents, and more.
+The [Deep Agents SDK](https://docs.langchain.com/oss/python/deepagents/overview) builds on top of LangGraph and adds planning capabilities, file systems for context management, the ability to spawn subagents, and more.
 Deep Agents is designed for complex, multi-step tasks that require planning and decomposition.
 
 Example tasks include working with search results, scripts, and other artifacts in state.
@@ -617,7 +617,7 @@ Other examples of agent harnesses include [Claude Agent SDK](https://platform.cl
 
 ### When to use the Deep Agents SDK
 
-Use the [Deep Agents SDK](/oss/python/deepagents/overview) when:
+Use the [Deep Agents SDK](https://docs.langchain.com/oss/python/deepagents/overview) when:
 
 * You are building agents that run over long time periods.
 * You are building agents that need to handle complex, multi-step tasks.
@@ -630,24 +630,24 @@ While you can accomplish similar tasks with LangChain, LangGraph, and Deep Agent
 
 | Feature           | LangChain                                                               | LangGraph                                                                   | Deep Agents                                                                  |
 | ----------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Short-term memory | [Short-term memory](/oss/python/langchain/short-term-memory)            | [Short-term memory](/oss/python/langgraph/add-memory#add-short-term-memory) | [`StateBackend`](/oss/python/deepagents/backends#statebackend)               |
-| Long-term memory  | [Long-term memory](/oss/python/langchain/long-term-memory)              | [Long-term memory](/oss/python/langgraph/add-memory#add-long-term-memory)   | [Long-term memory](/oss/python/deepagents/memory)                            |
-| Skills            | [Multi-agent skills](/oss/python/langchain/multi-agent/skills)          | -                                                                           | [Skills](/oss/python/deepagents/skills)                                      |
-| Subagents         | [Multi-agent subagents](/oss/python/langchain/multi-agent/subagents)    | [Subgraphs](/oss/python/langgraph/use-subgraphs)                            | [Subagents](/oss/python/deepagents/subagents)                                |
-| Human-in-the-loop | [Human-in-the-loop middleware](/oss/python/langchain/human-in-the-loop) | [Interrupts](/oss/python/langgraph/interrupts)                              | [`interrupt_on` parameter](/oss/python/deepagents/harness#human-in-the-loop) |
-| Streaming         | [Agent Streaming](/oss/python/langchain/event-streaming)                | [Streaming](/oss/python/langgraph/streaming)                                | [Streaming](/oss/python/deepagents/event-streaming)                          |
+| Short-term memory | [Short-term memory](https://docs.langchain.com/oss/python/langchain/short-term-memory)            | [Short-term memory](https://docs.langchain.com/oss/python/langgraph/add-memory#add-short-term-memory) | [`StateBackend`](https://docs.langchain.com/oss/python/deepagents/backends#statebackend)               |
+| Long-term memory  | [Long-term memory](https://docs.langchain.com/oss/python/langchain/long-term-memory)              | [Long-term memory](https://docs.langchain.com/oss/python/langgraph/add-memory#add-long-term-memory)   | [Long-term memory](https://docs.langchain.com/oss/python/deepagents/memory)                            |
+| Skills            | [Multi-agent skills](https://docs.langchain.com/oss/python/langchain/multi-agent/skills)          | -                                                                           | [Skills](https://docs.langchain.com/oss/python/deepagents/skills)                                      |
+| Subagents         | [Multi-agent subagents](https://docs.langchain.com/oss/python/langchain/multi-agent/subagents)    | [Subgraphs](https://docs.langchain.com/oss/python/langgraph/use-subgraphs)                            | [Subagents](https://docs.langchain.com/oss/python/deepagents/subagents)                                |
+| Human-in-the-loop | [Human-in-the-loop middleware](https://docs.langchain.com/oss/python/langchain/human-in-the-loop) | [Interrupts](https://docs.langchain.com/oss/python/langgraph/interrupts)                              | [`interrupt_on` parameter](https://docs.langchain.com/oss/python/deepagents/harness#human-in-the-loop) |
+| Streaming         | [Agent Streaming](https://docs.langchain.com/oss/python/langchain/event-streaming)                | [Streaming](https://docs.langchain.com/oss/python/langgraph/streaming)                                | [Streaming](https://docs.langchain.com/oss/python/deepagents/event-streaming)                          |
 
 ## Learn more
 
-* [LangChain overview](/oss/python/langchain/overview)
-* [LangGraph overview](/oss/python/langgraph/overview)
-* [Deep Agents overview](/oss/python/deepagents/overview)
+* [LangChain overview](https://docs.langchain.com/oss/python/langchain/overview)
+* [LangGraph overview](https://docs.langchain.com/oss/python/langgraph/overview)
+* [Deep Agents overview](https://docs.langchain.com/oss/python/deepagents/overview)
 
 ***
 
 <div className="source-links">
   <Callout icon="terminal-2">
-    [Connect these docs](/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
+    [Connect these docs](https://docs.langchain.com/use-these-docs) to Claude, VSCode, and more via MCP for real-time answers.
   </Callout>
 
   <Callout icon="edit">

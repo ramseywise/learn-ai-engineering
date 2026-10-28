@@ -3,7 +3,7 @@
 How custom graders compare to DeepEval and RAGAS on the support corpus A calibration sample.
 Evidence base for grader selection decisions in the registry.
 
-> **Scope:** Calibration run results and score evidence. For framework selection rationale and methodology principles, see [grader_methodology.md](grader_methodology.md).
+> **Scope:** Calibration run results and score evidence. For framework selection rationale and methodology principles, see [grader-methodology.md](grader-methodology.md).
 
 New calibration runs (GT ablation) → `.claude/docs/research/` until final → then Notion.
 
@@ -39,7 +39,7 @@ v3 improved Δ by +0.294 on answer_relevancy vs v2.
 |---|---|
 | Ship custom v3 as production `answer_relevancy` | Only grader with meaningful positive Δ on calibration sample |
 | Don't ship DeepEval graders | Inverted on multiple dimensions — optimise for something different than user sentiment |
-| Use custom escalation as high-confidence signal | Reliable discriminator; DeepEval inverted here |
+| Do **not** gate on custom escalation yet | Δ = 0.000 (d = 0.00): no separation between liked and disliked. Rework the criterion before use. DeepEval is inverted here too |
 | Hold grounding calibration | Grounding cross-check ran against URL strings not passage text — `context_missing` fires, returns 0.5 flat. Rerun after `article_loader.py` is wired. Pass `context=[passage.text ...]` not URLs. |
 
 ---
@@ -57,6 +57,6 @@ queries vs. nav/UI queries to see if Δ holds within domain before drawing cross
 
 ## Related
 
-- Calibration methodology and P/R/F1 framework → [grader_methodology.md](grader_methodology.md)
+- Calibration methodology and P/R/F1 framework → [grader-methodology.md](grader-methodology.md)
 - Active calibration runs → `.claude/docs/research/`
 - Final results (SupportAgent staging showdown) → Notion

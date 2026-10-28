@@ -60,7 +60,7 @@ A hook that announces every passing typecheck burns tokens and trains the model 
 
 ### Prompts vs. hooks
 
-The rule from [02-context/notes/02](../../02-context/notes/02-context-anatomy.md), restated at harness level:
+The rule from [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md), restated at harness level:
 
 > A model may ignore, misunderstand, or inconsistently follow a textual instruction. **A code-level control cannot be talked out of enforcing itself.**
 

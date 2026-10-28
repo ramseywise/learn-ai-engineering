@@ -1,6 +1,6 @@
 # Eval Architecture — Multi-Agent SupportAgent
 
-> **Canonical reference:** `evals/README.md` — layout, flows, LangFuse integration, run commands.
+> **Canonical reference:** `evals/README.md` in the source project (not in this repo) — layout, flows, LangFuse integration, run commands.
 > **This doc covers:** architectural decisions not in the README — routing vs domain eval distinction, Strand A/E/F, ADK native gaps, HITL annotation vs runtime interrupts.
 
 **Date:** 2026-05-09

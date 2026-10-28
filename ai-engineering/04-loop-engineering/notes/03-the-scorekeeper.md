@@ -67,7 +67,7 @@ The cleanest example of "hard to fake" is Karpathy's `autoresearch` (full case i
 
 > An agent that can edit its own evaluator does not have a verifier; it has a negotiation.
 
-Enforce the boundary **structurally** (file permissions, a hook that blocks writes, a separate repo), not just with an instruction in the prompt. Instructions are suggestions; permissions are rules. See [harness note 04](../../03-harness/notes/04-execution-boundaries.md#encode-constraints-dont-document-them).
+Enforce the boundary **structurally** (file permissions, a hook that blocks writes, a separate repo), not just with an instruction in the prompt. Instructions are suggestions; permissions are rules. See [harness note 04](../../03-harness-engineering/notes/04-execution-boundaries.md#encode-constraints-dont-document-them).
 
 ---
 
@@ -121,7 +121,9 @@ Quick checklist:
 
 ## Deeper in the harness layer
 
-[Harness note 05: Verification loops](../../03-harness/notes/05-verification-loops.md) covers the machinery underneath this note: the three-layer termination check, asymmetric QA, grading criteria over vibes, loop detection, the retry taxonomy and eval-first development. This note covers *what* to measure; that one covers *how the harness enforces it*.
+[Harness note 05: Verification loops](../../03-harness-engineering/notes/05-verification-loops.md) covers the machinery underneath this note: the three-layer termination check, asymmetric QA, grading criteria over vibes, loop detection, the retry taxonomy and eval-first development. This note covers *what* to measure; that one covers *how the harness enforces it*.
+
+For the scorekeeper as an eval artifact (building its dataset, calibrating a judge-based scorekeeper, telling a real gain from noise, and how optimizers game it), see [06-eval](../../06-eval/README.md): [04 — Graders](../../06-eval/notes/04-graders.md), [05 — LLM-as-judge](../../06-eval/notes/05-llm-as-judge.md), [09 — Reading results](../../06-eval/notes/09-reading-results.md) and [12 — When evals go wrong](../../06-eval/notes/12-failure-modes.md#goodhart-the-eval-becomes-the-target).
 
 ---
 

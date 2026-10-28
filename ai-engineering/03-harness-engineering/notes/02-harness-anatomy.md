@@ -33,7 +33,7 @@ LangChain's anatomy, grouped by the job each does:
 
 **5. Sandboxes** — safe execution environments with pre-configured tooling (runtimes, CLIs, browsers). See [note 04](04-execution-boundaries.md).
 
-**6. Memory systems** — file-based standards (`AGENTS.md`, `MEMORY.md`) for continual learning across sessions. See [02-context/notes/05](../../02-context/notes/06-memory.md).
+**6. Memory systems** — file-based standards (`AGENTS.md`, `MEMORY.md`) for continual learning across sessions. See [02-context-engineering/notes/05](../../02-context-engineering/notes/06-memory.md).
 
 ### Orchestration & control
 

@@ -9,6 +9,7 @@ sources:
   - https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://vercel.com/i/what-are-agentic-workflows
+  - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -43,13 +44,18 @@ MindStudio's list overlaps: no exit condition, repeated failures without adaptin
 
 ---
 
-## The human failure modes (Osmani)
+## The four silent costs (Osmani)
 
-These matter more, because they don't show up in traces:
+These matter more, because they don't show up in traces. They build up quietly and grow sharper the longer a loop runs:
 
-- **Verification burden.** Loops make mistakes *unattended*. Verifier sub-agents reduce the need for human confirmation but don't remove it.
-- **Comprehension debt.** Unreviewed code piles up faster than understanding. Faster loops widen the gap unless review is active.
-- **Cognitive surrender.** *"The comfortable posture is the dangerous one."* The same loop gives opposite outcomes depending on whether the operator is still thinking.
+| Cost | What happens | Countermeasure |
+|---|---|---|
+| **Verification debt** | Loops make mistakes *unattended*; "looks fine" stands in for "confirmed" | Stop conditions are machine-checkable, never "feels about right." Verifier sub-agents reduce human confirmation but don't remove it |
+| **Comprehension rot** | Code ships faster than you understand it; your model of the codebase drifts from reality | Fast loops require fast reading. Read and use what the loop produces |
+| **Cognitive surrender** | *"The comfortable posture is the dangerous one."* You take what it returns without an opinion | Same loop, opposite outcomes: one person uses it to go faster on work they understand, the other to avoid understanding it |
+| **Token blowout** | Context grows with every pass, roughly quadratically without management | Compaction or reset from the first loop, not bolted on later ([note 05](05-long-running-loops.md#compaction-vs-reset)) |
+
+Audit after an hour of any run: how much was machine-confirmed? Can you explain the last change? How many "I'll look later"s did you never look at? Is context size trending up?
 
 > *"Build the loop. But build it like someone who intends to stay the engineer, not just the person who presses go."* — Osmani
 
@@ -80,7 +86,7 @@ Every loop needs several **independent** ways to stop, so one failing doesn't le
 
 Decide the human handoff points **before** the first run: blockers, risky or irreversible actions, and anything that needs taste. A loop that asks at the right moment is safer than one that keeps going.
 
-Harness machinery for stall detection and retries: [harness note 05](../../03-harness/notes/05-verification-loops.md#loop-detection).
+Harness machinery for stall detection and retries: [harness note 05](../../03-harness-engineering/notes/05-verification-loops.md#loop-detection).
 
 ---
 

@@ -102,7 +102,7 @@ one — it's the only figure that moves with quality as well as spend.
 
 ## Sources
 
-- notes: [notes/](../../../ai-engineering/02-context/notes/) (5 layers + compaction + caching notes), [context-engineering.md](../../../ai-engineering/02-context/context-engineering.md) (skills tips), [agent-harness.md](../../../ai-engineering/03-harness/agent-harness.md) (offloading, progressive disclosure)
+- notes: [notes/](../../../ai-engineering/02-context-engineering/notes/) (5 layers + compaction + caching notes), [context-engineering.md](../../../ai-engineering/02-context-engineering/context-engineering.md) (skills tips), [agent-harness.md](../../../ai-engineering/03-harness-engineering/agent-harness.md) (offloading, progressive disclosure)
 - librarian wiki: Prefix Caching · Semantic Cache Pipeline · ADK Context Engineering · Summarization Node · HistoryCondenser · Multi-Agent Orchestration Patterns (caching-driven topology choice)
 - readings: `ai_engineering/multiagent context/`
 - external: developers.openai.com compaction guide · openai skills-shell-tips post

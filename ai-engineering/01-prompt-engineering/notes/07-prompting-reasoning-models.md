@@ -93,7 +93,7 @@ Deep-research products (OpenAI, Gemini and Claude Research) are reasoning models
 - **Upload the documents you already have**, especially for technical or niche topics the web covers poorly.
 - **Verify the sources yourself.** Known weaknesses are citation errors, a bias toward certain domains, date-sensitive queries, and paywalled content.
 
-Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [03-harness/deep-agents.md](../../03-harness/deep-agents.md).
+Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [03-harness-engineering/deep-agents.md](../../03-harness-engineering/deep-agents.md).
 
 ---
 
@@ -102,7 +102,7 @@ Use deep research only for multi-source, time-sensitive questions that need care
 The book's closing lessons hold for reasoning models too — maybe more so:
 
 - **It's still document completion** that mimics training data. Familiar formats still win.
-- **It isn't psychic.** Smarter models don't fix missing context. If *you* would need a piece of information to solve the problem, so does the model ([02-context](../../02-context/README.md)).
+- **It isn't psychic.** Smarter models don't fix missing context. If *you* would need a piece of information to solve the problem, so does the model ([02-context](../../02-context-engineering/README.md)).
 - **It's easily distracted.** Irrelevant context costs more when the model reasons over all of it.
 - **It needs to be led** — on goals and constraints now, rather than on steps.
 

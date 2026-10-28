@@ -37,7 +37,7 @@ The sequencing rule:
 
 Parallelism added to an undefined task structure produces collision, not speed. Define what each agent owns, what it receives, what it returns, and what it may touch — then parallelize.
 
-Isolate is also the **most expensive of the four context levers** ([02-context](../../02-context/context-engineering.md#the-four-levers)): real tokens multiply and cross-agent context is lost. Reach for it when a genuine context or trust boundary exists, not for tidiness.
+Isolate is also the **most expensive of the four context levers** ([02-context](../../02-context-engineering/context-engineering.md#the-four-levers)): real tokens multiply and cross-agent context is lost. Reach for it when a genuine context or trust boundary exists, not for tidiness.
 
 ---
 

@@ -29,6 +29,8 @@ good, prefer citing the primary source it draws on. Value is coverage and cadenc
 | [AI Builder Club](https://www.aibuilderclub.com/blog) | weekly | all six pillars; ~86 posts as of 2026-07 | 2026-07-30 |
 | [MarkTechPost](https://www.marktechpost.com/) | daily | loop, graph, papers | 2026-07-31 |
 | [dair.ai](https://github.com/dair-ai) | weekly | prompt, papers | guide absorbed 2026-10-28 — see below |
+| [KodeKloud notes](https://notes.kodekloud.com/docs/Loop-Engineering/What-Is-a-Loop/What-is-Loop-Engineering/page.md) | course, static | loop | 2026-10-28 — summarized into 04-loop-engineering/notes, not copied |
+| [learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | course, irregular | harness, loop | 2026-10-28 — L01–L12 into harness, L13 + project 07 into 04-loop-engineering |
 
 ---
 
@@ -41,11 +43,11 @@ five-layer stack: prompt → context → harness → loop → graph, **omitting 
 our six-pillar model treats eval as a peer foundation and is the better frame).
 
 Landed in the 2026-07-30 sweep:
-- [04-loop/loop-autonomy-ladder.md](04-loop/loop-autonomy-ladder.md)
-- [04-loop/evolve-loop.md](04-loop/evolve-loop.md)
-- [06-eval/eval-maturity-ladder.md](06-eval/eval-maturity-ladder.md)
-- [05-graph/graph-engineering.md](05-graph/graph-engineering.md) §11 — escalation framing + decision tree
-- [03-harness/notes/04-execution-boundaries.md](03-harness/notes/04-execution-boundaries.md) — role-label/canary section
+- [04-loop-engineering/notes/07-autonomy-ladder.md](04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
+- [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
+- [06-eval/notes/11-production-and-the-maturity-ladder.md](06-eval/notes/11-production-and-the-maturity-ladder.md)
+- [05-graph-engineering/graph-engineering.md](05-graph-engineering/graph-engineering.md) §11 — escalation framing + decision tree
+- [03-harness-engineering/notes/04-execution-boundaries.md](03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
 
 Assessed and **skipped** as already covered at equal or greater depth: harness 6 components,
 the 5 layers of AI engineering, episodic/semantic/procedural memory, context engineering
@@ -55,7 +57,7 @@ guide, prompt engineering 2026, and the Claude Code fundamentals track (that is
 ### MarkTechPost
 
 Added 2026-07-31. High volume, low signal-per-post — most of its loop-engineering guide
-duplicated material already in [04-loop/loop-engineering.md](04-loop/loop-engineering.md)
+duplicated material already in [04-loop-engineering/loop-engineering.md](04-loop-engineering/loop-engineering.md)
 (three components, five building blocks, the loop skeleton). Its value was one thing: the
 `autoresearch` case study, which pointed at two primary sources worth citing directly.
 
@@ -65,7 +67,7 @@ claimed ~90,000 GitHub stars (~48,000 two weeks post-release). The load-bearing 
 (630 lines, 700 experiments, 20 improvements, 2.02→1.80h, 5× val_bpb) all held up.
 
 Landed in the 2026-07-31 sweep:
-- [04-loop/loop-engineering.md](04-loop/loop-engineering.md) §8 — the `autoresearch`
+- [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-worked-example-autoresearch) — the `autoresearch`
   worked example and bilevel autoresearch, cited to
   [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and
   [arXiv:2603.23420](https://arxiv.org/abs/2603.23420) rather than to MarkTechPost.

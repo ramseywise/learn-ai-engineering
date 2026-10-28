@@ -125,7 +125,7 @@ Osmani's rules for that file:
 - Every rule traces to an actual failure or an external constraint.
 - Bias toward the load-bearing basics: package manager, test framework, formatting conventions.
 
-Lines that can't name their originating failure are speculative, and speculative rules are what turn a checklist into an ignored wall of text. See [02-context/notes/02](../../02-context/notes/02-context-anatomy.md) on system-prompt altitude — the same drift, one layer down.
+Lines that can't name their originating failure are speculative, and speculative rules are what turn a checklist into an ignored wall of text. See [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md) on system-prompt altitude — the same drift, one layer down.
 
 ---
 

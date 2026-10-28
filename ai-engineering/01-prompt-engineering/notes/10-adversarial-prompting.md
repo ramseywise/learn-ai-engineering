@@ -59,7 +59,7 @@ Practical rules:
 - **Treat model output as untrusted** before rendering it (XSS in markdown or HTML, links that exfiltrate data through URLs) or executing it.
 - **Red-team before shipping**: build a suite of injection attempts and run it as a regression test ([09](09-evaluating-prompts.md)).
 
-Runnable defenses: [notebooks/pe-chatgpt-adversarial.ipynb](../notebooks/pe-chatgpt-adversarial.ipynb). Harness-level guardrails and execution boundaries are in [03-harness/agents-guardrails.md](../../03-harness/agents-guardrails.md) and [03-harness/notes/04-execution-boundaries.md](../../03-harness/notes/04-execution-boundaries.md).
+Runnable defenses: [notebooks/pe-chatgpt-adversarial.ipynb](../notebooks/pe-chatgpt-adversarial.ipynb). Harness-level guardrails and execution boundaries are in [03-harness-engineering/agents-guardrails.md](../../03-harness-engineering/agents-guardrails.md) and [03-harness-engineering/notes/04-execution-boundaries.md](../../03-harness-engineering/notes/04-execution-boundaries.md).
 
 ---
 
