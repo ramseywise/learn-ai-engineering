@@ -153,6 +153,9 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 
 ## Pairwise ranking: Elo and Bradley–Terry
 
+![Elo Rating and Pairwise Comparison Ranking](../images/ai-agent-book/fig7-6.svg)
+*Figure 7-6, Elo Rating and Pairwise Comparison Ranking. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+
 When there's no absolute standard, ask "which is better, A or B?" and turn many such votes into a ranking.
 
 - **Bradley–Terry** gives each system a latent strength. P(A beats B) depends only on the difference in strengths.

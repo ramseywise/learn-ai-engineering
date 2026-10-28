@@ -107,6 +107,9 @@ Li's *AI Agents in Depth* ([ch. 10](https://github.com/bojieli/ai-agent-book/blo
 
 ### Shared vs. isolated context
 
+![Shared Context vs. Non-Shared Context](../images/ai-agent-book/fig10-1.svg)
+*Figure 10-1, Shared Context vs. Non-Shared Context. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+
 The analogy is threads vs. processes. Agents with shared context see one trajectory, like threads sharing memory; nothing is lost in transfer, but everything accumulates. Isolated agents each have their own window, like processes, and communicate only through what they explicitly pass.
 
 | Criterion | Share context | Isolate context |
@@ -170,6 +173,9 @@ The Actor model (Hewitt, 1973) is the precedent: isolated actors that share noth
 
 ### A virtual file system with four areas
 
+![Mounting structure of the four area types in the Agent Virtual File System](../images/ai-agent-book/fig10-2.svg)
+*Figure 10-2, Mounting structure of the four area types in the Agent Virtual File System. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+
 | Area | Example | Access | Concurrency |
 |---|---|---|---|
 | **Private scratchpad** | `/scratch/<agent>` | One agent | None needed |
@@ -196,6 +202,9 @@ Peer collaboration exists mostly to stop **premature termination**, which comes 
 
 ### Manager: agents as tools
 
+![Manager Parallel Coordination](../images/ai-agent-book/fig10-6.svg)
+*Figure 10-6, Manager Parallel Coordination. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+
 To the manager, each sub-agent is a tool call that returns a structured summary. The weak point is the **planner**: a bad plan sinks every worker. Plan-and-Act ([arXiv:2503.09572](https://arxiv.org/abs/2503.09572); 54% on WebArena-Lite) puts the strongest model on planning. That doesn't contradict the advice to give a reviewer roughly the same capability as the agent it reviews; planner and reviewer are different roles.
 
 - **Sequential:** the book translation lab runs Glossary → Translation → Proofreading under a manager that holds only the file index.
@@ -203,6 +212,9 @@ To the manager, each sub-agent is a tool call that returns a structured summary.
 - **Cross-modal:** a computer agent and a phone agent cooperate. The computer agent calls `initiate_phone_call_agent(purpose, required_info)`; the phone agent asks for one missing field at a time and reports each with `{"type": "info_collected", ...}`; messages crossing over are tagged `[FROM_COMPUTER_AGENT]` so the voice model doesn't read them aloud.
 
 ### Decentralised: orchestration vs. choreography
+
+![MetaGPT Multi-Agent Collaboration Network](../images/ai-agent-book/fig10-9.svg)
+*Figure 10-9, MetaGPT Multi-Agent Collaboration Network. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
 
 Orchestration has a conductor; choreography has each agent know its next step. Choreography removes the bottleneck and the single point of failure, and makes the whole flow harder to see.
 

@@ -87,6 +87,9 @@ Compaction composes these; each is usable independently.
 
 ### Six strategies compared
 
+![Comparison of Context Compression Strategies](../images/ai-agent-book/fig2-16.svg)
+*Figure 2-16, Comparison of Context Compression Strategies. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) (Apache-2.0).*
+
 Li's Experiment 2-9 tracks OpenAI co-founders' current roles with Kimi K3 capped at a 128K window. Seven searches returned about 367k characters.
 
 | Strategy | Result |
