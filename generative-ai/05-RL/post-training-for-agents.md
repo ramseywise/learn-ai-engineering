@@ -10,6 +10,9 @@ Two threads run through this note. **SFT memorizes, RL generalizes.** And **data
 
 ## The three stages
 
+![SFT→RL Two-Stage Training Pipeline; Mid-training Precedes These Two Behavioral-Alignment Stages](images/ai-agent-book/fig8-11.svg)
+*Figure 8-11, SFT→RL Two-Stage Training Pipeline; Mid-training Precedes These Two Behavioral-Alignment Stages. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
+
 | Stage | Data | Objective | What it learns | Cost |
 |---|---|---|---|---|
 | **Pretraining** | Raw internet text | Next-token prediction | Language, world knowledge, basic reasoning | Millions to tens of millions of USD |
@@ -166,6 +169,9 @@ It searches for tasks the strong solver passes, the weak solver fails, and the v
 
 ## Reward design for multi-turn agents
 
+![Credit Assignment in Multi-Turn Interactions](images/ai-agent-book/fig8-15.svg)
+*Figure 8-15, Credit Assignment in Multi-Turn Interactions. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
+
 Multi-turn adds **credit assignment**. Was it the question in turn 2 or the explanation in turn 7 that solved the ticket? It also adds **partial observability**.
 
 **Density.**
@@ -210,6 +216,9 @@ Use process rewards when the correctness of intermediate steps is easy to define
 ---
 
 ## RLVP: reward the outcome, penalize the path
+
+![16 Rollouts, Verification, and Relative Advantage on the Same SWE-bench Task](images/ai-agent-book/fig8-13.svg)
+*Figure 8-13, 16 Rollouts, Verification, and Relative Advantage on the Same SWE-bench Task. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
 
 Outcome rewards can't teach **outcome-neutral constraints**. Worse, they reward breaking them:
 

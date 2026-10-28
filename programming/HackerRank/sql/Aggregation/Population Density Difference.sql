@@ -1,3 +1,0 @@
-# Author: Thomas George Thomas
-SELECT MAX(POPULATION) - MIN(POPULATION)
-FROM CITY

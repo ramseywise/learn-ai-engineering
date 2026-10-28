@@ -156,6 +156,9 @@ The return path is as much a part of the tool as the call. Rules by tool type:
 
 ### Coding-agent search and edit tools
 
+![Comparison of Five File Editing Schemes](../images/ai-agent-book/fig5-4.svg)
+*Figure 5-4, Comparison of Five File Editing Schemes. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter5.md) (Apache-2.0).*
+
 Search, from coarse to fine:
 
 | Method | Good for | Blind spot |
@@ -188,6 +191,9 @@ Loading every tool and MCP server at startup **degrades performance before the a
 Skills invert this. A short name and description (*what* + *when*, ~10 tokens) stay resident; the full procedure loads only when the task activates it. A capability library of dozens of skills costs a few hundred tokens at rest.
 
 ### Tool discovery at scale
+
+![Hierarchical Tool Matching (Two-Level Semantic Search: Server-Level → Tool-Level)](../images/ai-agent-book/fig4-2.svg)
+*Figure 4-2, Hierarchical Tool Matching (Two-Level Semantic Search: Server-Level → Tool-Level). From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter4.md) (Apache-2.0).*
 
 The cost of eager loading is concrete. Li measures five typical MCP servers at about 55K tokens of definitions, roughly 30% of a 200K window, before the first user message. The fixes, from heaviest to lightest:
 

@@ -20,6 +20,9 @@ cleaned: 2026-10-28
 
 ## Outcome and trajectory
 
+![The Four Stages of an Agent Evaluation System](../images/ai-agent-book/fig7-1.svg)
+*Figure 7-1, The Four Stages of an Agent Evaluation System. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+
 ```
 Outcome:     did the agent reach the goal?
 Trajectory:  did it get there in an acceptable way?

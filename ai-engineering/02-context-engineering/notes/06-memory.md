@@ -25,6 +25,9 @@ This reframes the design question from "what should the agent remember?" to **"w
 
 ## Memory types
 
+![Comparison of Four Memory Strategies](../images/ai-agent-book/fig3-2.svg)
+*Figure 3-2, Comparison of Four Memory Strategies. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (Apache-2.0).*
+
 | Type | Scope | Lifetime | Example |
 |---|---|---|---|
 | **In-context / working** | Current window | The session | The conversation so far |
@@ -105,6 +108,9 @@ Design consequence: **the one-line hook is the highest-leverage text in the syst
 ---
 
 ## Memory hygiene
+
+![Mem0 Memory Management Architecture](../images/ai-agent-book/fig3-3.svg)
+*Figure 3-3, Mem0 Memory Management Architecture. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (Apache-2.0).*
 
 Memory must be **editable and auditable**. Wrong, outdated, and contradictory entries have to be removable rather than accumulating indefinitely. Append-only memory is a slow-motion failure: contradictions accumulate, and the model gets two conflicting facts with no basis to choose — **context poisoning** (see [11-failure-modes.md](11-failure-modes.md)).
 

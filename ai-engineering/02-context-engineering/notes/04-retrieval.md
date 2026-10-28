@@ -28,6 +28,9 @@ The difference is who decides relevance. Pre-computed retrieval makes an embeddi
 
 ## Just-in-time context
 
+![Comparison of Agentic RAG and Non-Agentic RAG](../images/ai-agent-book/fig3-12.svg)
+*Figure 3-12, Comparison of Agentic RAG and Non-Agentic RAG. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (Apache-2.0).*
+
 Instead of loading data, maintain **lightweight identifiers** and load at runtime:
 
 - File paths
@@ -226,11 +229,17 @@ Chunk size is a recall/precision dial: small chunks match precisely but arrive w
 
 ### Contextual retrieval
 
+![Contextual Retrieval](../images/ai-agent-book/fig3-14.svg)
+*Figure 3-14, Contextual Retrieval. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (Apache-2.0).*
+
 Every chunking strategy cuts a fragment off from its context. "The company's Q2 revenue grew 3%": which company, which year? Anthropic's **contextual retrieval** has an LLM write a short prefix for each chunk *at index time* ("From the KPI section of ACME Corp's 2025 Q2 financial report"), then indexes prefix + chunk. One step improves both retrieval paths: BM25 gains exact keywords to match (ACME, 2025 Q2), and the embedding gains the missing context.
 
 Anthropic reports that top-20 retrieval failures fall **49%** with contextual embeddings + contextual BM25, and **67%** once a reranker is added. With prompt caching, the indexing cost is about **$1 per million document tokens**, since every chunk of one document shares the document as a cached prefix. Don't confuse it with *contextual compression* ([05](05-compression-compaction.md)). That runs at query time and removes content. Contextual retrieval runs at index time and adds it. Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); sparse half offline in [practice/01](../practice/01-bm25-from-scratch/README.md).
 
 ### Hybrid retrieval
+
+![Hybrid Retrieval and Reranking Pipeline](../images/ai-agent-book/fig3-9.svg)
+*Figure 3-9, Hybrid Retrieval and Reranking Pipeline. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (Apache-2.0).*
 
 Lexical search (BM25) finds exact terms: names, error codes, identifiers. Dense search finds paraphrases. Run both, fuse the rankings (reciprocal rank fusion is the common default), then rerank the fused top-n with a cross-encoder. That pipeline is the reasonable default for production retrieval.
 
