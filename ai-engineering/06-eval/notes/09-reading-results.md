@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://arxiv.org/abs/2411.00640
   - https://www.anthropic.com/research/statistical-approach-to-model-evals
+  - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Dmitriev et al., A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments (KDD 2017)"
 confidence: high
 cleaned: 2026-10-28
@@ -107,6 +108,10 @@ Watch for **Simpson's paradox**: B can beat A in every slice and lose overall (o
 
 Slice 20 ways and one will show a "significant" change by chance at α = 0.05. Treat surprising slice results as hypotheses to confirm on fresh data, not conclusions. Pre-register the slices that gate releases.
 
+The same arithmetic applies to testing several fixes at once. At 95% confidence each, the chance that at least one of 6 parallel hypotheses is a false positive is 1 − 0.95⁶ ≈ **26%**. Either tighten the per-test threshold (Bonferroni: α / number of tests) or re-run every positive result as an independent confirmation and believe it only if it replicates.
+
+**When the difference is smaller than the noise, don't switch.** 100 tasks at 70% gives a standard error of about 4.6 points, so the 95% interval is ±9. "73% vs 70%" is inside the noise. Run the paired test first ([above](#compare-on-the-same-tasks-paired-differences)). Grow the sample only if that's still inconclusive.
+
 ---
 
 ## Read the transcripts
@@ -118,6 +123,29 @@ Numbers say how much. Transcripts say why. Before accepting any change in a scor
 3. If fails are mostly one failure label, that's your story. If they're scattered, it may be noise.
 
 Anthropic's guidance puts it plainly: you won't know whether your graders work unless you read transcripts and grades together.
+
+---
+
+## From a benchmark report to hypotheses
+
+A report's value is the hypotheses it suggests, not the headline number. Li's AndroidWorld walkthrough (*AI Agents in Depth*, ch. 6; the data is illustrative) shows the method:
+
+1. **Check the eval first.** Before blaming the agent on a 0% cluster, confirm the tasks, environment and grader work ([12](12-failure-modes.md#eval-bugs-look-like-agent-bugs)).
+2. **Cross per-task results with capability tags** (settings navigation, transcription, complex UI, …). Failures concentrated in one tag point to one cause.
+3. **Tier the hypotheses by cost:**
+
+| Tier | Example | Run when |
+|---|---|---|
+| **Surface** (prompt hints, tool descriptions) | "Add a hint for finding Wi-Fi settings" | First. They're cheap and independent, so test them in parallel (and correct for multiple comparisons, above) |
+| **Mid** (new tools, workflow changes) | "Add a transcription tool" | Surface fixes leave the tag below target |
+| **Deep** (swap model, add UI-tree input, post-train) | "Use a stronger vision model" | Only if the tag is still below, say, 40% after the cheaper tiers |
+
+4. **Weigh each fix's gain against its cost.** "+75 points on settings tasks for +8% input tokens" is a different decision from a gain at 3× cost. Don't deploy a fix whose gain is inside the noise.
+5. **Re-run the full benchmark.** Fixing one cluster reveals the next failure pattern, so the loop starts again.
+
+A **model swap** is one deep hypothesis among others. Run it the same way, on your own eval set, with paired comparison, and compare on success, tool-call accuracy, latency and cost. It is not a shortcut.
+
+Lab: AndroidWorld report → improvement ([upstream `chapter6/android-world`](https://github.com/bojieli/ai-agent-book/tree/main/chapter6)).
 
 ---
 

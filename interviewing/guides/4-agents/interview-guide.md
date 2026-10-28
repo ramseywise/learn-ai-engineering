@@ -142,6 +142,78 @@ for selection.
 - *"Pass@k vs Pass^k?"* — Pass@k = capability ceiling (any of k succeeded); Pass^k =
   deployment reliability (all k succeeded). Production cares about Pass^k.
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"One upgrade: stronger model, richer context, or more tools?"* — find the weak link in
+  failure trajectories: perception → context, decision → model, action → tools. Context is
+  the usual answer.
+- *"ReAct cost grows quadratically with the trajectory — can you break it?"* — compress
+  early turns to conclusions and state, write intermediate results to files and retrieve on
+  demand, and push subtasks into sub-agents.
+- *"How do you detect and stop an agent loop?"* — causes include repeated identical errors,
+  hallucinated tools, compaction dropping state, stripped reasoning, unsolvable tasks. Cap
+  iterations, fingerprint repeated tool + argument calls, escalate to a human past a failure
+  threshold.
+- *"Flight-booking support: workflow or agent?"* — workflow backbone (verify → search → pay
+  → book) to guarantee ordering and contain injection to one node; agent for open-ended
+  parts (rebooking, alternatives); human confirmation for large payments and refunds.
+- *"The user is offline when the agent needs approval?"* — fail safe: never default to
+  executing. Do the reversible parts, document the rest for a human, notify asynchronously
+  with a timeout, clarify vague instructions.
+- *"MCP's biggest gap?"* — cross-session, event-driven triggers: it is request–response, so
+  nothing standard can wake an offline agent.
+- *"20 events are queued (tool results, user messages, alerts) — how do you present them?"*
+  — route urgent events (alerts, interrupts) separately as cancellations; truncate long tool
+  results to head, tail and a file path; end the context with a status summary of counts per
+  type and a requirement to answer each.
+- *"Thousands of tools?"* — hierarchical grouping (app, then tool), a resident catalogue
+  with details loaded on demand like Skills, and a few common tools always at hand.
+- *"Where else does execute → validate → feedback apply, and where can't it?"* — configs run
+  in a sandbox, documents rendered and screenshot-checked. Not for irreversible actions
+  (email, calls, payments), where validation would itself act; use proposer–reviewer
+  approval before the action instead.
+- *"A log format changed — adapt or report?"* — diagnose first against docs and commit
+  history, then adapt *and* report: log an alert and file an issue, ask a human when unsure.
+  Adaptation must never swallow the anomaly signal.
+- *"Accumulated rules bloat the system prompt — garbage collection?"* — move anything
+  enforceable into linters, CI or tool validation; track rule hit rates and conflicts; keep
+  provenance in Git. One successful patch isn't evolution until it's evidenced, improves
+  later tasks and passes regression.
+- *"Code-as-rules vs natural-language rules?"* — code is deterministic, reads ground truth
+  and can't be argued with: the last line before irreversible actions. It can't explain
+  itself or find workarounds. Use both.
+- *"An experience doc has three successes and one failure on a newer API?"* — stratify
+  evidence by version and conditions, don't count votes: narrow its scope if it fails only
+  on the new version; lower confidence or revoke if it also fails under the old conditions.
+- *"Satisfaction rose and violations rose too?"* — satisfaction is a quality metric, never a
+  safety signal. Guardrail metrics (violations, privacy leaks, unsupported claims,
+  promise–action mismatch) get hard thresholds an average can't offset.
+- *"The agent "promised" an action it never took — prompt, harness or training?"* — prompt
+  if the model knows and misphrases; a harness check if text can be compared with tool state
+  (and always for high stakes); training only for broad language–action misalignment. Pick
+  the smallest change that's easy to validate and roll back.
+- *"How does a manager's decomposition stay good?"* — the strongest model plans
+  (Plan-and-Act), a reviewer checks the plan before execution, and every subtask gets
+  acceptance criteria and dependencies.
+- *"One searcher found the answer — stop the rest?"* — worker sends `target_found`, manager
+  broadcasts `terminate`, workers check at safe points in the loop and clean up (close
+  sessions, release locks, finish writes) before exiting.
+- *"Why does every kind of premature termination need a verifier?"* — "done" is a claim, not
+  a proof. Verify against real observations and an explicit definition of done, verify
+  failure claims too, and cap rounds so you don't swing into a runaway loop.
+- *"If debate among equal models doesn't beat one model, why multi-agent?"* — external
+  feedback (execution, screenshots) adds new information; different objectives and roles
+  cover blind spots; isolated contexts get past the window limit.
+- *"30-step vs 300-step budget?"* — inject total and remaining budget every step. Small:
+  straight to core function plus a basic check. Large: plan, implement, test, review, with
+  milestones to stop shallow saturation.
+- *"Which org pathologies show up in agent societies?"* — unclear interfaces, misread goals,
+  false "done", telephone-game cascades, cyclic handoffs, chats that never converge.
+  Contracts and a common envelope, task state machines with acceptance checks, independent
+  cross-validation.
+
 ## Sources
 
 - notes: [agent-harness.md](../../../ai-engineering/03-harness-engineering/agent-harness.md) (harness anatomy + OpenClaw 10 principles), [reliable-agents.md](../../../ai-engineering/03-harness-engineering/reliable-agents.md) (PRINCE case study), [agents-design.md](../../../ai-engineering/03-harness-engineering/agents-design.md) (protocol-driven multi-agent, decomposition), [loop-engineering.md](../../../ai-engineering/04-loop-engineering/loop-engineering.md), [deep-agents.md](../../../ai-engineering/03-harness-engineering/deep-agents.md), [memory.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md), [agents-google-adk.md](../../../generative-ai/03-agentic-foundations/agents-google-adk.md)

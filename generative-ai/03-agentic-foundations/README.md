@@ -62,8 +62,17 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for
   interview prep: agent harness, tool use, loop design, memory, multi-agent orchestration.
 
+### Book
+
+- Bojie Li, *AI Agents in Depth* (2026, [upstream](https://github.com/bojieli/ai-agent-book), Apache-2.0).
+  Ch. 1 is synthesized in [agent-fundamentals.md](agent-fundamentals.md): Agent = LLM + Context + Tools,
+  the context ablation, ReAct, workflow vs. autonomous, and guardrails. Later chapters are folded
+  into the ai-engineering pillars; each note's `sources:` cites the chapter it draws on.
+
 ### Cleaned notes
 
+- [agent-fundamentals.md](agent-fundamentals.md) — start here: the agent formula, the five context
+  parts and their ablation, the ReAct trajectory, model-as-agent, model choice, and workflow vs. autonomous.
 - [agents-google-adk.md](agents-google-adk.md) — Google ADK: agent framework, tool use, deployment.
 - [agent-harness.md](../../ai-engineering/03-harness-engineering/agent-harness.md) — harness architecture: tool
   registration, the agent loop, structured output parsing, error handling.

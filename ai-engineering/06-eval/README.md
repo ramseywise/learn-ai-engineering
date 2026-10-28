@@ -95,7 +95,9 @@ The rules from the topic notes on one page. Each group links to the chapter that
 │   └── case-study/               ← a real multi-agent support system's eval design, including its mistakes
 ├── notebooks/
 │   └── evaluating-ai-agents/     ← DeepLearning.AI course notebooks (Phoenix), labs 1–5
-├── practice/01-exercises.md      ← eight labs, one system, vibes → monitored
+├── practice/
+│   ├── 01-exercises.md           ← eight labs, one system, vibes → monitored
+│   └── 02-elo-leaderboard/       ← Elo / Bradley–Terry from pairwise votes (AI Agents in Depth, lab 6-6)
 ├── templates/                    ← dataset schema, taxonomy, judge prompt, calibration sheet, gate contract, CI workflow
 ├── sources/                      ← papers filed for this pillar
 └── references.md                 ← papers and further reading, mapped to chapters
@@ -144,6 +146,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | 6 — Calibrate a judge | — | [05](notes/05-llm-as-judge.md) |
 | 7 — Gate it in CI | — | [10](notes/10-evals-in-ci.md) |
 | 8 — Online | — | [11](notes/11-production-and-the-maturity-ladder.md), [12](notes/12-failure-modes.md) |
+
+[practice/02-elo-leaderboard](practice/02-elo-leaderboard/README.md): build a leaderboard from pairwise votes with online Elo and Bradley–Terry, recover a known ranking from simulated battles, then judge pairs with an order-swapping LLM judge. Pairs with [05](notes/05-llm-as-judge.md#pairwise-ranking-elo-and-bradleyterry). Runs offline: `python cli.py`.
 
 ### Templates
 

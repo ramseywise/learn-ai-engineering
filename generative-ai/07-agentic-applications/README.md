@@ -30,6 +30,19 @@ it holds only genuinely built things, not course material.
 - **[`chatbot/deep_research_bench/`](chatbot/deep_research_bench/)** —
   deep research benchmark dataset. Untouched reference data.
 
+### Notes
+
+- **[`real-time-multimodal-agents.md`](real-time-multimodal-agents.md)** —
+  voice (cascaded / Omni / full-duplex, streaming perception, fast/slow thinking,
+  control-token TTS), Computer Use (action space, visual grounding, efficiency) and
+  robotics (planning + VLA, action chunking, Sim2Real). From *AI Agents in Depth* ch. 9,
+  with upstream lab links.
+
+Other application-shaped labs from the book live upstream: web-search and search+codegen
+agents ([ch. 1](https://github.com/bojieli/ai-agent-book/tree/main/chapter1)) and
+paper→slides→video, log diagnosis and text-to-SQL
+([ch. 5](https://github.com/bojieli/ai-agent-book/tree/main/chapter5)).
+
 ---
 
 ## Cross-links

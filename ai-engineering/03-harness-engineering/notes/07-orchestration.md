@@ -6,6 +6,7 @@ sources:
   - https://www.anthropic.com/engineering/harness-design-long-running-apps
   - https://vercel.com/academy/build-ai-agent-harness
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
+  - "Bojie Li, AI Agents in Depth (2026), ch. 4 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -138,7 +139,44 @@ What crosses a boundary is the whole design:
 - **Summaries, never transcripts.** Sending a subagent's full history back defeats the firewall.
 - **State on disk, references in the message.** Large artifacts go to files; the handoff carries paths ([note 06](06-long-horizon-execution.md#tool-call-offloading)).
 - **Declare what was *not* done.** Scoped claims prevent the orchestrator from assuming coverage that doesn't exist.
+- **Label every source in the subagent's prompt.** Li's convention: a role statement, then inputs tagged `[FROM_MAIN_AGENT]`, `[FROM_USER]` and `[TOOL_RESULT]`, then explicit boundaries, then a JSON output schema. A subagent that can't tell instructions from data will follow injected text.
 - **Synthesize, don't delegate understanding.** "Based on your findings, fix the auth bug" pushes the orchestrator's job onto the worker. The orchestrator reads the findings and hands down a precise spec: the file, the line, the change, and what done looks like.
+
+---
+
+Collaboration tools reduce to a small set of primitives: `spawn` and `cancel`, `send_message`, and `list_agents`. Each one runs in one of four modes: **sync** (wait for the result), **async** (task ID plus an event later), **streaming** (partial results as they come), or **multi-turn** (a conversation with the worker). Choose the mode per task; a 30-minute research job should never be a sync call.
+
+---
+
+## Asynchronous agents: events and safe points
+
+A resident agent receives user messages, tool results, timers, webhooks and messages from other agents, all at unpredictable times. Li's model (ch. 4) is an **event loop**: each iteration drains a batch of events from the queue, appends them to the trajectory, calls the LLM once, and runs the tools it chose. Events are consumed **only at safe points**, meaning the end of a reasoning stretch or a tool return, never mid-step. Cancellation is checked at safe points too, the same discipline as Go's `ctx.Done()`.
+
+**Model each input as a structured event:** source (who), channel (how), content (what, including urgency), and context (which thread or task it belongs to). This keeps a user command distinct from a tool result that *contains* a command, which is the prompt-injection case.
+
+Three strategies, which differ only in how they treat the safe point:
+
+| Strategy | For | Mechanics |
+|---|---|---|
+| **Cancel** (force a safe point now) | `user.interrupt`, supervisor orders, urgent alerts | Abort the streaming response or tool, drain the queue, append everything, and re-invoke the LLM |
+| **Queue** (wait for the next safe point) | Routine input, tool results, timers | Append as a batch when the current step finishes. "Only last month" arrives with the search results it modifies, saving a round trip |
+| **Parallel** (don't wait) | Independent, cheap queries ("what's the weather?") | Answer in a side session; append the exchange to the main trajectory, marked as parallel |
+
+Hard-coded rules miss semantics. Li recommends a **small classifier LLM as the event router** to pick the strategy.
+
+**Keeping a synchronous model sane** (five rules):
+
+1. Write the assistant message, including any tool call, to the trajectory as soon as it is produced.
+2. Write the tool result only when the tool completes.
+3. If an interrupt arrives mid-tool, insert a **placeholder result** ("still running in the background; handle the new event first") so every call stays paired, and deliver the real result later as a new event.
+4. If an interrupt arrives mid-thought, discard the partial thinking.
+5. Queue non-urgent events and append them in a batch.
+
+Placeholders invite hallucinated results, so interrupt only when it is genuinely urgent. For batches, the model tends to answer only the last event. Number them (`[Unprocessed event 2/4] User note: Beijing data only`) and end with a summary line ("4 events: 1 tool result, 2 user messages, 1 reminder; address all of them").
+
+Polling is the fallback, not the design. Timers and heartbeats make an agent *look* proactive, but an OTP request during a live phone call can't wait five minutes for the next tick. Real proactivity needs a push channel from the outside world into the queue.
+
+Labs, upstream: [4-4 event-triggered email agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/agent-with-event-trigger) · [4-5 async agent with interruption](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/async-agent).
 
 ---
 

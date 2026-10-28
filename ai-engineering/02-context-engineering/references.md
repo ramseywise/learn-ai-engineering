@@ -43,6 +43,7 @@ Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Paper
 
 - Andrej Karpathy, [*Software Is Changing (Again)*](https://www.youtube.com/watch?v=LCEmiRjPEtQ), YC AI Startup School 2025. The origin of *"the delicate art and science of filling the context window with just the right information for the next step."*
 - [Awesome-Context-Engineering](https://github.com/Meirtz/Awesome-Context-Engineering): the maintained paper list that accompanies the survey.
+- ★ Bojie Li, *AI Agents in Depth*, [ch. 2 Context Engineering](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) and [ch. 3 User Memory](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md): KV-cache-friendly layout, the agent status bar, compression, and memory from a production phone-agent team. Runnable labs for [03](notes/03-budgeting-the-window.md) (kv-cache), [05](notes/05-compression-compaction.md) (context-compression), [06](notes/06-memory.md) (user-memory, mem0, memobase) and [10](notes/10-tools-and-multi-agent.md) (active-tool-discovery). Synthesised into notes [02](notes/02-context-anatomy.md), [04](notes/04-retrieval.md), [05](notes/05-compression-compaction.md) and [06](notes/06-memory.md), which link the labs upstream; the BM25 lab runs offline in [practice/01](practice/01-bm25-from-scratch/README.md).
 - [NotebookLM notebook and podcast deep dive](https://notebooklm.google.com/notebook/0c6e4dc6-9c30-4f53-8e1a-05cc9ff3bc7e): audio overviews of the upstream repo.
 
 ## About the upstream course

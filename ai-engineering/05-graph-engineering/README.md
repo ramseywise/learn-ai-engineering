@@ -69,6 +69,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ### Readings
 - [sources/](sources/) — the book (notes and PDFs, above), the archived deep note, and the community-compiled *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026) PDF.
+- Li, *AI Agents in Depth*, [ch. 10 Multi-Agent Collaboration](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md): when multi-agent actually beats single-agent, shared vs isolated context, failure modes. Synthesised into [05](notes/05-topology-patterns.md) (two design dimensions, the new-information test, the runtime as an OS, handoff packages, A2A; [labs table](notes/05-topology-patterns.md#labs)) and [07](notes/07-failure-modes-at-scale.md) (Byzantine faults, semantic conflicts, cascading amplification, MAST). Ch. 3's RAPTOR vs GraphRAG comparison is in [11](notes/11-kg-rag-and-text-to-cypher.md).
 
 ### External references
 - LangGraph docs: https://docs.langchain.com/langgraph

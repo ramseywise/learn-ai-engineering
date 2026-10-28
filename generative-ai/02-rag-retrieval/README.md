@@ -44,6 +44,7 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 ### Readings
 
 - [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
+- Li, *AI Agents in Depth*, [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md). Synthesized into [02-context 04 — retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) (hybrid stages, metrics, contextual retrieval, index-time distillation, RAPTOR/GraphRAG/filesystem, agentic RAG) and [06 — memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) (formats, Mem0, two-tier memory, three-level eval). Offline lab: [BM25 from scratch](../../ai-engineering/02-context-engineering/practice/01-bm25-from-scratch/README.md). The other labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) need models or API keys: [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
 - [`../../ai-engineering/05-graph-engineering/sources/`](../../ai-engineering/05-graph-engineering/sources/) — knowledge
   graphs for retrieval reference material.
 

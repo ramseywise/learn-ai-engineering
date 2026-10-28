@@ -5,6 +5,7 @@ sources:
   - https://docs.langchain.com/langgraph
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
   - https://www.anthropic.com/engineering/multi-agent-research-system
+  - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -42,7 +43,7 @@ Every node that loops should be bounded on its own, not only the graph as a whol
 
 ## Swarm-scale failures
 
-Two failures only appear once work is parallel.
+These failures only appear once work is parallel or spread across agents.
 
 ### Correlated errors
 
@@ -53,6 +54,34 @@ Parallel workers usually share a model, a prompt template and a retrieval index.
 > **A verifier that can see the generator's reasoning tends to ratify it.**
 
 Self-agreement bias: if the reviewer reads the generator's chain of thought, it inherits the generator's framing and finds its argument convincing. Give the verifier the **task and the output**, not the conversation that produced it. This is the graph form of the maker/checker separation ([04-loop note 03](../../04-loop-engineering/notes/03-the-scorekeeper.md)), and it's why subagents' separate context windows are a feature ([03-harness note 07](../../03-harness-engineering/notes/07-orchestration.md)).
+
+### Byzantine, not crash
+
+Distributed systems separate **crash faults** (a node stops) from **Byzantine faults** (a node keeps running and returns wrong answers). Agents fail the second way: a worker that hallucinates still returns a well-formed summary. Timeouts and retries catch crashes; only **cross-validation, voting over independent sources, and deterministic checks** catch Byzantine faults ([Li ch. 10](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md)).
+
+### Semantic conflicts
+
+Locks and reducers prevent **lost updates**, where two writers clobber one key. They don't prevent **semantic conflicts**, where both writes succeed and the result is still wrong. The book's example: two agents each insert a figure and renumber the figures, and every number in the document is now off by one. Optimistic locking (read `config.json` at version 3, write only if it's still 3, then bump it to 4) turns the silent conflict into a retry. One worktree per agent is copy-on-write: conflicts surface at merge time, where a human or a test can see them.
+
+### Cascading amplification
+
+An early error becomes a premise for everything downstream. In the book's translation lab, the glossary agent rendered "reasoning" as 推理 (inference). The translator applied it faithfully, and the proofreader, checking against the glossary, saw perfect consistency and passed it. Every stage did its job and the error survived all of them. The fix is a check from an **independent perspective**: a reviewer that reads the output against the source, not against the upstream artifact.
+
+### MAST: a taxonomy
+
+MAST (Multi-Agent System failure Taxonomy) classifies 14 failure modes from annotated traces into three groups, with inter-annotator agreement κ = 0.88:
+
+| Group | Examples |
+|---|---|
+| **System design** | Disobeying the role spec; step repetition; losing conversation history; not knowing when to stop |
+| **Inter-agent misalignment** | Ignoring another agent's input; withholding information; reasoning–action mismatch; derailing from the task |
+| **Missing verification** | Premature termination; no or incomplete verification; incorrect verification |
+
+The finding that matters: fixing prompts and roles in ChatDev improved it by only **+15.6%**. Most failures are structural and need topology or verification changes, not better wording.
+
+### Runaway loops
+
+An unbounded multi-agent loop fails three ways: **token cost**, **comprehension debt** (the system produces more than anyone can review) and **cognitive surrender** (people stop reviewing and accept whatever comes out). The first shows up on the bill; the other two don't show up anywhere until something breaks.
 
 ---
 
@@ -96,6 +125,7 @@ Before running a graph unattended:
 - [ ] Every `Send` has a cap on N.
 - [ ] Every verifier sees the output and the task, not the generator's reasoning.
 - [ ] Parallel workers have separate file spaces.
+- [ ] Every reviewer can check against something the producer didn't write: tests, sources, or execution.
 - [ ] At least one anchor the graph cannot edit, and someone watching it.
 
 ---

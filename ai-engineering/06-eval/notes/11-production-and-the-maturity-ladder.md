@@ -5,6 +5,7 @@ sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://developers.openai.com/cookbook/examples/realtime_eval_guide
   - https://nicktalwar.substack.com/p/6-things-your-ai-agents-need-that
+  - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - eval-harness.md (retired 2026-10-28)
   - eval-maturity-ladder.md (retired 2026-10-28)
 confidence: medium
@@ -116,6 +117,9 @@ When offline evals can't settle a question (tone, engagement, real resolution), 
 - **Pre-declare** the metric, sample size and duration ([09](09-reading-results.md#how-many-tasks)). Peeking and stopping on a good day inflates false positives.
 - **Watch the novelty effect**: early engagement lifts often fade ([09](09-reading-results.md#metric-pitfalls)).
 - **Ramp**: 1% → 10% → 50% with guardrail checks at each step.
+- **Separate the mechanism from the target.** If the change is "shorter plan files", plan length is the *mechanism* (what you change), not the *target* (session cost). Shorter plans can cause more edit–check–edit loops and raise total cost. Optimize the target.
+- **Test several doses, not just on/off.** A control plus three progressively stricter variants shows the dose–response curve and where the optimum sits.
+- **Record baselines**: sample size, percentiles, correlations ("rejection rate rises with plan size"). Without them you can't tell signal from noise.
 
 ---
 
@@ -141,6 +145,31 @@ Evals sit inside a wider set of things a production agent needs. The ones that t
 | **Human-in-the-loop checkpoints** | Every human correction is a labeled example, *if* it's logged |
 | **Audit logging** | The same traces serve debugging, compliance and evals ([08](08-tracing-and-observability.md)) |
 | **Handoff protocol** (agent ↔ agent, agent ↔ human) | Handoffs are failure points. Evaluate what context transferred, and whether it was enough |
+
+---
+
+## Eval infrastructure inside the product
+
+The best agent products also evaluate themselves from the inside. Li draws four practices from Claude Code–style agents (*AI Agents in Depth*, ch. 6):
+
+| Practice | What it is | Why it matters for evals |
+|---|---|---|
+| **Ablation switches** | One master switch turns off the major features (thinking, compaction, memory, background tasks) to give a bare-model baseline. Every feature can also be turned off on its own | Answers "does this feature help, or does it just feel useful?" Running it before each release finds **feature debt**: features newer models no longer need. Wire it in early in startup, before config is captured |
+| **Two-layer feature flags** | *Compile-time* flags remove the code from builds. *Runtime* flags are served by the server and cached on disk. The agent starts on stale config rather than block. Exposure is logged once per session | Clean ablations (the code is gone, not skipped), gradual rollout, kill switches, and uncontaminated A/B exposure data |
+| **Prompt rendering snapshots** | Render the full system prompt at any commit, with all conditions expanded. Rendering must be deterministic | Answers "which commit changed the prompt, and what did it do to the eval set?" Every prompt change runs the regression suite, like code in CI ([10](10-evals-in-ci.md)) |
+| **Privacy-typed analytics** | The analytics API only accepts values wrapped in types whose name certifies that the value has no user content | Lets you collect eval data from production without leaking content ([08](08-tracing-and-observability.md#privacy-and-retention)) |
+
+---
+
+## From eval environment to training environment
+
+A good eval environment is close to a reinforcement-learning environment. A rubric or validator is a **verifiable reward** (RLVR): the grading script becomes the reward script. SWE-Gym, for example, builds training tasks from SWE-bench-style repos. Training adds demands evals don't have:
+
+- **Reliable reset.** Millions of episodes, each from a deterministic clean state. Leftover state corrupts the gradient.
+- **Throughput.** Environments must run much faster and more in parallel. Sandboxed MCP servers (AWorld: 26 servers, 126 tools for GAIA) avoid rate limits and side effects of live APIs.
+- **Fidelity vs. randomization.** Higher fidelity transfers better but costs more. Moderate **domain randomization** (positions, names, appearance) improves generalization. Too much makes tasks unlearnable.
+
+Post-training itself: [gen-AI 05-RL](../../../generative-ai/05-RL/README.md).
 
 ---
 

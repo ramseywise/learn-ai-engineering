@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents
+  - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - case-study/gate-contract.md
 confidence: high
@@ -126,6 +127,25 @@ A task often has several graders. Decide up front how they combine:
 | **Report separately** | No composite. Show each dimension | Diagnosis. Always do this alongside any composite |
 
 Hybrid example: *schema valid AND no citation hallucination AND (0.5 × grounding + 0.3 × completeness + 0.2 × relevance ≥ 0.75)*.
+
+### Veto items
+
+A must-pass gate on a quality dimension is a **veto item**: if it fires, the total is zero. Hallucination is the classic one. It's orthogonal to quality, since a fluent, detailed, polite answer with a made-up fact does more harm than a terse correct one. A veto also blocks reward hacking by keyword stuffing: you can't pad your way past it.
+
+Li (*AI Agents in Depth*, ch. 6), following Scale AI's *Rubrics as Rewards*, gives four rules for a rubric:
+
+1. **Expert-grounded.** It encodes domain facts and reasoning steps, not surface features like fluency.
+2. **Covers pitfalls.** It names the high-risk common errors explicitly, not only what good looks like.
+3. **Weighted by importance.** Each item is Essential, Important, Optional or Pitfall, and Pitfall items can veto.
+4. **Self-contained.** Each item can be checked without the grader's own expertise. "Cites at least two named sources and says how each supports the conclusion", not "shows deep understanding".
+
+```yaml
+- id: hallucination
+  criterion: Every fact in the reply appears in a tool output
+  weight: veto        # fires → total score is 0
+```
+
+A rubric gets better through use. Disagreements between graders turn it, over time, from principles into a casebook of edge cases.
 
 Don't let a composite hide a regression. A model that gains 5 points of relevance while losing 5 points of grounding scores flat on the composite and is worse for users who need correct answers. Always report the dimensions too.
 
