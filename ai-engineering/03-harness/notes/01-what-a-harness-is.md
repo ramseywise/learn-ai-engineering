@@ -50,6 +50,8 @@ The minimal decomposition — a harness comprises at least:
 
 A system missing any one of these is not a harness — it is a prompt with tools attached. The most commonly missing part is **rollback**, and the most commonly *faked* one is the acceptance baseline (a vibes-based "looks good" instead of a binary check).
 
+Contrast this with the classic **agent = LLM + planning + tools + memory** decomposition (Weng 2023, the DAIR agents guide). That framing describes what the *model* does. These four parts describe what the *system around it* has to guarantee. Planning, tools and memory map onto harness components ([note 02](02-harness-anatomy.md)). None of the four parts above appear in the classic framing, and that gap is why agents built from it alone are unreliable.
+
 ---
 
 ## Why the harness dominates the model

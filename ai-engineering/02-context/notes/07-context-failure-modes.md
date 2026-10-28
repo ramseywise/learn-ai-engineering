@@ -112,7 +112,7 @@ When an agent misbehaves:
 2. **Check occupancy.** Above ~50%, suspect rot and distraction first.
 3. **Search for contradictions.** Grep the window for the claim the agent got wrong; if it appears twice with different values, it's clash.
 4. **Check provenance.** Trace the wrong fact to its source. No legitimate source → poisoning or injection.
-5. **Test in isolation.** Same task, minimal context. Works → context problem. Still fails → prompt or capability problem, and belongs in [01-prompt](../../01-prompt/README.md).
+5. **Test in isolation.** Same task, minimal context. Works → context problem. Still fails → prompt or capability problem, and belongs in [01-prompt](../../01-prompt-engineering/README.md).
 
 Step 5 is the one that gets skipped, and it's the one that separates a context problem from a prompt problem.
 

@@ -128,6 +128,23 @@ Historical is the one that gets away from you — it is the only type that grows
 
 ---
 
+## Worked example: tuning a deep-research agent
+
+DAIR's case study (Saravia, n8n) is a planner agent that writes search tasks, plus a worker agent that runs them. Each failure it hit was fixed by changing the context, not the model:
+
+| Symptom | Context fix |
+|---|---|
+| Planned 3 searches, ran 2, and gave no reason | State the completion rule. **Flexible** — "skip a task only if it overlaps another, and say why" — while developing and observing; **strict** — "execute every planned task" — in production |
+| Status values drifted between runs (`pending` / `to-do`, `done` / `completed` / `finished`) | **Enumerate the allowed values** in the tool instructions. Every free-text field that code reads needs a closed set |
+| Searched for stale news ("latest" meant last year) | **Inject the current date** as dynamic context, after the stable prefix so it doesn't break the cache (see [Ordering](#ordering-stable-before-dynamic)) |
+| One agent managed tasks, memory, search and the report; it forgot steps as the context grew | Split out a **search worker** that receives *only the query text* and returns results plus an error state. Run it on a cheaper model ([06](06-multi-agent-context.md#what-a-sub-agent-receives)) |
+| Unclear why it made a decision | Write the task list to external state (id, query, status, result summary, timestamp), so every decision is inspectable ([05](05-memory-as-context.md#structured-note-taking)) |
+| Undefined behavior when a search failed | Add **error-path instructions**: retry once, then record the failure and continue |
+
+Before shipping, check the context against four questions: **completeness** (does it cover every scenario?), **clarity** (could any part be read two ways?), **consistency** (do the system prompt and the tool descriptions agree?), and **testability** (can you check the behavior with an eval?). Then track task-completion rate, behavioral consistency across similar inputs, and error rate as the context changes. Avoiding over-constraint (rules that break on edge cases) and under-specification (vague goals) is a calibration problem. Evals settle it ([06-eval](../../06-eval/README.md)).
+
+---
+
 ## Working reference
 
 `~/.claude/refs/agent-context.md` — content priority ordering: stable content (system prompt, memory summaries) before ephemeral content (history, tool results, scratch reasoning). Also covers prompt versioning (`PROMPT_VERSION` identifiers; version bumps invalidate eval baselines).
