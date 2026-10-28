@@ -108,7 +108,7 @@ The model may have seen your eval data:
 | Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift)) |
 | Uncalibrated judge used as a release gate | Grader states: experimental never gates ([04](04-graders.md#grader-states-which-ones-can-block-a-release)) |
 | Judge from the same family as the SUT | Different model family ([05](05-llm-as-judge.md#known-biases)) |
-| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](../case-study/calibration-results.md)) |
+| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](case-study/calibration-results.md)) |
 
 ---
 

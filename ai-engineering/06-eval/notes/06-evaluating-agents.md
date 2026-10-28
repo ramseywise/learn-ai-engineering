@@ -77,7 +77,7 @@ def trajectory_score(expected: list[Call], actual: list[Call], mode="in_order") 
 Labeling expected tool calls is real work. Two shortcuts:
 
 - **Label from successful traces.** Run the agent, have a human confirm the good runs, and save their trajectories as references.
-- **Bootstrap from metadata.** If the system already logs which domain or sub-agent handled a request, that's a free routing label ([case study](../case-study/eval-architecture.md#strand-e--response-metadata-signals)).
+- **Bootstrap from metadata.** If the system already logs which domain or sub-agent handled a request, that's a free routing label ([case study](case-study/eval-architecture.md#strand-e--response-metadata-signals)).
 
 If there's no single correct path, don't force one. Use a **judge over the trajectory** with a rubric ("did the agent look up the order before changing it?") or check **invariants** ("never `issue_refund` before `lookup_order`").
 
@@ -85,7 +85,7 @@ If there's no single correct path, don't force one. Use a **judge over the traje
 
 ## Evaluate the components, then the whole
 
-An agent is a router plus skills plus a final answer. Evaluate each, because an end-to-end failure doesn't say which one broke. The DeepLearning.AI *Evaluating AI Agents* course ([labs](../Evaluating-AI-Agents-master/)) builds exactly this on a sales-data agent:
+An agent is a router plus skills plus a final answer. Evaluate each, because an end-to-end failure doesn't say which one broke. The DeepLearning.AI *Evaluating AI Agents* course ([labs](../notebooks/evaluating-ai-agents/)) builds exactly this on a sales-data agent:
 
 | Component | Question | Grader in the course |
 |---|---|---|
@@ -97,7 +97,7 @@ An agent is a router plus skills plus a final answer. Evaluate each, because an 
 
 ### Routing vs. domain evals in multi-agent systems
 
-With a supervisor and sub-agents, split the suites ([case study](../case-study/eval-architecture.md#the-core-gap-routing-vs-domain-evals)):
+With a supervisor and sub-agents, split the suites ([case study](case-study/eval-architecture.md#the-core-gap-routing-vs-domain-evals)):
 
 - **Routing eval**: does the supervisor pick the right sub-agent? Seed with queries on the boundaries between domains.
 - **Domain eval**: given correct routing, does each sub-agent call the right tools and produce the right output?
@@ -149,7 +149,7 @@ Log these on every trial. They catch regressions that pass rates miss:
 | **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope |
 | **Research** | Citation validity, coverage of required facts, source quality ([07](07-evaluating-rag-and-grounding.md)) |
 | **Computer use** | End-state checks on the environment. Sandboxed, reset per trial |
-| **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](../case-study/harness-patterns.md#adversarial-cases)) |
+| **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](case-study/harness-patterns.md#adversarial-cases)) |
 
 ### Multi-turn evaluation
 

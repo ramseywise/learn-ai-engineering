@@ -111,10 +111,10 @@ Accuracy alone hides the failure you care about. Report the two error rates sepa
 
 Rules of thumb:
 
-- **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](../case-study/grader-methodology.md#decision-framework)).
+- **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](case-study/grader-methodology.md#decision-framework)).
 - **Benchmark against human–human agreement.** If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans.
 - **Small separation means the threshold is doing the work.** If PASS and FAIL means differ by < 0.05, the judge isn't discriminating. Fix the prompt.
-- **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](../case-study/calibration-results.md)). Generic metrics aren't tuned to your users.
+- **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](case-study/calibration-results.md)). Generic metrics aren't tuned to your users.
 
 ### Correcting the pass rate
 
@@ -131,7 +131,7 @@ Example: judge passes 80% of production outputs, TPR 0.95, TNR 0.80 → (0.80 + 
 ## Keep it calibrated
 
 - **Re-calibrate when anything changes**: judge model, judge prompt, the system under test (new failure types appear), or the user population.
-- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](../case-study/calibration-results.md#domain-shift-pattern-to-watch)). Calibration is per domain.
+- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](case-study/calibration-results.md#domain-shift-pattern-to-watch)). Calibration is per domain.
 - **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)).
 - **Pin the judge model version.** A provider updating the judge silently changes all your scores.
 - **Don't mix judges** across runs you intend to compare.

@@ -11,7 +11,7 @@ cleaned: 2026-10-28
 
 > Eight labs that take one system from "vibes" to a gated, calibrated, monitored eval suite. Each lab climbs one rung of the [maturity ladder](../notes/11-production-and-the-maturity-ladder.md#the-ladder), and each needs the one before.
 
-Labs 2–5 use the DeepLearning.AI *Evaluating AI Agents* notebooks in [Evaluating-AI-Agents-master/](../Evaluating-AI-Agents-master/) (Arize Phoenix, a sales-data agent). Run those as written first, then **repeat each lab on a system of your own**: a RAG bot, a tool-using agent, a prompt pipeline. The repeat is where the learning is. Labs 1, 6, 7 and 8 are on your system only.
+Labs 2–5 use the DeepLearning.AI *Evaluating AI Agents* notebooks in [Evaluating-AI-Agents-master/](../notebooks/evaluating-ai-agents/) (Arize Phoenix, a sales-data agent). Run those as written first, then **repeat each lab on a system of your own**: a RAG bot, a tool-using agent, a prompt pipeline. The repeat is where the learning is. Labs 1, 6, 7 and 8 are on your system only.
 
 ---
 
@@ -49,7 +49,7 @@ A results log, one row per run:
 
 ## Lab 2 — Tracing: make every step visible
 
-**Rung:** prerequisite for 3. **Notes:** [08](../notes/08-tracing-and-observability.md). **Course:** [Lab 2](../Evaluating-AI-Agents-master/Lab%202/Lab2.ipynb).
+**Rung:** prerequisite for 3. **Notes:** [08](../notes/08-tracing-and-observability.md). **Course:** [Lab 2](../notebooks/evaluating-ai-agents/lab-2/Lab2.ipynb).
 
 1. Run the course notebook: instrument the agent with Phoenix / OpenInference and inspect the span tree.
 2. On your system, instrument model calls, tool calls and retrieval. Use OTel GenAI conventions or OpenInference.
@@ -64,7 +64,7 @@ A results log, one row per run:
 
 ## Lab 3 — Component evals: router and skills
 
-**Rung:** 1–2. **Notes:** [04](../notes/04-graders.md), [06](../notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole). **Course:** [Lab 3](../Evaluating-AI-Agents-master/Lab%203/Lab3.ipynb).
+**Rung:** 1–2. **Notes:** [04](../notes/04-graders.md), [06](../notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole). **Course:** [Lab 3](../notebooks/evaluating-ai-agents/lab-3/Lab3.ipynb).
 
 1. Run the course notebook: the router judge (`TOOL_CALLING_PROMPT_TEMPLATE`), the SQL and analysis judges, and the `exec()` code check.
 2. On your system, list every component: router, each tool / skill, final answer.
@@ -79,7 +79,7 @@ A results log, one row per run:
 
 ## Lab 4 — Trajectory evals and repeats
 
-**Rung:** 3. **Notes:** [06](../notes/06-evaluating-agents.md). **Course:** [Lab 4](../Evaluating-AI-Agents-master/Lab%204/Lab4.ipynb).
+**Rung:** 3. **Notes:** [06](../notes/06-evaluating-agents.md). **Course:** [Lab 4](../notebooks/evaluating-ai-agents/lab-4/Lab4.ipynb).
 
 1. Run the course notebook: the convergence metric (optimal path ÷ actual path) over repeated runs.
 2. On your system, add `expected_tool_calls` and a `tool_match_mode` to 20 rows. Label them from confirmed-good traces.
@@ -94,7 +94,7 @@ A results log, one row per run:
 
 ## Lab 5 — Experiments: compare two versions properly
 
-**Rung:** 3. **Notes:** [09](../notes/09-reading-results.md). **Course:** [Lab 5](../Evaluating-AI-Agents-master/Lab%205/Lab5.ipynb).
+**Rung:** 3. **Notes:** [09](../notes/09-reading-results.md). **Course:** [Lab 5](../notebooks/evaluating-ai-agents/lab-5/Lab5.ipynb).
 
 1. Run the course notebook: a Phoenix experiment with several evaluators, compared across a prompt change.
 2. On your system, make one change you believe helps.
