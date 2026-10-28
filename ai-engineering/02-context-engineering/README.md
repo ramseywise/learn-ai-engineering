@@ -83,6 +83,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ├── context-engineering.md  ← pillar overview
 ├── notes/                  ← the chapters (read in order), plus the 99 appendix
 ├── notebooks/              ← runnable Python labs
+├── practice/               ← offline labs adapted from AI Agents in Depth
 ├── templates/              ← copyable schemas, prompt programs and prompt templates
 ├── sources/                ← PDFs of the papers the chapters cite
 └── references.md           ← papers and further reading, mapped to chapters
@@ -126,6 +127,12 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | [05_prompt_programs.py](notebooks/05_prompt_programs.py) | [08](notes/08-cognitive-tools.md#prompt-programs) |
 | [06_schema_design.py](notebooks/06_schema_design.py) | [07](notes/07-structured-context.md) |
 | [07_recursive_patterns.py](notebooks/07_recursive_patterns.py) | [08](notes/08-cognitive-tools.md), [99](notes/99-speculative-field-track.md) |
+
+### Practice
+
+| Lab | Notes |
+|---|---|
+| [01 — BM25 from scratch](practice/01-bm25-from-scratch/README.md): inverted index, IDF and saturation, with every score traceable (Li, Exp. 3-5). Offline, no API key | [04](notes/04-retrieval.md#hybrid-retrieval) |
 
 ### Templates
 

@@ -35,6 +35,7 @@ exploitation, temporal-difference learning, Q-learning, policy gradients.
 | Exists | rl.md — basics (MDP, agent/environment, policy, reward) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
 | Exists | rl.md — cleaned, restructured; covers MDP, MARL, RL-in-RAG with full translations | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
 | Partial | Foundations bridged in rl.md; dedicated foundations note not yet created | See rl.md Section 1 for LLM-context RL foundations |
+| **Done** | **Lab: tabular Q-learning on a treasure hunt (offline, numpy) — 0% wins at 1k episodes, 100% at 10k** | [`practice/01-q-learning-treasure-hunt/`](practice/01-q-learning-treasure-hunt/) |
 
 **Assessment:** Strong reference coverage (full textbook + chapter PDFs). rl.md now
 covers MDP and algorithm families in LLM context. A dedicated note distilling chapters
@@ -107,12 +108,11 @@ process vs. outcome reward models.
 | Exists | rl.md — reward function mentions (brief) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) |
 | Exists | Reward hacking blog reference | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) (line 51) |
 | Exists | InstructGPT paper (describes reward model training) | [`2-llm-rlhf/`](2-llm-rlhf/) |
-| Missing | Cleaned note: reward model architecture and training | Recommend: [Anthropic reward modeling](https://arxiv.org/abs/2204.05862), [OpenAI process reward models](https://openai.com/index/improving-mathematical-reasoning-with-process-reward-models/) |
-| Missing | Process reward models vs outcome reward models | Key frontier topic — PRM drives chain-of-thought verification |
+| **Done** | **post-training-for-agents.md — reward density, scalar/vector/generative RMs, PRM vs ORM, RLVP path penalties, credit assignment** | [`post-training-for-agents.md`](post-training-for-agents.md#reward-design-for-multi-turn-agents) |
+| Missing | Cleaned note: reward model architecture (scalar head, training details) | Recommend: [Anthropic reward modeling](https://arxiv.org/abs/2204.05862), [OpenAI process reward models](https://openai.com/index/improving-mathematical-reasoning-with-process-reward-models/) |
 
-**Assessment:** Minimal coverage. Reward modeling is implicit in the RLHF papers but
-never surfaced as its own topic. Understanding reward hacking, overoptimization, and
-process vs. outcome reward models is critical for interview depth.
+**Assessment:** Reward design is now covered from the agent-training angle (density,
+form, process vs. outcome, RLVP). RM architecture details remain a smaller gap.
 
 ---
 
@@ -155,12 +155,13 @@ Increasingly relevant as agents move from prompt-engineered to RL-trained.
 | Exists | Reflexion paper (language agents with RL) | [`2-llm-rlhf/reflexioin_language_agents_with_reinforcement_learning.pdf`](2-llm-rlhf/reflexioin_language_agents_with_reinforcement_learning.pdf) |
 | Exists | Deep-research-bot RL notebook | [`../07-agentic-applications/chatbot/deep-research-bot/notebooks/03_rl_for_deep_research_agent.ipynb`](../07-agentic-applications/chatbot/deep-research-bot/notebooks/03_rl_for_deep_research_agent.ipynb) |
 | Exists | WebGPT reference (RL for web browsing) | [`../01-llm-fundamentals/rl.md`](../01-llm-fundamentals/rl.md) (line 239) |
-| Missing | RL for reasoning (DeepSeek-R1, OpenAI o1) — no coverage | Recommend: [DeepSeek-R1 paper](https://arxiv.org/abs/2501.12948) — this is the biggest recent development |
-| Missing | Verifiable rewards for reasoning tasks | Key innovation: math/code tasks provide automatic reward signals |
+| **Done** | **post-training-for-agents.md — SFT vs RL (memorize vs generalize), when to choose which, data/environment > algorithm, tool-calling RL (ReTool, DAPO, loss masking), on-policy distillation and self-distillation** | [`post-training-for-agents.md`](post-training-for-agents.md) |
+| Partial | RL for reasoning (DeepSeek-R1, o1) | R1-Zero vs cold-start in [`post-training-for-agents.md`](post-training-for-agents.md#the-three-stages); algorithm side in [`preference-optimization.md`](preference-optimization.md#the-deepseek-r1-story) |
 
 **Assessment:** Best-covered area after foundations. The MARL and RL-in-RAG notes in
 rl.md are rough (mixed zh/en Notion export) but contain real substance. The deep-research-bot
-notebook is a hands-on application. Main gap is RL-for-reasoning (DeepSeek-R1, o1).
+notebook is a hands-on application. Agent post-training is now covered in
+[`post-training-for-agents.md`](post-training-for-agents.md).
 
 ---
 
@@ -194,11 +195,8 @@ Ordered by impact for interview depth and conceptual completeness:
 2. ~~**PPO vs DPO vs GRPO comparison** (Topic 3)~~ **DONE** — [`preference-optimization.md`](preference-optimization.md)
 3. ~~**rl.md cleanup and split**~~ **DONE** — translated, restructured, RLHF/DPO extracted to 05-RL
 4. ~~**Constitutional AI / RLAIF note** (Topic 5)~~ **DONE** — [`constitutional-ai.md`](constitutional-ai.md)
-5. **Reward modeling depth** (Topic 4) — process vs. outcome reward models, reward
-   hacking patterns. Recommend: [Anthropic reward modeling](https://arxiv.org/abs/2204.05862),
-   [OpenAI process reward models](https://openai.com/index/improving-mathematical-reasoning-with-process-reward-models/)
-6. **RL for reasoning** (Topic 6) — DeepSeek-R1 and verifiable rewards. Newest and
-   fastest-moving area. See `preference-optimization.md` DeepSeek-R1 section for entry point.
+5. ~~**Reward modeling depth** (Topic 4)~~ **MOSTLY DONE** — [`post-training-for-agents.md`](post-training-for-agents.md#reward-design-for-multi-turn-agents); RM architecture still open
+6. ~~**RL for agents** (Topic 6)~~ **DONE** — [`post-training-for-agents.md`](post-training-for-agents.md), lab [`practice/01-q-learning-treasure-hunt/`](practice/01-q-learning-treasure-hunt/)
 7. **Readings audit** — deduplicate, move misfiled papers, create index.
 
 ---
@@ -212,6 +210,7 @@ Ordered by impact for interview depth and conceptual completeness:
 | Downstream | [03-agentic-foundations](../03-agentic-foundations/README.md) | RL-trained agents (ReAct, Reflexion, tool-use RL). MARL for multi-agent coordination. |
 | Downstream | [07-agentic-applications](../07-agentic-applications/README.md) | Deep-research-bot has an RL notebook (`03_rl_for_deep_research_agent.ipynb`). |
 | Lateral | [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md) | Evaluation methodology for RL-trained agents: trajectory scoring, preference annotation, benchmarks. |
+| Lateral | [Li, *AI Agents in Depth* ch. 7](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) | Synthesized into [`post-training-for-agents.md`](post-training-for-agents.md); GPU labs linked upstream from its [Labs](post-training-for-agents.md#labs) table. |
 | Lateral | [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) | Summary layer — RLHF, alignment, and prompting compressed for interview prep. |
 
 ---

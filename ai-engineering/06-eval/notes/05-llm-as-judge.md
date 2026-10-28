@@ -5,6 +5,7 @@ sources:
   - https://arxiv.org/abs/2303.16634
   - https://arxiv.org/abs/2404.12272
   - https://hamel.dev/blog/posts/llm-judge/
+  - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - case-study/grader-methodology.md
   - case-study/calibration-results.md
@@ -139,6 +140,30 @@ Example: judge passes 80% of production outputs, TPR 0.95, TNR 0.80 → (0.80 + 
 ### Cross-checking with other judges
 
 Comparing your judge to an off-the-shelf one (RAGAS, DeepEval, G-Eval) tells you whether they measure the same thing (correlation), not which is right. Only agreement with *human labels* settles that. Low correlation is a reason to investigate both against the labels, not to switch.
+
+### Multi-family judging
+
+Self-preference ([above](#known-biases)) gets worse when the agent is *optimized* against the judge: it learns that judge's blind spots. The mitigation is several independent judges from **different model families** on the same rubric. If the agent runs on Claude, judge with GPT and Gemini. Their biases tend to be orthogonal, so the agent rarely fools all of them at once. Aggregate by weighted average or require agreement. To keep cost down, run one judge on every case and the full panel as a periodic audit (*AI Agents in Depth*, ch. 6).
+
+### Beyond text
+
+The same pattern extends to other modalities. Score TTS output with an audio model (or ASR, then a text judge), UI agents from screenshots, and video from sampled frames. Each modality needs its own calibration set.
+
+---
+
+## Pairwise ranking: Elo and Bradley–Terry
+
+When there's no absolute standard, ask "which is better, A or B?" and turn many such votes into a ranking.
+
+- **Bradley–Terry** gives each system a latent strength. P(A beats B) depends only on the difference in strengths.
+- **Elo** is the online-update form of that model. Everyone starts at 1000. After each match, the winner gains points in proportion to how surprising the win was. A 1200-rated model is expected to beat a 1000-rated one about 76% of the time, and an upset moves both ratings more.
+- **Chatbot Arena** ranks models this way from millions of blind human votes. The catch: the ranking reflects what users happened to ask. A flood of coding questions lifts coding models.
+
+With an LLM judge doing the voting, **swap the order** on every pair and count a win only if it holds both ways, as in the position-bias row above. Bradley–Terry also assumes preferences are transitive (A > B > C ⇒ A > C). Judges and humans often violate that, so check for cycles before trusting a ranking.
+
+The same "compare candidates to each other" idea drives GRPO in post-training ([gen-AI 05-RL](../../../generative-ai/05-RL/README.md)).
+
+Lab: [practice/02-elo-leaderboard](../practice/02-elo-leaderboard/README.md).
 
 ---
 

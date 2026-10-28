@@ -121,6 +121,7 @@ ai-engineering is the discipline that makes them reliable.
     - `ai-engineering/05-graph-engineering/sources/` — knowledge graphs for RAG
     - `ai-engineering/readings/ai_engineering/` — AI design, AI engineering, and performance books
     - `ai-engineering/readings/general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
+- External links (courses, books, papers, tools) by pillar: [generative-ai/resources.md](generative-ai/resources.md)
 
 ### Programming ([`programming/`](programming/README.md))
 - Practice problems and cloud/infra reference — doesn't fit the data-domain categories above, kept

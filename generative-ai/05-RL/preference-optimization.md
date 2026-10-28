@@ -170,14 +170,21 @@ needs, cutting memory cost by ~25%.
 
 These rule-based rewards require no human labeling and scale to arbitrary volume.
 
-**Strengths:** No critic to train (simpler, cheaper), verifiable rewards eliminate reward
-hacking entirely for applicable tasks, enables large-scale online RL for reasoning,
+**Strengths:** No critic to train (simpler, cheaper), verifiable rewards remove the learned-RM
+loophole (though an agent can still game the verifier itself, for example by editing the
+tests it must pass; see [RLVP](post-training-for-agents.md#rlvp-reward-the-outcome-penalize-the-path)), enables large-scale online RL for reasoning,
 demonstrated at scale (DeepSeek-R1 achieves o1-level math reasoning).
 
 **Weaknesses:** Requires verifiable reward structure — not applicable to open-ended
 generation (summarization, helpfulness). Group sampling increases inference cost per
 training step. Normalizing within-group rewards can struggle with uniform groups
-(all correct or all incorrect).
+(all correct or all incorrect): zero variance means zero advantage and no gradient. DAPO
+drops those groups (dynamic sampling). RLVP gives them variance back with verifiable path
+penalties. Credit assignment is also coarse: one trajectory-level advantage is spread
+evenly over every token, which dilutes the signal over long multi-turn episodes, where
+PPO with a value network still earns its cost. DAPO's four fixes (Clip-Higher,
+token-level loss, dynamic sampling, overlong shaping) are tabulated in
+[post-training-for-agents.md](post-training-for-agents.md#rl-for-tool-calling).
 
 **When to use GRPO:** Reasoning tasks with verifiable outcomes (math, code, logic).
 Not appropriate for general instruction following or alignment training.

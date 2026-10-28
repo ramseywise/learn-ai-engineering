@@ -7,6 +7,7 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://openai.com/index/harness-engineering/
+  - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -165,6 +166,8 @@ Anthropic's three-agent architecture for long-running app generation:
 
 The evaluator **navigates the actual running application** rather than reading the diff. That distinction matters: reading code verifies intent, driving the app verifies behavior.
 
+The same split pays off when the evaluator needs to *see* the output. Li's slide and video generators (ch. 5) render each page or keyframe and have a vision-model reviewer return structured feedback ("p. 3: too dense, split"; "p. 7: code font too small, use 14pt"). It stops at a quality bar or after five rounds. The win is partly about context: the reviewer sees only the latest render, and the proposer accumulates compact text feedback, not dozens of screenshots per round.
+
 Measured result: a solo run (20 min, $9) produced broken core gameplay; the full harness (6 hr, $200) produced a functional game with working AI integration. **~20× the cost for the difference between broken and working** — the harness ROI question is rarely "is it cheaper," it's "does it produce a result at all."
 
 A second run in the same post (a browser DAW) shows where the money goes: planner **$0.46**, three build rounds **$114**, three QA rounds **$10**, for **$124.70 and 3 h 50 m** in total. QA is under a tenth of the cost, and it caught that core features ("clips can't be dragged", "no instrument panel") were presentational only.
@@ -255,6 +258,34 @@ Paired with the **two-retry rule**:
 > **Cap retries at two per gate failure. Beyond that, the problem is in the context or the specification — not the execution.**
 
 Three failures on the same gate means the agent lacks information or the spec is wrong. More attempts spend money to confirm that.
+
+---
+
+## Failure, recovery, and termination
+
+Li's taxonomy (ch. 5, distilled from production harness source code) sorts failures by layer:
+
+| Layer | Examples |
+|---|---|
+| **API** | 429s, overload, timeouts, dropped connections, output cut off at the token limit |
+| **Tool** | Hallucinated tool names, malformed arguments, execution exceptions, the same error returned again and again |
+| **Context** | Window overflow, failed compaction, a tool call without its paired result |
+| **Control flow** | No-progress loops, and **death spirals**, where error handling calls the LLM, fails, and cascades |
+
+**Detect: classify, then count.** Ask whether a retry could help before retrying. Fingerprint `hash(tool, args)`; a repeated fingerprint means a no-progress loop. Keep a separate failure counter for each recovery path. Some failures never raise an error:
+
+- **Silent stalls.** A streaming connection stays open with no data. SDK timeouts usually cover only connection setup, so add an idle watchdog. Every long-lived connection needs a liveness signal.
+- **Broken trajectories.** Repair an unpaired tool call before sending the context. Production may patch it with a placeholder; a training-data collection mode should refuse, because synthetic placeholders pollute training data.
+
+**Recover: escalate through increasingly visible stages.**
+
+1. **Silent retry**, with backoff and jitter, honouring `retry-after`. Retry the main loop; *drop* failed background calls such as title generation, so they don't amplify into quota contention.
+2. **Degrade and continue.** On truncation, raise the output cap, then ask the model to continue from the break. On persistent overload, fall back to another model, stripping provider-specific blocks from the history first.
+3. **Surface to the user**, along with what was already tried.
+
+Tool-layer errors never end the session. They come back as structured tool results, and malformed arguments are repaired programmatically. Treat the **whole recovery loop** as the unit: hold back intermediate errors from users and event subscribers until recovery has definitely failed.
+
+**Terminate: every recovery path needs a ceiling, set from data.** Claude Code's compaction breaker trips after **3** consecutive failures. Before it existed, one session failed more than 3,000 times in a row, futile retries cost about 250,000 API calls a day globally, and over 1,000 sessions saw streaks of 50+. For death spirals, disable model-invoking side effects on the error path (a stop hook that writes a commit message by calling the LLM, after a context overflow, is the classic case) and add a recursion-depth counter. Above all of this sit max turns, a session budget, and escalation to a human.
 
 ---
 

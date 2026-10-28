@@ -105,6 +105,37 @@ hang.
   authenticate inter-agent messages, verify provenance, isolate boundaries so one
   compromised agent can't cascade.
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"`delete_file` is safe until the path is `/etc` — dynamic risk?"* — rate tool +
+  arguments, not the tool: compute risk at call time from reversibility, permissions and
+  blast radius using deterministic rules (allow/deny lists) over structured arguments only,
+  never model judgment.
+- *"When is a constrained action space better?"* — high-compliance, irreversible work
+  (refunds, payments): picking from fixed options makes whole classes of mistake impossible.
+- *"Sandboxing vs capability?"* — tier isolation (container or microVM) by risk; no network
+  by default with an allow-list proxy; read-only source mounts; keys never inside the
+  sandbox; resource limits and timeouts.
+- *"Lethal trifecta plus persistent memory — the security design?"* — four boundaries. Data:
+  no mounted credentials, minimal visibility. Input: provenance labels; external content is
+  data, never instruction. Output: default-deny egress, review outside the context, HITL.
+  Cross-session: memory writes get the same trust review as external content.
+- *"Agent-generated SQL and HTML run directly?"* — SQL on a least-privilege read-only
+  account with resource limits; UI via a declarative protocol (A2UI) rendering trusted
+  components, or sandboxed if arbitrary HTML is unavoidable.
+- *"An agent may change its tools but not the system that approves its changes — how?"* —
+  evolvable code lives in a low-privilege sandbox that can only produce patches and tests;
+  permissions, keys, release config and validators are out of its reach; changes are
+  reproduced and regression-tested in isolation before release.
+- *"Fast-thinking actions (speak first, click first) — how do you avoid irreversible harm?"*
+  — grade actions by reversibility: the fast path may only take reversible ones;
+  irreversible actions wait for the slow path.
+- *"Agent or the user's own identity for external actions?"* — default to a separate,
+  auditable agent identity; use the user's identity only when the counterparty requires the
+  account holder, with the user authenticating in person (e.g. over VNC).
+
 ## Sources
 
 - notes: [security.md](../../notes/security.md) (OWASP agent cheat sheet + source–sink + PRINCE recovery), [prompt-injection.md](prompt-injection.md) (OWASP injection cheat sheet), [agents-guardrails.md](../../../ai-engineering/03-harness-engineering/agents-guardrails.md)
