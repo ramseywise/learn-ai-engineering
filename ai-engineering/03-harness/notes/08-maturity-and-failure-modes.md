@@ -145,6 +145,45 @@ This is the generalizable shape for HITL at volume. Full automation is unsafe an
 
 ---
 
+## Runtime vs. process observability
+
+"Add logging" covers half of observability. A harness needs two layers, and they answer different questions:
+
+| Layer | Signals | Answers |
+|---|---|---|
+| **Runtime** | Logs, traces, process lifecycle (start → ready → shutdown), critical-path checkpoints, data flow between components, resource trends, errors *with context* | *What did the system do?* |
+| **Process** | Plans, sprint contracts, rubrics, acceptance criteria, scored verdicts | *Why should this change be accepted?* |
+
+Without runtime signals the agent can't tell "correct" from "looks correct", and its retries become guesses. Without process artifacts, evaluation comes down to taste: "it doesn't feel right" gives the generator nothing to fix, while "contrast 2.1:1, WCAG AA needs 4.5:1" does.
+
+**The harness collects the signals, not the agent.** Agents don't log what they don't know they need, formats drift between sessions, and contracts and rubrics are structured artifacts that print statements can't produce. Practical shape:
+
+- **Structured logs** on startup and the critical path, queryable locally.
+- **One repeatable workload** the agent re-runs after every change. The loop is query → correlate → reason → fix → restart → re-run → verify.
+- **One trace per session, one span per task, sub-spans per verification step**, using OpenTelemetry conventions so it plugs into standard tooling (Jaeger etc.). This is the raw material for [trace-driven improvement](05-verification-loops.md#trace-driven-improvement).
+- For UI work, a **browser validation loop**: snapshot before, trigger exactly one path, snapshot after, compare, fix the smallest responsible layer, re-run until the same path is clean twice.
+
+Process artifacts are covered in [note 05](05-verification-loops.md#sprint-contracts) (contracts, rubrics). Templates: [evaluator-rubric.md](../templates/evaluator-rubric.md).
+
+---
+
+## The quality document
+
+A per-area health record that both agents and humans read, so codebase quality is *tracked* rather than assumed.
+
+| Domain / layer | Grade | Verification | Agent legibility | Test stability | Boundary compliance | Key gaps |
+|---|---|---|---|---|---|---|
+| Auth | A | passing | clear | stable | compliant | — |
+| Payments | C | partial (callback untested) | logic spread over 3 files | 2 flaky | violations | callback e2e |
+
+The scale: **A** all verification passing, clean and legible; **B** passing with minor gaps; **C** partially working, hard for agents to follow; **D** broken or structurally unsound.
+
+It does three jobs. A fresh session reads it and **fixes the lowest grade first.** The periodic cleanup loop ([practice/02](practice/02-session-lifecycle.md#entropy-management-two-cleanup-modes)) updates it, so the change history shows whether the repo is getting stronger or weaker. And it gives the subtraction pass below a baseline to measure against. Update it after significant sessions and before a new phase of work, not on a separate cleanup day.
+
+Template: [quality-document.md](../templates/quality-document.md).
+
+---
+
 ## The five failure modes
 
 | # | Failure | Tell |
@@ -205,6 +244,31 @@ Rather than a fixed configuration, the harness becomes a system that *compiles* 
 
 ---
 
+## Builder gotchas
+
+Non-obvious failures for anyone *building* harness runtime (memory, tools, subagents, hooks) rather than configuring one. They come from the *harness-creator* skill's analysis of a production coding-agent runtime. Each one fails silently.
+
+**Memory and instructions**
+- **Index caps truncate silently.** An always-loaded memory index has line and byte caps enforced at read time. Long entries hit the byte cap first and recent memories just "disappear". Keep index entries to one-line hooks and put detail in topic files.
+- **Most-local wins.** Org → user → project → local override, and the local file has the final say. A rule injected at user level is silently overridden by a project-root override. Test with the whole instruction stack present.
+- **Don't memorize what's derivable.** Architecture, code patterns and history are in the repo and go stale in memory. The memory taxonomy should forbid them by design.
+- **Two-step saves leave orphans.** Write the topic file, then the index pointer. A crash in between orphans the file but keeps the index consistent. That's the right failure direction; add a periodic sweep.
+- **Memoized context goes stale.** Context builders cached at startup must be invalidated *at every mutation point*, or the model sees stale data for the whole session.
+- **Skill descriptions are truncated** (~150 chars per entry in the listing). Front-load the distinctive trigger words.
+
+**Tools and permissions**
+- **Fail closed by default.** Tools are non-concurrent and non-read-only unless marked otherwise, and sensitive tools default to *ask*, not *allow*. Keep a bypass-immune list (`.git/**`, `rm -rf*`, `DROP TABLE*`) that no mode auto-approves.
+- **Concurrency safety is per call, not per tool.** `shell cat` is safe to parallelize and `shell rm` isn't. Classify each call at runtime.
+- **Permission checks have side effects** (denial tracking, mode changes). Don't cache verdicts across calls.
+
+**Subagents and lifecycle**
+- **Forks don't fork.** Recursive forks multiply context cost. Enforce one level, and block at call time rather than removing the tool, so the prompt cache still matches.
+- **Notify, then evict.** Clear a finished work unit's disk output eagerly, but its in-memory record only after the parent has read the result. Otherwise the parent reaches for a result that's already gone.
+- **Don't assume a "pending" state.** Work units usually register straight as running, so UI built around pending shows nothing.
+- **Hook trust is all-or-nothing.** An untrusted workspace skips *every* hook. Gate trust at dispatch rather than trying to judge each hook.
+
+---
+
 ## A build checklist
 
 Ordered by return on effort:
@@ -238,4 +302,4 @@ Items 1–8 get you to Stage 2. Items 9–16 get you to Stage 3. Item 17 keeps i
 
 ---
 
-→ Next layer: [04-loop/](../../04-loop/README.md) — the loops this harness implements.
+→ Next: [practice/01-repo-as-system-of-record.md](practice/01-repo-as-system-of-record.md) — the practice track: building this harness into a real repo.

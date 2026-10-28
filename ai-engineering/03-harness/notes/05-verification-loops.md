@@ -6,6 +6,7 @@ sources:
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
   - https://vercel.com/academy/build-ai-agent-harness
   - https://martinfowler.com/articles/reliable-llm-bayer.html
+  - https://openai.com/index/harness-engineering/
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -41,6 +42,66 @@ Verification must cover **happy paths and edge cases** — an agent asked to "te
 Enforcement is a hook, not a hope. `PreCompletionChecklistMiddleware` intercepts the agent's attempt to exit and **forces a verification pass before completion is allowed**. The agent cannot declare done; it can only *request* done, and the harness adjudicates.
 
 This is what grounds a solution in tests and creates the feedback signal that self-improvement runs on. It's also why sandbox tooling matters ([note 04](04-execution-boundaries.md)) — test runners, logs, and screenshots are what "verify" reads.
+
+---
+
+## The three-layer termination check
+
+"Verify" needs a floor, or the agent runs the fastest test and declares victory. Make the layers explicit and ordered, with each one a gate for the next:
+
+| Layer | Checks | Proves |
+|---|---|---|
+| **1. Static** | Syntax, types, lint, architecture rules | It's well-formed |
+| **2. Runtime** | Tests run, app starts and reaches ready, critical path executes, side effects (DB writes, files) correct | It runs |
+| **3. System** | End-to-end flow as a user would drive it, integration with real dependencies | It's *correct* |
+
+```markdown
+## Definition of done                     (AGENTS.md)
+- Done = end-to-end verification passed, not "code is written"
+- Level 1 static → Level 2 unit/integration → Level 3 e2e (required for cross-component changes)
+- Don't run level N+1 while level N fails. Skipping a required level = not done.
+```
+
+**Unit tests are blind by design to boundary defects.** Isolation and mocks make them fast and precise, and also unable to see:
+
+- **Interface mismatch.** The caller passes a relative path and the callee expects absolute. Both mocked unit tests pass.
+- **State propagation.** A migration changes the schema while a cache still holds the old shape. Each test starts fresh, so nothing notices.
+- **Resource lifecycle.** Handles, connections and sockets span components and leak only when composed.
+- **Environment dependency.** It's correct with everything mocked, and broken with real config, latency or permissions.
+
+E2E also **changes how the agent writes code.** An agent that knows it will be checked end to end starts thinking about upstream interfaces, boundaries and error paths. The cost is seconds of test time, which is negligible in an agent loop.
+
+One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [practice/03](practice/03-scope-and-done.md).)
+
+---
+
+## Agent-oriented error messages
+
+A failing check is only half a feedback loop. OpenAI's Codex practice is to **write every check's failure message for the agent, including how to fix it.** Each message carries three parts:
+
+```
+ERROR: direct import of 'fs' in src/renderer/App.tsx:12        ← WHAT
+WHY:   renderer has no Node.js access, for security            ← WHY
+FIX:   move the call to src/preload/file-ops.ts and use window.api.readFile()   ← FIX
+```
+
+Compare `"Test failed"` with `"POST /api/reset-password returned 500 — check EMAIL_SMTP_URL is set; template expected at templates/reset-email.html"`. The first triggers a blind retry ([retry taxonomy](#retry-taxonomy)). The second is a one-step fix the agent can make without a human.
+
+Pair this with OpenAI's principle for architecture checks: **enforce invariants, don't micromanage implementation.** Require "data is parsed at the boundary", not which parsing library to use.
+
+---
+
+## Promote review feedback into checks
+
+Human review is the most expensive verifier, and it repeats itself. The ratchet ([note 01](01-what-a-harness-is.md#the-ratchet)) applied to review:
+
+1. Notice a review comment you've written more than once.
+2. Name the invariant it protects.
+3. Write the cheapest decisive check for it (grep, lint rule, import-graph test, schema check).
+4. Give it a WHAT/WHY/FIX message.
+5. Wire it into the standard verification path, and note the rule's source in the topic doc.
+
+Review comments become docs, and docs that keep getting ignored become checks. Each promoted comment is one category of mistake that never needs a human again. This is how OpenAI "captures taste once and enforces it continuously" ([practice/02](practice/02-session-lifecycle.md#entropy-management-two-cleanup-modes)).
 
 ---
 
@@ -106,6 +167,10 @@ The evaluator **navigates the actual running application** rather than reading t
 
 Measured result: a solo run (20 min, $9) produced broken core gameplay; the full harness (6 hr, $200) produced a functional game with working AI integration. **~20× the cost for the difference between broken and working** — the harness ROI question is rarely "is it cheaper," it's "does it produce a result at all."
 
+A second run in the same post (a browser DAW) shows where the money goes: planner **$0.46**, three build rounds **$114**, three QA rounds **$10**, for **$124.70 and 3 h 50 m** in total. QA is under a tenth of the cost, and it caught that core features ("clips can't be dragged", "no instrument panel") were presentational only.
+
+**The evaluator needs calibrating too.** Early versions found real problems, then talked themselves into calling them minor and approved anyway. The fix was a development loop on the evaluator: read its logs, find where its judgment diverged from a human's, and tighten the QA prompt on exactly those points. Hard per-dimension thresholds (any dimension below the bar fails the sprint) stopped one strong dimension from averaging away a weak one.
+
 ---
 
 ## Grading criteria beat vibes
@@ -128,6 +193,17 @@ The generalizable move: **name the dimensions, weight them, score each separatel
 Before implementation, generator and evaluator **negotiate deliverables in writing.**
 
 This bridges the gap between a high-level spec and testable acceptance criteria — the gap where scope creep and misalignment live. The contract is written *before* work starts, by both parties, so the evaluator can't invent criteria afterward and the generator can't redefine done.
+
+A contract needs three sections, and the third is the one people skip:
+
+```markdown
+# Sprint contract: dark mode
+## Scope          theme toggle · global CSS variables · dark-mode tests
+## Verification   visual regression per component · main-flow e2e passes · no flash of unstyled content
+## Exclusions     print styles · third-party component theming
+```
+
+**Exclusions** stop the evaluator from rejecting work for things nobody asked for, and stop the generator from overreaching into them.
 
 It is the **acceptance baseline** from [note 01](01-what-a-harness-is.md#the-four-parts), made concrete and per-task. Related: verification contracts with **scoped claims** — the agent states precisely what it verified, which prevents "tests pass" from covering an untested path.
 

@@ -6,6 +6,8 @@ sources:
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
+  - https://openai.com/index/harness-engineering/
+  - https://github.com/walkinglabs/learn-harness-engineering
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -80,6 +82,29 @@ Most agent failures are **configuration problems, not model limitations**. Human
 | Rated its own work 9/10 | "It's sycophantic" | Generator and evaluator are the same agent |
 
 Each right-hand cell is a build task. That's the whole discipline in one table.
+
+### Five ways a capable model fails without a harness
+
+For a coding agent working in a real repo, the failures fall into five recurring shapes. Each one maps to a harness fix, not a model upgrade:
+
+| Failure | What it looks like | Harness fix |
+|---|---|---|
+| **Vague requirements** | Builds something plausible that isn't what you meant | Feature list with verifiable behaviors ([practice/03](practice/03-scope-and-done.md)) |
+| **Implicit conventions** | Breaks rules that live only in people's heads | Repo as system of record ([practice/01](practice/01-repo-as-system-of-record.md)) |
+| **Incomplete environment** | Spends the session fighting setup, or "fixes" the wrong thing | `init.sh` plus a startup-readiness check ([practice/02](practice/02-session-lifecycle.md)) |
+| **No verification** | Claims done when it isn't | Termination checks ([note 05](05-verification-loops.md#the-three-layer-termination-check)) |
+| **Cross-session loss** | Each session re-derives or undoes the last one | Progress log plus handoff ([practice/02](practice/02-session-lifecycle.md)) |
+
+### Fix the harness first
+
+The working loop that comes out of the reframe:
+
+1. **Run** the task on a fixed model.
+2. **Attribute** the failure to one subsystem: instructions, tools, environment, state or feedback ([note 02](02-harness-anatomy.md#the-five-subsystems)).
+3. **Fix that subsystem**, and only that one.
+4. **Re-run** the same task and compare.
+
+Change the model only after several rounds of this stop helping. Swapping models first hides which part of the harness was missing, so the same failure comes back under the next model.
 
 ---
 

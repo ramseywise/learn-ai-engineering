@@ -35,7 +35,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 
 - **[`../../ai-engineering/02-context/`](../../ai-engineering/02-context/README.md)** —
   context engineering for agents: what goes in the context window and why it matters
-  (curated course material: `00_COURSE/`, `notes/foundations/`, `cognitive-tools/`, `notes/reference/`).
+  (13-chapter course in `notes/`, with labs, templates and paper PDFs).
 - **[`LLMs-as-Operating-Systems--Agent-Memory-main/`](LLMs-as-Operating-Systems--Agent-Memory-main/)** —
   agent memory architectures: in-context, external (vector/KG), procedural memory.
 - **[`Long-Term-Agentic-Memory-With-LangGraph-main/`](../04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/)** —
@@ -75,7 +75,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
   retries, fallbacks, circuit breakers, determinism vs. stochasticity tradeoffs.
 - [loop-engineering.md](../../ai-engineering/04-loop/loop-engineering.md) — loop reliability:
   termination conditions, loop invariants, stuck-agent detection.
-- [deep-agents.md](../../ai-engineering/04-loop/deep-agents.md) — advanced agent patterns:
+- [deep-agents.md](../../ai-engineering/03-harness/deep-agents.md) — advanced agent patterns:
   long-horizon planning, self-correction, agentic evals.
 - [memory.md](../../ai-engineering/05-graph/memory.md) — memory architectures: in-context,
   episodic, semantic, procedural.

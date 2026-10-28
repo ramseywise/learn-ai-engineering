@@ -4,8 +4,9 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://developers.openai.com/api/docs/guides/compaction
+  - https://github.com/davidkimai/Context-Engineering (00_foundations/01–03, 00_COURSE/01_context_retrieval_generation/01–03) — snapshot 2026-08-14)
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-28
 ---
 # 2 — The Anatomy of Effective Context
 
@@ -75,7 +76,7 @@ Knowledge accumulated across sessions: user preferences, repeated corrections, p
 
 Never a full transcript pasted forward. Organize as a **compact index plus retrievable detail** — Claude Code's auto-memory loads the `MEMORY.md` index (first 200 lines / 25 KB) at session start; topic files are read only when needed.
 
-Memory must be **editable and auditable**. Wrong, outdated, or contradictory entries have to be removable rather than accumulating. See [05-memory-as-context.md](05-memory-as-context.md).
+Memory must be **editable and auditable**. Wrong, outdated, or contradictory entries have to be removable rather than accumulating. See [06-memory.md](06-memory.md).
 
 ### Layer 5 — Deterministic system
 
@@ -116,13 +117,13 @@ A useful cross-cut, orthogonal to the five layers:
 | **Retrieved** | Vector store, search, file reads | Changes per query |
 | **Historical** | Prior states, revisions, agent outputs | Grows monotonically |
 
-Historical is the one that gets away from you — it is the only type that grows without an explicit bound. Everything in [04-compression-compaction.md](04-compression-compaction.md) exists to bound it.
+Historical is the one that gets away from you — it is the only type that grows without an explicit bound. Everything in [05-compression-compaction.md](05-compression-compaction.md) exists to bound it.
 
 ---
 
 ## Structure within the window
 
-- **Delimit untrusted content.** Wrap user input and retrieved documents in tags (`<user_query>`, `<document index="1">`) so the model can distinguish instructions from data. This is also the first line of prompt-injection defense — see [07-context-failure-modes.md](07-context-failure-modes.md).
+- **Delimit untrusted content.** Wrap user input and retrieved documents in tags (`<user_query>`, `<document index="1">`) so the model can distinguish instructions from data. This is also the first line of prompt-injection defense — see [11-failure-modes.md](11-failure-modes.md).
 - **Structured outputs are context engineering.** A JSON schema or typed field list constrains what comes back, which determines what the *next* turn's context contains. Schema discipline compounds across a loop.
 - **Few-shot examples: diverse and canonical.** A handful of well-chosen examples outperforms an exhaustive rule list, and costs fewer tokens. Prefer examples over enumerated edge cases.
 
@@ -137,11 +138,40 @@ DAIR's case study (Saravia, n8n) is a planner agent that writes search tasks, pl
 | Planned 3 searches, ran 2, and gave no reason | State the completion rule. **Flexible** — "skip a task only if it overlaps another, and say why" — while developing and observing; **strict** — "execute every planned task" — in production |
 | Status values drifted between runs (`pending` / `to-do`, `done` / `completed` / `finished`) | **Enumerate the allowed values** in the tool instructions. Every free-text field that code reads needs a closed set |
 | Searched for stale news ("latest" meant last year) | **Inject the current date** as dynamic context, after the stable prefix so it doesn't break the cache (see [Ordering](#ordering-stable-before-dynamic)) |
-| One agent managed tasks, memory, search and the report; it forgot steps as the context grew | Split out a **search worker** that receives *only the query text* and returns results plus an error state. Run it on a cheaper model ([06](06-multi-agent-context.md#what-a-sub-agent-receives)) |
-| Unclear why it made a decision | Write the task list to external state (id, query, status, result summary, timestamp), so every decision is inspectable ([05](05-memory-as-context.md#structured-note-taking)) |
+| One agent managed tasks, memory, search and the report; it forgot steps as the context grew | Split out a **search worker** that receives *only the query text* and returns results plus an error state. Run it on a cheaper model ([10](10-tools-and-multi-agent.md#what-a-sub-agent-receives)) |
+| Unclear why it made a decision | Write the task list to external state (id, query, status, result summary, timestamp), so every decision is inspectable ([06](06-memory.md#structured-note-taking)) |
 | Undefined behavior when a search failed | Add **error-path instructions**: retry once, then record the failure and continue |
 
 Before shipping, check the context against four questions: **completeness** (does it cover every scenario?), **clarity** (could any part be read two ways?), **consistency** (do the system prompt and the tool descriptions agree?), and **testability** (can you check the behavior with an eval?). Then track task-completion rate, behavioral consistency across similar inputs, and error rate as the context changes. Avoiding over-constraint (rules that break on edge cases) and under-specification (vague goals) is a calibration problem. Evals settle it ([06-eval](../../06-eval/README.md)).
+
+---
+
+## The formal view
+
+The Mei et al. survey (2507.13334) writes context as an assembly of typed components rather than a single string:
+
+```
+C = A(c_instr, c_know, c_tools, c_mem, c_state, c_query)
+```
+
+| Component | Is | Layer above |
+|---|---|---|
+| `c_instr` | System instructions and rules | Instructions |
+| `c_know` | Retrieved external knowledge | Retrieved |
+| `c_tools` | Tool definitions and signatures | Tools |
+| `c_mem` | Persistent memory from prior sessions | Memory |
+| `c_state` | Dynamic state: user, world, task progress | Dynamic |
+| `c_query` | The immediate request | Query |
+
+`A` is the assembly function: selection, ordering, formatting. The framing makes one point worth keeping: **context engineering is designing `A`**, not writing any single component. Optimising the assembly under a token budget is [03](03-budgeting-the-window.md).
+
+### Examples: how many, which ones
+
+The upstream "molecule" material comes down to three rules:
+
+- **Two to five examples** usually capture most of the gain. Measure before adding more ([03](03-budgeting-the-window.md)).
+- **Select by similarity to the query** when you have an example pool. Retrieved examples beat a fixed set on heterogeneous traffic.
+- **Cover the output space.** Include at least one example of each output class (including "none" or "refuse"), or the model will under-produce the missing ones.
 
 ---
 
@@ -151,4 +181,4 @@ Before shipping, check the context against four questions: **completeness** (doe
 
 ---
 
-→ Next: [03-retrieval-strategies.md](03-retrieval-strategies.md) — how content gets *into* the window in the first place.
+→ Next: [03-budgeting-the-window.md](03-budgeting-the-window.md) — how much of each component the window can afford.

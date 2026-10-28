@@ -78,7 +78,7 @@ Landed in the 2026-07-31 sweep:
   note listing its `promptingguide.ai` sources in its frontmatter, and its notebooks were kept in
   [01-prompt-engineering/notebooks/](01-prompt-engineering/notebooks/). To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
-  [01-prompt-engineering/references.md](01-prompt-engineering/references.md).
+  [01-prompt-engineering/README.md](01-prompt-engineering/README.md#references).
 - [readings/AI-Papers-of-the-Week/](readings/AI-Papers-of-the-Week/): a vendored git snapshot, refreshed by hand.
 
 ### librarian / cartographer

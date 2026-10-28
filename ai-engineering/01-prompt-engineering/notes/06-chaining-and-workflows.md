@@ -130,7 +130,7 @@ Run **batch** for a known set of items (simpler) and **streaming** for open-ende
 ## Go deeper
 
 - Book: [Ch 9](../sources/prompt-eng-for-llms/09-llm-workflows.md) (Shopify DAG worked example, advanced workflows)
-- Anthropic, *Building Effective Agents*, and the chaining docs: [references.md](../references.md#vendor-guides)
+- Anthropic, *Building Effective Agents*, and the chaining docs: [references.md](../README.md#vendor-guides)
 - Runnable: [notebooks/pe-chatgpt-langchain.ipynb](../notebooks/pe-chatgpt-langchain.ipynb)
 
 ---

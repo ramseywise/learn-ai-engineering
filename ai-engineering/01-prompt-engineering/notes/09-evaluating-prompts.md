@@ -121,7 +121,7 @@ Lessons:
 
 - Book: [Ch 10](../sources/prompt-eng-for-llms/10-evaluating-llm-applications.md) (offline tech tree, SOMA, online metrics)
 - Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-harness.md](../../06-eval/eval-harness.md) · [eval-maturity-ladder.md](../../06-eval/eval-maturity-ladder.md)
-- Papers and tools: [references.md](../references.md#evaluation)
+- Papers and tools: [references.md](../README.md#evaluation)
 
 ---
 

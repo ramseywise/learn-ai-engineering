@@ -10,7 +10,7 @@ cleaned: 2026-10-28
 ---
 # 7 — Prompting Reasoning Models
 
-> Reasoning models are trained to produce chain-of-thought natively before they answer. Much of [03](03-core-techniques.md) is built into them, so the prompting advice shifts from *how to think* to *what to achieve*. Model behavior here changes quickly; treat the specifics as dated, and check the vendor guides in [references.md](../references.md#vendor-guides).
+> Reasoning models are trained to produce chain-of-thought natively before they answer. Much of [03](03-core-techniques.md) is built into them, so the prompting advice shifts from *how to think* to *what to achieve*. Model behavior here changes quickly; treat the specifics as dated, and check the vendor guides in [references.md](../README.md#vendor-guides).
 
 ---
 
@@ -93,7 +93,7 @@ Deep-research products (OpenAI, Gemini and Claude Research) are reasoning models
 - **Upload the documents you already have**, especially for technical or niche topics the web covers poorly.
 - **Verify the sources yourself.** Known weaknesses are citation errors, a bias toward certain domains, date-sensitive queries, and paywalled content.
 
-Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [04-loop/deep-agents.md](../../04-loop/deep-agents.md).
+Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [03-harness/deep-agents.md](../../03-harness/deep-agents.md).
 
 ---
 
@@ -110,7 +110,7 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 
 ## Go deeper
 
-- DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../references.md#reasoning-models)
+- DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../README.md#reasoning-models)
 - Book: [Ch 11](../sources/prompt-eng-for-llms/11-looking-ahead.md) (intelligence trends, the two durable lessons)
 
 ---

@@ -217,7 +217,7 @@ Loop: attempt → evaluate → reflect → retry with the reflection in context.
 ## Go deeper
 
 - Book: [Ch 5](../sources/prompt-eng-for-llms/05-prompt-content.md) (few-shot drawbacks) · [Ch 8](../sources/prompt-eng-for-llms/08-conversational-agency.md) (CoT, ReAct, plan-and-solve, Reflexion, branch-solve-merge)
-- Papers for every technique on this page: [references.md](../references.md#technique-papers)
+- Papers for every technique on this page: [references.md](../README.md#technique-papers)
 - Worked prompts: [prompt-library.md](prompt-library.md)
 
 ---

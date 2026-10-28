@@ -127,7 +127,7 @@ Reach for it when the static part of your prompt is long, stable, and still not 
 ## Go deeper
 
 - Book: [Ch 7](../sources/prompt-eng-for-llms/07-taming-the-model.md) (preamble types, logprobs, calibration, model choice, fine-tuning)
-- Vendor docs on structured outputs and sampling: [references.md](../references.md#vendor-guides)
+- Vendor docs on structured outputs and sampling: [references.md](../README.md#vendor-guides)
 - Runnable: [notebooks/pe-chatgpt-intro.ipynb](../notebooks/pe-chatgpt-intro.ipynb) (parameters) · [notebooks/pe-mixtral-introduction.ipynb](../notebooks/pe-mixtral-introduction.ipynb) (open-weight model)
 
 ---

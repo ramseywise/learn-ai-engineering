@@ -72,7 +72,7 @@ Anthropic's finding: **context resets outperformed compaction for Claude Sonnet 
 
 Compaction tuning, when you use it: **maximize recall first, then improve precision** by cutting superfluous content. Distill architectural decisions and unresolved issues; discard redundant tool outputs. A reset's handoff document is subject to the same discipline, written deliberately rather than generated.
 
-Depth on both: [02-context/notes/04](../../02-context/notes/04-compression-compaction.md).
+Depth on both: [02-context/notes/04](../../02-context/notes/05-compression-compaction.md).
 
 ---
 
@@ -92,7 +92,7 @@ Agents maintain **persistent memory outside the context window** — markdown no
 
 Notably, this behavior is **partly emergent**: Claude playing Pokémon developed its own note structures, maintaining strategic notes and tallies across thousands of steps without being told to. The harness's job is to *provide the medium* and prompt for its use; the model will often organize it sensibly.
 
-Design guidance in [02-context/notes/05](../../02-context/notes/05-memory-as-context.md): index-plus-detail rather than transcripts, and memory that is editable and auditable.
+Design guidance in [02-context/notes/05](../../02-context/notes/06-memory.md): index-plus-detail rather than transcripts, and memory that is editable and auditable.
 
 ---
 
