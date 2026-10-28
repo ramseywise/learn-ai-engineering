@@ -61,7 +61,7 @@ Self-RAG decides *inside the LLM* during generation.
 existing link structure (e.g. wikilinks) already gives you a traversable graph — say this
 before proposing entity extraction + community detection.
 
-**Knowledge-graph RAG in depth:** chapters in `ai-engineering/05-graph/3-rag-knowledge-graphs/` (KG-powered
+**Knowledge-graph RAG in depth:** chapters in `ai-engineering/05-graph-engineering/sources/` (KG-powered
 retrieval, QA agents over graphs) cover the build path: entity linking → graph features →
 KG-RAG.
 
@@ -120,8 +120,8 @@ control · HITL review for flagged outputs · claim-level provenance if CRAG/age
 
 ## Sources
 
-- notes: [rag.md](../../../generative-ai/02-rag-retrieval/rag.md) (9-architectures + production checklist), [memory.md](../../../ai-engineering/05-graph/memory.md) (memory-augmented conversational RAG)
+- notes: [rag.md](../../../generative-ai/02-rag-retrieval/rag.md) (9-architectures + production checklist), [memory.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) (memory-augmented conversational RAG)
 - images: [9 RAG architectures](../../images/9-rag-architectures.png)
-- readings: `3-rag/` (RAG, Self-RAG, RAGAS, survey papers), `3-rag-knowledge-graphs/` (KG-RAG chapters)
+- readings: `3-rag/` (RAG, Self-RAG, RAGAS, survey papers), `ai-engineering/05-graph-engineering/sources/` (KG-RAG chapters)
 - librarian wiki: RAG Retrieval Strategies · Agentic RAG — Advanced Patterns · RAG Reranking · Reciprocal Rank Fusion · RAG Evaluation · CRAG Retry Logic · Semantic Cache Pipeline · Vector Database Comparison · HistoryCondenser
 - course refs: `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main`, `ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main`

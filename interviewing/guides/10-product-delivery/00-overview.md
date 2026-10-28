@@ -15,7 +15,7 @@ the nonprofit sector) and the differentiator for FDE/DS roles.
    classic).
 3. **Product thinking for AI** — *Building Applications with AI Agents* chs 3, 13 (UX
    design for agentic systems; human–agent collaboration) + *Human-AI Interaction
-   Guidelines* (Microsoft, `ai-engineering/05-graph/3-rag-knowledge-graphs/Guidelines-for-Human-AI-Interaction-camera-ready.pdf`).
+   Guidelines* (Microsoft, `ai-engineering/06-eval/evaluation/Guidelines-for-Human-AI-Interaction-camera-ready.pdf`).
 4. **Communicating results** — *Storytelling with Data* (Knaflic,
    `data-analytics/readings/`): the deck/memo skills that carry take-home presentations
    and funder reports alike.

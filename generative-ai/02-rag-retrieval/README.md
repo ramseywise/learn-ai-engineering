@@ -44,7 +44,7 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 ### Readings
 
 - [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
-- [`../../ai-engineering/05-graph/3-rag-knowledge-graphs/`](../../ai-engineering/05-graph/3-rag-knowledge-graphs/) — knowledge
+- [`../../ai-engineering/05-graph-engineering/sources/`](../../ai-engineering/05-graph-engineering/sources/) — knowledge
   graphs for retrieval reference material.
 
 ---

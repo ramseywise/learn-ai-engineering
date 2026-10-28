@@ -29,10 +29,10 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 | Foundation | Depth (here) | Summary guide | Seed note(s) |
 |---|---|---|---|
 | prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](../interviewing/guides/7-security-safety/prompt-injection.md) (security) |
-| context | [02-context/](02-context/README.md) | [5-context-cost](../interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context/context-engineering.md), [memory.md](05-graph/memory.md) |
+| context | [02-context/](02-context/README.md) | [5-context-cost](../interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context/context-engineering.md), [memory.md](02-context-engineering/sources/memory-augmented-rag-notion-export.md) |
 | harness | [03-harness/](03-harness/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness/agent-harness.md), [agents-design.md](03-harness/agents-design.md) |
 | loop | [04-loop/](04-loop/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop/loop-engineering.md), [reliable-agents.md](03-harness/reliable-agents.md) |
-| graph | [05-graph/](05-graph/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph/graph-engineering.md) (new), readings/3-rag-knowledge-graphs/ |
+| graph | [05-graph/](05-graph/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph/graph-engineering.md) (new), 05-graph-engineering/sources/ |
 | eval | [06-eval/](06-eval/README.md) | [6-evals-observability](../interviewing/guides/6-evals-observability/00-overview.md) | [eval-harness.md](06-eval/eval-harness.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
 
 ---

@@ -118,7 +118,7 @@ ai-engineering is the discipline that makes them reliable.
     - `data-engineering/8-data-eng-data-mesh/` — data mesh and data-engineering handouts
     - `generative-ai/01-llm-fundamentals/readings/` — prompting, RLHF, and LLM foundations
     - `generative-ai/02-rag-retrieval/3-rag/` — retrieval-augmented generation papers
-    - `ai-engineering/05-graph/3-rag-knowledge-graphs/` — knowledge graphs for RAG
+    - `ai-engineering/05-graph-engineering/sources/` — knowledge graphs for RAG
     - `ai-engineering/readings/ai_engineering/` — AI design, AI engineering, and performance books
     - `ai-engineering/readings/general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
 
