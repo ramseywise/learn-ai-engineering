@@ -1,6 +1,6 @@
 # 01 — LLM Fundamentals
 
-> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md)
 > Position: first pillar — what LLMs are, how they're trained, how to prompt them.
 > Everything in generative AI builds on this foundation.
 
@@ -39,7 +39,7 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
 
 ### Interviewing guides
 
-- [2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) —
+- [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) —
   compressed summary for interview prep: attention, RLHF, prompting, model behavior.
 
 ### Cleaned notes

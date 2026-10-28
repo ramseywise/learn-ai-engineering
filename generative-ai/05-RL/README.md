@@ -1,6 +1,6 @@
 # 05 — RL & Alignment
 
-> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md)
 > Position: fifth pillar — reinforcement learning and post-training alignment.
 > Presumes: [01-llm-fundamentals](../01-llm-fundamentals/README.md).
 
@@ -211,7 +211,7 @@ Ordered by impact for interview depth and conceptual completeness:
 | Downstream | [07-agentic-applications](../07-agentic-applications/README.md) | Deep-research-bot has an RL notebook (`03_rl_for_deep_research_agent.ipynb`). |
 | Lateral | [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md) | Evaluation methodology for RL-trained agents: trajectory scoring, preference annotation, benchmarks. |
 | Lateral | [Li, *AI Agents in Depth* ch. 7](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) | Synthesized into [`post-training-for-agents.md`](post-training-for-agents.md); GPU labs linked upstream from its [Labs](post-training-for-agents.md#labs) table. |
-| Lateral | [interviewing/guides/2-llm-fundamentals](../../interviewing/guides/2-llm-fundamentals/00-overview.md) | Summary layer — RLHF, alignment, and prompting compressed for interview prep. |
+| Lateral | [interviewing/guides/2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) | Summary layer — RLHF, alignment, and prompting compressed for interview prep. |
 
 ---
 
