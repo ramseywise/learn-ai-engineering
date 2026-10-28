@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test link-check learn
+.PHONY: help lint test link-check learn papers papers-status papers-install
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -30,3 +30,15 @@ learn:  ## Process arXiv paper queue in librarian and surface top picks (cd libr
 	@echo "To fetch fresh papers first:"
 	@echo "  ARXIV_FETCH_ENABLED=true uv run cartographer --cron"
 	@echo "  (run from $(LIBRARIAN_DIR))"
+
+papers:  ## Fetch new AI Papers of the Week, triage, download PDFs into pillar sources/
+	@python3 scripts/papers/potw.py run
+
+papers-status:  ## Paper ledger counts by status
+	@python3 scripts/papers/potw.py status
+
+papers-install:  ## Install the weekly launchd job (Monday 11:00)
+	@cp scripts/papers/com.wiseer.potw.plist ~/Library/LaunchAgents/
+	@launchctl bootout gui/$$(id -u)/com.wiseer.potw 2>/dev/null || true
+	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
+	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"

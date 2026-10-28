@@ -45,7 +45,7 @@ infrastructure; eval is the discipline.
   [`langsmith.md`](../04-agentic-frameworks/notes/langsmith.md).
 
 **Support-agent content note:** content for the `kb_adk`/`kb_lg`/`kb_rag` support-agent
-system is distributed across both pillars by design — `ai-engineering/06-eval/evals/`
+system is distributed across both pillars by design — `ai-engineering/06-eval/case-study/`
 (gate-contract, eval-architecture) covers evaluation methodology; `generative-ai/02-rag-retrieval/rag/`
 (hc-rag-pipeline, semantic-cache, bedrock-kb) covers the retrieval pipeline; and
 `support-agent-observability.md` (here) covers the observability schema contract. There is

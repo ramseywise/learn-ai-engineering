@@ -66,7 +66,7 @@ Please use model version tags and aliases instead of stages. For example, instea
 
 ## 2.7 Homework
 
-More information [here](../cohorts/2024/02-experiment-tracking/homework.md).
+More information [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/cohorts/2024/02-experiment-tracking/homework.md).
 
 
 ## Notes

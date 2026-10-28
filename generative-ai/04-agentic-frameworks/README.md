@@ -37,9 +37,9 @@ given problem.
 
 ## Cross-links to ai-engineering
 
-- [ai-engineering/03-harness/](../../ai-engineering/03-harness/README.md) — harness
+- [ai-engineering/03-harness-engineering/](../../ai-engineering/03-harness-engineering/README.md) — harness
   architecture: the engineering discipline layer that sits on top of any framework choice.
-- [ai-engineering/04-loop/](../../ai-engineering/04-loop/README.md) — loop engineering:
+- [ai-engineering/04-loop-engineering/](../../ai-engineering/04-loop-engineering/README.md) — loop engineering:
   termination, reliability, and determinism patterns applicable across frameworks.
 
 ---

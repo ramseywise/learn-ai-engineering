@@ -17,7 +17,7 @@ systems are RAG systems — and most interview design questions have a RAG core.
 4. **Measure it** — RAGAS (2309.15217 + `ragas_automated_evaluation.pdf`) and ARES
    (2311.09476); pairs with pillar 6.
 5. **Knowledge graphs as the next step** — *Knowledge Graphs and LLMs in Action* (full
-   book, `ai-engineering/05-graph/3-rag-knowledge-graphs/`): building KGs with LLMs, GraphRAG (ch 13),
+   book, `ai-engineering/05-graph-engineering/sources/`): building KGs with LLMs, GraphRAG (ch 13),
    QA agents over graphs (ch 15 uses LangGraph).
 
 ## Resource map
@@ -27,7 +27,7 @@ systems are RAG systems — and most interview design questions have a RAG core.
 | RAG (2005.11401) · RAG survey (2312.10997) | pdf | `generative-ai/02-rag-retrieval/3-rag/` | the founding pattern + taxonomy |
 | Self-RAG (2310.11511) · corrective/advanced retrieval papers | pdf | `generative-ai/02-rag-retrieval/3-rag/` | reflection + retry loops |
 | RAGAS (2309.15217) · ARES (2311.09476) | pdf | `generative-ai/02-rag-retrieval/3-rag/` | RAG evaluation frameworks |
-| *Knowledge Graphs and LLMs in Action* (chs 1–15 + appendices) | pdf | `ai-engineering/05-graph/3-rag-knowledge-graphs/` | KG construction, GNNs, KG-RAG, Neo4j |
+| *Knowledge Graphs and LLMs in Action* (chs 1–15 + appendices) | pdf | `ai-engineering/05-graph-engineering/sources/` | KG construction, GNNs, KG-RAG, Neo4j |
 | coursera RAG course repos | code | `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main/` | guided builds |
 | chatbot projects | code | `generative-ai/07-agentic-applications/chatbot/` | working RAG codebases incl. deep-research bot |
 | RAG Retrieval Strategies · RAG Evaluation · Agentic RAG — Advanced Patterns (+ 13 more) | wiki | librarian `wiki/rag/` | compiled production patterns (RRF, E5 prefixes, reranking) |
