@@ -7,7 +7,8 @@ real answer.
 
 ## Learning path
 
-1. **The taxonomy** — [eval-harness.md](../../../ai-engineering/06-eval/eval-harness.md) (from Anthropic's
+1. **The taxonomy** — [eval-engineering.md](../../../ai-engineering/06-eval/eval-engineering.md) and
+   [01-what-an-eval-is.md](../../../ai-engineering/06-eval/notes/01-what-an-eval-is.md) (from Anthropic's
    eval article) + librarian's *Anthropic Eval Taxonomy* page: unit/trajectory/e2e tiers,
    capability vs regression harnesses.
 2. **Formal methodology** — *AI Engineering* chs 3–4 (Evaluation Methodology, Evaluate AI
@@ -34,7 +35,7 @@ real answer.
 | TruthfulQA + judge-bias papers | pdf | `ai-engineering/readings/general/` | why judges need calibration |
 | langfuse/langsmith course repos | code | `generative-ai/06-observability/` | hands-on tracing |
 | Anthropic Eval Taxonomy · LLM-judge + annotation pages (wiki/eval, 16pp) | wiki | librarian | compiled harness designs |
-| eval-harness.md · support-agent-observability.md | note | [ai-engineering/06-eval/](../../../ai-engineering/06-eval/) · [generative-ai/06-observability/](../../../generative-ai/06-observability/) | taxonomy + tracing |
+| eval-engineering.md · support-agent-observability.md | note | [ai-engineering/06-eval/](../../../ai-engineering/06-eval/) · [generative-ai/06-observability/](../../../generative-ai/06-observability/) | taxonomy + tracing |
 | agents-self-training.md | note | [../../notes/agents-self-training.md](../../notes/agents-self-training.md) | eval-driven training |
 | two-layer eval calibration · agentic lifecycle evals | image | [../../images/](../../images/) | human/LLM grading loop diagrams |
 

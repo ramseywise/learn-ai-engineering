@@ -100,8 +100,8 @@ Explore a collection of projects completed by members of our community. The proj
 
 ### MLOps Zoomcamp 2023
 
-* [2023 Projects](../cohorts/2023/07-project)
+* [2023 Projects](https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/cohorts/2023/07-project)
 
 ### MLOps Zoomcamp 2022
 
-* [2022 Projects](../cohorts/2022/07-project)
+* [2022 Projects](https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/cohorts/2022/07-project)

@@ -75,9 +75,9 @@ Cross-links from gen-AI pillars into ai-engineering:
 
 | gen-AI pillar | ai-engineering depth |
 |---|---|
-| 01 LLM fundamentals | [01-prompt/](../ai-engineering/01-prompt/README.md) — prompt engineering |
-| 02 RAG & retrieval | [02-context/](../ai-engineering/02-context/README.md) + [05-graph/](../ai-engineering/05-graph/README.md) |
-| 03-04 Agentic foundations + frameworks | [03-harness/](../ai-engineering/03-harness/README.md) + [04-loop/](../ai-engineering/04-loop/README.md) |
+| 01 LLM fundamentals | [01-prompt-engineering/](../ai-engineering/01-prompt-engineering/README.md) — prompt engineering |
+| 02 RAG & retrieval | [02-context-engineering/](../ai-engineering/02-context-engineering/README.md) + [05-graph-engineering/](../ai-engineering/05-graph-engineering/README.md) |
+| 03-04 Agentic foundations + frameworks | [03-harness-engineering/](../ai-engineering/03-harness-engineering/README.md) + [04-loop-engineering/](../ai-engineering/04-loop-engineering/README.md) |
 | 06 Observability | [06-eval/](../ai-engineering/06-eval/README.md) — evaluation and measurement |
 
 ---

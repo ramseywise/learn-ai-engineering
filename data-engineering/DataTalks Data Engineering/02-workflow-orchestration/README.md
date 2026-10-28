@@ -1,7 +1,7 @@
 > [!NOTE]
->If you're looking for Airflow videos from the 2022 edition, check the [2022 cohort folder](../cohorts/2022/week_2_data_ingestion/).
+>If you're looking for Airflow videos from the 2022 edition, check the [2022 cohort folder](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/cohorts/2022/week_2_data_ingestion).
 >
->If you're looking for Prefect videos from the 2023 edition, check the [2023 cohort folder](../cohorts/2023/week_2_data_ingestion/).
+>If you're looking for Prefect videos from the 2023 edition, check the [2023 cohort folder](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/cohorts/2023/week_2_workflow_orchestration).
 
 # Week 2: Workflow Orchestration
 
@@ -147,7 +147,7 @@ Additional Mage Guides
 
 ### 2.2.8 - 🗒️ Homework
 
-We've prepared a short exercise to test you on what you've learned this week. You can find the homework [here](../cohorts/2024/02-workflow-orchestration/homework.md). This follows closely from the contents of the course and shouldn't take more than an hour or two to complete. 😄
+We've prepared a short exercise to test you on what you've learned this week. You can find the homework [here](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/02-workflow-orchestration/homework.md). This follows closely from the contents of the course and shouldn't take more than an hour or two to complete. 😄
 
 ### 2.2.9 - 👣 Next Steps
 
@@ -183,9 +183,9 @@ Did you take notes? You can share them here:
 
 ## 2023 notes
 
-See [here](../cohorts/2023/week_2_workflow_orchestration#community-notes)
+See [here](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/cohorts/2023/week_2_workflow_orchestration#community-notes)
 
 
 ## 2022 notes
 
-See [here](../cohorts/2022/week_2_data_ingestion#community-notes)
+See [here](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/cohorts/2022/week_2_data_ingestion#community-notes)

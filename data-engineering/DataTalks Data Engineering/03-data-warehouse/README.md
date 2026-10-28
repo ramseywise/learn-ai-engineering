@@ -54,7 +54,7 @@
 
 # Homework
 
-* [2024 Homework](../cohorts/2024/03-data-warehouse/homework.md)
+* [2024 Homework](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/03-data-warehouse/homework.md)
 
 
 # Community notes

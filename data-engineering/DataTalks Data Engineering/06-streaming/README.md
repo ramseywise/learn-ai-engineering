@@ -116,7 +116,7 @@ Please follow the steps described under [pyspark-streaming](python/streams-examp
 
 ## Homework
 
-* [2024 Homework](../cohorts/2024/)
+* [2024 Homework](https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/cohorts/2024)
 
 ## Community notes
 

@@ -60,7 +60,7 @@ No video - you already know how to do it:
 
 ## Homework
 
-More information [here](../cohorts/2024/04-deployment/homework.md).
+More information [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/cohorts/2024/04-deployment/homework.md).
 
 
 ## Notes

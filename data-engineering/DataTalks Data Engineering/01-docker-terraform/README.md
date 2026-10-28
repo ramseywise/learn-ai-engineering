@@ -176,7 +176,7 @@ For the course you'll need:
 
 # Homework
 
-* [Homework](../cohorts/2024/01-docker-terraform/homework.md)
+* [Homework](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/01-docker-terraform/homework.md)
 
 
 # Community notes

@@ -20,7 +20,7 @@ confirmed.
 
 | Directory | Upstream | Snapshot date | Tracked | Notes |
 |---|---|---|---|---|
-| `ai-engineering/02-context/Context-Engineering-main` | https://github.com/davidkimai/Context-Engineering | 2026-08-14 | 298 files / 45.1 MB | Largest snapshot. Curation of the useful subset is #105. |
+| ~~`ai-engineering/02-context/Context-Engineering-main`~~ | https://github.com/davidkimai/Context-Engineering | 2026-08-14 | **removed 2026-10-28** (was 298 files / 45.1 MB) | Synthesized into `02-context/notes/01–13` + `99` (speculative appendix); raw course files deleted. Kept as files: `templates/`, `notebooks/` (zero-to-hero labs). Cited paper PDFs in `02-context/sources/`, links in `02-context/references.md`. |
 | `generative-ai/03-agentic-foundations/AgenticAIFrameworks-master` | https://github.com/adv-11/AgenticAIFrameworks | 2026-08-14 | 124 files / 1.3 MB | Content-matched (upstream adds `sf_ml_th/`). |
 | `generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main` | https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory | 2026-08-14 | 109 files / 16.1 MB | Includes 1 PDF (`handbook.pdf`). Exact content match. DeepLearning.AI × Letta course. |
 | `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main` | https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG | 2026-08-14 | 103 files / 27.2 MB | Includes 6 PDFs (5 module slide decks + certificate). Exact content match. |
@@ -28,12 +28,19 @@ confirmed.
 | `generative-ai/07-agentic-applications/internet-search-agent-main` | https://github.com/omidreza-amrollahi/internet-search-agent | 2026-08-14 | 39 files / 0.1 MB | Content-matched. Dependabot entry removed (see below). |
 | `generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main` | https://github.com/YunghuiHsu/Long-Term-Agentic-Memory-With-LangGraph | 2026-08-14 | 39 files / 0.8 MB | Exact content match. Dependabot entry removed (see below). |
 | `generative-ai/06-observability/langfuse-mcp-python-main` | https://github.com/Log-LogN/langfuse-mcp-python | 2026-08-14 | 36 files / 0.2 MB | Content-matched. Dependabot entry removed (see below). |
-| `ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-08-14 | 34 files / 27.3 MB | Exact content match. Contains a 22 MB `neo4j_L7.dump`. |
+| `ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-08-14 | 34 files / 27.3 MB | Exact content match. Contains a 22 MB `neo4j_L7.dump`. |
 | `generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main` | https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen | 2026-08-14 | 14 files / 1.7 MB | Exact content match. |
 | `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-08-14 | 12 files / 0.5 MB | Exact content match. |
 | `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-08-14 | 9 files / 0.1 MB | Exact content match. |
 | `data-analytics/Bayes/BayesianML-master` | ⚠️ unresolved — see note below | 2026-08-14 | 8 files / 0.1 MB | **Not a vendored snapshot — appears to be your own coursework.** Course: https://www.coursera.org/learn/bayesian-methods-in-machine-learning |
 | `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-08-14 | 5 files / 5.8 MB | Exact content match. |
+
+## Removed snapshots
+
+| Directory | Upstream | Removed | What was kept |
+|---|---|---|---|
+| `ai-engineering/01-prompt-engineering/Prompt-Engineering-Guide-main` (originally `01-prompt/`) | https://github.com/dair-ai/Prompt-Engineering-Guide (MIT) | 2026-10-28 | Its English `pages/` content was merged into `ai-engineering/01-prompt-engineering/notes/`, with sources in each note's frontmatter. The notebooks were kept as `ai-engineering/01-prompt-engineering/notebooks/` and the lecture PDF as `notes/dair-prompt-engineering-lecture.pdf`. The upstream `img/` folder was restored on 2026-10-28 (upstream commit `5767372`) as `sources/dair-prompt-engineering-guide/images/`. The Next.js site code and translations were dropped. Re-clone the upstream repo if you need them. |
+| `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/`, with the OpenAI repo template in `templates/openai-repo-template/`. Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
 
 ## `BayesianML-master` is misfiled
 

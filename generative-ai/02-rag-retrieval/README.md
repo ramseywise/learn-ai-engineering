@@ -25,7 +25,7 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 - **[`Deeplearning.ai-RAG-main/`](Deeplearning.ai-RAG-main/)** —
   DeepLearning.AI RAG course: building a document-QA pipeline with embeddings, vector
   stores, and faithfulness evaluation.
-- **[`../../ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main/`](../../ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main/)** —
+- **[`../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/`](../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/)** —
   knowledge graphs as a retrieval layer: structured retrieval over graph databases,
   KG-augmented context assembly.
 
@@ -38,13 +38,13 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 
 - [rag.md](rag.md) — RAG architecture: retrieval pipeline,
   chunking strategies, hybrid search, reranking, faithfulness and groundedness evaluation.
-- [graph-engineering.md](../../ai-engineering/05-graph/graph-engineering.md) — knowledge
+- [graph-engineering.md](../../ai-engineering/05-graph-engineering/graph-engineering.md) — knowledge
   graph patterns: entity extraction, graph construction, KG-for-RAG, graph traversal.
 
 ### Readings
 
 - [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
-- [`../../ai-engineering/05-graph/3-rag-knowledge-graphs/`](../../ai-engineering/05-graph/3-rag-knowledge-graphs/) — knowledge
+- [`../../ai-engineering/05-graph-engineering/sources/`](../../ai-engineering/05-graph-engineering/sources/) — knowledge
   graphs for retrieval reference material.
 
 ---
@@ -54,10 +54,10 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 RAG is fundamentally a **context assembly pattern** — the retrieved documents become the
 context window. The ai-engineering depth layer for this:
 
-- [ai-engineering/02-context/](../../ai-engineering/02-context/README.md) — context
+- [ai-engineering/02-context-engineering/](../../ai-engineering/02-context-engineering/README.md) — context
   engineering: assembling, compressing, and budgeting the context window that delivers
   your retrieved documents.
-- [ai-engineering/05-graph/](../../ai-engineering/05-graph/README.md) — graph engineering:
+- [ai-engineering/05-graph-engineering/](../../ai-engineering/05-graph-engineering/README.md) — graph engineering:
   the LangGraph/knowledge-graph layer that makes multi-step retrieval programmable.
 
 ---
