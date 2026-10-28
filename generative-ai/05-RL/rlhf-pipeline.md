@@ -132,7 +132,7 @@ out-of-distribution inputs that exploit this gap. See: [reward hacking patterns]
 
 ### Overoptimization
 
-PPO is run too long or with too large a KL coefficient. The policy drifts far from the
+PPO is run too long or with too small a KL coefficient. The policy drifts far from the
 SFT initialization, into regions where the reward model's scores are unreliable.
 
 **The reward model's accuracy degrades as the policy diverges from the distribution
@@ -141,7 +141,21 @@ policy can drift from SFT.
 
 Anthropic (2022) showed reward model score vs. KL divergence follows an inverse-U curve:
 initial optimization improves true quality; past the peak, reward score continues rising
-while actual quality degrades.
+while actual quality degrades. OpenAI measured the same shape as a scaling law (Gao,
+Schulman & Hilton, "Scaling Laws for Reward Model Overoptimization", 2023): proxy reward
+climbs monotonically while human-judged quality rises, then falls. This is Goodhart's law,
+and it shows up as verbose, ingratiating, rigorous-sounding filler.
+
+**Why the KL is reverse, `KL(π_θ || π_ref)`.** The current policy comes first. Reverse KL
+penalizes probability mass where the reference has almost none, so it keeps the policy
+inside the region where the RM's scores are trustworthy. It is also **mode-seeking**: the
+policy settles on one or two high-reward response styles instead of covering every style
+in the reference. That is why RL-tuned models sound more decisive and less diverse.
+Forward KL would force the policy to cover every mode of the SFT model, which is not the
+goal. In practice the penalty is computed **per token and added to the reward**, not as a
+separate loss term, so it flows through the PPO/GRPO advantage. Most RLVR runs keep it for
+stability. DAPO and Open-Reasoner-Zero drop it; DeepSeek-R1-Zero's GRPO keeps it. More in
+[post-training-for-agents.md](post-training-for-agents.md#why-sft-memorizes-and-rl-generalizes).
 
 ### Alignment tax
 

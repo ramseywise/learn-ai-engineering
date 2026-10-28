@@ -116,6 +116,38 @@ a defined handoff protocol (agent↔agent, agent↔human: what transfers, who ow
 - *"What do you log?"* — full trajectory: prompts, tool calls + args, retrieved context,
   intermediate outputs, final action; structured fields, not prose.
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"Does LLM-as-judge have systematic blind spots?"* — length and style bias, same-family
+  favouritism. Detect with a 100–200 item human gold set (Cohen's κ), length–score audits,
+  red-team cases; correct with rubrics that penalise verbosity and judges from other model
+  families.
+- *"Is there an endgame to benchmark leakage?"* — not for static question banks. Publish the
+  generator, keep the instances private: parameterised templates instantiated fresh each
+  run, graded on final environment state.
+- *"Reliable rubrics for subjective dimensions?"* — translate them into observable
+  behaviours with examples and boundary cases per grade, grow the rubric into a casebook
+  from rater disagreements, calibrate against a gold set.
+- *"How do you validate a simulated user?"* — spot-check dialogues for progressive
+  disclosure and no invented facts, and check that small real-user runs rank systems the
+  same way. Distorted simulators make absolute scores meaningless, though relative rankings
+  may hold.
+- *"Preferences aren't transitive — what happens to Bradley–Terry rankings?"* —
+  multi-dimensional trade-offs make rankings drift with the prompt mix. Rank per capability
+  and publish the pairwise win-rate matrix.
+- *"Each hypothesis needs hundreds of runs — how do you stretch the budget?"* — run cheap
+  prompt-level hypotheses first and gate expensive ones on them; use paired tests (McNemar)
+  on the same tasks; don't decide inside the noise band; grow the set when it can't resolve
+  the expected gain.
+- *"When should thinking mode be on?"* — route on task features (counting, complex
+  reasoning), historical failure clusters, and runtime uncertainty (backtracks, repeated
+  errors). It hurts in real-time voice and UI work, and is waste on simple tasks.
+- *"How do you debug an end-to-end voice model?"* — make it emit readable intermediates (an
+  inner-monologue text stream, event tags), compare against a self-cascade run to tell
+  perception errors from reasoning errors, and keep per-dimension offline regressions.
+
 ## Sources
 
 - notes: [eval-engineering.md](../../../ai-engineering/06-eval/eval-engineering.md) (overview of the 12-chapter eval syllabus, incl. Anthropic demystifying-evals synthesis and production layer), [support-agent-observability.md](../../../generative-ai/06-observability/support-agent-observability.md)

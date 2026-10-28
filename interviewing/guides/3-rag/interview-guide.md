@@ -118,6 +118,34 @@ control · HITL review for flagged outputs · claim-level provenance if CRAG/age
 - *"When would you NOT use RAG?"* — stable narrow knowledge that fits the context window or
   a fine-tune; latency-critical paths; poor-quality corpora (garbage in).
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"A user gives two different home addresses in two sessions?"* — extract → compare →
+  decide (Mem0 style): retrieve similar memories, have an LLM choose ADD/UPDATE/DELETE/NOOP.
+  Address-type facts keep the latest version with a timestamp; history-type facts keep every
+  version.
+- *"Source documents contradict each other — how does retrieval know?"* — chunk metadata
+  (version, effective and expiry dates, source); filter expired content or mark it in the
+  contextual prefix; fold authority and freshness into the reranker; flag inter-chunk
+  contradictions at index time.
+- *"The model doesn't know what it doesn't know, so it never searches — fix?"* — make "is
+  the information sufficient?" an explicit step (retrieve sub-questions, spot the missing
+  link, search again), and keep a lightweight overview of the store resident so the agent
+  knows what's in it.
+- *"Will long context make chunking and indexes obsolete?"* — partly: chunk tuning matters
+  less. But attention is soft retrieval and can't aggregate across a corpus; freshness,
+  tenant isolation, audit and cost don't depend on the model; and index-time distillation is
+  itself search + learning, consistent with the Bitter Lesson.
+- *"RAPTOR or GraphRAG?"* — RAPTOR for overview-to-detail drill-down across summary levels;
+  GraphRAG for multi-hop relations, entity disambiguation and themes via community
+  summaries.
+- *"When does a file-system knowledge base beat a vector store?"* — when humans and agents
+  maintain it together: readable, editable, versioned in Git, writable by the agent, and
+  L0/L1/L2 progressive disclosure saves tokens. It needs index pages and cross-links or
+  retrieval degrades as it grows.
+
 ## Sources
 
 - notes: [rag.md](../../../generative-ai/02-rag-retrieval/rag.md) (9-architectures + production checklist), [memory.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) (memory-augmented conversational RAG)

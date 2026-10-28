@@ -81,6 +81,50 @@ decoding as a latency trick. Serving metrics: TTFT, tokens/sec, p95.
 - *"DPO vs RLHF?"* — same preference data, no reward model or RL loop; directly raises the
   likelihood gap between chosen and rejected; trades some controllability for stability.
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"Fine-tuning broke general tool calling — how do you limit forgetting?"* — mix ~20%
+  general data back in; stop SFT once the format is stable; small LoRA rank (8–32) and a KL
+  penalty for RL; one adapter per task; regression-test general benchmarks.
+- *"A capability could be trained in or put in context — which?"* — facts and evidence go to
+  RAG, language-expressible principles to prompts/Skills, hard constraints to code. Train
+  only what symbols can't carry (tone, implicit policy, perception), and only once the
+  approach is proven at volume. Hard rules never rely on weights alone.
+- *"Why is distilling an agentic model harder than a chat model?"* — chat distils an
+  input→output style (plain SFT); reasoning needs full traces and filtering of wrong
+  answers; agentic needs a live environment, must not learn environment-returned tokens, and
+  offline data suffers learner–sampler mismatch, so use on-policy distillation.
+- *"Credit assignment across a 10-turn trajectory?"* — outcome reward plus per-action path
+  signals from deterministic rules (penalise invalid tool calls), process rewards where
+  steps are judgeable. That restores variance in all-pass / all-fail groups.
+- *"Correct process with a wrong result, or lucky success — which earns more reward?"* —
+  lucky success is the dangerous one: shortcuts like editing tests inflate success and seed
+  reward hacking. Reward outcomes, penalise bad actions, but keep process constraints sparse
+  so exploration can find better strategies.
+- *"Can a weak model supervise a strong one?"* — yes, as a verifier rather than a
+  demonstrator: verification is easier than generation, and SFT on a weak demonstrator caps
+  you at its level.
+- *"When is SFT enough and it's time for RL?"* — tool calls parse and execute reliably
+  enough to compute rewards; more demos stop improving OOD performance; validation starts to
+  degrade. Over-trained SFT collapses onto the training distribution and RL can't recover
+  it.
+- *"Can you train on an eval set like τ²-bench?"* — reuse environments, not questions:
+  parameterised instances stop answer memorisation but not template overfitting, so hold out
+  whole templates or domains and treat the OOD score as the real metric.
+- *"What reward hacking appears against simulated users or search?"* — sycophancy and
+  over-promising to easily placated users, fabricated facts the simulator won't check,
+  leading queries, verbose judge-pleasing answers, retreating to what the simulator models
+  well. Anchor rewards to verifiable real state, calibrate simulators against production
+  traces, and gate releases only on real online metrics.
+- *"Long-tail rollouts idle the training cluster — fix?"* — decouple rollout from training
+  and pipeline asynchronously, continuous batching, and DAPO-style overlong reward shaping
+  to shrink the tail at the source.
+- *"A per-user LoRA instead of a memory store?"* — usually no: LoRA memorises facts poorly
+  and can't reason multi-hop over them; frequently changing or auditable facts belong in
+  retrieval.
+
 ## Sources
 
 - notes: [rl.md](../../../generative-ai/01-llm-fundamentals/rl.md) (RL/RLHF/MARL — confidence: low, verify claims), [agents-self-training.md](../../notes/agents-self-training.md) (Agent-Lightning, training-agent disaggregation)
