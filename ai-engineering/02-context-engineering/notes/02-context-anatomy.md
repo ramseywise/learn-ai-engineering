@@ -17,6 +17,9 @@ cleaned: 2026-10-28
 
 ## The components
 
+![Overview of the Context Window Composition](../images/ai-agent-book/fig2-1.svg)
+*Figure 2-1, Overview of the Context Window Composition. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) (Apache-2.0).*
+
 A context window at inference time is composed of, roughly in order:
 
 1. **System prompt** — role, task framing, behavioral constraints
@@ -58,6 +61,9 @@ Properties: short, explicit, stable, operational, easy to follow. In Claude Code
 Test for this layer: *if it isn't true in nearly every task, it doesn't belong here.*
 
 ### Layer 2 — On-demand knowledge
+
+![Skills Progressive Disclosure Mechanism](../images/ai-agent-book/fig2-11.svg)
+*Figure 2-11, Skills Progressive Disclosure Mechanism. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) (Apache-2.0).*
 
 Reusable procedures and domain knowledge relevant only to certain tasks: skills, playbooks, deployment procedures, evaluation methodologies, debugging checklists, API-specific instructions, long reference docs.
 
@@ -102,6 +108,9 @@ This layer is the answer to prompt-altitude drift. "The agent keeps doing X" is 
 ---
 
 ## Ordering: stable before dynamic
+
+![Prompt Cache: Reusing the Prefix KV Cache Across Requests](../images/ai-agent-book/fig2-10.svg)
+*Figure 2-10, Prompt Cache: Reusing the Prefix KV Cache Across Requests. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) (Apache-2.0).*
 
 Ordering is not cosmetic — it determines cache economics and attention placement.
 
@@ -154,6 +163,9 @@ Position bias, the attention sink on the first token, and the "triangle" pattern
 ---
 
 ## Runtime state: the agent status bar
+
+![Agent Status Bar Architecture](../images/ai-agent-book/fig2-14.svg)
+*Figure 2-14, Agent Status Bar Architecture. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) (Apache-2.0).*
 
 The **status bar** is a short, structured block that the *harness* appends at the end of the context each turn, much like a phone's clock, battery and signal row. It is distinct from the system prompt, which is the fixed manual. The status bar is the live dashboard.
 

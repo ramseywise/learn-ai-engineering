@@ -33,6 +33,9 @@ The same shape appears at three scales:
 
 ## The evolve loop
 
+![Overall loop of continual Agent evolution](../images/ai-agent-book/fig9-1.svg)
+*Figure 9-1, Overall loop of continual Agent evolution. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (Apache-2.0).*
+
 > **An evolve loop is a loop with a second, slower loop pointed at it. The fast loop does the work. The slow loop edits the fast loop.**
 
 It **doesn't retrain weights, it rewrites files**. What improves is the scaffolding (contract, state, triggers, procedure) while the model stays fixed. That's why any practitioner can run one today.
@@ -100,6 +103,9 @@ Lab: [practice/02-trajectory-verifier](../practice/02-trajectory-verifier/README
 ---
 
 ## Where the lesson goes: four media
+
+![Four update methods for continual evolution](../images/ai-agent-book/fig9-3.svg)
+*Figure 9-3, Four update methods for continual evolution. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (Apache-2.0).*
 
 The [four edit targets](#the-four-edit-targets) say *which part* of the loop's config to change. The book adds a second question: *what medium* should hold the lesson. The answer depends on how the capability is best represented, not on how long it has been around.
 
