@@ -47,7 +47,7 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
   and preference optimization algorithms (DPO, GRPO) are extracted to the 05-RL pillar
   — see pointers in rl.md. For the full RL curriculum (topic map, gap analysis, notes),
   see [05-RL/README.md](../05-RL/README.md).
-- [prompt-engineering.md](../../ai-engineering/01-prompt/prompt-engineering.md) — core techniques:
+- [prompt-engineering.md](../../ai-engineering/01-prompt-engineering/prompt-engineering.md) — core techniques:
   system prompts, zero-shot/few-shot, chain-of-thought, structured output, XML structuring,
   prompt templates, prompt chaining, long-context patterns, and the prompt/context boundary.
 

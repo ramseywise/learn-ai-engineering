@@ -35,6 +35,12 @@ confirmed.
 | `data-analytics/Bayes/BayesianML-master` | ⚠️ unresolved — see note below | 2026-08-14 | 8 files / 0.1 MB | **Not a vendored snapshot — appears to be your own coursework.** Course: https://www.coursera.org/learn/bayesian-methods-in-machine-learning |
 | `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-08-14 | 5 files / 5.8 MB | Exact content match. |
 
+## Removed snapshots
+
+| Directory | Upstream | Removed | What was kept |
+|---|---|---|---|
+| `ai-engineering/01-prompt-engineering/Prompt-Engineering-Guide-main` (originally `01-prompt/`) | https://github.com/dair-ai/Prompt-Engineering-Guide (MIT) | 2026-10-28 | Its English `pages/` content was merged into `ai-engineering/01-prompt-engineering/notes/`, with sources in each note's frontmatter. The notebooks were kept as `ai-engineering/01-prompt-engineering/notebooks/` and the lecture PDF as `reading/dair-prompt-engineering-lecture.pdf`. The Next.js site code, translations and images were dropped. Re-clone the upstream repo if you need them. |
+
 ## `BayesianML-master` is misfiled
 
 This directory carries a `-master` suffix, which makes it *look* like a vendored snapshot,

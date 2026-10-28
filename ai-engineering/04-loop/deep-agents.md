@@ -3,7 +3,25 @@ origin: notion-export
 confidence: medium
 sources:
   - https://docs.langchain.com/oss/python/deepagents/overview
-cleaned: 2026-07-17
+  - https://www.promptingguide.ai/agents/deep-agents
+cleaned: 2026-10-28
+---
+
+## What makes an agent "deep" (concept)
+
+A **shallow** agent runs a tool-calling loop inside one context window and falls apart on long, multi-step work. A **deep** agent adds four things, which DAIR (Saravia) describes and Claude Code, the Claude Agent SDK, Deep Agents and deep-research products all converge on:
+
+| Pillar | What it means | Where it's covered |
+|---|---|---|
+| **Explicit planning** | A living to-do list the agent updates, retries and recovers from, rather than ad-hoc reasoning in context | [03-harness/06 — plans as artifacts](../03-harness/notes/06-long-horizon-execution.md#plans-as-first-class-artifacts) |
+| **Orchestrator + sub-agents** | An orchestrator delegates to specialists (search, code, retrieval, verification), each with a clean context, then integrates the results | [03-harness/07](../03-harness/notes/07-orchestration.md) · [02-context/06](../02-context/notes/06-multi-agent-context.md) |
+| **External memory / agentic search** | Intermediate work goes to files, notes or stores, not conversation history; the agent retrieves what it needs. See *ReasoningBank* (arXiv 2509.25140) and *Agentic Context Engineering* (arXiv 2510.04618) on building and curating that memory | [02-context/05](../02-context/notes/05-memory-as-context.md) |
+| **Verification** | A judge, a verifier sub-agent, or a human checks outputs before they're accepted | [03-harness/05](../03-harness/notes/05-verification-loops.md) |
+
+Underneath all four sits **context engineering**. Underspecified instructions are the most common failure ([02-context/02 — worked example](../02-context/notes/02-context-anatomy.md#worked-example-tuning-a-deep-research-agent)). How to *prompt* a deep-research product as a user is in [01-prompt-engineering/07](../01-prompt-engineering/notes/07-prompting-reasoning-models.md#prompting-deep-research-agents).
+
+The rest of this file is the LangChain Deep Agents SDK documentation.
+
 ---
 
 > ## Documentation Index

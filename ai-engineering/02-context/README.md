@@ -25,7 +25,7 @@ The governing objective is a *minimization*: **find the smallest set of high-sig
 
 #### Topic notes ([notes/](notes/))
 1. [Why context is finite](notes/01-why-context-is-finite.md) — attention budget, n² attention, context rot, diminishing returns.
-2. [The anatomy of effective context](notes/02-context-anatomy.md) — system prompt altitude, the five layers, stable-before-dynamic ordering, cache prefix matching.
+2. [The anatomy of effective context](notes/02-context-anatomy.md) — system prompt altitude, the five layers, stable-before-dynamic ordering, cache prefix matching, and a worked deep-research example.
 3. [Retrieval strategies](notes/03-retrieval-strategies.md) — pre-computed vs. just-in-time, lightweight identifiers, progressive disclosure, the hybrid default, the pre-retrieval pipeline.
 4. [Compression and compaction](notes/04-compression-compaction.md) — the compaction pipeline, retention priority, tool-result clearing, state extraction, crash recovery.
 5. [Memory as a context sub-component](notes/05-memory-as-context.md) — memory types, structured note-taking, index-plus-detail, memory hygiene.
@@ -35,6 +35,17 @@ The governing objective is a *minimization*: **find the smallest set of high-sig
 #### Related
 - [memory.md](../05-graph/memory.md) — memory depth: in-context, external, episodic, semantic.
 - [skills-design.md](../03-harness/skills-design.md) — skills as a harness primitive; relies on the progressive-disclosure mechanism from note 02.
+
+### Origin readings
+Where the term "context engineering" came from (mid-2025), and the essays that shaped it:
+- Karpathy, [the "context engineering" post](https://x.com/karpathy/status/1937902205765607626): "the delicate art and science of filling the context window"
+- LangChain, [*The rise of context engineering*](https://blog.langchain.com/the-rise-of-context-engineering/)
+- Lance Martin, [*Context engineering for agents*](https://rlancemartin.github.io/2025/06/23/context_engineering/), the source of the Write → Select → Compress → Isolate levers
+- Phil Schmid, [*The new skill in AI is not prompting, it's context engineering*](https://www.philschmid.de/context-engineering)
+- Walden Yan (Cognition), [*Don't build multi-agents*](https://cognition.ai/blog/dont-build-multi-agents): share full context, not messages
+- HumanLayer, [*12-factor agents*](https://github.com/humanlayer/12-factor-agents): "own your context window"
+- Anthropic, [*Effective context engineering for AI agents*](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+- DAIR, [*Context Engineering Guide*](https://www.promptingguide.ai/guides/context-engineering-guide), the source of the worked example in note 02
 
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
