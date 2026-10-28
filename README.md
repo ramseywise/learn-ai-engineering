@@ -6,11 +6,14 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
 
 > **Self-learner?** Start at [CURRICULUM.md](CURRICULUM.md) — subject map, prerequisites,
 > and three learning paths (AI Engineering, Data Engineering, Full-Stack Data).
-> **Interview prep?** Start at [interviewing/guides/00-start-here.md](interviewing/guides/00-start-here.md) —
-> ten pillars (+ Pillar 0 programming), ordered so each builds on the last.
+> **Interview prep and coding drills** moved to the private
+> [sisyphus](https://github.com/ramseywise/sisyphus) repo (2026-10-28): the
+> [interview guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md)
+> (ten pillars + Pillar 0 programming), round-by-round prep, the role × topic matrix, and the
+> [language drills](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md)
+> (Python, SQL, TypeScript, Terraform). This repo is the learning curriculum only.
 
-> **Interview prep (extended):** [interviewing KB](interviewing/README.md) — study guides,
-> round-by-round prep, and the role × topic matrix. Hands-on AI-engineering evidence (RAG,
+> Hands-on AI-engineering evidence (RAG,
 > agents, evals, MCP) lives in the working repos — see [`../PORTFOLIO.md`](../PORTFOLIO.md).
 > System-design writeups of those systems and a contract-based code-review drill are compiled
 > in the librarian wiki (`system-design-*.md`, `code-review-drill-sanyi.md`).
@@ -109,7 +112,7 @@ ai-engineering is the discipline that makes them reliable.
 
 ### AI Engineering ([`ai-engineering/`](ai-engineering/README.md))
 - Six foundations — **prompt → context → harness → loop → graph → eval**. Depth companion
-  to the [interviewing guides](interviewing/guides/00-start-here.md) (guides summarize;
+  to the [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) (guides summarize;
   this goes deep). Each pillar cross-links its guide, cleaned notes, and coursera code.
 
 ### Readings (distributed by pillar)
@@ -123,9 +126,6 @@ ai-engineering is the discipline that makes them reliable.
     - `ai-engineering/readings/general/` — foundational ML/NLP papers (word2vec, LIME, interpretability)
 - External links (courses, books, papers, tools) by pillar: [generative-ai/resources.md](generative-ai/resources.md)
 
-### Programming ([`programming/`](programming/README.md))
-- Practice problems and cloud/infra reference — doesn't fit the data-domain categories above, kept
-  as its own bucket
-    - `HackerRank/` — Python and SQL practice problems
-    - `Leet-Code/` — arrays/hashing, two pointers, sliding windows, linked lists, plus a
-      competitive-programming reference book
+### Programming (moved to [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md))
+- Python Basics notebooks, HackerRank (Python, SQL, TypeScript) and LeetCode practice now live
+  in sisyphus, organized by language alongside the interview-format coding drills.

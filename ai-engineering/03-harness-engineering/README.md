@@ -1,6 +1,6 @@
 # 03 — Harness Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *harness implements loops*.
 > Overview note: [harness-engineering.md](harness-engineering.md) · Topic depth: [notes/](notes/)
 
@@ -55,7 +55,7 @@ Copy-ready harness files: `AGENTS.md`, `init.sh`, `feature_list.json` + schema, 
 - [skills-design.md](skills-design.md) — skills as a harness primitive: descriptions as routing logic, negative examples, bundled templates, explicit invocation, and the skills+networking risk posture.
 
 ### Interviewing guide
-- [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
 - [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.

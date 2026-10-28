@@ -33,7 +33,7 @@ each project's `pyproject.toml`. Don't install them all at once.
 ## Foundations (math, Python, classical ML)
 
 - [MIT 18.06 Linear Algebra](https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/) — Strang's lectures.
-- [CS50's Introduction to Programming with Python](https://www.edx.org/learn/python/harvard-university-cs50-s-introduction-to-programming-with-python); practice on [HackerRank Python](https://www.hackerrank.com/domains/python) (see [`programming/`](../programming/README.md)).
+- [CS50's Introduction to Programming with Python](https://www.edx.org/learn/python/harvard-university-cs50-s-introduction-to-programming-with-python); practice on [HackerRank Python](https://www.hackerrank.com/domains/python) (see [`programming/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md)).
 - [Machine Learning Specialization (Andrew Ng)](https://www.coursera.org/specializations/machine-learning-introduction) — the course behind [`data-science/`](../data-science/README.md)'s Ng notebooks.
 - [CS50's Introduction to AI](https://cs50.harvard.edu/ai/) and [AIMA](https://aima.cs.berkeley.edu/) — classical AI: search, reasoning, planning.
 - [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) (Huyen) and [Made With ML](https://madewithml.com/) — production ML.

@@ -106,7 +106,7 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 
 ## Resources
 
-- Pillar guide: [4-agents](../../interviewing/guides/4-agents/00-overview.md)
+- Pillar guide: [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 - LangChain, 3 years of graph engineering with LangGraph: https://www.langchain.com/blog/3-years-of-graph-engineering-with-langgraph
 - LangGraph docs: https://docs.langchain.com/langgraph
 - Anthropic, Building effective agents: https://www.anthropic.com/engineering/building-effective-agents

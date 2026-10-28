@@ -1,7 +1,7 @@
 # AI Engineering
 
 > **Depth domain.** This folder goes deep on the six foundations of AI engineering.
-> The [interviewing guides](../interviewing/guides/00-start-here.md) are the compressed
+> The [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
 ---
@@ -28,12 +28,12 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 
 | Foundation | Depth (here) | Summary guide | Seed note(s) |
 |---|---|---|---|
-| prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](../interviewing/guides/7-security-safety/prompt-injection.md) (security) |
-| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](../interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context-engineering/context-engineering.md), [memory.md](02-context-engineering/sources/memory-augmented-rag-notion-export.md) |
-| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness-engineering/agent-harness.md), [agents-design.md](03-harness-engineering/agents-design.md) |
-| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop-engineering/loop-engineering.md), [notes/](04-loop-engineering/notes/), [practice/](04-loop-engineering/practice/), [reliable-agents.md](03-harness-engineering/reliable-agents.md) |
-| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph-engineering/graph-engineering.md), 05-graph-engineering/sources/, 05-graph-engineering/notebooks/ |
-| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](../interviewing/guides/6-evals-observability/00-overview.md) | [eval-engineering.md](06-eval/eval-engineering.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
+| prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) (security) |
+| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context-engineering/context-engineering.md), [memory.md](02-context-engineering/sources/memory-augmented-rag-notion-export.md) |
+| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness-engineering/agent-harness.md), [agents-design.md](03-harness-engineering/agents-design.md) |
+| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop-engineering/loop-engineering.md), [notes/](04-loop-engineering/notes/), [practice/](04-loop-engineering/practice/), [reliable-agents.md](03-harness-engineering/reliable-agents.md) |
+| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph-engineering/graph-engineering.md), 05-graph-engineering/sources/, 05-graph-engineering/notebooks/ |
+| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [eval-engineering.md](06-eval/eval-engineering.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
 
 ---
 
@@ -54,9 +54,9 @@ primary source underneath). Update the sweep date and landed-notes list on each 
 No content is duplicated across `ai-engineering/` and `generative-ai/`. The cleaned operational
 notes (frontmatter `origin:`/`confidence:`) live *inside* each pillar directory (e.g.
 `01-prompt-engineering/README.md`), not in a separate `interviewing/notes/` layer — the five
-files remaining in `interviewing/notes/` (`agents-self-training.md`, `case-interview.md`,
+files remaining in sisyphus `interviewing/notes/` (`agents-self-training.md`, `case-interview.md`,
 `foundations.md`, `reading-list.md`, `security.md`) are the ones not yet claimed by a pillar.
-`interviewing/guides/` is the only pointer-only layer: it summarizes for exam prep and links
+`interviewing/guides/` (in sisyphus since 2026-10-28) is the only pointer-only layer: it summarizes for exam prep and links
 back here for depth.
 
 **Architecture decision (absorbed, not pointer-only):** operational notes were designed as a

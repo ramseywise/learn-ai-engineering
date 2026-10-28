@@ -79,7 +79,7 @@ discipline. **Depends on Layer 2** (assumes you've fit at least one supervised m
 | Ng ML Notebooks — ex5 | `data-science/Ng's Machine Learning Nbks/ex5/` | bias-variance diagnosis, learning curves |
 | ISLR ch5 | `../data-analytics/readings/` | resampling methods |
 
-**Interview crosswalk:** Layer 3 is the core of pillar [1-foundations](../interviewing/guides/1-foundations/interview-guide.md) —
+**Interview crosswalk:** Layer 3 is the core of pillar [1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/interview-guide.md) —
 metric interpretation, train/test discipline, and leakage are the most common interview
 failure modes.
 
@@ -239,7 +239,7 @@ cross-references them correctly.
 
 ## Interview crosswalk
 
-- **Pillar 1 — Foundations:** [interviewing/guides/1-foundations/](../interviewing/guides/1-foundations/00-overview.md)
+- **Pillar 1 — Foundations:** [interviewing/guides/1-foundations/](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md)
   (covers Layers 1–5 content: bias-variance, metrics, supervised learning, unsupervised, ensembles)
-- **Cleaned notes:** `interviewing/notes/foundations.md` (Pillar 1 summary — bias-variance, metrics, CV)
+- **Cleaned notes:** sisyphus `interviewing/notes/foundations.md` (Pillar 1 summary — bias-variance, metrics, CV)
 - **Readings cross-cut:** `../data-analytics/readings/` maps to Layers 1–3

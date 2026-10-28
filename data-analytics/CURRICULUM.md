@@ -12,16 +12,16 @@ or generative AI — this curriculum ends with that branching decision.
 
 | # | Layer | What you learn | Notebooks / Material | Status |
 |---|---|---|---|---|
-| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | `../programming/Python Basics/1_Overview.ipynb`, `2_Texts.ipynb` | Present |
-| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | `../programming/Python Basics/3_Arrays.ipynb`, `4_DataFrames.ipynb` | Present |
-| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | `../programming/Python Basics/5_Plotting.ipynb`, `6_Aggregation.ipynb`, `7_Time_Series.ipynb` | Present |
+| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | `sisyphus/drills/python/basics/1_Overview.ipynb`, `2_Texts.ipynb` | Present |
+| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | `sisyphus/drills/python/basics/3_Arrays.ipynb`, `4_DataFrames.ipynb` | Present |
+| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | `sisyphus/drills/python/basics/5_Plotting.ipynb`, `6_Aggregation.ipynb`, `7_Time_Series.ipynb` | Present |
 | 4 | **Feature engineering** | Text feature representation; NLP preprocessing; TF-IDF, embeddings, classification features | `Text Analytics with Python/Ch03`, `Ch04`, `Ch05` | Present |
 | 5 | **Statistical analysis** | Hypothesis testing; distributions; A/B testing; correlation vs. causation | `5_Statistical_Analysis.ipynb` | Present (partial — see Layer 5 section) |
 | 6 | **Modeling + BI** | Semantic analysis; topic modeling; similarity; clustering; deep learning intro | `Text Analytics with Python/Ch06`, `Ch07`, `Ch08`, `Ch09`, `Ch10` | Present |
 
 ## Notebook Map
 
-### `../programming/Python Basics/` (self-authored, 7 notebooks)
+### `sisyphus/drills/python/basics/` (self-authored, 7 notebooks)
 
 Sequential — each builds on the previous.
 
@@ -76,7 +76,7 @@ These topics are **not** covered in the notebook and have no existing material i
 | Bayesian A/B testing | High | `../data-analytics/Bayes/AB-Bayes/AB_Testing_with_Python.ipynb` partially fills this — add a cross-reference or integration section |
 | Causal inference (DiD, IV, RD) | Medium | No existing notebook; add a Part 5 using `dowhy` or manual DiD examples |
 | Non-parametric tests (Mann-Whitney, Kolmogorov-Smirnov) | Low | One-off add to Part 2 |
-| Time-series testing (stationarity, autocorrelation) | Low | Covered better in `../programming/Python Basics/7_Time_Series.ipynb`; cross-reference sufficient |
+| Time-series testing (stationarity, autocorrelation) | Low | Covered better in `sisyphus/drills/python/basics/7_Time_Series.ipynb`; cross-reference sufficient |
 
 ### Readings that support this layer
 

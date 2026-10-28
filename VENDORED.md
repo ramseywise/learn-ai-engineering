@@ -67,8 +67,8 @@ Three directories contain their own `.git` directory. They are **not** submodule
 contents are not tracked:
 
 - `ai-engineering/readings/AI-Papers-of-the-Week/.git`
-- `programming/Leet-Code/.git`
-- `programming/Leet-Code/LeetCodeCheat/.git`
+- ~~`programming/Leet-Code/.git`~~ — moved to sisyphus `drills/python/leetcode/` (2026-10-28)
+- ~~`programming/Leet-Code/LeetCodeCheat/.git`~~ — moved with it
 
 Verified 2026-08-14: `git ls-files -s | awk '$1=="160000"'` returns **0 gitlink entries**,
 and all three paths have **0 tracked files** — they are already covered by existing
