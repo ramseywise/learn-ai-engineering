@@ -104,7 +104,7 @@ w/ Terraform
 1. If you've already created an AWS account, head to the IAM section, generate your secret-key, and download it locally.
 [Instructions](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html)
 
-2. [Configure]((https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html)) `aws-cli` with your downloaded AWS secret keys:
+2. [Configure](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-quickstart.html) `aws-cli` with your downloaded AWS secret keys:
       ```shell
          $ aws configure
          AWS Access Key ID [None]: xxx

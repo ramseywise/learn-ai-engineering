@@ -108,4 +108,4 @@ For each, write how you detected it and the guard that fixed it.
 
 ---
 
-→ Track B labs (`02-knowledge-graph-labs.md`) are planned in [OUTLINE.md](../OUTLINE.md#practice-track).
+→ Track B labs: [02-knowledge-graph-labs.md](02-knowledge-graph-labs.md).

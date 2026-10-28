@@ -8,12 +8,9 @@ SKIP_DIRS = {
     ".git",
     "node_modules",
     "idk",
-    "DataTalks Data Engineering",
-    "DataTalks MLOps",
     "Prompt-Engineering-Guide-main",
     "prompt-eng-for-llms",
     "Evaluating-AI-Agents-master",
-    "evaluation",
 }
 SKIP_PATHS = {"./.claude/docs"}
 SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/", "~/", "/guides/")

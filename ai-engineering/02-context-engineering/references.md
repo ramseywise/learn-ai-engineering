@@ -31,6 +31,14 @@ The upstream "neural field / attractor / quantum semantics" framework cites thes
 | Wang et al., [*Unveiling Attractor Cycles in LLMs: A Dynamical Systems View of Successive Paraphrasing*](https://arxiv.org/abs/2502.15208) (2025) | [2502.15208](sources/wang-2025-attractor-cycles.pdf) |
 | Agostino et al., [*A Quantum Semantic Framework for Natural Language Processing*](https://arxiv.org/abs/2506.10077) (2025) | [2506.10077](sources/agostino-2025-quantum-semantic-framework.pdf) |
 
+## AI Papers of the Week
+
+Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`).
+
+| Paper | Why read it | PDF | Maps to |
+|---|---|---|---|
+| ★ Peng, [*MemoryTax: The Bitter Lesson of Agent Memory*](https://arxiv.org/abs/2610.29823) (Oct 2026) | Mem0 beats full context only with GPT-4o-mini; with stronger models designed memory ties or loses and its build costs more than a full-context run. A coding agent searching the raw history scores 99% at under half the cost. One conversation, one run per cell | [2610.29823](sources/peng-2026-memorytax.pdf) | [06](notes/06-memory.md#designed-memory-vs-searching-the-raw-record) |
+
 ## Talks and collections
 
 - Andrej Karpathy, [*Software Is Changing (Again)*](https://www.youtube.com/watch?v=LCEmiRjPEtQ), YC AI Startup School 2025. The origin of *"the delicate art and science of filling the context window with just the right information for the next step."*

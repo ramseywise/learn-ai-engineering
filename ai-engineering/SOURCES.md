@@ -46,7 +46,7 @@ Landed in the 2026-07-30 sweep:
 - [04-loop-engineering/notes/07-autonomy-ladder.md](04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
 - [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
 - [06-eval/notes/11-production-and-the-maturity-ladder.md](06-eval/notes/11-production-and-the-maturity-ladder.md)
-- [05-graph-engineering/graph-engineering.md](05-graph-engineering/graph-engineering.md) §11 — escalation framing + decision tree
+- [05-graph-engineering/notes/01-graph-vs-loop.md](05-graph-engineering/notes/01-graph-vs-loop.md) — escalation framing + decision tree (was graph-engineering.md §11)
 - [03-harness-engineering/notes/04-execution-boundaries.md](03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
 
 Assessed and **skipped** as already covered at equal or greater depth: harness 6 components,
@@ -81,7 +81,14 @@ Landed in the 2026-07-31 sweep:
   [01-prompt-engineering/notebooks/](01-prompt-engineering/notebooks/). To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
   [01-prompt-engineering/README.md](01-prompt-engineering/README.md#references).
-- [readings/AI-Papers-of-the-Week/](readings/AI-Papers-of-the-Week/): a vendored git snapshot, refreshed by hand.
+
+### AI Papers of the Week (DAIR)
+
+Automated. A weekly launchd job (`com.wiseer.potw`, Monday 11:00) reads
+[dair-ai/AI-Papers-of-the-Week](https://github.com/dair-ai/AI-Papers-of-the-Week) from GitHub,
+records every paper in [readings/ledger.jsonl](readings/ledger.jsonl), triages it to a
+pillar and note, and downloads relevant arXiv PDFs into that pillar's `sources/`. `/papers` then
+writes the findings into the notes. See [scripts/papers/potw.py](../scripts/papers/potw.py).
 
 ### librarian / cartographer
 

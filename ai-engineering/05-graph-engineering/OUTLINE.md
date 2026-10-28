@@ -1,12 +1,12 @@
 ---
 origin: planning
-status: Track A (01–08) written with labs and templates; Track B (09–12) not yet written
+status: Track A (01–08) and Track B (09–13) written with labs and templates
 confidence: medium
 cleaned: 2026-10-28
 ---
 # 05 — Graph Engineering: chapter outline
 
-> The plan for turning this pillar into a `notes/01-…md` chapter sequence like [03-harness](../03-harness-engineering/README.md) and [04-loop](../04-loop-engineering/README.md). **Progress (2026-10-28):** Track A is split into [notes/01–08](notes/01-graph-vs-loop.md), with [practice/01-agent-graph-labs.md](practice/01-agent-graph-labs.md) and two runnable [templates](templates/). Track B (09–12) is still outline only. [graph-engineering.md](graph-engineering.md) is kept intact until Track B is written.
+> The plan for turning this pillar into a `notes/01-…md` chapter sequence like [03-harness](../03-harness-engineering/README.md) and [04-loop](../04-loop-engineering/README.md). **Progress (2026-10-28):** Track A is split into [notes/01–08](notes/01-graph-vs-loop.md), with [practice/01-agent-graph-labs.md](practice/01-agent-graph-labs.md) and two runnable [templates](templates/). Track B is written as [notes/09–13](notes/09-kg-fundamentals-and-cypher.md), with [practice/02-knowledge-graph-labs.md](practice/02-knowledge-graph-labs.md) and [templates/graph-update.schema.json](templates/graph-update.schema.json). Source swaps made in Track B: the GraphRAG paper replaces the flowtivity multi-hop numbers; the ~18% typed-edge figure and the Bun $165k figure are marked unverified; the model-tier table is now sourced to Anthropic's KG cookbook; the Dynamic Workflows limits are marked as corroborated only by third parties. The original deep note is archived at [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md), and [graph-engineering.md](graph-engineering.md) is now the pillar overview.
 
 ---
 
@@ -17,7 +17,7 @@ There are two tracks. They share the word "graph" and meet in chapter 12.
 | Track | Graph is | Nodes | Edges | Chapters |
 |---|---|---|---|---|
 | **A: agent graphs** | Execution topology | Units of computation | Permitted transitions | 01–08 |
-| **B: knowledge graphs** | Retrieval structure | Entities | Typed relationships | 09–12 |
+| **B: knowledge graphs** | Retrieval structure | Entities | Typed relationships | 09–13 |
 
 Chapter 12 (KG as shared agent memory) is the bridge: the knowledge graph becomes the state layer the execution graph coordinates through.
 
@@ -26,18 +26,19 @@ Chapter 12 (KG as shared agent memory) is the bridge: the knowledge graph become
 ```
 05-graph-engineering/
   README.md            mental model, rules of thumb, resource map (rewrite last)
-  graph-engineering.md overview note (shrinks to a pillar summary once chapters exist)
-  notes/01-…12-….md    the chapter sequence below
-  practice/            labs (one file per track, or per chapter, see "Practice track")
-  templates/           copy-ready graph skeletons (LangGraph generate-then-verify, fan-out/merge)
-  sources/             book chapter PDFs + source PDFs
-  kg-and-llms-in-action/        book notes (kept as the depth layer under Track B)
-  Knowledge_Graphs_for_RAG-main/ Neo4j course (labs for Track B)
+  graph-engineering.md overview note (pillar summary; the original deep note is in sources/)
+  notes/01-…13-….md    the chapter sequence below (the core syllabus)
+  practice/            labs, one file per track
+  templates/           copy-ready graph skeletons (generate-then-verify, fan-out/merge, GraphUpdate schema)
+  sources/             archived deep note, community PDF, and the book:
+    kg-and-llms-in-action/       chapter notes (depth layer under Track B), PDFs in pdf/
+  notebooks/
+    knowledge-graphs-for-rag/    DeepLearning.AI Neo4j course: notebooks, data, lesson notes (KG Labs 1, 3, 5)
 ```
 
 **Chapter conventions to follow** (from 04-loop-engineering/notes and 03-harness-engineering/notes): YAML frontmatter (`origin`, `sources`, `confidence`, `cleaned`); `# N — Title`; a one-line `>` summary; `---` between sections; tables for comparisons; a short "Where it sits" section; a "Working reference" line pointing at `~/.claude/refs/…`; and a closing `→ Next:` link to the following chapter.
 
-**Key to the source references below.** `§N` = a section of [graph-engineering.md](graph-engineering.md). `KG chN` = a chapter of [kg-and-llms-in-action/](kg-and-llms-in-action/) (PDFs in [sources/](sources/)). `L#` = a notebook in [Knowledge_Graphs_for_RAG-main/code/](Knowledge_Graphs_for_RAG-main/code/). `LG L#` = `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/Lesson_#_Student.ipynb` (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
+**Key to the source references below.** `§N` = a section of the original deep note, archived at [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md). `KG chN` = a chapter of [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/) (PDFs in [sources/kg-and-llms-in-action/pdf/](sources/kg-and-llms-in-action/pdf/)). `L#` = a notebook in [notebooks/knowledge-graphs-for-rag/code/](notebooks/knowledge-graphs-for-rag/code/). `LG L#` = `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/Lesson_#_Student.ipynb` (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 
 ---
 
@@ -51,7 +52,7 @@ Chapter 12 (KG as shared agent memory) is the bridge: the knowledge graph become
 
 **Feeds from.** §1 (definition, three framings, containment, where loop ends); §2 (production agents need cycles); §11 (choosing table, the escalation framing, five signals, 30-second decision tree, cost of a premature graph). The agent-graph vs. KG table from §9 goes in as a forward pointer only. Back-links: 04-loop `notes/01-what-a-loop-is.md` and `notes/02-loop-shapes.md`.
 
-**New writing.** A "where it sits" section that mirrors 04-loop note 01, and a map of the pillar (the table of 12 chapters). §1's three framings lean on vendor blogs (TrueFoundry, Eigent), so rebase the definition on LangChain/LangGraph docs and Anthropic's *Building Effective Agents* (workflows vs. agents).
+**New writing.** A "where it sits" section that mirrors 04-loop note 01, and a map of the pillar (the table of 13 chapters). §1's three framings lean on vendor blogs (TrueFoundry, Eigent), so rebase the definition on LangChain/LangGraph docs and Anthropic's *Building Effective Agents* (workflows vs. agents).
 
 **Exercises.**
 - *A loop is a one-node graph.* Take the agent loop from 04-loop (or `LG L1`) and re-express it as a LangGraph `StateGraph` with one node and a conditional self-edge. Confirm that behaviour is identical.
@@ -217,18 +218,16 @@ Chapter 12 (KG as shared agent memory) is the bridge: the knowledge graph become
 
 ---
 
-## Optional readings
+### 13 — Learning on graphs: features, embeddings, GNNs
 
-Not core. Read when you need graph ML rather than graph engineering.
+**File:** `notes/13-graph-ml-and-gnns.md`
 
-| Reading | Why optional |
-|---|---|
-| KG ch9 — [ML on knowledge graphs](kg-and-llms-in-action/09-ml-on-knowledge-graphs.md) | Task taxonomy (node/link/graph-level); worth a skim for vocabulary |
-| KG ch10 — [Graph feature engineering](kg-and-llms-in-action/10-graph-feature-engineering.md) | Centrality and PageRank features; useful for analytics on a KG you've built |
-| KG ch11 — [Graph representation learning and GNNs](kg-and-llms-in-action/11-graph-representation-learning-gnns.md) | Embeddings, encoder–decoder, Node2Vec |
-| KG ch12 — [Node classification and link prediction](kg-and-llms-in-action/12-node-classification-link-prediction.md) | PyG case studies (Elliptic AML, MovieLens) |
-| KG ch4 — [Multisource integration](kg-and-llms-in-action/04-multisource-integration.md) | Biomedical case studies (PPI, Hetionet, metapaths); good domain example, not needed for the track |
-| KG ch2 — [Intelligent systems: a hybrid approach](kg-and-llms-in-action/02-intelligent-systems-hybrid.md) | Conceptual background; chapter 09 takes one table from it |
+**Scope.** The book's graph-ML part, condensed for an engineer who runs a KG rather than a researcher. Why nodes aren't i.i.d. (homophily, structural equivalence, heterophily); the task map (node classification, link prediction, community detection, graph classification); manual vs. semiautomated vs. learned features, including the karate-club result and DWPC; the encoder–decoder frame, KG embedding decoders and message passing; ch12's GCN/SAGE/GAT comparison; the three GNN + LLM patterns. It closes by treating predicted edges as claims written through the `GraphUpdate` path.
+
+**Feeds from.** KG ch9–12. KG ch2 and ch4 are folded into chapters 09 (KG vs. LLM reasoning, purpose-driven construction) and 10 (multisource integration, DWPC) instead.
+
+**Exercises.**
+- *Predict missing links* (KG Lab 9). Reproduce the karate-club baselines, then hold out edges in your own graph and compare manual pair features with GraphSAGE, writing predictions back as flagged claims.
 
 ---
 
@@ -262,13 +261,16 @@ Following 04-loop, labs go in `practice/` at the pillar root. 03-harness uses `n
 - `practice/02-knowledge-graph-labs.md`: the Neo4j course run in order (`L2` → `L7`), then the own-domain KG and the shared-memory swarm (ch 12).
 - `templates/`: `generate-then-verify.py`, `fan-out-merge.py`, `graph-update.schema.json` (the `GraphUpdate` shape from ch 12).
 
-Before running the Neo4j labs: `Knowledge_Graphs_for_RAG-main/code/.env` holds live credentials. It is gitignored and has never been committed, but rotate the keys if the repo or that folder is ever shared.
+Before running the Neo4j labs: `notebooks/knowledge-graphs-for-rag/code/.env` holds live credentials. It is gitignored and has never been committed, but rotate the keys if the repo or that folder is ever shared.
 
 ---
 
 ## Housekeeping and open items
 
-- **memory.md overlap (to resolve later).** The Notion export on memory-augmented RAG moved to [02-context-engineering/sources/memory-augmented-rag-notion-export.md](../02-context-engineering/sources/memory-augmented-rag-notion-export.md). It overlaps 02-context `notes/06-memory.md`. Merge what's new into that note, then decide whether the export stays as a source.
-- **Off-topic papers.** The 20 non-graph papers (word2vec, InstructGPT, GPT-4 report, CoT, SelfCheckGPT, Generative Agents, Gorilla, ToolLLM, batch norm, calibration, interpretability, ML tech debt and others) were byte-identical copies of files already in `06-eval/evaluation/` (and, all but one, in `readings/general/`). They are parked in `06-eval/evaluation/_duplicates-from-05-graph-engineering/` and can be deleted.
-- **README rewrite.** Do this after the chapters exist. Add a numbered topic-notes list like 03-harness, and drop the external-reference list once sources are re-based.
-- **graph-engineering.md** becomes the pillar overview (as `harness-engineering.md` is for 03) once its sections have moved into chapters. Keep the §-to-chapter mapping above as the split plan.
+All items resolved 2026-10-28:
+
+- **memory.md overlap: done.** What was new in the Notion export (conversational query construction, retrieval control, recency-decay weighting, multi-turn benchmarks, memory hit rate) is merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md). The export stays at [02-context-engineering/sources/memory-augmented-rag-notion-export.md](../02-context-engineering/sources/memory-augmented-rag-notion-export.md) as the detailed source (Memoria internals, production concerns), linked from note 06.
+- **Off-topic papers: done.** The 20 byte-identical non-graph papers parked in `06-eval/evaluation/_duplicates-from-05-graph-engineering/` were deleted in commit b2b4777. The originals remain in `06-eval/evaluation/` and `readings/general/`.
+- **README rewrite: done.** Numbered topic-notes list for notes 01–13, practice and templates entries, and the deep note listed as an archived source.
+- **Book and course integrated: done.** The book notes moved into [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/) (with its chapter PDFs under `pdf/`), and the Neo4j course into [notebooks/knowledge-graphs-for-rag/](notebooks/knowledge-graphs-for-rag/), matching the other pillars' `sources/` and `notebooks/` layout. Every book chapter now feeds a note: ch1–3 → 09, ch4–8 and appendix C → 10, ch9–12 → 13, ch13–15 → 11. Every course lesson feeds note 09, 10 or 11 and a KG lab.
+- **graph-engineering.md: done.** The original deep note is archived at [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md), with its history kept through `git mv`. [graph-engineering.md](graph-engineering.md) is now the pillar overview. The §-to-chapter mapping above records where each section went.

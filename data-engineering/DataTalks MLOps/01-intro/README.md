@@ -128,7 +128,7 @@ Links:
 
 ## 1.6 Homework
 
-More information [here](../cohorts/2024/01-intro/homework.md).
+More information [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/cohorts/2024/01-intro/homework.md).
 
 
 ## Notes

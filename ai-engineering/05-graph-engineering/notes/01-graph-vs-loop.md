@@ -111,7 +111,7 @@ This pillar uses the word in two senses. Keep them apart:
 | The graph is | Execution topology | Data structure for retrieval |
 | Runtime concern | Routing, state, cost | Traversal, entity resolution |
 
-They meet in note 12 (planned): in a multi-agent system the knowledge graph is often the shared state layer the execution graph coordinates through.
+They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system the knowledge graph is often the shared state layer the execution graph coordinates through.
 
 ---
 
@@ -127,12 +127,12 @@ They meet in note 12 (planned): in a multi-agent system the knowledge graph is o
 | 06 | [When not to build a graph](06-when-not-to-build-a-graph.md) | A | When is the graph overhead not worth it? |
 | 07 | [Failure modes at scale](07-failure-modes-at-scale.md) | A | How do graphs fail where single loops don't? |
 | 08 | [Governance and production](08-governance-and-production.md) | A | How do you operate a graph, not just demo one? |
-| 09 | KG fundamentals and Cypher | B | What is a knowledge graph and how do you query it? |
-| 10 | Building KGs with LLMs | B | How do you turn text into a graph you can trust? |
-| 11 | KG-RAG and text-to-Cypher | B | How do you retrieve from a graph in natural language? |
-| 12 | KG as shared agent memory | A + B | How does a KG become a swarm's memory? |
+| 09 | [KG fundamentals and Cypher](09-kg-fundamentals-and-cypher.md) | B | What is a knowledge graph and how do you query it? |
+| 10 | [Building KGs with LLMs](10-building-kgs-with-llms.md) | B | How do you turn text into a graph you can trust? |
+| 11 | [KG-RAG and text-to-Cypher](11-kg-rag-and-text-to-cypher.md) | B | How do you retrieve from a graph in natural language? |
+| 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
 
-Track B (09–12) is planned in [OUTLINE.md](../OUTLINE.md) and not yet written.
+Labs: [P1 agent graph labs](../practice/01-agent-graph-labs.md) (Track A), [P2 knowledge graph labs](../practice/02-knowledge-graph-labs.md) (Track B).
 
 ---
 

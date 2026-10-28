@@ -28,7 +28,7 @@ confirmed.
 | `generative-ai/07-agentic-applications/internet-search-agent-main` | https://github.com/omidreza-amrollahi/internet-search-agent | 2026-08-14 | 39 files / 0.1 MB | Content-matched. Dependabot entry removed (see below). |
 | `generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main` | https://github.com/YunghuiHsu/Long-Term-Agentic-Memory-With-LangGraph | 2026-08-14 | 39 files / 0.8 MB | Exact content match. Dependabot entry removed (see below). |
 | `generative-ai/06-observability/langfuse-mcp-python-main` | https://github.com/Log-LogN/langfuse-mcp-python | 2026-08-14 | 36 files / 0.2 MB | Content-matched. Dependabot entry removed (see below). |
-| `ai-engineering/05-graph/Knowledge_Graphs_for_RAG-main` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-08-14 | 34 files / 27.3 MB | Exact content match. Contains a 22 MB `neo4j_L7.dump`. |
+| `ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-08-14 | 34 files / 27.3 MB | Exact content match. Contains a 22 MB `neo4j_L7.dump`. |
 | `generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main` | https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen | 2026-08-14 | 14 files / 1.7 MB | Exact content match. |
 | `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-08-14 | 12 files / 0.5 MB | Exact content match. |
 | `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-08-14 | 9 files / 0.1 MB | Exact content match. |
