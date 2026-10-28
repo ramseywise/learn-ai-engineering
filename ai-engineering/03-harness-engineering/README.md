@@ -26,14 +26,24 @@ The operating reframe is that agent failures are **configuration problems, not m
 - [harness-engineering.md](harness-engineering.md) — pillar overview: Agent = Model + Harness, the failures-are-config reframe, the ratchet, the five components, convergent design.
 
 #### Topic notes ([notes/](notes/))
-1. [What a harness is](notes/01-what-a-harness-is.md) — Agent = Model + Harness, the four parts, the harness gap, the ratchet, convergent design.
-2. [Harness anatomy](notes/02-harness-anatomy.md) — the nine components, filesystem as foundational primitive, bash-as-general-tool, the causal build order.
+1. [What a harness is](notes/01-what-a-harness-is.md) — Agent = Model + Harness, the four parts, the harness gap, five no-harness failures, fix-the-harness-first, the ratchet, convergent design.
+2. [Harness anatomy](notes/02-harness-anatomy.md) — the nine components, the five subsystems and ablation, filesystem as foundational primitive, bash-as-general-tool, the causal build order.
 3. [Tool design as harness surface](notes/03-tool-design.md) — ACI over API, the five-section tool contract, the four gating questions, MCP vs. in-process.
 4. [Execution boundaries and guardrails](notes/04-execution-boundaries.md) — sandboxes, hooks, silent-success/verbose-failure, encoded constraints, the five protection layers.
 5. [Verification and feedback loops](notes/05-verification-loops.md) — self-verification, process/data/draft reflection, asymmetric QA, when to delete a verifier, generator/evaluator separation, sprint contracts, dataset vs. live-traffic eval, two-retry rule, loop detection.
 6. [Long-horizon execution](notes/06-long-horizon-execution.md) — state externalization, compaction vs. context reset, context anxiety, Ralph loops, plans as artifacts.
 7. [Orchestration and multi-agent harnesses](notes/07-orchestration.md) — subagents as context firewall, role separation, ADK 2.0 graph primitives, oscillation and deadlock.
-8. [Harness maturity and failure modes](notes/08-maturity-and-failure-modes.md) — the five-stage model, the six-stage pipeline, production reliability primitives, five failure modes, iterative simplification.
+8. [Harness maturity and failure modes](notes/08-maturity-and-failure-modes.md) — the five-stage model, the six-stage pipeline, production reliability primitives, runtime vs. process observability, the quality document, five failure modes, iterative simplification, builder gotchas.
+
+#### Practice track ([notes/practice/](notes/practice/))
+Applying the notes to a real coding-agent repo. Adapted from *learn-harness-engineering*; see [references.md](references.md).
+1. [Repo as system of record](notes/practice/01-repo-as-system-of-record.md) — the fresh-session test, `AGENTS.md` as a router, encoding knowledge the agent can't see, making the map enforceable.
+2. [Session lifecycle](notes/practice/02-session-lifecycle.md) — initialization, the clock-in sequence, state files, handoff, the clean-state exit, entropy management.
+3. [Scope and done](notes/practice/03-scope-and-done.md) — WIP = 1, the feature list as a primitive, the behavior/verification/state triple, pass-state gating.
+4. [Exercises](notes/practice/04-exercises.md) — six labs and per-note drills to run on a repo of your own.
+
+#### Templates ([templates/](templates/))
+Copy-ready harness files: `AGENTS.md`, `init.sh`, `feature_list.json` + schema, `progress.md`, `session-handoff.md`, `clean-state-checklist.md`, `evaluator-rubric.md`, `quality-document.md`, and the OpenAI-style [openai-repo-template/](templates/openai-repo-template/).
 
 #### Related
 - [karpathy-method.md](karpathy-method.md) — Karpathy's AISN 2026 framing (via secondary video source): spec / verifier / environment layering, animals-vs-ghosts, rules-vs-requests.
@@ -68,6 +78,14 @@ Read into [notes/](notes/) on 2026-07-29:
 | [Google ADK 2.0 multi-agent](https://medium.com/google-cloud/harness-engineering-for-multi-agent-systems-using-google-adk-2-0-e248b885cb95) | Graph primitives, typed state, event routing, multi-agent failure modes |
 | [Anthropic — effective context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Agent-loop framing, compaction, structured note-taking, tool clarity test |
 | [Martin Fowler — building reliable agentic AI systems (Bayer PRINCE)](https://martinfowler.com/articles/reliable-llm-bayer.html) | Process/data/draft reflection, deleting a false-positive verifier, live-traffic eval, node-level retry, resume-from-failure, provider fallback, confidence-scored HITL |
+
+Read in on 2026-10-28 for the practice track (details in [references.md](references.md)):
+
+| Source | Contributes |
+|---|---|
+| [OpenAI — harness engineering](https://openai.com/index/harness-engineering/) | Repo as system of record, `AGENTS.md` as a map, enforced layering, golden rules and background cleanup |
+| [Anthropic — effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | Initializer agent, JSON feature list, one feature per session, progress file + git continuity |
+| [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Course structure behind the practice track, labs and templates |
 
 Queue (not yet read in):
 - Lilian Weng, "Harness Engineering for Self-Improvement": https://lilianweng.github.io/posts/2026-07-04-harness — ties harness→loop→self-improvement.

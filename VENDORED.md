@@ -40,6 +40,7 @@ confirmed.
 | Directory | Upstream | Removed | What was kept |
 |---|---|---|---|
 | `ai-engineering/01-prompt-engineering/Prompt-Engineering-Guide-main` (originally `01-prompt/`) | https://github.com/dair-ai/Prompt-Engineering-Guide (MIT) | 2026-10-28 | Its English `pages/` content was merged into `ai-engineering/01-prompt-engineering/notes/`, with sources in each note's frontmatter. The notebooks were kept as `ai-engineering/01-prompt-engineering/notebooks/` and the lecture PDF as `notes/dair-prompt-engineering-lecture.pdf`. The upstream `img/` folder was restored on 2026-10-28 (upstream commit `5767372`) as `sources/dair-prompt-engineering-guide/images/`. The Next.js site code and translations were dropped. Re-clone the upstream repo if you need them. |
+| `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/`, with the OpenAI repo template in `templates/openai-repo-template/`. Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
 
 ## `BayesianML-master` is misfiled
 
