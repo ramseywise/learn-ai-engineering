@@ -280,6 +280,7 @@ These are broader or more opinionated pieces, good once the notes feel familiar.
 - Weng, [*Prompt Engineering*](https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/) (2023) — a dense, research-oriented survey
 - Yan, [*Prompting Fundamentals and How to Apply Them Effectively*](https://eugeneyan.com/writing/prompting/) — a practitioner's view with production examples
 - [Learn Prompting](https://learnprompting.org) — a beginner-friendly open course, an alternative to DAIR
+- Li, *AI Agents in Depth*, [ch. 2 §Prompt Engineering](../readings/ai-agent-book-main/book-en/chapter2.md) — system-prompt design for agents. Labs: τ-bench prompt ablation (2-4), injection attacks (2-5), attention visualization (2-2), prompt patches from failures (8-3). Map: [READING-MAP](../readings/ai-agent-book-main/READING-MAP.md#chapter-2--context-engineering)
 - Context engineering — the successor framing (Karpathy, LangChain, Schmid, Lance Martin). Collected in [02-context](../02-context-engineering/README.md)
 
 ---

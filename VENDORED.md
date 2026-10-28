@@ -33,6 +33,7 @@ confirmed.
 | `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-08-14 | 12 files / 0.5 MB | Exact content match. |
 | `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-08-14 | 9 files / 0.1 MB | Exact content match. |
 | `data-analytics/Bayes/BayesianML-master` | ⚠️ unresolved — see note below | 2026-08-14 | 8 files / 0.1 MB | **Not a vendored snapshot — appears to be your own coursework.** Course: https://www.coursera.org/learn/bayesian-methods-in-machine-learning |
+| `ai-engineering/readings/ai-agent-book-main` | https://github.com/bojieli/ai-agent-book (Apache-2.0) | 2026-07-30 | partial, ~57 MB of 239 MB on disk | Bojie Li, *AI Agents in Depth*. Only the English text (`book-en/`, `chapter*/README.en.md`) and the runnable labs are tracked. The book-local `.gitignore` excludes the translations, Chinese originals, site and EPUB tooling, the author's chat logs, the 70 MB attention-visualization trajectories and the vendored AWorld copy (ch. 8). Routing into the pillars: `READING-MAP.md` (authored here). |
 | `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-08-14 | 5 files / 5.8 MB | Exact content match. |
 
 ## Removed snapshots
