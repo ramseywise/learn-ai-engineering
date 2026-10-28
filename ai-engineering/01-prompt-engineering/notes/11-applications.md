@@ -71,7 +71,7 @@ A concise counter-argument query related to the argument #N:
 - Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
 - In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
 
-Retrieval itself belongs to [02-context](../../02-context/notes/03-retrieval-strategies.md).
+Retrieval itself belongs to [02-context](../../02-context/notes/04-retrieval.md).
 
 ### Pitfalls
 
@@ -111,7 +111,7 @@ Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#c
 
 ## Go deeper
 
-- Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../references.md#applications)
+- Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../README.md#applications)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 
 ---

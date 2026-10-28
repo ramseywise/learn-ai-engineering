@@ -350,9 +350,9 @@ The unifying principle: return what the agent needs to *decide*, not everything 
 **Sources:**
 - [Anthropic — Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — pagination/truncation/filtering guidance, 25k-token default, MCP `maxResultSizeChars` annotation.
 - [Arize AI — Context management in agent harnesses](https://arize.com/blog/context-management-in-agent-harnesses/) — memory, files, and subagent patterns for bounding context.
-- (this repo: `ai-engineering/02-context/notes/03-retrieval-strategies.md`) — just-in-time context and identifier-vs-payload cost tradeoff.
-- (this repo: `ai-engineering/02-context/notes/06-multi-agent-context.md`) — token-efficient tool design and sub-agent isolation for large operations.
-- (this repo: `ai-engineering/02-context/notes/04-compression-compaction.md`) — checkpointing to disk for long-running operations.
+- (this repo: `ai-engineering/02-context/notes/04-retrieval.md`) — just-in-time context and identifier-vs-payload cost tradeoff.
+- (this repo: `ai-engineering/02-context/notes/10-tools-and-multi-agent.md`) — token-efficient tool design and sub-agent isolation for large operations.
+- (this repo: `ai-engineering/02-context/notes/05-compression-compaction.md`) — checkpointing to disk for long-running operations.
 
 </details>
 

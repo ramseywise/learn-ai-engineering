@@ -138,6 +138,7 @@ What crosses a boundary is the whole design:
 - **Summaries, never transcripts.** Sending a subagent's full history back defeats the firewall.
 - **State on disk, references in the message.** Large artifacts go to files; the handoff carries paths ([note 06](06-long-horizon-execution.md#tool-call-offloading)).
 - **Declare what was *not* done.** Scoped claims prevent the orchestrator from assuming coverage that doesn't exist.
+- **Synthesize, don't delegate understanding.** "Based on your findings, fix the auth bug" pushes the orchestrator's job onto the worker. The orchestrator reads the findings and hands down a precise spec: the file, the line, the change, and what done looks like.
 
 ---
 

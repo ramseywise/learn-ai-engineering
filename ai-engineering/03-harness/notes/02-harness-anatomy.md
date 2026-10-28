@@ -5,6 +5,7 @@ sources:
   - https://addyosmani.com/blog/agent-harness-engineering/
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - https://vercel.com/academy/build-ai-agent-harness
+  - https://github.com/walkinglabs/learn-harness-engineering
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -32,7 +33,7 @@ LangChain's anatomy, grouped by the job each does:
 
 **5. Sandboxes** — safe execution environments with pre-configured tooling (runtimes, CLIs, browsers). See [note 04](04-execution-boundaries.md).
 
-**6. Memory systems** — file-based standards (`AGENTS.md`, `MEMORY.md`) for continual learning across sessions. See [02-context/notes/05](../../02-context/notes/05-memory-as-context.md).
+**6. Memory systems** — file-based standards (`AGENTS.md`, `MEMORY.md`) for continual learning across sessions. See [02-context/notes/05](../../02-context/notes/06-memory.md).
 
 ### Orchestration & control
 
@@ -43,6 +44,24 @@ LangChain's anatomy, grouped by the job each does:
 **9. Context management tools** — web search, retrieval, and MCP access for information past the training cutoff; plus compaction and tool-output offloading.
 
 Supporting: git versioning, planning files, test runners, self-verification hooks.
+
+---
+
+## The five subsystems
+
+The nine components describe what *ships*. For diagnosing a failing agent, a coarser cut works better. Every component serves one of five subsystems, and every failure can be attributed to one of them:
+
+| Subsystem | Question it answers | Components |
+|---|---|---|
+| **Instructions** | What should I do, and by what rules? | 1 system prompt / `AGENTS.md`, 6 memory |
+| **Tools** | What can I act with? | 2 tools/skills/MCPs, 4 bash, 9 context tools |
+| **Environment** | Where do I run, and does it start? | 3 filesystem, 5 sandbox, `init.sh` |
+| **State** | What has happened so far? | Plan file, progress log, feature list, git |
+| **Feedback** | Did it work? | 8 hooks, test runners, verification gates, traces |
+
+Two of these map onto Norman's two gulfs from interaction design. The **gulf of execution** (the agent knows what it wants but can't act on it) is a tools or environment gap. The **gulf of evaluation** (it acted but can't tell whether that worked) is a feedback gap. Agents usually fail on evaluation. They are rarely stuck; they are confidently wrong.
+
+**Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing. [Practice lab 6](practice/04-exercises.md#lab-6--capstone-full-harness-cleanup-ablation) runs this end to end.
 
 ---
 

@@ -109,7 +109,7 @@ For UX, show tool activity to users and let them inspect and **edit arguments an
 - Book: [Ch 8](../sources/prompt-eng-for-llms/08-conversational-agency.md) (internal format, tool guidelines, conversational agent, UX)
 - Agent-level tool design, MCP, skills: [03-harness/notes/03-tool-design.md](../../03-harness/notes/03-tool-design.md)
 - Runnable: [notebooks/pe-function-calling.ipynb](../notebooks/pe-function-calling.ipynb) · [notebooks/react.ipynb](../notebooks/react.ipynb) · [notebooks/pe-chatgpt-langchain.ipynb](../notebooks/pe-chatgpt-langchain.ipynb)
-- Vendor tool-use docs and benchmarks: [references.md](../references.md#vendor-guides)
+- Vendor tool-use docs and benchmarks: [references.md](../README.md#vendor-guides)
 
 ---
 

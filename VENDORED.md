@@ -20,7 +20,7 @@ confirmed.
 
 | Directory | Upstream | Snapshot date | Tracked | Notes |
 |---|---|---|---|---|
-| ~~`ai-engineering/02-context/Context-Engineering-main`~~ | https://github.com/davidkimai/Context-Engineering | 2026-08-14 | **removed 2026-10-28** (was 298 files / 45.1 MB) | Curated subset moved into `02-context/`: `00_COURSE/`, `cognitive-tools/`, `notes/{foundations,00_foundations,10_mental_models,20_practical_protocols,masterclass_content,10_guides_zero_to_hero,reference}`, `notes/NOCODE.md`, `templates/`. Paper links in `02-context/reading/papers.md`. |
+| ~~`ai-engineering/02-context/Context-Engineering-main`~~ | https://github.com/davidkimai/Context-Engineering | 2026-08-14 | **removed 2026-10-28** (was 298 files / 45.1 MB) | Synthesized into `02-context/notes/01–13` + `99` (speculative appendix); raw course files deleted. Kept as files: `templates/`, `notebooks/` (zero-to-hero labs). Cited paper PDFs in `02-context/sources/`, links in `02-context/references.md`. |
 | `generative-ai/03-agentic-foundations/AgenticAIFrameworks-master` | https://github.com/adv-11/AgenticAIFrameworks | 2026-08-14 | 124 files / 1.3 MB | Content-matched (upstream adds `sf_ml_th/`). |
 | `generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main` | https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory | 2026-08-14 | 109 files / 16.1 MB | Includes 1 PDF (`handbook.pdf`). Exact content match. DeepLearning.AI × Letta course. |
 | `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main` | https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG | 2026-08-14 | 103 files / 27.2 MB | Includes 6 PDFs (5 module slide decks + certificate). Exact content match. |

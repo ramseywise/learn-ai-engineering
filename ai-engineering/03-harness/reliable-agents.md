@@ -13,7 +13,7 @@ extracted:
   - notes/08-maturity-and-failure-modes.md — accuracy before cost, resume-from-failed-node,
     cross-provider fallback, fail-fast on ambiguity, confidence-scored quarantine,
     subtraction corroboration
-  - 02-context/notes/03-retrieval-strategies.md — query-time pipeline (keyword +
+  - 02-context/notes/04-retrieval.md — query-time pipeline (keyword +
     filter extraction, n=5 query expansion, metadata pre-filtering inside the vector
     query, parallel hybrid search weighted 0.7/0.3, max-score aggregation to k≈20,
     bge-reranker-large cross-encoder to k=7); Text-to-SQL as a retrieval strategy
@@ -26,7 +26,7 @@ unextracted:
   - NER metadata-enrichment pipeline (extraction from PDFs to correct Athena
     metadata) — note the confidence-scored quarantine half is already in notes/08
   - Domain sub-agent hierarchy for the Researcher (per-domain toolsets, routing) →
-    02-context/notes/06-multi-agent-context.md
+    02-context/notes/10-tools-and-multi-agent.md
 ---
 
 > **Source note.** Kept for provenance, as with [agent-harness.md](agent-harness.md).
@@ -34,7 +34,7 @@ unextracted:
 > built with Thoughtworks. Harness-relevant claims are compressed into
 > [notes/05](notes/05-verification-loops.md) and [notes/08](notes/08-maturity-and-failure-modes.md);
 > the retrieval-pipeline and Text-to-SQL detail into
-> [02-context/notes/03](../02-context/notes/03-retrieval-strategies.md).
+> [02-context/notes/03](../02-context/notes/04-retrieval.md).
 > Ingestion, NER enrichment, and the domain sub-agent hierarchy remain unextracted —
 > see the `unextracted` list in the frontmatter.
 > Raw Notion export below — formatting artifacts (stripped diagrams, run-together

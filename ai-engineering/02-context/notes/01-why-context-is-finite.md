@@ -69,7 +69,11 @@ signal
 
 The curve turns *negative*, not merely flat. Past a point, adding a marginally relevant document makes output worse than omitting it, because it competes for attention with the tokens that mattered.
 
-This is the economic argument for every technique in notes 03–06: retrieval strategy, compaction, memory offloading, and sub-agent isolation all exist to keep the window on the left side of that curve.
+This is the economic argument for every technique in chapters 03–10: budgeting, retrieval strategy, compaction, memory offloading, structure, and sub-agent isolation all exist to keep the window on the left side of that curve.
+
+---
+
+For the formal version of this argument (context as an optimisation under a token budget), see [03](03-budgeting-the-window.md#formally-assembly-under-a-constraint).
 
 ---
 
@@ -78,8 +82,8 @@ This is the economic argument for every technique in notes 03–06: retrieval st
 1. **Curate, don't accumulate.** The default action on a new piece of context is to justify it, not to include it.
 2. **Measure occupancy, not just cost.** Track percentage of window used as a health metric independent of dollars.
 3. **Position matters.** If content must be included, order it — stable and high-priority material where attention is strongest. See [02-context-anatomy.md](02-context-anatomy.md).
-4. **Prefer a pointer to a payload.** A file path the agent can read on demand costs a handful of tokens; the file costs thousands. See [03-retrieval-strategies.md](03-retrieval-strategies.md).
-5. **Plan for sessions that outlive the window.** Long-horizon work needs compaction and external memory, not a bigger window. See [04-compression-compaction.md](04-compression-compaction.md) and [05-memory-as-context.md](05-memory-as-context.md).
+4. **Prefer a pointer to a payload.** A file path the agent can read on demand costs a handful of tokens; the file costs thousands. See [04-retrieval.md](04-retrieval.md).
+5. **Plan for sessions that outlive the window.** Long-horizon work needs compaction and external memory, not a bigger window. See [05-compression-compaction.md](05-compression-compaction.md) and [06-memory.md](06-memory.md).
 
 ---
 

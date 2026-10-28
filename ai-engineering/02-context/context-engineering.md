@@ -41,10 +41,10 @@ The operational frame (`~/.claude/refs/agent-context.md`). Apply in order — co
 
 | Lever | Question | Where |
 |---|---|---|
-| **Write** | Can this live outside the window? | [05-memory](notes/05-memory-as-context.md) |
-| **Select** | What comes back in, and when? | [03-retrieval](notes/03-retrieval-strategies.md) |
-| **Compress** | Can this be smaller? | [04-compaction](notes/04-compression-compaction.md) |
-| **Isolate** | Does this need a separate window? | [06-multi-agent](notes/06-multi-agent-context.md) |
+| **Write** | Can this live outside the window? | [06-memory](notes/06-memory.md) |
+| **Select** | What comes back in, and when? | [04-retrieval](notes/04-retrieval.md) |
+| **Compress** | Can this be smaller? | [05-compaction](notes/05-compression-compaction.md) |
+| **Isolate** | Does this need a separate window? | [10-multi-agent](notes/10-tools-and-multi-agent.md) |
 
 Isolate is last because it is most expensive: real tokens multiply, and cross-agent context is lost.
 
@@ -52,13 +52,9 @@ Isolate is last because it is most expensive: real tokens multiply, and cross-ag
 
 ## Topic notes
 
-1. [Why context is finite](notes/01-why-context-is-finite.md) — attention budget, n² attention, context rot, diminishing returns.
-2. [The anatomy of effective context](notes/02-context-anatomy.md) — system prompt altitude, the five layers, stable-before-dynamic ordering, cache prefix matching.
-3. [Retrieval strategies](notes/03-retrieval-strategies.md) — pre-computed vs. just-in-time, lightweight identifiers, progressive disclosure, the hybrid default, the pre-retrieval pipeline.
-4. [Compression and compaction](notes/04-compression-compaction.md) — the compaction pipeline, retention priority, tool-result clearing, state extraction, crash recovery.
-5. [Memory as a context sub-component](notes/05-memory-as-context.md) — memory types, structured note-taking, index-plus-detail, memory hygiene.
-6. [Multi-agent context and tool design](notes/06-multi-agent-context.md) — sub-agent isolation, orchestrator-holds-plan, token-efficient tools, tool overlap.
-7. [Context failure modes](notes/07-context-failure-modes.md) — rot, poisoning, distraction, clash, injection, and the diagnostic flow.
+The full chapter index, with what each covers, is in the [README](README.md#topic-notes-notes):
+
+01 [finite](notes/01-why-context-is-finite.md) · 02 [anatomy](notes/02-context-anatomy.md) · 03 [budgeting](notes/03-budgeting-the-window.md) · 04 [retrieval](notes/04-retrieval.md) · 05 [compaction](notes/05-compression-compaction.md) · 06 [memory](notes/06-memory.md) · 07 [structure](notes/07-structured-context.md) · 08 [cognitive tools](notes/08-cognitive-tools.md) · 09 [protocols](notes/09-protocols.md) · 10 [multi-agent](notes/10-tools-and-multi-agent.md) · 11 [failure modes](notes/11-failure-modes.md) · 12 [evaluation](notes/12-evaluating-context.md) · 13 [putting it together](notes/13-putting-it-together.md) · 99 [speculative track](notes/99-speculative-field-track.md)
 
 ---
 
@@ -91,7 +87,7 @@ Historical is the only type without a natural bound. Compaction exists to bound 
 
 ## Security facet
 
-Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/07-context-failure-modes.md#prompt-injection) and [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md).
+Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/11-failure-modes.md#prompt-injection) and [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md).
 
 ---
 
@@ -101,5 +97,5 @@ Context has no type system — instructions and data are the same tokens. Prompt
 - Anthropic: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - promptingguide.ai: https://www.promptingguide.ai/guides/context-engineering-guide
 - OpenAI compaction: https://developers.openai.com/api/docs/guides/compaction
-- Course material (curated from davidkimai/Context-Engineering): [00_COURSE](00_COURSE/README.md) · [notes/foundations](notes/foundations/README.md) · [cognitive-tools](cognitive-tools/README.md) · [notes/reference](notes/reference/) — index in the [README](README.md#course-material--context-engineering-davidkimai-snapshot-2026-08-14)
-- Papers: [reading/papers.md](reading/papers.md)
+- Course material (synthesized from davidkimai/Context-Engineering): chapters 03, 07–09, 12–13 and 99 in [notes/](notes/), plus [templates/](templates/) and [notebooks/](notebooks/)
+- Papers: [references.md](references.md) · PDFs in [sources/](sources/)
