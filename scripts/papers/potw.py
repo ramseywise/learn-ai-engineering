@@ -42,8 +42,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 AI_ENG = REPO / "ai-engineering"
 LEDGER = AI_ENG / "readings" / "ledger.jsonl"
-# summaries/abstracts for triage: bulky and re-fetchable, so kept out of git
-BLURBS = AI_ENG / "readings" / ".cache" / "blurbs.jsonl"
+# summaries/abstracts for triage, one file per year to stay under the pre-commit size limit
+BLURBS = AI_ENG / "readings" / "blurbs"
 # empty fields aren't written to the ledger; load_ledger puts these back as None
 FIELDS = ("arxiv", "url", "pillar", "note", "topic", "local_pdf", "copies", "sha1")
 RAW_URL = "https://raw.githubusercontent.com/dair-ai/AI-Papers-of-the-Week/main/years/{year}.md"
@@ -115,8 +115,8 @@ def write_jsonl(path, items):
 
 
 def load_ledger():
-    """Ledger rows, each with its `blurb` joined back in from the cache ("" if missing)."""
-    blurbs = {b["key"]: b["blurb"] for b in read_jsonl(BLURBS)}
+    """Ledger rows, each with its `blurb` joined back in from blurbs/<year>.jsonl ("" if missing)."""
+    blurbs = {b["key"]: b["blurb"] for path in sorted(BLURBS.glob("*.jsonl")) for b in read_jsonl(path)}
     rows = read_jsonl(LEDGER)
     for r in rows:
         r["blurb"] = r.get("blurb") or blurbs.get(r["key"], "")
@@ -134,7 +134,13 @@ def empty(v):
 def save_ledger(rows):
     # repo-only readings have no week; they sort first, by path
     rows.sort(key=lambda r: (r.get("week_start") or "", r.get("rank") or 0, r.get("local_pdf") or "", r["key"]))
-    write_jsonl(BLURBS, ({"key": r["key"], "blurb": r["blurb"]} for r in rows if r.get("blurb")))
+    by_year = {}
+    for r in rows:
+        if r.get("blurb"):
+            year = (r.get("week_start") or r.get("added_at") or "undated")[:4]
+            by_year.setdefault(year, []).append({"key": r["key"], "blurb": r["blurb"]})
+    for year, items in by_year.items():
+        write_jsonl(BLURBS / f"{year}.jsonl", items)
     write_jsonl(LEDGER, ({k: v for k, v in r.items() if k != "blurb" and not empty(v)} for r in rows))
 
 
@@ -198,7 +204,7 @@ def cmd_fetch(args):
             log(f"fetch: no page for {year} yet")
             continue
         for paper in parse_year(md, year):
-            if paper["key"] in seen:  # refill the gitignored blurb cache on a fresh clone
+            if paper["key"] in seen:  # refill a missing blurb from the DAIR page
                 seen[paper["key"]]["blurb"] = seen[paper["key"]]["blurb"] or paper["blurb"]
                 continue
             if since and paper["week_start"] < since:
