@@ -79,7 +79,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 - **New to evals:** [eval-engineering.md](eval-engineering.md), then chapters 01–05 in order. **01–05 can be read right after [01-prompt-engineering](../01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
 - **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md), then [Labs 1–4](practice/01-exercises.md).
-- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](case-study/README.md).
+- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/case-study/README.md).
 - **A number moved and you don't know why:** [09](notes/09-reading-results.md), then [12](notes/12-failure-modes.md#the-debug-order).
 - **Shipping:** [10](notes/10-evals-in-ci.md), [11](notes/11-production-and-the-maturity-ladder.md).
 
@@ -92,10 +92,12 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
 ├── eval-engineering.md           ← pillar overview
 ├── notes/                        ← the chapters (read in order)
+│   └── case-study/               ← a real multi-agent support system's eval design, including its mistakes
+├── notebooks/
+│   └── evaluating-ai-agents/     ← DeepLearning.AI course notebooks (Phoenix), labs 1–5
 ├── practice/01-exercises.md      ← eight labs, one system, vibes → monitored
 ├── templates/                    ← dataset schema, taxonomy, judge prompt, calibration sheet, gate contract, CI workflow
-├── case-study/                   ← a real multi-agent support system's eval design, including its mistakes
-├── Evaluating-AI-Agents-master/  ← DeepLearning.AI course notebooks (Phoenix)
+├── sources/                      ← papers filed for this pillar
 └── references.md                 ← papers and further reading, mapped to chapters
 ```
 
@@ -124,6 +126,10 @@ The rules from the topic notes on one page. Each group links to the chapter that
 11. [Production and the maturity ladder](notes/11-production-and-the-maturity-ladder.md) — the ladder (levels 0–4), online sampling, two-layer review, drift, A/B tests, feedback, the improvement loop.
 12. [When evals go wrong](notes/12-failure-modes.md) — eval bugs that look like agent bugs, the debug order, saturation, Goodhart, overfitting, contamination, judge drift, eval debt.
 
+### Notebooks
+
+[notebooks/evaluating-ai-agents/](notebooks/evaluating-ai-agents/README.md): DeepLearning.AI's *Evaluating AI Agents* course. Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix.
+
 ### Practice
 
 [practice/01-exercises.md](practice/01-exercises.md): eight labs on one system. Labs 2–5 pair with the course notebooks:
@@ -131,10 +137,10 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | Lab | Course notebook | Chapters |
 |---|---|---|
 | 1 — Error analysis | — | [02](notes/02-defining-correct.md), [03](notes/03-eval-datasets.md) |
-| 2 — Tracing | [Lab 2](Evaluating-AI-Agents-master/Lab%202/Lab2.ipynb) | [08](notes/08-tracing-and-observability.md) |
-| 3 — Router and skill evals | [Lab 3](Evaluating-AI-Agents-master/Lab%203/Lab3.ipynb) | [04](notes/04-graders.md), [06](notes/06-evaluating-agents.md) |
-| 4 — Trajectory and repeats | [Lab 4](Evaluating-AI-Agents-master/Lab%204/Lab4.ipynb) | [06](notes/06-evaluating-agents.md) |
-| 5 — Experiments | [Lab 5](Evaluating-AI-Agents-master/Lab%205/Lab5.ipynb) | [09](notes/09-reading-results.md) |
+| 2 — Tracing | [Lab 2](notebooks/evaluating-ai-agents/lab-2/Lab2.ipynb) | [08](notes/08-tracing-and-observability.md) |
+| 3 — Router and skill evals | [Lab 3](notebooks/evaluating-ai-agents/lab-3/Lab3.ipynb) | [04](notes/04-graders.md), [06](notes/06-evaluating-agents.md) |
+| 4 — Trajectory and repeats | [Lab 4](notebooks/evaluating-ai-agents/lab-4/Lab4.ipynb) | [06](notes/06-evaluating-agents.md) |
+| 5 — Experiments | [Lab 5](notebooks/evaluating-ai-agents/lab-5/Lab5.ipynb) | [09](notes/09-reading-results.md) |
 | 6 — Calibrate a judge | — | [05](notes/05-llm-as-judge.md) |
 | 7 — Gate it in CI | — | [10](notes/10-evals-in-ci.md) |
 | 8 — Online | — | [11](notes/11-production-and-the-maturity-ladder.md), [12](notes/12-failure-modes.md) |
@@ -145,7 +151,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ### Case study
 
-[case-study/](case-study/README.md): the eval design for a multi-agent, RAG-grounded support system — routing vs. domain evals, the full gate contract, claim-level grounding, and judge calibration results (including inverted off-the-shelf metrics and a grounding check that failed for an eval reason).
+[notes/case-study/](notes/case-study/README.md): the eval design for a multi-agent, RAG-grounded support system — routing vs. domain evals, the full gate contract, claim-level grounding, and judge calibration results (including inverted off-the-shelf metrics and a grounding check that failed for an eval reason).
 
 ### Related
 - [support-agent-observability.md](../../generative-ai/06-observability/support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.
