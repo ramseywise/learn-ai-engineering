@@ -84,7 +84,7 @@ Check the dataset against the distribution you care about:
 
 A row can be a valid task but unfair for a particular measurement. If the expected source isn't in the index, scoring that row on retrieval measures your corpus, not your retriever.
 
-The case study handles this with **named row pools**, each a subset of the one above it ([case study](../case-study/gate-contract.md#canonical-row-pools)):
+The case study handles this with **named row pools**, each a subset of the one above it ([case study](case-study/gate-contract.md#canonical-row-pools)):
 
 | Pool | Contains | Fair for |
 |---|---|---|
@@ -133,7 +133,7 @@ Schema: [templates/evalset.schema.json](../templates/evalset.schema.json).
 
 - **Split it.** Keep a **dev** set you iterate against and a **held-out test** set you look at rarely. Tuning prompts against the full set overfits to it, exactly as in ML ([12](12-failure-modes.md#overfitting-the-dev-set)). For judge calibration, use train/dev/test splits of the human labels too ([05](05-llm-as-judge.md#calibrate-against-human-labels)).
 - **Version it.** Datasets change. Store them in git (or a dataset tool with versions) and record the dataset version in every result. A score from v3 and a score from v4 are not comparable.
-- **Freeze the reference with the data.** If labels came from a grader, record the grader version. Change the grader and the labels shift ([case study](../case-study/grader-methodology.md#would-different-judges-give-different-golden-traces)).
+- **Freeze the reference with the data.** If labels came from a grader, record the grader version. Change the grader and the labels shift ([case study](case-study/grader-methodology.md#would-different-judges-give-different-golden-traces)).
 - **Keep it out of training and prompts.** Don't paste eval rows into few-shot examples. Don't fine-tune on them. Don't let the agent see them at runtime.
 - **Reset state per trial.** If tasks touch a database, sandbox or file system, every trial starts from a clean snapshot. Otherwise one trial's side effects look like the next trial's failure.
 

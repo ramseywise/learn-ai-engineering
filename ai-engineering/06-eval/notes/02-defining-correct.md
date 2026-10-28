@@ -70,7 +70,7 @@ Rules for a usable taxonomy:
 - **Ordered by pipeline stage.** A failure upstream masks everything downstream, so label the earliest one.
 - **Include the eval's own failures.** `context_missing` (the grader got no passage text) is a label too. It stops eval bugs being counted as system bugs ([12](12-failure-modes.md#eval-bugs-look-like-agent-bugs)).
 
-A worked example from a RAG support agent ([case study](../case-study/gate-contract.md#failure-taxonomy)), grouped by stage:
+A worked example from a RAG support agent ([case study](case-study/gate-contract.md#failure-taxonomy)), grouped by stage:
 
 | Stage | Labels |
 |---|---|

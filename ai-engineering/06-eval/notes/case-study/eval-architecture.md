@@ -133,8 +133,8 @@ The experimental `ToolTrajectoryGrader` in `evals/graders/judges/_experimental/r
 
 ## Observability + experiment tracking
 
-Platform wiring and online scoring → [langfuse.md](../../../generative-ai/04-agentic-frameworks/notes/langfuse.md) (support agents) and [langsmith.md](../../../generative-ai/04-agentic-frameworks/notes/langsmith.md) (SupportAgent).
-Metadata contract and ExperimentRun / RagConfig schemas → [support-agent-observability.md](../../../generative-ai/06-observability/support-agent-observability.md).
+Platform wiring and online scoring → [langfuse.md](../../../../generative-ai/04-agentic-frameworks/notes/langfuse.md) (support agents) and [langsmith.md](../../../../generative-ai/04-agentic-frameworks/notes/langsmith.md) (SupportAgent).
+Metadata contract and ExperimentRun / RagConfig schemas → [support-agent-observability.md](../../../../generative-ai/06-observability/support-agent-observability.md).
 
 ---
 

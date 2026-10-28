@@ -66,7 +66,7 @@ Getting **expected sources** is the expensive part. Options, cheapest first: the
 2. **Verify each claim** against the retrieved passages: *supported*, *contradicted*, or *not found*.
 3. **Score** = supported ÷ total. Report contradicted separately: a contradiction is worse than an omission.
 
-This is the core of RAGAS faithfulness (Es et al. 2023) and of the case study's grounding grader ([case study](../case-study/grounding-claims.md)). Benefits: partial credit, a pointer to the exact bad claim, and easier work for the judge than a holistic verdict.
+This is the core of RAGAS faithfulness (Es et al. 2023) and of the case study's grounding grader ([case study](case-study/grounding-claims.md)). Benefits: partial credit, a pointer to the exact bad claim, and easier work for the judge than a holistic verdict.
 
 ### Grounding tiers
 
@@ -110,7 +110,7 @@ Then, with a judge: **citation precision** (does the cited passage support the s
 
 ## Pass the text, not the pointer
 
-The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against RAGAS showed near-zero agreement for exactly this reason ([case study](../case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
+The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against RAGAS showed near-zero agreement for exactly this reason ([case study](case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
 
 Guard against it in the grader interface (`requires = {"retrieved_context"}`, [04](04-graders.md#the-grader-interface)) and label it `context_missing` in the taxonomy. Assert in CI that grounding graders received non-empty text.
 
