@@ -25,7 +25,7 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 - **[`Deeplearning.ai-RAG-main/`](Deeplearning.ai-RAG-main/)** —
   DeepLearning.AI RAG course: building a document-QA pipeline with embeddings, vector
   stores, and faithfulness evaluation.
-- **[`../../ai-engineering/05-graph-engineering/Knowledge_Graphs_for_RAG-main/`](../../ai-engineering/05-graph-engineering/Knowledge_Graphs_for_RAG-main/)** —
+- **[`../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/`](../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/)** —
   knowledge graphs as a retrieval layer: structured retrieval over graph databases,
   KG-augmented context assembly.
 

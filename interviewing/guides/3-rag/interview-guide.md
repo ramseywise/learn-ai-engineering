@@ -124,4 +124,4 @@ control · HITL review for flagged outputs · claim-level provenance if CRAG/age
 - images: [9 RAG architectures](../../images/9-rag-architectures.png)
 - readings: `3-rag/` (RAG, Self-RAG, RAGAS, survey papers), `ai-engineering/05-graph-engineering/sources/` (KG-RAG chapters)
 - librarian wiki: RAG Retrieval Strategies · Agentic RAG — Advanced Patterns · RAG Reranking · Reciprocal Rank Fusion · RAG Evaluation · CRAG Retry Logic · Semantic Cache Pipeline · Vector Database Comparison · HistoryCondenser
-- course refs: `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main`, `ai-engineering/05-graph-engineering/Knowledge_Graphs_for_RAG-main`
+- course refs: `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main`, `ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag`

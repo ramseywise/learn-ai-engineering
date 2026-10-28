@@ -74,7 +74,7 @@ is not officially supported in the 2024 edition of the course.
 ## Homework
 
 
-More information [here](../cohorts/2024/05-monitoring/homework.md)
+More information [here](https://github.com/DataTalksClub/mlops-zoomcamp/blob/main/cohorts/2024/05-monitoring/homework.md)
 
 
 ## Notes

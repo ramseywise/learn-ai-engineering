@@ -26,13 +26,13 @@ The best way to get support is to use [DataTalks.Club's Slack](https://datatalks
 
 To make discussions in Slack more organized:
 
-* Follow [these recommendations](asking-questions.md) when asking for help
+* Follow [these recommendations](https://datatalks.club/docs/courses/zoomcamp-logistics/asking-questions/) when asking for help
 * Read the [DataTalks.Club community guidelines](https://datatalks.club/slack/guidelines.html)
 
 
 ## Syllabus
 
-We encourage [Learning in Public](learning-in-public.md)
+We encourage [Learning in Public](https://datatalks.club/docs/courses/zoomcamp-logistics/learning-in-public/)
 
 ### [Module 1: Introduction](01-intro)
 

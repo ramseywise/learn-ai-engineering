@@ -126,4 +126,4 @@ Governance tells you what ran and what it cost. It doesn't tell you whether the 
 
 ---
 
-→ Next: `09-kg-fundamentals-and-cypher.md` — Track B: knowledge graphs. *(Not yet written; see [OUTLINE.md](../OUTLINE.md).)*
+→ Next: [09-kg-fundamentals-and-cypher.md](09-kg-fundamentals-and-cypher.md) — Track B: knowledge graphs.

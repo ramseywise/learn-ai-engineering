@@ -32,7 +32,7 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 | context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](../interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context-engineering/context-engineering.md), [memory.md](02-context-engineering/sources/memory-augmented-rag-notion-export.md) |
 | harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness-engineering/agent-harness.md), [agents-design.md](03-harness-engineering/agents-design.md) |
 | loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop-engineering/loop-engineering.md), [notes/](04-loop-engineering/notes/), [practice/](04-loop-engineering/practice/), [reliable-agents.md](03-harness-engineering/reliable-agents.md) |
-| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph-engineering/graph-engineering.md) (new), 05-graph-engineering/sources/ |
+| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph-engineering/graph-engineering.md), 05-graph-engineering/sources/, 05-graph-engineering/notebooks/ |
 | eval | [06-eval/](06-eval/README.md) | [6-evals-observability](../interviewing/guides/6-evals-observability/00-overview.md) | [eval-engineering.md](06-eval/eval-engineering.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
 
 ---

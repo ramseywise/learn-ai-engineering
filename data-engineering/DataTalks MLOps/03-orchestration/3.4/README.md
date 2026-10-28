@@ -52,4 +52,4 @@
 
 1. [Run pipelines on a recurring schedule](https://docs.mage.ai/orchestration/triggers/schedule-pipelines)
 
-1. [Improving model performance through retraining](<https://www.mage.ai/blog/how-to-improve-the-performance-of-a-machine-learning-(ML)-model>)
+1. [Improving model performance through retraining](https://www.mage.ai/blog/how-to-improve-the-performance-of-a-machine-learning-%28ML%29-model)

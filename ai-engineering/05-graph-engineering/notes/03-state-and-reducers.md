@@ -35,7 +35,7 @@ Design the schema the way you'd design a database table: name each key, give it 
 | Lifetime | Holds | Where it lives |
 |---|---|---|
 | **Short-term** (in-run) | Working memory for this run: draft, findings, attempt count | Graph state, checkpointed per step ([04](04-durable-execution-and-interrupts.md)) |
-| **Long-term** (cross-run) | Facts and preferences that outlive a run | A store outside the graph (note 12, planned; [02-context note 06](../../02-context-engineering/notes/06-memory.md)) |
+| **Long-term** (cross-run) | Facts and preferences that outlive a run | A store outside the graph ([note 12](12-kg-as-shared-agent-memory.md); [02-context note 06](../../02-context-engineering/notes/06-memory.md)) |
 
 **State is not context.** State is what the graph stores. Context is what you choose to load from it into a given node's prompt. A reviewer node should see the draft and the task, not every key in state ([07](07-failure-modes-at-scale.md#verifiers-need-isolated-context)). Deciding what each node sees is [context engineering](../../02-context-engineering/README.md) applied per node.
 
