@@ -59,7 +59,7 @@ For tool calls, check **in order** and stop at the first failure: *called a tool
 
 ### Reference-based text metrics
 
-BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. The case study ruled out ROUGE-L for conversational answers for this reason ([case study](../case-study/eval-architecture.md#why-we-use-custom-graders-instead-of-adks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
+BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. The case study ruled out ROUGE-L for conversational answers for this reason ([case study](case-study/eval-architecture.md#why-we-use-custom-graders-instead-of-adks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
 
 ---
 
@@ -96,7 +96,7 @@ class Grader(Protocol):
     def grade(self, task, output, trajectory=None, context=None) -> GraderResult: ...
 ```
 
-The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](../case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
+The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
 
 ---
 
@@ -156,7 +156,7 @@ Use an ordinal scale only when the levels are each *described* (what a 2 looks l
 
 ## Working reference
 
-[case-study/harness-patterns.md](../case-study/harness-patterns.md) — four suite types and a tool-trajectory scorer in pytest.
+[case-study/harness-patterns.md](case-study/harness-patterns.md) — four suite types and a tool-trajectory scorer in pytest.
 
 ---
 

@@ -1,6 +1,6 @@
 # Gate Contract — `<suite name>`
 
-> Generic version of the case study's [gate contract](../case-study/gate-contract.md). One section per gate, in pipeline order. See [notes/10](../notes/10-evals-in-ci.md#the-gate-ladder).
+> Generic version of the case study's [gate contract](../notes/case-study/gate-contract.md). One section per gate, in pipeline order. See [notes/10](../notes/10-evals-in-ci.md#the-gate-ladder).
 
 **Suite:** `<name>` · **Dataset version:** `vN` · **Baseline:** `<run ID / release>` · **Owner:** `<name>`
 

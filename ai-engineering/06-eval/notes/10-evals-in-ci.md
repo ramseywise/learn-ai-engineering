@@ -50,7 +50,7 @@ Why:
 - **Results are an artifact.** Upload them, diff them against the last run, attach them to the PR.
 - **Flakiness is visible.** Retries and infra errors are recorded in phase 1, not swallowed.
 
-The case study's harness splits each suite this way: an execution step writes rows, and pytest assertions read them ([case study](../case-study/harness-patterns.md)).
+The case study's harness splits each suite this way: an execution step writes rows, and pytest assertions read them ([case study](case-study/harness-patterns.md)).
 
 ---
 

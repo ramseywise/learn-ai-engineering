@@ -2,7 +2,7 @@
 
 > Applies to RAG-grounded agents (`kb_adk`, `kb_lg`, `kb_rag`) — any agent where the answer
 > should come from retrieved passages, not model training memory.
-> The grounding tiers that enforce this are summarized in [notes/07](../notes/07-evaluating-rag-and-grounding.md#grounding-tiers) (the source project's `invocation-flow.md`, Tier 2–3, is not in this repo).
+> The grounding tiers that enforce this are summarized in [notes/07](../07-evaluating-rag-and-grounding.md#grounding-tiers) (the source project's `invocation-flow.md`, Tier 2–3, is not in this repo).
 
 ---
 
