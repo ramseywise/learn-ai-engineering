@@ -10,6 +10,7 @@ sources:
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://vercel.com/i/what-are-agentic-workflows
   - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
+  - "Bojie Li, AI Agents in Depth (2026), ch. 8 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -99,6 +100,20 @@ Anthropic's *Effective Harnesses for Long-Running Agents* lists what an unattend
 - **Sub-agents multiply cost.** Each one is a fresh context. Use them for jobs that would cost more in the main context, not out of habit.
 - **Route models by step.** Frontier model for reasoning, smaller model for extraction and formatting ([10](10-framework-bindings.md)).
 - **Log cost per run** next to the score, so a run that got more expensive without getting better stands out.
+
+---
+
+## Guardrails for self-modifying loops
+
+A loop that edits itself can turn one mistake into a permanent one. Prompt injection from a web page gets summarized as "experience" and then fires in every later session. A malicious package found by search gets wrapped as a tool. A faulty verifier keeps approving regressions. Li (*AI Agents in Depth*, ch. 8) sets three boundaries:
+
+| Boundary | Rule |
+|---|---|
+| **Evidence ≠ instructions** | Raw web pages and tool output are untrusted evidence. Never write them straight into a Skill or prompt. Summarize first, version the change as a PR, and have it reviewed by a model from a different family. |
+| **Candidate ≠ production** | New knowledge, prompts, Skills, code and weights start in a candidate area that serves no traffic. New code and dependencies get a sandbox run, a permission review, a supply-chain scan and behavioural tests before canary. |
+| **Safety is not self-modifiable** | The agent may edit prompts, Skills, knowledge and tools. It may *not* edit the validators, test cases, release thresholds, audit logs or stable backups that approve its own updates. Otherwise it can pass off a regression as progress by lowering a threshold. |
+
+The third rule is the [write boundary](03-the-scorekeeper.md#the-write-boundary), extended to the release gate. Mechanics: [note 08](08-self-improving-loops.md#self-modification-as-a-release-process).
 
 ---
 

@@ -32,7 +32,10 @@ what the model is doing, why it behaves as it does, and how to instruct it relia
 
 - **[`readings/`](readings/)** — prompting, RLHF, and generative-AI foundations reference
   papers and book chapters (PDFs). Includes constitutional AI, chain-of-thought, and
-  prompt engineering for generative AI.
+  prompt engineering for generative AI. Also includes *Generative AI and LLMs for Dummies*
+  ([`readings/Generative-AI-and-LLMs-for-Dummies.pdf`](readings/Generative-AI-and-LLMs-for-Dummies.pdf)),
+  a gentle first pass before the papers.
+- External courses, books and the foundational-paper canon: [`../resources.md`](../resources.md#01--llm-fundamentals--pillar).
 
 ### Interviewing guides
 

@@ -100,6 +100,36 @@ one — it's the only figure that moves with quality as well as spend.
   to the question (recency/attention), with token budget enforcement + summarization
   fallback.
 
+### From *AI Agents in Depth* (Li)
+
+Condensed from the book's [reference answers](https://github.com/bojieli/ai-agent-book/blob/main/book-en/reference-answers.md) to its chapter thought questions; the book flags them as AI-drafted with light human review.
+
+- *"A sliding window made the agent repeat tool calls, full history explodes — design?"* —
+  append only; at ~80% of the window, compress old tool results once; persist large outputs
+  to disk with a summary; isolate intermediate work in sub-agents. That keeps the KV-cache
+  prefix intact.
+- *"Reasoning content across hundreds of tool calls?"* — keep recent reasoning in full and
+  roll older reasoning into a structured status (goal, confirmed facts, ruled-out paths,
+  to-dos) once, at a fixed point. DeepSeek R1 stripped history CoT (cheap, cache-friendly,
+  but no long-range plan); V4 mandates passing it back. For agents, reasoning is state.
+- *"148K characters compressed to 2K — irreversible loss?"* — yes, so pair lossy compression
+  with lossless indexing: source URLs per fact, raw outputs on disk, verbatim retention of
+  decisions, dates, names and IDs.
+- *"The status bar itself is wrong?"* — the model trusts it unconditionally. Maintain it in
+  code, never by an LLM counting history; track its accuracy as a metric; feed it only from
+  real observations.
+- *"Many people edit one system prompt — how does it stay clean?"* — prompts as code with
+  review; benchmark regressions before and after; enforced structure (SOP, XML/Markdown
+  layers); fragments labelled cacheable vs cache-breaking; bloat split into Skills.
+- *"The model can't know which Skill it needs?"* — keep Skill names and descriptions
+  resident, and write descriptions as routing conditions ("use when / don't use when").
+- *"Where should a loaded Skill be injected?"* — system prompt: strongest adherence, breaks
+  the cache. Mid-context as a file read: cache-safe, weaker adherence. End of context: good
+  adherence, recomputed every call.
+- *"Large, changing tool set — maximise cache hits?"* — a small frozen core of tools in
+  fixed order in the static prefix, a generic executor, capabilities via Skills; sub-agents
+  share the parent's prefix.
+
 ## Sources
 
 - notes: [notes/](../../../ai-engineering/02-context-engineering/notes/) (5 layers + compaction + caching notes), [context-engineering.md](../../../ai-engineering/02-context-engineering/context-engineering.md) (skills tips), [agent-harness.md](../../../ai-engineering/03-harness-engineering/agent-harness.md) (offloading, progressive disclosure)

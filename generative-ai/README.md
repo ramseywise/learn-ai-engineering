@@ -34,6 +34,11 @@ The order encodes dependency and temporal emergence:
 - **Agentic applications** — specific projects built with the frameworks: an
   internet-search agent and a deep-research bot.
 
+External courses, books, papers and tools are in **[resources.md](resources.md)**, organized by
+pillar. Bojie Li's *AI Agents in Depth* is synthesised into pillars
+[03](03-agentic-foundations/agent-fundamentals.md), [05](05-RL/post-training-for-agents.md) and
+[07](07-agentic-applications/real-time-multimodal-agents.md); each note links its labs upstream.
+
 ---
 
 ## Pillar → interviewing-guide crosswalk

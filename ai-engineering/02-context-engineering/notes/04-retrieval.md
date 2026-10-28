@@ -6,6 +6,7 @@ sources:
   - https://medium.com/ai-in-plain-english/10-context-engineering-techniques-every-ai-engineer-should-know-b54b486a6921
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/04_retrieval_augmented_generation/00–04, 40_reference/retrieval_indexing.md) — snapshot 2026-08-14)
+  - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -189,6 +190,12 @@ Retrieved content is not trustworthy by default. Validate before injecting:
 
 Conflict detection matters most. Two retrieved documents contradicting each other, both injected silently, is a reliable path to a confidently wrong answer. This is **context clash** — see [11-failure-modes.md](11-failure-modes.md).
 
+**Governance pushes these checks into the index** (Li, ch. 3):
+
+- **Expiry.** Tag each chunk with a version and effective/expiry dates, and filter at query time. A superseded policy left in the index gets retrieved *alongside* its replacement. The index structure matters here: HNSW supports incremental inserts; ANNOY needs a full rebuild.
+- **Permissions at the retrieval layer, not after it.** Once an unauthorized document is in the context, nothing guarantees it stays out of the answer. Multi-tenant systems also isolate vector indexes and metadata per tenant.
+- **Retrieved text is the main indirect-injection channel.** Tag its source ([framing](#framing-retrieved-content)), and never let retrieved content alone trigger a side-effecting action (transfer, delete, send). Those need their own authorization check ([harness 04](../../03-harness-engineering/notes/04-execution-boundaries.md)). *Knowledge poisoning* is the same attack, made before indexing.
+
 ---
 
 ## RAG architectures
@@ -204,6 +211,8 @@ The upstream course arranges RAG designs as a progression. Each step adds contro
 
 Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. It's the most capable design and the hardest to evaluate, because the retrieval path differs per run ([12](12-evaluating-context.md)).
 
+Li's Experiment 3-9 runs the two side by side on legal Q&A. A simple question ("rules on self-defense") gives the same quality either way, and non-agentic is faster. A compound question (sentencing for negligent serious injury while intoxicated, with a prior theft conviction) separates them. Non-agentic retrieval with the wrong first keywords misses the link. The agent searches the three sub-questions in parallel, sees what joins them is missing (how an unrelated prior conviction affects sentencing), and runs a second, targeted round on recidivism. Use agentic RAG when questions decompose; keep the single pass for narrow ones. Lab: upstream [3-9 agentic-rag](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/agentic-rag).
+
 ### Chunking
 
 | Strategy | Splits on | Trade-off |
@@ -215,9 +224,48 @@ Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → pla
 
 Chunk size is a recall/precision dial: small chunks match precisely but arrive without context; large chunks carry context but dilute the embedding. The hierarchical "retrieve small, return big" pattern sidesteps most of the trade-off.
 
+### Contextual retrieval
+
+Every chunking strategy cuts a fragment off from its context. "The company's Q2 revenue grew 3%": which company, which year? Anthropic's **contextual retrieval** has an LLM write a short prefix for each chunk *at index time* ("From the KPI section of ACME Corp's 2025 Q2 financial report"), then indexes prefix + chunk. One step improves both retrieval paths: BM25 gains exact keywords to match (ACME, 2025 Q2), and the embedding gains the missing context.
+
+Anthropic reports that top-20 retrieval failures fall **49%** with contextual embeddings + contextual BM25, and **67%** once a reranker is added. With prompt caching, the indexing cost is about **$1 per million document tokens**, since every chunk of one document shares the document as a cached prefix. Don't confuse it with *contextual compression* ([05](05-compression-compaction.md)). That runs at query time and removes content. Contextual retrieval runs at index time and adds it. Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); sparse half offline in [practice/01](../practice/01-bm25-from-scratch/README.md).
+
 ### Hybrid retrieval
 
 Lexical search (BM25) finds exact terms: names, error codes, identifiers. Dense search finds paraphrases. Run both, fuse the rankings (reciprocal rank fusion is the common default), then rerank the fused top-n with a cross-encoder. That pipeline is the reasonable default for production retrieval.
+
+Each stage has its own job:
+
+- **Sparse.** BM25's `k1` saturates term frequency, so the 20th mention adds little. `b` normalizes for document length. Rare terms dominate through IDF. *Learned sparse* models (SPLADE, BGE-M3's sparse head) learn the term weights and can add related terms that aren't in the text, while staying sparse and inspectable. Build BM25 by hand: [practice/01](../practice/01-bm25-from-scratch/README.md).
+- **Dense.** Cosine similarity compares direction, not magnitude, so length doesn't count. Contextual encoders (BERT, BGE-M3) give "bank" a different vector in each sentence; Word2Vec gave it one. For the ANN index, **HNSW** (graph-based: incremental inserts, higher memory, very high recall) suits live corpora. **ANNOY** (tree-based: fast build, low memory, full rebuild on change) suits static ones. Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding).
+- **Fusion.** Dense scores (roughly 0–1) and BM25 scores (0 to tens) aren't on the same scale. RRF (`Σ 1/(60 + rank)`) ignores scores and fuses ranks: robust, but it throws signal away. Normalize-and-weight keeps the scores but is hard to tune.
+- **Rerank.** A cross-encoder reads the query and the candidate *together* (the interviewer), where the bi-encoder compares two independent vectors (the résumé screen). It is too slow to run over the corpus, so it reranks the fused top 50 or so. It refines fusion; it doesn't replace it. Lab: upstream [3-6 retrieval-pipeline](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/retrieval-pipeline) reports each document's rank before and after reranking.
+
+**Measure each stage.** **recall@k**: did a relevant document reach the top k? It's the metric closest to what RAG needs. Note that many reports, Anthropic's included, mean *hit rate*: at least one relevant document in the top k. "Retrieval failure rate" is 1 − recall@20. **MRR** measures how high the first hit ranked. **nDCG** grades the whole ranked list. Check the definition and the k before comparing numbers across sources ([06-eval](../../06-eval/README.md)).
+
+### Multimodal ingestion
+
+Non-text content (charts, PDF layout, audio) enters at ingestion, and the path you choose sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed. Lab: upstream [3-7 multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/multimodal-agent).
+
+---
+
+## Distill at index time: beyond flat chunks
+
+Naive RAG, meaning raw documents chunked and indexed unprocessed, fails on two question shapes, however good the retriever:
+
+- **Aggregation.** Take 100 case files (90 black cats, 10 white) and ask for the ratio. Top-k truncation, uneven scores and the basic mismatch ("count across everything" vs. "find the few most relevant") leave the model reasoning from a sample of 15 and 3. One indexed summary, "100 cats: 90 black (90%), 10 white", answers it in a single retrieval.
+- **Rule induction.** Three cases: a veteran got the discount, a doctor got it, a teacher was refused. A nurse asks. "Nurse" sits near "doctor", so the doctor case ranks first and the teacher case is missed. The model concludes nurses qualify. The indexed rule "discount for veterans and doctors only" answers every profession.
+
+Attention is soft retrieval, not a summarizer. Spend compute **at index time** to turn cases into statistics and rules. It's the same "distill, don't retrieve" idea as the status bar ([02](02-context-anatomy.md#runtime-state-the-agent-status-bar)), applied to a corpus.
+
+| Structure | How it's built | Answers | Notes |
+|---|---|---|---|
+| **RAPTOR** | Cluster leaf chunks, summarize each cluster as a parent, recurse to a root | "Drill down from a concept to the details" | Retrieval works at any level of abstraction |
+| **GraphRAG** | LLM-extracted entities and relations, then community detection and summaries | Multi-hop ("my doctor's hospital's address") and disambiguation (two Dr. Zhangs are two nodes) | Converting to triples loses meaning: "if it rains I'll cancel the beach and go to the museum" loses its condition. Use it as an index alongside natural-language memory, not instead of it ([05-graph 11](../../05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md)) |
+| **Filesystem (OpenViking)** | Every resource gets L0 (~100-token abstract), L1 (~2k-token overview) and L2 (full text), with `.abstract`/`.overview` per directory | Navigation: most queries resolve at L1 | Progressive disclosure for a corpus. Needs **cross-links between files**, wiki-style, plus index pages. Weaker models append orphan files unless the writing prompt requires them to link and update the index |
+| **Knowledge discovery** | Extract a schema per case (bottom-up factor discovery), encode it, cluster it into prototypes, rank the factors | "What decides outcomes here?" | The ranked factors also tell the agent which questions to ask, in order. Lab: upstream [3-13](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/structured-knowledge-extraction) (Chinese legal data) |
+
+**When to use it:** if questions are "find the passage that says X", hybrid retrieval is enough. If they need cross-document synthesis or multi-level navigation, structured indexing is worth its large up-front LLM cost. Lab: upstream [3-8 structured-index](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/structured-index) (RAPTOR vs. GraphRAG over an Intel architecture manual).
 
 ### Framing retrieved content
 
