@@ -78,7 +78,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ## Layout
 
 ```
-02-context/
+02-context-engineering/
 ├── README.md               ← you are here: summary, rules of thumb, chapter index
 ├── context-engineering.md  ← pillar overview
 ├── notes/                  ← the chapters (read in order), plus the 99 appendix
@@ -132,8 +132,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 [templates/](templates/): `minimal_context.yaml`, schema templates ([YAML](templates/schema_template.yaml), [JSON](templates/schema_template.json)), [prompt_program_template.py](templates/prompt_program_template.py), [control_loop.py](templates/control_loop.py), [scoring_functions.py](templates/scoring_functions.py), and [prompt templates](templates/prompts/) (chain of thought, few-shot, minimal context, verification loop, expert guides).
 
 ### Related
-- [memory.md](../05-graph/memory.md) — memory depth: in-context, external, episodic, semantic.
-- [skills-design.md](../03-harness/skills-design.md) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
+- [memory-augmented-rag-notion-export.md](sources/memory-augmented-rag-notion-export.md) — memory depth: in-context, external, episodic, semantic.
+- [skills-design.md](../03-harness-engineering/skills-design.md) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
 
 ### Interviewing guide
 - [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
@@ -143,7 +143,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
 
 ### Next layer
-→ [03-harness/](../03-harness/README.md) — the harness wraps the loops that assemble context.
+→ [03-harness-engineering/](../03-harness-engineering/README.md) — the harness wraps the loops that assemble context.
 
 ---
 

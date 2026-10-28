@@ -87,7 +87,7 @@ Two lines come from the KodeKloud course and are worth making explicit: **save**
 | **Plan-then-Act** | Write the full plan up front, then execute | Predictable; brittle when step 3 invalidates step 5 |
 | **Plan-and-Revise** | Plan up front, re-plan when an observation breaks it | The usual production compromise |
 
-For long work the plan should live in a file, not in the context window, so a fresh pass can read and revise it. See [harness note 06](../../03-harness/notes/06-long-horizon-execution.md#plans-as-first-class-artifacts).
+For long work the plan should live in a file, not in the context window, so a fresh pass can read and revise it. See [harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#plans-as-first-class-artifacts).
 
 ### Vercel's sequencing advice
 
@@ -107,7 +107,7 @@ That is the green-first rule from [note 01](01-what-a-loop-is.md#green-first) ap
 |---|---|---|---|
 | Control flow | Fixed by your code | Decided by feedback each pass | Explicit nodes and edges, may contain loops |
 | Use when | Steps are known in advance | Steps depend on what the last one found | Several loops or agents must hand off |
-| Layer | prompt / harness | **this pillar** | [05-graph](../../05-graph/README.md) |
+| Layer | prompt / harness | **this pillar** | [05-graph](../../05-graph-engineering/README.md) |
 
 Start at the left column and move right only when the task forces you to.
 

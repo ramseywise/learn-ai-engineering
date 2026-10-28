@@ -68,7 +68,7 @@ The full chapter index, with what each covers, is in the [README](README.md#topi
 
 Once you are deciding *what* is in the window rather than *how* to phrase what's already there, you are in context engineering.
 
-Reciprocally, the context ↔ harness boundary: once the assembly becomes stateful and conditional — a loop that decides *when* to retrieve, compact, or spawn — you have crossed into [03-harness](../03-harness/README.md).
+Reciprocally, the context ↔ harness boundary: once the assembly becomes stateful and conditional — a loop that decides *when* to retrieve, compact, or spawn — you have crossed into [03-harness](../03-harness-engineering/README.md).
 
 ---
 

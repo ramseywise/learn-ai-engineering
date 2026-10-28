@@ -4,6 +4,7 @@ sources:
   - https://www.langchain.com/blog/the-art-of-loop-engineering
   - https://www.aibuilderclub.com/blog/self-improving-agent-loops
   - https://github.com/karpathy/autoresearch
+  - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
   - https://arxiv.org/abs/2603.23420
   - https://www.anthropic.com/institute/recursive-self-improvement
 confidence: medium
@@ -82,6 +83,10 @@ Karpathy's `autoresearch` (released 2026-03-06, MIT, ~630 lines of Python) is th
 Setup: **one Python file, one GPU, one metric.** The agent reads the code, proposes a change, runs a ~5-minute training run, checks whether validation improved, keeps or discards, and repeats.
 
 The load-bearing decision is the **write boundary**: the agent edits `train.py`, nobody edits `prepare.py` (evaluation), the human writes `program.md` ([note 03](03-the-scorekeeper.md#the-write-boundary)).
+
+Each experiment is a ratchet step: commit the change, train for a **fixed 5 minutes of wall clock**, compare validation; if better, keep the commit and append a row to `results.tsv`; if not, `git reset HEAD~1` and log the failure. The fixed budget is what makes results comparable: no change wins just by running longer. `results.tsv` is the loop's memory of every attempt, kept or not.
+
+**The loop is written in English.** `program.md` is a methodology, not code: what to change, what to leave alone, how to judge, what to do on failure, and one iron rule, *never ask for help, keep going*. Give the agent a method, not a task, and the method becomes the loop.
 
 **Results:** 700 experiments over two days → **20 real, stackable improvements**, cutting GPT-2 training from **2.02 → 1.80 hours (11%)**. Shopify's Tobi Lütke reported 19% on the same setup after 37 experiments.
 

@@ -6,7 +6,7 @@ cleaned: 2026-07-29
 ---
 # Ch 9 — LLM Workflows
 
-> Cross-pillar: this chapter's content maps to [04-loop](../../../04-loop/README.md) (agentic loops and workflow orchestration); topic synthesis: [notes/](../../notes/).
+> Cross-pillar: this chapter's content maps to [04-loop](../../../04-loop-engineering/README.md) (agentic loops and workflow orchestration); topic synthesis: [notes/](../../notes/).
 
 ## The generality/strength trade-off
 

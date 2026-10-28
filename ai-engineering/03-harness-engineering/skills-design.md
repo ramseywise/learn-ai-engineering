@@ -7,7 +7,7 @@ cleaned: 2026-07-29
 ---
 # Skills Design
 
-> Relocated from `02-context/context-engineering.md` (2026-07-29) — skills are a harness primitive, not a context-composition technique. The *progressive disclosure* mechanism they rely on belongs to context engineering; the design of the skills themselves belongs here.
+> Relocated from `02-context-engineering/context-engineering.md` (2026-07-29) — skills are a harness primitive, not a context-composition technique. The *progressive disclosure* mechanism they rely on belongs to context engineering; the design of the skills themselves belongs here.
 
 ---
 
@@ -15,7 +15,7 @@ cleaned: 2026-07-29
 
 A packaged procedure the agent loads on demand: a name, a description, and a body of instructions, templates, and examples. Only the name and description stay resident in the context window; the body loads when the task activates it.
 
-That split is why skills work — see [02-context/notes/02](../02-context/notes/02-context-anatomy.md#layer-2--on-demand-knowledge) for the progressive-disclosure mechanism and [02-context/notes/05](../02-context/notes/06-memory.md#index-plus-detail) for the same pattern applied to memory.
+That split is why skills work — see [02-context-engineering/notes/02](../02-context-engineering/notes/02-context-anatomy.md#layer-2--on-demand-knowledge) for the progressive-disclosure mechanism and [02-context-engineering/notes/05](../02-context-engineering/notes/06-memory.md#index-plus-detail) for the same pattern applied to memory.
 
 ---
 
@@ -73,7 +73,7 @@ A worked example in the body beats a paragraph describing the desired format.
 
 ## 4. Design for long runs early
 
-Container reuse and compaction are cheaper to build in than to retrofit. A skill that will run for more than a few minutes needs to assume it will be interrupted — write progress to disk, resume from checkpoint. See [02-context/notes/04](../02-context/notes/05-compression-compaction.md#crash-recovery).
+Container reuse and compaction are cheaper to build in than to retrofit. A skill that will run for more than a few minutes needs to assume it will be interrupted — write progress to disk, resume from checkpoint. See [02-context-engineering/notes/04](../02-context-engineering/notes/05-compression-compaction.md#crash-recovery).
 
 ---
 
@@ -85,7 +85,7 @@ Model-driven routing is probabilistic. When a skill must run, say so:
 Use the <skill name> skill.
 ```
 
-The general principle from [02-context/notes/02](../02-context/notes/02-context-anatomy.md#layer-5--deterministic-system): behavior that must be reliable belongs in code or explicit instruction, not in a description hoping to win a routing decision.
+The general principle from [02-context-engineering/notes/02](../02-context-engineering/notes/02-context-anatomy.md#layer-5--deterministic-system): behavior that must be reliable belongs in code or explicit instruction, not in a description hoping to win a routing decision.
 
 ---
 
@@ -103,7 +103,7 @@ Defensible default posture:
 
 Assume tool output is untrusted. Avoid combining open internet access with powerful procedures in consumer-facing flows where users expect strong confirmation controls.
 
-See [02-context/notes/07](../02-context/notes/11-failure-modes.md#prompt-injection) and [agents-guardrails.md](agents-guardrails.md).
+See [02-context-engineering/notes/07](../02-context-engineering/notes/11-failure-modes.md#prompt-injection) and [agents-guardrails.md](agents-guardrails.md).
 
 ---
 

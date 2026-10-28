@@ -117,4 +117,4 @@ Take an agent you've built, or the research-assistant shape above, and produce:
 - [ ] One failure mode from [11](11-failure-modes.md) reproduced, fixed and added to the eval set
 - [ ] A one-page design doc stating which lever each component serves
 
-When the loop that assembles this context becomes stateful and conditional, you've crossed into the harness layer → [03-harness](../../03-harness/README.md).
+When the loop that assembles this context becomes stateful and conditional, you've crossed into the harness layer → [03-harness](../../03-harness-engineering/README.md).

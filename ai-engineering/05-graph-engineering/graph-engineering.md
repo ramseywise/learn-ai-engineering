@@ -22,6 +22,8 @@ cleaned: 2026-08-03
 
 # Graph Engineering — deep note
 
+> Sections 1–8 and 10–14 have been split into the chapter sequence [notes/01–08](notes/01-graph-vs-loop.md); read those first. §9 (the knowledge-graph facet) feeds the planned Track B chapters ([OUTLINE.md](OUTLINE.md)). This note stays as the source until Track B is written.
+
 ## 1. Definition and where it sits
 
 Graph engineering is designing the **topology** of a multi-agent system: which nodes exist,
@@ -46,8 +48,8 @@ Three framings worth holding together:
   they watch, constrain, and correct one another."*
 
 Position in the progression: prompt → context → harness → loop → **graph**. The harness
-([03-harness](../03-harness/README.md)) supplies tools, state, and guardrails; the loop
-([04-loop](../04-loop/README.md)) decides how many times to use them and when to stop; the
+([03-harness](../03-harness-engineering/README.md)) supplies tools, state, and guardrails; the loop
+([04-loop](../04-loop-engineering/README.md)) decides how many times to use them and when to stop; the
 graph decides *which loop runs next and who is accountable for it.* Each layer presumes the
 one below — you cannot graph-engineer effectively without loop-engineering fluency.
 
@@ -149,7 +151,7 @@ between steps."*
   is the concurrency primitive: without a reducer, parallel fan-out into one key is a race.
 
 State is the substrate that replaces message-passing overhead in naive multi-agent designs.
-It is also where the [`agent-memory.md`](~/.claude/refs/agent-memory.md) single-writer rule
+It is also where the `~/.claude/refs/agent-memory.md` single-writer rule
 bites hardest — designate one writer per key, or use a reducer that makes multi-writer
 merging explicit.
 
@@ -261,7 +263,7 @@ Held-out test sets, physical inventory counts, banked revenue, safety specificat
 Without anchors a graph becomes *"perfectly self-consistent while drifting arbitrarily far
 from reality."*
 
-This maps directly onto the 不易 (immutable) layer in [`/sanyi`](~/.claude/skills/sanyi/) —
+This maps directly onto the 不易 (immutable) layer in the SANYI change contract (`~/workspace/librarian/data/wiki/meta/sanyi-change-contract.md`) —
 the invariants that must never become configurable. An anchor made tunable is an anchor that
 will eventually be tuned.
 
@@ -445,7 +447,7 @@ whose failure modes you can't reason about.
 
 | Situation | Use |
 |---|---|
-| Single agent, tool-augmented reasoning cycle | Loop engineering ([04-loop](../04-loop/README.md)) |
+| Single agent, tool-augmented reasoning cycle | Loop engineering ([04-loop](../04-loop-engineering/README.md)) |
 | Open-ended research with unknowable steps | Harness + loop, **not** a graph |
 | Multiple agents with conditional handoffs | Graph engineering |
 | 3+ independent verification steps | Graph (parallel review) |
@@ -487,7 +489,7 @@ cannot do:
 Yes to any → add a node. No to all → **strengthen the verifier and ship the loop.**
 
 That last clause is the one people skip. The most common "we need a graph" is really an
-overloaded verifier ([04-loop](../04-loop/README.md)), and splitting the verifier is far
+overloaded verifier ([04-loop](../04-loop-engineering/README.md)), and splitting the verifier is far
 cheaper than splitting the system.
 
 **The cost of a premature graph:** more prompts to maintain, cross-node state
@@ -597,7 +599,7 @@ at 30K — the agent is never allowed to fill its own context with the thing it 
 AWS, Azure, GCP, DigitalOcean, Hetzner, Heroku, and OpenShift. All installations run the same
 core; without a license key it runs as the free Community edition, with Business/Enterprise
 keys unlocking those editions. Relevant here as the deployment surface for a graph system you
-intend to operate rather than demo — see [`agent-runtime.md`](~/.claude/refs/agent-runtime.md).
+intend to operate rather than demo — see `~/.claude/refs/agent-runtime.md`.
 
 ---
 
@@ -607,9 +609,9 @@ intend to operate rather than demo — see [`agent-runtime.md`](~/.claude/refs/a
 - Book notes: [`kg-and-llms-in-action/`](kg-and-llms-in-action/)
 - Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/)
 - Coursera code — KG for RAG: [`Knowledge_Graphs_for_RAG-main`](Knowledge_Graphs_for_RAG-main/)
-- Readings — knowledge graph papers: [`3-rag-knowledge-graphs/`](3-rag-knowledge-graphs/)
+- Readings — KG book chapters and source PDFs: [`sources/`](sources/)
 - LangGraph docs: https://docs.langchain.com/langgraph
-- Loop engineering note: [`loop-engineering.md`](../04-loop/loop-engineering.md)
+- Loop engineering note: [`loop-engineering.md`](../04-loop-engineering/loop-engineering.md)
 - [From Karpathy's loops to shared knowledge graphs](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) — loop → swarm → graph progression; KG as shared memory; five-plane architecture (§9).
 - [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — true-dependency test, verifier context isolation, swarm cost anchors (§9).
 - [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — supervisor-pattern LangGraph case study with published constants (§14).

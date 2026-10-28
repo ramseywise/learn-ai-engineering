@@ -13,7 +13,7 @@ actually hold.
 2. **The threat landscape** — [security.md](../../notes/security.md): OWASP AI Agent
    Security taxonomy; OWASP cheat-sheet links in
    [reading-list.md](../../notes/reading-list.md).
-3. **Defenses in layers** — [agents-guardrails.md](../../../ai-engineering/03-harness/agents-guardrails.md) +
+3. **Defenses in layers** — [agents-guardrails.md](../../../ai-engineering/03-harness-engineering/agents-guardrails.md) +
    librarian *Input Guardrails Pipeline*: templating, content boundaries, sanitizers,
    moderation, output validation — and what each layer misses.
 4. **Agentic protection** — *Protecting Agentic Systems* (agent-applications book ch 12)
@@ -28,7 +28,7 @@ actually hold.
 
 | Resource | Type | Where | What it teaches |
 |---|---|---|---|
-| prompt-injection.md · agents-guardrails.md | note | [ai-engineering/01-prompt-engineering/](../../../ai-engineering/01-prompt-engineering/README.md) ([10 — adversarial prompting](../../../ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md)) · [ai-engineering/03-harness/](../../../ai-engineering/03-harness/) | the pillar's primary depth (wiki gap) |
+| prompt-injection.md · agents-guardrails.md | note | [ai-engineering/01-prompt-engineering/](../../../ai-engineering/01-prompt-engineering/README.md) ([10 — adversarial prompting](../../../ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md)) · [ai-engineering/03-harness-engineering/](../../../ai-engineering/03-harness-engineering/) | the pillar's primary depth (wiki gap) |
 | security.md | note | [../../notes/security.md](../../notes/security.md) | OWASP AI Agent taxonomy |
 | *Building Applications with AI Agents* ch 12 | pdf | `ai-engineering/readings/ai_engineering/ai_agent_applications/` | protecting agentic systems |
 | *Generative AI Design Patterns* ch 9 | pdf | `ai-engineering/readings/ai_engineering/ai design/` | safeguard patterns |

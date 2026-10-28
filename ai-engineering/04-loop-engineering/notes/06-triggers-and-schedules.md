@@ -6,6 +6,7 @@ sources:
   - https://notes.kodekloud.com/docs/Loop-Engineering/Components/Automations/page.md
   - https://claude.com/blog/getting-started-with-loops
   - https://www.aibuilderclub.com/blog/self-improving-agent-loops
+  - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -57,6 +58,8 @@ The harness now ships the patterns that used to be bash wrappers:
 | `/loop <prompt>` (no interval) | Self-paced: the model picks the delay before its next pass | Same | 3: time-based |
 | `/schedule` | Cloud routine: runs on a cron schedule (or once at a set time) with no session open | You delete the routine | 4: proactive |
 
+**Which one: does this thing have an end?** Yes → `/goal`. No, it's ongoing watching → `/loop`. The common mistake is `/loop 10m "keep implementing the payment system"`. Each `/loop` pass runs the same instruction from scratch and **doesn't remember where the last one stopped**, so you get the same starting point over and over. A timer loop that has to make progress needs a state file it reads first ([note 05](05-long-running-loops.md#memory-three-tiers-five-fields)).
+
 Codex and Hermes ship equivalents of `/loop` and `/goal`. The mapping to the autonomy ladder matters more than the syntax. `/loop` runs inside your session with your permissions; `/schedule` runs without you, so it needs a verifier you already trust and its own scoped credentials.
 
 ---
@@ -70,7 +73,7 @@ An unattended trigger multiplies whatever a single run costs. Before turning one
 - **No-op path**: a run that finds nothing to do should exit in seconds, before calling the model.
 - **Alert on spend**, not just on failure.
 
-Full treatment: [harness note 04: cost envelope](../../03-harness/notes/04-execution-boundaries.md#cost-envelope) and [note 09](09-failure-modes-and-guardrails.md#budgets-and-cost).
+Full treatment: [harness note 04: cost envelope](../../03-harness-engineering/notes/04-execution-boundaries.md#cost-envelope) and [note 09](09-failure-modes-and-guardrails.md#budgets-and-cost).
 
 ---
 

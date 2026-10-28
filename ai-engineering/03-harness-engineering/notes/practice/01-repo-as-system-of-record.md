@@ -122,7 +122,7 @@ Topic docs run 50–150 lines each and are read only when the task needs them.
 
 Anti-patterns to check for: the same rule in several places; obsolete rules nobody audits; conditional rules so specific they almost never fire; long tool manuals in startup context.
 
-Same idea from the context side: [02-context](../../../02-context/README.md), especially progressive disclosure and stable-before-dynamic ordering.
+Same idea from the context side: [02-context](../../../02-context-engineering/README.md), especially progressive disclosure and stable-before-dynamic ordering.
 
 ---
 

@@ -141,7 +141,7 @@ The upstream tool-reasoning module gives four levels of tool use. Each is a diff
 | **Conditional** | The model picks the tool from the situation | Tool descriptions must be distinct enough to choose between |
 | **Recursive** | A tool call spawns its own tool loop (a sub-agent) | This is isolation; see above |
 
-Most production agents are conditional loops with occasional parallel batches. Pipeline and DAG architectures are worth it only when the order is known in advance. Then they belong in code, not in the model's decisions ([03-harness](../../03-harness/README.md)).
+Most production agents are conditional loops with occasional parallel batches. Pipeline and DAG architectures are worth it only when the order is known in advance. Then they belong in code, not in the model's decisions ([03-harness](../../03-harness-engineering/README.md)).
 
 ---
 

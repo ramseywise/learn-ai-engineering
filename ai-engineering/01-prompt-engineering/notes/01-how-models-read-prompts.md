@@ -105,9 +105,9 @@ The book frames it as the whole request/response transformation layer, in four l
 | Level | Application does | Covered in |
 |---|---|---|
 | 1. Thin wrapper | Passes user text through with light formatting | [02-prompt-anatomy](02-prompt-anatomy.md) |
-| 2. Augmented input | Adds retrieved context, conversation history | [02-prompt-anatomy](02-prompt-anatomy.md), [02-context](../../02-context/README.md) |
+| 2. Augmented input | Adds retrieved context, conversation history | [02-prompt-anatomy](02-prompt-anatomy.md), [02-context](../../02-context-engineering/README.md) |
 | 3. Tool use | Model requests actions, app executes them | [05-tools-and-function-calling](05-tools-and-function-calling.md) |
-| 4. Agency | Model decides *how* to reach a goal | [06-chaining-and-workflows](06-chaining-and-workflows.md), [03-harness](../../03-harness/README.md) |
+| 4. Agency | Model decides *how* to reach a goal | [06-chaining-and-workflows](06-chaining-and-workflows.md), [03-harness](../../03-harness-engineering/README.md) |
 
 ---
 

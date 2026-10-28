@@ -43,7 +43,7 @@ cleaned: 2026-10-28
 - **The Electron app projects and TypeScript demos.** The starter and solution code taught the app more than the harness. The labs now run on your own repo.
 - **Translations** (zh, ja, ko, es, fr, vi, pt, de) and the VitePress website tooling.
 - **The rest of the harness-creator skill.** The gotchas and patterns were folded into the notes. The skill's own instructions duplicated the course.
-- **L13 and project 07 (loop engineering).** These belong to [04-loop/](../04-loop/README.md).
+- **L13 and project 07 (loop engineering).** These became [04-loop-engineering/notes/](../04-loop-engineering/notes/) and the [loop labs](../04-loop-engineering/practice/01-exercises.md).
 - **Unsourced statistics and "a team found…" anecdotes.** Only numbers traceable to a cited source were kept.
 - **The duplicate `CLAUDE.md` template.** [templates/AGENTS.md](templates/AGENTS.md) notes that `CLAUDE.md` can be a pointer or symlink to it.
 

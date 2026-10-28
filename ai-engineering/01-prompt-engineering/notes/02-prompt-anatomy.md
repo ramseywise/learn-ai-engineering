@@ -23,7 +23,7 @@ Every prompt has to satisfy all four at once (book, Ch 4):
 3. **Lead to a solution** — point at an answer, not more elaboration of the problem.
 4. **Have a natural stopping point** — the end of the assistant turn, a closing tag, or a stop sequence.
 
-Chat models give you 1, 3 and 4 almost for free through fine-tuning. **Criterion 2 is never automatic** — gathering and shaping context is where most of the work goes ([02-context](../../02-context/README.md)).
+Chat models give you 1, 3 and 4 almost for free through fine-tuning. **Criterion 2 is never automatic** — gathering and shaping context is where most of the work goes ([02-context](../../02-context-engineering/README.md)).
 
 ---
 
@@ -118,7 +118,7 @@ How a piece of data (say, a weather API result) enters the prompt should match t
 
 Snippet checklist: **modular** (insert or drop like list items), **natural** (reads as part of the document), **brief**, and **inert** (its token count doesn't change with its neighbors — tokenization isn't additive, so separate snippets with whitespace and avoid leading newlines).
 
-When the context budget varies, keep **elastic** versions of a snippet (full → trimmed → minimal) and pick the largest one that fits. Retrieval, scoring and packing are covered in depth in [02-context](../../02-context/notes/02-context-anatomy.md).
+When the context budget varies, keep **elastic** versions of a snippet (full → trimmed → minimal) and pick the largest one that fits. Retrieval, scoring and packing are covered in depth in [02-context](../../02-context-engineering/notes/02-context-anatomy.md).
 
 ---
 

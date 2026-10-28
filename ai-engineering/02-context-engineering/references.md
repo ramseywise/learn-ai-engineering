@@ -46,4 +46,4 @@ What was kept as files:
 - [templates/](templates/): schema templates, prompt programs, control loops and prompt templates.
 - [notebooks/](notebooks/): the `10_guides_zero_to_hero` Python labs.
 
-To read the originals, use the upstream repo: https://github.com/davidkimai/Context-Engineering. The deleted files are also in this repo's git history: `git show a51061f:ai-engineering/02-context/<path>`.
+To read the originals, use the upstream repo: https://github.com/davidkimai/Context-Engineering. The deleted files are also in this repo's git history: `git show a51061f:ai-engineering/02-context-engineering/<path>`.

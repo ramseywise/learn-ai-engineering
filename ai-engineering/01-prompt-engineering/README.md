@@ -8,7 +8,7 @@
 
 ## What it is
 
-Prompt engineering is the craft of writing instructions and examples that consistently elicit desired outputs from language models. It governs what you *ask* and how you *structure* the ask — not what you put in the context window alongside it. Once you're deciding *which documents, memory or tool outputs to include*, you're doing context engineering ([02-context](../02-context/README.md)).
+Prompt engineering is the craft of writing instructions and examples that consistently elicit desired outputs from language models. It governs what you *ask* and how you *structure* the ask — not what you put in the context window alongside it. Once you're deciding *which documents, memory or tool outputs to include*, you're doing context engineering ([02-context](../02-context-engineering/README.md)).
 
 | Prompt engineering | Context engineering |
 |---|---|
@@ -120,7 +120,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
     - [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md) — the security facet: adversarial input manipulation.
 
 ### Next layer
-→ [02-context/](../02-context/README.md) — context engineering assembles the window that delivers your prompts.
+→ [02-context-engineering/](../02-context-engineering/README.md) — context engineering assembles the window that delivers your prompts.
 
 ---
 
@@ -145,7 +145,7 @@ Every source behind the notes, in one place. Local files come first, followed by
 | [pe-chatgpt-langchain.ipynb](notebooks/pe-chatgpt-langchain.ipynb), [pe-rag.ipynb](notebooks/pe-rag.ipynb) | [06 — chaining](notes/06-chaining-and-workflows.md) |
 | [pe-chatgpt-adversarial.ipynb](notebooks/pe-chatgpt-adversarial.ipynb) | [10 — adversarial](notes/10-adversarial-prompting.md) |
 | [pe-code-llama.ipynb](notebooks/pe-code-llama.ipynb), [pe-mixtral-introduction.ipynb](notebooks/pe-mixtral-introduction.ipynb) | [11 — code](notes/11-applications.md#code), open-weight models |
-| [gemini-context-caching.ipynb](notebooks/gemini-context-caching.ipynb) | [02-context](../02-context/README.md) |
+| [gemini-context-caching.ipynb](notebooks/gemini-context-caching.ipynb) | [02-context](../02-context-engineering/README.md) |
 
 ### Elsewhere in this repo
 
@@ -280,7 +280,7 @@ These are broader or more opinionated pieces, good once the notes feel familiar.
 - Weng, [*Prompt Engineering*](https://lilianweng.github.io/posts/2023-03-15-prompt-engineering/) (2023) — a dense, research-oriented survey
 - Yan, [*Prompting Fundamentals and How to Apply Them Effectively*](https://eugeneyan.com/writing/prompting/) — a practitioner's view with production examples
 - [Learn Prompting](https://learnprompting.org) — a beginner-friendly open course, an alternative to DAIR
-- Context engineering — the successor framing (Karpathy, LangChain, Schmid, Lance Martin). Collected in [02-context](../02-context/README.md)
+- Context engineering — the successor framing (Karpathy, LangChain, Schmid, Lance Martin). Collected in [02-context](../02-context-engineering/README.md)
 
 ---
 

@@ -16,15 +16,15 @@ the librarian wiki and most of the cleaned notes are about — and the center of
 3. **Tools & MCP** — *Model Context Protocol* chapters (`ai-engineering/readings/ai_engineering/mcp/`);
    tool-design-as-UX (ACI/poka-yoke) from the wiki patterns pages.
 4. **Memory & state** — notes ([memory.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md),
-   [deep-agents.md](../../../ai-engineering/03-harness/deep-agents.md)) + `wiki/memory/` + the Memoria/
+   [deep-agents.md](../../../ai-engineering/03-harness-engineering/deep-agents.md)) + `wiki/memory/` + the Memoria/
    memory-augmented-RAG flow; chatbot-memory pilot paper (Yan et al. 2025, see librarian wiki).
 5. **Harness engineering** — the notes cluster unique to this repo:
-   [agent-harness](../../../ai-engineering/03-harness/agent-harness.md), [loop-engineering](../../../ai-engineering/04-loop/loop-engineering.md),
-   [reliable-agents](../../../ai-engineering/03-harness/reliable-agents.md) — acceptance baselines, execution
+   [agent-harness](../../../ai-engineering/03-harness-engineering/agent-harness.md), [loop-engineering](../../../ai-engineering/04-loop-engineering/loop-engineering.md),
+   [reliable-agents](../../../ai-engineering/03-harness-engineering/reliable-agents.md) — acceptance baselines, execution
    boundaries, feedback signals, rollback.
 6. **Multi-agent, skeptically** — *From One Agent to Many* (agent applications ch 8),
    `ai-engineering/readings/ai_engineering/multiagent context/`, notes
-   [agents-design.md](../../../ai-engineering/03-harness/agents-design.md); protocol/task-graph/isolation triad.
+   [agents-design.md](../../../ai-engineering/03-harness-engineering/agents-design.md); protocol/task-graph/isolation triad.
 
 ## Resource map
 
@@ -38,8 +38,8 @@ the librarian wiki and most of the cleaned notes are about — and the center of
 | LangGraph/ADK course repos | code | `generative-ai/03-agentic-foundations/` | guided framework builds |
 | deep-research bot | code | `generative-ai/chatbot/deep_research_bench/` | a real multi-step agent |
 | wiki/adk (19pp) · wiki/langgraph · wiki/deep-agents · wiki/patterns · wiki/memory · wiki/mcp | wiki | librarian | ~50 compiled pages of design experience |
-| agent-harness · agents-design · agents-guardrails · reliable-agents · deep-agents | note | [ai-engineering/03-harness/](../../../ai-engineering/03-harness/) | harness engineering |
-| loop-engineering · notes/01–10 | note | [ai-engineering/04-loop/](../../../ai-engineering/04-loop/) | loop design |
+| agent-harness · agents-design · agents-guardrails · reliable-agents · deep-agents | note | [ai-engineering/03-harness-engineering/](../../../ai-engineering/03-harness-engineering/) | harness engineering |
+| loop-engineering · notes/01–10 | note | [ai-engineering/04-loop-engineering/](../../../ai-engineering/04-loop-engineering/) | loop design |
 | memory | note | [ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md](../../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) | memory architectures |
 | agents-google-adk | note | [generative-ai/03-agentic-foundations/](../../../generative-ai/03-agentic-foundations/) | ADK framework |
 

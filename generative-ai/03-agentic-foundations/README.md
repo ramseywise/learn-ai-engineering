@@ -33,7 +33,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 
 **Context and memory:**
 
-- **[`../../ai-engineering/02-context/`](../../ai-engineering/02-context/README.md)** —
+- **[`../../ai-engineering/02-context-engineering/`](../../ai-engineering/02-context-engineering/README.md)** —
   context engineering for agents: what goes in the context window and why it matters
   (13-chapter course in `notes/`, with labs, templates and paper PDFs).
 - **[`LLMs-as-Operating-Systems--Agent-Memory-main/`](LLMs-as-Operating-Systems--Agent-Memory-main/)** —
@@ -65,21 +65,21 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 ### Cleaned notes
 
 - [agents-google-adk.md](agents-google-adk.md) — Google ADK: agent framework, tool use, deployment.
-- [agent-harness.md](../../ai-engineering/03-harness/agent-harness.md) — harness architecture: tool
+- [agent-harness.md](../../ai-engineering/03-harness-engineering/agent-harness.md) — harness architecture: tool
   registration, the agent loop, structured output parsing, error handling.
-- [agents-design.md](../../ai-engineering/03-harness/agents-design.md) — agent design patterns:
+- [agents-design.md](../../ai-engineering/03-harness-engineering/agents-design.md) — agent design patterns:
   ReAct, plan-and-execute, reflection, multi-agent orchestration.
-- [agents-guardrails.md](../../ai-engineering/03-harness/agents-guardrails.md) — safety and
+- [agents-guardrails.md](../../ai-engineering/03-harness-engineering/agents-guardrails.md) — safety and
   guardrails: input/output filtering, scope limiting, human-in-the-loop gates.
-- [reliable-agents.md](../../ai-engineering/03-harness/reliable-agents.md) — reliability patterns:
+- [reliable-agents.md](../../ai-engineering/03-harness-engineering/reliable-agents.md) — reliability patterns:
   retries, fallbacks, circuit breakers, determinism vs. stochasticity tradeoffs.
-- [loop-engineering.md](../../ai-engineering/04-loop/loop-engineering.md) — loop reliability:
+- [loop-engineering.md](../../ai-engineering/04-loop-engineering/loop-engineering.md) — loop reliability:
   termination conditions, loop invariants, stuck-agent detection.
-- [deep-agents.md](../../ai-engineering/03-harness/deep-agents.md) — advanced agent patterns:
+- [deep-agents.md](../../ai-engineering/03-harness-engineering/deep-agents.md) — advanced agent patterns:
   long-horizon planning, self-correction, agentic evals.
 - [memory.md](../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) — memory architectures: in-context,
   episodic, semantic, procedural.
-- [context-engineering.md](../../ai-engineering/02-context/context-engineering.md) — context
+- [context-engineering.md](../../ai-engineering/02-context-engineering/context-engineering.md) — context
   assembly for agents: what to include, what to compress, what to externalize.
 
 ---
@@ -91,9 +91,9 @@ For each agentic concern, there is a corresponding ai-engineering pillar:
 
 | Agentic concern | ai-engineering depth |
 |---|---|
-| Building the agent container | [03-harness/](../../ai-engineering/03-harness/README.md) |
-| Designing the agent loop | [04-loop/](../../ai-engineering/04-loop/README.md) |
-| Multi-agent graphs and KG retrieval | [05-graph/](../../ai-engineering/05-graph/README.md) |
+| Building the agent container | [03-harness-engineering/](../../ai-engineering/03-harness-engineering/README.md) |
+| Designing the agent loop | [04-loop-engineering/](../../ai-engineering/04-loop-engineering/README.md) |
+| Multi-agent graphs and KG retrieval | [05-graph-engineering/](../../ai-engineering/05-graph-engineering/README.md) |
 | Measuring and observing agent behavior | [06-eval/](../../ai-engineering/06-eval/README.md) |
 
 ---

@@ -100,7 +100,7 @@ The moment assembly becomes **stateful and conditional** — a loop deciding whe
 
 The tightest available decomposition (harness-engineering.ai), useful as a checklist:
 
-1. **Context engineering** — assembling calibrated information per step → [02-context](../02-context/README.md)
+1. **Context engineering** — assembling calibrated information per step → [02-context](../02-context-engineering/README.md)
 2. **Tool orchestration** — external system interaction, input validation, output parsing, error handling → [note 03](notes/03-tool-design.md)
 3. **Verification loops** — schema-based or semantic checks before proceeding → [note 05](notes/05-verification-loops.md)
 4. **Cost envelope management** — per-task budget ceilings preventing runaway spend → [note 08](notes/08-maturity-and-failure-modes.md)

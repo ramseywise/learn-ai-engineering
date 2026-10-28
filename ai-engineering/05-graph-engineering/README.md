@@ -1,7 +1,7 @@
 # 05 — Graph Engineering
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
-> Position in the stack: fifth foundation — builds on [04-loop](../04-loop/README.md); *graphs make agent organizations programmable*.
+> Position in the stack: fifth foundation — builds on [04-loop](../04-loop-engineering/README.md); *graphs make agent organizations programmable*.
 > Deep note: [graph-engineering.md](graph-engineering.md)
 
 ---
@@ -22,13 +22,35 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 
 ---
 
+## Syllabus
+
+Read the notes in order; each one is earned by the one before. Track A (agent graphs) is written; Track B (knowledge graphs, notes 09–12) is planned in [OUTLINE.md](OUTLINE.md).
+
+| # | Note | Covers | Lab |
+|---|---|---|---|
+| 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map | [Lab 1](practice/01-agent-graph-labs.md#lab-1--generate-then-verify) |
+| 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify | [Lab 1](practice/01-agent-graph-labs.md#lab-1--generate-then-verify) |
+| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test | [Lab 2](practice/01-agent-graph-labs.md#lab-2--fan-out-and-merge) |
+| 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go | [Lab 3](practice/01-agent-graph-labs.md#lab-3--checkpoint-and-interrupt) |
+| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping | [Lab 4](practice/01-agent-graph-labs.md#lab-4--subgraphs-and-the-parallel-review-graph) |
+| 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption | [Lab 5](practice/01-agent-graph-labs.md#lab-5--break-even-measurement) |
+| 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check | [Lab 6](practice/01-agent-graph-labs.md#lab-6--fault-injection) |
+| 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study | [Lab 7](practice/01-agent-graph-labs.md#lab-7--trace-and-attribute) |
+
+### Practice and templates
+
+- [P1 — Agent graph labs](practice/01-agent-graph-labs.md): seven labs that grow one graph through notes 01–08.
+- [templates/generate-then-verify.py](templates/generate-then-verify.py) and [templates/fan-out-merge.py](templates/fan-out-merge.py): runnable LangGraph skeletons.
+
+---
+
 ## Resource map
 
 ### Deep notes
 - [graph-engineering.md](graph-engineering.md) — the full discipline: primitives (nodes, edges, state, reducers, checkpointers, interrupts, Send API), why production agents aren't DAGs, topology patterns, when *not* to build a graph, scale failure modes and anchors, enterprise governance checklist, Claude Code mapping, the KG facet (including the KG as
   shared memory for swarms, and swarm cost anchors), adoption methodology, and the n8n
   supervisor-graph case study.
-- [memory.md](memory.md) — memory and state across graph nodes.
+- Memory-augmented RAG notes moved to [02-context-engineering/sources/memory-augmented-rag-notion-export.md](../02-context-engineering/sources/memory-augmented-rag-notion-export.md) (overlaps 02-context `notes/06-memory.md`; see [OUTLINE.md](OUTLINE.md)).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
 - [kg-and-llms-in-action/](kg-and-llms-in-action/) — chapter-by-chapter notes: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory and Neo4j/Cypher appendices.
@@ -41,7 +63,7 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 - [Knowledge_Graphs_for_RAG-main](./Knowledge_Graphs_for_RAG-main/) — knowledge-graph facet: entity graphs as retrieval structure.
 
 ### Readings
-- [3-rag-knowledge-graphs/](3-rag-knowledge-graphs/) — KG-for-RAG source PDFs (book chapters + reference papers).
+- [sources/](sources/) — *Knowledge Graphs and LLMs in Action* chapter PDFs plus the community-compiled *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026) PDF.
 
 ### External references
 - LangGraph docs: https://docs.langchain.com/langgraph
@@ -58,7 +80,7 @@ Graph is a **peer fifth foundation**, ordered after loop because it presumes loo
 - [Hosting n8n](https://docs.n8n.io/deploy/host-n8n) — deployment surface for a self-hosted graph runtime.
 
 ### Previous and next layer
-← Builds on [04-loop/](../04-loop/README.md)
+← Builds on [04-loop-engineering/](../04-loop-engineering/README.md)
 → [06-eval/](../06-eval/README.md) — eval measures graph correctness and multi-agent coordination quality.
 
 ---

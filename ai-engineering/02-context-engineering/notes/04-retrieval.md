@@ -114,7 +114,7 @@ What the diagram omits is as informative as what it shows — there is no rerank
 
 ### A tuned production pipeline
 
-Bayer's PRINCE platform (see [03-harness/reliable-agents.md](../../03-harness/reliable-agents.md)) is the same pipeline after that plateau, with the numbers filled in. It retrieves over decades of preclinical study reports, and the query-time path runs:
+Bayer's PRINCE platform (see [03-harness-engineering/reliable-agents.md](../../03-harness-engineering/reliable-agents.md)) is the same pipeline after that plateau, with the numbers filled in. It retrieves over decades of preclinical study reports, and the query-time path runs:
 
 1. **Keyword extraction and filter generation, concurrently.** One LLM pass pulls search keywords out of the natural-language query (domain terms like `piloerection`, `ataxia`); a second generates a structured metadata filter (`eq(study_id, T123456-2)`) via few-shot prompting over permutation examples.
 2. **Query expansion, n=5.** A smaller, faster model rewrites the question into five semantically similar variants, covering phrasing and terminology drift.
@@ -200,7 +200,7 @@ The upstream course arranges RAG designs as a progression. Each step adds contro
 | **Naive RAG** | embed query → top-k → stuff into prompt | One-hop factual questions over a clean corpus |
 | **Modular RAG** | Swappable stages: query rewrite → retrieve → rerank → compress → generate | You need to tune or replace one stage without rebuilding the rest |
 | **Agentic RAG** | The model decides *whether*, *what* and *when* to retrieve, and loops until it has enough | Multi-step questions; this is just-in-time retrieval ([above](#just-in-time-context)) |
-| **Graph-enhanced RAG** | Entities and relations extracted into a graph; retrieval walks edges | Multi-hop and "how is X related to Y" questions ([05-graph](../../05-graph/README.md)) |
+| **Graph-enhanced RAG** | Entities and relations extracted into a graph; retrieval walks edges | Multi-hop and "how is X related to Y" questions ([05-graph](../../05-graph-engineering/README.md)) |
 
 Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. It's the most capable design and the hardest to evaluate, because the retrieval path differs per run ([12](12-evaluating-context.md)).
 

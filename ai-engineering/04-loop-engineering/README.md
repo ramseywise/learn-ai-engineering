@@ -1,52 +1,70 @@
 # 04 — Loop Engineering
 
 > Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
-> Position in the stack: *loops make agent behavior programmable; the graph foundation ([05-graph](../05-graph/README.md)) builds on loops*.
-> Deep note: [loop-engineering.md](loop-engineering.md)
+> Position in the stack: *the harness runs one agent well; the loop runs it again, against a goal, until a scorekeeper says stop*.
+> Overview note: [loop-engineering.md](loop-engineering.md) · Topic depth: [notes/](notes/) · Practice: [practice/](practice/) · Templates: [templates/](templates/)
 
 ---
 
 ## What it is
 
-Loop engineering is the discipline of designing the **perceive → decide → act → repeat** cycle inside an agent. A loop is the unit of individual agent behavior: the model receives observations, reasons about them, selects an action (often a tool call), receives the result, and loops. Loop design governs: termination conditions, action selection strategy, error recovery within a cycle, and how the loop integrates with the surrounding harness.
+Loop engineering is the discipline of designing the system that prompts your agent, so you don't have to. A loop is **a goal plus a scorekeeper, repeated, with a way to stop**: each cycle gathers context, acts, verifies, and either saves the change or rolls it back.
 
-*"Loops made agent behavior programmable."* — explainx graph-engineering
+*"Loop engineering is replacing yourself as the person who prompts the agent. You design the system that does it instead."* — Addy Osmani
 
-Production systems stack **four levels** of loop (LangChain's taxonomy — detail in
-[loop-engineering.md](loop-engineering.md) §2):
+Two independent axes place any loop:
 
-1. **Agent loop** — model calls tools until the task is done. *Automates work.*
-2. **Verification loop** — a grader scores the output and feeds failures back. *Automates quality.*
-3. **Event-driven loop** — schedules/webhooks trigger runs in the background. *Automates invocation.*
-4. **Hill-climbing loop** — trace analysis rewrites the harness config. *Automates improvement.*
+- **Capability level** (LangChain), *what the loop automates*: agent loop (work) → verification loop (quality) → event-driven loop (invocation) → hill-climbing loop (improvement).
+- **Autonomy rung**, *what the operator has handed off*: tool approval → the stop condition (`/goal`) → the trigger, to a clock (`/loop`) → the trigger and session (`/schedule`).
 
-Levels 1–3 automate work; level 4 automates improvement, and is where loop engineering
-stops being scaffolding and starts modifying the harness underneath it.
+The binding constraint moves from generation to **verification**. That's why the scorekeeper comes before the loop, and why the hardest failures are human ones (comprehension rot, cognitive surrender), not mechanical ones.
 
-These are **capability** levels — *what the loop automates*. A second, orthogonal axis
-asks *how much of the operator's job has been handed off*: the autonomy ladder
-(turn-based → goal-based → time-based → proactive) in
-[loop-autonomy-ladder.md](loop-autonomy-ladder.md). A loop has a position on each.
+**Inherits the weaknesses of:** harness engineering. A loop running inside a poorly instrumented harness repeats unreliable behavior faster, and that's harder to debug than a single bad run.
 
-The next foundation — [05-graph](../05-graph/README.md) — extends this: graphs make *multi-agent organizations* programmable by composing and routing between loops.
+---
 
-**The operator's framing:** *"Loop engineering is replacing yourself as the person who
-prompts the agent. You design the system that does it instead."* (Osmani). The binding
-constraint moves from generation to **verification** — which is why levels 2 and 4 matter
-more than they look, and why the hard failure modes are human ones (comprehension debt,
-cognitive surrender) rather than mechanical ones.
+## Syllabus
 
-**Inherits the weaknesses of:** harness engineering — a loop operating inside a poorly instrumented harness will produce unreliable behavior that is hard to debug, even if the loop logic itself is sound.
+Read the notes in order; each one is earned by the one before. Start the labs after note 03.
+
+| # | Note | Covers | Lab |
+|---|---|---|---|
+| 1 | [What a loop is](notes/01-what-a-loop-is.md) | The cycle, goal + scorekeeper, green first, when not to loop, lineage, inside vs outside, the map | — |
+| 2 | [Loop shapes](notes/02-loop-shapes.md) | Five required parts, the canonical skeleton, patterns by task shape, loop vs workflow vs graph | — |
+| 3 | [The scorekeeper](notes/03-the-scorekeeper.md) | Five traits, hard-to-fake defenses, write boundary, deterministic first, maker/checker | [Lab 1](practice/01-exercises.md#lab-1--goal-loop-manual-vs-goal) |
+| 4 | [Building blocks](notes/04-building-blocks.md) | Automations, worktrees, skills, connectors, sub-agents, memory; add only when a failure demands it | [Lab 3](practice/01-exercises.md#lab-3--makerchecker-step-outside-the-loop) |
+| 5 | [Long-running loops](notes/05-long-running-loops.md) | Context budget, memory tiers and fields, context drift, Ralph, initializer/worker, compaction vs reset | [Lab 4](practice/01-exercises.md#lab-4--guarded-ralph-loop) |
+| 6 | [Triggers and schedules](notes/06-triggers-and-schedules.md) | Level 3, run-until-done vs timer, `/goal` / `/loop` / `/schedule`, cost ceilings | [Lab 2](practice/01-exercises.md#lab-2--timer-loop-monitoring-as-a-heartbeat) |
+| 7 | [The autonomy ladder](notes/07-autonomy-ladder.md) | The four handoffs, mapping to capability levels, the adoption ladder | — |
+| 8 | [Self-improving loops](notes/08-self-improving-loops.md) | Level 4, the evolve loop, anti-busywork, `autoresearch`, bilevel, RSI | [Lab 5](practice/01-exercises.md#lab-5--evolve-loop) |
+| 9 | [Failure modes and guardrails](notes/09-failure-modes-and-guardrails.md) | Structural and human failures, four silent costs, ratchet rules, layered exits, budgets, design checklist | Drills |
+| 10 | [Framework bindings](notes/10-framework-bindings.md) | ADK `LoopAgent`, Vercel `ToolLoopAgent` / `WorkflowAgent`, LangGraph | — |
+
+### Practice ([practice/](practice/))
+
+- [P1 — Exercises](practice/01-exercises.md): five labs (goal loop → timer loop → maker/checker → guarded Ralph → evolve) and a drill per note. These continue the [harness labs](../03-harness-engineering/notes/practice/04-exercises.md); Labs 1–3 adapt project 07 of *learn-harness-engineering*.
+
+### Templates ([templates/](templates/))
+
+| File | Use |
+|---|---|
+| [loop-contract.md](templates/loop-contract.md) | Fill in before the first pass: goal, acceptance criteria, scorekeeper, write boundary, trigger, stop rules, ratchet, human gates |
+| [loop-state.md](templates/loop-state.md) | Read at the start of each pass, rewritten at the end: the five fields plus run stats |
+| [maker-prompt.md](templates/maker-prompt.md) | The implementing agent: one small change per round, inside the boundary |
+| [checker-prompt.md](templates/checker-prompt.md) | The verifying agent: runs the scorekeeper itself; PASS is a legitimate verdict |
+| [ralph.sh](templates/ralph.sh) | Guarded Ralph loop: score ratchet with rollback, iteration, wall-clock and stall caps |
+
+### Images ([images/](images/))
+
+- `anthropic-agent-loop.png`, `anthropic-playbook-map.png`, used in [note 01](notes/01-what-a-loop-is.md).
 
 ---
 
 ## Resource map
 
-### Deep notes
-- [loop-engineering.md](loop-engineering.md) — the four levels (agent → verification → event-driven → hill-climbing), the five required components, loop patterns, production building blocks (automations/worktrees/skills/connectors/sub-agents/memory), failure modes, framework bindings (ADK `LoopAgent`, Vercel `ToolLoopAgent`/`WorkflowAgent`), and a design checklist. §8 covers level 4 at the frontier plus the `autoresearch` / bilevel-autoresearch worked example. Cites LangChain, Osmani, Pragmatic Engineer, ML Mastery, Masood, Anthropic RSI, Karpathy, ADK, Vercel.
-- [loop-autonomy-ladder.md](loop-autonomy-ladder.md) — the **autonomy** axis (orthogonal to the capability levels above): turn-based → goal-based → time-based → proactive, framed as four handoffs (tool approval → stop condition → trigger → session). Earn each rung with a verifier.
-- [evolve-loop.md](evolve-loop.md) — the slow loop that edits the fast one at practitioner scale: cadence, three inputs, four edit targets, the anti-busywork rule, and four failure modes.
-- [reliable-agents.md](../03-harness/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
+### Related
+- [reliable-agents.md](../03-harness-engineering/reliable-agents.md) — reliability patterns: retry logic, graceful degradation, human-in-the-loop escalation.
+- [Harness note 06: long-horizon execution](../03-harness-engineering/notes/06-long-horizon-execution.md) — Ralph and compaction from the harness side.
 
 ### Interviewing guide
 - [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
@@ -55,8 +73,21 @@ cognitive surrender) rather than mechanical ones.
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — agent loops implemented as LangGraph graphs.
 - [internet-search-agent-main](../../generative-ai/07-agentic-applications/internet-search-agent-main/) — concrete loop with web-search tooling.
 
+### External sources
+
+Read into [notes/](notes/) on 2026-10-28. Full list in [loop-engineering.md](loop-engineering.md#resources).
+
+| Source | Contributes |
+|---|---|
+| [Osmani](https://addyosmani.com/blog/loop-engineering/) | The definition, building blocks, morning loop, human failure modes |
+| [LangChain](https://www.langchain.com/blog/the-art-of-loop-engineering) | The four capability levels |
+| [KodeKloud course notes](https://notes.kodekloud.com/docs/Loop-Engineering/What-Is-a-Loop/What-is-Loop-Engineering/page.md) | Try/test/fix/save, scorekeeper traits, the six components, traps table, design-your-own-loop (summarized, not copied) |
+| [AI Builder Club](https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook) | The Anthropic playbook map, the autonomy ladder, the evolve loop |
+| [learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Lecture 13 (`/goal` vs `/loop`, silent costs, adoption ladder) and project 07 (the labs, maker/checker prompts) |
+| [Karpathy `autoresearch`](https://github.com/karpathy/autoresearch) + [bilevel](https://arxiv.org/abs/2603.23420) | The level-4 worked example |
+
 ### Next layer
-→ [05-graph/](../05-graph/README.md) — graph engineering composes loops into multi-agent topologies.
+→ [05-graph-engineering/](../05-graph-engineering/README.md) — graph engineering composes loops into multi-agent topologies.
 
 ---
 

@@ -1,0 +1,81 @@
+# Eval CI workflow template (GitHub Actions). See notes/10-evals-in-ci.md.
+# Adapt the `python -m evals.*` commands to your runner. Phase 1 runs and writes rows;
+# phase 2 asserts against the baseline. Keep them separate so you can re-assert cheaply.
+
+name: eval
+
+on:
+  pull_request:
+    paths:
+      - "prompts/**"
+      - "src/agent/**"
+      - "src/tools/**"
+      - "src/retrieval/**"
+      - "evals/**"
+  schedule:
+    - cron: "0 3 * * *"          # nightly full suite
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Suite to run"
+        default: "full"
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    # Code graders only. Cheap, fast, on every relevant PR.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+      - run: python -m evals.run --suite smoke --graders code --trials 1 --out smoke.jsonl
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.EVAL_API_KEY }}   # separate, spend-capped key
+      - run: python -m evals.assert smoke.jsonl --contract evals/gates.yaml --gates data_quality
+
+  regression:
+    needs: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -r requirements.txt
+
+      # Phase 1: run. Non-deterministic, costly. Records infra errors, never drops rows.
+      - name: Run suite
+        run: |
+          SUITE=${{ github.event_name == 'schedule' && 'full' || inputs.suite || 'regression' }}
+          python -m evals.run \
+            --suite "$SUITE" \
+            --trials 3 \
+            --concurrency 8 \
+            --cache .eval-cache \
+            --out results.jsonl
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.EVAL_API_KEY }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: eval-results, path: results.jsonl}
+
+      # Phase 2: assert. Deterministic, free. Paired comparison against the stored baseline.
+      - name: Assert gates
+        run: |
+          python -m evals.assert results.jsonl \
+            --baseline baselines/prod.jsonl \
+            --contract evals/gates.yaml \
+            --report report.md
+        # Nightly runs alert instead of blocking.
+        continue-on-error: ${{ github.event_name == 'schedule' }}
+
+      - name: PR summary
+        if: always()
+        run: cat report.md >> "$GITHUB_STEP_SUMMARY"

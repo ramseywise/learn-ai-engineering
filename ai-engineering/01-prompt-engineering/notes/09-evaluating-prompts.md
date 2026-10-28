@@ -120,8 +120,15 @@ Lessons:
 ## Go deeper
 
 - Book: [Ch 10](../sources/prompt-eng-for-llms/10-evaluating-llm-applications.md) (offline tech tree, SOMA, online metrics)
-- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-harness.md](../../06-eval/eval-harness.md) · [eval-maturity-ladder.md](../../06-eval/eval-maturity-ladder.md)
+- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-engineering.md](../../06-eval/eval-engineering.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
 - Papers and tools: [references.md](../README.md#evaluation)
+
+**Continue in 06-eval.** This chapter is the prompt-level view. Chapters 01–05 of [06-eval](../../06-eval/README.md) go deeper on the same ground and can be read right after this topic:
+- Defining pass/fail from error analysis → [02-defining-correct.md](../../06-eval/notes/02-defining-correct.md)
+- Building the dataset → [03-eval-datasets.md](../../06-eval/notes/03-eval-datasets.md)
+- Code graders and combining scores → [04-graders.md](../../06-eval/notes/04-graders.md)
+- Calibrating an LLM judge (TPR/TNR, bias correction) → [05-llm-as-judge.md](../../06-eval/notes/05-llm-as-judge.md#calibrate-against-human-labels)
+- Whether a prompt change actually helped (error bars, paired comparison) → [09-reading-results.md](../../06-eval/notes/09-reading-results.md)
 
 ---
 

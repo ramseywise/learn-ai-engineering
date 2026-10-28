@@ -23,7 +23,7 @@ This mirrors the local repo's harness principle of keeping prompt-engineering ar
 **Sources:**
 - [LiteLLM — Compatibility & Extensibility](https://docs.litellm.ai/docs/guides/compatibility_extensibility) — unified I/O format across 100+ providers via one call interface.
 - [LangChain — init_chat_model](https://reference.langchain.com/python/langchain/chat_models/base/init_chat_model) — provider-agnostic model initializer with standard kwargs (temperature, timeout, max_tokens).
-- (this repo: `ai-engineering/03-harness/notes/03-tool-design.md`) — "separate the contract from the execution logic via a factory pattern," the same principle applied here to model config.
+- (this repo: `ai-engineering/03-harness-engineering/notes/03-tool-design.md`) — "separate the contract from the execution logic via a factory pattern," the same principle applied here to model config.
 
 </details>
 
@@ -68,8 +68,8 @@ Accept that the model core stays probabilistic — even `temperature=0` doesn't 
 **Sources:**
 - [Anthropic — Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) — ground truth from the environment at each step, simple composable patterns over complex frameworks.
 - [Charles Sieg — Achieving Determinism with LLM Agents: An Architecture Guide](https://charlessieg.com/articles/achieving-determinism-with-llm-agents-architecture-guide.html) — "deterministic scaffolding around a non-deterministic core"; temperature=0 does not guarantee determinism.
-- (this repo: `ai-engineering/03-harness/reliable-agents.md`) — Bayer/PRINCE case study: retries at LLM-call and node level, cross-provider fallback, resume-from-failed-node via checkpointing, asymmetric QA, error fed back as context.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — pass@k vs. pass^k for measuring non-deterministic agent reliability across repeated trials.
+- (this repo: `ai-engineering/03-harness-engineering/reliable-agents.md`) — Bayer/PRINCE case study: retries at LLM-call and node level, cross-provider fallback, resume-from-failed-node via checkpointing, asymmetric QA, error fed back as context.
+- (this repo: `ai-engineering/06-eval/notes/06-evaluating-agents.md`) — pass@k vs. pass^k for measuring non-deterministic agent reliability across repeated trials.
 
 </details>
 
@@ -89,7 +89,7 @@ Practical layers, in order I'd stand them up:
 **Sources:**
 - [LangSmith — Trajectory Evals](https://docs.langchain.com/langsmith/trajectory-evals) — grading the sequence of tool calls/messages, not just final output.
 - [Langfuse — AI Agent Evaluation: trajectory, tool calls, and task completion](https://langfuse.com/resources/engineering/ai-agent-evaluation) — outcome vs. trajectory as distinct, both-necessary evaluation axes.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — task/trial/grader structure, code vs. LLM vs. human graders, "run multiple trials because agent behavior is non-deterministic," full review within 48h after a change.
+- (this repo: `ai-engineering/06-eval/notes/01-what-an-eval-is.md`, `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`) — task/trial/grader structure, code vs. LLM vs. human graders, "run multiple trials because agent behavior is non-deterministic," full review within 48h after a change.
 
 </details>
 
@@ -112,7 +112,7 @@ For an LLM-agent codebase specifically, this maps onto the eval gate structure d
 **Sources:**
 - [Testsigma — What is Testing Pyramid?](https://testsigma.com/blog/testing-pyramid/) — unit tests on every commit, E2E reserved for release/nightly.
 - [DevRocks — Automated Tests in CI/CD: The Test Pyramid](https://www.devrocks.de/en/blog/automatisierte-tests-cicd-test-pyramide) — unit and integration on every commit because they're fast; E2E gated to PRs into main or nightly.
-- (this repo: `ai-engineering/06-eval/evals/gate-contract.md`) — "run tests at the same layer as the change," with fast metric/schema tests distinct from slower report-rendering and grader-recalibration runs.
+- (this repo: `ai-engineering/06-eval/case-study/gate-contract.md`) — "run tests at the same layer as the change," with fast metric/schema tests distinct from slower report-rendering and grader-recalibration runs.
 
 </details>
 
@@ -132,7 +132,7 @@ This is the same "test at the layer of the change" principle from the previous a
 **Sources:**
 - [Hadley Works (dev.to) — LLM Evaluation in CI: Stop Manual Testing Before It Costs You](https://dev.to/hadleyworks/llm-evaluation-in-ci-stop-manual-testing-before-it-costs-you-59i7) — use a cheaper/faster model for PR-time checks, reserve the full/expensive model for release or nightly runs to keep CI feedback fast and cheap.
 - [Digital Applied — LLM Model Routing 2026: Cost-Quality Optimization](https://www.digitalapplied.com/blog/llm-model-routing-2026-cost-quality-optimization-engineering-guide) — sort providers by score/cost to find the tradeoff frontier rather than treating every model as equally worth testing on every change.
-- (this repo: `ai-engineering/06-eval/evals/gate-contract.md`, Gate 4 "Model And Runtime Comparison") — model/runtime comparison is its own gate, run and exported separately from the fast per-commit metric tests, precisely because it's a coarser-cadence, higher-cost evaluation.
+- (this repo: `ai-engineering/06-eval/case-study/gate-contract.md`, Gate 4 "Model And Runtime Comparison") — model/runtime comparison is its own gate, run and exported separately from the fast per-commit metric tests, precisely because it's a coarser-cadence, higher-cost evaluation.
 
 </details>
 
@@ -174,7 +174,7 @@ When reading individual traces, don't stop at the aggregate score — walk the *
 **Sources:**
 - [Anthropic — Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — trajectory vs. outcome grading, reading traces not just scores.
 - [Langfuse — What does a good trace look like?](https://langfuse.com/docs/observability/best-practices) — practical trace-reading and debugging guidance.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — two-layer manual/LLM-judge evaluation strategy and online sampling rules (negative-feedback triggers, high-cost dialogues, time-window sampling, 48h post-change review).
+- (this repo: `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`) — two-layer manual/LLM-judge evaluation strategy and online sampling rules (negative-feedback triggers, high-cost dialogues, time-window sampling, 48h post-change review).
 - (this repo: `interviewing/guides/6-evals-observability/interview-guide.md`) — condensed observability section with the same sampling rules.
 
 </details>
@@ -216,8 +216,8 @@ Compare old vs. new prompt on the **same fixed dataset** — an A/B or experimen
 **Sources:**
 - [LangSmith CI/CD Integration: Automated Regression Testing](https://markaicode.com/langsmith-cicd-automated-regression-testing/) — PR-triggered eval run, pass/fail gate against a dataset threshold.
 - [Anthropic — Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — grading trajectory + outcome, capability vs. regression suite distinction.
-- (this repo: `ai-engineering/06-eval/evals/eval-harness-patterns.md`) — "prompt change confidence," tool-trajectory scoring, two-phase run/assert CI pattern, regression gate example.
-- (this repo: `ai-engineering/06-eval/evals/gate-contract.md`) — `prompt_version` as a required field in every model/runtime comparison export.
+- (this repo: `ai-engineering/06-eval/case-study/harness-patterns.md`, `ai-engineering/06-eval/notes/10-evals-in-ci.md`) — "prompt change confidence," tool-trajectory scoring, two-phase run/assert CI pattern, regression gate example.
+- (this repo: `ai-engineering/06-eval/case-study/gate-contract.md`) — `prompt_version` as a required field in every model/runtime comparison export.
 
 </details>
 
@@ -234,8 +234,8 @@ Full review of traces for the first 24–48 hours after any prompt or model chan
 **Sources:**
 - [Galileo — 9 Best LLM Drift Monitoring Platforms](https://galileo.ai/blog/best-llm-output-drift-monitoring-platforms) — production drift monitoring approach and tooling landscape (Arize, Evidently, Phoenix).
 - [Markaicode — LangSmith CI/CD Integration: Automated Regression Testing](https://markaicode.com/langsmith-cicd-automated-regression-testing/) — CI regression gate blocking on pass-rate drop.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — capability→regression eval graduation, "fix the eval system before the agent" debugging order, 48h full-review-after-change rule.
-- (this repo: `ai-engineering/06-eval/eval-maturity-ladder.md`) — Level 4 "continuous sampling with drift alerts" as the maturity target.
+- (this repo: `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`, `ai-engineering/06-eval/notes/12-failure-modes.md`) — capability→regression eval graduation, "fix the eval system before the agent" debugging order, 48h full-review-after-change rule.
+- (this repo: `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`) — Level 4 "continuous sampling with drift alerts" as the maturity target.
 
 </details>
 
@@ -251,7 +251,7 @@ Accept non-determinism as structural rather than a bug to eliminate — even tem
 **Sources:**
 - [QAnswer — Why LLMs Are Not Deterministic Even at Temperature 0](https://www.qanswer.ai/blog/llm-non-determinism-temperature-zero) — sources of residual non-determinism at temp=0.
 - [Anthropic — Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — pass@k vs. pass^k definitions and when each applies.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — "run an eval set multiple times instead of once," pass@k / pass^k worked example.
+- (this repo: `ai-engineering/06-eval/notes/06-evaluating-agents.md`) — "run an eval set multiple times instead of once," pass@k / pass^k worked example.
 
 </details>
 
@@ -274,7 +274,7 @@ Anthropic's own guidance converges on the same point from the opposite direction
 **Sources:**
 - [Anthropic — Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — namespacing, meaningful context in returns, tool-description as the highest-leverage lever.
 - [Vercel — Build an AI Agent Harness](https://vercel.com/academy/build-ai-agent-harness) — five-section tool contract (what/when/when-not/do-not-use-for/examples).
-- (this repo: `ai-engineering/03-harness/notes/03-tool-design.md`) — ACI framing, the clarity test, four gating questions, schema rules, write-operation safety.
+- (this repo: `ai-engineering/03-harness-engineering/notes/03-tool-design.md`) — ACI framing, the clarity test, four gating questions, schema rules, write-operation safety.
 
 </details>
 
@@ -291,8 +291,8 @@ Skills work best layered on top of a small, sharp tool set — they make the *re
 
 **Sources:**
 - [Anthropic — Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — progressive disclosure, avoiding prompt sprawl, skills as reusable/auditable capability modules.
-- (this repo: `ai-engineering/03-harness/skills-design.md`) — description-as-routing-logic, token cost vs. routing precision, templates-inside-skill pattern.
-- (this repo: `ai-engineering/03-harness/notes/03-tool-design.md`) — "loading every tool/MCP server at startup degrades performance before the agent starts working," motivating progressive disclosure via skills.
+- (this repo: `ai-engineering/03-harness-engineering/skills-design.md`) — description-as-routing-logic, token cost vs. routing precision, templates-inside-skill pattern.
+- (this repo: `ai-engineering/03-harness-engineering/notes/03-tool-design.md`) — "loading every tool/MCP server at startup degrades performance before the agent starts working," motivating progressive disclosure via skills.
 
 </details>
 
@@ -309,7 +309,7 @@ So the right mental model isn't "skills vs. tools" but "skills sit above tools, 
 
 **Sources:**
 - [Anthropic — Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — skills as composable capabilities layered on existing agent/tool infrastructure, not a replacement for it.
-- (this repo: `ai-engineering/03-harness/notes/07-orchestration.md`) — "what matters is tool quality, not tool quantity"; skills close the gap between single tool invocation and multi-tool orchestration without bloating system prompts.
+- (this repo: `ai-engineering/03-harness-engineering/notes/07-orchestration.md`) — "what matters is tool quality, not tool quantity"; skills close the gap between single tool invocation and multi-tool orchestration without bloating system prompts.
 
 </details>
 
@@ -326,8 +326,8 @@ Start from Anthropic's core guidance: find the simplest structure that solves th
 **Sources:**
 - [Anthropic — Building Effective AI Agents](https://www.anthropic.com/engineering/building-effective-agents) — workflows-vs-agents distinction, "find the simplest solution possible," cost/latency trade-off of agentic autonomy.
 - [Anthropic — Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — skills as the reusable-procedure layer distinct from both tools and agents.
-- (this repo: `ai-engineering/03-harness/notes/03-tool-design.md`) — MCP vs. in-process decision table, applicable to the tool/skill boundary question by analogy (promote complexity only when a specific condition holds, not in anticipation).
-- (this repo: `ai-engineering/03-harness/agents-design.md`) — multi-agent decomposition patterns and when a separate agent (vs. a single agent with more tools) is warranted, including least-privilege scoping per agent.
+- (this repo: `ai-engineering/03-harness-engineering/notes/03-tool-design.md`) — MCP vs. in-process decision table, applicable to the tool/skill boundary question by analogy (promote complexity only when a specific condition holds, not in anticipation).
+- (this repo: `ai-engineering/03-harness-engineering/agents-design.md`) — multi-agent decomposition patterns and when a separate agent (vs. a single agent with more tools) is warranted, including least-privilege scoping per agent.
 
 </details>
 
@@ -350,9 +350,9 @@ The unifying principle: return what the agent needs to *decide*, not everything 
 **Sources:**
 - [Anthropic — Writing effective tools for AI agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — pagination/truncation/filtering guidance, 25k-token default, MCP `maxResultSizeChars` annotation.
 - [Arize AI — Context management in agent harnesses](https://arize.com/blog/context-management-in-agent-harnesses/) — memory, files, and subagent patterns for bounding context.
-- (this repo: `ai-engineering/02-context/notes/04-retrieval.md`) — just-in-time context and identifier-vs-payload cost tradeoff.
-- (this repo: `ai-engineering/02-context/notes/10-tools-and-multi-agent.md`) — token-efficient tool design and sub-agent isolation for large operations.
-- (this repo: `ai-engineering/02-context/notes/05-compression-compaction.md`) — checkpointing to disk for long-running operations.
+- (this repo: `ai-engineering/02-context-engineering/notes/04-retrieval.md`) — just-in-time context and identifier-vs-payload cost tradeoff.
+- (this repo: `ai-engineering/02-context-engineering/notes/10-tools-and-multi-agent.md`) — token-efficient tool design and sub-agent isolation for large operations.
+- (this repo: `ai-engineering/02-context-engineering/notes/05-compression-compaction.md`) — checkpointing to disk for long-running operations.
 
 </details>
 
@@ -392,8 +392,8 @@ Every confirmed failure becomes a new row in the eval set so it can't silently r
 **Sources:**
 - [The RAG Debugging Playbook — DEV Community](https://dev.to/kuldeep_paul/the-rag-debugging-playbook-a-step-by-step-guide-to-trace-level-failures-and-fixes-56pa) — trace-level failure localization across data/retrieval/generation/pipeline layers.
 - [RAG Fails Silently: Debugging Retrieval, Citations, and Unsupported Claims — Towards AI](https://pub.towardsai.net/rag-fails-silently-debugging-retrieval-citations-and-unsupported-claims-aa6f730b730a) — evidence that generation-side grounding failure, not retrieval, is often the primary cause.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — "fix the evaluation system before changing the agent" practical debugging order (infra → traces → category concentration → agent).
-- (this repo: `ai-engineering/06-eval/grounding-methodology.md`) — claim extraction as a debugging tool: wrong document = retrieval problem, wrong highlighted sentence = extraction problem, right claim/wrong explanation = generation problem.
+- (this repo: `ai-engineering/06-eval/notes/12-failure-modes.md`) — "fix the evaluation system before changing the agent" practical debugging order (infra → traces → category concentration → agent).
+- (this repo: `ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md`, `ai-engineering/06-eval/case-study/grounding-claims.md`) — claim extraction as a debugging tool: wrong document = retrieval problem, wrong highlighted sentence = extraction problem, right claim/wrong explanation = generation problem.
 
 </details>
 
@@ -413,7 +413,7 @@ Trustworthiness comes from where the rows originate and how disagreement is hand
 **Sources:**
 - [Anthropic — Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) — start small with real failures, positive/negative case design, environment reset, saturation signal.
 - [LangChain — Agent evaluation readiness checklist](https://www.langchain.com/blog/agent-evaluation-readiness-checklist) — ruling out infra/data issues, trace inspection for grader fairness.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — the full "collect real failures → clear criteria → isolated tasks → repeated trials → code/model/human grading → inspect traces → expand" pipeline.
+- (this repo: `ai-engineering/06-eval/eval-engineering.md`) — the full "collect real failures → clear criteria → isolated tasks → repeated trials → code/model/human grading → inspect traces → expand" pipeline.
 - (this repo: `ai-engineering/06-eval/README.md`, `agent-eval.md` reference) — golden dataset curation rules: real user queries, balanced coverage, eligibility labels per gate, versioned, 50–200 rows for LLM grading.
 
 </details>
@@ -436,7 +436,7 @@ Practically, this means instrumenting the product itself, not just the model cal
 **Sources:**
 - [Eugene Yan — Patterns for Building LLM-based Systems & Products](https://eugeneyan.com/writing/llm-patterns/) — explicit vs. implicit feedback UX and their role in building eval/fine-tuning datasets.
 - [Nebuly — User intent and implicit feedback in conversational AI](https://www.nebuly.com/blog/explicit-implicit-llm-user-feedback-quick-guide) — explicit feedback capturing only 1–3% of users vs. 100% implicit coverage; rephrasing as a failure signal.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — online sampling rules (negative-feedback triggering, high-cost dialogues, time-window sampling, post-change full review).
+- (this repo: `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`) — online sampling rules (negative-feedback triggering, high-cost dialogues, time-window sampling, post-change full review).
 - (this repo: `generative-ai/06-observability/support-agent-observability.md`) — trace schema (`escalated`, `contact_support`, `grounding_score` fields) that makes feedback attributable to a specific run.
 
 </details>
@@ -456,7 +456,7 @@ The signals are raw material; turning them into trustworthy eval rows takes a de
 **Sources:**
 - [Microsoft Data Science + AI — Beyond thumbs up and thumbs down: A human-centered approach to evaluation design](https://medium.com/data-science-at-microsoft/beyond-thumbs-up-and-thumbs-down-a-human-centered-approach-to-evaluation-design-for-llm-products-d2df5c821da5) — limits of raw explicit ratings and need for human-centered labeling.
 - [Eugene Yan — Patterns for Building LLM-based Systems & Products](https://eugeneyan.com/writing/llm-patterns/) — feedback → eval/fine-tuning dataset pipeline, organizational discipline of sample→annotate→improve.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — positive/negative case design, "include both to test capability and restraint," failure-seeded eval rows.
+- (this repo: `ai-engineering/06-eval/notes/03-eval-datasets.md`) — positive/negative case design, "include both to test capability and restraint," failure-seeded eval rows.
 - (this repo: `ai-engineering/06-eval/README.md`, `agent-eval.md` reference) — failure taxonomy labels (`citation_hallucination`, `unsupported_claim`, `rank_miss`, `wrong_escalation`) used to cluster and tag negative rows.
 
 </details>
@@ -482,7 +482,7 @@ The right way to actually answer this for a specific scenario is the same triage
 **Sources:**
 - [Nick Talwar — 6 things your AI agents need that most teams skip](https://nicktalwar.substack.com/p/6-things-your-ai-agents-need-that) — drift monitoring via baseline-vs-production scoring gap as a concrete regression signal.
 - [Nebuly — User intent and implicit feedback in conversational AI](https://www.nebuly.com/blog/explicit-implicit-llm-user-feedback-quick-guide) — rephrasing/abandonment as implicit failure signals.
-- (this repo: `ai-engineering/06-eval/eval-harness.md`) — rule-based sampling on negative feedback and high-cost/long dialogues as failure-concentration signals.
+- (this repo: `ai-engineering/06-eval/notes/11-production-and-the-maturity-ladder.md`) — rule-based sampling on negative feedback and high-cost/long dialogues as failure-concentration signals.
 - (this repo: `generative-ai/06-observability/support-agent-observability.md`) — `escalated`, `contact_support`, `grounding_score` as trace-level fields that operationalize these signals.
 
 </details>

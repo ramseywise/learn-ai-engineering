@@ -221,7 +221,7 @@ Without a binary eval, there is no signal to improve against, and every change i
 
 Two related disciplines: **Pass@k** measures capability boundaries (can it ever do this?); **Pass^k** measures deployment quality (does it do this *every* time?). Ship on Pass^k.
 
-And the meta-rule: **if the eval system is broken, fix the eval system first.** Never steer on a distorted signal. See [06-eval](../../06-eval/README.md).
+And the meta-rule: **if the eval system is broken, fix the eval system first.** Never steer on a distorted signal. The debug order for that is in [06-eval/12](../../06-eval/notes/12-failure-modes.md#the-debug-order); graders and their calibration states are in [06-eval/04](../../06-eval/notes/04-graders.md#grader-states-which-ones-can-block-a-release); pass@k vs. pass^k with repeats is in [06-eval/06](../../06-eval/notes/06-evaluating-agents.md#non-determinism-run-every-task-k-times); wiring evals into CI is in [06-eval/10](../../06-eval/notes/10-evals-in-ci.md).
 
 ### Two eval surfaces, different triggers
 

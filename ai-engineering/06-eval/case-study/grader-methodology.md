@@ -1,6 +1,6 @@
 # Grader Methodology & Selection
 
-> **Scope:** Framework selection rationale and methodology principles. For calibration run results and score evidence, see [llm-calibration-insights.md](llm-calibration-insights.md).
+> **Scope:** Framework selection rationale and methodology principles. For calibration run results and score evidence, see [calibration-results.md](calibration-results.md).
 
 **Context:** support corpus A eval pipeline — choosing which LLM-as-judge graders to use for the quality gate and for golden trace creation.
 

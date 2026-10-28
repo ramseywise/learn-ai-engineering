@@ -98,7 +98,7 @@ When the evidence is relational (who reports to whom, which service calls which)
 (billing-svc) -[deployed_in]-> (eu-west-1)
 ```
 
-Triples or adjacency lists are compact and make multi-hop questions ("who owns what billing calls?") a lookup rather than an inference. Retrieving from a knowledge graph is covered in [04](04-retrieval.md) and in depth in [05-graph](../../05-graph/README.md).
+Triples or adjacency lists are compact and make multi-hop questions ("who owns what billing calls?") a lookup rather than an inference. Retrieving from a knowledge graph is covered in [04](04-retrieval.md) and in depth in [05-graph](../../05-graph-engineering/README.md).
 
 ---
 
