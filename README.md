@@ -18,17 +18,20 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
 > System-design writeups of those systems and a contract-based code-review drill are compiled
 > in the librarian wiki (`system-design-*.md`, `code-review-drill-sanyi.md`).
 
-### Python for Data Analysis ([`data-analytics/`](data-analytics/README.md))
-- [Python Basics](data-analytics/python-basics/)
-    - Operations
-    - Texts
-    - Arrays
-    - DataFrames
-    - Plotting
-    - Aggregation
-    - Time Series
+### Programming ([`programming/`](programming/README.md))
+A course in the three languages the rest of the repo is written in. Notes, offline exercises and solutions:
+- [Python](programming/python/README.md)
+    - 01 Foundations (values, functions, loops, strings and files, collections)
+    - 02 Informatics (regex, HTTP, JSON/XML, objects, databases)
+    - 03 Language for engineers (data model, generators, decorators, errors, types, packaging, concurrency)
+    - 04 Python for data (arrays, DataFrames, plotting, aggregation, time series; McKinney chapters)
+- [SQL](programming/sql/README.md): `SELECT` to query plans, plus the SQL Murder Mystery capstone
+- [TypeScript](programming/typescript/README.md): JS for Python developers to typed LLM apps
 
-- [Text Analytics with Python](https://github.com/ramseywise/Python/tree/main/data-analytics/Text%20Analytics%20with%20Python)
+### Python for Data Analysis ([`data-analytics/`](data-analytics/README.md))
+- Statistical analysis, Bayesian A/B testing, and Michigan/Wesleyan statistics coursework
+
+- [Text Analytics with Python](data-science/Text%20Analytics%20with%20Python/) (in `data-science/`)
     - NLP Basics
     - Processing and Understanding Text
     - Feature Engineering
