@@ -19,7 +19,7 @@ from books and courses; sub-folder READMEs (where they exist) go into more detai
 > in the librarian wiki (`system-design-*.md`, `code-review-drill-sanyi.md`).
 
 ### Python for Data Analysis ([`data-analytics/`](data-analytics/README.md))
-- [Python Basics](https://github.com/ramseywise/Python/tree/main/data-analytics/Python%20Basics)
+- [Python Basics](data-analytics/python-basics/)
     - Operations
     - Texts
     - Arrays
@@ -127,5 +127,5 @@ ai-engineering is the discipline that makes them reliable.
 - External links (courses, books, papers, tools) by pillar: [generative-ai/resources.md](generative-ai/resources.md)
 
 ### Programming (moved to [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md))
-- Python Basics notebooks, HackerRank (Python, SQL, TypeScript) and LeetCode practice now live
+- HackerRank (Python, SQL, TypeScript) and LeetCode practice now live
   in sisyphus, organized by language alongside the interview-format coding drills.

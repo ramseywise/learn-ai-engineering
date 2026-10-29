@@ -4,7 +4,7 @@ Last updated: 2026-07-21
 
 ## Prerequisites
 
-Python basics from `sisyphus/drills/python/basics/`. Docker and SQL fundamentals help (the
+Python basics from `data-analytics/python-basics/`. Docker and SQL fundamentals help (the
 DataTalks DE Zoomcamp covers Docker from scratch; SQL is assumed).
 
 ## The 6 Foundations

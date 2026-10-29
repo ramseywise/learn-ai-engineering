@@ -19,7 +19,7 @@ ensemble methods → Bayesian methods. **Not linear — Layers 2 and 4 are indep
   sequence models).
 - **`../data-analytics/Bayes/`** — pruned to just the authored/completed pieces: `AB-Bayes/`
   (a real A/B-testing notebook, executed), `bayesian_inference_talk-main/` (a conference talk
-  actually given — slides + 3 executed notebooks), `BayesianML-master/` (completed Coursera
+  actually given — slides + 3 executed notebooks), `BayesianML/` (completed Coursera
   "Bayesian Methods for ML" assignments, weeks 2/4/5/6 + final assignment). Three pristine,
   generic clones that added no unique value were deleted. Moved to `data-analytics/` alongside
   the stats readings (2026-07-22).
