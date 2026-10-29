@@ -79,7 +79,7 @@ discipline. **Depends on Layer 2** (assumes you've fit at least one supervised m
 | Ng ML Notebooks — ex5 | `data-science/Ng's Machine Learning Nbks/ex5/` | bias-variance diagnosis, learning curves |
 | ISLR ch5 | `../data-analytics/readings/` | resampling methods |
 
-**Interview crosswalk:** Layer 3 is the core of pillar [1-foundations](../interviewing/guides/1-foundations/interview-guide.md) —
+**Interview crosswalk:** Layer 3 is the core of pillar [1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/interview-guide.md) —
 metric interpretation, train/test discipline, and leakage are the most common interview
 failure modes.
 
@@ -130,7 +130,7 @@ notebook comparing sklearn GB vs XGBoost vs LightGBM on a real dataset with SHAP
 |---|---|---|
 | Bayes/AB-Bayes | `../data-analytics/Bayes/AB-Bayes/` | Bayesian A/B testing — executed notebook |
 | Bayes/bayesian_inference_talk-main | `../data-analytics/Bayes/bayesian_inference_talk-main/` | slides + 3 executed notebooks from a real talk |
-| Bayes/BayesianML-master | `../data-analytics/Bayes/BayesianML-master/` | Coursera "Bayesian Methods for ML" — weeks 2/4/5/6 + final |
+| Bayes/BayesianML | `../data-analytics/Bayes/BayesianML/` | Coursera "Bayesian Methods for ML" — weeks 2/4/5/6 + final |
 | Bayesian Methods for Hackers (vendored) | `../data-analytics/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77/` | chapters 1–7 with PyMC3 code |
 | Bayesian Methods for Hackers (PDF) | `../data-analytics/readings/bayes_for_hackers.pdf` | reference copy |
 
@@ -148,7 +148,7 @@ variants use `import pymc as pm` (PyMC 5.x). Simple-tier notebooks already migra
 - `../data-analytics/CamDavidsonPilon-.../Chapter6_Priorities/Ch6_Priors_PyMC_current.ipynb` — PyMC5 variant exists (verify import)
 
 Still on **PyMC3** (breaking at v4), no `_current` equivalent:
-- `../data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` — `import pymc3 as pm`; requires full port or pin `pymc3==3.11.4` + `theano-pymc`
+- `../data-analytics/Bayes/BayesianML/week_4/Week4. Practical Assignment. MCMC.ipynb` — `import pymc3 as pm`; requires full port or pin `pymc3==3.11.4` + `theano-pymc`
 
 Phase 2 work (medium/hard tiers) requires: `pm.traceplot` → `az.plot_trace`, `pm.summary` → `az.summary`,
 and any custom Theano ops → PyTensor equivalents.
@@ -220,7 +220,7 @@ cross-references them correctly.
 | `data-analytics/CamDavidsonPilon-.../Ch5_LossFunctions_PyMC_current.ipynb` | Verified — `import pymc as pm`, `pytensor.tensor` | — |
 | `data-analytics/CamDavidsonPilon-.../Ch6_Priors_PyMC_current.ipynb` | Verified — `import pymc as pm` | — |
 | `data-analytics/CamDavidsonPilon-.../Chapter2–6 _PyMC3 variants` | Legacy — do not use | Pin `pymc3==3.11.4` + `theano-pymc==1.1.2` if must run |
-| `data-analytics/Bayes/BayesianML-master/week_4/Week4. Practical Assignment. MCMC.ipynb` | **Pinned legacy** — Coursera assignment; uses `pm.glm`, `pm.iter_sample`, `pm.traceplot` (all removed in PyMC 4+). Staleness note + migration comments added inline. | Run with `pymc3==3.11.4 theano-pymc==1.1.2`; `bayesian.yml` updated with pins |
+| `data-analytics/Bayes/BayesianML/week_4/Week4. Practical Assignment. MCMC.ipynb` | **Pinned legacy** — Coursera assignment; uses `pm.glm`, `pm.iter_sample`, `pm.traceplot` (all removed in PyMC 4+). Staleness note + migration comments added inline. | Run with `pymc3==3.11.4 theano-pymc==1.1.2`; `bayesian.yml` updated with pins |
 | `data-analytics/CamDavidsonPilon-.../sandbox/`, `Chapter7_BayesianMachineLearning/` | Stale — various pymc imports | Low priority; not in curriculum path |
 
 **PyMC3 → PyMC 5 migration map:**
@@ -239,7 +239,7 @@ cross-references them correctly.
 
 ## Interview crosswalk
 
-- **Pillar 1 — Foundations:** [interviewing/guides/1-foundations/](../interviewing/guides/1-foundations/00-overview.md)
+- **Pillar 1 — Foundations:** [interviewing/guides/1-foundations/](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md)
   (covers Layers 1–5 content: bias-variance, metrics, supervised learning, unsupervised, ensembles)
-- **Cleaned notes:** `interviewing/notes/foundations.md` (Pillar 1 summary — bias-variance, metrics, CV)
+- **Cleaned notes:** sisyphus `interviewing/notes/foundations.md` (Pillar 1 summary — bias-variance, metrics, CV)
 - **Readings cross-cut:** `../data-analytics/readings/` maps to Layers 1–3

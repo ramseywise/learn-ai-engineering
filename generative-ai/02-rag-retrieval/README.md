@@ -1,6 +1,6 @@
 # 02 — RAG & Retrieval
 
-> Depth layer. Summary: [interviewing/guides/3-rag](../../interviewing/guides/3-rag/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/3-rag](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/3-rag/00-overview.md)
 > Position: second pillar — the first killer app pattern built on LLMs.
 > Presumes: [01-llm-fundamentals](../01-llm-fundamentals/README.md).
 
@@ -31,7 +31,7 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 
 ### Interviewing guides
 
-- [3-rag](../../interviewing/guides/3-rag/00-overview.md) — compressed summary for
+- [3-rag](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/3-rag/00-overview.md) — compressed summary for
   interview prep: embedding models, vector stores, chunking, reranking, faithfulness.
 
 ### Cleaned notes

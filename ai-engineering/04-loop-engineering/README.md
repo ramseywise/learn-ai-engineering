@@ -1,6 +1,6 @@
 # 04 — Loop Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *the harness runs one agent well; the loop runs it again, against a goal, until a scorekeeper says stop*.
 > Overview note: [loop-engineering.md](loop-engineering.md) · Topic depth: [notes/](notes/) · Practice: [practice/](practice/) · Templates: [templates/](templates/)
 
@@ -69,7 +69,7 @@ Read the notes in order; each one is earned by the one before. Start the labs af
 - [Harness note 06: long-horizon execution](../03-harness-engineering/notes/06-long-horizon-execution.md) — Ralph and compaction from the harness side.
 
 ### Interviewing guide
-- [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — agent loops implemented as LangGraph graphs.

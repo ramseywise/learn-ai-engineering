@@ -1,6 +1,6 @@
 # 03 — Agentic Foundations
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position: third pillar — framework learning for agentic AI.
 > Presumes: [01-llm-fundamentals](../01-llm-fundamentals/README.md), [02-rag-retrieval](../02-rag-retrieval/README.md).
 
@@ -59,7 +59,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 
 ### Interviewing guides
 
-- [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for
+- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for
   interview prep: agent harness, tool use, loop design, memory, multi-agent orchestration.
 
 ### Book

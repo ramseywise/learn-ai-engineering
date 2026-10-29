@@ -12,7 +12,7 @@ cleaned: 2026-10-28
 ---
 # 10 — Adversarial Prompting and Prompt Risks
 
-> Where prompts fail under pressure: injection, leaking, jailbreaks, plus the quieter failures of bias and factuality. This is the defensive view for prompt authors. For interview depth on prompt injection, see [interviewing/7-security-safety/prompt-injection.md](../../../interviewing/guides/7-security-safety/prompt-injection.md).
+> Where prompts fail under pressure: injection, leaking, jailbreaks, plus the quieter failures of bias and factuality. This is the defensive view for prompt authors. For interview depth on prompt injection, see [interviewing/7-security-safety/prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
 
 ---
 

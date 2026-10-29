@@ -120,7 +120,7 @@ The feedback loop closes on itself: primitives discovered in harnesses get stand
 
 ## Resources
 
-- Pillar guide: [4-agents](../../interviewing/guides/4-agents/00-overview.md)
+- Pillar guide: [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 - Anthropic, harness design for long-running apps: https://www.anthropic.com/engineering/harness-design-long-running-apps
 - LangChain, anatomy of an agent harness: https://www.langchain.com/blog/the-anatomy-of-an-agent-harness
 - LangChain, improving deep agents: https://www.langchain.com/blog/improving-deep-agents-with-harness-engineering

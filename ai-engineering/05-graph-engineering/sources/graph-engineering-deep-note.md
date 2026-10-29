@@ -605,7 +605,7 @@ intend to operate rather than demo — see `~/.claude/refs/agent-runtime.md`.
 
 ## Resources
 
-- Pillar guide: [`4-agents`](../../../interviewing/guides/4-agents/00-overview.md)
+- Pillar guide: [`4-agents`](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 - Book notes: [`sources/kg-and-llms-in-action/`](kg-and-llms-in-action/)
 - Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/)
 - Coursera code — KG for RAG: [`notebooks/knowledge-graphs-for-rag`](../notebooks/knowledge-graphs-for-rag/)

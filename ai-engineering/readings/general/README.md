@@ -1,7 +1,7 @@
 # Readings Library
 
-Primary-source tier of the [interviewing KB](../../../interviewing/README.md) and its
-[curriculum pillars](../../../interviewing/guides/00-start-here.md). Folder names carry the
+Primary-source tier of the [interviewing KB](https://github.com/ramseywise/sisyphus/blob/main/interviewing/README.md) and its
+[curriculum pillars](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md). Folder names carry the
 pillar number they feed (`0-` = cross-cutting). Papers are listed by arXiv ID where that
 is the filename — resolve at `https://arxiv.org/abs/<id>`.
 
@@ -28,7 +28,7 @@ agentic architectural patterns, memory-trustworthiness pilot study (Yan et al. 2
 ## Conventions
 
 - The 10 interview-standard architecture papers are indexed with local paths and
-  one-line answers in [interviewing/notes/paper-canon.md](../../../interviewing/notes/paper-canon.md).
+  one-line answers in [interviewing/notes/paper-canon.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/notes/paper-canon.md).
 - Cite in guides by title + publisher (books) or arXiv ID/venue (papers).
 - New material: drop into the matching pillar folder and add a row here.
 - Committing binaries is Ramsey's decision per folder (policy decision 2026-07-17:
