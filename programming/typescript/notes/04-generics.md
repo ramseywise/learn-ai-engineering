@@ -20,7 +20,7 @@ function first(xs: any[]): any { return xs[0]; }          // the type is lost
 function first<T>(xs: T[]): T | undefined { return xs[0]; } // first([1, 2]) has type number | undefined
 ```
 
-`T` is inferred from the arguments, so you rarely write `first<number>(…)`. It is Python's `TypeVar` / `def first[T](xs: list[T]) -> T`.
+`T` is inferred from the arguments, so you rarely write `first<number>(…)`. It is Python's `TypeVar`: `def first(xs: list[T]) -> T` (or `first[T]` with 3.12 syntax).
 
 ## Constraints
 

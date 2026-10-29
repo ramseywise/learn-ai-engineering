@@ -15,12 +15,12 @@ sequenced learning paths for each domain.
 
 | Subject | CURRICULUM.md | Prerequisites | Structure |
 |---|---|---|---|
-| Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | None — entry point | Linear (Python basics → domain branches) |
+| Programming | [programming/CURRICULUM.md](programming/CURRICULUM.md) | None — entry point | Three tracks (Python 01–04, SQL 01–10, TypeScript 01–09), partly in parallel; practice drills live in [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md) |
+| Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | Programming: Python 01–04 | Linear (wrangling → statistics → domain branches) |
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear (pipeline stages) |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree (statistical foundations splits into supervised / unsupervised / Bayesian) |
 | Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar sequential (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications) |
 | AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval) |
-| Programming | [sisyphus `drills/README.md`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md) | None | Language drills by topic + difficulty (not sequential); lives in sisyphus |
 
 **Reading the table:** "Prerequisites" are recommendations, not gates. You can start
 generative-ai cold — you'll just revisit data-science concepts as they come up rather than
@@ -34,8 +34,9 @@ having them in memory already.
 
 Goal: build reliable, production-grade LLM systems.
 
-1. **Python fluency** — `data-analytics/python-basics/` (2–3 weeks)
-   Data wrangling, pandas, basic plotting. Skip if you already write Python daily.
+1. **Python fluency** — [`programming/python/`](programming/python/README.md) 01–03, then 04 (6–8 weeks)
+   Language, engineering idioms (types, async, packaging), then pandas. Add TypeScript 01–09 if
+   you'll build in TS. Skip what you already know: each module's exercises double as a placement test.
 
 2. **What LLMs are** — `generative-ai/01-llm-fundamentals/` (3–4 weeks)
    Build a tiny GPT (Karpathy's `nn-zero-to-hero`), read the attention paper,
@@ -59,7 +60,7 @@ pillars 0–4 are the core loop for this path.
 
 Goal: build data pipelines and ML infrastructure.
 
-1. **Python fluency** — `data-analytics/python-basics/` (see Path A step 1)
+1. **Python and SQL fluency** — [`programming/`](programming/README.md): Python 01–04 and SQL 01–10
 
 2. **Data Engineering sequence** — `data-engineering/CURRICULUM.md`
    Ingest → transform → orchestrate → warehouse → monitor → feature-serve.
@@ -76,10 +77,11 @@ Interview guide: [interviewing/guides/8-data-eng-mlops/00-overview.md](https://g
 
 Goal: broad foundation across the full data/AI stack.
 
-1. `data-analytics/CURRICULUM.md` — Python + analytics basics
-2. `data-science/CURRICULUM.md` — classical ML, stats, model evaluation (tree-shaped: go deep on 1–2 branches)
-3. `data-engineering/CURRICULUM.md` — pipelines and infrastructure
-4. `generative-ai/` + `ai-engineering/` — the LLM application and engineering layer
+1. `programming/CURRICULUM.md` — Python, SQL, TypeScript
+2. `data-analytics/CURRICULUM.md` — analytics and statistics basics
+3. `data-science/CURRICULUM.md` — classical ML, stats, model evaluation (tree-shaped: go deep on 1–2 branches)
+4. `data-engineering/CURRICULUM.md` — pipelines and infrastructure
+5. `generative-ai/` + `ai-engineering/` — the LLM application and engineering layer
 
 This path takes 6–12 months at 10–15 hours/week. It's broad first, deep second — plan
 to revisit each subject's depth READMEs once you've seen the whole landscape.
@@ -95,7 +97,7 @@ This repo has three layers that each serve a different purpose:
 
 | Layer | What it is | Where |
 |---|---|---|
-| **Depth** | Hands-on code, notebooks, course material — the actual learning | Subject dirs (`data-analytics/`, `generative-ai/`, `ai-engineering/`, etc.) |
+| **Depth** | Hands-on code, notebooks, course material — the actual learning | Subject dirs (`programming/`, `data-analytics/`, `generative-ai/`, `ai-engineering/`, etc.) |
 | **Summary** | Compressed exam-prep view: concepts, trade-offs, question banks | sisyphus `interviewing/guides/` (10 pillars + Pillar 0 programming) |
 | **Reference** | PDFs, papers, book chapters — theory to anchor the code | `readings/` and `sources/` inside each pillar (see the README's Readings list) |
 
@@ -111,9 +113,17 @@ map that links back to the depth dirs and the readings that support it.
 
 ## Definition of done
 
-The curriculum is **structurally frozen** as of 2026-10-28: the five subjects and their
+The curriculum is **structurally frozen** as of 2026-10-28: the six subjects and their
 pillars above are the full set. New material goes into an existing pillar; a new top-level
 folder or pillar needs a reason written here first.
+
+**Decision 2026-10-29: `programming/` added as a sixth subject.** Python, SQL and TypeScript
+are prerequisites for every other subject, but the repo only had seven pandas notebooks
+(`data-analytics/python-basics/`) and no SQL or TypeScript at all. Language fluency doesn't belong in
+any one pillar, and sisyphus `drills/` is practice, not teaching. So `programming/` holds the
+course (notes, exercises, solutions), sisyphus holds the drills, and librarian shows both.
+`python-basics/` moved to `programming/python/04-python-for-data/` along with the restored
+McKinney notebooks and the Michigan/Wesleyan scripts.
 
 A pillar is **done** when all five hold:
 
@@ -142,6 +152,7 @@ A pillar is **done** when all five hold:
 | generative-ai 07 agentic applications | Condense `internet-search-agent-main` |
 | data-analytics | `bayesian_inference_talk-main` to condense; `BayesianML/` is your own coursework (renamed from `BayesianML-master` 2026-10-28; see VENDORED.md) |
 | data-engineering · data-science | No snapshots. Check 3–5 |
+| programming | No snapshots (vendored TS exercises are kept as exercises, see VENDORED.md). Check 4–5 once librarian imports it and drills tag `concepts` |
 
 Order: the AI-engineering path (Path A) first — generative-ai 02 → 03 → 04 → 06 → 07, then
 ai-engineering 05. One snapshot per session; each follows the
