@@ -42,6 +42,25 @@ confirmed.
 | `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/`, with the OpenAI repo template in `templates/openai-repo-template/`. Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
 | `ai-engineering/readings/ai-agent-book-main` (vendored 2026-07-30) | https://github.com/bojieli/ai-agent-book (Apache-2.0) | 2026-10-28 | Bojie Li, *AI Agents in Depth*. The English chapters were synthesised into the pillar notes, each citing its chapter upstream: ch. 1 → `generative-ai/03-agentic-foundations/agent-fundamentals.md` and `03-harness-engineering` note 01; ch. 2 → `01-prompt-engineering` notes 02, 10 and `02-context-engineering` notes 02, 05; ch. 3 → `02-context-engineering` notes 04, 06 and `05-graph-engineering` note 11; ch. 4–5 → `03-harness-engineering` notes 01–07; ch. 6 → `06-eval`; ch. 7 → `generative-ai/05-RL/post-training-for-agents.md`; ch. 8 → `04-loop-engineering` note 08; ch. 9 → `generative-ai/07-agentic-applications/real-time-multimodal-agents.md`; ch. 10 → `05-graph-engineering` notes 05, 07. The reference answers were condensed into `interviewing/guides/*/interview-guide.md`. Labs that run offline were copied, translated where needed: `02-context-engineering/practice/01-bm25-from-scratch/`, `06-eval/practice/02-elo-leaderboard/`, `04-loop-engineering/practice/02-trajectory-verifier/` and `03-self-modifying-agent/`, and `generative-ai/05-RL/practice/01-q-learning-treasure-hunt/`. Every other lab is linked upstream from the note it supports, because it needs an API key, a GPU or hardware, or is in Chinese. Translations, Chinese originals, site tooling and the local `READING-MAP.md` were dropped. |
 
+## Programming course material (added 2026-10-29)
+
+`programming/` vendors **exercises and data**, not course snapshots. They are kept on purpose because
+they are the practice surface, and each keeps its license. Notes are written for this repo and cite
+their sources in frontmatter. The full list is in [programming/references.md](programming/references.md).
+
+| Path | Upstream | License | What's here |
+|---|---|---|---|
+| `programming/typescript/practice/typescript-exercises/` | https://github.com/typescript-exercises/typescript-exercises | MIT | 15 exercises with solutions. Patches for TypeScript 7 are listed in its `NOTICE.md` |
+| `programming/typescript/practice/type-challenges/challenges/` | https://github.com/type-challenges/type-challenges | MIT | 26 easy and medium challenges with their test cases. The solutions are written here |
+| `programming/sql/practice/data/survey.db` | https://github.com/swcarpentry/sql-novice-survey | CC-BY 4.0 | The Antarctic survey database (committed, 8 KB) |
+| `programming/sql/practice/data/clubdata.sql` | https://pgexercises.com/ | CC BY-SA 3.0 | PGExercises club data converted from Postgres to SQLite. `clubdata.db` is built from it and gitignored |
+| `programming/sql/practice/data/sql-murder-mystery.db` | https://github.com/NUKnightLab/sql-mysteries | MIT | Downloaded by `setup.sh`, gitignored |
+| `programming/python/04-python-for-data/mckinney/ch*.ipynb` | https://github.com/wesm/pydata-book (`2nd-edition`) | MIT (code) | Chapter notebooks restored from history (they were deleted in commit `1c72b00`). `examples/` and `datasets/` (~240 MB) are downloaded by `fetch_data.sh` and gitignored |
+
+**Paraphrased, not vendored:** Charles Severance's *Python for Everybody* (CC BY-NC-SA 3.0) and the
+TypeScript Handbook (CC-BY 4.0). No book text, slides or `mbox` data files are copied. Practice
+files use their own sample data.
+
 ## `BayesianML` was misfiled
 
 Renamed from `BayesianML-master` to `data-analytics/Bayes/BayesianML/` on 2026-10-28, so the

@@ -4,8 +4,8 @@ Last updated: 2026-07-21
 
 ## Prerequisites
 
-Python basics from `data-analytics/python-basics/`. Docker and SQL fundamentals help (the
-DataTalks DE Zoomcamp covers Docker from scratch; SQL is assumed).
+Python 01–03 and SQL 01–09 from [`programming/`](../programming/README.md). Docker helps (the
+DataTalks DE Zoomcamp covers Docker from scratch; SQL is assumed, and the SQL track covers it).
 
 ## The 6 Foundations
 
