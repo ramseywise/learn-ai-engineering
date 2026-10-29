@@ -12,30 +12,32 @@ or generative AI — this curriculum ends with that branching decision.
 
 | # | Layer | What you learn | Notebooks / Material | Status |
 |---|---|---|---|---|
-| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | `python-basics/1_Overview.ipynb`, `2_Texts.ipynb` | Present |
-| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | `python-basics/3_Arrays.ipynb`, `4_DataFrames.ipynb` | Present |
-| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | `python-basics/5_Plotting.ipynb`, `6_Aggregation.ipynb`, `7_Time_Series.ipynb` | Present |
-| 4 | **Feature engineering** | Text feature representation; NLP preprocessing; TF-IDF, embeddings, classification features | `Text Analytics with Python/Ch03`, `Ch04`, `Ch05` | Present |
-| 5 | **Statistical analysis** | Hypothesis testing; distributions; A/B testing; correlation vs. causation | `5_Statistical_Analysis.ipynb` | Present (partial — see Layer 5 section) |
-| 6 | **Modeling + BI** | Semantic analysis; topic modeling; similarity; clustering; deep learning intro | `Text Analytics with Python/Ch06`, `Ch07`, `Ch08`, `Ch09`, `Ch10` | Present |
+| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | [`programming/python/`](../programming/python/README.md) 01–03 (notes + exercises) | Moved to `programming/` |
+| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | [`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md) notebooks 3–4, McKinney ch07–08 | Moved to `programming/` |
+| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | [`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md) notebooks 5–7, McKinney ch09–11 | Moved to `programming/` |
+| 4 | **Feature engineering** | Text feature representation; NLP preprocessing; TF-IDF, embeddings, classification features | [`../data-science/Text Analytics with Python/`](../data-science/Text%20Analytics%20with%20Python/) Ch03–05 | Present (in data-science) |
+| 5 | **Statistical analysis** | Hypothesis testing; distributions; A/B testing; correlation vs. causation | `5_Statistical_Analysis.ipynb`, `courses/` | Present (partial — see Layer 5 section) |
+| 6 | **Modeling + BI** | Semantic analysis; topic modeling; similarity; clustering; deep learning intro | `../data-science/Text Analytics with Python/` Ch06–10 | Present (in data-science) |
 
 ## Notebook Map
 
-### `python-basics/` (self-authored, 7 notebooks)
+### Layers 1–3 live in `programming/` (since 2026-10-29)
 
-Sequential — each builds on the previous.
+The seven `python-basics/` notebooks (`1_Overview` → `7_Time_Series`) moved to
+[`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md), next to the McKinney chapter notebooks and
+the Michigan/Wesleyan pandas scripts. Python 01–03 in the same track teach the language itself.
 
-| Notebook | Layer |
+### `courses/` (own coursework scripts, Layer 5)
+
+| Script | From |
 |---|---|
-| `1_Overview.ipynb` | 1 — Python fundamentals |
-| `2_Texts.ipynb` | 1 — Python fundamentals (strings, file I/O) |
-| `3_Arrays.ipynb` | 2 — Data wrangling (NumPy) |
-| `4_DataFrames.ipynb` | 2 — Data wrangling (pandas) |
-| `5_Plotting.ipynb` | 3 — EDA + visualization |
-| `6_Aggregation.ipynb` | 3 — EDA (groupby, aggregation) |
-| `7_Time_Series.ipynb` | 3 — EDA (time-indexed data) |
+| `umich_statistical_analysis.py` | Michigan, *Applied Data Science with Python* |
+| `wesleyan_data_cleaning.py` | Wesleyan, *Data Analysis and Interpretation* |
+| `wesleyan_inferential_statistics.py` | Wesleyan, *Data Analysis and Interpretation* |
 
-### `Text Analytics with Python/` (companion to Dipanjan Sarkar's book, Chapters 01–10)
+The NESARC survey data these Wesleyan scripts read isn't included.
+
+### `../data-science/Text Analytics with Python/` (companion to Dipanjan Sarkar's book, Chapters 01–10)
 
 | Chapter | Topic | Layer |
 |---|---|---|
@@ -76,7 +78,7 @@ These topics are **not** covered in the notebook and have no existing material i
 | Bayesian A/B testing | High | `../data-analytics/Bayes/AB-Bayes/AB_Testing_with_Python.ipynb` partially fills this — add a cross-reference or integration section |
 | Causal inference (DiD, IV, RD) | Medium | No existing notebook; add a Part 5 using `dowhy` or manual DiD examples |
 | Non-parametric tests (Mann-Whitney, Kolmogorov-Smirnov) | Low | One-off add to Part 2 |
-| Time-series testing (stationarity, autocorrelation) | Low | Covered better in `python-basics/7_Time_Series.ipynb`; cross-reference sufficient |
+| Time-series testing (stationarity, autocorrelation) | Low | Covered better in `programming/python/04-python-for-data/7_Time_Series.ipynb`; cross-reference sufficient |
 
 ### Readings that support this layer
 
