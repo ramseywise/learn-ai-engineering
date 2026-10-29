@@ -34,7 +34,7 @@ having them in memory already.
 
 Goal: build reliable, production-grade LLM systems.
 
-1. **Python fluency** — sisyphus `drills/python/basics/` (2–3 weeks)
+1. **Python fluency** — `data-analytics/python-basics/` (2–3 weeks)
    Data wrangling, pandas, basic plotting. Skip if you already write Python daily.
 
 2. **What LLMs are** — `generative-ai/01-llm-fundamentals/` (3–4 weeks)
@@ -59,7 +59,7 @@ pillars 0–4 are the core loop for this path.
 
 Goal: build data pipelines and ML infrastructure.
 
-1. **Python fluency** — sisyphus `drills/python/basics/` (see Path A step 1)
+1. **Python fluency** — `data-analytics/python-basics/` (see Path A step 1)
 
 2. **Data Engineering sequence** — `data-engineering/CURRICULUM.md`
    Ingest → transform → orchestrate → warehouse → monitor → feature-serve.
@@ -140,7 +140,7 @@ A pillar is **done** when all five hold:
 | generative-ai 04 agentic frameworks | Condense `AI-Agents-in-LangGraph-main`, `Long-Term-Agentic-Memory-With-LangGraph-main` |
 | generative-ai 06 observability | Condense 3 Langfuse snapshots into one note set |
 | generative-ai 07 agentic applications | Condense `internet-search-agent-main` |
-| data-analytics | `bayesian_inference_talk-main` to condense; `BayesianML-master` is your own coursework — rename, don't delete (see VENDORED.md) |
+| data-analytics | `bayesian_inference_talk-main` to condense; `BayesianML/` is your own coursework (renamed from `BayesianML-master` 2026-10-28; see VENDORED.md) |
 | data-engineering · data-science | No snapshots. Check 3–5 |
 
 Order: the AI-engineering path (Path A) first — generative-ai 02 → 03 → 04 → 06 → 07, then
