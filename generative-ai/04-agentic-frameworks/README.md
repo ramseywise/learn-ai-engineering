@@ -1,6 +1,6 @@
 # 04 — Agentic Frameworks
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position: fourth pillar — framework reference material and selection guides.
 > Presumes: [03-agentic-foundations](../03-agentic-foundations/README.md).
 

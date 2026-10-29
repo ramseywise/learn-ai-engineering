@@ -1,6 +1,6 @@
 # 02 — Context Engineering
 
-> Depth layer. Summary: [interviewing/guides/5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md)
 > Position in the stack: *each loop step assembles context*.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
@@ -143,7 +143,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - [skills-design.md](../03-harness-engineering/skills-design.md) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
 
 ### Interviewing guide
-- [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
+- [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
 ### Course code
 - [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as an OS primitive.

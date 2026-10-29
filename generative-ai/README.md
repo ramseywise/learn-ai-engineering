@@ -1,7 +1,7 @@
 # Generative AI
 
 > **Depth domain.** This folder goes deep on the seven pillars of generative AI.
-> The [interviewing guides](../interviewing/guides/00-start-here.md) are the compressed
+> The [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
 ---
@@ -45,13 +45,13 @@ pillar. Bojie Li's *AI Agents in Depth* is synthesised into pillars
 
 | Pillar | Depth (here) | Summary (guide) |
 |---|---|---|
-| LLM fundamentals | [01-llm-fundamentals/](01-llm-fundamentals/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| RAG & retrieval | [02-rag-retrieval/](02-rag-retrieval/README.md) | [3-rag](../interviewing/guides/3-rag/00-overview.md) |
-| Agentic foundations | [03-agentic-foundations/](03-agentic-foundations/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) |
-| Agentic frameworks | [04-agentic-frameworks/](04-agentic-frameworks/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) |
-| RL & alignment | [05-RL/](05-RL/README.md) | [2-llm-fundamentals](../interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| Observability | [06-observability/](06-observability/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) |
-| Agentic applications | [07-agentic-applications/](07-agentic-applications/README.md) | [4-agents](../interviewing/guides/4-agents/00-overview.md) |
+| LLM fundamentals | [01-llm-fundamentals/](01-llm-fundamentals/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) |
+| RAG & retrieval | [02-rag-retrieval/](02-rag-retrieval/README.md) | [3-rag](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/3-rag/00-overview.md) |
+| Agentic foundations | [03-agentic-foundations/](03-agentic-foundations/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
+| Agentic frameworks | [04-agentic-frameworks/](04-agentic-frameworks/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
+| RL & alignment | [05-RL/](05-RL/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) |
+| Observability | [06-observability/](06-observability/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
+| Agentic applications | [07-agentic-applications/](07-agentic-applications/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
 
 ---
 
@@ -72,7 +72,7 @@ Temporal order: learn the gen-AI pillars first; the ai-engineering foundations
 their operational notes directly inside each pillar directory (e.g.
 `02-rag-retrieval/rag.md`, `06-observability/support-agent-observability.md`). There is no
 separate `interviewing/notes/` pointer layer for gen-AI content — notes were absorbed into
-the pillar dirs during the curriculum buildout. `interviewing/guides/` remains the
+the pillar dirs during the curriculum buildout. `interviewing/guides/` (now in sisyphus) remains the
 pointer-only summary layer for exam prep; it links into both `ai-engineering/` and
 `generative-ai/` pillar dirs for depth.
 

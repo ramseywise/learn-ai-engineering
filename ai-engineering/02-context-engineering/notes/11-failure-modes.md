@@ -100,7 +100,7 @@ The root cause is that context has no type system. Instructions and data are the
 
 Defense 5 is the load-bearing one. Every context-level defense is probabilistic. Only code-level controls are guarantees.
 
-Full treatment: [prompt-injection.md](../../../interviewing/guides/7-security-safety/prompt-injection.md) and pillar [7-security-safety](../../../interviewing/guides/7-security-safety/00-overview.md).
+Full treatment: [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) and pillar [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/00-overview.md).
 
 ---
 

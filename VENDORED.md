@@ -32,7 +32,6 @@ confirmed.
 | `generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main` | https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen | 2026-08-14 | 14 files / 1.7 MB | Exact content match. |
 | `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-08-14 | 12 files / 0.5 MB | Exact content match. |
 | `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-08-14 | 9 files / 0.1 MB | Exact content match. |
-| `data-analytics/Bayes/BayesianML-master` | ⚠️ unresolved — see note below | 2026-08-14 | 8 files / 0.1 MB | **Not a vendored snapshot — appears to be your own coursework.** Course: https://www.coursera.org/learn/bayesian-methods-in-machine-learning |
 | `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-08-14 | 5 files / 5.8 MB | Exact content match. |
 
 ## Removed snapshots
@@ -43,7 +42,10 @@ confirmed.
 | `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/`, with the OpenAI repo template in `templates/openai-repo-template/`. Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
 | `ai-engineering/readings/ai-agent-book-main` (vendored 2026-07-30) | https://github.com/bojieli/ai-agent-book (Apache-2.0) | 2026-10-28 | Bojie Li, *AI Agents in Depth*. The English chapters were synthesised into the pillar notes, each citing its chapter upstream: ch. 1 → `generative-ai/03-agentic-foundations/agent-fundamentals.md` and `03-harness-engineering` note 01; ch. 2 → `01-prompt-engineering` notes 02, 10 and `02-context-engineering` notes 02, 05; ch. 3 → `02-context-engineering` notes 04, 06 and `05-graph-engineering` note 11; ch. 4–5 → `03-harness-engineering` notes 01–07; ch. 6 → `06-eval`; ch. 7 → `generative-ai/05-RL/post-training-for-agents.md`; ch. 8 → `04-loop-engineering` note 08; ch. 9 → `generative-ai/07-agentic-applications/real-time-multimodal-agents.md`; ch. 10 → `05-graph-engineering` notes 05, 07. The reference answers were condensed into `interviewing/guides/*/interview-guide.md`. Labs that run offline were copied, translated where needed: `02-context-engineering/practice/01-bm25-from-scratch/`, `06-eval/practice/02-elo-leaderboard/`, `04-loop-engineering/practice/02-trajectory-verifier/` and `03-self-modifying-agent/`, and `generative-ai/05-RL/practice/01-q-learning-treasure-hunt/`. Every other lab is linked upstream from the note it supports, because it needs an API key, a GPU or hardware, or is in Chinese. Translations, Chinese originals, site tooling and the local `READING-MAP.md` were dropped. |
 
-## `BayesianML-master` is misfiled
+## `BayesianML` was misfiled
+
+Renamed from `BayesianML-master` to `data-analytics/Bayes/BayesianML/` on 2026-10-28, so the
+suffix no longer marks it as a snapshot. The reasoning is kept below.
 
 This directory carries a `-master` suffix, which makes it *look* like a vendored snapshot,
 but it is almost certainly not one. Its `README.md` links a Coursera course rather than a
@@ -57,9 +59,8 @@ notebooks are re-obtainable from `hse-aml/bayesian-methods-for-ml`; the work in
 `final_assignment/` is not obtainable from anywhere.
 
 Practical consequence: any future rule keyed on the `-main`/`-master` suffix would sweep
-this directory up with the genuine snapshots and put irreplaceable work at risk. Renaming it
-(dropping `-master`) or moving it out of `Bayes/` alongside the vendored talk repo would make
-its status self-evident.
+this directory up with the genuine snapshots and put irreplaceable work at risk. Dropping
+`-master` makes its status self-evident.
 
 ## Nested repositories
 
@@ -67,8 +68,8 @@ Three directories contain their own `.git` directory. They are **not** submodule
 contents are not tracked:
 
 - `ai-engineering/readings/AI-Papers-of-the-Week/.git`
-- `programming/Leet-Code/.git`
-- `programming/Leet-Code/LeetCodeCheat/.git`
+- ~~`programming/Leet-Code/.git`~~ — moved to sisyphus `drills/python/leetcode/` (2026-10-28)
+- ~~`programming/Leet-Code/LeetCodeCheat/.git`~~ — moved with it
 
 Verified 2026-08-14: `git ls-files -s | awk '$1=="160000"'` returns **0 gitlink entries**,
 and all three paths have **0 tracked files** — they are already covered by existing

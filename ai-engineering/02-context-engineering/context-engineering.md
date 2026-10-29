@@ -87,13 +87,13 @@ Historical is the only type without a natural bound. Compaction exists to bound 
 
 ## Security facet
 
-Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/11-failure-modes.md#prompt-injection) and [prompt-injection.md](../../interviewing/guides/7-security-safety/prompt-injection.md).
+Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/11-failure-modes.md#prompt-injection) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
 
 ---
 
 ## Resources
 
-- Pillar guide: [5-context-cost](../../interviewing/guides/5-context-cost/00-overview.md)
+- Pillar guide: [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md)
 - Anthropic: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - promptingguide.ai: https://www.promptingguide.ai/guides/context-engineering-guide
 - OpenAI compaction: https://developers.openai.com/api/docs/guides/compaction

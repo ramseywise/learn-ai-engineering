@@ -1,6 +1,6 @@
 # 05 — Graph Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: fifth foundation — builds on [04-loop](../04-loop-engineering/README.md); *graphs make agent organizations programmable*.
 > Overview: [graph-engineering.md](graph-engineering.md)
 
@@ -61,7 +61,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 - [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/) — the depth layer under notes 09–13 (ch1–3 → 09, ch4–8 → 10, ch13–15 → 11, ch9–12 → 13; chapter PDFs in `pdf/`). Chapter-by-chapter notes: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory and Neo4j/Cypher appendices.
 
 ### Interviewing guide
-- [4-agents](../../interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Notebooks and course code
 - [notebooks/knowledge-graphs-for-rag/](notebooks/knowledge-graphs-for-rag/) — DeepLearning.AI *Knowledge Graphs for RAG* (Neo4j): notebooks L2–L7, data dumps and lesson notes. Run as KG Labs 1, 3 and 5; L0–L2 feed note 09, L3–L6 note 10, L7 note 11.

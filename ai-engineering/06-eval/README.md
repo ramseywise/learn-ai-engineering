@@ -1,6 +1,6 @@
 # 06 — Eval Engineering
 
-> Depth layer. Summary: [interviewing/guides/6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md)
 > Position in the stack: *measures every layer below*.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
@@ -162,7 +162,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - [Learning-LangFuse-main](../../generative-ai/06-observability/Learning-LangFuse-main/) and [langfuse-evaluation-main](../../generative-ai/06-observability/langfuse-evaluation-main/) — Langfuse course code.
 
 ### Interviewing guide
-- [6-evals-observability](../../interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep. This folder is the source of depth; if they drift, this folder wins.
+- [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep. This folder is the source of depth; if they drift, this folder wins.
 
 ---
 

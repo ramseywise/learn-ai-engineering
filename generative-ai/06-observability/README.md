@@ -1,6 +1,6 @@
 # 06 — Observability
 
-> Depth layer. Summary: [interviewing/guides/4-agents](../../interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 > Position: sixth pillar — tracing, scoring, and evaluation pipelines for LLM applications.
 > Presumes: [03-agentic-foundations](../03-agentic-foundations/README.md).
 
