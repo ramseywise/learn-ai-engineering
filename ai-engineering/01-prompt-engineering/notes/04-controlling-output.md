@@ -25,7 +25,7 @@ Every token *before* the solution costs latency and money. Nothing after the rec
 |---|---|
 | **Structural boilerplate** (an opening `{`, a heading) | Put it in the *prompt*. Cheaper, and it guarantees the format |
 | **Reasoning** | Let it run long — this is CoT, and it buys correctness ([03](03-core-techniques.md#chain-of-thought)) |
-| **Fluff** (disclaimers, "Great question!") | Don't fight it; give it a slot: `1. [answer] 2. [caveats] 3. [background]`, then parse slot 1 |
+| **Fluff** (disclaimers, "Great question!") | Few-shot examples that skip the intro, or an explicit "answer directly" instruction. Failing that, give it a slot: `1. [answer] 2. [caveats] 3. [background]`, then parse slot 1. A slot doesn't always kill the intro, so parse defensively |
 
 ---
 
@@ -47,6 +47,8 @@ Caveats:
 
 **Best-of-n:** generate n completions at moderate temperature and keep the best-scoring one. Rule of thumb from the book: `temperature ≈ sqrt(n) / 10`. At temperature 0, the n completions are identical.
 
+**Beam search** is the decoding-side cousin: instead of committing token by token, it keeps several candidate continuations alive and looks a few tokens ahead so the model doesn't paint itself into a corner. Output is more globally coherent, but compute is much higher, so hosted APIs rarely expose it. Best-of-n is the version you control.
+
 ---
 
 ## Recognizable start and end
@@ -59,12 +61,27 @@ Decide up front how your parser will find the answer.
 | Fenced code | ` ```lang\n ` | `\n```\n` | Yes |
 | Numbered list, first item | `1.` | `\n2.` | Yes |
 | XML | `<answer>` | `</answer>` | Yes |
-| JSON / YAML / braced code | key or `{` | matching brace or dedent | No — parse it |
+| JSON / braced code | `{` | matching closing brace | No — count braces while streaming, or parse |
+| YAML / indented languages (Python) | the key or `def` line | first line back at the starting indent | Partly — `\n` + a top-level token works if you know what comes next |
 
 Stop-sequence tips:
 - **Prefer stop sequences to streaming-and-cancel.** Stopping server-side wastes nothing; cancelling over the network always wastes some tokens.
 - **Lead with a newline** (`\n#`, not `#`) so a `#` in a comment or phone number doesn't trigger a stop.
 - Add *likely* continuations as extra stops — after a Python function, `\ndef` and `\nclass` are safe because method bodies are indented.
+- **Use domain knowledge to sharpen stops.** If you know what *follows* the answer in this kind of document (the next section's header, the next field), stop on exactly that.
+
+```python
+resp = client.completions.create(          # legacy completions endpoint; chat APIs take `stop` too
+    model=MODEL,
+    prompt=prompt + "\n## Summary\n",      # boilerplate pushed into the prompt
+    stop=["\n#"],                          # end at the next markdown header
+    max_tokens=300,
+    logprobs=1,                            # per-token logprobs, where the provider allows it
+)
+text = resp.choices[0].text
+if resp.choices[0].finish_reason == "length":   # hit max_tokens, not the stop
+    ...                                          # truncated: retry or discard
+```
 
 ---
 
@@ -90,12 +107,14 @@ Controlling *style* (Anthropic's guidance):
 
 ## Logprobs: reading confidence
 
-A logprob is the log-probability of each emitted token (0 = certain; `exp()` converts it to a probability). Where the API exposes them, they're your best instrument:
+A logprob is the log-probability of each emitted token (0 = certain; `exp()` converts it to a probability). Where the API exposes them — some providers disable them, especially for newer models — they're your best instrument.
 
-- **Quality score.** Average token probability over the completion (or its first tokens — what Copilot found most predictive). Use it to gate: show only high-confidence suggestions, warn on low ones, retry, add context, or escalate to a stronger model.
+Reading the numbers: single-digit negatives are normal for free text; double-digit negatives mean something odd happened. Tokens near the *start* of a text run lower because the model has less context to go on. Expect jitter of about ±1 between identical calls (the same nondeterminism as temperature 0).
+
+- **Quality score.** Average token probability over the completion (or its first tokens — what Copilot found most predictive). Use it to gate: show only high-confidence suggestions, warn on low ones, retry, add context, or escalate to a stronger model. The book's warning: **don't be like Clippy** — interrupting users with low-confidence output costs more trust than staying quiet.
 - **Classification.** Use a format like `1. [positive | negative | neutral]` so the decision is the first token after a known start, then read the probabilities of each label.
-  - **Prefix-collision pitfall:** "North America" and "Northeast Asia" share the first token `North`, so their probabilities add up and can beat a better answer ("Europe") on the first token. **Give every label a distinct first token.**
-  - **Calibration:** the model's 50% isn't your threshold. Shift per-label logprobs by constants fitted on labeled data, or use **logit bias** where available.
+  - **Prefix-collision pitfall:** in the book's region classifier, "Europe" scored 44% on the first token and `North` 55% — but `North` was split between North America (42%) and Northeast Asia (13%). Sampling picks `North`, then the less likely continuation can win, and the output is "Northeast Asia" when Europe was the single best label. **Give every label a distinct first token.**
+  - **Calibration:** the model's 50% isn't your threshold. Shift per-label logprobs by constants fitted on labeled data (e.g. add 0.3 to "Yes" if the model under-calls it), using logistic regression or cross-entropy minimization to fit them. **Logit bias** applies the same shift at generation time where available.
 - **Prompt debugging.** With `echo=true` (where supported), logprobs on the *prompt* flag surprising tokens: typos and odd phrasing show up as deep dips, below roughly −13.
 
 ---
@@ -104,7 +123,8 @@ A logprob is the log-probability of each emitted token (0 = certain; `exp()` con
 
 The trade-offs, in rough order: **intelligence → speed → cost → ease of use → features** (tool use, logprobs, vision, context length) **→ special requirements** (open weights, data residency). Tightening one narrows the rest; cheap and very smart don't coexist.
 
-- Put an abstraction layer between your code and the provider ([notebooks/pe-litellm-intro.ipynb](../notebooks/pe-litellm-intro.ipynb)).
+- Match the model to the step, not the app: a small fast model for autocomplete, classification or routing; a frontier model for multistep reasoning; an open-weight model when data can't leave your infrastructure or you need logprobs the API hides.
+- Put an abstraction layer between your code and the provider (for example [LiteLLM](https://docs.litellm.ai/)).
 - Prototype on a slightly bigger model than you think you can afford. Prices fall, and your prompts will already be tuned for it.
 - A prompt tuned for one model is not portable. Re-run your evals when you switch ([09](09-evaluating-prompts.md)).
 
@@ -120,15 +140,20 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 | LoRA (parameter-efficient) | *Which* existing behaviors to use; formats; priors | Hundreds–thousands | Days |
 | Soft prompting | What a static prompt would say | Hundreds | Hours |
 
-Reach for it when the static part of your prompt is long, stable, and still not followed reliably — or when you have outcome data encoding preferences you can't articulate. After fine-tuning, **make the prompt look like the start of your fine-tuning documents**. If it resembles pre-training data instead, the model follows the old path (a modified Little Red Riding Hood principle).
+- **LoRA** freezes the base weights and trains small low-rank "diff" matrices. They're cheap to store, so one deployment can serve many LoRAs, one per customer or task. LoRA doesn't teach new tricks; it teaches *which* existing ones to use. It's good at shifting *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt. Trained on outcome data, it also picks up priors nobody wrote down: budget-conscious users reject "Monaco" but book after "Prague" suggestions.
+- **Soft prompting** uses gradient descent over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it.
+
+![Should you fine-tune? A decision flow](../sources/prompt-eng-for-llms/images/fig-7-8-should-you-fine-tune.png)
+*Image Source: Berryman & Ziegler (2024), Fig. 7-8*
+
+Reach for it when the static part of your prompt is long, stable, and still not followed reliably — or when you have outcome data encoding preferences you can't articulate. The payoff: after continued pre-training or LoRA you can typically **drop the static context entirely** — instructions and examples now live in the weights, so prompts get shorter, cheaper and faster. Then **make the prompt look like the start of your fine-tuning documents**. If it resembles pre-training data instead, the model follows the old path (a modified Little Red Riding Hood principle).
 
 ---
 
 ## Go deeper
 
-- Book: [Ch 7](../sources/prompt-eng-for-llms/07-taming-the-model.md) (preamble types, logprobs, calibration, model choice, fine-tuning)
+- Book (PDF): [Ch 7](../sources/prompt-eng-for-llms/reading/07-taming-the-model.pdf) (preamble types, logprobs, calibration, model choice, fine-tuning) · [Ch 2](../sources/prompt-eng-for-llms/reading/02-understanding-llms.pdf) (sampling, beam search)
 - Vendor docs on structured outputs and sampling: [references.md](../README.md#vendor-guides)
-- Runnable: [notebooks/pe-chatgpt-intro.ipynb](../notebooks/pe-chatgpt-intro.ipynb) (parameters) · [notebooks/pe-mixtral-introduction.ipynb](../notebooks/pe-mixtral-introduction.ipynb) (open-weight model)
 
 ---
 

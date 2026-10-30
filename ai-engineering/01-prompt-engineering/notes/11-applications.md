@@ -54,9 +54,15 @@ Story:
 
 Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material, varying **topic** and **target audience**. A 1.3B-parameter model trained on it rivaled models ten times its size on HumanEval. **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
 
+![phi-1 synthetic textbook sample](../sources/images/synthetic_diversity/textbooks_1.png)
+*A generated "textbook" passage: a definition, a worked example, then runnable code. Gunasekar et al. (2023), via DAIR.*
+
 ### Pattern 4 — synthetic queries for retrieval (Promptagator)
 
 Retrievers degrade in niche domains and low-resource languages. Dai et al. (2022) showed that **8 labeled examples plus an unlabeled corpus** are enough: few-shot prompt an LLM to write a query for each document, then train the retriever on the (query, document) pairs.
+
+![Promptagator pipeline](../sources/images/synthetic_rag/synthetic_rag_2.png)
+*A few-shot prompt turns domain documents into synthetic (query, document) pairs, which train a small dual encoder. Dai et al. (2022), via DAIR.*
 
 ```
 Task: Identify a counter-argument for the given argument.
@@ -67,7 +73,10 @@ Argument #N: {new document}
 A concise counter-argument query related to the argument #N:
 ```
 
-- "Relevance" depends on the search intent (supporting vs. counter-argument, etc.) — say which one.
+- "Relevance" depends on the search intent (supporting vs. counter-argument, etc.) — say which one. The paper used a different prompt label per dataset:
+
+  ![Promptagator per-dataset prompts](../sources/images/synthetic_rag/synthetic_rag_4.png)
+  *The same passage → query template, relabeled per intent ("Counter argument:", "Vexed question:", "Is it true that"). Dai et al. (2022).*
 - Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
 - In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
 
@@ -92,13 +101,67 @@ Retrieval itself belongs to [02-context](../../02-context-engineering/notes/04-r
 | Schema → SQL | Table and column definitions, then the question | Include the actual schema; generate fixtures to test against |
 | Explain code | Code first, then "Explain the above" | A narrow system prompt ("Python only") can make the model refuse adjacent tasks |
 
-The biggest lever for code is the same as everywhere: **context** — the relevant files, types, and tests. The second is **verification**: compile, lint, run the tests, and feed failures back (Reflexion, [03](03-core-techniques.md#reflexion)). Agentic coding is a harness problem ([03-harness](../../03-harness-engineering/README.md)). Runnable: [notebooks/pe-code-llama.ipynb](../notebooks/pe-code-llama.ipynb).
+![Instruction → code in chat mode](../sources/images/code-generation/chat-mode.png)
+*The system prompt fixes the language and "code only," and the user turn is the task. DAIR, Code generation.*
+
+A debugging prompt from the Code Llama notebook. The system role sets the job, and the user turn gives the code, the observed output and the expected output:
+
+```python
+messages = [
+    {"role": "system",
+     "content": "You are an expert programmer that helps to review Python code for bugs."},
+    {"role": "user", "content": """This function should return a list of lambda functions
+that compute successive powers of their input, but it doesn't work:
+
+def power_funcs(max_pow):
+    return [lambda x:x**k for k in range(1, max_pow+1)]
+
+[h(2) for h in power_funcs(3)] should give [2, 4, 8], but it currently gives [8, 8, 8].
+What is happening here?"""},
+]
+```
+*From DAIR's Code Llama notebook, run through Together's OpenAI-compatible endpoint. CodeLlama-70b-Instruct is superseded, but the prompt shapes in this section still apply.*
+
+**Unit tests.** Ask for a fixed number of tests, wrap the output in tags you can parse, and fix the comment format so each test can be identified:
+
+```python
+messages = [
+    {"role": "system", "content": "You are an expert programmer that helps write unit tests. "
+                                  "Don't explain anything just write the tests."},
+    {"role": "user", "content": """Your task is to write 2 tests to check the correctness of a
+function that solves a programming problem.
+The tests must be between [TESTS] and [/TESTS] tags.
+You must write the comment "#Test case n:" on a separate line directly above each assert
+statement, where n represents the test case number, starting from 1.
+
+Problem: Write a Python function to get the unique elements of a list."""},
+]
+```
+
+**Infilling (fill-in-the-middle, FIM).** You give the code before and after a gap, and the model writes the middle. Editor completion, docstring generation and type inference all work this way:
+
+```python
+prefix = """
+def two_largest_numbers(list: List[Number]) -> Tuple[Number]:
+  max = None
+  second_max = None
+  """
+suffix = """
+  return max, second_max
+"""
+```
+
+Code models trained for FIM take these through dedicated prefix/suffix/middle tokens or a `suffix` API parameter. The notebook's call is marked broken, and sending prefix and suffix as plain chat text only approximates FIM.
+
+**Over-refusal.** With a broad safety system prompt ("Always assist with care, respect, and truth… Avoid harmful, unethical, prejudiced, or negative content"), Code Llama refused *"Can you tell me how to kill a process?"*. Removing the system prompt fixed it. Generic safety wording in a domain system prompt costs you legitimate answers, so scope it to the domain and test for false refusals ([09](09-evaluating-prompts.md)).
+
+The biggest lever for code is the same as everywhere: **context** — the relevant files, types, and tests. The second is **verification**: compile, lint, run the tests, and feed failures back (Reflexion, [03](03-core-techniques.md#reflexion)). Agentic coding is a harness problem ([03-harness](../../03-harness-engineering/README.md)).
 
 ---
 
 ## Images and multimodal prompts
 
-Images are tokenized into embeddings and processed alongside the text ([book Ch 11](../sources/prompt-eng-for-llms/11-looking-ahead.md)). The same rules apply:
+**How it works** (the likely design; vendors don't publish specifics): a vision encoder turns image patches into vectors of the same size as text-token embeddings. Positional information is added so spatial layout survives, and the image vectors are concatenated with the text and run through the same transformer. Video is the naive extension, sampled frames fed in as a sequence of images. To the model, an image is just more context tokens, so the same rules apply:
 
 - **Include only relevant images.** Irrelevant images distract just like irrelevant text.
 - **Introduce each image in the text**: say what it is and what it's for ("The screenshot below is the failing checkout page").
@@ -107,11 +170,27 @@ Images are tokenized into embeddings and processed alongside the text ([book Ch 
 
 Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#chain-of-thought).
 
+Images also matter for training. Text-only pretraining is approaching "the whole public internet" as a ceiling, and images and video add a different kind of signal (spatial reasoning, physical common sense, social cues), not just more of the same.
+
+---
+
+## Interfaces: stateful objects of discourse
+
+When people collaborate, they talk *about* a persistent thing, such as a file, change it, and discuss how it changed. Plain chat UIs don't work this way. Ask for a function and then a change, and you get two full copies in the transcript, and it becomes ambiguous which one "it" refers to. **Claude's Artifacts** separate the object, kept in its own pane and updated in place, from the conversation about it. The book's critique, which works as a design checklist for your own app:
+
+- **Regeneration isn't editing.** The model still rewrites the whole object on every change, so it doesn't scale to long documents. Prefer diffs and edit tools.
+- **Support several objects**, each with a short name the user and the prompt can both use. Otherwise a new topic overwrites the only slot.
+- **Let the user edit directly** and feed that diff into the next prompt, so the model knows what changed.
+
+Conversational UI also keeps a human in the loop who can catch drift before it compounds ([06](06-chaining-and-workflows.md)). Without a designed object layer, a chat wrapper is just a gimmick.
+
 ---
 
 ## Go deeper
 
 - Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../README.md#applications)
+- Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (multimodality, Artifacts)
+- Runnable: [pe-rag.ipynb](../../02-context-engineering/notebooks/pe-rag.ipynb) (retrieval-augmented title generation)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 
 ---
