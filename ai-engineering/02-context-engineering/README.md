@@ -116,7 +116,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ### Notebooks
 
-[notebooks/](notebooks/README.md) holds runnable Python labs from the upstream course:
+[notebooks/](notebooks/README.md) holds runnable Python labs from the upstream course, plus two notebooks from the DAIR prompt-engineering guide:
 
 | Lab | Pairs with |
 |---|---|
@@ -127,6 +127,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | [05_prompt_programs.py](notebooks/05_prompt_programs.py) | [08](notes/08-cognitive-tools.md#prompt-programs) |
 | [06_schema_design.py](notebooks/06_schema_design.py) | [07](notes/07-structured-context.md) |
 | [07_recursive_patterns.py](notebooks/07_recursive_patterns.py) | [08](notes/08-cognitive-tools.md), [99](notes/99-speculative-field-track.md) |
+| [pe-rag.ipynb](notebooks/pe-rag.ipynb): retrieval-augmented title generation (DAIR) | [04](notes/04-retrieval.md) |
+| [gemini-context-caching.ipynb](notebooks/gemini-context-caching.ipynb): explicit context caching (DAIR) | [04](notes/04-retrieval.md) |
 
 ### Practice
 

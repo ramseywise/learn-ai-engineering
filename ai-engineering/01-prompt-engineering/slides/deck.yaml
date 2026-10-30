@@ -1,0 +1,604 @@
+# Prompt Engineering — lecture deck. Built from notes/01–11 and the README rules of thumb.
+# Build:  make slides PILLAR=01-prompt-engineering [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Prompt Engineering
+  subtitle: Writing the document the model completes
+  tagline: |-
+    Tokens · Anatomy · Techniques · Output control
+    Tools · Chains · Reasoning models · Evals · Security
+  reference: "Notes: ai-engineering/01-prompt-engineering"
+  output: prompt-engineering.pptx
+  notes: >-
+    Pillar 1 of the AI-engineering course, and the innermost layer: context contains prompts.
+    Four parts — how models read, the named techniques, building with prompts, shipping them.
+
+parts:
+  # ───────────────────────────────────────────────────────────── Part 1
+  - title: Foundations
+    summary: How models read prompts · Prompt anatomy
+    slides:
+      - layout: statement
+        title: The mental model
+        kicker: Why every rule follows
+        statement: An LLM is a document-completion engine. A prompt is the opening of a document whose most plausible continuation is the answer you want.
+        attribution: Ask "how would this document continue?" — not "how would a reasonable person reply?"
+        source: notes/01-how-models-read-prompts.md
+        notes: >-
+          The model is a mimic, not an oracle. Chat, tool calls and agents are all the application
+          layer building text before the call and parsing text after it. GPT-3's few-shot result (2020)
+          started the discipline: behaviour elicited by changing the input, with no weight updates.
+
+      - layout: cards
+        title: Five properties of the reader
+        kicker: How models read prompts
+        cards:
+          - title: Tokens, not characters
+            body: "~4 chars per token. Letter counting and string reversal are hard; SHOUTING and random IDs cost extra tokens."
+          - title: Autoregressive
+            body: Fixed compute per token and no takebacks. More thinking means emitting more tokens — the basis of CoT.
+          - title: Left-to-right attention
+            body: Order matters. Put the instruction before content when it changes **how** the content must be read.
+          - title: Truth bias
+            body: Hallucination is the same behaviour as fluency. A false premise gets run with, not questioned.
+          - title: Chat is a transcript
+            body: RLHF + ChatML turn a completion model into an assistant. Roles are document structure, not a security boundary.
+          - title: So…
+            accent: "0EA5C9"
+            body: Shape the document. Don't ask more forcefully — reorder, decompose, or move the work out of the model.
+        source: notes/01-how-models-read-prompts.md
+
+      - layout: compare
+        title: Order matters — the word-count test
+        kicker: Property 3
+        lead: The book asked ChatGPT to count the words in a 173-word paragraph, placing the instruction in two positions.
+        left:
+          title: Instruction after the paragraph
+          bullets:
+            - The model reads the paragraph not knowing it will need a count
+            - It answers **348**
+            - It can't go back and re-read
+          tag: Read first, task second → a guess
+        right:
+          title: Instruction before the paragraph
+          bullets:
+            - The model knows the job while it reads
+            - It answers **173**
+            - "One-pass heuristic: could an expert finish this in a single read, with no notes?"
+          tag: Task first → the reading is shaped by it
+        takeaway: If the prompt fails the one-pass test, restructure the task rather than asking harder.
+        source: notes/01-how-models-read-prompts.md
+
+      - layout: code
+        title: Chat models are completion models wearing a transcript
+        kicker: Property 5
+        lang: ChatML
+        code: |-
+          <|im_start|>system
+          You are a terse technical assistant.<|im_end|>
+          <|im_start|>user
+          What does `git rebase` do?<|im_end|>
+          <|im_start|>assistant
+        bullets:
+          - "**System role** is the main lever: RLHF trains models to follow it closely"
+          - Reserved tokens can't be typed — **unless you paste user content into `system`**
+          - "What chat costs: alignment tax, chatty preamble, a narrower voice"
+          - "**Two scripts:** the user's conversation ≠ the transcript you send. You are the showrunner of the second."
+        source: notes/01-how-models-read-prompts.md
+
+      - layout: steps
+        title: Every prompt must satisfy four criteria
+        kicker: Prompt anatomy
+        steps:
+          - title: Resemble training data
+            text: the Little Red Riding Hood principle — stay on familiar document shapes
+          - title: Carry all relevant information
+            text: and only that. Padding distracts (Chekhov's gun — everything included must matter)
+          - title: Lead to a solution
+            text: point at an answer, not at more elaboration of the problem
+          - title: Have a natural stopping point
+            text: end of turn, a closing tag, or a stop sequence
+        takeaway: Chat fine-tuning gives you 1, 3 and 4 almost free. Criterion 2 is never automatic — that's context engineering.
+        source: notes/02-prompt-anatomy.md
+
+      - layout: table
+        title: Writing instructions
+        kicker: Clear, direct, specific
+        lead: "Golden rule (Anthropic): if a colleague with no context would be confused by the prompt, so will the model."
+        header: [Rule, Weak, Strong]
+        widths: [2.2, 3.2, 5]
+        rows:
+          - [Be specific, "\"Keep it short, not too descriptive\"", "\"Use 2–3 sentences, for a high-school student\""]
+          - [Say what to do, "\"DO NOT ASK FOR INTERESTS\" (it asked anyway)", "\"Recommend from the top trending movies. If none fit, say so.\""]
+          - [Give the reason, "\"NEVER use ellipses\"", "\"No ellipses — a text-to-speech engine will read this aloud\""]
+          - [Avoid absolutes, "\"Always cite three sources\"", "\"Cite sources where they exist; say so when they don't\""]
+          - [Specify the output, "\"Extract the places\"", "\"Extract the places. Format: `Place: <comma_separated_list>`\""]
+        takeaway: Reasons generalise better than commands. Shouting (CRITICAL, MUST) now causes over-application.
+        source: notes/02-prompt-anatomy.md
+
+      - layout: flow
+        title: Ordering — the default skeleton
+        kicker: Beat the Valley of Meh
+        steps:
+          - label: Introduction
+            sub: what document, what task
+          - label: Context
+            sub: the long parade of reference material
+          - label: Refocus
+            sub: restate the question
+          - label: Transition
+            sub: the nudge from reading to answering
+        bullets:
+          - "**Recency bias** + **lost in the middle** → early-to-mid content is used least (the Valley of Meh)"
+          - "**Sandwich:** introduction + refocus, so the instruction is both primed and fresh"
+          - "Long inputs (20k+ tokens): documents first, query last — up to **30% better** on Anthropic's tests"
+          - Ask the model to quote the relevant parts before it answers
+        source: notes/02-prompt-anatomy.md
+
+      - layout: code
+        title: Separate instructions from data with XML
+        kicker: Choosing the document type
+        lang: xml
+        code: |-
+          <instructions>
+            Summarize the document for an executive audience.
+          </instructions>
+          <document index="1">
+            <source>q3-report.pdf</source>
+            <document_content>{{DOCUMENT}}</document_content>
+          </document>
+          <constraints>Max 3 sentences. Plain prose.</constraints>
+        bullets:
+          - "**Advice conversation** — the chat default; can include synthetic prior turns"
+          - "**Analytic report** — a `Scope` section and `# Analysis` before `# Conclusion`"
+          - "**Structured doc** — lets the app route parts of the output"
+          - Version the **template** (slots), not the rendered prompt
+        source: notes/02-prompt-anatomy.md
+
+      - layout: table
+        title: Agent system prompts — procedures, not rule piles
+        kicker: Tau-Bench ablation (Li, Exp. 2-4)
+        lead: One change at a time to an airline/retail support agent's system prompt.
+        header: [Change (all else fixed), Effect]
+        widths: [5, 5]
+        highlight: [1]
+        rows:
+          - [Tone swapped (neutral → bombastic → emoji-casual), Little change in completion]
+          - ["Same rules, flattened from an ordered procedure into an unordered list", "**Success fell more than 30%** — \"verify identity before refund\" was skipped"]
+          - [Tool descriptions removed (signatures kept), Tool-call errors up 45%]
+        takeaway: Write an SOP with numbered stages and exception branches. When an agent underperforms, ablate before rewriting.
+        source: notes/02-prompt-anatomy.md
+
+  # ───────────────────────────────────────────────────────────── Part 2
+  - title: Techniques
+    summary: Examples teach · reasoning buys compute · search explores · tools reach out
+    slides:
+      - layout: table
+        title: Which technique when
+        kicker: Start at the top
+        header: [Problem, Reach for, Cost]
+        widths: [4.6, 3.2, 2.4]
+        rows:
+          - [Task is clear and common, Zero-shot, —]
+          - ["Format, style, or labels are non-obvious", Few-shot, Longer prompt; anchoring]
+          - ["Multi-step arithmetic, logic, planning", Chain-of-thought, More output tokens]
+          - [Answers vary run to run, Self-consistency, N× calls]
+          - [Search problem with dead ends, Tree of Thoughts, Many calls + a controller]
+          - [Exact computation, PAL (code + interpreter), A sandbox]
+          - [Needs fresh or private information, ReAct / tool use, Loop + tools]
+          - ["Can verify and retry (tests, checkers)", Reflexion, Retry budget]
+          - [Long task with separable stages, Prompt chaining, Orchestration code]
+        takeaway: Reasoning models build many of these in — check notes/07 before adding CoT scaffolding.
+        source: notes/03-core-techniques.md
+
+      - layout: compare
+        title: Few-shot — what the examples actually teach
+        kicker: In-context learning
+        emphasis: none
+        left:
+          title: What matters (Min et al., 2022)
+          bullets:
+            - "**Label space and input distribution** matter more than whether each label is correct"
+            - Random labels still beat no examples
+            - "**Format** matters a lot"
+            - Sample labels from the true distribution, not a uniform spread
+        right:
+          title: The three drawbacks
+          accent: "D4621A"
+          bullets:
+            - "**Scales badly** — each example needs the same rich context as the real question"
+            - "**Anchoring** — the examples' range becomes the model's expectation"
+            - "**Spurious patterns** — example order gets learned. Shuffle, or let DSPy choose"
+        takeaway: Start zero-shot. Add examples only when zero-shot fails in a way you can name.
+        source: notes/03-core-techniques.md
+
+      - layout: image
+        title: Chain-of-thought — reasoning before the answer
+        kicker: Wei et al., 2022
+        image: ../sources/images/cot.png
+        caption: Standard vs. chain-of-thought prompting (Wei et al., 2022)
+        bullets:
+          - Without reasoning tokens, an answer is an intuitive guess; an explanation **after** it is rationalisation
+          - "PaLM 540B on GSM8K: **~20% → ~60%**"
+          - "**Zero-shot CoT:** \"Let's think step by step\""
+          - Put reasoning in a parseable `<thinking>` block so the app can strip it
+        source: notes/03-core-techniques.md
+
+      - layout: cards
+        title: Sampling, knowledge, search, code
+        kicker: Beyond a single CoT
+        cards:
+          - title: Self-consistency
+            body: Sample several CoT paths at temperature > 0 and take the majority answer. N× cost; nothing to vote on in open-ended text.
+          - title: Generated knowledge
+            body: Call 1 generates relevant facts; call 2 answers with them in the prompt. Adds no knowledge the model lacks — that's retrieval.
+          - title: Tree of Thoughts
+            body: "Generate, evaluate, backtrack. Game of 24: CoT **4%** → ToT **74%**. Needs a controller loop in code."
+          - title: PAL
+            body: The model writes code; an interpreter computes the answer. Don't ask the model to do what code does reliably.
+        source: notes/03-core-techniques.md
+
+      - layout: code
+        title: ReAct — reason + act
+        kicker: Yao et al., 2022
+        lang: trace
+        code: |-
+          Thought 1: I need to search Arthur's Magazine and
+                     First for Women, and find which started first.
+          Action 1:  Search[Arthur's Magazine]
+          Observation 1: Arthur's Magazine (1844–1846) was an
+                     American literary periodical...
+          Thought 2: Started in 1844. Now search First for Women.
+          Action 2:  Search[First for Women]
+          Observation 2: ...started in 1989...
+          Thought 3: 1844 < 1989, so Arthur's Magazine was first.
+          Action 3:  Finish[Arthur's Magazine]
+        bullets:
+          - Grounded in retrieved facts, so it hallucinates less than CoT — but one bad search derails it
+          - "ALFWorld: **71%** vs. 45% for act-only"
+          - Prompted alone it lost to CoT on HotpotQA; fine-tuning on ~3k traces flipped that
+          - The ancestor of today's native tool-calling loop
+        source: notes/03-core-techniques.md
+
+      - layout: flow
+        title: Reflexion — verbal reinforcement learning
+        kicker: Shinn et al., 2023
+        steps:
+          - label: Actor
+            sub: produces text or actions (CoT / ReAct)
+          - label: Evaluator
+            sub: tests, heuristics, or an LLM judge
+          - label: Self-reflection
+            sub: turns the score into written feedback
+        loop: retry with the reflection in context
+        bullets:
+          - "HumanEval pass@1: **91%** vs. GPT-4's 80% at the time"
+          - "**It works only when you get a do-over** — ideally with an objective evaluator"
+          - Useless for irreversible actions; with a weak evaluator it reinforces confident mistakes
+        source: notes/03-core-techniques.md
+
+  # ───────────────────────────────────────────────────────────── Part 3
+  - title: Building with prompts
+    summary: Controlling output · Tools · Chains and workflows · Reasoning models
+    slides:
+      - layout: flow
+        title: Anatomy of the ideal completion
+        kicker: Controlling output
+        end_accent: false
+        steps:
+          - label: Preamble
+            accent: "94A3B8"
+          - label: The solution
+            accent: "1E3A5F"
+          - label: Recognisable end
+            accent: "D4621A"
+          - label: Fluffy postscript
+            accent: "CBD5E1"
+        bullets:
+          - "**Structural boilerplate** (an opening `{`, a heading): put it in the prompt — cheaper, and it guarantees the format"
+          - "**Reasoning:** let it run long — that's CoT, and it buys correctness"
+          - "**Fluff:** don't fight it; give it a slot (`1. answer 2. caveats`) and parse slot 1"
+          - Stop on the recognisable end and nothing after it costs you anything
+        source: notes/04-controlling-output.md
+
+      - layout: table
+        title: Sampling parameters
+        kicker: Tune one knob at a time
+        header: [Parameter, Effect, Typical use]
+        widths: [2.4, 4.4, 4]
+        rows:
+          - ["`temperature`", Flattens (high) or sharpens (low) the distribution, Low for extraction and factual QA; higher for brainstorming]
+          - ["`top_p`", Sample from the smallest set reaching mass p, Tune temperature **or** top_p — not both]
+          - ["`max_tokens`", Hard cap on output length, A cut-off is not a stop — check the stop reason]
+          - ["`stop`", Strings that end generation server-side, The cheapest way to end on your recognisable end]
+          - ["`frequency` / `presence` penalty", Penalise repeated or any-seen tokens, Tune one penalty — not both]
+        takeaway: Temperature 0 is not deterministic. Many reasoning models fix or reject these parameters.
+        source: notes/04-controlling-output.md
+
+      - layout: steps
+        title: The structured-output ladder
+        kicker: Climb only as far as you need
+        axis: weaker → stronger guarantee
+        steps:
+          - title: Ask for it
+            text: "\"Return JSON with keys…\" — fine for prototypes, breaks at scale"
+          - title: Show it
+            text: a schema or one complete example; match the prompt's format to the output's
+          - title: Fence it
+            text: "`<answer>…</answer>` gives a parse target even in a chatty reply"
+          - title: Prefill it
+            text: "start the assistant turn with `{` — some newer models no longer accept this"
+          - title: Constrain it
+            text: JSON mode or schema-constrained decoding
+          - title: Route it through a tool
+            text: a tool whose parameters are your output schema
+        takeaway: A schema guarantees shape, not truth. Validate the values too.
+        source: notes/04-controlling-output.md
+
+      - layout: flow
+        title: The tool-calling loop
+        kicker: Tools and function calling
+        steps:
+          - label: messages + tools
+          - label: Model
+            sub: proposes a call
+          - label: App runs it
+            sub: dispatch by name
+          - label: Append result
+            sub: a `tool` message
+        loop: repeat until the reply has no tool calls
+        bullets:
+          - "The model never touches the world. It **proposes**; your code **executes**"
+          - "Under the hood it's still completion: schemas are rendered into the system prompt as text"
+          - "**Writing a tool definition is writing a prompt** — names, descriptions and enums all steer the choice"
+        source: notes/05-tools-and-function-calling.md
+
+      - layout: table
+        title: Writing tool definitions
+        kicker: Each field is prompt text
+        header: [Rule, Why]
+        widths: [4.4, 5.8]
+        rows:
+          - [Few tools that partition the domain, Every extra tool is a distractor; overlapping tools force a coin flip]
+          - ["Self-documenting names (`get_current_weather`)", Unbroken lowercase is hard to tokenise and read]
+          - [Descriptions say **when** to use it, "\"Use when the user asks about recent events…\""]
+          - ["Few, simple arguments; use `enum`s", Complex parameter lists burn tokens and accuracy]
+          - [Drop arguments the app already knows, "The model invents placeholders (`\"my-org\"`) for values it can't see"]
+          - [Errors that teach, "\"`date` must be YYYY-MM-DD\", not a stack trace"]
+        source: notes/05-tools-and-function-calling.md
+
+      - layout: statement
+        title: Safety lives in code
+        kicker: Gate side effects
+        statement: "\"Always confirm with the user before booking\" will eventually be skipped."
+        attribution: Let the model request any call; intercept side-effecting calls in the app and require approval of the exact arguments. Tool results are untrusted input.
+        source: notes/05-tools-and-function-calling.md
+
+      - layout: table
+        title: Workflow patterns
+        kicker: Anthropic's taxonomy
+        lead: When one prompt can't do the job, split it — each step gets one job, a short context, and a checkable output.
+        header: [Pattern, What it does, Example]
+        widths: [2.6, 4.2, 4]
+        rows:
+          - [Prompt chaining, Sequential steps with optional gates, Outline → check → draft]
+          - [Routing, Classify then send to a specialised prompt or model, "Support triage; small model for easy queries"]
+          - [Parallelisation, Sectioning (subtasks) or voting (same task N×), Moderation on several axes; self-consistency]
+          - [Orchestrator–workers, An LLM splits the task and delegates, Multi-file code changes]
+          - [Evaluator–optimiser, "One prompt generates, another critiques — loop", Translation with a critic; Reflexion]
+        source: notes/06-chaining-and-workflows.md
+
+      - layout: compare
+        title: Workflows vs. agents
+        kicker: Start with a workflow
+        left:
+          title: Workflow
+          accent: "0F7490"
+          bullets:
+            - Control flow predefined in code
+            - Tool use orchestrated by code
+            - High predictability
+            - "Good for: repeatable tasks, production reliability, cost control"
+          tag: DAG is the default topology
+        right:
+          title: Agent
+          bullets:
+            - Control flow chosen by the model
+            - Tools selected by the model
+            - Lower predictability
+            - "Good for: open-ended tasks whose steps can't be known up front"
+          tag: Most production systems are hybrids
+        takeaway: "First question for every task: does it need an LLM at all?"
+        source: notes/06-chaining-and-workflows.md
+
+      - layout: compare
+        title: Prompting reasoning models
+        kicker: Goals, not steps
+        left:
+          title: Drop these habits
+          bullets:
+            - Prescribing the reasoning steps
+            - Bolting on "Let's think step by step" — explicit CoT can **hurt** instruction-following
+            - Padding with few-shot examples by default
+            - Trusting reasoning because it was long
+        right:
+          title: Do this instead
+          bullets:
+            - State the goal, constraints and output format at a high level
+            - Tune **effort / budget**, not wording
+            - Use examples only for style or format the model gets wrong
+            - Ask it to verify its work before finishing
+        takeaway: "Escalate gradually: thinking off → low → medium → high, only while eval scores keep improving."
+        source: notes/07-prompting-reasoning-models.md
+
+  # ───────────────────────────────────────────────────────────── Part 4
+  - title: Shipping prompts
+    summary: Optimization · Evaluation · Adversarial prompting · Applications
+    slides:
+      - layout: flow
+        title: Prompt optimization is a loop
+        kicker: No metric, no optimizer
+        steps:
+          - label: Template v1
+          - label: Run on eval set
+          - label: Score
+          - label: Propose changes
+            sub: you, APE/OPRO, DSPy
+        loop: keep the new version only if it beats the old
+        bullets:
+          - "**Template ≠ prompt** — version the template, with its model, ID and eval score"
+          - "**Pin the model version** — a tuned prompt is not portable"
+          - "**Diff behaviour, not text** — run the regression suite on every edit"
+          - "Fix the cheapest layer first: clarity → context → ordering → examples → CoT → split → bigger model → fine-tune"
+        source: notes/08-prompt-optimization.md
+
+      - layout: cards
+        title: Letting models write prompts
+        kicker: APE · OPRO · meta-prompting · DSPy
+        cards:
+          - title: APE
+            body: "An LLM proposes instructions, each is scored on a target model. Found \"Let's work this out in a step by step way to be sure we have the right answer.\""
+          - title: OPRO
+            body: The LLM is the optimizer, shown past prompts and their scores. Found "Take a deep breath…"
+          - title: Meta-prompting
+            body: A strong model drafts or critiques a prompt from failing cases. A first draft, not a result.
+          - title: DSPy
+            body: "Signatures + modules, compiled against a metric: picks few-shot examples and their order, searches instructions."
+        source: notes/08-prompt-optimization.md
+
+      - layout: table
+        title: Build the eval first
+        kicker: Evaluating prompts
+        lead: "Copilot's eval framework is older than its prompts or its UI. Always log latency and token counts too."
+        header: [Target, Decision, Test style]
+        widths: [2.6, 3.8, 4.4]
+        rows:
+          - [The model, Swap or upgrade, Broad regression suite]
+          - [A single prompt, "Wording, examples, parameters", Small unit tests on one model call]
+          - ["The composition (chain, loop)", Architecture, End-to-end regression — no unit-level substitute]
+        takeaway: "Level 1: 5–20 examples, outputs committed, reviewed with git diff. Level 2: hundreds, scored automatically."
+        source: notes/09-evaluating-prompts.md
+
+      - layout: cards
+        title: LLM-as-judge — the SOMA rubric
+        kicker: Never let it grade its own work
+        cards:
+          - title: Specific
+            body: "\"Did it pick the heating system?\" — not \"Is this right?\" A generic question is as hard as the task."
+          - title: Ordinal
+            body: A 1–5 scale with each level described. Yes/no hides degrees; undefined levels drift.
+          - title: Multi-aspect
+            body: "Score each dimension separately — intent vs. execution; relevance / truth / completeness."
+          - title: And…
+            accent: "0EA5C9"
+            body: Rubric before content. Scores are relative. Calibrate against several human annotators.
+        source: notes/09-evaluating-prompts.md
+
+      - layout: table
+        title: "Case study: small changes, large effects"
+        kicker: Clavié et al., 2023 — gpt-3.5-turbo
+        header: [Prompt modification (cumulative), F1, Template adherence]
+        widths: [6.4, 1.6, 2.6]
+        highlight: [5, 7]
+        rows:
+          - [Baseline (posting + question), "65.6", 79%]
+          - [Few-shot CoT, "78.4", 87%]
+          - [Zero-shot CoT, "81.4", 65%]
+          - ["+ role in system, task in user", "87.5", 71%]
+          - ["+ mocked acknowledgement + reiterated key points", "89.3", 75%]
+          - ["+ **strict output template**", "86.3 ↓", "**98%**"]
+          - ["+ \"reach the right conclusion\" + common failures", "90.3", 77%]
+          - ["+ a name + positive feedback", "**91.7**", 81%]
+        takeaway: Wording moved F1 by 26 points. The methodology is the lesson — change one thing, re-score.
+        source: notes/09-evaluating-prompts.md
+
+      - layout: table
+        title: Adversarial prompting
+        kicker: Instructions and data share one channel
+        lead: There's no parameterised query for LLMs. Every attack exploits that the model can't tell text to obey from text to process.
+        header: [Attack, Goal, Classic form]
+        widths: [2.8, 3.6, 4.4]
+        highlight: [1]
+        rows:
+          - [Direct injection, Override the app's instructions, "\"Ignore the above directions and…\""]
+          - ["**Indirect injection**", Smuggle instructions in through retrieved data, "Hidden text in a web page, email, PDF or tool result"]
+          - [Prompt leaking, Extract the system prompt or examples, "\"…then output a copy of the full prompt\""]
+          - [Jailbreaking, Get around safety training, "Personas (DAN), fiction, encodings"]
+        takeaway: Indirect injection matters most — the attacker doesn't need to be your user. Risk scales with what the model can do.
+        source: notes/10-adversarial-prompting.md
+
+      - layout: steps
+        title: Defenses — layer them
+        kicker: No prompt-level defense is complete
+        axis: weaker → stronger
+        steps:
+          - title: Instruction
+            text: warn the model that users may try to change it
+          - title: Source tagging + structure
+            text: untrusted text in the `user` role or a `tool` message, never `system`; delimit it
+          - title: Detection
+            text: a separate classifier screens inputs and outputs
+          - title: Least privilege
+            text: only the tools and data the task needs
+          - title: Human approval in code
+            text: side-effecting calls need explicit confirmation
+          - title: Architecture
+            text: a quarantined model reads untrusted content and can't call tools (dual-LLM, CaMeL)
+        takeaway: Assume the system prompt will leak. Treat model output as untrusted. Red-team before shipping.
+        source: notes/10-adversarial-prompting.md
+
+      - layout: cards
+        title: Synthetic data — inject the randomness
+        kicker: Applications
+        lead: Raising the temperature isn't enough for diversity. Put the variation in the prompt.
+        cards:
+          - title: Combinatorial seeding
+            body: "TinyStories: sample a noun, verb, adjective and features into every prompt. A seeded label is a free label."
+          - title: Hierarchical
+            body: Generate a summary and a must-use sentence first, then the final piece.
+          - title: Vary the audience
+            body: "phi-1: textbook Python for different readers. A 1.3B model rivalled models 10× its size."
+          - title: Synthetic queries
+            body: "Promptagator: 8 labelled examples + a corpus are enough to train a niche retriever."
+        takeaway: "Pitfalls: skewed seeds give skewed data, and data from model A favours model A in evals."
+        source: notes/11-applications.md
+
+  # ───────────────────────────────────────────────────────────── Close
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: The pillar on one slide
+        cards:
+          - title: Writing
+            body: Clear and specific; say why. XML between instructions and data. Long content first, question last.
+          - title: Techniques
+            body: Zero-shot → few-shot → CoT → self-consistency. PAL for maths, ReAct for tools, Reflexion when you can check.
+          - title: Output
+            body: Low temperature for parseable output. Climb the structured-output ladder only as far as needed.
+          - title: Tools & chains
+            body: Tool descriptions are prompts. Gate side effects in code. Workflow before agent.
+          - title: Reasoning models
+            body: State the goal, not the steps. Tune effort, not wording.
+          - title: Shipping
+            body: Eval before tuning; one change at a time. Assume leaks and injection.
+        source: README.md#rules-of-thumb
+
+      - layout: bullets
+        title: Where to go next
+        kicker: Context contains prompts
+        bullets:
+          - text: "**02 — Context engineering:** what goes into the window alongside the prompt"
+            sub: ["Retrieval, memory, tool outputs and token budget"]
+          - text: "**06 — Eval:** defining correct, datasets, graders and calibrated judges"
+          - text: "**Run the code:** the snippets in each note; pe-rag and context caching in 02-context/notebooks"
+          - text: "**Read:** Berryman & Ziegler, Prompt Engineering for LLMs; Huyen, AI Engineering Ch 5"
+          - text: "**Copy from:** notes/prompt-library.md — example prompts by task"
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: A prompt is a document the model continues. When a prompt fails, change the document — its order, its contents, its shape — before you change the wording.
+        source: README.md

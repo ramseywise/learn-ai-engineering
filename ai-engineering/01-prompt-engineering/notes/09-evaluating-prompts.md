@@ -25,13 +25,20 @@ What you're testing determines the shape of the eval:
 | **A single prompt** | Wording, examples, parameters | Small unit tests on one model call |
 | **The composition** (chain, loop) | Architecture | End-to-end regression — no unit-level substitute |
 
+For a model swap, test across as wide a regression span as you can. If different steps use different models, test each step on its own. Prompt-level regression runs work too, but noise can hide the effect of a single change.
+
 If you can build only one, build the **end-to-end** one, then add unit tests on the critical path.
+
+There are two settings. **Offline** eval runs on example cases, needs no users and not even a working app, and is the one you build first. **Online** eval runs on live users. The stakes are higher and you need enough traffic for a clean signal, but it's the only fully valid data.
 
 ---
 
 ## Offline: the tech tree
 
-**Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes.
+![Offline eval tech tree](../sources/prompt-eng-for-llms/images/fig-10-1-offline-eval-tech-tree.png)
+*Berryman & Ziegler, Fig 10-1.*
+
+**Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus content to suppress (ask for two paragraphs, show one; [04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
 
 **Level 2 — the harness.** Hundreds to thousands of examples with **automatic scoring**, needed to see subtle effects. It has two independent problems: **where samples come from** and **how outputs are scored**.
 
@@ -43,13 +50,25 @@ If you can build only one, build the **end-to-end** one, then add unit tests on 
 | **App telemetry** | Real inputs | Doesn't exist before launch; app changes invalidate it; consent and privacy; outputs are biased by what your app suggested |
 | **Synthetic** (LLM-generated) | Cheap, controllable coverage — combine aspects (n × m × l) for spread | Tropes and misconceptions; **bias toward the generating model** if it's also a candidate under test |
 
+For existing records, balance **ubiquity** (enough data to scale) against **similarity** (close enough to your problem for valid conclusions). Copilot had no corpus of "what the user types next," so it built one from open-source repos: pick a function, delete its body, ask for a completion. The result was imperfect (function bodies skew long, and later edits such as new imports are missing) but nearly infinite. Telemetry captures good *inputs*, but what users did afterward was shaped by your suggestions, so it's weak as a gold standard; keep it for online eval.
+
+Synthetic data works best when you can **start from the solution and invent the problem backward**, or when you only need situations without a gold answer. Generate hierarchically: get a topic list, or enumerate aspects yourself, then ask for several examples per topic in one generation. That gives more variety than repeated calls at temperature > 0.
+
 ### Scoring outputs
 
 From most to least rigorous:
 
-1. **Gold-standard match.** Exact match for labels; *partial* match on the one aspect that matters for free text. Choose an aspect that separates breaking from benign divergence. For tool calls, test in order — *called a tool? → right tool? → valid syntax? → right values?* — because an early failure invalidates the later checks.
-2. **Functional test.** Does it parse, compile, pass the repo's own unit tests, and call only tools that exist with correctly typed arguments? The domain supplies the oracle.
+1. **Gold-standard match.** Exact match for labels; *partial* match on the one aspect that matters for free text. For classification, compare **logprobs** rather than the sampled label, which gives more statistical power from the same samples ([04](04-controlling-output.md)). Free-text exact match is vanishingly rare and only measures style. Pick an aspect that separates breaking from benign divergence, and that's neither so narrow it's unattainable nor so broad it's meaningless. For example, for "I'm chilly" the gold answer sets the heat to 77°F. Check *did it touch the heating system?*, because 74°F is a sane miss and touching the lights is a real failure. For code, check for an exact match after stripping comments and whitespace. For tool calls, test in order — *called a tool? → right tool? → valid syntax? → right values?* — because an early failure invalidates the later checks.
+2. **Functional test.** Does it parse, compile, pass the repo's own unit tests, and call only tools that exist with correctly typed arguments? The domain supplies the oracle. Copilot replayed function bodies in open-source repos and ran each repo's test suite (falling back to linter agreement). Often too weak alone, but sometimes surprisingly strong.
 3. **LLM-as-judge** — for qualities like helpfulness and tone. See below.
+
+**Decision checklist** (pick one of each):
+
+| Source | Ask | Scorer | Ask |
+|---|---|---|---|
+| Existing records | Can you find plenty? | Gold match | Is a full or partial match realistic *and* meaningful? |
+| App usage | Is the trickle fast enough, given app changes? | Functional test | Can you isolate an automatable critical aspect? |
+| Synthetic | Worth the synthesis effort? | LLM judge | Can people tell good from bad outputs? |
 
 **Multi-turn:** use **canned conversations** (score each turn against a scripted history — isolates turns but misses compounding errors) or an **LLM-mocked user** (end-to-end, but inherits the mock's biases).
 
@@ -67,6 +86,22 @@ From most to least rigorous:
 | **O**rdinal scale | 1–5, with each level described | Yes/no hides degrees; undefined levels drift between runs |
 | **M**ulti-**A**spect | Score each dimension separately — e.g. **intent** (right plan?) vs. **execution** (carried out correctly?); Copilot used relevance / truth / completeness | One composite score lets the judge silently switch criteria |
 
+Copilot Chat's split was **RTC**: relevance, truth and completeness. Avoid **Goldilocks questions** that fold "enough" and "not too much" into one axis ("Is the length right?"). Split them into "complete?" and "concise?". Undefined scale levels also let the judge hold ambitious answers to a stricter bar than safe ones.
+
+A SOMA judge prompt, as an illustration (not from a source):
+
+```
+You are reviewing a smart-home assistant's response written by another system.
+Rate each aspect from 1 to 5 using the definitions below, then output JSON.
+
+intent (1 = acted on the wrong device or need ... 5 = picked exactly the right action)
+execution (1 = invalid tool call ... 5 = right tool, valid arguments, sensible values)
+completeness (1 = ignored part of the request ... 5 = addressed every part)
+
+<request>{user_message}</request>
+<response>{assistant_turn_with_tool_calls}</response>
+```
+
 Also:
 - **Rubric before content.** The judge reads once, forward only ([01](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)), so put the aspects first, then the example.
 - **Scores are relative.** "81% correct" means little alone; "B is judged correct more often than A" is the valid claim.
@@ -79,17 +114,19 @@ Also:
 
 Offline eval is a lab. Live traffic is the only valid test — but its bandwidth is scarce, so **whittle candidates down offline first**.
 
-**A/B testing:** define **success metrics** and **guardrail metrics** *before* starting. Compare randomly assigned users only — "already updated" vs. "not yet" is a biased split.
+**A/B testing:** define **success metrics** (e.g., acceptance rate) and **guardrail metrics** (e.g., error or complaint rate) *before* starting. Off-the-shelf tools (Optimizely, VWO, AB Tasty) handle assignment and statistics. Your app only has to run in either mode behind a flag. Client-side apps must ship the new logic to most users before the test can start. Compare randomly assigned users only — "already updated" vs. "not yet" is a biased split, because update timing correlates with behavior.
 
 Metrics, from most direct to most incidental:
 
 | Kind | Example | Note |
 |---|---|---|
-| Direct feedback | 👍/👎, "which is better?" | High quality but intrusive; captures frustration more than delight |
+| Direct feedback | 👍/👎, "which is better?" (contrastive) | High quality and reusable as fine-tuning data, but intrusive. It captures frustration more than delight. Contrastive feedback is clearest, but nobody wants an ambient app asking after every action. **Delayed** feedback ("how was the trip?") often beats immediate |
 | Functional correctness | Compiled, booked, sent | Concrete, often binary |
 | **User acceptance** | Suggestion kept, link clicked | For Copilot, it predicted productivity better than fancier measures |
 | Achieved impact | Share of the final email written by the assistant | Outcome-side |
 | Incidental | Latency, conversation length | Ambiguous alone; track them to catch shifts |
+
+**Where to start:** find an acceptance or impact metric you trust, and fall back to direct feedback if there isn't one. Keep acceptance or impact as a standing guardrail, along with functional correctness and incidental metrics, especially latency and errors.
 
 ---
 
@@ -119,7 +156,7 @@ Lessons:
 
 ## Go deeper
 
-- Book: [Ch 10](../sources/prompt-eng-for-llms/10-evaluating-llm-applications.md) (offline tech tree, SOMA, online metrics)
+- Book: [Ch 10 PDF](../sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf) (the original chapter; everything above stands alone)
 - Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-engineering.md](../../06-eval/eval-engineering.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
 - Papers and tools: [references.md](../README.md#evaluation)
 
