@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test link-check learn papers papers-status papers-install
+.PHONY: help lint test link-check learn papers papers-status papers-install slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -42,3 +42,9 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootout gui/$$(id -u)/com.wiseer.potw 2>/dev/null || true
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
+
+slides:  ## Build a pillar deck: make slides PILLAR=01-prompt-engineering [PREVIEW=1] [PDF=1] [STRICT=1]
+	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1]"; exit 1; }
+	@uv run -q --with python-pptx --with pyyaml --with pillow python scripts/slides/build_deck.py \
+		ai-engineering/$(PILLAR)/slides/deck.yaml \
+		$(if $(PREVIEW),--preview ai-engineering/$(PILLAR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict)
