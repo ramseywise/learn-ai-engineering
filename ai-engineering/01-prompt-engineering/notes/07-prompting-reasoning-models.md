@@ -50,6 +50,9 @@ For models where thinking is a switch:
 3. Escalate to **medium**, then **high**, only while it keeps improving your eval scores ([09](09-evaluating-prompts.md)).
 4. Use few-shot examples to fix *style and format*, not reasoning.
 
+![Escalating reasoning effort](../sources/images/reasoning-llms/hybrid_reasoning_models.JPG)
+*Evaluate after each step and stop at the first satisfactory one. DAIR, Reasoning LLMs Guide.*
+
 **Optimize for accuracy first, then latency and cost.**
 
 ---
@@ -63,6 +66,12 @@ Use them for the reasoning-heavy *module* of an application, not the whole thing
 - **LLM-as-judge** — evaluator-optimizer loops where the judge needs to reason ([09](09-evaluating-prompts.md#llm-as-judge)).
 - Large codebases, algorithmic and scientific work, literature synthesis, ambiguous knowledge-intensive tasks.
 - **Writing prompts for other models** — meta-prompting ([08](08-prompt-optimization.md)).
+
+![Orchestrator-worker agent](../sources/images/reasoning-llms/orchestrator_worker_LI_1.JPG)
+*The reasoning model sits in the orchestrator, breaking the query into subtasks. Cheaper models run the parallel search workers and summaries. DAIR.*
+
+![Agentic RAG](../sources/images/reasoning-llms/agentic_rag.JPG)
+*Agentic RAG: a reasoning retrieval agent decides whether to answer directly or call the vector store, a reasoning chain, or web search. DAIR.*
 
 Simple extraction, classification and rewriting rarely need one.
 
@@ -87,6 +96,10 @@ Deep-research products (OpenAI, Gemini and Claude Research) are reasoning models
 
 - **Give it a plan and be specific** about the scope, the time period, and the sources you trust.
 - **Answer its clarifying questions thoroughly.** That's the cheapest point to steer the run.
+
+  ![Deep research clarifying questions](../sources/images/deep-research/deep_research_clarify.JPG)
+  *The agent asks about scope before it starts. "Both / no preference" wastes the cheapest steering point. DAIR, Deep Research guide.*
+
 - **Supply keywords.** The model turns your prompt into search queries, so precise terms (product names, technical terms, brands) save searches.
 - **Use clear task verbs**, such as *compare*, *recommend* or *report*, to signal the kind of output you want.
 - **Specify the report format**: sections, tables, columns, and length.
@@ -97,6 +110,14 @@ Use deep research only for multi-source, time-sensitive questions that need care
 
 ---
 
+## Intelligence trends (and what they don't fix)
+
+- **Benchmarks saturate.** Frontier models ace MMLU, HellaSwag, GSM8K and similar benchmarks. Partly the models are better, and partly benchmark text leaks into training data (contamination). The fixes are rotating leaderboards and **non-memorizable** tests such as ARC-AGI, which are generated from an effectively unbounded space. For your own app this means **public scores don't predict your task.** Build your own eval ([09](09-evaluating-prompts.md)).
+- **Cheaper and faster.** In **distillation**, a small student learns from a large teacher's full next-token distribution rather than from single labels. **Quantization** stores weights in 8 bits instead of 32. Both cut cost and latency for a modest loss of accuracy.
+- **Plan for the trend.** Cost, latency and context-window limits keep improving, so don't over-engineer around today's limits. Intelligence gains don't fill in missing context, though (see below).
+
+---
+
 ## What doesn't change
 
 The book's closing lessons hold for reasoning models too — maybe more so:
@@ -104,14 +125,16 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 - **It's still document completion** that mimics training data. Familiar formats still win.
 - **It isn't psychic.** Smarter models don't fix missing context. If *you* would need a piece of information to solve the problem, so does the model ([02-context](../../02-context-engineering/README.md)).
 - **It's easily distracted.** Irrelevant context costs more when the model reasons over all of it.
+- **It must be able to decipher the prompt.** If a human couldn't parse the fully rendered prompt, the model probably can't either.
 - **It needs to be led** — on goals and constraints now, rather than on steps.
+- **It has no internal monologue** unless it gets to write one. Reasoning models build this in, so you no longer prompt for CoT, but the principle is why they work.
 
 ---
 
 ## Go deeper
 
 - DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../README.md#reasoning-models)
-- Book: [Ch 11](../sources/prompt-eng-for-llms/11-looking-ahead.md) (intelligence trends, the two durable lessons)
+- Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (intelligence trends, the two durable lessons)
 
 ---
 

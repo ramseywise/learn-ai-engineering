@@ -130,7 +130,7 @@ A pillar is **done** when all five hold:
 1. **README** — what the pillar teaches, the order to read it in, prerequisites.
 2. **Condensed** — no vendored snapshot left inside it. Upstream courses are synthesised into
    `notes/` with sources cited (note frontmatter or a `references.md`), then the snapshot is
-   deleted and its row moves to "Removed snapshots" in [VENDORED.md](VENDORED.md).
+   deleted and its row moves to [Removed snapshots](#removed-snapshots) below.
 3. **Runnable or labelled** — each notebook or practice lab runs offline, or says what it
    needs (API key, GPU, service).
 4. **Imports cleanly** — `make import-courses` in librarian brings it in with no broken
@@ -150,13 +150,78 @@ A pillar is **done** when all five hold:
 | generative-ai 04 agentic frameworks | Condense `AI-Agents-in-LangGraph-main`, `Long-Term-Agentic-Memory-With-LangGraph-main` |
 | generative-ai 06 observability | Condense 3 Langfuse snapshots into one note set |
 | generative-ai 07 agentic applications | Condense `internet-search-agent-main` |
-| data-analytics | `bayesian_inference_talk-main` to condense; `BayesianML/` is your own coursework (renamed from `BayesianML-master` 2026-10-28; see VENDORED.md) |
+| data-analytics | `bayesian_inference_talk-main` to condense; `BayesianML/` is your own coursework (renamed from `BayesianML-master` 2026-10-28; see [Sources](#sources)) |
 | data-engineering · data-science | No snapshots. Check 3–5 |
-| programming | No snapshots (vendored TS exercises are kept as exercises, see VENDORED.md). Check 4–5 once librarian imports it and drills tag `concepts` |
+| programming | No snapshots (vendored TS exercises are kept as exercises, see [Sources](#sources)). Check 4–5 once librarian imports it and drills tag `concepts` |
 
 Order: the AI-engineering path (Path A) first — generative-ai 02 → 03 → 04 → 06 → 07, then
 ai-engineering 05. One snapshot per session; each follows the
 `02-context-engineering` precedent (notes + references, then delete).
+
+---
+
+## Sources
+
+Upstream material copied into this repo, recorded so its origin and license aren't lost. Notes
+written here cite their own sources in frontmatter or a pillar `references.md`; this section covers
+only material that was **copied in**.
+
+### Vendored snapshots
+
+ZIP downloads of other people's public repositories (hence the `-main` / `-master` suffixes):
+read-reference material, not authored here, and tracked in git. They were downloaded as ZIPs, so
+no nested `.git/config` records the upstream. Each URL was resolved by matching directory
+contents, not names. Verified 2026-08-14: no third-party or hand-authored edits inside them.
+Each one is condensed into notes and then deleted (see [Definition of done](#definition-of-done)).
+
+| Directory | Upstream | Snapshot date | Tracked | Notes |
+|---|---|---|---|---|
+| ~~`ai-engineering/02-context/Context-Engineering-main`~~ | https://github.com/davidkimai/Context-Engineering | 2026-08-14 | **removed 2026-10-28** (was 298 files / 45.1 MB) | Synthesized into `02-context/notes/01–13` + `99` (speculative appendix); raw course files deleted. Kept as files: `templates/`, `notebooks/` (zero-to-hero labs). Cited paper PDFs in `02-context/sources/`, links in `02-context/references.md`. |
+| `generative-ai/03-agentic-foundations/AgenticAIFrameworks-master` | https://github.com/adv-11/AgenticAIFrameworks | 2026-08-14 | 124 files / 1.3 MB | Content-matched (upstream adds `sf_ml_th/`). |
+| `generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main` | https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory | 2026-08-14 | 109 files / 16.1 MB | Includes 1 PDF (`handbook.pdf`). Exact content match. DeepLearning.AI × Letta course. |
+| `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main` | https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG | 2026-08-14 | 103 files / 27.2 MB | Includes 6 PDFs (5 module slide decks + certificate). Exact content match. |
+| `generative-ai/06-observability/langfuse-evaluation-main` | https://github.com/gustavobrieva1/langfuse-evaluation | 2026-08-14 | 56 files / 0.8 MB | Exact content match. Dependabot entry removed (see below). |
+| `generative-ai/07-agentic-applications/internet-search-agent-main` | https://github.com/omidreza-amrollahi/internet-search-agent | 2026-08-14 | 39 files / 0.1 MB | Content-matched. Dependabot entry removed (see below). |
+| `generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main` | https://github.com/YunghuiHsu/Long-Term-Agentic-Memory-With-LangGraph | 2026-08-14 | 39 files / 0.8 MB | Exact content match. Dependabot entry removed (see below). |
+| `generative-ai/06-observability/langfuse-mcp-python-main` | https://github.com/Log-LogN/langfuse-mcp-python | 2026-08-14 | 36 files / 0.2 MB | Content-matched. Dependabot entry removed (see below). |
+| `ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-08-14 | 34 files / 27.3 MB | Exact content match. Contains a 22 MB `neo4j_L7.dump`. |
+| `generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main` | https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen | 2026-08-14 | 14 files / 1.7 MB | Exact content match. |
+| `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-08-14 | 12 files / 0.5 MB | Exact content match. |
+| `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-08-14 | 9 files / 0.1 MB | Exact content match. |
+| `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-08-14 | 5 files / 5.8 MB | Exact content match. |
+
+### Removed snapshots
+
+| Directory | Upstream | Removed | What was kept |
+|---|---|---|---|
+| `ai-engineering/01-prompt-engineering/Prompt-Engineering-Guide-main` (originally `01-prompt/`) | https://github.com/dair-ai/Prompt-Engineering-Guide (MIT) | 2026-10-28 | Its English `pages/` content was merged into `ai-engineering/01-prompt-engineering/notes/`, with sources in each note's frontmatter. The notebooks were kept as `ai-engineering/01-prompt-engineering/notebooks/` and the lecture PDF as `notes/dair-prompt-engineering-lecture.pdf` (deleted 2026-10-30, superseded by `01-prompt-engineering/slides/`). The upstream `img/` folder was restored on 2026-10-28 (upstream commit `5767372`) as `sources/dair-prompt-engineering-guide/images/`. The Next.js site code and translations were dropped. Re-clone the upstream repo if you need them. |
+| `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/`, with the OpenAI repo template in `templates/openai-repo-template/`. Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
+| `ai-engineering/readings/ai-agent-book-main` (vendored 2026-07-30) | https://github.com/bojieli/ai-agent-book (Apache-2.0) | 2026-10-28 | Bojie Li, *AI Agents in Depth*. The English chapters were synthesised into the pillar notes, each citing its chapter upstream: ch. 1 → `generative-ai/03-agentic-foundations/agent-fundamentals.md` and `03-harness-engineering` note 01; ch. 2 → `01-prompt-engineering` notes 02, 10 and `02-context-engineering` notes 02, 05; ch. 3 → `02-context-engineering` notes 04, 06 and `05-graph-engineering` note 11; ch. 4–5 → `03-harness-engineering` notes 01–07; ch. 6 → `06-eval`; ch. 7 → `generative-ai/05-RL/post-training-for-agents.md`; ch. 8 → `04-loop-engineering` note 08; ch. 9 → `generative-ai/07-agentic-applications/real-time-multimodal-agents.md`; ch. 10 → `05-graph-engineering` notes 05, 07. The reference answers were condensed into `interviewing/guides/*/interview-guide.md`. Labs that run offline were copied, translated where needed: `02-context-engineering/practice/01-bm25-from-scratch/`, `06-eval/practice/02-elo-leaderboard/`, `04-loop-engineering/practice/02-trajectory-verifier/` and `03-self-modifying-agent/`, and `generative-ai/05-RL/practice/01-q-learning-treasure-hunt/`. Every other lab is linked upstream from the note it supports, because it needs an API key, a GPU or hardware, or is in Chinese. Translations, Chinese originals, site tooling and the local `READING-MAP.md` were dropped. |
+
+### Programming course material (added 2026-10-29)
+
+`programming/` vendors **exercises and data**, not course snapshots. They are kept on purpose because
+they are the practice surface, and each keeps its license. Notes are written for this repo and cite
+their sources in frontmatter. The full list is in [programming/references.md](programming/references.md).
+
+| Path | Upstream | License | What's here |
+|---|---|---|---|
+| `programming/typescript/practice/typescript-exercises/` | https://github.com/typescript-exercises/typescript-exercises | MIT | 15 exercises with solutions. Patches for TypeScript 7 are listed in its `NOTICE.md` |
+| `programming/typescript/practice/type-challenges/challenges/` | https://github.com/type-challenges/type-challenges | MIT | 26 easy and medium challenges with their test cases. The solutions are written here |
+| `programming/sql/practice/data/survey.db` | https://github.com/swcarpentry/sql-novice-survey | CC-BY 4.0 | The Antarctic survey database (committed, 8 KB) |
+| `programming/sql/practice/data/clubdata.sql` | https://pgexercises.com/ | CC BY-SA 3.0 | PGExercises club data converted from Postgres to SQLite. `clubdata.db` is built from it and gitignored |
+| `programming/sql/practice/data/sql-murder-mystery.db` | https://github.com/NUKnightLab/sql-mysteries | MIT | Downloaded by `setup.sh`, gitignored |
+| `programming/python/04-python-for-data/mckinney/ch*.ipynb` | https://github.com/wesm/pydata-book (`2nd-edition`) | MIT (code) | Chapter notebooks restored from history (they were deleted in commit `1c72b00`). `examples/` and `datasets/` (~240 MB) are downloaded by `fetch_data.sh` and gitignored |
+
+**Paraphrased, not vendored:** Charles Severance's *Python for Everybody* (CC BY-NC-SA 3.0) and the
+TypeScript Handbook (CC-BY 4.0). No book text, slides or `mbox` data files are copied. Practice
+files use their own sample data.
+
+`data-analytics/Bayes/BayesianML/` is **not** a snapshot despite its old `-master` suffix. It is
+personal Coursera coursework with a `final_assignment/` that exists nowhere else, so it was renamed
+on 2026-10-28 to keep suffix-based rules from sweeping it up. Nested `.git` directories, the
+Dependabot cleanup and repo-size analysis are recorded in
+`.claude/docs/research/2026-08-14_LAE-106_vendored-findings.md`.
 
 ---
 

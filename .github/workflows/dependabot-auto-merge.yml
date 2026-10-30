@@ -4,6 +4,7 @@ on: pull_request
 permissions:
   contents: write
   pull-requests: write
+  issues: write
 
 jobs:
   auto-merge:
@@ -19,6 +20,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - if: steps.metadata.outputs.update-type == 'version-update:semver-major'
         run: |
+          gh label create needs-review --color FBCA04 --force
           gh pr edit "$PR_URL" --add-label "needs-review"
           gh pr edit "$PR_URL" --add-assignee "ramseywise"
         env:

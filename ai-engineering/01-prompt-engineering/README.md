@@ -66,7 +66,8 @@ The rules from the topic notes on one page. Each group links to the note that ex
 
 ## Where to start
 
-- **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the matching [notebooks](#primary-sources-in-this-pillar), then read notes 07–11.
+- **Lecture deck:** [slides/prompt-engineering.pptx](slides/prompt-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=01-prompt-engineering`).
+- **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the code snippets in each note, then read notes 07–11.
 - **Building something now:** the [vendor guides](#vendor-guides) for your model, then [09 — evaluating prompts](notes/09-evaluating-prompts.md).
 - **Need an example prompt:** the [prompt library](notes/prompt-library.md).
 - **Security:** [10](notes/10-adversarial-prompting.md) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
@@ -78,11 +79,11 @@ The rules from the topic notes on one page. Each group links to the note that ex
 ```
 01-prompt-engineering/
 ├── README.md               ← you are here: summary, rules of thumb, all references
-├── notes/                  ← the topic notes (read in order), plus the DAIR lecture slides
-├── sources/
-│   ├── prompt-eng-for-llms/  ← per-chapter book notes, figures (images/), chapter PDFs (reading/)
-│   └── images/               ← the DAIR guide's figures
-└── notebooks/              ← runnable examples (mapped to notes under References)
+├── notes/                  ← the topic notes (read in order)
+├── slides/                 ← lecture deck built from the notes (deck.yaml → prompt-engineering.pptx)
+└── sources/
+    ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/) and figures (images/), absorbed into notes/
+    └── images/               ← the DAIR guide's figures
 ```
 
 ### Topic notes ([notes/](notes/))
@@ -108,12 +109,6 @@ The rules from the topic notes on one page. Each group links to the note that ex
 
 **Reference:** [prompt-library.md](notes/prompt-library.md) — copyable example prompts by task.
 
-### Book notes — *Prompt Engineering for LLMs* (Berryman & Ziegler, O'Reilly 2024)
-- [sources/prompt-eng-for-llms/00-overview.md](sources/prompt-eng-for-llms/00-overview.md) — index of the
-  11 per-chapter notes (`01-introduction` … `11-looking-ahead`), with figure screenshots
-  and `PDF p. N` quote citations. PDFs are in [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/).
-  Chapters 9 and 10 cross-link to the `04-loop` and `06-eval` pillars.
-
 ### Interviewing guides
 - [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
 - [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/00-overview.md) — security angle on prompt injection.
@@ -132,20 +127,11 @@ Every source behind the notes, in one place. Local files come first, followed by
 
 | Source | Where | Use it for |
 |---|---|---|
-| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · chapter notes: [sources/prompt-eng-for-llms/](sources/prompt-eng-for-llms/00-overview.md) | The backbone of notes 01, 02, 04, 05, 06 and 09. Written by two of the original GitHub Copilot engineers |
+| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: [sources/prompt-eng-for-llms/images/](sources/prompt-eng-for-llms/images/) | The backbone of notes 01, 02, 04, 05, 06 and 09; its chapter notes are absorbed into them, and each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
 | DAIR.AI *Prompt Engineering Guide* | [promptingguide.ai](https://www.promptingguide.ai/) · [GitHub](https://github.com/dair-ai/Prompt-Engineering-Guide) | The technique catalog (notes 03, 08, 10, 11). Its pages are absorbed into the notes, so check the live site for new additions |
-| DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [slides (PDF)](notes/dair-prompt-engineering-lecture.pdf) · [figures](sources/images/) | A one-hour overview; a good first pass |
-| Notebooks | [notebooks/](notebooks/) | Runnable versions of the techniques (see the table below) |
+| DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [figures](sources/images/) | A one-hour 2023 overview; a good first pass. Its slides are superseded by our [deck](slides/deck.yaml) |
 
-| Notebook | Pairs with |
-|---|---|
-| [pe-lecture.ipynb](notebooks/pe-lecture.ipynb), [pe-chatgpt-intro.ipynb](notebooks/pe-chatgpt-intro.ipynb), [pe-litellm-intro.ipynb](notebooks/pe-litellm-intro.ipynb) | [02 — anatomy](notes/02-prompt-anatomy.md), [03 — core techniques](notes/03-core-techniques.md) |
-| [pe-pal.ipynb](notebooks/pe-pal.ipynb), [react.ipynb](notebooks/react.ipynb) | [03 — PAL, ReAct](notes/03-core-techniques.md#pal--program-aided-language-models) |
-| [pe-function-calling.ipynb](notebooks/pe-function-calling.ipynb) | [05 — tools](notes/05-tools-and-function-calling.md) |
-| [pe-chatgpt-langchain.ipynb](notebooks/pe-chatgpt-langchain.ipynb), [pe-rag.ipynb](notebooks/pe-rag.ipynb) | [06 — chaining](notes/06-chaining-and-workflows.md) |
-| [pe-chatgpt-adversarial.ipynb](notebooks/pe-chatgpt-adversarial.ipynb) | [10 — adversarial](notes/10-adversarial-prompting.md) |
-| [pe-code-llama.ipynb](notebooks/pe-code-llama.ipynb), [pe-mixtral-introduction.ipynb](notebooks/pe-mixtral-introduction.ipynb) | [11 — code](notes/11-applications.md#code), open-weight models |
-| [gemini-context-caching.ipynb](notebooks/gemini-context-caching.ipynb) | [02-context](../02-context-engineering/README.md) |
+The DAIR notebooks were absorbed into the notes as code snippets (each is credited where it appears). The two that run on their own moved to 02-context: [pe-rag.ipynb](../02-context-engineering/notebooks/pe-rag.ipynb) and [gemini-context-caching.ipynb](../02-context-engineering/notebooks/gemini-context-caching.ipynb).
 
 ### Elsewhere in this repo
 
@@ -238,7 +224,7 @@ For [07](notes/07-prompting-reasoning-models.md). This area moves fastest, so ch
 
 For [09](notes/09-evaluating-prompts.md). Deeper material is in [06-eval](../06-eval/README.md).
 
-- ★ Book Ch 10 — [sources/prompt-eng-for-llms/10-evaluating-llm-applications.md](sources/prompt-eng-for-llms/10-evaluating-llm-applications.md)
+- ★ Book Ch 10 — [sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf](sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf)
 - Clavié et al., *Large Language Models in the Workplace* — 2303.07142 (the case-study table)
 - Huyen, *AI Engineering* Ch 3–4 — [readings/ai_engineering/ai engineer/](<../readings/ai_engineering/ai engineer/>)
 - Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena* — 2306.05685 (judge biases: position, verbosity, self-preference)
