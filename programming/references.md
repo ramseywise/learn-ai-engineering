@@ -1,7 +1,7 @@
 # Programming — references
 
 Everything the three tracks are built from, with how each source is used. Per-note sources are
-in each note's frontmatter. Vendored files are also listed in [VENDORED.md](../VENDORED.md).
+in each note's frontmatter. Vendored files are also listed in [CURRICULUM.md → Sources](../CURRICULUM.md#sources).
 
 ## Python
 
