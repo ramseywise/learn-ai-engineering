@@ -1,13 +1,13 @@
-# Readings inbox
+# Readings ledger and inbox
 
-This folder is the **index and inbox for every reading in the repo**, not a library. It
-sits next to the tooling in `scripts/papers/` and covers all subjects.
+This folder holds the tooling (`potw.py`, `figures.py`) and the **index of every reading in
+the repo**. It is not a library: PDFs live in their home's `sources/`. It covers all subjects.
 
 | Path | What it is |
 |---|---|
 | `ledger.jsonl` | One row per reading, repo-wide: DAIR AI Papers of the Week (2023 onward) and every PDF found in the repo. The single source of truth for what we have, where it lives, and whether it has been worked into the notes. |
 | `blurbs/<year>.jsonl` | A summary per ledger row, used only as triage input. The DAIR summary for papers, the first-page text for PDFs. Split by year to stay under the pre-commit size limit. |
-| `general/`, `ai_engineering/` | PDFs not yet routed, and the `skipped` ones that have no home (off-syllabus). Nothing else should stay here. |
+| `inbox/` | Drop a new PDF here. `route` moves it to its home's `sources/` once triage gives it one. |
 
 A PDF does not stay here. Once triage gives it a home, `route` moves it into that home's
 `sources/` folder, where the notes that use it live.
@@ -15,7 +15,7 @@ A PDF does not stay here. Once triage gives it a home, `route` moves it into tha
 ## Homes
 
 Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES` in
-[`scripts/papers/potw.py`](../papers/potw.py).
+[`scripts/papers/potw.py`](potw.py).
 
 | Home key | Folder |
 |---|---|
@@ -36,7 +36,13 @@ Haiku gives every reading two scores, 0–3:
   core reading for the home's scope, 1 fits loosely. A home with few notes yet is judged by its
   scope, so a new pillar is not starved.
 - **interest** is how much an AI engineer should know it, whatever the curriculum covers today:
-  3 is a landmark, 2 a notable new idea, 1 incremental, 0 not for this audience.
+  3 is a landmark, 2 a notable new idea, 1 incremental, 0 not for this audience. Haiku weighs
+  the method (new idea or tweak), the results (broad gains or a narrow benchmark) and the
+  citation count.
+- **citations** come from Semantic Scholar (`potw.py cite`, run weekly by `make papers`). A
+  paper cited 300 times a year or more counts as interest 3 whatever the model said. The free
+  tier is rate-limited; set `S2_API_KEY` to a free key to lift it. `cite` resumes where it
+  stopped.
 
 | Has a home? | Rule | Status |
 |---|---|---|
@@ -61,14 +67,15 @@ new ──triage──▶ queued ──download (DAIR, arXiv)──▶ downloade
 ## Commands
 
 ```bash
-make papers-status                                        # counts, and how many PDFs are left in this inbox
+make papers-status                                        # counts, and how many PDFs are left in inbox/
 python3 scripts/papers/potw.py route                      # dry run: where each triaged PDF would go
 python3 scripts/papers/potw.py route --apply              # move them (git mv) and drop duplicate copies
 python3 scripts/papers/potw.py triage --status skipped --source repo   # re-triage after HOMES changes
 python3 scripts/papers/potw.py triage --status parked --backlog        # re-triage after a pillar grows
 python3 scripts/papers/potw.py status --list parked                    # candidates for a new pillar
 python3 scripts/papers/potw.py triage --local --backlog   # DAIR rows whose PDF is already in the repo
-make papers                                               # weekly: fetch DAIR, triage, download
+python3 scripts/papers/potw.py download --backlog --limit 30          # the 30 best queued papers
+make papers                                               # weekly: fetch DAIR, cite, triage, download
 ```
 
 ## Skills
@@ -96,7 +103,7 @@ command doesn't change.
 
 ## Adding a reading
 
-Drop the PDF anywhere in this folder, then run `make papers` (or
+Drop the PDF in `inbox/`, then run `make papers` (or
 `python3 scripts/papers/potw.py scan --deep` followed by `triage --source repo`). Then
 `route --apply`. If triage finds a body of readings with no home, that is the signal to
 discuss a new pillar, as happened with `07-inference-engineering` on 2026-10-31.

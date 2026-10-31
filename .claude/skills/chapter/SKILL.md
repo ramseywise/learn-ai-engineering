@@ -21,7 +21,7 @@ python3 scripts/papers/potw.py status --list queued | grep '/ch[0-9]\|/appendix-
 
 Each line is JSON with `key`, `title`, `pillar` (the home key), `note` (the triage's best
 guess, repo-relative, may be null), `pdf` (repo-relative) and `reason`. If a queued
-chapter's `pdf` is still under `scripts/readings/`, run
+chapter's `pdf` is still under `scripts/papers/inbox/`, run
 `python3 scripts/papers/potw.py route --apply` first.
 
 `$ARGUMENTS` may name a book slug (the folder under `sources/`) and optionally a chapter
