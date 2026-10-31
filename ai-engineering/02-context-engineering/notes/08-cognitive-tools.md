@@ -30,9 +30,11 @@ The key design choice is that **each tool runs in its own context**. The tool ca
 
 Panel A is *cognitive prompting*: every operation is listed in one prompt and runs in one trace. Panel B is *cognitive tools*: each operation is a tool call with its own prompt, and only its output returns to the main trace.
 
-Result: GPT-4.1 on AIME 2024 rises from **26.7% to 43.3%**, approaching o1-preview, with similar gains on open-weight models. No training is involved, only structured prompting.
+Result: GPT-4.1 on AIME 2024 rises from **32.0% to 53.0%** pass@1, past o1-preview's 44.6%. No training is involved, only structured prompting. The comparison that matters most for context engineering is the middle condition. The same four operations listed in one prompt (cognitive prompting) reached **42.0%**. **Isolating each operation in its own call is worth another 11 points** over just naming the operations.
 
-Two caveats. These gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
+Open-weight models gain too, but the gain grows with model size. Qwen2.5-32B on AIME went from 17.2% to 32.1% and Llama3.3-70B from 13.1% to 29.8%. Qwen2.5-7B (12.5% → 14.6%) and Llama3.1-8B (5.8% → 8.8%) barely moved. Those numbers are averaged over at least 8 runs ([arXiv:2506.12115](https://arxiv.org/abs/2506.12115) (Ebouky et al., 2025-06)).
+
+Two caveats. The tool prompts were hand-written and tuned to the models tested; the authors warn they may not transfer to other model families without more prompt work. And these gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
 
 ---
 

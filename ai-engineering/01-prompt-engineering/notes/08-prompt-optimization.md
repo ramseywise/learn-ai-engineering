@@ -4,6 +4,7 @@ sources:
   - https://www.promptingguide.ai/techniques/ape
   - https://www.promptingguide.ai/techniques/meta_prompting
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 5, Ch 9"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -33,6 +34,21 @@ The proposer can be you, an LLM (APE, OPRO, meta-prompting), or a framework (DSP
 - **Pin the model version** next to the prompt. A prompt tuned on one model is not portable. Re-run the evals when either changes.
 - **Diff behavior, not text.** A one-word change can move the scores; run the regression suite on every edit.
 - **Log production I/O per prompt version** — it's your next eval set and the training data for optimizers ([06](06-chaining-and-workflows.md#operating-a-workflow)).
+
+**Keep prompts out of application code.** Put them in their own module or file. That way they can be reused across apps, tested separately from the code, and edited by domain experts who don't read Python. When there are many prompts, wrap each one in a record that carries its metadata (*AI Engineering*, ch. 5):
+
+```python
+class Prompt(BaseModel):
+    prompt_text: str
+    model_name: str            # the model it was tuned on
+    application: str
+    creator: str
+    date_created: datetime
+    sampling: dict = {}        # temperature, top_p
+    output_schema: dict | None = None
+```
+
+File formats such as Firebase's [Dotprompt](https://firebase.google.com/docs/genkit/dotprompt) put the model, input schema and output schema in YAML front matter above the template. **Git or a catalog?** Versioning prompts in the same repo as the code is simple, but when apps share a prompt, an edit forces every consumer onto the new version together. A separate **prompt catalog** versions each prompt on its own, so one team can stay pinned to v3 while another moves to v4. A good catalog also records which apps depend on each prompt and tells their owners when a new version lands.
 
 ---
 
@@ -101,9 +117,17 @@ Generated prompts are a **first draft, not a result** — they still have to win
 - **Instruction optimization** — proposes and searches over instruction wordings (MIPRO-style).
 - **Fine-tuning** — can distill the compiled program into weights.
 
-**TextGrad** does a similar job with "textual gradients": LLM-written critiques propagated back through a pipeline to revise each component's prompt.
+**TextGrad** does a similar job with "textual gradients": LLM-written critiques propagated back through a pipeline to revise each component's prompt. **Promptbreeder** (Fernando et al., DeepMind, 2023) treats the search as evolution. An LLM mutates a seed prompt, guided by a set of *mutator prompts*, and the best mutants are mutated again until one meets the target.
 
 Use these when you have a multi-step pipeline, a scorable metric, and dozens to hundreds of labeled examples. Skip them for one-off prompts or tasks you can't score automatically.
+
+### Before trusting a prompt tool
+
+Huyen's three warnings (*AI Engineering*, ch. 5):
+
+- **Hidden API calls.** Ten variants scored on 30 eval examples is already 300 calls. If each one also needs a validation call ("is this valid JSON?") and a scoring call, that's 900. A tool allowed to design its own chains can grow the bill without limit. Count the calls before you run it.
+- **Tool bugs.** The tool might use the wrong chat template ([01](01-how-models-read-prompts.md#property-5--chat-models-are-completion-models-wearing-a-transcript)), concatenate tokens instead of text, or ship typos in its default prompts. LangChain's default critique prompt had several typos. Tools also change their defaults without warning.
+- **Show me the prompt.** Write the first version by hand, so you learn the model and your requirements. Then read every prompt a tool generates before you trust it (Husain, [*Fuck You, Show Me the Prompt*](https://hamel.dev/blog/posts/prompt/), 2024).
 
 ---
 

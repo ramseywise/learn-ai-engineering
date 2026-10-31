@@ -6,6 +6,7 @@ sources:
   - https://www.promptingguide.ai/introduction/tips
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -146,6 +147,13 @@ Two attention effects pull against each other:
 
 Together they create the **Valley of Meh**: early-to-mid prompt content is used least effectively, and the valley widens as prompts grow. There's no full fix — put your best material at the start or end, and keep the prompt short.
 
+The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, they moved the one document that contains the answer through 10, 20 or 30 retrieved documents (about 2K, 4K and 6K tokens). Accuracy was U-shaped in every model they tested. With 20 documents, GPT-3.5-Turbo scored about 76% when the answer came first, about 63% when it came last, and dropped to about 54% in the middle:
+
+![Accuracy vs. position of the answer document, Liu et al. 2023](../sources/images/huyen-ai-engineering-fig5-4.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-4, reproducing Liu et al. (2023)*
+
+**Test your own model.** A needle-in-a-haystack (NIAH) test inserts one fact at different depths of a long prompt and asks for it back. RULER (Hsieh et al., 2024) is a harder synthetic suite. You can also build a realistic version from your own data, such as the patient's blood type in a long visit transcript. Use **private** facts, so the model can't answer from its training data instead of the context (*AI Engineering*, ch. 5). Where the task description works best is model-specific too: GPT-4 did better with it at the start, Llama 3 at the end. The sandwich below covers both cases.
+
 **The default skeleton:**
 
 ```mermaid
@@ -157,7 +165,7 @@ flowchart LR
 
 - **Introduction** frames the document so the model reads the context with the task in mind.
 - **Refocus** brings the question back to the high-attention end. The introduction-plus-refocus pair is the **sandwich technique**. For long inputs (20k+ tokens), Anthropic's guidance agrees: put documents first, the query last — up to 30% better on their tests — and ask the model to pull out relevant quotes before answering.
-- **Transition** ends the prompt where the answer should begin. In chat, that's the end of the user turn. In a completion prompt, it's a cue like `Answer:` or `## Solution`. The **inception** trick goes one step further: write the first words of the answer yourself (`The three main risks are 1.` or ` ```python `) so the model is already committed to the shape you want. Chat APIs that allow prefilling the assistant turn support the same move.
+- **Transition** ends the prompt where the answer should begin. In chat, that's the end of the user turn. In a completion prompt, it's a cue like `Answer:` or `## Solution`. Without one, the model may keep extending the input instead of answering. In Huyen's labeling example, a list of `item --> label` pairs that ends on a bare `chicken` gets continued as `chicken tacos --> edible` (*AI Engineering*, ch. 5). Choose a marker that can't occur in the inputs. The **inception** trick goes one step further: write the first words of the answer yourself (`The three main risks are 1.` or ` ```python `) so the model is already committed to the shape you want. Chat APIs that allow prefilling the assistant turn support the same move.
 
 When the instruction changes *how* the content must be read (counting, extracting a specific field), state it in the introduction too — the model can't go back and re-read ([01-how-models-read-prompts](01-how-models-read-prompts.md#property-3--left-to-right-attention-order-matters)).
 

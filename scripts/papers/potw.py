@@ -14,12 +14,16 @@ A *home* is the folder whose notes a reading feeds (HOMES below): the ai-enginee
 generative-ai pillars, plus data-science and data-engineering for classical ML and ML
 systems. `pillar` in the ledger is the home key. `note` and `local_pdf` are repo-relative.
 
-Ledger: ai-engineering/readings/ledger.jsonl, one reading per line — the single source of
+Ledger: scripts/readings/ledger.jsonl, one reading per line — the single source of
 truth for what we have and where it came from. `source` is "dair" (fetched from AI Papers
 of the Week) or "repo" (a PDF found in the repo). Keyed by arXiv id, else the DAIR URL,
 else `sha1:<hash>` of the file, so moving a PDF keeps its row. Every triaged paper gets a
 `topic` (TOPICS below) — the sort key for all readings; `pillar` is set only when the
-topic has a home. `skipped` means no home in this repo. Writing findings
+topic has a home. `parked` means worth knowing but no home or fitting note yet (re-triage it when a pillar
+grows); `skipped` means not for this course. `filed` means the PDF is in a
+home's sources/ but nobody has read it against the notes (whole books not split into
+chapters, exercise handouts, PDFs the scan found already filed); only `integrated`
+means a skill checked it against the notes. Writing findings
 into the notes is the /papers skill's job, not this script's — nothing here edits
 markdown or commits.
 
@@ -34,6 +38,9 @@ DAIR rows whose PDF someone already dropped into the repo (queued at relevance >
   potw.py triage --local --backlog
 """
 import argparse
+import contextlib
+import copy
+import fcntl
 import hashlib
 import datetime as dt
 import json
@@ -51,11 +58,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 AI_ENG = REPO / "ai-engineering"
-READINGS = AI_ENG / "readings"
+READINGS = REPO / "scripts" / "readings"
 LEDGER = READINGS / "ledger.jsonl"
 # summaries/abstracts for triage, one file per year to stay under the pre-commit size limit
 BLURBS = READINGS / "blurbs"
-INBOX = "ai-engineering/readings/"  # PDFs dropped here wait for `route`
+INBOX = "scripts/readings/"  # PDFs dropped here wait for `route`
 # empty fields aren't written to the ledger; load_ledger puts these back as None
 FIELDS = ("arxiv", "url", "pillar", "note", "topic", "local_pdf", "copies", "sha1")
 RAW_URL = "https://raw.githubusercontent.com/dair-ai/AI-Papers-of-the-Week/main/years/{year}.md"
@@ -117,6 +124,9 @@ OFF_SYLLABUS = {
     "domain-apps": "domain applications: science, medicine, finance, education",
     "other": "anything that fits none of the above",
 }
+# Off-syllabus topics we may grow a pillar for: a notable paper here is parked, not skipped,
+# so it is still in the ledger when the pillar arrives.
+WATCH = {"interpretability", "safety", "multimodal"}
 # Sort key for every reading: the homes first, then the off-syllabus buckets.
 TOPICS = {**{k: scope for k, (_, scope) in HOMES.items()}, **OFF_SYLLABUS}
 SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "CURRICULUM.md", "resources.md"}
@@ -171,8 +181,29 @@ def write_jsonl(path, items):
     tmp.replace(path)
 
 
+# What each row looked like when this process loaded it: save_ledger writes only the
+# fields this process changed since, so concurrent runs (a triage here, `mark` from a
+# /papers session) don't overwrite each other.
+_BASE = {}
+
+
+@contextlib.contextmanager
+def ledger_lock():
+    with open(READINGS / ".ledger.lock", "w") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        yield
+
+
 def load_ledger():
     """Ledger rows, each with its `blurb` joined back in from blurbs/<year>.jsonl ("" if missing)."""
+    with ledger_lock():
+        rows = _read_ledger()
+    _BASE.clear()
+    _BASE.update({r["key"]: copy.deepcopy(r) for r in rows})
+    return rows
+
+
+def _read_ledger():
     blurbs = {b["key"]: b["blurb"] for path in sorted(BLURBS.glob("*.jsonl")) for b in read_jsonl(path)}
     rows = read_jsonl(LEDGER)
     for r in rows:
@@ -181,6 +212,12 @@ def load_ledger():
         r.pop("pdf", None)  # old rows: AI_ENG-relative copy of local_pdf
         if r.get("note") and not r["note"].startswith(tuple(f"{f.split('/')[0]}/" for f in PILLARS.values())):
             r["note"] = f"ai-engineering/{r['note']}"  # old rows: notes were AI_ENG-relative
+        for k in ("local_pdf", "copies"):  # readings/ moved from ai-engineering/ to scripts/
+            old = "ai-engineering/readings/"
+            if isinstance(r.get(k), str) and r[k].startswith(old):
+                r[k] = INBOX + r[k][len(old):]
+            elif isinstance(r.get(k), list):
+                r[k] = [INBOX + c[len(old):] if c.startswith(old) else c for c in r[k]]
         if r.get("topic") == "applications":
             r["topic"] = "domain-apps"  # renamed when agentic-apps got a home
         for k in FIELDS:
@@ -194,6 +231,40 @@ def empty(v):
 
 
 def save_ledger(rows):
+    """Merge this process's changes into the ledger on disk, then refresh `rows` in place.
+
+    Under the lock: reread the ledger, apply each field that differs from what was loaded,
+    keep fields others changed meanwhile. If both sides changed a field, the disk wins
+    (a `mark integrated` from another session beats a stale `downloaded` here)."""
+    with ledger_lock():
+        disk = {r["key"]: r for r in _read_ledger()}
+        for r in rows:
+            base, cur = _BASE.get(r["key"]), disk.get(r["key"])
+            if cur is None:  # new here (or new to both: last writer wins)
+                disk[r["key"]] = copy.deepcopy(r)
+                continue
+            for k, v in r.items():
+                was = base.get(k) if base else None
+                if v == was or v == cur.get(k):
+                    continue
+                if base and cur.get(k) != was:
+                    log(f"ledger: {r['key']} {k} changed elsewhere to {cur.get(k)!r}; keeping that over {v!r}")
+                    continue
+                cur[k] = copy.deepcopy(v)
+        merged = list(disk.values())
+        _write_ledger(merged)
+    by_key = {r["key"]: r for r in rows}
+    for m in merged:
+        if m["key"] in by_key:
+            by_key[m["key"]].clear()
+            by_key[m["key"]].update(m)
+        else:
+            rows.append(m)
+    _BASE.clear()
+    _BASE.update({r["key"]: copy.deepcopy(r) for r in merged})
+
+
+def _write_ledger(rows):
     # repo-only readings have no week; they sort first, by path
     rows.sort(key=lambda r: (r.get("week_start") or "", r.get("rank") or 0, r.get("local_pdf") or "", r["key"]))
     by_year = {}
@@ -320,19 +391,29 @@ For each reading below:
 {off}
 2. note — the single existing note (path from the list above) its content belongs in, or null
    when the home has no fitting note yet. Off-syllabus topics always have note null.
-3. relevance to the repo (not general quality):
+3. relevance — fit to the home (not general quality):
   3 = changes or sharpens a claim a note makes; the note should cite it
-  2 = solid evidence for a note, or a core reading for its home
+  2 = solid evidence for a note, or a core reading for its home's scope
   1 = fits its home only loosely
   0 = unrelated to anything here
+   Judge against the home's scope, not only the notes listed: a home with few or no notes
+   yet is still growing, so a core paper for its scope is 2 even with note null.
+4. interest — how much an AI engineer should know this reading, whether or not any home
+   or note covers it yet:
+  3 = landmark: a technique, model, benchmark or result the field adopted or keeps citing
+  2 = a notable new idea or a strong result worth knowing
+  1 = incremental: a variant, a narrow benchmark, an application study
+  0 = not for this audience (policy essays, pure neuroscience, unrelated fields)
 Prefer the most specific home: a RAG survey is `rag`, not `context`; PPO is `post-training`;
-a CUDA or serving chapter is `inference`.
+a CUDA or serving chapter is `inference`. Safety-flavoured work often has a home: prompt
+injection and jailbreaks are `prompt`, dangerous-capability and safety benchmarks are `eval`,
+RLHF and constitutional training are `post-training`. Use `safety` only for the rest.
 
 Readings (JSON):
 {papers}
 
 Reply with ONLY a JSON array, one object per reading, no prose:
-[{{"key": "...", "topic": "loop", "note": "ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md", "relevance": 3, "reason": "<one sentence>"}}]
+[{{"key": "...", "topic": "loop", "note": "ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md", "relevance": 3, "interest": 2, "reason": "<one sentence>"}}]
 """
 
 
@@ -356,6 +437,21 @@ def triage_batch(batch, inventory, claude):
     if not m:
         raise ValueError(f"no JSON array in triage output: {out[:300]!r}")
     return {d["key"]: d for d in json.loads(m.group(0))}
+
+
+def triage_status(r, min_relevance):
+    """queued: worth reading into a home now. parked: worth knowing, but no home or fit yet.
+    skipped: not for this course."""
+    rel, interest = r.get("relevance") or 0, r.get("interest") or 0
+    # a PDF already in the repo only needs a home; a DAIR paper must earn its download
+    floor = 1 if r["source"] == "repo" or r.get("local_pdf") else min_relevance
+    if r.get("pillar"):
+        if rel >= floor or interest >= 3:  # a landmark paper is queued even if no note fits yet
+            return "queued"
+        return "parked" if interest >= 2 else "skipped"
+    if interest >= 3 or (interest >= 2 and r.get("topic") in WATCH):
+        return "parked"
+    return "skipped"
 
 
 def cmd_triage(args):
@@ -385,14 +481,16 @@ def cmd_triage(args):
             note = v.get("note") if pillar else None
             if note and not ((REPO / note).is_file() and note.startswith(PILLARS[pillar] + "/")):
                 note = None
-            rel = int(v.get("relevance") or 0)
-            r.update(topic=topic, pillar=pillar, note=note, relevance=rel, reason=v.get("reason", ""), triaged_at=now)
-            # a PDF already in the repo only needs a home; a DAIR paper must earn its download
-            floor = 1 if r["source"] == "repo" or r.get("local_pdf") else args.min_relevance
-            r["status"] = "queued" if pillar and rel >= floor else "skipped"
+            rel, interest = int(v.get("relevance") or 0), int(v.get("interest") or 0)
+            r.update(topic=topic, pillar=pillar, note=note, relevance=rel, interest=interest,
+                     reason=v.get("reason", ""), triaged_at=now)
+            r["status"] = triage_status(r, args.min_relevance)
         save_ledger(rows)
-    counts = {s: sum(r["status"] == s for r in pending) for s in ("queued", "skipped", "new")}
-    log(f"triage: {counts['queued']} queued, {counts['skipped']} skipped, {counts['new']} still new")
+        done = min(i + TRIAGE_BATCH, len(pending))
+        log(f"triage: {done}/{len(pending)} done, {sum(r['status'] == 'queued' for r in pending)} queued so far")
+    counts = {s: sum(r["status"] == s for r in pending) for s in ("queued", "parked", "skipped", "new")}
+    log(f"triage: {counts['queued']} queued, {counts['parked']} parked, {counts['skipped']} skipped, "
+        f"{counts['new']} still new")
 
 
 # --- download ---------------------------------------------------------------
@@ -536,8 +634,8 @@ def cmd_scan(args):
             "area": first["path"].split("/")[0], "added_at": now,
         }
         pillar = sources_pillar(first["path"])
-        if pillar:  # already filed in a pillar's sources/: it's course material, no triage needed
-            row.update(status="integrated", pillar=pillar, topic=pillar)
+        if pillar:  # already filed in a pillar's sources/: no triage needed, but not yet read against the notes
+            row.update(status="filed", pillar=pillar, topic=pillar)
         rows.append(row)
         known.add(key)
         added += 1
@@ -755,7 +853,7 @@ def cmd_status(args):
     if args.list:
         for r in rows:
             if r["status"] == args.list:
-                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "relevance")},
+                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "relevance", "interest")},
                                   "pdf": r.get("local_pdf"), **{k: r.get(k) for k in ("reason", "url")}}, ensure_ascii=False))
         return
     print(f"ledger: {LEDGER.relative_to(REPO)} ({len(rows)} papers, {sum(bool(r.get('have_pdf')) for r in rows)} with a PDF in the repo)")
@@ -821,7 +919,7 @@ def main():
     p.add_argument("--list", metavar="STATUS")
     p.set_defaults(fn=cmd_status)
     p = sub.add_parser("mark")
-    p.add_argument("status", choices=["new", "queued", "skipped", "downloaded", "link-only", "integrated"])
+    p.add_argument("status", choices=["new", "queued", "parked", "skipped", "downloaded", "link-only", "filed", "integrated"])
     p.add_argument("keys", nargs="+")
     p.set_defaults(fn=cmd_mark)
     args = ap.parse_args()

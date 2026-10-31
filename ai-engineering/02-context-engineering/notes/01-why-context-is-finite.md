@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2507.13334
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://research.trychroma.com/context-rot
 confidence: high
@@ -19,6 +20,8 @@ cleaned: 2026-07-29
 That single sentence is Anthropic's framing of the whole discipline. It is a *minimization* objective, which is counterintuitive: the instinct with a 200k or 1M window is to fill it. The instinct is wrong, and the rest of this note explains why.
 
 The field around that sentence is now large. Mei et al.'s survey sorts about 1,400 papers into foundational components (retrieval and generation, processing, management) and the implementations built from them (RAG, memory, tool use, multi-agent), plus evaluation and open problems. This pillar covers both halves: retrieval in [04](04-retrieval.md); processing in [05](05-compression-compaction.md), [07](07-structured-context.md) and [08](08-cognitive-tools.md); management in [03](03-budgeting-the-window.md); and the implementations in [06](06-memory.md) (memory) and [10](10-tools-and-multi-agent.md) (tools and multi-agent).
+
+The survey's headline conclusion is an **asymmetry**. With good context engineering, models understand long, complex inputs well, but they are much weaker at *producing* equally long and coherent output: long-form generation, factual consistency over thousands of tokens, and planning. That is a reading of the literature, not a measurement, but it matches practice. Almost everything in this pillar is about the input side ([arXiv:2507.13334](https://arxiv.org/abs/2507.13334) (Mei et al., 2025-07)).
 
 ![Taxonomy of context engineering: foundational components and system implementations](../sources/images/mei-context-engineering-survey-fig1.png)
 *Image Source: Mei et al. (2025)*

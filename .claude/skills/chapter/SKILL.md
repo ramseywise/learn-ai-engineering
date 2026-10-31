@@ -21,7 +21,7 @@ python3 scripts/papers/potw.py status --list queued | grep '/ch[0-9]\|/appendix-
 
 Each line is JSON with `key`, `title`, `pillar` (the home key), `note` (the triage's best
 guess, repo-relative, may be null), `pdf` (repo-relative) and `reason`. If a queued
-chapter's `pdf` is still under `ai-engineering/readings/`, run
+chapter's `pdf` is still under `scripts/readings/`, run
 `python3 scripts/papers/potw.py route --apply` first.
 
 `$ARGUMENTS` may name a book slug (the folder under `sources/`) and optionally a chapter
@@ -29,6 +29,13 @@ chapter's `pdf` is still under `ai-engineering/readings/`, run
 nothing, take the lowest chapter of the book with the most chapters already integrated
 (finish a book before starting the next). One chapter per run unless the user asks for
 more.
+
+**Filed chapters.** `potw.py status --list filed` holds chapters the scan found already in
+a `sources/` folder. Nobody has checked them against the notes. `$ARGUMENTS` of `filed`, or
+a book whose chapters are `filed`, means an audit. Read the book's references.md row and
+the notes it maps the chapter to, then read the chapter (Step 2) and look for claims,
+numbers, code and figures the notes miss. Steps 3–6 apply unchanged. If the notes already
+carry the chapter, the verdict is **verified**. Mark it `integrated` either way.
 
 ## Step 2 — Read the chapter
 

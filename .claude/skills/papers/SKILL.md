@@ -1,17 +1,17 @@
 ---
 name: papers
-description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars. Optional filter: /papers loop, /papers rag, /papers 2610.28577. Run from the learn-ai-engineering repo."
+description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars. Optional filter: /papers loop, /papers rag, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
 ---
 
 You are integrating research papers into the AI-engineering course notes. The weekly job
 (`scripts/papers/potw.py run`, launchd `com.wiseer.potw`) has already fetched DAIR's AI
 Papers of the Week, triaged each paper to a home and note, and downloaded the PDF into
-the home's `sources/`. PDFs that were already in the repo (the `ai-engineering/readings/`
+the home's `sources/`. PDFs that were already in the repo (the `scripts/readings/`
 inbox) are triaged the same way and moved home by `potw.py route`. Homes are the keys of
 `HOMES` in `scripts/papers/potw.py`: the six ai-engineering pillars plus `inference`
 (`ai-engineering/07-inference-engineering/`), the generative-ai pillars (`rag`, `agents`,
-`post-training`, …) and two subject folders (`classical-ml`, `ml-systems`) that hold PDFs
-only. Book chapters go through `/chapter`, not this skill. Your job is the part that needs judgement: turn the
+`post-training`, …) and two subject homes, `classical-ml` (`data-science/`) and
+`ml-systems` (`data-engineering/`), which have notes like any other home. Book chapters go through `/chapter`, not this skill. Your job is the part that needs judgement: turn the
 paper into citations and findings in the notes.
 
 The notes are the product. A paper earns a place by changing, sharpening, or evidencing a
@@ -28,13 +28,33 @@ python3 scripts/papers/potw.py status --list queued   # repo PDFs: already local
 
 Each line is JSON: `key`, `title`, `pillar` (the home key), `note` (repo-relative path, or
 null), `relevance`, `pdf` (repo-relative local PDF), `reason`, `url`. Take queued rows only
-when `pdf` is set and outside `ai-engineering/readings/`; if a queued PDF still sits in the
+when `pdf` is set and outside `scripts/readings/`; if a queued PDF still sits in the
 inbox, run `python3 scripts/papers/potw.py route --apply` first. Skip rows whose `pdf` is a
 book chapter (`sources/<book-slug>/chNN-…`); those belong to `/chapter`. Filter by
-`$ARGUMENTS` if given: a home key (`loop`, `rag`), or one or more keys / arXiv ids. If
-nothing is ready, say so and suggest `make papers`. Work one home at a time. Rows homed in
-`classical-ml` or `ml-systems` have no notes: check the PDF is filed under that subject's
-`readings/` and mark them integrated.
+`$ARGUMENTS` if given: a home key (`loop`, `rag`), one or more keys / arXiv ids, `cited`
+(only rows whose arXiv id already appears in a note: audit these first) or `filed` (audit
+`status --list filed` rows). If nothing is ready, say so and suggest `make papers`. Work
+one home at a time.
+
+A whole book that isn't split into chapters (a textbook PDF, not `sources/<book-slug>/chNN-…`)
+or an exercise handout isn't a paper: run `potw.py mark filed <key>` and list it in the
+report. A book becomes integrable once its chapters are split out for `/chapter`.
+
+### Already cited?
+
+Before reading, check whether the notes already cite the paper. The ledger lags: a paper
+can be written into a note by an earlier session while its row still says `queued`.
+
+```bash
+grep -rn --include='*.md' '<arxiv-id>' ai-engineering generative-ai data-science data-engineering
+```
+
+Also grep a distinctive title phrase for rows without an arXiv id. A hit does **not**
+mean the paper is integrated: notes often cite a classic from its abstract, without its
+numbers or limits. Treat a hit as an audit. Read the citing passages and the
+references.md row, then read the paper (Step 2) and check that the note carries its
+finding with the number, the setup it holds under, and what it doesn't show. Note every
+home that cites it; a paper cited in a second home may need its point made there too.
 
 ## Step 2 — Read
 
@@ -49,6 +69,9 @@ For each paper:
 2. Read the target note in full. Find the section where the claim lives — not just the
    note the triage picked; if a different note or section fits better, use that.
 3. Decide, and say which in your report:
+   - **verified** — (audit only) the note already carries the finding, with its number and
+     setup, cited correctly. Change nothing beyond the frontmatter `sources:` and the
+     references.md row if either is missing
    - **sharpens** — the note already says this; add the evidence (number + citation)
    - **extends** — a new point the section is missing; add a short paragraph
    - **contradicts** — the note's claim is wrong or over-stated; fix the claim, keep the
@@ -108,6 +131,6 @@ python3 scripts/papers/potw.py mark integrated <key> [<key> ...]
 make link-check
 ```
 
-Report, per paper: verdict (sharpens / extends / contradicts / skipped), the note and
+Report, per paper: verdict (verified / sharpens / extends / contradicts / skipped), the note and
 section changed, and one line on what changed. Call out every **contradicts** first.
 Don't commit — the user reviews the diff.

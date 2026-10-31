@@ -5,6 +5,8 @@ sources:
   - https://developers.openai.com/api/docs/guides/compaction
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/02_context_processing/01–02, 00_COURSE/03_context_management/01–04) — snapshot 2026-08-14)
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2610.28577
+  - https://arxiv.org/abs/2310.08560
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -83,7 +85,7 @@ Compaction composes these; each is usable independently.
 | **State extraction** | Pull structured facts into a compact record | Lossless for what's extracted, total for what isn't |
 | **Tool-result clearing** | Replace raw tool output with its conclusion | Near-lossless for verbose output |
 
-**Tool-result clearing** is the highest-value / lowest-risk of these — a lightweight compaction that strips raw tool outputs from history while keeping the fact that the call happened and what it concluded. Tool output is usually the largest and least reusable content in an agent's window. Clear it first, before reaching for lossy summarization.
+**Tool-result clearing** is the highest-value / lowest-risk of these — a lightweight compaction that strips raw tool outputs from history while keeping the fact that the call happened and what it concluded. Tool output is usually the largest and least reusable content in an agent's window. Clear it first, before reaching for lossy summarization. Clear it **in batches**, though, not every turn: each clearing rewrites the prefix ([below](#prompt-caching-interaction)).
 
 ### Six strategies compared
 
@@ -158,6 +160,8 @@ Compaction **invalidates the cache from the compaction point forward** — you h
 - Structure the post-compaction window so the stable parts (system prompt, tools) still lead, preserving a cacheable prefix for subsequent turns
 - Compacting at phase boundaries amortizes this cost across the phase that follows
 
+**Rolling edits are the expensive case.** Trimming text on every turn, for example keeping only the last 12 tool responses, rewrites the prefix each round. With GPT-OSS-120B on 100 BrowseComp-Plus tasks, that cost **1.85× the full-context baseline**, because every turn re-prefilled. Summarizing at a 48K threshold was about 7% cheaper than full context but lost 5 accuracy points ([arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10)). The same rolling drop done on the KV cache instead of the text came out ahead on both: **+1.7 points at 27.7% lower cost** than threshold summarization, averaged over 3 open-weight models and 4 agent benchmarks. That requires a self-served engine ([03](03-budgeting-the-window.md#cache-engineering-edit-the-kv-cache-not-the-text)). On a hosted API the lesson runs the other way: rewrite the history rarely and in large blocks.
+
 ---
 
 ## Memory hierarchies
@@ -169,6 +173,8 @@ The upstream management module borrows the CPU cache model. Context lives at lev
 | **L1: window** | Current task, recent turns, active evidence | Free; always attended | Registers / L1 cache |
 | **L2: session store** | Compacted summaries, tool results, scratch files | One tool call | RAM |
 | **L3: long-term** | Memory store, indexed corpus | Retrieval | Disk |
+
+MemGPT made this design concrete: the agent manages its own tiers through tool calls, and summarized history is evicted to a searchable recall store. In its multi-session recall test, GPT-4 went from 32.1% to 92.5%, against a baseline that saw only a summary of past sessions ([arXiv:2310.08560](https://arxiv.org/abs/2310.08560) (Packer et al., 2023-10); mechanics and caveats in [agentic foundations 03](../../../generative-ai/03-agentic-foundations/notes/03-memory-as-an-operating-system.md#the-os-analogy)).
 
 The useful habit is thinking in **promotion and demotion**. Compaction demotes content from L1 to L2. Retrieval promotes it back. A good design makes both moves cheap and explicit, rather than letting the window be the only tier ([06](06-memory.md)).
 
