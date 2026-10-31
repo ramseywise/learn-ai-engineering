@@ -1,80 +1,34 @@
 # Data Engineering — Curriculum
 
-Last updated: 2026-07-21
+Last updated: 2026-10-31
+
+What each note covers, which zoomcamp modules it draws on, and what each module needs to run are in the [README](README.md). This file is the order to work in.
 
 ## Prerequisites
 
-Python 01–03 and SQL 01–09 from [`programming/`](../programming/README.md). Docker helps (the
-DataTalks DE Zoomcamp covers Docker from scratch; SQL is assumed, and the SQL track covers it).
+- **Python 01–03 and SQL 01–09** from [programming/](../programming/README.md). The zoomcamps assume SQL and teach none.
+- **Docker basics** help. DE 01 teaches Docker from scratch, but every later module assumes it.
+- **Data analytics basics** ([data-analytics/](../data-analytics/README.md)) are recommended, not required.
+- **Cloud accounts:** GCP for the DE warehouse path (BigQuery), AWS for MLOps deployment. Each step below says what's possible without one.
 
-## The 6 Foundations
+## Sequenced path
 
-Data engineering is a pipeline discipline — each stage prepares data for the next.
+The order is linear because each foundation consumes the previous one's output. Steps 5–7 switch from the DE Zoomcamp to the MLOps Zoomcamp.
 
-| # | Foundation | What you learn | Primary material |
-|---|---|---|---|
-| 1 | **Ingest** | Pull data from APIs and streams; incremental loading; dlt pipelines | DE Zoomcamp Workshop 1 (dlt), Module 6 (Kafka/streaming) |
-| 2 | **Transform** | Layered modeling (raw → staging → mart); dbt; SQL transformation patterns | DE Zoomcamp Module 4 (analytics engineering, dbt, BigQuery) |
-| 3 | **Orchestrate** | DAG authoring; scheduling; backfill; retry logic | DE Zoomcamp Module 2 (Mage); MLOps Module 3 (Mage) |
-| 4 | **Warehouse / Store** | BigQuery internals; partitioning and clustering; Spark batch; columnar storage | DE Zoomcamp Module 3 (data warehouse) + Module 5 (Spark batch) |
-| 5 | **Monitor** | Pipeline observability; data quality checks; model drift monitoring | MLOps Module 5 (Prometheus, Evidently, Grafana) |
-| 6 | **Feature-serve** | Feature engineering for ML; experiment tracking; model registry; deployment | MLOps Module 2 (MLflow) + Module 4 (deployment) |
+| Step | Read | Then do | Done when | Without a cloud account |
+|---|---|---|---|---|
+| 1 | [01 Ingest](notes/01-ingest.md) | DE 01 Docker + Postgres, then Terraform | The taxi CSV is in Postgres via your own container; `terraform apply` creates the bucket and dataset | Skip Terraform; do the dlt → DuckDB example |
+| 2 | [04 Warehouse and store](notes/04-warehouse-and-store.md), BigQuery half | DE 03 | You can explain a query's bytes scanned before and after partitioning | Same SQL ideas in DuckDB on the Parquet files |
+| 3 | [02 Transform](notes/02-transform.md) | DE 04 | `dbt build` passes; `fact_trips` and one mart exist; you changed one test to `error` | dbt Core + Postgres |
+| 4 | [03 Orchestrate](notes/03-orchestrate.md) | DE 02 (videos), then rebuild steps 1–3 as one scheduled pipeline in Mage or Dagster | A backfill of three past months produces identical output when re-run | Fully local |
+| 5 | [04 Warehouse and store](notes/04-warehouse-and-store.md), Spark half | DE 05 | The revenue model from step 3 reproduced in Spark SQL, then in DuckDB | Local Spark |
+| 6 | [01 Ingest](notes/01-ingest.md), Kafka half | DE 06 | A producer/consumer pair with manual offset commits and an Avro schema | Docker |
+| 7 | [06 Feature-serve](notes/06-feature-serve.md) | MLOps 01, 02, 04 | A tracked, registered model served by the Docker web service | Scenarios 1–2 and `web-service/` |
+| 8 | [05 Monitor](notes/05-monitor.md) | MLOps 05 | A Grafana panel with an alert rule on drift | Fully local with Docker |
+| 9 | [08 MLOps maturity and best practices](notes/08-mlops-maturity-and-best-practices.md) | MLOps 06; MLOps 03 for retraining | `make integration_test` passes against LocalStack | Unit and integration tests are local |
+| 10 | [07 Data architectures](notes/07-data-architectures-mesh-fabric-mdw.md) | Work through the scenario prompts | You can answer each prompt with root cause → mechanism → trade-off | Reading only |
+| Capstone | — | MLOps 07 project, or the DE project brief | Self-scored against the rubric in note 08 | Use LocalStack for the cloud criterion's middle score |
 
-## Module Map
+## Where to go next
 
-### DataTalks Data Engineering Zoomcamp (`DataTalks Data Engineering/`)
-
-| Module | Topic | Foundation |
-|---|---|---|
-| 01-docker-terraform | Containerization + IaC | Cross-cutting infrastructure |
-| 02-workflow-orchestration | Mage orchestration | 3 — Orchestrate |
-| 03-data-warehouse | BigQuery | 4 — Warehouse/Store |
-| 04-analytics-engineering | dbt + transformation | 2 — Transform |
-| 05-batch | Spark | 4 — Warehouse/Store |
-| 06-streaming | Kafka | 1 — Ingest |
-| Workshop 1 (dlt) | API ingestion + incremental loading | 1 — Ingest |
-| Workshop 2 (RisingWave) | Stream processing with SQL | 1 — Ingest |
-
-### DataTalks MLOps Zoomcamp (`DataTalks MLOps/`)
-
-| Module | Topic | Foundation |
-|---|---|---|
-| 01-intro | MLOps maturity model | Cross-cutting |
-| 02-experiment-tracking | MLflow | 6 — Feature-serve |
-| 03-orchestration | Mage pipelines for ML | 3 — Orchestrate |
-| 04-deployment | Flask, Kinesis, batch scoring | 6 — Feature-serve |
-| 05-monitoring | Prefect + Evidently + Grafana | 5 — Monitor |
-| 06-best-practices | Testing, CI/CD, Terraform | Cross-cutting |
-
-## Orchestration Inconsistency
-
-Both zoomcamps use **Mage** for orchestration (DE Module 2, MLOps Module 3). The MLOps
-monitoring module (05) uses **Prefect** for batch job scheduling alongside Evidently.
-These tools are equivalent in capability; the inconsistency is a zoomcamp version artifact,
-not a curriculum design choice. Modern production stacks (2024+) also use **Dagster**
-and **Airflow 2.x** — neither appears in these materials.
-
-## Modern Gaps
-
-The following tools are not covered in the existing material but are standard in modern DE stacks. These are named as future additions, not currently implemented:
-
-- **DuckDB** — in-process OLAP engine; largely replaces Spark for single-node analytics workloads
-- **Polars** — DataFrame library with Rust performance; preferred over pandas for large-scale local processing
-- **Delta Lake / Apache Iceberg** — open table formats for data lakehouse architecture; critical for production lake stacks
-- **dlt (data load tool)** — Python-native ingestion library; appears in DE Zoomcamp Workshop 1 but deserves deeper coverage
-- **Dagster** — modern orchestrator with asset-first model; not in either zoomcamp
-
-## Reference Links
-
-- **Interview guide**: [`../interviewing/guides/8-data-eng-mlops/`](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md)
-- **Readings**: [`8-data-eng-data-mesh/`](8-data-eng-data-mesh/)
-- **Curated resource list**: [`awesome-data-engineering.md`](awesome-data-engineering.md)
-- **Reference book**: *Designing Data-Intensive Applications* (O'Reilly, in repo root of this dir)
-
-## What Comes Next
-
-After completing DE foundations, typical progressions:
-
-- **ML in production** → continue with MLOps depth (experiment tracking, monitoring, deployment)
-- **Data science** → `data-science/CURRICULUM.md` (statistical foundations + supervised learning)
-- **AI engineering** → `ai-engineering/` pillars (uses DE pipelines as the data layer)
+The previous and next layers are in the README's [Resource map](README.md#previous-and-next-layer).
