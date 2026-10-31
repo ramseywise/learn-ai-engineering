@@ -5,8 +5,9 @@
   triage    assign each new paper a home + target note (one `claude -p` call per batch)
   download  fetch arXiv PDFs for queued papers into <home>/sources/<author-year-slug>.pdf
   scan      register every PDF in the repo (source "repo") and set have_pdf / local_pdf
+  cite      citation counts from Semantic Scholar for every row with an arXiv id
   route     move triaged PDFs out of the readings/ inbox into their home's sources/
-  run       fetch + triage + scan + download (what the weekly launchd job calls)
+  run       fetch + cite + triage + scan + download (what the weekly launchd job calls)
   status    counts by status, or list one status with --list
   mark      set a paper's status (the /papers and /chapter skills mark papers `integrated`)
 
@@ -68,6 +69,9 @@ FIELDS = ("arxiv", "url", "pillar", "note", "topic", "local_pdf", "copies", "sha
 RAW_URL = "https://raw.githubusercontent.com/dair-ai/AI-Papers-of-the-Week/main/years/{year}.md"
 ARXIV_API = "https://export.arxiv.org/api/query?id_list={id}&max_results=100"
 ARXIV_PDF = "https://arxiv.org/pdf/{id}"
+S2_BATCH = "https://api.semanticscholar.org/graph/v1/paper/batch?fields=citationCount,influentialCitationCount"
+# Citations a year that mark a landmark: triage treats such a paper as interest 3.
+LANDMARK_CITES_PER_YEAR = 300
 USER_AGENT = "learn-ai-engineering-potw/1.0 (mailto:ramsey.wise@gmail.com)"
 TRIAGE_MODEL = os.environ.get("POTW_TRIAGE_MODEL", "claude-haiku-5-5")
 TRIAGE_BATCH = 25
@@ -399,7 +403,8 @@ For each reading below:
    Judge against the home's scope, not only the notes listed: a home with few or no notes
    yet is still growing, so a core paper for its scope is 2 even with note null.
 4. interest — how much an AI engineer should know this reading, whether or not any home
-   or note covers it yet:
+   or note covers it yet. Weigh the method (a new idea vs a tweak), the results (large,
+   general gains vs a narrow benchmark) and the citations when given:
   3 = landmark: a technique, model, benchmark or result the field adopted or keeps citing
   2 = a notable new idea or a strong result worth knowing
   1 = incremental: a variant, a narrow benchmark, an application study
@@ -425,7 +430,9 @@ def find_claude():
 
 
 def triage_batch(batch, inventory, claude):
-    papers = json.dumps([{"key": r["key"], "title": r["title"], "summary": r["blurb"][:1200]} for r in batch], ensure_ascii=False)
+    papers = json.dumps([{"key": r["key"], "title": r["title"], "summary": r["blurb"][:1200],
+                          **({"citations": r["citations"], "year": paper_year(r)} if r.get("citations") is not None else {})}
+                         for r in batch], ensure_ascii=False)
     homes = "\n".join(f"  {k} ({folder}) — {scope}" for k, (folder, scope) in HOMES.items())
     off = "\n".join(f"  {t} — {desc}" for t, desc in OFF_SYLLABUS.items())
     prompt = TRIAGE_PROMPT.format(homes=homes, inventory=inventory, off=off, papers=papers)
@@ -439,10 +446,22 @@ def triage_batch(batch, inventory, claude):
     return {d["key"]: d for d in json.loads(m.group(0))}
 
 
+def paper_year(r):
+    return int((r.get("week_start") or r.get("year") or str(dt.date.today().year))[:4])
+
+
+def cites_per_year(r):
+    if r.get("citations") is None:
+        return None
+    return r["citations"] / max(0.5, dt.date.today().year - paper_year(r) + 0.5)
+
+
 def triage_status(r, min_relevance):
     """queued: worth reading into a home now. parked: worth knowing, but no home or fit yet.
     skipped: not for this course."""
     rel, interest = r.get("relevance") or 0, r.get("interest") or 0
+    if (cites_per_year(r) or 0) >= LANDMARK_CITES_PER_YEAR:  # the field voted: a landmark
+        interest = 3
     # a PDF already in the repo only needs a home; a DAIR paper must earn its download
     floor = 1 if r["source"] == "repo" or r.get("local_pdf") else min_relevance
     if r.get("pillar"):
@@ -452,6 +471,38 @@ def triage_status(r, min_relevance):
     if interest >= 3 or (interest >= 2 and r.get("topic") in WATCH):
         return "parked"
     return "skipped"
+
+
+def cmd_cite(args):
+    """Citation counts for every row with an arXiv id, from Semantic Scholar (100 ids a call)."""
+    rows = load_ledger()
+    todo = [r for r in rows if r.get("arxiv") and (getattr(args, "refresh", False) or r.get("citations") is None)]
+    now = dt.datetime.now().isoformat(timespec="seconds")
+    got = 0
+    for i in range(0, len(todo), 100):
+        batch = todo[i : i + 100]
+        body = json.dumps({"ids": [f"ARXIV:{re.sub(r'v\d+$', '', r['arxiv'])}" for r in batch]}).encode()
+        for wait in (0, 5, 30, 90):
+            time.sleep(wait)
+            req = urllib.request.Request(S2_BATCH, data=body, headers={"Content-Type": "application/json", "User-Agent": USER_AGENT})
+            try:
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    found = json.load(resp)
+                break
+            except urllib.error.HTTPError as exc:
+                if exc.code != 429:
+                    raise
+        else:
+            log("cite: Semantic Scholar kept answering 429; try again later")
+            break
+        for r, f in zip(batch, found):
+            if f:  # null when Semantic Scholar doesn't know the id
+                r.update(citations=f.get("citationCount"), influential=f.get("influentialCitationCount"), cited_at=now)
+                got += 1
+        save_ledger(rows)
+        log(f"cite: {min(i + 100, len(todo))}/{len(todo)} looked up")
+        time.sleep(3)  # the free tier is a shared pool; stay well under it
+    log(f"cite: citation counts for {got}/{len(todo)} papers")
 
 
 def cmd_triage(args):
@@ -660,6 +711,11 @@ def cmd_scan(args):
 def cmd_download(args):
     rows = load_ledger()
     queued = [r for r in rows if r["status"] == "queued" and (args.backlog or not r.get("backlog"))]
+    # best first, so a partial run (or --limit) fetches the papers most worth reading
+    queued.sort(key=lambda r: (-(r.get("relevance") or 0), -(r.get("interest") or 0), -(cites_per_year(r) or 0)))
+    if getattr(args, "limit", None):
+        queued = [r for r in queued if r.get("have_pdf") or not r.get("arxiv")] + \
+                 [r for r in queued if r.get("arxiv") and not r.get("have_pdf")][: getattr(args, "limit", None)]
     done = 0
     for r in queued:
         if r.get("have_pdf"):  # already in the repo — `route` files it, don't fetch a copy
@@ -853,7 +909,7 @@ def cmd_status(args):
     if args.list:
         for r in rows:
             if r["status"] == args.list:
-                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "relevance", "interest")},
+                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "relevance", "interest", "citations")},
                                   "pdf": r.get("local_pdf"), **{k: r.get(k) for k in ("reason", "url")}}, ensure_ascii=False))
         return
     print(f"ledger: {LEDGER.relative_to(REPO)} ({len(rows)} papers, {sum(bool(r.get('have_pdf')) for r in rows)} with a PDF in the repo)")
@@ -879,6 +935,7 @@ def cmd_mark(args):
 
 def cmd_run(args):
     cmd_fetch(args)
+    cmd_cite(args)
     cmd_triage(args)
     cmd_scan(args)
     cmd_download(args)
@@ -902,6 +959,8 @@ def main():
             p.add_argument("--status", default="new", help="re-triage rows with this status (default new)")
             p.add_argument("--source", choices=["dair", "repo"], help="only rows from this source")
             p.add_argument("--local", action="store_true", help="only rows whose PDF is already in the repo")
+        if name == "download":
+            p.add_argument("--limit", type=int, help="fetch at most this many PDFs, best first")
         if name in ("triage", "download"):
             p.add_argument("--backlog", action="store_true", help="include backfilled papers")
         else:
@@ -915,6 +974,9 @@ def main():
     p.add_argument("--from", dest="src", default=INBOX, help=f"move PDFs found under this prefix (default {INBOX})")
     p.add_argument("--apply", action="store_true", help="move the files (default: dry run)")
     p.set_defaults(fn=cmd_route)
+    p = sub.add_parser("cite")
+    p.add_argument("--refresh", action="store_true", help="refetch counts already in the ledger")
+    p.set_defaults(fn=cmd_cite)
     p = sub.add_parser("status")
     p.add_argument("--list", metavar="STATUS")
     p.set_defaults(fn=cmd_status)

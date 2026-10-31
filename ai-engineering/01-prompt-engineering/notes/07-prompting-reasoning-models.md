@@ -5,6 +5,7 @@ sources:
   - https://www.promptingguide.ai/guides/deep-research
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 11"
+  - https://arxiv.org/abs/2505.11423
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -19,7 +20,7 @@ cleaned: 2026-10-28
 A reasoning model (o-series, Claude with extended or adaptive thinking, Gemini thinking, DeepSeek-R1) spends **test-time compute** on hidden or summarized thinking tokens before it answers. Two consequences:
 
 - **More thinking usually means better answers** on hard tasks — but with more latency and cost. You control it with an **effort or budget** setting (low / medium / high, or a token budget), not with prompt wording.
-- **The CoT scaffolding you'd write for a standard model is redundant at best**, and can hurt. Explicit step-by-step CoT prompting has been shown to *degrade instruction-following* in reasoning models (*The Pitfalls of Reasoning for Instruction Following*, 2025).
+- **The CoT scaffolding you'd write for a standard model is redundant at best**, and can hurt. Explicit step-by-step CoT prompting has been shown to *degrade instruction-following*. Across 15 models on IFEval and ComplexBench, adding CoT lowered constraint accuracy. The paired comparisons (Claude 3.7 Sonnet with and without thinking, DeepSeek-V3 vs. R1) show the same drop. Reasoning helped with formatting and exact wording but led models to drop simple constraints or add content nobody asked for ([arXiv:2505.11423](https://arxiv.org/abs/2505.11423), Li et al., 2025-05). The best mitigation was a trained classifier that decides *whether* to reason for a given instruction.
 
 ---
 

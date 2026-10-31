@@ -8,6 +8,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 3, Ch 8"
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - https://arxiv.org/abs/2302.12173
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -65,7 +66,7 @@ The attacker's side has a weakness too: **an extracted "system prompt" is often 
 
 ### Indirect prompt injection
 
-This is the most important variant for applications, because **the attacker doesn't need to be your user**. Anything that ends up in the prompt — retrieved documents, web pages, emails, tool outputs, file contents, another agent's messages — can carry instructions. The risk scales with what the model can *do*: an injected instruction in a summarizer produces a bad summary, but in an agent with email and file tools it can exfiltrate data. Tool results are untrusted input ([05](05-tools-and-function-calling.md#safety-gate-in-code-not-in-the-prompt)).
+This is the most important variant for applications, because **the attacker doesn't need to be your user**. Anything that ends up in the prompt — retrieved documents, web pages, emails, tool outputs, file contents, another agent's messages — can carry instructions. The risk scales with what the model can *do*: an injected instruction in a summarizer produces a bad summary, but in an agent with email and file tools it can exfiltrate data. Tool results are untrusted input ([05](05-tools-and-function-calling.md#safety-gate-in-code-not-in-the-prompt)). Greshake et al. showed this on production systems in early 2023, against Bing's GPT-4 chat and code-completion engines. Retrieved text could steer which APIs the model called, exfiltrate the user's data, and copy itself into outputs that other LLM instances would later read: a prompt that behaves like a worm ([arXiv:2302.12173](https://arxiv.org/abs/2302.12173)).
 
 Every perception tool is an entry point: invisible page elements, PDF metadata, image EXIF. Li's attack/defense lab (Experiment 2-5) uses three channels:
 
