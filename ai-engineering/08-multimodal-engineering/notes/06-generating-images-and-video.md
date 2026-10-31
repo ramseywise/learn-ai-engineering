@@ -8,7 +8,13 @@ sources:
   - https://arxiv.org/abs/2208.12242
   - https://arxiv.org/abs/2208.01618
   - https://arxiv.org/abs/2106.09685
+  - https://arxiv.org/abs/2303.04671
+  - https://arxiv.org/abs/2309.17421
   - https://huggingface.co/docs/diffusers
+  - https://arxiv.org/abs/2405.09818
+  - https://arxiv.org/abs/2410.13848
+  - https://github.com/deepseek-ai/Janus/blob/main/janus_pro_tech_report.pdf
+  - https://arxiv.org/abs/2410.00037
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -27,6 +33,11 @@ The latent space is continuous. Interpolating between two points in it, say a do
 - **Generation is sampling.** The same prompt gives a different image on every run unless you fix the starting noise, which is set by the seed.
 - **Early steps set composition and late steps set detail.** Several controls below exploit this: prompt editing, ControlNet's start and end steps, and SDXL's base-to-refiner switch.
 - **Text encoders differ between model families.** SD 2 used OpenCLIP alone, so prompts tuned on SD 1.5 transferred poorly. SDXL combines OpenCLIP ViT-G/14 with OpenAI's CLIP ViT-L, which largely fixed this (ch. 9).
+
+**Not every image generator is a diffusion model.** Chameleon ([arXiv:2405.09818](https://arxiv.org/abs/2405.09818) (Chameleon Team, 2024-05)) and Janus ([arXiv:2410.13848](https://arxiv.org/abs/2410.13848) (Wu et al., 2024-10)) turn an image into discrete VQ tokens and have the language model predict them one at a time, so one transformer both reads and draws images. Guidance survives the switch: Janus applies classifier-free guidance to the logits, l_u + s(l_c − l_u), with a default scale of 5. Janus also shows why a shared image tokenizer is a poor compromise. Sharing the generation tokenizer for understanding drops POPE from 87.0 to 60.1 at 1.3B, against separate SigLIP and VQ encoders. Janus-Pro-7B ([deepseek-ai/Janus](https://github.com/deepseek-ai/Janus/blob/main/janus_pro_tech_report.pdf) (Chen et al., 2025-01)) scores 0.80 on GenEval against 0.67 for DALL-E 3 and 0.74 for SD3-Medium, yet it outputs only 384×384 and its own report names fine detail and small faces as weak. GenEval checks that objects, counts and positions match the prompt; it does not measure resolution or quality. All three evaluations are run by the vendors.
+
+![Janus architecture: an understanding encoder and a separate generation encoder feed one autoregressive transformer, which has a text head and an image head](../sources/images/wu-janus-fig2.png)
+*Image Source: Wu et al., [Janus: Decoupling Visual Encoding for Unified Multimodal Understanding and Generation](https://arxiv.org/abs/2410.13848) (2024), Fig. 2*
 
 The course has no note yet on diffusion internals: the noise schedule, U-Net vs. DiT denoisers, and why classifier-free guidance works. When one is written, [generative-ai/01](../../../generative-ai/01-llm-fundamentals/README.md) is its home.
 
@@ -83,6 +94,8 @@ The book suggests blending two celebrities with prompt editing so the result loo
 
 The parameters interact: CFG and denoising strength, for example. The cheapest way to find good settings is a grid: fix the prompt and seed, vary two or three parameters, and render every combination (AUTOMATIC1111's X/Y/Z plot script, ch. 9). This is the image version of an eval sweep. It is only affordable when you host the model, or when per-image API prices are low enough to render a grid of dozens.
 
+A vision-language model can do the first pass over the grid. GPT-4V rated prompt–image alignment on a 1–10 scale, giving 4 → 8 → 9 to three successively improved samples for "a parrot driving a car". It also caught misspelled text rendered on a cake ("Azuze Research" for "Azure Research"), and in a generate–critique–rewrite loop with SDXL it added the missing dog breed to the prompt ([arXiv:2309.17421](https://arxiv.org/abs/2309.17421) (Yang et al., 2023-09), §9.6, §10.3). These are hand-picked examples from an early GPT-4V, with no benchmark. Use a VLM judge to triage a grid and spot-check its scores before you trust them.
+
 ## Editing: img2img, inpainting, control images
 
 Text-to-image controls style well and composition badly. Three tools fix that.
@@ -114,6 +127,8 @@ Text-to-image controls style well and composition badly. Three tools fix that.
 The preprocessor and the ControlNet model must match each other (a Canny map needs a Canny model), and the model must match the base model's version. *Control weight* acts like a prompt weight for the map. *Start* and *end control steps* limit when it applies: ending at 0.8 lets the model invent fine detail freely (ch. 9).
 
 **Segment Anything** ([arXiv:2304.02643](https://arxiv.org/abs/2304.02643), Kirillov et al., 2023) produces the masks. It was trained on 11 million images and 1.1 billion masks, and it returns a mask from one to three clicked points, or masks every object in the image (ch. 9). Pair it with inpainting to replace a background behind a person without painting the mask by hand. The book found the AUTOMATIC1111 integration unreliable, so script SAM directly if you depend on it.
+
+**An LLM can drive the editing tools.** Visual ChatGPT ([arXiv:2303.04671](https://arxiv.org/abs/2303.04671) (Wu et al., 2023-03)) put ChatGPT in front of 22 vision models, including captioning/VQA, Stable Diffusion, InstructPix2Pix and several ControlNets. The prompt describes each tool by name, usage and input/output format. Every intermediate image gets a filename of the form `{Name}_{Operation}_{Prev_Name}_{Org_Name}.png`, so you can read the chain of edits back from the name. The paper's evidence is case studies only, with no benchmark or baseline. The authors themselves list prompt brittleness, latency from chained calls, and a context window that caps how many tools fit. The lineage-in-the-filename trick is worth copying in any multi-step edit pipeline. Pair it with the parameter log under [Provenance](#provenance-and-training-data-risk).
 
 ## Customizing a model
 
@@ -152,7 +167,7 @@ Two operational rules from the self-hosted side (ch. 9):
 
 ## Provenance and training-data risk
 
-**Metadata is the cheapest provenance, and the most fragile.** AUTOMATIC1111 writes the prompt and every setting into each PNG's metadata. That makes an image reproducible, but the metadata survives only until a site strips it on upload (ch. 9). Store generation parameters in your own database keyed by image hash; don't rely on the file. Signed manifests such as C2PA Content Credentials (not covered in the book) are the industry route for marking output as AI-generated.
+**Metadata is the cheapest provenance, and the most fragile.** AUTOMATIC1111 writes the prompt and every setting into each PNG's metadata. That makes an image reproducible, but the metadata survives only until a site strips it on upload (ch. 9). Store generation parameters in your own database keyed by image hash; don't rely on the file. Signed manifests such as C2PA Content Credentials (not covered in the book) are the industry route for marking output as AI-generated. Invisible watermarks in the pixels or samples are weaker than they look. Moshi's authors found that an AudioSeal mark on 10-second clips, detected at 0.9999, dropped to 0.08 after one pass through their Mimi audio codec, which is no different from unmarked audio (0.09). They also note that removing the watermark from Stable Diffusion's open-source code took commenting out one line ([arXiv:2410.00037](https://arxiv.org/abs/2410.00037) (Défossez et al., 2024-09), §6.4). Re-encoding the media erases the mark, so treat a watermark as a hint, never as proof of origin.
 
 **Memorization is rare, but not zero.** The book cites Carlini et al. to argue that a diffusion model is not a collage tool: of 350,000 training images the researchers tried to reproduce from Stable Diffusion, they succeeded with 109 (ch. 7; [arXiv:2301.13188](https://arxiv.org/abs/2301.13188), Carlini et al., 2023-01). The paper chose those 350,000 as the *most duplicated* images in the training set, where memorization is likeliest, so 109 is a floor for heavily duplicated content, not a rate for typical images. The engineering reading is that output can occasionally reproduce a training image nearly exactly, most likely for famous artworks, logos and stock photos, and that a rare copy is still a copy. Prompts that name a living artist or a trademark raise the odds.
 
