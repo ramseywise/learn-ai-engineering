@@ -10,6 +10,8 @@ sources:
   - ../practice/intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb
   - https://arxiv.org/abs/1301.3781
   - https://nlp.stanford.edu/projects/glove/
+  - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 1"
+  - https://aclanthology.org/Q18-1034/
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -98,6 +100,8 @@ def complete_analogy(a, b, c, word_to_vec):
 
 The same notebook shows the vectors encode social bias: projecting names and occupations onto the `woman - man` direction separates "receptionist" from "engineer". It removes the bias component from gender-neutral words (**neutralise**) and makes gendered pairs equidistant from the neutral axis (**equalise**), after Bolukbasi et al. (2016). Embeddings learned from text inherit the text's associations; any similarity system built on them does too.
 
+Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([14](14-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
+
 ---
 
 ## Embeddings inside a model
@@ -158,7 +162,7 @@ def levenshtein(u, v):
     return D[-1, -1]
 ```
 
-**Normalise before cosine or dot product.** With L2-normalised vectors, cosine similarity is the dot product and Euclidean distance is a monotone function of it, so all three rank neighbours identically. Vector databases rely on this.
+The raw dot product is unbounded and grows with vector length, so it favours long vectors. In count-based vectors that means frequent, uninformative words. Cosine divides the length out. **Normalise before cosine or dot product.** With L2-normalised vectors, cosine similarity is the dot product and Euclidean distance is a monotone function of it, so all three rank neighbours identically. Vector databases rely on this.
 
 ---
 

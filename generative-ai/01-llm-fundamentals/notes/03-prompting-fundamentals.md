@@ -2,6 +2,8 @@
 origin: book-condensed
 sources:
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3, 10"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 2"
+  - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 3"
   - https://arxiv.org/abs/2201.11903
   - https://arxiv.org/abs/2205.11916
   - https://arxiv.org/abs/2210.03629
@@ -17,7 +19,7 @@ cleaned: 2026-10-31
 
 ## Why prompts fail
 
-Phoenix & Taylor open (O'Reilly ch. 1) by taking a one-line naive prompt and listing what is wrong with it. The list doubles as a checklist:
+Phoenix & Taylor open (*Prompt Engineering for GenAI*, ch. 1) by taking a one-line naive prompt and listing what is wrong with it. The list doubles as a checklist:
 
 | Problem | What it looks like | Principle that fixes it |
 |---|---|---|
@@ -84,7 +86,7 @@ Split a task into steps, each with its own prompt and its own check.
 
 - **Chaining:** the output of one call is the input of the next (outline → draft → edit).
 - **Self-evaluation:** a second call grades or critiques the first.
-- **Reasoning before answering:** asking for step-by-step work improves multi-step problems. Chain-of-thought exemplars took PaLM 540B to state of the art on GSM8K ([arXiv:2201.11903](https://arxiv.org/abs/2201.11903), Wei et al., 2022). Even the zero-shot phrase "Let's think step by step" lifted text-davinci-002 from 17.7% to 78.7% on MultiArith ([arXiv:2205.11916](https://arxiv.org/abs/2205.11916), Kojima et al., 2022). Modern reasoning models do this internally; see [07 — Prompting reasoning models](../../../ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md).
+- **Reasoning before answering:** asking for step-by-step work improves multi-step problems. Chain-of-thought exemplars took PaLM 540B to state of the art on GSM8K ([arXiv:2201.11903](https://arxiv.org/abs/2201.11903), Wei et al., 2022). Even the zero-shot phrase "Let's think step by step" lifted text-davinci-002 from 17.7% to 78.7% on MultiArith ([arXiv:2205.11916](https://arxiv.org/abs/2205.11916), Kojima et al., 2022). **Self-consistency** goes one step further: sample several chains of thought and take the majority answer. It only works when the answer can be compared exactly (a number, a choice), and it multiplies cost by the number of samples. Gemini's MMLU score was reported this way, with 32 samples per question (*AI Engineering*, ch. 2; *Building AI Agents*, ch. 3). Modern reasoning models do the step-by-step part internally; see [07 — Prompting reasoning models](../../../ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md).
 - **Meta-prompting:** have a model write or improve the prompt.
 - **Reason + act:** interleave thoughts with tool calls (ReAct, [arXiv:2210.03629](https://arxiv.org/abs/2210.03629)). This is where prompting turns into agents ([03-agentic-foundations](../../03-agentic-foundations/README.md)).
 
@@ -94,7 +96,7 @@ Depth: [06 — Chaining and workflows](../../../ai-engineering/01-prompt-enginee
 
 ## Standard practices
 
-O'Reilly ch. 3 is a catalogue of everyday text tasks. The recurring patterns:
+*Prompt Engineering for GenAI* ch. 3 is a catalogue of everyday text tasks. The recurring patterns:
 
 | Task | Practice |
 |---|---|

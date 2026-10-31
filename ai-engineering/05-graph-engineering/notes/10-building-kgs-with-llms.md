@@ -4,6 +4,7 @@ sources:
   - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 4–8 and appendix C: sources/kg-and-llms-in-action/ch04-multisource-integration.pdf … ch08-ned-open-llms-ontologies.pdf, appendix-c-kgs-from-structured-sources.pdf"
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L6: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
 cleaned: 2026-10-31
 ---
@@ -163,6 +164,18 @@ Preannotation is worth having even when an LLM can't run in production: the same
 | Domain IDs (UMLS CUIs, etc.) | Built in when a linker exists | Not by itself (ch7: ChatGPT can't assign UMLS IDs) |
 
 Source: *KG & LLMs in Action*, ch. 5 and 7. The book's view is that traditional NLP keeps a real place where security, cost at scale or streaming latency rule an LLM out (*KG & LLMs in Action*, ch. 5). A common hybrid uses a traditional linker where a domain knowledge base exists and an LLM for relations and long-tail types.
+
+Raieli and Iuculano (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7) list two more variants. One uses a large LLM to extract and a smaller one to correct the output, which fits the [verifier](#stage-6-evaluating-extraction) slot in the pipeline above. The other skips the corpus altogether and **distils a KG from the LLM's own parametric knowledge** by prompting it for triples. They report that such graphs are "competitive in quality, diversity, and novelty" with ones extracted from text, citing Pan et al.'s roadmap ([arXiv 2306.08302](https://arxiv.org/abs/2306.08302), not yet read for this course). Be careful with that one. A distilled graph has no source documents, so the provenance this note depends on isn't there. It also can't ground the model it came from, because it repeats that model's beliefs, errors included. Use it to seed a schema or to propose candidate facts for checking, not as the store a RAG system cites ([note 11](11-kg-rag-and-text-to-cypher.md)).
+
+### A prompt that writes Cypher directly: what not to copy
+
+The same chapter's "custom method" asks the model to read a passage and return the **Cypher that creates the graph**, which is then run against Neo4j. It's a short route to a demo, and the prompt has three problems this note's pipeline is designed to prevent (ch. 7):
+
+- **The instructions contradict each other.** The task list says "Be creative" and "Understand hidden relationships from the network". The notes a few lines below say "Do not hallucinate". For extraction, creativity and inferred relationships *are* hallucination. Drop both lines and say what counts as stated in the text.
+- **The few-shot example teaches errors.** The example passage gives Mary's birth year (1995) and Jane's age in years. The answer writes `MERGE (Jane:Person {name: "Jane", age:1993})`, a year stored under `age`, one line after giving Mary a `birth_year` property. It also writes `FRIENDS_WITH` in both directions for every pair, against [one direction per relation](#stage-2-extraction). The model copies examples more faithfully than it follows instructions, so a wrong example costs more than a missing one ([01-prompt note 03](../../01-prompt-engineering/notes/03-core-techniques.md#few-shot)).
+- **Model output is executed as a write.** Nothing checks the generated statements against a schema before they run, nothing separates mentions from entities, and `MERGE` matches on the whole property map. A node first written as `{name: "Jane"}` and later as `{name: "Jane", age: 1993}` becomes two Janes. Have the model emit structured mentions and relations, then assemble with deterministic `MERGE` on a resolved key ([stage 5](#stage-5-assembly-with-the-course-as-worked-example)).
+
+The library route in the chapter is `LLMGraphTransformer(llm=llm).convert_to_graph_documents(documents)`, imported from `langchain_experimental.graph_transformers`. It returns structured nodes and relationships instead of Cypher, which is the better shape. Pass `allowed_nodes` and `allowed_relationships` to hold it to your schema. The package is experimental and its import path has moved between releases, so pin the version.
 
 ---
 
@@ -567,6 +580,42 @@ Source: *KG & LLMs in Action*, ch. 4. Two more points on the distributions show 
 The other two sources show what mature integrated KGs look like. **Hetionet** combines 29 resources into 47,031 nodes of 11 types and 2,250,197 edges of 24 types. Some edge types carry their provenance: each of the 11,571 Compound–binds–Gene edges stores its reference as a relationship property. **CKG** links 33 node labels with 51 relationship types to support queries such as finding altered functions, suggesting drugs for regulated proteins and surfacing possible confounders (*KG & LLMs in Action*, ch. 4). For patient data the chapter gives two privacy-preserving options. One is to load only statistical relationships (diseases, symptoms, outcomes and their weights) and leave out patient records. The other is a de-identified generic clinical KG, with patient EHR data added only when strictly necessary and with consent.
 
 The LLM's role here is to **interpret** the quantitative output (a DWPC ranking, a set of protein–disease links) as a domain narrative. It doesn't replace expert judgement, which matters most in the clinical case. The prompt the chapter uses (with Claude.ai Sonnet 4.0) has four parts: a biomedical-assistant role, the raw result rows (pathway, DWPC, PC, gene count), one line of context on what DWPC means, and five numbered asks: biological significance, relation to pathogenesis, therapeutic implications, unexpected findings, follow-up questions. The output is a hypothesis list for a human to check, not a finding. The book's words: "We do not suggest using results from LLMs without proper interpretation by physicians and researchers" (*KG & LLMs in Action*, ch. 4). Check the rows before you send them. The book's prompt mixes DWPC scores from two different metapath queries (four rows from the disease–gene–process query, the glycoprotein row from the query with an extra gene–gene hop) under one label, and the model then interprets them side by side. DWPC values are only comparable within one metapath and one damping exponent.
+
+---
+
+## After the load: assess, clean, enrich, retire
+
+The pipeline above ends at load. Raieli and Iuculano draw the longer cycle: **creation → assessment → cleaning → enrichment → deployment**, with assessment and cleaning often run as one pass (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7, Fig. 7.7). Stage 6 measures one extraction run against a gold set. Once the graph is live, the questions change. Is it still right, is it complete enough for the task, and can a fact be taken out again?
+
+**Assess along named dimensions.** The chapter's list (ch. 7):
+
+| Dimension | Asks | Check it with |
+|---|---|---|
+| **Accuracy** | Are entities and edges syntactically and semantically right? | Stage 6 metrics, re-run on a fresh sample |
+| **Completeness** | Does the graph hold the entities and relations the task needs? | Coverage against a gold KG or a list of must-answer questions |
+| **Conciseness** | Is it filling up with junk? The book's example is blank nodes, which stand in for unnamed entities and multiply if extraction isn't controlled | Count nodes with no name or a single edge; watch hub growth |
+| **Timeliness** | How old is each fact, and how often is it refreshed? | An `extracted_at` property on nodes and edges; a refresh schedule per source |
+| **Accessibility, understandability** | Can the people and systems that need it query it and read the schema? | The LLM-ready schema in [note 11](11-kg-rag-and-text-to-cypher.md#give-the-model-an-llm-ready-schema) |
+| **Security, privacy, traceability** | Who can read it, and where did each fact come from? | Access control on the store; provenance on every node and edge |
+
+The book connects traceability to privacy: if every fact links to its source document, you can **delete a user's data on request** and remove whatever came from a document later found to be wrong. That is the practical reason for the text-paired graph in [note 11](11-kg-rag-and-text-to-cypher.md#what-a-graph-adds) and for keeping mentions separate from entities. The deletion pass removes the mentions from that source, then re-resolves the entities they supported. An entity left with no mentions goes too.
+
+**Clean by error type.** The chapter separates syntactic errors, ontology errors (a type or property that doesn't exist, or the wrong one), semantic errors, and **knowledge errors** carried in from the sources ("person x is not the CEO of company y"). Three ways to find them, from cheap to costly: statistical outlier detection, which the book calls "not particularly accurate"; rule-based checks from the ontology (nothing can be both a `Person` and a `Place`); and an LLM asked to judge each fact, as when it catches `(Vienna, CapitalOf, Hungary)` (ch. 7). The LLM check only works for facts the model already knows, such as capitals. On private or domain data, which is why most teams build a KG, the model's opinion isn't evidence. There it can flag implausible triples for a person to review, but it shouldn't delete them. Rule checks are the ones to run on every load, since they are deterministic and can block the load the way Stage 6 does.
+
+**Enrich, knowing it costs cleaning.** KGs are "notoriously incomplete", and the usual first fix is another source: another database, another corpus, then other formats (CSV, XML, JSON, images). The chapter's warning is that each added source makes cleaning, alignment and entity resolution matter more (ch. 7). The alternative is to **infer** missing triples with a model, which is link prediction under another name ([note 13](13-graph-ml-and-gnns.md#the-task-map)). The chapter lists four ways to use an LLM for it:
+
+| Approach | Input → output | Trade-off |
+|---|---|---|
+| Joint encoding | The whole triple (h, r, t) → probability it's valid, or a linear classifier on the final hidden state | One model call per candidate triple |
+| Masked (MLM) encoding | (h, r, ?) → the predicted tail | Fills a gap directly |
+| Separated encoding | Encode (h, r) and t apart, then score their similarity | The book calls it more accurate but at risk of combinatorial explosion |
+| Prompting | Few-shot prompt with the triple plus entity and relation descriptions | Can use context the encoders can't see; costs most per call |
+
+Whatever the method, an inferred triple is a prediction. It goes in flagged, with a confidence score, and stays out of default traversals until confirmed ([note 13](13-graph-ml-and-gnns.md#predictions-in-a-shared-graph)).
+
+**Plan the pipelines that run after deployment.** "Deployment is the last step in the pipeline. That doesn't mean it's the end of the story" (ch. 7). A live KG needs four standing pipelines: updates as sources change, assessment of every write so that new data doesn't add errors or conflicts, cleaning for facts that are outdated or must be deleted for legal or privacy reasons, and access and security control. The book doesn't connect these to the earlier stages, but they are the same stages run again. An update pipeline is chunk → extract → resolve → assemble on the changed documents, gated by the same Stage 6 metrics. If the first build was a one-off notebook, none of this can be done.
+
+On hosting, the chapter's survey is short: relational tables, document stores, graph databases (Neo4j with Cypher) and RDF triple stores, or a KG layer over an existing database (ch. 7). The choice that matters for an LLM-built graph, labelled property graph or RDF, is in [note 09](09-kg-fundamentals-and-cypher.md#two-data-models-lpg-vs-rdf).
 
 ---
 

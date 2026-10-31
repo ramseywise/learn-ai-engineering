@@ -9,6 +9,7 @@ sources:
   - https://docs.prefect.io/
   - https://docs.dagster.io/
   - https://airflow.apache.org/docs/
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 11"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -37,6 +38,8 @@ DE 02.2.1 ("What is orchestration?") frames the job; this table is the checklist
 | Backfill | A for-loop someone writes once | Run the same pipeline over a date range, each run isolated |
 | Observability | Log files | Run history, task state, logs per run, alerts |
 | Triggers | None | Schedule, sensor (new data arrived), API call, upstream success |
+
+Adopt the orchestrator on day 0, even if it only runs locally at first. An orchestrator forces each pipeline to be a separate unit that hands off only through storage (warehouse, feature store, artifact store), and a pipeline built that way can later be triggered by a schedule, an API call or a monitoring alert without a rewrite. The *LLM Engineer's Handbook* authors credit this decoupling with making continuous training a small step at the end of their project rather than a refactor (*LLM Engineer's Handbook*, ch. 11). Once the whole system runs from one manual trigger, the automated triggers are configuration.
 
 ---
 

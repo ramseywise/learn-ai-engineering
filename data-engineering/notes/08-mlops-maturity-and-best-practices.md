@@ -6,6 +6,8 @@ sources:
   - https://github.com/DataTalksClub/mlops-zoomcamp/tree/main/07-project
   - https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/mlops-maturity-model
   - https://docs.localstack.cloud/
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), appendix (MLOps principles)"
+  - https://arxiv.org/abs/2005.04118
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -32,6 +34,8 @@ Like [07](07-data-architectures-mesh-fabric-mdw.md), this is cross-cutting. It i
 | 4 | Full MLOps automated operations | Monitoring triggers retraining and redeployment; a closed loop | Few humans in the loop. Needs strong monitoring to be safe |
 
 The module's advice: not every project needs level 4. A proof of concept can stay at 0. A model that matters to the business should reach 2 to 3. Level 4 pays off when there are many models or data drifts quickly.
+
+A coarser cut of the same ladder has three tiers: manual (notebooks), **continuous training** (an orchestrator retrains on a schedule, on new data or on a monitoring alert) and **CI/CD** (code changes are built, tested and deployed automatically). CT automates the pipelines. CI/CD ships new versions of the pipeline code (*LLM Engineer's Handbook*, appendix). The two loops are separate triggers, and Microsoft's level 4 is the point where both are closed.
 
 ### Where the zoomcamp takes you
 
@@ -102,6 +106,24 @@ def test_predict():
 ```
 
 `test_base64_decode` reads a fixture (`tests/data.b64`) and checks the decoded ride. `test_lambda_handler` runs the whole handler with the mock model and checks the output event. None of these touch AWS or the real model.
+
+### What the module doesn't test: data, model, behaviour
+
+The course's tests cover code. An ML system changes when any of code, data or model changes, so it needs tests on all three (*LLM Engineer's Handbook*, appendix):
+
+- **Data validity**, run in the feature pipeline. For tabular data: no nulls where none are allowed, categoricals only take expected values, floats stay in range. For text: length, encoding, language, special characters. These belong next to the dbt and Mage checks in [05](05-monitor.md#pipeline-side-monitoring-from-earlier-notes).
+- **Model sanity**, the cheap catches for a training run that finishes without error and is still wrong. Check input and output tensor shapes. Check that loss falls after one batch. Check that the model can overfit a tiny batch to near-zero loss. Run the pipeline on every supported device (CPU and GPU) and check that early-stopping and checkpoint logic fires. These are slow, so gate them in CI on changes to model code.
+- **Behaviour**, treating the model as a black box ([CheckList](https://arxiv.org/abs/2005.04118), Ribeiro et al., 2020). *Minimum functionality*: simple cases it must always get right. *Invariance*: a perturbation that shouldn't change the output (synonym swap) doesn't. *Directional*: a perturbation that should change the output does.
+
+```python
+def test_overfits_one_batch():
+    model, batch = make_model(), next(iter(train_loader))
+    opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    for _ in range(200):
+        loss = loss_fn(model(batch.x), batch.y)
+        opt.zero_grad(); loss.backward(); opt.step()
+    assert loss.item() < 0.05       # can't memorise 32 rows → wiring bug, not a tuning problem
+```
 
 ### Integration test with docker-compose and LocalStack
 

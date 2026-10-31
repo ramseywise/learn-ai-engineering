@@ -53,7 +53,7 @@ target; rename or merge as the material dictates.
 | 03 | Documents: OCR, layout, charts and tables, OCR vs. VLM | *Vision Language Models*; ledger papers |
 | 04 | Multimodal RAG: page-as-image retrieval, captioning, mixed indexes | ColPali; *Vision Language Models* RAG chapter |
 | 05 | Speech in and out: ASR, TTS, cascaded vs. end-to-end | HF Audio Course; Whisper; Moshi; Qwen2.5-Omni |
-| 06 | Generating images and video: APIs, editing, cost, provenance | HF Diffusers docs; ledger papers |
+| 06 | [Generating images and video: APIs, editing, cost, provenance](notes/06-generating-images-and-video.md) ✓ | *Prompt Engineering for Generative AI* ch. 7, 9; HF Diffusers docs; ledger papers |
 | 07 | Evaluating multimodal systems: VLM hallucination, grading non-text output | *Hallucination in LVLMs*; MMMU |
 | 08 | Failure modes and when to fall back to text | synthesis |
 
