@@ -30,6 +30,8 @@ Backfill (older weeks, tagged `backlog` so the weekly run leaves them alone):
 
 Re-triage after HOMES changes (e.g. the repo PDFs triage once skipped):
   potw.py triage --status skipped --source repo
+DAIR rows whose PDF someone already dropped into the repo (queued at relevance >= 1):
+  potw.py triage --local --backlog
 """
 import argparse
 import hashlib
@@ -64,8 +66,8 @@ TRIAGE_MODEL = os.environ.get("POTW_TRIAGE_MODEL", "claude-haiku-5-5")
 TRIAGE_BATCH = 25
 
 # Every topic with a home in the repo: key -> (folder, scope). The key is what the ledger
-# stores as `pillar` (and `topic`). Pillar folders file PDFs under sources/; the two
-# subject folders without pillars file them under readings/.
+# stores as `pillar` (and `topic`). Every home, pillar or
+# subject folder, files PDFs under sources/.
 HOMES = {
     "prompt": ("ai-engineering/01-prompt-engineering",
                "prompt engineering: instructions, few-shot, chain-of-thought prompting, output formats, prompt injection"),
@@ -132,7 +134,7 @@ arxiv_re = re.compile(r"arxiv\.org/(?:abs|pdf|html)/(\d{4}\.\d{4,5})|academy\.da
 def sources_rel(home):
     """Repo-relative folder a home files its PDFs in."""
     folder = PILLARS[home]
-    return f"{folder}/{'sources' if '/' in folder else 'readings'}"
+    return f"{folder}/sources"
 
 
 def is_tracked(path):
@@ -496,7 +498,7 @@ def arxiv_batch_meta(ids):
 
 
 def sources_pillar(path):
-    """The home whose sources/ (or readings/) folder holds this PDF, if any."""
+    """The home whose sources/ folder holds this PDF, if any."""
     for home in PILLARS:
         if path.startswith(sources_rel(home) + "/"):
             return home
@@ -695,33 +697,48 @@ def cmd_route(args):
         sys.exit(f"route: no arXiv metadata for {len(need - set(meta))} papers; retry later "
                  "(the dry run shows the names that would be used)")
     taken = {r["local_pdf"] for r in rows if r.get("local_pdf")}
+    home_of = lambda p: p.startswith(sources_rel(r["pillar"]) + "/")  # r is the loop's current row
+    sha = lambda p: hashlib.sha1(p.read_bytes()).hexdigest()
     moved = dropped = 0
-    for r in sorted(todo, key=lambda r: r["local_pdf"]):
-        src = REPO / r["local_pdf"]
-        dest = REPO / sources_rel(r["pillar"]) / route_name(r, meta)
-        rel = str(dest.relative_to(REPO))
-        if rel in taken and rel != r["local_pdf"]:  # name clash with a different reading
-            dest = dest.with_name(f"{dest.stem}-{(r.get('arxiv') or r['key'][5:13])}.pdf")
-            rel = str(dest.relative_to(REPO))
-        print(f"{'mv' if args.apply else 'would mv'}  {r['local_pdf']}\n    -> {rel}")
-        # duplicate copies inside the inbox go; copies elsewhere wait for /pillar
-        extra = [c for c in r.get("copies") or [] if c.startswith(args.src) and (REPO / c).exists()]
-        for c in extra:
-            print(f"{'rm' if args.apply else 'would rm'}  {c}  (duplicate)")
-        taken.add(rel)  # in a dry run too, so clashes show up before --apply
-        if not args.apply:
-            continue
-        git_mv(src, dest)
-        for c in extra:
-            git_rm(REPO / c)
-            dropped += 1
-        taken.discard(r["local_pdf"])
-        r["local_pdf"] = rel
-        r["copies"] = [c for c in r.get("copies") or [] if c not in extra] or None
-        r["area"] = rel.split("/")[0]
-        moved += 1
-    if args.apply:
-        save_ledger(rows)
+    try:
+        for r in sorted(todo, key=lambda r: r["local_pdf"]):
+            src = REPO / r["local_pdf"]
+            inbox = [c for c in [r["local_pdf"], *(r.get("copies") or [])]
+                     if c.startswith(args.src) and (REPO / c).exists()]
+            # a copy already in the right home wins and the inbox ones are duplicates; a copy filed
+            # in another home stays listed in `copies` for /pillar to clear up
+            filed = [c for c in r.get("copies") or [] if home_of(c) and (REPO / c).exists()]
+            if filed:
+                rel, drop = filed[0], inbox
+            else:
+                dest = REPO / sources_rel(r["pillar"]) / route_name(r, meta)
+                rel = str(dest.relative_to(REPO))
+                if dest.exists() and sha(dest) == sha(src):  # same file already there, untracked by the ledger
+                    drop = inbox
+                else:
+                    if rel in taken or dest.exists():  # name clash with a different reading
+                        dest = dest.with_name(f"{dest.stem}-{(r.get('arxiv') or r['key'][5:13])}.pdf")
+                        rel = str(dest.relative_to(REPO))
+                    drop = inbox[1:]
+                    print(f"{'mv' if args.apply else 'would mv'}  {r['local_pdf']}\n    -> {rel}")
+            for c in drop:
+                print(f"{'rm' if args.apply else 'would rm'}  {c}  (duplicate of {rel})")
+            taken.add(rel)  # in a dry run too, so clashes show up before --apply
+            if not args.apply:
+                continue
+            if r["local_pdf"] not in drop:
+                git_mv(src, REPO / rel)
+                moved += 1
+            for c in drop:
+                git_rm(REPO / c)
+                dropped += 1
+            taken.discard(r["local_pdf"])
+            r["local_pdf"] = rel
+            r["copies"] = [c for c in r.get("copies") or [] if c not in drop and c != rel] or None
+            r["area"] = rel.split("/")[0]
+    finally:  # a failed move must not lose the ones already made
+        if args.apply:
+            save_ledger(rows)
     left = sum(1 for r in rows if (r.get("local_pdf") or "").startswith(args.src))
     if not args.apply:
         left -= len(todo)
