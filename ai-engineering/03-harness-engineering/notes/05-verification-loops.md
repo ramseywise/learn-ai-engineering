@@ -7,6 +7,8 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://openai.com/index/harness-engineering/
+  - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
+  - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-07-29
@@ -134,6 +136,16 @@ Cheap fast model for the task; expensive smart model **at the verification gate 
 
 The symmetric alternative — same model checking its own work — is listed among the field's canonical failure modes. It produces confident agreement, not review.
 
+Karpathy's framing (as relayed from his AISN 2026 talk) is a useful way to teach this. A model is a "robot librarian" that answers only from its own books and doesn't know which ones are missing, so telling it to "make this better" changes nothing. Verification does. His three moves line up with this note:
+
+| Move | Mechanism | Here |
+|---|---|---|
+| **Criteria before work** | "Three sections, each ends with a recommendation," not "make it look good" | [Eval-first](#eval-first), [sprint contracts](#sprint-contracts) |
+| **Second librarian** | A different model family grades the first one's answer | This section |
+| **External signal** | Ask the system that holds ground truth: the deploy target, the test suite, the database | [Self-verification](#the-self-verification-loop) |
+
+Boris Cherny (Claude Code), as quoted in the same talk: **a feedback loop improves final quality 2–3×.**
+
 ### When a verifier is worth deleting
 
 The counterweight, and the rarer report: PRINCE ran an LLM review step over generated SQL and **removed it**. The reviewer kept flagging valid queries as erroneous — cost and latency for a net loss in throughput, with no accuracy gain to trade against.
@@ -189,6 +201,20 @@ Subjective judgment doesn't transfer to an evaluator agent. Replace it with **we
 
 The generalizable move: **name the dimensions, weight them, score each separately.** A single 1–10 score collapses distinct failures into one number and gives the generator nothing actionable.
 
+For code work, the pillar's [evaluator rubric](../templates/evaluator-rubric.md) scores six harness-level dimensions 0–2 and ends in a three-way verdict:
+
+```markdown
+| Category          | Question                                                    | Score (0-2) |
+| Correctness       | Does the implemented behavior match the requested feature? |             |
+| Verification      | Did the required checks actually run, with evidence?       |             |
+| Scope discipline  | Did the session stay inside the chosen feature scope?      |             |
+| Reliability       | Does the result survive restart or rerun without repair?   |             |
+| Maintainability   | Is the code and documentation clear for the next session?  |             |
+| Handoff readiness | Can a fresh session continue from repo artifacts only?     |             |
+
+Verdict: Accept · Revise · Block
+```
+
 ---
 
 ## Sprint contracts
@@ -221,6 +247,8 @@ Without a binary eval, there is no signal to improve against, and every change i
 1. **Schema checks** — does the output parse and conform?
 2. **Reference comparison** — does it match known-good output?
 3. **Calibrated LLM-as-judge** — rubric-scored, with the rubric itself validated against human judgment.
+
+The same ladder describes **runtime guardrails**, the gate between "the agent says it's done" and the result being finalised. Code checks cover format, length and allowlists, and should be preferred wherever they can decide. An LLM judge covers nuance ("is this consistent with the sources?") and returns *why* it failed, so the agent revises instead of retrying blind. A HITL stop covers what neither can decide. **Most production systems run at least two of the three.**
 
 Two related disciplines: **Pass@k** measures capability boundaries (can it ever do this?); **Pass^k** measures deployment quality (does it do this *every* time?). Ship on Pass^k.
 

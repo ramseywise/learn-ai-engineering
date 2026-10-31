@@ -37,6 +37,26 @@ A workflow agent that runs its `sub_agents` **in order, every pass**, until a st
 
 The documented refinement shape: `InitialWriterAgent` (draft) → `CriticAgent` (grade against criteria) → `RefinerAgent` (apply fixes, or call `exit_loop` when the critic returns its completion phrase, e.g. "No major issues found"). Sub-agents share state through the session state dict. Available in Python, TypeScript, Go and Java.
 
+```python
+from google.adk.agents import LlmAgent, LoopAgent, SequentialAgent
+from google.adk.tools.tool_context import ToolContext
+
+def exit_loop(tool_context: ToolContext):
+    """Call only when the critic said 'No major issues found'."""
+    tool_context.actions.escalate = True     # ends the LoopAgent after this pass
+    return {}
+
+critic  = LlmAgent(name="CriticAgent",  instruction="Grade {draft} against the criteria...",
+                   output_key="critique")
+refiner = LlmAgent(name="RefinerAgent", instruction="If {critique} is clean, call exit_loop. "
+                   "Otherwise rewrite {draft}.", tools=[exit_loop], output_key="draft")
+
+refine = LoopAgent(name="Refine", sub_agents=[critic, refiner], max_iterations=5)  # backstop
+pipeline = SequentialAgent(name="Write", sub_agents=[initial_writer, refine])
+```
+
+`output_key` writes each agent's reply into session state, and `{draft}` / `{critique}` read it back into the next instruction. That's the whole memory between passes.
+
 Practices: write the completion criteria before the loop; always provide the escape hatch; keep `max_iterations` as the backstop, **not** the main exit.
 
 The critic/refiner split is the maker/checker pattern from [note 03](03-the-scorekeeper.md#maker-and-checker). Note that the critic's completion phrase is how it returns "clean."

@@ -1,6 +1,6 @@
 # Lab 3 — Self-modification triggered by failure trajectories
 
-> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 8-5 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/self-modifying-agent), Apache-2.0). The README has been translated to English. Concepts: [note 08 — Self-modification as a release process](../../notes/08-self-improving-loops.md#self-modification-as-a-release-process).
+> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 9-6 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-modifying-agent), Apache-2.0). The README has been translated to English. Concepts: [note 08 — Self-modification as a release process](../../notes/08-self-improving-loops.md#self-modification-as-a-release-process).
 
 Suppose production trajectories show an agent calling the same tool again and again after a `retryable=false` error. The system should fix the agent's retry and circuit-breaker code. Adding "don't repeat the call" to the prompt is the wrong layer: the constraint can be enforced deterministically, so it belongs in code.
 

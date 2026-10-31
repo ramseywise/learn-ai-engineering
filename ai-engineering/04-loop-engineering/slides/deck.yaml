@@ -1,0 +1,823 @@
+# Loop Engineering — lecture deck. Built from notes/01–10 and the README syllabus.
+# Build:  make slides PILLAR=04-loop-engineering [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Loop Engineering
+  subtitle: Designing the cycle that prompts the agent
+  tagline: |-
+    Loop shapes · Scorekeeper · Building blocks · Long runs
+    Triggers · Autonomy · Self-improvement · Guardrails · Frameworks
+  reference: "Notes: ai-engineering/04-loop-engineering"
+  output: loop-engineering.pptx
+  notes: >-
+    Pillar 4 of the AI-engineering course. prompt → context → harness → loop → graph.
+    The harness decides where work can safely happen; the loop decides what happens next and when it stops.
+    Four parts — the foundations, building the loop, autonomy and improvement, running it safely.
+
+parts:
+  # ───────────────────────────────────────────────────────────── Part 1
+  - title: Foundations
+    summary: What a loop is · Loop shapes · The scorekeeper
+    slides:
+      - layout: statement
+        title: The definition
+        kicker: What a loop is
+        statement: Loop engineering is designing the cycle that keeps an agent correct and productive when nobody is watching.
+        attribution: "\"Stop prompting your agents and start designing the loops that prompt them.\" — Adnan Masood"
+        source: notes/01-what-a-loop-is.md
+        notes: >-
+          The question changes from "how do I phrase this?" to "what cycle re-prompts the agent, checks it,
+          and decides when it quits?" Osmani: replace yourself as the person who prompts the agent.
+          A loop is dynamic, unlike a chain: feedback changes the next step.
+
+      - layout: image
+        title: One cycle, three vocabularies
+        kicker: What a loop is
+        image: ../images/anthropic-agent-loop.png
+        caption: "The loop Anthropic ships (AI Builder Club, 2026)"
+        bullets:
+          - "**Classic agents:** perceive → decide → act → repeat"
+          - "**Claude Agent SDK:** gather → act → verify → repeat"
+          - "**KodeKloud:** try → test → fix → **save** → repeat"
+          - The save step makes progress a ratchet. A bad pass costs one rollback, not the run
+        source: notes/01-what-a-loop-is.md
+        notes: >-
+          Every source describes the same cycle. KodeKloud adds the step the others leave implicit:
+          a pass that improves the score is committed before the next pass starts.
+
+      - layout: compare
+        title: Two things before anything runs
+        kicker: The foundation
+        emphasis: right
+        left:
+          title: A clear goal
+          bullets:
+            - A plain statement of what done looks like
+            - "\"Make all auth tests pass\", not \"improve the app\""
+            - A testable goal is a loop invariant; a vague one is an infinite loop
+          tag: Points the work
+        right:
+          title: A scorekeeper
+          bullets:
+            - An objective check that says whether a step helped or hurt
+            - Test suite, build, linter, or a rubric graded by a separate agent
+            - The load-bearing part, with its own note
+          tag: Proves the work
+        takeaway: "Write the scorekeeper first. Then go green once: goal → one change → score → persist."
+        source: notes/01-what-a-loop-is.md
+        notes: >-
+          Green first: one small validated win saved before adding anything. Then add parts only when a real
+          failure demands them. Build a loop only when the work repeats and a scorekeeper can validate it;
+          otherwise a workflow or a good prompt is cheaper.
+
+      - layout: table
+        title: Crossing from harness into loop
+        kicker: Inside the loop vs outside it
+        header: [Harness engineering, Loop engineering]
+        widths: [5, 5]
+        bold_first: false
+        rows:
+          - ["One run: tools, sandbox, hooks, verification", "Many runs: what starts the next one, and when to stop"]
+          - [Progress file written at session end, Progress file read by the next pass to pick its own task]
+          - [Generator/evaluator separation, Maker/checker as the loop's quality ceiling]
+          - ["Ratchet on the harness (every failure → a rule)", "Ratchet on the work (score only goes up, else roll back)"]
+        takeaway: The moment the agent's next run starts without you typing a prompt, you've crossed from harness into loop.
+        source: notes/01-what-a-loop-is.md
+        notes: >-
+          With a full harness you are still inside the loop: you read the progress file and type the next
+          instruction. Outside it, a system you designed does trigger → discover → dispatch → verify → save.
+          Generation becomes nearly free; judgment becomes the scarce resource.
+
+      - layout: table
+        title: Two axes map the pillar
+        kicker: Capability levels (LangChain)
+        lead: Each level wraps the one before. The second axis, autonomy, is independent of it.
+        header: [Level, Loop, Automates, Note]
+        widths: [1, 4.5, 2, 1.5]
+        rows:
+          - ["1", "Agent loop: model calls tools until done", Work, "02, 04, 05"]
+          - ["2", "Verification loop: grader feeds failures back", Quality, "03"]
+          - ["3", "Event-driven loop: schedules and webhooks start runs", Invocation, "06"]
+          - ["4", "Hill-climbing loop: traces rewrite the harness", Improvement, "08"]
+        takeaway: "Humans stay in at every level. \"Automation doesn't mean removing humans from the loop.\""
+        source: notes/01-what-a-loop-is.md
+        notes: >-
+          Autonomy: turn-based → goal-based → time-based → proactive (note 07). A hill-climbing loop
+          can run at autonomy rung 1 with a human approving each rewrite.
+
+      - layout: table
+        title: The five required parts
+        kicker: Loop shapes
+        lead: A loop missing any one will hang, thrash, or quietly ship garbage.
+        header: [Part, Missing it looks like]
+        widths: [4, 5]
+        rows:
+          - [Testable goal, Loop never finishes; scope drifts]
+          - [Tool set, "The agent can't see consequences, so it guesses"]
+          - [Context management, Token overflow; it forgets what it tried]
+          - ["Termination logic (layered, independent)", Runs forever or stops at random]
+          - [Error handling, Retries the same failed approach]
+        takeaway: Design the shape before the prompt. A prompt cannot fix a missing line.
+        source: notes/02-loop-shapes.md
+        notes: >-
+          ML Mastery, MindStudio and Masood agree on these five. Anthropic built Claude Code around one
+          loop and extracted the Agent SDK: the loop is the reusable object, not the prompt inside it.
+
+      - layout: code
+        title: The canonical skeleton
+        kicker: The model supplies two lines
+        lang: pseudocode
+        code: |-
+          initialize state with goal
+          for step in range(MAX_STEPS):
+              reason about current state      # the model
+              choose a concrete action        # the model
+              execute the tool
+              update state with the outcome
+              compact context
+              if scorekeeper says goal met:
+                  save; return success
+              if score went down: roll back
+              if no progress for N steps
+                 or budget exhausted: escalate
+          escalate to human  # cap is not success
+        bullets:
+          - "\"Engineering is everything wrapped around\" the model (Masood)"
+          - "**Save** on success and **roll back** on a drop: the score only goes up"
+          - The final line is an escalation, not a return value
+        source: notes/02-loop-shapes.md
+        notes: >-
+          Every line except the two model lines is yours. The save and roll-back lines come from KodeKloud
+          and make progress a ratchet (note 09).
+
+      - layout: image
+        title: Most loop decisions are multiple choice
+        kicker: "JevAgentHarness (Zhu et al., 2026)"
+        image: ../sources/images/zhu-2026-decision-points.png
+        caption: Eight decision points in one step, and five ways to share control (Zhu et al., 2026, Fig. 3)
+        bullets:
+          - "A small decision model scores the options: **28%** of an LLM call's time, **2.6%** of its price"
+          - "Without a fitted threshold, delegating tool choice cut success by **19 points**"
+          - "With a per-point threshold (the cascade): **81–89%** cheaper, up to **2.5×** faster, under 3 points lost"
+        takeaway: A cheap component in the loop is safe only once you've measured where it is wrong.
+        source: notes/02-loop-shapes.md
+        notes: >-
+          Which tool, which arguments, reflect or not, stop or not. The decision model most accurate on
+          isolated questions solved only 69.5% of agent tasks. Same lesson as the scorekeeper.
+
+      - layout: cards
+        title: Pick the pattern by task shape
+        kicker: Loop patterns
+        cards:
+          - title: Retry
+            body: "Atomic task, clear pass/fail. Act → check → act again with the error."
+          - title: Plan–Execute–Verify
+            body: Multi-step work where order matters. Plan once, run steps, verify each.
+          - title: Explore–Narrow
+            body: Unfamiliar territory. Fan out in parallel, then converge on the best lead.
+          - title: Human-in-the-loop
+            body: Ambiguity or high stakes. Pause at decision points for approval.
+        takeaway: "Vercel's order: tool use first, then reflection, then planning and multi-agent once evals exist."
+        source: notes/02-loop-shapes.md
+        notes: >-
+          Planning variants inside the agent loop: ReAct (adaptive, can wander), Plan-then-Act (predictable,
+          brittle), Plan-and-Revise (the usual production compromise). For long work the plan lives in a file.
+          Workflow → loop → graph: move right only when the task forces you to.
+
+      - layout: statement
+        title: Build the verifier first
+        kicker: The scorekeeper
+        statement: Build the verifier before you scale the generator. A generator that can't check itself just produces plausible-looking work faster.
+        attribution: "Anthropic's web-app agent improved once it could test features like a human would — verification, not a better prompt."
+        source: notes/03-the-scorekeeper.md
+        notes: >-
+          In a loop the generator runs cheaply, over and over. The scorekeeper decides whether that motion
+          turns into value or slop. LangChain: verification adds latency and cost; worth it when quality
+          matters more than speed.
+
+      - layout: cards
+        title: Five traits of a scorekeeper
+        kicker: KodeKloud's four, plus one
+        cards:
+          - title: Objective
+            body: Same work gives the same result every time.
+          - title: Automatic
+            body: One command or CI trigger. No manual step.
+          - title: Fast
+            body: Cheap enough to run every pass.
+          - title: Clear
+            body: One unambiguous score, so the loop knows where it stands.
+          - title: Hard to fake
+            accent: "D4621A"
+            body: "A loop that can lower the bar will take the easiest path to green."
+          - title: Defenses
+            accent: "0EA5C9"
+            body: Held-out checks, tamper-proof location, auditable artifacts, watch the trend.
+        source: notes/03-the-scorekeeper.md
+        notes: >-
+          If the loop can pass by faking outputs or editing the tests, the score becomes a lie. A sudden
+          jump in score is a reason to look, not to celebrate.
+
+      - layout: table
+        title: The write boundary
+        kicker: Karpathy's autoresearch
+        header: [File, Who writes it, Why]
+        widths: [2.5, 2.5, 5]
+        rows:
+          - ["`train.py`", Agent, The search space]
+          - ["`prepare.py` (eval)", Nobody, The verifier must not be editable by the thing it grades]
+          - ["`program.md`", Human, The contract]
+        takeaway: "An agent that can edit its own evaluator does not have a verifier; it has a negotiation."
+        source: notes/03-the-scorekeeper.md
+        notes: >-
+          Enforce the boundary structurally: file permissions, a hook that blocks writes, a separate repo.
+          Instructions are suggestions; permissions are rules. Layering: deterministic checks first,
+          a rubric graded by a separate model above that floor, humans for taste.
+
+      - layout: code
+        title: The checker never trusts the maker
+        kicker: Maker and checker
+        lang: markdown
+        code: |-
+          ## Your role
+          You are the Checker. Be strict, and
+          honest in both directions.
+          1. Read the loop contract.
+          2. Read the diff, not the Maker's summary.
+          3. Run the scorekeeper commands yourself.
+          ## Checklist
+          - Boundary: any file outside it changed?
+            Tests or scoring touched? → auto Fail
+          - Tests: would they fail if reverted?
+          - Score: higher, equal or lower?
+          ## Report
+          Verdict: PASS / FAIL / PASS WITH NOTES
+          A PASS needs scorekeeper output behind it.
+        bullets:
+          - "Checker: fresh agent, **no maker history**, stricter rules"
+          - "Must be allowed to return **clean**, or it invents findings"
+          - "ADK: `RefinerAgent` / `CriticAgent`; LangChain: `RubricMiddleware`"
+        source: notes/03-the-scorekeeper.md
+        notes: >-
+          Condensed from templates/checker-prompt.md. The maker does one small change, runs build, lint and
+          tests itself and hands over where to look hardest. The original project-07 prompt told the checker
+          that finding nothing was failure; this version deletes that line.
+
+  # ───────────────────────────────────────────────────────────── Part 2
+  - title: Building the loop
+    summary: Building blocks · Long-running loops · Triggers and schedules
+    slides:
+      - layout: table
+        title: Six parts, each fixing one failure
+        kicker: Building blocks
+        header: [Part, Fixes this failure]
+        widths: [3, 6]
+        rows:
+          - [Automations, You are still the one pressing go]
+          - [Worktrees, A bad try breaks main; parallel agents collide]
+          - [Skills, The agent re-guesses your conventions every pass]
+          - [Connectors / plugins, The loop can only edit local files]
+          - [Sub-agents, Main context floods; the maker grades itself]
+          - [Memory, Each restart forgets what was done]
+        takeaway: Add a part when you see the failure it fixes, not before.
+        source: notes/04-building-blocks.md
+        notes: >-
+          Osmani and KodeKloud list the same six. Osmani's names: heartbeat, parallel safety, intent
+          preservation, environmental integration, separation of concerns, the spine.
+
+      - layout: cards
+        title: What each block buys a loop
+        kicker: Building blocks
+        cards:
+          - title: Worktrees
+            body: "Disposable, concurrent experiments. `git worktree add ../try -b try`; a failed try costs one `remove`."
+          - title: Skills
+            body: Steps, not essays, loaded only when the task matches. Skipping them is intent debt.
+          - title: Connectors
+            body: "From \"here's the fix\" to \"PR opened, ticket linked\". Least privilege: read-only by default."
+          - title: Sub-agents
+            body: "Fresh context, one job, distilled return. Explorer → implementer → verifier."
+        source: notes/04-building-blocks.md
+        notes: >-
+          Full access (merge, delete, manage permissions): avoid, or put a human approval in front and
+          audit every use. Sub-agents return only the result; the main loop never sees the messy middle.
+
+      - layout: steps
+        title: The whole loop in motion
+        kicker: One pass, KodeKloud's sequence
+        axis: one pass
+        steps:
+          - title: Goal + scorekeeper
+            text: required before anything runs
+          - title: Read memory, make a worktree
+            text: where did I leave off; a safe place to try
+          - title: Load the skill, make ONE change
+            text: the steps for this kind of job
+          - title: Score it
+            text: the scorekeeper, not the agent's own claim
+          - title: Save or roll back, update memory
+            text: the ratchet, then the next pass starts
+        source: notes/04-building-blocks.md
+        notes: >-
+          How the six parts fit into one pass. One small change per pass keeps every step testable and
+          revertible.
+
+      - layout: statement
+        title: Context is a budget, not a bucket
+        kicker: Long-running loops
+        statement: A loop that runs for hours must forget on purpose and remember on disk. Progress lives in files, not in the context window.
+        attribution: Context rot, context anxiety and session end all have the same fix.
+        source: notes/05-long-running-loops.md
+        notes: >-
+          Feed each pass the smallest set of high-signal tokens the next step needs: just-in-time retrieval,
+          compact inside the loop, offload big outputs, push heavy reads into sub-agents.
+
+      - layout: table
+        title: Memory — five fields
+        kicker: Read at the start of every pass
+        header: [Field, Example]
+        widths: [3, 6]
+        rows:
+          - [Goal, "`All tests in tests/auth/ pass`"]
+          - [Last score, "`41/47 passing`"]
+          - [What was tried, "`Mocking the clock in test_expiry: no change`"]
+          - [What is next, "`Check token refresh path in auth/session.py`"]
+          - [Waiting for a human, "`Approve dropping the legacy cookie`"]
+        takeaway: "\"What was tried\" earns its place. Without it, a fresh pass reruns the attempt that failed an hour ago."
+        source: notes/05-long-running-loops.md
+        notes: >-
+          Three tiers: now and recent read every pass, archive only when needed. Keep memory small.
+          Context drift: when the world changes and the notes don't, the loop acts on a stale picture with
+          full confidence. Date every note. Template: templates/loop-state.md.
+
+      - layout: code
+        title: The Ralph loop, with a ratchet
+        kicker: Huntley's loop, production-grade
+        lang: bash
+        code: |-
+          best=$(score)
+          for ((i = 1; i <= MAX_ITERS; i++)); do
+            past_deadline && exit 2       # clock
+            $AGENT_CMD < "$PROMPT_FILE"   # fresh ctx
+            now=$(score)
+            if worse; then                # undo
+              git reset --hard; ((stall++))
+            elif better; then             # keep
+              git commit -qam "pass $i"
+              best=$now; stall=0
+            else ((stall++)); fi
+            done_check && exit 0          # success
+            ((stall >= STALL_LIMIT)) && exit 3
+          done
+          exit 1                          # cap != success
+        bullets:
+          - "Iteration cap, wall-clock cap, a **done check** run by the scorekeeper, a stall check"
+          - "Exit codes tell success (0) from cap (1), clock (2), stall (3)"
+          - "Harnesses now ship it: stop hooks, `/goal`"
+        source: notes/05-long-running-loops.md
+        notes: >-
+          Simplified from templates/ralph.sh (the note has the full condensed version with awk comparisons
+          and git clean). Each run starts with a fresh context; the filesystem carries everything between runs.
+
+      - layout: compare
+        title: Initializer and worker
+        kicker: Anthropic, long-running agents
+        emphasis: right
+        left:
+          title: Initializer (runs once)
+          bullets:
+            - Turns the task into files
+            - Feature list, progress log, scaffolding, `init` script
+            - Commits them
+          tag: The plan on disk
+        right:
+          title: Worker (every session)
+          bullets:
+            - Reads the progress log and git history
+            - Picks **one** unfinished item, implements and tests it
+            - Commits, updates the log, exits cleanly
+          tag: One item per session, leave the repo clean
+        takeaway: "Loops lean toward reset over compaction: state is already on disk, so clear the window and hand off through files."
+        source: notes/05-long-running-loops.md
+        notes: >-
+          Compaction summarizes the transcript in place (one long session; risk of summary-of-a-summary drift).
+          Reset clears the window and hands off through files (multi-session; anything not written down is lost).
+
+      - layout: compare
+        title: Two ways a loop runs again
+        kicker: Triggers and schedules
+        emphasis: none
+        left:
+          title: Run-until-done
+          bullets:
+            - Pass after pass, immediately
+            - Stops on the finish signal or a cap
+            - Needs a precise done
+          tag: "`/goal`"
+        right:
+          title: Timer
+          bullets:
+            - On an interval or cron
+            - Never stops by itself; each run is short
+            - Must be cheap when there's nothing to do
+          tag: "`/loop 5m`, `/schedule`"
+        takeaway: "Does this thing have an end? Yes → /goal. No, it's ongoing watching → /loop."
+        source: notes/06-triggers-and-schedules.md
+        notes: >-
+          Capability level 3: the agent becomes a component running continuously. The common mistake is
+          /loop 10m "keep implementing the payment system": each pass starts from scratch unless it reads a state file.
+
+      - layout: table
+        title: Three triggers, and the cost ceilings they need
+        kicker: Triggers and schedules
+        header: [Trigger, Fires on, Example]
+        widths: [2, 3.5, 5]
+        rows:
+          - [Manual, You, Interactive work you're watching]
+          - [Event, "Sentry error, ticket, failing CI, Slack", Investigate the alert and open a PR]
+          - [Schedule, The clock, Nightly test-babysitting; 30-minute migration cycles]
+        takeaway: "Prefer events to polling. Caps per run and per day, a no-op path that exits before the model, alerts on spend."
+        source: notes/06-triggers-and-schedules.md
+        notes: >-
+          A schedule that wakes to find nothing is the most common waste at level 3. Put a cheap deterministic
+          pre-check in front. Oded Messer's skeptical note: much of level 3 is automation rediscovered; what's
+          new is that the thing on the cron is nondeterministic, which is why the scorekeeper carries the weight.
+
+  # ───────────────────────────────────────────────────────────── Part 3
+  - title: Autonomy and improvement
+    summary: The autonomy ladder · Self-improving loops
+    slides:
+      - layout: steps
+        title: The autonomy ladder
+        kicker: Climb one rung at a time
+        axis: more handed off
+        steps:
+          - title: 1 — Turn-based
+            text: hand off tool approval within a turn. Where you learn how tasks fail
+          - title: 2 — Goal-based (`/goal`)
+            text: hand off the stop condition. Needs a measurable end state
+          - title: 3 — Time-based (`/loop`)
+            text: hand off the trigger to a clock. Session-scoped, your permissions
+          - title: 4 — Proactive (`/schedule`)
+            text: hand off trigger and session. Needs a verifier you trust unattended
+        takeaway: Earn each handoff with a verifier. Skipping rungs is how you get a doom loop.
+        source: notes/07-autonomy-ladder.md
+        notes: >-
+          Rungs are cumulative. Rung 2 is pivotal: the first unattended loop; a weak verifier there becomes
+          a weak verifier at 3 and 4 where nobody watches it fail. Time-based is the right resting place for
+          most loops. The prerequisite for rung 4 is evidential, not technical.
+
+      - layout: statement
+        title: The evolve loop
+        kicker: Capability level 4
+        statement: An evolve loop is a loop with a second, slower loop pointed at it. The fast loop does the work. The slow loop edits the fast loop.
+        attribution: It doesn't retrain weights; it rewrites files. Contract, state, triggers and procedure improve while the model stays fixed.
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          LangChain: traces → analysis agent → rewritten harness config. The slow loop runs every 5–10 runs
+          of the fast one and reads configuration, state and logs, and raw conversation history.
+
+      - layout: image
+        title: The continual-evolution loop
+        kicker: "Li, AI Agents in Depth, ch. 9"
+        image: ../images/ai-agent-book/fig9-1.svg
+        caption: Execute, record, form signals, generate candidate updates, verify, release (Li, 2026, Fig. 9-1, Apache-2.0)
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          The book's full loop: execute a task, record the trajectory, form outcome, process and quality
+          signals, generate candidate updates to knowledge, instructions, programs or parameters, then verify
+          and release a new agent version.
+
+      - layout: table
+        title: Four edit targets, and the anti-busywork rule
+        kicker: The evolve loop
+        header: [Target, Symptom that triggers it]
+        widths: [2.5, 6]
+        rows:
+          - [Contract, "Loop \"succeeds\" on runs you'd call failures"]
+          - [State, Agent acts on facts that expired]
+          - [Trigger logic, "Wakes constantly, finds nothing to do"]
+          - [SOP steps, "Same manual correction, every run"]
+        takeaway: "Agents default to doing something. Make \"no change needed\" an explicit, successful outcome."
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          Superdesign's triage loop rewrote its own trigger: a script that fetches the last 30 minutes of
+          updates and wakes the agent only when work exists. If "no change" counts as failure, you have built
+          a machine that damages itself on a schedule. Failure modes: invented improvements, state rot,
+          compounding errors, and it can't decide whether the loop should exist.
+
+      - layout: code
+        title: Verify before you learn
+        kicker: Promise–action consistency
+        lang: python
+        code: |-
+          def _promise_action(self, traj):
+              ok = {c["name"]
+                    for c in traj["tool_calls"]
+                    if c["result"].get("success")}
+              missing = [p for p in traj["promises"]
+                         if p["required_tool"] not in ok]
+              if missing:          # said it, never did it
+                  return DimensionResult(
+                      "promise_action_consistency",
+                      "process_rules", FAIL, 0.0,
+                      [f"turn {p['turn']}: {p['text']}"
+                       for p in missing],  # evidence
+                      confidence=1.0)
+        bullets:
+          - "Three layers: **outcome** and **process** in code, **quality** by rubric"
+          - "False promise and privacy leak both average **0.571** but need different fixes"
+          - Structured, not scalar. A single 0.57 points nowhere
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          From practice/02-trajectory-verifier. Preserving experience is not learning from it. The run is
+          rejected if any outcome or process dimension fails, whatever the average says. Over-refusal
+          averages 0.714 and would sail through a scalar threshold.
+
+      - layout: image
+        title: Where the lesson goes
+        kicker: Four media
+        image: ../images/ai-agent-book/fig9-3.svg
+        caption: Knowledge docs, prompts and Skills, programs and harness, parameters (Li, 2026, Fig. 9-3, Apache-2.0)
+        bullets:
+          - "Starts as an **experience doc**, from comparison not summary"
+          - "Promoted to a **Skill** rule after repeated validation"
+          - "Compiled into **code** if it needs no language understanding"
+          - "**Weights** only for broad, implicit judgment"
+        takeaway: Choose the smallest target that is easiest to verify and roll back.
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          Prompt learning means minimal diffs, not rewrites: one old → new edit with a stated scope, gated on
+          boundary cases and a retention set. A strategy is recommended only when two non-failed trajectories support it.
+
+      - layout: flow
+        title: Self-modification is a release process
+        kicker: Never overwrite stable
+        steps:
+          - label: Branch
+            sub: from stable
+          - label: Minimal patch
+            sub: in a candidate dir
+          - label: Checks
+            sub: static, unit, security
+          - label: Replay + regress
+            sub: failures and old tasks
+          - label: Canary or reject
+            sub: never straight to stable
+        bullets:
+          - "**Falsifiable change contract:** root cause, expected gain, possible regression, tests for both"
+          - "**Bounded candidate space:** failures, successes to preserve, rejected attempts"
+          - "Safety is not self-modifiable: validators, thresholds and audit logs stay out of reach"
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          From Li ch. 9, Agentic Harness Engineering and Self-Harness. The change contract states predicted
+          impact before running; the next round checks that prediction.
+
+      - layout: code
+        title: The gate runs outside the model
+        kicker: practice/03-self-modifying-agent
+        lang: python
+        code: |-
+          retry = ns["should_retry"]
+          checks["failure_replay"] = all(
+              not retry(t["error_code"],
+                        t["retryable"], 0)
+              for t in failures)
+          checks["old_task_regression"] = all((
+              retry("TEMPORARY_TIMEOUT", True, 2),
+              not retry("TEMPORARY_TIMEOUT", True, 3),
+          ))
+          decision = ("release_to_canary"
+                      if all(checks.values())
+                      else "reject_candidate")
+        bullets:
+          - "Trigger: **≥ 2** failure trajectories with the same tool and error code"
+          - "Patch: stop retrying `retryable=false` errors"
+          - "Swap in an LLM patch writer: a plausible patch that breaks timeouts still gets **reject**"
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          Stable 1.0.0 retried everything three times. The gate compiles the candidate, replays every failure
+          (a permanent error must stop at once and open the circuit breaker) and re-checks old behaviour.
+          The manifest records source cases, diff, checks and the candidate and rollback versions.
+
+      - layout: image
+        title: Plasticity costs stability
+        kicker: "Chen et al., 2026"
+        image: ../sources/images/chen-2026-plasticity-vs-stability.png
+        caption: Gain on new tasks vs loss on old ones, four drift scenarios (Chen et al., 2026, Fig. 2)
+        bullets:
+          - "Across 12 runs: the more a method learned, the more it forgot (**r = −0.72**)"
+          - "Global edits to one shared prompt: a family's share fell **100% → 14.7%**"
+          - Opposite workflows → the policy rewritten into its opposite
+          - "Measure separately: validity, **activation**, **adherence**, held-out gain"
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          ReasoningBank, GEPA and Meta-Harness on four drifting task streams. Similarity-based memory localizes
+          updates better but retrieves foreign memories. Lin et al.: harness updating is not harness benefit;
+          diagnose with a two-way model swap.
+
+      - layout: compare
+        title: "autoresearch: one file, one GPU, one metric"
+        kicker: The worked example
+        emphasis: left
+        left:
+          title: The loop
+          bullets:
+            - Agent edits `train.py`; nobody edits `prepare.py`
+            - "Fixed **5 minutes** of training per try, so results compare"
+            - "Better → keep and log to `results.tsv`; worse → `git reset HEAD~1`"
+            - The method lives in English, in `program.md`
+          tag: "Karpathy, 2026-03-06, ~630 lines"
+        right:
+          title: The result
+          bullets:
+            - "700 experiments over two days → **20** real improvements"
+            - "GPT-2 training **2.02 → 1.80 h** (11%)"
+            - "Hit rate **under 3%**, which is fine when attempts are cheap"
+            - "Bilevel version: outer loop writes search code, **5×** gain, same model"
+          tag: "\"If you have an objective metric, you are the bottleneck.\""
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          The prerequisite: an automatic gate that can fail the work. Bilevel autoresearch (Qu & Lu): tuning
+          parameters without changing the mechanism gave no reliable gain; the outer loop had to write code.
+          Both loops use the same model, so the gain comes from loop structure.
+
+      - layout: image
+        title: At the frontier — recursive self-improvement
+        kicker: "DiscoveryRSI (Zhong et al., 2026)"
+        image: ../sources/images/zhong-2026-discoveryrsi-results.png
+        caption: Hits in later research, quality over two RSI rounds, human-rated gain (Zhong et al., 2026, Fig. 1)
+        bullets:
+          - "Task horizon **doubling every ~4 months**; >80% of Anthropic's merged code by Claude"
+          - "Quality is an automated rubric; best hit rate vs later papers **6.3%**"
+          - "Open-ended work: implementation drift, over-optimism, missing taste"
+        takeaway: The limit becomes verification capacity, not generation capacity.
+        source: notes/08-self-improving-loops.md
+        notes: >-
+          DiscoveryRSI learns from credit assignment, harness replay and more. The loop improves on what it
+          can measure, and the measurement is still the weak part. Fixes: separate claims from evidence, log
+          negative results, keep diverse branches, move humans up to problem definition and stopping.
+
+  # ───────────────────────────────────────────────────────────── Part 4
+  - title: Running it safely
+    summary: Failure modes and guardrails · Framework bindings
+    slides:
+      - layout: table
+        title: The traps
+        kicker: Failure modes (KodeKloud, Masood)
+        header: [Trap, Symptom, Fix]
+        widths: [2.5, 3.5, 4]
+        rows:
+          - [No scorekeeper, Results inconsistent or meaningless, Write it first; objective and hard to game]
+          - [Goal too big, Never finishes; scope drifts, Cut to one small testable piece]
+          - [Cheating the tests, "Green score, wrong output", Protect the scorekeeper; held-out checks]
+          - [Thrashing, "Lots of change, no improvement", "Smaller goal, smaller changes"]
+          - [Context rot, Memory degrades as the transcript grows, Summarize and prune inside the loop]
+          - [Unsafe autonomy, Risky commands or sweeping edits, Narrow write scope; approval gates]
+        source: notes/09-failure-modes-and-guardrails.md
+        notes: >-
+          Masood's structural three: context rot, termination failure, weak verification. MindStudio adds
+          no exit condition, repeated failures without adapting, vague goal, not enough tool access.
+
+      - layout: cards
+        title: The four silent costs
+        kicker: "Osmani: they don't show up in traces"
+        cards:
+          - title: Verification debt
+            body: "\"Looks fine\" stands in for \"confirmed\". Make stop conditions machine-checkable."
+          - title: Comprehension rot
+            body: Code ships faster than you understand it. Fast loops require fast reading.
+          - title: Cognitive surrender
+            accent: "D4621A"
+            body: "\"The comfortable posture is the dangerous one.\" You take what it returns without an opinion."
+          - title: Token blowout
+            body: Context grows roughly quadratically. Compaction or reset from the first loop.
+        takeaway: "\"Build it like someone who intends to stay the engineer, not just the person who presses go.\""
+        source: notes/09-failure-modes-and-guardrails.md
+        notes: >-
+          Audit after an hour of any run: how much was machine-confirmed? Can you explain the last change?
+          How many "I'll look later"s did you never look at? Is context size trending up?
+
+      - layout: table
+        title: Layered exits
+        kicker: Several independent ways to stop
+        header: [Exit, Fires when, Outcome]
+        widths: [2.5, 4, 3.5]
+        highlight: [0]
+        rows:
+          - [Success, Scorekeeper confirms the goal, "Save, report, stop"]
+          - [Iteration cap, N passes reached, "Escalate. The cap isn't success"]
+          - [Budget cap, "Tokens, dollars or wall-clock spent", Escalate with state saved]
+          - [Stall detector, "Score flat for K passes, or same action repeated", "Change strategy once, then escalate"]
+          - [Human escalation, "Blocker, irreversible action, judgment call", Pause and hand over full context]
+        takeaway: "The two ratchet rules: the score only goes up, and fix breaks before adding more."
+        source: notes/09-failure-modes-and-guardrails.md
+        notes: >-
+          Decide the human handoff points before the first run. With a worktree per try and a commit per
+          green pass, rollback is git reset or git worktree remove. Budgets: per pass and per run, log cost
+          next to score, sub-agents multiply cost, route models by step.
+
+      - layout: table
+        title: Guardrails for self-modifying loops
+        kicker: "Li, AI Agents in Depth, ch. 9"
+        header: [Boundary, Rule]
+        widths: [3, 7]
+        rows:
+          - ["Evidence ≠ instructions", "Web pages and tool output are untrusted. Summarize, version as a PR, review with another model family"]
+          - ["Candidate ≠ production", "New knowledge, prompts, Skills, code start where no traffic is served. Sandbox, scan, test, then canary"]
+          - [Safety is not self-modifiable, "Validators, tests, thresholds, audit logs and backups are out of the agent's reach"]
+        takeaway: The third rule is the write boundary, extended to the release gate.
+        source: notes/09-failure-modes-and-guardrails.md
+        notes: >-
+          A loop that edits itself can turn one mistake into a permanent one: an injection summarized as
+          experience fires in every later session; a malicious package gets wrapped as a tool; a faulty
+          verifier keeps approving regressions.
+
+      - layout: table
+        title: The same loop parts in three frameworks
+        kicker: Framework bindings
+        header: [Loop part, Google ADK, Vercel AI SDK, LangGraph]
+        widths: [2.2, 3, 3, 3]
+        rows:
+          - [Agent loop, "`LoopAgent`", "`ToolLoopAgent`", "`create_agent`"]
+          - [Checker, critic sub-agent, your check in a tool, "`RubricMiddleware`"]
+          - [Early exit, "`escalate = True`", "`stopWhen`", "edge to `END`"]
+          - [Hard cap, "`max_iterations`", "`stepCountIs(n)`", "`recursion_limit`"]
+          - [Durability, session state, "`WorkflowAgent`", checkpointer]
+          - [Trace, events, "`result.steps`", LangSmith]
+        takeaway: Look for where each framework puts the goal, the scorekeeper and the stop rules.
+        source: notes/10-framework-bindings.md
+        notes: >-
+          Vercel durability: 'use step' makes each tool execute a checkpoint; completed steps replay from
+          recorded output. Functions with fluid compute run up to 800s. LangGraph: a loop is an explicit cycle
+          in the graph — the next layer, 05-graph.
+
+      - layout: code
+        title: "ADK: the critic/refiner loop"
+        kicker: Framework bindings
+        lang: python
+        code: |-
+          def exit_loop(tool_context: ToolContext):
+              tool_context.actions.escalate = True
+              return {}
+
+          critic = LlmAgent(name="CriticAgent",
+              instruction="Grade {draft} ...",
+              output_key="critique")
+          refiner = LlmAgent(name="RefinerAgent",
+              instruction="If {critique} is clean, "
+                          "call exit_loop. Else rewrite.",
+              tools=[exit_loop], output_key="draft")
+          refine = LoopAgent(name="Refine",
+              sub_agents=[critic, refiner],
+              max_iterations=5)       # backstop
+        bullets:
+          - "**Stopping is not automatic:** a sub-agent must set `escalate`"
+          - "`output_key` writes state; `{draft}` reads it back"
+          - "`max_iterations` is the backstop, **not** the main exit"
+        source: notes/10-framework-bindings.md
+        notes: >-
+          The documented refinement shape: InitialWriterAgent → CriticAgent → RefinerAgent, wrapped in a
+          SequentialAgent. This is maker/checker; the critic's completion phrase is how it returns clean.
+
+  # ───────────────────────────────────────────────────────────── Close
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: The pillar on one slide
+        cards:
+          - title: Foundation
+            body: Goal and scorekeeper before anything runs. Go green once, then add parts.
+          - title: Scorekeeper
+            body: Deterministic first, out of the loop's write scope, some checks held out. The checker can say clean.
+          - title: Ratchet
+            body: The score only goes up. One change per pass; save or roll back.
+          - title: Long runs
+            body: State on disk, not in context. One item per session, leave the repo clean.
+          - title: Autonomy
+            body: Climb one rung at a time, each earned with a verifier you trust.
+          - title: Stopping
+            accent: "D4621A"
+            body: Layered, independent exits. A cap is an escalation, never a success.
+        source: README.md
+        notes: >-
+          The through-line: treat an autonomous run as a thermostat, not a conversation partner.
+
+      - layout: bullets
+        title: Where to go next
+        kicker: The graph composes loops
+        bullets:
+          - text: "**05 — Graph engineering:** loops composed into nodes, edges and multi-agent topologies"
+          - text: "**06 — Eval:** the scorekeeper as an eval artifact; graders, judges, Goodhart"
+          - text: "**Labs:** practice/01-exercises, 02-trajectory-verifier, 03-self-modifying-agent"
+          - text: "**Copy from:** templates/ — ralph.sh, loop contract, loop state, maker and checker prompts"
+          - text: "**Read:** Li, AI Agents in Depth ch. 9; Karpathy's autoresearch; Osmani and Masood"
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: The model supplies two lines of the loop. Everything else — the goal, the scorekeeper, the stop rules — is yours to design.
+        source: README.md

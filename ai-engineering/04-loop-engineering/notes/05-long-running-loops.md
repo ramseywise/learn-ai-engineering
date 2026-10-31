@@ -94,6 +94,29 @@ What it lacks: a stop condition, a budget and a scorekeeper. A production versio
 - a **stall check**: stop if the score hasn't moved in N passes
 - a log line per pass
 
+The core of it is the ratchet: run the agent, re-score, then roll back, save or count a stall. Condensed from the template (`log` stands in for its timestamped `tee` line):
+
+```bash
+best=$(score)                      # SCORE_CMD prints one number, higher is better
+for ((i = 1; i <= MAX_ITERS; i++)); do
+  (( $(date +%s) > deadline )) && { log "STOP wall-clock cap"; exit 2; }
+  $AGENT_CMD < "$PROMPT_FILE" >> "$LOG" 2>&1 || true   # fresh context every pass
+  now=$(score)
+  if awk "BEGIN{exit !($now < $best)}"; then           # worse: undo the pass
+    git reset --hard -q HEAD && git clean -fdq; stall=$((stall + 1))
+  elif awk "BEGIN{exit !($now > $best)}"; then         # better: commit it
+    git add -A && git commit -qm "ralph pass $i: $best -> $now"; best=$now; stall=0
+  else
+    stall=$((stall + 1))                               # no movement
+  fi
+  bash -c "$DONE_CMD" >/dev/null 2>&1 && { log "DONE"; exit 0; }   # scorekeeper, not the agent
+  (( stall >= STALL_LIMIT )) && { log "STOP stalled; escalate"; exit 3; }
+done
+log "STOP iteration cap; escalate"; exit 1             # a cap is not success
+```
+
+Each exit has its own code, so whatever wraps the script can tell success (0) from a cap (1), the clock (2) and a stall (3).
+
 Harnesses now ship this pattern: hooks catch the agent's attempt to finish and re-inject the prompt into a fresh context ([harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#ralph-loops)), and `/goal` does it as a built-in ([note 06](06-triggers-and-schedules.md#claude-code)).
 
 ---

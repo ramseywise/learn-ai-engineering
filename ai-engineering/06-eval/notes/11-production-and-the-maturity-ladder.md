@@ -82,7 +82,8 @@ Neither humans nor judges are enough on their own:
 
 Judges alone drift: nobody notices the criteria moving. Humans alone don't cover real traffic at scale. Run both, and track human–judge agreement on the overlap as its own metric.
 
-![Two-layer eval: human sampling calibrates the LLM evaluator](../images/two-layer-eval-human-llm-calibration.png)
+![Two-layer eval: the trace stream feeds human sampling (rule-based sample, annotation, calibration dataset) and an LLM evaluator (score all traces, drift detection, aggregate metrics). The human calibration set calibrates the judge, and both feed a quality dashboard](../images/two-layer-eval-human-llm-calibration.png)
+*Image Source: course diagram (this repo)*
 
 ---
 

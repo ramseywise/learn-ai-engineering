@@ -23,6 +23,7 @@ The operating reframe is that agent failures are **configuration problems, not m
 ## Resource map
 
 ### Deep notes
+- **Lecture deck:** [slides/harness-engineering.pptx](slides/harness-engineering.pptx) — the notes as a 5-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=03-harness-engineering`).
 - [harness-engineering.md](harness-engineering.md) — pillar overview: Agent = Model + Harness, the failures-are-config reframe, the ratchet, the five components, convergent design.
 
 #### Topic notes ([notes/](notes/))

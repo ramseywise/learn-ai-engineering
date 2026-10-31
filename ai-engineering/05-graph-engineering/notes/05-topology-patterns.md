@@ -58,6 +58,9 @@ How state crosses the boundary:
 | **Share keys** | Add the compiled subgraph directly; shared keys flow in and out |
 | **Differ** | Call the subgraph inside a wrapper node that maps parent state → child input and child output → parent update |
 
+![Pattern 1, different schemas: a wrapper node maps parent foo to child bar and back. Pattern 2, shared keys: the compiled subgraph is added directly and reads and writes foo and messages](../images/langgraph/subgraph-state-patterns.png)
+*Image Source: LangGraph docs, subgraphs (LangChain), via sources/langgraph_extended.pptx*
+
 The wrapper is more code, and usually worth it: it makes the subgraph's contract explicit, and it stops a child from writing parent keys it shouldn't touch.
 
 ### Handoff
@@ -108,7 +111,7 @@ Li's *AI Agents in Depth* ([ch. 10](https://github.com/bojieli/ai-agent-book/blo
 ### Shared vs. isolated context
 
 ![Shared Context vs. Non-Shared Context](../images/ai-agent-book/fig10-1.svg)
-*Figure 10-1, Shared Context vs. Non-Shared Context. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+*Image Source: Li, AI Agents in Depth, ch. 10, Fig. 10-1 (Apache-2.0)*
 
 The analogy is threads vs. processes. Agents with shared context see one trajectory, like threads sharing memory; nothing is lost in transfer, but everything accumulates. Isolated agents each have their own window, like processes, and communicate only through what they explicitly pass.
 
@@ -174,7 +177,7 @@ The Actor model (Hewitt, 1973) is the precedent: isolated actors that share noth
 ### A virtual file system with four areas
 
 ![Mounting structure of the four area types in the Agent Virtual File System](../images/ai-agent-book/fig10-2.svg)
-*Figure 10-2, Mounting structure of the four area types in the Agent Virtual File System. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+*Image Source: Li, AI Agents in Depth, ch. 10, Fig. 10-2 (Apache-2.0)*
 
 | Area | Example | Access | Concurrency |
 |---|---|---|---|
@@ -203,7 +206,7 @@ Peer collaboration exists mostly to stop **premature termination**, which comes 
 ### Manager: agents as tools
 
 ![Manager Parallel Coordination](../images/ai-agent-book/fig10-6.svg)
-*Figure 10-6, Manager Parallel Coordination. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+*Image Source: Li, AI Agents in Depth, ch. 10, Fig. 10-6 (Apache-2.0)*
 
 To the manager, each sub-agent is a tool call that returns a structured summary. The weak point is the **planner**: a bad plan sinks every worker. Plan-and-Act ([arXiv:2503.09572](https://arxiv.org/abs/2503.09572); 54% on WebArena-Lite) puts the strongest model on planning. That doesn't contradict the advice to give a reviewer roughly the same capability as the agent it reviews; planner and reviewer are different roles.
 
@@ -214,7 +217,7 @@ To the manager, each sub-agent is a tool call that returns a structured summary.
 ### Decentralised: orchestration vs. choreography
 
 ![MetaGPT Multi-Agent Collaboration Network](../images/ai-agent-book/fig10-9.svg)
-*Figure 10-9, MetaGPT Multi-Agent Collaboration Network. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md) (Apache-2.0).*
+*Image Source: Li, AI Agents in Depth, ch. 10, Fig. 10-9 (Apache-2.0)*
 
 Orchestration has a conductor; choreography has each agent know its next step. Choreography removes the bottleneck and the single point of failure, and makes the whole flow harder to see.
 

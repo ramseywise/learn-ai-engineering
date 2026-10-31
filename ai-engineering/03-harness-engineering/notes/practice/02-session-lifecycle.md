@@ -47,6 +47,23 @@ Anthropic's long-running-agent harness makes this a separate role: an **initiali
 5. A **progress log** recording the starting state
 6. A **clean baseline commit**
 
+The startup path is a dozen lines of shell. The pillar's [init.sh](../../templates/init.sh) installs, runs the baseline verification, and prints the start command rather than running it, so a session can always boot and check before doing anything else:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+INSTALL_CMD=(npm install)     # replace per repo
+VERIFY_CMD=(npm test)
+START_CMD=(npm run dev)
+
+"${INSTALL_CMD[@]}"
+"${VERIFY_CMD[@]}"            # fails loudly if the baseline is broken
+printf 'start with:'; printf ' %q' "${START_CMD[@]}"; echo
+[ "${RUN_START_COMMAND:-0}" = "1" ] && exec "${START_CMD[@]}"
+```
+
 Start from a project template rather than an empty directory where possible, so only project-specific setup remains.
 
 **Startup readiness**, the four conditions initialization must satisfy:

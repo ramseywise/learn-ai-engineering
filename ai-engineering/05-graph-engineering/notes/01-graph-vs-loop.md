@@ -32,6 +32,11 @@ The first is the one to build on. TrueFoundry and Eigent are vendor blogs; their
 
 Anthropic's *Building Effective Agents* draws the same line from the other side. **Workflows** are systems where models and tools are orchestrated through predefined code paths; **agents** are systems where the model directs its own process. A graph is how you write a workflow down, and it is also how you mix the two: fixed paths where you know the route, an agent node where you don't.
 
+![Five workflow shapes (prompt chaining, parallelization, orchestrator-worker, evaluator-optimizer, routing) next to an agent loop of LLM call, tool and feedback](../images/langgraph/workflows-vs-agent.png)
+*Image Source: LangGraph docs, "Workflows and agents" (LangChain), after Anthropic's Building Effective Agents (2024)*
+
+Every box on the left is a graph you write down in advance. The box on the right is a loop. Most production graphs are the left-hand shapes with one or two right-hand boxes inside them.
+
 ---
 
 ## Containment, not replacement
@@ -131,6 +136,7 @@ They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system
 | 10 | [Building KGs with LLMs](10-building-kgs-with-llms.md) | B | How do you turn text into a graph you can trust? |
 | 11 | [KG-RAG and text-to-Cypher](11-kg-rag-and-text-to-cypher.md) | B | How do you retrieve from a graph in natural language? |
 | 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
+| 13 | [Learning on graphs](13-graph-ml-and-gnns.md) | B | What can a model learn from the graph's structure? |
 
 Labs: [P1 agent graph labs](../practice/01-agent-graph-labs.md) (Track A), [P2 knowledge graph labs](../practice/02-knowledge-graph-labs.md) (Track B).
 

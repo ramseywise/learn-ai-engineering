@@ -27,6 +27,8 @@ The binding constraint moves from generation to **verification**. That's why the
 
 Read the notes in order; each one is earned by the one before. Start the labs after note 03.
 
+- **Lecture deck:** [slides/loop-engineering.pptx](slides/loop-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=04-loop-engineering`).
+
 | # | Note | Covers | Lab |
 |---|---|---|---|
 | 1 | [What a loop is](notes/01-what-a-loop-is.md) | The cycle, goal + scorekeeper, green first, when not to loop, lineage, inside vs outside, the map | — |
@@ -43,8 +45,8 @@ Read the notes in order; each one is earned by the one before. Start the labs af
 ### Practice ([practice/](practice/))
 
 - [P1 — Exercises](practice/01-exercises.md): five labs (goal loop → timer loop → maker/checker → guarded Ralph → evolve) and a drill per note. These continue the [harness labs](../03-harness-engineering/notes/practice/04-exercises.md); Labs 1–3 adapt project 07 of *learn-harness-engineering*.
-- [P2 — Trajectory verifier](practice/02-trajectory-verifier/README.md): outcome, process and quality layers with evidence for each dimension, calibrated against expert labels (from *AI Agents in Depth*, Exp. 8-1). Offline, no API key.
-- [P3 — Self-modifying agent](practice/03-self-modifying-agent/README.md): failure trajectories trigger a retry-policy patch behind a release gate that emits `release_to_canary` or `reject_candidate` (Exp. 8-5). Offline, no API key.
+- [P2 — Trajectory verifier](practice/02-trajectory-verifier/README.md): outcome, process and quality layers with evidence for each dimension, calibrated against expert labels (from *AI Agents in Depth*, Exp. 9-1). Offline, no API key.
+- [P3 — Self-modifying agent](practice/03-self-modifying-agent/README.md): failure trajectories trigger a retry-policy patch behind a release gate that emits `release_to_canary` or `reject_candidate` (Exp. 9-6). Offline, no API key.
 
 ### Templates ([templates/](templates/))
 
@@ -56,9 +58,10 @@ Read the notes in order; each one is earned by the one before. Start the labs af
 | [checker-prompt.md](templates/checker-prompt.md) | The verifying agent: runs the scorekeeper itself; PASS is a legitimate verdict |
 | [ralph.sh](templates/ralph.sh) | Guarded Ralph loop: score ratchet with rollback, iteration, wall-clock and stall caps |
 
-### Images ([images/](images/))
+### Images
 
-- `anthropic-agent-loop.png`, `anthropic-playbook-map.png`, used in [note 01](notes/01-what-a-loop-is.md).
+- [images/](images/): `anthropic-agent-loop.png`, `anthropic-playbook-map.png` (AI Builder Club) in [note 01](notes/01-what-a-loop-is.md); `ai-agent-book/fig9-1.svg`, `fig9-3.svg` (Li, Apache-2.0) in [note 08](notes/08-self-improving-loops.md).
+- [sources/images/](sources/images/): figures cropped from the papers in [sources/](sources/): `zhu-2026-decision-points.png` in [note 02](notes/02-loop-shapes.md); `chen-2026-plasticity-vs-stability.png` and `zhong-2026-discoveryrsi-results.png` in [note 08](notes/08-self-improving-loops.md).
 
 ---
 
@@ -87,7 +90,7 @@ Read into [notes/](notes/) on 2026-10-28. Full list in [loop-engineering.md](loo
 | [AI Builder Club](https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook) | The Anthropic playbook map, the autonomy ladder, the evolve loop |
 | [learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Lecture 13 (`/goal` vs `/loop`, silent costs, adoption ladder) and project 07 (the labs, maker/checker prompts) |
 | [Karpathy `autoresearch`](https://github.com/karpathy/autoresearch) + [bilevel](https://arxiv.org/abs/2603.23420) | The level-4 worked example |
-| Li, *AI Agents in Depth* (2026), [ch. 8 Continual Evolution](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) | Synthesized into [08](notes/08-self-improving-loops.md#verify-before-you-learn): three-layer verification, four media, change contracts, harness updating vs benefit, sleep learning, "done ≠ progress"; safety boundaries in [09](notes/09-failure-modes-and-guardrails.md#guardrails-for-self-modifying-loops). Labs copied as [P2](practice/02-trajectory-verifier/README.md) and [P3](practice/03-self-modifying-agent/README.md). Upstream only: [gaia-experience](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/gaia-experience) (8-2), [prompt-auto-optimization](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/prompt-auto-optimization) (8-3), [browser-use-rpa](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/browser-use-rpa) (8-4), [self-evolution-eval](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/self-evolution-eval) (8-6), [self-evolving-tools](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/self-evolving-tools) |
+| Li, *AI Agents in Depth* (2026), [ch. 9 Continual Evolution](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) | Synthesized into [08](notes/08-self-improving-loops.md#verify-before-you-learn): three-layer verification, four media, change contracts, harness updating vs benefit, sleep learning, "done ≠ progress"; safety boundaries in [09](notes/09-failure-modes-and-guardrails.md#guardrails-for-self-modifying-loops). Labs copied as [P2](practice/02-trajectory-verifier/README.md) (Exp. 9-1) and [P3](practice/03-self-modifying-agent/README.md) (Exp. 9-6); their core code is excerpted in note 08. Upstream only: [tau2-escalation-experience](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/tau2-escalation-experience) (9-2), [prompt-auto-optimization](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/prompt-auto-optimization) (9-3), [browser-use-rpa](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/browser-use-rpa) (9-5), [harness-safety-gate](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/harness-safety-gate) (9-7), [hermes-self-evolution](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/hermes-self-evolution) (9-8), [self-evolution-eval](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-evolution-eval) (9-9), [self-evolving-tools](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-evolving-tools) |
 
 ### Next layer
 → [05-graph-engineering/](../05-graph-engineering/README.md) — graph engineering composes loops into multi-agent topologies.

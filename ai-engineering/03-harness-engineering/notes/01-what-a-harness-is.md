@@ -7,6 +7,7 @@ sources:
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
   - https://openai.com/index/harness-engineering/
+  - https://docs.langchain.com/oss/python/concepts/products
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 1, 5 — https://github.com/bojieli/ai-agent-book"
 confidence: high
@@ -97,6 +98,19 @@ Two data points:
 The same pattern shows up in Li's nesting of engineering scopes: **prompt ⊂ context ⊂ harness ⊂ loop**. Each scope widens what the engineer controls: the instruction, then the working set, then the system the model runs in, then sustained operation across runs. *Graph engineering* (a mid-2026 label) is an orchestration view across these scopes, not a sixth one: a loop is a graph with a back edge, and a graph node can run its own loop ([05-graph](../../05-graph-engineering/README.md)).
 
 Hence the slogan: *a decent model with a great harness beats a great model with a bad harness.* And the diagnostic order that falls out of it — when an agent fails, **audit the orchestration layer first** (tool descriptions, retry budgets, handoff schemas), **then the context layer** (data quality, coverage, recency). In a mature setup the model is rarely the bottleneck.
+
+### Where context ends and the harness begins
+
+| Context engineering | Harness engineering |
+|---|---|
+| What goes in the window on *this* call | The loop that decides *whether and when* to call |
+| Which documents, memory, tool results to inject | Which tools exist at all, and what they're allowed to do |
+| Token budget within one assembly | Cost envelope across a whole run |
+| Compaction as a technique | Compaction as middleware that fires on a trigger |
+
+Once assembly becomes **stateful and conditional**, with a loop deciding when to retrieve, compact, verify or spawn, you have crossed from context into harness. harness-engineering.ai's five-component checklist states the same scope: **context engineering** ([02-context](../../02-context-engineering/README.md)), **tool orchestration** ([03](03-tool-design.md)), **verification loops** ([05](05-verification-loops.md)), **cost-envelope management** ([04](04-execution-boundaries.md#cost-envelope)) and **observability and evaluation** ([08](08-maturity-and-failure-modes.md#runtime-vs-process-observability), [06-eval](../../06-eval/README.md)). The same source puts the claimed reliability impact at **5–15%** for prompt engineering, **15–30%** for context engineering and **50–80%** for harness engineering. Treat those numbers as directional, not measured. The ordering is what matters.
+
+LangChain draws the line between product categories the same way. A **framework** (LangChain, Vercel AI SDK, OpenAI Agents SDK, Google ADK) gives you abstractions and integrations. A **runtime** (LangGraph, Temporal, Inngest) gives you durable execution, streaming, HITL and persistence. A **harness** (Deep Agents SDK, Claude Agent SDK, Manus, coding CLIs) is batteries-included: predefined tools, prompts, a to-do planner, a virtual filesystem, subagents and history summarization. Pick a harness when the task is long and non-deterministic. Pick a runtime when you need low-level control of a workflow that mixes deterministic and agentic steps.
 
 ### Why coding agents matured first
 

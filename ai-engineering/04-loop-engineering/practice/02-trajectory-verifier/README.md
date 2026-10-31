@@ -1,6 +1,6 @@
 # Lab 2 — A three-layer trajectory verifier
 
-> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 8-1 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/trajectory-verifier), Apache-2.0). The README and sample data have been translated to English. Concepts: [note 08 — Verify before you learn](../../notes/08-self-improving-loops.md#verify-before-you-learn).
+> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 9-1 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/trajectory-verifier), Apache-2.0). The README and sample data have been translated to English. Concepts: [note 08 — Verify before you learn](../../notes/08-self-improving-loops.md#verify-before-you-learn).
 
 The lab turns a customer-service trajectory into a structured diagnosis that a later evolve step can learn from. User satisfaction is not used as the signal, and neither is a single overall score. The verifier checks three layers in order, and every failing dimension keeps the turns that prove it:
 

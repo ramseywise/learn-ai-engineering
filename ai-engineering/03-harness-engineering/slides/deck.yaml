@@ -1,0 +1,907 @@
+# Harness Engineering — lecture deck. Built from notes/01–08 and notes/practice/01–03.
+# Build:  make slides PILLAR=03-harness-engineering [PREVIEW=1] [PDF=1] [STRICT=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Harness Engineering
+  subtitle: Everything around the model that makes it an agent
+  tagline: |-
+    Anatomy · Tools · Boundaries · Verification
+    Long horizons · Orchestration · Maturity · Practice
+  reference: "Notes: ai-engineering/03-harness-engineering"
+  output: harness-engineering.pptx
+  notes: >-
+    Pillar 3 of the AI-engineering course. Prompt is inside context, and context is inside the harness.
+    Five parts: what a harness is, the tool and boundary surface, verification and long-running work,
+    orchestration and maturity, then applying it all to a real repo.
+
+parts:
+  # ───────────────────────────────────────────────────────────── Part 1
+  - title: Foundations
+    summary: What a harness is · Harness anatomy
+    slides:
+      - layout: statement
+        title: The thesis
+        kicker: What a harness is
+        statement: Agent = Model + Harness.
+        attribution: Everything between the request and the output, except the weights, is harness. A decent model with a great harness beats a great model with a bad harness.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          A raw model is a text transformer. It becomes an agent when something gives it durable state,
+          tool execution, feedback loops and enforceable constraints. harness-engineering.ai's four verbs:
+          a harness constrains, informs, verifies and corrects. Most incomplete harnesses have the first two
+          and are missing the last two.
+
+      - layout: table
+        title: The expanded equation, on one refund
+        kicker: Li, AI Agents in Depth
+        lead: "Agent = LLM + [Context + Tools + Constrain + Verify + Correct] = Model + Harness"
+        header: [Function, In the refund example, Design principle]
+        widths: [1.8, 4, 4]
+        rows:
+          - [Context, The 7-day refund policy is in the system prompt, Information sufficiency at every decision]
+          - [Tools, "`query_order`, `process_refund`", "Clear interface: names, examples, boundaries"]
+          - [Constrain, "Refund ≤ order total, checked by the framework", "Fail-safe defaults: off until enabled"]
+          - [Verify, Confirm in the DB that the refund landed, "Check structured fields, never model prose"]
+          - [Correct, Retry automatically on API timeout, Hide intermediate state until unrecoverable]
+        highlight: [2, 3, 4]
+        takeaway: Context + tools is the demo. Constrain, verify and correct are the production harness.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          Without the harness the same model gets no policy, picks no tool, invents a success message, and the
+          user finds out later. In Claude Code most harness code is constrain/verify/correct: process-state
+          tracking, multi-layer compaction, permission tiers, circuit breakers, rollback-and-retry.
+
+      - layout: cards
+        title: Why the harness dominates the model
+        kicker: Reliability compounds
+        cards:
+          - title: Steps compound
+            body: "A 90%-reliable step chained five times lands near **59%**. Real tasks run far more than five steps once you count tool calls and parses."
+          - title: Harness-only gains
+            body: "LangChain DeepAgents: **52.8% → 66.5%** on Terminal Bench 2.0, rank ~30 → top five, on a fixed model."
+          - title: Same model, two harnesses
+            body: Opus 4.6 scores far below its ceiling in a loose harness and far above it with tighter tools and prompts.
+          - title: So…
+            accent: "0EA5C9"
+            body: When an agent fails, audit orchestration first, then context. In a mature setup the model is rarely the bottleneck.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          Model quality shifts per-step accuracy a few points. Harness structure changes how many steps must
+          succeed in a row and what happens when one doesn't. Harness thickness depends on the model, so always
+          state the model when you report a harness result.
+
+      - layout: steps
+        title: Four nested scopes of engineering
+        kicker: prompt ⊂ context ⊂ harness ⊂ loop
+        axis: wider scope →
+        steps:
+          - title: Prompt
+            text: "The instruction. Claimed reliability impact **5–15%**"
+          - title: Context
+            text: "The working set on one call. Claimed impact **15–30%**"
+          - title: Harness
+            text: "The system the model runs in. Claimed impact **50–80%**"
+            accent: "D4621A"
+          - title: Loop
+            text: Sustained operation across runs (pillar 04)
+        takeaway: The percentages are directional, not measured (harness-engineering.ai). The ordering is the point.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          Li's nesting. Each scope widens what the engineer controls. Graph engineering is an orchestration view
+          across these scopes rather than a fifth one: a loop is a graph with a back edge.
+
+      - layout: table
+        title: Where context ends and the harness begins
+        kicker: The boundary
+        header: [Context engineering, Harness engineering]
+        widths: [5, 5]
+        bold_first: false
+        rows:
+          - [What goes in the window on **this** call, The loop that decides **whether and when** to call]
+          - ["Which documents, memory, tool results to inject", "Which tools exist at all, and what they may do"]
+          - [Token budget within one assembly, Cost envelope across a whole run]
+          - [Compaction as a technique, Compaction as middleware that fires on a trigger]
+        takeaway: Once assembly is stateful and conditional, you have crossed from context into harness.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          The five-component checklist from harness-engineering.ai: context engineering, tool orchestration,
+          verification loops, cost-envelope management, observability and evaluation. LangChain's product split
+          is the same line: framework (abstractions), runtime (durable execution, HITL), harness (batteries included).
+
+      - layout: table
+        title: Failures are configuration, not model limits
+        kicker: HumanLayer's "skill issue"
+        header: [Failure, Not this, But this]
+        widths: [3, 2.8, 4.2]
+        rows:
+          - [Ignored a convention, "\"The model is dumb\"", "The convention isn't in `AGENTS.md`"]
+          - [Ran `rm -rf`, "\"The model is unsafe\"", There's no blocking hook]
+          - [Lost the thread at step 40, "\"Window too small\"", "No planner/executor split, no plan file"]
+          - [Shipped broken code, "\"It can't code\"", No typecheck back-pressure in the loop]
+          - [Rated its own work 9/10, "\"It's sycophantic\"", Generator and evaluator are the same agent]
+        takeaway: Every right-hand cell is a build task. That is the whole discipline in one table.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          For coding agents the no-harness failures fall into five shapes: vague requirements, implicit
+          conventions, incomplete environment, no verification, cross-session loss. Each maps to a practice
+          note: the feature list, the repo as system of record, init.sh, termination checks, progress plus handoff.
+
+      - layout: cards
+        title: The four parts every harness needs
+        kicker: The minimal decomposition
+        cards:
+          - title: Acceptance baseline
+            body: What "done and correct" means, checkably. The most often **faked** part.
+          - title: Execution boundary
+            body: Where the agent runs and what it can touch.
+          - title: Feedback signals
+            body: How the agent learns its last action was wrong.
+          - title: Rollback
+            accent: "D4621A"
+            body: How a bad action gets undone. The most often **missing** part.
+        takeaway: Missing any one, it is not a harness. It is a prompt with tools attached.
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          Contrast with agent = LLM + planning + tools + memory (Weng 2023). That framing describes what the
+          model does. These four describe what the system around it must guarantee, and none of them appear
+          in the classic framing.
+
+      - layout: flow
+        title: The ratchet
+        kicker: Osmani
+        steps:
+          - {label: Agent slips, sub: a real failure}
+          - {label: Find the subsystem, sub: instructions · tools · env · state · feedback}
+          - {label: Encode the fix, sub: hook · lint rule · AGENTS.md line · gate}
+          - {label: Never again, sub: the harness tightens}
+        loop: every failure, permanently
+        bullets:
+          - "Every line in a good `AGENTS.md` traces back to something that went wrong"
+          - "Keep `AGENTS.md` under **~60 lines**: a pilot's checklist, not a style guide"
+          - Lines that can't name their originating failure are speculative; delete them
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          The ratchet makes a harness an artifact rather than a config file. Its counterweight is iterative
+          simplification in note 08: when a model upgrade makes a component unnecessary, remove it.
+
+      - layout: table
+        title: Five subsystems, one per failure
+        kicker: Harness anatomy
+        header: [Subsystem, Question it answers, Components]
+        widths: [2.2, 3.6, 4.2]
+        rows:
+          - [Instructions, "What should I do, by what rules?", "System prompt / `AGENTS.md`, memory"]
+          - [Tools, "What can I act with?", "Tools, skills, MCPs, bash, context tools"]
+          - [Environment, "Where do I run, and does it start?", "Filesystem, sandbox, `init.sh`"]
+          - [State, "What has happened so far?", "Plan file, progress log, feature list, git"]
+          - [Feedback, "Did it work?", "Hooks, test runners, verification gates, traces"]
+        highlight: [4]
+        takeaway: Agents are rarely stuck. They are confidently wrong, which is a feedback gap.
+        source: notes/02-harness-anatomy.md
+        notes: >-
+          LangChain lists nine components; this coarser cut is for diagnosis. Norman's gulf of execution is a
+          tools or environment gap; the gulf of evaluation is a feedback gap. Ablation turns the table into a
+          method: remove one subsystem at a time on a fixed task and see what breaks.
+
+      - layout: steps
+        title: The minimum viable harness
+        kicker: Six items
+        steps:
+          - {title: Tool loop, text: with typed schemas}
+          - {title: Sandbox, text: "even just a working-directory boundary"}
+          - {title: Filesystem, text: "the agent can read and write it; the most foundational primitive"}
+          - {title: Plan file, text: "for anything past ~5 steps"}
+          - {title: Verification gate, text: "one binary pass/fail check", accent: "D4621A"}
+          - {title: Structured traces, text: of every step}
+        takeaway: Build capability first, then the constraints that make it survive scale, then productize.
+        source: notes/02-harness-anatomy.md
+        notes: >-
+          Vercel Academy's 38-lesson build order: agent loop, tool design, system prompt, sandbox (capability),
+          then context management, subagents, sandbox lifecycle, HITL, planning and verification (constraints),
+          then surfaces and extensibility. Teams that build orchestration before verification end up claiming
+          Stage 2 at Stage 0.
+
+  # ───────────────────────────────────────────────────────────── Part 2
+  - title: Tools and boundaries
+    summary: Tool design · Execution boundaries and guardrails
+    slides:
+      - layout: compare
+        title: Design for an agent, not a programmer
+        kicker: ACI, not API
+        emphasis: right
+        left:
+          title: An API's reader
+          bullets:
+            - Has docs, type hints and autocomplete
+            - Can ask a follow-up question
+            - Learns boundaries by reading the codebase
+          tag: Implicit knowledge fills the gaps
+        right:
+          title: An ACI's reader
+          bullets:
+            - Sees only a name, a description and a schema
+            - Needs explicit boundaries between tools
+            - "Needs error-proof params: enums, absolute paths"
+            - Needs examples **inside** the definition
+          tag: What it can't see doesn't exist
+        takeaway: When a tool is misused, check the description before questioning the model.
+        source: notes/03-tool-design.md
+        notes: >-
+          Anthropic's clarity test: if a human engineer can't say which tool fits a situation, an agent can't
+          either. The dominant failure is bloated tool sets with overlap; LangChain's Terminal Bench gain came
+          partly from removing tools. Selection accuracy falls off past roughly a hundred tools.
+
+      - layout: table
+        title: The five-section tool contract
+        kicker: Vercel Academy
+        header: [Section, Purpose]
+        widths: [3, 7]
+        rows:
+          - [What it does, "The operation, plainly"]
+          - [WHEN TO USE, Positive triggers the tool owns]
+          - [WHEN NOT TO USE, Boundary cases that belong to a neighbouring tool]
+          - [DO NOT USE FOR, "Hard negatives: misuse seen in practice (ratchet output)"]
+          - [EXAMPLES, Concrete invocations with realistic arguments]
+        highlight: [2, 3]
+        takeaway: "Adding 1–5 examples moved tool-call accuracy from **~72% to 90%** (Li)."
+        source: notes/03-tool-design.md
+        notes: >-
+          The negative sections do the heavy lifting: they disambiguate search from grep from read. Li adds
+          concrete formats (E.164, RFC 3339), the return value and cost of the call. Keep the contract
+          (schema + description) separate from the execution logic, because the contract gets iterated like a prompt.
+
+      - layout: table
+        title: Four questions before a tool ships
+        kicker: Gating
+        header: [Question, If the answer is no]
+        widths: [3, 7]
+        rows:
+          - ["Reversible?", Put a confirmation gate in front of it]
+          - ["Idempotent?", Never retry it without an idempotency key]
+          - ["Observable?", It can't be debugged; add a trace]
+          - ["Parallel-safe?", Serialize it in the orchestrator]
+        takeaway: Gate the irreversible. Gating reversible actions is the fastest way to make an agent useless.
+        source: notes/03-tool-design.md
+        notes: >-
+          Schema rules sit alongside: snake_case verb-noun names, side effects declared in the description,
+          typed returns, structured errors. Write operations declare their side effect and confirm before
+          irreversible execution.
+
+      - layout: image
+        title: Discover tools; don't preload them
+        kicker: Li, Fig. 4-2
+        image: ../images/ai-agent-book/fig4-2.svg
+        caption: Two-level matching, server then tool (Li, AI Agents in Depth, 2026, Apache-2.0)
+        bullets:
+          - "Five MCP servers ≈ **55K tokens**, ~30% of a 200K window, before the first message"
+          - "MCP-Zero: **~98% fewer tokens** across ~2,800 tools"
+          - "Dynamic discovery: Opus 4 **49% → 74%** on tool selection"
+          - "Cursor's greppable tool folder: **−46.9%** tokens"
+          - "Append new schemas at the end and leave them pinned, so the KV cache survives"
+        source: notes/03-tool-design.md
+        notes: >-
+          Three fixes from heaviest to lightest: a retrieval pre-filter (matches once, on the opening request),
+          proactive discovery through a resident tool_search meta-tool, and skills. Return an explicit "not found"
+          when nothing scores above threshold. MCP solves interoperability; skills solve choice overload.
+
+      - layout: code
+        title: A skill description is routing logic
+        kicker: OpenAI skills tips
+        lang: yaml
+        code: |-
+          # bad (~45 tokens): details that belong in the body
+          description: |
+            Handles the complete deployment process to
+            production: environment checks, rollback,
+            post-deploy verification. Use before deploying.
+
+          # good (~9 tokens): the same routing signal
+          description: Use when deploying to production
+            or rolling back.
+        bullets:
+          - Only name + description stay resident; the body loads on demand
+          - "Add **negative examples**: when not to fire, and what to use instead"
+          - Templates and worked examples go in the body, where they are free until used
+          - "For determinism, invoke explicitly: `Use the <name> skill.`"
+          - "Skills + shell allowed; network on a **minimal allowlist**"
+        source: notes/03-tool-design.md
+        notes: >-
+          The description is the only text the agent has when it decides whether to load the skill, and it sits
+          in every window, so it pulls between token cost and routing precision. Skills plus open network is an
+          exfiltration path, because a skill body is instructions the agent follows.
+
+      - layout: image
+        title: Coding agents edit by exact match
+        kicker: Li, Fig. 5-4
+        image: ../images/ai-agent-book/fig5-4.svg
+        caption: Five file-editing schemes and their trade-offs (Li, AI Agents in Depth, 2026, Apache-2.0)
+        bullets:
+          - "**Old → new string** (Claude Code): predictable; fails loudly if not unique"
+          - "**Start + end anchors:** same reliability, cheaper large deletions"
+          - "**Line ranges:** models miscount, and numbers shift after every edit"
+          - "**Diff + apply model** (Cursor): fast, needs a trained apply model"
+          - "Search: Claude Code greps with no index; Cursor pays for one"
+        source: notes/03-tool-design.md
+        notes: >-
+          Default to old-to-new string and return line-numbered reads so references are precise. Search runs
+          coarse to fine: glob, grep, semantic search, LSP. The index choice weighs infrastructure and data
+          egress against recall.
+
+      - layout: table
+        title: Requests vs. rules
+        kicker: Karpathy, AISN 2026
+        lead: A `CLAUDE.md` line is a request the model can ignore. A pre-tool-use hook is a rule it cannot.
+        header: [Bucket, Enforcement, Example]
+        widths: [2, 3.6, 4.4]
+        rows:
+          - [Always do, "Instruction in `AGENTS.md`", Run the formatter before committing]
+          - [Ask first, Permission gate or HITL confirmation, "Add a dependency, change a schema"]
+          - [Never do, "Hook or permission deny, never a sentence", "Write `.env`, force-push, delete outside the workspace"]
+        highlight: [2]
+        takeaway: Match the enforcement level to the cost of getting it wrong.
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          A code-level control cannot be talked out of enforcing itself. "The agent keeps doing X" is usually a
+          hook, not a stronger paragraph, and a fourth conditional in a prompt is the sign the rule has outgrown the
+          prompt. Declarative permissions (Deep Agents: ordered rules, first match wins) cover the file tools but
+          not a raw shell.
+
+      - layout: steps
+        title: The isolation ladder
+        kicker: Sandboxes
+        axis: stronger isolation ↓
+        steps:
+          - {title: venv, text: "Not on the ladder: isolates dependencies, not effects", accent: "94A3B8", n: "×"}
+          - {title: OS-level, n: "1", text: "macOS Seatbelt, Linux seccomp / Landlock"}
+          - {title: Container, n: "2", text: "Process, filesystem and network namespaces"}
+          - {title: microVM, n: "3", text: "Firecracker-class; for untrusted code and production agents", accent: "D4621A"}
+        takeaway: "Pair every rung with quotas: CPU, memory, disk, network, wall-clock."
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          Backend independence is the rule: swap the backend, the tools don't change. Local, in-memory
+          copy-on-write and remote cloud sandboxes sit behind one interface. Cloud sandboxes cost money while idle,
+          so design snapshot and restore early. For always-on agents, extend the sandbox to identity: the agent
+          gets its own accounts.
+
+      - layout: compare
+        title: Silent success, verbose failure
+        kicker: Hooks
+        emphasis: right
+        left:
+          title: Hook that announces every pass
+          bullets:
+            - Burns tokens on every edit
+            - Trains the model to skim hook output
+            - The one real failure is lost in noise
+          tag: Low signal
+        right:
+          title: Hook that speaks only on failure
+          bullets:
+            - "Full error, file and line"
+            - The agent learns within **one step**
+            - Typecheck and lint become back-pressure
+          tag: High-signal channel
+        takeaway: Hooks run as code on a trigger, after every edit and before every risky command.
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          Typical placements: after every file edit run typecheck and lint, before a bash command block
+          destructive patterns, before a write outside the workspace deny or ask.
+
+      - layout: table
+        title: Test the gate, not the model's mood
+        kicker: Canary pattern · Claude Code v2.1.220
+        lead: "Run each deletion route twice: baseline (canary must die) and guarded (must survive **and** log a denial)."
+        header: [Route, "Verdict with a `Bash(rm:*)` deny rule"]
+        widths: [4, 6]
+        rows:
+          - ["`rm -f`", "**HELD**: blocked as intended"]
+          - ["`find -delete`", "**INCONCLUSIVE**: bypassed, no refusal recorded"]
+          - [File-writing tool overwrite, "**BYPASSED**: canary destroyed"]
+        highlight: [1, 2]
+        takeaway: Enumerate effects, not commands. `rm` is one spelling of delete; prefer allowlists and real sandboxes.
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          File survival alone proves nothing: a model that decides not to try produces the same surviving file as a
+          real denial. Without a structured permission_denials event you observed the model's choice, not
+          enforcement. Re-test gates after every harness upgrade; a regressed deny rule looks like a working one.
+
+      - layout: cards
+        title: Five protection layers
+        kicker: Defence in depth
+        cards:
+          - {title: Pre-input, body: Malicious or malformed user input}
+          - {title: Pre-retrieval, body: Poisoned documents entering context}
+          - {title: Pre-generate, body: Unsafe assembled context reaching the model}
+          - {title: Post-generate, body: Unsafe output leaving the system}
+          - {title: Escalation, body: Anything unresolved reaching a human}
+          - title: So…
+            accent: "0EA5C9"
+            body: Tool inputs are model-written, so they are **semi-trusted**. Validate them against the schema like an external request.
+        takeaway: Each guardrail lives in the component it protects, not in one central service.
+        source: notes/04-execution-boundaries.md
+        notes: >-
+          Trust zones: user input untrusted; retrieved content, tool inputs and outputs semi-trusted; agent state
+          trusted. The 16-risk agentic map (behaviour, security, resilience, multi-agent collusion, human oversight)
+          lands on the same controls. Redact PII before logging: traces are a security surface.
+
+  # ───────────────────────────────────────────────────────────── Part 3
+  - title: Verification and long horizons
+    summary: Verification loops · Long-horizon execution
+    slides:
+      - layout: table
+        title: Three layers before "done"
+        kicker: Termination check
+        header: [Layer, Checks, Proves]
+        widths: [1.8, 6, 2.2]
+        rows:
+          - [1. Static, "Syntax, types, lint, architecture rules", It's well-formed]
+          - [2. Runtime, "Tests run, app reaches ready, side effects correct", It runs]
+          - [3. System, "End to end as a user drives it, real dependencies", "It's **correct**"]
+        highlight: [2]
+        takeaway: Don't run level N+1 while level N fails. Skipping a required level means not done.
+        source: notes/05-verification-loops.md
+        notes: >-
+          Unit tests are blind by design to boundary defects: interface mismatch, state propagation, resource
+          lifecycle, environment dependency. E2E also changes how the agent writes code, because it starts thinking
+          about interfaces. No refactoring before the core behaviour is verified.
+
+      - layout: compare
+        title: Spend at the gate, and only where it decides
+        kicker: Asymmetric QA
+        emphasis: none
+        left:
+          title: Make the verifier smarter
+          bullets:
+            - Cheap fast model generates; strong model checks at the gate
+            - Same model checking itself gives **confident agreement**
+            - "Use a **second librarian**: another model family"
+          tag: Verification runs once per gate
+          accent: "1E3A5F"
+        right:
+          title: Delete a verifier that cries wolf
+          bullets:
+            - "PRINCE (Bayer) **removed** its LLM SQL reviewer: false positives"
+            - "Kept the exact checks: `SELECT`-only allowlist, result cap"
+            - A gate people route around is worse than none
+          tag: Cheapest mechanism that is decisive
+          accent: "D4621A"
+        takeaway: A verifier earns its place only if acting on its verdict beats ignoring it.
+        source: notes/05-verification-loops.md
+        notes: >-
+          Karpathy's three moves: criteria before work, a second librarian, an external signal from the system that
+          holds ground truth. Boris Cherny, quoted: a feedback loop improves final quality 2–3×.
+
+      - layout: flow
+        title: Separate generation from evaluation
+        kicker: Anthropic, long-running apps
+        steps:
+          - {label: Planner, sub: brief → full spec, accent: "1E3A5F"}
+          - {label: Generator, sub: builds feature by feature, accent: "1E3A5F"}
+          - {label: Evaluator, sub: drives the running app and scores it}
+        loop: revise until every criterion clears its bar
+        bullets:
+          - "Solo run: **20 min, $9**, core gameplay broken"
+          - "Full harness: **6 hr, $200**, a working game"
+          - "Browser DAW: **$124.70** total; QA only **$10**, and it caught presentational-only features"
+          - The evaluator needs calibrating too, with hard per-dimension thresholds
+        source: notes/05-verification-loops.md
+        notes: >-
+          External evaluators can be tuned to scepticism far more easily than generators can be made self-critical.
+          The evaluator drives the app with Playwright: reading code verifies intent, driving the app verifies
+          behaviour. The ROI question is rarely "is it cheaper" but "does it produce a result at all".
+
+      - layout: code
+        title: Sprint contracts are written before the work
+        kicker: Generator ↔ evaluator
+        lang: markdown
+        code: |-
+          # Sprint contract: dark mode
+          ## Scope
+          theme toggle · CSS variables · dark-mode tests
+          ## Verification
+          visual regression per component · main-flow e2e
+          no flash of unstyled content
+          ## Exclusions
+          print styles · third-party component theming
+        bullets:
+          - Both sides negotiate it in writing, before code
+          - The evaluator can't invent criteria afterwards
+          - The generator can't redefine done
+          - "**Exclusions** is the section people skip"
+        takeaway: "Name the dimensions, weight them, score each separately. One 1–10 score gives nothing to act on."
+        source: notes/05-verification-loops.md
+        notes: >-
+          This is the acceptance baseline from note 01, made concrete per task. Anthropic's frontend criteria:
+          design quality, originality, craft, functionality. The pillar's evaluator rubric scores six dimensions
+          0–2 and ends in Accept, Revise or Block.
+
+      - layout: steps
+        title: The verification ladder, cheapest first
+        kicker: Eval-first
+        axis: costlier, more nuanced ↓
+        steps:
+          - {title: Schema check, text: "Does it parse and conform?"}
+          - {title: Reference comparison, text: "Does it match known-good output?"}
+          - {title: Calibrated LLM judge, text: "Rubric-scored, and it returns **why** it failed so the agent can revise"}
+          - {title: Human stop, text: "For what neither code nor a judge can decide", accent: "D4621A"}
+        takeaway: "Most production systems run at least two. Pass@k shows capability; ship on **Pass^k**."
+        source: notes/05-verification-loops.md
+        notes: >-
+          Establish binary pass/fail criteria before tuning anything else. If the eval system is broken, fix it
+          first; never steer on a distorted signal. Evaluate stages, not just the endpoint.
+
+      - layout: table
+        title: Not every failure is retryable
+        kicker: Retry taxonomy
+        header: [Failure, Response]
+        widths: [3, 7]
+        rows:
+          - ["Transient (network, rate limit)", "Backoff 2×, jitter ±20%, max 3"]
+          - [Tool error, "Retry once, then escalate"]
+          - [Model refusal, "**Never retry**: it will refuse again"]
+          - [Schema violation, Retry once with the validation error in context]
+          - [Context exhaustion, "Compact or reset, then resume"]
+          - [Fatal, Stop and surface the error]
+        highlight: [2]
+        takeaway: Budget retries per invocation, not per tool. Degrade loudly with a `degraded` flag.
+        source: notes/05-verification-loops.md
+        notes: >-
+          Five tools with three retries each is fifteen attempts if the budget is per tool. Circuit-break after 5
+          consecutive failures with a 60 s cooldown. PRINCE retries at two levels: the call for transient noise, the
+          node when the call succeeded but the step didn't.
+
+      - layout: cards
+        title: Every recovery path needs a ceiling
+        kicker: Loops and death spirals
+        cards:
+          - title: Two-retry rule
+            body: A third failure on the same gate means the context or the spec is wrong, not the execution.
+          - title: Loop detection
+            body: "Count edits per file. After N, prompt \"reconsider your approach\": force a re-plan, not a repair."
+          - title: Feed the error back
+            body: "Give the agent the error, the query and the context. PRINCE caps it at **3** attempts."
+          - title: Set ceilings from data
+            accent: "D4621A"
+            body: "Before Claude Code's breaker (trips at **3**), one session failed **3,000+** times; futile retries cost **~250K** API calls a day."
+        source: notes/05-verification-loops.md
+        notes: >-
+          Li's taxonomy sorts failures by layer: API, tool, context, control flow. Fingerprint hash(tool, args) to
+          detect no-progress loops. Silent stalls need an idle watchdog. For death spirals, disable model-invoking
+          side effects on the error path. Above all of it sit max turns, a session budget and escalation.
+
+      - layout: statement
+        title: Make the loop re-entrant
+        kicker: Long-horizon execution
+        statement: Progress lives in files, not in the context window.
+        attribution: Once state is external, any fresh context can pick up where the last one stopped. Context windows become disposable.
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          Two degradations show up as sessions extend: coherence decay, and context anxiety, where the model wraps
+          up early and confidently as the window fills. An initializer agent turns the task into filesystem state;
+          a worker runs read state → do the next thing → write state.
+
+      - layout: table
+        title: What makes an agent deep
+        kicker: DAIR · Deep Agents · Claude Agent SDK
+        lead: A shallow agent runs one tool loop in one window. A deep agent adds four things.
+        header: [Pillar, What it means, "Deep Agents ships"]
+        widths: [2.6, 4.2, 3.2]
+        rows:
+          - [Explicit planning, A living to-do list the agent updates, "`write_todos`"]
+          - [Orchestrator + subagents, "Specialists with clean contexts", "`task` tool"]
+          - [External memory, "Work goes to files, not history", "Virtual filesystem, `AGENTS.md`"]
+          - [Verification, Output checked before it's accepted, "HITL `interrupt_on`"]
+        takeaway: The agent loop is the same everywhere. The defaults are the harness.
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          Claude Code, the Claude Agent SDK, LangChain Deep Agents and deep-research products all converge on these
+          four. Deep Agents also summarizes history and offloads large tool results automatically, on top of the
+          LangGraph runtime.
+
+      - layout: table
+        title: Compaction vs. context reset
+        kicker: Hitting the limit
+        header: ["", Compaction, Context reset]
+        widths: [2, 4, 4]
+        rows:
+          - [Mechanism, Summarize earlier turns in place, "Clear the window, hand off via files"]
+          - [Preserves, A lossy trace of everything, Only what the handoff captures]
+          - [Fails by, Summary-of-summary drift, Anything not written down is gone]
+          - [Best for, One long session, Multi-day work]
+        takeaway: Resets beat compaction on Sonnet 4.5; later models need them less. Re-test on every upgrade.
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          Compaction tuning: maximize recall first, then precision. Keep decisions and unresolved issues; drop
+          redundant tool output. Offload large tool output to files, keep head and tail, and leave the path.
+
+      - layout: code
+        title: The handoff separates verified from assumed
+        kicker: templates/session-handoff.md
+        lang: markdown
+        code: |-
+          ## Verified Now
+          what works · what verification actually ran
+          ## Changed This Session
+          code or behaviour added · harness changes
+          ## Broken Or Unverified
+          known defect · unverified path · risk
+          ## Next Best Step
+          feature · why next · what counts as passing
+          ## Commands
+          startup · verification · focused debug
+        bullets:
+          - "Start writing it at **~60%** of the window, while there is room"
+          - "A generated summary blurs verified and assumed; this doesn't"
+          - "Pair with `progress.md`: current state on top, append-only log below"
+          - "Exit only on a clean state: build, tests, logs, `./init.sh`"
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          Plans are first-class artifacts: execution plans checked into the repo with progress and decision logs.
+          The decision log records why, which is what a summary drops and a resumed session needs most.
+
+      - layout: flow
+        title: Ralph loops defeat context anxiety
+        kicker: Continuation
+        steps:
+          - {label: Agent works, sub: state goes to files}
+          - {label: Tries to finish, sub: maybe early}
+          - {label: Hook intercepts, sub: re-injects the original prompt}
+          - {label: Fresh context, sub: reads the files, carries on}
+        loop: until the verification gate says done
+        caption: Premature wrap-up becomes harmless, because "done" opens a new window instead of ending the work.
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          With state externalized this runs across any number of context windows with no human in between. The
+          verification gate from note 05 decides whether the loop actually ends. Decomposition is scaffolding
+          around a model limit: Opus 4.6 let Anthropic remove sprint decomposition entirely.
+
+  # ───────────────────────────────────────────────────────────── Part 4
+  - title: Orchestration and maturity
+    summary: Multi-agent harnesses · Maturity and failure modes
+    slides:
+      - layout: bullets
+        title: Subagents are a context firewall first
+        kicker: Orchestration
+        bullets:
+          - "A search that reads **40** files and finds **3** returns the 3"
+          - "The orchestrator gets a **~1,000–2,000-token** summary, not the exploration"
+          - Orchestrator holds the plan; subagents hold the details
+          - "Deep Agents' `task` tool: fresh instance, runs to completion, **one** final report"
+          - Isolation is the most expensive context lever; use it at a real boundary
+        aside:
+          title: The sizing rule
+          accent: "1E3A5F"
+          body: Give each subagent the minimum context, authority and execution budget needed to finish one clearly defined task.
+        source: notes/07-orchestration.md
+        notes: >-
+          Subagents are a context-management technique before they are an architecture. Role patterns from
+          cheapest up: explorer/executor (read-only explorer on a cheap model), planner/executor,
+          generator/evaluator, then a full role pipeline.
+
+      - layout: table
+        title: Protocols precede collaboration
+        kicker: Protocols between tasks
+        header: [Foundation, Defines, Prevents]
+        widths: [2.4, 4.4, 3.2]
+        rows:
+          - [Communication protocol, "Message meanings; requests, results, failures, acks", "Lost acks, silent failures, double runs"]
+          - [Task graph, "What work exists, who owns it, what depends on what", "Duplicate owners, premature starts"]
+          - [Isolation boundary, "Which files, branches, tools each agent may touch", "Write collisions"]
+        takeaway: Establish the task graph and isolation boundaries before you add parallelism.
+        source: notes/07-orchestration.md
+        notes: >-
+          The failures of conversation-only coordination: an agent forgets its commitment, two agents own one
+          task, work starts before its dependency, a failure is treated as done, a retry runs twice, two workers
+          edit one file, nobody can rebuild global state after a crash.
+
+      - layout: cards
+        title: Four multi-agent topologies
+        kicker: Pick the shape, then the cut
+        cards:
+          - {title: Sequential, body: "A → B → C. Stages that genuinely depend on each other."}
+          - {title: Parallel, body: "Fan out, join. Subtasks that share no state."}
+          - {title: Manager hierarchy, body: "One orchestrator delegates and integrates. The default for open-ended work."}
+          - {title: All-to-all, accent: "94A3B8", body: "Free chat. Brainstorming only: hard to predict or control."}
+        takeaway: "Cut the work by function, by file (spatial), by stage (temporal) or by data partition."
+        source: notes/07-orchestration.md
+        notes: >-
+          Spatial decomposition parallelizes well until the files depend on each other. Data-driven decomposition
+          suits large datasets processed chunk by chunk. ADK 2.0 makes the topology declarative: agents, @node,
+          edges, JoinNode, typed Pydantic state validated at node boundaries.
+
+      - layout: table
+        title: Multi-agent failures are harness bugs
+        kicker: Named failure modes
+        header: [Failure, Shape, Mitigation]
+        widths: [2.6, 3.8, 3.6]
+        rows:
+          - [Loop oscillation, Two nodes bounce work forever, Counters on cyclic edges; escalate]
+          - [Context pollution, Nested flows leak state upward, Boundary schemas; return summaries]
+          - [Concurrency collision, Branches write the same state, JoinNode barriers; key ownership]
+          - [Consensus deadlock, Reviewers never agree, "Tie-break, majority or an arbiter"]
+        takeaway: E2E fails but components pass → a handoff bug. Evaluate both.
+        source: notes/07-orchestration.md
+        notes: >-
+          All four get worse as agent count rises, which is the argument for keeping it low. Hallucinations
+          amplify across handoffs, so cross-validate claims that cross one. Label every source in a subagent prompt
+          and declare what was not done.
+
+      - layout: table
+        title: The five-stage maturity model
+        kicker: AI-native playbook
+        header: [Stage, Name, What exists]
+        widths: [1, 2.4, 6.6]
+        rows:
+          - ["0", Ad-hoc, "Scripts, manual tool calls, no registry or structured logs"]
+          - ["1", Basic, "Schema-first tools, a registry, unit-test verification"]
+          - ["2", Verified, "CI checks, sandboxing, tracing, behavioural evals, branch-per-agent"]
+          - ["3", Observability-first, "E2E tracing, LLM-judge scoring, middleware, versioned memory"]
+          - ["4", Self-healing, "Auto-remediation, cost-aware orchestration (emerging, 2026)"]
+        highlight: [2, 3]
+        takeaway: Stage 1 makes it work, 2 makes it trustworthy, 3 makes it improvable. Most claiming 3 are at 1.
+        source: notes/08-maturity-and-failure-modes.md
+        notes: >-
+          The honest test is "can I point to the code that runs verification on every task, without a human
+          remembering to?" Pipelines, agents and self-improvers are parallel choices by problem fit, not a ladder:
+          if the task shape is known, a pipeline is better.
+
+      - layout: steps
+        title: The six-stage task pipeline
+        kicker: Per task, in a mature harness
+        steps:
+          - {title: Preflight, text: Gather context; establish current state}
+          - {title: Plan, text: Decompose into steps}
+          - {title: Approve, text: "Mandatory human gate on the **plan**", accent: "D4621A", n: "★"}
+          - {title: Tasks, text: "Execute, documenting as you go"}
+          - {title: Verify, text: Binary pass/fail quality gate}
+          - {title: Finish, text: "Export artifacts, log the outcome"}
+        takeaway: Reviewing a wrong plan takes two minutes. Reviewing the code from a wrong plan takes an hour.
+        source: notes/08-maturity-and-failure-modes.md
+        notes: >-
+          Approve is the gate teams skip and the one that pays best. Three gates constrain the whole pipeline: scope
+          boundary, permissions, responsibility boundary. Incident memory makes the ratchet a persistent artifact.
+
+      - layout: flow
+        title: Iterative simplification
+        kicker: The counterweight to the ratchet
+        lead: Every component encodes an assumption about what the model can't do on its own.
+        steps:
+          - {label: List components, sub: and the weakness each mitigates}
+          - {label: Disable one, sub: run the eval suite}
+          - {label: Decide, sub: "holds → delete; drops → keep, note model"}
+        loop: on every model upgrade
+        bullets:
+          - "Opus 4.6 let Anthropic **remove sprint decomposition** with no quality loss"
+          - "PRINCE deleted a verifier that never paid off, with no upgrade needed"
+          - Scaffolding for a model weakness expires; scaffolding for an external constraint doesn't
+        source: notes/08-maturity-and-failure-modes.md
+        notes: >-
+          This needs a binary eval; without one, subtraction is unmeasurable and nobody dares, which is how
+          harnesses calcify. Complexity shifts rather than shrinks: removed scaffolding frees budget for new
+          failure modes.
+
+      - layout: table
+        title: Eight deployment anti-patterns
+        kicker: Looks like the model; is the engineering
+        header: [Anti-pattern, Fix]
+        widths: [4, 6]
+        rows:
+          - [System prompt as knowledge base, Conventions in the prompt; knowledge in skills]
+          - [Unbounded tool count, "Merge overlaps, namespace the rest"]
+          - [No verification loop, Acceptance criteria per task type]
+          - [Boundaryless multi-agent, "Roles, permissions, a worktree per agent"]
+          - [Unmanaged memory, "Watch tokens; compact or reset at a threshold"]
+          - [No evaluation, Turn every failure into a test case]
+          - [Premature multi-agent, Find the single-agent limit first]
+          - [Constraints by expectation, "Enforce with tools, linters, hooks"]
+        takeaway: The five big failure modes sit above these. Skipping the harness hides the other four.
+        source: notes/08-maturity-and-failure-modes.md
+        notes: >-
+          The five failure modes: skipped harness (claiming Stage 2 at Stage 0), no Approve gate, no incident
+          memory, symmetric verification, no binary eval.
+
+  # ───────────────────────────────────────────────────────────── Part 5
+  - title: Practice
+    summary: Repo as system of record · Session lifecycle · Scope and done
+    slides:
+      - layout: table
+        title: The fresh-session test
+        kicker: Repo as system of record
+        lead: Open a new session with no chat history and ask five questions.
+        header: [Question, Answered by]
+        widths: [4, 6]
+        rows:
+          - ["What is this system?", "`AGENTS.md` / README"]
+          - ["How is it organized?", "`ARCHITECTURE.md`, module docs"]
+          - ["How do I run it?", "`init.sh`, Makefile, package scripts"]
+          - ["How do I verify it?", "Test, lint and check commands"]
+          - ["Where are we now?", "Progress log, feature list, git history"]
+        takeaway: Every unanswered question gets guessed, and every new session guesses again.
+        source: notes/practice/01-repo-as-system-of-record.md
+        notes: >-
+          The repo is the agent's whole world: knowledge in Slack or people's heads doesn't exist for it. Four rules
+          for the map: knowledge next to code, one entry file, minimal but complete, update with the code.
+
+      - layout: code
+        title: AGENTS.md is a router, not a manual
+        kicker: Progressive disclosure
+        lang: markdown
+        code: |-
+          # AGENTS.md
+          ## Overview
+          Python 3.11 FastAPI backend, PostgreSQL 15.
+          ## Quick start
+          Install: make setup · Test: make test
+          ## Hard constraints      (top, ≤15, non-negotiable)
+          - All DB queries use parameterized SQLAlchemy 2.0
+          - All PRs pass pytest + mypy --strict + ruff
+          ## Topic docs            (what + when to read)
+          - docs/api-patterns.md: when adding endpoints
+          - docs/database-rules.md: when touching DB code
+        bullets:
+          - "Entry file **50–200 lines**; topic docs 50–150"
+          - Red lines at the top or bottom, never the middle (lost in the middle)
+          - "Each rule records its source, scope and expiry"
+          - Audit and delete dead rules like unused dependencies
+        source: notes/practice/01-repo-as-system-of-record.md
+        notes: >-
+          A long instruction file crowds the budget, buries constraints in the middle, flattens priority and decays
+          into contradiction. OpenAI's layout routes architecture, product specs, design docs and exec plans into
+          their own files; templates/openai-repo-template packages it.
+
+      - layout: flow
+        title: One feature at a time, passed by evidence
+        kicker: Scope and done
+        steps:
+          - {label: not_started, accent: "94A3B8"}
+          - {label: active, sub: "WIP = 1", accent: "1E3A5F"}
+          - {label: passing, sub: only via its verification run}
+        caption: "`blocked` hangs off active. A script flips the state; the agent requests verification, never edits the field."
+        takeaway: "Verified completion rate = verified ÷ activated. Under WIP = 1 it sits at **1.0** between features."
+        source: notes/practice/03-scope-and-done.md
+        notes: >-
+          Each feature carries behaviour, verification and state, plus evidence once it passes. Rules for AGENTS.md:
+          don't mark complete because code was added, don't rewrite the list to hide unfinished work, don't weaken
+          tests, don't change verification rules mid-implementation. Session done = verification passes AND the
+          clean-state check passes.
+
+  # ───────────────────────────────────────────────────────────── Close
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: The pillar on one slide
+        cards:
+          - title: Diagnose
+            body: Failures are configuration. Fix the harness before blaming the model, and ratchet every fix in.
+          - title: Tools
+            body: Write descriptions for a reader with no docs. Fewer, clearer tools. Gate only the irreversible.
+          - title: Boundaries
+            body: "Must hold every time → hook, permission or schema. Test the gate; enumerate effects, not commands."
+          - title: Verification
+            body: Binary evals first. A separate, smarter evaluator. Two retries, then fix the spec.
+          - title: Long horizons
+            body: State in files. Handoffs that separate verified from assumed. Clean state is part of done.
+          - title: Maturity
+            body: Approve the plan. Fewest agents the task allows. Strip scaffolding on every model upgrade.
+        source: notes/08-maturity-and-failure-modes.md
+        notes: >-
+          The note 08 build checklist has the full 17 items. These six are the ones to remember.
+
+      - layout: bullets
+        title: Where to go next
+        kicker: Harness implements loops
+        bullets:
+          - text: "**04 — Loop engineering:** the loops the harness runs, and how they improve themselves"
+          - text: "**06 — Eval:** graders, calibration and pass^k, the binary evals every rule here depends on"
+          - text: "**Do the labs:** notes/practice/04-exercises.md, six labs on a repo of your own"
+          - text: "**Copy from:** templates/, with `AGENTS.md`, `init.sh`, feature list, progress, handoff, rubric"
+          - text: "**Read:** Anthropic on long-running harnesses; OpenAI on harness engineering; Li, AI Agents in Depth"
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: The model holds the intelligence; the harness makes it useful. When an agent fails, change the system around it, then make sure that failure can never happen again.
+        source: README.md

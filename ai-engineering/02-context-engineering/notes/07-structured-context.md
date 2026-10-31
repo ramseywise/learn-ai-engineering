@@ -86,6 +86,28 @@ This is the compaction target ([05](05-compression-compaction.md)) and the memor
 
 Use the provider's structured-output mode (a JSON schema enforced at decode time) when code consumes the answer. When it isn't available, put the schema in the prompt plus one filled example, and validate on receipt. See [controlling output](../../01-prompt-engineering/notes/04-controlling-output.md).
 
+The fallback loop, condensed from the upstream course's `06_schema_design.py`. The validator's error message goes back into the context, so the retry knows what to fix:
+
+````python
+import json, re, jsonschema
+
+def query_with_schema(task, schema, max_attempts=3):
+    prompt = (f"{task}\n\nRespond with a single JSON object that conforms to this schema, "
+              f"and nothing else:\n{json.dumps(schema, indent=2)}")
+    for _ in range(max_attempts):
+        raw = llm(prompt)
+        fenced = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
+        try:
+            obj = json.loads(fenced.group(1) if fenced else raw)
+            jsonschema.validate(obj, schema)
+            return obj
+        except (json.JSONDecodeError, jsonschema.ValidationError) as e:
+            prompt += f"\n\nYour previous response did not conform. Error: {e}. Try again."
+    raise ValueError("no schema-valid response")
+````
+
+With decode-time enforcement, the parse step can't fail, but `jsonschema.validate` still earns its place for constraints the provider's schema subset doesn't support (patterns, cross-field rules).
+
 ---
 
 ## Structured knowledge: graphs and tables

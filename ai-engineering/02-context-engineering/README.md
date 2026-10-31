@@ -69,7 +69,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ## Where to start
 
-- **New to this:** read [context-engineering.md](context-engineering.md), then chapters 01–06 in order, running the matching [notebooks](#notebooks).
+- **Lecture deck:** [slides/context-engineering.pptx](slides/context-engineering.pptx) — the notes as a 3-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=02-context-engineering`).
+- **New to this:** read [context-engineering.md](context-engineering.md), then chapters 01–06 in order, running the code snippets in each note.
 - **Building an agent now:** [02](notes/02-context-anatomy.md), [05](notes/05-compression-compaction.md), [10](notes/10-tools-and-multi-agent.md), then the design order of questions in [13](notes/13-putting-it-together.md#designing-a-context-system-the-order-of-questions).
 - **Debugging one:** [11 — failure modes](notes/11-failure-modes.md), then [12 — evaluating context](notes/12-evaluating-context.md).
 
@@ -82,7 +83,8 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ├── README.md               ← you are here: summary, rules of thumb, chapter index
 ├── context-engineering.md  ← pillar overview
 ├── notes/                  ← the chapters (read in order), plus the 99 appendix
-├── notebooks/              ← runnable Python labs
+├── slides/                 ← lecture deck built from the notes (deck.yaml → context-engineering.pptx)
+├── notebooks/              ← the original labs, folded into notes/ as snippets
 ├── practice/               ← offline labs adapted from AI Agents in Depth
 ├── templates/              ← copyable schemas, prompt programs and prompt templates
 ├── sources/                ← PDFs of the papers the chapters cite
@@ -114,21 +116,18 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 **Appendix:** [99 — the speculative field track](notes/99-speculative-field-track.md) — neural fields, attractors, resonance, quantum semantics and the mental models, with what's grounded and what isn't (`confidence: low`).
 
-### Notebooks
+### Code in the notes
 
-[notebooks/](notebooks/README.md) holds runnable Python labs from the upstream course, plus two notebooks from the DAIR prompt-engineering guide:
+The upstream course's Python labs and the DAIR caching notebook are folded into the notes as short snippets, each credited where it appears:
 
-| Lab | Pairs with |
+| Code | Now in |
 |---|---|
-| [01_min_prompt.py](notebooks/01_min_prompt.py) | [01](notes/01-why-context-is-finite.md), [02](notes/02-context-anatomy.md) |
-| [02_expand_context.py](notebooks/02_expand_context.py) | [02](notes/02-context-anatomy.md), [03](notes/03-budgeting-the-window.md) |
-| [03_control_loops.py](notebooks/03_control_loops.py) | [08](notes/08-cognitive-tools.md#the-self-correction-loop) |
-| [04_rag_recipes.py](notebooks/04_rag_recipes.py) | [04](notes/04-retrieval.md) |
-| [05_prompt_programs.py](notebooks/05_prompt_programs.py) | [08](notes/08-cognitive-tools.md#prompt-programs) |
-| [06_schema_design.py](notebooks/06_schema_design.py) | [07](notes/07-structured-context.md) |
-| [07_recursive_patterns.py](notebooks/07_recursive_patterns.py) | [08](notes/08-cognitive-tools.md), [99](notes/99-speculative-field-track.md) |
-| [pe-rag.ipynb](notebooks/pe-rag.ipynb): retrieval-augmented title generation (DAIR) | [04](notes/04-retrieval.md) |
-| [gemini-context-caching.ipynb](notebooks/gemini-context-caching.ipynb): explicit context caching (DAIR) | [04](notes/04-retrieval.md) |
+| Layer-by-layer token cost (`02_expand_context.py`), drop-oldest history fit ([templates/control_loop.py](templates/control_loop.py)) | [03 — measuring token efficiency](notes/03-budgeting-the-window.md#measuring-token-efficiency), [history](notes/03-budgeting-the-window.md#history) |
+| Overlap chunker and hybrid fusion (`04_rag_recipes.py`), explicit caching (`gemini-context-caching.ipynb`, ported to `google-genai`), retrieved few-shot (`pe-rag.ipynb`) | [04 — chunking](notes/04-retrieval.md#chunking), [hybrid retrieval](notes/04-retrieval.md#hybrid-retrieval), [caching](notes/04-retrieval.md#caching) |
+| Schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
+| External validator loop (`03_control_loops.py`), operations-as-data program (`05_prompt_programs.py`), self-graded stop caution (`07_recursive_patterns.py`) | [08 — self-correction loop](notes/08-cognitive-tools.md#the-self-correction-loop), [prompt programs](notes/08-cognitive-tools.md#prompt-programs) |
+
+[pe-rag.ipynb](notebooks/pe-rag.ipynb) still runs on its own; the 01-prompt pillar links to it.
 
 ### Practice
 

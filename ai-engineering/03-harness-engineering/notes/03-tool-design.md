@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://developers.openai.com/blog/skills-shell-tips
   - https://vercel.com/academy/build-ai-agent-harness
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.langchain.com/blog/the-anatomy-of-an-agent-harness
@@ -156,8 +157,8 @@ The return path is as much a part of the tool as the call. Rules by tool type:
 
 ### Coding-agent search and edit tools
 
-![Comparison of Five File Editing Schemes](../images/ai-agent-book/fig5-4.svg)
-*Figure 5-4, Comparison of Five File Editing Schemes. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter5.md) (Apache-2.0).*
+![Five file-editing schemes, each with an example edit and its trade-off: diff + apply model, old→new string, line numbers, and others](../images/ai-agent-book/fig5-4.svg)
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter5.md) (2026), Fig. 5-4 (Apache-2.0)*
 
 Search, from coarse to fine:
 
@@ -192,8 +193,8 @@ Skills invert this. A short name and description (*what* + *when*, ~10 tokens) s
 
 ### Tool discovery at scale
 
-![Hierarchical Tool Matching (Two-Level Semantic Search: Server-Level → Tool-Level)](../images/ai-agent-book/fig4-2.svg)
-*Figure 4-2, Hierarchical Tool Matching (Two-Level Semantic Search: Server-Level → Tool-Level). From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter4.md) (Apache-2.0).*
+![Two-level tool matching: semantic search picks the GitHub server (0.92) from five, then the top-3 of its 26 tools](../images/ai-agent-book/fig4-2.svg)
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter4.md) (2026), Fig. 4-2 (Apache-2.0)*
 
 The cost of eager loading is concrete. Li measures five typical MCP servers at about 55K tokens of definitions, roughly 30% of a 200K window, before the first user message. The fixes, from heaviest to lightest:
 
@@ -205,7 +206,34 @@ The cost of eager loading is concrete. Li measures five typical MCP servers at a
 
 MCP solves **interoperability**. Skills solve **choice overload**. They are complementary, not rivals.
 
-This is the same mechanism as layer 2 in [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md), applied to capability rather than knowledge. See also [skills-design.md](../skills-design.md).
+This is the same mechanism as layer 2 in [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md#layer-2--on-demand-knowledge), applied to capability rather than knowledge.
+
+### Writing a skill
+
+OpenAI's [skills and shell tips](https://developers.openai.com/blog/skills-shell-tips) reduce to six rules.
+
+**1. The description is routing logic, not documentation.** It is the only text the agent has when it decides whether to load the skill, and it sits in every window. It should say when to use the skill, when not to, and what success looks like. Keep it terse:
+
+```yaml
+# bad (~45 tokens): details that belong in the body
+description: |
+  This skill handles the complete deployment process to production.
+  It covers environment checks, rollback procedures, and post-deploy
+  verification. Use this before deploying any code to production.
+
+# good (~9 tokens): the same routing signal
+description: Use when deploying to production or rolling back.
+```
+
+**2. Add negative examples.** A misfire costs a full body load plus a wrong-track start. "Don't call this skill when… (and what to do instead)" is worth more than another positive example, because the positive case is usually obvious from the name and the negative case never is.
+
+**3. Put templates and worked examples inside the skill.** They cost nothing until the skill fires, so the body is the right home for bulky, consistently shaped outputs: structured reports, triage summaries, analysis write-ups.
+
+**4. Design for long runs early.** A skill that runs for more than a few minutes should assume it will be interrupted: write progress to disk and resume from a checkpoint ([02-context/05](../../02-context-engineering/notes/05-compression-compaction.md#crash-recovery)).
+
+**5. For determinism, invoke explicitly.** Routing on descriptions is probabilistic. When a skill must run, write `Use the <skill name> skill.` in the instruction.
+
+**6. Skills plus network is an exfiltration path.** A skill body is instructions the agent follows. An injected instruction with network reach can move data out. The defensible default is **skills allowed, shell allowed, network on a minimal per-task allowlist**. Treat tool output as untrusted ([note 04](04-execution-boundaries.md#the-five-protection-layers)).
 
 ---
 

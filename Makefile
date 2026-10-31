@@ -45,6 +45,6 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 
 slides:  ## Build a pillar deck: make slides PILLAR=01-prompt-engineering [PREVIEW=1] [PDF=1] [STRICT=1]
 	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1]"; exit 1; }
-	@uv run -q --with python-pptx --with pyyaml --with pillow python scripts/slides/build_deck.py \
+	@uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py python scripts/slides/build_deck.py \
 		ai-engineering/$(PILLAR)/slides/deck.yaml \
 		$(if $(PREVIEW),--preview ai-engineering/$(PILLAR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict)

@@ -6,7 +6,7 @@ sources:
   - sources/kg-and-llms-in-action/03-first-kg-from-ontologies.md
   - sources/kg-and-llms-in-action/appendix-a-intro-to-graphs.md
   - sources/kg-and-llms-in-action/appendix-b-neo4j.md
-  - notebooks/knowledge-graphs-for-rag/notes/Lesson_0.md … Lesson_2.md
+  - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L0–L2: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://neo4j.com/docs/cypher-manual/current/
 confidence: medium-high
 cleaned: 2026-10-28
@@ -100,6 +100,11 @@ From appendix A, kept to what you need:
 
 **Choose by goal, not ideology** (ch3). Use RDF and OWL when standard ontologies, interchange and formal inference are the point. Use LPG when you need provenance, confidence and timestamps on edges. That covers most LLM-extracted graphs, because every extracted edge should record where it came from. You can have both: ch3 imports OWL ontologies into Neo4j with **Neosemantics (n10s)** and keeps the subclass hierarchy as edges you can traverse.
 
+![Three LPG relationships, each a record with a direction, a type and a property: KNOWS since 2024, TEACHES year 2024, INTRODUCES section Introduction](../images/kg-for-rag/relationship-properties.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+The figure is the LPG argument in one picture: `since`, `year` and `section` sit on the edges themselves. In RDF each of those would need a workaround.
+
 This track uses LPG and Neo4j.
 
 ---
@@ -124,6 +129,30 @@ That list comes from a vendor blog (flowtivity), which also claims typed edges i
 ## Neo4j and Cypher
 
 Cypher draws patterns in ASCII: `(n:Label {prop: value})-[r:TYPE]->(m)`.
+
+![Two Person nodes, Andreas and Andrew, linked by KNOWS; Andreas TEACHES and Andrew INTRODUCES the Course node Knowledge Graphs for RAG, with the matching Cypher pattern underneath](../images/kg-for-rag/kg-person-teaches-course.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+The pattern under the picture, `(Person)-[TEACHES]->(Course)<-[INTRODUCES]-(Person)`, is the Cypher you'd write to find it. You draw the shape you want and Neo4j finds every match.
+
+From Python, the course wraps the driver in LangChain's `Neo4jGraph`, which returns each row as a dict:
+
+```python
+from langchain_neo4j import Neo4jGraph   # course used langchain_community.graphs (deprecated)
+
+kg = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USERNAME, password=NEO4J_PASSWORD)
+
+# Co-actors: walk out along ACTED_IN and back in to the other actors
+cypher = """
+MATCH (tom:Person {name: $name})-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(co:Person)
+RETURN co.name AS coActor, m.title AS movie
+"""
+rows = kg.query(cypher, params={"name": "Tom Hanks"})   # list[dict]
+
+kg.refresh_schema(); print(kg.schema)   # the schema string text-to-Cypher prompts use (note 11)
+```
+
+The LangChain Neo4j integrations moved out of `langchain_community` into the `langchain-neo4j` package; the class names are unchanged.
 
 ### Cheat sheet
 

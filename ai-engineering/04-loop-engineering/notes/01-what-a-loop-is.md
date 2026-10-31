@@ -48,6 +48,7 @@ Every source describes the same cycle in different words:
 | KodeKloud course | try → test → fix → save → repeat |
 
 ![The loop Anthropic ships: gather context, take action, verify work, repeat until verified or a stopping condition trips](../images/anthropic-agent-loop.png)
+*Image Source: AI Builder Club, "Loop engineering: the Anthropic playbook" (2026)*
 
 The KodeKloud version adds the step the others leave implicit: **save**. A pass that improves the score is committed before the next pass starts, so progress is a ratchet. A bad pass costs one rollback, not the run.
 
@@ -101,6 +102,17 @@ Loop engineering doesn't replace TDD or CI. It **runs them under an agent**: sma
 
 With a full harness (`AGENTS.md`, feature list, `init.sh`, progress file) you are still **inside the loop**: you read the progress file, decide what's next, type the instruction. You are the engine. **Outside the loop**, a system you designed does that: trigger → discover work → dispatch → verify → save state → repeat, and you get only the decisions it can't make, in an inbox. The leverage moves from writing the right prompt to designing the right loop. Generation becomes nearly free; judgment becomes the scarce resource.
 
+The same artifacts change role when you cross the line:
+
+| Harness engineering | Loop engineering |
+|---|---|
+| One run: tools, sandbox, hooks, verification inside the run | Many runs: what starts the next one, and when to stop |
+| Progress file written at session end | Progress file *read* by the next pass to pick its own task |
+| Generator/evaluator separation | Maker/checker as the loop's quality ceiling |
+| Ratchet on the harness (every failure → a rule) | Ratchet on the work (score only goes up, else roll back) |
+
+The moment the agent's next run starts without you typing a prompt, you've crossed from harness into loop.
+
 ---
 
 ## The map of this pillar
@@ -127,6 +139,7 @@ LangChain is explicit that **humans stay in at every level**: approval before se
 Anthropic never uses the phrase "loop engineering," but their engineering essays add up to a playbook for it (synthesis by AI Builder Club). Each row points to the note that develops it:
 
 ![Anthropic's essays mapped to loop-engineering moves](../images/anthropic-playbook-map.png)
+*Image Source: AI Builder Club, "Loop engineering: the Anthropic playbook" (2026)*
 
 | Principle (source essay) | Loop-engineering move | Note |
 |---|---|---|

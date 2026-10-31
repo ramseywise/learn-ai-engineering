@@ -18,7 +18,7 @@ cleaned: 2026-10-28
 ## The three kinds
 
 ![A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment](../images/ai-agent-book/fig7-4.svg)
-*Figure 7-4, A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-4 (Apache-2.0)*
 
 | Grader | How it scores | Strength | Weakness | Use when |
 |---|---|---|---|---|
