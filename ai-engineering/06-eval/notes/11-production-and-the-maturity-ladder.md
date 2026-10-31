@@ -9,6 +9,7 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 10"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
+  - "Paul Iusztin & Maxime Labonne, LLM Engineer's Handbook (Packt, 2024), appendix"
   - eval-harness.md (retired 2026-10-28)
   - eval-maturity-ladder.md (retired 2026-10-28)
 confidence: medium
@@ -106,7 +107,8 @@ Detecting it:
 1. **Capture a baseline at launch**: online grader scores, efficiency metrics, feedback rate, escalation rate, per slice.
 2. **Run the same pipeline continuously** on the sample.
 3. **Alert on divergence** beyond a margin that accounts for noise ([09](09-reading-results.md)). Daily rates on small samples are noisy; use rolling windows.
-4. **Watch the inputs too.** Topic or intent mix shifting (cluster embeddings of queries, compare to the baseline mix) warns you before quality metrics move.
+4. **Watch the inputs too.** Topic or intent mix shifting (cluster embeddings of queries, compare to the baseline mix) warns you before quality metrics move. Make it a test rather than an eyeball: keep a reference window (launch traffic) and a test window (recent traffic) and compare them with a two-sample test. Use Kolmogorov–Smirnov for a numeric feature such as query length or tool calls per turn, chi-squared for a categorical one such as intent label, and maximum mean discrepancy (MMD) over query embeddings for the text itself (*LLM Engineer's Handbook*, appendix). `alibi-detect` ships `KSDrift` and `MMDDrift`. The p-value is the alert threshold: too loose and the channel fills with false alarms people learn to ignore. The data side of this (data, concept and prediction drift, and Evidently reports) is in [data-engineering 05](../../../data-engineering/notes/05-monitor.md#three-kinds-of-drift).
+5. **Rule out plumbing before reacting.** An alert is first a question: is the data valid, did a schema change, is it one outlier? Only a real shift justifies re-tuning the prompt, the index or the model (*LLM Engineer's Handbook*, appendix).
 
 Pin model versions where the provider allows it, so "drift" is something you chose.
 

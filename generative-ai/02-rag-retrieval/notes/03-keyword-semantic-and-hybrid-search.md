@@ -1,6 +1,7 @@
 ---
 origin: Deeplearning.ai-RAG-main
 sources:
+  - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 5"
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 2, "Information Retrieval and Search Foundations" + Assignment 2)
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
@@ -92,7 +93,7 @@ An **embedding model** maps text to a dense vector so that similar meanings land
 ![Two vectors [10,10] and [100,100] on the same direction: cosine similarity 1 despite very different lengths, angle θ between direction lines](../sources/images/hasan-dlai-rag-cosine.png)
 *Image Source: Hasan, DeepLearning.AI RAG course, Module 2*
 
-A correction to one book: the *LLM Engineer's Handbook* (ch. 4) says cosine distance ranges from −1 to 1. That is the range of cosine *similarity*. Cosine distance, 1 − similarity, ranges from 0 to 2. Check which one a library returns before setting a threshold.
+A correction to one book: the *LLM Engineer's Handbook* (ch. 4) says cosine distance ranges from −1 to 1. That is the range of cosine *similarity*. Cosine distance, 1 − similarity, ranges from 0 to 2. *Prompt Engineering for GenAI* (ch. 5) makes the same slip, calling cosine similarity "a measure of distance": higher similarity means *closer*. Check which one a library returns before setting a threshold. A FAISS `IndexFlatL2`, for instance, returns squared L2 distances ([04](04-vector-databases-and-ann.md)).
 
 Rule: **only compare vectors from the same model**. Two models' spaces are unrelated, even at the same dimension.
 

@@ -6,6 +6,7 @@ sources:
   - https://docs.tavily.com/
   - https://docs.langchain.com/oss/python/langgraph/persistence
   - https://docs.langchain.com/oss/python/langgraph/interrupts
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 9"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -97,6 +98,19 @@ for event in abot.graph.stream({"messages": [HumanMessage("What is the weather i
 | `PostgresSaver` | Production, multiple workers |
 
 A checkpointer is **short-term memory**: one thread's state. Facts that must survive across threads go in a store, which is [note 03](03-long-term-memory-with-langgraph.md).
+
+### Double texting
+
+A thread is also where a second message collides with a run that hasn't finished: the user fixes a typo or adds a constraint mid-run. The design options and their costs are in [harness 07](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md#double-texting-the-same-problem-in-a-chat-app). LangGraph's deployment server picks one per request with `multitask_strategy` (*Learning LangChain*, ch. 9):
+
+| Strategy | What happens to run 1 | Use when |
+|---|---|---|
+| `reject` | Keeps running; the new message is refused | Runs are short or side-effecting and must not overlap |
+| `enqueue` | Finishes; the new message runs next as its own run | Each message is an independent request |
+| `interrupt` | Stops, keeps its checkpointed progress; the new input continues the thread | The follow-up refines the same task |
+| `rollback` | Discarded; the new input runs as if it were the first | The follow-up replaces the first message |
+
+`interrupt` is the natural fit for chat and the hardest to get right: any tool call run 1 already executed has happened, so its side effects must be idempotent or recorded in state, and a half-finished tool-call turn must be cleaned up before the next model call. The book calls the server LangGraph Platform, since renamed LangSmith Deployment; check the current docs for the parameter.
 
 ## L4 — streaming
 

@@ -62,17 +62,17 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 |---|---|---|
 | 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map |
 | 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify |
-| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test |
+| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, input and output schemas, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test |
 | 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go |
 | 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping |
 | 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption |
 | 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check |
 | 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study |
 | 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet |
-| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals |
-| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes, schema-first text-to-Cypher, the LangGraph QA agent |
+| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals, the lifecycle after the load |
+| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes and granularity, graph-to-prompt formats, schema-first text-to-Cypher, the LangGraph QA agent |
 | 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost |
-| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims |
+| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, LLM graph reasoning and its limits, predictions as claims |
 
 ## Rules of thumb
 
@@ -90,6 +90,10 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | Errors compound per hop: at 85% per hop, a 5-hop answer is ~44% right | [10](notes/10-building-kgs-with-llms.md) |
 | Never merge entities destructively; keep provenance on every edge | [10](notes/10-building-kgs-with-llms.md), [12](notes/12-kg-as-shared-agent-memory.md) |
 | Vector search first, canned traversals for named question shapes, text-to-Cypher only with a validator | [11](notes/11-kg-rag-and-text-to-cypher.md) |
+| Never execute model-written Cypher as a write: extract structured mentions, assemble with deterministic `MERGE` | [10](notes/10-building-kgs-with-llms.md) |
+| A live KG needs standing pipelines for update, assessment, deletion and access, not a one-off build | [10](notes/10-building-kgs-with-llms.md) |
+| Return the smallest graph unit the question needs: node, triplet, path, then subgraph | [11](notes/11-kg-rag-and-text-to-cypher.md) |
+| Paths, degree and ordering are graph queries, not prompts: give the model the tool | [13](notes/13-graph-ml-and-gnns.md) |
 | If a run's only durable record is its chat transcript, you have no graph | [12](notes/12-kg-as-shared-agent-memory.md) |
 | Beat a domain-informed feature baseline before trusting a learned embedding | [13](notes/13-graph-ml-and-gnns.md) |
 | A predicted edge is a claim: flag it, score it, keep it out of default traversals | [13](notes/13-graph-ml-and-gnns.md) |
@@ -103,6 +107,13 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
 - [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/): the chapter PDFs, `chNN-<topic>.pdf` and `appendix-{a,b,c}-<topic>.pdf`. Their content is folded into notes 09–13, which cite the chapter for each claim (ch1–3 and appendices A–B → 09, ch4–8 and appendix C → 10, ch13–15 → 11, ch9–12 → 13). Topics: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory, Neo4j and structured-sources appendices.
+
+### Other books folded in
+- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), [sources/building-ai-agents-llms-rag-kgs/](sources/building-ai-agents-llms-rag-kgs/). Ch. 7 → notes 10 (KG lifecycle after the load), 11 (retrieval granularity, retrievers, prompt formats, HybridRAG) and 13 (LLM graph reasoning and its limits). Ch. 9 → notes 05, 06 and 07.
+- Albada, *Building Applications with AI Agents* (O'Reilly, 2025), [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/). Ch. 8 → notes 05 and 07 (actor-critic, supervisor routing, A2A, ADAS, distributed transports).
+- Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), PDFs in [generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Ch. 5 → notes 02 (the agency ladder, LLM routers) and 03 (input and output schemas).
+
+Chapter-to-note maps and quality flags for all three are in [references.md](references.md).
 
 ### Interviewing guide
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.

@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - "Chip Huyen, AI Engineering (O'Reilly, 2025), ch. 6"
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/05_memory_systems/00–04, 00_COURSE/03_context_management/02_memory_hierarchies.md) — snapshot 2026-08-14)
@@ -133,6 +134,7 @@ Practices:
 
 - **Update over append.** Before writing, check whether an existing entry covers it. Revise that one.
 - **Delete what proved wrong.** A memory falsified by later evidence is worse than no memory.
+- **Pick a contradiction policy on purpose.** Keep the newer fact, have a model judge, or keep both as perspectives. Which is right depends on the use case. Liu et al. (2023) have the agent reflect after each action and choose to insert, merge or replace; Bae et al. (2022) merge a summary back into the memory with a sentence-level classifier (*AI Engineering*, ch. 6).
 - **One fact per file.** Granular files can be individually revised or deleted; a monolith cannot.
 - **Absolute dates, not relative.** "Last week" written six months ago is now false. Timestamps must resolve independently of read time.
 - **Don't store what's derivable.** Code structure, git history, and file layout are already in the repo. Memory holds what the artifacts *don't* record — decisions, preferences, corrections, and the reasons behind them.
@@ -183,6 +185,8 @@ trim_messages(messages, max_tokens=N, strategy="last",  # keep the newest
 ```
 
 Two related helpers clean the list before it is sent. `filter_messages` keeps messages by type, name or id. `merge_message_runs` joins consecutive messages of the same type, which some providers (Anthropic among them) reject.
+
+`strategy="last"` is FIFO eviction, and FIFO assumes early turns matter least. Huyen calls that assumption "fatally wrong" in long conversations, where the first turns often hold the task definition. Pin those turns (the system message, the original request) or summarize them; don't let them age out. She also frames the budget as a split. If 30% of the window is reserved for what is retrieved from long-term memory, short-term history gets at most 70%, and overflow moves to the store (*AI Engineering*, ch. 6). The 30% is her illustration, not a recommendation.
 
 ---
 

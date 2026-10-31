@@ -632,7 +632,7 @@ On hosting, the chapter's survey is short: relational tables, document stores, g
 
 `~/.claude/refs/agent-eval.md`: gold sets and gating. `~/.claude/refs/agent-memory.md`: semantic memory writes.
 
-Depth: *KG & LLMs in Action* ch. 4–8 and appendix C; the chapter files are listed in [references.md](../references.md).
+Depth: *KG & LLMs in Action* ch. 4–8 and appendix C; the chapter files are listed in [references.md](../references.md). Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7, for the full lifecycle (assessment, cleaning, enrichment).
 
 ---
 

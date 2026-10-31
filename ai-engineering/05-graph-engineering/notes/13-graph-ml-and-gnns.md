@@ -6,6 +6,7 @@ sources:
   - sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf
   - sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf
   - sources/kg-and-llms-in-action/ch12-node-classification-link-prediction.pdf
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
 cleaned: 2026-10-31
 ---
@@ -316,6 +317,8 @@ The first term rewards a high score for the true fact; the second penalises a hi
 
 RESCAL's cost is per relation, not per entity. The book's illustration, "1,000 entities and 100 relationship types, we'd need millions of parameters", holds because of the relation count: 100 matrices at d = 100 is already 1M parameters, whatever the number of entities. DistMult is RESCAL with each matrix restricted to its diagonal (d parameters per relation), which is where its symmetry comes from.
 
+Raieli and Iuculano add two decoders that answer the table's weaknesses (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7). **RotatE** models each relation as a rotation in complex space, which covers symmetry, antisymmetry, inversion and composition together. Their examples: marriage is symmetric, and "my nephew is my brother's son" is a composition. **ATTH** embeds in hyperbolic space to keep hierarchies (the geometry row above) together with logical patterns. Their reason for caring about structure: standard embeddings lose a large KG's hierarchies, chains and rings, and those are the structures that reasoning and subgraph extraction depend on (ch. 7, Fig. 7.26). Pick the decoder by the relation patterns your questions use. If they depend on composition or symmetry, DistMult can't represent them.
+
 ### Message passing
 
 A GNN layer has each node **aggregate** its neighbours' vectors and **update** its own. After *k* layers a node's embedding encodes its *k*-hop neighbourhood, both its shape (an atom can come to "know" it sits in a benzene ring) and its neighbours' features (a paper absorbs related papers' content) (*KG & LLMs in Action*, ch. 11).
@@ -430,15 +433,39 @@ Across both tasks **GAT** had the most parameters and the slowest training. It b
 
 ## GNNs and LLMs together
 
-GNNs handle structure and struggle with text. LLMs are the reverse. Ch. 11 names three ways to combine them (*KG & LLMs in Action*, ch. 11):
+GNNs handle structure and struggle with text. LLMs are the reverse. Ch. 11 names three ways to combine them (*KG & LLMs in Action*, ch. 11). Raieli and Iuculano give the same encoder example, abstracts embedded as node features for a citation network, and add a fourth pattern (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7):
 
 | Pattern | Flow | Example |
 |---|---|---|
 | **LLM as predictor** | GNN encodes the structure; the LLM produces the final output | KG question answering that explains a structural finding |
 | **LLM as encoder** | The LLM embeds node text; the GNN propagates it over edges | Paper abstracts as node features for citation prediction |
 | **LLM as aligner** | Both run in parallel, aligned by contrastive training | Multimodal KGs where both text and structure matter |
+| **LLM as labeller** | The LLM labels nodes zero-shot from their text; the GNN trains on those labels | Topic labels for papers from their titles, instead of paying annotators |
 
 The predictor pattern is what the book's advisory systems do: a structural result (a DWPC ranking, a predicted link) gets explained in domain language. The LLM narrates; it doesn't decide. That is ch. 4's rule for clinical use, where the authors warn against acting on LLM interpretations of clinical-KG findings without expert review, and a reasonable default anywhere (*KG & LLMs in Action*, ch. 4).
+
+The labeller row is worth noting for cost. [The task map](#the-task-map) says node classification needs training, and training needs labels. A zero-shot LLM pass gives a first set of labels quickly, and a person can check a sample of them before the GNN learns from them. The book also mentions fine-tuning the LLM and the GNN jointly (ch. 7).
+
+### When the LLM does the graph reasoning itself
+
+The alternative to pairing an LLM with a GNN is asking the LLM to reason over the graph directly. Raieli and Iuculano separate two kinds of task, following a graph-and-LLM survey ([arXiv 2404.14809](https://arxiv.org/abs/2404.14809), not yet read for this course) (ch. 7):
+
+- **Structure understanding**: degree, path search, shortest path, topological sort, Hamilton path. The first ones are easy and the last two are much harder.
+- **Graph learning**: node, edge and graph classification, explaining a node's features, and KG question answering. These need the attributes as well as the structure.
+
+There are three ways to prompt for it: a **manual** prompt with the graph inlined (plus an explanation of the algorithm, such as DFS, if you want it followed), limited by context length; **self-prompting**, where the model rewrites its own prompt over several rounds; and **API-call** prompts, where the model calls graph tools. The fourth option is **supervised fine-tuning** on graph tasks (ch. 7).
+
+The chapter is frank about the limits. LLMs read a graph as linear text and attend to node labels more than to topology. Tokenisation breaks numbers apart, which hurts tasks that count or compare. Training corpora contain little graph data. The models "succeed in solving simple tasks on small graphs, but their performance decays rapidly as both graph and task complexity increase" (ch. 7). The book's evidence that fine-tuning helps is one figure:
+
+![A directed graph listed edge by edge, with the question "Which are the predecessor nodes of node 3?" ChatGPT answers 4, 2 and 6 and misses node 0; the fine-tuned model answers 4, 2, 6 and 0, which is correct](../sources/images/building-ai-agents-llms-rag-kgs-fig7-31.png)
+*Image Source: Salvatore Raieli & Gabriele Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), Fig. 7.31*
+
+The figure comes from the paper the book cites ([arXiv 2403.04483](https://arxiv.org/abs/2403.04483), not yet read for this course). It shows a single question. Behind the book's claim that "SFT on graph datasets allows for results that are better than much larger models", the chapter gives one example, not a benchmark. The miss is worth studying anyway. Node 0's edge to 3 is on the **last line** of the list, and ChatGPT's answer goes through the edges in order and leaves that one out. Asking a model to scan a list of edges is a poor way to run a graph algorithm.
+
+The practical rule follows. **Don't ask the model to do what a graph query does exactly.** Degree, paths, predecessors and topological order are one line of Cypher or `networkx`, and both are always right. Give the model those as tools (the API-call approach and the canned traversals of [note 11](11-kg-rag-and-text-to-cypher.md#retrieval-modes)), and keep the model for reading the question and explaining the result. Fine-tune only if you have a graph task no algorithm covers and enough labelled examples.
+
+The chapter ends with **graph-formed reasoning** ([01-prompt note 03](../../01-prompt-engineering/notes/03-core-techniques.md#tree-of-thoughts)). *Think on the graph* treats intermediate thoughts as nodes and their dependencies as edges, as in Graph of Thoughts. It is expensive, with several calls per answer, and used for reasoning problems such as maths. *Verify on the graph* generates several lines of reasoning, joins them in a graph and has a verifier, usually another LLM, look for contradictions between paths. The book's worked example contradicts itself: the question is about "60 miles in 1.5 hours", and the thought nodes it lists are "Distance = 60 km" and "Speed = 40 km/h". The arithmetic is right and the unit has changed. It is an accidental demonstration of the point of verification. A checker that compares each node with the question would have caught it, and a single chain of thought never looks back.
+
 
 ---
 
@@ -459,7 +486,7 @@ A predicted edge is the clearest case of note 12's rule that **claims are not tr
 
 Try it: rerun the karate-club comparison 10 times per feature set and report the mean and spread of F1, then tune Node2Vec until it matches the homophily baseline or explain why it can't. On a graph of your own, hold out 10% of one edge type, score candidates with manual pair features (common neighbours, Adamic–Adar, DWPC) and with GraphSAGE plus a dot-product decoder, write the top 20 back as flagged predictions, and read them by hand to count real missing links against hub artefacts.
 
-Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration.pdf) (Hetionet, metapaths, DWPC, celiac case), [ch. 9 PDF](../sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf) (task taxonomy, karate club), [ch. 10 PDF](../sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf) (manual features, metapaths, DWPC, ReFeX), [ch. 11 PDF](../sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf) (embeddings, KG decoders, message passing), [ch. 12 PDF](../sources/kg-and-llms-in-action/ch12-node-classification-link-prediction.pdf) (PyG walkthroughs).
+Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration.pdf) (Hetionet, metapaths, DWPC, celiac case), [ch. 9 PDF](../sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf) (task taxonomy, karate club), [ch. 10 PDF](../sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf) (manual features, metapaths, DWPC, ReFeX), [ch. 11 PDF](../sources/kg-and-llms-in-action/ch11-graph-representation-learning-gnns.pdf) (embeddings, KG decoders, message passing), [ch. 12 PDF](../sources/kg-and-llms-in-action/ch12-node-classification-link-prediction.pdf) (PyG walkthroughs). Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 7: a short survey of KG embeddings, GNNs and LLM graph reasoning.
 
 ---
 

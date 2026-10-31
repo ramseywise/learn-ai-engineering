@@ -8,6 +8,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 8, Ch 11"
   - https://arxiv.org/abs/2306.11644
   - https://arxiv.org/abs/2305.07759
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 8"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -175,6 +176,20 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#chain-of-thought).
 
 Images also matter for training. Text-only pretraining is approaching "the whole public internet" as a ceiling, and images and video add a different kind of signal (spatial reasoning, physical common sense, social cues), not just more of the same.
+
+### Prompting image generators
+
+The inverse job, writing prompts *for* a diffusion model, has its own conventions. Phoenix & Taylor's are written against Midjourney v5 (2023), so the syntax is dated, but the ideas carry over to other image models (*Prompt Engineering for Generative AI*, ch. 8):
+
+- **Format first.** "Stock photo", "oil painting" and "Egyptian hieroglyphs" change everything, including the content: an oil painting of a business meeting has no computers in it, because oil paintings rarely contain them.
+- **Quality boosters leak style.** "4k" or "trending on artstation" lifts quality because those labels went with good images in training. They bring the source's habits too: their "space whale, trending on artstation" comes out looking like a spaceship.
+- **Negative prompts help, unreliably.** `--no frame, wall` removes the frame that tends to come with "oil painting", but it often fails when the two concepts are too strongly correlated in training. In Midjourney, `--no` is shorthand for a weight of `::-0.5`. Weights (`::2`, `::-1`) dial a concept up or down, and a grid search over weight pairs maps the blend. Older negative-prompt fixes for hands and extra fingers are mostly unnecessary from Midjourney v5 and SDXL on.
+- **Rewrite the user's prompt.** A `{subject} in the style of {artist}` template gave a dachshund standing *next to* a Banksy mural. Asking an LLM for the artist's medium first and rendering `{medium} of a {subject} in the style of {artist}` put the dog in the street art. This is meta-prompting ([08](08-prompt-optimization.md)) to fix garbage in, garbage out from non-expert users.
+- **Unbundle a style instead of naming the artist.** Have an LLM describe the style without naming the artist or the work, shorten that into prompt terms ("surrealist landscape", "melting objects"), then remix them. The result is more original, and it avoids the legal and ethical grey zone of imitating a living artist, which the authors advise caution on (and legal counsel for commercial use).
+- **Measure what the prompt actually uses.** `/describe` reverse-engineers a prompt from an image. `/shorten` shows per-token weights, which often reveal that most of a long prompt does nothing. That's the same lesson as for text prompts ([09](09-evaluating-prompts.md)).
+- **Inpainting for consistency.** To keep a character consistent, generate two images side by side at 2:1, then inpaint one half (Midjourney's Vary Region) with a new pose. The other half anchors the features.
+
+Diffusion internals and Stable Diffusion workflows belong to the multimodal pillar.
 
 ---
 

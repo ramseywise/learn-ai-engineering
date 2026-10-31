@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2406.13121
   - https://arxiv.org/abs/2407.16833
   - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -44,7 +45,7 @@ How far long context stretches depends on the task. On Google DeepMind's LOFT be
 
 When the corpus fits, the choice need not be all-or-nothing. Averaged over seven LongBench sets, reading the full context beat top-5 RAG by 7.6 points for Gemini-1.5-Pro and 13.1 for GPT-4o, at about 6× the tokens. But the two gave identical answers on 63% of queries, so routing pays. In **Self-Route**, RAG answers first and says "unanswerable" when the chunks fall short, and only those queries go to full context. Over all nine sets this matched long context for GPT-4o (48.89 vs. 48.67) on 61% of the tokens ([arXiv:2407.16833](https://arxiv.org/abs/2407.16833) (Li et al., 2024-07)). For inputs beyond the window, RAG still won (GPT-3.5-Turbo with a 16K window, on ~147K-word ∞Bench documents).
 
-These combine. A common shape is a cached prefix (instructions, tool definitions, a corpus index) plus retrieval or tool calls for the long tail. Retrieval also wins whenever **permissions** matter, whatever the size: a cached corpus is visible to everyone who hits the cache.
+These combine. A common shape is a cached prefix (instructions, tool definitions, a corpus index) plus retrieval or tool calls for the long tail. Albada reaches the same verdict from practice, without measurements: a million-token window costs compute and latency and doesn't guarantee the model finds the one relevant passage, so production systems pair long context with selective retrieval (*Building Applications with AI Agents*, ch. 6). Retrieval also wins whenever **permissions** matter, whatever the size: a cached corpus is visible to everyone who hits the cache.
 
 ---
 

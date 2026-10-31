@@ -4,6 +4,7 @@ sources:
   - "Negro et al., Knowledge Graphs and LLMs in Action (Manning, 2025), ch. 1–3 and appendices A–B: sources/kg-and-llms-in-action/ch01-kg-llm-killer-combination.pdf, ch02-intelligent-systems-hybrid.pdf, ch03-first-kg-from-ontologies.pdf, appendix-a-intro-to-graphs.pdf, appendix-b-neo4j.pdf"
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L0–L2: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://neo4j.com/docs/cypher-manual/current/
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
 cleaned: 2026-10-31
 ---
@@ -172,6 +173,8 @@ Structure alone doesn't make a graph a knowledge graph; the meaning layered on i
 | Captures | Broader/narrower hierarchy | Hierarchy plus identity, difference and richer constraints |
 | Example | Vehicle ⊃ Car ⊃ Sedan | "Car" ≡ "Automobile"; "Car" and "Bicycle" are disjoint |
 | Expressive features | Parent/child | Classes defined by union, complement, disjointness, cardinality |
+
+Raieli & Iuculano draw the same line and add a second axis: **domain-independent** (upper) ontologies give a few high-level concepts that let several domains integrate, and **domain ontologies** (medicine, finance) sit below them as subclasses carrying the terminology (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 7). Their example of a property rule needs a fix: they say that if `married_to` is transitive you can infer facts nobody stated. Marriage is *symmetric* (A married to B implies B married to A), not transitive. Declaring a relationship with the wrong property makes the reasoner infer false facts with full confidence, so check each one.
 
 Without an ontology, a vocabulary stays vague, because nothing records how its terms relate. But full, rigid ontologies are costly and age badly. The book's recommendation is **just enough semantics**: model the subset of ontology features the current questions need, scoped to one subdomain (say, cardiology in a healthcare KG), and extend it as the system grows.
 
