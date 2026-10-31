@@ -1,7 +1,7 @@
 # Readings inbox
 
 This folder is the **index and inbox for every reading in the repo**, not a library. It
-lives under `ai-engineering/` only because the tooling points here. It covers all subjects.
+sits next to the tooling in `scripts/papers/` and covers all subjects.
 
 | Path | What it is |
 |---|---|
@@ -15,7 +15,7 @@ A PDF does not stay here. Once triage gives it a home, `route` moves it into tha
 ## Homes
 
 Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES` in
-[`scripts/papers/potw.py`](../../scripts/papers/potw.py).
+[`scripts/papers/potw.py`](../papers/potw.py).
 
 | Home key | Folder |
 |---|---|
@@ -24,15 +24,38 @@ Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES
 | classical-ml | `data-science/sources/` |
 | ml-systems | `data-engineering/sources/` |
 
-Topics with no home (mechanistic interpretability, safety research, robotics and other
-multimodal work, domain applications) are kept in the ledger as `skipped` and never routed.
+Topics with no home are kept in the ledger and never routed. Interpretability, safety research
+and multimodal work are *watched*: a notable paper there is `parked`, so it is still waiting when
+a pillar for it arrives. Domain applications and everything else are `skipped`.
+
+## How triage scores a reading
+
+Haiku gives every reading two scores, 0–3:
+
+- **relevance** is fit to the home: 3 sharpens a claim a note makes, 2 is solid evidence or a
+  core reading for the home's scope, 1 fits loosely. A home with few notes yet is judged by its
+  scope, so a new pillar is not starved.
+- **interest** is how much an AI engineer should know it, whatever the curriculum covers today:
+  3 is a landmark, 2 a notable new idea, 1 incremental, 0 not for this audience.
+
+| Has a home? | Rule | Status |
+|---|---|---|
+| yes | relevance at or above the floor (2 for DAIR, 1 for a PDF we hold), or interest 3 | `queued` |
+| yes | below the floor, interest 2 | `parked` |
+| no | interest 3, or interest 2 in a watched topic | `parked` |
+| either | anything else | `skipped` |
+
+`parked` and `skipped` are both re-triaged with `triage --status parked` or `--status skipped`,
+for example after a pillar gets notes or HOMES changes. `status --list parked` shows the
+candidates for a new pillar, with each paper's `reason`.
 
 ## Status lifecycle
 
 ```
 new ──triage──▶ queued ──download (DAIR, arXiv)──▶ downloaded ──/papers──────────▶ integrated
           │        └──route (PDF already in the repo; stays queued)──/papers or /chapter──▶ integrated
-          └───▶ skipped (no home, or a DAIR paper below relevance 2 that we don't hold)
+          ├───▶ parked (worth knowing, but no home or fit yet; re-triage when a pillar grows)
+          └───▶ skipped (not for this course)
 ```
 
 ## Commands
@@ -42,6 +65,8 @@ make papers-status                                        # counts, and how many
 python3 scripts/papers/potw.py route                      # dry run: where each triaged PDF would go
 python3 scripts/papers/potw.py route --apply              # move them (git mv) and drop duplicate copies
 python3 scripts/papers/potw.py triage --status skipped --source repo   # re-triage after HOMES changes
+python3 scripts/papers/potw.py triage --status parked --backlog        # re-triage after a pillar grows
+python3 scripts/papers/potw.py status --list parked                    # candidates for a new pillar
 python3 scripts/papers/potw.py triage --local --backlog   # DAIR rows whose PDF is already in the repo
 make papers                                               # weekly: fetch DAIR, triage, download
 ```
@@ -56,7 +81,18 @@ make papers                                               # weekly: fetch DAIR, 
 | `/pillar` | Bring a pillar folder to the standard layout (`notes/`, `sources/`, `references.md`). |
 | `/slides` | One pillar's notes into a lecture deck, kept as `.pptx` and `.pdf`. |
 
-The standard layout every skill writes to is in [PILLAR-LAYOUT.md](../PILLAR-LAYOUT.md).
+The standard layout every skill writes to is in [PILLAR-LAYOUT.md](../../ai-engineering/PILLAR-LAYOUT.md).
+
+## Running sessions side by side
+
+Triage, download and `/papers` or `/chapter` can run at the same time. Triage writes only
+the ledger and never moves a file. Download writes PDFs straight into the home's `sources/`.
+`/papers` and `/chapter` read from `sources/` and end with `potw.py mark`. Every save takes a
+lock on `.ledger.lock`, rereads the ledger and writes only the fields that process changed.
+When two processes changed the same field, the one already on disk wins, so a stale
+`downloaded` never overwrites a `mark integrated`. Edit the ledger only through `potw.py`.
+A hand edit made while a potw.py command is running is kept only if it touches fields that
+command doesn't change.
 
 ## Adding a reading
 

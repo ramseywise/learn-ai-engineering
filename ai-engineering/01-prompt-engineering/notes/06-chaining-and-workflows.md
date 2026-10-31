@@ -6,6 +6,7 @@ sources:
   - https://www.promptingguide.ai/agents/ai-workflows-vs-ai-agents
   - https://www.promptingguide.ai/applications/pf
   - https://www.anthropic.com/research/building-effective-agents
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -29,6 +30,8 @@ A single general prompt trades **strength for generality**: it will attempt anyt
 - When a step fails, a system-prompt instruction is only a suggestion. There's no correction mechanism.
 
 Splitting into steps buys back strength. Each prompt has one job, a short context, and an output you can check. It's also easier to debug, because a bad result traces to one step.
+
+There's a production data point. GoDaddy's customer-support prompt grew past 1,500 tokens after one round of iteration. Split into smaller prompts per subtask, it performed better **and** cost less in tokens. The costs of splitting are more calls and a longer wait before the first token of the final step, which users feel when they can't see the intermediate output. The call count overstates the bill, because each prompt is shorter and simple steps can go to a cheaper model. A common split is a small model for intent classification and a strong one for the reply. Independent steps can run in parallel, for example the same story written at three reading levels (*AI Engineering*, ch. 5).
 
 ---
 

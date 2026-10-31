@@ -3,6 +3,9 @@ origin: synthesis
 sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 5, Ch 8"
   - https://www.promptingguide.ai/techniques
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - https://arxiv.org/abs/2201.11903
+  - https://arxiv.org/abs/2205.11916
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -57,6 +60,8 @@ What actually matters in the examples (Min et al., 2022):
 - **Format** matters a lot; even a consistent format with random labels helps.
 - Sampling labels from the true distribution beats a uniform spread.
 
+**How much few-shot still buys depends on the model and the domain.** GPT-3 gained a lot from examples. In Microsoft's 2023 analysis of GPT-4-class models, few-shot improved only a little on zero-shot, because stronger instruction-followers need fewer examples. That analysis likely undercounts domain-specific tasks. If the model rarely saw your API in pretraining (Huyen's example is the Ibis dataframe library), a few examples still make a big difference (*AI Engineering*, ch. 5). Pay for examples in tokens as well: the same three labeled items cost 38 GPT-4 tokens as `Input:/Output:` blocks and 27 as `chickpea --> edible` lines. If the scores are equal, use the compact format.
+
 The book's three drawbacks — **use few-shot only when something is genuinely non-obvious**:
 
 | Drawback | What happens | Mitigation |
@@ -88,9 +93,9 @@ A:
 ![Standard prompting vs. chain-of-thought prompting](../sources/images/wei-chain-of-thought-fig1.png)
 *Image Source: Wei et al. (2022)*
 
-PaLM 540B: GSM8K math ~20% → ~60%; StrategyQA 69.4% → 75.6%; symbolic-reasoning tasks improve too. Like few-shot itself, it's an emergent ability of large models.
+With PaLM 540B and 8 exemplars, GSM8K math rose from **17.9% to 56.9%**, past the prior best of 55% (a fine-tuned GPT-3 with a verifier). On StrategyQA, CoT reached 75.6% against a prior state of the art of 69.4%. Symbolic-reasoning tasks improve too. **The gain is an emergent ability of scale.** Below about 100B parameters, models wrote fluent but illogical chains and scored *below* standard prompting ([arXiv:2201.11903](https://arxiv.org/abs/2201.11903) (Wei et al., 2022-01)).
 
-**Zero-shot CoT** (Kojima et al., 2022): append *"Let's think step by step."* No examples needed.
+**Zero-shot CoT** (Kojima et al., 2022): append *"Let's think step by step."* No examples needed. With text-davinci-002 it took MultiArith from **17.7% to 78.7%** and GSM8K from **10.4% to 40.7%**. That beat standard 8-shot prompting (33.8% and 15.6%) but stayed below 8-shot CoT (93.0% and 48.7%). It works in two calls. The first generates the reasoning. The second appends an extraction prompt such as *"Therefore, the answer (arabic numerals) is"* to pull out a parseable answer. **It doesn't help where there is no chain to write.** It made no difference on single-step arithmetic (SingleEq, AddSub) and lowered CommonsenseQA from 68.8% to 64.6% ([arXiv:2205.11916](https://arxiv.org/abs/2205.11916) (Kojima et al., 2022-05)).
 
 ![Zero-shot CoT](../sources/images/kojima-zero-shot-reasoners-fig1.png)
 *Image Source: Kojima et al. (2022)*

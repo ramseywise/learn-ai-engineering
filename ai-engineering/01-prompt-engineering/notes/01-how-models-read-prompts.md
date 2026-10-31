@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 1–3"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://www.promptingguide.ai/introduction/basics
 confidence: high
 cleaned: 2026-10-28
@@ -152,7 +153,7 @@ What does `git rebase` do?<|im_end|>
 | Property | Why it matters |
 |---|---|
 | Unambiguous turns | The model always knows it's answering, not continuing |
-| System-message steerability | RLHF trains models to follow the `system` role closely — your main lever for persona and rules (off-topic redirects, de-escalation) |
+| System-message steerability | RLHF trains models to follow the `system` role closely — your main lever for persona and rules (off-topic redirects, de-escalation). The system and user messages are concatenated into one sequence, so any extra pull the system message has comes from two things: it sits **first**, and models are **post-trained to rank it higher** (OpenAI's instruction hierarchy, [10](10-adversarial-prompting.md#defenses-weakest-to-strongest)) |
 | Injection resistance | Reserved tokens can't be typed: a user who sends the literal string `<|im_start|>` gets six ordinary tokens (`<`, `|`, `im`, `_start`, `|`, `>`). Users are locked into the `user` role — **unless you paste user content into `system`** |
 
 The chat API hides ChatML entirely: you send a list of `{role, content}` messages and the provider serializes it. Synthetic `assistant` turns are allowed — the model treats them as things it said. (This example is from DAIR's ChatGPT intro notebook. `gpt-3.5-turbo` is retired, but the call shape is current.)
@@ -178,6 +179,21 @@ ChatML is OpenAI's serialization, and every chat model has its own. Mistral's in
 ```
 
 `<s>` and `</s>` are special BOS/EOS tokens, but `[INST]` and `[/INST]` are **ordinary strings**, so unlike ChatML's markers a user *can* type them. If you call an open-weight model as a raw completion, you have to reproduce its template yourself. DAIR's Mixtral notebook sends the same request with and without the `[INST]` wrapper and gets noticeably different output. A chat API, or the tokenizer's `apply_chat_template`, applies the template for you.
+
+Templates also change between versions of the same model family. Meta moved from Llama 2's `[INST] <<SYS>>` wrapper to Llama 3's header tokens, and each `<|…|>` span below is a single token:
+
+```
+<s>[INST] <<SYS>>                                        # Llama 2
+{{ system_prompt }}
+<</SYS>>
+{{ user_message }} [/INST]
+
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>   # Llama 3
+{{ system_prompt }}<|eot_id|><|start_header_id|>user<|end_header_id|>
+{{ user_message }}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+```
+
+A wrong template, or even an extra newline, fails **silently**: the model still produces something reasonable, only worse. Template bugs in third-party libraries are common. Huyen lost a day of fine-tuning debugging to a library that hadn't updated its template for a new model version. So before you trust a pipeline, **print the final serialized prompt** and compare it with the model card (*AI Engineering*, ch. 5). Don't confuse the model's *chat* template, which the model developer fixes, with your own *prompt* template ([02](02-prompt-anatomy.md#prompt-templates)), which you design and fill with data.
 
 The same `messages` list works across providers through a wrapper like [LiteLLM](https://docs.litellm.ai/). Tool calling, added later, changes nothing fundamental either: it is special syntax inside the transcript for describing and requesting function calls, with results appended back in ([05](05-tools-and-function-calling.md)).
 

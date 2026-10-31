@@ -70,6 +70,8 @@ Getting **expected sources** is the expensive part. Options, cheapest first: the
 
 This is the core of RAGAS faithfulness (Es et al. 2023) and of the case study's grounding grader ([case study](13-case-study-support-agent.md#grounding-claims-before-the-answer)). Benefits: partial credit, a pointer to the exact bad claim, and easier work for the judge than a holistic verdict.
 
+RAGAS's own validation is thinner than its adoption suggests. On WikiEval (50 Wikipedia pages on post-2022 events, ChatGPT-written questions), its scores agreed with human preference **0.95 on faithfulness, 0.78 on answer relevance and 0.70 on context relevance** ([arXiv:2309.15217](https://arxiv.org/abs/2309.15217), Es et al., 2023-09). The task was pairwise: pick the better of two answers, where the worse one had been deliberately degraded (answered without context, left incomplete, or padded with off-topic sentences). That is easier than scoring a real answer on an absolute scale. Context relevance was weakest because the judge struggled to pick the key sentences out of long contexts. Treat the defaults as a starting point and calibrate them on your own labelled set before gating on them.
+
 ### Grounding tiers
 
 Not every claim needs the same evidence. The case study grades on tiers:
@@ -90,8 +92,8 @@ An answer can be perfectly faithful to a stale or wrong document. Faithfulness m
 
 For answers with no retrieved context (closed-book, or checking a model's own knowledge):
 
-- **Self-consistency.** Sample several answers. Claims that vary between samples are likely hallucinated (SelfCheckGPT, Manakul et al. 2023).
-- **Adversarial factuality sets.** TruthfulQA (Lin et al. 2021) targets questions where the popular answer is false. Good for measuring a model's tendency to repeat misconceptions.
+- **Self-consistency.** Sample several answers. Claims that vary between samples are likely hallucinated. SelfCheckGPT ([arXiv:2303.08896](https://arxiv.org/abs/2303.08896), Manakul et al., 2023-03) drew 20 samples per passage on 238 GPT-3 biographies from WikiBio. Asking an LLM whether each sentence is supported by each sample reached **AUC-PR 93.4 for flagging non-factual sentences** (random 73.0) and 0.78 Spearman with human passage rankings. That beat GPT-3's own token probabilities (87.5 at best). The cost is N extra generations plus one check per sentence per sample, and the test set was biographies only.
+- **Adversarial factuality sets.** TruthfulQA ([arXiv:2109.07958](https://arxiv.org/abs/2109.07958), Lin et al., 2021-09) has 817 questions in 38 categories where the popular answer is false. At release, the best model (GPT-3-175B with a "helpful" prompt) was truthful on **58% against 94% for humans**. Within each model family the largest models were usually *least* truthful. The authors attribute this to larger models imitating human misconceptions more faithfully, and back it with control experiments. A GPT-3 judge fine-tuned on human labels predicted truthfulness with 90–96% accuracy on held-out models. That is an early case of a judge calibrated against humans ([05](05-llm-as-judge.md)). Good for measuring a model's tendency to repeat misconceptions. Its questions have been public since 2021, so check for contamination before trusting a high score.
 
 ---
 

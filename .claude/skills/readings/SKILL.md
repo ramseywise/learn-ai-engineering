@@ -1,16 +1,17 @@
 ---
 name: readings
-description: "Work the readings backlog: show what is in the ai-engineering/readings/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage. Run from the learn-ai-engineering repo."
+description: "Work the readings backlog: show what is in the scripts/readings/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage. Run from the learn-ai-engineering repo."
 ---
 
-You are keeping the reading backlog moving. `ai-engineering/readings/README.md` describes
+You are keeping the reading backlog moving. `scripts/readings/README.md` describes
 the system. In short, every reading (DAIR AI Papers of the Week and every PDF dropped into
-the repo) is one row in `ai-engineering/readings/ledger.jsonl`. Triage gives each row a
+the repo) is one row in `scripts/readings/ledger.jsonl`. Triage gives each row a
 home, a note and a relevance score. Route moves its PDF to the home's `sources/`. Then
 `/papers` (single papers) or `/chapter` (book chapters) fold it into the notes.
 
-Nothing leaves the repo. A reading with no home stays in the inbox as `skipped`. If
-triage keeps finding a body of sources with no home, propose a new pillar (see the
+Nothing leaves the repo. A reading with no home stays in the ledger as `parked` (worth
+knowing: interest 2–3) or `skipped` (not for this course). If `status --list parked` shows a
+body of sources with no home, propose a new pillar (see the
 decision note in `CURRICULUM.md`). Do not create one without the user.
 
 ---
@@ -20,7 +21,7 @@ decision note in `CURRICULUM.md`). Do not create one without the user.
 ```bash
 python3 scripts/papers/potw.py status
 python3 scripts/papers/potw.py status --list queued | python3 -c "import sys,json,collections; c=collections.Counter((r['pillar'], 'chapter' if '/ch' in (r.get('pdf') or '') or '/appendix-' in (r.get('pdf') or '') else 'paper') for r in map(json.loads,sys.stdin)); [print(f'{n:4} {h:18} {k}') for (h,k),n in sorted(c.items())]"
-find ai-engineering/readings -name '*.pdf' -newer ai-engineering/readings/ledger.jsonl
+find scripts/readings -name '*.pdf' -newer scripts/readings/ledger.jsonl
 ```
 
 The last command lists PDFs added since the ledger was last written. They need a scan and
