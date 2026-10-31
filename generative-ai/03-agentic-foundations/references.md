@@ -1,6 +1,6 @@
 # References — Agentic Foundations
 
-> Every source the notes cite, mapped to notes. **★** = read first. Local PDFs live in [sources/](sources/); figures in [sources/images/](sources/images/). Rows under [From the curated list](#from-the-curated-list) are copied from [generative-ai/resources.md](../resources.md), section 03/04.
+> Every source the notes cite, mapped to notes. **★** = read first. Local PDFs live in [sources/](sources/); figures in [sources/images/](sources/images/). Rows under [From the curated list](#from-the-curated-list) are copied from `generative-ai/resources.md` (retired 2026-10-31), section 03/04.
 
 ---
 
@@ -41,7 +41,7 @@
 
 ## From the curated list
 
-Copied from [generative-ai/resources.md](../resources.md) § 03/04 — Agents and frameworks.
+Copied from `generative-ai/resources.md` (retired 2026-10-31) § 03/04 — Agents and frameworks.
 
 **Guides**
 
