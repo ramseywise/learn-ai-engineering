@@ -12,6 +12,8 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2310.02304
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 8"
 confidence: high
 cleaned: 2026-07-30
 ---
@@ -171,6 +173,15 @@ Gate placement follows the four questions from [note 03](03-tool-design.md#the-f
 
 Human-in-the-loop requests need a **timeout with a declared default** (proceed, skip or abort), so an unanswered question doesn't stall the run indefinitely. Feed the human's answer back as a learning signal; repeated approvals of the same pattern are a candidate to automate.
 
+The human gate has failure modes of its own (*Building Applications with AI Agents*, ch. 12):
+
+- **Automation bias.** Reviewers over-trust the agent, especially when it sounds confident.
+- **Alert fatigue.** A stream of low-priority asks trains people to click through the one that matters.
+- **Skill decay.** Once the agent does the routine work, the humans lose the skill they need to judge it.
+- **Misaligned incentives.** A reviewer measured on throughput approves fast.
+
+Albada's mitigations are clear escalation paths, adaptive alerting and ongoing operator training. Gating only irreversible actions is what keeps alert fatigue down in the first place.
+
 ### Reviewing calls before they run
 
 When a human can't be in every loop, put a second model in front of risky calls. Li describes two shapes:
@@ -248,6 +259,32 @@ Independently toggleable, each with its own failure mode:
 | **Pre-generate** | Unsafe assembled context reaching the model |
 | **Post-generate** | Unsafe output leaving the system |
 | **Escalation** | Anything unresolved reaching a human |
+
+### Moderation around the whole engine
+
+![Two-stage moderation: the user goal passes a pre-flight moderation check before the planner and executor run; the generated content passes a post-flight check before it reaches the user, redacted if needed](../sources/images/context-engineering-multi-agent-systems-fig8-2.png)
+*Image Source: Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), Fig. 8.2*
+
+Rothman wraps the pre-input and post-generate layers around his whole plan-execute engine ([note 07](07-orchestration.md#a-plan-execute-engine-end-to-end)), not around each agent (*Context Engineering for Multi-Agent Systems*, ch. 8):
+
+- **Pre-flight.** The goal goes to a moderation API. If it is flagged, the run halts before the planner spends anything.
+- **Post-flight.** The final output is checked. If it is flagged, it is replaced with a standard redaction notice.
+- **Fail closed.** If the moderation call itself errors, the wrapper returns `flagged: True`. "If we can't check it, we assume it's not safe."
+
+The instructive part is where it failed on a legal-assistant deployment:
+
+- **Context the text doesn't carry.** Moderation blocked witness testimony because it contained profanity, and an internal meeting transcript because someone lost their temper. Turning moderation off let profanity through in emails. Enabling it for emails only blocked important messages. An email that quotes profane testimony inside profane body text can't be judged from the text at all. The rule that quoted evidence is allowed and the email body is not is organizational, not linguistic.
+- **A sanitizer that can't tell evidence from injection.** The regex sanitizer's list included the patterns `ignore previous instructions`, `act as` and `sudo|apt-get|yum|pip install`, plus a client-requested `ignore any legal advice`. That last one fired on hostile-witness testimony ("ignore any legal advice to the contrary"). The chunk was skipped, and in one run the skip cascaded into a fatal Dependency Error at a later step.
+
+Rothman's fixes are architectural rather than more patterns:
+
+- **Segment the data by trust.** Testimony goes in its own namespace (`KnowledgeStore-Testimony`) with its own, more lenient sanitization policy. This is a per-source version of the trust zones below.
+- **Put policy in a meta-controller outside the engine.** It parses the messy input (separating an email body from its attachments, for instance), enforces the rules agreed with legal, HR and IT, and assembles a clean configuration for the engine. The engine keeps the non-deterministic reasoning; the deterministic business rules live above it. The configuration object (Rothman's "control deck") is the API between the two layers.
+- **Replace vague requests with pre-approved objectives.** "Draft a pleading based on this NDA" produced fluent nonsense, not because of hallucination but because the goal had no blueprint. Standard objectives for common tasks, written with the domain team, fix it.
+
+### Measuring a pre-input filter
+
+Classifier-based injection filters can be scored. Lakera's PINT benchmark (4,314 inputs: multilingual injections, jailbreaks and hard negatives) reports **Lakera Guard at 92.5% and Llama Prompt Guard at 61.4%** (*Building Applications with AI Agents*, ch. 12). PINT is Lakera's own benchmark, so treat the ranking as vendor-reported. Microsoft's BIPIA covers *indirect* injection, the retrieved-content case. Even the best score leaves misses, which is why [Li's position](#coding-agent-specifics) stands: design so that an injected agent can't *complete* a dangerous action. For detection after the fact, plant **honeytokens**, fake secrets in the data flow whose access or exfiltration is itself the alarm.
 
 ### Trust zones
 

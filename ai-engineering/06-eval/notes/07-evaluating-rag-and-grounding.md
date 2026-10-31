@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2305.14627
   - https://arxiv.org/abs/2303.08896
   - https://arxiv.org/abs/2109.07958
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
@@ -56,6 +58,8 @@ flowchart LR
 
 Pick *k* to match what actually goes into the prompt. Recall@50 is irrelevant if only the top 5 are passed to the model.
 
+RAGAS's two retrieval metrics are not plain recall and precision (*LLM Engineer's Handbook*, ch. 7). **Context precision** is rank-aware: it rewards putting the relevant passages at the top, closer to nDCG than to precision@k. **Context recall** splits the *reference answer* into claims and checks how many can be attributed to the retrieved context, so it needs a ground-truth answer, not labeled sources. **Answer relevancy** is indirect too: an LLM writes several questions that the answer would fit, and the score is their mean cosine similarity to the real question. It catches off-topic or partial answers, and it inherits the embedding model's notion of similarity.
+
 Getting **expected sources** is the expensive part. Options, cheapest first: the doc a support agent linked in the original ticket; the source a human-approved answer cited; an LLM judge labeling relevance of retrieved chunks (calibrate it, [05](05-llm-as-judge.md)); expert labeling.
 
 ---
@@ -84,6 +88,12 @@ Not every claim needs the same evidence. The case study grades on tiers:
 
 Without tiers, a judge either fails harmless filler or waves through invented specifics.
 
+The word "faithfulness" doesn't mean one thing across tools. MLflow, Ragas and LlamaIndex all ship a faithfulness judge, with different prompts and scales: 1–5, 0/1 and YES/NO (*AI Engineering*, ch. 3). A faithfulness number is only comparable to another from the same judge version ([05](05-llm-as-judge.md#three-judge-shapes)).
+
+**A cheaper verifier for step 2.** Claim verification is textual entailment (NLI): given a premise (the passage) and a hypothesis (the claim), predict entailment, contradiction or neutral. A small trained classifier can do it instead of a general judge. Huyen's example is DeBERTa-v3-base-mnli-fever-anli, 184M parameters, trained on 764,000 annotated pairs (*AI Engineering*, ch. 4). It's cheap enough to run on every claim in production. Calibrate it like a judge: NLI models trained on general text can miss domain paraphrase.
+
+**Check what the context added.** Iusztin & Labonne suggest comparing the answer with and without the retrieved context to measure integration (*LLM Engineer's Handbook*, ch. 7). If the two are the same, the generator ignored retrieval, and faithfulness can look fine because the model's prior happened to agree with the passage.
+
 ### Faithful is not correct
 
 An answer can be perfectly faithful to a stale or wrong document. Faithfulness measures the generator. **Correctness** against a reference measures the system. Track both: faithful-but-wrong points at the corpus.
@@ -93,7 +103,14 @@ An answer can be perfectly faithful to a stale or wrong document. Faithfulness m
 For answers with no retrieved context (closed-book, or checking a model's own knowledge):
 
 - **Self-consistency.** Sample several answers. Claims that vary between samples are likely hallucinated. SelfCheckGPT ([arXiv:2303.08896](https://arxiv.org/abs/2303.08896), Manakul et al., 2023-03) drew 20 samples per passage on 238 GPT-3 biographies from WikiBio. Asking an LLM whether each sentence is supported by each sample reached **AUC-PR 93.4 for flagging non-factual sentences** (random 73.0) and 0.78 Spearman with human passage rankings. That beat GPT-3's own token probabilities (87.5 at best). The cost is N extra generations plus one check per sentence per sample, and the test set was biographies only.
+- **Search-backed checking.** SAFE (Wei et al., Google DeepMind, 2024) runs the claim-by-claim recipe against the web: split the response into facts, rewrite each to stand alone ("It opened in the 20th century" → name the subject), send fact-checking queries to Google Search, and have a model judge each fact against the results (*AI Engineering*, ch. 4). It's the same decomposition as RAGAS faithfulness, with search results as the context. It inherits search's blind spots, and it can't verify private facts.
+
+![SAFE splits a response into individual facts, makes each self-contained, checks relevance, and rates each against Google Search results](../sources/images/huyen-ai-engineering-fig4-1.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 4-1*
+
 - **Adversarial factuality sets.** TruthfulQA ([arXiv:2109.07958](https://arxiv.org/abs/2109.07958), Lin et al., 2021-09) has 817 questions in 38 categories where the popular answer is false. At release, the best model (GPT-3-175B with a "helpful" prompt) was truthful on **58% against 94% for humans**. Within each model family the largest models were usually *least* truthful. The authors attribute this to larger models imitating human misconceptions more faithfully, and back it with control experiments. A GPT-3 judge fine-tuned on human labels predicted truthfulness with 90–96% accuracy on held-out models. That is an early case of a judge calibrated against humans ([05](05-llm-as-judge.md)). Good for measuring a model's tendency to repeat misconceptions. Its questions have been public since 2021, so check for contamination before trusting a high score.
+
+**Point the closed-book suite at where hallucination concentrates.** Huyen found her model hallucinated most on two kinds of query: niche knowledge (the Vietnamese Mathematical Olympiad rather than the IMO) and questions about things that don't exist ("What did X say about Y?" when X never did) (*AI Engineering*, ch. 4). Read outputs to find your own two kinds, then weight the suite toward them ([02](02-defining-correct.md#find-failure-modes-by-reading-error-analysis)).
 
 ---
 
@@ -125,10 +142,10 @@ Guard against it in the grader interface (`requires = {"retrieved_context"}`, [0
 | Framework | Gives you | Watch out for |
 |---|---|---|
 | **RAGAS** | Faithfulness, answer relevance, context precision / recall, reference-free | Generic definitions. Uncalibrated for your domain ([05](05-llm-as-judge.md#cross-checking-with-other-judges)) |
-| **ARES** (Saad-Falcon et al. 2023) | Fine-tuned small judges + a small human set (~150 labels) with prediction-powered inference for confidence intervals. Beat RAGAS by 59 points on context-relevance and 14 on answer-relevance accuracy across KILT and SuperGLUE ([arXiv:2311.09476](https://arxiv.org/abs/2311.09476)) | Setup cost: synthetic training data plus judge fine-tuning per domain. Worth it at volume |
+| **ARES** (Saad-Falcon et al. 2023) | Fine-tuned small judges + a small human set (~150 labels) with prediction-powered inference for confidence intervals. Beat RAGAS by 59 points on context-relevance and 14 on answer-relevance accuracy across KILT and SuperGLUE ([arXiv:2311.09476](https://arxiv.org/abs/2311.09476)) | Setup cost: synthetic training data plus judge fine-tuning per domain. Defaults: synthetic queries from google/flan-t5-xxl, classifier judges on microsoft/deberta-v3-large (*LLM Engineer's Handbook*, ch. 7). Worth it at volume |
 | **DeepEval, TruLens, Phoenix evals** | Ready-made RAG judges, tracing integration | Same as RAGAS: calibrate before gating |
 
-Use frameworks to get started and for cross-checks. Gate on graders you've calibrated against your own labels.
+Iusztin & Labonne pair the two: RAGAS for quick iteration, ARES once trained for consistent and potentially faster evaluation at key stages (*LLM Engineer's Handbook*, ch. 7). Use frameworks to get started and for cross-checks. Gate on graders you've calibrated against your own labels.
 
 ---
 

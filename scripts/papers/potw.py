@@ -752,7 +752,8 @@ def cmd_download(args):
     # repo PDFs stay `queued` for /chapter and /papers; this only fetches DAIR papers
     queued = [r for r in rows if r["status"] == "queued" and r["source"] == "dair"
               and (args.backlog or not r.get("backlog"))
-              and (r.get("relevance") or 0) >= (getattr(args, "fetch_min", None) or 0)]
+              and (r.get("relevance") or 0) >= (getattr(args, "fetch_min", None) or 0)
+              and (not getattr(args, "home", None) or r.get("pillar") in args.home)]
     # best first, so a partial run (or --limit) fetches the papers most worth reading
     queued.sort(key=lambda r: (-(r.get("relevance") or 0), -(r.get("interest") or 0), -(cites_per_year(r) or 0)))
     if getattr(args, "limit", None):
@@ -1018,6 +1019,7 @@ def main():
         if name == "download":
             p.add_argument("--limit", type=int, help="fetch at most this many PDFs, best first")
             p.add_argument("--min-relevance", dest="fetch_min", type=int, help="only papers at this relevance or higher")
+            p.add_argument("--home", nargs="+", help="only papers homed here (e.g. multimodal safety)")
         if name in ("triage", "download"):
             p.add_argument("--backlog", action="store_true", help="include backfilled papers")
         else:

@@ -9,6 +9,7 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2405.15793
   - https://arxiv.org/abs/2609.11999
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 4, 5"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -163,6 +164,8 @@ SWE-agent's ablations (GPT-4 Turbo, SWE-bench Lite, 18.0% for the full interface
 
 **Parallel calls need fault boundaries.** Each tool declares whether it is concurrency-safe (default: no). Execution of a call can begin as soon as its arguments finish streaming and validate. A failure aborts only the calls in the same batch that depend on it; the independent calls and the parent task carry on.
 
+**`tool_choice` turns tool use from the model's call into yours** (*Building Applications with AI Agents*, ch. 4). `auto` lets the model decide, which suits general use. `required` (`any` on some APIs) forces at least one call, for steps whose answer has to come from a tool. `none` blocks calls, which is useful in tests or for a final prose turn. Pinning a named tool makes a step deterministic. A pipeline step that must extract into a schema should pin the tool rather than hope the model chooses it.
+
 ### Coding-agent search and edit tools
 
 ![Five file-editing schemes, each with an example edit and its trade-off: diff + apply model, old→new string, line numbers, and others](../sources/images/li-ai-agents-in-depth-fig5-4.svg)
@@ -209,6 +212,16 @@ The cost of eager loading is concrete. Li measures five typical MCP servers at a
 1. **Retrieval pre-filter.** Embed tool descriptions and inject the top-k for the user's query. The limitation is that it matches **once**, against the opening request; "debug the file" can turn into a cross-domain tool chain nobody predicted.
 2. **Proactive discovery.** The agent declares a capability gap mid-task, and the system matches and injects tools. MCP-Zero matches in two levels, server first and then tool, and reports about 98% fewer tokens than full injection across ~2,800 tools. Dynamic discovery took Opus 4 from 49% to 74% on Anthropic's tool-selection eval. The production form is a resident `tool_search` meta-tool: OpenAI's `defer_loading`, and Claude Code deferring MCP tools by default. When nothing scores above threshold, return an explicit **"not found"**, so the agent rephrases, improvises with basic tools, or builds a new one.
 3. **Skills.** A thin resident catalog, read with ordinary file tools, with no embedding index to maintain. Cursor's version, a folder of tool descriptions the agent greps, cut tokens by 46.9%. Pi Coding Agent keeps MCP out of its core entirely and exposes it through a single ~200-token proxy tool.
+
+Albada's comparison of selection strategies (*Building Applications with AI Agents*, ch. 5, Table 5-2) adds the trade-offs:
+
+| Strategy | Strength | Weakness |
+|---|---|---|
+| **Standard** (all descriptions in the prompt, the model picks) | Simple; few-shot examples help | Scales poorly as tools are added |
+| **Semantic** (embed descriptions, retrieve) | Scales to many tools; low latency | Worse accuracy from **semantic collisions** between similar descriptions |
+| **Hierarchical** (pick a group, then a tool within it) | Scales, and more accurate when many tools look alike | Slower: sequential model calls |
+
+For a step that may need several tools at once, his pattern retrieves a fixed maximum (say five) semantically, then has the model filter that shortlist down to what the task needs, and runs the survivors in parallel. Two description habits reduce collisions: **include an example invocation** with typical inputs and outputs, and **state type and range constraints** ("x and y must be integers between 0 and 1,000") so the model can rule a tool out.
 
 **KV-cache rule for dynamic tools.** Never insert a newly loaded schema into the static prefix; that invalidates the whole cache. Append it at the end of the context *on the turn it is discovered*, and then leave it pinned where it landed, where it becomes ordinary cached history. Cache invalidation then comes only from TTL expiry or from modifying, removing or reordering tools already loaded. The cost is that weaker models handle schemas mid-trajectory poorly and may need post-training for it.
 
@@ -259,7 +272,9 @@ Skills also improve with use. Karpathy's line (as relayed from his AISN 2026 tal
 
 Cost: latency per hop, plus a process to operate. Default to in-process; promote when one of the left-hand conditions actually holds rather than in anticipation.
 
-What the protocol gives you: three primitives (**tools**, **resources**, **prompts**) over two transports (**stdio** for local servers and **Streamable HTTP** for remote ones; the older SSE transport is deprecated). What it doesn't: it is request–response, so a server notification does not wake an idle agent. Event-driven behaviour needs its own channel ([note 07](07-orchestration.md#asynchronous-agents-events-and-safe-points)).
+Albada names the cost that pushes teams off in-process tools at scale: **duplication**. Every agent service that uses a local tool library has to deploy it, and every change means coordinating redeploys, so in practice teams quietly reimplement the same tools (*Building Applications with AI Agents*, ch. 4). That is the "multiple distinct callers" row arriving through org structure rather than architecture. His other middle option, vendor plug-in catalogues, has aged badly: the ChatGPT plug-ins he cites were retired in 2024 in favour of GPTs and, later, MCP connectors.
+
+What the protocol gives you: three primitives (**tools**, **resources**, **prompts**) over two transports (**stdio** for local servers and **Streamable HTTP** for remote ones; the older SSE transport is deprecated). Remote servers also have an OAuth-based authorization flow in the spec. Two dated claims to discount in older texts: *Building Applications with AI Agents* (ch. 4) describes MCP as "JSON-RPC 2.0 over HTTPS or WebSocket" and says the spec "does not yet mandate" a security solution. WebSocket was never a standard transport, and authorization has been in the spec since 2025, although auth on a remote server is still something you configure, not a default. What it doesn't: it is request–response, so a server notification does not wake an idle agent. Event-driven behaviour needs its own channel ([note 07](07-orchestration.md#asynchronous-agents-events-and-safe-points)).
 
 ### MCP supply-chain risks
 
@@ -291,6 +306,16 @@ When the downstream API offers no idempotency key, use one of two patterns:
 
 - **Query before mutate.** Before retrying, check whether the first attempt already landed ("does order #123 already have a refund?").
 - **Two-phase call.** `prepare_*` validates and returns a preview plus a short-lived **confirm token**; `commit_*` executes only with that token. A retry with a spent token is rejected rather than executed twice, and the preview gives a human or reviewer something concrete to approve.
+
+### Tools over persistent state
+
+Albada's cautionary case: an agent asked to optimize database performance "optimized" it by dropping half the rows of a production table (*Building Applications with AI Agents*, ch. 4). His rules for any tool that touches a live store:
+
+- **Register narrow operations, not `execute_sql`.** `get_user_profile(user_id)` and `add_new_customer(record)` each wrap one tested query. A read-only agent never receives a tool that can modify data.
+- **If free-form queries are unavoidable**, bind parameters or use prepared statements, reject statements containing `DROP` or `ALTER`, and run them under a database account with only the privileges the allowed queries need.
+- **Log every invocation and alert on anomalies**, such as unusually large deletions or schema changes, so a mistake is caught before it cascades.
+
+**Generated tools are code, so treat them like code.** Pointing a model at an OpenAPI spec to draft wrappers saves boilerplate. The safe loop is: generate, run in a sandbox, have a human review, pass CI, and regenerate when the spec changes. Generating tools on the fly *during* a run skips the review step, so it belongs behind the sandbox in [note 04](04-execution-boundaries.md#sandboxes).
 
 ---
 

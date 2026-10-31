@@ -5,6 +5,7 @@ sources:
   - https://docs.langchain.com/langgraph
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -46,6 +47,30 @@ The result is, in their words, *"predictable, powerful, and efficient."* Each no
 
 The design move, applied to any graph you draw: for each node, ask *"could this be code?"*, then *"could this be one call?"*, and only then make it an agent. An agent node is where you accept variance; put it where the work is genuinely open-ended and nowhere else.
 
+### The autonomy ladder
+
+Oshin & Campos make "how much agency" measurable (*Learning LangChain*, ch. 5). Ask which of three decisions the LLM makes and which stay in code:
+
+1. **The output of a step**: draft the reply.
+2. **The next step to take**: archive, reply, or flag this email.
+3. **Which steps exist at all**: write and run code for an action nobody pre-programmed.
+
+Each recipe that answers those questions is a *cognitive architecture*, a term the authors trace to CoALA (Sumers et al., [arXiv:2309.02427](https://arxiv.org/abs/2309.02427)).
+
+![Cognitive architectures 0–5: code, LLM call, chain, router (human-driven) and state machine, autonomous (LLM-driven), with columns for who decides the step's output, the next step, and the available steps](../sources/images/learning-langchain-fig5-1.png)
+*Image Source: Mayo Oshin & Nuno Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 5-1*
+
+| Level | Architecture | LLM decides | Graph shape |
+|---|---|---|---|
+| 0 | Code | Nothing | No model |
+| 1 | LLM call | One step's output | One node |
+| 2 | Chain | Several steps' outputs, in a fixed order ("flow engineering", after AlphaCodium) | Static edges only |
+| 3 | Router | Also the next step, **without cycles** | Conditional edges, acyclic |
+| 4 | State machine | The next step, **with cycles** | Conditional edges + back-edges |
+| 5 | Autonomous | Also which steps exist | Agent writes its own tools |
+
+The line under level 3 matters most. Up to the router, a human still decides what can happen and the graph is a DAG. From the state machine down, the LLM decides when to stop. The book frames the whole ladder as a trade-off between **agency** and **reliability**, using an email assistant with two constraints that pull against each other: interrupt the user as little as possible, and never send a reply the user wouldn't have sent. Write the constraints down first, then pick the lowest rung that meets them. Their level-2 text-to-SQL chain also shows agency tuned per node without changing the topology: temperature 0.1 for the SQL step and 0.7 for the explanation.
+
 ---
 
 ## Edges choose what runs next
@@ -68,6 +93,45 @@ Conditional edges are what buy you:
 | **Cycles** | Route back to an earlier node to revise ([01](01-graph-vs-loop.md#production-agents-are-not-dags)) |
 
 A cycle without a bound is an infinite loop. Every back-edge needs a counter in state or a recursion limit ([07](07-failure-modes-at-scale.md)).
+
+### A router fails silently unless you make it fail loudly
+
+An LLM router can stand in for a trained intent classifier with no labelled dataset, and *Learning LangChain* (ch. 5) frames it exactly that way. The book's example routes a medical assistant's question to one of two retrievers: patient records or insurance FAQs. Its wiring is the common way to get routing wrong:
+
+```python
+# As in the book: free-text label, typed but not enforced
+router_prompt = SystemMessage("... Output only the domain name.")
+def router_node(state):
+    res = model_low_temp.invoke([router_prompt, ...])
+    return {"domain": res.content}          # "Records", "records." and "medical" all land here
+
+def pick_retriever(state):
+    if state["domain"] == "records":
+        return "retrieve_medical_records"
+    else:                                    # every other string means insurance
+        return "retrieve_insurance_faqs"
+```
+
+`domain: Literal["records", "insurance"]` in the `TypedDict` is a type hint only, so nothing checks it at runtime. Any reply other than exactly `records`, whether capitalised, punctuated or rephrased, silently goes to insurance. `generate_answer` repeats the same `else`, so the answer is written with the insurance prompt too. Nothing errors and nothing shows in the output, only a confident answer from the wrong index. The fix:
+
+```python
+from typing import Literal
+from pydantic import BaseModel
+
+class Route(BaseModel):
+    domain: Literal["records", "insurance", "unclear"]
+
+router = model_low_temp.with_structured_output(Route)
+
+def router_node(state):
+    return {"domain": router.invoke([router_prompt, ...]).domain}
+
+def pick_retriever(state) -> Literal["retrieve_medical_records", "retrieve_insurance_faqs", "clarify"]:
+    return {"records": "retrieve_medical_records",
+            "insurance": "retrieve_insurance_faqs"}.get(state["domain"], "clarify")
+```
+
+Three changes. Constrain the output with a schema. Give the router a way to say "unclear". Make the fallback a real node, such as one that asks a clarifying question, instead of quietly reusing one of the branches. Then eval the router on a labelled set as a classifier ([07](07-failure-modes-at-scale.md#mechanical-failures)).
 
 ---
 

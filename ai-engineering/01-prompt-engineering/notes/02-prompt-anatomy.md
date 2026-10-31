@@ -8,6 +8,7 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://arxiv.org/abs/2307.03172
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -118,6 +119,11 @@ Format examples the way the rest of the document is formatted: in a chat prompt,
 | Specify the output | "Extract the places" | "Extract the places. Format: `Place: <comma_separated_list>`" |
 
 Reasons generalize better than bare commands: a model that knows *why* a rule exists applies it sensibly to cases you didn't list. Modern models also follow instructions more literally than older ones, so shouting (CRITICAL, MUST) now tends to cause over-application rather than compliance.
+
+**Imagine the context a human would need, then supply it.** Phoenix & Taylor organize the craft as five principles: give direction, specify format, provide examples, evaluate quality, divide labor. They map onto this pillar as 02, [04](04-controlling-output.md), [03](03-core-techniques.md#few-shot), [09](09-evaluating-prompts.md) and [06](06-chaining-and-workflows.md) (*Prompt Engineering for Generative AI*, ch. 1). Two direction tactics from their chapter that this note doesn't cover elsewhere:
+
+- **Prewarming (internal retrieval).** First ask the model for best-practice advice on the task ("what makes a good product name?"), then, in the same conversation, ask it to do the task. It writes its own direction. The alternative is pasting trusted external guidance into the prompt, which makes the prompt longer and more expensive but often better.
+- **Too much direction conflicts.** Stack enough constraints (a style, a format, a base image, a camera model) and some combinations have no examples in the training data, so the model can't satisfy them all. Pick the constraint that matters most and drop the ones that clash with it. They note that too little direction is the more common failure.
 
 **System prompt vs. user turn.** Put persona, standing rules, and output conventions in the system prompt — chat models are trained to prioritize it. Never paste untrusted user or retrieved content into it ([10-adversarial-prompting](10-adversarial-prompting.md)).
 

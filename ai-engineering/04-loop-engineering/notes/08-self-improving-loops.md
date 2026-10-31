@@ -15,6 +15,7 @@ sources:
   - https://arxiv.org/abs/2505.22954
   - https://arxiv.org/abs/2607.13104
   - https://arxiv.org/abs/2607.12227
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 11"
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -124,6 +125,14 @@ def _promise_action(self, trajectory):
 
 Every dimension returns a verdict, a score, the turns that prove it and a confidence. The run is rejected if any outcome or process dimension fails, whatever the average says. In the lab, the false promise and the privacy leak both average **0.571**, yet one needs a harness consistency check and the other an identity gate plus output redaction. The over-refusal averages 0.714 and would sail through a threshold.
 
+**Which runs go to the second verifier or the human.** *Building Applications with AI Agents* (ch. 11) gives starting rules for the "low-confidence or high-risk" route. Escalate when any of these fires:
+
+- a self-reported certainty below 0.7, or high entropy over the class probabilities;
+- disagreement above 20% across 3–5 sampled runs;
+- a score below 0.8 from a separate critic model.
+
+Rank the escalated runs by risk = uncertainty × consequence. Tune the thresholds on historical runs so that fewer than 10% are escalated, which keeps reviewers from fatigue. These are the author's rules of thumb, not measured results. The self-reported number is also the weakest of the three: models' sense of their own confidence rarely changes what they do ([note 07](07-autonomy-ladder.md#1--turn-based-hand-off-tool-approval)). Prefer the sampling or critic signal, and calibrate whichever you use against the expert-labelled set.
+
 #### Worked example: three layers, one verdict
 
 The three layers are three verifiers behind one interface. Code decides outcome and process; only the quality layer may be an LLM, and it is swappable (a deterministic heuristic judge keeps the example offline). Adapted from Li's Experiment 9-1:
@@ -204,6 +213,29 @@ A lesson moves along this path as evidence builds up. It starts as an experience
 A strategy is recommended only when at least two non-failed trajectories support it. Each document records when it applies, the strategy, known pitfalls, exceptions, its source trajectories and when it was last validated. Test transfer on tasks that weren't used to write it. Reflexion-style self-reflection can *propose* lessons, but reflection is not evidence.
 
 **Prompt learning means minimal diffs, not rewrites.** Karpathy calls it *system prompt learning*: notes to your future self, edited as text where RL would edit weights. From a cluster of similar failures, produce one `old → new` edit with a stated scope. Check it for conflicts with existing rules. Gate it on both the boundary cases that triggered it and a retention set of old tasks. DSPy, OPRO and GEPA do batch search offline to find a strong starting prompt. Minimal production diffs handle the long tail. For Skills, search the library first and `patch` an existing one before creating a near-duplicate.
+
+**A lesson learned inside a session is gone when the session ends.** A correction the agent picks up mid-conversation works only for that conversation (*Building Applications with AI Agents*, ch. 11). Treat it as a cheap live trial. If it keeps working, promote it into one of the four media above; otherwise it is lost.
+
+**An offline optimizer is only as good as its metric and its trainset.** The book's DSPy example compiles a ReAct incident-response agent with MIPROv2 on five hand-written examples, while its own comment says to aim for 100+. It scores with `dspy.evaluate.answer_exact_match`. That metric reads an `answer` field, but the signature's output is `response`, and exact match can't score a free-text response plan in any case. The same chapter's threat classifier has a three-label output, which is where exact match does fit:
+
+```python
+import dspy
+dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))   # the chapter's other snippet uses the retired dspy.OpenAI(...)
+
+class ThreatClassifier(dspy.Signature):
+    """Classify an indicator (IP, URL, hash) as benign, suspicious or malicious."""
+    indicator: str = dspy.InputField()
+    threat_level: str = dspy.OutputField()
+
+def label_match(example, pred, trace=None):          # the metric names the real output field
+    return example.threat_level == pred.threat_level.strip().lower()
+
+optimizer = dspy.MIPROv2(metric=label_match, auto="light")
+compiled = optimizer.compile(dspy.ChainOfThought(ThreatClassifier),
+                             trainset=trainset)       # tens to hundreds of labelled cases, not five
+```
+
+Score the result on held-out cases before it ships. For each refinement, record three things: the problem you saw, the change you made, and the metric that will show whether it worked. Without that record nobody can tell later which edit fixed what, or roll one back.
 
 **Compiling workflows.** A browser trajectory that repeats with different parameters can be compiled into a parameterized script, with state checks before each action, after each action, and on the final state. The script is only a `candidate` until it has been replayed from a clean reset. When any check fails, it moves to `invalid` and the agent falls back to exploring. In PreAct this gave an **8.5–13× speedup** on repeated tasks. Without the final-state check, you get 100% replay coverage on a task that never completed.
 
@@ -315,6 +347,18 @@ rollback version: fcd37db6ebb1
 The manifest records the source cases, the diff, each check, and the candidate and rollback versions. Swap in an LLM as the patch writer and nothing else changes: a plausible patch that breaks timeout retries still gets `reject_candidate`.
 
 Run it: upstream [chapter9/self-modifying-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-modifying-agent) (Exp. 9-6, Apache-2.0). Clone the repo, then `cd chapter9/self-modifying-agent && python demo.py`; it is offline, and `--generator llm` uses an LLM patch writer.
+
+### Past canary: shadow, A/B and bandits
+
+Canary is one of several ways to expose a candidate to live traffic. *Building Applications with AI Agents* (ch. 11) covers three more. Each one breaks on a kind of agent that ordinary web services don't have.
+
+| Method | What it does | Where it breaks for agents | Workaround |
+|---|---|---|---|
+| Shadow | Candidate sees the same inputs; only stable's output reaches users | An agent that asks a human for approval can't do so from the shadow without exposing the request | Replay historical approvals or synthetic responses, or test that flow in staging or an A/B test |
+| A/B | Live traffic split between stable and candidate | Agents with chat history or long-term memory behave inconsistently when a user switches arms | Sticky assignment, splits per session, and a separate or versioned state store per arm |
+| Bayesian bandit | Shifts traffic toward the arm that is winning as results come in | Not covered by the book: the bandit optimizes whatever reward it gets, so a single averaged score lets an arm that over-refuses (0.714 in the lab above) win | Reward on the pass/fail verdict from [Verify before you learn](#verify-before-you-learn), not on the average |
+
+The book's bandit illustration: one of three reasoning chains scores 15% better on threat classification and ends up with 70% of the traffic, while the other two still get some. That is an illustration, not a measured run. A completion rate that falls in arm B can mean users are engaging more carefully rather than failing, so read some transcripts before declaring a winner.
 
 ### Measuring the evolve loop itself
 
@@ -453,6 +497,8 @@ The risk that connects back to every scale: an **Amdahl's-law bottleneck**. Auto
 - [ ] Is each lesson in the smallest medium that holds it (doc → Skill → code → weights)?
 - [ ] Does every self-edit land as a candidate with a change contract, a failure replay and a retention set before it reaches canary?
 - [ ] Do you measure activation and adherence separately from whether the update was valid?
+- [ ] Is there an escalation rule (which runs go to a second verifier or a human) tuned to a load reviewers can sustain?
+- [ ] Does each refinement record the problem, the change and the metric, and does a stateful agent's A/B test keep each user on one arm?
 - [ ] Are evolve diffs reviewed by a human, and are they getting more boring over time?
 - [ ] Who decides whether this loop should exist, and when do they revisit it?
 

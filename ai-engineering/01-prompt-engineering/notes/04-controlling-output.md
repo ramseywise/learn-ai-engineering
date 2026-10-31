@@ -5,6 +5,7 @@ sources:
   - https://www.promptingguide.ai/introduction/settings
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - https://arxiv.org/abs/2408.02442
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -105,12 +106,19 @@ flowchart LR
 
 1. **Ask for it** — "Return JSON with keys `name`, `date`." Fine for prototypes, breaks at scale.
 2. **Show it** — a schema or one complete example in the prompt. Matching the format of the prompt to the format you want also helps: markdown in, markdown out; prose in, prose out.
-3. **Fence it** — XML tags (`<answer>…</answer>`) give an unambiguous parse target even inside a chatty reply.
+3. **Fence it** — XML tags (`<answer>…</answer>`) give an unambiguous parse target even inside a chatty reply. The same trick hides reasoning: Phoenix & Taylor's *inner monologue* tactic has the model write its working inside a marked block that the app strips before display, which matters in tutoring, where showing the reasoning gives away the answer (*Prompt Engineering for Generative AI*, ch. 3).
 4. **Prefill it** — start the assistant turn with `{` or `<answer>` so the model can only continue the structure. This is the book's "push boilerplate into the prompt" in chat form. **Some newer models no longer accept a prefilled last assistant turn** — check your model's docs, and use options 5–6 instead.
 5. **Constrain it** — JSON mode or schema-constrained decoding (OpenAI Structured Outputs, Anthropic structured outputs, `strict` tool schemas). The decoder can't emit tokens that break the schema.
 6. **Route it through a tool** — define a tool whose parameters *are* your output schema and require the model to call it ([05](05-tools-and-function-calling.md)).
 
 A schema guarantees **shape, not truth**: a valid JSON object can still hold hallucinated values. Validate the content as well ([09](09-evaluating-prompts.md)).
+
+At rungs 1–3, write the parser for what actually comes back, not what you asked for. Phoenix & Taylor's list of what comes back (*Prompt Engineering for Generative AI*, ch. 1, 3):
+
+- **Counts aren't guaranteed.** Ask for 10 headings and you may get 8. Check the count, or make the code accept any length.
+- **JSON arrives wrapped.** It often comes inside a ```` ```json ```` fence or after a lead-in ("json output:"), and sometimes it's invalid (unescaped characters, or truncated when long). A failed `json.loads` is your retry trigger.
+- **Give the model an explicit empty answer.** Their YAML filter prompt says "if no items are left after filtering, return `No Items`", so an input with nothing valid gets a sentinel your code can branch on instead of an improvised apology. Parse YAML with `yaml.safe_load`, then check the result against the schema before passing it downstream.
+- **YAML is a fair alternative to JSON** when people read the output too: no braces to balance, and it allows comments.
 
 Format can also cost accuracy, through two routes. The first is **key order**. Tam et al. found that in JSON mode, "100% of GPT 3.5 Turbo JSON-mode responses placed the 'answer' key before the 'reason' key, resulting in zero-shot direct answering instead of zero-shot chain-of-thought reasoning." The model committed to an answer before it had reasoned. The second is **schema strictness**. On GSM8K, Claude 3 Haiku scored 86.99% when told to "reply in JSON" and 23.44% when the prompt also spelled out a `{"reason": …, "answer": …}` schema. The losses were not parse failures: LLaMA 3 8B failed to parse only 0.148% of the time on the Last Letter task in JSON, yet still lost 38.15 points to free text. The effect reversed on classification. Answering in JSON instead of free text lifted Gemini 1.5 Flash on DDXPlus (medical diagnosis) from 41.6% to 60.3%, which the authors attribute to the format narrowing the possible answers. The paper tested only small and mid-size 2024 models (GPT-3.5 Turbo, Claude 3 Haiku, Gemini 1.5 Flash, LLaMA 3 8B, Gemma 2 9B) on simple schemas ([arXiv:2408.02442](https://arxiv.org/abs/2408.02442) (Tam et al., 2024-08)). For reasoning steps, put the reasoning field before the answer field, or let the model answer in prose and convert it to JSON in a second call. The paper's "NL-to-Format" setup did that and scored about the same as free text.
 
@@ -167,6 +175,11 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 
 ![Should you fine-tune? A decision flow](../sources/images/berryman-prompt-engineering-for-llms-fig7-8.png)
 *Image Source: Berryman & Ziegler (2024), Fig. 7-8*
+
+> **Contradiction: when does fine-tuning overtake prompting?** Phoenix & Taylor write that fine-tuning "starts to beat prompt engineering once you can supply a few thousand examples", and cite Scao & Rush's figure (*Prompt Engineering for Generative AI*, ch. 1, Fig. 1-13). The figure doesn't show that. Both curves are fine-tuned RoBERTa: one with a task prompt (the "prompting run"), one with a classifier head and no prompt. The prompted run is ahead or level at every data size on BoolQ and RTE, and the curves nearly meet by about 3,000 BoolQ points and meet at the end of the roughly 2,250-point RTE set. Scao & Rush's own conclusion is that a prompt is worth hundreds of labelled data points. So the figure shows the prompt's advantage running out as data grows, not fine-tuning winning. It also says nothing about prompting a frozen chat model. Use the table above and your own evals to decide.
+>
+> ![Accuracy vs training points on BoolQ and RTE for prompted vs head-based fine-tuning](../sources/images/prompt-engineering-for-generative-ai-fig1-13.png)
+> *Image Source: Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 1-13*
 
 Reach for it when the static part of your prompt is long, stable, and still not followed reliably — or when you have outcome data encoding preferences you can't articulate. The payoff: after continued pre-training or LoRA you can typically **drop the static context entirely** — instructions and examples now live in the weights, so prompts get shorter, cheaper and faster. Then **make the prompt look like the start of your fine-tuning documents**. If it resembles pre-training data instead, the model follows the old path (a modified Little Red Riding Hood principle).
 

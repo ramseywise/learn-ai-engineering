@@ -4,6 +4,8 @@ sources:
   - https://arxiv.org/abs/2411.00640
   - https://www.anthropic.com/research/statistical-approach-to-model-evals
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - "Dmitriev et al., A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments (KDD 2017)"
 confidence: high
 cleaned: 2026-10-28
@@ -50,6 +52,10 @@ Rough sizes for detecting a difference between two versions run on the *same* ta
 | 2 points | 2,500+ |
 
 The paired range depends on how often the two versions disagree on the same task: fewer disagreements, fewer tasks needed. Unpaired comparisons need noticeably more.
+
+OpenAI's rougher rule of thumb, as Huyen quotes it, assumes nothing about pairing: to be 95% confident that one system is better, a 30-point difference needs ~10 samples, 10 points ~100, 3 points ~1,000 and 1 point ~10,000. **Each 3× smaller difference needs 10× more samples** (*AI Engineering*, ch. 4). That matches the table above to within a factor of two at 10 points. Use whichever you have, and stop pretending a 2-point gap on 100 rows means something.
+
+**A cheap stability check for the suite you already have:** bootstrap it. Draw 100 rows with replacement from your 100, score them, and repeat many times. If one resample gives 90% and another 70%, the suite is too small for the decisions you're making with it (*AI Engineering*, ch. 4).
 
 Practical consequence: a 50-task golden set is a **smoke detector** for big regressions. It cannot tell you that a prompt tweak gained 3 points. Either grow the suite, or stop making decisions on 3-point differences.
 
@@ -133,7 +139,14 @@ Slicing by difficulty does the same job for capability claims. Yang et al. (2026
 ![Task-mean success by difficulty stratum (Easy, Medium, Hard, Extreme) across five training stages. Easy rises from 31.78% to 72.88%; Extreme rises to 10.98%, dips to 6.10%, then recovers](../sources/images/yang-terminal-rsi-fig10.png)
 *Image Source: Yang et al. (2026), Figure 10*
 
-Watch for **Simpson's paradox**: B can beat A in every slice and lose overall (or the reverse) if the slice mix differs between runs. Compare on identical task sets.
+Watch for **Simpson's paradox**: B can beat A in every slice and lose overall (or the reverse) if the slice mix differs between runs. Huyen's example, using numbers from a 1986 kidney-stone study (*AI Engineering*, ch. 4):
+
+| | Group 1 | Group 2 | Overall |
+|---|---|---|---|
+| Model A | **93%** (81/87) | **73%** (192/263) | 78% (273/350) |
+| Model B | 87% (234/270) | 69% (55/80) | **83%** (289/350) |
+
+A wins both groups and loses overall, because most of A's rows are in the harder group. Compare on identical task sets.
 
 ### Too many slices
 
@@ -193,6 +206,18 @@ From the KDD 2017 "Dirty Dozen" paper on online experiments, the ones that bite 
 | **Ignoring the error bar** | Shipping on +2 points over 50 tasks |
 
 Rule: **count errors and refusals as failures**, or report them as their own rate. Never let them silently leave the denominator.
+
+### A cautionary write-up
+
+The fine-tuning evaluation in *LLM Engineer's Handbook* (ch. 7) shows how many of these pitfalls fit in one table. Two fine-tuned 8B models and Llama-3.1-8B-Instruct answered 334 test prompts. A GPT-4o-mini judge scored each answer once, at temperature 0.8, on 1–3 scales for accuracy and style:
+
+| Model | Accuracy | Style |
+|---|---|---|
+| TwinLlama-3.1-8B (SFT) | 2.45 | 2.04 |
+| TwinLlama-3.1-8B-DPO | 2.46 | 2.12 |
+| Llama-3.1-8B-Instruct | 2.62 | 1.86 |
+
+The text reads the 0.08 style gap between DPO and SFT as DPO "leading" and the 0.16 accuracy gap as Instruct having "a slight edge". There's no error bar, no repeat run of a sampled judge, no paired comparison and no human check of the style judge. Any of those gaps may be noise. The chapter's best advice is the qualitative step: read the answers, because reading catches mistakes like a wrong chat template or the wrong model being loaded, which no score will flag.
 
 ---
 

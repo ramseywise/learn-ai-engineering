@@ -3,6 +3,7 @@ origin: synthesis
 sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://www.langchain.com/blog/agent-evaluation-readiness-checklist
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9, 10"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
@@ -171,6 +172,23 @@ Anthropic describes eval suites as living artifacts: a team owns the infrastruct
 - **Infra owner**: runner, CI, dashboards, cost.
 - **Criteria owner** ([02](02-defining-correct.md#one-person-decides)): pass/fail definitions, the taxonomy, calibration sign-off.
 - **Every engineer**: adds a row when they fix a bug.
+
+Production metrics need owners too, and they cut across teams. Albada's point: a five-second planning delay is usually a prompt or workflow decision, not an infrastructure limit, so no single team can own latency. His template assigns each metric with a RACI chart: **R**esponsible does the work, **A**ccountable owns the outcome, **C**onsulted gives input, **I**nformed is kept updated (*Building Applications with AI Agents*, ch. 10). Condensed:
+
+| Metric | Product | ML engineers | Infra / SRE |
+|---|---|---|---|
+| Latency (planning, tool calls) | A, C | R, I | R, C |
+| Hallucination rate | C, I | **A**, R | I |
+| Task success rate | **A**, R (defines success) | C | I |
+| Token usage / cost | C | R, I | **A**, R |
+| Input drift | I | **A**, R | C |
+| Fallback / retry frequency | C | R | **A**, I |
+| User feedback | **A**, R | C | I |
+| Dashboards and triage rituals | C | C | **A**, R |
+
+Exactly one A per row. Adapt the columns to your org. The point is that no metric is left without an A.
+
+The release gate itself can be stated the same way. Albada's example combines a threshold and a no-regression rule: at least 95% tool recall on refund and cancellation scenarios, and promotion blocked by any regression in multi-turn tests (*Building Applications with AI Agents*, ch. 9). That's the absolute-floor and regression-set rows of [the gate table](#the-regression-gate).
 
 ---
 

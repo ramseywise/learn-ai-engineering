@@ -4,6 +4,8 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/06_tool_integrated_reasoning/00–03, 00_COURSE/07_multi_agent_systems/00–03, cognitive-tools/cognitive-architectures/) — snapshot 2026-08-14)
+  - "Kyle Stratis, AI Agents with MCP (O'Reilly, 2025), ch. 1–5 — sources/ai-agents-with-mcp/"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 2, 6, appendix A — sources/context-engineering-multi-agent-systems/"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -147,6 +149,77 @@ Most production agents are conditional loops with occasional parallel batches. P
 
 ---
 
+## MCP: a protocol for moving context
+
+The Model Context Protocol standardises how context from outside the agent reaches the window. Harness 03 covers [when to choose MCP over an in-process tool](../../03-harness-engineering/notes/03-tool-design.md#mcp-vs-in-process), its supply-chain risks, and the cost of loading every server's definitions eagerly ([tool discovery at scale](../../03-harness-engineering/notes/03-tool-design.md#tool-discovery-at-scale)). This section reads the protocol as context plumbing: who decides what enters the window, and what each hop costs.
+
+**Why a protocol.** The idea is borrowed from the Language Server Protocol. Without a shared interface, M models and N tools need M×N connectors; with one, M+N. Three models and four tools is 12 integrations without MCP and 7 with it (*AI Agents with MCP*, ch. 1).
+
+![MCP architecture: the host application talks to one MCP client per server; requests, responses and notifications flow client to server, elicitation and sampling requests flow server to client](../sources/images/ai-agents-with-mcp-fig2-3.png)
+*Image Source: Stratis, *AI Agents with MCP* (O'Reilly, 2025), Fig. 2-3*
+
+**Architecture.** The host is the application that holds the LLM. It runs **one client per server**, 1:1. Messages are JSON-RPC requests, responses and notifications. Each connection has a lifecycle of initialize (protocol version and capability negotiation), operate, shut down. The Python SDK's `ClientSessionGroup` drives several servers as if they were one, so two primitives with the same name raise an exception. Prefix tool names per server (`grader_…`), which also helps the model choose (*AI Agents with MCP*, ch. 4–5).
+
+**Who controls each primitive** is the context-engineering question. The spec assigns each primitive to a different party:
+
+| Primitive | Controlled by | How it enters the window |
+|---|---|---|
+| **Tools** | The model | The model pulls context by calling them |
+| **Resources** | The application | The host decides what to attach. Read-only, addressed by URI, with `{var}` templates |
+| **Prompts** | The user | The user picks a template. It can be multi-turn and can embed resource links |
+
+The book's ch. 2 calls prompts application-controlled. Its own ch. 5 and the spec say user-controlled.
+
+**Server-initiated requests.** Three client features let the server reach back through the client:
+
+- **Sampling** (`sampling/createMessage`) lets a server borrow the host's model. The spec says clients SHOULD keep a human in the loop and rate-limit.
+- **Elicitation** asks the user for structured input. The user can accept, decline or cancel, and the schema is limited to a flat subset of JSON Schema.
+- **Roots** (`file://` URIs) tell a server where it may work. They are advisory. The server is trusted to respect them, so **roots are not a security boundary** ([isolation](#context-isolation-as-a-security-boundary)).
+
+**Transports.**
+
+- **stdio** for local servers.
+- **Streamable HTTP** for remote ones. It uses one endpoint: POST carries client messages, and an optional GET opens an SSE stream. Streams resume via `Last-Event-ID`, auth is OAuth 2.1, and local servers should bind to localhost.
+- The older HTTP+SSE transport is superseded.
+
+The book's ch. 2 describes Streamable HTTP as "GETs and PUTs". The spec uses POST and GET.
+
+> **Version-dependent.** These details follow the 2025-03-26 spec that the book cites, plus the 2025-06-18 revision, which added elicitation and structured tool output. Check the current spec before relying on a detail. Drop the book's ecosystem counts; they date from mid-2025.
+
+A minimal server has one primitive of each kind (FastMCP, now the default in the Python SDK; it derives the output schema from type hints):
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("grader")
+
+@mcp.tool()                          # model-controlled
+def grader_report_card(student: str) -> ReportCard: ...
+
+@mcp.resource("file:///rubric.md")   # application-controlled: lazy, no side effects
+def rubric() -> str: ...
+
+@mcp.prompt()                        # user-controlled
+def review(student: str) -> str: ...
+
+if __name__ == "__main__":
+    mcp.run()                        # stdio; mcp.run("streamable-http") for remote
+```
+
+The book's runnable clients and servers (ch. 3 onward) are in its upstream repo.
+
+### Designing MCP servers for the window
+
+- **Don't auto-generate a server from a REST API.** REST endpoints are granular, so one user action becomes several tool choices, and the errors compound. At 95% accuracy per choice, five choices succeed about 77% of the time (0.95⁵). Each call also re-sends the previous turns. A back-of-envelope estimate on the book's ch. 3 example server puts that at about 8× the tokens and nearly 7× the cost. If you start from a generated server, "aggressively curate" it (Jeremiah Lowin, Prefect). Better, build from **agent stories**: user stories written for the agent, each mapped to one end-to-end tool (*AI Agents with MCP*, ch. 5).
+- **Measure tool choice before and after you change descriptions.** The book suggests Promptfoo or PromptBench. This is the [tool-overlap](#tool-overlap) test, run as an eval.
+- **Resources carry hints for the host.** Annotations are `audience` (user, assistant), `priority` (0.0–1.0) and `lastModified`. They need FastMCP 2.11+ or the low-level API. Resource reads should be lazy and free of side effects. Three patterns from the book:
+  - Documentation servers (Context7, AWS).
+  - A discovery resource that lists entities, paired with a query tool, for large or changing sets.
+  - A cache keyed by resource reference (Tim Kellogg's tupac).
+- **Application control has a cost.** The book's ch. 3 client spends an extra LLM call every turn just to choose which resources and prompts to attach. That is [retrieval](04-retrieval.md) by another name, and it needs its own budget.
+
+---
+
 ## Orchestration and coordination
 
 The upstream multi-agent module has an orchestration progression and a coordination one. Only a few rungs are common in practice:
@@ -163,6 +236,15 @@ The upstream "emergent behaviour" and "field orchestration" material claims that
 ### Inter-agent messages are context
 
 Every hand-off is a prompt someone else will read. Give messages a schema (task, constraints, evidence, return shape), keep them self-contained, and log them. Cognition's warning applies: agents that share no context make decisions that conflict. Pass the decisions, not just the task.
+
+**A hand-off is a data contract.** Rothman's build shows two ways it breaks (*Context Engineering for Multi-Agent Systems*, ch. 2, 6):
+
+- **A changed shape.** Inserting a Summarizer between Researcher and Writer broke the pipeline. The Writer expected a `facts` key and received `summary`. Validate the shape at every boundary, not only at the end.
+- **An unbounded review loop.** A writer–validator loop needs a cap. His validator returns pass/fail plus feedback, the feedback is appended to the writer's next attempt, and revisions stop at 2.
+
+The book's ch. 2 calls its envelope `{protocol_version, sender, content, metadata}` "MCP". It is a homemade dict checked by key, not the Model Context Protocol ([above](#mcp-a-protocol-for-moving-context)).
+
+**Make plan dependencies explicit.** In the same book's engine, the planner emits a JSON plan whose steps refer to earlier outputs by placeholder (`$$STEP_1_OUTPUT$$`). The executor resolves the placeholders, and the trace logs both the **planned** input and the **resolved** one. A bad step can then be traced either to the plan or to the data it received. The engine also keeps its instructions (style and structure "blueprints") in a separate vector namespace and retrieves them by intent. That is [procedural memory](06-memory.md#episodic-semantic-procedural) retrieved like documents (*Context Engineering for Multi-Agent Systems*, appendix A).
 
 ---
 

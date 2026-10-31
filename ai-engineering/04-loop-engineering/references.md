@@ -11,6 +11,13 @@ cleaned: 2026-10-31
 
 ---
 
+## Books
+
+| | Source | Notes |
+|---|---|---|
+| ★ | Michael Albada, *Building Applications with AI Agents* (O'Reilly, 2025). Chapter PDFs in [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/) (ch. 11, 13); ch. 3 is in [harness engineering's sources](../03-harness-engineering/sources/building-applications-with-ai-agents/). Folded in as: ch. 3 → [07](notes/07-autonomy-ladder.md#who-chooses-the-rung); ch. 11 → [08](notes/08-self-improving-loops.md); ch. 13 → [07](notes/07-autonomy-ladder.md#the-human-side-of-the-ladder). Ch. 11's escalation thresholds and bandit numbers are the author's rules of thumb, and its first DSPy snippet uses a retired API. Notes cite it as `(*Building Applications with AI Agents*, ch. N)` | 07, 08 |
+| ★ | Mayo Oshin and Nuno Campos, *Learning LangChain* (O'Reilly, 2025). Chapter PDFs in [generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Folded in as: ch. 8 → [07](notes/07-autonomy-ladder.md#why-each-rung-costs-reliability), [10](notes/10-framework-bindings.md#langchain--langgraph). Its `interrupt_before` and `gpt-3.5-turbo` code is dated. Notes cite it as `(*Learning LangChain*, ch. N)` | 07, 10 |
+
 ## AI Papers of the Week
 
 Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`).

@@ -7,6 +7,7 @@ sources:
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - https://arxiv.org/abs/2512.08296
   - https://arxiv.org/abs/2604.02460
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -61,6 +62,15 @@ Beyond tokens, every node you add brings:
 - **Harder debugging**: a wrong answer now has N places it could have come from.
 
 All of that is pure overhead when the problem had one specialty to begin with.
+
+**A "multi-agent system" that is a pipeline.** Raieli & Iuculano's travel planner (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 9) has four "agents":
+
+- a random-forest weather model that picks the best month;
+- an embedding search over hotel descriptions (top k = 5 by cosine similarity);
+- a GPT-2 itinerary writer;
+- a GPT-2 email writer.
+
+A controller calls them in a fixed order. No step decides anything, so no edge is conditional and nothing loops. That makes it a four-stage pipeline, and it is better for it: each stage can be tested on its own, and the cheapest model that works is used per stage. The one design choice worth copying is that the trip price (`price × nights + $100 × days`) is computed in code, because "LLMs are not good at arithmetic". Before calling something multi-agent, check whether any node chooses what runs next ([02](02-graph-primitives.md#edges-choose-what-runs-next)). If none does, build a function chain and skip the graph runtime.
 
 ---
 

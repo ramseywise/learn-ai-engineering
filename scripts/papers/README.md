@@ -76,6 +76,7 @@ python3 scripts/papers/potw.py triage --status parked --backlog        # re-tria
 python3 scripts/papers/potw.py status --list parked                    # candidates for a new pillar
 python3 scripts/papers/potw.py triage --local --backlog   # DAIR rows whose PDF is already in the repo
 python3 scripts/papers/potw.py download --backlog --limit 30          # the 30 best queued papers
+python3 scripts/papers/potw.py download --backlog --home multimodal safety  # one or more homes only
 make papers                                               # weekly: fetch DAIR, cite, triage, download
 ```
 

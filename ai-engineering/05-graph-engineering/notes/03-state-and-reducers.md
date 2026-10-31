@@ -4,8 +4,9 @@ sources:
   - https://docs.langchain.com/langgraph
   - https://www.langchain.com/blog/3-years-of-graph-engineering-with-langgraph
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 3 — State and Reducers
 
@@ -38,6 +39,35 @@ Design the schema the way you'd design a database table: name each key, give it 
 | **Long-term** (cross-run) | Facts and preferences that outlive a run | A store outside the graph ([note 12](12-kg-as-shared-agent-memory.md); [02-context note 06](../../02-context-engineering/notes/06-memory.md)) |
 
 **State is not context.** State is what the graph stores. Context is what you choose to load from it into a given node's prompt. A reviewer node should see the draft and the task, not every key in state ([07](07-failure-modes-at-scale.md#verifiers-need-isolated-context)). Deciding what each node sees is [context engineering](../../02-context-engineering/README.md) applied per node.
+
+### Input and output schemas: the graph's public interface
+
+The same split applies at the graph's edges. The full state holds working keys the caller shouldn't have to supply or parse, so give the graph a narrower input schema and output schema. Oshin and Campos's text-to-SQL chain (*Learning LangChain*, ch. 5) keeps `messages`, `user_query`, `sql_query` and `sql_explanation` in state. It accepts only the query and returns only the two results:
+
+```python
+class State(TypedDict):
+    messages: Annotated[list, add_messages]   # internal: conversation history
+    user_query: str
+    sql_query: str
+    sql_explanation: str
+
+class Input(TypedDict):
+    user_query: str
+
+class Output(TypedDict):
+    sql_query: str
+    sql_explanation: str
+
+# Book (2025): StateGraph(State, input=Input, output=Output)
+builder = StateGraph(State, input_schema=Input, output_schema=Output)   # current LangGraph keyword names
+```
+
+The keyword names are version-specific. The book's `input=` and `output=` were renamed `input_schema=` and `output_schema=` in later LangGraph releases, so check the version you have installed.
+
+Two limits:
+
+- **The output schema filters the return value of `invoke`, not the stream.** The book notes that the internal keys are still emitted by `stream()`. Don't use the output schema to hide anything that shouldn't reach the client. Filter the stream as well, or keep the data out of state.
+- **The schemas are typed dicts, and nothing enforces them at runtime.** An input missing `user_query` fails inside the first node that reads it, not at the graph boundary. Validate inputs at the API layer, or use a Pydantic model as the state schema if you want validation on the way in.
 
 ---
 

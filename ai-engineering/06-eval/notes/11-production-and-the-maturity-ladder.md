@@ -6,6 +6,9 @@ sources:
   - https://developers.openai.com/cookbook/examples/realtime_eval_guide
   - https://nicktalwar.substack.com/p/6-things-your-ai-agents-need-that
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 10"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - eval-harness.md (retired 2026-10-28)
   - eval-maturity-ladder.md (retired 2026-10-28)
 confidence: medium
@@ -122,6 +125,12 @@ When offline evals can't settle a question (tone, engagement, real resolution), 
 - **Test several doses, not just on/off.** A control plus three progressively stricter variants shows the dose–response curve and where the optimum sits.
 - **Record baselines**: sample size, percentiles, correlations ("rejection rate rises with plan size"). Without them you can't tell signal from noise.
 
+Two steps come before an A/B test, and one comes after it (*Building Applications with AI Agents*, ch. 10):
+
+- **Shadow mode.** The new version runs on the same live inputs as production, but users never see its output. Give both versions' spans a shared request ID so you can diff them per request: tool selection, latency, tokens, hallucination rate. You learn what breaks on real traffic at zero user risk. You can't learn anything that depends on the user's reaction.
+- **Canary.** Serve the new version to 1–5% of traffic. Tag every trace with the version, compare success rate, latency, tool use and errors against the baseline, and alert on a significant regression. Roll back at once if it fails.
+- **Regression trace collection.** Export every production failure trace (hallucination, planning error, tool misuse) into the test suite automatically. Once the fix lands, that trace should pass. This is the improvement loop below, wired to the trace store.
+
 ---
 
 ## User feedback as signal
@@ -133,6 +142,53 @@ When offline evals can't settle a question (tone, engagement, real resolution), 
 | **Downstream outcomes** (ticket reopened, refund reversed) | Closest to value | Delayed, hard to attribute |
 
 Feedback is a sampling rule and a calibration label ([05](05-llm-as-judge.md#the-procedure)), not a metric to optimize directly. Optimizing 👍 rate rewards flattery.
+
+Attach feedback to the trace, and to the span it is about where you can, so a 👎 lands next to the retrieval or tool call that caused it (LangSmith supports this; *Learning LangChain*, ch. 10).
+
+### Implicit signals worth logging
+
+Huyen's list of signals you can read from the conversation itself (*AI Engineering*, ch. 10):
+
+- **Early termination.** The user stops generation, leaves the app, or leaves the agent waiting for an answer.
+- **Error correction.** A follow-up starting "No, …" or "I meant …", a rephrase, or a correction ("Bill is the suspect, not the victim"). "Are you sure?" and "Show me the sources" may mean the answer lacked detail or the user distrusts it, not that it was wrong.
+- **Edits.** A user editing the generated code or text is a strong negative signal. Each edit is also a free preference pair: the edited version wins, the original loses.
+- **Refusals** ("As a language model, I can't…") usually mean an unhappy user.
+- **Regeneration.** Often dissatisfaction, but in creative apps users also regenerate just to see options.
+- **Conversation length.** Its meaning depends on the app: long is good for a companion and bad for customer support. Read it with dialogue diversity (distinct tokens or topics). A long conversation where the bot repeats itself means the user is stuck in a loop.
+
+Signals that cost the user nothing are designed in, not bolted on. Midjourney shows four images and offers upscale (strong positive for that image), variations (weaker positive) or regenerate (none of them is good enough). Copilot shows a grey draft that the user accepts with Tab or ignores by typing on. Both read as normal use, not as a feedback form.
+
+**Complaints cluster.** Clustering the natural-language feedback in the FITS dataset (Xu et al. 2022, clustering by Yuan et al. 2023) gives a shape worth knowing before you build your own taxonomy:
+
+| Feedback type | Share |
+|---|---|
+| Restates or clarifies the request | 26.54% |
+| Didn't answer, irrelevant, or told the user to find it themselves | 16.20% |
+| Points to a search result that answers the question | 16.17% |
+| Tells the bot to use the search results | 15.27% |
+| Factually incorrect or not grounded in the search results | 11.27% |
+| Not specific, accurate, complete or detailed enough | 9.39% |
+| Hedges too much ("I am not sure") | 4.17% |
+| Repetitive or rude | 0.99% |
+
+FITS is a search-grounded chatbot, so the grounding-related rows are high by design. Treat the table as a starting point for axial coding ([02](02-defining-correct.md#find-failure-modes-by-reading-error-analysis)), not as your distribution.
+
+### Feedback has biases
+
+Explicit feedback is sparse, especially with few users, and skews negative because unhappy users are more likely to bother. Implicit feedback is plentiful but noisy: one person shares conversations to show off a glaring mistake, another to share a useful answer. Huyen's list of biases (*AI Engineering*, ch. 10):
+
+- **Leniency.** People rate higher than they mean to, especially if a low rating triggers a "why?" form. In 2015 Uber's average driver rating was 4.8, and drivers below 4.6 risked deactivation. Look at the rating distribution. Labelled options ("Pretty good", "Could've been better", "Don't match me with this driver again") get more granular answers than bare numbers.
+- **Randomness.** Shown two long answers side by side, users often click one without reading either.
+- **Position.** The first suggestion gets more clicks whether or not it's better. Randomize the order, or model the success rate per position.
+- **Preference.** Length is easier to notice than errors, so people pick the longer answer. Recency bias favours the last answer seen. These are the same biases LLM judges have ([05](05-llm-as-judge.md)).
+- **Broken UI.** Huyen's workshop feedback form on Luma put the angry emoji (one star) where five stars should be, so happy attendees left 1/5 ratings alongside positive comments. Test the form before trusting the numbers.
+
+![Luma feedback form where the angry-face emoji sits in the five-star position](../sources/images/huyen-ai-engineering-fig10-21.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 10-21*
+
+Visibility changes behaviour too. People are more candid when their feedback is private (Midjourney's upscale, variation and regenerate choices were public in its early days).
+
+**Degenerate feedback loops.** You only get feedback on what you showed. If feedback trains the system, its own outputs shape the next round of feedback and the first bias grows. A few early users like cat photos, the system makes more cats, cat lovers arrive and rate cats highly, and the product becomes a cat app. The same loop can amplify racism, sexism or explicit content. Trained on user approval, models learn to say what users want to hear: Sharma et al. (2023) found models trained on human feedback tend toward sycophancy, agreeing with the user's stated view.
 
 ---
 
