@@ -41,6 +41,32 @@ invoke_agent  support-agent                       2.8s   $0.012
 └── chat      claude-sonnet  (answer)             1.3s   3,210 in / 260 out
 ```
 
+Here is the course agent's trace in Phoenix. The agent span wraps two router turns. The first calls a tool, which makes its own LLM call and runs SQL. The second writes the answer:
+
+![Span tree for one agent run: AgentRun (agent) contains router_call (chain) with an LLM chat completion, handle_tool_calls (chain) with the lookup_sales_data tool, its LLM call and execute_sql_query, then a second router_call and LLM call](../images/evaluating-ai-agents/lab-2-spans_agent.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 2*
+
+Auto-instrumentation gives you the LLM spans. Your own code adds the agent, chain and tool spans around them:
+
+```python
+tracer_provider = register(project_name=PROJECT)      # phoenix.otel: OTel exporter
+OpenAIInstrumentor().instrument(tracer_provider=tracer_provider)  # every LLM call
+tracer = tracer_provider.get_tracer(__name__)
+
+@tracer.tool()                                         # tool span, args + result
+def lookup_sales_data(prompt: str) -> str: ...
+
+def run_agent(messages):
+    with tracer.start_as_current_span("AgentRun", openinference_span_kind="agent") as span:
+        span.set_input(value=messages)
+        with tracer.start_as_current_span("router_call", openinference_span_kind="chain"):
+            ...                                        # LLM spans nest in here
+        span.set_output(value=answer)
+        span.set_status(StatusCode.OK)
+```
+
+Name the spans after your agent's own steps (router, tool, skill), so a grader can select them by kind and name later ([06](06-evaluating-agents.md#evaluate-the-components-then-the-whole)).
+
 ### What each span should carry
 
 | Span type | Record |
@@ -98,6 +124,9 @@ Pick on: can it run evals over stored traces, attach scores back to spans, build
 ## Traces → evals → datasets
 
 The loop that makes traces pay off:
+
+![Traces flow from the agent into an observability platform. The evaluation layer queries traces and writes annotations back to them](../images/evaluating-ai-agents/lab-3-traces.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 3*
 
 ```
 production traces ──sample──▶ graders (online) ──scores on spans──▶ dashboards / alerts

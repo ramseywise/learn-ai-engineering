@@ -7,7 +7,7 @@ sources:
   - sources/kg-and-llms-in-action/07-named-entity-disambiguation.md
   - sources/kg-and-llms-in-action/08-ned-open-llms-ontologies.md
   - sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.md
-  - notebooks/knowledge-graphs-for-rag/notes/Lesson_3.md … Lesson_6.md
+  - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L6: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
 confidence: medium-high
 cleaned: 2026-10-28
@@ -184,6 +184,72 @@ The Neo4j course builds an SEC filings graph one stage at a time:
 | L6 | A second source (Form 13 investment managers) merged onto the same `Company` nodes; uniqueness constraints; full-text index |
 
 L6 is appendix C's lesson at small scale: **`MERGE` on a shared identity key is how sources are fused**, and it only works if identities have been resolved first.
+
+The course names its build loop **extract, enhance, expand**: pull out nodes from a source, give them an index or a unique key, then connect them. Its advice is to start with a **minimum viable graph** and grow it one source at a time.
+
+![Extract, enhance, expand for four node types: Chunk from the 10-K JSON (vector embedding, NEXT), Form (unique chunk IDs, PART_OF), Company from Form 13 (unique cusip6, FILED) and Manager (full-text index of names, OWNS_STOCK_IN)](../images/kg-for-rag/extract-enhance-expand.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+**L3–L4: chunks as nodes, with a key and an embedding.** Each 10-K section is split (`RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)`) and every chunk gets a deterministic ID, so reloading is idempotent:
+
+```cypher
+// The constraint first: it makes MERGE safe and indexes the key
+CREATE CONSTRAINT unique_chunk IF NOT EXISTS
+FOR (c:Chunk) REQUIRE c.chunkId IS UNIQUE;
+
+// chunkId = "{formId}-{item}-chunk{seq:04d}": same input, same node
+MERGE (c:Chunk {chunkId: $chunk.chunkId})
+  ON CREATE SET c.text = $chunk.text, c.formId = $chunk.formId,
+                c.f10kItem = $chunk.f10kItem, c.chunkSeqId = $chunk.chunkSeqId;
+
+// Neo4j as the vector store: embed in the database, then index
+MATCH (c:Chunk) WHERE c.textEmbedding IS NULL
+WITH c, genai.vector.encode(c.text, "OpenAI", {token: $openAiApiKey}) AS v
+CALL db.create.setNodeVectorProperty(c, "textEmbedding", v);
+```
+
+`genai.vector.encode` was the GenAI plugin's API when the course was recorded. Check your Neo4j version's GenAI docs before reusing it, because the embedding functions have since been renamed. One bug to avoid if you run the L4 notebook: `split_form10k_data_from_file` loops over `item1_text_chunks[:20]` instead of the current item's chunks, so every item's chunks contain Item 1 text.
+
+**L5: structure between chunks.** Chunks of one section become a linked list, and each chunk points to its form:
+
+![Three Chunk nodes linked in order by NEXT, each with a PART_OF edge up to one Form node](../images/kg-for-rag/chunk-next-part-of.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+```cypher
+// Order a section's chunks and link neighbours with NEXT (APOC)
+MATCH (c:Chunk {formId: $formId, f10kItem: $item})
+WITH c ORDER BY c.chunkSeqId ASC
+WITH collect(c) AS section
+CALL apoc.nodes.link(section, "NEXT", {avoidDuplicates: true})
+RETURN size(section);
+
+// Every chunk belongs to its form
+MATCH (c:Chunk), (f:Form) WHERE c.formId = f.formId
+MERGE (c)-[:PART_OF]->(f);
+```
+
+The `NEXT` links are what make window retrieval possible in [note 11](11-kg-rag-and-text-to-cypher.md#retrieval-modes). The course also adds a `SECTION` edge from the form to the first chunk of each item (`chunkSeqId = 0`).
+
+**L6: fuse a second source on a shared key.** Form 13 holdings add `Manager` nodes and attach them to the **same** `Company` nodes, matched on the CUSIP:
+
+```cypher
+CREATE CONSTRAINT unique_manager IF NOT EXISTS
+FOR (m:Manager) REQUIRE m.managerCik IS UNIQUE;
+
+MERGE (com:Company {cusip6: $row.cusip6})
+  ON CREATE SET com.companyName = $row.companyName
+MERGE (mgr:Manager {managerCik: $row.managerCik})
+  ON CREATE SET mgr.managerName = $row.managerName
+// The quarter is part of the edge's identity; value and shares are data on it
+MERGE (mgr)-[o:OWNS_STOCK_IN {reportCalendarOrQuarter: $row.quarter}]->(com)
+  ON CREATE SET o.value = toFloat($row.value), o.shares = toInteger($row.shares);
+
+// Full-text index so "royal bank" finds "Royal Bank of Canada"
+CREATE FULLTEXT INDEX fullTextManagerNames IF NOT EXISTS
+FOR (m:Manager) ON EACH [m.managerName];
+```
+
+Notice that `value` and `shares` live on the **edge**, not on `Company`. That detail is what trips text-to-Cypher up in [note 11](11-kg-rag-and-text-to-cypher.md#the-failure-to-expect).
 
 **Curate before you scale** (appendix C). Start from a few sources that matter for the task. Every extra loosely related dataset adds reconciliation work and noise.
 

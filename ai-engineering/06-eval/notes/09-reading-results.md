@@ -73,6 +73,32 @@ Most tasks pass or fail on both versions, so the differences are mostly zero, an
 
 For binary outcomes, the same idea is **McNemar's test**: only the tasks where A and B disagree carry information. If B wins 14 and loses 6 of the 20 discordant tasks, that's evidence. If it wins 11 and loses 9, it isn't.
 
+### A worked example that needs this
+
+The DeepLearning.AI course's final lab runs exactly this setup. It uses one dataset and two agent versions, where v2 adds "Think before you respond." to the SQL-generation prompt. The same evaluators score both:
+
+![Experiment: one dataset runs through Agent v1 and Agent v2. Evaluators 1 and 2 score them 0.86 and 0.95 for v1 and 0.82 and 0.99 for v2](../images/evaluating-ai-agents/lab-5-experiments.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 5*
+
+```python
+# Each evaluator sees the dataset row (input, expected) and the task output
+def evaluate_sql_result(output, expected) -> bool:
+    digits = lambda s: "".join(filter(str.isdigit, s))
+    sql = next((r for r in output.get("tool_responses") or []
+                if r["tool_name"] == "lookup_sales_data"), None)
+    if sql is None:
+        return True                     # course code: no SQL ran counts as a PASS
+    return digits(sql["tool_response"]) == digits(expected["sql_result"])
+
+for name in ("v1", "v2"):               # v2 = SQL prompt + "Think before you respond."
+    run_experiment(dataset, run_agent_task, experiment_name=f"Overall {name}",
+                   evaluators=[function_calling_eval, evaluate_sql_result,
+                               evaluate_clarity, evaluate_entity_correctness,
+                               code_is_runnable])
+```
+
+The lab ends with v1 and v2 side by side in the Phoenix UI. Read it with this note. The dataset is about **7 questions**, run once each. At n = 7 a single flipped task moves a rate by 14 points, so 0.82 vs 0.86 is noise. Pair by question, count the discordant tasks, and repeat each one k times before you conclude anything ([06](06-evaluating-agents.md#non-determinism-run-every-task-k-times)). Also check the graders before the agents. `evaluate_sql_result` passes silently when no SQL ran, and it compares only the digits in the result, so `1,200` and `12.00` match. A version that skips the SQL tool gets a perfect SQL score.
+
 ---
 
 ## Repeats and clustering

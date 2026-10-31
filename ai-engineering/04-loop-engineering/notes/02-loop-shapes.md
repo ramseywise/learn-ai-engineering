@@ -66,6 +66,13 @@ escalate to human  # cap reached, not success
 
 *"Engineering is everything wrapped around"* the model (Masood). The model supplies two lines; every other line is yours.
 
+Even those two lines are mostly multiple-choice questions: which tool, which arguments, reflect or not, stop or not. JevAgentHarness (Zhu et al., 2026) counts **eight decision points** in one step of the loop and hands each to a small decision model that scores the listed options instead of generating text (one call cost 28% of an LLM call's time and 2.6% of its price):
+
+![Eight decision points in one step of the agent loop, and five ways a decision model can share control with the LLM](../sources/images/zhu-2026-decision-points.png)
+*Image Source: Zhu et al. (2026), JevAgentHarness, Fig. 3*
+
+The catch is the threshold. The decision model most accurate on isolated questions solved only **69.5%** of agent tasks, and delegating tool choices without a fitted confidence threshold cut success by **19 points**. With a threshold fitted per decision point (the *cascade*: decide when sure, defer to the LLM when not), agents ran **81–89% cheaper** and up to **2.5× faster** while losing less than 3 points of success. Same lesson as the scorekeeper: a cheap component in the loop is only safe once you have measured where it is wrong.
+
 Two lines come from the KodeKloud course and are worth making explicit: **save** on success, and **roll back** on a score drop. Together they make progress a ratchet: the score only goes up. See [note 09](09-failure-modes-and-guardrails.md#the-two-ratchet-rules).
 
 ---

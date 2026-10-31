@@ -110,7 +110,8 @@ Stage notes:
 
 A production pipeline with the same shape — ingestion and indexing on the left, query and retrieval on the right:
 
-![AWS Bedrock knowledge base pipeline: web crawl → semantic chunking → vector database, then query transformation → hybrid search → context injection → generation](../../images/bedrock-kb-pipeline-billydk.png)
+![AWS Bedrock knowledge base pipeline: web crawl → semantic chunking → vector database, then query transformation → hybrid search → context injection → generation](../images/bedrock-kb-pipeline-billydk.png)
+*Image Source: Billy.dk support assistant on AWS Bedrock Knowledge Bases (author's diagram).*
 
 Two things worth noting against the abstract pipeline above. **Hybrid search** runs semantic and keyword retrieval together rather than choosing between them — vectors catch paraphrase, keywords catch exact identifiers, and each covers the other's failure mode. And **query transformation** sits before retrieval: the user's original phrasing is rewritten into tool parameters, because the text a human types is rarely the text that retrieves best.
 
@@ -143,13 +144,34 @@ Vector search over chunks is the wrong tool for questions that need precise filt
 - **Dynamic few-shot from a semantic layer.** Hand-picked (natural language → SQL) example pairs live in their own vector-database collection. The user's query retrieves the most similar examples, which go into the generation prompt as in-context learning. This is retrieval used to *condition generation* rather than to supply answer content, and it is the note's clearest case of the few-shot examples themselves being a retrieved, growable asset: new examples get added as failure patterns surface, and quality improves without retraining or prompt rewrites.
 - **Validation over review.** Generated SQL is checked mechanically (SELECT-only; DELETE/INSERT/UPDATE blocked). An earlier LLM-review step was *removed* — it flagged valid queries as broken often enough to cost more than it saved. Deterministic validation beat model judgment on a task with a checkable answer.
 
+The same move works without SQL. The DAIR `pe-rag` notebook retrieves similar paper titles and uses them as style examples for generating new ones:
+
+```python
+import chromadb
+from chromadb.utils import embedding_functions
+
+ef = embedding_functions.SentenceTransformerEmbeddingFunction("all-MiniLM-L6-v2")
+titles = chromadb.Client().get_or_create_collection("ml_titles", embedding_function=ef)
+titles.upsert(ids=[str(i) for i in range(len(corpus))], documents=corpus)
+
+hits = titles.query(query_texts=[user_topic], n_results=10)["documents"][0]
+prompt = f"""Generate 5 titles for a paper on: {user_topic}
+Mimic the style of these titles. Do not copy any of them.
+<examples>
+{chr(10).join(hits)}
+</examples>"""
+```
+
+The examples are chosen per request, so the prompt stays short and on-topic. The notebook ran it on Fireworks-hosted Llama 2 7B and Mistral 7B Instruct with Mistral's `[INST]` template. Those are legacy models; any current chat model works with the plain prompt above. Runnable original: [pe-rag.ipynb](../notebooks/pe-rag.ipynb).
+
 The generalizable shape: a retrieval layer that spans structured and unstructured data needs a router, not a single index. The decision of *which* retrieval mechanism to use is itself a context-engineering decision, made before any retrieval happens.
 
 ### Ingestion determines the ceiling
 
 Retrieval can only return what parsing extracted. Parser capability tiers roughly like this:
 
-![Three parser tiers: text-only extraction; text plus image descriptions, audio transcription and video summarization; and visually rich document handling](../../images/parser-tiers-by-modality.png)
+![Three parser tiers: text-only extraction; text plus image descriptions, audio transcription and video summarization; and visually rich document handling](../images/parser-tiers-by-modality.png)
+*Image Source: AWS Bedrock Knowledge Bases, parsing options (console screenshot).*
 
 The consequence for context engineering: a tier-one parser over a PDF-heavy corpus silently drops every chart, diagram, and table into either nothing or garbled text. The retrieval layer then looks broken — low recall, irrelevant chunks — when the actual failure happened at ingestion. Check what the parser produced before tuning k, rerankers, or chunk size.
 
@@ -177,7 +199,32 @@ For large corpora, retrieve in tiers: search summaries or section headers first,
 
 Two distinct caches, often confused:
 
-- **Prompt caching** (inference-level) — caches the prefill computation for a token prefix. Prefix-match only, so ordering governs hit rate. See [02-context-anatomy.md](02-context-anatomy.md#ordering-stable-before-dynamic). Vendors expose it two ways: **implicit** (automatic prefix reuse, or a breakpoint marker in the request) and **explicit** (a named cache object you create with a TTL, then reference by name — e.g., [Gemini context caching](https://ai.google.dev/gemini-api/docs/caching)). Explicit caches suit "upload a corpus once, ask many questions" sessions — a cheap alternative to RAG when the whole corpus fits in the window. Runnable: [gemini-context-caching.ipynb](../notebooks/gemini-context-caching.ipynb).
+- **Prompt caching** (inference-level) — caches the prefill computation for a token prefix. Prefix-match only, so ordering governs hit rate. See [02-context-anatomy.md](02-context-anatomy.md#ordering-stable-before-dynamic). Vendors expose it two ways: **implicit** (automatic prefix reuse, or a breakpoint marker in the request) and **explicit** (a named cache object you create with a TTL, then reference by name — e.g., [Gemini context caching](https://ai.google.dev/gemini-api/docs/caching)). Explicit caches suit "upload a corpus once, ask many questions" sessions — a cheap alternative to RAG when the whole corpus fits in the window. The explicit flow, in the current `google-genai` SDK:
+
+  ```python
+  from google import genai
+  from google.genai import types
+
+  client = genai.Client()
+  doc = client.files.upload(file="a11.txt")            # upload once
+  cache = client.caches.create(
+      model="gemini-2.5-flash",
+      config=types.CreateCachedContentConfig(
+          display_name="apollo-11-transcript",
+          system_instruction="Answer questions about the attached transcript.",
+          contents=[doc],
+          ttl="900s",                                   # you pay storage per hour; set it short
+      ),
+  )
+  for q in ["Who spoke first?", "List the course corrections."]:
+      r = client.models.generate_content(
+          model="gemini-2.5-flash", contents=q,
+          config=types.GenerateContentConfig(cached_content=cache.name),
+      )
+      print(r.usage_metadata.cached_content_token_count, r.text)  # confirm the hit
+  ```
+
+  The DAIR notebook this replaces used the old `google-generativeai` package (`caching.CachedContent.create`, `GenerativeModel.from_cached_content`) and `gemini-1.5-flash-001`. That SDK is superseded by `google-genai` and that model is retired.
 - **Retrieval caching** (application-level) — caches the *results* of expensive retrieval keyed by query similarity. A near-duplicate query reuses the prior result set instead of re-running search, planning, or sub-query generation. Cuts cost and latency on hot queries.
 
 ---
@@ -227,6 +274,23 @@ Li's Experiment 3-9 runs the two side by side on legal Q&A. A simple question ("
 
 Chunk size is a recall/precision dial: small chunks match precisely but arrive without context; large chunks carry context but dilute the embedding. The hierarchical "retrieve small, return big" pattern sidesteps most of the trade-off.
 
+Fixed-size with overlap is a few lines over token ids. The stride is `size - overlap`, so a sentence cut at one boundary appears whole in the next chunk:
+
+```python
+import tiktoken
+
+def text_to_chunks(text, size=512, overlap=64, enc=tiktoken.get_encoding("cl100k_base")):
+    ids = enc.encode(text)
+    chunks = []
+    for start in range(0, len(ids), size - overlap):
+        window = ids[start:start + size]
+        if window:
+            chunks.append(enc.decode(window))
+    return chunks
+```
+
+Adapted from the upstream course's `04_rag_recipes.py`, which defaults to 1,000 tokens with 200 overlap and to `gpt-3.5-turbo` and `text-embedding-ada-002`. Both models are legacy; swap in a current embedding model.
+
 ### Contextual retrieval
 
 ![Contextual Retrieval](../images/ai-agent-book/fig3-14.svg)
@@ -249,6 +313,29 @@ Each stage has its own job:
 - **Dense.** Cosine similarity compares direction, not magnitude, so length doesn't count. Contextual encoders (BERT, BGE-M3) give "bank" a different vector in each sentence; Word2Vec gave it one. For the ANN index, **HNSW** (graph-based: incremental inserts, higher memory, very high recall) suits live corpora. **ANNOY** (tree-based: fast build, low memory, full rebuild on change) suits static ones. Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding).
 - **Fusion.** Dense scores (roughly 0–1) and BM25 scores (0 to tens) aren't on the same scale. RRF (`Σ 1/(60 + rank)`) ignores scores and fuses ranks: robust, but it throws signal away. Normalize-and-weight keeps the scores but is hard to tune.
 - **Rerank.** A cross-encoder reads the query and the candidate *together* (the interviewer), where the bi-encoder compares two independent vectors (the résumé screen). It is too slow to run over the corpus, so it reranks the fused top 50 or so. It refines fusion; it doesn't replace it. Lab: upstream [3-6 retrieval-pipeline](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/retrieval-pipeline) reports each document's rank before and after reranking.
+
+Both fusions fit in a few lines. The weighted version is PRINCE's 0.7/0.3 split; it needs each score list normalized first, or BM25's larger range swamps the dense half:
+
+```python
+def rrf(rankings, k=60):                       # rankings: list of ranked doc-id lists
+    scores = {}
+    for ranked in rankings:
+        for rank, doc in enumerate(ranked, start=1):
+            scores[doc] = scores.get(doc, 0) + 1 / (k + rank)
+    return sorted(scores, key=scores.get, reverse=True)
+
+def minmax(s):                                 # {doc: score} -> scores in [0, 1]
+    lo, hi = min(s.values()), max(s.values())
+    return {d: (v - lo) / (hi - lo or 1) for d, v in s.items()}
+
+def weighted(dense, sparse, w_dense=0.7):      # each: {doc: raw score}
+    d, s = minmax(dense), minmax(sparse)
+    fused = {doc: w_dense * d.get(doc, 0) + (1 - w_dense) * s.get(doc, 0)
+             for doc in d.keys() | s.keys()}
+    return sorted(fused, key=fused.get, reverse=True)
+```
+
+The upstream course's `HybridRAG` (keyword weight 0.3, keyword score = query-term overlap) breaks off mid-method, so the combination step above is written for this note rather than copied.
 
 **Measure each stage.** **recall@k**: did a relevant document reach the top k? It's the metric closest to what RAG needs. Note that many reports, Anthropic's included, mean *hit rate*: at least one relevant document in the top k. "Retrieval failure rate" is 1 − recall@20. **MRR** measures how high the first hit ranked. **nDCG** grades the whole ranked list. Check the definition and the k before comparing numbers across sources ([06-eval](../../06-eval/README.md)).
 

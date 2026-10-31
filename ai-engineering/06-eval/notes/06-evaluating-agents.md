@@ -21,7 +21,7 @@ cleaned: 2026-10-28
 ## Outcome and trajectory
 
 ![The Four Stages of an Agent Evaluation System](../images/ai-agent-book/fig7-1.svg)
-*Figure 7-1, The Four Stages of an Agent Evaluation System. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-1 (Apache-2.0)*
 
 ```
 Outcome:     did the agent reach the goal?
@@ -92,7 +92,15 @@ If there's no single correct path, don't force one. Use a **judge over the traje
 
 ## Evaluate the components, then the whole
 
-An agent is a router plus skills plus a final answer. Evaluate each, because an end-to-end failure doesn't say which one broke. The DeepLearning.AI *Evaluating AI Agents* course ([labs](../notebooks/evaluating-ai-agents/)) builds exactly this on a sales-data agent:
+An agent is a router plus skills plus a final answer. Evaluate each, because an end-to-end failure doesn't say which one broke. The DeepLearning.AI [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course (code: [upstream repo](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents)) builds exactly this on a sales-data agent: a function-calling router that picks between three tools and loops until it can answer.
+
+![Course agent: a GPT-4o-mini router with function calling dispatches to three tools (lookup sales data, data analysis, data visualization) and loops back](../images/evaluating-ai-agents/lab-1-agent.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 1*
+
+Each box gets its own grader. Three are LLM judges and one is plain code:
+
+![One evaluator per component: router function-calling choice and parameter extraction (LLM judge), SQL generation correctness (LLM judge), analysis clarity (LLM judge), visualization code is runnable (code)](../images/evaluating-ai-agents/lab-3-router_skill_eval.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 3*
 
 | Component | Question | Grader in the course |
 |---|---|---|
@@ -101,6 +109,39 @@ An agent is a router plus skills plus a final answer. Evaluate each, because an 
 | **Skill: analysis** | Is the analysis clear? Are entities correct? | Two LLM judges, one per criterion |
 | **Skill: visualization** | Does the generated code run? | Code: `exec()` it |
 | **Path** | Did it converge in a reasonable number of steps? | Code: optimal steps ÷ actual steps |
+
+The router judge, in the course's code. It pulls every LLM span from the traces, judges each tool choice against the tool definitions, and writes the label back onto the span:
+
+```python
+# Pull LLM spans that made a tool call (Lab 3)
+query = SpanQuery().where("span_kind == 'LLM'").select(
+    question="input.value", tool_call="llm.tools")
+df = px.Client().query_spans(query, project_name=PROJECT).dropna(subset=["tool_call"])
+
+with suppress_tracing():                     # don't trace the judge itself
+    evals = llm_classify(
+        dataframe=df,
+        template=TOOL_CALLING_PROMPT_TEMPLATE,   # course pastes tool JSON into it
+        rails=["correct", "incorrect"],          # output is snapped to these labels
+        model=OpenAIModel(model="gpt-4o"),
+        provide_explanation=True)                # reasoning stored next to the label
+evals["score"] = (evals["label"] == "correct").astype(int)
+px.Client().log_evaluations(SpanEvaluations(eval_name="Tool Calling Eval", dataframe=evals))
+```
+
+The visualization check needs no judge:
+
+````python
+def code_is_runnable(output: str) -> bool:
+    code = output.strip().replace("```python", "").replace("```", "")
+    try:
+        exec(code)        # course shortcut: run untrusted code only in a sandbox
+        return True
+    except Exception:
+        return False
+````
+
+These APIs have moved since the course was recorded. `px.Client()` and `SpanEvaluations`/`log_evaluations` are legacy: current Phoenix uses `phoenix.client.Client` and logs span annotations. phoenix.evals 2.x replaces `llm_classify(dataframe=…)` and `OpenAIModel` with `create_classifier` and `LLM(provider="openai", model=…)`. The course also fills the template's `{tool_definitions}` slot with string `.replace()` calls that turn the JSON braces into quotes. Pass the definitions in as a template variable instead. "Runs without raising" is also a weak check: code that draws an empty chart passes it.
 
 ### Routing vs. domain evals in multi-agent systems
 
@@ -145,7 +186,31 @@ Log these on every trial. They catch regressions that pass rates miss:
 | **Tokens** (input / output / cached) | Cost driver. Context bloat shows here first |
 | **Latency** (p50 / p95, time to first token) | User experience |
 | **Cost per success** | The sustainability metric. Failed runs are pure cost, so at 50% success the real cost is 2× the per-run cost |
-| **Convergence** | Optimal steps ÷ actual steps (the course's Lab 4 metric) |
+| **Convergence** | Optimal steps ÷ actual steps (the course's Lab 4 metric, [below](#convergence-in-practice)) |
+
+### Convergence in practice
+
+The course's Lab 4 asks the same question 17 ways ("average quantity per transaction", paraphrased), runs the agent on each, and scores how close each run came to the shortest path:
+
+![Convergence experiment: a dataset of paraphrased questions goes through the task run_agent_and_track_path, the evaluator evaluate_path_length, and out comes a convergence score](../images/evaluating-ai-agents/lab-4-experiment1.png)
+*Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 4*
+
+```python
+def run_and_track(example):                      # the experiment's task
+    msgs = run_agent([{"role": "user", "content": example.input["question"]}])
+    return {"path_length": len(msgs)}            # counts messages, not tool calls
+
+experiment = run_experiment(dataset, run_and_track, experiment_name="Convergence Eval")
+optimal = min(o["path_length"] for o in outputs if o)   # shortest run observed
+
+@create_evaluator(name="Convergence Eval", kind="CODE")
+def convergence(output) -> float:
+    return optimal / output["path_length"] if output else 0.0   # 1.0 = shortest
+
+experiment = evaluate_experiment(experiment, evaluators=[convergence])
+```
+
+Read the score for what it is. "Optimal" means the shortest run *observed*, not the shortest possible, so a suite where every run thrashes can still score near 1.0. The score is also relative to this batch, so it doesn't compare across agent versions unless you fix the reference length. Set the optimum by hand (or from a confirmed good trace) before using it as a regression gate.
 
 ### Why agent cost grows faster than the step count
 

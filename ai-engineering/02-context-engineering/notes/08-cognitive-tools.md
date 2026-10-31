@@ -102,6 +102,35 @@ def self_correct(problem, max_iter=3):
 
 Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [loop engineering](../../04-loop-engineering/loop-engineering.md).
 
+The swap is small. Here the verifier is Python's own compiler, from the upstream course's `03_control_loops.py`:
+
+````python
+import re
+
+def python_validator(response):
+    blocks = re.findall(r"```python(.*?)```", response, re.DOTALL)
+    if not blocks:
+        return False, "No Python code block found."
+    for i, block in enumerate(blocks, 1):
+        try:
+            compile(block, "<llm>", "exec")       # syntax only; tests would check behaviour
+        except SyntaxError as e:
+            return False, f"Syntax error in block {i}: {e}"
+    return True, "ok"
+
+def generate_checked(task, validate=python_validator, max_attempts=3):
+    prompt = task
+    for _ in range(max_attempts):
+        out = llm(prompt)
+        ok, feedback = validate(out)
+        if ok:
+            return out
+        prompt = f"{task}\n\nYour previous answer:\n{out}\n\nProblem: {feedback}\nFix it."
+    raise ValueError(f"still failing after {max_attempts} attempts: {feedback}")
+````
+
+The opposite design is a weak one. The upstream `07_recursive_patterns.py` stops its self-reflection loop when the model's *own* quality score (parsed by regex, default 0.5) clears 0.8. A self-graded stop condition inherits the blind spots the loop was meant to catch, so treat it as a demo, not a pattern.
+
 ---
 
 ## Prompt programs
@@ -129,6 +158,27 @@ Why this works when it does:
 - **A declared return** fixes the output shape.
 
 Programs compose: `understand → analyze_tradeoffs → verify`. They can branch ("if fewer than two options survive step 3, expand the search") and loop (refine until the verifier passes).
+
+In code, a program is a list of operations plus shared state that later templates can read. This is the shape of the upstream `05_prompt_programs.py` `MultiStepProgram`:
+
+```python
+program = [
+    {"name": "reason",  "system": "You are a careful analyst.",
+     "template": "Solve step by step:\n{problem}"},
+    {"name": "verify",  "system": "You are a critical reviewer.",
+     "template": "Problem: {problem}\nSolution:\n{reason}\nList any errors, or say NONE."},
+    {"name": "correct", "system": "You are a careful analyst.",
+     "template": "Problem: {problem}\nDraft:\n{reason}\nReview:\n{verify}\nGive the final answer."},
+]
+
+def run(program, **inputs):
+    state = dict(inputs)
+    for op in program:
+        state[op["name"]] = llm(op["template"].format(**state), system=op["system"])
+    return state                       # every intermediate output, for audit
+```
+
+Because the steps are data, you can log, diff and eval each one, and reorder or drop steps without touching the runner.
 
 ### Cognitive tools vs. prompt programs
 

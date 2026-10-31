@@ -76,6 +76,13 @@ per sheet, in `ai-engineering/<pillar>/slides/.preview/`. That folder is gitigno
 4. For the user's review, add `PDF=1`. It writes `slides/<topic>.pdf`, one page per slide,
    which opens in a VS Code tab. The pages are images, with no speaker notes. The PDF is
    gitignored because it is regenerated from the YAML.
+5. Check the size: `ls -la ai-engineering/<pillar>/slides/*.pptx`. **Keep the `.pptx` under
+   1000 KB.** The pre-commit hook `check-added-large-files --maxkb=1000` rejects anything
+   bigger, and the decks so far are 270–860 KB. The builder already shrinks every image to
+   about 220 dpi at its size on the slide, and stores it as JPEG when that is smaller, so
+   the original images can stay as they are. If a deck still goes over, the cause is too
+   many image slides. Cut the weakest ones, or split the pillar into two decks. Don't raise
+   the hook limit.
 
 ## Step 6 — Wire it in
 

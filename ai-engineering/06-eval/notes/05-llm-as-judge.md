@@ -56,6 +56,23 @@ A judge that checks "quality" will silently switch between criteria from row to 
 
 Template: [templates/judge-prompt.md](../templates/judge-prompt.md).
 
+A compact version from the DeepLearning.AI course's analysis-clarity judge (Lab 3). It is one criterion, delimited data, and the explanation before the label:
+
+```text
+You are evaluating whether an answer to a query is clear.
+[BEGIN DATA]
+Query: {query}
+Answer: {response}
+[END DATA]
+"clear": the answer is easy to follow, well structured, and answers the query.
+"unclear": it is confusing, off-topic, or hard to act on.
+
+EXPLANATION: <step-by-step reasoning>
+LABEL: "clear" or "unclear"
+```
+
+**Parse strictly.** Phoenix's `llm_classify(..., rails=["clear", "unclear"])` snaps the output to one of the rails and records anything else as unparseable. Count an unparseable verdict as a **grader error**, not a FAIL. Folding it into FAIL makes a formatting bug look like an agent regression. The course's Lab 5 adds a second judge on the same answer for entity correctness. That's the one-judge-per-criterion rule in practice.
+
 ### Decompose hard criteria
 
 For grounding and completeness, a single holistic question ("is this faithful?") is weak. Decompose:
@@ -154,7 +171,7 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 ## Pairwise ranking: Elo and Bradley–Terry
 
 ![Elo Rating and Pairwise Comparison Ranking](../images/ai-agent-book/fig7-6.svg)
-*Figure 7-6, Elo Rating and Pairwise Comparison Ranking. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-6 (Apache-2.0)*
 
 When there's no absolute standard, ask "which is better, A or B?" and turn many such votes into a ranking.
 
@@ -162,9 +179,26 @@ When there's no absolute standard, ask "which is better, A or B?" and turn many 
 - **Elo** is the online-update form of that model. Everyone starts at 1000. After each match, the winner gains points in proportion to how surprising the win was. A 1200-rated model is expected to beat a 1000-rated one about 76% of the time, and an upset moves both ratings more.
 - **Chatbot Arena** ranks models this way from millions of blind human votes. The catch: the ranking reflects what users happened to ask. A flood of coding questions lifts coding models.
 
+The update in two lines, with K setting how far one match moves a rating:
+
+```
+expected  E_A = 1 / (1 + 10^((R_B − R_A) / 400))     # 1200 vs 1000 → 0.76
+update    R_A ← R_A + K · (S_A − E_A)                # S_A = 1 win, ½ tie, 0 loss
+```
+
 With an LLM judge doing the voting, **swap the order** on every pair and count a win only if it holds both ways, as in the position-bias row above. Bradley–Terry also assumes preferences are transitive (A > B > C ⇒ A > C). Judges and humans often violate that, so check for cycles before trusting a ranking.
 
 The same "compare candidates to each other" idea drives GRPO in post-training ([gen-AI 05-RL](../../../generative-ai/05-RL/README.md)).
+
+The swap check from the lab's judge:
+
+```python
+def judge_pair(question, a, b) -> str:
+    first = judge_once(question, a, b)              # "A" | "B" | "tie"
+    second = judge_once(question, b, a)             # same pair, order swapped
+    second = {"A": "B", "B": "A"}.get(second, second)   # map back to the real answers
+    return first if first == second else "tie"      # a win must survive the swap
+```
 
 Lab: [practice/02-elo-leaderboard](../practice/02-elo-leaderboard/README.md).
 

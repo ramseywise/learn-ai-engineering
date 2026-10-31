@@ -102,6 +102,28 @@ Three sources, one pattern:
 
 A checker must be allowed to return **"clean."** A reviewer that cannot pass the work will make up findings. The same rule protects evolve loops ([note 08](08-self-improving-loops.md#the-anti-busywork-rule)).
 
+The two prompts in [templates/](../templates/) (adapted from *learn-harness-engineering* project 07) make the split concrete. The maker does **one small change** inside the write boundary, runs build, lint and tests itself, and hands over a summary plus *"where to look hardest."* The checker never trusts that summary:
+
+```markdown
+## Your role
+You are the Checker. Be strict, and be honest in both directions.
+1. Read the loop contract: the goal, the scorekeeper, the write boundary.
+2. Read the diff, not the Maker's summary of it.
+3. Run the scorekeeper commands yourself.
+## Checklist
+- Boundary: did any file outside the write boundary change? Were tests,
+  fixtures or scoring scripts touched? (Any yes is an automatic Fail.)
+- Tests: would they fail if the change were reverted?
+- Score: higher, equal or lower than the last score in the state file?
+## Report
+Verdict: PASS / FAIL / PASS WITH NOTES
+Scorekeeper output: <command>: <result> · Score: <before> → <after>
+A FAIL needs at least one Critical issue with evidence.
+A PASS needs the scorekeeper output to back it.
+```
+
+The original project-07 prompt told the checker that finding nothing was failure. This version deletes that line: PASS is a legitimate verdict when the scorekeeper output supports it.
+
 ---
 
 ## Write it first

@@ -7,7 +7,7 @@ sources:
   - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
   - https://arxiv.org/abs/2603.23420
   - https://www.anthropic.com/institute/recursive-self-improvement
-  - "Bojie Li, AI Agents in Depth (2026), ch. 8 — https://github.com/bojieli/ai-agent-book"
+  - "Bojie Li, AI Agents in Depth (2026), ch. 9 — https://github.com/bojieli/ai-agent-book"
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -33,8 +33,8 @@ The same shape appears at three scales:
 
 ## The evolve loop
 
-![Overall loop of continual Agent evolution](../images/ai-agent-book/fig9-1.svg)
-*Figure 9-1, Overall loop of continual Agent evolution. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (Apache-2.0).*
+![The continual-evolution loop: execute a task, record the trajectory, form outcome/process/quality signals, generate candidate updates to knowledge, instructions, programs or parameters, then verify and release a new agent version](../images/ai-agent-book/fig9-1.svg)
+*Image Source: Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (2026), Fig. 9-1 (Apache-2.0)*
 
 > **An evolve loop is a loop with a second, slower loop pointed at it. The fast loop does the work. The slow loop edits the fast loop.**
 
@@ -86,7 +86,7 @@ Start it at autonomy rung 1 ([note 07](07-autonomy-ladder.md)), with a human app
 
 The evolve loop's input is only as good as its verdict on each run. If the system doesn't know which step caused a success or a failure, a model-written reflection is just a guess. Once that guess lands in a prompt or in training data, it compounds. A correct outcome also doesn't prove a correct process. Tests pass when the failing tests are deleted. A customer is "satisfied" when promised a refund that never happens.
 
-Li (*AI Agents in Depth*, ch. 8) splits verification into three layers. Each one rests on harder evidence than the layer above it:
+Li (*AI Agents in Depth*, ch. 9) splits verification into three layers. Each one rests on harder evidence than the layer above it:
 
 | Layer | Question | Evidence |
 |---|---|---|
@@ -98,14 +98,33 @@ Only what code can't formalize goes to the LLM layer. **Promise–action consist
 
 Keep the result **structured, not scalar**. "Partially succeeded, one unsupported claim, one false promise, policy repeated three times" tells the next step *what* to edit. The unsupported claim points to missing knowledge or a missing citation rule. The false promise points to a harness consistency check. A single 0.57 points nowhere. Calibrate the LLM layer against a small expert-labelled set, and re-run that set when the model version changes. Send low-confidence or high-risk runs to a second verifier or a human. Finally, keep the **verifier and the editor separate**, so the model that judges a run is not the one that rewrites the rules.
 
+Promise–action consistency is a few lines of code once the trajectory records its tool calls. From the lab's `ProcessVerifier`:
+
+```python
+def _promise_action(self, trajectory):
+    succeeded = {c["name"] for c in trajectory["tool_calls"]
+                 if c.get("result", {}).get("success") is True}
+    missing = [p for p in trajectory.get("promises", [])
+               if p["required_tool"] not in succeeded]      # said it, never did it
+    if missing:
+        return DimensionResult(
+            "promise_action_consistency", "process_rules", FAIL, 0.0,
+            [f"turn {p['turn']}: claimed {p['text']!r}, but no successful "
+             f"{p['required_tool']} call" for p in missing],  # evidence, not a number
+            confidence=1.0)
+    return DimensionResult("promise_action_consistency", "process_rules", PASS, 1.0, [...], 0.98)
+```
+
+Every dimension returns a verdict, a score, the turns that prove it and a confidence. The run is rejected if any outcome or process dimension fails, whatever the average says. In the lab, the false promise and the privacy leak both average **0.571**, yet one needs a harness consistency check and the other an identity gate plus output redaction. The over-refusal averages 0.714 and would sail through a threshold.
+
 Lab: [practice/02-trajectory-verifier](../practice/02-trajectory-verifier/README.md) builds the three layers and compares them with a single score on four labelled trajectories.
 
 ---
 
 ## Where the lesson goes: four media
 
-![Four update methods for continual evolution](../images/ai-agent-book/fig9-3.svg)
-*Figure 9-3, Four update methods for continual evolution. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (Apache-2.0).*
+![Four carriers for a lesson: knowledge docs, prompts and Skills, programs and harness, parameters; easy to update at one end, internalized at the other](../images/ai-agent-book/fig9-3.svg)
+*Image Source: Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (2026), Fig. 9-3 (Apache-2.0)*
 
 The [four edit targets](#the-four-edit-targets) say *which part* of the loop's config to change. The book adds a second question: *what medium* should hold the lesson. The answer depends on how the capability is best represented, not on how long it has been around.
 
@@ -152,7 +171,31 @@ Two additions make the result attributable:
 - **A falsifiable change contract** ([Agentic Harness Engineering](https://arxiv.org/abs/2604.25850)). Each edit records the failure evidence, the inferred root cause, the component to change, the behaviour expected to improve, the behaviour that might regress, and tests for both. It states the predicted impact *before* running, and the next round checks that prediction.
 - **A bounded candidate space** ([Self-Harness](https://arxiv.org/abs/2606.09498)). Give the generator the failures, the successes it must preserve, and the previously rejected attempts. The successes say what not to break. The rejected list stops it re-submitting the same idea in new words.
 
-Lab: [practice/03-self-modifying-agent](../practice/03-self-modifying-agent/README.md). Repeated `retryable=false` calls trigger a patch to `retry_policy.py`. The release gate replays the failures and re-tests transient-timeout recovery before it emits `release_to_canary`.
+Lab: [practice/03-self-modifying-agent](../practice/03-self-modifying-agent/README.md). Repeated `retryable=false` calls trigger a patch to `retry_policy.py`. A request is raised only when **at least two** failure trajectories show the same tool and error code. The bug and the minimal patch:
+
+```python
+def should_retry(error_code, retryable, attempt):
+    if not retryable or error_code in NON_RETRYABLE_CODES:   # + added by the patch
+        return False                                          # +
+    return attempt < MAX_RETRIES       # stable 1.0.0 retried everything 3 times
+```
+
+The gate runs outside the model. It compiles the candidate, replays every failure (a permanent error must stop at once and open the circuit breaker), then re-checks the old behaviour it must not break:
+
+```python
+checks["failure_replay"] = all(
+    not ns["should_retry"](t["error_code"], t["retryable"], 0)
+    and ns["should_open_circuit"](1, error_code=t["error_code"], retryable=t["retryable"])
+    for t in failures)
+checks["old_task_regression"] = all((
+    ns["should_retry"]("TEMPORARY_TIMEOUT", True, 2),        # transient: still retried
+    not ns["should_retry"]("TEMPORARY_TIMEOUT", True, 3),    # ...up to the cap
+    not ns["should_open_circuit"](4, error_code="TEMPORARY_TIMEOUT", retryable=True),
+))
+decision = "release_to_canary" if all(checks.values()) else "reject_candidate"
+```
+
+The manifest records the source cases, the diff, each check, and the candidate and rollback versions. Swap in an LLM as the patch writer and nothing else changes: a plausible patch that breaks timeout retries still gets `reject_candidate`.
 
 ### Measuring the evolve loop itself
 
@@ -171,7 +214,14 @@ Lab: [practice/03-self-modifying-agent](../practice/03-self-modifying-agent/READ
 - Both activate it but only the strong model executes it → instruction following is the bottleneck.
 - Every model regresses → suspect the change itself.
 
-Then fix the task model and change the updater model, to compare updaters directly. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
+Then fix the task model and change the updater model, to compare updaters directly.
+
+**Plasticity costs stability.** Chen et al. (2026) ran three self-evolving methods (ReasoningBank memory retrieval, GEPA prompt evolution, Meta-Harness) on four task streams that drift in topic, workflow or domain. Self-evolution raised aggregate scores on most streams, but across all twelve runs the more a method learned on new tasks, the more it forgot on old ones (**r = −0.72**):
+
+![Plasticity against stability across four drift scenarios: methods that gain more on new tasks lose more on old ones](../sources/images/chen-2026-plasticity-vs-stability.png)
+*Image Source: Chen et al. (2026), Are Self-Evolving Agents Continual Learners?, Fig. 2*
+
+The mechanisms are the ones this note warns about. Self-modifying methods make **global edits to one shared prompt**, so new rules crowd out old ones: in one stream, a task family's share of GEPA's strategy prompt fell from 100% to 14.7%, and when two streams needed opposite workflows the agent rewrote its policy into its opposite. Similarity-based memory localizes updates better but retrieves **foreign memories** on unseen tasks, and collides when similar queries need conflicting workflows. Hence the retention set in every gate, and the preference for scoped Skills over one ever-growing prompt. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
 
 ### Sleep learning: consolidation on a schedule
 
@@ -241,6 +291,13 @@ Measurements worth quoting when arguing about loop horizons:
 - **>80% of merged production code at Anthropic written by Claude** (May 2026), up from single digits before Feb 2025.
 - CORE-Bench (research reproduction): ~20% in 2024 → saturated within 15 months.
 - On open-ended research problems, models chose a better next step than humans **64%** of the time (Apr 2026), up from 51% (Nov 2025).
+
+DiscoveryRSI (Zhong et al., 2026) is a research-scale version of the same loop, aimed at hypothesis generation in the life sciences. A multi-agent evolutionary search grows hypothesis trees; selected investigations are compiled into executable tasks; and the system learns from three signals: credit assigned to the hypotheses that drove an assessment, **harness replay** to find productive strategies and recurring failures, and re-discovery that applies accepted improvements to new investigations. Over two rounds of self-improvement a 27B model's hypothesis quality rose from **4.86 to 5.39**, and the share of evolve/repair moves rose from 77.5% to 91.7%:
+
+![DiscoveryRSI: hypothesis hits in later published research, quality rising over two RSI rounds, and human-rated gain per revision](../sources/images/zhong-2026-discoveryrsi-results.png)
+*Image Source: Zhong et al. (2026), DiscoveryRSI, Fig. 1*
+
+Read the headline numbers with the next section in mind. "Quality" is an automated rubric score, the human review is described as preliminary, and the best hit rate against later publications is **6.3%**. The loop improves on what it can measure, and the measurement is still the weak part.
 
 ### When "done" is not progress
 

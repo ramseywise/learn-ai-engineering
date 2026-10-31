@@ -114,5 +114,5 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 - Edge et al., GraphRAG: https://arxiv.org/abs/2404.16130
 - Anthropic KG construction cookbook: https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
 - Book notes: [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/), *Knowledge Graphs and LLMs in Action* (Manning)
-- Neo4j course: [notebooks/knowledge-graphs-for-rag/](notebooks/knowledge-graphs-for-rag/)
+- Neo4j course: DeepLearning.AI, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (2024); its key Cypher is folded into notes 09–11
 - Secondary sources (vendor and aggregator posts) are listed with a quality assessment in [OUTLINE.md](OUTLINE.md#source-quality-replace-before-splitting).

@@ -68,6 +68,11 @@ findings: Annotated[list[str], dedupe]
 
 LangGraph runs a graph in **super-steps**. Every node scheduled for the same super-step runs in parallel, and their updates are applied together when the step ends. If two of them write a key that has **no reducer**, there is no rule for which one wins, and LangGraph refuses: it raises `InvalidUpdateError` rather than silently dropping one write.
 
+![Nodes A and B share super-step 1 after START, so checkpoint v3 holds both writes merged by the reducer before node C runs in super-step 2](../images/langgraph/parallel-super-step.png)
+*Image Source: LangGraph docs, persistence (LangChain), via sources/langgraph_extended.pptx*
+
+The table is the point: there is **no checkpoint between A and B**. Both writes reach state at the same boundary (v3), so the reducer on `bar` is the only thing that decides how they combine.
+
 That error is the framework doing you a favour. The same bug in a hand-rolled multi-agent system (two agents writing one file, one dict, one row) doesn't raise; it just loses work.
 
 > **Rule: every key has either exactly one writer or an explicit reducer.**
@@ -96,6 +101,8 @@ builder.add_edge("review_file", "synthesize")
 Each `review_file` instance runs in parallel with its own private input, and each returns `{"findings": [...]}`. Because `findings` has an `operator.add` reducer, all their results land in one list before `synthesize` runs. Without the reducer, this exact graph raises on the first run with two files.
 
 Fan-out and reducers are one feature: **Send creates the parallel writers, the reducer makes their writes safe.**
+
+Cap N before you fan out (`state["changed_files"][:MAX_FANOUT]`), because an unbounded list is an unbounded bill ([07](07-failure-modes-at-scale.md)). [templates/fan-out-merge.py](../templates/fan-out-merge.py) is a runnable version with the cap; delete the reducer on `findings` to see the `InvalidUpdateError`.
 
 ---
 

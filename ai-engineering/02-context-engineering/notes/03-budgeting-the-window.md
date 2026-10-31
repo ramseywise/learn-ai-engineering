@@ -121,6 +121,18 @@ Pick examples that are diverse and include near-misses at the boundary, rather t
 
 Production systems combine all three: structured state for decisions, a rolling summary for narrative, and a short raw window for the most recent turns. Details in [05](05-compression-compaction.md) and [06](06-memory.md).
 
+Windowing in its simplest form reserves the output first, then drops the oldest turn until the rest fits. This is the core of the pillar's [templates/control_loop.py](../templates/control_loop.py) `ContextManager`:
+
+```python
+def fit_history(fixed, history, count, max_tokens=4000, reserved=1000):  # count: str -> int tokens
+    budget = max_tokens - reserved                 # output tokens come off the top
+    while history and count(fixed + "".join(history)) > budget:
+        history.pop(0)                             # drop_oldest
+    return history
+```
+
+The template estimates tokens by word count. Pass the model's tokenizer (or the provider's token-count endpoint) as `count` instead: words undercount tokens by about a quarter on English prose, and by more on code and non-English text.
+
 ### Evidence
 
 - Retrieve fewer, better chunks. Reranking the top 20 down to the best 5 usually beats passing all 20 ([04](04-retrieval.md)).
@@ -144,6 +156,28 @@ Prompt caching changes the cost side of the budget without changing the attentio
 2. **Ablate.** Drop one component, re-run the eval set and record the change in quality. Components whose removal costs nothing are candidates to cut.
 3. **Track quality per 1k tokens** alongside absolute quality. Two configurations with equal scores aren't equal if one uses half the window.
 4. **Watch for cliff edges.** Plot score against total context length. Where it bends down is your effective budget for that model and task.
+
+The upstream course's first experiment makes step 2 concrete. It starts from an atomic prompt and adds one layer at a time, logging what each layer costs and what it returns:
+
+```python
+import tiktoken
+enc = tiktoken.get_encoding("o200k_base")
+base = "Write a paragraph about climate change."
+layers = {
+    "role":        "You are a climate scientist writing for the public.",
+    "examples":    "Example of the register wanted: ...",
+    "constraints": "Under 120 words. Cite one quantitative fact. No jargon.",
+    "audience":    "Readers are high-school students.",
+}
+prompt = base
+for name, text in [("base", "")] + list(layers.items()):
+    prompt = f"{text}\n\n{prompt}" if text else prompt
+    out = llm(prompt)
+    p, r = len(enc.encode(prompt)), len(enc.encode(out))
+    print(f"{name:12} prompt={p:4} response={r:4} score={judge(out):.2f}")
+```
+
+Read the `score` column, not response length. The original reported `response_tokens / prompt_tokens` as "token efficiency", which rewards verbosity. Quality per prompt token is the number that tells you whether a layer earned its place.
 
 ---
 

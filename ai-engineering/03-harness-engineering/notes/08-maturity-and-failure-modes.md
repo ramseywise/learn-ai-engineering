@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
   - https://www.anthropic.com/engineering/harness-design-long-running-apps
   - https://addyosmani.com/blog/agent-harness-engineering/
@@ -195,6 +196,21 @@ Template: [quality-document.md](../templates/quality-document.md).
 | **5** | **No binary eval** | Changes are argued about; nothing can be measured or tuned |
 
 Failure 1 is the meta-failure — it hides the other four. The honest test is not *"do we have verification?"* but *"can I point to the code that runs it, on every task, without a human remembering to?"*
+
+### Eight deployment anti-patterns
+
+The same diagnosis at the level of individual design choices. Each looks like a model limitation and turns out to be a missing engineering constraint:
+
+| Anti-pattern | Symptom | Fix |
+|---|---|---|
+| **System prompt as knowledge base** | Prompt keeps growing; key rules get ignored | Keep conventions in the prompt and move knowledge to skills ([03](03-tool-design.md#progressive-disclosure-skills)) |
+| **Unbounded tool count** | Wrong tool chosen often | Merge overlapping tools, namespace the rest |
+| **No verification loop** | "Done" that nobody can check | Acceptance criteria per task type ([05](05-verification-loops.md#the-three-layer-termination-check)) |
+| **Boundaryless multi-agent** | State drift; failures can't be attributed | Roles, permissions, a worktree per agent ([07](07-orchestration.md#protocols-precede-collaboration)) |
+| **Unmanaged memory** | Decision quality drops after ~20 turns | Monitor tokens; compact or reset at a threshold ([06](06-long-horizon-execution.md#compaction-vs-context-reset)) |
+| **No evaluation** | Nobody knows whether a change regressed | Turn every failure into a test case |
+| **Premature multi-agent** | Coordination overhead exceeds the parallel gain | Find the single-agent limit first ([07](07-orchestration.md#when-not-to-go-multi-agent)) |
+| **Constraints by expectation** | Documented rules are followed selectively | Enforce with tools, linters and hooks ([04](04-execution-boundaries.md#prompts-vs-hooks)) |
 
 ---
 

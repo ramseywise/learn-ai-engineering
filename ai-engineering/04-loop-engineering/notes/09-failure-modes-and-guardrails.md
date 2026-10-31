@@ -10,7 +10,7 @@ sources:
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://vercel.com/i/what-are-agentic-workflows
   - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
-  - "Bojie Li, AI Agents in Depth (2026), ch. 8 — https://github.com/bojieli/ai-agent-book"
+  - "Bojie Li, AI Agents in Depth (2026), ch. 9 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -105,7 +105,7 @@ Anthropic's *Effective Harnesses for Long-Running Agents* lists what an unattend
 
 ## Guardrails for self-modifying loops
 
-A loop that edits itself can turn one mistake into a permanent one. Prompt injection from a web page gets summarized as "experience" and then fires in every later session. A malicious package found by search gets wrapped as a tool. A faulty verifier keeps approving regressions. Li (*AI Agents in Depth*, ch. 8) sets three boundaries:
+A loop that edits itself can turn one mistake into a permanent one. Prompt injection from a web page gets summarized as "experience" and then fires in every later session. A malicious package found by search gets wrapped as a tool. A faulty verifier keeps approving regressions. Li (*AI Agents in Depth*, ch. 9) sets three boundaries:
 
 | Boundary | Rule |
 |---|---|

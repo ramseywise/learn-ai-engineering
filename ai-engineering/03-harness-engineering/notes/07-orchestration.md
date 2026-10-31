@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
   - https://medium.com/google-cloud/harness-engineering-for-multi-agent-systems-using-google-adk-2-0-e248b885cb95
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.anthropic.com/engineering/harness-design-long-running-apps
@@ -28,6 +29,8 @@ A search that reads 40 files and finds 3 relevant ones should return **the 3**, 
 
 The settled default: **orchestrator holds the plan; subagents hold the details.** Sub-agents return summaries only — search and debugging detail stays in their own contexts.
 
+The sizing rule that follows: **give each subagent the minimum context, authority and execution budget needed to finish one clearly defined task.** Deep Agents' built-in `task` tool encodes the same contract. Each call gets a fresh agent instance, runs on its own until it finishes, and returns **one final report**. It is stateless, so it can't send a stream of messages back to the parent.
+
 ---
 
 ## Protocols precede collaboration
@@ -38,7 +41,17 @@ The sequencing rule:
 
 Parallelism added to an undefined task structure produces collision, not speed. Define what each agent owns, what it receives, what it returns, and what it may touch — then parallelize.
 
-Isolate is also the **most expensive of the four context levers** ([02-context](../../02-context-engineering/context-engineering.md#the-four-levers)): real tokens multiply and cross-agent context is lost. Reach for it when a genuine context or trust boundary exists, not for tidiness.
+**Use natural language inside a task and protocols between tasks.** Agents that coordinate only by conversation fail in predictable ways: an agent forgets what it committed to, two agents both think they own a task, work starts before its dependency finishes, a failure is silently treated as done, a retried request runs twice, two workers edit the same files, and after a crash nobody can reconstruct the global state. Each of those is a missing piece of one of three foundations:
+
+| Foundation | Defines | Prevents |
+|---|---|---|
+| **Communication protocol** | Message meanings; how requests, results, failures and acks are sent; valid state transitions | Lost acks, silent failures, double execution |
+| **Task graph** | What work exists, who owns each task, which tasks depend on which | Duplicate ownership, premature starts, unknown global state |
+| **Isolation boundary** | Which files, branches, tools and resources each agent may modify | Write collisions, cross-agent damage |
+
+At the infrastructure level that becomes durable messaging, explicit task state, dependency tracking, idempotent processing, isolated side effects, structured handoffs and deterministic verification.
+
+Isolate is also the **most expensive of the four context levers** ([02-context/10](../../02-context-engineering/notes/10-tools-and-multi-agent.md#costs)): real tokens multiply and cross-agent context is lost. Reach for it when a genuine context or trust boundary exists, not for tidiness.
 
 ---
 
@@ -62,6 +75,17 @@ Splits decomposition from implementation. The fix for "the agent got lost in a 4
 ### Generator / Evaluator
 
 Splits production from judgment — the structural answer to self-evaluation bias ([note 05](05-verification-loops.md#separating-generation-from-evaluation)).
+
+### Topologies
+
+| Topology | Shape | Use when |
+|---|---|---|
+| **Sequential** | A → B → C, each consumes the last one's artifact | Stages genuinely depend on each other |
+| **Parallel** | Fan out independent workers, join the results | Subtasks share no state |
+| **Manager hierarchy** | One orchestrator delegates and integrates; it can nest | The default for open-ended work |
+| **All-to-all** | Agents chat freely | Brainstorming and low-stakes creative work only, because it is hard to predict and control |
+
+How to cut the work is a separate choice from the topology. **Functional** decomposition splits by expertise (research, code, review). **Spatial** splits by file or directory, which parallelizes well until the files depend on each other. **Temporal** splits into stages where later ones need earlier ones finished. **Data-driven** splits by data partition for large datasets processed chunk by chunk.
 
 ### Full pipeline
 
@@ -129,6 +153,8 @@ Named problems that emerge specifically from orchestration:
 
 All four are *harness* bugs. None is fixed by a better model, and all four get worse as agent count rises — which is the practical argument for keeping agent counts as low as the task allows.
 
+Two more problems are specific to many agents. **Hallucinations amplify**: one agent's invention becomes the next agent's input, so cross-validate claims that cross a handoff. **Failures are hard to attribute.** The fix is to **evaluate each component and the end-to-end result separately**. If the end-to-end eval fails while every component eval passes, the bug is in a handoff or integration. If one component eval fails, you know which agent to fix. Per-step traces (each agent's plan, prompt, tool calls and results) make that analysis fast.
+
 ---
 
 ## Handoff design
@@ -150,8 +176,8 @@ Collaboration tools reduce to a small set of primitives: `spawn` and `cancel`, `
 
 ## Asynchronous agents: events and safe points
 
-![Three Strategies for Asynchronous Event Processing](../images/ai-agent-book/fig6-2.svg)
-*Figure 6-2, Three Strategies for Asynchronous Event Processing. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0).*
+![Three ways to handle an event that arrives mid-task: cancel and restart, queue until a safe point, or run in parallel](../images/ai-agent-book/fig6-2.svg)
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (2026), Fig. 6-2 (Apache-2.0)*
 
 A resident agent receives user messages, tool results, timers, webhooks and messages from other agents, all at unpredictable times. Li's model (ch. 4) is an **event loop**: each iteration drains a batch of events from the queue, appends them to the trajectory, calls the LLM once, and runs the tools it chose. Events are consumed **only at safe points**, meaning the end of a reasoning stretch or a tool return, never mid-step. Cancellation is checked at safe points too, the same discipline as Go's `ctx.Done()`.
 

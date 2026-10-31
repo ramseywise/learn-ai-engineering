@@ -4,7 +4,7 @@ sources:
   - sources/kg-and-llms-in-action/13-kg-powered-rag.md
   - sources/kg-and-llms-in-action/14-natural-language-kg-questions.md
   - sources/kg-and-llms-in-action/15-qa-agent-with-langgraph.md
-  - notebooks/knowledge-graphs-for-rag/notes/Lesson_7.md
+  - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L4–L7: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://arxiv.org/abs/2404.16130
   - https://neo4j.com/docs/neo4j-graphrag-python/current/
 confidence: medium-high
@@ -80,6 +80,42 @@ The 53.4% vs. 42.9% multi-hop figures that graph-engineering.md §9 quoted come 
 
 **Default order:** start with vector. Add canned traversals for the multi-hop question shapes you can name. Add text-to-Cypher only for the long tail, and only with a validator. Ch13 takes the same position: its ReAct agent's tools use **precanned Cypher queries** because free-form generation fails too often, with a vector-search tool as a fallback. This is the agency rule from [note 02](02-graph-primitives.md) again.
 
+### Hybrid in practice: a `retrieval_query`
+
+LangChain's `Neo4jVector` runs the vector search, then hands each hit (`node`, `score`) to a Cypher fragment you supply. That fragment is where the graph adds context. Course L5 widens each hit to its `NEXT` neighbours:
+
+```cypher
+// node and score come from the vector index
+MATCH window = (:Chunk)-[:NEXT*0..1]->(node)-[:NEXT*0..1]->(:Chunk)
+WITH node, score, window ORDER BY length(window) DESC LIMIT 1  // longest = both sides
+WITH nodes(window) AS chunks, node, score
+UNWIND chunks AS c
+WITH collect(c.text) AS texts, node, score
+RETURN apoc.text.join(texts, " \n ") AS text, score, node {.source} AS metadata
+```
+
+L6 goes further and walks from the chunk to its company and on to the managers holding it, so the retrieved text starts with facts no paragraph contains:
+
+```cypher
+MATCH (node)-[:PART_OF]->(f:Form)<-[:FILED]-(com:Company)<-[o:OWNS_STOCK_IN]-(mgr:Manager)
+WITH node, score, mgr, o, com ORDER BY o.shares DESC LIMIT 10
+WITH collect(mgr.managerName + " owns " + o.shares + " shares of " + com.companyName)
+     AS holdings, node, score
+RETURN apoc.text.join(holdings, "\n") + "\n" + node.text AS text,
+       score, {source: node.source} AS metadata
+```
+
+```python
+from langchain_neo4j import Neo4jVector          # was langchain_community.vectorstores
+store = Neo4jVector.from_existing_index(
+    OpenAIEmbeddings(), url=NEO4J_URI, username=NEO4J_USERNAME, password=NEO4J_PASSWORD,
+    index_name="form_10k_chunks", text_node_property="text",
+    retrieval_query=investment_retrieval_query)  # the Cypher above
+retriever = store.as_retriever()
+```
+
+On a question about ransomware protection, the windowed retriever's answer also named NetApp's ONTAP software, which the plain retriever's answer left out. The course wires the retriever into `RetrievalQAWithSourcesChain` and calls it with `chain({"question": q})`; both the class and the call style are deprecated, so use `create_retrieval_chain` or an LCEL pipe with `.invoke`. One more lesson from L4 carries over: the plain chain made up an answer to a question about Apple, which isn't in the NetApp filing, until the prompt said *"If you are unsure about the answer, say you don't know."*
+
 ---
 
 ## Text-to-Cypher
@@ -135,6 +171,38 @@ Ch14 classifies at two levels before generating anything:
 ### The failure to expect
 
 In course L7, LangChain's `GraphCypherQAChain` was told to follow the schema and still summed a `value` property on `Company`, which doesn't exist. The property is on the `OWNS_STOCK_IN` relationship. **One few-shot example with the right pattern fixed it.** Text-to-Cypher fails on plausible-looking schema mistakes, and those are exactly what a schema check catches.
+
+![The SEC graph the chain queries: Manager OWNS_STOCK_IN Company, both LOCATED_AT Address, Company FILED Form, Chunk PART_OF Form, Form SECTION Chunk, and Chunk NEXT Chunk](../images/kg-for-rag/sec-graph-schema.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+The L7 chain is the minimal text-to-Cypher setup: the schema string from `kg.schema`, rules, and few-shot examples, each a comment with the question followed by its Cypher. The course grows the example list one failure at a time:
+
+```python
+from langchain_neo4j import GraphCypherQAChain   # was langchain.chains (deprecated)
+
+CYPHER_GENERATION_TEMPLATE = """Task: Generate a Cypher statement to query a graph database.
+Use only the relationship types and properties in the schema.
+Schema:
+{schema}
+Do not include any text except the generated Cypher statement.
+Examples:
+# What investment firms are near Santa Clara?
+MATCH (address:Address) WHERE address.city = 'Santa Clara'
+MATCH (mgr:Manager)-[:LOCATED_AT]->(mgrAddress:Address)
+  WHERE point.distance(address.location, mgrAddress.location) < 10000
+RETURN mgr.managerName, mgr.managerAddress
+
+The question is:
+{question}"""
+
+chain = GraphCypherQAChain.from_llm(
+    ChatOpenAI(temperature=0), graph=kg, verbose=True,
+    cypher_prompt=PromptTemplate.from_template(CYPHER_GENERATION_TEMPLATE),
+    allow_dangerous_requests=True)   # required in current versions: it runs generated Cypher
+chain.invoke({"query": "What investment firms are near Santa Clara?"})   # course used .run()
+```
+
+`point.distance` is in metres, so "near" had to be taught as a 10 km radius. A second example in the course routes "What does Palo Alto Networks do?" through the company full-text index (which also matches the misspelling "Palo Aalto") to the `SECTION` chunk for Item 1. That query only returns the first chunk of the section, a limitation the course leaves in place. The `allow_dangerous_requests` flag is LangChain's reminder that this chain executes whatever the model writes, which is the case for the `EXPLAIN` validator below.
 
 ---
 

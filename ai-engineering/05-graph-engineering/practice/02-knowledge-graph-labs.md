@@ -1,7 +1,7 @@
 ---
 origin: planning
 sources:
-  - notebooks/knowledge-graphs-for-rag/
+  - https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/
   - sources/kg-and-llms-in-action/
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
 confidence: medium
@@ -11,14 +11,14 @@ cleaned: 2026-10-28
 
 > Run the Neo4j course in order, model a domain you know, then build a graph you can measure, query and trust, and finally use it as shared memory for a swarm.
 
-These labs follow notes [09](../notes/09-kg-fundamentals-and-cypher.md)–[13](../notes/13-graph-ml-and-gnns.md). Labs 1, 3 and 5 are the course notebooks in [notebooks/knowledge-graphs-for-rag/code/](../notebooks/knowledge-graphs-for-rag/code/), with study notes in [notebooks/knowledge-graphs-for-rag/notes/](../notebooks/knowledge-graphs-for-rag/notes/). The other labs are new builds.
+These labs follow notes [09](../notes/09-kg-fundamentals-and-cypher.md)–[13](../notes/13-graph-ml-and-gnns.md). Labs 1, 3 and 5 follow DeepLearning.AI's [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Neo4j, 2024). Its hosted notebooks come with a database already loaded, and the key Cypher from each lesson is in notes 09–11. The other labs are new builds.
 
 ---
 
 ## Ground rules
 
-- **Neo4j.** Use a local Neo4j (Desktop or Docker, `neo4j:5`) or an AuraDB free instance. The course dumps are `code/data/neo4j_L2.dump` and `neo4j_L7.dump`.
-- **Credentials.** `code/.env` holds live API and Neo4j credentials. It is gitignored and has never been committed. Use your own values, never paste them into notes, and rotate them if the folder is ever shared.
+- **Neo4j.** Use the course's hosted notebooks, a local Neo4j (Desktop or Docker, `neo4j:5`) with the APOC and GenAI plugins, or an AuraDB free instance.
+- **Credentials.** Keep API and Neo4j credentials in a gitignored `.env`. Never paste them into notes, and rotate them if the file is ever shared.
 - **Gold sets first.** Hand-label the evaluation data in Labs 4, 6 and 7 *before* you build. Otherwise you'll label toward what the system already does.
 - **Provenance from the first write.** Every node and edge you create records its source, so Lab 8 is possible.
 
@@ -33,10 +33,10 @@ A run log, one row per run:
 
 ## Lab 1 — Cypher on the movies graph
 
-*Note [09](../notes/09-kg-fundamentals-and-cypher.md). Course `L2-query_with_cypher.ipynb`, Lessons 0–2.*
+*Note [09](../notes/09-kg-fundamentals-and-cypher.md). Course lessons 1–2 (querying with Cypher).*
 
-1. Restore `neo4j_L2.dump`, or load the movies dataset with `:play movies`.
-2. Work through the notebook, then write these queries without looking: co-actors of an actor; actors within 3 hops of Kevin Bacon (a bounded variable-length path); the shortest path between two actors; the top 5 directors by movie count.
+1. Load the movies dataset with `:play movies` (or use the course's L2 notebook).
+2. Work through the course lesson, then write these queries without looking: co-actors of an actor; actors within 3 hops of Kevin Bacon (a bounded variable-length path); the shortest path between two actors; the top 5 directors by movie count.
 3. Add a uniqueness constraint on `Person.name`, then try to `CREATE` a duplicate. Next, `MERGE` on `{name, born}` with a misspelled `born`, and explain the duplicate it creates.
 
 ## Lab 2 — Model this repo as a KG
@@ -68,9 +68,9 @@ A run log, one row per run:
 
 ## Lab 5 — Chat with the 10-K graph
 
-*Note [11](../notes/11-kg-rag-and-text-to-cypher.md). Course `L7-chat_with_kg.ipynb`.*
+*Note [11](../notes/11-kg-rag-and-text-to-cypher.md). Course lesson 7 (chatting with the SEC graph).*
 
-1. Restore `neo4j_L7.dump` and run `GraphCypherQAChain` over it.
+1. Use the course's L7 notebook (its database already has the `Address` nodes), or extend your Lab 3 graph, and run `GraphCypherQAChain` over it ([note 11](../notes/11-kg-rag-and-text-to-cypher.md#the-failure-to-expect) has the setup).
 2. Reproduce the course failure: ask for total investment by a manager and check whether the generated query sums a `value` on `Company`, which doesn't exist. Fix it with one few-shot example, then remove the example and fix it instead with a schema annotation (`/* value lives on OWNS_STOCK_IN */`). Record which fix holds up on five paraphrases of the question.
 
 ## Lab 6 — Text-to-Cypher as generate-then-verify

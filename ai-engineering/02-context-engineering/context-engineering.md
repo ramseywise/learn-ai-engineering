@@ -87,7 +87,7 @@ Historical is the only type without a natural bound. Compaction exists to bound 
 
 ## Security facet
 
-Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/07](notes/11-failure-modes.md#prompt-injection) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
+Context has no type system — instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface. See [notes/11](notes/11-failure-modes.md#prompt-injection) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
 
 ---
 
@@ -97,5 +97,5 @@ Context has no type system — instructions and data are the same tokens. Prompt
 - Anthropic: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
 - promptingguide.ai: https://www.promptingguide.ai/guides/context-engineering-guide
 - OpenAI compaction: https://developers.openai.com/api/docs/guides/compaction
-- Course material (synthesized from davidkimai/Context-Engineering): chapters 03, 07–09, 12–13 and 99 in [notes/](notes/), plus [templates/](templates/) and [notebooks/](notebooks/)
+- Course material (synthesized from davidkimai/Context-Engineering): chapters 03, 07–09, 12–13 and 99 in [notes/](notes/), plus [templates/](templates/); the upstream labs are folded into the notes as snippets
 - Papers: [references.md](references.md) · PDFs in [sources/](sources/)

@@ -42,6 +42,10 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost | [KG Labs 7–8](practice/02-knowledge-graph-labs.md#lab-7--swarm-with-and-without-shared-memory) |
 | 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims | [KG Lab 9](practice/02-knowledge-graph-labs.md#lab-9--predict-missing-links) |
 
+### Where to start
+
+- **Lecture deck:** [slides/graph-engineering.pptx](slides/graph-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=05-graph-engineering`).
+
 ### Practice and templates
 
 - [P1 — Agent graph labs](practice/01-agent-graph-labs.md): seven labs that grow one graph through notes 01–08.
@@ -64,7 +68,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Notebooks and course code
-- [notebooks/knowledge-graphs-for-rag/](notebooks/knowledge-graphs-for-rag/) — DeepLearning.AI *Knowledge Graphs for RAG* (Neo4j): notebooks L2–L7, data dumps and lesson notes. Run as KG Labs 1, 3 and 5; L0–L2 feed note 09, L3–L6 note 10, L7 note 11.
+- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024): its Cypher and LangChain code is folded into the notes as commented snippets (L1–L2 → note 09, L3–L6 → note 10, L4–L7 → note 11, with deprecated APIs flagged), and its figures are in [images/kg-for-rag/](images/kg-for-rag/). Run the hosted notebooks as KG Labs 1, 3 and 5.
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing); used in the Track A labs.
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.
 
