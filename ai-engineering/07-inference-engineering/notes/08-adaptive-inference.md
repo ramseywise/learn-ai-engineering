@@ -9,6 +9,7 @@ sources:
   - https://pytorch.org/blog/accelerating-generative-ai-2/
   - https://arxiv.org/abs/2306.11695
   - https://arxiv.org/abs/2312.12456
+  - https://arxiv.org/abs/2410.00037
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -115,6 +116,8 @@ One max value sets the scale for the whole tensor, so a single outlier crushes e
 | **QuIP#, HQQ** | Very low-bit (2–3 bit) methods | The Handbook's rule of thumb: a >30B model at low bits beats a 7–13B model at full precision |
 
 Two corrections to the Handbook's text. It says LLM.int8's outliers are "extreme weight values (~0.1%)". In the LLM.int8 paper they are **activation** feature dimensions, which is why that method decomposes the matmul by input feature. It also says GPTQ is "limited to 4-bit", but GPTQ supports 2, 3, 4 and 8 bits (*LLM Engineer's Handbook*, ch. 8).
+
+How well a model survives 4 bits depends on what it was trained to do, not just its size. Kyutai's 7B Helium text model, quantized to 4-bit weights and 8-bit activations with blocks of 32, scores 52.97 on MMLU against 54.3 at BF16. The same backbone after speech instruction tuning (Moshi) falls from 49.7 to 42.2 under the same scheme, and blocks of 256 cost both models more ([arXiv:2410.00037](https://arxiv.org/abs/2410.00037) (Défossez et al., 2024-09)). Re-run the eval on the fine-tuned checkpoint you will actually serve.
 
 ### Low-precision floating point
 

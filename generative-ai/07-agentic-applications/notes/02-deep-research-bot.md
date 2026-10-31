@@ -5,6 +5,8 @@ sources:
   - https://github.com/Ayanami0730/deep_research_bench (Du et al., DeepResearch Bench, Apache-2.0 code)
   - https://arxiv.org/abs/2506.11763 (DeepResearch Bench paper, RACE and FACT)
   - https://art.openpipe.ai/fundamentals/ruler (OpenPipe ART, RULER reward)
+  - https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf (Singh et al., Code Researcher, 2025)
+  - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf (Shao et al., DR Tulu: RL with Evolving Rubrics, 2025)
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -146,6 +148,8 @@ class AgentStateCompaction(AgentState):
 
 The hook lives in the state class, so compaction is invisible to the loop. The trade-offs are the ones in [02-context engineering](../../../ai-engineering/02-context-engineering/README.md): a character-count estimate instead of a tokenizer, and a summary that replaces *everything* after the request. The last tool result goes too, though the comment says "system + summary + recent messages".
 
+Code Researcher ([Microsoft Research, 2025-06](https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf) (Singh et al., 2025-06)) uses the same research-then-write split on Linux kernel crashes, with a different way of managing context. Its Analysis phase searches definitions, code patterns and past commit messages and diffs (`search_commits(regex)`). Each (action, result) pair goes into a structured memory instead of a running summary. Before writing a patch, the Synthesis phase filters out the pairs that turned out to be irrelevant. On 200 kBenchSyz crashes, with GPT-4o, 15 LLM calls, a 50K-token context limit and best of 5 tries, it resolved 48% against 31.5% for SWE-agent. It explored 10 files per trajectory against 1.33. Using o1 for the patch-writing step raised that to 58%, above o1 handed the ground-truth buggy files (51%). Dropping commit search cut the resolution rate from 48% to 38%. That ablation was run on only the 96 bugs it had already solved, so the two percentages don't share a denominator. "Resolved" means the reproducer no longer crashes, and the authors note that some of those patches only block the crash path without fixing the cause.
+
 ---
 
 ## Evaluation: RACE against a reference report
@@ -203,6 +207,15 @@ The upstream bench (kept in [practice/deep_research_bench/](../practice/deep_res
 | Demo twist | The system prompt asks for "comically wicked" answers, so you can *see* the policy shift after 1 vs. 27 steps |
 
 The grouping is GRPO-style: rewards are relative within a group, so RULER only needs to rank, not to score absolutely. Theory: [05-RL 05 — post-training for agents](../../05-RL/notes/05-post-training-for-agents.md).
+
+RULER's rubric is fixed. DR Tulu ([DR Tulu](https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf) (Shao et al., 2025-11)) makes it move, and calls the method RLER. Training starts from Qwen3-8B fine-tuned on 16K GPT-5 research trajectories. The judge, GPT-4.1-mini, scores every rollout against two sets of rubrics:
+- **Persistent rubrics**, written once per question from search results.
+- **Evolving rubrics**, regenerated each step by comparing the current rollouts. Positive ones reward new knowledge the policy found. Negative ones penalize hacks the judge noticed, such as copying retrieved text verbatim to farm citation precision.
+
+Rubrics with zero reward variance across a group are dropped, because they can't rank anything. In the ablation, generic rubrics lowered the four-benchmark average by 1.1 points. Search-grounded rubrics raised it by 1.7, and adding evolving rubrics on a second SFT base gave +4.0 against +3.1. After RL, the 8B model averaged 60.7 against 53.9 for SFT alone. It beat OpenAI Deep Research on AstaBench ScholarQA-CSv2, 86.7 to 79.6, at about $0.00008 a query in API fees (hosting excluded) against $1.80. Several caveats apply:
+- Many of the proprietary-system scores are copied from the benchmarks' authors, not rerun.
+- Search results drift between runs.
+- The run with the highest training reward did worse downstream. The authors blame the gap between the in-loop judge and the different judges used for evaluation.
 
 ---
 

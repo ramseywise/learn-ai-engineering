@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2304.03442
   - https://arxiv.org/abs/2505.22101
   - https://arxiv.org/abs/2607.26637
+  - https://github.com/firstbatchxyz/mem-agent/blob/main/main.pdf
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
 confidence: high
 cleaned: 2026-10-31
@@ -320,6 +321,13 @@ From the course conclusion, the four things you control:
 | Shared block edited by two agents at once | One writer per block, or a tool that serializes writes |
 
 How much should the memory agent curate? A controlled comparison of filesystem memory stores ([arXiv:2607.26637](https://arxiv.org/abs/2607.26637), Zhou et al., 2026-07) says less than you'd think. With gpt-5.4-mini building and searching the store, a verbatim dump of the conversations or one file per session matched or beat an agent-curated store on all four conversational benchmarks; on PersonaMem at 32k tokens, curation scored 37.5% against 78.1% for the dump, because the curator left superseded preferences standing as current (the right fact was still in the store for all 13 misses). Asking the agent to reorganize a store silently condensed it unless told to keep every fact: on REALTALK, a condensing reorganization dropped correctness from 77.6% to 41.2%, while a fact-preserving one held at 77.6%. Two budget rules follow. Spend model strength on the reader, not the writer: a stronger searcher raised mean correctness from about 62% (gpt-5.4-nano) to 79% (gpt-5.4), while a stronger builder "buys a more elaborate store, not a more useful one." And match stored experience to the executor: on ALFWorld, raw episode logs helped a gpt-4.1 executor most (87.1% vs. 73.6% with no store), but a gpt-4.1-mini executor did better with distilled task guidance (76.4% vs. 66.4% with logs). The study uses single build runs and 32–158 questions per benchmark tier, so read differences of a few points as ties.
+
+The memory manager can also be a small model trained for the job. mem-agent from Dria ([mem-agent](https://github.com/firstbatchxyz/mem-agent/blob/main/main.pdf) (Tekparmak & Kaya, 2025-10)) trained Qwen3-4B-Thinking with GSPO to retrieve, update and ask for clarification over an Obsidian-style folder of markdown files, using Python file tools. On the authors' 56-sample md-memory-bench, scored by an LLM judge, the overall score rose from 0.39 to 0.75. That put it second of 11 models, behind Qwen3-235B-Thinking at 0.79 and ahead of GPT-5 at 0.63 and Claude Opus 4.1 at 0.55. The engineering lessons travel better than the leaderboard:
+- **Format rewards get farmed.** Paying per well-formed turn taught the model to use all 8 turns. The fix was rewards that shrink each turn until halfway, then turn negative, plus double the reward for success.
+- **Diffs are hard for small models.** A diff-based update tool failed, and they switched to `update_file(path, old_content, new_content)`.
+- **Quantization costs judgment first.** The 4- and 8-bit builds sometimes invent facts instead of asking the user for clarification.
+
+The benchmark is small and handmade, and the training data is synthetic from the same team, so treat 0.75 as an existence proof, not a ranking.
 
 ---
 

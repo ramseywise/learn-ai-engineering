@@ -2,6 +2,7 @@
 origin: synthesis
 sources:
   - https://arxiv.org/abs/2411.00640
+  - https://arxiv.org/abs/2509.04664
   - https://www.anthropic.com/research/statistical-approach-to-model-evals
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
@@ -205,7 +206,7 @@ From the KDD 2017 "Dirty Dozen" paper on online experiments, the ones that bite 
 | **Overall vs. segment confusion** | The slicing problem above |
 | **Ignoring the error bar** | Shipping on +2 points over 50 tasks |
 
-Rule: **count errors and refusals as failures**, or report them as their own rate. Never let them silently leave the denominator.
+Rule: **never let errors or refusals silently leave the denominator.** Count errors as failures. For refusals, it depends on whether declining was a legitimate answer. Where the system should have answered, a refusal is a failure. Where "I don't know" is acceptable, counting it as a failure scores a confident wrong answer the same as an honest abstention, which pushes the system toward guessing ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09)). In that case report three rates: correct, wrong and abstained. Or use a grader that penalizes wrong answers more than abstentions ([04](04-graders.md#binary-vs-scales)).
 
 ### A cautionary write-up
 

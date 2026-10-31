@@ -6,6 +6,7 @@ sources:
   - https://arxiv.org/abs/2305.14627
   - https://arxiv.org/abs/2303.08896
   - https://arxiv.org/abs/2109.07958
+  - https://open-eqa.github.io/assets/pdfs/paper.pdf
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
@@ -43,6 +44,8 @@ flowchart LR
 | **Citations** | Do citations point at sources that support the claim? | Citation precision / recall | Citation → passage mapping |
 
 **Score generation only on rows where retrieval succeeded** (the `generation_eligible` pool, [03](03-eval-datasets.md#row-eligibility-is-this-row-fair-for-this-gate)). If the source wasn't retrieved, a bad answer is a retrieval failure. Counting it against generation sends you to fix the prompt when the index is the problem.
+
+**Run a no-context baseline.** Ask the same questions with nothing retrieved. The gap between that score and the full system is what retrieval is really adding, and questions the model answers correctly without context aren't testing retrieval. OpenEQA, an embodied question-answering benchmark, found a "blind" GPT-4 that saw only the question scored 33.5, against 55.3 for GPT-4V given the video frames and 86.8 for humans. A third of the score came from priors about what's usually in a house, not from looking ([PDF](https://open-eqa.github.io/assets/pdfs/paper.pdf) (Majumdar et al., 2024-06); scored by a GPT-4 judge validated against human raters, [05](05-llm-as-judge.md#what-to-measure)).
 
 ---
 

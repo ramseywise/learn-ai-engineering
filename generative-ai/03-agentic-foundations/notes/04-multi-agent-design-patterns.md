@@ -14,6 +14,7 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
   - "Huang et al. 2024, Understanding the planning of LLM agents: A survey — https://arxiv.org/abs/2402.02716"
   - "Yao et al. 2023, Tree of Thoughts — https://arxiv.org/abs/2305.10601"
+  - "Koh et al. 2024, Tree Search for Language Model Agents — https://arxiv.org/abs/2407.01476 (also https://jykoh.com/search-agents/paper.pdf)"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -263,6 +264,8 @@ idx = max(0, min(choice.choice_index, len(opts) - 1))
 ```
 
 She notes that this propose-and-judge pair can sometimes replace a full multi-agent design, with fewer calls to the large model.
+
+Koh et al. carry multi-plan selection from puzzles into a live environment ([arXiv:2407.01476](https://arxiv.org/abs/2407.01476) (Koh et al., 2024-07)). They run best-first search over web-page states: the agent proposes b candidate actions, executes each one, and GPT-4o scores the resulting screenshots as a value function. The search stops at a score threshold or after c state expansions. On VisualWebArena it lifted a GPT-4o agent from 18.9% to 26.4% success (+39.7% relative) and Llama-3-70B from 7.6% to 16.7%. On WebArena it lifted GPT-4o from 15.0% to 19.2%. On a 200-task subset, success rose with budget: 24.5% with no search, 32.0% at c=5, 37.0% at c=20. The paper names three costs. A budget of c=20 can use up to 20× more LM calls. Backtracking means resetting the environment and replaying the action sequence. And search is only safe over actions that can be undone, such as browsing, not placing an order. (The text quotes an 18.6% baseline once; the tables say 18.9%.)
 
 ---
 

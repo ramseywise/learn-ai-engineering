@@ -17,6 +17,8 @@ sources:
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "Sprague et al. 2024, To CoT or not to CoT? — https://arxiv.org/abs/2409.12183"
   - "Mirzadeh et al. 2024, GSM-Symbolic — https://arxiv.org/abs/2410.05229"
+  - "Bran et al. 2023, ChemCrow: Augmenting large-language models with chemistry tools — https://arxiv.org/abs/2304.05376"
+  - "Hao et al. 2024, Training Large Language Models to Reason in a Continuous Latent Space (Coconut) — https://arxiv.org/abs/2412.06769"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -41,6 +43,8 @@ Every agent framework in [05](05-framework-survey.md) wraps the same four steps:
 The loop stops when the model answers without a tool call, or when a step or token budget runs out. The names differ by vendor: Toolformer called it tool use, Andrew Ng and Anthropic say **tool use**, OpenAI and Gemini say **function calling**. Lakshmanan and Hapke file it as pattern **P21 Tool Calling** and note that ReAct is "just CoT + Tool Calling".
 
 Toolformer ([arXiv:2302.04761](https://arxiv.org/abs/2302.04761), Schick et al., 2023-02) is also the clearest evidence that tool calls help where the model is weakest. GPT-J (6.7B) was shown a few demonstrations per API and wrote candidate calls into its own training text. A call was kept only when inserting its result made the following tokens easier to predict. The model was then fine-tuned on what survived. With a calculator it scored 40.4 on ASDiv, against 14.0 for GPT-3 175B and 14.8 for the same model with tools disabled. With a QA tool it scored 53.5 on LAMA T-REx against GPT-3's 39.8. Each call was a single inline lookup with no chaining. Multi-step tool use needed ReAct-style loops and, later, models trained for function calling.
+
+ChemCrow ([arXiv:2304.05376](https://arxiv.org/abs/2304.05376) (Bran et al., 2023-04)) shows the same effect in a ReAct loop. GPT-4 at temperature 0.1 was given 18 chemistry tools, including name-to-SMILES conversion, reaction planning and a cloud robot lab. It planned and ran real syntheses of DEET and three thiourea organocatalysts. On 14 tasks graded by four expert chemists, tool-less GPT-4 won only the easy tasks it could answer from memory, and ChemCrow won on the harder and novel ones. Two caveats apply. A GPT-4 grader preferred tool-less GPT-4's fluent but wrong answers. And in the authors' own reproducibility check, the tools returned the right product in all 5 runs of one task, but in 2 of them the model misread that product's SMILES string and drew the wrong conclusion about the mechanism.
 
 ![ReAct trajectory: thought, action, observation repeated until an answer](../sources/images/li-ai-agents-in-depth-fig1-4.svg)
 
@@ -249,6 +253,8 @@ code_writer_agent.update_system_message(
 The book's rules for P22: run in a sandbox with CPU, memory, network and time limits (Docker or a VM); validate before running (parse, static analysis); send errors back so the model can repair them (P18 Reflection). It works best with a narrow DSL plus a parser. `LocalCommandLineCodeExecutor` runs on the host: the lab is fine, production is not. Execution boundaries are covered in [harness 04](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
 
 There is evidence that the interpreter does work that chain-of-thought (CoT) can't. Sprague et al. (2024) found that up to 95% of CoT's gain on MMLU comes from questions whose question or output contains "=", meaning symbolic or math problems. For other questions, nothing predicted when CoT would help. They also found that CoT is good at producing a plan but weaker at executing it, so the gain is larger when the plan goes to a Python interpreter. Mirzadeh et al.'s GSM-Symbolic (2024) rewrites GSM8K problems as templates. Accuracy drops when only the numbers change, falls sharply as problems get more complex, and is thrown off by irrelevant clauses, which the model turns into operations (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11). For arithmetic and symbolic steps, have the model write the expression and let code evaluate it.
+
+Coconut ([arXiv:2412.06769](https://arxiv.org/abs/2412.06769) (Hao et al., 2024-12)) goes the other way: it makes the reasoning invisible instead of executable. It feeds the last hidden state back in as the next input embedding instead of decoding a token, and it uses a curriculum that swaps written CoT steps for these continuous thoughts. On GSM8k with GPT-2 it scored 34.1% using 8.2 generated tokens, against 42.9% and 25 tokens for written CoT and 16.5% for no CoT. Without the curriculum it fell to 14.4%. On ProsQA, a graph-search task, it beat written CoT, 97.0% to 77.5%. On Llama 3-8B the gain over no CoT shrank to 42.2% → 43.6%. For an agent builder, the price is the trace: no tool can check a step it can't read, which is exactly what the interpreter route gives you.
 
 ---
 
