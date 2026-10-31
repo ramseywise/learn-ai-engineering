@@ -12,8 +12,8 @@
   mark      set a paper's status (the /papers and /chapter skills mark papers `integrated`)
 
 A *home* is the folder whose notes a reading feeds (HOMES below): the ai-engineering and
-generative-ai pillars, plus data-science and data-engineering for classical ML and ML
-systems. `pillar` in the ledger is the home key. `note` and `local_pdf` are repo-relative.
+generative-ai pillars, plus the subject homes (SUBJECT_HOMES: analytics, classical-ml,
+data-systems, ml-systems, programming), which get their readings from discover.py. `pillar` in the ledger is the home key. `note` and `local_pdf` are repo-relative.
 
 Ledger: scripts/papers/ledger.jsonl, one reading per line — the single source of
 truth for what we have and where it came from. `source` is "dair" (fetched from AI Papers

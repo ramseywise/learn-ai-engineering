@@ -1,6 +1,6 @@
 ---
 name: papers
-description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars. Optional filter: /papers loop, /papers rag, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
+description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars and the subject homes (data-analytics, data-science, data-engineering, programming). Optional filter: /papers loop, /papers rag, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
 ---
 
 You are integrating research papers into the AI-engineering course notes. The weekly job
@@ -50,7 +50,7 @@ Before reading, check whether the notes already cite the paper. The ledger lags:
 can be written into a note by an earlier session while its row still says `queued`.
 
 ```bash
-grep -rn --include='*.md' '<arxiv-id>' ai-engineering generative-ai data-science data-engineering
+grep -rn --include='*.md' '<arxiv-id>' ai-engineering generative-ai data-analytics data-science data-engineering programming
 ```
 
 Also grep a distinctive title phrase for rows without an arXiv id. A hit does **not**

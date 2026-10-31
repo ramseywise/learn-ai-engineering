@@ -1,6 +1,6 @@
 ---
 name: readings
-description: "Work the readings backlog: show what is in the scripts/papers/inbox/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage. Run from the learn-ai-engineering repo."
+description: "Work the readings backlog: show what is in the scripts/papers/inbox/ inbox and the ledger (queued, downloaded, integrated by home), route triaged PDFs to their home's sources/, triage anything new, and recommend the next /chapter or /papers run. Usage: /readings, /readings route, /readings triage, /readings discover <home>. Run from the learn-ai-engineering repo."
 ---
 
 You are keeping the reading backlog moving. `scripts/papers/README.md` describes
@@ -43,6 +43,21 @@ wrong home, edit that row's `topic`, `pillar` and `note` in the ledger (one JSON
 per line), then rerun the dry run. Skipped rows stay where they are. Route removes an
 inbox copy only when the same file already sits in the right home. A copy filed in the
 wrong home stays in the row's `copies` list; mention those so `/pillar` can clear them.
+
+## Discover mode (`/readings discover <home>`)
+
+For the subject homes (analytics, classical-ml, data-systems, ml-systems, programming), whose
+readings predate DAIR. See "Discovery for the subject homes" in `scripts/papers/README.md`.
+
+1. If `scripts/papers/discover/queries-<home>.json` is missing, run `discover.py queries --home <home>`
+   and stop: the user edits the queries before anything is searched.
+2. `discover.py search --home <home>`, then `potw.py triage --home <home>`. On a budget error,
+   say so and suggest setting `OPENALEX_API_KEY`. Never request a key using the user's email.
+3. `discover.py review --home <home>` and point the user at `discover/review-<home>.md`. After they
+   mark it, run `review --home <home> --apply`, then `potw.py download --backlog --home <home>`.
+4. Never delete ledger rows; mark them `skipped` with a reason. A concurrent writer re-adds deleted rows.
+
+---
 
 ## Step 3 — Recommend the next run
 
