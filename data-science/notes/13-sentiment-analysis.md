@@ -1,10 +1,10 @@
 ---
-origin: vendored snapshots: Text Analytics with Python (kept as practice) + intro-to-nlp (condensed here, removed 2026-10-31)
+origin: vendored snapshots: Text Analytics with Python (kept as practice) + own coursework: intro-to-nlp (kept as practice)
 sources:
   - ../practice/Text Analytics with Python/Ch09 - Sentiment Analysis/
   - ../sources/sarkar-text-analytics-with-python-2e.pdf
-  - intro-to-nlp/tensorFlow/neural-network/ (CNN and RNN/LSTM sentiment, removed)
-  - intro-to-nlp/word-cloud/world-cloud-pet-finder.ipynb (removed)
+  - ../practice/intro-to-nlp/tensorFlow/neural-network/ (CNN and RNN/LSTM sentiment)
+  - ../practice/intro-to-nlp/word-cloud/world-cloud-pet-finder.ipynb
   - https://github.com/cjhutto/vaderSentiment
 confidence: medium
 cleaned: 2026-10-31
@@ -216,7 +216,7 @@ Findings were EDA-grade: many "names" are descriptions ("Kitten", "Puppies", "No
 | `Ch09d - Model Interpretation` | LIME explanations | Needs data; legacy: `skater` is unmaintained, swap in `lime` |
 | `Ch09e - Topic Models` | NMF per sentiment class, pyLDAvis | Needs data; NMF `alpha` → `alpha_W`; pyLDAvis `.sklearn` → `.lda_model` |
 
-The intro-to-nlp CNN/RNN sentiment and PetFinder notebooks were condensed into this note and removed.
+The intro-to-nlp CNN/RNN sentiment notebooks are in [`practice/intro-to-nlp/tensorFlow/neural-network/`](../practice/intro-to-nlp/tensorFlow/neural-network/) and the PetFinder word clouds in [`practice/intro-to-nlp/word-cloud/`](../practice/intro-to-nlp/word-cloud/). Their data is in `practice/intro-to-nlp/data/` (CSVs gitignored, local only).
 
 ---
 

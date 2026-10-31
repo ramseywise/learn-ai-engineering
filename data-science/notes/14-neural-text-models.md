@@ -1,12 +1,12 @@
 ---
-origin: vendored snapshots: Text Analytics with Python (kept), intro-to-nlp (condensed here, removed 2026-10-31); own notebook
+origin: vendored snapshots: Text Analytics with Python (kept), own coursework: intro-to-nlp (kept as practice); own notebook
 sources:
   - ../practice/Text Analytics with Python/Ch10 - The Promise of Deep Learning/
   - ../practice/deep-learning-starter-simple-lstm.ipynb
   - ../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf
   - ../sources/buduma-fundamentals-of-deep-learning.pdf
-  - intro-to-nlp/tensorFlow/ (tensor intro, pipeline review, RNN classification, LSTM text generation; removed)
-  - intro-to-nlp/transformers/transformers_models_apis.ipynb (removed)
+  - ../practice/intro-to-nlp/tensorFlow/ (tensor intro, pipeline review, RNN classification, LSTM text generation)
+  - ../practice/intro-to-nlp/transformers/transformers_models_apis.ipynb
   - https://huggingface.co/docs/transformers/main_classes/pipelines
 confidence: high
 cleaned: 2026-10-31
@@ -250,7 +250,7 @@ Pin a `model=` in anything you keep; defaults change between library versions. A
 | Sarkar `Ch10a` (universal embeddings) | `tf.estimator`, `hub.text_embedding_column`, `tf.estimator.inputs.numpy_input_fn` | Partly migrated: the confusion-matrix cell uses `tf.math.confusion_matrix(...).numpy()`, but the estimator API was removed in TF 2.16 and the TF-Hub v1 modules need `tensorflow_hub` with TF ≤ 2.15. Read for the idea; use `sentence-transformers` to run it |
 | Sarkar `Ch04b`, `Ch09b`, `Ch09c` | Standalone `keras` 2.x, `keras.layers.normalization`, `predict_classes` | Legacy; port to `tensorflow.keras` / Keras 3 |
 | Kaggle NLP notebook | `keras.layers.recurrent`, standalone keras | Legacy ([09](09-text-classification.md)) |
-| intro-to-nlp (removed) | `tf.keras` 2.x with `preprocessing.text.Tokenizer` | Snippets in this note use `TextVectorization` |
+| intro-to-nlp (practice) | `tf.keras` 2.x with `preprocessing.text.Tokenizer` | Snippets in this note use `TextVectorization` |
 | Ng Sequence Models | standalone `keras` 2.x, TF 1.x backend | Legacy, reading-only ([07](07-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map)) |
 | own `deep-learning-starter-simple-lstm` | PyTorch + `transformers` scheduler | Current |
 
@@ -273,7 +273,7 @@ An encoder RNN squeezes a whole sentence into one final state, and its steps can
 | [`Ch10a - Text Classification with Universal Embeddings`](../practice/Text%20Analytics%20with%20Python/Ch10%20-%20The%20Promise%20of%20Deep%20Learning/Ch10a%20-%20Deep%20Transfer%20Learning%20for%20NLP%20-%20Text%20Classification%20with%20Universal%20Embeddings.ipynb) | TF-Hub NNLM and USE encoders, frozen vs fine-tuned | Legacy: needs TF ≤ 2.15 + `tensorflow_hub`, internet for the modules, GPU recommended, IMDb `movie_reviews.csv` (not in this snapshot) |
 | [`deep-learning-starter-simple-lstm`](../practice/deep-learning-starter-simple-lstm.ipynb) | PyTorch BiLSTM sequence regression, masked loss, GroupKFold | Needs data: Kaggle `ventilator-pressure-prediction`; GPU (5 folds × 200 epochs); `transformers` for the scheduler |
 
-The intro-to-nlp TensorFlow and transformers notebooks were condensed into this note and removed.
+The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/`](../practice/intro-to-nlp/tensorFlow/) and the transformers notebook in [`practice/intro-to-nlp/transformers/`](../practice/intro-to-nlp/transformers/). They use the older `Tokenizer` API.
 
 ---
 

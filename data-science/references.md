@@ -35,12 +35,6 @@
 | Vaswani et al. 2017, *Attention Is All You Need*; Radford et al. 2019 (GPT-2); Brown et al. 2020 (GPT-3, the training hyperparameters) | 17 |
 | [spaCy](https://spacy.io/), [NLTK](https://www.nltk.org/), [gensim](https://radimrehurek.com/gensim/), [sklearn-crfsuite](https://sklearn-crfsuite.readthedocs.io/) docs | 08–12 |
 
-## Removed snapshots
-
-| Snapshot | Upstream | Removed | Kept |
-|---|---|---|---|
-| `data-science/intro-to-nlp/` (28 tracked files incl. a 25 MB IMDb zip, plus ~100 MB of git-ignored CSVs on disk) | Unknown: no attribution in its README. The TensorFlow notebooks follow DeepLearning.AI's *Natural Language Processing in TensorFlow* (Coursera); the transformers notebook follows the Hugging Face course's pipeline chapter | 2026-10-31 | Snippets and findings in notes 08 (preprocessing, tokenising, padding), 09, 10 (NLTK summarisation), 11 (word2vec, embedding projector, learning curve), 13 (CNN/RNN sentiment, PetFinder word clouds), 14 (tensors, RNN classification, LSTM text generation, transformers pipelines) |
-
 ## Dependency audits
 
 The full per-notebook fix tables live in the notes; this is the index.

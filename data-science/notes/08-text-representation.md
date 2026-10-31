@@ -1,5 +1,5 @@
 ---
-origin: vendored snapshot: Text Analytics with Python (kept as practice) + Intro to Machine Learning in Python (kept) + vendored snapshot: intro-to-nlp (condensed here, removed)
+origin: vendored snapshot: Text Analytics with Python (kept as practice) + Intro to Machine Learning in Python (kept) + own coursework: intro-to-nlp (kept as practice)
 sources:
   - https://github.com/dipanjanS/text-analytics-with-python
   - ../practice/Text Analytics with Python/Ch01 - Natural Language Processing Basics/
@@ -8,7 +8,9 @@ sources:
   - ../practice/Intro to Machine Learning in Python/07-working-with-text-data.ipynb
   - ../sources/sarkar-text-analytics-with-python-2e.pdf
   - ../sources/bird-klein-loper-nlp-with-python.pdf
-  - intro-to-nlp/nltk/text_preprocessing_nltk.ipynb, intro-to-nlp/tensorFlow/text-processing/*, intro-to-nlp/tensorFlow/tensor-intro-review/tensorFlow_tokenizing_review.ipynb (removed 2026-10-31)
+  - ../practice/intro-to-nlp/nltk/text_preprocessing_nltk.ipynb
+  - ../practice/intro-to-nlp/tensorFlow/text-processing/
+  - ../practice/intro-to-nlp/tensorFlow/tensor-intro-review/tensorFlow_tokenizing_review.ipynb
 confidence: high
 cleaned: 2026-10-31
 ---
