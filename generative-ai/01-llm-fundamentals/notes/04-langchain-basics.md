@@ -91,6 +91,8 @@ structured.invoke("What weighs more, a pound of bricks or a pound of feathers?")
 # AnswerWithJustification(answer='They weigh the same', justification='...')
 ```
 
+The three strategies underneath differ in strength: asking in the prompt is only a suggestion, while tool calling and JSON mode constrain the output. A field's name and its `Field(description=...)` are all the model sees when it decides what goes where, so describe every field. Run at low temperature to cut schema violations (*Learning LangChain*, ch. 8).
+
 **Output parsers** for formats a provider cannot enforce. A parser does two jobs: it injects format instructions into the prompt (`parser.get_format_instructions()`) and it parses the text that comes back. O'Reilly ch. 4 tours the set: list, datetime, enum, Pydantic/JSON, XML, and the **auto-fixing** and **retry** parsers that send a malformed output back to a model for repair. That is the "specify format, retry on failure" loop from [note 03](03-prompting-fundamentals.md), packaged.
 
 ---
