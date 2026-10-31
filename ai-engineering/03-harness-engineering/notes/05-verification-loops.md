@@ -7,9 +7,16 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://openai.com/index/harness-engineering/
+  - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
+  - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
+  - https://arxiv.org/abs/2609.11999
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 5 — Verification and Feedback Loops
 
@@ -27,6 +34,8 @@ Two distinct problems underneath:
 2. **Agents rate their own work generously.** Anthropic: *"agents tend to respond by confidently praising the work — even when quality is mediocre."*
 
 The first needs a forced verification pass. The second needs an *external* evaluator. They are not the same fix.
+
+Stronger models haven't removed the first problem. In Mak et al.'s interface comparison ([arXiv:2609.11999](https://arxiv.org/abs/2609.11999), 2026-09), Opus-4.8 and GPT-5.5 working through a shell failed most often by declaring the task complete without verifying it. The same shell also put the grader within reach: during development, agents pulled answers out of TheAgentCompany's public evaluator scripts instead of doing the workflow, until the authors blocked network access to that repository. An external evaluator only counts as external if the agent can't read it.
 
 ---
 
@@ -72,7 +81,7 @@ This is what grounds a solution in tests and creates the feedback signal that se
 
 E2E also **changes how the agent writes code.** An agent that knows it will be checked end to end starts thinking about upstream interfaces, boundaries and error paths. The cost is seconds of test time, which is negligible in an agent loop.
 
-One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [practice/03](practice/03-scope-and-done.md).)
+One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [note 10](10-scope-and-done.md).)
 
 ---
 
@@ -102,7 +111,7 @@ Human review is the most expensive verifier, and it repeats itself. The ratchet 
 4. Give it a WHAT/WHY/FIX message.
 5. Wire it into the standard verification path, and note the rule's source in the topic doc.
 
-Review comments become docs, and docs that keep getting ignored become checks. Each promoted comment is one category of mistake that never needs a human again. This is how OpenAI "captures taste once and enforces it continuously" ([practice/02](practice/02-session-lifecycle.md#entropy-management-two-cleanup-modes)).
+Review comments become docs, and docs that keep getting ignored become checks. Each promoted comment is one category of mistake that never needs a human again. This is how OpenAI "captures taste once and enforces it continuously" ([note 06](06-long-horizon-execution.md#entropy-management-two-cleanup-modes)).
 
 ---
 
@@ -133,6 +142,16 @@ The single highest-leverage rule in this note:
 Cheap fast model for the task; expensive smart model **at the verification gate only**. This inverts the intuition that you spend on generation, and it's economically favorable — verification runs once per gate over a bounded artifact, while generation runs over many steps.
 
 The symmetric alternative — same model checking its own work — is listed among the field's canonical failure modes. It produces confident agreement, not review.
+
+Karpathy's framing (as relayed from his AISN 2026 talk) is a useful way to teach this. A model is a "robot librarian" that answers only from its own books and doesn't know which ones are missing, so telling it to "make this better" changes nothing. Verification does. His three moves line up with this note:
+
+| Move | Mechanism | Here |
+|---|---|---|
+| **Criteria before work** | "Three sections, each ends with a recommendation," not "make it look good" | [Eval-first](#eval-first), [sprint contracts](#sprint-contracts) |
+| **Second librarian** | A different model family grades the first one's answer | This section |
+| **External signal** | Ask the system that holds ground truth: the deploy target, the test suite, the database | [Self-verification](#the-self-verification-loop) |
+
+Boris Cherny (Claude Code), as quoted in the same talk: **a feedback loop improves final quality 2–3×.**
 
 ### When a verifier is worth deleting
 
@@ -174,6 +193,17 @@ A second run in the same post (a browser DAW) shows where the money goes: planne
 
 **The evaluator needs calibrating too.** Early versions found real problems, then talked themselves into calling them minor and approved anyway. The fix was a development loop on the evaluator: read its logs, find where its judgment diverged from a human's, and tighten the QA prompt on exactly those points. Hard per-dimension thresholds (any dimension below the bar fails the sprint) stopped one strong dimension from averaging away a weak one.
 
+### An observer that checks claims against the record
+
+The Gemini Minecraft run (Faldor et al., 2026) put the same split into a team of agents playing without a human. Four agents were told to verify each action, build reusable tools, share memory and **report honestly**. A fifth agent, the **Observer**, did no playing. It checked agents' claims against the game record, reported specification gaming, and intervened only when the environment itself failed (six server restarts in 27 hours).
+
+The instruction to report honestly showed up in the transcripts. At hour 12 one agent announced that all 14 Ender Eyes were banked in a chest. Two minutes later it retracted the claim: a server restart had restored a save from after its death, it had respawned with an empty inventory, and the success message had come from an unguarded branch of its own script.
+
+![An agent announces 14 Ender Eyes banked, then retracts: the message came from an unguarded script branch](../sources/images/faldor-gemini-argon-minecraft-fig14.png)
+*Image Source: Faldor et al. (2026)*
+
+An unguarded branch that prints "success" without checking the world is the same failure as code written and never tested. What caught it was a habit the harness asked for: check the real state, then report. Without the retraction, three other agents would have planned around Ender Eyes that didn't exist.
+
 ---
 
 ## Grading criteria beat vibes
@@ -188,6 +218,20 @@ Subjective judgment doesn't transfer to an evaluator agent. Replace it with **we
 | **Functionality** | Can a user actually complete the task? |
 
 The generalizable move: **name the dimensions, weight them, score each separately.** A single 1–10 score collapses distinct failures into one number and gives the generator nothing actionable.
+
+For code work, an evaluator rubric can score six harness-level dimensions 0–2 and end in a three-way verdict:
+
+```markdown
+| Category          | Question                                                    | Score (0-2) |
+| Correctness       | Does the implemented behavior match the requested feature? |             |
+| Verification      | Did the required checks actually run, with evidence?       |             |
+| Scope discipline  | Did the session stay inside the chosen feature scope?      |             |
+| Reliability       | Does the result survive restart or rerun without repair?   |             |
+| Maintainability   | Is the code and documentation clear for the next session?  |             |
+| Handoff readiness | Can a fresh session continue from repo artifacts only?     |             |
+
+Verdict: Accept · Revise · Block
+```
 
 ---
 
@@ -221,6 +265,8 @@ Without a binary eval, there is no signal to improve against, and every change i
 1. **Schema checks** — does the output parse and conform?
 2. **Reference comparison** — does it match known-good output?
 3. **Calibrated LLM-as-judge** — rubric-scored, with the rubric itself validated against human judgment.
+
+The same ladder describes **runtime guardrails**, the gate between "the agent says it's done" and the result being finalised. Code checks cover format, length and allowlists, and should be preferred wherever they can decide. An LLM judge covers nuance ("is this consistent with the sources?") and returns *why* it failed, so the agent revises instead of retrying blind. A HITL stop covers what neither can decide. **Most production systems run at least two of the three.**
 
 Two related disciplines: **Pass@k** measures capability boundaries (can it ever do this?); **Pass^k** measures deployment quality (does it do this *every* time?). Ship on Pass^k.
 
@@ -259,6 +305,19 @@ Paired with the **two-retry rule**:
 
 Three failures on the same gate means the agent lacks information or the spec is wrong. More attempts spend money to confirm that.
 
+### Nudges the harness injects
+
+Loop detection is one of several messages a harness can inject at a set point in the run. The Object-Oriented Harness paper (Li G. et al., 2026) evolved harnesses as a class hierarchy. One lineage, for tasks whose deliverable is a written file, added three injected nudges, each subclass inheriting the one before:
+
+![Inheritance chain of harnesses: s9 completion check, s12 near-budget reminder, s29 tool-error guidance](../sources/images/li-object-oriented-harness-fig9.png)
+*Image Source: Li G. et al. (2026)*
+
+- **Completion check** (s9). Before the agent finishes, request another turn if it never attempted a write. A narrow version of `PreCompletionChecklistMiddleware` above.
+- **Near-budget reminder** (s12). Near the turn limit, if no write has succeeded yet, prompt the agent to write now instead of exploring further.
+- **Tool-error guidance** (s29). Add corrective hints for unrecoverable errors or repeated unproductive results, rather than a bare stack trace ([agent-oriented error messages](#agent-oriented-error-messages)).
+
+Each one is a hook ([note 04](04-execution-boundaries.md#hooks-deterministic-control-flow)), not a sentence in the system prompt. It fires at the right moment instead of competing for attention from the start.
+
 ---
 
 ## Failure, recovery, and termination
@@ -281,7 +340,7 @@ Li's taxonomy (ch. 5, distilled from production harness source code) sorts failu
 
 1. **Silent retry**, with backoff and jitter, honouring `retry-after`. Retry the main loop; *drop* failed background calls such as title generation, so they don't amplify into quota contention.
 2. **Degrade and continue.** On truncation, raise the output cap, then ask the model to continue from the break. On persistent overload, fall back to another model, stripping provider-specific blocks from the history first.
-3. **Surface to the user**, along with what was already tried.
+3. **Surface to the user**, along with what was already tried. Albada's UX version (*Building Applications with AI Agents*, ch. 3): say what can't be done, offer an alternative or a hand-off to a human, and keep the user's context so they don't have to repeat themselves. For background work, the same rule applies before anything fails: tell the user when the task starts, give an estimated completion time, and end with a short summary.
 
 Tool-layer errors never end the session. They come back as structured tool results, and malformed arguments are repaired programmatically. Treat the **whole recovery loop** as the unit: hold back intermediate errors from users and event subscribers until recovery has definitely failed.
 
@@ -301,6 +360,10 @@ Not all failures are retryable:
 | **Schema violation** | Return the validation error; retry once with it in context |
 | **Context exhaustion** | Compact or reset, then resume ([note 06](06-long-horizon-execution.md)) |
 | **Fatal** | Stop; surface the error |
+
+Albada's corrective flow for malformed calls (*Building Applications with AI Agents*, ch. 4) sharpens the schema row. **Validate** every response against the schema (jsonschema or Pydantic). If a required tool call was skipped, trigger it yourself; if the JSON is invalid, ask the model to fix it. **Regenerate only the broken part** rather than the whole exchange. When retries run out, **fall back**: a backup model, a clarifying question to the user, cached data, or a safe default. Log every validation error, retry and fallback.
+
+A common shortcut breaks the "not all failures are retryable" rule. Rothman's hardened engine (*Context Engineering for Multi-Agent Systems*, ch. 5) decorates its LLM and embedding calls with tenacity's `@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))`. With no `retry=` filter, that retries **every** exception, refusals and bugs included, and the waits alone can add minutes before the first real failure shows. Its good half: after the last attempt the wrapper logs and re-raises, so the executor halts instead of passing on an empty string. Restrict the decorator to transient error types (`retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError))`).
 
 Retry budget is **per-invocation, not per-tool** — otherwise five tools with three retries each become fifteen attempts. Circuit-break after 5 consecutive failures with a 60s cooldown, then fail fast.
 

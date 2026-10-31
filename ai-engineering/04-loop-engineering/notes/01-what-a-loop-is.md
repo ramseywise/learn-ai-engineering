@@ -33,6 +33,12 @@ Two framings worth holding together:
 
 Boris Cherny's version, quoted in Pragmatic Engineer: agents now "prompt Claude and figure out what to do. My job is to write loops."
 
+The shortest working definition, and the thesis of this pillar:
+
+> **A loop is a goal plus a scorekeeper, repeated, with a way to stop.**
+
+Generation becomes nearly free inside a loop, so the binding constraint moves to **verification**. That is why the scorekeeper comes before the loop ([note 03](03-the-scorekeeper.md)), and why the hardest failures are human ones, comprehension rot and cognitive surrender, rather than mechanical ones ([note 09](09-failure-modes-and-guardrails.md#the-four-silent-costs-osmani)).
+
 A loop is *dynamic*, unlike a chain. The agent may go A → B, discover B failed, revise, and only then reach C. A chain runs a fixed sequence whatever the intermediate results. That difference, feedback changing the next step, is the whole discipline.
 
 ---
@@ -47,7 +53,8 @@ Every source describes the same cycle in different words:
 | Anthropic (Claude Agent SDK) | gather context → take action → verify work → repeat |
 | KodeKloud course | try → test → fix → save → repeat |
 
-![The loop Anthropic ships: gather context, take action, verify work, repeat until verified or a stopping condition trips](../images/anthropic-agent-loop.png)
+![The loop Anthropic ships: gather context, take action, verify work, repeat until verified or a stopping condition trips](../sources/images/aibuilderclub-anthropic-agent-loop.png)
+*Image Source: AI Builder Club, "Loop engineering: the Anthropic playbook" (2026)*
 
 The KodeKloud version adds the step the others leave implicit: **save**. A pass that improves the score is committed before the next pass starts, so progress is a ratchet. A bad pass costs one rollback, not the run.
 
@@ -101,6 +108,17 @@ Loop engineering doesn't replace TDD or CI. It **runs them under an agent**: sma
 
 With a full harness (`AGENTS.md`, feature list, `init.sh`, progress file) you are still **inside the loop**: you read the progress file, decide what's next, type the instruction. You are the engine. **Outside the loop**, a system you designed does that: trigger → discover work → dispatch → verify → save state → repeat, and you get only the decisions it can't make, in an inbox. The leverage moves from writing the right prompt to designing the right loop. Generation becomes nearly free; judgment becomes the scarce resource.
 
+The same artifacts change role when you cross the line:
+
+| Harness engineering | Loop engineering |
+|---|---|
+| One run: tools, sandbox, hooks, verification inside the run | Many runs: what starts the next one, and when to stop |
+| Progress file written at session end | Progress file *read* by the next pass to pick its own task |
+| Generator/evaluator separation | Maker/checker as the loop's quality ceiling |
+| Ratchet on the harness (every failure → a rule) | Ratchet on the work (score only goes up, else roll back) |
+
+The moment the agent's next run starts without you typing a prompt, you've crossed from harness into loop.
+
 ---
 
 ## The map of this pillar
@@ -118,7 +136,16 @@ Loops are classified on **two independent axes**.
 
 **Autonomy: how much of the operator's job has been handed off.** Turn-based → goal-based → time-based → proactive. See [07](07-autonomy-ladder.md).
 
-A loop has a position on both axes. A hill-climbing loop (capability 4) can run at autonomy rung 1, with a human approving each rewrite.
+A loop has a position on both axes:
+
+| Capability level (LangChain): *what it automates* | Autonomy rung: *what the operator handed off* |
+|---|---|
+| 1. Agent loop: work | 1. Turn-based: tool approval |
+| 2. Verification loop: quality | 2. Goal-based: the stop condition (`/goal`) |
+| 3. Event-driven loop: invocation | 3. Time-based: the trigger, to a clock (`/loop`) |
+| 4. Hill-climbing loop: improvement | 4. Proactive: the trigger and session (`/schedule`) |
+
+Levels 1–3 automate work; level 4 automates improvement and starts editing the harness underneath it. The two axes are independent: a hill-climbing loop (capability 4) can run at autonomy rung 1, with a human approving each rewrite. Earn each rung with a verifier that has been seen catching a real failure.
 
 LangChain is explicit that **humans stay in at every level**: approval before sensitive tool calls (L1), humans as graders for sensitive work (L2), review before output reaches users (L3), and review of harness changes before deploy (L4). *"Automation doesn't mean removing humans from the loop."*
 
@@ -126,7 +153,8 @@ LangChain is explicit that **humans stay in at every level**: approval before se
 
 Anthropic never uses the phrase "loop engineering," but their engineering essays add up to a playbook for it (synthesis by AI Builder Club). Each row points to the note that develops it:
 
-![Anthropic's essays mapped to loop-engineering moves](../images/anthropic-playbook-map.png)
+![Anthropic's essays mapped to loop-engineering moves](../sources/images/aibuilderclub-anthropic-playbook-map.png)
+*Image Source: AI Builder Club, "Loop engineering: the Anthropic playbook" (2026)*
 
 | Principle (source essay) | Loop-engineering move | Note |
 |---|---|---|
@@ -141,6 +169,8 @@ Anthropic never uses the phrase "loop engineering," but their engineering essays
 ## Where it sits
 
 prompt → context → harness → **loop** → graph. The harness ([03-harness](../../03-harness-engineering/README.md)) supplies tools, state and guardrails; the loop decides how many times to use them and when to stop. *The loop decides what happens; the harness decides where it can safely happen.* The graph layer ([05-graph](../../05-graph-engineering/README.md)) composes loops into multi-agent topologies.
+
+**Inherits the weaknesses of:** harness engineering. A loop running inside a poorly instrumented harness repeats unreliable behavior faster, and that is harder to debug than a single bad run.
 
 ---
 

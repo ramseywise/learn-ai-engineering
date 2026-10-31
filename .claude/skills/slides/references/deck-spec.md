@@ -49,6 +49,13 @@ no number and no divider.
 - Quote any string that starts with `*`, `[`, `{`, `"`, `` ` ``, `-` or `#`.
 - Quote any string that contains `: `.
 - Quote table cells that contain a comma. An unquoted comma inside `[a, b, c]` splits the cell. The builder stops with an error naming the row.
+- Quote values that contain `?` inside a flow mapping or sequence (`{label: Exists?}`, `[a, Pass?]`). Otherwise PyYAML fails to parse them.
+- Quote `Yes`, `No`, `On`, `Off`, `True` and `False`. Unquoted, they become booleans and render as "True" or "False".
+- A bullet such as `- Lead term: explanation` is a mapping, not a string, and renders as an empty bullet. Quote it.
+
+**Images.** `.png`, `.jpg` and `.svg` work. Check the real format with `file`, because downloaded "`.png`" files are often WebP, which fails. Convert them with `sips -s format png in.png --out out.png`.
+
+**Image size.** Images are embedded at about 220 dpi of their displayed size, never larger, and as JPEG when that is smaller. Plan on 60–150 KB per image slide. The whole `.pptx` must stay under 1000 KB, which is the pre-commit limit, so a deck has room for about 6–10 image slides. Give each one a reason to be there.
 
 ## Layouts
 
@@ -126,7 +133,7 @@ attribution: smaller line under it
 
 ### `image`
 ```yaml
-image: ../sources/images/cot.png    # relative to the YAML
+image: ../sources/images/wei-chain-of-thought-fig1.png   # relative to the YAML; .png/.jpg/.svg (SVG is rasterised)
 caption: Standard vs. CoT prompting (Wei et al., 2022)
 bullets: [...]                      # optional: image left, bullets right
 ```

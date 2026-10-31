@@ -4,7 +4,7 @@ The style follows the LangGraph deck (05-graph-engineering/sources/langgraph_ext
 navy title bar with an orange edge, a pale breadcrumb strip, white cards with coloured
 stripes, square bullet markers, and a tinted takeaway strip.
 
-    uv run -q --with python-pptx --with pyyaml --with pillow \
+    uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py \
         python scripts/slides/build_deck.py ai-engineering/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict]
 
 The spec format and layout catalogue are in .claude/skills/slides/references/deck-spec.md.
@@ -616,6 +616,43 @@ def lay_statement(slide, spec, top, bottom, ctx, info):
         text(slide, MARGIN + 0.8, by + h + 0.15, w, 0.4, spec["attribution"], 17, SLATE, italic=True)
 
 
+def raster(path: Path) -> Path:
+    """python-pptx only embeds bitmaps, so render an SVG to a PNG beside the temp files."""
+    if path.suffix.lower() != ".svg":
+        return path
+    import resvg_py
+
+    out = Path(tempfile.gettempdir()) / "build_deck_svg" / f"{path.stem}-{abs(hash(str(path)))}.png"
+    if not out.exists() or out.stat().st_mtime < path.stat().st_mtime:
+        out.parent.mkdir(exist_ok=True)
+        out.write_bytes(bytes(resvg_py.svg_to_bytes(svg_path=str(path), width=2000, background="white")))
+    return out
+
+
+def shrink(path: Path, w_in: float, h_in: float, dpi: int = 220) -> Path:
+    """Downsample to the size the image is shown at, so a deck stays small enough to commit."""
+    from PIL import Image
+
+    img = Image.open(path)
+    target = (round(w_in * dpi), round(h_in * dpi))
+    if img.width <= target[0] and path.stat().st_size < 150_000:
+        return path
+    out_dir = Path(tempfile.gettempdir()) / "build_deck_img"
+    out_dir.mkdir(exist_ok=True)
+    stem = f"{path.stem}-{abs(hash((str(path), target)))}"
+    if img.width > target[0]:
+        img = img.convert("RGBA" if img.mode in ("RGBA", "LA", "P") else "RGB").resize(target, Image.LANCZOS)
+    png = out_dir / f"{stem}.png"
+    img.save(png, optimize=True)
+    # Screenshots and photos compress far better as JPEG; keep PNG when it is already smaller.
+    jpg = out_dir / f"{stem}.jpg"
+    flat = Image.new("RGB", img.size, "white")
+    flat.paste(img, mask=img.getchannel("A") if img.mode == "RGBA" else None)
+    flat.save(jpg, quality=88, optimize=True)
+    best = min((png, jpg, path), key=lambda p: p.stat().st_size)
+    return best
+
+
 def lay_image(slide, spec, top, bottom, ctx, info):
     from PIL import Image
 
@@ -627,12 +664,13 @@ def lay_image(slide, spec, top, bottom, ctx, info):
     if not path.exists():
         warn(ctx, f"image not found: {path}")
         return
+    path = raster(path)
     iw, ih = Image.open(path).size
     scale = min(region_w / iw, region_h / ih)
     w, h = iw * scale, ih * scale
     x = MARGIN + (region_w - w) / 2
     rect(slide, x - 0.06, top - 0.06, w + 0.12, h + 0.12, WHITE, line=BORDER)
-    slide.shapes.add_picture(str(path), Inches(x), Inches(top), Inches(w), Inches(h))
+    slide.shapes.add_picture(str(shrink(path, w, h)), Inches(x), Inches(top), Inches(w), Inches(h))
     if cap:
         text(slide, MARGIN, top + h + 0.15, region_w, 0.4, cap, 12, MUTED, italic=True, align=PP_ALIGN.CENTER)
     if side:
@@ -857,15 +895,25 @@ def contact_sheets(pngs: list[Path], out_dir: Path) -> list[Path]:
     return sheets
 
 
-def write_pdf(pngs: list[Path], pdf: Path) -> Path:
-    """One page per slide, rasterised from the rendered PNGs (no speaker notes, no selectable text)."""
+def write_pdf(pngs: list[Path], pdf: Path, width: int = 1600) -> Path:
+    """One page per slide, rasterised from the rendered PNGs (no speaker notes, no selectable text).
+
+    Pages are downsampled to `width` px and JPEG-encoded: sharp on screen, ~5 MB a deck, since
+    the PDF is committed and every rebuild adds a copy to git history.
+    """
     from PIL import Image
 
-    pages = [Image.open(p).convert("RGB") for p in pngs]
+    pages = []
+    for p in pngs:
+        img = Image.open(p).convert("RGB")
+        if img.width > width:
+            img = img.resize((width, round(img.height * width / img.width)), Image.LANCZOS)
+        pages.append(img)
     # Write beside the target, then rename: a viewer with the PDF open reloads on change and
     # would otherwise read a half-written file and report it corrupt.
     tmp = pdf.with_name(f".{pdf.name}.tmp")
-    pages[0].save(tmp, format="PDF", save_all=True, append_images=pages[1:], resolution=180, quality=90)
+    pages[0].save(tmp, format="PDF", save_all=True, append_images=pages[1:],
+                  resolution=width / 13.333, quality=80)
     tmp.replace(pdf)
     return pdf
 

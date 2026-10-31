@@ -2,11 +2,11 @@
 
 > From "JavaScript for Python developers" to typed LLM apps, in nine modules. Each module is a
 > short note plus exercises that are checked by the type checker, by `node --test`, or by both.
-> Jump to: [Modules](#modules) · [Setup](#setup) · [How exercises are checked](#how-exercises-are-checked) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
+> Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [How exercises are checked](#how-exercises-are-checked) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
 
 ---
 
-## Modules
+## Syllabus
 
 | # | Note | You can… | Exercises |
 |---|---|---|---|
@@ -24,6 +24,24 @@ The type challenges are in [`practice/type-challenges/challenges/`](practice/typ
 Solutions sit next to each vendored exercise (`index.solution.ts`), in
 [`practice/type-challenges/solutions/`](practice/type-challenges/solutions/) and in
 [`practice/solutions/`](practice/solutions/). Try each exercise before you open them.
+
+---
+
+## Layout
+
+```
+typescript/
+├── README.md
+├── notes/                        01–09
+└── practice/                     one npm project: package.json, tsconfig.json, .gitignore (node_modules/)
+    ├── check.ts                  one tsc run with the errors grouped by exercise; --solutions swaps the solutions in
+    ├── exercises/                own runtime exercises 01, 06, 08, 09
+    ├── solutions/                same names, worked
+    ├── tests/                    node --test, one file per runtime exercise
+    ├── examples/claude.ts        live Anthropic SDK example
+    ├── typescript-exercises/     vendored 01–15 (index.ts, index.solution.ts, test.ts), LICENSE, NOTICE.md
+    └── type-challenges/          challenges/ vendored with its LICENSE; solutions/ written here
+```
 
 ---
 

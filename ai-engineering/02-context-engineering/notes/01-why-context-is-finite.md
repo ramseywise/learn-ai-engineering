@@ -1,10 +1,16 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2507.13334
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://research.trychroma.com/context-rot
+  - https://arxiv.org/abs/2307.03172
+  - https://arxiv.org/abs/2512.24601
+  - https://arxiv.org/abs/2404.07143
+  - https://arxiv.org/abs/2501.15383
+  - https://arxiv.org/abs/2512.23675
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 1 — Why Context Is a Finite Resource
 
@@ -17,6 +23,13 @@ cleaned: 2026-07-29
 **Find the smallest set of high-signal tokens that maximize the likelihood of your desired outcome.**
 
 That single sentence is Anthropic's framing of the whole discipline. It is a *minimization* objective, which is counterintuitive: the instinct with a 200k or 1M window is to fill it. The instinct is wrong, and the rest of this note explains why.
+
+The field around that sentence is now large. Mei et al.'s survey sorts about 1,400 papers into foundational components (retrieval and generation, processing, management) and the implementations built from them (RAG, memory, tool use, multi-agent), plus evaluation and open problems. This pillar covers both halves: retrieval in [04](04-retrieval.md); processing in [05](05-compression-compaction.md), [07](07-structured-context.md) and [08](08-cognitive-tools.md); management in [03](03-budgeting-the-window.md); and the implementations in [06](06-memory.md) (memory) and [10](10-tools-and-multi-agent.md) (tools and multi-agent).
+
+The survey's headline conclusion is an **asymmetry**. With good context engineering, models understand long, complex inputs well, but they are much weaker at *producing* equally long and coherent output: long-form generation, factual consistency over thousands of tokens, and planning. That is a reading of the literature, not a measurement, but it matches practice. Almost everything in this pillar is about the input side ([arXiv:2507.13334](https://arxiv.org/abs/2507.13334) (Mei et al., 2025-07)).
+
+![Taxonomy of context engineering: foundational components and system implementations](../sources/images/mei-context-engineering-survey-fig1.png)
+*Image Source: Mei et al. (2025)*
 
 ---
 
@@ -41,14 +54,18 @@ Observed failure shapes:
 
 | Shape | What it looks like |
 |---|---|
-| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle" |
+| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle". GPT-3.5 with the answer mid-context scored below its own no-documents baseline ([prompt 02](../../01-prompt-engineering/notes/02-prompt-anatomy.md#ordering)) |
 | Distractor sensitivity | Plausible-but-wrong content nearby pulls the answer off target more as the window grows |
 | Instruction decay | System-prompt constraints obeyed early in a session are quietly dropped later |
 | Needle degradation | Exact-match retrieval of a planted fact degrades as surrounding filler increases, even when the fact is verbatim present |
 
-The last one is the important one. The fact is *there*, unmodified, and the model still misses it. This is why "include it just in case" is a real cost rather than free insurance — filler actively degrades retrieval of the signal it surrounds.
+Needle degradation is the easiest of these to measure, and it is no longer where frontier models break. Zhang, Kraska and Khattab report that "frontier models can now reliably solve these tasks in RULER [...] in the 1M+ token settings but struggle at far shorter lengths on OOLONG, a task where the answer depends explicitly on almost every line in the prompt" ([arXiv:2512.24601](https://arxiv.org/abs/2512.24601) (Zhang et al., 2025-12)). The effective window depends on the task, not just on the model. It shrinks as the answer comes to depend on more of the input. GPT-5 (272K window) stays near 100% on single-needle retrieval out to 262K tokens. On OOLONG, where the answer needs a linear pass over the input, it falls to about 30% by 262K. On OOLONG-Pairs, where the answer needs pairs of lines, it is near 0% by 33K. So ask how much of the context the answer depends on, not only how much context there is. A "1M window" claim usually rests on a needle test, which says little about a task that has to aggregate. Qwen2.5-1M is a clear case. Its headline figure is passkey retrieval, perfect to 1M tokens at 14B, but RULER is reported only up to 128K. On LV-Eval, which needs many evidence fragments at once, Qwen2.5-14B-Instruct-1M falls from 54.5 at 16K to 43.3 at 256K. Qwen's own evaluation runs no aggregation test beyond 256K ([arXiv:2501.15383](https://arxiv.org/abs/2501.15383) (Yang et al., 2025-01)). Filler is still a real cost rather than free insurance. Rot shows up wherever attention has to spread across the window, and a dense task makes every line part of the signal.
 
-Long-context handling techniques (**position encoding interpolation**, letting a model address sequences longer than it trained on) extend the addressable range. They do not repeal rot — they move where it starts.
+![GPT-5 vs. RLM(GPT-5) across context lengths on S-NIAH, OOLONG and OOLONG-Pairs](../sources/images/zhang-recursive-language-models-fig1.png)
+
+*Image Source: Zhang, Kraska & Khattab, [Recursive Language Models](https://arxiv.org/abs/2512.24601) (2025), Fig. 1*
+
+Long-context handling techniques (**position encoding interpolation**, letting a model address sequences longer than it trained on) extend the addressable range. They do not repeal rot — they move where it starts. Architectural changes show the same pattern. Infini-attention adds a fixed-size compressive memory to each attention layer. A 1B model with it solved passkey retrieval out to 1M tokens, but only after fine-tuning on 5K-token passkey inputs. Zero-shot, it found passkeys hidden at the start or middle of the filler only 3–14% of the time at 32K–1M ([arXiv:2404.07143](https://arxiv.org/abs/2404.07143) (Munkhdalai et al., 2024-04)). Reach measured on the easiest needle test, after training on that test, is not an effective window for real work. Test-time training moves the window into the weights instead. TTT-E2E pairs an 8K sliding window with MLPs that keep training on the context as it is read. At 3B parameters and 164B training tokens, its language-modelling loss improves with context as full attention's does, and prefill at 128K is 2.7× faster on an H100. But passkey retrieval falls to 0.46 at 16K and 0.06 at 128K, against 0.99 for full attention and about what the bare sliding window scores. Compressing the context into weights keeps its gist and loses the needle ([arXiv:2512.23675](https://arxiv.org/abs/2512.23675) (Tandon et al., 2025-12)).
 
 ---
 

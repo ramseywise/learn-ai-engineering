@@ -5,9 +5,12 @@ sources:
   - https://www.promptingguide.ai/applications/generating_textbooks
   - https://www.promptingguide.ai/applications/synthetic_rag
   - https://www.promptingguide.ai/applications/coding
-  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 11"
+  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 8, Ch 11"
+  - https://arxiv.org/abs/2306.11644
+  - https://arxiv.org/abs/2305.07759
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 8"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 11 — Applications
 
@@ -17,7 +20,7 @@ cleaned: 2026-10-28
 
 ## Synthetic data generation
 
-The use cases: eval sets ([09](09-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), and test fixtures.
+The use cases: eval sets ([09](09-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), fine-tuning documents when you can't collect enough real successes ([04](04-controlling-output.md#when-prompting-isnt-enough-fine-tuning)), and test fixtures.
 
 **The core problem is diversity.** Even at high temperature, models produce repetitive, trope-heavy samples. Raising the temperature isn't enough — **inject the randomness into the prompt**.
 
@@ -31,6 +34,8 @@ Write a short story (3-5 paragraphs) which only uses very simple words that a
 the noun "{noun}" and the adjective "{adjective}". The story should have the
 following features: {feature_1}, {feature_2}. Remember to only use simple words!
 ```
+
+The seeding is what made the data usable. Asking for "a story a child would understand" with no seeds gives near-duplicates, even at high temperature. On the seeded dataset, models **under 10M parameters** wrote fluent, consistent stories, and a 28M model's completions held up against GPT2-XL, which is about 50× larger ([arXiv:2305.07759](https://arxiv.org/abs/2305.07759)).
 
 The recipe:
 1. Identify the dimensions that should vary (topic, audience, length, tone, **label**).
@@ -52,16 +57,16 @@ Story:
 
 ### Pattern 3 — textbook-quality data (phi-1)
 
-Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material, varying **topic** and **target audience**. A 1.3B-parameter model trained on it rivaled models ten times its size on HumanEval. **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
+Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material with GPT-3.5, varying **topic** and **target audience**. They mixed it with 6B tokens of web code filtered for textbook quality, so the synthetic part is a seventh of the data. The resulting 1.3B-parameter phi-1 reached **50.6% pass@1 on HumanEval** after 4 days on 8 A100s, ahead of open models ten times its size ([arXiv:2306.11644](https://arxiv.org/abs/2306.11644)). **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
 
-![phi-1 synthetic textbook sample](../sources/images/synthetic_diversity/textbooks_1.png)
+![phi-1 synthetic textbook sample](../sources/images/gunasekar-textbooks-are-all-you-need-sample.png)
 *A generated "textbook" passage: a definition, a worked example, then runnable code. Gunasekar et al. (2023), via DAIR.*
 
 ### Pattern 4 — synthetic queries for retrieval (Promptagator)
 
 Retrievers degrade in niche domains and low-resource languages. Dai et al. (2022) showed that **8 labeled examples plus an unlabeled corpus** are enough: few-shot prompt an LLM to write a query for each document, then train the retriever on the (query, document) pairs.
 
-![Promptagator pipeline](../sources/images/synthetic_rag/synthetic_rag_2.png)
+![Promptagator pipeline](../sources/images/dai-promptagator-pipeline.png)
 *A few-shot prompt turns domain documents into synthetic (query, document) pairs, which train a small dual encoder. Dai et al. (2022), via DAIR.*
 
 ```
@@ -75,7 +80,7 @@ A concise counter-argument query related to the argument #N:
 
 - "Relevance" depends on the search intent (supporting vs. counter-argument, etc.) — say which one. The paper used a different prompt label per dataset:
 
-  ![Promptagator per-dataset prompts](../sources/images/synthetic_rag/synthetic_rag_4.png)
+  ![Promptagator per-dataset prompts](../sources/images/dai-promptagator-per-dataset-prompts.png)
   *The same passage → query template, relabeled per intent ("Counter argument:", "Vexed question:", "Is it true that"). Dai et al. (2022).*
 - Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
 - In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
@@ -101,7 +106,7 @@ Retrieval itself belongs to [02-context](../../02-context-engineering/notes/04-r
 | Schema → SQL | Table and column definitions, then the question | Include the actual schema; generate fixtures to test against |
 | Explain code | Code first, then "Explain the above" | A narrow system prompt ("Python only") can make the model refuse adjacent tasks |
 
-![Instruction → code in chat mode](../sources/images/code-generation/chat-mode.png)
+![Instruction → code in chat mode](../sources/images/dair-code-generation-chat-mode.png)
 *The system prompt fixes the language and "code only," and the user turn is the task. DAIR, Code generation.*
 
 A debugging prompt from the Code Llama notebook. The system role sets the job, and the user turn gives the code, the observed output and the expected output:
@@ -161,7 +166,7 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 
 ## Images and multimodal prompts
 
-**How it works** (the likely design; vendors don't publish specifics): a vision encoder turns image patches into vectors of the same size as text-token embeddings. Positional information is added so spatial layout survives, and the image vectors are concatenated with the text and run through the same transformer. Video is the naive extension, sampled frames fed in as a sequence of images. To the model, an image is just more context tokens, so the same rules apply:
+**How it works** (the likely design; vendors don't publish specifics): a vision encoder turns image patches into vectors (the book describes a convolutional network; current models mostly use a ViT-style encoder over patches) of the same size as text-token embeddings. Positional information is added so spatial layout survives, and the image vectors are concatenated with the text and run through the same transformer. Video is the naive extension, sampled frames fed in as a sequence of images. To the model, an image is just more context tokens, so the same rules apply:
 
 - **Include only relevant images.** Irrelevant images distract just like irrelevant text.
 - **Introduce each image in the text**: say what it is and what it's for ("The screenshot below is the failing checkout page").
@@ -171,6 +176,20 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 Multimodal CoT (rationale first, then answer) is in [03](03-core-techniques.md#chain-of-thought).
 
 Images also matter for training. Text-only pretraining is approaching "the whole public internet" as a ceiling, and images and video add a different kind of signal (spatial reasoning, physical common sense, social cues), not just more of the same.
+
+### Prompting image generators
+
+The inverse job, writing prompts *for* a diffusion model, has its own conventions. Phoenix & Taylor's are written against Midjourney v5 (2023), so the syntax is dated, but the ideas carry over to other image models (*Prompt Engineering for Generative AI*, ch. 8):
+
+- **Format first.** "Stock photo", "oil painting" and "Egyptian hieroglyphs" change everything, including the content: an oil painting of a business meeting has no computers in it, because oil paintings rarely contain them.
+- **Quality boosters leak style.** "4k" or "trending on artstation" lifts quality because those labels went with good images in training. They bring the source's habits too: their "space whale, trending on artstation" comes out looking like a spaceship.
+- **Negative prompts help, unreliably.** `--no frame, wall` removes the frame that tends to come with "oil painting", but it often fails when the two concepts are too strongly correlated in training. In Midjourney, `--no` is shorthand for a weight of `::-0.5`. Weights (`::2`, `::-1`) dial a concept up or down, and a grid search over weight pairs maps the blend. Older negative-prompt fixes for hands and extra fingers are mostly unnecessary from Midjourney v5 and SDXL on.
+- **Rewrite the user's prompt.** A `{subject} in the style of {artist}` template gave a dachshund standing *next to* a Banksy mural. Asking an LLM for the artist's medium first and rendering `{medium} of a {subject} in the style of {artist}` put the dog in the street art. This is meta-prompting ([08](08-prompt-optimization.md)) to fix garbage in, garbage out from non-expert users.
+- **Unbundle a style instead of naming the artist.** Have an LLM describe the style without naming the artist or the work, shorten that into prompt terms ("surrealist landscape", "melting objects"), then remix them. The result is more original, and it avoids the legal and ethical grey zone of imitating a living artist, which the authors advise caution on (and legal counsel for commercial use).
+- **Measure what the prompt actually uses.** `/describe` reverse-engineers a prompt from an image. `/shorten` shows per-token weights, which often reveal that most of a long prompt does nothing. That's the same lesson as for text prompts ([09](09-evaluating-prompts.md)).
+- **Inpainting for consistency.** To keep a character consistent, generate two images side by side at 2:1, then inpaint one half (Midjourney's Vary Region) with a new pose. The other half anchors the features.
+
+Diffusion internals and Stable Diffusion workflows belong to the multimodal pillar.
 
 ---
 
@@ -182,6 +201,10 @@ When people collaborate, they talk *about* a persistent thing, such as a file, c
 - **Support several objects**, each with a short name the user and the prompt can both use. Otherwise a new topic overwrites the only slot.
 - **Let the user edit directly** and feed that diff into the next prompt, so the model knows what changed.
 
+The critique dates from mid-2024. Products have since moved on some of it (ChatGPT's Canvas, October 2024, lets the user edit the object directly), so read the list as design requirements, not as a description of current tools.
+
+The prompt-side half of this is the book's ch. 8 **artifact**: a piece of data attached to a user or assistant message, kept in the context and shown in the UI so the user can see what the agent is attending to and dismiss what it shouldn't be ([05](05-tools-and-function-calling.md#context-for-a-tool-using-agent)).
+
 Conversational UI also keeps a human in the loop who can catch drift before it compounds ([06](06-chaining-and-workflows.md)). Without a designed object layer, a chat wrapper is just a gimmick.
 
 ---
@@ -190,7 +213,6 @@ Conversational UI also keeps a human in the loop who can catch drift before it c
 
 - Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../README.md#applications)
 - Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (multimodality, Artifacts)
-- Runnable: [pe-rag.ipynb](../../02-context-engineering/notebooks/pe-rag.ipynb) (retrieval-augmented title generation)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 
 ---

@@ -36,8 +36,18 @@ Treat every claim below as **hypothesis or metaphor** unless it's tied to a pape
 | **Boundaries** | Permeable membranes control what enters and leaves the field | Gating what gets into the window. This is the Select lever ([04](04-retrieval.md)) |
 | **Persistence / decay** | Field patterns fade unless reinforced | Older content loses influence and is lost first under compaction ([05](05-compression-compaction.md)) |
 | **Symbolic mechanisms** | LLMs implement abstraction → induction → retrieval | **Real result** (Yang et al., ICML 2025): identified attention heads for each stage. Applied in [07](07-structured-context.md) |
-| **Quantum semantics** | Meaning is undetermined until "observed" by an interpretive context; Bell-style tests show non-classical contextuality | Agostino et al. (2506.10077) report CHSH-style violations in LLM interpretation of ambiguous phrases. Practical version: an ambiguous prompt has no fixed meaning, so disambiguate with context. The quantum framing adds no technique |
+| **Quantum semantics** | Meaning is undetermined until "observed" by an interpretive context; Bell-style tests show non-classical contextuality | Agostino et al. (2506.10077) report CHSH-style violations in LLM interpretation of ambiguous phrases: S values from 1.2 to 2.8, with several runs at 2.3–2.4 against the classical bound of 2. The authors themselves caution that the test assumes no-signalling, which behavioural experiments often violate, so the excess correlation may come from direct influence between the settings rather than genuine contextuality. Practical version: an ambiguous prompt has no fixed meaning, so disambiguate with context. The quantum framing adds no technique |
 | **Unified field theory** | Combines symbolic, field and quantum views into one framework | No testable content beyond the parts above |
+
+Two of the rows rest on real papers, and their figures show how modest the grounded versions are. Wang et al.'s "attractor" is a 2-cycle: paraphrase a text over and over and it alternates between two clusters of near-identical outputs.
+
+![Successive paraphrasing falls into a 2-cycle between two clusters](../sources/images/wang-attractor-cycles-fig1.png)
+*Image Source: Wang et al. (2025)*
+
+Yang et al.'s "symbolic mechanism" is a three-stage circuit of attention heads. Abstraction heads map tokens to variables, induction heads find the pattern over variables, and retrieval heads map the predicted variable back to a token. The tasks are small, such as ABA/ABB rule induction from two examples, where Llama-3.1 70B scored 95%. The circuit showed up clearly in Gemma-2, Qwen2.5 and Llama-3.1, with weaker evidence in GPT-2.
+
+![Symbol abstraction, symbolic induction and retrieval heads](../sources/images/yang-emergent-symbolic-mechanisms-fig1.png)
+*Image Source: Yang et al. (2025)*
 
 ---
 

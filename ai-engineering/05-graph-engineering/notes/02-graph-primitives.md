@@ -5,6 +5,7 @@ sources:
   - https://docs.langchain.com/langgraph
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -46,6 +47,30 @@ The result is, in their words, *"predictable, powerful, and efficient."* Each no
 
 The design move, applied to any graph you draw: for each node, ask *"could this be code?"*, then *"could this be one call?"*, and only then make it an agent. An agent node is where you accept variance; put it where the work is genuinely open-ended and nowhere else.
 
+### The autonomy ladder
+
+Oshin & Campos make "how much agency" measurable (*Learning LangChain*, ch. 5). Ask which of three decisions the LLM makes and which stay in code:
+
+1. **The output of a step**: draft the reply.
+2. **The next step to take**: archive, reply, or flag this email.
+3. **Which steps exist at all**: write and run code for an action nobody pre-programmed.
+
+Each recipe that answers those questions is a *cognitive architecture*, a term the authors trace to CoALA (Sumers et al., [arXiv:2309.02427](https://arxiv.org/abs/2309.02427)).
+
+![Cognitive architectures 0–5: code, LLM call, chain, router (human-driven) and state machine, autonomous (LLM-driven), with columns for who decides the step's output, the next step, and the available steps](../sources/images/learning-langchain-fig5-1.png)
+*Image Source: Mayo Oshin & Nuno Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 5-1*
+
+| Level | Architecture | LLM decides | Graph shape |
+|---|---|---|---|
+| 0 | Code | Nothing | No model |
+| 1 | LLM call | One step's output | One node |
+| 2 | Chain | Several steps' outputs, in a fixed order ("flow engineering", after AlphaCodium) | Static edges only |
+| 3 | Router | Also the next step, **without cycles** | Conditional edges, acyclic |
+| 4 | State machine | The next step, **with cycles** | Conditional edges + back-edges |
+| 5 | Autonomous | Also which steps exist | Agent writes its own tools |
+
+The line under level 3 matters most. Up to the router, a human still decides what can happen and the graph is a DAG. From the state machine down, the LLM decides when to stop. The book frames the whole ladder as a trade-off between **agency** and **reliability**, using an email assistant with two constraints that pull against each other: interrupt the user as little as possible, and never send a reply the user wouldn't have sent. Write the constraints down first, then pick the lowest rung that meets them. Their level-2 text-to-SQL chain also shows agency tuned per node without changing the topology: temperature 0.1 for the SQL step and 0.7 for the explanation.
+
 ---
 
 ## Edges choose what runs next
@@ -68,6 +93,45 @@ Conditional edges are what buy you:
 | **Cycles** | Route back to an earlier node to revise ([01](01-graph-vs-loop.md#production-agents-are-not-dags)) |
 
 A cycle without a bound is an infinite loop. Every back-edge needs a counter in state or a recursion limit ([07](07-failure-modes-at-scale.md)).
+
+### A router fails silently unless you make it fail loudly
+
+An LLM router can stand in for a trained intent classifier with no labelled dataset, and *Learning LangChain* (ch. 5) frames it exactly that way. The book's example routes a medical assistant's question to one of two retrievers: patient records or insurance FAQs. Its wiring is the common way to get routing wrong:
+
+```python
+# As in the book: free-text label, typed but not enforced
+router_prompt = SystemMessage("... Output only the domain name.")
+def router_node(state):
+    res = model_low_temp.invoke([router_prompt, ...])
+    return {"domain": res.content}          # "Records", "records." and "medical" all land here
+
+def pick_retriever(state):
+    if state["domain"] == "records":
+        return "retrieve_medical_records"
+    else:                                    # every other string means insurance
+        return "retrieve_insurance_faqs"
+```
+
+`domain: Literal["records", "insurance"]` in the `TypedDict` is a type hint only, so nothing checks it at runtime. Any reply other than exactly `records`, whether capitalised, punctuated or rephrased, silently goes to insurance. `generate_answer` repeats the same `else`, so the answer is written with the insurance prompt too. Nothing errors and nothing shows in the output, only a confident answer from the wrong index. The fix:
+
+```python
+from typing import Literal
+from pydantic import BaseModel
+
+class Route(BaseModel):
+    domain: Literal["records", "insurance", "unclear"]
+
+router = model_low_temp.with_structured_output(Route)
+
+def router_node(state):
+    return {"domain": router.invoke([router_prompt, ...]).domain}
+
+def pick_retriever(state) -> Literal["retrieve_medical_records", "retrieve_insurance_faqs", "clarify"]:
+    return {"records": "retrieve_medical_records",
+            "insurance": "retrieve_insurance_faqs"}.get(state["domain"], "clarify")
+```
+
+Three changes. Constrain the output with a schema. Give the router a way to say "unclear". Make the fallback a real node, such as one that asks a clarifying question, instead of quietly reusing one of the branches. Then eval the router on a labelled set as a classifier ([07](07-failure-modes-at-scale.md#mechanical-failures)).
 
 ---
 
@@ -110,13 +174,83 @@ A node can also return `Command(goto="node_b", update={...})` to combine a state
 
 The highest-yield first graph is a job that **splits into a produce step and an independent check step**: draft-then-review, research-then-write, build-then-test.
 
-```
-START → generate (LLM) → validate (code: schema, tests) → review (LLM) ─┬→ END
-             ↑                                                          │
-             └───────────────── feedback, while attempts < N ───────────┘
+```mermaid
+flowchart LR
+    S([START]) --> G["generate<br/>(LLM)"]
+    G --> V["validate<br/>(code: schema, tests)"]
+    V -- pass --> R["review<br/>(LLM, sees task + output only)"]
+    V -- "fail, attempts < N" --> G
+    R -- PASS --> E([END])
+    R -- "FAIL + feedback, attempts < N" --> G
+    V -- "fail, attempts = N" --> E
+    R -- "attempts = N" --> E
 ```
 
-The separation is what creates the value; any parallelism is a bonus. Note the agency budget: the validator is code, so it catches what code can catch before you pay for the LLM reviewer. A copy-ready version is in [templates/generate-then-verify.py](../templates/generate-then-verify.py).
+The separation is what creates the value; any parallelism is a bonus. Note the agency budget: the validator is code, so it catches what code can catch before you pay for the LLM reviewer.
+
+A copy-ready version (`pip install langgraph langchain-anthropic`). Two writers append to `feedback`, so it carries a reducer; every other key has one writer:
+
+```python
+from typing import Annotated, TypedDict
+import operator
+from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import StateGraph, START, END
+
+MAX_ATTEMPTS = 3
+model = ChatAnthropic(model="claude-sonnet-5-5", temperature=0)
+
+class State(TypedDict):
+    task: str
+    draft: str                                    # one writer: generate
+    feedback: Annotated[list[str], operator.add]  # validate and review both append
+    attempts: int
+    verdict: str                                  # one writer per step: validate or review
+
+def generate(state: State) -> dict:
+    notes = "\n".join(state.get("feedback", [])) or "none"
+    prompt = f"Task:\n{state['task']}\n\nFeedback on earlier attempts:\n{notes}"
+    return {"draft": model.invoke(prompt).content,
+            "attempts": state.get("attempts", 0) + 1}
+
+def validate(state: State) -> dict:
+    # Deterministic checks first: a schema check, a test run, a linter.
+    problems = [] if state["draft"].strip() else ["validator: draft is empty"]
+    return {"feedback": problems, "verdict": "fail" if problems else ""}
+
+def review(state: State) -> dict:
+    # The reviewer sees the task and the output, not the generator's reasoning (note 07).
+    reply = model.invoke(f"Task:\n{state['task']}\n\nOutput:\n{state['draft']}\n\n"
+                         "Reply PASS, or FAIL followed by one line saying what to fix.").content.strip()
+    if reply.startswith("PASS"):
+        return {"verdict": "pass"}
+    return {"verdict": "fail", "feedback": [f"reviewer: {reply}"]}
+
+def after_validate(state: State) -> str:
+    if state["verdict"] != "fail":
+        return "review"
+    return "generate" if state["attempts"] < MAX_ATTEMPTS else END
+
+def after_review(state: State) -> str:
+    if state["verdict"] == "pass" or state["attempts"] >= MAX_ATTEMPTS:
+        return END
+    return "generate"
+
+builder = StateGraph(State)
+builder.add_node("generate", generate)
+builder.add_node("validate", validate)
+builder.add_node("review", review)
+builder.add_edge(START, "generate")
+builder.add_edge("generate", "validate")
+builder.add_conditional_edges("validate", after_validate)
+builder.add_conditional_edges("review", after_review)
+graph = builder.compile(checkpointer=InMemorySaver())   # pause/resume/replay, note 04
+
+result = graph.invoke({"task": "Write a haiku about state machines."},
+                      {"configurable": {"thread_id": "gtv-1"}})
+```
+
+The bound lives in the two routers, not in the model: after `MAX_ATTEMPTS` the graph ends with `verdict == "fail"` and the caller decides what to do ([07](07-failure-modes-at-scale.md)).
 
 ---
 

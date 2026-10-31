@@ -4,8 +4,9 @@ sources:
   - https://docs.langchain.com/langgraph
   - https://www.langchain.com/blog/3-years-of-graph-engineering-with-langgraph
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 3 — State and Reducers
 
@@ -39,6 +40,35 @@ Design the schema the way you'd design a database table: name each key, give it 
 
 **State is not context.** State is what the graph stores. Context is what you choose to load from it into a given node's prompt. A reviewer node should see the draft and the task, not every key in state ([07](07-failure-modes-at-scale.md#verifiers-need-isolated-context)). Deciding what each node sees is [context engineering](../../02-context-engineering/README.md) applied per node.
 
+### Input and output schemas: the graph's public interface
+
+The same split applies at the graph's edges. The full state holds working keys the caller shouldn't have to supply or parse, so give the graph a narrower input schema and output schema. Oshin and Campos's text-to-SQL chain (*Learning LangChain*, ch. 5) keeps `messages`, `user_query`, `sql_query` and `sql_explanation` in state. It accepts only the query and returns only the two results:
+
+```python
+class State(TypedDict):
+    messages: Annotated[list, add_messages]   # internal: conversation history
+    user_query: str
+    sql_query: str
+    sql_explanation: str
+
+class Input(TypedDict):
+    user_query: str
+
+class Output(TypedDict):
+    sql_query: str
+    sql_explanation: str
+
+# Book (2025): StateGraph(State, input=Input, output=Output)
+builder = StateGraph(State, input_schema=Input, output_schema=Output)   # current LangGraph keyword names
+```
+
+The keyword names are version-specific. The book's `input=` and `output=` were renamed `input_schema=` and `output_schema=` in later LangGraph releases, so check the version you have installed.
+
+Two limits:
+
+- **The output schema filters the return value of `invoke`, not the stream.** The book notes that the internal keys are still emitted by `stream()`. Don't use the output schema to hide anything that shouldn't reach the client. Filter the stream as well, or keep the data out of state.
+- **The schemas are typed dicts, and nothing enforces them at runtime.** An input missing `user_query` fails inside the first node that reads it, not at the graph boundary. Validate inputs at the API layer, or use a Pydantic model as the state schema if you want validation on the way in.
+
 ---
 
 ## Reducers decide merges
@@ -68,6 +98,11 @@ findings: Annotated[list[str], dedupe]
 
 LangGraph runs a graph in **super-steps**. Every node scheduled for the same super-step runs in parallel, and their updates are applied together when the step ends. If two of them write a key that has **no reducer**, there is no rule for which one wins, and LangGraph refuses: it raises `InvalidUpdateError` rather than silently dropping one write.
 
+![Nodes A and B share super-step 1 after START, so checkpoint v3 holds both writes merged by the reducer before node C runs in super-step 2](../sources/images/langchain-langgraph-docs-parallel-super-step.png)
+*Image Source: LangGraph docs, persistence (LangChain), via sources/langgraph_extended.pptx*
+
+The table is the point: there is **no checkpoint between A and B**. Both writes reach state at the same boundary (v3), so the reducer on `bar` is the only thing that decides how they combine.
+
 That error is the framework doing you a favour. The same bug in a hand-rolled multi-agent system (two agents writing one file, one dict, one row) doesn't raise; it just loses work.
 
 > **Rule: every key has either exactly one writer or an explicit reducer.**
@@ -96,6 +131,59 @@ builder.add_edge("review_file", "synthesize")
 Each `review_file` instance runs in parallel with its own private input, and each returns `{"findings": [...]}`. Because `findings` has an `operator.add` reducer, all their results land in one list before `synthesize` runs. Without the reducer, this exact graph raises on the first run with two files.
 
 Fan-out and reducers are one feature: **Send creates the parallel writers, the reducer makes their writes safe.**
+
+Cap N before you fan out (`state["changed_files"][:MAX_FANOUT]`), because an unbounded list is an unbounded bill ([07](07-failure-modes-at-scale.md)). A complete version that runs offline with no model (`uv run --with langgraph python fan_out.py`):
+
+```python
+from typing import Annotated, TypedDict
+import operator
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send
+
+MAX_FANOUT = 20  # cap N (note 07: unbounded fan-out)
+
+class State(TypedDict):
+    items: list[str]
+    findings: Annotated[list[str], operator.add]  # many writers, merged by append
+    summary: str
+
+class ItemInput(TypedDict):
+    item: str
+
+def plan(state: State) -> dict:
+    return {}  # e.g. retrieve or list the items to review
+
+def fan_out(state: State) -> list[Send]:
+    return [Send("review_item", {"item": x}) for x in state["items"][:MAX_FANOUT]]
+
+def review_item(inp: ItemInput) -> dict:
+    # Each instance gets only its own input. Replace with a model call.
+    return {"findings": [f"{inp['item']}: ok"]}
+
+def synthesize(state: State) -> dict:
+    return {"summary": f"{len(state['findings'])} findings"}
+
+builder = StateGraph(State)
+builder.add_node("plan", plan)
+builder.add_node("review_item", review_item)
+builder.add_node("synthesize", synthesize)
+builder.add_edge(START, "plan")
+builder.add_conditional_edges("plan", fan_out, ["review_item"])
+builder.add_edge("review_item", "synthesize")
+builder.add_edge("synthesize", END)
+graph = builder.compile()
+
+out = graph.invoke({"items": ["a.py", "b.py", "c.py"], "findings": []})
+print(out["summary"], out["findings"])
+# 3 findings ['a.py: ok', 'b.py: ok', 'c.py: ok']
+```
+
+Now change `findings` to a plain `list[str]` and run it again. It fails on the first super-step:
+
+```
+InvalidUpdateError: At key 'findings': Can receive only one value per step.
+Use an Annotated key to handle multiple values.
+```
 
 ---
 

@@ -6,8 +6,10 @@ sources:
   - https://www.promptingguide.ai/agents/ai-workflows-vs-ai-agents
   - https://www.promptingguide.ai/applications/pf
   - https://www.anthropic.com/research/building-effective-agents
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3, 10"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 6 — Chaining and Workflows
 
@@ -19,16 +21,18 @@ cleaned: 2026-10-28
 
 A single general prompt trades **strength for generality**: it will attempt anything, but it executes multi-step work poorly. A chat agent sits in the general/weak corner. Narrowing its system message and tools buys some strength, and a workflow goes all the way: one job, split into small tasks run with high fidelity, coordinated by a supervisor (LLM or plain code).
 
-![Generality vs. strength](../sources/prompt-eng-for-llms/images/fig-9-1-generality-vs-strength.png)
+![Generality vs. strength](../sources/images/berryman-prompt-engineering-for-llms-fig9-1.png)
 *Berryman & Ziegler, Fig 9-1.*
 
- The book's example (scrape Shopify stores → invent a plug-in per store → email the owner) degrades predictably as you push one agent at it:
+The book's example (scrape Shopify stores → invent a plug-in per store → email the owner) is real: in early 2023 a developer ran it with GPT-4, sent thousands of emails at the push of a button, and got eager replies from real store owners. It degrades predictably as you push one agent at it. With no tools the agent just restates your plan. Given `search_web`, `browse_site` and `send_email`, it searches "best Shopify storefronts 2024", writes terse ideas, and sends form letters that still contain `[your_name]`. Moving the instructions into the system prompt helps only so far:
 
 - The system prompt grows until it distracts the model.
 - There's no clean way to process work items one at a time.
 - When a step fails, a system-prompt instruction is only a suggestion. There's no correction mechanism.
 
 Splitting into steps buys back strength. Each prompt has one job, a short context, and an output you can check. It's also easier to debug, because a bad result traces to one step.
+
+There's a production data point. GoDaddy's customer-support prompt grew past 1,500 tokens after one round of iteration. Split into smaller prompts per subtask, it performed better **and** cost less in tokens. The costs of splitting are more calls and a longer wait before the first token of the final step, which users feel when they can't see the intermediate output. The call count overstates the bill, because each prompt is shorter and simple steps can go to a cheaper model. A common split is a small model for intent classification and a strong one for the reply. Independent steps can run in parallel, for example the same story written at three reading levels (*AI Engineering*, ch. 5).
 
 ---
 
@@ -52,6 +56,8 @@ Prompt 2 (answer)
 
 Each step can be tested and tuned separately, and you can add a third step (strip citations, translate, reformat) without touching the others. XML tags at the hand-off points make the parsing trivial ([04](04-controlling-output.md#structured-output)).
 
+**Least-to-most** is the chain for building something up in layers: ask for the architecture of a small Flask app, then the code for one route, then a test for that route, each prompt building on the last answer. Its weakness is the one every chain has, made worse by keeping state in chat history. A weak early answer starves every later step, and in a long run the first outputs fall out of the context window. Check each intermediate answer before you build on it (*Prompt Engineering for Generative AI*, ch. 3).
+
 ---
 
 ## Building a workflow — five steps
@@ -71,7 +77,7 @@ Each step can be tested and tuned separately, and you can add a third step (stri
 
 Still sketch the *how* well enough to be confident the task is feasible, or you'll be back at the drawing board after implementing it.
 
-**First question for every task: does it need an LLM?** Use plain code for scraping and writes, and a small classifier (BERT) for pure classification. LLMs are slow, costly and nondeterministic, so spend them only where they're needed. Mix model sizes too: a cheap model for easy steps, a frontier model for hard ones.
+**First question for every task: does it need an LLM?** Use plain code for scraping and writes, and a small classifier (BERT) for pure classification. LLMs are slow, costly and nondeterministic, so spend them only where they're needed. Mix models too: a cheap, possibly self-hosted model for easy steps, a frontier model for hard ones, and an in-house fine-tuned model for very customized ones.
 
 ---
 
@@ -80,7 +86,7 @@ Still sketch the *how* well enough to be confident the task is feasible, or you'
 | Approach | How | Use for |
 |---|---|---|
 | **Templated prompt** | Fill a template, parse the completion. A prefix and suffix bracket the output (`Dear {name},` … `We hope to hear from you soon,`), so the completion is *exactly* the body | Generation |
-| **Forced tool call** | Define a tool whose parameters are the output schema; force it with `tool_choice` | Extraction into structured data |
+| **Forced tool call** | Define a tool whose parameters are the output schema; force it with `tool_choice`. Strict structured outputs (OpenAI added them to function calls in 2024) guarantee the arguments match the schema | Extraction into structured data |
 | **Two-step with scratch work** | Brainstorm with CoT, then a clean step that writes up only the winner | Keeping reasoning out of the stored output |
 
 A templated prompt for a completion model. The prefix ends mid-document and the suffix closes it, so the model can only fill in the letter:
@@ -132,7 +138,7 @@ When quality is still short:
 - **Force a planning pass.** Disable tool execution for one turn (`tool_choice: "none"`, keeping the tool specs) so the model reasons before acting.
 - **Reflexion at the task level.** Check the output with a validator, tests or a judge; on failure, re-prompt with the requirements, the failed attempt and the critique ([03](03-core-techniques.md#reflexion)).
 - **Conversational sub-agents** for open-ended tasks that don't fit one prompt or tool call: an "expert" agent does the work and a "user proxy" agent drives it toward the goal (the AutoGen pattern). Heavier; use it last.
-- **Human-in-the-loop** for irreversible actions and for tasks that keep failing.
+- **Human-in-the-loop** for actions that are expensive and can't be undone (ask for approval), for outputs that need human-level judgment (queue reviewers), and for the few items that keep failing Reflexion (a person inspects them and fixes the prompt).
 
 Reflexion and sub-agents cost a lot more compute. Try tightening the prompt first.
 
@@ -148,7 +154,7 @@ Reflexion and sub-agents cost a lot more compute. Try tightening the prompt firs
 | **DAG** | Fan-out and fan-in, no cycles | **Default choice.** Each task gets what it needs directly; dependency reasoning stays simple (the Airflow model) |
 | **Cyclic** | Loops back on failure | Sometimes needed, but costly: you must carry the failure context back, every task must handle retried items, and you need an attempt cap. **Prefer hiding a retry loop inside a task** |
 
-Run **batch** for a known set of items (simpler) and **streaming** for open-ended arrivals (lower latency, more complex). State machine, pub-sub and orchestrated graph are the same thing wired differently.
+Run **batch** for a known set of items (simpler) and **streaming** for open-ended arrivals (lower latency, more complex). State machine, pub-sub and orchestrator are three ways to describe the same thing. What matters is how the tasks connect.
 
 **Worked example (book's Shopify plug-in promoter, as a DAG):**
 
@@ -176,7 +182,7 @@ The optimization pass started by asking whether these were the right tasks at al
 | **Orchestrator–workers** | An LLM splits the task dynamically and delegates | Multi-file code changes |
 | **Evaluator–optimizer** | One prompt generates, another critiques, loop | Translation with a critic; Reflexion |
 
-![Routing workflow](../sources/images/agents/routing.png)
+![Routing workflow](../sources/images/dair-n8n-routing-workflow.png)
 *Routing in a workflow builder (n8n): a small model classifies with a structured-output parser, and a switch sends each type to its own chain. DAIR, AI workflows vs. agents.*
 
 ---
@@ -190,7 +196,7 @@ The optimization pass started by asking whether these were the right tasks at al
 | Predictability | High | Lower |
 | Good for | Well-defined, repeatable tasks; production reliability; cost control | Open-ended tasks where the steps can't be known up front |
 
-![Task-planner agent](../sources/images/agents/task-planner-agent.png)
+![Task-planner agent](../sources/images/dair-task-planner-agent.png)
 *An agent: the model, memory and tools hang off one node, and the model decides the order. DAIR.*
 
 **Start with a workflow.** Move to agentic routing only when fixed topologies can't express the problem. Most production systems are hybrids: a workflow routes requests to agents that handle the open-ended subtasks.
@@ -198,7 +204,7 @@ The optimization pass started by asking whether these were the right tasks at al
 The advanced end puts an LLM in charge of routing, trading stability for flexibility:
 
 - **Workflow as agent.** The supervisor is a chat agent whose tools are the tasks. Push further and make each task an agent too (agent of agents). Give each nested agent a `finish` tool so it submits a definite output instead of chatting forever. At the far end, the supervisor writes new tasks on the fly (system message plus tools picked from a pool) and keeps reprioritizing a work list.
-- **Stateful task agents.** Each agent owns one work item, such as one source file in a "build a website" workflow, and keeps it consistent as related items change, notifying the agents that depend on it. Watch for circular dependencies, which mean the workflow never stops. Bonus: you can talk directly to the agent that owns an asset.
+- **Stateful task agents.** Each agent owns one work item, such as one source file in a "build a website" workflow, and keeps it consistent as related items change, notifying the agents that depend on it. Watch for circular dependencies, which can keep the workflow from ever finding a stopping point. Bonus: you can talk directly to the agent that owns an asset.
 - **Roles and delegation.** AutoGen pairs an **Assistant** with a **UserProxy** that holds the goal, keeps the Assistant on track and declares success; a group-chat manager delegates among several role agents. CrewAI gives each agent a role, goal, backstory and tools, and runs them `sequential` (pipeline), `hierarchical` (manager delegates) or `consensual` (peer negotiation, unreleased when the book was written).
 
 **Try it (book exercise):** build the UserProxy/Assistant pair without a framework, say for a command-line Python math tutor. Give the `CodeAssistant` file-write and test-run tools but no knowledge of the goal. Give the `UserProxy` no tools and a clear statement of the goal. Do they converge, drift, or spiral into "thanks again!" pleasantries? Building it by hand teaches more than adopting a framework.
@@ -210,9 +216,16 @@ Orchestration at scale is covered in [03-harness](../../03-harness-engineering/n
 ## Operating a workflow
 
 - **Evaluate per task before end-to-end.** Modularity is the point — a failure usually lives in one task ([09](09-evaluating-prompts.md)).
-- Collect each task's real inputs and outputs. They become the offline test set and the training data for prompt optimizers like DSPy ([08](08-prompt-optimization.md)).
-- Run that set as a regression harness before shipping any prompt change (TextGrad also optimizes against it).
+- Start collecting example inputs and outputs for each task as soon as its interface is fixed. They become the offline test set, and the data that prompt optimizers like DSPy and TextGrad tune against: given I/O examples and a metric, they rewrite the prompt to raise the score ([08](08-prompt-optimization.md)).
+- Run that set as a regression harness before shipping any prompt change.
+- Once a task is live, record its real inputs and outputs too.
 - In production, sample traffic for quality drift and A/B test competing task implementations.
+
+**Chains fail quietly in the glue code.** Phoenix & Taylor's blog-writing chain (interview → outline → one section per subheading with retrieved web pages → style rewrite → image) shows three ways (*Prompt Engineering for Generative AI*, ch. 10):
+
+- **A format rule the model can't follow.** Their starting single prompt asks for "a minimum of 9 sections" of "a minimum of two paragraphs". They predict the model will ignore it, because models are bad at counting. Moving to one call per outline subheading fixes the count by construction.
+- **A retry loop that drops work.** The section loop retries retrieval with fewer documents (`k` = 5, 4, …) when a call raises. The text says it falls back to no documents if every attempt fails. But in the printed code the fallback only sets `relevant_documents = ""` after the loop has ended and never writes the section, so the post just loses it. The `except` also catches errors from the generation call itself, so a generation failure is misreported as a retrieval problem. Make each step either produce its output or fail loudly, and check the assembled result against the plan (one section per subheading).
+- **A template that never fills in.** The first image function sends `'''an illustration of "+prompt+". in Corporate Memphis ...'''`, a plain string, so the image API gets the literal text `"+prompt+"` and every image comes from the style words alone. A later version uses an f-string. Log the final rendered prompt for every call, not the template.
 
 ---
 

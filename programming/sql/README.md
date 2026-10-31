@@ -2,11 +2,11 @@
 
 > From `SELECT` to query plans, in nine modules and a capstone. Every module is a short note plus
 > exercises you can run offline against SQLite.
-> Jump to: [Modules](#modules) · [Setup](#setup) · [The databases](#the-databases) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
+> Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [The databases](#the-databases) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
 
 ---
 
-## Modules
+## Syllabus
 
 | # | Note | You can… | Exercises |
 |---|---|---|---|
@@ -22,6 +22,22 @@
 | 10 | [Capstone: the SQL Murder Mystery](notes/10-capstone-murder-mystery.md) | Solve an open-ended investigation using everything above | — |
 
 Worked answers are in [`practice/solutions/`](practice/solutions/). Try each exercise before you open them.
+
+---
+
+## Layout
+
+```
+sql/
+├── README.md
+├── notes/                        01–10
+└── practice/
+    ├── setup.sh                  builds data/clubdata.db from clubdata.sql; downloads sql-murder-mystery.db
+    ├── check.sh                  runs every solution (or exercise) file; calls setup.sh if clubdata.db is missing
+    ├── exercises/                01–08 .sql, 09 .py
+    ├── solutions/                same names, worked
+    └── data/                     survey.db and clubdata.sql committed; clubdata.db and sql-murder-mystery.db gitignored
+```
 
 ---
 
