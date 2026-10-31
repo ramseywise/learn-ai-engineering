@@ -44,9 +44,9 @@ cleaned: 2026-10-31
 | | Li et al., *A Contextual-Bandit Approach to Personalized News* (LinUCB) | [1003.0146](https://arxiv.org/abs/1003.0146) | ✓ [li-2010-…](sources/li-2010-contextual-bandit-news-recommendation.pdf) | 01 |
 | | Zhou, *A Survey on Contextual Multi-armed Bandits* | [1508.03326](https://arxiv.org/abs/1508.03326) | ✓ [zhou-2015-…](sources/zhou-2015-contextual-bandits-survey.pdf) | 01 |
 | | Riquelme et al., *Deep Bayesian Bandits Showdown* | [1802.09127](https://arxiv.org/abs/1802.09127) | ✓ [riquelme-2018-…](sources/riquelme-2018-deep-bayesian-bandits.pdf) | 01 |
-| ★ | Schulman et al., *Proximal Policy Optimization* (PPO) | [1707.06347](https://arxiv.org/abs/1707.06347) | ✓ [schulman-2017-ppo.pdf](sources/schulman-2017-ppo.pdf) | 01, 02, 03 |
+| ★ | Schulman et al., *Proximal Policy Optimization* (PPO) | [1707.06347](https://arxiv.org/abs/1707.06347) | ✓ [schulman-2017-proximal-policy-optimization-algorithms.pdf](sources/schulman-2017-proximal-policy-optimization-algorithms.pdf) | 01, 02, 03 |
 | ★ | Christiano et al., *Deep RL from Human Preferences* | [1706.03741](https://arxiv.org/abs/1706.03741) | ✓ [christiano-2017-…](sources/christiano-2017-deep-rl-from-human-preferences.pdf) | 02 |
-| ★ | Ouyang et al., *Training LMs to Follow Instructions with Human Feedback* (InstructGPT) | [2203.02155](https://arxiv.org/abs/2203.02155) | ✓ [ouyang-2022-instructgpt.pdf](sources/ouyang-2022-instructgpt.pdf) | 01, 02 |
+| ★ | Ouyang et al., *Training LMs to Follow Instructions with Human Feedback* (InstructGPT) | [2203.02155](https://arxiv.org/abs/2203.02155) | ✓ [ouyang-2022-training-language-models-follow-instructions.pdf](sources/ouyang-2022-training-language-models-follow-instructions.pdf) | 01, 02 |
 | | Bai et al., *Training a Helpful and Harmless Assistant with RLHF* | [2204.05862](https://arxiv.org/abs/2204.05862) | — | 02 |
 | | OpenAI, *GPT-4 Technical Report* | [2303.08774](https://arxiv.org/abs/2303.08774) | ✓ in [01 sources](../01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf) | 02 |
 | ★ | Bai et al., *Constitutional AI: Harmlessness from AI Feedback* | [2212.08073](https://arxiv.org/abs/2212.08073) | ✓ [bai-2022-constitutional-ai.pdf](sources/bai-2022-constitutional-ai.pdf) | 04 |
@@ -61,6 +61,18 @@ cleaned: 2026-10-31
 | | Shinn et al., *Reflexion* | [2303.11366](https://arxiv.org/abs/2303.11366) | ✓ [shinn-2023-reflexion.pdf](sources/shinn-2023-reflexion.pdf) | 01, 05 |
 | | Yao et al., *Tree of Thoughts* | [2305.10601](https://arxiv.org/abs/2305.10601) | ✓ [yao-2023-tree-of-thoughts.pdf](sources/yao-2023-tree-of-thoughts.pdf) | — (agent reasoning; belongs with 03-agentic-foundations) |
 
+### Routed in, not yet integrated
+
+Placed in [sources/](sources/) by the readings router (`scripts/papers/potw.py route`) on 2026-10-31. Queued in the ledger for `/chapter`; not yet folded into the notes.
+
+| Book | Chapter | PDF | Likely note |
+|---|---|---|---|
+| Huyen, *AI Engineering* (O'Reilly, 2025) | ch. 7 Finetuning | [ch07](sources/huyen-ai-engineering/ch07-finetuning.pdf) | 02, 03 |
+| Huyen, *AI Engineering* | ch. 8 Dataset Engineering | [ch08](sources/huyen-ai-engineering/ch08-dataset-engineering.pdf) | 05 |
+| *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt) | ch. 8 Reinforcement Learning and AI Agents | [ch08](sources/building-ai-agents-llms-rag-kgs/ch08-reinforcement-learning-ai-agents.pdf) | 01, 05 |
+| *Building Applications with AI Agents* (O'Reilly) | ch. 7 Learning in Agentic Systems | [ch07](sources/building-applications-with-ai-agents/ch07-learning-agentic-systems.pdf) | 05 |
+| *AI Agents: The Definitive Guide* | ch. 3 Advanced Planning, Reasoning, and Scalable Execution | [ch03](sources/ai-agents-definitive-guide/ch03-advanced-planning-reasoning-scalable-execution-agents.pdf) | 05 |
+
 ### Misfiled papers
 
 These came in with the old `2-llm-rlhf/` dump and are not about RL. They are kept in [sources/misfiled/](sources/misfiled/) so nothing is lost; the owning pillar can pull them.
@@ -69,9 +81,9 @@ These came in with the old `2-llm-rlhf/` dump and are not about RL. They are kep
 |---|---|
 | Lipton, *The Mythos of Model Interpretability* (1606.03490) | 01-llm-fundamentals or ai-engineering/06-eval |
 | Amershi et al., *Software Engineering for Machine Learning* (ICSE 2019) | data-science or ai-engineering |
-| *Conversational AI* survey | 07-agentic-applications/chatbot |
-| Vlasov et al., *Dialogue Transformers* (Rasa TED, 1910.00486) | 07-agentic-applications/chatbot |
-| Bunk et al., *DIET: Lightweight Language Understanding for Dialogue Systems* (Rasa, 2004.09936) | 07-agentic-applications/chatbot |
+| *Conversational AI* survey | 07-agentic-applications (a copy is already in its sources/) |
+| Vlasov et al., *Dialogue Transformers* (Rasa TED, 1910.00486) | 07-agentic-applications (a copy is already in its sources/) |
+| Bunk et al., *DIET: Lightweight Language Understanding for Dialogue Systems* (Rasa, 2004.09936) | 07-agentic-applications (a copy is already in its sources/) |
 | Wu & Johnson, *Rethinking "Batch" in BatchNorm* (2105.07576) | data-science |
 
 ## Secondary

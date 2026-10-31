@@ -33,7 +33,7 @@ cleaned: 2026-10-31
 
 ## From the subject reading list
 
-Copied from [generative-ai/resources.md](../resources.md), section *03/04 — Agents and frameworks*, on 2026-10-31.
+Copied from `generative-ai/resources.md` (retired 2026-10-31), section *03/04 — Agents and frameworks*, on 2026-10-31.
 
 **Guides**
 

@@ -31,7 +31,7 @@ cleaned: 2026-10-31
 
 ## From the subject reading list
 
-Copied from [generative-ai/resources.md](../resources.md), section *06 — Observability and evals*, on 2026-10-31.
+Copied from `generative-ai/resources.md` (retired 2026-10-31), section *06 — Observability and evals*, on 2026-10-31.
 
 | | Source | Notes |
 |---|---|---|
