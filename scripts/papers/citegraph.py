@@ -707,11 +707,12 @@ def roots_md(db, home, n):
         out += [f"\n### Origin candidates\n",
                 f"Cited by ≥3 of our papers and older than the median cited year ({cutoff:g}). "
                 "The metric proposes; reading confirms.\n",
-                "| Local | Paper | Status | Venue | In repo |", "|---|---|---|---|---|"]
+                "| Local | " + ("Meth. | " if has_intents else "") + "Paper | Status | Venue | In repo |",
+                "|---|" + ("---|" if has_intents else "") + "---|---|---|---|"]
         for w in cand[:20]:
             x = ws[w]
-            out.append(f"| {len(deg[w])} | [{cite_label(db, x)}]({link(x)}) | {x['review_status']} | "
-                       f"{x['venue'] or ''} | {flag(x)} |")
+            out.append(f"| {len(deg[w])} | " + (f"{len(meth.get(w, ()))} | " if has_intents else "")
+                       + f"[{cite_label(db, x)}]({link(x)}) | {x['review_status']} | {x['venue'] or ''} | {flag(x)} |")
     return "\n".join(out)
 
 
