@@ -18,7 +18,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Ingest is foundation 1 of 6: **ingest** → transform → orchestrate → warehouse/store → monitor → feature-serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. The zoomcamp material splits the job three ways:
+Ingest is foundation 1 of 6: **ingest** → transform → orchestrate → warehouse/store → monitor → feature-serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. Background reading: Kleppmann, *Designing Data-Intensive Applications* ([sources/](../sources/kleppmann-designing-data-intensive-applications.pdf)), ch. 4 (encoding and schema evolution, which is why the Kafka section uses Avro with a registry) and ch. 11 (stream processing). The zoomcamp material splits the job three ways:
 
 | Mode | Zoomcamp material | What it teaches |
 |---|---|---|

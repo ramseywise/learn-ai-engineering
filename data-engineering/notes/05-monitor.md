@@ -188,6 +188,8 @@ Two things to change before production. Metrics are keyed by `begin + timedelta(
 
 `dashboards/data_drift.json` charts the three columns over `timestamp`: **Prediction drift**, **Number of drifted columns**, **Share of missing values**. Grafana alert rules on the same queries (for example `num_drifted_columns > 2` for two consecutive batches) close the loop. The MLOps project rubric gives full monitoring marks only when a threshold triggers an alert or a retraining run ([08](08-mlops-maturity-and-best-practices.md)); the Mage sensor in MLOps 3.4 is the retraining half.
 
+Give every alert an owner and an action (page, open a ticket, trigger retraining). An alert nobody acts on trains the team to ignore the channel, and requiring two consecutive breaches is the cheapest guard against one noisy batch.
+
 ---
 
 ## Debugging with test suites (5.9)
