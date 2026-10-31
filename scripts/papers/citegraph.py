@@ -2,17 +2,22 @@
 """Citation graph of the papers the course cites: what they cite, which venue reviewed them,
 and which of them we already hold as PDFs.
 
-  fetch     resolve seeds (papers cited in a home's notes + ledger rows read there) in OpenAlex,
+  fetch     resolve seeds (papers cited in a home's notes, every PDF in its folder, and ledger rows
+            read there) in OpenAlex,
             then fetch every work they reference
   dblp      peer-review status from DBLP (SPARQL): published venue for arXiv preprints
   intents   Semantic Scholar per-citation intents (methodology / background / result) and
             isInfluential; slow without S2_API_KEY, resumable
   status    print review status of the seeds; --write puts venue + review_status in the ledger
   roots     what our papers cite most (local in-degree), RPYS peak years, origin candidates
-  acquire   peer-reviewed works our papers cite but we don't hold; --queue adds them to the ledger
+  acquire   peer-reviewed works our papers cite but we don't hold, and whether a legal free copy
+            exists; --queue adds them to the ledger, --download fetches the free ones (needs --home)
+  preprints for those with no free copy, find an arXiv preprint by title (OpenAlex often has only
+            the proceedings record)
   upgrade   arXiv citations in notes that have a peer-reviewed version to cite instead
   exposure  notes ranked by the share of their citations that are preprint-only
-  report    roots + acquire + upgrade + exposure as markdown in scripts/papers/reports/
+  report    status + roots + acquire + upgrade + exposure as markdown in scripts/papers/reports/;
+            --all writes one report per home plus reports/README.md
   export    GraphML of the graph
 
 Every command takes --home <key> (rag, loop, ...; see potw.HOMES) to work on one home;
@@ -136,7 +141,8 @@ CREATE TABLE IF NOT EXISTS work(
   doi TEXT, arxiv TEXT, source_name TEXT, source_type TEXT, published_in TEXT,
   cited_by INT, oa_pdf TEXT, refs_fetched INT DEFAULT 0,
   dblp_checked INT DEFAULT 0, dblp_venue TEXT, dblp_year INT, dblp_key TEXT, dblp_type TEXT,
-  review_status TEXT, venue TEXT, top_venue INT, in_repo TEXT, s2_done INT DEFAULT 0);
+  review_status TEXT, venue TEXT, top_venue INT, in_repo TEXT, s2_done INT DEFAULT 0,
+  arxiv_checked INT DEFAULT 0);
 CREATE TABLE IF NOT EXISTS author(work TEXT, position INT, name TEXT, openalex_id TEXT,
   PRIMARY KEY(work, position));
 CREATE TABLE IF NOT EXISTS cites(src TEXT, dst TEXT, influential INT, intents TEXT,
@@ -156,6 +162,8 @@ def connect():
     db = sqlite3.connect(DB)
     db.row_factory = sqlite3.Row
     db.executescript(SCHEMA)
+    if "arxiv_checked" not in {r[1] for r in db.execute("PRAGMA table_info(work)")}:
+        db.execute("ALTER TABLE work ADD COLUMN arxiv_checked INT DEFAULT 0")
     return db
 
 
@@ -249,9 +257,10 @@ def collect_seeds(db, hs, rows):
                 db.execute("INSERT OR IGNORE INTO seed(ref, kind, home) VALUES (?,?,?)", (ref, kind, key))
                 db.execute("INSERT OR IGNORE INTO note_cites VALUES (?,?,?)", (rel, key, ref))
         for r in rows:
-            if r.get("pillar") != key or r["status"] not in SEED_STATUSES:
-                continue
             pdf = r.get("local_pdf") if isinstance(r.get("local_pdf"), str) else None
+            in_folder = bool(pdf) and pdf.startswith(folder + "/") and r["status"] != "skipped"
+            if not in_folder and (r.get("pillar") != key or r["status"] not in SEED_STATUSES):
+                continue
             got = ("arxiv", r["arxiv"]) if r.get("arxiv") else (ref_from_pdf(pdf) if pdf else None)
             if got:
                 db.execute("INSERT OR IGNORE INTO seed(ref, kind, home) VALUES (?,?,?)", (got[1], got[0], key))
@@ -726,14 +735,88 @@ def acquire_list(db, home, min_deg):
     return [(ws[w], len(deg[w])) for w in picks]
 
 
+OA_HOSTS = (("aclanthology.org", "ACL Anthology"), ("aclweb.org", "ACL Anthology"), ("mlr.press", "PMLR"),
+            ("neurips.cc", "NeurIPS proceedings"), ("nips.cc", "NeurIPS proceedings"), ("openreview.net", "OpenReview"),
+            ("jmlr.org", "JMLR"), ("direct.mit.edu", "MIT Press (open access)"), ("arxiv.org", "arXiv"),
+            ("aaai.org", "AAAI (open access)"), ("ijcai.org", "IJCAI (open access)"), ("thecvf.com", "CVF open access"),
+            ("usenix.org", "USENIX (open access)"), ("dl.acm.org", "ACM (open access)"))
+
+
+def availability(w):
+    """(how to get it, PDF URL or None). A free published copy beats the arXiv preprint; a
+    paywalled paper with an arXiv version is still free to read (cite the venue)."""
+    if w["oa_pdf"]:
+        host = urllib.parse.urlparse(w["oa_pdf"]).netloc
+        label = next((name for h, name in OA_HOSTS if h in host), f"free ({host})")
+        if label == "arXiv" or label.startswith("free"):
+            label = label if label == "arXiv" else f"free copy ({host})"
+        return f"✓ {label}", w["oa_pdf"]
+    doi = (w["doi"] or "").lower()
+    if doi.startswith("10.18653/v1/"):  # every ACL Anthology paper is open access
+        return "✓ ACL Anthology", f"https://aclanthology.org/{doi.split('/', 2)[2]}.pdf"
+    if w["arxiv"]:
+        return "✓ arXiv preprint", f"https://arxiv.org/pdf/{w['arxiv']}"
+    if doi.startswith("10.1162/tacl"):  # TACL is open access; the DOI lands on the free MIT Press page
+        return "✓ TACL (open access)", f"https://doi.org/{doi}"
+    if w["doi"]:
+        return "✗ no free copy found (paywalled: library, author page or request)", None
+    return "✗ no free copy found", None
+
+
+ARXIV_SEARCH = "https://export.arxiv.org/api/query?search_query={q}&max_results=5"
+ATOM = "{http://www.w3.org/2005/Atom}"
+
+
+def cmd_preprints(args):
+    """OpenAlex often holds only the proceedings record of a paper that also has an arXiv preprint
+    (MMLU, SuperGLUE). For papers on a reading list with no free copy, search arXiv by title and
+    store the id, so availability() can point at the free preprint."""
+    import xml.etree.ElementTree as ET
+    db = connect()
+    todo = {}
+    for key in homes(args.home):
+        for w, _ in acquire_list(db, key, args.min):
+            if not w["arxiv_checked"] and availability(w)[0].startswith("✗"):
+                todo[w["id"]] = w
+    log(f"preprints: {len(todo)} reading-list papers with no free copy; searching arXiv by title")
+    found = 0
+    for w in todo.values():
+        words = " ".join(norm_title(w["title"]).split()[:12])
+        url = ARXIV_SEARCH.format(q=urllib.parse.quote(f'ti:"{words}"'))
+        try:
+            feed = ET.fromstring(potw.http_get(url, timeout=60))
+        except Exception as exc:
+            log(f"preprints: {w['id']} failed: {exc}")
+            continue
+        hit = None
+        for e in feed.iter(f"{ATOM}entry"):
+            year = int(e.findtext(f"{ATOM}published", "0000")[:4])
+            if norm_title(e.findtext(f"{ATOM}title", "")) == w["norm_title"] and \
+                    (not w["year"] or w["year"] - 3 <= year <= w["year"] + 1):
+                hit = re.sub(r"v\d+$", "", e.findtext(f"{ATOM}id", "").rsplit("/abs/", 1)[-1])
+                break
+        db.execute("UPDATE work SET arxiv=COALESCE(arxiv, ?), arxiv_checked=1 WHERE id=?", (hit, w["id"]))
+        db.commit()
+        found += bool(hit)
+        log(f"preprints: {w['title'][:60]} -> {hit or 'none'}")
+        time.sleep(3)  # arXiv asks for one request every 3 seconds
+    log(f"preprints: {found} of {len(todo)} have an arXiv copy")
+
+
 def acquire_md(db, home, min_deg):
     picks = acquire_list(db, home, min_deg)
     out = [f"### Peer-reviewed papers to acquire ({len(picks)})\n",
            f"Peer-reviewed, cited by ≥{min_deg} of our papers, no PDF in the repo. "
-           "`citegraph.py acquire --queue` adds them to the ledger.\n",
-           "| Local | Paper | Venue | Free PDF |", "|---|---|---|---|"]
+           "**Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, "
+           "then arXiv). `acquire --download` fetches the free ones into this home's sources/; "
+           "`acquire --queue` only adds them to the ledger.\n"]
+    got = Counter(availability(w)[0].startswith("✓") for w, _ in picks)
+    out.append(f"{got[True]} can be fetched free, {got[False]} have no free copy.\n")
+    out += ["| Local | Paper | Venue | Get it |", "|---|---|---|---|"]
     for w, d in picks:
-        out.append(f"| {d} | [{cite_label(db, w)}]({link(w)}) | {w['venue']} | {w['oa_pdf'] or '—'} |")
+        how, url = availability(w)
+        out.append(f"| {d} | [{cite_label(db, w)}]({link(w)}) | {w['venue']} | "
+                   + (f"[{how}]({url})" if url else how) + " |")
     return "\n".join(out)
 
 
@@ -779,9 +862,13 @@ def status_md(db, home):
     held = sum(1 for w in seeds.values() if w["in_repo"])
     out = [f"### Our papers by review status ({len(seeds)}; {held} with a PDF in the repo)\n",
            " · ".join(f"{k}: {v}" for k, v in c.most_common()) + "\n",
-           "| Paper | Status | Venue | In repo |", "|---|---|---|---|"]
+           "In notes = linked from a note or references.md; a PDF we hold that no note links is unread or uncited.\n",
+           "| Paper | Status | Venue | In notes | In repo |", "|---|---|---|---|---|"]
+    q = "SELECT DISTINCT w.canon FROM note_cites n JOIN seed s ON s.ref=n.ref JOIN work w ON w.id=s.work"
+    noted = {r[0] for r in db.execute(q + (" WHERE n.home=?" if home else ""), (home,) if home else ())}
     for w in sorted(seeds.values(), key=lambda w: (w["review_status"], -(w["year"] or 0))):
-        out.append(f"| [{cite_label(db, w)}]({link(w)}) | {w['review_status']} | {w['venue'] or ''} | {flag(w)} |")
+        out.append(f"| [{cite_label(db, w)}]({link(w)}) | {w['review_status']} | {w['venue'] or ''} | "
+                   f"{'✓' if w['id'] in noted else '—'} | {flag(w)} |")
     miss = db.execute("SELECT ref FROM seed WHERE work IS NULL" + (" AND home=?" if home else ""),
                       (home,) if home else ()).fetchall()
     if miss:
@@ -815,7 +902,9 @@ def cmd_roots(args):
 def cmd_acquire(args):
     db = connect()
     print(acquire_md(db, args.home, args.min))
-    if args.queue:
+    if args.download:
+        download(db, args)
+    elif args.queue:
         rows = potw.load_ledger()
         have = {r["key"] for r in rows} | {r.get("arxiv") for r in rows if r.get("arxiv")}
         now = time.strftime("%Y-%m-%dT%H:%M:%S")
@@ -835,6 +924,49 @@ def cmd_acquire(args):
         log(f"acquire: queued {added} papers in the ledger")
 
 
+def download(db, args):
+    """Save each free copy into the home's sources/ as <author>-<year>-<title-slug>.pdf and add a
+    `downloaded` ledger row, so /papers picks it up. Paywalled papers are left for a human."""
+    if not args.home:
+        sys.exit("acquire --download needs --home: PDFs go into that home's sources/")
+    rows = potw.load_ledger()
+    have = {r["key"] for r in rows} | {r.get("arxiv") for r in rows if r.get("arxiv")}
+    sources = REPO / potw.HOMES[args.home][0] / "sources"
+    done = 0
+    for w, d in acquire_list(db, args.home, args.min):
+        how, url = availability(w)
+        key = w["arxiv"] or link(w)
+        if not url or key in have:
+            continue
+        try:
+            pdf = potw.http_get(url, timeout=120)
+        except Exception as exc:
+            log(f"download: {key} failed: {exc}")
+            continue
+        if not pdf.startswith(b"%PDF") and w["arxiv"] and "arxiv.org" not in url:
+            url = f"https://arxiv.org/pdf/{w['arxiv']}"  # the publisher page wasn't a PDF; fall back to arXiv
+            pdf = potw.http_get(url, timeout=120)
+        if not pdf.startswith(b"%PDF"):
+            log(f"download: {key} {url} is not a PDF; skipped")
+            continue
+        dest = sources / f"{potw.make_slug(w['title'], first_author(db, w['id']), str(w['year']))}.pdf"
+        if dest.exists():
+            continue
+        dest.write_bytes(pdf)
+        rows.append({"key": key, "title": w["title"], "status": "downloaded", "source": "citegraph",
+                     "arxiv": w["arxiv"], "url": link(w), "pillar": args.home, "topic": args.home,
+                     "added_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "downloaded_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                     "have_pdf": True, "local_pdf": str(dest.relative_to(REPO)), "venue": w["venue"],
+                     "review_status": w["review_status"], "local_citations": d, "citations": w["cited_by"],
+                     "year": w["year"], "first_author": first_author(db, w["id"]),
+                     "reason": f"Peer-reviewed ({w['venue']}); cited by {d} of our papers. Got it from {how[2:]}."})
+        potw.save_ledger(rows)
+        done += 1
+        log(f"download: {key} -> {dest.relative_to(REPO)}")
+        time.sleep(3)
+    log(f"download: {done} PDFs saved")
+
+
 def cmd_upgrade(args):
     print(upgrade_md(connect(), args.home))
 
@@ -844,6 +976,31 @@ def cmd_exposure(args):
 
 
 def cmd_report(args):
+    if args.all:
+        index = ["# Citation graph reports\n",
+                 "One report per home: our papers and their review status, what they cite most, where the "
+                 "ideas come from, and peer-reviewed papers we lack (with whether a free copy exists). "
+                 "Regenerate with `python3 scripts/papers/citegraph.py report --all`.\n",
+                 "| Home | Our papers | Peer-reviewed | With PDF | To acquire | Free |", "|---|---|---|---|---|---|"]
+        db = connect()
+        for key in homes(None):
+            seeds = works(db, seed_ids(db, key))
+            if not seeds:
+                continue
+            args.home = key
+            write_report(args)
+            picks = acquire_list(db, key, args.min)
+            free = sum(availability(w)[0].startswith("✓") for w, _ in picks)
+            index.append(f"| [{key}](citegraph-{key}.md) | {len(seeds)} | "
+                         f"{sum(w['review_status'] == 'peer-reviewed' for w in seeds.values())} | "
+                         f"{sum(bool(w['in_repo']) for w in seeds.values())} | {len(picks)} | {free} |")
+        (REPORTS / "README.md").write_text("\n".join(index) + "\n", encoding="utf-8")
+        log(f"report: {REPORTS.relative_to(REPO)}/README.md")
+        return
+    write_report(args)
+
+
+def write_report(args):
     db = connect()
     name = args.home or "all"
     REPORTS.mkdir(exist_ok=True)
@@ -897,7 +1054,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(required=True)
     for name, fn in (("fetch", cmd_fetch), ("dblp", cmd_dblp), ("intents", cmd_intents), ("status", cmd_status),
-                     ("roots", cmd_roots), ("acquire", cmd_acquire), ("upgrade", cmd_upgrade),
+                     ("roots", cmd_roots), ("acquire", cmd_acquire), ("preprints", cmd_preprints),
+                     ("upgrade", cmd_upgrade),
                      ("exposure", cmd_exposure), ("report", cmd_report), ("export", cmd_export)):
         p = sub.add_parser(name)
         p.add_argument("--home", help="one home key (rag, loop, ...); default all ai-engineering + generative-ai homes")
@@ -907,6 +1065,10 @@ def main():
             p.add_argument("--write", action="store_true", help="write review_status and venue to the ledger")
         if name == "acquire":
             p.add_argument("--queue", action="store_true", help="append the list to the ledger as queued rows")
+            p.add_argument("--download", action="store_true",
+                           help="fetch the legal free copies into the home's sources/ and add downloaded ledger rows")
+        if name == "report":
+            p.add_argument("--all", action="store_true", help="one report per home, plus reports/README.md")
         p.set_defaults(fn=fn)
     args = ap.parse_args()
     args.fn(args)
