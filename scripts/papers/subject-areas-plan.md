@@ -169,6 +169,22 @@ Phase 1 homes + triage fixes ──▶ Phase 3 stats note skeletons ──▶ Ph
 
 ✋ marks a step where the work stops for your review.
 
+## Deviations from this plan (2026-10-31)
+
+- Discovery is a separate script, `scripts/papers/discover.py`, not a `potw.py discover`
+  subcommand. potw.py was already long, and discovery has its own cache and review files.
+- OpenAlex `search.semantic` replaces Semantic Scholar `/recommendations`. It found the
+  canonical papers for a note's topics better, and needs no S2 key. Plain keyword search
+  ranked by citations returned off-topic classics unless filtered by year.
+- Queries are mostly canonical paper titles, not topic phrases. Some notes have no queries.
+  Review the queries files before running `search`.
+- Curated titles resolve via fallbacks: a year-filtered search, then one with no year, then
+  semantic. A `near()` guard rejects matches whose title is empty, one word or unrelated. Junk
+  matches from before that guard are marked `skipped`, not deleted. `save_ledger` merges with
+  concurrent writers, so a deleted row comes back.
+- Search is blocked on the OpenAlex daily budget until `OPENALEX_API_KEY` is set.
+- Data-analytics was renumbered (default kept). The new skeleton notes are 01, 03, 05 and 07.
+
 ## Open questions
 
 - Renumbering data-analytics notes 01–10 changes every link to them, including links from

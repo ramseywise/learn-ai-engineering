@@ -24,9 +24,17 @@ and which of them we already hold as PDFs.
   report    status + roots + acquire + upgrade + exposure as markdown in scripts/papers/reports/;
             --all writes one report per home plus reports/README.md
   export    GraphML of the graph; --html writes interactive pages reports/graph-<home>.html
+  bridges   reports/bridges.md: readings that discovery found for both a subject home and an AI
+            home, and works cited from both sides; where data-analytics, data-science,
+            data-engineering and programming meet ai-engineering and generative-ai
 
 Every command takes --home <key> (rag, loop, ...; see potw.HOMES) to work on one home;
-default is every ai-engineering and generative-ai home.
+default is every home, --subject limits it to the five subject homes (analytics,
+classical-ml, data-systems, ml-systems, programming).
+
+The subject homes hold few papers, so their graph is thin if seeded only from what we have
+read. `fetch --include-queued` also seeds from queued rows; reports for homes fetched that
+way say so in a banner, since the graph then reflects what we plan to read.
 
 Graph: scripts/papers/citations.db (SQLite, gitignored, rebuilt from the APIs). Nodes are
 OpenAlex works; `in_repo` is the repo path of our PDF when we hold one. An arXiv preprint and
@@ -94,12 +102,20 @@ def norm_title(t):
     return re.sub(r"[^a-z0-9]+", " ", t).strip()
 
 
+SUBJECT_ONLY = False  # set by --subject
+
+
 def homes(key):
     if key:
         if key not in potw.HOMES:
             sys.exit(f"unknown home {key!r}; one of: {', '.join(potw.HOMES)}")
         return {key: potw.HOMES[key][0]}
-    return {k: v[0] for k, v in potw.HOMES.items() if v[0].startswith(("ai-engineering/", "generative-ai/"))}
+    keys = potw.SUBJECT_HOMES if SUBJECT_ONLY else potw.HOMES
+    return {k: potw.HOMES[k][0] for k in keys}
+
+
+def is_ai_home(key):
+    return potw.HOMES[key][0].startswith(("ai-engineering/", "generative-ai/"))
 
 
 def get_json(url, headers=None, tries=6, pause=0.0, data=None):
@@ -156,6 +172,7 @@ CREATE TABLE IF NOT EXISTS seed(ref TEXT PRIMARY KEY, kind TEXT, home TEXT, work
   ledger_key TEXT, title TEXT);
 CREATE TABLE IF NOT EXISTS seed_home(work TEXT, home TEXT, PRIMARY KEY(work, home));
 CREATE TABLE IF NOT EXISTS note_cites(note TEXT, home TEXT, ref TEXT, PRIMARY KEY(note, ref));
+CREATE TABLE IF NOT EXISTS provisional(home TEXT PRIMARY KEY, fetched TEXT);
 CREATE INDEX IF NOT EXISTS cites_dst ON cites(dst);
 CREATE INDEX IF NOT EXISTS work_norm ON work(norm_title);
 CREATE INDEX IF NOT EXISTS work_arxiv ON work(arxiv);
@@ -251,9 +268,12 @@ def ref_from_pdf(path):
     return None
 
 
-def collect_seeds(db, hs, rows):
-    """Fill seed + note_cites: papers linked from each home's markdown, plus ledger rows read there."""
+def collect_seeds(db, hs, rows, include_queued=False):
+    """Fill seed + note_cites: papers linked from each home's markdown, plus ledger rows read there
+    (and, with include_queued, rows queued for it)."""
+    statuses = SEED_STATUSES + (("queued",) if include_queued else ())
     for key, folder in hs.items():
+        sharers = {k for k, v in potw.HOMES.items() if v[0] == folder and k != key}
         for md in sorted((REPO / folder).rglob("*.md")):
             rel = md.relative_to(REPO).as_posix()
             if "/sources/" in rel or "/slides/" in rel:
@@ -263,10 +283,12 @@ def collect_seeds(db, hs, rows):
                 db.execute("INSERT OR IGNORE INTO note_cites VALUES (?,?,?)", (rel, key, ref))
         for r in rows:
             pdf = r.get("local_pdf") if isinstance(r.get("local_pdf"), str) else None
-            in_folder = bool(pdf) and pdf.startswith(folder + "/") and r["status"] != "skipped"
-            if not in_folder and (r.get("pillar") != key or r["status"] not in SEED_STATUSES):
+            in_folder = (bool(pdf) and pdf.startswith(folder + "/") and r["status"] != "skipped"
+                         and r.get("pillar") not in sharers)  # data-engineering holds two homes
+            if not in_folder and (r.get("pillar") != key or r["status"] not in statuses):
                 continue
-            got = ("arxiv", r["arxiv"]) if r.get("arxiv") else (ref_from_pdf(pdf) if pdf else None)
+            got = (("arxiv", r["arxiv"]) if r.get("arxiv") else ("doi", r["doi"].lower()) if r.get("doi")
+                   else ref_from_pdf(pdf) if pdf else None)
             if got:
                 db.execute("INSERT OR IGNORE INTO seed(ref, kind, home) VALUES (?,?,?)", (got[1], got[0], key))
                 db.execute("UPDATE seed SET ledger_key=? WHERE ref=?", (r["key"], got[1]))
@@ -402,7 +424,14 @@ def mark_in_repo(db, rows):
 def cmd_fetch(args):
     db = connect()
     rows = potw.load_ledger()
-    collect_seeds(db, homes(args.home), rows)
+    hs = homes(args.home)
+    collect_seeds(db, hs, rows, args.include_queued)
+    for key in hs:
+        if args.include_queued:
+            db.execute("INSERT OR REPLACE INTO provisional VALUES (?,?)", (key, time.strftime("%Y-%m-%d")))
+        else:
+            db.execute("DELETE FROM provisional WHERE home=?", (key,))
+    db.commit()
     resolve_seeds(db)
     fetch_refs(db)
     link_canon(db)
@@ -987,6 +1016,7 @@ def place_pdf(db, w, home, pdf):
     if dest.exists():
         log(f"download: {dest.relative_to(REPO)} already exists; skipped")
         return None
+    dest.parent.mkdir(parents=True, exist_ok=True)  # programming has no sources/ yet
     dest.write_bytes(pdf)
     rel = dest.relative_to(REPO).as_posix()
     db.execute("UPDATE work SET in_repo=? WHERE canon=?", (rel, w["id"]))
@@ -1317,10 +1347,86 @@ def write_report(args):
             f"on {time.strftime('%Y-%m-%d')}. Sources: OpenAlex (references, venues, open-access PDFs), "
             "DBLP (peer-reviewed venue), Semantic Scholar (citation intents, when fetched). "
             "Counts are lower bounds: reference lists in these APIs are incomplete.\n",
+            provisional_md(db, args.home),
             status_md(db, args.home), roots_md(db, args.home, args.n), acquire_md(db, args.home, args.min),
-            upgrade_md(db, args.home), exposure_md(db, args.home)]
+            upgrade_md(db, args.home), exposure_md(db, args.home), role_check_md(args.home)]
+    body = [b for b in body if b]
     path.write_text("\n\n".join(body) + "\n", encoding="utf-8")
     log(f"report: {path.relative_to(REPO)}")
+
+
+def provisional_md(db, home):
+    q = "SELECT home, fetched FROM provisional" + (" WHERE home=?" if home else "")
+    got = db.execute(q, (home,) if home else ()).fetchall()
+    if not got:
+        return ""
+    which = ", ".join(f"`{r[0]}` ({r[1]})" for r in got)
+    return (f"> **Provisional.** Seeded from queued readings as well as read ones: {which}. The graph shows "
+            "what the queue cites, not what the notes rest on; re-fetch without `--include-queued` once "
+            "the readings are integrated.\n")
+
+
+def role_check_md(home):
+    """Where triage (source_role), the curated list or a manual edit disagrees with the graph's role."""
+    rows = [r for r in potw.load_ledger() if (not home or r.get("pillar") == home) and r.get("role")
+            and r["status"] != "skipped"]
+    out = []
+    for r in rows:
+        said = r.get("role_manual") or r.get("source_role") or r.get("curated_role")
+        graph = r["role"] if r["role"] in ("primary", "secondary") else None
+        if said in ("primary", "secondary") and graph and said != graph:
+            out.append(f"| {(r.get('title') or r['key'])[:80]} | {said} | {graph} | {r.get('local_citations') or 0} | "
+                       f"{r['status']} | `{r['key']}` |")
+    if not out:
+        return ""
+    return "\n".join([f"### Role check ({len(out)} disagreements)\n",
+                      "Triage or the curated list called these one thing; the citation graph (cited by "
+                      f">= {PRIMARY_MIN} of our papers, >= {PRIMARY_METH} for the method, means primary) says another. "
+                      "Settle them in `discover.py review`: a role edit there wins over both.\n",
+                      "| Reading | Said | Graph | Local cites | Status | Key |", "|---|---|---|---|---|---|", *out])
+
+
+def cmd_bridges(args):
+    """Readings that sit between a subject home and an AI home."""
+    rows = potw.load_ledger()
+    found = []
+    for r in rows:
+        mine = r.get("discovered_for") or r.get("pillar")
+        also = r.get("also_found_for") or []
+        if not mine or mine not in potw.HOMES or r["status"] == "skipped":
+            continue
+        sides = {mine, *[a for a in also if a in potw.HOMES]}
+        if any(is_ai_home(h) for h in sides) and any(not is_ai_home(h) for h in sides):
+            found.append((r, sorted(sides)))
+    db = connect()
+    subject = [k for k in potw.HOMES if not is_ai_home(k)]
+    ai = [k for k in potw.HOMES if is_ai_home(k)]
+    seeds_s = {w for k in subject for w in seed_ids(db, k)}
+    seeds_a = {w for k in ai for w in seed_ids(db, k)}
+    deg_s, _, _ = in_degree(db, seeds_s)
+    deg_a, _, _ = in_degree(db, seeds_a)
+    both = sorted((w for w in deg_s if w in deg_a), key=lambda w: -min(len(deg_s[w]), len(deg_a[w])))[: args.n]
+    ws = works(db, both)
+    out = ["# Bridges between the subject homes and the AI homes\n",
+           f"> Generated by `scripts/papers/citegraph.py bridges` on {time.strftime('%Y-%m-%d')}. A bridge is a "
+           "reading that discovery found for a subject home (analytics, classical-ml, data-systems, ml-systems, "
+           "programming) and an AI home, or a work cited from both sides. Good candidates for a "
+           "cross-link between notes.\n",
+           f"## Found for both sides ({len(found)})\n",
+           "| Reading | Year | Homes | Status | Note |", "|---|---|---|---|---|"]
+    for r, sides in sorted(found, key=lambda x: -(x[0].get("citations") or 0)):
+        out.append(f"| {(r.get('title') or r['key'])[:90]} | {r.get('year') or ''} | {', '.join(sides)} | "
+                   f"{r['status']} | {r.get('note') or r.get('discovered_note') or ''} |")
+    out += [f"\n## Cited from both sides (top {len(both)})\n",
+            "Subject / AI = how many of each side's papers cite it.\n",
+            "| Work | Subject | AI | In repo |", "|---|---|---|---|"]
+    for w in both:
+        if w in ws:
+            out.append(f"| [{cite_label(db, ws[w])}]({link(ws[w])}) | {len(deg_s[w])} | {len(deg_a[w])} | {flag(ws[w])} |")
+    REPORTS.mkdir(exist_ok=True)
+    path = REPORTS / "bridges.md"
+    path.write_text("\n".join(out) + "\n", encoding="utf-8")
+    log(f"bridges: {len(found)} found for both sides, {len(both)} cited from both -> {path.relative_to(REPO)}")
 
 
 def cmd_export(args):
@@ -1366,9 +1472,12 @@ def main():
                      ("roots", cmd_roots), ("acquire", cmd_acquire), ("preprints", cmd_preprints),
                      ("primary", cmd_primary), ("ingest", cmd_ingest), ("refs", cmd_refs),
                      ("upgrade", cmd_upgrade),
-                     ("exposure", cmd_exposure), ("report", cmd_report), ("export", cmd_export)):
+                     ("exposure", cmd_exposure), ("report", cmd_report), ("export", cmd_export),
+                     ("bridges", cmd_bridges)):
         p = sub.add_parser(name)
-        p.add_argument("--home", help="one home key (rag, loop, ...); default all ai-engineering + generative-ai homes")
+        p.add_argument("--home", help="one home key (rag, loop, analytics, ...); default every home")
+        p.add_argument("--subject", action="store_true",
+                       help="only the subject homes (analytics, classical-ml, data-systems, ml-systems, programming)")
         p.add_argument("--n", type=int, default=40, help="rows in the most-cited table")
         p.add_argument("--min", type=int, default=3, help="acquire: minimum local in-degree")
         if name == "status":
@@ -1387,8 +1496,13 @@ def main():
             p.add_argument("--html", action="store_true", help="interactive pages reports/graph-<home>.html")
         if name == "report":
             p.add_argument("--all", action="store_true", help="one report per home, plus reports/README.md")
+        if name == "fetch":
+            p.add_argument("--include-queued", action="store_true",
+                           help="also seed from queued rows (thin homes); their reports get a provisional banner")
         p.set_defaults(fn=fn)
     args = ap.parse_args()
+    global SUBJECT_ONLY
+    SUBJECT_ONLY = args.subject
     args.fn(args)
 
 

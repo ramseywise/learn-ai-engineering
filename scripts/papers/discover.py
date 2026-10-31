@@ -259,16 +259,29 @@ def cmd_search(args):
 
 def resolve_title(title, year=None):
     """Best OpenAlex match for a title: exact normalised title first, else the most cited
-    result whose title contains the query's words."""
-    params = {"search": title, "per-page": 10, "select": OA_FIELDS}
-    if year:
-        params["filter"] = f"publication_year:{int(year) - 1}-{int(year) + 1}"
-    res = (cached_get(params) or {}).get("results") or []
+    result whose title is a near match (see `near`). Tries a plain search within a year
+    of `year`, then without the year (reprints such as MapReduce in CACM 2008), then a
+    semantic search, which finds titles the keyword index splits badly."""
     want = cg.norm_title(title)
-    exact = [w for w in res if cg.norm_title(w.get("title")) == want]
-    loose = [w for w in res if want in cg.norm_title(w.get("title")) or cg.norm_title(w.get("title")) in want]
-    pool = exact or loose
-    return max(pool, key=lambda w: w.get("cited_by_count") or 0) if pool else None
+
+    def near(got):  # "XGBoost" for "XGBoost: A Scalable..."; never an empty or one-word fragment
+        return got and (want in got or want.startswith(got + " ") or (got in want and len(got.split()) >= 2))
+
+    def best(res):
+        exact = [w for w in res if cg.norm_title(w.get("title")) == want]
+        pool = exact or [w for w in res if near(cg.norm_title(w.get("title")))]
+        return max(pool, key=lambda w: w.get("cited_by_count") or 0) if pool else None
+
+    tries = [({"search": title, "per-page": 10, "select": OA_FIELDS}, False)]
+    if year:
+        tries[0][0]["filter"] = f"publication_year:{int(year) - 1}-{int(year) + 1}"
+        tries.append(({"search": title, "per-page": 10, "select": OA_FIELDS}, False))
+    tries.append(({"search.semantic": title, "per-page": 10, "select": OA_FIELDS}, True))
+    for params, semantic in tries:
+        w = best((cached_get(params, semantic=semantic) or {}).get("results") or [])
+        if w:
+            return w
+    return None
 
 
 def cmd_curated(args):
@@ -279,7 +292,11 @@ def cmd_curated(args):
     for it in items:
         if args.home and it["home"] not in args.home:
             continue
-        w = resolve_title(it["title"], it.get("year"))
+        try:
+            w = resolve_title(it["title"], it.get("year"))
+        except BudgetSpent as e:
+            log(f"curated: OpenAlex budget spent ({e}); saved what was resolved, re-run later to resume")
+            break
         if not w:
             missing.append(it)
             continue

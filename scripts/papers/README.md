@@ -21,8 +21,14 @@ Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES
 |---|---|
 | prompt, context, harness, loop, graph, eval, inference, multimodal, safety | `ai-engineering/01`–`09` |
 | llm-fundamentals, rag, agents, frameworks, post-training, observability, agentic-apps | `generative-ai/01`–`07` |
+| analytics | `data-analytics/sources/` |
 | classical-ml | `data-science/sources/` |
-| ml-systems | `data-engineering/sources/` |
+| data-systems, ml-systems | `data-engineering/sources/` (two keys, one folder) |
+| programming | `programming/sources/` |
+
+The last five are the *subject homes* (`SUBJECT_HOMES` in potw.py). Their readings are mostly
+books and classic papers that predate DAIR, so they come in through `discover.py` (below), not
+the weekly fetch.
 
 Topics with no home are kept in the ledger and never routed. Interpretability and alignment
 research are *watched*: a notable paper there is `parked`, so it is still waiting when a pillar
@@ -81,6 +87,30 @@ python3 scripts/papers/potw.py download --backlog --home multimodal safety  # on
 make papers                                               # weekly: fetch DAIR, cite, triage, download
 ```
 
+## Discovery for the subject homes
+
+The citation graph grows outward from papers we already hold, so a home that holds few gets
+little from it. [`discover.py`](discover.py) searches by topic instead. Plan:
+[subject-areas-plan.md](subject-areas-plan.md).
+
+1. `queries` writes `discover/queries-<home>.json`, a few search queries per note. You edit that file first.
+2. `search` runs each query through OpenAlex semantic search and adds the well-cited works the ledger lacks as `new` rows.
+   `curated` resolves the hand-picked list in `discover/curated.jsonl` by title.
+3. `potw.py triage --home <home>` scores them as usual.
+4. `review` writes `discover/review-<home>.md`, one table per note. Mark keep and role, then `--apply`.
+
+OpenAlex without a key gives each IP a small free daily budget (about 100 semantic searches);
+set `OPENALEX_API_KEY` for more. Every response is cached in `discover/cache/` (gitignored).
+
+```bash
+python3 scripts/papers/discover.py search --home analytics data-systems ml-systems classical-ml programming
+python3 scripts/papers/discover.py curated
+python3 scripts/papers/potw.py triage --home analytics
+python3 scripts/papers/discover.py review --home analytics            # then edit, then --apply
+python3 scripts/papers/citegraph.py fetch --subject --include-queued  # graph for the subject homes
+python3 scripts/papers/citegraph.py bridges                           # works both sides cite
+```
+
 ## Citation graph
 
 `citegraph.py` builds a graph of what our papers cite, so we can see where ideas come from and
@@ -110,6 +140,11 @@ cite the peer-reviewed version. Plan and reasoning: [citation-graph-plan.md](cit
   are listed to fetch by hand: drop the PDF in `downloads/` (gitignored, any file name) and
   run `ingest`, which matches it by title and files it.
 - Each `references.md` gets a generated **Where the ideas come from** table (`refs --write`).
+- `--subject` limits any command to the five subject homes. `fetch --include-queued` also
+  seeds from queued rows, which those homes need while they hold few PDFs. A home seeded that
+  way is marked *provisional* in its report.
+- `bridges` writes [reports/bridges.md](reports/bridges.md): readings found for both a subject
+  home and an AI home, and works cited from both sides.
 - `export --html` writes an interactive graph per pillar, `reports/graph-<home>.html`
   (gitignored; open it in a browser).
 
