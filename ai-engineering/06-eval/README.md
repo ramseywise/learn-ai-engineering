@@ -139,8 +139,8 @@ Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-
 Trimmed templates live inline in the chapter that teaches them: the failure-taxonomy skeleton in [02](notes/02-defining-correct.md#the-failure-taxonomy), the row schema and its enums in [03](notes/03-eval-datasets.md), the judge prompt and calibration record in [05](notes/05-llm-as-judge.md#writing-the-judge-prompt), and the gate contract and CI workflow in [10](notes/10-evals-in-ci.md).
 
 ### Related
-- [support-agent-observability.md](../../generative-ai/06-observability/support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.
-- [Learning-LangFuse-main](../../generative-ai/06-observability/Learning-LangFuse-main/) and [langfuse-evaluation-main](../../generative-ai/06-observability/langfuse-evaluation-main/) — Langfuse course code.
+- [support-agent-observability.md](../../generative-ai/06-observability/notes/05-support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.
+- [Learning-LangFuse-main](../../generative-ai/06-observability/notes/02-scoring-datasets-experiments.md) and [langfuse-evaluation-main](../../generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) — Langfuse course code.
 
 ### Interviewing guide
 - [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep. This folder is the source of depth; if they drift, this folder wins.

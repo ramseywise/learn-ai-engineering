@@ -99,7 +99,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 ## Resource map
 
 ### Related notes elsewhere
-- Memory-augmented RAG notes are merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md) (memory designs) and [generative-ai/02-rag-retrieval/rag.md](../../generative-ai/02-rag-retrieval/rag.md) (retrieval).
+- Memory-augmented RAG notes are merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md) (memory designs) and [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) (retrieval).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
 - [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/): the chapter PDFs, `chNN-<topic>.pdf` and `appendix-{a,b,c}-<topic>.pdf`. Their content is folded into notes 09–13, which cite the chapter for each claim (ch1–3 and appendices A–B → 09, ch4–8 and appendix C → 10, ch13–15 → 11, ch9–12 → 13). Topics: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory, Neo4j and structured-sources appendices.
@@ -110,7 +110,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 ### Notebooks and course code
 - DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.
   - **Credentials:** `notebooks/knowledge-graphs-for-rag/code/.env` is the only file left of the local copy of the course. It holds live credentials, is gitignored and has never been committed. Rotate the keys if the repo or that folder is ever shared, and delete the file once you no longer run the notebooks locally.
-- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing): runnable companion code for notes 01–05 (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md) — LangGraph agent graphs (nodes, edges, state, conditional routing): runnable companion code for notes 01–05 (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.
 
 ### Readings

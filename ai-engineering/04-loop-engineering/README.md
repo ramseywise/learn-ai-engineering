@@ -83,8 +83,8 @@ sources/       the papers (Chen, Zhong, Zhu 2026) and images/ with every figure 
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — agent loops implemented as LangGraph graphs.
-- [internet-search-agent-main](../../generative-ai/07-agentic-applications/internet-search-agent-main/) — concrete loop with web-search tooling.
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md) — agent loops implemented as LangGraph graphs.
+- [internet-search-agent-main](../../generative-ai/07-agentic-applications/notes/01-internet-search-agent.md) — concrete loop with web-search tooling.
 
 ### External sources
 

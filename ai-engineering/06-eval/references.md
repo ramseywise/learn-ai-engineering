@@ -1,6 +1,6 @@
 # References — Eval Engineering
 
-> Papers and further reading, mapped to chapters. **★** = read first. Local PDFs live in [readings/general/](../readings/general/).
+> Papers and further reading, mapped to chapters. **★** = read first. Local PDFs live in [sources/](sources/), or in the home linked on each row.
 
 ---
 
@@ -30,7 +30,7 @@
 | ★ | Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena* (2023): position, verbosity, self-preference biases; judges reach human–human agreement | [2306.05685](https://arxiv.org/abs/2306.05685) | 05 |
 | | Liu et al., *G-Eval: NLG Evaluation using GPT-4 with Better Human Alignment* (2023): judge-generated evaluation steps | [2303.16634](https://arxiv.org/abs/2303.16634) | 05 |
 | ★ | Shankar et al., *Who Validates the Validators? Aligning LLM-Assisted Evaluation with Human Preferences* (2024): criteria drift | [2404.12272](https://arxiv.org/abs/2404.12272) | 02, 05 |
-| | Guo et al., *On Calibration of Modern Neural Networks* (2017): confidence calibration background. [PDF](../readings/general/1706.04599v2.pdf) | [1706.04599](https://arxiv.org/abs/1706.04599) | 05 |
+| | Guo et al., *On Calibration of Modern Neural Networks* (2017): confidence calibration background. [PDF](../../data-science/sources/guo-2017-calibration-modern-neural-networks.pdf) | [1706.04599](https://arxiv.org/abs/1706.04599) | 05 |
 
 ### Agents
 
@@ -44,29 +44,29 @@
 
 | | Paper | arXiv | Chapters |
 |---|---|---|---|
-| ★ | Es et al., *RAGAS: Automated Evaluation of Retrieval Augmented Generation* (2023). [PDF](../readings/general/ragas_automated_evaluation.pdf) | [2309.15217](https://arxiv.org/abs/2309.15217) | 07 |
+| ★ | Es et al., *RAGAS: Automated Evaluation of Retrieval Augmented Generation* (2023). [PDF](sources/es-2023-ragas.pdf) | [2309.15217](https://arxiv.org/abs/2309.15217) | 07 |
 | | Saad-Falcon et al., *ARES: An Automated Evaluation Framework for RAG Systems* (2023) | [2311.09476](https://arxiv.org/abs/2311.09476) | 07 |
 | | Gao et al., *Enabling Large Language Models to Generate Text with Citations* (ALCE, 2023): citation precision/recall | [2305.14627](https://arxiv.org/abs/2305.14627) | 07, 13 |
 | | Qi et al., *Model Internals-based Answer Attribution for Trustworthy Retrieval-Augmented Generation* (EMNLP 2024): self-generated citations are often unreliable | [2406.13663](https://arxiv.org/abs/2406.13663) | 13 |
 | | Chen et al., *Concise and Sufficient Sub-Sentence Citations for RAG* (2025): sub-sentence citations cut verification cost | [2509.20859](https://arxiv.org/abs/2509.20859) | 13 |
-| | Manakul et al., *SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection* (2023). [PDF](../readings/general/2303.08896v3.pdf) | [2303.08896](https://arxiv.org/abs/2303.08896) | 07 |
-| | Lin et al., *TruthfulQA: Measuring How Models Mimic Human Falsehoods* (2021). [PDF](../readings/general/truthfulQA_how_models_mimic_human_falsehoods.pdf) | [2109.07958](https://arxiv.org/abs/2109.07958) | 07 |
-| | Shuster et al., *Retrieval Augmentation Reduces Hallucination in Conversation* (EMNLP Findings 2021). [PDF](../readings/general/2021.findings-emnlp.320.pdf) | [2104.07567](https://arxiv.org/abs/2104.07567) | 07 |
+| | Manakul et al., *SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection* (2023). [PDF](sources/manakul-2023-selfcheckgpt.pdf) | [2303.08896](https://arxiv.org/abs/2303.08896) | 07 |
+| | Lin et al., *TruthfulQA: Measuring How Models Mimic Human Falsehoods* (2021). [PDF](sources/lin-2021-truthfulqa.pdf) | [2109.07958](https://arxiv.org/abs/2109.07958) | 07 |
+| | Shuster et al., *Retrieval Augmentation Reduces Hallucination in Conversation* (EMNLP Findings 2021). [PDF](../../generative-ai/02-rag-retrieval/sources/retrieval-augmentation-reduces-hallucination-conversation.pdf) | [2104.07567](https://arxiv.org/abs/2104.07567) | 07 |
 
 ### Statistics and metrics
 
 | | Paper | Link | Chapters |
 |---|---|---|---|
 | ★ | Miller, *Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations* (Anthropic, 2024): CLT error bars, clustered SEs, paired differences | [2411.00640](https://arxiv.org/abs/2411.00640) | 09 |
-| ★ | Dmitriev et al., *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017). [PDF](../readings/general/2017-08%20KDDMetricInterpretationPitfalls.pdf) | — | 09, 11 |
+| ★ | Dmitriev et al., *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017). [PDF](../../data-engineering/sources/2017-08-kddmetricinterpretationpitfalls.pdf) | — | 09, 11 |
 
 ### Systems and practice
 
 | | Paper | Link | Chapters |
 |---|---|---|---|
-| | Sculley et al., *Hidden Technical Debt in Machine Learning Systems* (NeurIPS 2015). [PDF](../readings/general/NIPS-2015-hidden-technical-debt-in-machine-learning-systems-Paper.pdf) | — | 12 |
-| | Amershi et al., *Software Engineering for Machine Learning: A Case Study* (ICSE-SEIP 2019). [PDF](../readings/general/amershi-icse-2019_Software_Engineering_for_Machine_Learning.pdf) | — | 10, 12 |
-| | Gao et al., *Learning towards Conversational AI: A Survey* (2022). [PDF](../readings/general/conversational-ai.pdf), [longer version](../readings/general/conversational-ai-longer-version.pdf) | — | 06 |
+| | Sculley et al., *Hidden Technical Debt in Machine Learning Systems* (NeurIPS 2015). [PDF](../../data-engineering/sources/hidden-technical-debt-machine-learning-systems.pdf) | — | 12 |
+| | Amershi et al., *Software Engineering for Machine Learning: A Case Study* (ICSE-SEIP 2019). [PDF](../../data-engineering/sources/amershi-icse-2019-software-engineering-machine.pdf) | — | 10, 12 |
+| | Gao et al., *Learning towards Conversational AI: A Survey* (2022). [PDF](../../generative-ai/07-agentic-applications/sources/learning-towards-conversational-ai-survey-07d04bbf.pdf), [longer version](../../generative-ai/07-agentic-applications/sources/learning-towards-conversational-ai-survey.pdf) | — | 06 |
 
 ---
 
