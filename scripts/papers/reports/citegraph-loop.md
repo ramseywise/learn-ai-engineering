@@ -45,31 +45,31 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 
 | Local | Meth. | Paper | Status | Venue | Global cites | In repo |
 |---|---|---|---|---|---|---|
-| 6 | 0 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
+| 6 | 0 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 6 | 0 | [Shinn 2023, Reflexion: language agents with verbal reinforcement learning](https://arxiv.org/abs/2303.11366) | peer-reviewed | NeurIPS 2023 | 1069 | ✓ `generative-ai/05-RL/sources/shinn-2023-reflexion.pdf` |
 | 6 | 0 | [Zhang 2025, Agentic Context Engineering: Evolving Contexts for Self-Improving Lang](https://arxiv.org/abs/2510.04618) | peer-reviewed | ICLR 2026 | 6 | ✓ `ai-engineering/02-context-engineering/sources/zhang-2025-agentic-context-engineering.pdf` |
 | 6 | 0 | [Lee 2026, Meta-Harness: End-to-End Optimization of Model Harnesses](https://arxiv.org/abs/2603.28052) | preprint |  | 3 | ✓ `ai-engineering/03-harness-engineering/sources/lee-2026-meta-harness.pdf` |
 | 5 | 1 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 5 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | — |
+| 5 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | ✓ `generative-ai/03-agentic-foundations/sources/madaan-2023-self-refine.pdf` |
 | 5 | 0 | [Agrawal 2025, GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learnin](https://arxiv.org/abs/2507.19457) | peer-reviewed | ICLR 2026 | 6 | ✓ `ai-engineering/01-prompt-engineering/sources/agrawal-2025-gepa.pdf` |
 | 5 | 0 | [Merrill 2026, Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Comman](https://arxiv.org/abs/2601.11868) | peer-reviewed | ICLR 2026 | 3 | ✓ `ai-engineering/06-eval/sources/merrill-2026-terminal-bench.pdf` |
-| 4 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | 1044 | — |
+| 4 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | 1044 | ✓ `generative-ai/05-RL/sources/li-2022-competition-level-code-generation-alphacode.pdf` |
 | 4 | 1 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 4 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | — |
+| 4 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | ✓ `generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf` |
 | 4 | 0 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | peer-reviewed | ICLR 2024 | 72 | — |
 | 4 | 0 | [Zhang 2025, Darwin Gödel Machine: Open-Ended Evolution of Self-Improving Agents](https://arxiv.org/abs/2505.22954) | peer-reviewed | ICLR 2026 | 34 | ✓ `ai-engineering/04-loop-engineering/sources/zhang-2025-darwin-godel-machine.pdf` |
-| 3 | 1 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | — |
+| 3 | 1 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
 | 3 | 0 | [Schulman 2017, Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347) | preprint |  | 10618 | ✓ `generative-ai/05-RL/sources/schulman-2017-proximal-policy-optimization-algorithms.pdf` |
 | 3 | 0 | [OpenAI 2019, Dota 2 with Large Scale Deep Reinforcement Learning](https://arxiv.org/abs/1912.06680) | preprint |  | 1064 | — |
 | 3 | 0 | [Vinyals 2019, Grandmaster level in StarCraft II using multi-agent reinforcement lear](https://doi.org/10.1038/s41586-019-1724-z) | peer-reviewed | Nat. 2019 | 3453 | — |
-| 3 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 3 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | — |
+| 3 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 3 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
 | 3 | 0 | [Zhao 2024, ExpeL: LLM Agents Are Experiential Learners](https://arxiv.org/abs/2308.10144) | peer-reviewed | AAAI 2024 | 179 | — |
 | 3 | 0 | [Hu 2024, Automated Design of Agentic Systems](https://arxiv.org/abs/2408.08435) | peer-reviewed | ICLR 2025 | 10 | — |
 | 3 | 0 | [Lin 2026, Agentic Harness Engineering: Observability-Driven Automatic Evolution ](https://arxiv.org/abs/2604.25850) | preprint |  | 1 | — |
-| 2 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | — |
+| 2 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
 | 2 | 1 | [Le 2022, CodeRL: Mastering Code Generation Through Pretrained Models and Deep R](https://arxiv.org/abs/2207.01780) | peer-reviewed | NeurIPS 2022 | 141 | — |
-| 2 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | — |
+| 2 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | ✓ `generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf` |
 | 2 | 1 | [Bai 2022, Constitutional AI: Harmlessness from AI Feedback](https://arxiv.org/abs/2212.08073) | preprint |  | 325 | ✓ `generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf` |
 | 2 | 1 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
 | 2 | 1 | [Nair 2024, DERA: Enhancing Large Language Model Completions with Dialog-Enabled R](https://arxiv.org/abs/2303.17071) | workshop | ClinicalNLP@NAACL 2024 | 38 | — |
@@ -77,7 +77,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 2 | 0 | [Guo 2017, On Calibration of Modern Neural Networks](https://arxiv.org/abs/1706.04599) | peer-reviewed | ICML 2017 | 3438 | ✓ `data-science/sources/guo-2017-calibration-modern-neural-networks.pdf` |
 | 2 | 0 | [Silver 2017, Mastering the game of Go without human knowledge](https://doi.org/10.1038/nature24270) | peer-reviewed | Nat. 2017 | 9079 | — |
 | 2 | 0 | [Hendrycks 2021, Measuring Mathematical Problem Solving With the MATH Dataset](https://arxiv.org/abs/2103.03874) | peer-reviewed | NeurIPS Datasets and Benchmarks 2021 | 306 | — |
-| 2 | 0 | [Nijkamp 2022, CodeGen: An Open Large Language Model for Code with Multi-Turn Program](https://arxiv.org/abs/2203.13474) | peer-reviewed | ICLR 2023 | 330 | — |
+| 2 | 0 | [Nijkamp 2022, CodeGen: An Open Large Language Model for Code with Multi-Turn Program](https://arxiv.org/abs/2203.13474) | peer-reviewed | ICLR 2023 | 330 | ✓ `generative-ai/01-llm-fundamentals/sources/nijkamp-2022-codegen.pdf` |
 | 2 | 0 | [Qin 2023, ToolLLM: Facilitating Large Language Models to Master 16000+ Real-worl](https://arxiv.org/abs/2307.16789) | peer-reviewed | ICLR 2024 | 71 | ✓ `generative-ai/03-agentic-foundations/sources/qin-2023-toolllm.pdf` |
 | 2 | 0 | [Touvron 2023, LLaMA: Open and Efficient Foundation Language Models](https://arxiv.org/abs/2302.13971) | preprint |  | 4528 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama.pdf` |
 | 2 | 0 | [Wang 2023, Voyager: An Open-Ended Embodied Agent with Large Language Models](https://arxiv.org/abs/2305.16291) | peer-reviewed | Trans. Mach. Learn. Res. 2024 | 222 | ✓ `ai-engineering/04-loop-engineering/sources/wang-2023-voyager.pdf` |
@@ -95,7 +95,7 @@ Years whose cited references spike above their neighbours; the most cited paper 
 | 1950 | +1 | [Turing 1950, I.—COMPUTING MACHINERY AND INTELLIGENCE](https://doi.org/10.1093/mind/lix.236.433) | peer-reviewed | — |
 | 1979 | +1 | [Holm 1979, A Simple Sequentially Rejective Multiple Test Procedure](https://doi.org/10.2307/4615733) | preprint | — |
 | 1995 | +1 | [Tesauro 1995, Temporal difference learning and TD-Gammon](https://doi.org/10.1145/203330.203343) | peer-reviewed | — |
-| 2009 | +2 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | — |
+| 2009 | +2 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | ✓ `generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf` |
 | 2017 | +8 | [Schulman 2017, Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347) | preprint | ✓ `generative-ai/05-RL/sources/schulman-2017-proximal-policy-optimization-algorithms.pdf` |
 | 2019 | +2 | [OpenAI 2019, Dota 2 with Large Scale Deep Reinforcement Learning](https://arxiv.org/abs/1912.06680) | preprint | — |
 | 2022 | +20 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
@@ -107,31 +107,27 @@ Cited by ≥3 of our papers and older than the median cited year (2023). The met
 
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
-| 3 | 1 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | — |
+| 3 | 1 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
 | 5 | 1 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 4 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | — |
+| 4 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | ✓ `generative-ai/05-RL/sources/li-2022-competition-level-code-generation-alphacode.pdf` |
 | 4 | 1 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 | 3 | 0 | [Schulman 2017, Proximal Policy Optimization Algorithms](https://arxiv.org/abs/1707.06347) | preprint |  | ✓ `generative-ai/05-RL/sources/schulman-2017-proximal-policy-optimization-algorithms.pdf` |
 | 3 | 0 | [OpenAI 2019, Dota 2 with Large Scale Deep Reinforcement Learning](https://arxiv.org/abs/1912.06680) | preprint |  | — |
 | 3 | 0 | [Vinyals 2019, Grandmaster level in StarCraft II using multi-agent reinforcement lear](https://doi.org/10.1038/s41586-019-1724-z) | peer-reviewed | Nat. 2019 | — |
-| 3 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | — |
-| 6 | 0 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | — |
-| 3 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | — |
-| 4 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | — |
+| 3 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 6 | 0 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
+| 3 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 4 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | ✓ `generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf` |
 
-### Peer-reviewed papers to acquire (8)
+### Peer-reviewed papers to acquire (4)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-7 can be fetched free, 1 have no free copy.
+3 can be fetched free, 1 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 5 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17651) |
-| 4 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | Science | [✓ arXiv](https://arxiv.org/pdf/2203.07814) |
-| 4 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2203.11171) |
 | 4 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2310.06770) |
-| 3 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | NeurIPS 2020 | [✓ arXiv](https://arxiv.org/pdf/2005.14165) |
 | 3 | [Vinyals 2019, Grandmaster level in StarCraft II using multi-agent reinforcement lear](https://doi.org/10.1038/s41586-019-1724-z) | Nat. 2019 | ✗ no free copy found (paywalled: library, author page or request) |
 | 3 | [Zhao 2024, ExpeL: LLM Agents Are Experiential Learners](https://arxiv.org/abs/2308.10144) | AAAI 2024 | [✓ AAAI (open access)](https://ojs.aaai.org/index.php/AAAI/article/download/29936/31635) |
 | 3 | [Hu 2024, Automated Design of Agentic Systems](https://arxiv.org/abs/2408.08435) | ICLR 2025 | [✓ arXiv](https://arxiv.org/pdf/2408.08435) |

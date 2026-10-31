@@ -42,36 +42,36 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 |---|---|---|---|---|---|---|
 | 5 | 3 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 4 | 4 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | — |
-| 3 | 3 | [Henderson 2019, Training Neural Response Selection for Task-Oriented Dialogue Systems](https://doi.org/10.18653/v1/p19-1536) | peer-reviewed | ACL (1) 2019 | 87 | — |
+| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
+| 3 | 3 | [Henderson 2019, Training Neural Response Selection for Task-Oriented Dialogue Systems](https://doi.org/10.18653/v1/p19-1536) | peer-reviewed | ACL (1) 2019 | 87 | ✓ `generative-ai/07-agentic-applications/sources/henderson-2019-training-neural-response-selection-task.pdf` |
 | 3 | 0 | [Antol 2015, VQA: Visual Question Answering](https://arxiv.org/abs/1505.00468) | peer-reviewed | ICCV 2015 | 4486 | — |
 | 3 | 0 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 | 3 | 0 | [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | 134 | ✓ `ai-engineering/06-eval/sources/deng-2023-mind2web.pdf` |
 | 3 | 0 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | peer-reviewed | ICLR 2024 | 31 | — |
-| 3 | 0 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | — |
+| 3 | 0 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | ✓ `generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf` |
 | 2 | 2 | [Kim 2014, Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882) | peer-reviewed | EMNLP 2014 | 14831 | — |
-| 2 | 2 | [Kingma 2014, Adam: A Method for Stochastic Optimization](https://arxiv.org/abs/1412.6980) | peer-reviewed | ICLR (Poster) 2015 | 98959 | — |
-| 2 | 2 | [Goo 2018, Slot-Gated Modeling for Joint Slot Filling and Intent Prediction](https://doi.org/10.18653/v1/n18-2118) | peer-reviewed | NAACL-HLT (2) 2018 | 508 | — |
+| 2 | 2 | [Kingma 2014, Adam: A Method for Stochastic Optimization](https://arxiv.org/abs/1412.6980) | peer-reviewed | ICLR (Poster) 2015 | 98959 | ✓ `generative-ai/01-llm-fundamentals/sources/kingma-2014-adam.pdf` |
+| 2 | 2 | [Goo 2018, Slot-Gated Modeling for Joint Slot Filling and Intent Prediction](https://doi.org/10.18653/v1/n18-2118) | peer-reviewed | NAACL-HLT (2) 2018 | 508 | ✓ `generative-ai/07-agentic-applications/sources/goo-2018-slot-gated-modeling-joint-slot.pdf` |
 | 2 | 2 | [Wang 2018, GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Languag](https://doi.org/10.18653/v1/w18-5446) | workshop | BlackboxNLP@EMNLP 2018 | 4222 | — |
-| 2 | 2 | [Dinan 2018, Wizard of Wikipedia: Knowledge-Powered Conversational agents](https://arxiv.org/abs/1811.01241) | peer-reviewed | ICLR (Poster) 2019 | 610 | — |
+| 2 | 2 | [Dinan 2018, Wizard of Wikipedia: Knowledge-Powered Conversational agents](https://arxiv.org/abs/1811.01241) | peer-reviewed | ICLR (Poster) 2019 | 610 | ✓ `generative-ai/02-rag-retrieval/sources/dinan-2018-wizard-wikipedia.pdf` |
 | 2 | 1 | [Williams 2006, Partially observable Markov decision processes for spoken dialog syste](https://doi.org/10.1016/j.csl.2006.06.008) | peer-reviewed | Comput. Speech Lang. 2007 | 853 | — |
 | 2 | 1 | [Lowe 2015, The Ubuntu Dialogue Corpus: A Large Dataset for Research in Unstructur](https://doi.org/10.18653/v1/w15-4640) | peer-reviewed | SIGDIAL Conference 2015 | 770 | — |
-| 2 | 1 | [Liu 2016, Attention-Based Recurrent Neural Network Models for Joint Intent Detec](https://arxiv.org/abs/1609.01454) | peer-reviewed | INTERSPEECH 2016 | 723 | — |
+| 2 | 1 | [Liu 2016, Attention-Based Recurrent Neural Network Models for Joint Intent Detec](https://arxiv.org/abs/1609.01454) | peer-reviewed | INTERSPEECH 2016 | 723 | ✓ `generative-ai/07-agentic-applications/sources/liu-2016-attention-based-recurrent-neural-network.pdf` |
 | 2 | 1 | [Serban 2016, Building End-To-End Dialogue Systems Using Generative Hierarchical Neu](https://doi.org/10.1609/aaai.v30i1.9883) | peer-reviewed | AAAI 2016 | 1639 | — |
 | 2 | 1 | [Williams 2017, Hybrid Code Networks: practical and efficient end-to-end dialog contro](https://arxiv.org/abs/1702.03274) | peer-reviewed | ACL (1) 2017 | 325 | — |
 | 2 | 1 | [Peters 2018, Deep Contextualized Word Representations](https://arxiv.org/abs/1802.05365) | peer-reviewed | NAACL-HLT 2018 | 11982 | ✓ `generative-ai/01-llm-fundamentals/sources/deep-contextualized-word-representations.pdf` |
-| 2 | 1 | [Adiwardana 2020, Towards a Human-like Open-Domain Chatbot](https://arxiv.org/abs/2001.09977) | preprint |  | 614 | — |
-| 2 | 1 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 2 | 1 | [Roller 2021, Recipes for Building an Open-Domain Chatbot](https://arxiv.org/abs/2004.13637) | peer-reviewed | EACL 2021 | 784 | — |
-| 2 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
-| 2 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | — |
-| 2 | 0 | [Bahdanau 2014, Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) | peer-reviewed | ICLR 2015 | 16213 | — |
+| 2 | 1 | [Adiwardana 2020, Towards a Human-like Open-Domain Chatbot](https://arxiv.org/abs/2001.09977) | preprint |  | 614 | ✓ `generative-ai/07-agentic-applications/sources/adiwardana-2020-towards-human-like-open-domain.pdf` |
+| 2 | 1 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 2 | 1 | [Roller 2021, Recipes for Building an Open-Domain Chatbot](https://arxiv.org/abs/2004.13637) | peer-reviewed | EACL 2021 | 784 | ✓ `generative-ai/02-rag-retrieval/sources/roller-2021-recipes-building-open-domain-chatbot.pdf` |
+| 2 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
+| 2 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | ✓ `generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf` |
+| 2 | 0 | [Bahdanau 2014, Neural Machine Translation by Jointly Learning to Align and Translate](https://arxiv.org/abs/1409.0473) | peer-reviewed | ICLR 2015 | 16213 | ✓ `generative-ai/01-llm-fundamentals/sources/bahdanau-2014-neural-machine-translation-jointly-learning.pdf` |
 | 2 | 0 | [Sordoni 2015, A Hierarchical Recurrent Encoder-Decoder for Generative Context-Aware ](https://arxiv.org/abs/1507.02221) | peer-reviewed | CIKM 2015 | 475 | — |
 | 2 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
 | 2 | 0 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 2 | 0 | [Hong 2023, MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework](https://arxiv.org/abs/2308.00352) | peer-reviewed | ICLR 2024 | 235 | ✓ `generative-ai/03-agentic-foundations/sources/hong-2023-metagpt.pdf` |
 | 2 | 0 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
-| 2 | 0 | [Yang 2023, InterCode: Standardizing and Benchmarking Interactive Coding with Exec](https://arxiv.org/abs/2306.14898) | peer-reviewed | NeurIPS 2023 | 26 | — |
+| 2 | 0 | [Yang 2023, InterCode: Standardizing and Benchmarking Interactive Coding with Exec](https://arxiv.org/abs/2306.14898) | peer-reviewed | NeurIPS 2023 | 26 | ✓ `ai-engineering/06-eval/sources/yang-2023-intercode.pdf` |
 | 2 | 0 | [OpenAI 2024, OpenAI o1 System Card](https://arxiv.org/abs/2412.16720) | tech-report |  | 50 | — |
 | 2 | 0 | [Shao 2024, DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Lan](https://arxiv.org/abs/2402.03300) | preprint |  | 101 | ✓ `generative-ai/05-RL/sources/shao-2024-deepseekmath.pdf` |
 | 1 | 1 | [Taylor 1953, “Cloze Procedure”: A New Tool for Measuring Readability](https://doi.org/10.1177/107769905303000401) | peer-reviewed | Journalism Quarterly | 2332 | — |
@@ -94,7 +94,7 @@ Years whose cited references spike above their neighbours; the most cited paper 
 | 2006 | +2 | [Williams 2006, Partially observable Markov decision processes for spoken dialog syste](https://doi.org/10.1016/j.csl.2006.06.008) | peer-reviewed | — |
 | 2018 | +14 | [Peters 2018, Deep Contextualized Word Representations](https://arxiv.org/abs/1802.05365) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/deep-contextualized-word-representations.pdf` |
 | 2019 | +30 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 2022 | +8 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | — |
+| 2022 | +8 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
 
 ### Origin candidates
 
@@ -105,18 +105,15 @@ Cited by ≥3 of our papers and older than the median cited year (2019). The met
 | 5 | 3 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 3 | 0 | [Antol 2015, VQA: Visual Question Answering](https://arxiv.org/abs/1505.00468) | peer-reviewed | ICCV 2015 | — |
 
-### Peer-reviewed papers to acquire (5)
+### Peer-reviewed papers to acquire (2)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-5 can be fetched free, 0 have no free copy.
+2 can be fetched free, 0 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 4 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2207.01206) |
 | 3 | [Antol 2015, VQA: Visual Question Answering](https://arxiv.org/abs/1505.00468) | ICCV 2015 | [✓ arXiv preprint](https://arxiv.org/pdf/1505.00468) |
-| 3 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2306.05685) |
-| 3 | [Henderson 2019, Training Neural Response Selection for Task-Oriented Dialogue Systems](https://doi.org/10.18653/v1/p19-1536) | ACL (1) 2019 | [✓ ACL Anthology](https://www.aclweb.org/anthology/P19-1536.pdf) |
 | 3 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2307.13854) |
 
 ### arXiv citations with a peer-reviewed version (7 papers)

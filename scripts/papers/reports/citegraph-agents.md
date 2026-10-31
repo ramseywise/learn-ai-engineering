@@ -63,43 +63,43 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 20 | 3 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
 | 19 | 4 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 | 16 | 0 | [Shinn 2023, Reflexion: language agents with verbal reinforcement learning](https://arxiv.org/abs/2303.11366) | peer-reviewed | NeurIPS 2023 | 1069 | ✓ `generative-ai/05-RL/sources/shinn-2023-reflexion.pdf` |
-| 12 | 3 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 11 | 2 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | — |
+| 12 | 3 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 11 | 2 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | ✓ `generative-ai/03-agentic-foundations/sources/madaan-2023-self-refine.pdf` |
 | 9 | 2 | [Yao 2023, Tree of Thoughts: Deliberate Problem Solving with Large Language Model](https://arxiv.org/abs/2305.10601) | peer-reviewed | NeurIPS 2023 | 1170 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2023-tree-thoughts.pdf` |
-| 9 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | — |
+| 9 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
 | 9 | 1 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | peer-reviewed | ICLR 2024 | 31 | — |
 | 9 | 1 | [Hong 2023, MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework](https://arxiv.org/abs/2308.00352) | peer-reviewed | ICLR 2024 | 235 | ✓ `generative-ai/03-agentic-foundations/sources/hong-2023-metagpt.pdf` |
 | 9 | 1 | [Schick 2023, Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) | peer-reviewed | NeurIPS 2023 | 1160 | ✓ `generative-ai/03-agentic-foundations/sources/schick-2023-toolformer.pdf` |
 | 9 | 1 | [OpenAI 2023, GPT-4 Technical Report](https://arxiv.org/abs/2303.08774) | tech-report |  | 2404 | ✓ `generative-ai/01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf` |
 | 9 | 1 | [Qian 2024, ChatDev: Communicative Agents for Software Development](https://doi.org/10.18653/v1/2024.acl-long.810) | peer-reviewed | ACL (1) 2024 | 447 | ✓ `generative-ai/03-agentic-foundations/sources/qian-2023-chatdev.pdf` |
-| 9 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | — |
+| 9 | 0 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | ✓ `generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf` |
 | 8 | 2 | [Wang 2024, A survey on large language model based autonomous agents](https://arxiv.org/abs/2308.11432) | peer-reviewed | Frontiers Comput. Sci. 2024 | 1927 | ✓ `generative-ai/03-agentic-foundations/sources/wang-2023-survey-large-language-model-based.pdf` |
 | 8 | 1 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
 | 8 | 1 | [Touvron 2023, LLaMA: Open and Efficient Foundation Language Models](https://arxiv.org/abs/2302.13971) | preprint |  | 4528 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama.pdf` |
 | 8 | 1 | [Du 2023, Improving Factuality and Reasoning in Language Models through Multiage](https://arxiv.org/abs/2305.14325) | peer-reviewed | ICML 2024 | 119 | — |
-| 7 | 3 | [Hao 2023, Reasoning with Language Model is Planning with World Model](https://arxiv.org/abs/2305.14992) | peer-reviewed | EMNLP 2023 | 166 | — |
-| 7 | 0 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | — |
+| 7 | 3 | [Hao 2023, Reasoning with Language Model is Planning with World Model](https://arxiv.org/abs/2305.14992) | peer-reviewed | EMNLP 2023 | 166 | ✓ `generative-ai/03-agentic-foundations/sources/hao-2023-reasoning-language-model-planning-world.pdf` |
+| 7 | 0 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | ✓ `generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf` |
 | 7 | 0 | [Wang 2023, Describe, Explain, Plan and Select: Interactive Planning with Large La](https://arxiv.org/abs/2302.01560) | preprint |  | 55 | — |
-| 6 | 2 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
+| 6 | 2 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 6 | 2 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
-| 6 | 1 | [Huang 2022, Language Models as Zero-Shot Planners: Extracting Actionable Knowledge](https://arxiv.org/abs/2201.07207) | peer-reviewed | ICML 2022 | 304 | — |
-| 6 | 1 | [Zhang 2023, Building Cooperative Embodied Agents Modularly with Large Language Mod](https://arxiv.org/abs/2307.02485) | peer-reviewed | ICLR 2024 | 52 | — |
+| 6 | 1 | [Huang 2022, Language Models as Zero-Shot Planners: Extracting Actionable Knowledge](https://arxiv.org/abs/2201.07207) | peer-reviewed | ICML 2022 | 304 | ✓ `generative-ai/03-agentic-foundations/sources/huang-2022-language-models-as-zero-shot.pdf` |
+| 6 | 1 | [Zhang 2023, Building Cooperative Embodied Agents Modularly with Large Language Mod](https://arxiv.org/abs/2307.02485) | peer-reviewed | ICLR 2024 | 52 | ✓ `generative-ai/03-agentic-foundations/sources/zhang-2023-building-cooperative-embodied-agents-modularly.pdf` |
 | 6 | 1 | [Liu 2023, AgentBench: Evaluating LLMs as Agents](https://arxiv.org/abs/2308.03688) | peer-reviewed | ICLR 2024 | 75 | ✓ `ai-engineering/06-eval/sources/liu-2023-agentbench.pdf` |
 | 6 | 1 | [Kim 2023, Language Models can Solve Computer Tasks](https://arxiv.org/abs/2303.17491) | peer-reviewed | NeurIPS 2023 | 101 | — |
 | 6 | 1 | [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | 134 | ✓ `ai-engineering/06-eval/sources/deng-2023-mind2web.pdf` |
 | 6 | 1 | [Zhong 2024, MemoryBank: Enhancing Large Language Models with Long-Term Memory](https://arxiv.org/abs/2305.10250) | peer-reviewed | AAAI 2024 | 250 | — |
 | 6 | 1 | [Xi 2025, The rise and potential of large language model based agents: a survey](https://arxiv.org/abs/2309.07864) | peer-reviewed | Sci. China Inf. Sci. 2025 | 972 | ✓ `generative-ai/03-agentic-foundations/sources/xi-2023-rise-potential-large-language-model.pdf` |
 | 5 | 3 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
-| 5 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | — |
+| 5 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
 | 5 | 1 | [Packer 2023, MemGPT: Towards LLMs as Operating Systems](https://arxiv.org/abs/2310.08560) | preprint |  | 64 | ✓ `ai-engineering/02-context-engineering/sources/packer-2023-memgpt.pdf` |
 | 5 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
-| 5 | 0 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | peer-reviewed | CoRL 2023 | 287 | — |
+| 5 | 0 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | peer-reviewed | CoRL 2023 | 287 | ✓ `generative-ai/01-llm-fundamentals/sources/huang-2022-inner-monologue.pdf` |
 | 5 | 0 | [Chan 2023, ChatEval: Towards Better LLM-based Evaluators through Multi-Agent Deba](https://arxiv.org/abs/2308.07201) | peer-reviewed | ICLR 2024 | 69 | — |
 | 5 | 0 | [Liang 2024, Encouraging Divergent Thinking in Large Language Models through Multi-](https://arxiv.org/abs/2305.19118) | peer-reviewed | EMNLP 2024 | 320 | — |
 | 4 | 1 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | peer-reviewed | EMNLP 2018 | 1805 | — |
-| 4 | 1 | [Shridhar 2020, ALFWorld: Aligning Text and Embodied Environments for Interactive Lear](https://arxiv.org/abs/2010.03768) | peer-reviewed | ICLR 2021 | 80 | — |
-| 4 | 1 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | — |
-| 4 | 1 | [Fan 2022, MineDojo: Building Open-Ended Embodied Agents with Internet-Scale Know](https://arxiv.org/abs/2206.08853) | peer-reviewed | NeurIPS 2022 | 72 | — |
+| 4 | 1 | [Shridhar 2020, ALFWorld: Aligning Text and Embodied Environments for Interactive Lear](https://arxiv.org/abs/2010.03768) | peer-reviewed | ICLR 2021 | 80 | ✓ `ai-engineering/06-eval/sources/shridhar-2020-alfworld.pdf` |
+| 4 | 1 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | ✓ `ai-engineering/06-eval/sources/ahn-2022-do-as-i-can-not.pdf` |
+| 4 | 1 | [Fan 2022, MineDojo: Building Open-Ended Embodied Agents with Internet-Scale Know](https://arxiv.org/abs/2206.08853) | peer-reviewed | NeurIPS 2022 | 72 | ✓ `generative-ai/03-agentic-foundations/sources/fan-2022-minedojo.pdf` |
 
 ### Historical roots (RPYS peak years)
 
@@ -123,82 +123,61 @@ Cited by ≥3 of our papers and older than the median cited year (2023). The met
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
 | 19 | 4 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 12 | 3 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | — |
+| 12 | 3 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
 | 20 | 3 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
 | 3 | 2 | [Browne 2012, A Survey of Monte Carlo Tree Search Methods](https://doi.org/10.1109/tciaig.2012.2186810) | peer-reviewed | IEEE Trans. Comput. Intell. AI Games 2012 | — |
-| 6 | 2 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | — |
-| 3 | 2 | [Wang 2022, ScienceWorld: Is your Agent Smarter than a 5th Grader?](https://arxiv.org/abs/2203.07540) | peer-reviewed | EMNLP 2022 | — |
+| 6 | 2 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
+| 3 | 2 | [Wang 2022, ScienceWorld: Is your Agent Smarter than a 5th Grader?](https://arxiv.org/abs/2203.07540) | peer-reviewed | EMNLP 2022 | ✓ `generative-ai/03-agentic-foundations/sources/wang-2022-scienceworld.pdf` |
 | 4 | 1 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | peer-reviewed | EMNLP 2018 | — |
-| 4 | 1 | [Shridhar 2020, ALFWorld: Aligning Text and Embodied Environments for Interactive Lear](https://arxiv.org/abs/2010.03768) | peer-reviewed | ICLR 2021 | — |
+| 4 | 1 | [Shridhar 2020, ALFWorld: Aligning Text and Embodied Environments for Interactive Lear](https://arxiv.org/abs/2010.03768) | peer-reviewed | ICLR 2021 | ✓ `ai-engineering/06-eval/sources/shridhar-2020-alfworld.pdf` |
 | 3 | 1 | [Wang 2021, Putting Humans in the Natural Language Processing Loop: A Survey](https://arxiv.org/abs/2103.04044) | preprint |  | — |
-| 9 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | — |
-| 4 | 1 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | — |
-| 6 | 1 | [Huang 2022, Language Models as Zero-Shot Planners: Extracting Actionable Knowledge](https://arxiv.org/abs/2201.07207) | peer-reviewed | ICML 2022 | — |
-| 3 | 1 | [Bai 2022, Training a Helpful and Harmless Assistant with Reinforcement Learning ](https://arxiv.org/abs/2204.05862) | preprint |  | — |
+| 9 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 4 | 1 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | ✓ `ai-engineering/06-eval/sources/ahn-2022-do-as-i-can-not.pdf` |
+| 6 | 1 | [Huang 2022, Language Models as Zero-Shot Planners: Extracting Actionable Knowledge](https://arxiv.org/abs/2201.07207) | peer-reviewed | ICML 2022 | ✓ `generative-ai/03-agentic-foundations/sources/huang-2022-language-models-as-zero-shot.pdf` |
+| 3 | 1 | [Bai 2022, Training a Helpful and Harmless Assistant with Reinforcement Learning ](https://arxiv.org/abs/2204.05862) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/bai-2022-training-helpful-harmless-assistant-reinforcement.pdf` |
 | 8 | 1 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
-| 4 | 1 | [Fan 2022, MineDojo: Building Open-Ended Embodied Agents with Internet-Scale Know](https://arxiv.org/abs/2206.08853) | peer-reviewed | NeurIPS 2022 | — |
-| 4 | 1 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | — |
-| 5 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | — |
+| 4 | 1 | [Fan 2022, MineDojo: Building Open-Ended Embodied Agents with Internet-Scale Know](https://arxiv.org/abs/2206.08853) | peer-reviewed | NeurIPS 2022 | ✓ `generative-ai/03-agentic-foundations/sources/fan-2022-minedojo.pdf` |
+| 4 | 1 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | ✓ `generative-ai/05-RL/sources/zelikman-2022-star.pdf` |
+| 5 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
 | 4 | 1 | [Kojima 2022, Large Language Models Are Zero-Shot Reasoners](https://arxiv.org/abs/2205.11916) | peer-reviewed | NeurIPS 2022 | ✓ `ai-engineering/01-prompt-engineering/sources/kojima-2022-large-language-models-zero-shot.pdf` |
-| 3 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | — |
+| 3 | 1 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | ✓ `generative-ai/05-RL/sources/li-2022-competition-level-code-generation-alphacode.pdf` |
 | 3 | 0 | [Kumar 1995, Artificial intelligence: a modern approach](https://doi.org/10.5860/choice.33-1577) | peer-reviewed | Choice Reviews Online | — |
 
-### Peer-reviewed papers to acquire (50)
+### Peer-reviewed papers to acquire (29)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-46 can be fetched free, 4 have no free copy.
+25 can be fetched free, 4 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 12 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | NeurIPS 2020 | [✓ arXiv](https://arxiv.org/pdf/2005.14165) |
-| 11 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17651) |
-| 9 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2203.11171) |
 | 9 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2307.13854) |
 | 8 | [Du 2023, Improving Factuality and Reasoning in Language Models through Multiage](https://arxiv.org/abs/2305.14325) | ICML 2024 | [✓ arXiv](https://arxiv.org/pdf/2305.14325) |
-| 7 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | J. Mach. Learn. Res. 2023 | [✓ arXiv](https://arxiv.org/pdf/2204.02311) |
-| 7 | [Hao 2023, Reasoning with Language Model is Planning with World Model](https://arxiv.org/abs/2305.14992) | EMNLP 2023 | [✓ ACL Anthology](https://aclanthology.org/2023.emnlp-main.507.pdf) |
-| 6 | [Huang 2022, Language Models as Zero-Shot Planners: Extracting Actionable Knowledge](https://arxiv.org/abs/2201.07207) | ICML 2022 | [✓ arXiv](https://arxiv.org/pdf/2201.07207) |
 | 6 | [Zhong 2024, MemoryBank: Enhancing Large Language Models with Long-Term Memory](https://arxiv.org/abs/2305.10250) | AAAI 2024 | [✓ AAAI (open access)](https://ojs.aaai.org/index.php/AAAI/article/download/29946/31654) |
 | 6 | [Kim 2023, Language Models can Solve Computer Tasks](https://arxiv.org/abs/2303.17491) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17491) |
-| 6 | [Zhang 2023, Building Cooperative Embodied Agents Modularly with Large Language Mod](https://arxiv.org/abs/2307.02485) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2307.02485) |
 | 5 | [Liang 2024, Encouraging Divergent Thinking in Large Language Models through Multi-](https://arxiv.org/abs/2305.19118) | EMNLP 2024 | [✓ ACL Anthology](https://aclanthology.org/2024.emnlp-main.992.pdf) |
-| 5 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | CoRL 2023 | [✓ arXiv](https://arxiv.org/pdf/2207.05608) |
-| 5 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2207.01206) |
 | 5 | [Chan 2023, ChatEval: Towards Better LLM-based Evaluators through Multi-Agent Deba](https://arxiv.org/abs/2308.07201) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2308.07201) |
 | 4 | [Silver 2017, Mastering the game of Go without human knowledge](https://doi.org/10.1038/nature24270) | Nat. 2017 | ✗ no free copy found (paywalled: library, author page or request) |
 | 4 | [Wooldridge 1995, Intelligent agents: theory and practice](https://doi.org/10.1017/s0269888900008122) | Knowl. Eng. Rev. 1995 | ✗ no free copy found (paywalled: library, author page or request) |
-| 4 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | SOSP 2023 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3600006.3613165) |
 | 4 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | EMNLP 2018 | [✓ ACL Anthology](https://www.aclweb.org/anthology/D18-1259.pdf) |
-| 4 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | CoRL 2023 | [✓ arXiv](https://arxiv.org/pdf/2204.01691) |
-| 4 | [Zhou 2022, Least-to-Most Prompting Enables Complex Reasoning in Large Language Mo](https://arxiv.org/abs/2205.10625) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2205.10625) |
 | 4 | [Wang 2023, Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoni](https://doi.org/10.18653/v1/2023.acl-long.147) | ACL (1) 2023 | [✓ ACL Anthology](https://aclanthology.org/2023.acl-long.147.pdf) |
 | 4 | [Li 2023, CAMEL: Communicative Agents for "Mind" Exploration of Large Language M](https://arxiv.org/abs/2303.17760) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17760) |
 | 4 | [Park 2022, Social Simulacra: Creating Populated Prototypes for Social Computing S](https://arxiv.org/abs/2208.04024) | UIST 2022 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3526113.3545616) |
-| 4 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2203.14465) |
 | 4 | [Mandi 2024, RoCo: Dialectic Multi-Robot Collaboration with Large Language Models](https://arxiv.org/abs/2307.04738) | ICRA 2024 | [✓ arXiv](https://arxiv.org/pdf/2307.04738) |
 | 4 | [Zhao 2024, ExpeL: LLM Agents Are Experiential Learners](https://arxiv.org/abs/2308.10144) | AAAI 2024 | [✓ AAAI (open access)](https://ojs.aaai.org/index.php/AAAI/article/download/29936/31635) |
-| 4 | [Shridhar 2020, ALFWorld: Aligning Text and Embodied Environments for Interactive Lear](https://arxiv.org/abs/2010.03768) | ICLR 2021 | [✓ arXiv](https://arxiv.org/pdf/2010.03768) |
-| 4 | [Fan 2022, MineDojo: Building Open-Ended Embodied Agents with Internet-Scale Know](https://arxiv.org/abs/2206.08853) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2206.08853) |
 | 4 | [Lin 2023, SwiftSage: A Generative Agent with Fast and Slow Thinking for Complex ](https://arxiv.org/abs/2305.17390) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2305.17390) |
 | 4 | [Zeng 2024, AgentTuning: Enabling Generalized Agent Abilities for LLMs](https://arxiv.org/abs/2310.12823) | Findings of the Association for Computational Linguistics: ACL (Findings of ACL) | [✓ ACL Anthology](https://aclanthology.org/2024.findings-acl.181.pdf) |
 | 4 | [Wang 2026, SCM: Enhancing Large Language Model with Self-Controlled Memory Framew](https://arxiv.org/abs/2304.13343) | DASFAA (6) 2026 | [✓ arXiv](https://arxiv.org/pdf/2304.13343) |
 | 3 | [Kumar 1995, Artificial intelligence: a modern approach](https://doi.org/10.5860/choice.33-1577) | Choice Reviews Online | ✗ no free copy found (paywalled: library, author page or request) |
-| 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | J. Mach. Learn. Res. 2020 | [✓ arXiv](https://arxiv.org/pdf/1910.10683) |
 | 3 | [Ji 2022, Survey of Hallucination in Natural Language Generation](https://arxiv.org/abs/2202.03629) | ACM Comput. Surv. 2023 | [✓ arXiv](https://arxiv.org/pdf/2202.03629) |
 | 3 | [Browne 2012, A Survey of Monte Carlo Tree Search Methods](https://doi.org/10.1109/tciaig.2012.2186810) | IEEE Trans. Comput. Intell. AI Games 2012 | ✗ no free copy found (paywalled: library, author page or request) |
 | 3 | [Guo 2025, DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learn](https://arxiv.org/abs/2501.12948) | Nat. 2025 | [✓ free copy (www.nature.com)](https://www.nature.com/articles/s41586-025-09422-z.pdf) |
 | 3 | [Joshi 2017, TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Rea](https://arxiv.org/abs/1705.03551) | ACL (1) 2017 | [✓ ACL Anthology](https://www.aclweb.org/anthology/P17-1147.pdf) |
-| 3 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | Science | [✓ arXiv](https://arxiv.org/pdf/2203.07814) |
-| 3 | [Li 2023, BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image En](https://arxiv.org/abs/2301.12597) | ICML 2023 | [✓ arXiv](https://arxiv.org/pdf/2301.12597) |
 | 3 | [Ziems 2023, Can Large Language Models Transform Computational Social Science?](https://arxiv.org/abs/2305.03514) | Comput. Linguistics 2024 | [✓ MIT Press (open access)](https://direct.mit.edu/coli/article-pdf/doi/10.1162/coli_a_00502/2191886/coli_a_00502.pdf) |
 | 3 | [Song 2023, LLM-Planner: Few-Shot Grounded Planning for Embodied Agents with Large](https://arxiv.org/abs/2212.04088) | ICCV 2023 | [✓ arXiv](https://arxiv.org/pdf/2212.04088) |
-| 3 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | ICML 2022 | [✓ arXiv](https://arxiv.org/pdf/2112.04426) |
-| 3 | [Qin 2024, Tool Learning with Foundation Models](https://arxiv.org/abs/2304.08354) | ACM Comput. Surv. 2025 | [✓ arXiv preprint](https://arxiv.org/pdf/2304.08354) |
 | 3 | [Tang 2024, MedAgents: Large Language Models as Collaborators for Zero-shot Medica](https://arxiv.org/abs/2311.10537) | Findings of the Association for Computational Linguistics: ACL (Findings of ACL) | [✓ ACL Anthology](https://aclanthology.org/2024.findings-acl.33.pdf) |
 | 3 | [Huang 2025, Recommender AI Agent: Integrating Large Language Models for Interactiv](https://arxiv.org/abs/2308.16505) | ACM Trans. Inf. Syst. 2025 | [✓ arXiv](https://arxiv.org/pdf/2308.16505) |
 | 3 | [Sumers 2023, Cognitive Architectures for Language Agents](https://arxiv.org/abs/2309.02427) | Trans. Mach. Learn. Res. 2024 | [✓ arXiv](https://arxiv.org/pdf/2309.02427) |
-| 3 | [Wang 2022, ScienceWorld: Is your Agent Smarter than a 5th Grader?](https://arxiv.org/abs/2203.07540) | EMNLP 2022 | [✓ ACL Anthology](https://aclanthology.org/2022.emnlp-main.775.pdf) |
 | 3 | [Nottingham 2023, Do Embodied Agents Dream of Pixelated Sheep: Embodied Decision Making ](https://arxiv.org/abs/2301.12050) | ICML 2023 | [✓ arXiv](https://arxiv.org/pdf/2301.12050) |
 | 3 | [Paul 2024, REFINER: Reasoning Feedback on Intermediate Representations](https://doi.org/10.18653/v1/2024.eacl-long.67) | EACL (1) 2024 | [✓ ACL Anthology](https://aclanthology.org/2024.eacl-long.67.pdf) |
 

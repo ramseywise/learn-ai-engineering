@@ -804,13 +804,18 @@ def availability(w):
     paywalled paper with an arXiv version is still free to read (cite the venue)."""
     if w["oa_pdf"]:
         host = urllib.parse.urlparse(w["oa_pdf"]).netloc
+        if "aclanthology.org" in host:  # OpenAlex lowercases old ACL ids, which 404: n19-1300 -> N19-1300
+            url = re.sub(r"/([a-z]\d{2}-\d{4})\.pdf$", lambda m: f"/{m.group(1).upper()}.pdf", w["oa_pdf"])
+            return "✓ ACL Anthology", url
         label = next((name for h, name in OA_HOSTS if h in host), f"free ({host})")
         if label == "arXiv" or label.startswith("free"):
             label = label if label == "arXiv" else f"free copy ({host})"
         return f"✓ {label}", w["oa_pdf"]
     doi = (w["doi"] or "").lower()
     if doi.startswith("10.18653/v1/"):  # every ACL Anthology paper is open access
-        return "✓ ACL Anthology", f"https://aclanthology.org/{doi.split('/', 2)[2]}.pdf"
+        aid = doi.split("/", 2)[2]
+        aid = aid.upper() if re.fullmatch(r"[a-z]\d{2}-\d{4}", aid) else aid  # old ids are uppercase: N19-1300
+        return "✓ ACL Anthology", f"https://aclanthology.org/{aid}.pdf"
     if w["arxiv"]:
         return "✓ arXiv preprint", f"https://arxiv.org/pdf/{w['arxiv']}"
     if doi.startswith("10.1162/tacl"):  # TACL is open access; the DOI lands on the free MIT Press page
@@ -843,10 +848,15 @@ def cmd_preprints(args):
     for w in todo.values():
         words = " ".join(norm_title(w["title"]).split()[:12])
         url = ARXIV_SEARCH.format(q=urllib.parse.quote(f'ti:"{words}"'))
-        try:
-            feed = ET.fromstring(potw.http_get(url, timeout=60))
-        except Exception as exc:
-            log(f"preprints: {w['id']} failed: {exc}")
+        feed = None
+        for wait in (0, 30, 90):  # arXiv answers 429 when pushed; back off rather than give up
+            time.sleep(wait)
+            try:
+                feed = ET.fromstring(potw.http_get(url, timeout=60))
+                break
+            except Exception as exc:
+                log(f"preprints: {w['id']} failed: {exc}")
+        if feed is None:
             continue
         hit = None
         for e in feed.iter(f"{ATOM}entry"):

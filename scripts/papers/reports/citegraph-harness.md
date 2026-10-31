@@ -34,27 +34,27 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | Local | Meth. | Paper | Status | Venue | Global cites | In repo |
 |---|---|---|---|---|---|---|
 | 5 | 0 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 4 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
+| 4 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 4 | 0 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 3 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | — |
+| 3 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-emergent-abilities-large-language-models.pdf` |
 | 3 | 0 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | peer-reviewed | ICLR 2024 | 72 | — |
 | 3 | 0 | [Schick 2023, Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) | peer-reviewed | NeurIPS 2023 | 1160 | ✓ `generative-ai/03-agentic-foundations/sources/schick-2023-toolformer.pdf` |
 | 3 | 0 | [Shinn 2023, Reflexion: language agents with verbal reinforcement learning](https://arxiv.org/abs/2303.11366) | peer-reviewed | NeurIPS 2023 | 1069 | ✓ `generative-ai/05-RL/sources/shinn-2023-reflexion.pdf` |
 | 2 | 1 | [Yao 2023, Tree of Thoughts: Deliberate Problem Solving with Large Language Model](https://arxiv.org/abs/2305.10601) | peer-reviewed | NeurIPS 2023 | 1170 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2023-tree-thoughts.pdf` |
 | 2 | 0 | [Amodei 2016, Concrete Problems in AI Safety](https://arxiv.org/abs/1606.06565) | preprint |  | 1314 | — |
 | 2 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
-| 2 | 0 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | — |
-| 2 | 0 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | — |
+| 2 | 0 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
+| 2 | 0 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | ✓ `ai-engineering/06-eval/sources/ahn-2022-do-as-i-can-not.pdf` |
 | 2 | 0 | [Jiang 2023, Mistral 7B](https://arxiv.org/abs/2310.06825) | preprint |  | 330 | ✓ `generative-ai/01-llm-fundamentals/sources/jiang-2023-mistral-7b.pdf` |
 | 2 | 0 | [Yang 2023, Large Language Models as Optimizers](https://arxiv.org/abs/2309.03409) | peer-reviewed | ICLR 2024 | 151 | ✓ `ai-engineering/01-prompt-engineering/sources/yang-2023-large-language-models-as-optimizers.pdf` |
-| 2 | 0 | [Rozière 2023, Code Llama: Open Foundation Models for Code](https://arxiv.org/abs/2308.12950) | preprint |  | 531 | — |
+| 2 | 0 | [Rozière 2023, Code Llama: Open Foundation Models for Code](https://arxiv.org/abs/2308.12950) | preprint |  | 531 | ✓ `generative-ai/01-llm-fundamentals/sources/roziere-2023-code-llama.pdf` |
 | 2 | 0 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 2 | 0 | [Wang 2023, Voyager: An Open-Ended Embodied Agent with Large Language Models](https://arxiv.org/abs/2305.16291) | peer-reviewed | Trans. Mach. Learn. Res. 2024 | 222 | ✓ `ai-engineering/04-loop-engineering/sources/wang-2023-voyager.pdf` |
 | 2 | 0 | [Wang 2023, MINT: Evaluating LLMs in Multi-turn Interaction with Tools and Languag](https://arxiv.org/abs/2309.10691) | peer-reviewed | ICLR 2024 | 18 | — |
-| 2 | 0 | [Liang 2023, Code as Policies: Language Model Programs for Embodied Control](https://arxiv.org/abs/2209.07753) | peer-reviewed | ICRA 2023 | 767 | — |
+| 2 | 0 | [Liang 2023, Code as Policies: Language Model Programs for Embodied Control](https://arxiv.org/abs/2209.07753) | peer-reviewed | ICRA 2023 | 767 | ✓ `generative-ai/01-llm-fundamentals/sources/liang-2023-code-as-policies.pdf` |
 | 2 | 0 | [Touvron 2023, LLaMA: Open and Efficient Foundation Language Models](https://arxiv.org/abs/2302.13971) | preprint |  | 4528 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama.pdf` |
 | 2 | 0 | [Wu 2023, AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversati](https://arxiv.org/abs/2308.08155) | preprint |  | 194 | — |
-| 2 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | — |
+| 2 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | ✓ `generative-ai/03-agentic-foundations/sources/madaan-2023-self-refine.pdf` |
 | 2 | 0 | [Wang 2024, OpenHands: An Open Platform for AI Software Developers as Generalist A](https://arxiv.org/abs/2407.16741) | peer-reviewed | ICLR 2025 | 24 | ✓ `ai-engineering/03-harness-engineering/sources/wang-2024-openhands.pdf` |
 | 2 | 0 | [Patil 2024, Gorilla: Large Language Model Connected with Massive APIs](https://arxiv.org/abs/2305.15334) | peer-reviewed | NeurIPS 2024 | 227 | ✓ `generative-ai/03-agentic-foundations/sources/patil-2023-gorilla.pdf` |
 | 2 | 0 | [Besta 2024, Graph of Thoughts: Solving Elaborate Problems with Large Language Mode](https://arxiv.org/abs/2308.09687) | peer-reviewed | AAAI 2024 | 556 | ✓ `generative-ai/03-agentic-foundations/sources/besta-2023-graph-thoughts.pdf` |
@@ -68,11 +68,11 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 1 | 1 | [Petke 2017, Genetic Improvement of Software: A Comprehensive Survey](https://doi.org/10.1109/tevc.2017.2693219) | peer-reviewed | IEEE Trans. Evol. Comput. 2018 | 230 | — |
 | 1 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | 435 | — |
 | 1 | 1 | [Xiao 2022, Uncertainty Quantification with Pre-trained Language Models: A Large-S](https://arxiv.org/abs/2210.04714) | peer-reviewed | EMNLP (Findings) 2022 | 34 | — |
-| 1 | 1 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | peer-reviewed | CoRL 2023 | 287 | — |
-| 1 | 1 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | — |
-| 1 | 1 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | — |
+| 1 | 1 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | peer-reviewed | CoRL 2023 | 287 | ✓ `generative-ai/01-llm-fundamentals/sources/huang-2022-inner-monologue.pdf` |
+| 1 | 1 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | ✓ `ai-engineering/06-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf` |
+| 1 | 1 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `ai-engineering/06-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
 | 1 | 1 | [Lin 2022, Teaching Models to Express Their Uncertainty in Words](https://arxiv.org/abs/2205.14334) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 59 | — |
-| 1 | 1 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | peer-reviewed | ACL (1) 2022 | 610 | — |
+| 1 | 1 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | peer-reviewed | ACL (1) 2022 | 610 | ✓ `ai-engineering/01-prompt-engineering/sources/lu-2022-fantastically-ordered-prompts-where-find.pdf` |
 
 ### Historical roots (RPYS peak years)
 
@@ -94,20 +94,19 @@ Cited by ≥3 of our papers and older than the median cited year (2023). The met
 
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
-| 4 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | — |
+| 4 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 5 | 0 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 3 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | — |
+| 3 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-emergent-abilities-large-language-models.pdf` |
 | 4 | 0 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 
-### Peer-reviewed papers to acquire (2)
+### Peer-reviewed papers to acquire (1)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-2 can be fetched free, 0 have no free copy.
+1 can be fetched free, 0 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 3 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | Trans. Mach. Learn. Res. 2022 | [✓ arXiv](https://arxiv.org/pdf/2206.07682) |
 | 3 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2310.06770) |
 
 ### arXiv citations with a peer-reviewed version (1 papers)

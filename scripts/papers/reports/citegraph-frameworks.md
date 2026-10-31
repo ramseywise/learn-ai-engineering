@@ -27,11 +27,11 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 1 | 1 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
 | 1 | 1 | [Li 2023, CAMEL: Communicative Agents for "Mind" Exploration of Large Language M](https://arxiv.org/abs/2303.17760) | peer-reviewed | NeurIPS 2023 | 315 | — |
 | 1 | 1 | [Qian 2024, ChatDev: Communicative Agents for Software Development](https://doi.org/10.18653/v1/2024.acl-long.810) | peer-reviewed | ACL (1) 2024 | 447 | ✓ `generative-ai/03-agentic-foundations/sources/qian-2023-chatdev.pdf` |
-| 1 | 0 | [Reimers 2019, Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://doi.org/10.18653/v1/d19-1410) | peer-reviewed | EMNLP/IJCNLP (1) 2019 | 12790 | — |
-| 1 | 0 | [Wolf 2020, Transformers: State-of-the-Art Natural Language Processing](https://doi.org/10.18653/v1/2020.emnlp-demos.6) | peer-reviewed | EMNLP (Demos) 2020 | 8741 | — |
-| 1 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 1 | 0 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | — |
-| 1 | 0 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | 144 | — |
+| 1 | 0 | [Reimers 2019, Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://doi.org/10.18653/v1/d19-1410) | peer-reviewed | EMNLP/IJCNLP (1) 2019 | 12790 | ✓ `generative-ai/05-RL/sources/reimers-2019-sentence-bert.pdf` |
+| 1 | 0 | [Wolf 2020, Transformers: State-of-the-Art Natural Language Processing](https://doi.org/10.18653/v1/2020.emnlp-demos.6) | peer-reviewed | EMNLP (Demos) 2020 | 8741 | ✓ `generative-ai/01-llm-fundamentals/sources/wolf-2020-transformers.pdf` |
+| 1 | 0 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 1 | 0 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
+| 1 | 0 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | 144 | ✓ `ai-engineering/01-prompt-engineering/sources/nye-2021-show-your-work.pdf` |
 | 1 | 0 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
 | 1 | 0 | [Xu 2023, Gentopia: A Collaborative Platform for Tool-Augmented LLMs](https://arxiv.org/abs/2308.04030) | preprint |  | 6 | — |
 | 1 | 0 | [Gür 2023, A Real-World WebAgent with Planning, Long Context Understanding, and P](https://arxiv.org/abs/2307.12856) | peer-reviewed | ICLR 2024 | 15 | — |
@@ -47,7 +47,7 @@ Years whose cited references spike above their neighbours; the most cited paper 
 
 | Year | Excess | Paper | Status | In repo |
 |---|---|---|---|---|
-| 2020 | +1 | [Wolf 2020, Transformers: State-of-the-Art Natural Language Processing](https://doi.org/10.18653/v1/2020.emnlp-demos.6) | peer-reviewed | — |
+| 2020 | +1 | [Wolf 2020, Transformers: State-of-the-Art Natural Language Processing](https://doi.org/10.18653/v1/2020.emnlp-demos.6) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/wolf-2020-transformers.pdf` |
 
 ### Peer-reviewed papers to acquire (0)
 

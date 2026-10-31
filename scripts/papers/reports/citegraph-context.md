@@ -53,40 +53,40 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 
 | Local | Meth. | Paper | Status | Venue | Global cites | In repo |
 |---|---|---|---|---|---|---|
-| 11 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
+| 11 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
 | 8 | 2 | [Liu 2024, Lost in the Middle: How Language Models Use Long Contexts](https://arxiv.org/abs/2307.03172) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2024 | 1602 | ✓ `ai-engineering/02-context-engineering/sources/liu-2023-lost-middle.pdf` |
 | 8 | 0 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 8 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
 | 7 | 2 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 | 7 | 0 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 7 | 0 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | peer-reviewed | SOSP 2023 | 1809 | — |
-| 7 | 0 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | — |
-| 6 | 1 | [Beltagy 2020, Longformer: The Long-Document Transformer](https://arxiv.org/abs/2004.05150) | preprint |  | 2281 | — |
+| 7 | 0 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | peer-reviewed | SOSP 2023 | 1809 | ✓ `generative-ai/05-RL/sources/kwon-2023-efficient-memory-management-large-language.pdf` |
+| 7 | 0 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | ✓ `generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf` |
+| 6 | 1 | [Beltagy 2020, Longformer: The Long-Document Transformer](https://arxiv.org/abs/2004.05150) | preprint |  | 2281 | ✓ `generative-ai/01-llm-fundamentals/sources/beltagy-2020-longformer.pdf` |
 | 6 | 0 | [Xu 2025, A-Mem: Agentic Memory for LLM Agents](https://arxiv.org/abs/2502.12110) | peer-reviewed | NeurIPS 2025 | 49 | ✓ `generative-ai/03-agentic-foundations/sources/xu-2025-mem.pdf` |
 | 5 | 2 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | peer-reviewed | EMNLP 2018 | 1805 | — |
-| 5 | 2 | [Dai 2019, Transformer-XL: Attentive Language Models beyond a Fixed-Length Contex](https://doi.org/10.18653/v1/p19-1285) | peer-reviewed | ACL (1) 2019 | 3169 | — |
+| 5 | 2 | [Dai 2019, Transformer-XL: Attentive Language Models beyond a Fixed-Length Contex](https://doi.org/10.18653/v1/p19-1285) | peer-reviewed | ACL (1) 2019 | 3169 | ✓ `generative-ai/01-llm-fundamentals/sources/dai-2019-transformer-xl.pdf` |
 | 5 | 1 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
 | 5 | 0 | [Packer 2023, MemGPT: Towards LLMs as Operating Systems](https://arxiv.org/abs/2310.08560) | preprint |  | 64 | ✓ `ai-engineering/02-context-engineering/sources/packer-2023-memgpt.pdf` |
 | 5 | 0 | [Shinn 2023, Reflexion: language agents with verbal reinforcement learning](https://arxiv.org/abs/2303.11366) | peer-reviewed | NeurIPS 2023 | 1069 | ✓ `generative-ai/05-RL/sources/shinn-2023-reflexion.pdf` |
 | 5 | 0 | [Chhikara 2025, Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memo](https://arxiv.org/abs/2504.19413) | peer-reviewed | ECAI 2025 | 10 | ✓ `generative-ai/03-agentic-foundations/sources/chhikara-2025-mem0.pdf` |
-| 4 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | — |
-| 4 | 1 | [Gu 2023, Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752) | preprint |  | 1578 | — |
+| 4 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 4 | 1 | [Gu 2023, Mamba: Linear-Time Sequence Modeling with Selective State Spaces](https://arxiv.org/abs/2312.00752) | preprint |  | 1578 | ✓ `generative-ai/01-llm-fundamentals/sources/gu-2023-mamba.pdf` |
 | 4 | 0 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
 | 4 | 0 | [Xiao 2023, Efficient Streaming Language Models with Attention Sinks](https://arxiv.org/abs/2309.17453) | peer-reviewed | ICLR 2024 | 55 | ✓ `ai-engineering/07-inference-engineering/sources/xiao-2023-efficient-streaming-language-models-attention.pdf` |
 | 4 | 0 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
 | 4 | 0 | [Qwen 2024, Qwen2.5 Technical Report](https://arxiv.org/abs/2412.15115) | tech-report |  | 129 | ✓ `generative-ai/01-llm-fundamentals/sources/qwen-2024-qwen2-5-technical-report.pdf` |
 | 4 | 0 | [Bai 2024, LongBench: A Bilingual, Multitask Benchmark for Long Context Understan](https://doi.org/10.18653/v1/2024.acl-long.172) | peer-reviewed | ACL (1) 2024 | 185 | — |
 | 4 | 0 | [Shao 2024, DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Lan](https://arxiv.org/abs/2402.03300) | preprint |  | 101 | ✓ `generative-ai/05-RL/sources/shao-2024-deepseekmath.pdf` |
-| 3 | 2 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | — |
-| 3 | 1 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | Neural Comput. 1997 | 102318 | — |
-| 3 | 1 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | Found. Trends Inf. Retr. 2009 | 3303 | — |
-| 3 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | — |
-| 3 | 1 | [Child 2019, Generating Long Sequences with Sparse Transformers](https://arxiv.org/abs/1904.10509) | preprint |  | 1063 | — |
+| 3 | 2 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
+| 3 | 1 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | Neural Comput. 1997 | 102318 | ✓ `generative-ai/01-llm-fundamentals/sources/hochreiter-1997-long-short-term-memory.pdf` |
+| 3 | 1 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | Found. Trends Inf. Retr. 2009 | 3303 | ✓ `generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf` |
+| 3 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
+| 3 | 1 | [Child 2019, Generating Long Sequences with Sparse Transformers](https://arxiv.org/abs/1904.10509) | preprint |  | 1063 | ✓ `generative-ai/01-llm-fundamentals/sources/child-2019-generating-long-sequences-sparse-transformers.pdf` |
 | 3 | 1 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2019 | 2068 | — |
-| 3 | 1 | [Katharopoulos 2020, Transformers are RNNs: Fast Autoregressive Transformers with Linear At](https://arxiv.org/abs/2006.16236) | peer-reviewed | ICML 2020 | 827 | — |
-| 3 | 1 | [Karpukhin 2020, Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906) | peer-reviewed | EMNLP (1) 2020 | 3578 | — |
+| 3 | 1 | [Katharopoulos 2020, Transformers are RNNs: Fast Autoregressive Transformers with Linear At](https://arxiv.org/abs/2006.16236) | peer-reviewed | ICML 2020 | 827 | ✓ `generative-ai/01-llm-fundamentals/sources/katharopoulos-2020-transformers-rnns.pdf` |
+| 3 | 1 | [Karpukhin 2020, Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906) | peer-reviewed | EMNLP (1) 2020 | 3578 | ✓ `generative-ai/02-rag-retrieval/sources/karpukhin-2020-dense-passage-retrieval-open-domain.pdf` |
 | 3 | 1 | [Press 2021, Train Short, Test Long: Attention with Linear Biases Enables Input Len](https://arxiv.org/abs/2108.12409) | peer-reviewed | ICLR 2022 | 161 | ✓ `generative-ai/01-llm-fundamentals/sources/press-2021-train-short-test-long.pdf` |
-| 3 | 1 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | peer-reviewed | ICML 2022 | 382 | — |
+| 3 | 1 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | peer-reviewed | ICML 2022 | 382 | ✓ `generative-ai/02-rag-retrieval/sources/borgeaud-2021-improving-language-models-retrieving-trillions.pdf` |
 | 3 | 1 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 3 | 1 | [Munkhdalai 2024, Leave No Context Behind: Efficient Infinite Context Transformers with ](https://arxiv.org/abs/2404.07143) | preprint |  | 23 | ✓ `ai-engineering/02-context-engineering/sources/munkhdalai-2024-leave-no-context-behind.pdf` |
 | 3 | 0 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | peer-reviewed | ICLR 2024 | 72 | — |
@@ -101,13 +101,13 @@ Years whose cited references spike above their neighbours; the most cited paper 
 | Year | Excess | Paper | Status | In repo |
 |---|---|---|---|---|
 | 1990 | +2 | [Elman 1990, Finding Structure in Time](https://doi.org/10.1207/s15516709cog1402_1) | peer-reviewed | — |
-| 1997 | +3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | — |
+| 1997 | +3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/hochreiter-1997-long-short-term-memory.pdf` |
 | 1998 | +2 | [Binder 1998, Contextual strength does not modulate the subordinate bias effect: Evi](https://doi.org/10.3758/bf03212950) | peer-reviewed | — |
 | 2001 | +2 | [McDonald 2001, Rethinking the Word Frequency Effect: The Neglected Role of Distributi](https://doi.org/10.1177/00238309010440030101) | peer-reviewed | — |
-| 2009 | +3 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | — |
+| 2009 | +3 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | ✓ `generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf` |
 | 2017 | +3 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
-| 2020 | +10 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | — |
-| 2023 | +60 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | peer-reviewed | — |
+| 2020 | +10 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 2023 | +60 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | peer-reviewed | ✓ `generative-ai/05-RL/sources/kwon-2023-efficient-memory-management-large-language.pdf` |
 
 ### Origin candidates
 
@@ -116,46 +116,36 @@ Cited by ≥3 of our papers and older than the median cited year (2022). The met
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
 | 5 | 2 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | peer-reviewed | EMNLP 2018 | — |
-| 5 | 2 | [Dai 2019, Transformer-XL: Attentive Language Models beyond a Fixed-Length Contex](https://doi.org/10.18653/v1/p19-1285) | peer-reviewed | ACL (1) 2019 | — |
-| 11 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | — |
-| 3 | 2 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | — |
-| 3 | 1 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | Neural Comput. 1997 | — |
-| 3 | 1 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | Found. Trends Inf. Retr. 2009 | — |
-| 3 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | — |
-| 3 | 1 | [Child 2019, Generating Long Sequences with Sparse Transformers](https://arxiv.org/abs/1904.10509) | preprint |  | — |
+| 5 | 2 | [Dai 2019, Transformer-XL: Attentive Language Models beyond a Fixed-Length Contex](https://doi.org/10.18653/v1/p19-1285) | peer-reviewed | ACL (1) 2019 | ✓ `generative-ai/01-llm-fundamentals/sources/dai-2019-transformer-xl.pdf` |
+| 11 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 3 | 2 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
+| 3 | 1 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | Neural Comput. 1997 | ✓ `generative-ai/01-llm-fundamentals/sources/hochreiter-1997-long-short-term-memory.pdf` |
+| 3 | 1 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | Found. Trends Inf. Retr. 2009 | ✓ `generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf` |
+| 3 | 1 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
+| 3 | 1 | [Child 2019, Generating Long Sequences with Sparse Transformers](https://arxiv.org/abs/1904.10509) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/child-2019-generating-long-sequences-sparse-transformers.pdf` |
 | 3 | 1 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2019 | — |
-| 3 | 1 | [Katharopoulos 2020, Transformers are RNNs: Fast Autoregressive Transformers with Linear At](https://arxiv.org/abs/2006.16236) | peer-reviewed | ICML 2020 | — |
-| 6 | 1 | [Beltagy 2020, Longformer: The Long-Document Transformer](https://arxiv.org/abs/2004.05150) | preprint |  | — |
-| 3 | 1 | [Karpukhin 2020, Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906) | peer-reviewed | EMNLP (1) 2020 | — |
+| 3 | 1 | [Katharopoulos 2020, Transformers are RNNs: Fast Autoregressive Transformers with Linear At](https://arxiv.org/abs/2006.16236) | peer-reviewed | ICML 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/katharopoulos-2020-transformers-rnns.pdf` |
+| 6 | 1 | [Beltagy 2020, Longformer: The Long-Document Transformer](https://arxiv.org/abs/2004.05150) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/beltagy-2020-longformer.pdf` |
+| 3 | 1 | [Karpukhin 2020, Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906) | peer-reviewed | EMNLP (1) 2020 | ✓ `generative-ai/02-rag-retrieval/sources/karpukhin-2020-dense-passage-retrieval-open-domain.pdf` |
 | 3 | 1 | [Press 2021, Train Short, Test Long: Attention with Linear Biases Enables Input Len](https://arxiv.org/abs/2108.12409) | peer-reviewed | ICLR 2022 | ✓ `generative-ai/01-llm-fundamentals/sources/press-2021-train-short-test-long.pdf` |
-| 4 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | — |
-| 3 | 1 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | peer-reviewed | ICML 2022 | — |
+| 4 | 1 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 3 | 1 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | peer-reviewed | ICML 2022 | ✓ `generative-ai/02-rag-retrieval/sources/borgeaud-2021-improving-language-models-retrieving-trillions.pdf` |
 | 8 | 0 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 4 | 0 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
 | 8 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
 
-### Peer-reviewed papers to acquire (16)
+### Peer-reviewed papers to acquire (6)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-14 can be fetched free, 2 have no free copy.
+6 can be fetched free, 0 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 11 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | NeurIPS 2020 | [✓ arXiv](https://arxiv.org/pdf/2005.14165) |
-| 7 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2306.05685) |
-| 7 | [Kwon 2023, Efficient Memory Management for Large Language Model Serving with Page](https://arxiv.org/abs/2309.06180) | SOSP 2023 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3600006.3613165) |
-| 5 | [Dai 2019, Transformer-XL: Attentive Language Models beyond a Fixed-Length Contex](https://doi.org/10.18653/v1/p19-1285) | ACL (1) 2019 | [✓ ACL Anthology](https://www.aclweb.org/anthology/P19-1285.pdf) |
 | 5 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | EMNLP 2018 | [✓ ACL Anthology](https://www.aclweb.org/anthology/D18-1259.pdf) |
 | 4 | [Bai 2024, LongBench: A Bilingual, Multitask Benchmark for Long Context Understan](https://doi.org/10.18653/v1/2024.acl-long.172) | ACL (1) 2024 | [✓ ACL Anthology](https://aclanthology.org/2024.acl-long.172.pdf) |
-| 3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | Neural Comput. 1997 | ✗ no free copy found (paywalled: library, author page or request) |
-| 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | J. Mach. Learn. Res. 2020 | [✓ arXiv](https://arxiv.org/pdf/1910.10683) |
-| 3 | [Karpukhin 2020, Dense Passage Retrieval for Open-Domain Question Answering](https://arxiv.org/abs/2004.04906) | EMNLP (1) 2020 | [✓ ACL Anthology](https://www.aclweb.org/anthology/2020.emnlp-main.550.pdf) |
-| 3 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | Found. Trends Inf. Retr. 2009 | ✗ no free copy found (paywalled: library, author page or request) |
 | 3 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | Trans. Assoc. Comput. Linguistics 2019 | [✓ TACL (open access)](https://doi.org/10.1162/tacl_a_00276) |
 | 3 | [Guo 2025, DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learn](https://arxiv.org/abs/2501.12948) | Nat. 2025 | [✓ free copy (www.nature.com)](https://www.nature.com/articles/s41586-025-09422-z.pdf) |
-| 3 | [Katharopoulos 2020, Transformers are RNNs: Fast Autoregressive Transformers with Linear At](https://arxiv.org/abs/2006.16236) | ICML 2020 | [✓ arXiv](https://arxiv.org/pdf/2006.16236) |
-| 3 | [Borgeaud 2021, Improving language models by retrieving from trillions of tokens](https://arxiv.org/abs/2112.04426) | ICML 2022 | [✓ arXiv](https://arxiv.org/pdf/2112.04426) |
 | 3 | [Press 2023, Measuring and Narrowing the Compositionality Gap in Language Models](https://arxiv.org/abs/2210.03350) | EMNLP (Findings) 2023 | [✓ ACL Anthology](https://aclanthology.org/2023.findings-emnlp.378.pdf) |
 | 3 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2310.06770) |
 

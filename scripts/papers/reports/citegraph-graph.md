@@ -42,44 +42,44 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 |---|---|---|---|---|---|---|
 | 8 | 0 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
 | 7 | 0 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 6 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 6 | 1 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | — |
+| 6 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 6 | 1 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | ✓ `generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf` |
 | 6 | 1 | [Shinn 2023, Reflexion: language agents with verbal reinforcement learning](https://arxiv.org/abs/2303.11366) | peer-reviewed | NeurIPS 2023 | 1069 | ✓ `generative-ai/05-RL/sources/shinn-2023-reflexion.pdf` |
 | 6 | 1 | [Schick 2023, Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) | peer-reviewed | NeurIPS 2023 | 1160 | ✓ `generative-ai/03-agentic-foundations/sources/schick-2023-toolformer.pdf` |
 | 5 | 3 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
 | 5 | 1 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
-| 5 | 1 | [Guu 2020, REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909) | peer-reviewed | ICML 2020 | 541 | — |
-| 5 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
+| 5 | 1 | [Guu 2020, REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909) | peer-reviewed | ICML 2020 | 541 | ✓ `generative-ai/02-rag-retrieval/sources/guu-2020-realm.pdf` |
+| 5 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 5 | 1 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 5 | 1 | [Edge 2024, From Local to Global: A Graph RAG Approach to Query-Focused Summarizat](https://arxiv.org/abs/2404.16130) | preprint |  | 159 | — |
-| 5 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | — |
-| 5 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | — |
+| 5 | 1 | [Edge 2024, From Local to Global: A Graph RAG Approach to Query-Focused Summarizat](https://arxiv.org/abs/2404.16130) | preprint |  | 159 | ✓ `ai-engineering/05-graph-engineering/sources/edge-2024-local-global.pdf` |
+| 5 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 5 | 0 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-emergent-abilities-large-language-models.pdf` |
 | 5 | 0 | [Du 2023, Improving Factuality and Reasoning in Language Models through Multiage](https://arxiv.org/abs/2305.14325) | peer-reviewed | ICML 2024 | 119 | — |
 | 5 | 0 | [Rafailov 2023, Direct Preference Optimization: Your Language Model is Secretly a Rewa](https://doi.org/10.52202/075280-2338) | peer-reviewed | NeurIPS 2023 | 689 | ✓ `generative-ai/05-RL/sources/rafailov-2023-dpo.pdf` |
 | 4 | 2 | [Touvron 2023, LLaMA: Open and Efficient Foundation Language Models](https://arxiv.org/abs/2302.13971) | preprint |  | 4528 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama.pdf` |
 | 4 | 1 | [Bai 2022, Constitutional AI: Harmlessness from AI Feedback](https://arxiv.org/abs/2212.08073) | preprint |  | 325 | ✓ `generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf` |
 | 4 | 1 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 4 | 0 | [Sutton 1998, Reinforcement Learning: An Introduction](https://doi.org/10.1109/tnn.1998.712192) | peer-reviewed | IEEE Trans. Neural Networks 1998 | 27217 | — |
-| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | — |
+| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
 | 4 | 0 | [Gao 2023, Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997) | preprint |  | 876 | ✓ `generative-ai/02-rag-retrieval/sources/2312.10997v5.pdf` |
 | 3 | 1 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 3 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | — |
+| 3 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
 | 3 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | 435 | — |
 | 3 | 1 | [Kojima 2022, Large Language Models Are Zero-Shot Reasoners](https://arxiv.org/abs/2205.11916) | peer-reviewed | NeurIPS 2022 | 2013 | ✓ `ai-engineering/01-prompt-engineering/sources/kojima-2022-large-language-models-zero-shot.pdf` |
-| 3 | 1 | [Luo 2023, Reasoning on Graphs: Faithful and Interpretable Large Language Model R](https://arxiv.org/abs/2310.01061) | peer-reviewed | ICLR 2024 | 56 | — |
+| 3 | 1 | [Luo 2023, Reasoning on Graphs: Faithful and Interpretable Large Language Model R](https://arxiv.org/abs/2310.01061) | peer-reviewed | ICLR 2024 | 56 | ✓ `ai-engineering/05-graph-engineering/sources/luo-2023-reasoning-graphs.pdf` |
 | 3 | 1 | [Wang 2024, A survey on large language model based autonomous agents](https://arxiv.org/abs/2308.11432) | peer-reviewed | Frontiers Comput. Sci. 2024 | 1927 | ✓ `generative-ai/03-agentic-foundations/sources/wang-2023-survey-large-language-model-based.pdf` |
 | 3 | 0 | [Bollacker 2008, Freebase](https://doi.org/10.1145/1376616.1376746) | peer-reviewed | SIGMOD Conference 2008 | 4852 | — |
 | 3 | 0 | [Ji 2021, A Survey on Knowledge Graphs: Representation, Acquisition, and Applica](https://arxiv.org/abs/2002.00388) | peer-reviewed | IEEE Trans. Neural Networks Learn. Syst. 2022 | 2951 | — |
-| 3 | 0 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | peer-reviewed | ICLR 2022 | 1103 | — |
+| 3 | 0 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | peer-reviewed | ICLR 2022 | 1103 | ✓ `generative-ai/05-RL/sources/wei-2021-finetuned-language-models-zero-shot.pdf` |
 | 3 | 0 | [Liu 2022, Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Metho](https://arxiv.org/abs/2107.13586) | peer-reviewed | ACM Comput. Surv. 2023 | 4354 | — |
 | 3 | 0 | [Le 2022, CodeRL: Mastering Code Generation Through Pretrained Models and Deep R](https://arxiv.org/abs/2207.01780) | peer-reviewed | NeurIPS 2022 | 141 | — |
-| 3 | 0 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | 182 | — |
-| 3 | 0 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | 1044 | — |
+| 3 | 0 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | 182 | ✓ `generative-ai/05-RL/sources/zelikman-2022-star.pdf` |
+| 3 | 0 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | peer-reviewed | Science | 1044 | ✓ `generative-ai/05-RL/sources/li-2022-competition-level-code-generation-alphacode.pdf` |
 | 3 | 0 | [Hong 2023, MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework](https://arxiv.org/abs/2308.00352) | peer-reviewed | ICLR 2024 | 235 | ✓ `generative-ai/03-agentic-foundations/sources/hong-2023-metagpt.pdf` |
 | 3 | 0 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | peer-reviewed | ICLR 2024 | 31 | — |
 | 3 | 0 | [Chen 2023, Teaching Large Language Models to Self-Debug](https://arxiv.org/abs/2304.05128) | peer-reviewed | ICLR 2024 | 109 | ✓ `ai-engineering/04-loop-engineering/sources/chen-2023-teaching-large-language-models-self.pdf` |
 | 3 | 0 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
-| 3 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | — |
+| 3 | 0 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | peer-reviewed | NeurIPS 2023 | 830 | ✓ `generative-ai/03-agentic-foundations/sources/madaan-2023-self-refine.pdf` |
 
 ### Historical roots (RPYS peak years)
 
@@ -103,47 +103,37 @@ Cited by ≥3 of our papers and older than the median cited year (2022). The met
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
 | 5 | 3 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
-| 6 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | — |
+| 6 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
 | 5 | 1 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 3 | 1 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 5 | 1 | [Guu 2020, REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909) | peer-reviewed | ICML 2020 | — |
-| 3 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | — |
-| 5 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | — |
+| 5 | 1 | [Guu 2020, REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909) | peer-reviewed | ICML 2020 | ✓ `generative-ai/02-rag-retrieval/sources/guu-2020-realm.pdf` |
+| 3 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
+| 5 | 1 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 3 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | — |
 | 4 | 0 | [Sutton 1998, Reinforcement Learning: An Introduction](https://doi.org/10.1109/tnn.1998.712192) | peer-reviewed | IEEE Trans. Neural Networks 1998 | — |
 | 3 | 0 | [Bollacker 2008, Freebase](https://doi.org/10.1145/1376616.1376746) | peer-reviewed | SIGMOD Conference 2008 | — |
 | 3 | 0 | [Ji 2021, A Survey on Knowledge Graphs: Representation, Acquisition, and Applica](https://arxiv.org/abs/2002.00388) | peer-reviewed | IEEE Trans. Neural Networks Learn. Syst. 2022 | — |
-| 5 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | — |
-| 3 | 0 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | peer-reviewed | ICLR 2022 | — |
+| 5 | 0 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 3 | 0 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | peer-reviewed | ICLR 2022 | ✓ `generative-ai/05-RL/sources/wei-2021-finetuned-language-models-zero-shot.pdf` |
 
-### Peer-reviewed papers to acquire (21)
+### Peer-reviewed papers to acquire (11)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-19 can be fetched free, 2 have no free copy.
+9 can be fetched free, 2 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 6 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | NeurIPS 2020 | [✓ arXiv](https://arxiv.org/pdf/2005.14165) |
-| 6 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2203.11171) |
-| 5 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | Trans. Mach. Learn. Res. 2022 | [✓ arXiv](https://arxiv.org/pdf/2206.07682) |
-| 5 | [Guu 2020, REALM: Retrieval-Augmented Language Model Pre-Training](https://arxiv.org/abs/2002.08909) | ICML 2020 | [✓ arXiv](https://arxiv.org/pdf/2002.08909) |
 | 5 | [Du 2023, Improving Factuality and Reasoning in Language Models through Multiage](https://arxiv.org/abs/2305.14325) | ICML 2024 | [✓ arXiv](https://arxiv.org/pdf/2305.14325) |
 | 4 | [Sutton 1998, Reinforcement Learning: An Introduction](https://doi.org/10.1109/tnn.1998.712192) | IEEE Trans. Neural Networks 1998 | ✗ no free copy found (paywalled: library, author page or request) |
-| 4 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2207.01206) |
 | 3 | [Bollacker 2008, Freebase](https://doi.org/10.1145/1376616.1376746) | SIGMOD Conference 2008 | ✗ no free copy found (paywalled: library, author page or request) |
 | 3 | [Liu 2022, Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Metho](https://arxiv.org/abs/2107.13586) | ACM Comput. Surv. 2023 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3560815) |
 | 3 | [Ji 2021, A Survey on Knowledge Graphs: Representation, Acquisition, and Applica](https://arxiv.org/abs/2002.00388) | IEEE Trans. Neural Networks Learn. Syst. 2022 | [✓ arXiv](https://arxiv.org/pdf/2002.00388) |
-| 3 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | ICLR 2022 | [✓ arXiv](https://arxiv.org/pdf/2109.01652) |
-| 3 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | Science | [✓ arXiv](https://arxiv.org/pdf/2203.07814) |
-| 3 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17651) |
 | 3 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | ICLR 2021 | [✓ arXiv preprint](https://arxiv.org/pdf/2009.03300) |
 | 3 | [Chen 2024, Exploring the Potential of Large Language Models (LLMs)in Learning on ](https://arxiv.org/abs/2307.03393) | SIGKDD Explor. 2023 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3655103.3655110) |
-| 3 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2203.14465) |
 | 3 | [Wang 2024, Knowledge Graph Prompting for Multi-Document Question Answering](https://arxiv.org/abs/2308.11730) | AAAI 2024 | [✓ AAAI (open access)](https://ojs.aaai.org/index.php/AAAI/article/download/29889/31552) |
 | 3 | [Le 2022, CodeRL: Mastering Code Generation Through Pretrained Models and Deep R](https://arxiv.org/abs/2207.01780) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2207.01780) |
 | 3 | [Kim 2023, Language Models can Solve Computer Tasks](https://arxiv.org/abs/2303.17491) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17491) |
-| 3 | [Luo 2023, Reasoning on Graphs: Faithful and Interpretable Large Language Model R](https://arxiv.org/abs/2310.01061) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2310.01061) |
 | 3 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | ICLR 2024 | [✓ arXiv](https://arxiv.org/pdf/2307.13854) |
 
 ### arXiv citations with a peer-reviewed version (10 papers)

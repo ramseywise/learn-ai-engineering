@@ -65,43 +65,43 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | Local | Meth. | Paper | Status | Venue | Global cites | In repo |
 |---|---|---|---|---|---|---|
 | 21 | 7 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 15 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | — |
-| 12 | 5 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | — |
-| 12 | 4 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | — |
+| 15 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | 23005 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 12 | 5 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | peer-reviewed | ICLR 2023 | 809 | ✓ `generative-ai/05-RL/sources/wang-2022-self-consistency-improves-chain-thought.pdf` |
+| 12 | 4 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
 | 12 | 2 | [Ouyang 2022, Training Language Models to Follow Instructions with Human Feedback](https://doi.org/10.52202/068431-2011) | peer-reviewed | NeurIPS 2022 | 3106 | ✓ `generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf` |
-| 11 | 5 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | — |
+| 11 | 5 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | 1436 | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 | 11 | 4 | [Kojima 2022, Large Language Models Are Zero-Shot Reasoners](https://arxiv.org/abs/2205.11916) | peer-reviewed | NeurIPS 2022 | 2013 | ✓ `ai-engineering/01-prompt-engineering/sources/kojima-2022-large-language-models-zero-shot.pdf` |
-| 11 | 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | — |
-| 10 | 2 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | — |
-| 9 | 2 | [Zhou 2022, Least-to-Most Prompting Enables Complex Reasoning in Large Language Mo](https://arxiv.org/abs/2205.10625) | peer-reviewed | ICLR 2023 | 380 | — |
+| 11 | 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
+| 10 | 2 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 1264 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-emergent-abilities-large-language-models.pdf` |
+| 9 | 2 | [Zhou 2022, Least-to-Most Prompting Enables Complex Reasoning in Large Language Mo](https://arxiv.org/abs/2205.10625) | peer-reviewed | ICLR 2023 | 380 | ✓ `ai-engineering/01-prompt-engineering/sources/zhou-2022-least-most-prompting-enables-complex.pdf` |
 | 9 | 1 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
-| 8 | 2 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | — |
+| 8 | 2 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `ai-engineering/06-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
 | 8 | 1 | [Shin 2020, AutoPrompt: Eliciting Knowledge from Language Models with Automaticall](https://arxiv.org/abs/2010.15980) | peer-reviewed | EMNLP (1) 2020 | 1279 | — |
-| 8 | 1 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | 144 | — |
+| 8 | 1 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | 144 | ✓ `ai-engineering/01-prompt-engineering/sources/nye-2021-show-your-work.pdf` |
 | 8 | 1 | [Schick 2023, Toolformer: Language Models Can Teach Themselves to Use Tools](https://arxiv.org/abs/2302.04761) | peer-reviewed | NeurIPS 2023 | 1160 | ✓ `generative-ai/03-agentic-foundations/sources/schick-2023-toolformer.pdf` |
 | 8 | 0 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 7 | 2 | [Lightman 2023, Let's Verify Step by Step](https://arxiv.org/abs/2305.20050) | peer-reviewed | ICLR 2024 | 65 | ✓ `generative-ai/05-RL/sources/lightman-2023-let-s-verify-step-step.pdf` |
 | 7 | 1 | [Hendrycks 2021, Measuring Mathematical Problem Solving With the MATH Dataset](https://arxiv.org/abs/2103.03874) | peer-reviewed | NeurIPS Datasets and Benchmarks 2021 | 306 | — |
-| 7 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | — |
-| 6 | 3 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | — |
-| 6 | 2 | [Zhou 2022, Large Language Models Are Human-Level Prompt Engineers](https://arxiv.org/abs/2211.01910) | peer-reviewed | ICLR 2023 | 330 | — |
-| 6 | 1 | [Wang 2017, Program Induction by Rationale Generation: Learning to Solve and Expla](https://arxiv.org/abs/1705.04146) | peer-reviewed | ACL (1) 2017 | 325 | — |
-| 6 | 1 | [Patel 2021, Are NLP Models really able to Solve Simple Math Word Problems?](https://arxiv.org/abs/2103.07191) | peer-reviewed | NAACL-HLT 2021 | 307 | — |
+| 7 | 1 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | ✓ `generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf` |
+| 6 | 3 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
+| 6 | 2 | [Zhou 2022, Large Language Models Are Human-Level Prompt Engineers](https://arxiv.org/abs/2211.01910) | peer-reviewed | ICLR 2023 | 330 | ✓ `ai-engineering/01-prompt-engineering/sources/zhou-2022-large-language-models-human-level.pdf` |
+| 6 | 1 | [Wang 2017, Program Induction by Rationale Generation: Learning to Solve and Expla](https://arxiv.org/abs/1705.04146) | peer-reviewed | ACL (1) 2017 | 325 | ✓ `ai-engineering/01-prompt-engineering/sources/wang-2017-program-induction-rationale-generation.pdf` |
+| 6 | 1 | [Patel 2021, Are NLP Models really able to Solve Simple Math Word Problems?](https://arxiv.org/abs/2103.07191) | peer-reviewed | NAACL-HLT 2021 | 307 | ✓ `ai-engineering/01-prompt-engineering/sources/patel-2021-nlp-models-really-able-solve.pdf` |
 | 6 | 1 | [Geva 2021, Did Aristotle Use a Laptop? A Question Answering Benchmark with Implic](https://doi.org/10.1162/tacl_a_00370) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2021 | 242 | — |
 | 6 | 1 | [OpenAI 2023, GPT-4 Technical Report](https://arxiv.org/abs/2303.08774) | tech-report |  | 2404 | ✓ `generative-ai/01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf` |
 | 6 | 0 | [Rae 2021, Scaling Language Models: Methods, Analysis & Insights from Training Go](https://arxiv.org/abs/2112.11446) | preprint |  | 235 | ✓ `ai-engineering/05-graph-engineering/sources/kg-and-llms-in-action/references.pdf` |
-| 6 | 0 | [Bai 2022, Training a Helpful and Harmless Assistant with Reinforcement Learning ](https://arxiv.org/abs/2204.05862) | preprint |  | 442 | — |
+| 6 | 0 | [Bai 2022, Training a Helpful and Harmless Assistant with Reinforcement Learning ](https://arxiv.org/abs/2204.05862) | preprint |  | 442 | ✓ `generative-ai/01-llm-fundamentals/sources/bai-2022-training-helpful-harmless-assistant-reinforcement.pdf` |
 | 6 | 0 | [Guo 2025, DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learn](https://arxiv.org/abs/2501.12948) | peer-reviewed | Nat. 2025 | 1692 | — |
-| 5 | 2 | [Talmor 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Kn](https://doi.org/10.18653/v1/n19-1421) | peer-reviewed | NAACL-HLT (1) 2019 | 582 | — |
-| 5 | 2 | [Gao 2021, Making Pre-trained Language Models Better Few-shot Learners](https://doi.org/10.18653/v1/2021.acl-long.295) | peer-reviewed | ACL/IJCNLP (1) 2021 | 1361 | — |
+| 5 | 2 | [Talmor 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Kn](https://doi.org/10.18653/v1/n19-1421) | peer-reviewed | NAACL-HLT (1) 2019 | 582 | ✓ `generative-ai/01-llm-fundamentals/sources/talmor-2019-commonsenseqa.pdf` |
+| 5 | 2 | [Gao 2021, Making Pre-trained Language Models Better Few-shot Learners](https://doi.org/10.18653/v1/2021.acl-long.295) | peer-reviewed | ACL/IJCNLP (1) 2021 | 1361 | ✓ `ai-engineering/01-prompt-engineering/sources/gao-2021-making-pre-trained-language-models.pdf` |
 | 5 | 2 | [Yao 2022, ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/abs/2210.03629) | peer-reviewed | ICLR 2023 | 608 | ✓ `generative-ai/03-agentic-foundations/sources/yao-2022-react.pdf` |
-| 5 | 2 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | peer-reviewed | ACL (1) 2022 | 610 | — |
+| 5 | 2 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | peer-reviewed | ACL (1) 2022 | 610 | ✓ `ai-engineering/01-prompt-engineering/sources/lu-2022-fantastically-ordered-prompts-where-find.pdf` |
 | 5 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | 435 | — |
 | 5 | 1 | [Liu 2022, Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Metho](https://arxiv.org/abs/2107.13586) | peer-reviewed | ACM Comput. Surv. 2023 | 4354 | — |
 | 5 | 1 | [Fu 2022, Complexity-Based Prompting for Multi-Step Reasoning](https://arxiv.org/abs/2210.00720) | peer-reviewed | ICLR 2023 | 97 | — |
 | 5 | 0 | [Amini 2019, MathQA: Towards Interpretable Math Word Problem Solving with Operation](https://doi.org/10.18653/v1/n19-1245) | peer-reviewed | NAACL-HLT (1) 2019 | 108 | — |
-| 5 | 0 | [Li 2021, Prefix-Tuning: Optimizing Continuous Prompts for Generation](https://doi.org/10.18653/v1/2021.acl-long.353) | peer-reviewed | ACL/IJCNLP (1) 2021 | 2473 | — |
-| 5 | 0 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | 182 | — |
+| 5 | 0 | [Li 2021, Prefix-Tuning: Optimizing Continuous Prompts for Generation](https://doi.org/10.18653/v1/2021.acl-long.353) | peer-reviewed | ACL/IJCNLP (1) 2021 | 2473 | ✓ `generative-ai/05-RL/sources/li-2021-prefix-tuning.pdf` |
+| 5 | 0 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | peer-reviewed | NeurIPS 2022 | 182 | ✓ `generative-ai/05-RL/sources/zelikman-2022-star.pdf` |
 | 5 | 0 | [Min 2022, Rethinking the Role of Demonstrations: What Makes In-Context Learning ](https://arxiv.org/abs/2202.12837) | peer-reviewed | EMNLP 2022 | 753 | — |
 | 5 | 0 | [Lanham 2023, Measuring Faithfulness in Chain-of-Thought Reasoning](https://arxiv.org/abs/2307.13702) | preprint |  | 33 | — |
 
@@ -114,8 +114,8 @@ Years whose cited references spike above their neighbours; the most cited paper 
 | 1913 | +1 | [Ebbinghaus 1913, Memory: A contribution to experimental psychology.](https://doi.org/10.1037/10011-000) | book | — |
 | 1953 | +1 | [Taylor 1953, “Cloze Procedure”: A New Tool for Measuring Readability](https://doi.org/10.1177/107769905303000401) | peer-reviewed | — |
 | 1993 | +2 | [Амари 1993, Backpropagation and stochastic gradient descent method](https://doi.org/10.1016/0925-2312(93)90006-o) | peer-reviewed | — |
-| 1997 | +3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | — |
-| 2009 | +3 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | — |
+| 1997 | +3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/hochreiter-1997-long-short-term-memory.pdf` |
+| 2009 | +3 | [Robertson 2009, The Probabilistic Relevance Framework: BM25 and Beyond](https://doi.org/10.1561/1500000019) | peer-reviewed | ✓ `generative-ai/02-rag-retrieval/sources/robertson-2009-probabilistic-relevance-framework.pdf` |
 | 2017 | +13 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 2022 | +102 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
 | 2023 | +73 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
@@ -126,89 +126,60 @@ Cited by ≥3 of our papers and older than the median cited year (2022). The met
 
 | Local | Meth. | Paper | Status | Venue | In repo |
 |---|---|---|---|---|---|
-| 11 | 5 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | — |
-| 12 | 4 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | — |
-| 11 | 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | — |
-| 6 | 3 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | — |
+| 11 | 5 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
+| 12 | 4 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
+| 11 | 3 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
+| 6 | 3 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
 | 4 | 3 | [Black 2021, GPT-Neo: Large Scale Autoregressive Language Modeling with Mesh-Tensor](https://doi.org/10.5281/zenodo.5297715) | preprint |  | — |
 | 3 | 2 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2019 | — |
-| 5 | 2 | [Talmor 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Kn](https://doi.org/10.18653/v1/n19-1421) | peer-reviewed | NAACL-HLT (1) 2019 | — |
-| 15 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | — |
-| 5 | 2 | [Gao 2021, Making Pre-trained Language Models Better Few-shot Learners](https://doi.org/10.18653/v1/2021.acl-long.295) | peer-reviewed | ACL/IJCNLP (1) 2021 | — |
-| 6 | 1 | [Wang 2017, Program Induction by Rationale Generation: Learning to Solve and Expla](https://arxiv.org/abs/1705.04146) | peer-reviewed | ACL (1) 2017 | — |
+| 5 | 2 | [Talmor 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Kn](https://doi.org/10.18653/v1/n19-1421) | peer-reviewed | NAACL-HLT (1) 2019 | ✓ `generative-ai/01-llm-fundamentals/sources/talmor-2019-commonsenseqa.pdf` |
+| 15 | 2 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | peer-reviewed | NeurIPS 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/brown-2020-language-models-few-shot-learners.pdf` |
+| 5 | 2 | [Gao 2021, Making Pre-trained Language Models Better Few-shot Learners](https://doi.org/10.18653/v1/2021.acl-long.295) | peer-reviewed | ACL/IJCNLP (1) 2021 | ✓ `ai-engineering/01-prompt-engineering/sources/gao-2021-making-pre-trained-language-models.pdf` |
+| 6 | 1 | [Wang 2017, Program Induction by Rationale Generation: Learning to Solve and Expla](https://arxiv.org/abs/1705.04146) | peer-reviewed | ACL (1) 2017 | ✓ `ai-engineering/01-prompt-engineering/sources/wang-2017-program-induction-rationale-generation.pdf` |
 | 8 | 1 | [Shin 2020, AutoPrompt: Eliciting Knowledge from Language Models with Automaticall](https://arxiv.org/abs/2010.15980) | peer-reviewed | EMNLP (1) 2020 | — |
 | 4 | 1 | [Miao 2020, A Diverse Corpus for Evaluating and Developing English Math Word Probl](https://arxiv.org/abs/2106.15772) | peer-reviewed | ACL 2020 | — |
 | 3 | 1 | [Clark 2020, Transformers as Soft Reasoners over Language](https://arxiv.org/abs/2002.05867) | peer-reviewed | IJCAI 2020 | — |
 | 4 | 1 | [Gao 2020, The Pile: An 800GB Dataset of Diverse Text for Language Modeling](https://arxiv.org/abs/2101.00027) | preprint |  | — |
-| 3 | 1 | [Bisk 2020, PIQA: Reasoning about Physical Commonsense in Natural Language](https://arxiv.org/abs/1911.11641) | peer-reviewed | AAAI 2020 | — |
+| 3 | 1 | [Bisk 2020, PIQA: Reasoning about Physical Commonsense in Natural Language](https://arxiv.org/abs/1911.11641) | peer-reviewed | AAAI 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/bisk-2020-piqa.pdf` |
 | 7 | 1 | [Hendrycks 2021, Measuring Mathematical Problem Solving With the MATH Dataset](https://arxiv.org/abs/2103.03874) | peer-reviewed | NeurIPS Datasets and Benchmarks 2021 | — |
 | 5 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | — |
-| 8 | 1 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | — |
-| 3 | 1 | [Sanh 2021, Multitask Prompted Training Enables Zero-Shot Task Generalization](https://arxiv.org/abs/2110.08207) | peer-reviewed | ICLR 2022 | — |
-| 4 | 1 | [Lester 2021, The Power of Scale for Parameter-Efficient Prompt Tuning](https://arxiv.org/abs/2104.08691) | peer-reviewed | EMNLP (1) 2021 | — |
+| 8 | 1 | [Nye 2021, Show Your Work: Scratchpads for Intermediate Computation with Language](https://arxiv.org/abs/2112.00114) | preprint |  | ✓ `ai-engineering/01-prompt-engineering/sources/nye-2021-show-your-work.pdf` |
+| 3 | 1 | [Sanh 2021, Multitask Prompted Training Enables Zero-Shot Task Generalization](https://arxiv.org/abs/2110.08207) | peer-reviewed | ICLR 2022 | ✓ `generative-ai/05-RL/sources/sanh-2021-multitask-prompted-training-enables-zero.pdf` |
+| 4 | 1 | [Lester 2021, The Power of Scale for Parameter-Efficient Prompt Tuning](https://arxiv.org/abs/2104.08691) | peer-reviewed | EMNLP (1) 2021 | ✓ `generative-ai/05-RL/sources/lester-2021-power-scale-parameter-efficient-prompt.pdf` |
 
-### Peer-reviewed papers to acquire (54)
+### Peer-reviewed papers to acquire (25)
 
 Peer-reviewed, cited by ≥3 of our papers, no PDF in the repo. **Get it** says whether a legal free copy exists (OpenAlex/Unpaywall open-access data, then arXiv). `acquire --download` fetches the free ones into this home's sources/; `acquire --queue` only adds them to the ledger.
 
-52 can be fetched free, 2 have no free copy.
+24 can be fetched free, 1 have no free copy.
 
 | Local | Paper | Venue | Get it |
 |---|---|---|---|
-| 15 | [Brown 2020, Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) | NeurIPS 2020 | [✓ arXiv](https://arxiv.org/pdf/2005.14165) |
-| 12 | [Wang 2022, Self-Consistency Improves Chain of Thought Reasoning in Language Model](https://arxiv.org/abs/2203.11171) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2203.11171) |
-| 11 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | J. Mach. Learn. Res. 2020 | [✓ arXiv](https://arxiv.org/pdf/1910.10683) |
-| 10 | [Wei 2022, Emergent Abilities of Large Language Models](https://arxiv.org/abs/2206.07682) | Trans. Mach. Learn. Res. 2022 | [✓ arXiv](https://arxiv.org/pdf/2206.07682) |
-| 9 | [Zhou 2022, Least-to-Most Prompting Enables Complex Reasoning in Large Language Mo](https://arxiv.org/abs/2205.10625) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2205.10625) |
 | 8 | [Shin 2020, AutoPrompt: Eliciting Knowledge from Language Models with Automaticall](https://arxiv.org/abs/2010.15980) | EMNLP (1) 2020 | [✓ ACL Anthology](https://www.aclweb.org/anthology/2020.emnlp-main.346.pdf) |
-| 8 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | Trans. Mach. Learn. Res. 2023 | [✓ arXiv](https://arxiv.org/pdf/2206.04615) |
-| 7 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | J. Mach. Learn. Res. 2023 | [✓ arXiv](https://arxiv.org/pdf/2204.02311) |
 | 7 | [Hendrycks 2021, Measuring Mathematical Problem Solving With the MATH Dataset](https://arxiv.org/abs/2103.03874) | NeurIPS Datasets and Benchmarks 2021 | [✓ arXiv](https://arxiv.org/pdf/2103.03874) |
 | 6 | [Guo 2025, DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learn](https://arxiv.org/abs/2501.12948) | Nat. 2025 | [✓ free copy (www.nature.com)](https://www.nature.com/articles/s41586-025-09422-z.pdf) |
-| 6 | [Zhou 2022, Large Language Models Are Human-Level Prompt Engineers](https://arxiv.org/abs/2211.01910) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2211.01910) |
-| 6 | [Wang 2017, Program Induction by Rationale Generation: Learning to Solve and Expla](https://arxiv.org/abs/1705.04146) | ACL (1) 2017 | [✓ ACL Anthology](https://www.aclweb.org/anthology/P17-1015.pdf) |
-| 6 | [Patel 2021, Are NLP Models really able to Solve Simple Math Word Problems?](https://arxiv.org/abs/2103.07191) | NAACL-HLT 2021 | [✓ ACL Anthology](https://aclanthology.org/2021.naacl-main.168.pdf) |
 | 6 | [Geva 2021, Did Aristotle Use a Laptop? A Question Answering Benchmark with Implic](https://doi.org/10.1162/tacl_a_00370) | Trans. Assoc. Comput. Linguistics 2021 | [✓ TACL (open access)](https://doi.org/10.1162/tacl_a_00370) |
 | 5 | [Liu 2022, Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Metho](https://arxiv.org/abs/2107.13586) | ACM Comput. Surv. 2023 | [✓ ACM (open access)](https://dl.acm.org/doi/pdf/10.1145/3560815) |
-| 5 | [Li 2021, Prefix-Tuning: Optimizing Continuous Prompts for Generation](https://doi.org/10.18653/v1/2021.acl-long.353) | ACL/IJCNLP (1) 2021 | [✓ ACL Anthology](https://aclanthology.org/2021.acl-long.353.pdf) |
-| 5 | [Gao 2021, Making Pre-trained Language Models Better Few-shot Learners](https://doi.org/10.18653/v1/2021.acl-long.295) | ACL/IJCNLP (1) 2021 | [✓ ACL Anthology](https://aclanthology.org/2021.acl-long.295.pdf) |
 | 5 | [Min 2022, Rethinking the Role of Demonstrations: What Makes In-Context Learning ](https://arxiv.org/abs/2202.12837) | EMNLP 2022 | [✓ ACL Anthology](https://aclanthology.org/2022.emnlp-main.759.pdf) |
-| 5 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | ACL (1) 2022 | [✓ ACL Anthology](https://aclanthology.org/2022.acl-long.556.pdf) |
-| 5 | [Talmor 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Kn](https://doi.org/10.18653/v1/n19-1421) | NAACL-HLT (1) 2019 | [✓ ACL Anthology](https://aclanthology.org/n19-1421.pdf) |
 | 5 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | ICLR 2021 | [✓ arXiv preprint](https://arxiv.org/pdf/2009.03300) |
-| 5 | [Süzgün 2023, Challenging BIG-Bench Tasks and Whether Chain-of-Thought Can Solve The](https://doi.org/10.18653/v1/2023.findings-acl.824) | ACL (Findings) 2023 | [✓ ACL Anthology](https://aclanthology.org/2023.findings-acl.824.pdf) |
-| 5 | [Zelikman 2022, STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2203.14465) |
-| 5 | [Amini 2019, MathQA: Towards Interpretable Math Word Problem Solving with Operation](https://doi.org/10.18653/v1/n19-1245) | NAACL-HLT (1) 2019 | [✓ ACL Anthology](https://aclanthology.org/n19-1245.pdf) |
+| 5 | [Amini 2019, MathQA: Towards Interpretable Math Word Problem Solving with Operation](https://doi.org/10.18653/v1/n19-1245) | NAACL-HLT (1) 2019 | [✓ ACL Anthology](https://aclanthology.org/N19-1245.pdf) |
 | 5 | [Fu 2022, Complexity-Based Prompting for Multi-Step Reasoning](https://arxiv.org/abs/2210.00720) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2210.00720) |
 | 4 | [Bender 2021, On the Dangers of Stochastic Parrots](https://doi.org/10.1145/3442188.3445922) | FAccT 2021 | ✗ no free copy found (paywalled: library, author page or request) |
-| 4 | [Lester 2021, The Power of Scale for Parameter-Efficient Prompt Tuning](https://arxiv.org/abs/2104.08691) | EMNLP (1) 2021 | [✓ ACL Anthology](https://aclanthology.org/2021.emnlp-main.243.pdf) |
-| 4 | [Wei 2021, Finetuned Language Models Are Zero-Shot Learners](https://arxiv.org/abs/2109.01652) | ICLR 2022 | [✓ arXiv](https://arxiv.org/pdf/2109.01652) |
-| 4 | [Madaan 2023, Self-Refine: Iterative Refinement with Self-Feedback](https://arxiv.org/abs/2303.17651) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2303.17651) |
 | 4 | [Zhao 2021, Calibrate Before Use: Improving Few-Shot Performance of Language Model](https://arxiv.org/abs/2102.09690) | ICML 2021 | [✓ arXiv](https://arxiv.org/pdf/2102.09690) |
 | 4 | [Lu 2023, Chameleon: Plug-and-Play Compositional Reasoning with Large Language M](https://arxiv.org/abs/2304.09842) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2304.09842) |
 | 4 | [Miao 2020, A Diverse Corpus for Evaluating and Developing English Math Word Probl](https://arxiv.org/abs/2106.15772) | ACL 2020 | [✓ ACL Anthology](https://www.aclweb.org/anthology/2020.acl-main.92.pdf) |
 | 4 | [He 2024, OlympiadBench: A Challenging Benchmark for Promoting AGI with Olympiad](https://doi.org/10.18653/v1/2024.acl-long.211) | ACL (1) 2024 | [✓ ACL Anthology](https://aclanthology.org/2024.acl-long.211.pdf) |
-| 3 | [Hochreiter 1997, Long Short-Term Memory](https://doi.org/10.1162/neco.1997.9.8.1735) | Neural Comput. 1997 | ✗ no free copy found (paywalled: library, author page or request) |
 | 3 | [Mądry 2017, Towards Deep Learning Models Resistant to Adversarial Attacks](https://arxiv.org/abs/1706.06083) | ICLR (Poster) 2018 | [✓ arXiv](https://arxiv.org/pdf/1706.06083) |
 | 3 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | Trans. Assoc. Comput. Linguistics 2019 | [✓ TACL (open access)](https://doi.org/10.1162/tacl_a_00276) |
-| 3 | [Su 2023, RoFormer: Enhanced transformer with Rotary Position Embedding](https://arxiv.org/abs/2104.09864) | Neurocomputing 2024 | [✓ arXiv](https://arxiv.org/pdf/2104.09864) |
-| 3 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | NeurIPS 2023 | [✓ arXiv](https://arxiv.org/pdf/2306.05685) |
 | 3 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | EMNLP 2018 | [✓ ACL Anthology](https://www.aclweb.org/anthology/D18-1259.pdf) |
-| 3 | [Chung 2022, Scaling Instruction-Finetuned Language Models](https://arxiv.org/abs/2210.11416) | J. Mach. Learn. Res. 2024 | [✓ arXiv](https://arxiv.org/pdf/2210.11416) |
-| 3 | [Li 2022, Competition-level code generation with AlphaCode](https://arxiv.org/abs/2203.07814) | Science | [✓ arXiv](https://arxiv.org/pdf/2203.07814) |
 | 3 | [Reynolds 2021, Prompt Programming for Large Language Models: Beyond the Few-Shot Para](https://arxiv.org/abs/2102.07350) | CHI Extended Abstracts 2021 | [✓ arXiv](https://arxiv.org/pdf/2102.07350) |
-| 3 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | CoRL 2023 | [✓ arXiv](https://arxiv.org/pdf/2204.01691) |
-| 3 | [Sanh 2021, Multitask Prompted Training Enables Zero-Shot Task Generalization](https://arxiv.org/abs/2110.08207) | ICLR 2022 | [✓ arXiv](https://arxiv.org/pdf/2110.08207) |
-| 3 | [Lu 2022, Learn to Explain: Multimodal Reasoning Via Thought Chains for Science ](https://arxiv.org/abs/2209.09513) | NeurIPS 2022 | [✓ arXiv](https://arxiv.org/pdf/2209.09513) |
 | 3 | [Press 2023, Measuring and Narrowing the Compositionality Gap in Language Models](https://arxiv.org/abs/2210.03350) | EMNLP (Findings) 2023 | [✓ ACL Anthology](https://aclanthology.org/2023.findings-emnlp.378.pdf) |
 | 3 | [Dua 2019, DROP: A Reading Comprehension Benchmark Requiring Discrete Reasoning O](https://arxiv.org/abs/1903.00161) | NAACL-HLT (1) 2019 | [✓ arXiv](https://arxiv.org/pdf/1903.00161) |
 | 3 | [Chao 2025, Jailbreaking Black Box Large Language Models in Twenty Queries](https://arxiv.org/abs/2310.08419) | SaTML 2025 | [✓ arXiv](https://arxiv.org/pdf/2310.08419) |
 | 3 | [Clark 2020, Transformers as Soft Reasoners over Language](https://arxiv.org/abs/2002.05867) | IJCAI 2020 | [✓ IJCAI (open access)](https://www.ijcai.org/proceedings/2020/0537.pdf) |
-| 3 | [Creswell 2022, Selection-Inference: Exploiting Large Language Models for Interpretabl](https://arxiv.org/abs/2205.09712) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2205.09712) |
 | 3 | [Khot 2022, Decomposed Prompting: A Modular Approach for Solving Complex Tasks](https://arxiv.org/abs/2210.02406) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2210.02406) |
 | 3 | [Tay 2022, UL2: Unifying Language Learning Paradigms](https://arxiv.org/abs/2205.05131) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2205.05131) |
 | 3 | [Saparov 2022, Language Models Are Greedy Reasoners: A Systematic Formal Analysis of ](https://arxiv.org/abs/2210.01240) | ICLR 2023 | [✓ arXiv](https://arxiv.org/pdf/2210.01240) |
-| 3 | [Bisk 2020, PIQA: Reasoning about Physical Commonsense in Natural Language](https://arxiv.org/abs/1911.11641) | AAAI 2020 | [✓ arXiv preprint](https://arxiv.org/pdf/1911.11641) |
 
 ### arXiv citations with a peer-reviewed version (14 papers)
 
