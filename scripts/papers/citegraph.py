@@ -8,17 +8,22 @@ and which of them we already hold as PDFs.
   dblp      peer-review status from DBLP (SPARQL): published venue for arXiv preprints
   intents   Semantic Scholar per-citation intents (methodology / background / result) and
             isInfluential; slow without S2_API_KEY, resumable
-  status    print review status of the seeds; --write puts venue + review_status in the ledger
+  status    print review status of the seeds; --write puts venue, review_status, role and
+            local_citations in the ledger
   roots     what our papers cite most (local in-degree), RPYS peak years, origin candidates
   acquire   peer-reviewed works our papers cite but we don't hold, and whether a legal free copy
             exists; --queue adds them to the ledger, --download fetches the free ones (needs --home)
-  preprints for those with no free copy, find an arXiv preprint by title (OpenAlex often has only
+  preprints for those (and primary sources) with no free copy, find an arXiv preprint by title (OpenAlex often has only
             the proceedings record)
+  primary   primary sources (cited by >=3 of our papers, >=2 for the method) across the corpus:
+            reports/primary.md lists what to fetch by hand; --download fetches the free ones
+  ingest    file the PDFs put in downloads/ into the right home (needs pypdf)
+  refs      "Where the ideas come from" block for each references.md; --write puts it there
   upgrade   arXiv citations in notes that have a peer-reviewed version to cite instead
   exposure  notes ranked by the share of their citations that are preprint-only
   report    status + roots + acquire + upgrade + exposure as markdown in scripts/papers/reports/;
             --all writes one report per home plus reports/README.md
-  export    GraphML of the graph
+  export    GraphML of the graph; --html writes interactive pages reports/graph-<home>.html
 
 Every command takes --home <key> (rag, loop, ...; see potw.HOMES) to work on one home;
 default is every ai-engineering and generative-ai home.
@@ -801,6 +806,9 @@ def cmd_preprints(args):
         for w, _ in acquire_list(db, key, args.min):
             if not w["arxiv_checked"] and availability(w)[0].startswith("✗"):
                 todo[w["id"]] = w
+    for w, _, _, _ in ([] if args.home else primary_list(db)):
+        if not w["arxiv_checked"] and not w["in_repo"] and availability(w)[0].startswith("✗"):
+            todo[w["id"]] = w
     log(f"preprints: {len(todo)} reading-list papers with no free copy; searching arXiv by title")
     found = 0
     for w in todo.values():
@@ -906,16 +914,18 @@ def cmd_status(args):
         rows = potw.load_ledger()
         by_ledger = {r["ledger_key"]: r["work"] for r in db.execute("SELECT ledger_key, work FROM seed WHERE ledger_key IS NOT NULL AND work IS NOT NULL")}
         by_arxiv = {r["ref"]: r["work"] for r in db.execute("SELECT ref, work FROM seed WHERE kind='arxiv' AND work IS NOT NULL")}
+        deg, meth, _ = in_degree(db, seed_ids(db, None))  # counted across the whole corpus
         n = 0
         for r in rows:
             wid = by_ledger.get(r["key"]) or by_arxiv.get(r.get("arxiv"))
             if not wid:
                 continue
-            w = db.execute("SELECT review_status, venue FROM work WHERE id=(SELECT canon FROM work WHERE id=?)", (wid,)).fetchone()
-            r["review_status"], r["venue"] = w["review_status"], w["venue"]
+            w = db.execute("SELECT * FROM work WHERE id=(SELECT canon FROM work WHERE id=?)", (wid,)).fetchone()
+            d, m = len(deg.get(w["id"], ())), len(meth.get(w["id"], ()))
+            r.update(review_status=w["review_status"], venue=w["venue"], role=role_of(w, d, m), local_citations=d)
             n += 1
         potw.save_ledger(rows)
-        log(f"status: wrote review_status and venue to {n} ledger rows")
+        log(f"status: wrote review_status, venue, role and local_citations to {n} ledger rows")
 
 
 def cmd_roots(args):
@@ -948,46 +958,320 @@ def cmd_acquire(args):
 
 
 def download(db, args):
-    """Save each free copy into the home's sources/ as <author>-<year>-<title-slug>.pdf and add a
-    `downloaded` ledger row, so /papers picks it up. Paywalled papers are left for a human."""
+    """acquire --download: the free copies of one home's reading list."""
     if not args.home:
         sys.exit("acquire --download needs --home: PDFs go into that home's sources/")
-    rows = potw.load_ledger()
-    have = {r["key"] for r in rows} | {r.get("arxiv") for r in rows if r.get("arxiv")}
-    sources = REPO / potw.HOMES[args.home][0] / "sources"
-    done = 0
-    for w, d in acquire_list(db, args.home, args.min):
-        how, url = availability(w)
-        key = w["arxiv"] or link(w)
-        if not url or key in have:
-            continue
+    done, failed = fetch_free(db, [(w, args.home, d) for w, d in acquire_list(db, args.home, args.min)])
+    log(f"download: {done} PDFs saved, {len(failed)} failed")
+
+
+def get_pdf(url, w):
+    """The PDF at url; if that page isn't a PDF (a publisher landing page), the arXiv copy."""
+    urls = [url] + ([f"https://arxiv.org/pdf/{w['arxiv']}"] if w["arxiv"] and "arxiv.org" not in url else [])
+    for u in urls:
         try:
-            pdf = potw.http_get(url, timeout=120)
+            pdf = potw.http_get(u, timeout=120)
         except Exception as exc:
-            log(f"download: {key} failed: {exc}")
+            log(f"download: {u} failed: {exc}")
             continue
-        if not pdf.startswith(b"%PDF") and w["arxiv"] and "arxiv.org" not in url:
-            url = f"https://arxiv.org/pdf/{w['arxiv']}"  # the publisher page wasn't a PDF; fall back to arXiv
-            pdf = potw.http_get(url, timeout=120)
-        if not pdf.startswith(b"%PDF"):
-            log(f"download: {key} {url} is not a PDF; skipped")
+        if pdf.startswith(b"%PDF"):
+            return pdf
+        log(f"download: {u} is not a PDF")
+    return None
+
+
+def place_pdf(db, w, home, pdf):
+    """Write pdf into the home's sources/ as <author>-<year>-<title-slug>.pdf and mark the work held."""
+    dest = REPO / potw.HOMES[home][0] / "sources" / \
+        f"{potw.make_slug(w['title'], first_author(db, w['id']), str(w['year']))}.pdf"
+    if dest.exists():
+        log(f"download: {dest.relative_to(REPO)} already exists; skipped")
+        return None
+    dest.write_bytes(pdf)
+    rel = dest.relative_to(REPO).as_posix()
+    db.execute("UPDATE work SET in_repo=? WHERE canon=?", (rel, w["id"]))
+    db.commit()
+    return rel
+
+
+def upsert_row(db, rows, w, home, d, rel, how):
+    """Add a `downloaded` ledger row for a PDF we just got, or fill in the row already queued for it."""
+    now = time.strftime("%Y-%m-%dT%H:%M:%S")
+    key = w["arxiv"] or link(w)
+    m = len(in_degree(db, seed_ids(db, None))[1].get(w["id"], ()))
+    new = {"status": "downloaded", "have_pdf": True, "local_pdf": rel, "downloaded_at": now,
+           "venue": w["venue"], "review_status": w["review_status"], "role": role_of(w, d, m),
+           "local_citations": d}
+    for r in rows:
+        if r["key"] == key or (w["arxiv"] and r.get("arxiv") == w["arxiv"]):
+            r.update(new)
+            return
+    rows.append({"key": key, "title": w["title"], "source": "citegraph", "arxiv": w["arxiv"], "url": link(w),
+                 "pillar": home, "topic": home, "added_at": now, "citations": w["cited_by"], "year": w["year"],
+                 "first_author": first_author(db, w["id"]), **new,
+                 "reason": f"{w['review_status']} ({w['venue'] or 'no venue'}); cited by {d} of our papers. {how}"})
+
+
+def fetch_free(db, items):
+    """items: (work, home, local citations). Save each legal free copy and add a `downloaded` ledger
+    row so /papers picks it up. Returns (saved, [(work, home, d) that failed])."""
+    rows = potw.load_ledger()
+    held = {r["key"] for r in rows if r.get("have_pdf")} | {r.get("arxiv") for r in rows if r.get("have_pdf") and r.get("arxiv")}
+    done, failed = 0, []
+    for w, home, d in items:
+        how, url = availability(w)
+        if not url or (w["arxiv"] or link(w)) in held or w["arxiv"] in held:
             continue
-        dest = sources / f"{potw.make_slug(w['title'], first_author(db, w['id']), str(w['year']))}.pdf"
-        if dest.exists():
+        pdf = get_pdf(url, w)
+        rel = pdf and place_pdf(db, w, home, pdf)
+        if not rel:
+            if not pdf:
+                failed.append((w, home, d))
             continue
-        dest.write_bytes(pdf)
-        rows.append({"key": key, "title": w["title"], "status": "downloaded", "source": "citegraph",
-                     "arxiv": w["arxiv"], "url": link(w), "pillar": args.home, "topic": args.home,
-                     "added_at": time.strftime("%Y-%m-%dT%H:%M:%S"), "downloaded_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                     "have_pdf": True, "local_pdf": str(dest.relative_to(REPO)), "venue": w["venue"],
-                     "review_status": w["review_status"], "local_citations": d, "citations": w["cited_by"],
-                     "year": w["year"], "first_author": first_author(db, w["id"]),
-                     "reason": f"Peer-reviewed ({w['venue']}); cited by {d} of our papers. Got it from {how[2:]}."})
+        upsert_row(db, rows, w, home, d, rel, f"Got it from {how[2:]}.")
         potw.save_ledger(rows)
         done += 1
-        log(f"download: {key} -> {dest.relative_to(REPO)}")
+        log(f"download: {cite_label(db, w)[:60]} -> {rel}")
         time.sleep(3)
-    log(f"download: {done} PDFs saved")
+    return done, failed
+
+
+# --- roles and primary sources ------------------------------------------------
+
+SURVEY_RE = re.compile(r"\b(survey|review|overview|tutorial|primer)\b", re.I)
+BENCH_RE = re.compile(r"\b(benchmark|dataset|corpus|leaderboard|test suite)\b|^measuring\b", re.I)
+PRIMARY_MIN, PRIMARY_METH = 3, 2  # cited by ≥3 of our papers, ≥2 of them for the method
+
+
+def role_of(w, d, m):
+    """primary: several of our papers cite it for its method, so an idea likely starts there.
+    survey / benchmark: by title; they collect citations without being an idea's source.
+    new: too recent for our corpus to have cited it. secondary: everything else."""
+    t = w["title"] or ""
+    if SURVEY_RE.search(t):
+        return "survey"
+    if BENCH_RE.search(t):
+        return "benchmark"
+    if d >= PRIMARY_MIN and m >= PRIMARY_METH:
+        return "primary"
+    if d < PRIMARY_MIN and (w["year"] or 0) >= int(time.strftime("%Y")) - 1:
+        return "new"
+    return "secondary"
+
+
+def primary_list(db):
+    """Every primary work across the corpus: (work, home whose papers cite it most, cited by, for method)."""
+    deg, meth, _ = in_degree(db, seed_ids(db, None))
+    ws = works(db, [w for w in deg if len(deg[w]) >= PRIMARY_MIN])
+    prim = {wid: w for wid, w in ws.items() if role_of(w, len(deg[wid]), len(meth.get(wid, ()))) == "primary"}
+    best = {}
+    for key in homes(None):
+        hdeg = in_degree(db, seed_ids(db, key))[0]
+        for wid in prim:
+            n = len(hdeg.get(wid, ()))
+            if n > best.get(wid, ("", 0))[1]:
+                best[wid] = (key, n)
+    out = [(w, best[wid][0], len(deg[wid]), len(meth.get(wid, ()))) for wid, w in prim.items() if wid in best]
+    out.sort(key=lambda x: (-x[2], -x[3]))
+    return out
+
+
+def primary_md(db, failed=()):
+    items = primary_list(db)
+    held = [x for x in items if x[0]["in_repo"]]
+    free = [x for x in items if not x[0]["in_repo"] and availability(x[0])[1]]
+    paywalled = [x for x in items if not x[0]["in_repo"] and not availability(x[0])[1]]
+    failed_ids = {w["id"] for w, _, _ in failed}
+    by_hand = paywalled + [x for x in free if x[0]["id"] in failed_ids]
+    free = [x for x in free if x[0]["id"] not in failed_ids]
+    head = "| Cited by | For method | Paper | Venue | Home |"
+    row = lambda w, h, d, m, extra: (f"| {d} | {m} | [{cite_label(db, w)}]({link(w)}) | "
+                                     f"{w['venue'] or w['review_status']} | {h} |{extra}")
+    out = ["# Primary sources\n",
+           f"Generated by `citegraph.py primary` on {time.strftime('%Y-%m-%d')}. A work is **primary** when at "
+           f"least {PRIMARY_MIN} of our papers cite it and at least {PRIMARY_METH} of them cite it for its method "
+           "(Semantic Scholar citation intents), so an idea most likely starts there. Surveys and benchmarks are "
+           "left out even when heavily cited. **Home** is the pillar whose papers cite it most; that is where "
+           "the PDF goes.\n",
+           f"{len(items)} primary works: {len(held)} in the repo, {len(free)} free to download, "
+           f"{len(by_hand)} to fetch by hand.\n",
+           f"## Fetch these by hand ({len(by_hand)})\n",
+           "No free copy found, or the free link didn't serve a PDF. Put the PDF in `downloads/` (any file "
+           "name) and run `uv run --with pypdf python scripts/papers/citegraph.py ingest`: it matches each "
+           "PDF to its paper by title and files it in the right home.\n",
+           head + " Link |", "|---|---|---|---|---|---|"]
+    out += [row(w, h, d, m, f" {link(w)} |") for w, h, d, m in by_hand]
+    if free:
+        out += [f"\n## Free, not downloaded yet ({len(free)})\n",
+                "`citegraph.py primary --download` fetches these.\n", head + " Get it |", "|---|---|---|---|---|---|"]
+        out += [row(w, h, d, m, f" [{availability(w)[0]}]({availability(w)[1]}) |") for w, h, d, m in free]
+    out += [f"\n## In the repo ({len(held)})\n", head + " PDF |", "|---|---|---|---|---|---|"]
+    out += [row(w, h, d, m, f" `{w['in_repo']}` |") for w, h, d, m in held]
+    return "\n".join(out)
+
+
+def cmd_primary(args):
+    db = connect()
+    failed = []
+    if args.download:
+        todo = [(w, h, d) for w, h, d, m in primary_list(db) if not w["in_repo"]]
+        done, failed = fetch_free(db, todo)
+        log(f"primary: {done} PDFs saved, {len(failed)} free links failed")
+    REPORTS.mkdir(exist_ok=True)
+    (REPORTS / "primary.md").write_text(primary_md(db, failed) + "\n", encoding="utf-8")
+    log(f"primary: {(REPORTS / 'primary.md').relative_to(REPO)}")
+
+
+DOWNLOADS = REPO / "downloads"
+
+
+def cmd_ingest(args):
+    """File the PDFs dropped in downloads/: match each to a wanted paper (primary sources and every
+    home's reading list) by arXiv id or DOI in the file name, else by its title on the first two
+    pages, then move it to that home's sources/ and add a ledger row."""
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        sys.exit("ingest needs pypdf: uv run --with pypdf python scripts/papers/citegraph.py ingest")
+    import logging
+    logging.getLogger("pypdf").setLevel(logging.ERROR)
+    db = connect()
+    wanted = {w["id"]: (w, h, d) for w, h, d, m in primary_list(db) if not w["in_repo"]}
+    for key in homes(None):
+        for w, d in acquire_list(db, key, args.min):
+            if w["id"] not in wanted or d > wanted[w["id"]][2]:
+                wanted[w["id"]] = (w, key, d)
+    squash = lambda t: re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", t or "").lower())
+    rows = potw.load_ledger()
+    moved = 0
+    for pdf in sorted(DOWNLOADS.glob("*.pdf")):
+        hit, ref = None, ref_from_pdf(pdf)
+        if ref:
+            hit = next((c for c in wanted.values()
+                        if (c[0]["arxiv"] if ref[0] == "arxiv" else (c[0]["doi"] or "").lower()) == ref[1].lower()), None)
+        if not hit:
+            try:
+                text = squash(" ".join(p.extract_text() or "" for p in PdfReader(str(pdf)).pages[:2]))
+            except Exception as exc:
+                log(f"ingest: {pdf.name}: can't read it ({exc}); left in downloads/")
+                continue
+            hits = [c for c in wanted.values() if len(squash(c[0]["title"])) >= 15 and squash(c[0]["title"]) in text]
+            hit = max(hits, key=lambda c: len(c[0]["title"])) if hits else None
+        if not hit:
+            log(f"ingest: {pdf.name}: matches none of the {len(wanted)} wanted papers; left in downloads/")
+            continue
+        w, home, d = hit
+        rel = place_pdf(db, w, home, pdf.read_bytes())
+        if not rel:
+            continue
+        pdf.unlink()
+        upsert_row(db, rows, w, home, d, rel, f"Fetched by hand into downloads/ as {pdf.name}.")
+        potw.save_ledger(rows)
+        moved += 1
+        log(f"ingest: {pdf.name} -> {rel} ({cite_label(db, w)[:60]})")
+    log(f"ingest: {moved} PDFs filed")
+
+
+# --- references.md: where the ideas come from ---------------------------------
+
+ORIGINS_START, ORIGINS_END = "<!-- citegraph:origins start -->", "<!-- citegraph:origins end -->"
+ORIGINS_BEFORE = re.compile(r"^## (AI Papers of the Week|Source quality|Secondary|About the upstream|Deliberately)", re.M)
+
+
+def origins_md(db, home, folder, n=25):
+    seeds = seed_ids(db, home)
+    deg, meth, _ = in_degree(db, seeds)
+    ws = works(db, [w for w in deg if len(deg[w]) >= PRIMARY_MIN])
+    picks = [(w, len(deg[wid]), len(meth.get(wid, ()))) for wid, w in ws.items()
+             if role_of(w, len(deg[wid]), len(meth.get(wid, ()))) == "primary"]
+    if not picks:
+        return None
+    picks.sort(key=lambda x: (-x[1], -x[2]))
+    out = ["## Where the ideas come from\n",
+           f"Generated by `citegraph.py refs --write` on {time.strftime('%Y-%m-%d')}; rerun it instead of "
+           f"editing between the markers. These works are cited by at least {PRIMARY_MIN} of this pillar's "
+           f"papers, at least {PRIMARY_METH} of them for the method, so an idea most likely starts there. "
+           "When a note states one of these ideas, cite the origin as well as the recent paper. "
+           "**Cited by** counts this pillar's papers; **For method** counts those citing it for its method. "
+           "⚑ = not peer-reviewed. Fetch the missing ones with `citegraph.py primary --download`.\n",
+           "| Paper | Venue | Cited by | For method | We hold |", "|---|---|---|---|---|"]
+    for w, d, m in picks[:n]:
+        venue = (w["venue"] or "") + (" ⚑" if w["review_status"] != "peer-reviewed" else "")
+        if w["in_repo"]:
+            held = f"[✓ PDF]({os.path.relpath(REPO / w['in_repo'], REPO / folder)})"
+        else:
+            how, url = availability(w)
+            held = f"— ([{how[2:]}]({url}))" if url else "— (no free copy)"
+        out.append(f"| [{cite_label(db, w)}]({link(w)}) | {venue.strip() or w['review_status']} | {d} | {m} | {held} |")
+    if len(picks) > n:
+        out.append(f"\n{len(picks) - n} more in [the citation report](../../scripts/papers/reports/citegraph-{home}.md).")
+    return "\n".join(out)
+
+
+def export_html(args):
+    """One self-contained page (d3 from a CDN) per home, or for the whole corpus."""
+    db = connect()
+    for key in ([args.home] if args.home else [None, *homes(None)]):
+        seeds = seed_ids(db, key)
+        if not seeds:
+            continue
+        deg, meth, _ = in_degree(db, seeds)
+        floor = 2 if key else 3
+        keep = seeds | {w for w in deg if len(deg[w]) >= floor}
+        ws = works(db, keep)
+        notes = defaultdict(set)
+        q = "SELECT w.canon, n.note FROM note_cites n JOIN seed s ON s.ref=n.ref JOIN work w ON w.id=s.work"
+        for r in db.execute(q + (" WHERE n.home=?" if key else ""), (key,) if key else ()):
+            notes[r[0]].add(r[1])
+        nodes = []
+        for wid, w in ws.items():
+            d, m = len(deg.get(wid, ())), len(meth.get(wid, ()))
+            how, url = availability(w)
+            nodes.append({"id": wid, "t": w["title"], "a": first_author(db, wid), "yr": w["year"], "v": w["venue"],
+                          "s": w["review_status"], "r": role_of(w, d, m), "d": d, "m": m, "h": w["in_repo"],
+                          "u": link(w), "g": None if w["in_repo"] else [how, url], "seed": wid in seeds,
+                          "notes": sorted(notes.get(wid, ()))})
+        canon = {r[0]: r[1] for r in db.execute("SELECT id, canon FROM work")}
+        links = {}
+        for c in db.execute("SELECT src, dst, intents FROM cites"):
+            s_, d_ = canon.get(c[0], c[0]), canon.get(c[1], c[1])
+            if s_ in ws and d_ in ws and s_ != d_:
+                links[(s_, d_)] = links.get((s_, d_), 0) or int(bool(c[2] and "methodology" in c[2]))
+        data = {"nodes": nodes, "links": [{"s": a, "t": b, "m": m} for (a, b), m in links.items()]}
+        title = f"Citation graph: {key or 'all pillars'}"
+        page = (HERE / "citegraph_view.html.tmpl").read_text(encoding="utf-8")
+        page = page.replace("__TITLE__", title).replace("__MIN__", str(floor)).replace(
+            "__DATA__", json.dumps(data, ensure_ascii=False).replace("</", "<\\/"))
+        out = REPORTS / f"graph-{key or 'all'}.html"
+        REPORTS.mkdir(exist_ok=True)
+        out.write_text(page, encoding="utf-8")
+        log(f"export: {out.relative_to(REPO)} ({len(nodes)} nodes, {len(links)} edges)")
+
+
+def cmd_refs(args):
+    db = connect()
+    for key, folder in homes(args.home).items():
+        block = origins_md(db, key, folder)
+        path = REPO / folder / "references.md"
+        if not block:
+            log(f"refs: {key}: no primary sources yet")
+            continue
+        if not args.write:
+            print(f"\n=== {path.relative_to(REPO)}\n{block}")
+            continue
+        if not path.exists():
+            log(f"refs: {key}: no references.md; skipped")
+            continue
+        text = path.read_text(encoding="utf-8")
+        blk = f"{ORIGINS_START}\n{block}\n{ORIGINS_END}"
+        if ORIGINS_START in text:
+            text = re.sub(re.escape(ORIGINS_START) + ".*?" + re.escape(ORIGINS_END), lambda _: blk, text, flags=re.S)
+        elif m := ORIGINS_BEFORE.search(text):
+            text = text[:m.start()] + blk + "\n\n" + text[m.start():]
+        else:
+            text = text.rstrip() + "\n\n" + blk + "\n"
+        path.write_text(text, encoding="utf-8")
+        log(f"refs: {path.relative_to(REPO)}")
 
 
 def cmd_upgrade(args):
@@ -1040,6 +1324,8 @@ def write_report(args):
 
 
 def cmd_export(args):
+    if args.html:
+        return export_html(args)
     db = connect()
     seeds = seed_ids(db, args.home)
     deg, _, _ = in_degree(db, seeds)
@@ -1078,6 +1364,7 @@ def main():
     sub = ap.add_subparsers(required=True)
     for name, fn in (("fetch", cmd_fetch), ("dblp", cmd_dblp), ("intents", cmd_intents), ("status", cmd_status),
                      ("roots", cmd_roots), ("acquire", cmd_acquire), ("preprints", cmd_preprints),
+                     ("primary", cmd_primary), ("ingest", cmd_ingest), ("refs", cmd_refs),
                      ("upgrade", cmd_upgrade),
                      ("exposure", cmd_exposure), ("report", cmd_report), ("export", cmd_export)):
         p = sub.add_parser(name)
@@ -1090,6 +1377,14 @@ def main():
             p.add_argument("--queue", action="store_true", help="append the list to the ledger as queued rows")
             p.add_argument("--download", action="store_true",
                            help="fetch the legal free copies into the home's sources/ and add downloaded ledger rows")
+        if name == "primary":
+            p.add_argument("--download", action="store_true",
+                           help="fetch the legal free copies into the citing home's sources/")
+        if name == "refs":
+            p.add_argument("--write", action="store_true",
+                           help="write the block into each references.md (default: print it)")
+        if name == "export":
+            p.add_argument("--html", action="store_true", help="interactive pages reports/graph-<home>.html")
         if name == "report":
             p.add_argument("--all", action="store_true", help="one report per home, plus reports/README.md")
         p.set_defaults(fn=fn)

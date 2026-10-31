@@ -69,6 +69,7 @@ new ──triage──▶ queued ──download (DAIR, arXiv)──▶ downloade
 
 ```bash
 make papers-status                                        # counts, and how many PDFs are left in inbox/
+python3 scripts/papers/potw.py where lewis retrieval-augmented   # where a paper's PDF lives (id, key or title words)
 python3 scripts/papers/potw.py route                      # dry run: where each triaged PDF would go
 python3 scripts/papers/potw.py route --apply              # move them (git mv) and drop duplicate copies
 python3 scripts/papers/potw.py triage --status skipped --source repo   # re-triage after HOMES changes
@@ -100,6 +101,17 @@ cite the peer-reviewed version. Plan and reasoning: [citation-graph-plan.md](cit
 - The graph is `citations.db` (SQLite, gitignored). Reports go in `reports/`, one per home,
   indexed by [reports/README.md](reports/README.md).
 - Fix a wrong review status in `review_overrides.jsonl`.
+- **Roles**: a work is *primary* when at least 3 of our papers cite it and at least 2 cite it for
+  its method, so an idea most likely starts there. Surveys and benchmarks are labelled by title;
+  *new* means too recent to judge; everything else is *secondary*. `status --write` puts `role`
+  and `local_citations` on ledger rows. A label, not a folder: PDFs stay in `sources/`.
+- **Primary sources** across the corpus are in [reports/primary.md](reports/primary.md):
+  `primary --download` fetches the free ones into the pillar that cites them most. The rest
+  are listed to fetch by hand: drop the PDF in `downloads/` (gitignored, any file name) and
+  run `ingest`, which matches it by title and files it.
+- Each `references.md` gets a generated **Where the ideas come from** table (`refs --write`).
+- `export --html` writes an interactive graph per pillar, `reports/graph-<home>.html`
+  (gitignored; open it in a browser).
 
 ```bash
 python3 scripts/papers/citegraph.py fetch --home rag      # seeds, OpenAlex works and references
@@ -111,6 +123,10 @@ python3 scripts/papers/citegraph.py report --all          # every home, plus rep
 python3 scripts/papers/citegraph.py status --home rag --write   # venue + review_status into the ledger
 python3 scripts/papers/citegraph.py acquire --home rag --queue     # queue peer-reviewed papers we lack
 python3 scripts/papers/citegraph.py acquire --home rag --download  # fetch the free ones into sources/
+python3 scripts/papers/citegraph.py primary --download           # free primary sources; reports/primary.md
+uv run --with pypdf python scripts/papers/citegraph.py ingest    # file the PDFs you put in downloads/
+python3 scripts/papers/citegraph.py refs --write                 # origins table in every references.md
+python3 scripts/papers/citegraph.py export --html                # reports/graph-<home>.html
 ```
 
 ## Skills
