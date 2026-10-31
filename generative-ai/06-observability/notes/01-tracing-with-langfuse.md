@@ -1,4 +1,15 @@
-# LangFuse — Reference Spec
+---
+origin: own coursework
+sources:
+  - https://langfuse.com/docs
+  - https://langfuse.com/docs/sdk/python/decorators
+  - https://langfuse.com/docs/integrations/langchain/tracing
+confidence: medium
+cleaned: 2026-10-31
+---
+# 1 — Tracing with Langfuse
+
+> One trace per agent turn, one child span per tool call: the Langfuse data model, the `ContextVar` pattern that carries a trace into tools, decorator and callback wiring, and the score keys a support agent records.
 
 Observability platform for LLM agents. Handles tracing, online scoring, datasets, and
 experiment comparison.
@@ -308,3 +319,7 @@ instruction = get_langfuse_prompt(
 
 Call the fetch inside a lazy factory function so LangFuse is initialised before the agent
 is constructed, and cache the result for the process lifetime — no per-request fetch.
+
+---
+
+→ Next: [02-scoring-datasets-experiments.md](02-scoring-datasets-experiments.md) — turning traces into scores, a golden dataset into experiment runs, and two model versions into a comparison.

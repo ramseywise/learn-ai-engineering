@@ -1,4 +1,13 @@
-# GCP Vertex AI Search vs AWS Bedrock KB
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 13 — GCP Vertex AI Search vs AWS Bedrock KB
+
+> The two managed RAG backends side by side: store, chunking, hybrid search, reranking, scores, and when to leave each.
 
 Comparison of the two managed RAG backends used across our codebases.
 
@@ -45,7 +54,7 @@ AWS_REGION=eu-central-1
 SUPPORT_AGENT_RETRIEVAL_MODE=bedrock        # or 'rag' to call kb_rag agent instead
 ```
 
-Full spec: [bedrock-kb.md](bedrock-kb.md)
+Full spec: [12 — Bedrock knowledge bases](12-bedrock-knowledge-bases.md)
 
 ---
 
@@ -146,3 +155,7 @@ Retrieval evals for chat-agent: `eval/evaluate.py` / Langfuse dataset experiment
 **GCP `:answer` → GCP agentic**: when you need CRAG-style correction loops or want to control answer synthesis. `:answer` is faster but you can't intercept or grade the retrieval step.
 
 **Either → pgvector**: only for local dev or if Postgres is already your stack. Loses hybrid search and managed reranking. Not production-ready at scale without significant infrastructure work.
+
+---
+
+→ Next: [14-kb-rag-pipeline-adr.md](14-kb-rag-pipeline-adr.md) — a self-built deterministic pipeline and the decisions behind it.

@@ -20,7 +20,7 @@ sequenced learning paths for each domain.
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear (pipeline stages) |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree (statistical foundations splits into supervised / unsupervised / Bayesian) |
 | Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar sequential (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications) |
-| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval) |
+| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval), plus inference as the substrate |
 
 **Reading the table:** "Prerequisites" are recommendations, not gates. You can start
 generative-ai cold — you'll just revisit data-science concepts as they come up rather than
@@ -124,6 +124,15 @@ any one pillar, and sisyphus `drills/` is practice, not teaching. So `programmin
 course (notes, exercises, solutions), sisyphus holds the drills, and librarian shows both.
 `python-basics/` moved to `programming/python/04-python-for-data/` along with the restored
 McKinney notebooks and the Michigan/Wesleyan scripts.
+
+**Decision 2026-10-31: `ai-engineering/07-inference-engineering/` added as a seventh
+ai-engineering pillar.** The readings backlog held a whole book on AI systems performance
+(20 chapters plus a checklist), Huyen's inference-optimization chapter and a steady flow of
+serving papers. None of the six layers could hold GPU kernels, KV-cache management or
+prefill/decode disaggregation without becoming a hardware course, and moving the material
+out of the repo would have dropped it. Inference sits under the six layers as their
+substrate: it prices every call they make. The freeze is relaxed in one direction only: a
+new pillar is added when the readings triage finds a body of sources with no home.
 
 A pillar is **done** when all five hold:
 

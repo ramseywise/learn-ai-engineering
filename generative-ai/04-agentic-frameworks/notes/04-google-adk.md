@@ -1,4 +1,15 @@
-# Google ADK — Reference Spec
+---
+origin: own coursework
+sources:
+  - https://google.github.io/adk-docs/
+  - https://google.github.io/adk-docs/llms-full.txt
+  - https://google.github.io/adk-docs/evaluate/
+confidence: medium
+cleaned: 2026-10-31
+---
+# 4 — Google ADK
+
+> Google's Agent Development Kit as a reference spec: primitives, workflow agents, `ToolContext` state, the `adk` CLI, and ADK's built-in eval framework.
 
 Reference for building agents with the Google Agent Development Kit (Python). Relevant if we add an ADK-backed agent layer on top of the eval platform graders, or extend to ADK-hosted evaluators.
 
@@ -185,3 +196,7 @@ runner = Runner(agent=agent, callbacks=[pii_redaction_callback])
 ```
 
 Reusable guardrails live in `shared/guardrails/`.
+
+---
+
+→ Next: [05-langsmith.md](05-langsmith.md) — tracing and evaluating these agents on LangChain's platform; the open-source alternative is [06-observability/01](../../06-observability/notes/01-tracing-with-langfuse.md).

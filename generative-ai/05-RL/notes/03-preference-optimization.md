@@ -1,7 +1,17 @@
-# Preference Optimization Algorithms
+---
+origin: web-authored
+sources:
+  - https://arxiv.org/abs/2305.18290 (DPO)
+  - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
+  - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
+confidence: medium
+cleaned: 2026-10-31
+---
 
-> **Pillar:** [05-RL](README.md)
-> **Presumes:** [RLHF pipeline](rlhf-pipeline.md) — understand the three-stage baseline first
+# 3 — Preference Optimization Algorithms
+
+> **Pillar:** [05-RL](../README.md)
+> **Presumes:** [RLHF pipeline](02-rlhf-pipeline.md) — understand the three-stage baseline first
 > **Papers:** DPO (2305.18290), DeepSeek-R1 (2501.12948), GRPO (2402.03300)
 
 ---
@@ -77,7 +87,7 @@ common at scale.
 
 ## DPO — Direct Preference Optimization
 
-**Paper:** Rafailov et al., 2023 (arXiv: 2305.18290). Currently at `2-llm-rlhf/2305.18290v3.pdf`.
+**Paper:** Rafailov et al., 2023 (arXiv: 2305.18290). In repo at [`sources/rafailov-2023-dpo.pdf`](../sources/rafailov-2023-dpo.pdf).
 
 **The insight:** The RLHF objective (maximize reward subject to KL constraint) has a
 closed-form optimal policy. DPO reparameterizes the reward model in terms of the policy
@@ -172,7 +182,7 @@ These rule-based rewards require no human labeling and scale to arbitrary volume
 
 **Strengths:** No critic to train (simpler, cheaper), verifiable rewards remove the learned-RM
 loophole (though an agent can still game the verifier itself, for example by editing the
-tests it must pass; see [RLVP](post-training-for-agents.md#rlvp-reward-the-outcome-penalize-the-path)), enables large-scale online RL for reasoning,
+tests it must pass; see [RLVP](05-post-training-for-agents.md#rlvp-reward-the-outcome-penalize-the-path)), enables large-scale online RL for reasoning,
 demonstrated at scale (DeepSeek-R1 achieves o1-level math reasoning).
 
 **Weaknesses:** Requires verifiable reward structure — not applicable to open-ended
@@ -184,7 +194,7 @@ penalties. Credit assignment is also coarse: one trajectory-level advantage is s
 evenly over every token, which dilutes the signal over long multi-turn episodes, where
 PPO with a value network still earns its cost. DAPO's four fixes (Clip-Higher,
 token-level loss, dynamic sampling, overlong shaping) are tabulated in
-[post-training-for-agents.md](post-training-for-agents.md#rl-for-tool-calling).
+[post-training-for-agents.md](05-post-training-for-agents.md#rl-for-tool-calling).
 
 **When to use GRPO:** Reasoning tasks with verifiable outcomes (math, code, logic).
 Not appropriate for general instruction following or alignment training.
@@ -279,11 +289,11 @@ This validated the verifiable rewards paradigm and shifted the field's attention
 
 ## Cross-links
 
-- **Baseline:** [rlhf-pipeline.md](rlhf-pipeline.md) — the three-stage PPO pipeline these
+- **Baseline:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) — the three-stage PPO pipeline these
   algorithms evolved from
-- **Constitutional AI:** [constitutional-ai.md](constitutional-ai.md) — RLAIF as an
+- **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md) — RLAIF as an
   alternative feedback source (still uses PPO or DPO at the optimization step)
-- **RL foundations:** [../01-llm-fundamentals/rl.md](../01-llm-fundamentals/rl.md) — MDP
+- **RL foundations:** [01-rl-foundations.md](01-rl-foundations.md) — MDP
   framing, value functions, policy gradients
-- **Papers in repo:** [`2-llm-rlhf/2305.18290v3.pdf`](2-llm-rlhf/2305.18290v3.pdf) (DPO)
+- **Papers in repo:** [`sources/rafailov-2023-dpo.pdf`](../sources/rafailov-2023-dpo.pdf) (DPO)
 - **External:** DeepSeek-R1 (arXiv: 2501.12948), GRPO (arXiv: 2402.03300)

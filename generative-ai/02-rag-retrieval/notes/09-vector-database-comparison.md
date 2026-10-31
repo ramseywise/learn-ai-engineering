@@ -1,4 +1,13 @@
-# Vector Databases — Reference & Trade-offs
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 9 — Vector databases: reference and trade-offs
+
+> Which vector store to use (OpenSearch, DuckDB, Chroma, pgvector, Pinecone, Discovery Engine), what each costs in features, and HNSW vs ANNOY for the index.
 
 Landscape of vector stores relevant to our RAG architecture. Scoped to what appears in our codebase or is a realistic migration target.
 
@@ -61,7 +70,7 @@ How Bedrock uses it:
 - Vector field: `bedrock-knowledge-base-default-vector`.
 - Raw `_score` is NOT exposed by the Bedrock KB API (always returns 0.0 via API; only visible in OpenSearch dashboard).
 
-See [bedrock-kb.md](bedrock-kb.md) for full field mapping, retrieval modes, and env vars.
+See [12 — Bedrock knowledge bases](12-bedrock-knowledge-bases.md) for full field mapping, retrieval modes, and env vars.
 
 ### Elasticsearch
 Comparable to OpenSearch (shared lineage). Prefer when:
@@ -116,7 +125,7 @@ Two modes we use in chat-agent:
 | Agentic RAG | `GcpAgentSearchClient` | Gemini ADK agentic loop (grade + rewrite) |
 | Built-in answer | `GcpAnswerSearchClient` | GCP Discovery Engine (black box) |
 
-See [gcp-vertex-vs-bedrock.md](gcp-vertex-vs-bedrock.md) for a detailed head-to-head comparison.
+See [13 — GCP vs Bedrock](13-gcp-vertex-vs-bedrock.md) for a detailed head-to-head comparison.
 
 ---
 
@@ -165,3 +174,7 @@ The insert behaviour is also a governance point: expiring a superseded document 
 **pgvector → Pinecone**: lose keyword/hybrid, gain SaaS zero-ops. Only viable if your queries are purely semantic and corpus is English.
 
 **Any → GCP Discovery Engine**: only viable if your stack is already GCP-native. Retrieval is a black box — you lose visibility into score calibration, chunk boundaries, and reranker behaviour. Suitable when you want GCP to own the full RAG loop (as in chat-agent's `:answer` backend).
+
+---
+
+→ Next: [10-semantic-cache.md](10-semantic-cache.md) — skipping retrieval altogether when a query has been answered before.

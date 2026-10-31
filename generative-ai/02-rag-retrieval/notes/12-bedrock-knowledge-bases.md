@@ -1,4 +1,13 @@
-# Bedrock Knowledge Base — Reference Spec
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 12 — Bedrock knowledge bases: reference spec
+
+> How a managed AWS Bedrock knowledge base is configured and queried: KB identities, retrieval modes, reranking, metadata and env vars.
 
 Retrieval from AWS Bedrock KB used in SupportAgent.
 
@@ -188,3 +197,7 @@ for p in passages:
     print(p.id, p.score, p.url)
 "
 ```
+
+---
+
+→ Next: [13-gcp-vertex-vs-bedrock.md](13-gcp-vertex-vs-bedrock.md) — the same job on GCP, compared feature by feature.

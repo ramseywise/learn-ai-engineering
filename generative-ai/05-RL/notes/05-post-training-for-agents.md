@@ -1,7 +1,15 @@
-# Post-Training for Agents
+---
+origin: vendored
+sources:
+  - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md (Apache-2.0)
+confidence: medium
+cleaned: 2026-10-31
+---
 
-> **Pillar:** [05-RL](README.md)
-> **Presumes:** [rlhf-pipeline.md](rlhf-pipeline.md), [preference-optimization.md](preference-optimization.md)
+# 5 — Post-Training for Agents
+
+> **Pillar:** [05-RL](../README.md)
+> **Presumes:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md), [03-preference-optimization.md](03-preference-optimization.md)
 > **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 8 — [book-en/chapter8.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0)
 
 Two threads run through this note. **SFT memorizes, RL generalizes.** And **data and environment matter more than algorithms.**
@@ -10,7 +18,7 @@ Two threads run through this note. **SFT memorizes, RL generalizes.** And **data
 
 ## The three stages
 
-![SFT→RL Two-Stage Training Pipeline; Mid-training Precedes These Two Behavioral-Alignment Stages](images/ai-agent-book/fig8-11.svg)
+![SFT→RL Two-Stage Training Pipeline; Mid-training Precedes These Two Behavioral-Alignment Stages](../sources/images/li-ai-agents-in-depth-fig8-11.svg)
 *Figure 8-11, SFT→RL Two-Stage Training Pipeline; Mid-training Precedes These Two Behavioral-Alignment Stages. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
 
 | Stage | Data | Objective | What it learns | Cost |
@@ -67,7 +75,7 @@ RL also improved the **visual encoder**, because the outcome signal backpropagat
 
 ## Classic RL vs. LLM+RL: why priors win
 
-Tabular Q-learning (Bellman update, ε-greedy, TD learning; see [rl.md](../01-llm-fundamentals/rl.md)) assumes a **closed action space**. An LLM's action space is open-ended natural language and tool calls. It also adds a new kind of action: **thinking**, which changes no external state but improves the next action.
+Tabular Q-learning (Bellman update, ε-greedy, TD learning; see [01-rl-foundations.md](01-rl-foundations.md)) assumes a **closed action space**. An LLM's action space is open-ended natural language and tool calls. It also adds a new kind of action: **thinking**, which changes no external state but improves the next action.
 
 | | Q-learning (Exp 7-1) | LLM agent (Exp 7-2) |
 |---|---|---|
@@ -83,7 +91,7 @@ To Q-learning, "door", "key" and "sword" are opaque symbols. The LLM brings prio
 
 The working order is **prior > environment > algorithm**. Classic RL still wins where simulation is cheap and repeatable. In the real world, every trial costs a phone call or a browser session, and sample efficiency dominates.
 
-**Lab:** [practice/01-q-learning-treasure-hunt](practice/01-q-learning-treasure-hunt/) reproduces Exp 7-1 offline. The Exp 7-2 LLM agent is [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience) and needs an API key.
+**Lab:** [practice/01-q-learning-treasure-hunt](../practice/01-q-learning-treasure-hunt/) reproduces Exp 7-1 offline. The Exp 7-2 LLM agent is [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience) and needs an API key.
 
 ---
 
@@ -117,7 +125,7 @@ SFT writes stable mappings and protocols into weights.
 
 ## When to choose SFT vs. RL
 
-1. **Does this need training at all?** If prompts, tools or context management can solve it, no. Most agent applications stop here ([harness engineering](../../ai-engineering/03-harness-engineering/README.md)).
+1. **Does this need training at all?** If prompts, tools or context management can solve it, no. Most agent applications stop here ([harness engineering](../../../ai-engineering/03-harness-engineering/README.md)).
 2. **Try SFT first.** Use it for JSON schemas, tool-call format, protocol habits, tone and length. Don't use it to inject facts.
 3. **Add RL when SFT plateaus.**
    - Deployment drifts systematically from training (rules or appearance change).
@@ -153,7 +161,7 @@ SFT writes stable mappings and protocols into weights.
 - **Diversity**, or the model collapses to one mode.
 - **Label accuracy.** Filter wrong CoT before you distill it.
 
-> **Often, good SFT data means you don't need RL.** Before 2025, Anthropic's recipe was large-scale high-quality SFT plus RLAIF ([constitutional-ai.md](constitutional-ai.md)), with little RLVR, and its coding models were already strong. Data decides how far you can go; RL decides how much higher.
+> **Often, good SFT data means you don't need RL.** Before 2025, Anthropic's recipe was large-scale high-quality SFT plus RLAIF ([04-constitutional-ai.md](04-constitutional-ai.md)), with little RLVR, and its coding models were already strong. Data decides how far you can go; RL decides how much higher.
 
 **Agentic data generation.** Autodata's Agentic Self-Instruct runs four roles:
 
@@ -169,7 +177,7 @@ It searches for tasks the strong solver passes, the weak solver fails, and the v
 
 ## Reward design for multi-turn agents
 
-![Credit Assignment in Multi-Turn Interactions](images/ai-agent-book/fig8-15.svg)
+![Credit Assignment in Multi-Turn Interactions](../sources/images/li-ai-agents-in-depth-fig8-15.svg)
 *Figure 8-15, Credit Assignment in Multi-Turn Interactions. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
 
 Multi-turn adds **credit assignment**. Was it the question in turn 2 or the explanation in turn 7 that solved the ticket? It also adds **partial observability**.
@@ -217,7 +225,7 @@ Use process rewards when the correctness of intermediate steps is easy to define
 
 ## RLVP: reward the outcome, penalize the path
 
-![16 Rollouts, Verification, and Relative Advantage on the Same SWE-bench Task](images/ai-agent-book/fig8-13.svg)
+![16 Rollouts, Verification, and Relative Advantage on the Same SWE-bench Task](../sources/images/li-ai-agents-in-depth-fig8-13.svg)
 *Figure 8-13, 16 Rollouts, Verification, and Relative Advantage on the Same SWE-bench Task. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
 
 Outcome rewards can't teach **outcome-neutral constraints**. Worse, they reward breaking them:
@@ -257,7 +265,7 @@ R = O + β·Φ        O = outcome reward (still the goal)
 - **miniF2F**: iterations to reach 90% success fell from 7.0 to 4.4 at 4B, and from 8.5 to 5.4 at 30B.
 - **Chained file operations**: all-fail groups fell from 65% to 8%.
 
-**RLVR verifies outcomes. RLVP also verifies the process.** Together they train an agent that gets the job done *and* does it properly. For guardrails on the inference side, see [loop failure modes](../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md).
+**RLVR verifies outcomes. RLVP also verifies the process.** Together they train an agent that gets the job done *and* does it properly. For guardrails on the inference side, see [loop failure modes](../../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md).
 
 ---
 
@@ -315,7 +323,7 @@ SimpleVLA-RL used similar levers: dynamic sampling, clip bounds of [0.8, 1.28] a
 3. First-turn-only scoring: taught perfunctory replies.
 4. Rollout shape aligned with the eval: the policy collapsed to one mode, even with a 4× KL anchor.
 
-None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly and scored **+23–47 pp** over SFT. What stalls post-training is usually signal density, not reward cleverness. (Li & Shi 2026; the inference-time version is the [agent status bar](../../ai-engineering/02-context-engineering/notes/02-context-anatomy.md#runtime-state-the-agent-status-bar).)
+None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly and scored **+23–47 pp** over SFT. What stalls post-training is usually signal density, not reward cleverness. (Li & Shi 2026; the inference-time version is the [agent status bar](../../../ai-engineering/02-context-engineering/notes/02-context-anatomy.md#runtime-state-the-agent-status-bar).)
 
 **On-policy self-distillation (OPSD)** (Zhao et al. 2026, arXiv:2601.18734) is for when there is no stronger teacher. The same model plays both roles; only the context differs.
 
@@ -330,7 +338,7 @@ None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly
 
 1. **Using post-training to store facts.** Use RAG; post-training teaches how to use knowledge.
 2. **Starting RL before format is stable.** If the parse-failure rate is above 20%, RL will fail.
-3. **Reward hacking.** Reward the real objective, not a proxy like length. On RM over-optimization, see [rlhf-pipeline.md](rlhf-pipeline.md#overoptimization).
+3. **Reward hacking.** Reward the real objective, not a proxy like length. On RM over-optimization, see [02-rlhf-pipeline.md](02-rlhf-pipeline.md#overoptimization).
 4. **A low-fidelity simulator.** The policy collapses in production.
 5. **Over-training.** Train loss falls while validation gets worse. Stop early, especially with SFT.
 6. **Value-function collapse and under-exploration.** PPO curves oscillate; low temperature traps the policy in a local optimum.
@@ -345,7 +353,7 @@ None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly
 
 Fail fast before you fail at scale.
 
-**Eval vs. train data.** SWE-Gym trains; SWE-Bench Verified must stay held out. τ²-bench trajectories make good imitation data, and AndroidWorld's templates generate curricula. Reuse the *environment*, never the *eval items* ([06-eval](../../ai-engineering/06-eval/README.md)).
+**Eval vs. train data.** SWE-Gym trains; SWE-Bench Verified must stay held out. τ²-bench trajectories make good imitation data, and AndroidWorld's templates generate curricula. Reuse the *environment*, never the *eval items* ([06-eval](../../../ai-engineering/06-eval/README.md)).
 
 ---
 
@@ -353,7 +361,7 @@ Fail fast before you fail at scale.
 
 | Exp | Lab | Where |
 |---|---|---|
-| 7-1 | Q-learning treasure hunt | **[practice/01-q-learning-treasure-hunt](practice/01-q-learning-treasure-hunt/)** (offline, numpy) |
+| 7-1 | Q-learning treasure hunt | **[practice/01-q-learning-treasure-hunt](../practice/01-q-learning-treasure-hunt/)** (offline, numpy) |
 | 7-2 | LLM agent vs. Q-learning | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience) (API key) |
 | 7-3 | MiniMind: train a 100M LLM from scratch (QK-Norm + Muon, ~14 h, ~$34) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/MiniMind-pretrain) (GPU) |
 | 7-5 | Continued pretraining: Mistral 7B learns Korean | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/continued-pretraining) (GPU) |
@@ -382,6 +390,6 @@ Fail fast before you fail at scale.
 
 ## Cross-links
 
-- **Upstream:** [rlhf-pipeline.md](rlhf-pipeline.md) (KL penalty, reward models), [preference-optimization.md](preference-optimization.md) (PPO / DPO / GRPO math), [rl.md](../01-llm-fundamentals/rl.md) (MDP, Q-learning)
-- **Lateral:** [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md) (environments as training grounds), [04-loop-engineering failure modes](../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md)
-- **Downstream:** [03-agentic-foundations/agent-fundamentals.md](../03-agentic-foundations/agent-fundamentals.md) (trajectories as the raw material for learning)
+- **Upstream:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) (KL penalty, reward models), [03-preference-optimization.md](03-preference-optimization.md) (PPO / DPO / GRPO math), [01-rl-foundations.md](01-rl-foundations.md) (MDP, Q-learning)
+- **Lateral:** [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) (environments as training grounds), [04-loop-engineering failure modes](../../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md)
+- **Downstream:** [03-agentic-foundations](../../03-agentic-foundations/README.md) (trajectories as the raw material for learning)

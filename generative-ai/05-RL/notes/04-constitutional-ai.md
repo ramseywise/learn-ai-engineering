@@ -1,9 +1,18 @@
-# Constitutional AI and RLAIF
+---
+origin: web-authored
+sources:
+  - https://arxiv.org/abs/2212.08073 (Constitutional AI)
+  - https://arxiv.org/abs/2309.00267 (RLAIF)
+confidence: medium
+cleaned: 2026-10-31
+---
 
-> **Pillar:** [05-RL](README.md)
-> **Presumes:** [RLHF pipeline](rlhf-pipeline.md) — Constitutional AI extends the RLHF framework
+# 4 — Constitutional AI and RLAIF
+
+> **Pillar:** [05-RL](../README.md)
+> **Presumes:** [RLHF pipeline](02-rlhf-pipeline.md) — Constitutional AI extends the RLHF framework
 > **Papers:** Constitutional AI (arXiv: 2212.08073), RLAIF (arXiv: 2309.00267)
-> **Paper in repo:** [`2-llm-rlhf/constitutional_ai.pdf`](2-llm-rlhf/constitutional_ai.pdf)
+> **Paper in repo:** [`sources/bai-2022-constitutional-ai.pdf`](../sources/bai-2022-constitutional-ai.pdf)
 
 ---
 
@@ -235,11 +244,10 @@ training) that substitutes AI-generated labels for human labels.
 
 ## Cross-links
 
-- **Baseline:** [rlhf-pipeline.md](rlhf-pipeline.md) — the three-stage RLHF pipeline
+- **Baseline:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) — the three-stage RLHF pipeline
   Constitutional AI extends
-- **Algorithms:** [preference-optimization.md](preference-optimization.md) — the RM
+- **Algorithms:** [03-preference-optimization.md](03-preference-optimization.md) — the RM
   training step can be replaced with DPO or other offline methods; Constitutional AI
   generates the preference data, not the optimizer
-- **RL foundations:** [../01-llm-fundamentals/rl.md](../01-llm-fundamentals/rl.md)
-- **Duplicate paper note:** `01-llm-fundamentals/readings/constitutional_ai.pdf` is a
-  duplicate. Canonical copy: [`2-llm-rlhf/constitutional_ai.pdf`](2-llm-rlhf/constitutional_ai.pdf)
+- **RL foundations:** [01 — RL foundations](01-rl-foundations.md)
+- **Paper in repo:** [`sources/bai-2022-constitutional-ai.pdf`](../sources/bai-2022-constitutional-ai.pdf) (the duplicate copies were removed in the 2026-10-31 cleanup)
