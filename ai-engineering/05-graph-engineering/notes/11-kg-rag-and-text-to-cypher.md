@@ -25,7 +25,7 @@ cleaned: 2026-10-28
 
 ## Where vector RAG breaks
 
-Ch13 of Negro et al.'s *Knowledge Graphs and LLMs in Action* (Manning, 2025) lists the failure modes of chunk-and-embed retrieval ([ch. 13 PDF](../sources/kg-and-llms-in-action/ch13-kg-powered-rag.pdf)):
+Ch13 of Negro et al.'s *Knowledge Graphs and LLMs in Action* (Manning, 2025) lists the failure modes of chunk-and-embed retrieval:
 
 | Failure | What happens |
 |---|---|
@@ -38,7 +38,7 @@ Ch13 of Negro et al.'s *Knowledge Graphs and LLMs in Action* (Manning, 2025) lis
 
 The ch13 worked example: for "How is Lauritsen related to cyclotron research?", the three top results scored 0.906, 0.903 and 0.902 by cosine similarity, and **only the first mentioned Lauritsen at all**. Embeddings encode overall meaning. They don't guarantee that a named entity is present. A second query in the chapter ("What is known about cyclotron research?") shows the same thing from the other side: the top hit (0.918) is a relevant 1939 diary entry on cyclotron costs, and the runner-up (0.916) reads like a sales pitch for a competing machine (*KG & LLMs in Action*, ch. 13). Score gaps in the third decimal place say nothing about relevance.
 
-Ch14 shows the consequence ([ch. 14 PDF](../sources/kg-and-llms-in-action/ch14-natural-language-kg-questions.pdf)). Given five witness statements, the model reasons from a bandaged left finger and a phone held in the left hand to "probably left-handed", with sensible hedging. Remove one witness statement from the retrieved context and the model **reverses its conclusion with the same confidence** (*KG & LLMs in Action*, ch. 14). RAG output is bounded by retrieval completeness, and the model can't tell that something is missing. Grounding narrows what the model draws on; it doesn't make the model deterministic. The book's conclusion is to keep a person reviewing the answers (ch. 13).
+Ch14 shows the consequence. Given five witness statements and the question "Is the perpetrator left-handed?", the model leans on Witness C (phone held to the ear with the left hand, "strong evidence"), notes that a bandaged left index finger "doesn't necessarily imply" anything, and concludes "likely left-handed" with sensible hedging. Remove Witness C's statement from the retrieved context and the model builds the opposite case from what remains (wallet taken out with the right hand, a bag carried in the right hand), dismisses the bandage as possibly unrelated, and **reverses its conclusion**: "the absence of a single witness statement is enough to lead the model to the opposite conclusion" (*KG & LLMs in Action*, §14.2.2). RAG output is bounded by retrieval completeness, and the model can't tell that something is missing. Grounding narrows what the model draws on; it doesn't make the model deterministic. The book's conclusion is to keep a person reviewing the answers (ch. 13).
 
 ---
 
@@ -81,11 +81,11 @@ A figure you will see quoted is **53.4% vs. 42.9%** multi-hop accuracy for graph
 
 **Triples lose meaning.** "If it rains next week I'll cancel the beach trip and go to the museum" becomes `(user, plans, beach trip)` and `(user, backup, museum)`, and the condition is gone. Extraction errors also contaminate the graph. Li's recommendation (*AI Agents in Depth*, ch. 3): keep the core record in natural language, and use the graph as an *index* for the domains that need multi-hop and disambiguation (medical, legal, family relationships). For "drill from concept to detail" questions, a RAPTOR summary tree fits better than a graph ([02-context 04](../../02-context-engineering/notes/04-retrieval.md#distill-at-index-time-beyond-flat-chunks)).
 
-**Default order:** start with vector. Add canned traversals for the multi-hop question shapes you can name. Add text-to-Cypher only for the long tail, and only with a validator. Ch13 takes the same position: its ReAct agent's tools use **precanned Cypher queries** because free-form generation fails too often, with a vector-search tool as a fallback. This is the agency rule from [note 02](02-graph-primitives.md) again.
+**Default order:** start with vector. Add canned traversals for the multi-hop question shapes you can name. Add text-to-Cypher only for the long tail, and only with a validator. Ch13 takes a similar position, but more narrowly. Its KG retriever tool *does* generate Cypher from the schema; only the document retriever is a **precanned query**, because generating that query "would introduce another possible point of failure when the Cypher queries are complex". The book adds that production Graph RAG systems carry many KG tools, "many of which are based on precanned Cypher queries for types of questions that are frequently repeated" (§13.4.3). This is the agency rule from [note 02](02-graph-primitives.md) again.
 
 ### A Graph RAG agent: three tools under ReAct
 
-Ch13's agent over the Rockefeller Archive Center graph (1930s grant diaries: who talked with whom about what) has three tools and a ReAct loop that chooses among them (*KG & LLMs in Action*, ch. 13; [ch. 13 PDF](../sources/kg-and-llms-in-action/ch13-kg-powered-rag.pdf)):
+Ch13's agent over the Rockefeller Archive Center graph (1930s grant diaries: who talked with whom about what) has three tools and a ReAct loop that chooses among them (*KG & LLMs in Action*, ch. 13):
 
 | Tool | What it does | Typical question |
 |---|---|---|
@@ -133,14 +133,15 @@ def relation_docs(**kwargs) -> list[str]:
     return [r["text"] for r in rows]
 ```
 
-The book's listing builds the whole query with `str.format`, entity names included. Pass names as parameters instead: a name containing a quote breaks the query, and string-built Cypher is an injection path.
+The book's listing differs in ways worth knowing. Its arguments are plain `str` fields whose descriptions list the allowed values (source class "only one, 'Person'"; relationship one of `TALKED_ABOUT`, `TALKED_WITH`, `WORKS_WITH`, ...), so nothing rejects an off-list value; the `Literal` above does. The query reaches documents through `(p:Page)-[:MENTIONS_ENTITY]->` rather than a page list on the edge, keeps the first three results, and returns an empty list on any exception, which the agent sees as "no documents". The document selector's tool description embeds the full KG schema (`Full KG schema:\n{KG_SCHEMA}`), so the agent picks arguments against the real labels. And it builds the whole query with `str.format`, entity names included. Pass names as parameters instead: a name containing a quote breaks the query, and string-built Cypher is an injection path.
 
 How the loop behaved (ch13):
 
-- **"What did her fellow researchers say about Dorothy M. Wrinch?"** The agent first asked the KG retriever who talked about her (three names came back), then called the document retriever once per name and composed a grounded answer. Four thought-action-observation rounds, in an order the agent chose.
+- **"What did her fellow researchers say about Dorothy M. Wrinch?"** The agent first asked the KG retriever who talked about her (three names came back: Eric Ponder, Pascu and Irving Langmuir), then called the document retriever once per name and composed a grounded answer. Four thought-action-observation rounds, in an order the agent chose.
+- **A question naming two people** ("What did August Krogh say about Lawrence Irving?") went straight to the document retriever, with no KG lookup first. The book notes that an LLM without retrieval would say it has no information, or make something up.
 - **"Are there shared research topics between Harvard and Johns Hopkins?"** No single diary entry compares the two, so vector search would have to stuff many documents into context and hope. The KG retriever wrote a clumsy but correct query and answered "astronomy and climatology". This is the aggregate case where a graph wins outright, with a much smaller context as a bonus.
 
-Practical lessons from the chapter: tool names and descriptions decide which tool gets picked, so write them carefully, and override the framework's default agent prompt if behaviour is unstable. Run the same question several times, because the variation shows you where to improve. The next steps it names are re-ranking after vector search and a self-correction loop for generated Cypher. The rest of this note builds that loop.
+Practical lessons from the chapter: tool names and descriptions decide which tool gets picked, so write them carefully, and override the framework's default agent prompt if behaviour is unstable. Run the same question several times, because the variation shows you where to improve. The next steps it names are re-ranking after vector search and a self-correction loop for generated Cypher. In ch13 that loop is the LLM double-checking its own query ("generates the Cypher query first and then asks the LLM to double-check it"). Ch15 replaces the self-review with the database's error message, which is the version the rest of this note builds. The chapter's agent is LangChain's `create_structured_chat_agent` and `AgentExecutor` on `gpt-4o-mini` at temperature 0, both legacy now (LangGraph's prebuilt ReAct agent replaces them).
 
 ### Vector search inside the graph
 
@@ -248,7 +249,7 @@ Two cautions from the notebook. One query filters `WHERE addr.city = 'California
 
 ### Think like the expert: schema first
 
-Ch14's method is to ask what a domain expert would do (*KG & LLMs in Action*, ch. 14; [ch. 14 PDF](../sources/kg-and-llms-in-action/ch14-natural-language-kg-questions.pdf)). Its thought experiment: force a panel of real experts to work RAG-style, picking a dozen similar-looking paragraphs and answering only from those, and their answers come out shallow. An expert doesn't read paragraphs. They know the **schema** and build a **constrained traversal**:
+Ch14's method is to ask what a domain expert would do (*KG & LLMs in Action*, ch. 14). Its thought experiment: force a panel of real experts to work RAG-style, picking a dozen similar-looking paragraphs and answering only from those, and their answers come out shallow. An expert doesn't read paragraphs. They know the **schema** and build a **constrained traversal**:
 
 1. **Parse** the question into entities (`Car {color, model}`), relationships (owns, captured by) and constraints (red, Camaro, this area, this time window).
 2. **Map** those onto schema labels and relationship types.
@@ -262,7 +263,7 @@ WHERE v.model = "Camaro" AND v.color = "Red"
 RETURN path
 ```
 
-(The book's figure writes the time window as `$startTime >= e.timestamp >= $endTime`, which is backwards and isn't valid chained comparison in Cypher anyway; the version above is the intended filter.)
+(The book's text and Fig. 14.2 write the time window as `$startTime >= e.timestamp >= $endTime`. Cypher accepts chained comparisons, so this parses, but it means `$startTime >= e.timestamp AND e.timestamp >= $endTime`: with a normal window (start before end) it matches nothing, and no error tells you so. The version above is the intended filter.)
 
 Constrained traversals compose: one traversal, possibly with an aggregation, picks out a subgraph that seeds the next. That is how a complex question becomes a query. The framing shift matters: classic RAG builds context so the model can *generate an answer*. Here the model's job is to *formulate the question* precisely enough that the database returns the facts, so the answer is retrieved, not written (ch. 14).
 
@@ -296,7 +297,7 @@ flowchart LR
 
 Annotations are the expert's cheat sheet written down: abbreviations, what each relationship means, units, direction. **Name things well in the first place**, too. A model can't use a relationship called `REL_7`.
 
-**Keep it in config, not code.** Ch14 drives the transformation from a YAML file with two sections, `skip` and `descriptions`; ch15's schema provider applies it in three steps: call `apoc.meta.schema({sample: -1})` (no sampling, so rare labels aren't missed), drop skipped classes, relationships and properties (and any relationship whose endpoint was skipped), then attach descriptions ([ch. 15 PDF](../sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf)). A compact version of the idea:
+**Keep it in config, not code.** Ch14 drives the transformation from a YAML file with two sections, `skip` and `descriptions`; ch15's schema provider applies it in three steps: call `apoc.meta.schema({sample: -1})` (no sampling, so rare labels aren't missed), drop skipped classes, relationships and properties (and any relationship whose endpoint was skipped), then attach descriptions (ch. 15). A compact version of the idea:
 
 ```yaml
 schema:
@@ -332,9 +333,11 @@ def render_schema(meta: dict, cfg: dict) -> str:
 
 The YAML is versioned with the prompts, readable by domain experts, and grows with the graph without code changes.
 
+Three differences from the book's provider (listings 15.3–15.4) matter if you copy it. It attaches descriptions to node classes and node properties only, so the relationship descriptions above are an addition. Its property skip list is flat and applies to every class and relationship, so skipping `name` on one label skips it everywhere. And the `schema_extraction` node calls `apoc.meta.schema({sample: -1})`, a full scan, on **every question**, writing into class-level dictionaries (`Node.items`, `Relationship.items`) shared by the whole process. On a large graph, build the rendered schema once and rebuild it when the graph or the YAML changes.
+
 ### Prompt shape
 
-The book's prompt has nine parts: task and `<QUESTION>`; `<SCHEMA>` with annotations; requirements that depend on the intent (a map needs coordinates, a graph view needs named relationships); few-shot examples; the user's current selection; KG-specific notes; the question restated; the requirements restated; and the output format.
+The book's prompt has nine parts: task and `<QUESTION>`; `<SCHEMA>` with annotations (rendered under markdown headings such as `### Graph Schema Overview`, with the instruction to "consider the comments as annotations"); requirements that depend on the intent (a map needs coordinates, a graph view needs named relationships); few-shot examples; the user's current selection; KG-specific notes; the question restated; the requirements restated; and the output format.
 
 **Order the output fields so reasoning comes first:**
 
@@ -349,14 +352,14 @@ The book's prompt has nine parts: task and `<QUESTION>`; `<SCHEMA>` with annotat
 
 Listing `relationships` first reduces invented relationship types, because the model commits to the schema before writing the query. This is chain-of-thought ordering ([01-prompt note 03](../../01-prompt-engineering/notes/03-core-techniques.md)): an answer written before its reasoning is a guess, and the reasoning that follows only rationalises it. Tokens are generated in order, each conditioned on the ones before, so an early commitment gets defended and an early error propagates. Ch14 illustrates this with a route-finding prompt: answer-first, the model picks a highway and then explains away the construction it mentions; reasoning-first, it lists the routes, weighs them and lands on a different one (*KG & LLMs in Action*, ch. 14).
 
-Tuning the fields: if your model never invents relationships, drop `relationships`; if it commits to them too early, ask for the ones it will "potentially traverse". Few-shot examples must use the same JSON shape. The book fills fields it doesn't want to dictate with `"..."`, so you can add worked reasoning to an example later without changing the format.
+Tuning the fields: if your model never invents relationships, drop `relationships`; if it commits to them too early, ask for the ones it will "potentially traverse". Few-shot examples must use the same JSON shape; the book says they "must conform to our response format". Its own Jinja2 example template breaks that rule: it renders `"query"` *before* `"reasoning"`, with no comma between them, so every example teaches query-first ordering in malformed JSON. Render examples in the response order (`relationships`, `reasoning`, `query`). Fields the book doesn't want to dictate are filled with `"..."`. To add worked reasoning to an example, first run the example question without a `reasoning` field to see how the model reasons unguided, then add only the critical content "without radically changing the overall response".
 
 **The parts that matter most**, from the nine-part prompt:
 
 | Part | What it does | Why |
 |---|---|---|
 | Intent-dependent requirements | Graph or map output: return every matched node and **named** relationship (`[r:OWNS]`, not `[:OWNS]`), one `MATCH` pattern where possible. Table output: select and rename properties as columns | The front end needs different shapes; anonymous relationships can't be drawn |
-| "Use only the schema; if you can't, say why" | Permission to fail, reported through `success: false` | Without it the model invents something plausible |
+| "Use only the schema; if you can't, say why" | Permission to fail, reported through `success: false`, plus "You must respect relationship types and directions" | Without it the model invents something plausible |
 | User selection | Lists the nodes currently selected in the UI. If the question says "the selected X" and the selection is empty, set `success: false` | Lets users say "the older siblings of the selected person"; refuses to guess the referent |
 | KG-specific notes | A template variable for per-graph tips ("`location` is a Neo4j point, use `point.distance`") | Keeps the core prompt reusable across graphs |
 | Question and requirements restated at the end | The schema can be long and pushes the question far from where generation starts | Recency |
@@ -376,6 +379,7 @@ What makes the classification prompt work (ch. 14):
 - **Defined categories with a default.** The book's rule: graph unless the user asks for one explicitly; table for aggregation, ordering or statistics; chart for distributions; map for locations. When unsure, graph, since the system queries a graph.
 - **Few-shot examples, including boundary cases.** "Most common types of organised crime involved in human trafficking" needs both aggregation and relationships; the book labels it graph and keeps it as an example precisely because it's borderline.
 - **A JSON output with a `reason` field**, used for debugging, not downstream logic.
+- **A fallback category** where one applies. The book's checklist is clear instructions, defined categories, examples, boundary cases, output format and fallback. Boundary examples are best harvested, not invented: "The easiest way to obtain high-quality samples on the boundary is to observe misclassification during normal use".
 
 | Question | Output |
 |---|---|
@@ -384,7 +388,7 @@ What makes the classification prompt work (ch. 14):
 | Main suspects in recent burglaries | graph |
 | Traffic fatalities last year vs the year before | table |
 
-**Model size shows up here.** "How often is the knowledge graph updated?" is a question about the system's process. A full-size model classified it as system/documentation; a small quantised model called it a data question ("concerns the frequency of updates within the data"). The `reason` field made the gap visible: the small model needed more background in the task definition (ch. 14).
+**Model size shows up here.** "How often is the knowledge graph updated?" is a question about the system's process. A full-size model classified it as system/documentation; a "smaller or quantized" model called it a data question ("concerns the frequency of updates within the data"). The book's reason the larger model is right: update frequency inferred from node timestamps would reflect how the data happened to be entered, not how updates are scheduled. The `reason` field made the gap visible: the small model needed more background in the task definition (ch. 14).
 
 **One prompt or several?** Start with a single broad classification prompt: less to maintain, faster to ship. Split into stages (request type, then output form) when accuracy on edge cases or frequently changing categories justify it. Waiting also gives you real misclassified questions to build the staged prompts from (ch. 14).
 
@@ -428,7 +432,7 @@ chain.invoke({"query": "What investment firms are near Santa Clara?"})   # cours
 
 ## The QA agent as a Track A graph
 
-Ch15 implements the expert pipeline in LangGraph (*KG & LLMs in Action*, ch. 15; [ch. 15 PDF](../sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf)):
+Ch15 implements the expert pipeline in LangGraph (*KG & LLMs in Action*, ch. 15):
 
 ![The ch15 LangGraph pipeline: START, intent detection, schema extraction, text to Cypher, query execution; from query execution a dashed Retry edge goes back to text to Cypher, a dashed Summarize edge to generate summary and then END, and a dashed END edge straight to END](../sources/images/negro-kg-and-llms-in-action-fig15-3.png)
 *Image Source: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 15.3 (2025)*
@@ -437,7 +441,7 @@ Ch15 implements the expert pipeline in LangGraph (*KG & LLMs in Action*, ch. 15;
 
 Around the graph sit three components:
 
-- **A configuration provider.** One YAML file holds the prompt templates (Jinja2), the KG notes and the few-shot examples, each example with its question, Cypher and optional reasoning. Prompts and annotations are then tuned and versioned without touching code, and the file is reloaded on every request so edits apply immediately.
+- **A configuration provider.** One YAML file holds the prompt templates (Jinja2), the KG notes and the few-shot examples, each example with its question, Cypher and optional reasoning. Prompts and annotations are then tuned and versioned without touching code, and the file is reloaded on every request so edits apply immediately. The KG notes carry domain definitions the schema can't ("a previous offender or known offender is defined by the fact that the node is connected to crimes") and traversal advice ("do not expand ANPRCameraEvent unless you need to connect it to both Vehicle and ANPRCamera"). Check the examples as carefully as code, because the model copies them. Two in the printed config are wrong: the March 14 example's answer, `MATCH (c:Crime) WHERE c.date starts with "2025-03-14"`, has no `RETURN` and won't run, and the "male known offender" example filters `person.sex CONTAINS 'MALE'`, which also matches `'FEMALE'`.
 - **A schema provider.** The skip-and-describe transformation [above](#give-the-model-an-llm-ready-schema).
 - **A question-processing interface.** A generator that turns the pipeline run into an event stream for the front end ([below](#streaming-it-to-a-ui)).
 
@@ -453,7 +457,12 @@ Around the graph sit three components:
 
 Execution keeps records as a list for graph and map output and converts to a DataFrame for tables. It catches the driver's `ClientError` (syntax errors and schema mismatches) instead of raising, so a failure becomes state that the router can act on. Each LLM node parses its reply leniently: strip a stray `` ```json `` fence, then parse with `json5` (ch. 15).
 
-Two bugs to fix if you copy the listings: the intent node writes `output_reason` while the state declares `output_type_reason`, and the summary node writes `summary_analisys` (misspelt) against `summary_analysis`. A typed state is only an audit trail if node outputs match the declared keys.
+Bugs to fix if you copy the listings:
+
+- The intent node writes `output_reason` while the state declares `output_type_reason`, and the summary node writes `summary_analisys` (misspelt) against `summary_analysis`. `results_error` is declared `list` but holds a string or `None`. A typed state is only an audit trail if node outputs match the declared keys and types.
+- `processQuestion` builds the selection as `{"labels": list(node.labels)[0], ...}`, but the ch14 templates render `{{node.label}}`. Jinja2 renders a missing key as an empty string, so the model sees selected nodes with no label and nothing fails. `list(node.labels)[0]` is also an arbitrary pick for a node with several labels.
+- The records (`self.results`) and the selection (`self.selection`) live on the `Agent` instance, not in `AgentState`. The checkpointer never sees them, and two concurrent questions on one shared pipeline overwrite each other's records. Put them in state.
+- Only `neo4j.exceptions.ClientError` is caught. A query that runs and returns nothing is not an error, so it is never retried; that is the gap the validator below partly fills.
 
 ### The retry edge
 
@@ -466,14 +475,14 @@ def post_query_execution(state):
     return "summarize" if state["output_type"] in ("map", "graph") else "END"
 ```
 
-`retries` is incremented on every execution, so `< 3` means **three executions in total**, i.e. two retries. When the budget runs out the route is a bare `END`, so the user gets only the error; a production version should say plainly that it couldn't answer.
+`retries` is incremented on every execution, so `< 3` means **three executions in total**, i.e. two retries (the book: "allows up to three attempts to execute the query"). On a retry, `information` reads "We tried: {query} and we got: {error}", and the template sits it next to the restated question. When the budget runs out the route is a bare `END`, so the user gets only the error; a production version should say plainly that it couldn't answer.
 
 Several Track A patterns appear here:
 
 - **Generate-then-verify** ([note 02](02-graph-primitives.md)). The database is the verifier, and its error message goes back into the prompt through the `information` field.
 - **A bounded back-edge** ([note 07](07-failure-modes-at-scale.md)). It stops after three attempts.
 - **Typed state as the audit trail** ([note 03](03-state-and-reducers.md)). `AgentState` keeps `output_type_reason`, `query_reasoning` and `results_error`, so every intermediate decision can be inspected. The book points out that this also gives you a dataset of failures and few-shot candidates for free.
-- **A checkpointer** ([note 04](04-durable-execution-and-interrupts.md)). `graph.compile(checkpointer=self.memory)`, with a fresh `thread_id` per question.
+- **A checkpointer** ([note 04](04-durable-execution-and-interrupts.md)). `graph.compile(checkpointer=self.memory)`, with a fresh `thread_id` per question. Listing 15.12 never defines `self.memory`; use `MemorySaver()`. The checkpointer is what lets the streaming generator call `graph.get_state(config)` for the full state, which needs one. Because every question gets a new thread, nothing carries between questions through LangGraph; continuity across turns comes only from the UI selection.
 
 ### Validate before you execute
 
@@ -559,7 +568,7 @@ From ch15's closing section:
 
 `~/.claude/refs/agent-context.md`: retrieval and context assembly. `~/.claude/refs/agent-reliability.md`: bounded retries.
 
-Depth: Negro et al., *Knowledge Graphs and LLMs in Action*: [ch. 13 PDF](../sources/kg-and-llms-in-action/ch13-kg-powered-rag.pdf), [ch. 14 PDF](../sources/kg-and-llms-in-action/ch14-natural-language-kg-questions.pdf), [ch. 15 PDF](../sources/kg-and-llms-in-action/ch15-qa-agent-with-langgraph.pdf).
+Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 13–15.
 
 ---
 

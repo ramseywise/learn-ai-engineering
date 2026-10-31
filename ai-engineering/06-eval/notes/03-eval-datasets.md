@@ -8,7 +8,7 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 3 — Eval Datasets
 
@@ -36,11 +36,13 @@ Grow toward the next stage when the current one can't separate two versions you 
 
 | Source | Strength | Watch out for |
 |---|---|---|
-| **Production logs / telemetry** | Real distribution, real phrasing | Doesn't exist before launch. Consent and PII. Biased by what your app already does well |
+| **Production logs / telemetry** | Real distribution, real phrasing | Doesn't exist before launch. Each big app change can make old rows obsolete. Consent and PII. Good *inputs*, weak *labels*: what the user did next was shaped by what your app suggested |
 | **Real failures** (tickets, 👎, escalations) | The highest-value rows. Directly about your weak spots | Over-represents failure. Balance with normal traffic |
-| **Existing records** (pre-AI support logs, docs, forums) | Plentiful, realistic | Shape mismatch. You may need to adapt them into tasks |
+| **Existing records** (pre-AI support logs, docs, forums) | Plentiful, realistic | Shape mismatch. You may need to adapt them into tasks, trading similarity to your problem against scale |
 | **Domain experts writing cases** | Hits the edge cases that matter | Slow. Experts write *hard* cases and under-sample common ones |
 | **Synthetic (LLM-generated)** | Cheap coverage of combinations | Tropes, unrealistic phrasing, bias toward the generating model |
+
+Telemetry is fine for graders that need no gold answer. Where you need one, Berryman & Ziegler suggest leaving telemetry to online evaluation. For existing records, GitHub Copilot is the standard example: no corpus of "what the user types next" existed, so the team took functions from open-source repos, deleted the bodies, and asked for completions. Function bodies run longer than typical suggestions, and edits that depend on the body (new imports) are already in the file, but the supply is nearly infinite (*Prompt Engineering for LLMs*, ch. 10).
 
 ### Synthetic data done right
 
@@ -51,9 +53,11 @@ Don't ask a model for "100 test questions". You'll get 100 variations of the sam
 3. Turn each tuple into a natural-language query in a **separate** call.
 4. Read a sample. Delete the unrealistic ones.
 
+If you want several queries per tuple, ask for them in one call. Provided the output fits, that gives more variety than repeated calls at temperature > 0. Synthesis is easiest when you can start from the answer and invent the question backward. It is riskiest when the model doesn't know the domain well, because the rows come out as simplistic tropes, popular misconceptions or plain errors (*Prompt Engineering for LLMs*, ch. 10).
+
 Two traps:
 
-- **Self-preference.** If the model generating the data is also a candidate under test, it'll find its own phrasing easy. Generate with a different model family.
+- **Self-preference.** If the model generating the data is also a candidate under test, it'll find its own phrasing easy. If every row was written by model A, a harness that decides between A and B starts A with a head start. Generate with a different model family.
 - **Synthetic-only suites.** Use synthetic data to bootstrap and fill coverage gaps, then replace it with real traffic as you get it.
 
 ### Harvest from failures

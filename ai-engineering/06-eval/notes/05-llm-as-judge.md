@@ -9,7 +9,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 5 — LLM-as-Judge and Calibration
 
@@ -46,8 +46,8 @@ A judge that checks "quality" will silently switch between criteria from row to 
 
 ### Structure that works
 
-1. **Role and task.** Frame it as grading a third party's work. Never tell the model it's grading its own output: self-grading leans lenient ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#llm-as-judge)).
-2. **The criterion**, with a precise definition of PASS and FAIL.
+1. **Role and task.** Frame it as grading a third party's work. Never tell the model it's grading its own output. Berryman & Ziegler report that judges get a bit less accurate when told the work is the user's and much worse when told it is their own, because the model is pulled between conflicting habits: forum-style text that rarely self-criticizes fairly, and RLHF that makes it recant at any hint of doubt (*Prompt Engineering for LLMs*, ch. 10; [01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#llm-as-judge)). This is about framing, and it is separate from self-preference (below), which applies even when the judge doesn't know whose output it is.
+2. **The criterion**, with a precise definition of PASS and FAIL. State it before the content: the judge reads once, front to back, so it should read the output already knowing what to look for.
 3. **Few-shot examples**: 2–4 labeled cases, including a tricky PASS and a tricky FAIL near the boundary. Take them from your human-labeled data, never from the test split.
 4. **The inputs**, clearly delimited: question, output, reference or context.
 5. **Reason, then verdict.** Ask for a short critique first, then a final label in a fixed format (`"verdict": "PASS"`). Reasoning first improves accuracy and gives you something to read when the judge is wrong.
@@ -160,13 +160,13 @@ Accuracy alone hides the failure you care about. Report the two error rates sepa
 Rules of thumb:
 
 - **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](13-case-study-support-agent.md#decision-framework)).
-- **Benchmark against human–human agreement.** If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans.
+- **Benchmark against human–human agreement.** If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans. Berryman & Ziegler's version of the test: have several people rate the same items, then add the judge (one query per item, temperature 0) to the pool and check that the pool's disagreement, measured with something like Kendall's τ, doesn't rise (*Prompt Engineering for LLMs*, ch. 10).
 - **Small separation means the threshold is doing the work.** If PASS and FAIL means differ by < 0.05, the judge isn't discriminating. Fix the prompt.
 - **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](13-case-study-support-agent.md#calibration-results)). Generic metrics aren't tuned to your users.
 
 ### Correcting the pass rate
 
-A judge with known error rates gives a biased estimate of the true pass rate. If the judge's observed pass rate is *p̂*, and you measured TPR and TNR on the test split, the corrected estimate is:
+An uncalibrated judge's pass rate is only a relative measure. "The judge passes 81% of answers" means little alone, while "version B passes more often than version A" is a usable claim (*Prompt Engineering for LLMs*, ch. 10). Calibration is what turns it into an estimate. A judge with known error rates gives a biased estimate of the true pass rate. If the judge's observed pass rate is *p̂*, and you measured TPR and TNR on the test split, the corrected estimate is:
 
 ```
 true pass rate ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)

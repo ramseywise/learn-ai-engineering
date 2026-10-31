@@ -43,7 +43,7 @@ Classical ML assumes data points are **i.i.d.** (independent and identically dis
 
 So node tasks are usually **semisupervised**. Training sees the whole graph, unlabelled nodes included; only their labels are missing, and their neighbourhoods still inform the model. That differs from textbook supervised learning, where test points are unseen at training time, and from textbook semisupervised learning, which still assumes i.i.d. (ch. 9).
 
-Graphs are incomplete for two reasons, and they call for different evaluation: the edge exists but was never recorded (or is deliberately hidden, as in fraud), or the graph is still evolving (next year's co-authorships). The first is tested with random held-out edges; the second needs a time-based split (ch. 9).
+Graphs are incomplete for two reasons: the edge exists but was never recorded (or is deliberately hidden, as in fraud), or the graph is still evolving (next year's co-authorships) (ch. 9). The book stops at the two causes, but they call for different evaluation. Random held-out edges test the first; the second needs a time-based split, or the model is scored on edges it could only know from the future.
 
 ### The task map
 
@@ -52,15 +52,15 @@ The book's main split is not supervised vs. unsupervised but **what one data poi
 | Task | Data point | Typical use | Needs training? |
 |---|---|---|---|
 | **Node classification** | A node in one graph | Fraud, bots, AML, protein function; multilabel variants (which groups will this user join?) | Yes |
-| **Link prediction** | A node pair in one graph | KG completion, recommendations, drug repurposing, side effects | Yes; sample non-links as negatives |
+| **Link prediction** | A node pair in one graph | KG completion, recommendations, drug repurposing, side effects | Yes, and semisupervised like node classification; sample non-links as negatives |
 | **Community detection** | The whole graph | Summarising, fraud rings, functional modules | No: WCC, Louvain, label propagation act on the graph directly |
-| **Graph classification** | One whole graph among many | Molecule toxicity, enzyme vs. non-enzyme, malware | Yes |
+| **Graph classification** | One whole graph among many | Molecule toxicity, enzyme vs. non-enzyme, malware | Yes; here each graph *is* an i.i.d. data point, so ordinary supervised learning applies |
 
 A small set of tasks covers a large set of business problems. That is the book's main argument for the graph framing.
 
-Two terms worth keeping apart: **link prediction** asks whether an edge of a fixed type exists; **relationship prediction** also predicts its type, typically by scoring each type separately (ch. 9).
+Two terms worth keeping apart: **link prediction** asks whether an edge of a fixed type exists; **relationship prediction** also predicts its type (ch. 9). The book then uses the two "interchangeably", and ch. 10 frames the difference as the classifier's output: binary (does an edge exist?) or multiclass (which type of edge?).
 
-**Community detection is not K-means.** K-means needs *k* up front and DBSCAN groups dense points in vector space; both treat records as independent points. Graph clustering needs no *k* and lets the edges decide membership, usually by maximising **modularity** (how much denser a community's internal edges are than chance would predict). **Label propagation** is fast but random: rerun it and the communities shift slightly, so pin a seed or check stability before you store community IDs. Louvain on the 34-node karate-club graph finds four communities that mostly match the real post-split factions, with one boundary node landing on the wrong side (ch. 9).
+**Community detection is not K-means.** K-means needs *k* up front and DBSCAN groups dense points in vector space; both treat records as independent points. Graph clustering needs no *k* and lets the edges decide membership, usually by maximising **modularity** (how much denser a community's internal edges are than chance would predict). **Label propagation** is fast but random: rerun it and the communities shift slightly, so pin a seed or check stability before you store community IDs. It can also take the labels you already have as seeds, which makes it a cheap semisupervised baseline. Louvain on the 34-node karate-club graph (seed 123) finds four communities that mostly match the real post-split factions, with one boundary node landing on the wrong side (ch. 9).
 
 ### Two ways to implement
 
@@ -100,10 +100,10 @@ Manual features keep a place even when you plan to learn embeddings: they are ex
 | Features | F1 |
 |---|---|
 | Degree only | 0.43 |
-| Node2Vec, 64-dim, untuned | 0.65, and unstable between runs (30–70%) |
-| Degree + "neighbours in faction A" + "neighbours in faction B" (homophily, written by hand) | **0.93**, stable |
+| Node2Vec, 64-dim, untuned (walk length 30, 200 walks per node, window 10, default p = q = 1) | 0.64 |
+| Degree + "neighbours in faction A" + "neighbours in faction B" (homophily, written by hand) | **0.93**, "very stable" |
 
-The classifier was the same logistic regression each time, on standardised features (without scaling, a 1–1,000 degree column drowns a 0–1 centrality column). Domain knowledge expressed as three numbers beat a generic embedding. Learned features don't remove the need to understand the graph. They need tuning (here, shorter and fewer walks was the suggested fix for over-homogeneous vectors), and a domain-informed baseline tells you whether the tuning worked. The homophily feature is a two-liner:
+Read the numbers small. The test set is 40% of 34 nodes, i.e. 14 members, so one node moves F1 by several points. The classifier was the same one-vs-rest `LogisticRegressionCV` each time, on standardised features (without scaling, a 1–1,000 degree column drowns a 0–1 centrality column), scored with weighted P/R/F1. The book says repeated runs of *both* the degree and the Node2Vec setups swing between 30% and 70% F1. With the split fixed (`random_state=0`), only the multi-worker Node2Vec walks can actually vary between runs, so the swing presumably comes from changing the split. Domain knowledge expressed as three numbers beat a generic embedding. Learned features don't remove the need to understand the graph. They need tuning (here, shorter and fewer walks was the suggested fix for over-homogeneous vectors), and a domain-informed baseline tells you whether the tuning worked. The homophily feature is a two-liner:
 
 ```python
 def homophily_features(G, label="club"):
@@ -112,7 +112,7 @@ def homophily_features(G, label="club"):
             for n in G}
 ```
 
-The catch: counting labelled neighbours uses the labels you're predicting. Compute it from **training labels only**, or the test nodes leak their answers into their neighbours' features.
+The catch: counting labelled neighbours uses the labels you're predicting. Compute it from **training labels only**, or the test nodes leak their answers into their neighbours' features. The book's listing counts the club label of every neighbour, test nodes included, so its 0.93 is an optimistic upper bound.
 
 ### Manual node features
 
@@ -121,16 +121,18 @@ Ch. 10 builds one feature vector per node on a 20-node toy fraud network (four k
 | Feature | Scope | Fraud-aware variant | What it says | Value on the toy graph |
 |---|---|---|---|---|
 | **Degree** | Local | Split into fraud degree and legit degree | More fraudulent neighbours, more risk | D: 4 neighbours, 2 of them fraudsters |
-| **Triangles** | Local | Fraudulent (both alters fraud), semifraudulent (one), legitimate (none) | Tight clustering; a fraud triangle is a ring signal | — |
+| **Triangles** | Local | Fraudulent (both alters fraud), semifraudulent (one), legitimate (none) | Tight clustering; a fraud triangle is a ring signal | D: 2 triangles, D–E–F fraudulent, D–F–G semifraudulent |
 | **Egonet density** | Local | None | Share of possible egonet edges that exist: 2M / N(N−1) | A: 7 nodes, 7 of 21 possible edges, 0.33 |
-| **Geodesic distance** | Global | Distance to the nearest fraudster, and the number of fraudsters at 1, 2, 3 hops | Proximity to contamination | 0 for a fraudster |
+| **Geodesic distance** | Global | Distance to the nearest fraudster, and the number of fraudsters at 1, 2, 3 hops | Proximity to contamination | 0 for a fraudster; A: 1 (I is a neighbour) |
 | **Closeness** | Global | None | Inverse of mean shortest-path distance to everyone | A highest (0.5); R, S lowest (0.24) |
-| **Betweenness** | Global | None | Share of shortest paths that pass through the node: a bridge | A = 104 (unnormalised); nine nodes are 0 |
+| **Betweenness** | Global | None | Share of shortest paths that pass through the node: a bridge | A = 104 (unnormalised; the book's code passes `normalized=True`, which gives 0.61); nine nodes are 0 |
 | **PageRank** | Global | Personalised toward known fraudsters | Importance weighted by the importance of who points at you | A tops base PageRank (0.108) |
 
 Two practical fixes from the chapter. Closeness breaks on disconnected graphs (distance to an unreachable node is infinite), so average over **reachable nodes only** and scale by the reachable fraction, which is what `networkx` does. And the PageRank pair is more useful than either number: the gap between base and fraud-personalised PageRank flags nodes whose fraud exposure is larger than their general prominence. The book reports D jumping to the top of the fraud-weighted ranking (0.168). Rerunning its setup as described (personalisation weight 2.0 on fraudsters) leaves A on top with D at about 0.085, so treat the exact numbers as sensitive to the weight; the divergence idea is what transfers.
 
-Assembling and training is ordinary tabular ML: one row per node, a **stratified** split so both sides keep the fraud/legit ratio, `StandardScaler`, logistic regression, and the absolute coefficients as a first read on feature importance (ch. 10). With 20 nodes and four fraudsters, an 80/20 split leaves one fraudster in the test set, so read the toy's metrics as a demonstration, not evidence.
+The fraudster counts by hop have two definitions in the chapter, and they disagree. Its code counts fraudsters by shortest-path distance (A has 1, 2 and 1 at one, two and three hops). Its table counts walks, entries of the adjacency matrix raised to the power 2 or 3, which revisit nodes and count a fraudster once per route (A gets 4 and 18, and D's count includes walks that return to D). Pick one and document it; walk counts grow with degree and mostly re-measure it.
+
+Assembling and training is ordinary tabular ML: one row per node, a **stratified** 80/20 split so both sides keep the fraud/legit ratio, `StandardScaler`, logistic regression, and the absolute coefficients as a first read on feature importance (ch. 10). With 20 nodes and four fraudsters, that split leaves one fraudster in the test set. The book draws the same conclusion and doesn't report the toy's results at all, since the graph is "too small to be statistically relevant".
 
 ### Manual relationship features
 
@@ -144,11 +146,11 @@ For link prediction a node *pair* needs one vector. Two families (ch. 10):
 | Average | (uᵢ + vᵢ) / 2 | n | Symmetric |
 | L1 | \|uᵢ − vᵢ\| | n | Symmetric; a per-dimension distance |
 | L2 | (uᵢ − vᵢ)² | n | Symmetric; penalises big gaps |
-| Hadamard | uᵢ · vᵢ | n | Symmetric; the usual default with learned embeddings |
+| Hadamard | uᵢ · vᵢ | n | Symmetric; the operator that won node2vec's own link-prediction benchmarks (Grover & Leskovec, 2016), not a claim the book makes |
 
 There is no rule for which one wins; benchmark them on your task. With hand-made node features this family tends to lose to path-based features. It does better once the node vectors are learned (ch. 10).
 
-**Path-based features** describe the pair by how it is connected. A **metapath** is a typed walk through the schema (the *metagraph*), e.g. Compound–binds–Gene–associates–Disease, abbreviated CbGaD. For drug repurposing on Hetionet, every compound–disease pair gets one column per metapath, whether or not the pair is directly linked (ch. 10):
+**Path-based features** describe the pair by how it is connected. A **metapath** is a typed walk through the schema (the *metagraph*), e.g. Compound–binds–Gene–associates–Disease, abbreviated CbGaD. For drug repurposing on Hetionet (19 public databases, more than 50,000 nodes), every compound–disease pair gets one column per metapath, whether or not the pair is directly linked. Himmelstein et al. evaluated every compound-to-disease metapath of length 2 to 4, and the approach surfaced depression and alcoholism drugs as candidates for smoking addiction and epilepsy (ch. 10):
 
 | Metapath | Length | Reads as |
 |---|---|---|
@@ -157,6 +159,7 @@ There is no rule for which one wins; benchmark them on your task. With hand-made
 | CrCtD | 2 | The drug resembles a drug that treats the disease |
 | CbGbCtD | 3 | It binds a gene that another treating drug also binds |
 | CbGeAlD | 3 | It binds a gene expressed in tissue where the disease localises |
+| CbGiGiGaD | 4 | It binds a gene two interaction steps from a disease gene |
 | CbGpPWpGaD | 4 | It binds a gene in a pathway shared with a disease gene |
 
 ### DWPC: discount the hubs
@@ -195,6 +198,8 @@ Every node on the path must be bound in the `MATCH`; the book's own listing coun
 
 Raw counts surface the generic, well-studied process; DWPC surfaces the specific mechanism a researcher can act on.
 
+DWPC scores are comparable only within one metapath and one damping exponent *w*. Ch. 4's own LLM prompt breaks this: it lists a glycoprotein-biosynthesis score (0.00342, from the GWAS + gene–gene metapath of Table 4.4) alongside four from the disease–gene–process metapath of Table 4.3 as if they were one ranking.
+
 **Cost.** DWPC over every pair and every metapath is expensive and noisy. Himmelstein et al. cut the metapaths from 1,026 to 709 by keeping those whose values differ between known treatments and non-treatments, then restricted the candidate pairs using domain knowledge and degree-based probabilities (ch. 10). Do the same: select metapaths against labelled positives before computing the full matrix.
 
 ### LLMs help with manual features
@@ -203,14 +208,14 @@ Because manual features rest on well-known algorithms, an LLM can reason about t
 
 ### Semiautomated: ReFeX
 
-**ReFeX** (Recursive Feature eXtraction) sits between hand-made and learned features. It works on **topology alone**, ignoring labels and types, and is built on two rules: needing no node or edge attributes, and producing features that predict attributes where they exist and transfer across graphs (*KG & LLMs in Action*, ch. 10).
+**ReFeX** (Recursive Feature eXtraction) sits between hand-made and learned features. It works on **topology alone**, ignoring labels and types, and is built on two rules: needing no node or edge attributes, and producing features that predict attributes where they exist and transfer across graphs (*KG & LLMs in Action*, ch. 10). The features describe the *kind* of nodes a node connects to, not which nodes: "it is who you know, or who you relate to". That is why they can be compared across different networks, or across snapshots of one network over time, which embeddings trained separately per graph can't offer.
 
 It runs in three stages, then prunes:
 
 1. **Local**: degree (in/out separately on directed graphs; weighted variants sum edge weights).
 2. **Egonet**: edges inside the egonet, and edges leaving it.
-3. **Recursive**: for every existing feature, the **sum** and **mean** over the node's neighbours; repeat, so each round reaches one hop further (`sum(mean(degree))` describes the two-hop region).
-4. **Prune**: recursion multiplies the feature count each round, so drop features highly correlated with one already kept. The original method also uses logarithmic binning and threshold-based pruning.
+3. **Recursive**: for every existing feature, the **sum** and **mean** over the node's neighbours (over in- and out-neighbours separately on directed graphs); repeat, so each round reaches one hop further (`sum(mean(degree))` describes the two-hop region; the book's example of a deeper name is `degree(sum)(mean)(mean)(sum)`).
+4. **Prune**: recursion multiplies the feature count each round, so drop any feature highly correlated with an earlier one. The original method also uses logarithmic binning and threshold-based pruning.
 
 Node A of the toy fraud graph, by hand (ch. 10):
 
@@ -222,7 +227,7 @@ Node A of the toy fraud graph, by hand (ch. 10):
 | Recursive 1 | Sum / mean of neighbours' degrees | 17 / 2.83 |
 | Recursive 2 | Sum / mean of neighbours' round-1 sums | 69 / 11.5 |
 
-A minimal version (reproduces the table above):
+A minimal version. With `max_corr` above 1 (pruning off) it reproduces the table above; at the default 0.95 the round-2 sum (69) is pruned on this graph, because it tracks an earlier column. The book's own code computes different egonet features (node count, edge count and density, not edges leaving the egonet), so its vectors won't match this one column for column.
 
 ```python
 import networkx as nx, numpy as np
@@ -258,7 +263,7 @@ Every graph representation learning method is an **encoder** (structure → vect
 | **Encoder** | Adjacency (structure) and, optionally, node features | A lookup table up to a deep GNN | — |
 | **Decoder** | One or two embeddings | Dot product, softmax, a classifier head | The training signal: "are these connected?", neighbourhood overlap, or a node label |
 
-**Node2Vec in this frame** (ch. 11): the encoder generates biased random walks (its `p` and `q` parameters trade staying inside a tight group against wandering to other circles) and gives nodes that co-occur on walks similar vectors; the decoder is a softmax asking "given *i*'s vector, how likely is *j* to appear near it on a walk?". On the karate club the vectors cluster by faction, members with friends in both camps land in between, and the two leaders get distinct vectors. Similarity to each leader predicts which faction a member joins.
+**Node2Vec in this frame** (ch. 11): the encoder generates biased random walks and gives nodes that co-occur on walks similar vectors; the decoder is a softmax asking "given *i*'s vector, how likely is *j* to appear near it on a walk?". The bias comes from the original paper (Grover & Leskovec, 2016): having just stepped from *t* to *v*, the walk moves to a next node *x* with unnormalised weight 1/*p* if *x* = *t* (go back), 1 if *x* is also a neighbour of *t*, and 1/*q* if *x* is farther from *t*. Low *q* pushes the walk outward (DFS-like, finds communities); high *q* keeps it local (BFS-like, finds structural roles). The book's gloss swaps the labels, calling exploring other circles "going broad" and staying in a tight group "going deep"; in the paper's terms that is the other way round. With *p* = *q* = 1 the walk is unbiased, i.e. DeepWalk, and that is what the book runs: its karate listing sets 16 dimensions, walk length 10, 20 walks per node, window 5, *p* = *q* = 1. The book reports the result only qualitatively: the vectors cluster by faction, members with friends in both camps land in between, and the two leaders get distinct vectors. Similarity to each leader predicts which faction a member joins.
 
 Choose the embedding along four axes (ch. 11):
 
@@ -306,8 +311,10 @@ The first term rewards a high score for the true fact; the second penalises a hi
 | Family | Example | Relation is… | Strength | Weakness |
 |---|---|---|---|---|
 | Translation | TransE | A vector added to the head to land on the tail | Intuitive; handles composition | Many-to-one relations |
-| Matrix | RESCAL | A matrix transforming the head | Expressive | Parameter-heavy (one matrix per relation type) |
-| Semantic matching | DistMult, ComplEx | A relation-conditioned similarity; ComplEx uses complex numbers | ComplEx handles asymmetry | May miss composition |
+| Matrix | RESCAL | A matrix transforming the head | Expressive | Parameter-heavy: one d × d matrix per relation type |
+| Semantic matching | DistMult, ComplEx | A relation-conditioned similarity; ComplEx uses complex numbers | ComplEx handles asymmetry | DistMult's score is symmetric in head and tail, so it can't tell `causes` from `caused_by`; both may miss composition |
+
+RESCAL's cost is per relation, not per entity. The book's illustration, "1,000 entities and 100 relationship types, we'd need millions of parameters", holds because of the relation count: 100 matrices at d = 100 is already 1M parameters, whatever the number of entities. DistMult is RESCAL with each matrix restricted to its diagonal (d parameters per relation), which is where its symmetry comes from.
 
 ### Message passing
 
@@ -323,7 +330,9 @@ h_u⁽ᵏ⁾ = σ( W_self · h_u⁽ᵏ⁻¹⁾  +  W_neigh · Σ_{v ∈ N(u)} h_
           └── UPDATE ──┘          └──── AGGREGATE ────┘
 ```
 
-The **self-loop** variant treats a node as its own neighbour and uses one weight matrix. It is simpler and more stable but can no longer weigh "me" differently from "my neighbours", which matters when a node's own features are its strongest signal (ch. 11).
+*W* can be shared across layers or learned per layer, and the bias is often dropped (ch. 11).
+
+The **self-loop** variant treats a node as its own neighbour, h_u⁽ᵏ⁾ = AGGREGATE({h_v : v ∈ N(u) ∪ {u}}), and uses one weight matrix. The book credits it with simplicity, stability and less overfitting through parameter sharing. The cost is that it can no longer weigh "me" differently from "my neighbours", which matters when a node's own features are its strongest signal (ch. 11). GCN is built this way.
 
 The variants fix specific problems (ch. 11):
 
@@ -337,17 +346,28 @@ The variants fix specific problems (ch. 11):
 
 Normalisation is lossy: after it, nodes are harder to tell apart by degree. Prefer it when features matter more than structure, or when degree spread destabilises training.
 
-**Attention** (GAT) weights neighbours by relevance instead of equally, with a learned score per edge, softmax-normalised over the neighbourhood. Use it when neighbour importance varies or many edges are noise. **Multi-head attention** is the transformer mechanism applied to a neighbourhood: each head learns its own query/key/value projections and can specialise (bond type vs. spatial layout in a molecule), and the per-edge weights double as an explanation. Some graph transformers also add **structural encodings** (e.g. a learned vector per degree), playing the role positional encodings play for token order.
+**Attention** (GAT) weights neighbours by relevance instead of equally: m_u = Σ α_uv · h_v, with α_uv a softmax over the neighbourhood of a score aᵀ[W h_u ‖ W h_v] (ch. 11). The book's formula leaves out the LeakyReLU that the original GAT paper (Veličković et al., 2018) and PyG's `GATConv` apply to that score before the softmax. The parameters are one shared *W* and one vector *a* per head; the score is *computed* per edge, not learned per edge. Use it when neighbour importance varies or many edges are noise. **Multi-head attention** is the transformer mechanism applied to a neighbourhood: each head learns its own query/key/value projections and can specialise (bond type vs. spatial layout in a molecule), and the per-edge weights double as an explanation. Some graph transformers also add **structural encodings** (e.g. a learned vector per degree), playing the role positional encodings play for token order.
 
 **Update variants** fight **over-smoothing**, where deep stacks make every node look the same:
 
 | Update | How | Use when |
 |---|---|---|
-| Skip / concat (GraphSAGE) | Concatenate the node's own vector with the aggregate before the linear layer | Default; keeps the node's original features reachable and helps gradients |
+| Skip / concat (GraphSAGE) | Concatenate the node's own vector with the aggregate before the linear layer | Default; keeps the node's original features reachable and helps gradients. (The book also cites GraphSAGE as an example of attention in aggregation; it isn't. Its aggregators are mean, LSTM and pooling.) |
 | Gated (GRU-style) | A learned gate mixes old state and new candidate per dimension | Some nodes should stay stable; noisy neighbourhoods (the book suggests citation graphs) |
 | Jumping knowledge | Keep every layer's output and combine them (concat, max, or an LSTM) | Different nodes need different hop depths; multiscale structure (the book suggests molecules) |
 
 The choice of update matters as much as the choice of aggregation, and the richer options cost time and memory (ch. 11).
+
+The three layers ch. 12 compares, as PyG implements them (one layer, node *u*, before the activation):
+
+```
+GCN   (GCNConv)   h_u' = W · Σ_{v ∈ N(u) ∪ {u}} h_v / √(d̂_u · d̂_v)          d̂ = degree + 1 (self-loop)
+SAGE  (SAGEConv)  h_u' = W_root · h_u  +  W_neigh · mean_{v ∈ N(u)} h_v        = W · [h_u ‖ mean h_v]
+GAT   (GATConv)   h_u' = Σ_{v ∈ N(u) ∪ {u}} α_uv · W h_v,
+                  α_uv = softmax_v( LeakyReLU( aᵀ [W h_u ‖ W h_v] ) )          one (W, a) per head
+```
+
+So GCN is self-loops plus symmetric normalisation plus one matrix, SAGE is the concat update with a mean aggregator, and GAT is self-loops plus attention.
 
 ### In practice (ch12, PyTorch Geometric)
 
@@ -366,12 +386,14 @@ flowchart LR
 |---|---|---|
 | Data | 203,769 Bitcoin transactions, 234,355 payment edges, 166 anonymised features; 77% unlabelled, 2.2% illicit | 610 users, 9,742 movies, 100,836 ratings; movie features = 20 one-hot genres; only "rated or not" is predicted |
 | Graph | Homogeneous (`Data`) | Heterogeneous (`HeteroData`, users and movies; `ToUndirected()` adds reverse `rev_rates` edges so messages flow both ways; `to_hetero()` converts the base GNN) |
-| Input vectors | The 166 features | Users: a learned lookup only (no features). Movies: linear map of genres **plus** a learned lookup, so a new movie starts from its genres |
+| Input vectors | The 166 features | Users: a learned lookup only (no features). Movies: linear map of genres **plus** a learned lookup. The genre path carries some signal for a new movie, but the lookup is indexed by node ID, so the model is still transductive |
 | Decoder | `log_softmax` + cross-entropy | Dot product + binary cross-entropy on logits |
 | Splitting | Node masks; most nodes are unlabelled | `RandomLinkSplit`, with **message-passing edges kept apart from supervision edges** to avoid leakage |
-| Result | SAGE best F1 (82.7% of illicit nodes caught); GCN missed 32% | SAGE fewest false positives; GCN best recall |
+| Result | SAGE caught the most illicit nodes (82.7%) and had the best weighted F1; GCN missed 32% | SAGE fewest false positives; GCN best recall |
 
-**Node-classification details.** Unknown-label nodes stay in the graph, so they still pass messages, but a mask keeps them out of the loss and the metrics. The labelled nodes split 80/10/10 at random, and each split keeps roughly 90% licit / 10% illicit. Use weighted precision/recall/F1, since accuracy on a 9:1 split flatters any model (ch. 12).
+**Node-classification details.** Unknown-label nodes stay in the graph, so they still pass messages, but a mask keeps them out of the loss and the metrics. The labelled nodes split 80/10/10 at random (37,251 / 4,656 / 4,657), and each split keeps roughly 90% licit / 10% illicit (ch. 12). Elliptic is a time series, and a random node split lets the model train on transactions later than the ones it is tested on; the dataset's authors (Weber et al., 2019) split by time step instead, which is the harder and more honest test.
+
+The book scores with sklearn's `average='weighted'`. That doesn't escape the imbalance: weighting by class support makes the 90% licit class dominate, which is why all three models sit near 0.95–0.98 weighted F1 on validation while catching only 68–83% of illicit nodes. For AML, report the illicit class's own recall and precision (or macro F1).
 
 **Link-prediction details.** The leakage trap is the core lesson. A minimal split:
 
@@ -388,11 +410,13 @@ split = T.RandomLinkSplit(
 train, val, test = split(data)
 ```
 
-If an edge the model is asked to predict is also present in the message-passing graph, the model can simply see it, and training metrics become meaningless. In the book's run the 80,669 training edges split into 56,469 message-passing edges (`edge_index`) and 24,201 supervision edges (`edge_label_index`). Reverse edges are only ever messages. Validation and test reuse all earlier edges for message passing and add their own labelled positives plus sampled negatives (validation: 10,083 positives, 20,166 negatives). For graphs that don't fit in memory, `LinkNeighborLoader` samples a subgraph per batch, e.g. 20 neighbours at hop 1 and 10 at hop 2 (ch. 12).
+If an edge the model is asked to predict is also present in the message-passing graph, the model can simply see it, and training metrics become meaningless. In the book's run the 80,669 training edges split into 56,469 message-passing edges (`edge_index`) and 24,201 supervision edges (`edge_label_index`). Reverse edges are only ever messages. Validation and test reuse all earlier edges for message passing and add their own labelled positives plus sampled negatives (validation: 10,083 positives, 20,166 negatives; test passes messages over 90,753 edges). For graphs that don't fit in memory, `LinkNeighborLoader` samples a subgraph per batch, e.g. 20 neighbours at hop 1 and 10 at hop 2, 128 supervision edges per batch with 2 sampled negatives each (ch. 12).
 
-Two PyG gotchas from the chapter: GAT needs its own subclass because the first layer's multi-head output is `hidden × heads` wide and the last layer must not concatenate (`concat=False`); and a heterogeneous "GCN" uses `GraphConv`, not `GCNConv`, because `GCNConv`'s degree normalisation assumes one node and edge type.
+Check what the loader samples from. As printed, the book's training loader is built with `data=data`, the full graph, while taking `edge_label_index` from `train_data`. Message passing then runs over every rating, including the supervision edges and the validation and test edges: exactly the leakage the split was set up to prevent. Pass `data=train_data` (and `val_data` / `test_data` for the evaluation loaders).
 
-**Cost and confusion matrices** (ch. 12; T4 GPU, 400 epochs for AML, 55 for MovieLens):
+Two PyG gotchas from the chapter: GAT needs its own subclass because the first layer's multi-head output is `hidden × heads` wide and the last layer must not concatenate (`concat=False`); and a heterogeneous "GCN" uses `GraphConv`, not `GCNConv`, because `GCNConv` assumes one node and edge type, whereas `GraphConv` has separate root and neighbour weights. `GraphConv` sums neighbours with no degree normalisation, so the link-prediction "GCN" is really an unnormalised two-matrix layer, structurally the same as SAGE with a sum in place of the mean.
+
+**Cost and confusion matrices** (ch. 12; Colab T4, 400 epochs for AML, 55 for MovieLens; one run each, no seeds or error bars). The AML rates are read from the book's confusion-matrix figure, whose test set (451 illicit, 4,206 licit) doesn't match its split table (476 / 4,181), and the prose gives other counts again (SAGE missing 88 illicit nodes where the figure shows 78). Treat them as one illustrative run:
 
 | Encoder | AML params / time | AML illicit caught | AML licit flagged | Links params / time | Links found (recall) | Non-links wrongly predicted |
 |---|---|---|---|---|---|---|
@@ -400,7 +424,7 @@ Two PyG gotchas from the chapter: GAT needs its own subclass because the first l
 | GAT | 22,025 / 43 s | 81% | 1.0% | 1.07M / 956 s | 75.4% | 11.7% |
 | SAGE | 5,427 / 37 s | **83%** | 1.1% | 713k / 777 s | 71.5% | **5.4%** |
 
-Across both tasks **GAT** had the most parameters and the slowest training, with no accuracy gain to show for it: attention adds learnable weights per edge and head. GCN vs. SAGE is a precision/recall choice. Make it from the cost of each error: AML can't afford missed illicit accounts, and a recommender shouldn't over-suggest. The book's verdicts follow this: SAGE for AML, and GCN as the best overall balance for recommendations despite SAGE's lower false-positive rate.
+Across both tasks **GAT** had the most parameters and the slowest training. It beat GCN on AML (81% vs. 68% of illicit caught) but never beat SAGE, and on MovieLens it had the most false positives (11.7%). (The book's prose says GAT "struggles with recall" there, but its own test confusion matrix puts GAT's recall at 75.4%, above SAGE's 71.5%.) The book puts its size down to "learnable coefficients for the neighborhood edges"; the counts say otherwise. The AML figures fit exactly with a hidden width of 16 and a 3-way output (the "unknown" class gets an output too, though the mask never trains it): GCN 166·16+16 + 16·3+3 = 2,723; SAGE doubles each weight matrix (root and neighbour) for 5,427; GAT's 8 heads make the first layer 128 wide, 166·128 = 21,248 weights, against only 262 attention parameters, for 22,025. The cost of attention is computing a score on every edge, not storing one. On MovieLens, GCN and SAGE have identical counts (713,408) because `GraphConv` and `SAGEConv` both carry one root and one neighbour matrix per layer, and most of those parameters are the user and movie lookup tables (10,352 rows), which the book names as the main reason link prediction is so much heavier. GCN vs. SAGE is a precision/recall choice. Make it from the cost of each error: AML can't afford missed illicit accounts, and a recommender shouldn't over-suggest. The book's verdicts follow this: SAGE for AML, and GCN as the best overall balance for recommendations despite SAGE's lower false-positive rate.
 
 ---
 

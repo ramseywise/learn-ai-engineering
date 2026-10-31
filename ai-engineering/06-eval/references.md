@@ -16,7 +16,7 @@
 | | LangChain, [*Trajectory evals*](https://docs.langchain.com/langsmith/trajectory-evals) and [*Agent evaluation readiness checklist*](https://www.langchain.com/blog/agent-evaluation-readiness-checklist): trajectory matching; rule out infra first | 06, 12 |
 | | AI Builder Club, [*How to evaluate AI agents*](https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents): the maturity ladder, layered graders, cost per success | 04, 11 |
 | | Nick Talwar, [*6 things your AI agents need*](https://nicktalwar.substack.com/p/6-things-your-ai-agents-need-that): evals, fallback, drift, HITL, audit logs, handoffs | 11 |
-| | Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024), Ch. 10: offline/online evaluation, SOMA judges | 01, 04, 05 |
+| | Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024), Ch. 10: offline/online evaluation, SOMA judges | 01, 03, 04, 05 |
 | | DeepLearning.AI, [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) (Arize): router, skill and trajectory evals in Phoenix. Notebooks: [upstream repo](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents); code folded into 06, 08, 09 | 06, 08, 09 |
 
 ---

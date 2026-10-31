@@ -41,9 +41,11 @@ The book's definition: an **ever-evolving graph of typed entities, their attribu
 | **Integration** | Several sources fused onto shared entities. | One reference point regardless of source format or provenance |
 | **Learning** | The structure supports inference and graph ML ([note 13](13-graph-ml-and-gnns.md)). | Centrality for influential nodes, shortest paths, community detection, inference rules |
 
+The business case the book leans on is integration. It cites McKinsey's estimate that addressing data fragmentation can cut annual data spending by 5–15% in the short term (*KG & LLMs in Action*, ch. 1 §1.4). That is a consultancy figure for fixing fragmentation in general, not a measured result for KGs.
+
 ### Why KGs stalled, and what LLMs change
 
-KGs have been around for years without wide adoption. The book gives three reasons: they're **expensive to build and maintain**, answering a question means **navigating several hops**, which needs schema and query-language knowledge, and the answer comes back **scattered across many nodes and edges** that a non-expert can't read (*KG & LLMs in Action*, ch. 1). Structured sources are the easy part: their items are already identified and typed, so mapping them onto a graph schema is predictable work. Text is the hard part, because of multiple languages and scripts, typos, coreference ("John saw Bob and he waved": who waved?), varied writing styles, and domain jargon.
+KGs have been around for years without wide adoption. The book gives three reasons: they're **expensive to build and maintain**, answering a question means **navigating several hops**, which needs schema and query-language knowledge, and the answer comes back **scattered across many nodes and edges** that a non-expert can't read (*KG & LLMs in Action*, ch. 1). The early adopters show the ceiling: Google used a KG to search for "things, not strings", but only for search, and analysts use KGs for investigative questions, but the querying effort keeps that to a small user base. Structured sources are the easy part: their items are already identified and typed, so mapping them onto a graph schema is predictable work. Text is the hard part, because of multiple languages and scripts, typos, coreference ("John saw Bob and he waved": who waved?), varied writing styles, and domain jargon.
 
 Those three blockers line up with three jobs an LLM can do:
 
@@ -60,7 +62,7 @@ LLMs **build** KGs (extraction, [note 10](10-building-kgs-with-llms.md)), **quer
 
 ### Why it pairs with LLMs
 
-It works the other way too: each side covers a weakness of the other (*KG & LLMs in Action*, ch. 1 §1.3).
+It works the other way too: each side covers a weakness of the other (*KG & LLMs in Action*, ch. 1 §1.3). The chapter's text names three LLM drawbacks a KG mitigates: hallucination, stale information and explainability. The fourth row below comes from fig. 1.5's "lack domain-specific / new knowledge".
 
 | LLM drawback | What the KG contributes |
 |---|---|
@@ -69,7 +71,7 @@ It works the other way too: each side covers a weakness of the other (*KG & LLMs
 | Opacity | Paths and edges you can show as the reason for an answer |
 | Private data | Domain facts the model never saw |
 
-The book's summary figure (fig. 1.5) lists the KG's own weaknesses as **incompleteness**, **no language understanding** and **complex querying**: exactly the gaps the LLM fills. Its strengths are accuracy, interpretability, domain knowledge and knowledge that keeps evolving.
+The book's summary figure (fig. 1.5) lists the KG's own weaknesses as **incompleteness**, **no language understanding** and **complex querying**: exactly the gaps the LLM fills, with its general knowledge, language processing and generalisability. The KG's strengths are accuracy, interpretability, domain knowledge and knowledge that keeps evolving, which answer the LLM's hallucination, black-box opacity and missing domain or recent knowledge.
 
 ### When to use a KG, and when to add an LLM
 
@@ -101,9 +103,9 @@ Ch2 frames the pairing as a question of how each side holds knowledge and reason
 | It's good at | Interpretability, exact facts, auditing | Language, ambiguity, filling gaps |
 | Natural reasoning | **Deductive**: sound, but only as complete as the knowledge base | **Inductive and probabilistic**: generalises from incomplete data, and can reach false conclusions from true premises |
 
-Real knowledge bases are never complete, so purely deductive engines stall. A pure deductive engine also only reads: it transforms sources into its knowledge base once and never writes conclusions back. Inductive methods, whether graph ML ([note 13](13-graph-ml-and-gnns.md)) or an LLM, fill the gaps and **extend the knowledge base** with what they learn, so the reasoning engine becomes a loop: read the KG, suggest, observe the result, write new knowledge back (*KG & LLMs in Action*, ch. 2). In the book's medical example, a patient with vague symptoms and an incomplete record stalls a rule engine, while an LLM can weigh several diagnoses and propose a prioritised set of tests.
+A deductive engine "requires a highly complete and accurate knowledge base, which is rarely available", so on real data it stalls. It also mostly only reads: in the book's diagram (fig. 2.11) communication runs one way "in most cases", and the deductive reasoner doesn't store its results back in the knowledge base. Inductive methods, whether graph ML ([note 13](13-graph-ml-and-gnns.md)) or an LLM, fill the gaps, generalise under uncertainty and **extend the knowledge base** with what they learn. The book's general reasoning engine is a loop: read the KG, suggest, observe the result, write new knowledge back (*KG & LLMs in Action*, ch. 2, fig. 2.10). In the book's medical example, a patient with vague symptoms and an incomplete record stalls a rule engine, while an LLM can weigh several diagnoses and propose a prioritised set of tests.
 
-**Pitfall: fluent is not the same as reasoning.** The authors gave Claude 3.5 Sonnet a stripped-down river-crossing puzzle (a farmer and a sheep, no wolf or cabbage). It answered with the shuttle pattern of the full puzzle, extra trips included: the solution closest to its training data, not one fitted to the stated constraints. Wu et al. found the same across 11 task families: performance drops consistently on counterfactual variants of familiar tasks (*KG & LLMs in Action*, ch. 2). The authors expect newer models to do better on this specific puzzle, but the lesson stands: give the precise, rule-bound part of a task to the KG, and the ambiguous, pattern-matching part to the LLM. Neither supplies common sense.
+**Pitfall: fluent is not the same as reasoning.** The authors gave Claude 3.5 Sonnet a stripped-down river-crossing puzzle (a farmer and a sheep, no wolf or lettuce). It answered with the shuttle pattern of the full puzzle, "the smallest number of trips required is 3" (across with the sheep, back alone, across alone), when the first crossing already solves it: the solution closest to its training data, not one fitted to the stated constraints (fig. 2.9). Wu et al. found the same across 11 tasks, from coding and drawing to chess and arithmetic: performance "substantially and consistently degraded" on counterfactual variants of familiar tasks, which the book reads as LLMs often relying on "narrow, non-transferable procedures" (*KG & LLMs in Action*, ch. 2). The authors expect newer models to do better on this specific puzzle, but the lesson stands: give the precise, rule-bound part of a task to the KG, and the ambiguous, pattern-matching part to the LLM. Neither supplies common sense.
 
 The book aims all of this at **intelligent advisory systems** (IAS): systems that support a human decision rather than act on their own.
 
@@ -113,11 +115,11 @@ The book aims all of this at **intelligent advisory systems** (IAS): systems tha
 | Needs | Full automation, real-time decisions, adaptability | Decision support, context awareness, explanations on demand |
 | Examples | Self-driving car | Differential diagnosis, fraud flagging, crime hotspot forecasting |
 
-The book's design rules follow: give the system a specific, meaningful objective; design the interface so correct outputs pay off and mistakes are cheap, and so it collects feedback; build on an established domain knowledge base (papers, ontologies, curated data) rather than generic knowledge; and feed the results of its suggestions back into that knowledge base.
+The book takes Geoff Hulten's definition: an intelligent system connects users to AI to achieve meaningful objectives, and its intelligence "evolves and improves over time, particularly when it improves by watching how users interact with the system". Four characteristics follow: a specific, **meaningful objective** that drives the whole build; an **intelligent experience**, an interface where correct outputs pay off, mistakes are cheap, and implicit and explicit feedback gets collected; **knowledge creation and update**, done continuously; and **orchestration** of several algorithms, the output of one feeding the next. For its own design the book adds: suggest rather than act, build on an established domain knowledge base (papers, ontologies, curated data) rather than generic knowledge, and feed the results of suggested actions back into that knowledge base.
 
 ### Purpose-driven, not bottom-up
 
-Ch2's construction rule: **start from the question the graph must answer, not from the data you happen to have** (*KG & LLMs in Action*, ch. 2). Bottom-up integration ("load every source, fix the schema afterwards, see what connects") usually fails in the authors' experience, for three reasons: too many sources with different structures and identifiers, a large normalisation effort, and most of the content is specific to some other task.
+Ch2's construction rule: **start from the question the graph must answer, not from the data you happen to have** (*KG & LLMs in Action*, ch. 2). Bottom-up integration ("load every source, fix the schema afterwards, see what connects") "often leads to the failure of KG adoption" in the authors' experience, for three reasons: too many sources with different structures and identifiers, a large normalisation effort, and most of the content is specific to some other task.
 
 The book runs construction as a CRISP-DM cycle with the KG at the centre:
 
@@ -137,7 +139,7 @@ Later rounds work **by difference and extension**: add node and relationship typ
 
 ## Graph basics
 
-From appendix A (*KG & LLMs in Action*, app. A; [appendix A PDF](../sources/kg-and-llms-in-action/appendix-a-intro-to-graphs.pdf)), kept to what you need:
+From appendix A (*KG & LLMs in Action*, app. A; [appendix A PDF](../sources/kg-and-llms-in-action/appendix-a-intro-to-graphs.pdf)), kept to what you need. Hubs, shortest and variable-length paths and connected components are not in the appendix; they are added because later notes lean on them.
 
 - **Graph** `G = (V, E)`: a set of vertices (nodes) and a set of edges (relationships), each edge a pair of vertices. Graph theory starts with Euler's 1736 proof that Königsberg's seven bridges can't each be crossed exactly once.
 - **Directed or undirected.** A directed edge runs from its *tail* (start node) to its *head* (end node). **Weighted** edges carry a number. The two properties are independent.
@@ -146,18 +148,18 @@ From appendix A (*KG & LLMs in Action*, app. A; [appendix A PDF](../sources/kg-a
 - **Path**: a sequence of vertices joined by edges. A **simple path** repeats no vertex; a **cycle** returns to its start. **Shortest path** and **variable-length path** are the core traversal operations.
 - **Connected component**: a set of nodes that can all reach each other. Weakly connected components (WCC) do the clustering step in graph-based entity resolution.
 
-**Graph vs. network.** A network is a graph whose nodes and edges have been given meaning. The same structure can be a social, citation, communication or transport network depending only on those semantics. Networks also sit inside **surrounding contexts**, forces outside the graph that shape how it grows. The main one in social data is **homophily**: similar people link to each other, and linked people grow similar. Recommenders use it to guess what a new user likes from their connections. The appendix's case studies are the ICIJ's Panama Papers network (people, companies and intermediaries linked as shareholder, director or beneficiary) and Krebs's Amazon "also bought" graph of political books, which showed two disconnected camps in 2008 and many bridging books by 2012.
+**Graph vs. network.** A network is a graph whose nodes and edges have been given meaning. The same structure can be a social, citation, communication or transport network depending only on those semantics. Networks also sit inside **surrounding contexts**, forces outside the graph that shape how it grows. The main one in social data is **homophily**: similar people link to each other, and linked people grow similar. Recommenders use it to guess what a new user likes from their connections. The appendix's case studies are the ICIJ's Panama Papers network (people, companies and intermediaries linked as shareholder, director or beneficiary) and Krebs's Amazon "also bought" graph of US political books. In 2008 it had three non-overlapping clusters (Obama biographies, Democratic, Republican) with no books bridging red and blue; by 2012 many books bridged the clusters and none was isolated.
 
 ### Representing a graph in memory
 
 | | Adjacency list | Adjacency matrix |
 |---|---|---|
-| Structure | Per node, the list of its neighbours | A `|V| × |V|` grid; cell `(u, v)` is 1 (or the weight) if the edge exists |
-| Memory | Proportional to `|V| + |E|` (an undirected edge is stored twice) | Proportional to `|V|²`, whatever the edge count; halve it for undirected graphs |
+| Structure | Per node, the list of its neighbours | A `\|V\| × \|V\|` grid; cell `(u, v)` is 1 (or the weight) if the edge exists |
+| Memory | Proportional to `\|V\| + \|E\|` (an undirected edge is stored twice) | Proportional to `\|V\|²`, whatever the edge count; halve it for undirected graphs |
 | "Is there an edge u→v?" | Scan `u`'s list | One lookup |
-| Choose when | The graph is sparse (most real KGs) | The graph is dense or small |
+| Choose when | The graph is sparse (most real KGs) | The graph is dense (`\|E\|` close to `\|V\|²`), or small enough that simplicity wins |
 
-In a directed matrix, rows give outgoing edges and columns give incoming ones. Neo4j's **index-free adjacency** is the list idea taken to storage: each node record points straight at its relationships, so a hop costs the same no matter how large the graph is (*KG & LLMs in Action*, app. A–B).
+In a directed matrix, rows give outgoing edges and columns give incoming ones. An unweighted matrix needs only one bit per cell. Neo4j's **index-free adjacency** is the list idea taken to storage: each node record points straight at its relationships, so a hop costs the same no matter how large the graph is (*KG & LLMs in Action*, app. B, which points back to app. A for the representations).
 
 ---
 
@@ -191,7 +193,7 @@ Ontologies also do integration work (*KG & LLMs in Action*, ch. 3; [ch. 3 PDF](.
 
 (*KG & LLMs in Action*, ch. 1 §1.6 and ch. 3.)
 
-**Choose by goal, not ideology** (*KG & LLMs in Action*, ch. 3). Use RDF and OWL when standard ontologies, interchange and formal inference are the point. Use LPG when you need provenance, confidence and timestamps on edges. That covers most LLM-extracted graphs, because every extracted edge should record where it came from. You can have both: ch3 imports OWL ontologies into Neo4j with **Neosemantics (n10s)** and keeps the subclass hierarchy as edges you can traverse (worked example below). Going the other way, Amazon Neptune can run Cypher over RDF data.
+**Choose by goal, not ideology** (*KG & LLMs in Action*, ch. 3). Use RDF and OWL when standard ontologies, interchange and formal inference are the point. The authors add an LLM-era reason to keep OWL around: it is widely used, and models such as GPT and Claude have seen a lot of it in training, which makes OWL-based data easier for them to interpret. Use LPG when you need provenance, confidence and timestamps on edges. That covers most LLM-extracted graphs, because every extracted edge should record where it came from. You can have both: ch3 imports OWL ontologies into Neo4j with **Neosemantics (n10s)** and keeps the subclass hierarchy as edges you can traverse (worked example below). Going the other way, Amazon Neptune can run Cypher over RDF data.
 
 ![Three LPG relationships, each a record with a direction, a type and a property: KNOWS since 2024, TEACHES year 2024, INTRODUCES section Introduction](../sources/images/kollegger-knowledge-graphs-for-rag-relationship-properties.png)
 *Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
@@ -206,7 +208,7 @@ Because an RDF predicate is global, you can't hang "this source, this date" on o
 |---|---|---|
 | **N-ary relation** | Turn the fact into a node (often a blank node, `_:a a :Annotation`) linking disease, phenotype, source, curator, date | Extra node per fact; the schema grows and gets harder to keep backward compatible |
 | **Named graph** | Put the triple in a named subgraph (a fourth element, TriG syntax) and describe the graph | Many tiny graphs are inefficient to store and exchange; editing one statement is awkward |
-| **RDF-star** | Quote the triple and attach properties to it: `<< :d :hasPhenotype :p >> :source :pmid` | Closest to LPG and the most readable SPARQL, but needs engines that implement the extension |
+| **RDF-star** | Quote the triple and attach properties to it: `<< :d :hasPhenotype :p >> :source :pmid` | Closest to LPG and the most readable SPARQL, but needs engines that implement the extension, and the book says its query performance "must be improved" |
 | **Reification, singleton properties** | Older encodings of a statement about a statement | Rarely used in practice |
 | **LPG** | Properties on the relationship itself | None for this need |
 
@@ -247,7 +249,7 @@ That list comes from a vendor blog (flowtivity), which also claims typed edges i
 
 ## Neo4j and Cypher
 
-Neo4j is a **native** LPG database: storage and query planning are built for graphs rather than layered on tables (*KG & LLMs in Action*, app. B; [appendix B PDF](../sources/kg-and-llms-in-action/appendix-b-neo4j.pdf)). It is fully **ACID** (a failed write rolls back the whole transaction; committed data survives a crash, because recovery replays the transaction log), which sets it apart from many NoSQL stores. Clients connect over HTTP or the binary **Bolt** protocol. The Community Edition is free (GPLv3) and is enough for everything in this track; Enterprise adds backup and clustering. Run it as a server, through Neo4j Desktop, in Docker, or on Aura Free in the cloud. The book recommends a local instance while learning.
+Neo4j is a **native** LPG database: storage and query planning are built for graphs rather than layered on tables (*KG & LLMs in Action*, app. B; [appendix B PDF](../sources/kg-and-llms-in-action/appendix-b-neo4j.pdf)). It is fully **ACID** (a failed write rolls back the whole transaction; committed data survives a crash, because recovery replays the transaction log), which sets it apart from many NoSQL stores. Clients connect over HTTP or the binary **Bolt** protocol. The Community Edition is free (GPLv3) and the appendix says the book's code "works perfectly" with it; Enterprise adds backup and clustering. One exception: ch3 starts with `CREATE DATABASE hpo`, and Community supports only the default `neo4j` database, so on Community skip that line and load into `neo4j`. Run it as a server, through Neo4j Desktop (which bundles a free developer licence for Enterprise), in Docker, or on Aura Free in the cloud. The book recommends a local instance while learning. Versions: Neo4j moved to calendar versions after the 5.x line; the appendix was tested on 2025.x and its server install needs Java 21 or later, while ch3's listings were tested on 5.20 Enterprise.
 
 Cypher draws patterns in ASCII: `()` is a node, `-[]->` a directed relationship, so `(n:Label {prop: value})-[r:TYPE]->(m)` reads as it looks. It is declarative, like the SQL that inspired it: you describe the pattern and the planner decides how to find it. **openCypher** publishes the language spec for other vendors.
 
@@ -356,7 +358,7 @@ CALL apoc.schema.assert({}, {})
 - **Always bound variable-length paths** (`*1..3`, not `*`). Unbounded traversal over a hub can visit the whole graph.
 - **Pair `MERGE` with a uniqueness constraint.** The course (L6) shows `MERGE` creating duplicates when writers race. The constraint turns that into an error you can see. This is the single-writer rule from [note 03](03-state-and-reducers.md), applied at the database.
 - **`MERGE` on the identity key only, then `SET` the rest.** `MERGE (c:Company {cik:$cik, name:$name})` makes a new node whenever the name is spelled differently.
-- **Read with `MATCH`, not `MERGE`.** `MERGE` creates the pattern when nothing matches, so a "query" written with it quietly writes to the graph. (Ch3's listing 3.24 inspects its results with a `MERGE`.)
+- **Read with `MATCH`, not `MERGE`.** `MERGE` creates the pattern when nothing matches, so a "query" written with it quietly writes to the graph. (Ch3's listing 3.21 inspects its results with a `MERGE`.)
 - **Put provenance on edges**, such as `source`, `run_id` and `extracted_at`. You'll need it for rollback in [note 12](12-kg-as-shared-agent-memory.md).
 - **Batch big writes** with `apoc.periodic.iterate` (or `CALL { … } IN TRANSACTIONS`) instead of one giant transaction.
 
@@ -403,7 +405,7 @@ MATCH (n:Resource) WHERE n.uri STARTS WITH 'http://purl.obolibrary.org/obo/HP_'
 SET n:HpoPhenotype, n.id = replace(split(n.uri, '/obo/')[1], '_', ':');
 ```
 
-`handleVocabUris: 'IGNORE'` drops namespace prefixes from property and type names; `applyNeo4jNaming` upper-cases relationship types, so `rdfs:subClassOf` becomes `SUBCLASSOF`. In the authors' run the import loaded **899,558 statements** (HPO as of February 2025, Neo4j 5.20 with APOC and n10s 5.20).
+`handleVocabUris: 'IGNORE'` drops namespace prefixes from property and type names; `applyNeo4jNaming` upper-cases relationship types, so `rdfs:subClassOf` becomes `SUBCLASSOF`. In the authors' run the import loaded **899,558 statements** (HPO as of February 2025, Neo4j 5.20 Enterprise in Desktop 1.6.1, with APOC and n10s 5.20). The chapter also makes `id` unique on `Resource` and indexes `id` on `HpoPhenotype` and `HpoDisease` before loading.
 
 The annotation half reads the TSV twice: once to `MERGE` disease nodes, once to `MATCH` disease and phenotype by ID and `MERGE` the edge between them. Then it copies columns onto the edge **without overwriting with nulls**. The book does this with a `FOREACH (_ IN CASE WHEN row[i] IS NOT NULL THEN [1] ELSE [] END | SET …)` per column; `coalesce` is shorter:
 
@@ -416,9 +418,9 @@ SET r.source    = coalesce(row[4], r.source),
     r.frequency = coalesce(row[7], r.frequency)
 ```
 
-A second batched pass (`apoc.periodic.iterate`, 1,000 edges per batch) adds readable fields: it pulls the curator and date out of `biocuration` with a regex, expands codes (`PCS` = published clinical study, `IEA` = inferred from electronic annotation, `TAS` = traceable author statement; aspect `P` = phenotypic abnormality, `I` = inheritance), and builds a PubMed or OMIM URL from the source ID. The last step deletes every imported `Resource` node that is neither a phenotype nor a disease, which removes the OWL scaffolding the clinician doesn't need.
+A second batched pass (`apoc.periodic.iterate`, 1,000 edges per batch) adds readable fields: it pulls the curator and date out of `biocuration` with a regex, expands codes (`PCS` = published clinical study, `IEA` = inferred from electronic annotation, `TAS` = traceable author statement; aspect `P` = phenotypic abnormality, `I` = inheritance), and builds a PubMed or OMIM URL from the source ID. The last step deletes every imported `Resource` node that is neither a phenotype nor a disease, which removes the OWL scaffolding the clinician doesn't need. The book's listing 3.24 keys that batch on `id(n)`, which Neo4j 5 deprecates; use `elementId(n)` instead.
 
-**Pitfall: one edge per pair loses provenance.** The edge is merged on (disease, phenotype) alone, but a pair can have several annotation rows with different sources, and each later row overwrites the earlier one's properties. If every source should stay visible (and the chapter's argument for LPG was exactly that), put the source in the merge key, `MERGE (d)-[r:HAS_PHENOTYPIC_FEATURE {source: row[4]}]->(p)`, or keep a list. (This is our reading of the listings, not a point the book makes.)
+**Pitfall: one edge per pair loses provenance.** The edge is merged on (disease, phenotype) alone, but a pair can have several annotation rows with different sources, and each later row overwrites the earlier one's properties. That runs against the chapter's own case for LPG, which says this modelling "lets us create multiple relationships, each potentially representing a specific annotation characterized by a provenance and date". If every source should stay visible, put the source in the merge key, `MERGE (d)-[r:HAS_PHENOTYPIC_FEATURE {source: row[4]}]->(p)`, or keep a list. A second, smaller loss: the `reference` column can hold several `;`-separated IDs (`PMID:9357814;PMID:17659063;PMID:16731998` in the chapter's own sample), and the URL step's greedy `apoc.text.replace(rel.source, '(.*)PMID:', '')` keeps only the last one. (Both are our reading of the listings, not points the book makes.)
 
 **Query 1: rank candidate diseases by matched symptoms.** The patient has type 1 diabetes plus four findings not linked to it: growth delay, large knee, sensorineural hearing impairment and pruritus.
 
@@ -431,7 +433,7 @@ ORDER BY n DESC, d.label LIMIT 5
 
 The top hit matches all five: `OMIM:619269`, odontochondrodysplasia 2 with hearing loss and diabetes. The next candidates match three or fewer. The clinician then reads the frequency and source on those edges to decide what to test next (*KG & LLMs in Action*, ch. 3, table 3.2). Matching on exact labels is fragile; in production match on HPO IDs, and consider letting an observed term also match its descendants.
 
-**Query 2: inference over the hierarchy.** "Which diseases involve an abnormality of the endocrine system?" Few annotations use that general term (`HP:0000818`); most use specific ones such as goitre, hypothyroidism or abnormal T4 levels. The subclass edges imported from the ontology bridge the gap:
+**Query 2: inference over the hierarchy.** "Which diseases involve an abnormality of the endocrine system?" Some annotations use that general term (`HP:0000818`) directly, but a clinician also wants the specific ones underneath it, such as goitre, hypothyroidism or abnormal T4 levels. The subclass edges imported from the ontology bridge the gap:
 
 ```cypher
 // diseases annotated with the category or anything up to 3 levels below it
