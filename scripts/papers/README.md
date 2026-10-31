@@ -80,6 +80,30 @@ python3 scripts/papers/potw.py download --backlog --home multimodal safety  # on
 make papers                                               # weekly: fetch DAIR, cite, triage, download
 ```
 
+## Citation graph
+
+`citegraph.py` builds a graph of what our papers cite, so we can see where ideas come from and
+cite the peer-reviewed version. Plan and reasoning: [citation-graph-plan.md](citation-graph-plan.md).
+
+- **Seeds** are the papers a home's markdown links (arXiv, DOI, ACL Anthology) plus its ledger
+  rows marked `integrated`, `filed` or `downloaded`.
+- **OpenAlex** supplies reference lists, venues and open-access PDF links. **DBLP** (SPARQL)
+  decides the peer-reviewed venue. **Semantic Scholar** adds per-citation intents, which mark a
+  methodology citation as a sign of where an idea came from.
+- **In repo**: every table marks a work we hold with ✓ and its path. The match is by arXiv id,
+  DOI or title, against the ledger's `local_pdf`.
+- The graph is `citations.db` (SQLite, gitignored). Reports go in `reports/`.
+- Fix a wrong review status in `review_overrides.jsonl`.
+
+```bash
+python3 scripts/papers/citegraph.py fetch --home rag      # seeds, OpenAlex works and references
+python3 scripts/papers/citegraph.py dblp --home rag       # peer-review status (~1 min per 500 works)
+python3 scripts/papers/citegraph.py intents --home rag    # S2 intents; slow without S2_API_KEY
+python3 scripts/papers/citegraph.py report --home rag     # reports/citegraph-rag.md
+python3 scripts/papers/citegraph.py status --home rag --write   # venue + review_status into the ledger
+python3 scripts/papers/citegraph.py acquire --home rag --queue  # queue peer-reviewed papers we lack
+```
+
 ## Skills
 
 | Skill | Unit of work |
