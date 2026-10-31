@@ -36,6 +36,10 @@ book chapter (`sources/<book-slug>/chNN-…`); those belong to `/chapter`. Filte
 `status --list filed` rows). If nothing is ready, say so and suggest `make papers`. Work
 one home at a time.
 
+**Primary sources first.** Rows with `"source": "citegraph"` and `"role": "primary"` are the
+works our papers cite most for their method, the papers ideas come from (see
+`scripts/papers/reports/primary.md`). Take them before DAIR rows of the same home.
+
 A whole book that isn't split into chapters (a textbook PDF, not `sources/<book-slug>/chNN-…`)
 or an exercise handout isn't a paper: run `potw.py mark filed <key>` and list it in the
 report. A book becomes integrable once its chapters are split out for `/chapter`.
@@ -66,9 +70,18 @@ For each paper:
    The first ~5 pages usually cover abstract, setup and results; read the limitations
    section too. Pull out: the claim, the headline numbers, the setup they hold under,
    and what the paper does *not* show.
-2. Read the target note in full. Find the section where the claim lives — not just the
+2. **Trace the origin.** Look up what the paper builds on in the citation graph:
+   ```bash
+   sqlite3 scripts/papers/citations.db "SELECT d.title, d.year, d.venue, d.in_repo FROM cites c
+     JOIN work s ON s.id=c.src JOIN work d ON d.id=c.dst
+     WHERE s.arxiv='<arxiv-id>' AND c.intents LIKE '%methodology%'"
+   ```
+   If the idea you are about to write down is older than the paper, cite the origin too
+   (venue and year), and name it before the recent work. If we don't hold the origin, it is
+   probably on `reports/primary.md` already; mention it in the report.
+3. Read the target note in full. Find the section where the claim lives — not just the
    note the triage picked; if a different note or section fits better, use that.
-3. Decide, and say which in your report:
+4. Decide, and say which in your report:
    - **verified** — (audit only) the note already carries the finding, with its number and
      setup, cited correctly. Change nothing beyond the frontmatter `sources:` and the
      references.md row if either is missing
@@ -96,6 +109,9 @@ sections), newest first, matching the column shape the file already uses. For th
 | Fu et al., [*Cache Engineering for Agents*](https://arxiv.org/abs/2610.28577) (Oct 2026) | <the finding, with its number, in one sentence> | [2610.28577](sources/fu-2026-cache-engineering-agents.pdf) | [05](notes/05-compression-compaction.md#<anchor>) |
 ```
 
+Put the venue in the source cell (`EMNLP 2020`), or ⚑ when the paper is only a preprint;
+the ledger row's `venue` and `review_status` say which.
+
 Use **★** only for papers that change a claim (contradicts / strong extends).
 
 ## Step 4 — The note
@@ -105,6 +121,8 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
 - Cite inline the way the notes already do:
   `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10)` with the
   finding in **bold** where it's the point of the sentence.
+- Give the venue in the citation when there is one: `(Karpukhin et al., EMNLP 2020)`; a
+  preprint keeps its date and says `preprint`.
 - State the number and the condition it holds under ("on SWE-bench-style coding tasks",
   "at 7B"). No number without its setup.
 - Add the arXiv URL to the note's frontmatter `sources:` list.
@@ -128,6 +146,7 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
 
 ```bash
 python3 scripts/papers/potw.py mark integrated <key> [<key> ...]
+python3 scripts/papers/citegraph.py refs --home <home> --write   # refresh "Where the ideas come from"
 make link-check
 ```
 

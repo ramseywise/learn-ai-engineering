@@ -955,6 +955,27 @@ def cmd_route(args):
 # --- status / mark ----------------------------------------------------------
 
 
+def cmd_where(args):
+    """Where a paper lives: match an arXiv id, a ledger key, or every word of the query against
+    title and first author. Prints the PDF path (or "no PDF"), status, home and venue."""
+    q = " ".join(args.query).lower()
+    words = re.findall(r"[a-z0-9.]+", q)
+    hits = [r for r in load_ledger()
+            if q in (r.get("arxiv") or "", r["key"].lower())
+            or all(w in f"{r.get('title') or ''} {r.get('first_author') or ''} {r.get('year') or ''}".lower() for w in words)]
+    for r in hits[:args.limit]:
+        pdf = r.get("local_pdf") if isinstance(r.get("local_pdf"), str) else None
+        extra = [r.get("venue"), r.get("review_status"), r.get("role")]
+        print(f"{pdf or 'no PDF'}\n    {r.get('title')} [{r['key']}] status={r['status']} home={r.get('pillar') or '-'}"
+              + (f" ({', '.join(x for x in extra if x)})" if any(extra) else ""))
+        for c in r.get("copies") or []:
+            print(f"    duplicate copy: {c}")
+    if not hits:
+        print(f"no ledger row matches {q!r}; check scripts/papers/reports/primary.md for papers we don't hold")
+    elif len(hits) > args.limit:
+        print(f"... {len(hits) - args.limit} more; narrow the query")
+
+
 def cmd_status(args):
     rows = load_ledger()
     if args.list:
@@ -1039,6 +1060,10 @@ def main():
     p = sub.add_parser("status")
     p.add_argument("--list", metavar="STATUS")
     p.set_defaults(fn=cmd_status)
+    p = sub.add_parser("where", help="where a paper's PDF lives: arXiv id, key, or title/author words")
+    p.add_argument("query", nargs="+")
+    p.add_argument("--limit", type=int, default=10)
+    p.set_defaults(fn=cmd_where)
     p = sub.add_parser("mark")
     p.add_argument("status", choices=["new", "queued", "parked", "skipped", "downloaded", "link-only", "filed", "integrated"])
     p.add_argument("keys", nargs="+")

@@ -52,6 +52,15 @@ The notes are the product. Everything else in the folder serves them.
   into a note before it goes onto a slide.
 - **Inline citations** link the public URL, never the local PDF:
   `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10)`.
+- **Venue in citations.** Say where a paper was reviewed: `(Karpukhin et al., EMNLP 2020)`.
+  A paper that is only a preprint keeps the date and says so: `(Fu et al., 2026-10, preprint)`.
+  `scripts/papers/citegraph.py upgrade` lists arXiv citations that have a published version.
+- **Cite the origin as well as the recent paper.** When a note states an idea that started
+  earlier, name the origin first, then the recent work: "dense retrieval (Karpukhin et al.,
+  EMNLP 2020), extended to agents by …". The origins for each pillar are in the generated
+  "Where the ideas come from" section of its `references.md`.
+- **`confidence: high`** needs peer-reviewed evidence for the note's central claims, or a stated
+  reason (a primary vendor report, a reproduced result) when they rest on preprints.
 
 ## references.md
 
@@ -59,6 +68,12 @@ Frontmatter (`origin: curated`, `sources:`, `confidence:`, `cleaned:`), then tab
 order: **Books**, **Core papers**, **AI Papers of the Week**. Each row says why to read it,
 links the local PDF, and maps to the notes that use it. **★** marks a reading that changed a
 claim. The local PDF is linked from here and nowhere else.
+
+Between `<!-- citegraph:origins start -->` and `<!-- citegraph:origins end -->` sits a
+generated **Where the ideas come from** table: works that at least 3 of the pillar's papers cite,
+at least 2 of them for the method, with venue, those counts, and whether we hold the PDF.
+`python3 scripts/papers/citegraph.py refs --write` regenerates it; don't edit inside the markers.
+Mark preprint-only rows in the hand-written tables with ⚑.
 
 ```markdown
 | Book | Chapters | PDF | Maps to |

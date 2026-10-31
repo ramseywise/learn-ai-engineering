@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>__TITLE__</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<style>
+  :root { --ink:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --bg:#fbfbfd; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); display:flex; height:100vh; }
+  #graph { flex:1; position:relative; }
+  svg { width:100%; height:100%; display:block; }
+  aside { width:360px; border-left:1px solid var(--line); padding:16px 18px; overflow:auto; background:#fff; }
+  h1 { font-size:16px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:12px; margin-bottom:12px; }
+  input[type=search] { width:100%; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  label { font-size:12px; color:var(--muted); display:block; margin-top:10px; }
+  .legend { display:grid; grid-template-columns:auto 1fr; gap:4px 8px; font-size:12px; margin:12px 0; align-items:center; }
+  .sw { width:12px; height:12px; border-radius:50%; display:inline-block; }
+  #detail h2 { font-size:15px; margin:14px 0 6px; }
+  #detail dl { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; font-size:13px; }
+  #detail dt { color:var(--muted); }
+  #detail ul { padding-left:18px; margin:4px 0; font-size:12px; }
+  a { color:#0066cc; }
+  .hint { color:var(--muted); font-size:12px; margin-top:14px; }
+  line { stroke:#8e8e93; stroke-opacity:.18; }
+  line.meth { stroke:#3a3a3c; stroke-opacity:.45; stroke-width:1.4; }
+  .dim { opacity:.08; }
+  text.lbl { font-size:10px; fill:var(--ink); pointer-events:none; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+</style>
+</head>
+<body>
+<div id="graph"><svg></svg></div>
+<aside>
+  <h1>__TITLE__</h1>
+  <div class="sub" id="counts"></div>
+  <input type="search" id="q" placeholder="Search titles or authors">
+  <label>Show works cited by at least <b id="minv"></b> of our papers <input type="range" id="min" min="1" max="10" value="__MIN__"></label>
+  <label><input type="checkbox" id="primary"> Only our papers and primary sources</label>
+  <div class="legend">
+    <span class="sw" style="background:#2e7d5b"></span><span>Peer-reviewed</span>
+    <span class="sw" style="background:#4aa3a2"></span><span>Workshop</span>
+    <span class="sw" style="background:#e08a2c"></span><span>Preprint</span>
+    <span class="sw" style="background:#8a63c9"></span><span>Tech report</span>
+    <span class="sw" style="background:#8e8e93"></span><span>Book / other</span>
+    <span>■</span><span>One of our papers (a PDF here, or linked from a note)</span>
+    <span>●</span><span>A work our papers cite</span>
+    <span class="sw" style="background:#fff;border:2.5px solid #1d1d1f"></span><span>We hold the PDF</span>
+    <span>━</span><span>Cited for its method (darker)</span>
+  </div>
+  <div id="detail"><p class="hint">Size = how many of our papers cite it. Click a node for details; drag to move, scroll to zoom.</p></div>
+</aside>
+<script>
+const DATA = __DATA__;
+const COLOR = {"peer-reviewed":"#2e7d5b","workshop":"#4aa3a2","preprint":"#e08a2c","tech-report":"#8a63c9"};
+const color = s => COLOR[s] || "#8e8e93";
+const byId = new Map(DATA.nodes.map(n => [n.id, n]));
+const svg = d3.select("svg"), root = svg.append("g");
+svg.call(d3.zoom().scaleExtent([0.1, 8]).on("zoom", e => root.attr("transform", e.transform)));
+const linkG = root.append("g"), nodeG = root.append("g"), lblG = root.append("g");
+const sim = d3.forceSimulation().force("charge", d3.forceManyBody().strength(-140))
+  .force("link", d3.forceLink().id(d => d.id).distance(70).strength(0.08))
+  .force("x", d3.forceX().strength(0.04)).force("y", d3.forceY().strength(0.04))
+  .force("center", d3.forceCenter()).force("collide", d3.forceCollide(d => r(d) + 3));
+const r = d => (d.seed ? 4.5 : 3) + 3 * Math.sqrt(d.d);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function visible() {
+  const min = +document.getElementById("min").value, prim = document.getElementById("primary").checked;
+  document.getElementById("minv").textContent = min;
+  const nodes = DATA.nodes.filter(n => (n.seed || n.d >= min) && (!prim || n.seed || n.r === "primary"));
+  const ids = new Set(nodes.map(n => n.id));
+  const links = DATA.links.filter(l => ids.has(l.s) && ids.has(l.t)).map(l => ({source: l.s, target: l.t, m: l.m}));
+  return {nodes, links};
+}
+
+function draw() {
+  const {nodes, links} = visible();
+  document.getElementById("counts").textContent =
+    `${nodes.filter(n => n.seed).length} of our papers, ${nodes.filter(n => !n.seed).length} cited works, ${links.length} citations shown`;
+  const w = svg.node().clientWidth, h = svg.node().clientHeight;
+  sim.force("x").x(w / 2); sim.force("y").y(h / 2); sim.force("center").x(w / 2).y(h / 2);
+  nodes.forEach(n => { if (n.x === undefined) { n.x = w / 2 + (Math.random() - .5) * 200; n.y = h / 2 + (Math.random() - .5) * 200; } });
+  const L = linkG.selectAll("line").data(links, d => d.source + ">" + d.target)
+    .join("line").attr("class", d => d.m ? "meth" : null);
+  const sym = d3.symbol();
+  const N = nodeG.selectAll("path").data(nodes, d => d.id).join("path")
+    .attr("d", d => sym.type(d.seed ? d3.symbolSquare : d3.symbolCircle).size(Math.PI * r(d) ** 2)())
+    .attr("fill", d => color(d.s)).attr("stroke", d => d.h ? "#1d1d1f" : "#fff")
+    .attr("stroke-width", d => d.h ? 2.5 : 1).style("cursor", "pointer")
+    .on("click", (e, d) => show(d))
+    .call(d3.drag().on("start", (e, d) => { if (!e.active) sim.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on("end", (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = d.fy = null; }));
+  N.selectAll("title").data(d => [d]).join("title").text(d => `${d.a} ${d.yr}: ${d.t}`);
+  const top = new Set([...nodes].sort((a, b) => b.d - a.d).slice(0, 15).map(n => n.id));
+  const T = lblG.selectAll("text").data(nodes.filter(n => top.has(n.id)), d => d.id).join("text")
+    .attr("class", "lbl").attr("dx", 8).attr("dy", 3).text(d => `${d.a} ${d.yr}`);
+  sim.nodes(nodes).on("tick", () => {
+    L.attr("x1", d => d.source.x).attr("y1", d => d.source.y).attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+    N.attr("transform", d => `translate(${d.x},${d.y})`);
+    T.attr("x", d => d.x).attr("y", d => d.y);
+  });
+  sim.force("link").links(links);
+  sim.alpha(1).restart();
+  search();
+}
+
+function show(d) {
+  const citedBy = DATA.links.filter(l => l.t === d.id).map(l => byId.get(l.s)).filter(n => n && n.seed);
+  const cites = DATA.links.filter(l => l.s === d.id).map(l => byId.get(l.t)).filter(Boolean).sort((a, b) => b.d - a.d);
+  const li = n => `<li>${esc(n.a)} ${n.yr}, ${esc(n.t)}</li>`;
+  const held = d.h ? `✓ <code>${esc(d.h)}</code>` : (d.g ? (d.g[1] ? `<a href="${esc(d.g[1])}" target="_blank">${esc(d.g[0])}</a>` : esc(d.g[0])) : "—");
+  document.getElementById("detail").innerHTML = `
+    <h2><a href="${esc(d.u)}" target="_blank">${esc(d.t)}</a></h2>
+    <dl><dt>First author</dt><dd>${esc(d.a)} (${d.yr || "?"})</dd>
+    <dt>Venue</dt><dd>${esc(d.v || "—")}</dd><dt>Status</dt><dd>${esc(d.s)}</dd>
+    <dt>Role</dt><dd>${esc(d.r)}</dd>
+    <dt>Cited by</dt><dd>${d.d} of our papers (${d.m} for its method)</dd>
+    <dt>We hold</dt><dd>${held}</dd></dl>
+    ${d.notes.length ? `<h2>Notes that link it</h2><ul>${d.notes.map(n => `<li><code>${esc(n)}</code></li>`).join("")}</ul>` : ""}
+    ${citedBy.length ? `<h2>Our papers that cite it (${citedBy.length})</h2><ul>${citedBy.map(li).join("")}</ul>` : ""}
+    ${cites.length ? `<h2>It cites, in this graph (${cites.length})</h2><ul>${cites.slice(0, 30).map(li).join("")}</ul>` : ""}`;
+}
+
+function search() {
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  nodeG.selectAll("path").classed("dim", d => q && !(d.t + " " + d.a).toLowerCase().includes(q));
+}
+
+document.getElementById("q").addEventListener("input", search);
+document.getElementById("min").addEventListener("input", draw);
+document.getElementById("primary").addEventListener("change", draw);
+draw();
+</script>
+</body>
+</html>
