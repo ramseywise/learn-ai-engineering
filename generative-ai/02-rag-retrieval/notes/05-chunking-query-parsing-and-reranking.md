@@ -8,6 +8,11 @@ sources:
   - https://arxiv.org/abs/2407.01219
   - https://arxiv.org/abs/2410.13070
   - https://aclanthology.org/2024.naacl-industry.23/
+  - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
+  - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2, ch. 3
+  - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
+  - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
+  - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -30,6 +35,8 @@ cleaned: 2026-10-31
 
 Chunk size is a balance. Too large (chapters): too many topics per vector, context fills fast. Too small (words, short sentences): each chunk loses its surrounding context and relevance drops.
 
+Phoenix and Taylor name the "too large" effect: an embedding of a long, mixed chunk regresses toward the mean, drifting toward the centre of the vector space where it is moderately similar to everything (*Prompt Engineering for GenAI*, ch. 5). Huyen names the "too small" cost: halving the chunk size doubles the number of vectors to store and search, and a boundary can cut the meaning in two. Her example is "I left my wife a note", split so that the retrieved half reads "I left my wife" (*AI Engineering*, ch. 6). Her candidate units are characters (say 2,048), words (512), sentences (20) or paragraphs. Raieli and Iuculano report 100 or 256 tokens, or 500 characters, as common starting sizes (*Building AI Agents*, ch. 6).
+
 ### Strategies
 
 | Strategy | How | Cost | Course verdict |
@@ -45,6 +52,25 @@ Chunk size is a balance. Too large (chapters): too many topics per vector, conte
 *Image Source: Hasan, DeepLearning.AI RAG course, Module 3*
 
 Context-aware chunking is the same idea as Anthropic's *contextual retrieval* (2024). The house treatment, with the numbers, is in [01 § chunking](01-rag-pipeline.md#chunking) and [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md).
+
+**What overlap to use is a convention, not a finding.** Huyen's own example overlaps 20 characters on 2,048-character chunks, about 1% (*AI Engineering*, ch. 6). The framework examples run much higher: 200 on 1,000 characters (20%) in *Learning LangChain* (ch. 2), 50 on 500 (10%) in the *LLM Engineer's Handbook* (ch. 4), and 20 on 100 tokens in *Prompt Engineering for GenAI* (ch. 5). None of the four measures the choice. Treat the course's 10–20% as a starting point to test, and drop it if a cheaper setting retrieves as well.
+
+**Recursive splitting in LangChain** is `RecursiveCharacterTextSplitter`. It tries separators in order (`"\n\n"`, then `"\n"`, then `" "`) and only falls to the next one when a piece is still too long. `RecursiveCharacterTextSplitter.from_language(Language.PYTHON, ...)` swaps in code-aware separators such as `class` and `def` (*Learning LangChain*, ch. 2). The Handbook's article chunker is a cruder version: split into sentences, append sentences until the next one would pass `max_length`, and keep the chunk only if it has reached `min_length` (*LLM Engineer's Handbook*, ch. 4). Its article handler sets both to 1,000 characters. With `min_length == max_length`, a chunk is kept only if it ends within a character or so of 1,000, so most chunks, and every article's tail, are silently dropped. Set the minimum well below the maximum. The same run turns 76 documents into 2,373 chunks with the generic 500/50 splitter.
+
+**Less common chunkers** from Raieli and Iuculano (*Building AI Agents*, ch. 6):
+
+| Chunker | How | Catch |
+|---|---|---|
+| Clustering (k-means on sentence embeddings) | Group sentences by topic | Loses the original order |
+| Proposition | An LLM rewrites the text as atomic, self-contained statements | One LLM pass over the corpus |
+| Statistical merging | Merge neighbouring sentences while a similarity statistic stays high | A threshold to tune |
+
+Their guidelines match the course: match the chunk to the query type, respect the embedder's input limit, and evaluate on your own data.
+
+**Contextual retrieval, the mechanics.** Huyen describes the index-time step behind context-aware chunking: an LLM writes a short context, typically 50–100 tokens, that situates the chunk in its document, and the context is prepended before embedding and BM25 indexing (*AI Engineering*, ch. 6). Her other augmentations: product descriptions with reviews, or the questions an article answers.
+
+![Contextual retrieval: an LLM, given the whole document and one chunk, writes a short context that is prepended to the chunk before indexing](../sources/images/huyen-ai-engineering-fig6-5.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 6-5*
 
 **Element-based chunking** is recursive splitting taken further: a document-layout model labels each element (title, narrative text, table, list), and chunks break at element boundaries. On FinanceBench (10-K and 10-Q filings, top-10 chunks, GPT-4 generator), element-based chunking answered 53.2% of questions correctly against 48.2% for the best fixed size (512 tokens) and 35.5% for 128 tokens, on manual grading. It also indexed about half as many chunks (62,529 vs 112,155) and needed no chunk-size tuning ([arXiv:2402.05131](https://arxiv.org/abs/2402.05131), Jimeno Yepes et al., 2024-02). The setting is one domain of table-heavy, strongly structured documents, so expect less on prose.
 
@@ -81,6 +107,21 @@ def mixed_chunking(source_text: str) -> list[str]:
 ```
 
 Each chunk is stored with metadata (`chapter_title`, `filename`, `chunk_index`, `chunking_strategy`) so one Weaviate collection can hold all strategies and a filter picks one.
+
+### Index small, return large
+
+Three ways to separate what you match on from what you hand the LLM. The general pattern, and LangChain's `MultiVectorRetriever`, are in [01 § embed one thing, return another](01-rag-pipeline.md#embed-one-thing-return-another). Raieli and Iuculano list the variants (*Building AI Agents*, ch. 6):
+
+| Variant | Index | Return |
+|---|---|---|
+| **Hypothetical questions** | Questions an LLM generates for each chunk, at index time | The chunk |
+| **Sentence window** | Single sentences | The sentence plus its neighbours |
+| **Parent document** | Small child chunks | The parent, when more than n of the top-k children come from it |
+
+Hypothetical questions are HyDE turned around. HyDE generates a fake answer at query time and matches it against chunks. Hypothetical questions are generated once at index time and matched against the user's question, so they add no query latency.
+
+![Hypothetical questions versus HyDE, with an acetaminophen example: index-time generated questions matched to the query, versus a query-time hypothetical answer matched to chunks](../sources/images/building-ai-agents-llms-rag-kgs-fig6-4.png)
+*Image Source: Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), Fig. 6.4*
 
 ### The experiment: Pro Git, four strategies
 
@@ -128,6 +169,39 @@ HyDE changes what is being matched: normally prompt-to-document, with HyDE docum
 
 GLiNER example: *"I read The Great Gatsby by F. Scott Fitzgerald last summer while visiting New York…"* → BOOK, PERSON, DATE, LOCATION. The DATE and LOCATION can become metadata filters.
 
+Raieli and Iuculano's HyDE variant generates several answers, five in their example, and averages their embeddings, so one odd generation doesn't steer the search (*Building AI Agents*, ch. 6).
+
+### Query transformations
+
+Oshin and Campos group the rewrites by how far they move from the user's words (*Learning LangChain*, ch. 3).
+
+![Query transformation strategies arranged by how much more or less abstract they make the user's question](../sources/images/learning-langchain-fig3-5.png)
+*Image Source: Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 3-5*
+
+| Transformation | What it does | Cost |
+|---|---|---|
+| **Rewrite-Retrieve-Read** (Ma et al., 2023) | An LLM rewrites the question, then retrieval and answering run as usual | Two LLM calls in sequence |
+| **Multi-query** | An LLM writes several versions of the question (five, from different perspectives); retrieve for each, deduplicate the union | One extra call; k × versions retrievals |
+| **RAG-Fusion** | Multi-query, then merge the result lists with reciprocal rank fusion instead of a plain union | As multi-query |
+| **Step-back** | Generate a more general question; retrieve for it and for the original, and give both contexts to the LLM (*Building AI Agents*, ch. 6) | One extra call |
+
+```python
+def reciprocal_rank_fusion(results: list[list], k=60):
+    fused = {}
+    for docs in results:                       # one ranked list per query version
+        for rank, doc in enumerate(docs):
+            fused[doc] = fused.get(doc, 0) + 1 / (rank + k)
+    return sorted(fused, key=fused.get, reverse=True)
+```
+
+The same RRF is used for hybrid search ([03](03-keyword-semantic-and-hybrid-search.md#hybrid-search-and-reciprocal-rank-fusion)). The book's examples use `gpt-3.5-turbo` and `retriever.get_relevant_documents`; current LangChain spells the call `retriever.invoke`. Query expansion pulls in more marginal chunks, so pair it with a post-filter or a reranker (*Building AI Agents*, ch. 6).
+
+Two rewrites from Huyen matter in chat (*AI Engineering*, ch. 6). Identity resolution: after "Who is John Doe?", "How about his wife?" needs rewriting to name John Doe's wife before retrieval. And when the rewrite can't be resolved, the rewriter should say so rather than guess. Multi-turn rewriting is covered in [01 § conversational multi-turn RAG](01-rag-pipeline.md#conversational-multi-turn-rag).
+
+### Self-query: letting the LLM write the filter
+
+A self-query retriever has an LLM split the question into a semantic query and a metadata filter. LangChain's `SelfQueryRetriever` takes a list of `AttributeInfo(name, description, type)` describing the filterable fields, and `enable_limit=True` lets it read "Return 2 Fantasy books" as a genre filter plus a limit of 2 (*Learning LangChain*, ch. 3; *Prompt Engineering for GenAI*, ch. 5). The descriptions are part of the prompt, so they need care. Phoenix and Taylor's example indexes books but keeps the content description "Brief summary of a movie". Nothing errors; the LLM just gets a wrong description of the corpus, which is how these slips go unnoticed. The Handbook does a narrower version by hand: an LLM extracts the author's name from the query, and the search filters on it (*LLM Engineer's Handbook*, ch. 9).
+
 ---
 
 ## Three ways to score a query against a document
@@ -161,6 +235,26 @@ The context budget is the same as without reranking; what changes is how relevan
 | Cross-encoder | High | Minor added latency on 20–50 pairs |
 | LLM scoring (fine-tuned, outputs e.g. 0.95) | Highest | Costly; reranking only, never first stage |
 
+Raieli and Iuculano's fuller list (*Building AI Agents*, ch. 5–6):
+
+| Family | Examples | Trade-off |
+|---|---|---|
+| Cross-encoder | BGE reranker | The default |
+| Multi-vector (late interaction) | jina-colbert, ColBERTv2 | Cheapest; doc vectors precomputed |
+| LLM pointwise, pairwise or listwise | Prompt an LLM to score one doc, compare two, or order a list | Best quality, highest cost |
+| Fine-tuned seq2seq | RankT5 | Between the two |
+
+ColBERTv2 runs as a reranker in a few lines through RAGatouille: `RAGPretrainedModel.from_pretrained("colbert-ir/colbertv2.0")`, then `.rerank(query, documents, k)`.
+
+Why rerank at all, from the Handbook: the first stage optimises for speed over a whole corpus, a reranker sees query and document together, and fewer, better chunks cut prompt cost and noise (*LLM Engineer's Handbook*, ch. 4). Oshin and Campos add that a low k is not a false economy: more documents make the app slower, and irrelevant ones push the LLM toward hallucination (*Learning LangChain*, ch. 3). Huyen notes two differences from web search. Rank position matters less, because the LLM reads all k chunks; and time is a legitimate reranking signal, for news or changing docs (*AI Engineering*, ch. 6).
+
+Cheaper post-retrieval steps (*Building AI Agents*, ch. 6):
+
+- Drop chunks below a score threshold, or without a required keyword, metadata value or date.
+- Expand a hit with its neighbouring chunks, so a fragment arrives with its context.
+
+Raieli and Iuculano cite Wang et al.'s pipeline sweep as recommending query classification, HyDE, reranking, repacking and summarization together, and they stress that reranking was the one stage whose removal hurt clearly. Wang's own Table 11 shows the HyDE step's price (see the rules of thumb below), so take the full combination as an upper bound on quality, not a default.
+
 ```python
 from weaviate.classes.query import Rerank
 
@@ -190,7 +284,7 @@ The house version of the reranking stage, with production numbers, is note [08 �
 
 | Rule | Why |
 |---|---|
-| Start with fixed-size or recursive chunks, 10–20% overlap | Good defaults; measure before getting clever. Semantic chunking did not beat fixed-size on real documents in Qu et al.; a better embedder moved results more |
+| Start with fixed-size or recursive chunks; test 10–20% overlap against less | Good defaults; measure before getting clever. The overlap figure is a convention: book examples range from 1% to 20%, unmeasured. Semantic chunking did not beat fixed-size on real documents in Qu et al.; a better embedder moved results more |
 | Try context-aware chunking first when recall is low | Index-time cost only; no query latency |
 | Size `top_k` to chunk size | Many small or few large, same token budget |
 | Rewrite queries with a small LLM | Cheap, large gains on conversational prompts |

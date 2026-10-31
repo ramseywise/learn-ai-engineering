@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2304.03442
   - https://arxiv.org/abs/2505.22101
   - https://arxiv.org/abs/2607.26637
+  - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -236,6 +237,18 @@ Lakshmanan and Hapke (P28 Long-Term Memory) and LangMem use a cognitive-science 
 | Semantic | facts extracted from conversations | human block, archival memory | `create_memory_manager` with schemas; Mem0 graph + vectors |
 
 The book's working-memory rule: trim to the token limit but keep the system prompt, and keep the trimmed list valid (never drop a tool call while keeping its result). Mem0's `memory.add(messages, user_id=...)` uses an LLM to extract facts, resolve contradictions with what is stored, and drop small talk and general knowledge; `memory.search(query, user_id=...)` returns ranked memories across types.
+
+"Trimmed to fit" covers four strategies. LangChain's legacy memory classes, as Phoenix and Taylor present them, give each one a name (*Prompt Engineering for Generative AI*, ch. 6):
+
+| Strategy | Legacy class | Keeps | Trade-off |
+|---|---|---|---|
+| Full buffer | `ConversationBufferMemory` | Every message | No limit, so it eventually overflows the window |
+| Last-k window | `ConversationBufferWindowMemory` | The last k exchanges | Silently forgets anything older than k |
+| Token buffer | `ConversationTokenBufferMemory` | Recent messages up to a token limit | Predictable size; same blind spot as the window |
+| Running summary | `ConversationSummaryMemory` | An LLM-written summary | Costs a model call per update; summaries lose detail |
+| Summary + buffer | `ConversationSummaryBufferMemory` | Recent messages verbatim; older ones folded into a summary once a token limit is passed | The usual default: recency kept exactly, history kept roughly |
+
+By default these live in process memory and disappear with the session; persistence needs a database-backed history. The classes are deprecated: current LangChain keeps the message list in LangGraph state with a checkpointer and trims or summarizes it in a node. The strategies are unchanged. In MemGPT terms, the summary-plus-buffer row is the recursive summary plus recent chat history from the context-compilation table above. MemGPT adds what these classes lack: the evicted messages stay searchable in recall memory.
 
 The Mem0 paper ([arXiv:2504.19413](https://arxiv.org/abs/2504.19413), Chhikara et al., 2025-04) shows what extraction costs. On LOCOMO's long multi-session conversations, graded by an LLM judge, Mem0 scored 66.9% and the graph variant 68.4%. Passing the whole 26k-token conversation scored **72.9%**. Memory wins on cost: about 1.8k tokens per query instead of 26k, and p95 latency of 1.4 s instead of 17 s. Mem0 also beat its other memory baselines: OpenAI's memory at 52.9%, LangMem at 58.1%, and Zep at 66.0% (Zep also took hours to make new memories searchable). When the history still fits in the window and latency doesn't matter, full context is the more accurate baseline.
 

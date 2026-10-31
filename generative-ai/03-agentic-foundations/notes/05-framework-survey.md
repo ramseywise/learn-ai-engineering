@@ -5,6 +5,9 @@ sources:
   - "DeepLearning.AI CrewAI notebooks bundled in that repo (CrewAI/Notebooks) — https://www.deeplearning.ai/short-courses/multi-ai-agent-systems-with-crewai/"
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 10 Composable Agentic Workflows — ../sources/lakshmanan-hapke-genai-design-patterns-ch10-composable-agentic-workflows.pdf"
   - "generative-ai/resources.md, section 03/04 Agents and frameworks"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 7"
+  - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 1"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -37,6 +40,8 @@ This note is the map. The two frameworks this course uses in depth, LangGraph an
 | A2A | agent server | task protocol between agents | per task | agents from different vendors |
 
 AutoGen's own maintainers now point new work at the **Microsoft Agent Framework**, which merges AutoGen and Semantic Kernel. The AutoGen patterns in [04](04-multi-agent-design-patterns.md) still apply.
+
+Albada's rule of thumb (mid-2025): CrewAI or the OpenAI Agents SDK to get a prototype running fast, LangGraph or AutoGen when you need control in production. He also notes that a framework isn't required: many teams build directly on the model providers' APIs (*Building Applications with AI Agents*, ch. 1). That fits Anthropic's "keep it simple" principle in [01](01-agent-fundamentals.md#workflow-vs-autonomous-agent).
 
 ---
 
@@ -163,6 +168,34 @@ builder.add_edge("write_research_brief", END)
 
 The repo's email agent is the textbook LangGraph loop (agent node, `ToolNode`, a `should_continue` router), and its LangMem examples are covered in [03](03-memory-as-an-operating-system.md#memory-types-in-other-frameworks). For LangGraph itself start with [04-agentic-frameworks 01](../../04-agentic-frameworks/notes/01-react-from-scratch-to-langgraph.md).
 
+**Subgraphs** are how LangGraph builds multi-agent and hierarchical systems (the HSM superstate of [01](01-agent-fundamentals.md#agents-as-state-machines)). There are two ways to attach one (*Learning LangChain*, ch. 7):
+
+- **Add the compiled subgraph as a node** when parent and child share state keys. The shared keys are the interface. Any other keys passed in or returned are ignored.
+- **Call it from a wrapper function** when the schemas differ. Map parent state into the subgraph's input, invoke it, and map the result back.
+
+Because the interface is just the input and output schemas, different teams can build different subgraphs independently.
+
+**Human in the loop with `interrupt`.** Koenigstein lists four patterns: approve or reject, review and edit state, review tool calls, and validate human input (*AI Agents: The Definitive Guide*, ch. 2). The tool-review version wraps any tool so that the call pauses for a decision:
+
+```python
+def add_hitl(tool_obj: BaseTool) -> BaseTool:
+    @tool(tool_obj.name, description=tool_obj.description, args_schema=tool_obj.args_schema)
+    def wrapped(**tool_input):
+        response = interrupt([{
+            "action_request": {"action": tool_obj.name, "args": tool_input},
+            "config": {"allow_accept": True, "allow_edit": True, "allow_respond": True},
+        }])[0]
+        if response["type"] == "accept":   return tool_obj.invoke(tool_input)
+        if response["type"] == "edit":     return tool_obj.invoke(response["args"]["args"])
+        if response["type"] == "response": return response["args"]   # human answer replaces the tool
+        raise ValueError("unsupported response type")
+    return wrapped
+```
+
+Resume with `Command(resume=...)`. The rule that matters: **when execution resumes, the interrupted node re-runs from the top**. Any side effect (an API call, a database write) placed before `interrupt()` in that node runs twice. Koenigstein's rule is stricter: keep side effects out of the interrupting node, pause first, and act only after explicit approval. The wrapper above complies, because the tool runs only after `interrupt()` returns a decision. A checkpointer is required, because the pause is a saved thread.
+
+Dated details in these books: Koenigstein calls LangChain's `AgentExecutor` "often preferable in production". It is the legacy agent runtime, and current LangChain builds agents on LangGraph. Her examples, like the others, use the prebuilt `langgraph.prebuilt.create_react_agent`, which LangGraph 1.0 deprecates in favor of `langchain.agents.create_agent`. Check current docs before copying signatures.
+
 ---
 
 ## Google ADK
@@ -265,5 +298,7 @@ Lakshmanan and Hapke close the book by building one agentic workflow from earlie
 | MCP vs A2A? | Tools for a model vs tasks between agents |
 | Why does AutoGen 0.2 code look different from current AutoGen? | 0.4 rewrote it as event-driven; Microsoft Agent Framework is the successor |
 | What should a tool return on failure? | A status and a readable error, so the model can recover |
+| Why must side effects not share a node with `interrupt()`? | On resume the node re-runs from the start, so the side effect would run twice |
+| Two ways to add a LangGraph subgraph? | As a node directly when keys are shared, or via a wrapper that transforms state when schemas differ |
 
 → Next: [06 — Google ADK intensive](06-google-adk-intensive.md) — course notes on context types, the agentic SDLC, protocols and skills.

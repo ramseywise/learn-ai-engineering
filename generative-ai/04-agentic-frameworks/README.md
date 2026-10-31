@@ -9,7 +9,7 @@
 
 The hands-on framework layer: how the agent ideas from 03 and from ai-engineering's loop and graph pillars look in real code, and how to choose between the frameworks that implement them.
 
-The pillar builds one agent several times. First it is a 40-line Python loop around a chat model. Then it is a two-node LangGraph graph, then a graph with a checkpointer, streaming and human approval, and finally an email assistant with semantic, episodic and procedural memory in a LangGraph store. Google ADK and LangSmith follow as reference specs. A selection note closes the pillar by turning all of that into a decision.
+The pillar builds one agent several times. First it is a 40-line Python loop around a chat model. Then it is a two-node LangGraph graph, then a graph with a checkpointer, streaming and human approval, and finally an email assistant with semantic, episodic and procedural memory in a LangGraph store. Google ADK and LangSmith follow as reference specs. A selection note turns all of that into a decision, and a last note drops one layer down to the LCEL chains that sit inside graph nodes.
 
 > **Build the loop by hand once. Then a framework is a set of things you no longer write, and you can judge whether that set is worth its indirection.**
 
@@ -22,16 +22,18 @@ Theory stays in ai-engineering. Why an agent is a cyclic graph, how reducers mer
 1. Read notes 01–03 in order. They are the two DeepLearning.AI LangGraph courses, condensed with their code and figures inline.
 2. Read 04 (ADK) and 05 (LangSmith) as reference specs, when you need them.
 3. Read 06 before choosing a framework for anything new.
-4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+4. Read 07 when a node needs a multi-step chain, a fan-out, structured output or a plan of dependent queries. Read [01-llm-fundamentals note 04](../01-llm-fundamentals/notes/04-langchain-basics.md) first if LCEL is new.
+5. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Layout
 
 ```
 README.md      this file: overview, start here, syllabus, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes, with licences
-notes/         01–06, the course; code and figures inline
+notes/         01–07, the course; code and figures inline
 sources/
-  images/      course figures (ksm26-ai-agents-in-langgraph-fig1..6)
+  images/      course figures (ksm26-ai-agents-in-langgraph-fig1..6),
+               book figures (prompt-engineering-for-generative-ai-fig4-7)
 ```
 
 ---
@@ -44,8 +46,9 @@ sources/
 | 2 | [Agentic search, persistence, streaming](notes/02-agentic-search-persistence-streaming.md) | L3 agent-oriented search vs scrape; L4 checkpointers and threads, node vs token streaming; L5 HITL (interrupt, inspect, edit, time travel); L6 essay-writer graph |
 | 3 | [Long-term memory with LangGraph](notes/03-long-term-memory-with-langgraph.md) | Triage router + ReAct agent; semantic memory (store + langmem tools), episodic (few-shot from labelled examples), procedural (prompts in the store, `create_multi_prompt_optimizer`); namespace map |
 | 4 | [Google ADK](notes/04-google-adk.md) | Primitives, ADK vs LangGraph, workflow agents, `ToolContext` state, `adk run`/`adk web`, ADK eval metrics and config, guardrail callbacks |
-| 5 | [LangSmith](notes/05-langsmith.md) | Wiring for LangGraph (env vars) and ADK (`@traceable`), trace anatomy, datasets, `evaluate()`, annotation queues, experiment comparison |
+| 5 | [LangSmith](notes/05-langsmith.md) | Wiring for LangGraph (env vars) and ADK (`@traceable`), trace anatomy, datasets, `evaluate()`, testing whether a cheaper model is good enough, annotation queues, experiment comparison |
 | 6 | [Framework selection](notes/06-framework-selection.md) | Do you need one; the dimensions; LangGraph, ADK, Pydantic AI, OpenAI Agents SDK, MS Agent Framework compared; decision table; running two frameworks side by side; lock-in checklist |
+| 7 | [LCEL composition in practice](notes/07-lcel-composition-in-practice.md) | Data flow (`RunnablePassthrough.assign`, `itemgetter`, `RunnableParallel`), sequential vs batch with `max_concurrency`, three routes to structured output (`tool_choice`, hallucinated arguments), a query plan as a validated DAG, map-reduce, few-shot limits, book APIs and their current form |
 
 ## Rules of thumb
 
@@ -60,6 +63,10 @@ sources/
 | Namespace memory by user id from the run config, never from model output | [03](notes/03-long-term-memory-with-langgraph.md) |
 | Correct behaviour with labelled examples before rewriting rules | [03](notes/03-long-term-memory-with-langgraph.md) |
 | Treat an optimizer's prompt rewrite as a deploy: diff it, log it, be able to roll back | [03](notes/03-long-term-memory-with-langgraph.md) |
+| An accuracy against labels from a stronger model measures agreement with that model; spot-check the labels, and count parse failures separately | [05](notes/05-langsmith.md#testing-whether-a-cheaper-model-is-good-enough) |
+| Cap every `.batch()` with `max_concurrency` | [07](notes/07-lcel-composition-in-practice.md#fan-out-with-a-concurrency-cap) |
+| Validate a model-written plan (unknown ids, cycles) before executing it | [07](notes/07-lcel-composition-in-practice.md#query-planning-a-plan-is-a-dag) |
+| Never load prompts with pickle; keep them as text files under version control | [07](notes/07-lcel-composition-in-practice.md#few-shot-selection-and-prompt-files) |
 | Choose a framework by control flow and durability, not by demo | [06](notes/06-framework-selection.md) |
 | Keep tools, prompts and eval data framework-neutral | [06](notes/06-framework-selection.md) |
 
@@ -76,6 +83,7 @@ sources/
 ### Books and courses
 - DeepLearning.AI, *AI Agents in LangGraph* → notes 01–02.
 - DeepLearning.AI × LangChain, *Long-Term Agentic Memory with LangGraph* → note 03.
+- Phoenix & Taylor, *Prompt Engineering for Generative AI* ch. 4 → notes 07 and 05. Oshin & Campos, *Learning LangChain* ch. 1 → note 07 (API flags only; the basics are in [01-llm-fundamentals note 04](../01-llm-fundamentals/notes/04-langchain-basics.md)).
 - Full citations, upstream repos and licences: [references.md](references.md).
 
 ### Coursework and practice

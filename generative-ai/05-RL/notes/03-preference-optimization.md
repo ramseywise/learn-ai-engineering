@@ -1,6 +1,7 @@
 ---
 origin: web-authored
 sources:
+  - https://arxiv.org/abs/2503.14476
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
   - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
@@ -8,6 +9,9 @@ sources:
   - https://arxiv.org/abs/2506.21495 (offline vs semi-online vs online DPO/GRPO)
   - https://arxiv.org/abs/2503.01067 (All Roads Lead to Likelihood)
   - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
+  - https://arxiv.org/abs/2507.18071 (GSPO)
+  - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
+  - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -16,7 +20,8 @@ cleaned: 2026-10-31
 
 > **Pillar:** [05-RL](../README.md)
 > **Presumes:** [RLHF pipeline](02-rlhf-pipeline.md) — understand the three-stage baseline first
-> **Papers:** DPO (2305.18290), DeepSeek-R1 (2501.12948), GRPO (2402.03300)
+> **Papers:** DPO (2305.18290), DeepSeek-R1 (2501.12948), GRPO (2402.03300), GSPO (2507.18071)
+> **Books:** Iusztin & Labonne, *LLM Engineer's Handbook*, ch. 6; Koenigstein, *AI Agents: The Definitive Guide*, ch. 3 (see [references](../references.md#books))
 
 ---
 
@@ -52,7 +57,10 @@ and the one used in InstructGPT, GPT-4, and Claude v1.
 
 **What it is:** An on-policy actor-critic algorithm with a clipped surrogate objective.
 During RLHF, PPO treats the LLM as a policy, each generated token as an action, and the
-reward model's scalar score as the environment reward.
+reward model's scalar score as the environment reward. Because it is on-policy, the ratio and clip
+correct for the policy going stale across the K epochs spent on one batch. See
+[01](01-rl-foundations.md#policy-gradients-from-reinforce-to-the-ppo-clip) for the clip plot and
+where the gradient vanishes.
 
 **Objective:**
 
@@ -155,6 +163,52 @@ Does not generalize beyond the preference distribution seen in training.
 exploration, and can't afford PPO compute. The dominant choice in industry for RLHF
 at moderate scale.
 
+### DPO in practice
+
+LLMEH runs DPO with TRL and Unsloth on top of its own SFT model (*LLM Engineer's Handbook*,
+ch. 6). The goal was a style change: make answers sound like the authors' blog. The
+practical points:
+
+- **β sets how hard the reference pulls.** 0.1 is the most common value. The authors raised it
+  to **0.5** because lower β made the model formal and wordy. Their warning: "DPO tends to make
+  models more verbose and pushes them to use very formal language." That is the length
+  problem above, seen in a real run.
+- **With LoRA, the reference model is free.** Only the adapters train, so the base weights
+  with the adapters switched off *are* `π_ref`. Pass `ref_model=None` and load one model, not two.
+- **Learning rate is about 100× lower than SFT:** 2e-6, against 3e-4 for their LoRA SFT. One
+  epoch, not three.
+- **How many pairs:** see the table in [02](02-rlhf-pipeline.md#stage-2--reward-model-training).
+  Task-level style or refusal changes need 100–10k.
+
+```python
+trainer = DPOTrainer(
+    model=model, ref_model=None,        # LoRA: base without adapters is the reference
+    beta=0.5,                            # 0.1 is the usual default
+    train_dataset=ds["train"], eval_dataset=ds["test"],
+    args=DPOConfig(learning_rate=2e-6, num_train_epochs=1,
+                   per_device_train_batch_size=2, gradient_accumulation_steps=8),
+)
+```
+
+That run used Llama 3.1 8B with r = α = 64 and 1,467 pairs. Recent TRL versions take `beta`
+inside `DPOConfig` and `processing_class` in place of `tokenizer`, so check the API of the
+version you install.
+
+**What to watch.** TRL logs these metrics, and the book says how to read them:
+
+| Metric | Healthy | Warning sign |
+|---|---|---|
+| `rewards/chosen`, `rewards/rejected` | β × log-ratio against the reference. The gap between them widens | Both falling (rejected probabilities can drop *and* chosen ones too) |
+| `rewards/margins` | Rises quickly, then plateaus | Flat from the start |
+| `rewards/accuracies` | Climbs gradually; need not reach 100% | 100% early means the pairs are too easy. Add harder ones |
+| Train vs. val loss, grad norm | Small gap; small norms with few spikes | — |
+
+*Dated:* LLMEH (2024) treats DPO as offline only and says "for large-scale training runs
+with millions of preference samples, PPO-inspired methods still have a higher performance
+ceiling". The ceiling turned out to come mainly from **online sampling, not from PPO**.
+Semi-online and online DPO match GRPO on math and beat offline DPO by about 30 points on
+AlpacaEval (heuristic 2 below).
+
 ---
 
 ## GRPO — Group Relative Policy Optimization
@@ -162,7 +216,8 @@ at moderate scale.
 **Paper:** DeepSeek-Math ([arXiv:2402.03300](https://arxiv.org/abs/2402.03300)), operationalized in DeepSeek-R1 (arXiv: 2501.12948).
 
 **The insight:** you don't need a separate value network if you estimate advantages from
-a group of sampled outputs. That is GRPO's whole contribution in DeepSeekMath, and it still
+a group of sampled outputs; the group mean is a REINFORCE baseline
+([01](01-rl-foundations.md#policy-gradients-from-reinforce-to-the-ppo-clip)). That is GRPO's whole contribution in DeepSeekMath, and it still
 used a *trained* reward model there, both outcome and process supervision, with the reward
 model retrained during RL on a replay buffer. Dropping the reward model in favour of rule-based
 checks (answer correct? format right?) came with DeepSeek-R1. Together the two make
@@ -214,10 +269,61 @@ penalties. Credit assignment is also coarse: one trajectory-level advantage is s
 evenly over every token, which dilutes the signal over long multi-turn episodes, where
 PPO with a value network still earns its cost. DAPO's four fixes (Clip-Higher,
 token-level loss, dynamic sampling, overlong shaping) are tabulated in
-[post-training-for-agents.md](05-post-training-for-agents.md#rl-for-tool-calling).
+[post-training-for-agents.md](05-post-training-for-agents.md#rl-for-tool-calling). Clip-Higher
+answers entropy collapse under symmetric clipping: raising only ε_high lets low-probability tokens
+gain mass ([arXiv:2503.14476](https://arxiv.org/abs/2503.14476), Yu et al., 2025-03).
 
 **When to use GRPO:** Reasoning tasks with verifiable outcomes (math, code, logic).
 Not appropriate for general instruction following or alignment training.
+
+### GSPO — sequence-level ratios
+
+**Paper:** Zheng et al. (Qwen team), "Group Sequence Policy Optimization" (2025). Used to train
+Qwen3. Summarized in *AI Agents: The Definitive Guide*, ch. 3.
+
+GRPO gives every token in a response the same advantage, but still computes and clips the
+importance ratio **per token**. In a long response those per-token ratios fluctuate
+independently and their noise adds up. GSPO argues that because the reward belongs to the
+whole sequence, the ratio and the clipping should too. It replaces the token ratio with a
+length-normalized **sequence** ratio:
+
+```
+s_i(θ) = ( π_θ(y_i | x) / π_θ_old(y_i | x) ) ^ (1/|y_i|)
+
+L_GSPO(θ) = -E[ (1/G) · Σ_i min( s_i(θ) · A_i, clip(s_i(θ), 1-ε, 1+ε) · A_i ) ]
+```
+
+`A_i` is the same group-normalized advantage as GRPO. The 1/|y| exponent is a geometric
+mean over tokens, which keeps long responses from producing extreme ratios. Clipping then
+keeps or drops whole responses, not individual tokens.
+
+![GSPO: sample prompts, generate full sequences, compute sequence rewards and relative comparisons, and combine them with a KL divergence estimated over the full sequence. All clipping and optimization act on the sequence likelihood.](../sources/images/ai-agents-definitive-guide-fig3-3.png)
+*Image Source: Nicole Koenigstein, *AI Agents: The Definitive Guide* (O'Reilly, 2026), Fig. 3-3*
+
+The two claims in favour of GSPO (Zheng et al.; the book repeats them):
+
+- More stable on long outputs and on mixture-of-experts models. With GRPO, the experts a token
+  routes to can change between the old and new policy, so per-token ratios swing. The Qwen
+  team needed "routing replay" to stabilize GRPO on MoE; GSPO did not.
+- Sequence likelihoods from the inference engine can be reused, so less recomputation in the
+  trainer.
+
+*Read with care:* both claims come from the team that built GSPO and trained Qwen3 with it.
+The book's comparison table also says GRPO "needs value-model surrogates" for MoE stability.
+GRPO has no value model; the MoE fix the GSPO paper describes is routing replay. The choice is
+a stability and infrastructure question for long-output or MoE training, not a new kind of
+objective. DAPO's token-level loss (in [05](05-post-training-for-agents.md#rl-for-tool-calling))
+moves the other way, toward weighting each token equally, so practice has not settled on one
+granularity.
+
+**Who needs what** (adapted from *AI Agents: The Definitive Guide*, Table 3-2):
+
+| Method | Reference policy | Reward signal | Critic | Unit of the ratio / loss |
+|---|---|---|---|---|
+| PPO (RLHF) | Frozen SFT model | Learned reward model | Yes | Token, with GAE advantages |
+| DPO | Frozen reference | None at train time: offline chosen/rejected pairs | No | Sequence, pairwise |
+| GRPO | Often a frozen reference | Reward function, verifier or LLM judge | No | Token ratio, group-normalized advantage |
+| GSPO | Often a frozen reference | Same as GRPO | No | Sequence ratio, group-normalized advantage |
 
 ---
 
@@ -276,7 +382,7 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 
 ## Decision framework
 
-| Property | PPO | DPO | GRPO | KTO | ORPO |
+| Property | PPO | DPO | GRPO (and GSPO) | KTO | ORPO |
 |----------|-----|-----|------|-----|------|
 | Needs reward model | Yes | No | Optional (DeepSeekMath used one; R1 used rules) | No | No |
 | Needs reference model | Yes (SFT) | Yes (SFT) | Yes (SFT) | Yes (SFT) | No |
@@ -365,4 +471,4 @@ proof of new capability.
   [arXiv:2506.21495](https://arxiv.org/abs/2506.21495) (semi-online DPO vs GRPO),
   [arXiv:2503.01067](https://arxiv.org/abs/2503.01067) (why online beats offline),
   [arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (RLVR pass@k boundary)
-- **External:** DeepSeek-R1 (arXiv: 2501.12948), GRPO (arXiv: 2402.03300)
+- **External:** DeepSeek-R1 (arXiv: 2501.12948), GRPO (arXiv: 2402.03300), GSPO ([arXiv:2507.18071](https://arxiv.org/abs/2507.18071))

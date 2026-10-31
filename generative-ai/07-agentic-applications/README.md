@@ -12,6 +12,7 @@ Agentic applications are what the earlier pillars build toward: a model, tools, 
 - **A bounded search agent.** Two LangGraph graphs behind FastAPI: a router that decides whether to search, and a plan → search → draft loop that writes a sectioned report.
 - **An open-ended deep-research agent.** A from-scratch tool-calling loop with context compaction, scored on DeepResearch Bench with an LLM judge, then trained with RL.
 - **Real-time multimodal agents.** Voice, computer use and robotics, where latency and perception change the architecture.
+- **Application patterns.** Where the agent sits in the user's work (chatbot, collaborative editor, ambient background agent), and one engine re-tasked to a new domain by changing only its corpus.
 
 The pillar's question is the same throughout: how much autonomy does the task need, and what does that cost in calls, latency and failure modes?
 
@@ -22,7 +23,8 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 1. Read [01 — Internet search agent](notes/01-internet-search-agent.md). It shows a fixed graph with a bounded cost.
 2. Read [02 — Deep research bot](notes/02-deep-research-bot.md), then open [practice/deep-research-bot/notebooks/01_simple_agent.ipynb](practice/deep-research-bot/notebooks/01_simple_agent.ipynb). This is the open loop, and how to evaluate it.
 3. Read [03 — Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) for agents whose inputs are audio, screens and sensors.
-4. Look up papers and upstream repos in [references.md](references.md).
+4. Read [04 — Application patterns](notes/04-application-patterns.md) before designing the UI around any of these: chatbot, collaborative or ambient.
+5. Look up papers and upstream repos in [references.md](references.md).
 
 ---
 
@@ -35,13 +37,14 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 ├── notes/
 │   ├── 01-internet-search-agent.md
 │   ├── 02-deep-research-bot.md
-│   └── 03-real-time-multimodal-agents.md
+│   ├── 03-real-time-multimodal-agents.md
+│   └── 04-application-patterns.md
 ├── practice/
 │   ├── deep-research-bot/        # W&B workshop agent (Apache-2.0), notebooks 01–03, RACE eval
 │   └── deep_research_bench/      # DeepResearch Bench RACE scorer (Apache-2.0), vendored
 └── sources/
-    ├── images/                   # li-ai-agents-in-depth-fig6-*.svg
-    ├── context-engineering-multi-agent-systems/
+    ├── images/                   # li-ai-agents-in-depth-fig6-*.svg, context-engineering-multi-agent-systems-fig9-1.png
+    ├── context-engineering-multi-agent-systems/   # ch. 9 PDF
     └── *.pdf                     # dialogue-systems and human-AI interaction papers (queued)
 ```
 
@@ -54,6 +57,7 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 | 01 | [Internet search agent](notes/01-internet-search-agent.md) | Router node vs search tool, structured decisions, the plan → section loop, checkpointers, FastAPI serving, code review | internet-search-agent (MIT) |
 | 02 | [Deep research bot](notes/02-deep-research-bot.md) | A minimal agent loop, Exa tools, think/plan tools, context compaction, RACE scoring, RL with ART + RULER, code review | W&B workshop; DeepResearch Bench |
 | 03 | [Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) | Cascaded vs omni vs full-duplex voice, fast/slow thinking, computer use, VLA robotics, Sim2Real | Li, *AI Agents in Depth* ch. 6 |
+| 04 | [Application patterns](notes/04-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 |
 
 ---
 
@@ -69,6 +73,9 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 | Training an agent | Do it only after the eval is stable. RL optimises whatever the reward measures |
 | Voice | Stream ASR → LLM → TTS and start speaking before the full answer is ready, or go full-duplex |
 | Computer use | Prefer APIs and the DOM to pixels. Use vision for grounding only where there is no structure |
+| The agent edits an artifact the user is also editing | Decide the merge level (branch + diff, or real-time CRDT/OT) before building the agent; emit targeted edits, never whole rewrites |
+| A run takes tens of seconds | Make it ambient or batch and deliver a summary; don't put it behind a chat turn |
+| The goal asks for something the corpus doesn't contain | Say so, and label inferred claims separately from cited ones |
 | Third-party search APIs | Wrap them behind one client interface. Bing Search was retired in 2025 and broke agents that called it directly |
 
 ---
@@ -86,7 +93,7 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 
 ### Books and courses
 
-- W&B *Building Agents from Scratch* workshop → 02. Li, *AI Agents in Depth* ch. 6 → 03. Details and upstream links are in [references.md](references.md#books-and-courses).
+- W&B *Building Agents from Scratch* workshop → 02. Li, *AI Agents in Depth* ch. 6 → 03. Oshin & Campos, *Learning LangChain* ch. 11 → 04. Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 → 04. Details and upstream links are in [references.md](references.md#books-and-courses).
 
 ### Coursework
 

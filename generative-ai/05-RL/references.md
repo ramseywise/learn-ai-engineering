@@ -19,12 +19,16 @@ cleaned: 2026-10-31
 |---|---|---|
 | ★ | Sutton & Barto, [*Reinforcement Learning: An Introduction*](http://incompleteideas.net/book/the-book-2nd.html) (2nd ed., 2018). ✓ [sources/sutton-barto-2018-reinforcement-learning-2nd-ed.pdf](sources/sutton-barto-2018-reinforcement-learning-2nd-ed.pdf) (70 MB). Ch. 1–6 cover MDPs, DP, Monte Carlo, TD and Q-learning; ch. 13 covers policy gradients | 01, 05 |
 | ★ | Bojie Li, *AI Agents in Depth* (2026), [ch. 8 Post-Training](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0). Synthesized into 05; figures 8-11, 8-13 and 8-15 are in [sources/images/](sources/images/) as `li-ai-agents-in-depth-*`. Experiment 7-1 is the [Q-learning lab](practice/01-q-learning-treasure-hunt/) | 05 |
-| | Phil Winder, *Reinforcement Learning: Industrial Applications of Intelligent Agents* (O'Reilly, 2020). ✓ Chapter PDFs ch. 1–11 in [sources/winder-reinforcement-learning/](sources/winder-reinforcement-learning/). Ch. 2–5 parallel Sutton & Barto with code; ch. 9–10 cover RL in production | 01 |
+| | Phil Winder, *Reinforcement Learning: Industrial Applications of Intelligent Agents* (O'Reilly, 2020). Chapter PDFs in [sources/winder-reinforcement-learning/](sources/winder-reinforcement-learning/). Folded in as: ch. 1–3 → [01](notes/01-rl-foundations.md) §1 (MDP, Bellman, TD, Q-learning vs SARSA); ch. 4 → 01 §1 DQN and offline RL; ch. 5–6 → 01 §1 policy gradients and PPO clip; ch. 7 → 01 §1 entropy and SAC; ch. 8 → 01 §1 imitation/IRL, hierarchy/curricula and §2 MARL; ch. 9, 11 → 01 §1 exploration, engineering an RL problem, what has dated; ch. 10 → [01](notes/01-rl-foundations.md#scaling-actors-and-learners) (scaling, comparing runs). Notes cite it as `(*Reinforcement Learning*, ch. N)` | 01 |
 | | Lattimore & Szepesvári, *Bandit Algorithms* (Cambridge, 2020). ✓ [sources/lattimore-szepesvari-2020-bandit-algorithms.pdf](sources/lattimore-szepesvari-2020-bandit-algorithms.pdf). The exploration–exploitation trade-off with no state | 01 |
 | | Hugging Face, [Deep RL Course](https://huggingface.co/learn/deep-rl-course): hands-on Q-learning, DQN, PPO with Gymnasium | 01 |
 | | OpenAI, [Spinning Up in Deep RL](https://spinningup.openai.com/): policy-gradient derivations and reference PPO code | 01, 03 |
-| | *LLM Engineer's Handbook* ch. 5–6 (SFT and preference alignment with DPO). ✓ in [01-llm-fundamentals/sources/llm-engineers-handbook/](../01-llm-fundamentals/sources/llm-engineers-handbook/) | 02, 03 |
-| | Raschka, *Build a Large Language Model (From Scratch)* ch. 6–7 (classification and instruction fine-tuning: stage 1 of RLHF). ✓ in [01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/](../01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/) | 02 |
+| ★ | Chip Huyen, *AI Engineering* (O'Reilly, 2025). Chapter PDFs in [sources/huyen-ai-engineering/](sources/huyen-ai-engineering/). Folded in as: ch. 7 Finetuning (when to fine-tune, memory math, LoRA/QLoRA, hyperparameters, "form vs facts") → [02](notes/02-rlhf-pipeline.md#sft-in-practice); ch. 8 Dataset Engineering (quality vs diversity, Llama 3 domain mix, how much data, synthetic data and its limits, dedup, cleaning) → [05](notes/05-post-training-for-agents.md#data-engineering-for-post-training). Notes cite it as `(*AI Engineering*, ch. N)` | 02, 05 |
+| ★ | Paul Iusztin & Maxime Labonne, *LLM Engineer's Handbook* (Packt, 2024). Chapter PDFs in [01-llm-fundamentals/sources/llm-engineers-handbook/](../01-llm-fundamentals/sources/llm-engineers-handbook/). Folded in as: ch. 5 Supervised Fine-Tuning (memory per parameter, Unsloth LoRA config, hyperparameters → [02](notes/02-rlhf-pipeline.md#sft-in-practice); curation pipeline, dataset sizes, Evol-Instruct → [05](notes/05-post-training-for-agents.md#data-engineering-for-post-training)); ch. 6 Preference Alignment (preference-data sizes, judge biases → [02](notes/02-rlhf-pipeline.md#stage-2--reward-model-training); DPO β, learning rate, TRL metrics → [03](notes/03-preference-optimization.md#dpo-in-practice)). Notes cite it as `(*LLM Engineer's Handbook*, ch. N)` | 02, 03, 05 |
+| | Sebastian Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024). Chapter PDFs in [01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/](../01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/). Folded in as: ch. 6 classification fine-tuning (classification head, frozen layers) and ch. 7 instruction fine-tuning (chat template, collate function with `-100` masking, judge-scored eval) → [02](notes/02-rlhf-pipeline.md#sft-in-practice). Notes cite it as `(*Build an LLM from Scratch*, ch. N)` | 02 |
+| | Nicole Koenigstein, *AI Agents: The Definitive Guide* (O'Reilly, 2026, Early Release). Chapter PDF in [sources/ai-agents-definitive-guide/](sources/ai-agents-definitive-guide/). Folded in as: ch. 3 GSPO and who-needs-what table → [03](notes/03-preference-optimization.md#gspo--sequence-level-ratios); RULER, ART, rLLM → [05](notes/05-post-training-for-agents.md#judges-as-rewards-ruler-art-and-rllm); MCTS, AB-MCTS, TreeQuest → [05](notes/05-post-training-for-agents.md#test-time-search-instead-of-training). Notes cite it as `(*AI Agents: The Definitive Guide*, ch. N)` | 03, 05 |
+| | Michael Albada, *Building Applications with AI Agents* (O'Reilly, 2025). Chapter PDF in [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/). Folded in as: ch. 7 nonparametric learning (exemplars, Reflexion, ExpeL), when to fine-tune, function-calling SFT → [05](notes/05-post-training-for-agents.md#learning-without-weights-first); its RLVR definition is flagged in 05. Notes cite it as `(*Building Applications with AI Agents*, ch. N)` | 05 |
+| | Salvatore Raieli & Gabriele Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025). Chapter PDF in [sources/building-ai-agents-llms-rag-kgs/](sources/building-ai-agents-llms-rag-kgs/). Folded in as: ch. 8 LLM-enhanced RL taxonomy → [05](notes/05-post-training-for-agents.md#classic-rl-vs-llmrl-why-priors-win). Most of the chapter is a classic-RL primer (bandits, MDPs, DQN, REINFORCE, PPO, A2C/A3C, AlphaZero) that belongs with 01. Notes cite it as `(*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. N)` | 05 |
 
 ## First-party docs
 
@@ -63,19 +67,12 @@ cleaned: 2026-10-31
 | | Asai et al., *Self-RAG* | [2310.11511](https://arxiv.org/abs/2310.11511) | — | 01 |
 | | Yao et al., *ReAct* | [2210.03629](https://arxiv.org/abs/2210.03629) | ✓ [yao-2022-react.pdf](sources/yao-2022-react.pdf) | 01, 05 |
 | | Shinn et al., *Reflexion* | [2303.11366](https://arxiv.org/abs/2303.11366) | ✓ [shinn-2023-reflexion.pdf](sources/shinn-2023-reflexion.pdf) | 01, 05 |
+| | Yu et al., *DAPO: An Open-Source LLM Reinforcement Learning System at Scale* | [2503.14476](https://arxiv.org/abs/2503.14476) | — | 03, 05 (Clip-Higher, dynamic sampling, token-level loss, overlong shaping) |
+| | Shi et al., *Instruction Tuning With Loss Over Instructions* | [2405.14394](https://arxiv.org/abs/2405.14394) | — | 02 (prompt-loss weighting vs response-only masking) |
+| | Zheng et al., *Group Sequence Policy Optimization* (GSPO) | [2507.18071](https://arxiv.org/abs/2507.18071) | — | 03 (sequence-level importance ratio) |
+| | Inoue et al., *Wider or Deeper? Scaling LLM Inference-Time Compute with Adaptive Branching Tree Search* (AB-MCTS) | [2503.04412](https://arxiv.org/abs/2503.04412) | — | 05 |
+| | Cao et al., *Survey on Large Language Model-Enhanced Reinforcement Learning* | [2404.00282](https://arxiv.org/abs/2404.00282) | — | 05 (four roles of an LLM in classic RL) |
 | | Yao et al., *Tree of Thoughts* | [2305.10601](https://arxiv.org/abs/2305.10601) | ✓ [yao-2023-tree-of-thoughts.pdf](sources/yao-2023-tree-of-thoughts.pdf) | — (agent reasoning; belongs with 03-agentic-foundations) |
-
-### Routed in, not yet integrated
-
-Placed in [sources/](sources/) by the readings router (`scripts/papers/potw.py route`) on 2026-10-31. Queued in the ledger for `/chapter`; not yet folded into the notes.
-
-| Book | Chapter | PDF | Likely note |
-|---|---|---|---|
-| Huyen, *AI Engineering* (O'Reilly, 2025) | ch. 7 Finetuning | [ch07](sources/huyen-ai-engineering/ch07-finetuning.pdf) | 02, 03 |
-| Huyen, *AI Engineering* | ch. 8 Dataset Engineering | [ch08](sources/huyen-ai-engineering/ch08-dataset-engineering.pdf) | 05 |
-| *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt) | ch. 8 Reinforcement Learning and AI Agents | [ch08](sources/building-ai-agents-llms-rag-kgs/ch08-reinforcement-learning-ai-agents.pdf) | 01, 05 |
-| *Building Applications with AI Agents* (O'Reilly) | ch. 7 Learning in Agentic Systems | [ch07](sources/building-applications-with-ai-agents/ch07-learning-agentic-systems.pdf) | 05 |
-| *AI Agents: The Definitive Guide* | ch. 3 Advanced Planning, Reasoning, and Scalable Execution | [ch03](sources/ai-agents-definitive-guide/ch03-advanced-planning-reasoning-scalable-execution-agents.pdf) | 05 |
 
 ### Misfiled papers
 
@@ -111,6 +108,7 @@ The open items carried over from the old README's curriculum, quality assessment
 
 ## Source quality
 
-- Papers and textbooks above are primary. The Winder chapters and the two engineering handbooks are purchased copies; keep them local and do not redistribute.
+- Papers and textbooks above are primary. The Winder, Huyen, Iusztin & Labonne, Raschka, Koenigstein, Albada and Raieli & Iuculano chapters are purchased copies; keep them local and do not redistribute.
+- The 2024 books (*LLM Engineer's Handbook*, Raschka) predate GRPO's spread, LoRA Without Regret and online-DPO results. The notes flag where their advice is dated. Koenigstein is an Early Release and its claims about GSPO are the GSPO authors' own. Author names for Koenigstein and Albada follow the repo convention; the chapter PDFs don't print them.
 - 05 is a synthesis of one book chapter (Li, Apache-2.0). Its numbers (e.g. "0% wins at 1k episodes, 100% at 10k" in the lab) are reproduced locally; other figures rest on the book.
 - 01 started life as a low-confidence Notion export. It has been cleaned and translated, but bare-URL claims in its MARL section were not re-verified.

@@ -15,7 +15,7 @@ The thread through all five notes is that **the reward signal is the product**. 
 
 ## Start here
 
-1. [01 — RL foundations](notes/01-rl-foundations.md), §1 only, for the MDP vocabulary.
+1. [01 — RL foundations](notes/01-rl-foundations.md), §1 for MDP vocabulary, Bellman/TD, policy gradients up to the PPO clip, and max-entropy RL.
 2. [02 — RLHF pipeline](notes/02-rlhf-pipeline.md): SFT → reward model → PPO, and why each stage exists.
 3. [03 — Preference optimization](notes/03-preference-optimization.md): the decision framework table.
 4. [05 — Post-training for agents](notes/05-post-training-for-agents.md): "SFT memorizes, RL generalizes", then run the [Q-learning lab](practice/01-q-learning-treasure-hunt/).
@@ -32,7 +32,9 @@ The thread through all five notes is that **the reward signal is the product**. 
 ├── practice/
 │   └── 01-q-learning-treasure-hunt/   tabular Q-learning lab (offline, numpy)
 └── sources/                local PDFs: Sutton & Barto, Winder ch. 1–11, bandits, RLHF/DPO/PPO papers
-    ├── images/             figures from Li, AI Agents in Depth ch. 8
+    ├── images/             figures from Li ch. 8, Huyen ch. 7–8, Koenigstein ch. 3, Albada ch. 7, Winder
+    ├── huyen-ai-engineering/, ai-agents-definitive-guide/, building-applications-with-ai-agents/,
+    │   building-ai-agents-llms-rag-kgs/   purchased chapter PDFs (see references.md § Books)
     ├── misfiled/           non-RL papers from the old dump, kept for their owning pillar
     └── winder-reinforcement-learning/
 ```
@@ -44,10 +46,10 @@ The thread through all five notes is that **the reward signal is the product**. 
 | # | Note | Covers |
 |---|---|---|
 | 01 | [RL foundations](notes/01-rl-foundations.md) | MDP tuple (S, A, P, R, γ); value-based, policy-gradient and actor-critic families; exploration vs exploitation; how RL maps onto LLMs; multi-agent RL (CTDE, VDN/QMIX, MADDPG, MAPPO); RL in RAG (WebGPT, RL over retrieval actions, Self-RAG reflection tokens) |
-| 02 | [RLHF pipeline](notes/02-rlhf-pipeline.md) | SFT, reward-model training with the Bradley-Terry loss, PPO with a KL penalty; reward hacking, overoptimization, alignment tax; practical considerations |
-| 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO (no reward model, no rollouts), GRPO (no critic, group-relative advantage); KTO, IPO, ORPO; decision framework; the DeepSeek-R1 story |
+| 02 | [RLHF pipeline](notes/02-rlhf-pipeline.md) | SFT and SFT in practice (when to fine-tune, chat templates and loss masking, memory math, LoRA/QLoRA, hyperparameters); preference data at practitioner scale and judge biases; reward-model training with the Bradley-Terry loss, PPO with a KL penalty; reward hacking, overoptimization, alignment tax; practical considerations |
+| 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO (no reward model, no rollouts) and DPO in practice (β, learning rate, TRL metrics), GRPO (no critic, group-relative advantage), GSPO (sequence-level ratios, MoE); KTO, IPO, ORPO; decision framework; the DeepSeek-R1 story |
 | 04 | [Constitutional AI and RLAIF](notes/04-constitutional-ai.md) | The constitution; SL-CAI critique → revision; RLAIF preference labels; red-teaming; self-improvement and scaling; comparison with RLHF |
-| 05 | [Post-training for agents](notes/05-post-training-for-agents.md) | The three stages; SFT memorizes vs RL generalizes; when to pick SFT or RL; data and environment over algorithm; reward design for multi-turn agents; RLVP; RL for tool calling (loss masking, ReTool, DAPO); on-policy and self-distillation; pitfalls; labs; interview questions |
+| 05 | [Post-training for agents](notes/05-post-training-for-agents.md) | The three stages; SFT memorizes vs RL generalizes; LLMs inside classic RL; function-calling SFT; learning without weights (exemplars, Reflexion, ExpeL) and when to fine-tune; when to pick SFT or RL; data and environment over algorithm, and data engineering (quality, mix, synthetic data, dedup); reward design for multi-turn agents; LLM judges as rewards (RULER, ART, rLLM); RLVP; RL for tool calling (loss masking, ReTool, DAPO); on-policy and self-distillation; test-time search (MCTS, AB-MCTS); pitfalls; labs; interview questions |
 
 ---
 
@@ -60,6 +62,10 @@ The thread through all five notes is that **the reward signal is the product**. 
 | A reward model is a proxy. Past some point, more optimization against it lowers true quality (overoptimization) | 02 |
 | Default to DPO when you have preference pairs and no verifier. Use GRPO/PPO when you can score outputs online (code that runs, math that checks) | 03 |
 | Constitutional AI swaps human harmlessness labels for AI critiques guided by written principles. The principles become the thing you audit | 04 |
+| Fine-tuning is for form, RAG is for facts. When in doubt, don't fine-tune: try prompts, retrieval and in-context learning (Reflexion, ExpeL) first | 02, 05 |
+| Start fine-tuning with about 50 good examples. If they show no gain, fix the setup before buying more data | 05 |
+| Apply LoRA to all linear layers, not only attention. For DPO, start at β = 0.1 (raise it if outputs turn wordy) with a learning rate about 100× below LoRA SFT's | 02, 03 |
+| Gate a learned judge behind a verifiable check: correctness first, judge ranking second | 05 |
 | Good SFT data often removes the need for RL. Data decides how far you can go; RL decides how much higher | 05 |
 | SFT memorizes the demonstrations; RL generalizes to held-out scenarios. Use SFT for format, RL for behaviour under distribution shift | 05 |
 | Reward the outcome and penalize verifiable process violations (RLVP). Do not reward a lucky path that broke a constraint | 05 |
@@ -77,7 +83,7 @@ The thread through all five notes is that **the reward signal is the product**. 
 - [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md): environments as training grounds, trajectory scoring, preference annotation.
 - [ai-engineering/04-loop-engineering](../../ai-engineering/04-loop-engineering/README.md): failure modes and guardrails, the runtime side of reward hacking.
 
-**Books and courses:** Sutton & Barto (★), Li *AI Agents in Depth* ch. 8 (★), Winder, Lattimore & Szepesvári, HF Deep RL Course, OpenAI Spinning Up. Full list with chapter → note mapping in [references.md](references.md).
+**Books and courses:** Sutton & Barto (★), Li *AI Agents in Depth* ch. 8 (★), Huyen *AI Engineering* ch. 7–8 (★), *LLM Engineer's Handbook* ch. 5–6 (★), Raschka ch. 6–7, Koenigstein ch. 3, Albada ch. 7, Raieli & Iuculano ch. 8, Winder, Lattimore & Szepesvári, HF Deep RL Course, OpenAI Spinning Up. Full list with chapter → note mapping in [references.md](references.md).
 
 **Practice**
 

@@ -7,6 +7,13 @@ sources:
   - "Cemri et al. 2025, Why Do Multi-Agent LLM Systems Fail? — https://arxiv.org/abs/2503.13657"
   - "Andrew Ng, Agentic Design Patterns (The Batch, 2024) — https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/"
   - https://arxiv.org/abs/2601.12307
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 7"
+  - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 2"
+  - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 4, 11"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
+  - "Huang et al. 2024, Understanding the planning of LLM agents: A survey — https://arxiv.org/abs/2402.02716"
+  - "Yao et al. 2023, Tree of Thoughts — https://arxiv.org/abs/2305.10601"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -136,6 +143,27 @@ writer.initiate_chat(recipient=critic, message=task, max_turns=2, summary_method
 
 This is P18 Reflection with the critic split into roles. The book's guidance for reflection applies: a reviewer with a specific rubric beats "please improve this", and one or two rounds capture most of the gain.
 
+**The same loop as a two-node graph.** Oshin and Campos build reflection from a `generate` node and a `reflect` node (*Learning LangChain*, ch. 7). One detail is easy to miss: `reflect` swaps the roles of every message after the first, so AI messages become human messages and the reverse. The critic model then thinks it is grading a user's essay, and its critique goes back to `generate` as a `HumanMessage`, as if the user had sent it. The swap is needed because dialogue-tuned models are trained on alternating human/AI turns. The loop then runs a fixed number of rounds:
+
+```python
+def reflect(state: State) -> State:
+    swap = {AIMessage: HumanMessage, HumanMessage: AIMessage}
+    flipped = [reflection_prompt, state["messages"][0]] + [
+        swap[type(m)](content=m.content) for m in state["messages"][1:]
+    ]
+    critique = model.invoke(flipped)
+    return {"messages": [HumanMessage(content=critique.content)]}
+
+def should_continue(state: State):
+    return END if len(state["messages"]) > 6 else "reflect"   # 3 rounds, ending on a draft
+
+builder.add_edge(START, "generate")
+builder.add_conditional_edges("generate", should_continue)
+builder.add_edge("reflect", "generate")
+```
+
+There are two variants: let `reflect` decide when the draft is good enough, or add reflection as the last node of a tool-calling agent, at the price of more latency. The authors "strongly recommend" grounding the critique wherever possible. For code, run a linter or compiler before `reflect` and pass it the errors. That matches the P22 rule of sending execution errors back to the model ([02](02-tool-use-and-react.md#code-execution-instead-of-a-tool-list)).
+
 ---
 
 ## L4 — tool use inside a conversation
@@ -212,6 +240,32 @@ Without the transition table, the manager LLM picks the next speaker from each a
 
 ---
 
+## Planning strategies
+
+The Planner in L6 is one way to plan. Huang et al.'s survey of LLM-agent planning ([arXiv:2402.02716](https://arxiv.org/abs/2402.02716)), as summarized by Raieli and Iuculano, sorts the options by where each one fails (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 4):
+
+| Strategy | How it works | Fails when |
+|---|---|---|
+| Decomposition first | Plan every subgoal up front, then execute ("Let's first devise a plan" / "Let's carry out the plan") | A step goes wrong mid-run: the plan can't be corrected |
+| Interleaved | Decompose one subtask, solve it, decompose the next (ReAct is this) | The problem is hard: chains grow long and costly without reaching an answer |
+| Multi-plan selection | Sample several plans and pick one by majority vote, tree search or RL | The budget is tight: generating many paths costs compute and time, and the stochastic choice is inconsistent |
+| External planner | A symbolic or small neural planner finds the path; the LLM fixes the mistakes | You can't afford the engineering: complex to build |
+| Reflection and refinement | Generate a plan, critique it (self or a separate evaluator), refine | No guarantee of convergence; it can loop |
+| Memory-augmented | Store and recall past observations and outcomes in external memory to get past the context limit | The book names no failure mode; it inherits the weaknesses of retrieval |
+
+**Plan-and-execute** separates planning from execution, with each handled by its own LLM call that sees the objective, the current task and the completed tasks. BabyAGI is the classic example. In a loop, an execution agent does the next task and stores the result in a vector database. A task-creation agent derives new tasks from the objective and that result. A prioritization agent reorders the task list against the objective (*Prompt Engineering for Generative AI*, ch. 6). The structure is also an injection defense: Plan-Then-Execute in [02](02-tool-use-and-react.md#prompt-injection-six-defenses) fixes the plan before untrusted data is read. BabyAGI regenerates tasks every cycle, so it gets the flexibility and loses that protection.
+
+**Tree of Thoughts** (ToT, [arXiv:2305.10601](https://arxiv.org/abs/2305.10601)) is multi-plan selection with backtracking. On the Game of 24, GPT-4 with chain-of-thought solved 4% of problems; ToT solved 74% (*Prompt Engineering for Generative AI*, ch. 6). Koenigstein's cheap version uses two models: a small model proposes three options as structured output, and a stronger judge picks one. Clamp the judge's index in code, because structured output guarantees the type, not the range (*AI Agents: The Definitive Guide*, ch. 2):
+
+```python
+choice = judge_llm.with_structured_output(ChoicePayload).invoke(eval_prompt)
+idx = max(0, min(choice.choice_index, len(opts) - 1))
+```
+
+She notes that this propose-and-judge pair can sometimes replace a full multi-agent design, with fewer calls to the large model.
+
+---
+
 ## Letta: agents as services with shared memory
 
 The Letta course (L6) takes a different approach. Each agent is a persistent service behind a REST API, with its own memory. Agents coordinate in two ways:
@@ -256,6 +310,44 @@ When the outreach agent is told "the company has rebranded to Letta", it edits t
 | Market-based | agents bid for tasks (sealed-bid or English auction) | heterogeneous agents with different costs |
 | Human-in-the-loop | a proxy agent routes conflicts to a person | high stakes, ambiguous decisions |
 
+The LangGraph view of the same space names topologies by who decides what runs next (*Learning LangChain*, ch. 7):
+
+![Multi-agent topologies: single agent, network, supervisor, supervisor with agents as tools, hierarchical, custom](../sources/images/learning-langchain-fig7-3.png)
+*Image Source: Mayo Oshin & Nuno Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 7-3*
+
+| Topology | Who picks the next agent |
+|---|---|
+| Network | Any agent can call any other |
+| Supervisor | One supervisor agent. A special case makes the subagents its tools. |
+| Hierarchical | Supervisors of supervisors |
+| Custom | Parts of the flow are fixed edges; only some agents choose |
+
+The supervisor is a structured-output call: `next: Literal["researcher", "coder", "FINISH"]`, read by a conditional edge. The router sees only the agents' names unless you add descriptions, so `agent_1` and `agent_2` give it nothing to decide with. Two design choices follow. The first is whether subagents share one `messages` list, so each sees the others' work, or are subgraphs that keep their own state and return only a summary. The second is whether each subagent returns to the supervisor or decides for itself to answer the user. The authors' own caveat: reflection and multi-agent "shouldn't be the first thing you reach for". Start with the single agent of [02](02-tool-use-and-react.md). (Their Python listing has bugs. `AgentState` declares only `next`, yet the nodes return `messages`, and `"FINISH"` is never mapped to `END`. The JavaScript version maps it.)
+
+Koenigstein builds three of these in LangGraph and compares them (*AI Agents: The Definitive Guide*, ch. 2):
+
+| Architecture | Use when | Benefits | Trade-offs |
+|---|---|---|---|
+| Supervisor | Small teams with clear task boundaries | Simple; strong control; avoids deadlocks | Central bottleneck; single point of failure |
+| Hierarchical | Multi-team workflows that must scale | Modular; mirrors an org chart | Harder to debug; needs careful design |
+| Swarm | Peers handing work back and forth (researcher ↔ writer) | Flexible, natural back-and-forth | Less predictable; needs robust handoff design |
+
+Her runs show the cost profile, but on different tasks. The hierarchical team wrote a whitepaper in about two minutes with `recursion_limit=150`. The swarm produced three cited bullet points in about 30 seconds. Don't read that as swarm being faster. Swarm handoffs use `create_handoff_tool`, which by default passes the **full message history** to the next agent. Filter it, or every handoff grows the context.
+
+Raieli and Iuculano's single- vs multi-agent comparison (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11; the book's caption for this table is wrong):
+
+| | Single agent | Multi-agent |
+|---|---|---|
+| Cost | Lower: fewer inference steps | Higher: more agents, LLM calls and tool use |
+| Latency | Lower | Higher: inter-agent communication |
+| Fault tolerance | One failure breaks the system | Failures can be contained in one agent |
+| Modularity | Monolithic | Agents added or replaced independently |
+| Scalability | One agent handles all logic | Parallel agents |
+| Communication overhead | None | Significant: explicit messaging |
+| Interpretability | One decision chain | Distributed reasoning is harder to follow |
+
+Albada adds the cost driver: agents spend tokens sharing context and coordinating, so a multi-agent system often uses more tokens for the same task (*Building Applications with AI Agents*, ch. 2).
+
 Use cases from the book, roughly from least to most complex: parallel breadth-first work (the most common), multistep pipelines, collaborative content, complex reasoning, adversarial verification (red team / blue team), domain integration, self-improving systems.
 
 ---
@@ -269,6 +361,8 @@ Cemri et al. (2025) found 40–80% of tasks fail in the multi-agent systems they
 | Specification issues | ignoring the role or task spec, repeating steps, losing context, not recognising completion |
 | Inter-agent misalignment | conversation resets, not asking for clarification, derailment, withholding information, ignoring other agents, reasoning that does not match action |
 | Task verification | missing or weak checks, premature termination |
+
+The taxonomy comes from expert annotation of about 150 conversation traces, each averaging over 15,000 lines. No single cause dominates: failures spread across all three categories, and they are correlated. A bad architecture, for example, causes inefficient communication downstream, so fixing one mode rarely fixes the system (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11).
 
 The book adds that coordination overhead grows faster than the number of agents, consistency across agents is hard, and errors compound along a chain. Its advice: if UX design, a human in the loop or adjusted expectations let a single agent do the job, use a single agent. The production view (subagents as context firewalls, when not to go multi-agent) is in [harness 07 — orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) and [context 10 — tools and multi-agent](../../../ai-engineering/02-context-engineering/notes/10-tools-and-multi-agent.md).
 
@@ -294,5 +388,8 @@ The book adds that coordination overhead grows faster than the number of agents,
 | How do you stop a group chat from derailing? | Speaker-transition rules, turn caps, a human approver |
 | Why do multi-agent systems fail? | Bad specs, misaligned agents, weak verification (Cemri 2025) |
 | Messages vs shared memory? | Messages for requests; shared blocks for facts every agent needs |
+| Why does a reflection node swap human and AI roles? | Dialogue-tuned models expect alternating turns; the critic must see the draft as user input, and the generator must see the critique as user feedback |
+| Supervisor, hierarchical or swarm? | Supervisor for small teams (bottleneck, but no deadlocks); hierarchical for many teams (harder to debug); swarm for peer back-and-forth (needs careful handoffs) |
+| Decomposition-first vs interleaved planning? | Up-front plans can't correct mid-run errors; interleaved plans adapt but can run long and costly on hard problems |
 
 → Next: [05 — framework survey](05-framework-survey.md) — the same patterns in AutoGen, CrewAI, LangGraph, ADK, the OpenAI Agents SDK, smolagents and Letta, plus MCP and A2A.

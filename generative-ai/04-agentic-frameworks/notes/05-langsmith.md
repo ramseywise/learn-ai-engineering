@@ -3,6 +3,7 @@ origin: own coursework
 sources:
   - https://docs.smith.langchain.com/
   - https://docs.smith.langchain.com/evaluation
+  - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 4"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -145,6 +146,24 @@ results = evaluate(
 | `completeness_score` | completeness | `CompletenessGrader` |
 | `escalation_correct` | escalation | `EscalationGrader` |
 | `answer_relevancy` | relevancy | `AnswerRelevancyGrader` |
+
+### Testing whether a cheaper model is good enough
+
+*Prompt Engineering for Generative AI* (ch. 4) walks through the most common reason to run an eval: checking whether a cheaper model can take over a task. The setup:
+
+1. GPT-4 classifies a set of bank-transaction descriptions into a `transaction_type` and a `transaction_category`. **Those labels are treated as ground truth.**
+2. Mixtral 8x7b (`mistral-small` in Mistral's API) runs the same chain, `prompt | model | StrOutputParser() | remove_back_slashes | PydanticOutputParser`. The extra step strips backslashes Mistral put into JSON keys.
+3. An exact-match comparison against the GPT-4 labels scores Mistral at **77.5%**. The book doesn't give the number of transactions.
+4. GPT-3.5-turbo runs the same chain in JSON mode (`response_format={"type": "json_object"}`), and a GPT-4 pairwise judge (`labeled_pairwise_string`) compares the two smaller models against the reference and explains its choice.
+
+Four things to know before copying this setup:
+
+- **The score measures agreement with GPT-4, not correctness.** Where GPT-4 mislabels a transaction, a small model that gets it right scores as wrong. The book's own warning covers the judge too: "if GPT-4 is bad at a task, it may also be bad at evaluating that task", so read the judge's reasoning by hand. Spot-check a sample of the reference labels before trusting any accuracy against them ([06-eval](../../../ai-engineering/06-eval/README.md)).
+- **Parse failures count as wrong answers.** The loop's `except` branch writes a `None` row instead of crashing, and `None` never matches. So the 77.5% mixes misclassifications with output that failed to parse. Track the parse-failure rate as its own metric. A model that classifies well but formats badly needs a different fix (JSON mode, `with_structured_output`) from one that classifies badly.
+- **Exact match needs no framework.** The book says so itself: a string comparison is a pandas one-liner. The LLM judges are where a library earns its place. For near-miss answers, the book points to Levenshtein and embedding-distance evaluators.
+- **The API is legacy.** `load_evaluator(...)` and `evaluate_string_pairs(...)` come from `langchain.evaluation`. In current code, store the GPT-4 labels as dataset `outputs`, write exact match as a custom evaluator like `routing_accuracy` above, and run both models through `evaluate()` as two experiments. Use LangSmith's pairwise comparison for the head-to-head.
+
+The book's case for doing this at all still holds. If the small model is good enough, the task gets cheaper and faster, and an open-weights model can run on your own servers so sensitive data never leaves. Its advice is to test against the hosted API first, before self-hosting.
 
 ---
 
