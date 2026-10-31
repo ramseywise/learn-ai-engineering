@@ -5,8 +5,10 @@ sources:
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/building-effective-agents
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
+  - https://arxiv.org/abs/2512.08296
+  - https://arxiv.org/abs/2604.02460
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 6 — When Not to Build a Graph
 
@@ -29,6 +31,11 @@ The test: can you name the nodes before the run starts? If not, can `Send` deriv
 ## What fan-out costs
 
 Anthropic's multi-agent research system is the first-party anchor. In their write-up, agents use about **4× the tokens of a chat interaction**, and multi-agent systems about **15×**. In exchange, the multi-agent version beat a single agent by a wide margin on their research eval, and token usage alone explained most of the variance in performance. Their conclusion: multi-agent systems pay off for tasks whose value is high enough to cover the tokens, and that **parallelise well**. Tasks where every agent needs the same context, or with many dependencies between agents, are a poor fit.
+
+Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) tested that conclusion under controlled conditions: 260 configurations across six agentic benchmarks, five architectures and three model families (GPT-5, Gemini 2.x, Claude Sonnet 3.7–4.5), with compute matched. The spread was enormous. A centralized team scored 80.8% higher than a single agent on Finance Agent, where the work decomposes into parallel subtasks; every multi-agent variant lost 39–70% on PlanCraft, where each step constrains the next; and the mean change across all multi-agent configurations was −0.3% (95% CI [−58.7%, +77.2%]). The one predictor that held up under their most conservative statistics was the single agent's own score: once it was above about 45%, adding agents had negative returns. Multi-agent runs spent 1.6–6.2× the tokens of a single agent at matched performance. Their caveats: only 20 tasks per cell on SWE-bench Verified and Terminal-Bench, and prompts were not tuned per model. Tran & Kiela ([arXiv:2604.02460](https://arxiv.org/abs/2604.02460), 2026-04) get the same answer from the other side: on multi-hop QA at matched thinking-token budgets, a single agent was best or tied with every multi-agent variant ([05](05-topology-patterns.md#when-multi-agent-beats-single-agent)).
+
+![Box plots for six benchmarks comparing a single agent with four multi-agent architectures: every multi-agent variant gains 57–81% on Finance Agent and loses 39–70% on PlanCraft, with small losses on SWE-bench Verified](../sources/images/kim-2025-scaling-agent-systems-fig2.png)
+*Image Source: Kim et al., [Towards a Science of Scaling Agent Systems](https://arxiv.org/abs/2512.08296) (2025), Fig. 2*
 
 flowtivity puts the trade-off as a table. Its numbers are vendor estimates, so use them as a shape to test rather than as constants:
 
@@ -106,6 +113,7 @@ This is [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-ope
 | Single agent, tool-augmented reasoning | Loop |
 | Open-ended research with unknowable steps | Harness + loop, **not** a graph |
 | Simple task, low per-cycle pass rate | Loop: fan-out cost isn't recovered |
+| Single agent already passes more than ~45% | Loop: extra agents had negative returns (Kim et al.) |
 | Verifier failing on several criteria | Split the verifier first |
 | Several agents with conditional handoffs | Graph |
 | 3+ independent verification or research steps | Graph (parallel review) |

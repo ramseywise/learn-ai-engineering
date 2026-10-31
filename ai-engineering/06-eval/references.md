@@ -70,6 +70,22 @@
 
 ---
 
+## AI Papers of the Week
+
+Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`). Newest first.
+
+| | Paper | arXiv | Chapters |
+|---|---|---|---|
+| ★ | Bodhwani et al. (Amazon), *GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation of Task-Oriented Agents* (2026): on τ²-bench and SimulatorArena (25 agents), 57.5% of conversations a blind panel rated satisfied had failed the task, the same as the base failure rate. A judge panel flips the same near-equal pairs (31% error), and persona simulators cut reward 42% against a cooperative user. [PDF](sources/bodhwani-2026-gauge.pdf) | [2609.12191](https://arxiv.org/abs/2609.12191) | [05](notes/05-llm-as-judge.md#the-procedure) · [05](notes/05-llm-as-judge.md#multi-family-judging) · [06](notes/06-evaluating-agents.md#multi-turn-evaluation) |
+| ★ | Norman et al. (UC Berkeley), *Reliability without Validity: A Systematic, Large-Scale Evaluation of LLM-as-a-Judge Models* (2026): 21 judges, about 541k judgments. Exact-match agreement overstates κ by 33.8–41.3 points, test–retest near 0.99 coexists with strong position bias, and verbosity bias is below 0.011 for every judge under one pairwise rubric. [PDF](sources/norman-2026-reliability-without-validity.pdf) | [2606.19544](https://arxiv.org/abs/2606.19544) | [05](notes/05-llm-as-judge.md#known-biases) · [05](notes/05-llm-as-judge.md#what-to-measure) |
+| | Zhao et al. (Princeton, Tencent AI Lab), *One Token to Fool LLM-as-a-Judge* (2025): reference-based judges pass content-free answers such as `:` or `Thought process:` (GPT-4o up to 35% false positives, open 70B judges 60–90%); fine-tuning on truncated negatives fixes it. [PDF](sources/zhao-2025-one-token-fool-llm-as.pdf) | [2507.08794](https://arxiv.org/abs/2507.08794) | [05](notes/05-llm-as-judge.md#known-biases) |
+| | Li et al. (Tsinghua), *LLMs-as-Judges: A Comprehensive Survey on LLM-based Evaluation Methods* (2024): taxonomy of 15 judge biases in four groups, plus methods, applications and meta-evaluation benchmarks. A catalogue with no new experiments. [PDF](sources/li-2024-llms-as-judges.pdf) | [2412.05579](https://arxiv.org/abs/2412.05579) | [05](notes/05-llm-as-judge.md#known-biases) |
+| ★ | Kapoor et al. (Princeton), *AI Agents That Matter* (2024): on HumanEval, a simple retry baseline matches the best agent's accuracy, while LATS costs over 50× more for less, so plot accuracy against cost. Most agent benchmarks lack a holdout at the generality they claim, and task order and scoring bugs shift leaderboard numbers. [PDF](sources/kapoor-2024-ai-agents-that-matter.pdf) | [2407.01502](https://arxiv.org/abs/2407.01502) | [06](notes/06-evaluating-agents.md#efficiency-metrics) · [06](notes/06-evaluating-agents.md#environment-hygiene) · [03](notes/03-eval-datasets.md#lessons-from-public-benchmarks) |
+| | Ma et al. (HKU, HKUST), *AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents* (NeurIPS 2024 D&B): progress rate over annotated subgoals (Pearson > 0.95 with human raters) separates agents whose success rates are all near zero, and grounding accuracy isolates invalid actions. [PDF](sources/ma-2024-agentboard.pdf) | [2401.13178](https://arxiv.org/abs/2401.13178) | [06](notes/06-evaluating-agents.md#outcome-and-trajectory) |
+| | Li et al. (PKU, Beihang), *Leveraging Large Language Models for NLG Evaluation: Advances and Challenges* (2024): taxonomy of LLM-based NLG metrics. Its comparison table puts G-Eval at 0.51 Spearman on SummEval against 0.19 for ROUGE-1, at 200–400× the run time. [PDF](sources/li-2024-leveraging-large-language-models-nlg.pdf) | [2401.07103](https://arxiv.org/abs/2401.07103) | [04](notes/04-graders.md#reference-based-text-metrics) |
+
+---
+
 ## Standards and tools
 
 | Tool | Link | Chapters |

@@ -5,6 +5,8 @@ sources:
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation" + labs 4.1 sampling, 4.2 prompt engineering, Assignment 4 "Fashion Forward Hub")
   - https://gradientscience.org/contextcite/ (ContextCite, cited by the course)
   - https://arxiv.org/abs/2401.14887
+  - https://arxiv.org/abs/2401.08406
+  - https://aclanthology.org/2024.naacl-industry.23/
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -28,7 +30,7 @@ An LLM is a decoder-only transformer. For each new token it runs the whole conte
 RAG works because attention lets every generated token look at the retrieved documents. Two consequences:
 
 - The model **may still ignore the context** if its weights pull harder. Prompting (below) and evaluation (RAGAS) are how you catch that.
-- **What else is in the context matters.** On NQ-open with 7B-class open models (Llama 2, Falcon, MPT, Phi-2), retrieved passages that score high but lack the answer pulled accuracy down more than unrelated passages did. Adding *random* documents sometimes raised accuracy, by up to 35% in the best case. Placing the gold passage next to the question also helped ([arXiv:2401.14887](https://arxiv.org/abs/2401.14887), Cuconasu et al., 2024-01). The authors offer no mechanism for the random-document effect and call for more research, so don't pad prompts with noise. The two findings to use: near-miss distractors are the real threat, and the best evidence goes closest to the question.
+- **What else is in the context matters.** On NQ-open with small open models (Llama2-7B, Falcon-7B, MPT-7B and Phi-2 at 2.7B, all 4-bit), retrieved passages that score high but lack the answer pulled accuracy down more than unrelated passages did. Adding a single such distractor to the gold passage cost up to 25%, and picking distractors with a retriever trained on hard negatives made it worse, not better. Adding *random* documents sometimes raised accuracy: +35% relative for Llama2-7B with four retrieved passages (about 0.19 → 0.25). Placing the gold passage next to the question also helped ([arXiv:2401.14887](https://arxiv.org/abs/2401.14887), Cuconasu et al., 2024-01). For the random-document effect the authors offer only a tentative lead (attention entropy rose about 3× with noise added) and say they can't explain it yet, so don't pad prompts with noise. The two findings to use: near-miss distractors are the real threat, and the best evidence goes closest to the question.
 - **Most of the cost is in the transformer.** Longer contexts mean more compute per token. This is the latency argument in note [07](07-rag-in-production.md).
 
 ---
@@ -165,6 +167,8 @@ The course's example: a support bot asked "Do you offer student discounts?" inve
 | ContextCite | Attributes each statement to the context spans that caused it | Research tool; extra compute |
 | ALCE benchmark | Scores citation quality, correctness and fluency | For evaluating systems, not runtime |
 
+The grounding prompt is weakest exactly when retrieval misses. In a banking-QA study (GPT-4, GPT-3.5 and Llama-2, two document sets, 800 queries each), the models kept answering when the gold passage was absent, with loosely related context or with invention. The authors call this *pseudo-helpfulness*. Nine prompt variants (verbose, quote-first, citation-required) made no salient difference to answer quality ([Zhao et al., NAACL 2024 Industry](https://aclanthology.org/2024.naacl-industry.23/), 2024-06). Catch missing evidence upstream, in the retriever and in evaluation, rather than with more prompt wording.
+
 ---
 
 ## Evaluating the generator: RAGAS
@@ -234,7 +238,7 @@ The metadata step is query parsing (note [05](05-chunking-query-parsing-and-rera
 | Update cost | Re-index documents | Retrain |
 | Citations | Natural | None |
 
-Fine-tuning changes how the model talks, not reliably what it knows. Use RAG for knowledge, fine-tuning for domain adaptation, and both when you need both. Fine-tuning in depth: [01-llm-fundamentals](../../01-llm-fundamentals/README.md) (training and adapting) and [05-RL](../../05-RL/README.md) (preference tuning).
+Fine-tuning changes how the model talks, not reliably what it knows. Microsoft's agriculture study is the measured version. On 273 expert-curated Washington-state farming questions, graded by GPT-4 against a rubric, LoRA fine-tuning GPT-4 on generated Q&A raised accuracy from 75% to 81%, and RAG added 5 points on top (86%). But fine-tuning Llama2-13B base dropped it below the off-the-shelf chat model (68% vs 76%), and RAG did more for fully correct answers than fine-tuning did (GPT-4: 36% → 60% with RAG, 45% fine-tuned) ([arXiv:2401.08406](https://arxiv.org/abs/2401.08406), Balaguer et al., 2024-01). Use RAG for knowledge, fine-tuning for domain adaptation, and both when you need both. Fine-tuning in depth: [01-llm-fundamentals](../../01-llm-fundamentals/README.md) (training and adapting) and [05-RL](../../05-RL/README.md) (preference tuning).
 
 ---
 

@@ -7,6 +7,8 @@ sources:
   - https://medium.com/ai-in-plain-english/10-context-engineering-techniques-every-ai-engineer-should-know-b54b486a6921
   - https://ai.google.dev/gemini-api/docs/caching
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/04_retrieval_augmented_generation/00–04, 40_reference/retrieval_indexing.md) — snapshot 2026-08-14)
+  - https://arxiv.org/abs/2406.13121
+  - https://arxiv.org/abs/2407.16833
   - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-10-31
@@ -37,6 +39,10 @@ Retrieval is one of three ways to get a corpus in front of the model. Pick by co
 | **Prompt / context cache** | Put the corpus in a stable prefix (implicit) or a named cache object (explicit), then ask many questions against it | It fits, and the same corpus serves many queries in a session | Storage per hour (explicit); any prefix change misses ([02](02-context-anatomy.md#ordering-stable-before-dynamic)) |
 | **Retrieval** | Index once, fetch the relevant slice per query | The corpus doesn't fit, changes often, or permissions differ per user | Pipeline to build and tune; relevance can be guessed wrong |
 | **Just-in-time tools** | The agent searches and reads on demand (below) | Agents over codebases, file systems, APIs | Latency, wandering, non-determinism |
+
+How far long context stretches depends on the task. On Google DeepMind's LOFT benchmark, Gemini 1.5 Pro was given a 128k-token corpus (roughly 300 to 1,200 passages, depending on the dataset) in its prompt. It matched specialized retrievers on text retrieval (0.77 vs. Gecko's 0.76) and on RAG (0.53 vs. 0.52). It fell well short on SQL-like reasoning over tables (0.38 vs. 0.65), and the authors note performance "does degrade when scaling the corpus to millions of tokens" ([arXiv:2406.13121](https://arxiv.org/abs/2406.13121) (Lee et al., 2024-06)). Without caching, the Gemini 1.5 Pro API had a median latency of about 4 s at 32k input tokens, 12 s at 128k, and 100 s at 1M. That is the per-call bill a cache exists to cut.
+
+When the corpus fits, the choice need not be all-or-nothing. Averaged over seven LongBench sets, reading the full context beat top-5 RAG by 7.6 points for Gemini-1.5-Pro and 13.1 for GPT-4o, at about 6× the tokens. But the two gave identical answers on 63% of queries, so routing pays. In **Self-Route**, RAG answers first and says "unanswerable" when the chunks fall short, and only those queries go to full context. Over all nine sets this matched long context for GPT-4o (48.89 vs. 48.67) on 61% of the tokens ([arXiv:2407.16833](https://arxiv.org/abs/2407.16833) (Li et al., 2024-07)). For inputs beyond the window, RAG still won (GPT-3.5-Turbo with a 16K window, on ~147K-word ∞Bench documents).
 
 These combine. A common shape is a cached prefix (instructions, tool definitions, a corpus index) plus retrieval or tool calls for the long tail. Retrieval also wins whenever **permissions** matter, whatever the size: a cached corpus is visible to everyone who hits the cache.
 
@@ -129,7 +135,7 @@ Retrieved text is dynamic, so it goes **after** the cacheable prefix and **befor
 Three placement rules follow:
 
 - **Never interleave retrieval into the prefix.** Swapping "most relevant" documents into the system prompt breaks the cache on every request ([02](02-context-anatomy.md#patterns-that-break-the-cache-or-the-model)).
-- **Long documents above the query.** Anthropic measures up to 30% better answers when the question comes after the material.
+- **Long documents above the query.** Anthropic measures up to 30% better answers when the question comes after the material. LOFT found the same: putting the query before the corpus "led to a significant and consistent performance decrease across tasks and models" ([arXiv:2406.13121](https://arxiv.org/abs/2406.13121)).
 - **Best evidence at the edges.** Recall dips in the middle of a long block ([01](01-why-context-is-finite.md#context-rot)). With many chunks, put the top-ranked ones first and last, not in rank order down the middle.
 
 ### Framing retrieved content

@@ -10,6 +10,8 @@ sources:
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 1–4"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 2"
   - https://arxiv.org/abs/2108.12409
+  - https://arxiv.org/abs/2303.12712
+  - https://arxiv.org/abs/2303.18223
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -31,6 +33,8 @@ That framing explains three things you will meet constantly:
 | Fluent but wrong answers (hallucination) | Training rewards *plausible* continuations, not true ones. A confident-sounding citation is a likely sequence of tokens whether or not the paper exists |
 | Sensitivity to wording | The prompt is the conditioning context. Different tokens give a different distribution |
 | Few-shot learning | Examples in the prompt make the desired pattern the most likely continuation, with no weight update ([arXiv:2005.14165](https://arxiv.org/abs/2005.14165), Brown et al., 2020) |
+
+The loop has a fourth consequence: the model has no scratchpad except the tokens it has already written. Bubeck et al. probed an early, pre-release GPT-4 on `a*b + c*d`. With single-digit numbers it got "only 58% accuracy" on 100 random samples, and with numbers from 10 to 19 it got 16%. When the prompt asked it to write out every intermediate step first, accuracy rose to 100% for numbers from 1 to 40. Asked how many primes lie between 150 and 250, it answered 13. Asked to list them first and then count, it got the right answer. The authors put these failures down to "the model's lack of planning, working memory, ability to backtrack," and separate *incremental* tasks, which can be written one step at a time, from *discontinuous* ones that need an idea before the first word. They also warn that "all quantitative results will be different on the final" model ([arXiv:2303.12712](https://arxiv.org/abs/2303.12712) (Bubeck et al., 2023-03)). This is why chain-of-thought prompting helps arithmetic: the intermediate tokens are the working memory.
 
 ---
 
@@ -123,6 +127,8 @@ Three results explain why "large" is in the name:
 | Compute-optimal training | For a fixed compute budget, train a smaller model on more data, roughly 20 tokens per parameter. Chinchilla (70B, 1.4T tokens) beat the 280B Gopher | Hoffmann et al. [arXiv:2203.15556](https://arxiv.org/abs/2203.15556) |
 
 LLaMA ([arXiv:2302.13971](https://arxiv.org/abs/2302.13971)) applied the Chinchilla lesson with public data only: its 13B model beat GPT-3 (175B) on most benchmarks reported in the paper. The GPT-4 report ([arXiv:2303.08774](https://arxiv.org/abs/2303.08774)) adds that final loss could be predicted from runs using under 1/1,000th of the compute, while giving almost no architectural detail.
+
+Lower loss does not translate directly into better task scores. Zhao et al.'s survey warns that "a direct decrease in language modeling loss does not always indicate an improvement of model performance on downstream tasks", and on some tasks performance gets worse as loss falls (inverse scaling). It defines *emergent abilities* as those "not present in small models but arise in large models", such as GPT-3's in-context learning. It also reports the debate over whether emergence is real: the sharp jumps "might be partially attributed to the evaluation setting for special tasks (e.g., the discontinuous evaluation metrics)", and they flatten when the metric is changed. The survey's reply is that users experience many tasks as pass/fail anyway, so code that fails its tests is worth nothing however close it came ([arXiv:2303.18223](https://arxiv.org/abs/2303.18223) (Zhao et al., 2023-03; v16, 2025-03)).
 
 ---
 

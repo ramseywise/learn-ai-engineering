@@ -4,6 +4,10 @@ sources:
   - https://arxiv.org/abs/2306.05685
   - https://arxiv.org/abs/2303.16634
   - https://arxiv.org/abs/2404.12272
+  - https://arxiv.org/abs/2412.05579
+  - https://arxiv.org/abs/2507.08794
+  - https://arxiv.org/abs/2606.19544
+  - https://arxiv.org/abs/2609.12191
   - https://hamel.dev/blog/posts/llm-judge/
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
@@ -116,16 +120,21 @@ Decomposition gives partial credit, finds *which* claim failed, and is easier fo
 
 ## Known biases
 
-Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases that matter most. Strong judges agreed with human preferences about as often as humans agreed with each other (over 80%) *once these were controlled*.
+Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases that matter most. Strong judges agreed with human preferences about as often as humans agreed with each other (over 80%) *once these were controlled*. A later survey sorts the documented biases into four groups (presentation, social, content, cognitive) and names fifteen. Among them are bandwagon (siding with a stated majority) and distraction, where an irrelevant sentence such as "System Star likes to eat oranges and apples" shifts the verdict ([arXiv:2412.05579](https://arxiv.org/abs/2412.05579) (Li et al., 2024-12)). The table keeps the ones worth testing for on your own data.
 
 | Bias | What happens | Mitigation |
 |---|---|---|
 | **Position** | Pairwise judges favor the first (or second) answer | Run both orders. Count a win only if it holds in both. Otherwise call it a tie |
-| **Verbosity** | Longer answers score higher, even when padded | Rubric says length is not quality. Include a short correct example scored PASS. Track score vs. length |
+| **Verbosity** | Longer answers score higher, even when padded. Much weaker in 2026 judges under a pairwise rubric (below), but not ruled out | Rubric says length is not quality. Include a short correct example scored PASS. Track score vs. length |
 | **Self-preference** | A model favors outputs from its own family | Judge with a different model family from the system under test |
 | **Leniency** | Judges pass borderline cases | Binary criteria with explicit FAIL conditions. Tricky-FAIL few-shot examples |
 | **Format / authority** | Confident tone, markdown, citations look correct | Check citations in code ([07](07-evaluating-rag-and-grounding.md#citation-checks-in-code)). Judge the content, not the style |
 | **Limited capability** | The judge can't verify what it can't do (hard math, niche code) | Use a reference answer, or a code check, or a stronger judge |
+| **Master keys** | A reference-guided judge passes a non-answer: a lone `:`, a blank space, `Thought process:` | Put empty and opener-only responses in the calibration set as must-FAIL cases. Check the answer is non-empty in code |
+
+**Measure the biases on your judge instead of assuming them.** Norman et al. audited 21 judges from 9 providers on MT-Bench, JudgeBench and RewardBench (about 541k judgments, temperature 0, March–April 2026). **Verbosity bias was below 0.011 for all 21**, measured as the correlation between length difference and verdict under one pairwise rubric. 2023-era studies had put the effect of style and length at 20–40% of variance. The authors warn that this "should not be interpreted as a universal claim that verbosity bias is solved": another rubric or task may bring it back. Position bias had not gone away. It ranged from 0.002 (Gemini 2.5 Pro) to 0.192 (Qwen 3 8B), measured as |P(A wins) − 0.5| over both orders ([arXiv:2606.19544](https://arxiv.org/abs/2606.19544) (Norman et al., 2026-06)). Keep the swap test mandatory, and treat the length check as a cheap confirmation.
+
+The master-key row comes from Zhao et al., who tested judges that grade reasoning answers against a gold answer (five math and general-reasoning benchmarks, temperature 0). **Content-free responses passed**: "punctuation-only responses (e.g., “:”) can induce errors in GPT-4o with up to 35% FPRs", and `Thought process:` reached 60–90% false positives on LLaMA3-70B-Instruct and Qwen2.5-72B-Instruct. Averaged over all their attack strings, the false-positive rate was 6.0% for o1, 12.4% for Claude 4 Sonnet and 14.6% for GPT-4o. Chain-of-thought with majority voting did not reliably help and sometimes made it worse. Two things did help: removing the question from the judge prompt, and fine-tuning a verifier on truncated "first sentence only" answers labeled wrong ([arXiv:2507.08794](https://arxiv.org/abs/2507.08794) (Zhao et al., 2025-07)). Their setting is RL reward models, where the policy finds such strings by itself. An agent optimized against your judge can do the same ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
 
 ---
 
@@ -135,7 +144,7 @@ Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases th
 
 ### The procedure
 
-1. **Get human labels.** 100–200 outputs labeled PASS/FAIL on the judge's criterion, by your domain expert ([02](02-defining-correct.md#one-person-decides)). Include both classes in reasonable numbers. If real user signal exists (👍/👎, escalation, resolution), it can serve as the label, as in the case study.
+1. **Get human labels.** 100–200 outputs labeled PASS/FAIL on the judge's criterion, by your domain expert ([02](02-defining-correct.md#one-person-decides)). Include both classes in reasonable numbers. If real user signal exists (👍/👎, escalation, resolution), it can serve as the label, as in the case study, but only for a criterion it actually measures. **Satisfaction is not task success.** In GAUGE (25 agents on τ²-bench and SimulatorArena), "57.5% of conversations our blind human panel rated satisfied (≥5/7) had failed the customer’s task". That is the same as the 57.3% base failure rate, so the rating carried no information about success (AUC 0.44). A policy-aware judge that read the tool calls did discriminate success (AUC 0.73) ([arXiv:2609.12191](https://arxiv.org/abs/2609.12191) (Bodhwani et al., 2026-09)). A 👍 can label a tone or experience judge. A resolution judge needs labels from the outcome.
 2. **Split** the labels: **train** (pick few-shot examples from here), **dev** (iterate on the prompt here), **test** (measure once at the end).
 3. **Run the judge** on dev. Build the confusion matrix against the human labels.
 4. **Read the disagreements.** Each one is either a judge prompt problem (fix the prompt), a criteria problem (fix the criteria, re-label), or a hard case (add to few-shot).
@@ -157,10 +166,15 @@ Accuracy alone hides the failure you care about. Report the two error rates sepa
 | **Cohen's κ** | Agreement corrected for chance | Comparing against human–human agreement |
 | **Score separation** | Mean score on human-PASS minus mean on human-FAIL (and Cohen's *d*) | Whether a continuous judge discriminates at all |
 
+![Two panels. Left: for each of 21 judges, exact-match agreement on MT-Bench sits near 0.8 while Cohen's kappa sits near 0.4–0.5. Right: test–retest reliability against position bias; Qwen 3 8B and Gemini 2.5 Flash are highly repeatable but strongly position-biased](../sources/images/norman-2026-reliability-without-validity-fig1.png)
+*Image Source: Norman et al., [Reliability without Validity](https://arxiv.org/abs/2606.19544) (2026), Fig. 1*
+
 Rules of thumb:
 
 - **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](13-case-study-support-agent.md#decision-framework)).
-- **Benchmark against human–human agreement.** If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans. Berryman & Ziegler's version of the test: have several people rate the same items, then add the judge (one query per item, temperature 0) to the pool and check that the pool's disagreement, measured with something like Kendall's τ, doesn't rise (*Prompt Engineering for LLMs*, ch. 10).
+- **Lead with κ, not raw agreement.** Across 21 judges on MT-Bench, exact-match agreement exceeded Cohen's κ by 33.8–41.3 points: "a judge reporting “85% agreement” on MT-Bench has κ≈0.48" (Norman et al., [above](#known-biases)). Ties and an unbalanced base rate inflate raw agreement.
+- **Repeatable is not valid.** Qwen 3 8B gave the same verdict across reruns almost every time (test–retest α 0.992) and had the cohort's strongest position bias (0.192). A deterministic judge reproduces its bias exactly. Run the swap check even on a judge that never changes its mind.
+- **Benchmark against human–human agreement**, on the same statistic. If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans. Berryman & Ziegler's version of the test: have several people rate the same items, then add the judge (one query per item, temperature 0) to the pool and check that the pool's disagreement, measured with something like Kendall's τ, doesn't rise (*Prompt Engineering for LLMs*, ch. 10).
 - **Small separation means the threshold is doing the work.** If PASS and FAIL means differ by < 0.05, the judge isn't discriminating. Fix the prompt.
 - **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](13-case-study-support-agent.md#calibration-results)). Generic metrics aren't tuned to your users.
 
@@ -179,7 +193,7 @@ Example: judge passes 80% of production outputs, TPR 0.95, TNR 0.80 → (0.80 + 
 ## Keep it calibrated
 
 - **Re-calibrate when anything changes**: judge model, judge prompt, the system under test (new failure types appear), or the user population.
-- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](13-case-study-support-agent.md#domain-shift)). Calibration is per domain.
+- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](13-case-study-support-agent.md#domain-shift)). Calibration is per domain. Public benchmarks show the same: in Norman et al.'s study 11 of 21 judges moved four or more places between benchmarks, and Llama 3.3 70B went from 5th on MT-Bench to 20th on JudgeBench, so a judge's leaderboard rank says little about how it does on your data.
 - **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)).
 - **Pin the judge model version.** A provider updating the judge silently changes all your scores.
 - **Don't mix judges** across runs you intend to compare.
@@ -190,7 +204,9 @@ Comparing your judge to an off-the-shelf one (RAGAS, DeepEval, G-Eval) tells you
 
 ### Multi-family judging
 
-Self-preference ([above](#known-biases)) gets worse when the agent is *optimized* against the judge: it learns that judge's blind spots. The mitigation is several independent judges from **different model families** on the same rubric. If the agent runs on Claude, judge with GPT and Gemini. Their biases tend to be orthogonal, so the agent rarely fools all of them at once. Aggregate by weighted average or require agreement. To keep cost down, run one judge on every case and the full panel as a periodic audit (*AI Agents in Depth*, ch. 6).
+Self-preference ([above](#known-biases)) gets worse when the agent is *optimized* against the judge: it learns that judge's blind spots. The mitigation is several independent judges from **different model families** on the same rubric. If the agent runs on Claude, judge with GPT and Gemini. Their biases tend to be orthogonal, so the agent rarely fools all of them at once. Aggregate by weighted average or require agreement. To keep cost down, run one judge on every case and the full panel as a periodic audit (*AI Agents in Depth*, ch. 6). GAUGE measured the self-preference this guards against: an Opus-4.8 judge rated Claude agents 0.75 points (on a 7-point scale) higher, relative to a GPT-5.5 judge, than it rated non-Claude agents (Bodhwani et al., [above](#the-procedure)).
+
+**A panel doesn't fix a shared resolution limit.** In the same study, four judges from two providers ranked τ²-bench agents. They recovered the full 25-agent ladder (ρ 0.84–0.94) but not the near-equal strong agents. On pairs whose verifiable rewards differed by less than 0.1, the best single judge picked the wrong winner 31% of the time, against under 1% on wide pairs. The four-judge average gave exactly 31% too, because the judges correlated at ρ 0.67–0.98 and flipped the same close pairs. The one thing that helped was **calibrated abstention**: refuse to rank a pair whose score gap falls inside its bootstrap noise. That halved the error to 14.8% on the pairs it ranked, but it ranked only 31–49% of them. When two candidates are close, report "no detectable difference" ([09](09-reading-results.md#compare-on-the-same-tasks-paired-differences)) rather than adding judges.
 
 ### Beyond text
 

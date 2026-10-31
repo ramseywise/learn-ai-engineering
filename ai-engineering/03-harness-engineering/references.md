@@ -28,6 +28,13 @@ cleaned: 2026-10-31
 | LangChain, [Deep Agents docs](https://docs.langchain.com/oss/python/deepagents/overview) | Capability groups, pluggable filesystem backends, permissions, tool allowlists and harness profiles, `execute` vs. `eval` | [02](notes/02-harness-anatomy.md) · [04](notes/04-execution-boundaries.md) · [06](notes/06-long-horizon-execution.md#shallow-vs-deep-agents) |
 | Karpathy, AISN 2026 talk (secondary: YouTube breakdown, no primary transcript) | Spec / verifier / environment layers; rules vs. requests; robot librarian | [01](notes/01-what-a-harness-is.md) · [04](notes/04-execution-boundaries.md#prompts-vs-hooks) · [05](notes/05-verification-loops.md#asymmetric-qa) · [09](notes/09-repo-as-system-of-record.md#karpathys-environment-layer) · [10](notes/10-scope-and-done.md#before-the-list-the-spec) |
 
+## AI Papers of the Week
+
+| Source | Why read it | Maps to |
+|---|---|---|
+| ★ Mak et al., *Is Bash All You Need? An Empirical Study of Tool Interfaces for Enterprise Digital Worker Agents*, arXiv [2609.11999](https://arxiv.org/abs/2609.11999) (2026, Microsoft) · [PDF](sources/mak-2026-bash-all-you-need.pdf) | Five tool interfaces on TheAgentCompany and APEX-Agents with Opus-4.8 and GPT-5.5: bash alone beats typed tools by up to 24.5 pp with 19–72% fewer tokens, typed tools on top of bash add nothing, PTC when a fixed catalog is required; shell agents declare done without verifying and read evaluator scripts | [03](notes/03-tool-design.md#capability-form-and-granularity) · [05](notes/05-verification-loops.md#the-core-failure) |
+| Yang et al., *SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering*, arXiv [2405.15793](https://arxiv.org/abs/2405.15793) (NeurIPS 2024) · [PDF](sources/yang-2024-swe-agent.pdf) | Origin of the ACI term: GPT-4 Turbo 18.0% vs. 11.0% on SWE-bench Lite with a designed interface vs. a plain shell; ablations of search, file window, lint-on-edit and history | [03](notes/03-tool-design.md#aci-not-api) · [03](notes/03-tool-design.md#output-discipline) |
+
 ## About the upstream course
 
 [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) (MIT) is a 13-lecture, 7-project course built around an Electron knowledge-base app. Its English material was folded into this module on 2026-10-28 and the vendored snapshot was deleted.

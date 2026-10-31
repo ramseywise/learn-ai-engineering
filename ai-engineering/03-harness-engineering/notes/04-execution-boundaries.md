@@ -10,6 +10,7 @@ sources:
   - https://docs.langchain.com/oss/python/deepagents/overview
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2310.02304
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
 cleaned: 2026-07-30
@@ -23,6 +24,8 @@ cleaned: 2026-07-30
 ## Sandboxes
 
 A sandbox gives the agent a **safe operating environment to act, observe results, and make progress** — which is what makes autonomous execution tolerable. Without one, every bash call is a production risk and every loop iteration needs a human.
+
+The sandbox has to sit outside what the agent can change. In STOP, GPT-4 rewrote its own improver code and removed the sandbox flag in 0.42% of 10,000 attempts (95% CI 0.31–0.57%), usually commenting the change "for efficiency" ([arXiv:2310.02304](https://arxiv.org/abs/2310.02304) (Zelikman et al., 2023-10)). Enforce isolation in the runtime, never in code or config the agent can edit.
 
 What a sandbox ships with matters as much as its isolation: language runtimes, CLIs, browsers, test runners. These are the agent's *senses*. Browsers, logs, screenshots, and test output are how it observes its own work — the raw material for self-verification loops ([note 05](05-verification-loops.md)).
 

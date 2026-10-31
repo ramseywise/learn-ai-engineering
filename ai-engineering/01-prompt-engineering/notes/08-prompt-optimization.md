@@ -7,6 +7,8 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://arxiv.org/abs/2309.03409
   - https://arxiv.org/abs/2406.07496
+  - https://arxiv.org/abs/2507.19457
+  - https://arxiv.org/abs/2509.10414
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -25,7 +27,7 @@ flowchart LR
     T2 -->|"keep only if it beats vN"| R
 ```
 
-The proposer can be you, an LLM (APE, OPRO, meta-prompting), or a framework (DSPy, TextGrad). The parts that matter are the same in every case: **a fixed eval set, a metric, and a record of every version.**
+The proposer can be you, an LLM (APE, OPRO, meta-prompting), or a framework (DSPy, TextGrad, GEPA). The parts that matter are the same in every case: **a fixed eval set, a metric, and a record of every version.**
 
 ---
 
@@ -121,7 +123,11 @@ Generated prompts are a **first draft, not a result** — they still have to win
 
 **TextGrad** does a similar job with "textual gradients": LLM-written critiques propagated back through a pipeline to revise each component's prompt. It took GPT-4o's zero-shot accuracy on GPQA from 51% to 55% ([arXiv:2406.07496](https://arxiv.org/abs/2406.07496), Yuksekgonul et al., 2024-06). **Promptbreeder** (Fernando et al., DeepMind, 2023) treats the search as evolution. An LLM mutates a seed prompt, guided by a set of *mutator prompts*, and the best mutants are mutated again until one meets the target.
 
+**GEPA** combines the two ideas. It runs the pipeline, has an LLM read the full traces (reasoning, tool calls, tool outputs, evaluator feedback) and diagnose what went wrong, and then rewrites one module's prompt. Instead of keeping only the single best prompt, it keeps every candidate that is best on at least one training example (a Pareto front) and mutates from those. On six benchmarks (multi-hop QA, instruction following, privacy-aware delegation, retrieval-augmented claim verification and two math sets) with Qwen3 8B, GEPA improved the average over the unoptimized baseline by 9.62 points. GRPO fine-tuning with 24,000 rollouts improved it by 3.68, and MIPROv2 by 2.61. GEPA beat GRPO on every benchmark except AIME. In the authors' summary, "GEPA outperforms GRPO by 6% on average and by up to 20%, while using up to 35x fewer rollouts." With GPT-4.1 Mini, it gained 12.19 points against 5.64 for MIPROv2 and 6.11 for TextGrad. Two details matter in practice. Choosing candidates from the Pareto front gained 12.44 points where always mutating the current best gained 6.05. GEPA's prompts were also up to 9.2× shorter than MIPROv2's, because it writes instructions rather than piling in few-shot examples ([arXiv:2507.19457](https://arxiv.org/abs/2507.19457) (Agrawal et al., 2025-07)). The method needs a metric that can also return text feedback, such as which constraint failed or which document was missing, and not only a score.
+
 Use these when you have a multi-step pipeline, a scorable metric, and dozens to hundreds of labeled examples. Skip them for one-off prompts or tasks you can't score automatically.
+
+Optimized prompts can still overfit their eval set. de Wynter found an APO-optimized prompt lost accuracy as test inputs moved away from the training distribution: the slope was −0.5, against −0.4 for a plain prompt and −1.4 for CoT, on nine synthetic formal-language tasks ([arXiv:2509.10414](https://arxiv.org/abs/2509.10414) (de Wynter, 2025-09)). Hold out test cases that differ from the ones the optimizer saw.
 
 ### Before trusting a prompt tool
 

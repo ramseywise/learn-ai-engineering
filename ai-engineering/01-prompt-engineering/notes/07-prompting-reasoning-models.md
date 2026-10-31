@@ -6,6 +6,7 @@ sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 11"
   - https://arxiv.org/abs/2505.11423
+  - https://arxiv.org/abs/2504.09858
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -53,6 +54,8 @@ For models where thinking is a switch:
 
 ![Escalating reasoning effort](../sources/images/dair-hybrid-reasoning-effort-escalation.jpg)
 *Evaluate after each step and stop at the first satisfactory one. DAIR, Reasoning LLMs Guide.*
+
+Thinking off can be stronger than it looks, especially if you sample several answers. Ma et al. switched off thinking in DeepSeek-R1-Distill-Qwen-32B by prefilling the thinking block with "Okay, I think I have finished thinking." and closing it. On math, coding and theorem-proving benchmarks, this NoThinking mode used 2.0–5.1× fewer tokens. It trailed full thinking at pass@1 on most benchmarks, but matched it once enough samples were drawn (pass@k at large k). On theorem proving it matched thinking at every k while using 3.3–3.7× fewer tokens. At an equal, small token budget it often won outright: "51.3 vs. 28.9 on AMC23 with 700 tokens." Drawing several NoThinking answers in parallel and keeping the best one beat sequential thinking on tasks with a verifier, at "7× lower latency and even 4× less total token usage." The authors tested only open-weight models, because prefilling the thinking block needs access closed APIs don't give: "we lack access for making interventions to closed-source models" ([arXiv:2504.09858](https://arxiv.org/abs/2504.09858) (Ma et al., 2025-04)). Where you can check answers automatically, try several thinking-off samples before you pay for long thinking.
 
 **Optimize for accuracy first, then latency and cost.**
 

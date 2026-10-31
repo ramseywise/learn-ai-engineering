@@ -7,8 +7,10 @@ sources:
   - https://www.langchain.com/blog/the-anatomy-of-an-agent-harness
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2405.15793
+  - https://arxiv.org/abs/2609.11999
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 3 — Tool Design as Harness Surface
 
@@ -19,6 +21,8 @@ cleaned: 2026-07-29
 ## ACI, not API
 
 Tool design follows **ACI principles — Agent-Computer Interface, not Application Programming Interface.** A tool is designed for a reader that has no documentation, no type hints, no autocomplete, and no ability to ask a follow-up question. It sees a name, a description, and a parameter schema.
+
+The term comes from SWE-agent ([arXiv:2405.15793](https://arxiv.org/abs/2405.15793), Yang et al., 2024-05), which measured it: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface (a windowed file viewer, summarized search, an editor that lints every edit) against 11.0% through a plain Linux shell. Same model, same task; only the interface changed.
 
 Consequences:
 
@@ -55,6 +59,8 @@ Before writing a description, decide what *kind* of capability this is. Li gives
 | **Generality:** a general `code_interpreter` vs. a narrow tool | General: it covers the long tail for free | Narrow when security, permissions or performance demand it, or when the general route is unreliable. `grep` is dedicated because its flags differ across operating systems |
 
 Selection accuracy falls off once a model faces more than roughly a hundred tools, so every dedicated tool spends a shared budget. That is the quantitative case for the subtraction rule above.
+
+For strong current models the default has moved further toward the general executor. Mak et al. ([arXiv:2609.11999](https://arxiv.org/abs/2609.11999), 2026-09) ran Opus-4.8 and GPT-5.5 on TheAgentCompany and APEX-Agents under five interfaces. Bash alone beat a typed-tool catalog by 21.8–24.5 pp on TheAgentCompany and 4.8–7.4 pp on APEX-Agents "while using 19–72% fewer total tokens"; Opus-4.8 on TheAgentCompany went from 44.9% at $1.20 per task with typed tools to 69.4% at $0.37 with bash. Adding the typed tools on top of bash changed nothing (−0.6 pp, 95% CI [−3.0, +1.9]). Their rule: "favor bash alone when arbitrary execution can be isolated and PTC when security or compliance policies require a fixed tool catalog," where PTC (programmatic tool calling) means the model writes code against the fixed tools. This doesn't overturn SWE-agent. Its 2024 win was over a *bare* shell for GPT-4 Turbo, and the principles behind it (bounded output, feedback on every action) still hold; what has changed is that a frontier model no longer needs bespoke commands to apply them. The authors warn their results "may not carry over to later releases," so re-run the comparison when you change models.
 
 ---
 
@@ -152,6 +158,8 @@ The return path is as much a part of the tool as the call. Rules by tool type:
 | **File writes** | Run the linter automatically after the write and return its findings with the result, so errors are fixed while the context is still fresh. |
 | **Multimodal input** | Choose deliberately between passing the image and passing OCR text. Layout-heavy content needs the image; dense text is cheaper and more reliable as OCR. |
 | **Bulk data** | Use the **artifact pattern**. The model writes the SQL (and optionally the chart code); the system executes it and renders rows straight to the user. Data never passes through the model, which is slow and error-prone at transcribing thousands of rows. |
+
+SWE-agent's ablations (GPT-4 Turbo, SWE-bench Lite, 18.0% for the full interface) put numbers on several of these rules. Search that returned a summary of which files matched scored 18.0%; search that paged through matches one at a time scored 12.0%, worse than no search tool at all (15.7%), because agents "tend to look through every match exhaustively." A 100-line file window scored 18.0%, a 30-line window 14.3%, and showing the whole file 12.7%. Dropping the lint-on-edit check cost 3 points (15.0%), and keeping full history instead of collapsing all but the last five observations cost 3 more (15.0%). Failed edits compound: any edit attempt had a 90.5% chance of eventually succeeding, but after one failed edit that fell to 57.2%, so a check that catches a bad write immediately is worth more than it looks.
 
 **Parallel calls need fault boundaries.** Each tool declares whether it is concurrency-safe (default: no). Execution of a call can begin as soon as its arguments finish streaming and validate. A failure aborts only the calls in the same batch that depend on it; the independent calls and the parent task carry on.
 

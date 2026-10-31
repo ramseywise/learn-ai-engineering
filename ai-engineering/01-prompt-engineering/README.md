@@ -176,9 +176,12 @@ These are the papers behind [03 — core techniques](notes/03-core-techniques.md
 |---|---|---|
 | Few-shot / in-context learning | Brown et al., *Language Models are Few-Shot Learners* (GPT-3) | 2005.14165 |
 | What makes few-shot work | ★ Min et al., *Rethinking the Role of Demonstrations* | 2202.12837 |
+| Many-shot ICL and OOD brittleness | de Wynter, *Is In-Context Learning Learning?* · [PDF](sources/wynter-2025-context-learning-learning.pdf) | 2509.10414 |
 | Instruction tuning (why zero-shot works) | Wei et al., *Finetuned Language Models Are Zero-Shot Learners* (FLAN) | 2109.01652 |
 | Chain-of-thought | ★ Wei et al. | 2201.11903 |
 | Zero-shot CoT ("Let's think step by step") | Kojima et al. | 2205.11916 |
+| Where CoT helps (math and symbolic) | ★ Sprague et al., *To CoT or not to CoT?* · [PDF](sources/sprague-2024-cot-or-not-cot.pdf) | 2409.12183 |
+| CoT under distribution shift | Zhao et al., *Is Chain-of-Thought Reasoning of LLMs a Mirage?* · [PDF](sources/zhao-2025-chain-thought-reasoning-llms-mirage.pdf) | 2508.01191 |
 | Auto-CoT | Zhang et al. | 2210.03493 |
 | Multimodal CoT | Zhang et al. | 2302.00923 |
 | GraphPrompt | Liu et al. | 2302.08043 |
@@ -191,6 +194,7 @@ These are the papers behind [03 — core techniques](notes/03-core-techniques.md
 | Active-Prompt | Diao et al. | 2302.12246 |
 | Directional stimulus prompting | Li et al. | 2302.11520 |
 | Reflexion | Shinn et al. | 2303.11366 |
+| Format restrictions vs reasoning ([04](notes/04-controlling-output.md#structured-output)) | Tam et al., *Let Me Speak Freely?* · [PDF](sources/tam-2024-let-me-speak-freely.pdf) | 2408.02442 |
 
 **Background:** Kaplan et al., *Scaling Laws* (2001.08361) · Christiano et al., *RLHF from human preferences* (1706.03741) · Bubeck et al., *Sparks of AGI* (2303.12712) — the source of the TiKZ unicorn and other probes in the [prompt library](notes/prompt-library.md).
 
@@ -209,6 +213,7 @@ For [08](notes/08-prompt-optimization.md).
 | Meta-prompting (structure-oriented) | Zhang et al. | 2311.11482 |
 | DSPy | ★ Khattab et al. · [dspy.ai](https://dspy.ai) | 2310.03714 |
 | TextGrad | Yuksekgonul et al. | 2406.07496 |
+| GEPA — reflective prompt evolution | Agrawal et al., *GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning* · [PDF](sources/agrawal-2025-gepa.pdf) | 2507.19457 |
 
 ### Reasoning models
 
@@ -218,6 +223,7 @@ For [07](notes/07-prompting-reasoning-models.md). This area moves fastest, so ch
 - DeepSeek-AI, *DeepSeek-R1: Incentivizing Reasoning Capability via RL* — 2501.12948
 - Raschka, [*Understanding Reasoning LLMs*](https://magazine.sebastianraschka.com/p/understanding-reasoning-llms) — an overview of how reasoning models are trained
 - *The Pitfalls of Reasoning for Instruction Following* — 2505.11423 (explicit CoT hurts instruction-following)
+- Ma et al., *Reasoning Models Can Be Effective Without Thinking* — 2504.09858 · [PDF](sources/ma-2025-reasoning-models-can-be-effective.pdf) (NoThinking prefill plus parallel sampling)
 - Anthropic, *Reasoning Models Don't Always Say What They Think* — 2505.05410 (CoT faithfulness)
 - Shojaee et al., [*The Illusion of Thinking*](https://machinelearning.apple.com/research/illusion-of-thinking) (Apple, 2025) — collapse on harder puzzles; read it with the rebuttals it prompted
 

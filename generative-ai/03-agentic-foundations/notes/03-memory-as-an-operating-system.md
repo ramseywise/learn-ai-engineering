@@ -7,6 +7,8 @@ sources:
   - "Chhikara et al. 2025, Mem0 — https://arxiv.org/abs/2504.19413"
   - "adv-11/AgenticAIFrameworks: Letta/self-editing memory from scratch, LangGraph/langMem — https://github.com/adv-11/AgenticAIFrameworks"
   - https://arxiv.org/abs/2304.03442
+  - https://arxiv.org/abs/2505.22101
+  - https://arxiv.org/abs/2607.26637
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -245,6 +247,8 @@ The retrieval score most of these systems descend from is from *Generative Agent
 
 The three are summed with equal weight. **Reflection** runs when the importance of recent events adds up past 150, which works out to two or three times a game day. It writes higher-level conclusions back into the stream as memories. In a believability ranking (TrueSkill), the full architecture scored μ = 29.9, without reflection 26.9, and without memory, reflection or planning 21.2. Human crowdworkers role-playing the agents scored 23.0. Memory errors persisted: agents missed facts they had observed, retrieved fragments, and embellished details.
 
+MemOS ([arXiv:2505.22101](https://arxiv.org/abs/2505.22101), Li et al., 2025-05) takes the OS analogy further than MemGPT. Its taxonomy is by where memory lives rather than what it is about: **parametric** (the weights), **activation** (the KV cache and hidden states), and **plaintext** (retrievable documents, which is everything in the table above). It also defines paths for moving memory between them, such as caching hot plaintext as KV or distilling stable knowledge into weights. Every unit is a **MemCube**: a payload plus a metadata header that records provenance, a time-to-live or decay policy, access control, version lineage and access frequency. That header is the governance layer most frameworks leave out, but MemOS is an architecture paper with no experiments, so treat it as a checklist of fields to store, not as evidence that the design works.
+
 The LangGraph + LangMem course version, with semantic, episodic and procedural memory in an email assistant, is [04-agentic-frameworks 03](../../04-agentic-frameworks/notes/03-long-term-memory-with-langgraph.md).
 
 LangMem's procedural memory is the one idea MemGPT does not have: a prompt optimizer that rewrites the agent's own instructions from feedback.
@@ -301,6 +305,8 @@ From the course conclusion, the four things you control:
 | Core memory fills with trivia | Smaller block limits; a rule for what belongs in core vs archival |
 | Agent answers from stale core memory | Memory stats in context; instruct it to search before answering |
 | Shared block edited by two agents at once | One writer per block, or a tool that serializes writes |
+
+How much should the memory agent curate? A controlled comparison of filesystem memory stores ([arXiv:2607.26637](https://arxiv.org/abs/2607.26637), Zhou et al., 2026-07) says less than you'd think. With gpt-5.4-mini building and searching the store, a verbatim dump of the conversations or one file per session matched or beat an agent-curated store on all four conversational benchmarks; on PersonaMem at 32k tokens, curation scored 37.5% against 78.1% for the dump, because the curator left superseded preferences standing as current (the right fact was still in the store for all 13 misses). Asking the agent to reorganize a store silently condensed it unless told to keep every fact: on REALTALK, a condensing reorganization dropped correctness from 77.6% to 41.2%, while a fact-preserving one held at 77.6%. Two budget rules follow. Spend model strength on the reader, not the writer: a stronger searcher raised mean correctness from about 62% (gpt-5.4-nano) to 79% (gpt-5.4), while a stronger builder "buys a more elaborate store, not a more useful one." And match stored experience to the executor: on ALFWorld, raw episode logs helped a gpt-4.1 executor most (87.1% vs. 73.6% with no store), but a gpt-4.1-mini executor did better with distilled task guidance (76.4% vs. 66.4% with logs). The study uses single build runs and 32–158 questions per benchmark tier, so read differences of a few points as ties.
 
 ---
 

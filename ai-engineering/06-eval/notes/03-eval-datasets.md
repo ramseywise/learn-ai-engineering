@@ -6,6 +6,9 @@ sources:
   - https://hamel.dev/blog/posts/field-guide/
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2407.01502
+  - https://arxiv.org/abs/2509.10414
+  - https://arxiv.org/abs/2508.01191
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-31
@@ -81,6 +84,7 @@ Check the dataset against the distribution you care about:
 - **Slice by the dimensions** from your failure taxonomy and user mix: intent, language, difficulty, source type, user segment. Record the slice on every row so you can report by slice later.
 - **Match production frequencies** for the headline number. Over-sample rare-but-costly cases in *separate* slices, not the headline.
 - **Balance positive and negative cases** ([02](02-defining-correct.md#positive-and-negative-cases)).
+- **Include off-distribution rows**, not only inputs that resemble your few-shot examples or training data. Prompted in-context accuracy fell as test inputs drifted from the exemplars, fastest with CoT (slope −1.4, across 4 LLMs and 9 synthetic tasks) ([arXiv:2509.10414](https://arxiv.org/abs/2509.10414) (de Wynter, 2025-09)). A CoT trained into a small model on a toy task fell to 0% exact match on unseen transformations ([arXiv:2508.01191](https://arxiv.org/abs/2508.01191) (Zhao et al., 2025-08)).
 - **Watch the denominator.** "92% pass" means nothing until you say *of what*. Report pass rate per slice, with the slice size.
 
 ---
@@ -185,6 +189,7 @@ Li's survey of GAIA, SWE-bench Verified, τ²-bench, Terminal-Bench, AndroidWorl
 - **Use difficulty levels as a diagnostic.** GAIA's Level 1 needs 1–2 tools (humans 93.9%, GPT-4 30.3%), Level 2 needs multi-step reasoning (91.8% vs 9.7%), and Level 3 needs long combinations (87.3% vs 0%). Failing at a given level points to a different fix: L1 to prompts and tool use, L2 to planning, L3 to architecture or post-training.
 - **Tighten success conditions until a superficial fix can't pass.** τ²-bench accepts only an "excellent" speed rating, not "good". Loose conditions reward agents that half-solve the task.
 - **Start some tasks mid-stream.** OSWorld often begins from a configured intermediate state, not a clean one, and accepts more than one valid end state.
+- **Hold out at the level of generality you claim.** If the agent must handle new *kinds* of task, the test set needs task types the dev set never had, not just new instances of the same tasks. Kapoor et al. sorted 17 agent benchmarks this way. Only 1 of 8 domain-general benchmarks held out whole tasks, and 7 of the 17 had no holdout at all. The cost shows on WebArena, where the top agent at the time (STeP, 35.8%) "hardcodes policies to solve the specific tasks included in WebArena", such as building a Reddit profile URL by appending `/user/user_name` ([arXiv:2407.01502](https://arxiv.org/abs/2407.01502) (Kapoor et al., 2024-07)). A private suite tuned on the same tasks it reports on has the same problem ([12](12-failure-modes.md#overfitting-the-dev-set)).
 
 ---
 

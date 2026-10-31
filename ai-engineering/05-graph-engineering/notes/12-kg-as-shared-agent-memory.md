@@ -9,8 +9,9 @@ sources:
   - https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/ (secondary)
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops (secondary)
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
+  - https://arxiv.org/abs/2608.28978
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 12 — KG as Shared Agent Memory
 
@@ -218,9 +219,11 @@ Move to the next stage only when the current one has been measured.
 
 The persistent graph at stage 3 needn't be a graph database. The community consensus [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) reports (attributed to Eugeniu Ghelbur) is four properties: a **small typed core** of node and edge types, **cheap indexing**, **hybrid retrieval** (keyword or vector to find an entry point, then edges to expand), and **temporal supersession** (a newer fact `SUPERSEDES` an older one instead of overwriting it). All four can be built on markdown files you own. A vendor-relayed opinion, not a result, but a sensible bar to clear before reaching for Neo4j.
 
+Gate stage 3 against flat retrieval, not only against no memory. Rusu et al. ([arXiv:2608.28978](https://arxiv.org/abs/2608.28978), 2026-08) had GPT-4o-mini extract every conversation turn into a nine-label ontology and answered from 2-hop subgraphs. On LongMemEval (500 questions) it lost to plain retrieval over the raw turns with the same five retrieval roots: token F1 0.417 vs. 0.468 (95% CI on the gap [−0.085, −0.016]). The worst category was recalling what the assistant itself had said, where judge accuracy fell from 0.911 to 0.607; the graph won only on temporal questions, and narrowly (judge 0.293 vs. 0.278). Detail the extractor drops can't be retrieved later. The same paper shows retention is cheap: scoring nodes on recency (90-day half-life), access frequency, centrality and turn decay, and pruning everything below 0.10, removed 9.8% of a 27,021-node graph with token F1 unchanged (+0.001) and judge accuracy down 1.6 points. The authors scope it themselves: one small extractor on one benchmark, so "these results characterise this extraction-based pipeline rather than graph-structured memory in general."
+
 Two drills test whether the graph is earning its place:
 
-- **With and without shared memory.** Fan out 5–10 workers over one corpus twice: once returning prose to a synthesiser that reads everything, once publishing validated `GraphUpdate`s that the synthesiser queries and must cite. Compare redundant findings, synthesiser input tokens, total tokens, and answer and path quality on a fixed question set.
+- **With and without shared memory.** Fan out 5–10 workers over one corpus twice: once returning prose to a synthesiser that reads everything, once publishing validated `GraphUpdate`s that the synthesiser queries and must cite. Compare redundant findings, synthesiser input tokens, total tokens, and answer and path quality on a fixed question set. Add a third arm that keeps the workers' raw output in a flat retrieval index, so the graph has to beat verbatim recall, not just no memory.
 - **Contamination.** Inject one false `RESOLVES_TO` merge under a fake `run_id`, re-run the questions and trace every changed answer back to the bad edge, then roll back by deleting everything carrying that `run_id`. If provenance alone can't restore the answers, the write path isn't strict enough.
 
 ---

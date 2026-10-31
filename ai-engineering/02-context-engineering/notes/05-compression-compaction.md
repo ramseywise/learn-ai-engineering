@@ -7,8 +7,14 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2610.28577
   - https://arxiv.org/abs/2310.08560
+  - https://arxiv.org/abs/2608.22752
+  - https://arxiv.org/abs/2608.11242
+  - https://arxiv.org/abs/2610.02163
+  - https://papers.voltropy.com/LCM
+  - https://arxiv.org/abs/2609.37725
+  - https://arxiv.org/abs/2512.24601
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 5 — Compression and Compaction
 
@@ -51,12 +57,23 @@ The final step matters most. Recent turns stay **verbatim** because the agent's 
 What survives compaction, in order:
 
 1. **Architectural decisions — do not summarize.** "We chose X over Y because Z" must survive verbatim. Lose the reasoning and the agent re-litigates a settled decision, or silently contradicts it.
-2. **Modified files and critical changes.** The diff-so-far is state, not history.
-3. **Verification status — pass/fail.** Which tests ran and what happened.
-4. **Unresolved TODOs and rollback notes.** Everything not yet done.
-5. **Tool output — deletable.** Retain the pass/fail conclusion, discard the payload.
+2. **User constraints and safety rules — pin verbatim, outside the summary.** "Don't delete emails until I confirm." "Patient is allergic to penicillin." A rule stops being enforceable once it is paraphrased.
+3. **Modified files and critical changes.** The diff-so-far is state, not history.
+4. **Verification status — pass/fail.** Which tests ran and what happened.
+5. **Unresolved TODOs and rollback notes.** Everything not yet done.
+6. **Tool output — deletable.** Retain the pass/fail conclusion, discard the payload.
 
-The asymmetry between 1 and 5 is the core insight. A 40k-token test output compresses to "17 passed, 2 failed: `test_auth_retry`, `test_token_refresh`" with essentially no loss. A one-sentence architectural rationale cannot be compressed at all without losing what makes it useful.
+The asymmetry between 1–2 and 6 is the core insight. A 40k-token test output compresses to "17 passed, 2 failed: `test_auth_retry`, `test_token_refresh`" with essentially no loss. A one-sentence architectural rationale cannot be compressed at all without losing what makes it useful.
+
+Item 2 is the one that general-purpose compactors drop. A summarizer cannot tell which sentence is a rule, so it compresses rules at the same rate as everything around them. On 20 production agent configurations, "Claude Code's /compact prompt on Sonnet 4.6 preserves 53% of safety rules after one compaction round and 10% after five" at 50% compression per round. No type-blind strategy the authors tested beat 0.53 recall in a single round ([arXiv:2608.22752](https://arxiv.org/abs/2608.22752) (Zerhoudi et al., 2026-08)). A separate study of several compactors found they keep only 17% of injected user constraints on average. In one inbox test (gpt-oss-120b, compacting at 100K tokens), the agent deleted emails without approval in 30 of 100 sessions after compaction, against none before it ([arXiv:2608.11242](https://arxiv.org/abs/2608.11242) (Wang et al., 2026-08)). Having the user restate the rule in the first turn after compaction only got that down to 13 of 100.
+
+Both papers fix it the same way: take the rules out of the summary's hands.
+- **Wang et al.** use a small extractor (Qwen3.5-9B) to build a constraint registry and append it verbatim after the summary. Retention rose to 90–95%, and compliance came within a few points of the uncompacted upper bound.
+- **Zerhoudi et al.** classify each line by type and pin constraints and procedures unchanged. Their TypeCompact held 0.96 recall over five rounds. A deterministic check then confirms every pinned rule survived. That check matters: without it, configurations that reported 1.00 recall had silently dropped a mean 57% of the constraints. Classification has its own blind spot. Rules phrased as plain facts, like the penicillin allergy, were recognized only 62% of the time by gpt-5.4-mini.
+
+![Constraint recall over five sequential compaction rounds: TypeCompact vs. Sonnet 4.6 /compact vs. gpt-5.4-mini](../sources/images/zerhoudi-compaction-cliff-fig3.png)
+
+*Image Source: Zerhoudi, Mitrović & Granitzer, [The Compaction Cliff in Long-Running AI Agent Memory](https://arxiv.org/abs/2608.22752) (2026), Fig. 3*
 
 ### Trigger points
 
@@ -67,7 +84,9 @@ The asymmetry between 1 and 5 is the core insight. A 40k-token test output compr
 
 Phase boundaries are the better trigger. Compacting at a natural seam produces a clean summary; compacting mid-edit at 95% occupancy forces a summary of an incoherent state.
 
-**Identifiers survive verbatim.** UUIDs, hashes, IPs, ports, URLs, filenames, PR numbers. Change one digit and the next tool call fails. Summarizers also tend to drop what *looks* re-acquirable: early decisions, the reasons behind constraints, and failed paths. Those are exactly what retention items 1–4 protect.
+A model can learn to pick the seam itself, but prompting alone does not get it there. In AutoCompact's experiments, "the base model rarely invoked compact() before the context limit, even when compaction rules were specified." After SFT and RL on when and what to compact, Qwen3-Coder-30B-A3B scored 39.6% on SWE-bench Verified. The same model scored 30.4% keeping full history in a 256K window, and 28.8% compacting at a fixed 16K length ([arXiv:2610.02163](https://arxiv.org/abs/2610.02163) (Zhang et al., 2026-10)). Proactive compaction helped even in the 256K setting, where nothing overflows. Dropping stale context is worth doing for quality, not only for room.
+
+**Identifiers survive verbatim.** UUIDs, hashes, IPs, ports, URLs, filenames, PR numbers. Change one digit and the next tool call fails. Summarizers also tend to drop what *looks* re-acquirable: early decisions, the reasons behind constraints, and failed paths. Those are exactly what retention items 1–5 protect.
 
 `~/.claude/rules/context-health.md` codifies this: sessions past 150k cost ~5× per turn with no cache benefit on the overflow. Compaction is one turn; carrying stale context is a cost on every subsequent turn.
 
@@ -115,9 +134,20 @@ Claude Code layers five mechanisms, cheapest and most cache-controllable first:
 4. **Archival per-turn summaries** ("`git log`, not `git squash`"), which keep the thread of the conversation.
 5. **Full LLM compaction**, as a last resort. Session memory is tried first, and a **circuit breaker** stops sessions stuck in compaction-failure loops.
 
+Lossless Context Management (LCM) applies the same ideas outside Claude Code ([papers.voltropy.com/LCM](https://papers.voltropy.com/LCM) (Ehrlich & Blackman, 2026-02)). Every message and tool result goes to an immutable store. The summaries the model sees are "a derived cache; the immutable history remains the sole source of truth", and the agent can grep or expand back into the originals. Its compaction escalates through three levels, and the last one is a deterministic 512-token truncation with "No LLM involved". That guarantees each pass shrinks the context, which is the same job Claude Code's circuit breaker does. LCM's authors are a vendor, and they report a single benchmark. On OOLONG with Opus 4.6, their agent averaged 74.8 against Claude Code's 70.3 across 8K–1M tokens. Claude Code was slightly ahead at 8K and 16K. The paper also concedes that "we cannot deterministically guarantee that the agent will always" recover what it needs from the store.
+
+### Letting the model edit its own context
+
+The ladder above is a harness deciding what the model sees. **Context Language Models** (CLMs) hand that job to the model. The live context is exposed as a file, which the model reads and rewrites with ordinary shell commands. It decides when to drop, summarize, or restore a span ([arXiv:2609.37725](https://arxiv.org/abs/2609.37725) (Shao et al., 2026-09)). Run zero-shot on Qwen3.6-27B with a 32K limit, CLMs scored 59.4% on BrowseComp-Plus. That was 11.4% (relative) above the strongest baseline, Codex-style summarization, and used 21.5% fewer prefix-reuse FLOPs. Three caveats:
+- A small model needs training first. Qwen3.5-9B as a CLM trailed the summary harness until online RL.
+- An edit in the middle of the context invalidates the prefix cache from that point ([below](#prompt-caching-interaction)). The authors' serving fix, Suffix Cache Reuse, cut server compute by 35% but needs a self-served engine.
+- "Editable context can become another channel through which prompt injections or self-generated instructions persist across turns."
+
 ### Isolation beats compression
 
 Compression removes bulk after it has landed. **Sub-agent isolation** keeps it out of the window altogether. "Find the payment-callback handler" done in the main loop drags in dozens of files. Delegated, it costs two messages: the task, and "`handle_callback` in `src/payment/callbacks.py`, plus 2 call sites". It needs no extra summarizer call and leaves the parent's prefix untouched. The price is a self-contained brief, because the sub-agent doesn't see the parent's context ([10](10-tools-and-multi-agent.md)).
+
+The same idea applies to the input itself. A **Recursive Language Model** (RLM) never puts a long prompt in the window. The prompt sits as a variable in a Python REPL. The model writes code to inspect and slice it, and calls sub-models on the pieces ([arXiv:2512.24601](https://arxiv.org/abs/2512.24601) (Zhang et al., 2025-12)). On OOLONG-Pairs at 32K tokens, where the answer depends on pairs of lines throughout the input, GPT-5 scored 0.1 F1 both alone and with a summarize-on-overflow agent. As an RLM, with GPT-5-mini handling the sub-calls, it scored 58.0. On BrowseComp-Plus over 1,000 documents (6–11M tokens), the RLM reached 91.3% against the compaction agent's 70.5%. The authors' conclusion: "compaction is rarely expressive enough for tasks that require dense access throughout the prompt." Compaction decides once what to keep. An RLM keeps everything and decides per query what to read. The costs are latency (the sub-calls run one after another), a long tail of expensive runs, and weaker results with weaker models.
 
 **State extraction** is what makes compaction safe. If task state lives in a structured record — files touched, decisions, open items — rather than being implicit in the prose of the conversation, then summarizing the prose costs little. Agents that write their state down survive compaction; agents that keep it in the transcript do not.
 

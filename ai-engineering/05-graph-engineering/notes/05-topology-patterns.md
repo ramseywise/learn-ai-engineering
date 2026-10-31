@@ -8,8 +8,10 @@ sources:
   - https://code.claude.com/docs/en/sub-agents
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
   - https://arxiv.org/abs/2503.09572
+  - https://arxiv.org/abs/2604.02460
+  - https://arxiv.org/abs/2512.08296
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 5 — Topology Patterns
 
@@ -150,8 +152,12 @@ The book's test is one question: **does the collaboration introduce information 
 | Collaboration | New information? | Evidence |
 |---|---|---|
 | **Self-review** (same model reviews its own output, no tools) | No | Often neutral or harmful: Huang et al. (ICLR 2024); the TACL self-correction survey ([arXiv:2406.01297](https://arxiv.org/abs/2406.01297)). CRITIC's gains vanish when the tools are removed. |
-| **Debate** among copies of one model | No | Matches a single agent given the same compute (Tran & Kiela, [arXiv:2604.02460](https://arxiv.org/abs/2604.02460)): by the data-processing inequality, recombining the same information can't add any |
+| **Debate** among copies of one model | No | On multi-hop QA (FRAMES, MuSiQue) at matched thinking-token budgets, a single agent was best or statistically tied at every budget above 100 tokens, across Qwen3, DeepSeek-R1 and Gemini 2.5 (Tran & Kiela, [arXiv:2604.02460](https://arxiv.org/abs/2604.02460)); debate was the strongest multi-agent variant but still didn't beat it. The argument is the data-processing inequality: recombining the same information can't add any |
 | **Execution, tool or visual feedback** | Yes | Large gains. RLEF ([arXiv:2410.02089](https://arxiv.org/abs/2410.02089)) trains on execution feedback; WebGen-Agent's screenshot feedback took Claude 3.5 Sonnet from 26.4% to 51.9% |
+
+The data-processing argument assumes the single agent uses its context perfectly, and Tran & Kiela flag that as its boundary. When they degraded the context (Qwen3-30B on MuSiQue 4-hop at a 1,000-token thinking budget, with 70% of the context tokens masked or swapped for random tokens), a sequential multi-agent pipeline beat the single agent; at 30% the single agent still led. Splitting can pay when one context is too long or too noisy to use well, which is a context problem, not new information.
+
+Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) add a second test from 260 controlled configurations: once a single agent already scores above about 45% on a task, adding agents had negative returns ([06](06-when-not-to-build-a-graph.md#what-fan-out-costs)).
 
 So a reviewer earns its node when it can **run something**: tests, a browser, a search, a type checker. A reviewer that only rereads the text is the same model a second time.
 
