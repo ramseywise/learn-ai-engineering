@@ -7,6 +7,8 @@ sources:
   - "adv-11/AgenticAIFrameworks: AutoGen/react_prompting.py, AutoGen/tool_use_calculator.py, MCP/server.py, MCP/chatbot.py — https://github.com/adv-11/AgenticAIFrameworks"
   - "Yao et al. 2022, ReAct — https://arxiv.org/abs/2210.03629"
   - "Schick et al. 2023, Toolformer — https://arxiv.org/abs/2302.04761"
+  - "Patil et al. 2023, Gorilla — https://arxiv.org/abs/2305.15334"
+  - "Qin et al. 2023, ToolLLM — https://arxiv.org/abs/2307.16789"
   - "Beurer-Kellner et al. 2025, Design Patterns for Securing LLM Agents against Prompt Injections — https://arxiv.org/abs/2506.08837"
 confidence: high
 cleaned: 2026-10-31
@@ -244,6 +246,8 @@ From the P21 section of the book, plus what the labs show:
 | Don't make the model fill in deterministic values | Inject IDs, dates and user context in code |
 | Return descriptive errors, not stack traces | The model can retry (P18 Reflection) |
 | Prefer code execution when the input is a DSL | SQL as a string beats twenty filter parameters |
+
+When the catalogue is too large to list, the field tried two fixes in 2023: fine-tune on API documentation, and retrieve the few relevant tools per request. Gorilla ([arXiv:2305.15334](https://arxiv.org/abs/2305.15334), Patil et al., 2023-05) fine-tuned LLaMA-7B on 1,645 TorchHub, TensorHub and HuggingFace calls. With no retriever it reached **71.7% AST accuracy on HuggingFace calls, against 19.8% for zero-shot GPT-4**. GPT-4's errors were mostly invented models and repos: 37% of its HuggingFace calls named an API that doesn't exist. Retrieval cut both ways. With the oracle document in the prompt, GPT-3.5 reached 89.7%. With BM25, every model fell below 20% on HuggingFace, and Gorilla dropped from 71.7% to 17.0%. A weak retriever is worse than none. ToolLLM ([arXiv:2307.16789](https://arxiv.org/abs/2307.16789), Qin et al., 2023-07) scaled to 16,464 RapidAPI endpoints with ChatGPT-generated instructions and solution paths. Swapping the ReAct loop for a depth-first search over call trees, which lets the model back up after a failed call, raised **ChatGPT's pass rate from 40.2% to 64.8%**. That beat GPT-4 with ReAct (57.2%). The fine-tuned 7B ToolLLaMA reached 66.7% with the same search, while Vicuna and Alpaca passed nothing. The pass rates are judged by ChatGPT, which agreed with human annotators 87.1% of the time, so read them as relative.
 
 ---
 

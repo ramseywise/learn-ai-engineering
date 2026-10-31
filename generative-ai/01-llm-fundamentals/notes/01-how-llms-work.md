@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2303.08774
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 1–4"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 2"
+  - https://arxiv.org/abs/2108.12409
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -62,6 +63,9 @@ Attention by itself is order-blind, so position is added in:
 | Learned absolute positions | GPT-2, GPT-3 | A second embedding table indexed by position, added to the token embedding |
 | Sinusoidal | Original transformer | Fixed sine/cosine patterns ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762)) |
 | Rotary (RoPE) | Llama, most open models | Rotate query/key vectors by an angle that depends on position ([arXiv:2104.09864](https://arxiv.org/abs/2104.09864)); extends to longer contexts more gracefully |
+| ALiBi | BLOOM, MPT | No position embedding; subtract a per-head linear penalty proportional to query–key distance from the attention scores ([arXiv:2108.12409](https://arxiv.org/abs/2108.12409)) |
+
+ALiBi's paper (Press et al., 2021-08) tested whether a model trained on short sequences still works on longer ones. On WikiText-103, sinusoidal models got worse as soon as the input passed the training length, and rotary was only somewhat better. A 1.3B ALiBi model trained on 1,024 tokens matched the perplexity of a sinusoidal model trained on 2,048 when both were tested at 2,048, and it trained **11% faster with 11% less memory**. Perplexity was best at about twice the training length, then held steady out to 10,000 tokens. The authors' own appendix limits what that shows. With nonoverlapping evaluation windows, the gain from longer inputs came from fewer tokens sitting at the start of a window with little context (the "early token curse"). It did not come from the model using text far back. Under sliding-window evaluation, where every token gets full context, ALiBi's perplexity stayed flat as the input grew, while the sinusoidal model's still blew up. ALiBi extrapolates without breaking. That is not the same as making use of the extra context.
 
 ---
 
