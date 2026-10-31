@@ -11,6 +11,10 @@ sources:
   - https://arxiv.org/abs/2407.01502
   - https://arxiv.org/abs/2609.12191
   - https://arxiv.org/abs/2504.13837
+  - https://arxiv.org/abs/2505.08775
+  - https://arxiv.org/abs/2504.12516
+  - https://arxiv.org/abs/2510.04374
+  - https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
@@ -190,6 +194,7 @@ Two metrics answer different questions:
 | **pass@k** | P(at least one of k trials succeeds) | "Can it do this at all, given retries?" | Rises |
 | **pass^k** | P(all k trials succeed) | "Does it do this *every* time?" | Falls |
 | **Best@k** | Score of the best of k trials | "What's the quality ceiling?" (continuous scores, open-ended tasks) | Rises |
+| **Worst@k** | Score of the worst of k trials | "How bad is the bad day?" (the continuous-score version of pass^k) | Falls |
 
 If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)^k, and pass^k = p^k. At p = 0.75 and k = 3: pass@3 = 0.98, pass^3 = **0.42**.
 
@@ -198,9 +203,14 @@ If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)
 
 The two can rank models in opposite orders. On math benchmarks, RLVR-trained models beat their base models at k=1 but lose at large k: base Qwen2.5-32B solves about 9% more Minerva problems than its RL-trained version at k=128 ([arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (Yue et al., 2025-04)). Pick the k that matches how the system is used before comparing.
 
+Worst@k does for rubric scores what pass^k does for pass/fail. HealthBench samples *N* responses per conversation, takes the minimum score over every subset of size *k*, and averages those minima. That gives an unbiased estimate, the same idea as Chen et al.'s pass@k estimator. o3 scores 0.60 on average, but its worst-of-16 is about a third lower, and GPT-3.5 Turbo's worst-case score reaches 0 by k = 7 ([arXiv:2505.08775](https://arxiv.org/abs/2505.08775) (Arora et al., 2025-05); OpenAI benchmarking OpenAI models on its own rubrics). In a domain where one bad answer does harm, the bottom of the curve is the number to gate on.
+
+![Worst-at-k score against k from 1 to 16 for five OpenAI models. o3 falls from about 0.60 to about 0.36; GPT-3.5 Turbo falls to zero by k = 7](../sources/images/arora-healthbench-fig7.png)
+*Image Source: Arora et al., [HealthBench](https://arxiv.org/abs/2505.08775) (2025), Fig. 7*
+
 State which one you report. Yang et al. (2026) give both for a common set of *n* tasks and *R* repeats: **Mean@R** = average over all n·R binary attempts (the expected one-shot success rate), and **pass@R** = fraction of tasks solved in *at least one* repeat. Neither can be reconstructed from the other once aggregated, so log per-attempt results, not just the summary.
 
-Also report the **per-task pass rate distribution**. A suite at 70% could be "every task passes 70% of the time" (flaky) or "70% of tasks always pass, 30% never do" (capability gaps). They need different fixes.
+Also report the **per-task pass rate distribution**. A suite at 70% could be "every task passes 70% of the time" (flaky) or "70% of tasks always pass, 30% never do" (capability gaps). They need different fixes. Real suites are usually a mix. Over 64 trials per question on BrowseComp, Deep Research solved 16% of the questions every time, failed 14% every time, and landed somewhere in between on the rest ([arXiv:2504.12516](https://arxiv.org/abs/2504.12516) (Wei et al., 2025-04)).
 
 ---
 
@@ -255,6 +265,8 @@ So the levers are turn count and context growth, not just a cheaper model ([02-c
 
 **Report a budget–capability curve, not one point.** RE-Bench (Wijk et al. 2025): at a 2-hour budget the best agent scored about 4× human experts. At 8 hours humans narrowly passed it, and with 32 hours total across attempts they scored about 2× the agent. Leading at a short budget doesn't predict long-horizon ability. Compare at budgets close to the real workload.
 
+**Count the human review time in any speedup claim.** GPT-5 finished GDPval's expert tasks 90× faster than the experts, but someone has to check the output. Once the authors added an expert's 109-minute average review and the expert redoing the work whenever the model lost (61% of the time), the speedup fell to 1.12× for "try the model once, then fix it yourself" and 1.39× for "retry until it's good enough". The cost advantage fell from 474× to 1.18–1.63×. For GPT-4o, which won 12.5% of comparisons, the retry strategy ended up *slower* than the expert alone, at 0.46× ([arXiv:2510.04374](https://arxiv.org/abs/2510.04374) (Patwardhan et al., 2025-10); OpenAI-run, self-reported human times, 220 tasks).
+
 **Plot accuracy against cost, and include simple baselines.** Kapoor et al. reran the HumanEval agents from the leaderboard (164 problems, five runs each, April 2024 prices). A warming baseline (retry GPT-4 when the example tests fail, raising temperature from 0 to 0.5 across retries) reached 93.2% for $2.45. LDB with GPT-4 reached 93.3% for $6.36, and LATS with GPT-4 reached 88.0% for $134.50. "For substantially similar accuracy, the cost can differ by almost two orders of magnitude." None of the original papers reported cost as a headline metric, and the authors found none that compared against such baselines. Log **input and output token counts, not just dollars**, so the comparison can be re-priced when rates change ([arXiv:2407.01502](https://arxiv.org/abs/2407.01502) (Kapoor et al., 2024-07)).
 
 ![Accuracy against cost on HumanEval. A dashed Pareto frontier runs from GPT-3.5 through Escalation to Warming (GPT-4) and LDB (GPT-4). LATS (GPT-4) sits far right at about $134 with lower accuracy](../sources/images/kapoor-2024-ai-agents-that-matter-fig1.png)
@@ -267,7 +279,7 @@ So the levers are turn count and context growth, not just a cheaper model ([02-c
 | Agent type | Add these to the suite |
 |---|---|
 | **Conversational** | Multi-turn tasks. Turn-count limits. Tone and interaction quality. Long, adversarial conversations. A simulated user ([below](#multi-turn-evaluation)) |
-| **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope |
+| **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope, including a check that test files are untouched, since agents special-case tests ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)) |
 | **Research** | Citation validity, coverage of required facts, source quality ([07](07-evaluating-rag-and-grounding.md)) |
 | **Computer use** | End-state checks on the environment. Sandboxed, reset per trial |
 | **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](13-case-study-support-agent.md#adversarial-cases)) |
@@ -307,7 +319,8 @@ An agent eval environment has five parts. Each one can be wrong on its own:
 - **Isolate trials.** Parallel trials must not share mutable resources, and neither should sequential ones. WebArena's Reddit clone rate-limits posting, so "if the tasks involving Reddit posts are evaluated one after another, they are much more likely to fail." Task order changed the score (Kapoor et al., [above](#efficiency-metrics)). Shuffle task order between runs. A score that moves with order means the tasks are not independent.
 - **Re-run the scoring, not just the agent.** The same audit found two leaderboard agents (LATS, STeP) that marked some failed tasks as correct and dropped a few tasks from the benchmark.
 - **Stub or record unstable externals** (live web, third-party APIs) for regression suites. Keep a separate live suite for capability checks.
-- **Treat a 0% task as suspect.** If a task fails every trial across several model versions, check the task before the agent. It's often broken: unreachable state, wrong reference, missing permission.
+- **Treat a 0% task as suspect.** If a task fails every trial across several model versions, check the task before the agent. It's often broken: unreachable state, wrong reference, missing permission. On BrowseComp, 21 of the 118 questions that Deep Research never solved had a bad reference answer ([03](03-eval-datasets.md#lessons-from-public-benchmarks)). For the rest, the authors gave the model the reference answer and asked it to find supporting evidence. It usually could, which showed the questions were hard rather than broken (Wei et al., [above](#non-determinism-run-every-task-k-times)).
+- **Keep the answer out of reach.** An agent that can't do the task the intended way will look for another way. In one of Anthropic's capture-the-flag evals, Claude 3.7 Sonnet couldn't connect to the vulnerable service, so it reasoned that the service was running locally, searched the whole machine and found the flag in plaintext ([PDF](https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf) (Anthropic, 2025-02)). Store reference answers, grader code and hidden tests where the agent's tools can't read them, and read the transcripts of surprising passes.
 
 ---
 

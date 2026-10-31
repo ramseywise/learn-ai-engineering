@@ -7,6 +7,7 @@ sources:
   - ../sources/buduma-fundamentals-of-deep-learning.pdf
   - https://www.tensorflow.org/guide/migrate
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), appendix A"
+  - https://arxiv.org/abs/2302.06675
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -128,6 +129,7 @@ The rule behind both: keep the variance of activations constant across layers so
 | Momentum | $v = \beta v + (1-\beta) dW$; $W \mathrel{-}= \alpha v$ | Smooths oscillation; $\beta = 0.9$ |
 | RMSprop | $s = \beta s + (1-\beta) dW^2$; $W \mathrel{-}= \alpha\, dW / \sqrt{s + \epsilon}$ | Per-parameter step size |
 | Adam | Momentum + RMSprop + bias correction $\hat v = v / (1 - \beta_1^t)$ | Default; $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\epsilon = 10^{-8}$ |
+| Lion | $W \mathrel{-}= \alpha\,(\operatorname{sign}(\beta_1 v + (1-\beta_1) dW) + \lambda W)$; then $v = \beta_2 v + (1-\beta_2) dW$ | Found by program search. Keeps only momentum, so less optimizer memory than Adam. Needs a 3–10× smaller learning rate and 3–10× larger weight decay than AdamW. Saved up to 5× pre-training compute for ViT on JFT, with gains growing with batch size ([arXiv:2302.06675](https://arxiv.org/abs/2302.06675) (Chen et al., 2023-02)) |
 
 On the "moons" data, after the same epochs: mini-batch GD 79.7%, momentum 79.7%, Adam 94%. Learning-rate decay and the *lectures'* batch normalisation complete the course; [17 — nanoGPT](17-nanogpt.md) uses AdamW with warmup and cosine decay.
 
