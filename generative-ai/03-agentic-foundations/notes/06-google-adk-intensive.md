@@ -6,11 +6,19 @@ sources:
 cleaned: 2026-07-17
 ---
 
+# 6 — Google ADK intensive: course notes
+
+> Notes from Google's five-day AI Agents Intensive (vibe-coding edition), Days 1–3: agentic engineering versus vibe coding, context types, the agent harness, interoperability protocols and agent skills.
+
+These are course notes, not an ADK reference. For ADK itself (agents, tools, sessions, deployment) read [04-agentic-frameworks](../../04-agentic-frameworks/README.md), note 04. For the ideas the course gestures at, the deeper treatments are [context engineering](../../../ai-engineering/02-context-engineering/README.md) (context types, skills as progressive disclosure) and [harness engineering](../../../ai-engineering/03-harness-engineering/README.md) (Agent = Model + Harness). Days 4–5 (security and evaluation; spec-driven production) were not written up.
+
+Course page and NotebookLM notebook:
+
 https://www.kaggle.com/competitions/5-day-ai-agents-intensive-vibecoding-course-with-google
 
 https://notebooklm.google.com/notebook/25cb1710-ae04-4a99-9c1a-b6c2a4fdbb11
 
-### Schedule:
+## Schedule
 
 - **Day 1: Introduction to Agents & Vibe Coding** Level up from AI chatbots and text completion to autonomous agents. Master vibe coding workflows where natural language is the primary programming interface.
 - **Day 2: Agent Tools & Interoperability** Explore unlimited capabilities by integrating external APIs, code execution, and agent to agent communication.
@@ -18,7 +26,9 @@ https://notebooklm.google.com/notebook/25cb1710-ae04-4a99-9c1a-b6c2a4fdbb11
 - **Day 4: Vibe Coding Agent Security and Evaluation** Develop reliable agents by implementing rigorous testing, guardrails, and quality evaluations. Secure agents against new threat vectors.
 - **Day 5: Spec-Driven Production Grade Development in the Age of Vibe Coding** Graduate your local agents into a governed, scalable, and observable production-ready fleet. Master cloud deployment, debugging, and observability.
 
-# Day 1 Introduction to Agents & Vibe Coding
+---
+
+## Day 1 Introduction to Agents & Vibe Coding
 
 1. Complete Unit 1 – "Introduction to Agents & Vibe Coding"
     - Listen to the summary podcast (https://www.youtube.com/watch?v=cbzmr7vt4XA) episode for this unit.
@@ -142,7 +152,9 @@ operational burdens between Capital Expenditure (CapEx)— the upfront investmen
 
 *(missing diagram — `Screenshot 2026-06-15 at 22.50.05.png` not exported from Notion)*
 
-# Day 2 Agent Tools & Interoperability
+---
+
+## Day 2 Agent Tools & Interoperability
 
 - Listen to the summary podcast (https://www.youtube.com/watch?v=GjjKXqxFTOY) episode for this unit.
 - To complement the podcast, read "Agent Tools & Interoperability” whitepaper (https://www.kaggle.com/whitepaper-agent-tools-and-interoperability)
@@ -172,7 +184,9 @@ Identify scope, access criterias
 Include the specifications in the coding agent
 Authentication
 
-# Day 3 Agent Skills
+---
+
+## Day 3 Agent Skills
 
 Complete Unit 3 - “Agent Skills”:
 
@@ -216,3 +230,7 @@ Why Multi-Agent Systems Are Losing Favor:
 Previous: Large orchestration complexity.
 
 Now: One general-purpose agent can dynamically load skills. — deployment/ memory stores / routing complexity / maintenance
+
+---
+
+→ Next: back to the [pillar README](../README.md), or on to [04-agentic-frameworks](../../04-agentic-frameworks/README.md) for LangGraph and ADK in depth.
