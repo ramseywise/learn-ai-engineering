@@ -293,6 +293,7 @@ The vendored M&G notebooks were written against scikit-learn 0.20. This repo's c
 | `OneHotEncoder(sparse=False)` | `OneHotEncoder(sparse_output=False)` | Renamed 1.2, old name removed 1.4 |
 | `GridSearchCV(..., iid=True)` | Drop `iid` | Removed 1.0 (0.24 deprecation) |
 | `LogisticRegression()` (convergence warnings on unscaled data) | `LogisticRegression(max_iter=1000)` or scale first | Default solver `lbfgs` since 0.22 |
+| `vectorizer.get_feature_names()` | `get_feature_names_out()` (all transformers) | Removed 1.2 |
 | `load_boston()` | `fetch_california_housing()` or `mglearn.datasets.load_extended_boston()` | Removed 1.2 |
 
 Where the fixes landed:
@@ -302,9 +303,10 @@ Where the fixes landed:
 | `02-supervised-learning.ipynb` | `LogisticRegression(max_iter=1000)`, `DummyClassifier(strategy="stratified")` |
 | `04-representing-data-feature-engineering.ipynb` | `OneHotEncoder(sparse_output=False)` in cells 18, 21, 26 |
 | `05-model-evaluation-and-improvement.ipynb` | No stale imports (uses `mglearn` helpers) |
-| `01`, `03`, `06`, `07`, `08` | Clean |
+| `01`, `03`, `06`, `08` | Clean |
 | `../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb` | `iid=True` removed from `GridSearchCV` (cells 41, 43) |
-| Sarkar *Text Analytics*, Ng ML exercises | Clean (Sarkar uses `Pipeline` only; Ng uses no sklearn) |
+| `04`, `07` and Sarkar `Ch04a`, `Ch06c`, `Ch06d`, `Ch06e`, `Ch07c`, `Ch09e` | `get_feature_names()` → `get_feature_names_out()` (2026-10-31; the 2026-07 audit missed it) |
+| Ng ML exercises | Clean (no sklearn) |
 
 `cross_validation` appearing in Sarkar's `Ch06b` is an LDA topic word in a notebook output, not an import.
 

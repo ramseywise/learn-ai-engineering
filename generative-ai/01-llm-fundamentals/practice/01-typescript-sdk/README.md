@@ -1,4 +1,6 @@
-# TypeScript — LLM Fundamentals
+# Lab 1 — Calling Claude from TypeScript
+
+> Concepts: [06 — Calling models from code](../../notes/06-calling-models-from-code.md). Run label: needs Node, `@anthropic-ai/sdk`, `tsx` and `ANTHROPIC_API_KEY`; each run makes a few paid API calls.
 
 Runnable TypeScript examples using the [Anthropic SDK](https://github.com/anthropic-ai/anthropic-sdk-node). Each file is self-contained and covers one core pattern.
 
@@ -31,7 +33,7 @@ npx tsx 04-multi-turn.ts        # scripted demo when stdin is not a TTY
 
 ## Key SDK patterns
 
-- **Model**: `claude-sonnet-4-20250514` throughout.
+- **Model**: `claude-sonnet-4-20250514` throughout. Replace it with a current model id if this one has been retired.
 - **Streaming**: `client.messages.stream()` returns an async iterable of server-sent events; call `.finalMessage()` for the completed message object.
 - **Tool use**: define tools with a JSON Schema `input_schema`; use `tool_choice: { type: "tool", name: "..." }` to force a call.
 - **Multi-turn**: pass the full `messages` array (user + assistant turns) on each request; the SDK does not manage history automatically.

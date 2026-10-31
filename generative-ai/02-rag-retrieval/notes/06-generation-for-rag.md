@@ -1,0 +1,259 @@
+---
+origin: Deeplearning.ai-RAG-main
+sources:
+  - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
+  - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation" + labs 4.1 sampling, 4.2 prompt engineering, Assignment 4 "Fashion Forward Hub")
+  - https://gradientscience.org/contextcite/ (ContextCite, cited by the course)
+confidence: high
+cleaned: 2026-10-31
+---
+# 6 — Generation for RAG
+
+> The LLM half of RAG: how a decoder-only transformer turns the augmented prompt into tokens, which sampling knobs control that, how to choose a model, how to write prompts that keep answers grounded and cited, how to measure faithfulness with RAGAS, and when to split one LLM call into an agentic workflow. RAG adds knowledge; fine-tuning changes behaviour.
+
+---
+
+## Why RAG works: attention
+
+An LLM is a decoder-only transformer. For each new token it runs the whole context through 8–64 layers, each with many attention heads (8 to 100+) and a feed-forward block, then samples one token and repeats until an end-of-sequence token.
+
+| Part | What it contributes |
+|---|---|
+| Token + **position** vectors | What each token is and where it sits |
+| **Attention** heads | Each token looks at every other token and pulls in what is relevant |
+| Feed-forward layers | Per-token processing of what attention gathered |
+| Token loop | One token at a time, conditioned on all before |
+
+RAG works because attention lets every generated token look at the retrieved documents. Two consequences:
+
+- The model **may still ignore the context** if its weights pull harder. Prompting (below) and evaluation (RAGAS) are how you catch that.
+- **Most of the cost is in the transformer.** Longer contexts mean more compute per token. This is the latency argument in note [07](07-rag-in-production.md).
+
+---
+
+## Sampling
+
+The model outputs a probability for every vocabulary token. Sampling decides which one to emit.
+
+| Knob | What it does | Lab observation |
+|---|---|---|
+| **Greedy** | Always the most likely token | Deterministic, can loop and repeat |
+| **Temperature** | Rescales the distribution: p' ∝ exp(log p / T). < 1 sharpens, > 1 flattens | T = 0.3 and 1.5 start alike; T = 3 is nonsense |
+| **top-k** | Sample only from the k most likely tokens | `top_k=0` behaves like greedy; `top_k=10` varies |
+| **top-p** (nucleus) | Sample from the smallest set whose cumulative probability ≥ p | `top_p=0` gives identical outputs; `0.8` varies |
+| Repetition penalty | Lowers probability of tokens already used | Stops loops in long answers |
+| Logit bias | Push specific tokens up or down | Ban or force words, force a label vocabulary |
+
+![The same next-token distribution at temperatures 0, 0.5, 1, 1.2 and 5: low temperature concentrates probability on the top token, high temperature flattens toward uniform](../sources/images/hasan-dlai-rag-temperature.png)
+*Image Source: Hasan, DeepLearning.AI RAG course, Module 4*
+
+top-p adapts to the model's confidence, which top-k does not. When the model is sure, the nucleus is one or two tokens; when unsure, it widens.
+
+![top-p = 85%: candidate tokens sorted by probability, cumulative 32%, 57%, 75%, 87%; the first four are kept because 87% is the first total above 85%](../sources/images/hasan-dlai-rag-top-p.png)
+*Image Source: Hasan, DeepLearning.AI RAG course, Module 4*
+
+Temperature changes the **shape** of the distribution; top-p and top-k change **which tokens are eligible**. Setting `temperature=1` does not make output deterministic.
+
+### Parameters by task
+
+Lab 4.2 routes each query to a parameter set:
+
+```python
+def answer_query(query):
+    label = decide_if_technical_or_creative(query).lower()   # one cheap LLM call
+    if label == "technical":     # documentation, procedures: be precise
+        kwargs = generate_params_dict(query, temperature=0,   top_p=0.1)
+    elif label == "creative":    # "suggest three places to visit": allow variety
+        kwargs = generate_params_dict(query, temperature=1.1, top_p=0.4)
+    else:                        # classifier failed: neutral fallback
+        kwargs = generate_params_dict(query, temperature=0.5, top_p=0.5)
+    return generate_with_single_input(**kwargs)["content"]
+```
+
+The course's warning: keep temperature below about 1.3, and if you go near it, lower top_p to compensate.
+
+---
+
+## Choosing an LLM
+
+| Factor | Question |
+|---|---|
+| Size | Bigger knows more and reasons better; costs more |
+| Cost | Per input and output token, at your volume |
+| Context window | Fits your top_k chunks plus history? |
+| Latency | Time to first token and tokens per second |
+| Knowledge cutoff | Matters less with RAG, but not zero |
+
+| Benchmark type | Example | Watch out for |
+|---|---|---|
+| Automated | MMLU (57 subjects, multiple choice) | **Saturation** (everyone scores 90%+) and **contamination** (test set in training data) |
+| Human preference | LMArena, Elo ratings | Measures preference, not correctness |
+| LLM-as-judge | One model grades another | Judges favour their own model family |
+
+Use public benchmarks to shortlist; decide on your own eval set.
+
+---
+
+## Prompting for RAG
+
+### The messages format
+
+Chat models take a list of `{role, content}` messages (`system`, `user`, `assistant`). Under the hood each model family wraps them in special tokens (Llama uses `<|begin_of_text|>`, `<|start_header_id|>system<|end_header_id|>` and so on). The API hides this; know it exists when a raw-completion endpoint misbehaves.
+
+### A RAG prompt template
+
+| Section | Contents |
+|---|---|
+| **System** | Use only the retrieved documents. Judge whether each is relevant. Cite sources. Say so if the answer is not there |
+| **History** | Prior turns, pruned to the last N messages |
+| **Retrieved** | `[DOC 1] … (source: …)`, `[DOC 2] …` |
+| **Query** | The user's current question |
+
+| Technique | Use in RAG |
+|---|---|
+| In-context learning | Retrieve *examples* of good past answers, not just facts |
+| Chain of thought / scratchpad | Let the model reason over conflicting documents before answering |
+| Reasoning models | Few-shot examples tend to *hurt*; drop prior reasoning tokens from history |
+| Context pruning | Keep the last N messages; summarise or drop older ones |
+
+### Classification and structured output
+
+Two pieces of Lab 4.2 that the assignment reuses:
+
+```python
+# 1. LLM as a classifier: precise instructions, labelled examples (incl. edge cases),
+#    and max_tokens 1–2 so it can only emit the label
+prompt = f"""Label the following instruction as an FAQ-related query or a product-related query.
+Examples:
+    Is there a refund for incorrectly bought clothes? Label: FAQ
+    Do you have blue T-shirts under 100 dollars? Label: Product
+Return only one of the two labels: FAQ or Product.
+Instruction: {query}"""
+label = generate_with_single_input(prompt, temperature=0, max_tokens=1)["content"].strip()
+label = label if label in ("FAQ", "Product") else None    # always validate the label
+
+# 2. Structured output: pass a JSON schema instead of begging for JSON in the prompt
+from pydantic import BaseModel, Field
+
+class VoiceNote(BaseModel):
+    title: str = Field(description="A title for the voice note")
+    summary: str = Field(description="A short one sentence summary of the voice note.")
+    actionItems: list[str] = Field(description="A list of action items from the voice note")
+
+result = generate_with_multiple_input(
+    messages=[{"role": "system", "content": "The following is a voice message transcript. Only answer in JSON."},
+              {"role": "user", "content": transcript}],
+    response_format={"type": "json_schema", "schema": VoiceNote.model_json_schema()},
+)
+```
+
+The "old-fashioned way" in the lab (a smart-home prompt listing every device ID with JSON examples, `{{ }}` escaped inside the f-string) works but is long and fragile; the schema parameter guarantees parseable output.
+
+---
+
+## Hallucinations and citations
+
+The course's example: a support bot asked "Do you offer student discounts?" invents one, because a discount is the probable answer.
+
+| Defence | How | Cost / limit |
+|---|---|---|
+| Self-consistency | Sample several answers; distrust disagreement | Multiplies cost |
+| Grounding via system prompt | "Answer only from the documents; say if you don't know" | Cheap; not a guarantee |
+| **Citations** | Number documents, require `[1]`, `[2]` after claims | Citations themselves can be hallucinated |
+| ContextCite | Attributes each statement to the context spans that caused it | Research tool; extra compute |
+| ALCE benchmark | Scores citation quality, correctness and fluency | For evaluating systems, not runtime |
+
+---
+
+## Evaluating the generator: RAGAS
+
+| Metric | How it is computed | What it misses |
+|---|---|---|
+| **Response relevancy** | An evaluator LLM writes several prompts that *could* have produced the response; embed them and the real prompt; average cosine | Does not check facts |
+| **Faithfulness** | An LLM extracts every factual claim in the response, then checks each against the retrieved docs; share supported | Depends on judge quality |
+| Others | Noise sensitivity, citation metrics, context precision/recall | All lean on LLM-as-judge |
+
+Measure indirectly too: thumbs up/down and A/B tests that change only the LLM, so you capture its effect alone. The RAGAS paper is in `sources/` (arXiv 2309.15217); see [references](../references.md).
+
+---
+
+## Agentic RAG
+
+One LLM call can be split into several specialised ones. The course's support-bot flowchart:
+
+| Step | Model | Job |
+|---|---|---|
+| Router | Small | Does this prompt need retrieval at all? |
+| Retriever | — | Fetch candidates |
+| Evaluator | Small | Are these documents relevant? |
+| Generator | Large | Write the answer from the augmented prompt |
+| Citation | Specialised | Attach sources |
+
+| Workflow shape | Pattern |
+|---|---|
+| Sequential | parser → rewriter → retriever → generator → citation |
+| Conditional | Router picks one branch |
+| Iterative | Writer and evaluator loop N times |
+| Parallel | Orchestrator fans out; synthesiser merges |
+
+Build simple ones by hand; reach for a framework as they grow. These are Anthropic's *Building Effective Agents* shapes; the house treatment is [ai-engineering 05 — graph vs loop](../../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md) and [01 § agentic vs single-pass](01-rag-pipeline.md#agentic-vs-single-pass-li-experiment-3-9).
+
+Assignment 4 builds exactly this for a clothing store ("Fashion Forward Hub"):
+
+```python
+def answer_query(query: str) -> dict:
+    label = check_if_faq_or_product(query)          # router, max_tokens=1, temperature=0
+    if label not in ("FAQ", "Product"):             # router failed: answer from history
+        return {"role": "assistant",
+                "prompt": f"User provided a question that does not fit FAQ or Product "
+                          f"related questions. Answer it based on the context you already "
+                          f"have so far. Query provided by the user: {query}"}
+    if label == "FAQ":
+        return query_on_faq(query)                  # FAQ pairs in the prompt
+    try:
+        # decide_task_nature → get_params_for_task (technical 0.3/0.7, creative 1.0/0.9)
+        # → LLM extracts metadata (gender, articleType, baseColour, season, usage, price)
+        # → Weaviate filters on it → product prompt
+        return query_on_products(query)
+    except Exception:
+        return {"role": "assistant", "prompt": "…Instruct them to rephrase it…"}
+```
+
+The metadata step is query parsing (note [05](05-chunking-query-parsing-and-reranking.md)) done with structured output: the LLM sees the allowed values for each field and returns JSON that becomes a Weaviate filter.
+
+---
+
+## RAG vs fine-tuning
+
+| | RAG | Fine-tuning |
+|---|---|---|
+| Changes | The prompt | The weights |
+| Good for | **Knowledge**: facts, private data, freshness | **Behaviour**: domain style, format, tone, task skill |
+| Update cost | Re-index documents | Retrain |
+| Citations | Natural | None |
+
+Fine-tuning changes how the model talks, not reliably what it knows. Use RAG for knowledge, fine-tuning for domain adaptation, and both when you need both. Fine-tuning in depth: [01-llm-fundamentals](../../01-llm-fundamentals/README.md) (training and adapting) and [05-RL](../../05-RL/README.md) (preference tuning).
+
+---
+
+## Rules of thumb
+
+| Rule | Why |
+|---|---|
+| Temperature ≈ 0, low top_p for factual RAG answers | Faithfulness over variety |
+| Classifier calls: `max_tokens` 1–2, validate the label | Can't ramble, failures are explicit |
+| Use the schema parameter for JSON | Parsing never fails |
+| Tell the model to cite and to say "not in the documents" | Cheapest hallucination defence |
+| Measure faithfulness, not only relevancy | A relevant answer can still be invented |
+| Small models for routers and evaluators | They run on every request |
+
+---
+
+## Labs
+
+| Lab | Label |
+|---|---|
+| M4 Lab 4.1 (sampling parameters), Lab 4.2 (classification, params by task, structured output) ([upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG)) | needs an API key (Together.ai); not copied |
+| M4 Assignment 4 (Fashion Forward Hub chatbot) | needs Together API key + embedded Weaviate; not copied |
+
+→ Next: [07-rag-in-production.md](07-rag-in-production.md) — the system works on a laptop; now evaluate it with traces, cut its cost and latency, secure it, and extend it to images and PDFs.

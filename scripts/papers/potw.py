@@ -359,7 +359,8 @@ def triage_batch(batch, inventory, claude):
 def cmd_triage(args):
     rows = load_ledger()
     pending = [r for r in rows if r["status"] == args.status and (args.backlog or not r.get("backlog"))
-               and (not args.source or r["source"] == args.source)]
+               and (not args.source or r["source"] == args.source)
+               and (not getattr(args, "local", False) or r.get("local_pdf"))]
     if not pending:
         log("triage: nothing new")
         return
@@ -385,7 +386,7 @@ def cmd_triage(args):
             rel = int(v.get("relevance") or 0)
             r.update(topic=topic, pillar=pillar, note=note, relevance=rel, reason=v.get("reason", ""), triaged_at=now)
             # a PDF already in the repo only needs a home; a DAIR paper must earn its download
-            floor = 1 if r["source"] == "repo" else args.min_relevance
+            floor = 1 if r["source"] == "repo" or r.get("local_pdf") else args.min_relevance
             r["status"] = "queued" if pillar and rel >= floor else "skipped"
         save_ledger(rows)
     counts = {s: sum(r["status"] == s for r in pending) for s in ("queued", "skipped", "new")}
@@ -626,10 +627,15 @@ def arxiv_authors(ids):
     out, ids = {}, sorted(ids)
     for i in range(0, len(ids), 100):
         chunk = ids[i : i + 100]
-        try:
-            feed = ET.fromstring(http_get(ARXIV_API.format(id=",".join(chunk))))
-        except Exception as exc:
-            log(f"route: arXiv metadata failed for {len(chunk)} ids: {exc}")
+        feed = None
+        for wait in (0, 20, 60):  # the API answers 429 after a few quick calls
+            time.sleep(wait)
+            try:
+                feed = ET.fromstring(http_get(ARXIV_API.format(id=",".join(chunk))))
+                break
+            except Exception as exc:
+                log(f"route: arXiv metadata failed for {len(chunk)} ids: {exc}")
+        if feed is None:
             continue
         for entry in feed.findall("a:entry", ns):
             m = file_id_re.search(entry.findtext("a:id", "", ns))
@@ -685,6 +691,9 @@ def cmd_route(args):
     need = {r["arxiv"] for r in todo if r.get("arxiv") and not r.get("first_author")
             and not chapter_re.match(Path(r["local_pdf"]).name)}
     meta = arxiv_authors(need) if need else {}
+    if args.apply and need - set(meta):  # names would fall back to bare titles; don't commit to them
+        sys.exit(f"route: no arXiv metadata for {len(need - set(meta))} papers; retry later "
+                 "(the dry run shows the names that would be used)")
     taken = {r["local_pdf"] for r in rows if r.get("local_pdf")}
     moved = dropped = 0
     for r in sorted(todo, key=lambda r: r["local_pdf"]):
@@ -777,6 +786,7 @@ def main():
         if name == "triage":
             p.add_argument("--status", default="new", help="re-triage rows with this status (default new)")
             p.add_argument("--source", choices=["dair", "repo"], help="only rows from this source")
+            p.add_argument("--local", action="store_true", help="only rows whose PDF is already in the repo")
         if name in ("triage", "download"):
             p.add_argument("--backlog", action="store_true", help="include backfilled papers")
         else:
