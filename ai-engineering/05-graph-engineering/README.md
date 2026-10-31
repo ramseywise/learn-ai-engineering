@@ -43,10 +43,11 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 ## Layout
 
 ```
-README.md      this file: overview, start here, rules of thumb, sources
+README.md      this file: overview, start here, rules of thumb, resource map
+references.md  every source the notes cite, mapped to notes
 notes/         01–13, the course; figures and code inline
 slides/        deck.yaml + graph-engineering.pptx
-sources/       book chapters and PDFs, the archived deep note, the LangGraph style deck
+sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
   images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
   images/unreferenced/   course images not used anywhere yet, kept for review
 ```
@@ -97,12 +98,11 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ## Resource map
 
-### Deep notes
-- [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md): the original single deep note, archived. A `§N` reference in a note means a section of this file.
+### Related notes elsewhere
 - Memory-augmented RAG notes are merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md) (memory designs) and [generative-ai/02-rag-retrieval/rag.md](../../generative-ai/02-rag-retrieval/rag.md) (retrieval).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
-- [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/) — the depth layer under notes 09–13 (ch1–3 → 09, ch4–8 → 10, ch13–15 → 11, ch9–12 → 13; chapter PDFs in `pdf/`). Chapter-by-chapter notes: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory and Neo4j/Cypher appendices.
+- [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/): the chapter PDFs, `chNN-<topic>.pdf` and `appendix-{a,b,c}-<topic>.pdf`. Their content is folded into notes 09–13, which cite the chapter for each claim (ch1–3 and appendices A–B → 09, ch4–8 and appendix C → 10, ch13–15 → 11, ch9–12 → 13). Topics: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory, Neo4j and structured-sources appendices.
 
 ### Interviewing guide
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
@@ -110,48 +110,15 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 ### Notebooks and course code
 - DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.
   - **Credentials:** `notebooks/knowledge-graphs-for-rag/code/.env` is the only file left of the local copy of the course. It holds live credentials, is gitignored and has never been committed. Rotate the keys if the repo or that folder is ever shared, and delete the file once you no longer run the notebooks locally.
-- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing); used in the Track A labs. An `LG L#` reference means `Lesson_#_Student.ipynb` there (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing): runnable companion code for notes 01–05 (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.
 
 ### Readings
-- [sources/](sources/) — the book (notes and PDFs, above), the archived deep note, and the community-compiled *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026) PDF.
+- [sources/](sources/) — the book PDFs (above), figures in `images/`, and the community-compiled *Graph Engineering: The Karpathy Loop, Improved 1000x by Itself* (2026) PDF.
 - Li, *AI Agents in Depth*, [ch. 10 Multi-Agent Collaboration](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md): when multi-agent actually beats single-agent, shared vs isolated context, failure modes. Synthesised into [05](notes/05-topology-patterns.md) (two design dimensions, the new-information test, the runtime as an OS, handoff packages, A2A; [labs table](notes/05-topology-patterns.md#labs)) and [07](notes/07-failure-modes-at-scale.md) (Byzantine faults, semantic conflicts, cascading amplification, MAST). Ch. 3's RAPTOR vs GraphRAG comparison is in [11](notes/11-kg-rag-and-text-to-cypher.md).
 
-### External references
-- LangGraph docs: https://docs.langchain.com/langgraph
-- Anthropic, [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) and [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) (source of the ~15× token figure).
-- Edge et al., [From Local to Global: a Graph RAG approach](https://arxiv.org/abs/2404.16130) (GraphRAG, 2024).
-- Anthropic, [knowledge graph construction cookbook](https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide).
-- LangGraph GitHub: https://github.com/langchain-ai/langgraph
-- [3 years of graph engineering with LangGraph](https://www.langchain.com/blog/3-years-of-graph-engineering-with-langgraph) — production agents need cycles; loops are simplified graphs.
-- [Graph engineering: enterprise guide](https://www.truefoundry.com/blog/graph-engineering-enterprise-guide) — identity, cost attribution, approval checkpoints, 7-question production checklist.
-- [Graph engineering for AI agents](https://www.eigent.ai/blog/graph-engineering-ai-agents) — control-theory framing: loop failure modes at scale, paired metrics, anchors.
-- [Graph engineering 2026 guide](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) — parallel review graph, typed edges, loop-vs-graph cost tradeoffs, 5-stage adoption.
-- [Graph engineering with Claude Code](https://www.aibuilderclub.com/blog/graph-engineering-with-claude-code) — subagents as nodes, hooks as deterministic edges, Agent SDK.
-- [Forget loop engineering](https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985) — the organizational-structure argument.
-- [From Karpathy's loops to shared knowledge graphs](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) — loop → swarm → graph as capacity unlocks; the KG as shared memory ("the agent forgets, the graph does not"); tiered extraction pipeline; five-plane architecture.
-- [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — the true-dependency test for what parallelizes; verifier context isolation; swarm cost anchors.
-- [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — production supervisor-pattern LangGraph case study: six agents, per-node iteration bounds, optimistic locking, published context budgets.
-- [Hosting n8n](https://docs.n8n.io/deploy/host-n8n) — deployment surface for a self-hosted graph runtime.
-
-### Source quality
-
-Several external references above are secondary or vendor posts. Per [SOURCES.md](../SOURCES.md), Tier 2 sources are gap-detectors, not citations of record. The notes flag numbers that rest on them; corroborate before you quote them:
-
-| Source | Problem | Corroborate via |
-|---|---|---|
-| flowtivity.ai, "graph engineering 2026 guide" | Vendor marketing; supplies most of the hard numbers (~3× tokens, ~50% break-even, ~18% typed-edge gain, 53.4 vs 42.9% multi-hop, "~3× faster") and the OpenClaw / Codex tooling claims | Your own measurements (lab A5); the GraphRAG paper; LangGraph docs |
-| youmind.com viral-article landing page | Source of the Bun $165k figure and Dynamic Workflows limits | Anthropic docs for Dynamic Workflows; Bun's own post; otherwise drop |
-| pkhamdee.blog | Personal blog synthesising primary sources | Karpathy's autoresearch repo; Anthropic's KG cookbook; Anthropic engineering posts |
-| [sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf](sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf) | Community-compiled; carries an Anthropic logo but says "not affiliated … not endorsed" | Cite as secondary only |
-| explainx.ai/post/graph-engineering | SEO aggregator | Drop; LangChain's "3 years of graph engineering" has the same line first-hand |
-| Medium, GaoDalie "Forget loop engineering" | Opinion piece; overstates | A quote at most, not evidence |
-| Medium, Rathod n8n deep dive | Third-party teardown | n8n's own source and `docs.n8n.io` |
-| aibuilderclub.com | Tier 2 aggregator | Claude Code docs (subagents, hooks), Claude Agent SDK docs, *Building effective agents* |
-| truefoundry.com enterprise guide | Vendor (sells an AI gateway); gateway-centric framing | OpenTelemetry GenAI semantic conventions; LangSmith / LangGraph tracing docs |
-| eigent.ai blog | Vendor blog; sound framing but uncited | Keep as framing; anchor Goodhart in the original literature |
-
-First-party and fine to cite: LangChain's "3 years of graph engineering with LangGraph", the LangGraph docs and GitHub, `docs.n8n.io`, Anthropic's engineering posts, Addy Osmani.
+### External references and source quality
+Every web source, paper and book the notes cite, mapped to notes, with the quality flags for vendor and secondary posts: [references.md](references.md).
 
 ### Previous and next layer
 ← Builds on [04-loop-engineering/](../04-loop-engineering/README.md)

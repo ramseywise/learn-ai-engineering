@@ -8,6 +8,7 @@ sources:
   - sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf (community synthesis; secondary)
   - https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/ (secondary)
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops (secondary)
+  - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -215,13 +216,20 @@ Don't start at the swarm. The synthesis's staged path matches [note 06](06-when-
 
 Move to the next stage only when the current one has been measured.
 
+The persistent graph at stage 3 needn't be a graph database. The community consensus [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) reports (attributed to Eugeniu Ghelbur) is four properties: a **small typed core** of node and edge types, **cheap indexing**, **hybrid retrieval** (keyword or vector to find an entry point, then edges to expand), and **temporal supersession** (a newer fact `SUPERSEDES` an older one instead of overwriting it). All four can be built on markdown files you own. A vendor-relayed opinion, not a result, but a sensible bar to clear before reaching for Neo4j.
+
+Two drills test whether the graph is earning its place:
+
+- **With and without shared memory.** Fan out 5–10 workers over one corpus twice: once returning prose to a synthesiser that reads everything, once publishing validated `GraphUpdate`s that the synthesiser queries and must cite. Compare redundant findings, synthesiser input tokens, total tokens, and answer and path quality on a fixed question set.
+- **Contamination.** Inject one false `RESOLVES_TO` merge under a fake `run_id`, re-run the questions and trace every changed answer back to the bad edge, then roll back by deleting everything carrying that `run_id`. If provenance alone can't restore the answers, the write path isn't strict enough.
+
 ---
 
 ## Working reference
 
 `~/.claude/refs/agent-memory.md`: taxonomy, persistence by lifetime (in-turn → session → cross-session → **cross-agent**), and the single-writer rule. `~/.claude/refs/agent-architecture.md`: when to fan out.
 
-Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06-memory.md) (ChatGPT, OpenClaw, Memoria). Practice: [lab B7](../practice/exercises.md#b7--swarm-with-and-without-shared-memory) and [lab B8](../practice/exercises.md#b8--contamination-drill).
+Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06-memory.md) (ChatGPT, OpenClaw, Memoria).
 
 ---
 

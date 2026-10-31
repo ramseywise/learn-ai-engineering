@@ -14,7 +14,8 @@ SKIP_DIRS = {
 }
 SKIP_PATHS = {"./.claude/docs"}
 SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/", "~/", "/guides/")
-link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)\)")
+# The path part of a link; a trailing #anchor is allowed (the file is checked, not the anchor)
+link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
 fence_re = re.compile(r"```.*?```", re.DOTALL)
 
 errors = 0
