@@ -79,7 +79,7 @@ Landed in the 2026-07-31 sweep:
   pages were merged into [01-prompt-engineering/notes/](01-prompt-engineering/notes/), with each
   note listing its `promptingguide.ai` sources in its frontmatter. Its notebooks were excerpted into
   the same notes (removed 2026-10-30), except the RAG and context-caching ones, which were later folded into
-  [generative-ai/02-rag-retrieval/rag.md](../generative-ai/02-rag-retrieval/rag.md) and 02-context note 04. To check for new
+  [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) and 02-context note 04. To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
   [01-prompt-engineering/README.md](01-prompt-engineering/README.md#references).
 

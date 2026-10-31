@@ -23,7 +23,7 @@ and have not been renamed to the flat convention.
 
 | Files | Content | Where it would go |
 |---|---|---|
-| `rag/` (10: rag-paradigms, rag-process, rag-taxonomy, rag-vs-finetuning, rag-evolution, rag-framework, rag-augmentation, rag-optimization, rag-metrics, rag-ecosystem) | Gao et al. 2023 RAG-survey figures | `generative-ai/02-rag-retrieval/rag.md`. **rag-paradigms** and **rag-vs-finetuning** are the strongest |
+| `rag/` (10: rag-paradigms, rag-process, rag-taxonomy, rag-vs-finetuning, rag-evolution, rag-framework, rag-augmentation, rag-optimization, rag-metrics, rag-ecosystem) | Gao et al. 2023 RAG-survey figures | `generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md`. **rag-paradigms** and **rag-vs-finetuning** are the strongest |
 | `research/rag-faith.png` | RAG faithfulness vs. prior strength (Wu et al. 2024) | `02-context-engineering/notes/04-retrieval.md` |
 | `research/haystack-performance.png` | needle-in-a-haystack results | `02-context-engineering/notes/01-why-context-is-finite.md` |
 | `research/infini-attention.png` | Infini-attention architecture | 02 note 01, as an aside |
