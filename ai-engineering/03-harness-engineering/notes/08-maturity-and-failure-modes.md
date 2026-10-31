@@ -113,7 +113,7 @@ The corollary is that **cheap-and-wrong is the more expensive failure**, because
 
 The maturity ladder says *what* to build; these are the mechanisms that keep a Stage 2–3 harness running once real traffic hits it. All four come from PRINCE, and all four are unglamorous.
 
-PRINCE's own framing: the LangGraph workflow *is* the harness. It decides which component can act, which tools it can use, where the workflow can pause, how failures are retried, how state is persisted, and when to move from research to reflection to writing. Those are the control points for recovery, inspection, evaluation and human intervention that an unconstrained autonomous agent lacks. (PRINCE's retrieval stack is in [genai/02 agent-rag-patterns](../../../generative-ai/02-rag-retrieval/rag/agent-rag-patterns.md).)
+PRINCE's own framing: the LangGraph workflow *is* the harness. It decides which component can act, which tools it can use, where the workflow can pause, how failures are retried, how state is persisted, and when to move from research to reflection to writing. Those are the control points for recovery, inspection, evaluation and human intervention that an unconstrained autonomous agent lacks. (PRINCE's retrieval stack is in [genai/02 agent-rag-patterns](../../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md).)
 
 ### Resume from the failed node
 

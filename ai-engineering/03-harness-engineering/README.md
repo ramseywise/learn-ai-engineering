@@ -47,7 +47,7 @@ slides/           deck.yaml + harness-engineering.pptx
 sources/          paper PDFs + images/ (figures used by notes and deck)
 ```
 
-Related outside this pillar: PRINCE's retrieval stack (RAG, Text-to-SQL, NER) is in [generative-ai/02-rag-retrieval/rag/agent-rag-patterns.md](../../generative-ai/02-rag-retrieval/rag/agent-rag-patterns.md).
+Related outside this pillar: PRINCE's retrieval stack (RAG, Text-to-SQL, NER) is in [generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md](../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md).
 
 ---
 
@@ -57,8 +57,8 @@ Related outside this pillar: PRINCE's retrieval stack (RAG, Text-to-SQL, NER) is
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
-- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main/) — agentic design patterns.
-- [AgenticAIFrameworks-master](../../generative-ai/03-agentic-foundations/AgenticAIFrameworks-master/) — framework survey.
+- [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/notes/04-multi-agent-design-patterns.md) — agentic design patterns.
+- [AgenticAIFrameworks-master](../../generative-ai/03-agentic-foundations/notes/05-framework-survey.md) — framework survey.
 
 ### External sources
 
