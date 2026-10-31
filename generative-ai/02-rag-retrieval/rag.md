@@ -102,7 +102,7 @@ Retrieval can only return what parsing extracted. Parser capability comes in tie
 
 A tier-one parser over a PDF-heavy corpus silently turns every chart, diagram and table into nothing or garbled text. The retrieval layer then looks broken (low recall, irrelevant chunks) when the failure happened at ingestion. Check what the parser produced before tuning k, rerankers or chunk size.
 
-**Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [3-7 multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/multimodal-agent)).
+**Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/multimodal-agent)).
 
 ---
 
@@ -145,7 +145,7 @@ Lexical search (BM25) finds exact terms: names, error codes, identifiers. Dense 
 
 Each stage has its own job:
 
-- **Sparse.** BM25's `k1` saturates term frequency, so the 20th mention adds little. `b` normalises for document length. Rare terms dominate through IDF. *Learned sparse* models (SPLADE, BGE-M3's sparse head) learn the term weights and can add related terms that aren't in the text, while staying sparse and inspectable. Build BM25 by hand: [practice/01](practice/01-bm25-from-scratch/README.md).
+- **Sparse.** BM25's `k1` saturates term frequency, so the 20th mention adds little. `b` normalises for document length. Rare terms dominate through IDF. *Learned sparse* models (SPLADE, BGE-M3's sparse head) learn the term weights and can add related terms that aren't in the text, while staying sparse and inspectable. Worked example below: [BM25 from scratch](#bm25-from-scratch).
 - **Dense.** Cosine similarity compares direction, not magnitude, so length doesn't count. Contextual encoders (BERT, BGE-M3) give "bank" a different vector in each sentence; Word2Vec gave it one. The ANN index choice (HNSW for live corpora, ANNOY for static ones) is in [vector-databases.md](rag/vector-databases.md#ann-index-types-hnsw-vs-annoy). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding).
 - **Fusion.** Dense scores (roughly 0–1) and BM25 scores (0 to tens) aren't on the same scale. RRF (`Σ 1/(60 + rank)`) ignores scores and fuses ranks: robust, but it throws signal away. Normalise-and-weight keeps the scores but is hard to tune.
 - **Rerank.** A cross-encoder reads the query and the candidate *together* (the interviewer), where the bi-encoder compares two independent vectors (the résumé screen). It's too slow to run over the corpus, so it reranks the fused top 50 or so. It refines fusion; it doesn't replace it. Lab: upstream [3-6 retrieval-pipeline](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/retrieval-pipeline) reports each document's rank before and after reranking.
@@ -173,6 +173,82 @@ def weighted(dense, sparse, w_dense=0.7):      # each: {doc: raw score}
 
 The DAIR course's `HybridRAG` (keyword weight 0.3, keyword score = query-term overlap) breaks off mid-method, so the combination step above was written for this note rather than copied.
 
+### BM25 from scratch
+
+The sparse half fits in about 40 lines of standard-library Python. For query term *t* in document *d*:
+
+```
+score(t, d) = IDF(t) · tf · (k1 + 1) / (tf + k1 · (1 − b + b · |d| / avgdl))
+IDF(t)      = ln((N − df + 0.5) / (df + 0.5) + 1)
+```
+
+- **`k1` saturates term frequency.** The 20th mention adds far less than the 2nd, so a long document can't win by repetition. Typical values are 1.2–2.0.
+- **`b` normalises for length.** `b=0` ignores length; `b=1` normalises fully. The usual default is 0.75.
+- **The `+ 1` inside the log** is the Lucene variant. It keeps IDF positive for terms that appear in more than half the documents. Li's worked example uses the classic form without it, so his numbers come out slightly lower.
+
+```python
+import math, re
+from collections import Counter
+
+STOP = {"the", "is", "a", "an", "of", "to", "in", "and", "for", "on", "how", "what"}
+
+def tokenize(text):
+    # Keep codes like HTTP-403 whole; lowercase ordinary words; drop stop words.
+    tokens = re.findall(r"[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*", text)
+    return [t if any(c.isdigit() for c in t) else t.lower()
+            for t in tokens if t.lower() not in STOP]
+
+class BM25:
+    def __init__(self, docs, k1=1.5, b=0.75):
+        self.k1, self.b = k1, b
+        self.tf = [Counter(tokenize(d)) for d in docs]         # term counts per doc
+        self.len = [sum(c.values()) for c in self.tf]          # |d|
+        self.avgdl = sum(self.len) / len(docs)
+        self.df = Counter(t for c in self.tf for t in c)       # docs containing t
+        self.N = len(docs)
+
+    def idf(self, t):
+        # Lucene variant: the +1 keeps IDF positive for very common terms.
+        df = self.df[t]
+        return math.log((self.N - df + 0.5) / (df + 0.5) + 1)
+
+    def term_score(self, t, i):
+        tf = self.tf[i][t]
+        if tf == 0:
+            return 0.0
+        norm = 1 - self.b + self.b * self.len[i] / self.avgdl   # length normalisation
+        return self.idf(t) * tf * (self.k1 + 1) / (tf + self.k1 * norm)  # saturates in tf
+
+    def search(self, query, k=3):
+        q = tokenize(query)
+        scores = [(sum(self.term_score(t, i) for t in q), i) for i in range(self.N)]
+        return sorted((s for s in scores if s[0] > 0), reverse=True)[:k]
+
+docs = [
+    "Model distillation trains a small student model from a large teacher model.",
+    "The model returned HTTP-403 when the API key had expired.",
+    "A model card describes the model, its data and the model's limits.",
+    "Forbidden errors usually mean the credentials lack permission.",
+]
+bm25 = BM25(docs)
+for q in ["model distillation", "HTTP-403", "forbidden error"]:
+    print(f"{q!r:22} ->", [(i, round(s, 2)) for s, i in bm25.search(q)])
+```
+
+```
+'model distillation'   -> [(0, 1.68), (2, 0.59), (1, 0.37)]
+'HTTP-403'             -> [(1, 1.24)]
+'forbidden error'      -> [(3, 1.31)]
+```
+
+Three things to read off the output:
+
+- **Rare beats frequent.** Doc 2 says "model" four times but ranks well below doc 0. "model" is in three of the four documents, so its IDF is low, and `k1` caps what repetition can add. "distillation" is in one document and carries the score.
+- **Codes survive tokenisation.** `HTTP-403` stays one token and hits doc 1 exactly, which is what dense search tends to blur.
+- **The blind spot.** "forbidden error" never reaches doc 1, the actual 403 incident, and it matches doc 3 on "forbidden" alone: "error" ≠ "errors", with no stemming and no synonyms. That gap is what the dense half and the reranker fill.
+
+To build intuition, sweep `k1 ∈ {0.5, 1.2, 2.0}` and `b ∈ {0, 0.75, 1}` on a corpus with one very long document and watch its rank move. To see the sparse half of [contextual retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md#contextual-retrieval), prefix a chunk with "ACME Corp 2025 Q2 financial report:" and query "ACME revenue". The fuller engine, with an inverted index, debug logging and tests, is upstream: Li, *AI Agents in Depth*, [Experiment 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (Apache-2.0).
+
 ### Measure each stage
 
 - **recall@k**: did a relevant document reach the top k? The metric closest to what RAG needs. Many reports, Anthropic's included, mean *hit rate*: at least one relevant document in the top k. "Retrieval failure rate" is 1 − recall@20.
@@ -198,7 +274,7 @@ What the diagram omits is as informative: there's no reranking and no deduplicat
 
 ## A tuned pipeline: Bayer's PRINCE
 
-Bayer's PRINCE platform ([Martin Fowler article](https://martinfowler.com/articles/reliable-llm-bayer.html); summary in [03-harness reliable-agents](../../ai-engineering/03-harness-engineering/reliable-agents.md)) is the same pipeline after that plateau, with the numbers filled in. It retrieves over decades of preclinical study reports, and the query-time path runs:
+Bayer's PRINCE platform ([Martin Fowler article](https://martinfowler.com/articles/reliable-llm-bayer.html); its verification loops in [03-harness — three kinds of reflection](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md#three-kinds-of-reflection)) is the same pipeline after that plateau, with the numbers filled in. It retrieves over decades of preclinical study reports, and the query-time path runs:
 
 1. **Keyword extraction and filter generation, concurrently.** One LLM pass pulls search keywords out of the question (domain terms like `piloerection`, `ataxia`); a second generates a structured metadata filter (`eq(study_id, T123456-2)`) via few-shot prompting over permutation examples.
 2. **Query expansion, n=5.** A smaller, faster model rewrites the question into five semantically similar variants, covering phrasing and terminology drift.
@@ -230,8 +306,16 @@ import chromadb
 from chromadb.utils import embedding_functions
 
 ef = embedding_functions.SentenceTransformerEmbeddingFunction("all-MiniLM-L6-v2")
-titles = chromadb.Client().get_or_create_collection("ml_titles", embedding_function=ef)
-titles.upsert(ids=[str(i) for i in range(len(corpus))], documents=corpus)
+titles = chromadb.PersistentClient(path="./chromadb").get_or_create_collection(
+    "ml_titles", embedding_function=ef)
+
+# Index in batches; keep the URL and abstract as metadata for citing later.
+for i in range(0, len(papers), 50):                 # papers: [{"Title", "PaperURL", "Abstract"}]
+    batch = papers[i:i + 50]
+    titles.upsert(
+        ids=[str(i + j) for j in range(len(batch))],  # stable ids, so re-runs update, not duplicate
+        documents=[p["Title"] or "No Title" for p in batch],
+        metadatas=[{"url": p["PaperURL"], "abstract": p["Abstract"]} for p in batch])
 
 hits = titles.query(query_texts=[user_topic], n_results=10)["documents"][0]
 prompt = f"""Generate 5 titles for a paper on: {user_topic}
@@ -241,7 +325,7 @@ Mimic the style of these titles. Do not copy any of them.
 </examples>"""
 ```
 
-The examples are chosen per request, so the prompt stays short and on-topic. The notebook ran on Fireworks-hosted Llama 2 7B and Mistral 7B Instruct with Mistral's `[INST]` template. **Those models are legacy**; any current chat model works with the plain prompt above. Runnable original: [practice/pe-rag.ipynb](practice/pe-rag.ipynb).
+The examples are chosen per request, so the prompt stays short and on-topic. The notebook ran on Fireworks-hosted Llama 2 7B and Mistral 7B Instruct with Mistral's `[INST]` template. **Those models are legacy**; any current chat model works with the plain prompt above. The corpus was DAIR's ML Papers of the Week list. The original builds ids from a random hash of the title, so re-running it adds duplicates; the stable ids above fix that. Runnable original: DAIR [Prompt-Engineering-Guide `notebooks/pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb).
 
 The general shape: a retrieval layer that spans structured and unstructured data needs a **router**, not a single index. Choosing *which* retrieval mechanism to use is a decision made before any retrieval happens.
 
@@ -359,7 +443,7 @@ Evaluation shifts from single-turn QA to later-turn performance, non-standalone 
 
 ## Labs
 
-- [practice/01-bm25-from-scratch](practice/01-bm25-from-scratch/README.md): BM25 by hand, offline, plus the sparse half of contextual retrieval.
-- [practice/pe-rag.ipynb](practice/pe-rag.ipynb): retrieved few-shot examples with ChromaDB (DAIR course; legacy models).
+- BM25 from scratch: [worked example above](#bm25-from-scratch); full engine upstream at [Li 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (offline, standard library).
+- Retrieved few-shot examples with ChromaDB: [snippet above](#text-to-sql-is-a-retrieval-strategy); notebook upstream at DAIR [`pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb) (legacy models).
 - Upstream *AI Agents in Depth* ch. 3 labs (need models or API keys): [ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
 - [Deeplearning.ai-RAG-main/](Deeplearning.ai-RAG-main/): the DeepLearning.AI RAG course.

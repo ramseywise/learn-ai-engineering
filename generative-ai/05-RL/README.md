@@ -210,7 +210,7 @@ Ordered by impact for interview depth and conceptual completeness:
 | Downstream | [03-agentic-foundations](../03-agentic-foundations/README.md) | RL-trained agents (ReAct, Reflexion, tool-use RL). MARL for multi-agent coordination. |
 | Downstream | [07-agentic-applications](../07-agentic-applications/README.md) | Deep-research-bot has an RL notebook (`03_rl_for_deep_research_agent.ipynb`). |
 | Lateral | [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md) | Evaluation methodology for RL-trained agents: trajectory scoring, preference annotation, benchmarks. |
-| Lateral | [Li, *AI Agents in Depth* ch. 7](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) | Synthesized into [`post-training-for-agents.md`](post-training-for-agents.md); GPU labs linked upstream from its [Labs](post-training-for-agents.md#labs) table. |
+| Lateral | [Li, *AI Agents in Depth* ch. 8](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) | Synthesized into [`post-training-for-agents.md`](post-training-for-agents.md); GPU labs linked upstream from its [Labs](post-training-for-agents.md#labs) table. |
 | Lateral | [interviewing/guides/2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) | Summary layer — RLHF, alignment, and prompting compressed for interview prep. |
 
 ---

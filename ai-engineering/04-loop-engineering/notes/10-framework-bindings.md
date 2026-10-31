@@ -83,7 +83,7 @@ The critic/refiner split is the maker/checker pattern from [note 03](03-the-scor
 
 **Durability** with `WorkflowAgent` from `@ai-sdk/workflow`: each tool's `execute` carries a `'use step'` directive, which makes it a checkpoint. Completed steps **replay from their recorded output** instead of running again, and failed steps retry automatically. Use `stream()` rather than `generate()` for long runs. Wiring: `withWorkflow()` in `next.config.ts`, `'use workflow'` on the workflow function.
 
-**Model routing per step**: a frontier model (`claude-fable-5`) for the loop's reasoning and synthesis, a smaller one (`claude-sonnet-5`) for aggregation and structured extraction via `generateObject()`. Model IDs use the `creator/model-name` format through the AI Gateway, with a failover list in `providerOptions.gateway.models`.
+**Model routing per step**: a frontier model (`claude-fable-5-1`) for the loop's reasoning and synthesis, a smaller one (`claude-sonnet-5-5`) for aggregation and structured extraction via `generateObject()`. Model IDs use the `creator/model-name` format through the AI Gateway, with a failover list in `providerOptions.gateway.models`.
 
 **Sandboxing** model-written code:
 
@@ -118,4 +118,4 @@ In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edg
 
 ---
 
-→ Practice: [../practice/exercises.md](../practice/exercises.md) — build the loops from this syllabus.
+→ Back to the [README](../README.md).

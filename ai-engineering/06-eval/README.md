@@ -79,7 +79,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 - **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=06-eval`).
 - **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01–05 can be read right after [01-prompt-engineering](../01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
-- **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md), then [Labs 1–4](practice/exercises.md).
+- **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md).
 - **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/13-case-study-support-agent.md).
 - **A number moved and you don't know why:** [09](notes/09-reading-results.md), then [12](notes/12-failure-modes.md#the-debug-order).
 - **Shipping:** [10](notes/10-evals-in-ci.md), [11](notes/11-production-and-the-maturity-ladder.md).
@@ -93,9 +93,6 @@ The rules from the topic notes on one page. Each group links to the chapter that
 06-eval/
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
 ├── notes/                        ← chapters 01–13, read in order; figures and code inline
-├── practice/
-│   ├── exercises.md              ← eight labs, one system, vibes → monitored
-│   └── 02-elo-leaderboard/       ← Elo / Bradley–Terry from pairwise votes (AI Agents in Depth, lab 6-6); runs offline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)
 ├── sources/                      ← papers filed for this pillar
 │   └── images/                   ← every figure the notes and deck use (unreferenced/ holds unused course images)
@@ -135,22 +132,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
 
-### Practice
-
-[practice/exercises.md](practice/exercises.md): eight labs on one system. Labs 2–5 pair with the course notebooks:
-
-| Lab | Course notebook | Chapters |
-|---|---|---|
-| 1 — Error analysis | — | [02](notes/02-defining-correct.md), [03](notes/03-eval-datasets.md) |
-| 2 — Tracing | [Lab 2](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents/blob/master/Lab%202/Lab2.ipynb) | [08](notes/08-tracing-and-observability.md) |
-| 3 — Router and skill evals | [Lab 3](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents/blob/master/Lab%203/Lab3.ipynb) | [04](notes/04-graders.md), [06](notes/06-evaluating-agents.md) |
-| 4 — Trajectory and repeats | [Lab 4](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents/blob/master/Lab%204/Lab4.ipynb) | [06](notes/06-evaluating-agents.md) |
-| 5 — Experiments | [Lab 5](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents/blob/master/Lab%205/Lab5.ipynb) | [09](notes/09-reading-results.md) |
-| 6 — Calibrate a judge | — | [05](notes/05-llm-as-judge.md) |
-| 7 — Gate it in CI | — | [10](notes/10-evals-in-ci.md) |
-| 8 — Online | — | [11](notes/11-production-and-the-maturity-ladder.md), [12](notes/12-failure-modes.md) |
-
-[practice/02-elo-leaderboard](practice/02-elo-leaderboard/README.md): build a leaderboard from pairwise votes with online Elo and Bradley–Terry, recover a known ranking from simulated battles, then judge pairs with an order-swapping LLM judge. Pairs with [05](notes/05-llm-as-judge.md#pairwise-ranking-elo-and-bradleyterry). Runs offline with no API key: `python cli.py` (about 240 KB, 3.9k lines of Python with 38 tests; the `llm` source and `llm_judge.py` need a key).
+Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-llm-as-judge.md#worked-example-online-elo-vs-a-bradleyterry-fit). The full runnable lab is upstream at [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard): run `pip install -r requirements.txt && python quickstart.py`, offline, with no API key.
 
 ### Copy-ready snippets
 

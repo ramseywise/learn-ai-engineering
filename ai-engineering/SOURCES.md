@@ -57,7 +57,7 @@ guide, prompt engineering 2026, and the Claude Code fundamentals track (that is
 ### MarkTechPost
 
 Added 2026-07-31. High volume, low signal-per-post — most of its loop-engineering guide
-duplicated material already in [04-loop-engineering/loop-engineering.md](04-loop-engineering/loop-engineering.md)
+duplicated material already in [04-loop-engineering/](04-loop-engineering/README.md)
 (three components, five building blocks, the loop skeleton). Its value was one thing: the
 `autoresearch` case study, which pointed at two primary sources worth citing directly.
 
@@ -78,8 +78,8 @@ Landed in the 2026-07-31 sweep:
 - *Prompt Engineering Guide*: the snapshot was **removed on 2026-10-28**. Its English
   pages were merged into [01-prompt-engineering/notes/](01-prompt-engineering/notes/), with each
   note listing its `promptingguide.ai` sources in its frontmatter. Its notebooks were excerpted into
-  the same notes (removed 2026-10-30), except the RAG and context-caching ones, which moved to
-  [02-context-engineering/notebooks/](02-context-engineering/notebooks/). To check for new
+  the same notes (removed 2026-10-30), except the RAG and context-caching ones, which were later folded into
+  [generative-ai/02-rag-retrieval/rag.md](../generative-ai/02-rag-retrieval/rag.md) and 02-context note 04. To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
   [01-prompt-engineering/README.md](01-prompt-engineering/README.md#references).
 

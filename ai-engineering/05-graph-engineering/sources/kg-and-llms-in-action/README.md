@@ -23,4 +23,4 @@
 | [Appendix B — Neo4j](appendix-b-neo4j.md) | [09](../../notes/09-kg-fundamentals-and-cypher.md) |
 | [Appendix C — KGs from structured sources](appendix-c-kgs-from-structured-sources.md) | [10](../../notes/10-building-kgs-with-llms.md) |
 
-The companion course, *Knowledge Graphs for RAG* (Neo4j), is in [notebooks/knowledge-graphs-for-rag/](../../notebooks/knowledge-graphs-for-rag/).
+The companion course, *Knowledge Graphs for RAG* (Neo4j), is folded into notes 09–11; see the pillar [README](../../README.md#resource-map).

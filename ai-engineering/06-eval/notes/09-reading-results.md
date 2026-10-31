@@ -176,7 +176,7 @@ A report's value is the hypotheses it suggests, not the headline number. Li's An
 
 A **model swap** is one deep hypothesis among others. Run it the same way, on your own eval set, with paired comparison, and compare on success, tool-call accuracy, latency and cost. It is not a shortcut.
 
-Lab: AndroidWorld report → improvement ([upstream `chapter6/android-world`](https://github.com/bojieli/ai-agent-book/tree/main/chapter6)).
+Lab: AndroidWorld report → improvement ([upstream `chapter7/android-world`](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/android-world)).
 
 ---
 

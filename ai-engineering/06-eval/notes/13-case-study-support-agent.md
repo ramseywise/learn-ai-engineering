@@ -303,4 +303,4 @@ A guardrail suite keeps safety behaviour from regressing silently ([12](12-failu
 
 ---
 
-→ Back to the [README](../README.md). Practice: [practice/exercises.md](../practice/exercises.md).
+→ Back to the [README](../README.md).

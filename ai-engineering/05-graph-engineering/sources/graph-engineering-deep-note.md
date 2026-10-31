@@ -608,7 +608,7 @@ intend to operate rather than demo — see `~/.claude/refs/agent-runtime.md`.
 - Pillar guide: [`4-agents`](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
 - Book notes: [`sources/kg-and-llms-in-action/`](kg-and-llms-in-action/)
 - Coursera code — agent graphs: [`AI-Agents-in-LangGraph-main`](../../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/)
-- Coursera code — KG for RAG: [`notebooks/knowledge-graphs-for-rag`](../notebooks/knowledge-graphs-for-rag/)
+- DeepLearning.AI × Neo4j, *Knowledge Graphs for RAG*: folded into [notes 09–11](../notes/09-kg-fundamentals-and-cypher.md)
 - Readings — KG book chapters and source PDFs: [`sources/`]()
 - LangGraph docs: https://docs.langchain.com/langgraph
 - Loop engineering note: [04-loop-engineering](../../04-loop-engineering/README.md)

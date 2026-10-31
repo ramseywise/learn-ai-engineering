@@ -22,7 +22,7 @@ The operating reframe is that agent failures are **configuration problems, not m
 
 ## Start here
 
-Read the notes in order. 01–08 are the harness as components; 09–10 put it into a real repo; the exercises test it on a repo of your own.
+Read the notes in order. 01–08 are the harness as components; 09–10 put it into a real repo.
 
 1. [What a harness is](notes/01-what-a-harness-is.md) — Agent = Model + Harness, the four parts, three data points (LangChain, Agent S4, Vercel), five no-harness failures, the ratchet, convergent design.
 2. [Harness anatomy](notes/02-harness-anatomy.md) — the nine components, the five subsystems and ablation, one real harness (the Gemini Minecraft run) read through them, Deep Agents capability groups, the filesystem as foundational primitive.
@@ -35,8 +35,6 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 9. [The repo as system of record](notes/09-repo-as-system-of-record.md) — the fresh-session test, `AGENTS.md` as a router (and how long it should be), Karpathy's environment layer, making the map enforceable.
 10. [Scope and done](notes/10-scope-and-done.md) — the spec first, WIP = 1, the feature list as a primitive, the behavior/verification/state triple, pass-state gating.
 
-Then: [practice/exercises.md](practice/exercises.md) — six labs and per-note drills to run on a repo of your own.
-
 Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=03-harness-engineering`.
 
 ## Layout
@@ -45,7 +43,6 @@ Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx)
 README.md         this file
 references.md     primary sources, upstream course, what was kept and dropped
 notes/            01–10, the course; figures and code inline
-practice/         exercises.md
 slides/           deck.yaml + harness-engineering.pptx
 sources/          paper PDFs + images/ (figures used by notes and deck)
 ```
@@ -81,13 +78,13 @@ Read into [notes/](notes/) on 2026-07-29:
 | [Anthropic — effective context engineering](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | Agent-loop framing, compaction, structured note-taking, tool clarity test |
 | [Martin Fowler — building reliable agentic AI systems (Bayer PRINCE)](https://martinfowler.com/articles/reliable-llm-bayer.html) | Process/data/draft reflection, deleting a false-positive verifier, live-traffic eval, node-level retry, resume-from-failure, provider fallback, confidence-scored HITL |
 
-Read in on 2026-10-28 for notes 09–10 and the exercises (details in [references.md](references.md)):
+Read in on 2026-10-28 for notes 09–10 (details in [references.md](references.md)):
 
 | Source | Contributes |
 |---|---|
 | [OpenAI — harness engineering](https://openai.com/index/harness-engineering/) | Repo as system of record, `AGENTS.md` as a map, enforced layering, golden rules and background cleanup |
 | [Anthropic — effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | Initializer agent, JSON feature list, one feature per session, progress file + git continuity |
-| [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Course structure behind notes 06, 09, 10 and the exercises |
+| [walkinglabs/learn-harness-engineering](https://github.com/walkinglabs/learn-harness-engineering) | Course structure behind notes 06, 09, 10 |
 
 Queue (not yet read in):
 - Lilian Weng, "Harness Engineering for Self-Improvement": https://lilianweng.github.io/posts/2026-07-04-harness — ties harness→loop→self-improvement.

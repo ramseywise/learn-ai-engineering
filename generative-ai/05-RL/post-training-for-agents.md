@@ -2,7 +2,7 @@
 
 > **Pillar:** [05-RL](README.md)
 > **Presumes:** [rlhf-pipeline.md](rlhf-pipeline.md), [preference-optimization.md](preference-optimization.md)
-> **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 7 — [book-en/chapter7.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0)
+> **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 8 — [book-en/chapter8.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0)
 
 Two threads run through this note. **SFT memorizes, RL generalizes.** And **data and environment matter more than algorithms.**
 
@@ -355,18 +355,18 @@ Fail fast before you fail at scale.
 |---|---|---|
 | 7-1 | Q-learning treasure hunt | **[practice/01-q-learning-treasure-hunt](practice/01-q-learning-treasure-hunt/)** (offline, numpy) |
 | 7-2 | LLM agent vs. Q-learning | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience) (API key) |
-| 7-3 | MiniMind: train a 100M LLM from scratch (QK-Norm + Muon, ~14 h, ~$34) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/MiniMind-pretrain) (GPU) |
-| 7-5 | Continued pretraining: Mistral 7B learns Korean | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/continued-pretraining) (GPU) |
-| 7-6 | Voice SFT: Orpheus, Sesame | [orpheus](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/orpheus), [sesame](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/sesame) (GPU) |
-| 7-7 | Multilingual reasoning SFT | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/MultilingualReasoning) (GPU) |
-| 7-9 | CoT distillation | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/cot-distillation) (GPU) |
-| 7-10 | AdaptThink | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/AdaptThink) (GPU) |
-| 7-12 | V-IRL spatial reasoning | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/SpatialReasoning) (GPU) |
-| 7-13 | SimpleVLA-RL | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/SimpleVLA-RL) (GPU) |
-| 7-14 | RLVP | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/RLVP) (GPU) |
-| 7-15 | ReTool | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/retool) (multi-GPU) |
-| 7-16 | AWorld-train | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/AWorld-train) (GPU + MCP sandbox) |
-| — | Intuitor (RL from internal confidence, no external reward) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/Intuitor) (GPU) |
+| 7-3 | MiniMind: train a 100M LLM from scratch (QK-Norm + Muon, ~14 h, ~$34) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/MiniMind-pretrain) (GPU) |
+| 7-5 | Continued pretraining: Mistral 7B learns Korean | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/continued-pretraining) (GPU) |
+| 7-6 | Voice SFT: Orpheus, Sesame | [orpheus](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/orpheus), [sesame](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/sesame) (GPU) |
+| 7-7 | Multilingual reasoning SFT | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/MultilingualReasoning) (GPU) |
+| 7-9 | CoT distillation | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/cot-distillation) (GPU) |
+| 7-10 | AdaptThink | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/AdaptThink) (GPU) |
+| 7-12 | V-IRL spatial reasoning | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/SpatialReasoning) (GPU) |
+| 7-13 | SimpleVLA-RL | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/SimpleVLA-RL) (GPU) |
+| 7-14 | RLVP | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/RLVP) (GPU) |
+| 7-15 | ReTool | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/retool) (multi-GPU) |
+| 7-16 | AWorld-train | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/AWorld-train) (GPU + MCP sandbox) |
+| — | Intuitor (RL from internal confidence, no external reward) | [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter8/Intuitor) (GPU) |
 
 ---
 

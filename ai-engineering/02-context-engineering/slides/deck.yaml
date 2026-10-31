@@ -34,6 +34,21 @@ parts:
           fixed. Token cost is not the binding constraint; quality degrades first. "It fits in the window" is
           not an argument for including something.
 
+      - layout: image
+        title: The field, mapped
+        kicker: Mei et al. 2025 — a survey of ~1,400 papers
+        image: ../sources/images/mei-context-engineering-survey-fig1.png
+        caption: "Mei et al., A Survey of Context Engineering for LLMs (2025), Fig. 1"
+        bullets:
+          - "**Components**: retrieval and generation, processing, management"
+          - "**Implementations**: RAG, memory, tool use, multi-agent"
+          - "This pillar: retrieval 04; processing 05, 07, 08; management 03"
+          - "Implementations: memory 06; tools and multi-agent 10"
+        source: notes/01-why-context-is-finite.md
+        notes: >-
+          The survey is also the source of the formal view in note 02, C = A(c1…cn): context as an assembly of
+          components under a budget.
+
       - layout: table
         title: Context rot starts long before the limit
         kicker: Four failure shapes
@@ -215,7 +230,7 @@ parts:
           tag: A full window leaves no room to answer
         source: notes/03-budgeting-the-window.md
         notes: >-
-          The pillar's templates/control_loop.py ContextManager is the minimal version: reserve the output, then
+          The upstream course's ContextManager (control_loop.py) is the minimal version: reserve the output, then
           drop the oldest history entry until the rest fits. Use the model's tokenizer rather than a word count;
           words undercount tokens by about a quarter on English and more on code.
 
@@ -238,6 +253,23 @@ parts:
           Write the full version, then cut elements one at a time while re-running the eval set. Two patterns
           account for most of the savings: task guidance over persona biography, and minimal scaffolding (three
           output sections, not seven). Example counts: 1–3 per class for classification, 2–5 for generation.
+
+      - layout: image
+        title: Cache engineering — edit the KV cache, not the text
+        kicker: Fu et al., Tsinghua 2026
+        image: ../sources/images/fu-cache-engineering-agents-fig1.png
+        caption: "Fu et al., Cache Engineering for Agents (2026), Fig. 1"
+        bullets:
+          - "KV-cache reads are **82.4%** of agent API cost"
+          - "Text edits force a re-prefill of everything after them"
+          - "Rolling-drop of tool responses: **+1.7 pts, −27.7% cost** vs. threshold summarization"
+          - "Serving: **1.2×** throughput, **1.5×** P95 latency"
+        takeaway: "Without serving-stack access: batch edits, make them at stable boundaries, drop whole blocks."
+        source: notes/03-budgeting-the-window.md
+        notes: >-
+          Prompt caching changes the cost side of the budget, not the attention side. Fu et al.'s AKV lets the agent
+          drop or reposition cached entries directly; letting the agent refine its own cache policy cut a further
+          7.1% of cost. History dependence means prefix matching alone misses most available reuse.
 
       - layout: code
         title: Measure what each layer buys
@@ -292,68 +324,38 @@ parts:
           and purpose before a byte is read. Claude Code is the hybrid pattern: CLAUDE.md every session, everything
           else Read, Grep, Glob on demand.
 
-      - layout: flow
-        title: The pre-retrieval pipeline — cheap filters first
-        kicker: When you do retrieve upfront
-        steps:
-          - {label: Filter, sub: "permission, date, tenant"}
-          - {label: Search, sub: "hybrid top-k"}
-          - {label: Rerank, sub: cross-encoder}
-          - {label: Dedup + compress, sub: query-conditional}
-          - {label: Format, sub: "tags + source + date"}
-        bullets:
-          - "**Filter inside the vector query**, not on the results. It's also a security control"
-          - "**Ranking ≠ retrieval** — retrieve wide, rerank, send narrow"
-          - "**Dedup trap** — a chunk hit by several sub-queries is often the most relevant one"
-          - "**Compress per query** — a generic summary drops the detail the query needed"
+      - layout: table
+        title: Retrieve, cache, or load it all
+        kicker: Three ways to load a corpus
+        header: [Option, Use when, Costs]
+        widths: [2.4, 4.2, 3.6]
+        highlight: [2]
+        rows:
+          - ["**Long context**", "Fits well inside the *effective* window; you ask once or twice", "Full prefill per call; rot as occupancy grows"]
+          - ["**Prompt / context cache**", "Fits, and the same corpus serves many queries", "Storage per hour; any prefix change misses"]
+          - ["**Retrieval**", "Doesn't fit, changes often, or permissions differ per user", "A pipeline to build and tune"]
+          - ["**Just-in-time tools**", "Agents over codebases, file systems, APIs", "Latency, wandering, non-determinism"]
+        takeaway: "They combine: a cached prefix plus retrieval or tool calls for the long tail. Permissions force retrieval."
         source: notes/04-retrieval.md
         notes: >-
-          The full pipeline in the note has seven stages: metadata filtering, vector search, ranking,
-          deduplication, compression, memory injection, structured formatting. Each stage narrows the candidate
-          set, so cheap filters go first and every later stage gets cheaper.
+          A cached corpus is visible to everyone who hits the cache, so retrieval wins whenever access differs per
+          user, whatever the size. The retrieval pipeline itself (chunking, hybrid search, rerank, PRINCE, RAPTOR,
+          agentic RAG) now lives in generative-ai/02-rag-retrieval/rag.md.
 
-      - layout: steps
-        title: A tuned pipeline — Bayer's PRINCE
-        kicker: Martin Fowler, reliable LLM case study
-        axis: millions → 7 chunks
-        steps:
-          - title: Extract keywords + a metadata filter
-            text: two concurrent LLM passes, e.g. `eq(study_id, T123456-2)`
-          - title: Expand the query, n=5
-            text: a smaller model rewrites the question into five variants
-          - title: Pre-filter inside the vector DB
-            text: millions of vectors → tens or hundreds before any similarity math
-          - title: Parallel hybrid search, 0.7 / 0.3
-            text: "kNN **0.7**, keyword **0.3**, found experimentally; union, max-score, keep ~20"
-          - title: Cross-encoder rerank, 20 → 7
-            text: "`bge-reranker-large` against the **original** question, not the rewrites"
-            accent: "D4621A"
-        takeaway: Each narrowing uses a mechanism more accurate and more expensive than the last.
+      - layout: table
+        title: How much to retrieve — scale depth to the task
+        kicker: Retrieve wide, rerank, send narrow
+        header: [Task shape, Chunks]
+        widths: [5, 5]
+        rows:
+          - [Simple factual lookup, Few — more is pure dilution]
+          - ["Comparison / synthesis across sources", More — needs breadth]
+          - [Ambiguous or exploratory, "Retrieve wide, rerank hard, send narrow"]
+        takeaway: "Recall and precision are different jobs: a fast wide first stage, then a reranker picks what reaches the window."
         source: notes/04-retrieval.md
         notes: >-
-          Three things generalize past the numbers. Expansion multiplies retrieval, so the filter has to come first.
-          Max-score aggregation is a dedup policy: multi-retrieval counts as signal without letting a chunk win by
-          appearing everywhere weakly. The rerank scores against the user's actual question, because reranking
-          against a rewrite would compound its drift. The 0.7/0.3 split is a corpus-specific result; for a new
-          corpus, measure it.
-
-      - layout: image
-        title: Hybrid retrieval and reranking
-        kicker: The production default
-        image: ../sources/images/li-ai-agents-in-depth-fig3-9.svg
-        caption: "Li, AI Agents in Depth (2026), Fig. 3-9 (Apache-2.0)"
-        bullets:
-          - "**BM25** finds exact terms: names, error codes, IDs"
-          - "**Dense** finds paraphrases"
-          - "**Fuse**: RRF `Σ 1/(60 + rank)` is robust; weighted scores need normalizing first"
-          - "**Rerank** the fused top ~50 with a cross-encoder"
-          - "Measure each stage: **recall@k**, MRR, nDCG"
-        source: notes/04-retrieval.md
-        notes: >-
-          Dense scores run roughly 0–1 and BM25 scores run to tens, so weighted fusion without min-max normalization
-          lets BM25 swamp the dense half. The note has both fusions as code. A cross-encoder reads query and
-          candidate together (the interviewer); a bi-encoder compares two independent vectors (the résumé screen).
-          Many reports, Anthropic's included, mean hit rate when they say recall@k. Check the definition and k.
+          Bayer's PRINCE pipeline narrows millions of vectors to 7 chunks this way; the mechanics, with its 0.7/0.3
+          hybrid weighting, are in the RAG module's rag.md.
 
       - layout: image
         title: Contextual retrieval — add context at index time
@@ -372,43 +374,6 @@ parts:
           One step improves both retrieval paths: BM25 gains exact keywords (ACME, 2025 Q2) and the embedding gains
           the missing context. The indexing cost is low because every chunk of one document shares the document as
           a cached prefix.
-
-      - layout: image
-        title: A first production cut
-        kicker: Worked example
-        image: ../images/bedrock-kb-pipeline-billydk.png
-        caption: Billy.dk support assistant on AWS Bedrock Knowledge Bases
-        bullets:
-          - "**Hybrid search**: semantic and keyword together"
-          - "**Query transformation** before retrieval: what users type rarely retrieves best"
-          - "Missing: **no rerank, no dedup**"
-          - Those are the stages teams add after quality plateaus
-        source: notes/04-retrieval.md
-        notes: >-
-          Ingestion and indexing on the left, query and retrieval on the right. Ingestion sets the ceiling: a
-          text-only parser over a PDF-heavy corpus silently drops every chart and table, and the retrieval layer
-          then looks broken. Check what the parser produced before tuning k, rerankers or chunk size.
-
-      - layout: table
-        title: RAG architectures — each step adds control
-        kicker: From naive to agentic
-        header: [Architecture, Shape, Use when]
-        widths: [2.2, 4.2, 3.6]
-        highlight: [2]
-        rows:
-          - [Naive, "embed → top-k → stuff into prompt", One-hop questions over a clean corpus]
-          - [Modular, "rewrite → retrieve → rerank → compress → generate", You need to swap one stage]
-          - [Agentic, "model decides whether, what and when; loops", Multi-step questions that decompose]
-          - [Graph-enhanced, Entities and relations; retrieval walks edges, "Multi-hop, \"how is X related to Y\""]
-          - [Text-to-SQL, "schema subset + retrieved few-shot + SELECT-only check", "Counting, filtering, aggregation"]
-        takeaway: A layer spanning structured and unstructured data needs a router, not a single index.
-        source: notes/04-retrieval.md
-        notes: >-
-          Li's Experiment 3-9 on legal Q&A: a simple question gives the same quality either way and non-agentic is
-          faster. A compound question (negligent injury while intoxicated, with a prior theft conviction) separates
-          them: the agent searches the sub-questions in parallel, sees the missing link, and runs a targeted second
-          round. In PRINCE's Text-to-SQL path an LLM review step was removed: it flagged valid queries often enough
-          to cost more than it saved. Deterministic validation beat model judgment.
 
       - layout: flow
         title: The compaction pipeline
@@ -537,6 +502,18 @@ parts:
           archive, cluster similar entries, generalize episodes into rules. Sanitize logs locally: a 0.6B local model
           catches natural-language PII that regex misses, recall above 95%.
 
+      - layout: image
+        title: MEM1 — overwrite the state, don't append the log
+        kicker: Zhou et al. 2025
+        image: ../sources/images/zhou-mem1-fig1.png
+        caption: "Zhou et al., MEM1 (2025), Fig. 1"
+        bullets:
+          - "ReAct-style agents append every thought, action and observation"
+          - "MEM1 keeps one **internal state**, rewritten each step"
+          - "Near-constant memory; matches or beats larger models on long multi-hop QA"
+        takeaway: "No training needed for the lesson: a fixed-size, rewritten state block beats an ever-growing log."
+        source: notes/06-memory.md
+
       - layout: compare
         title: Designed memory vs. searching the raw record
         kicker: Peng, arXiv 2610.29823
@@ -629,6 +606,18 @@ parts:
           result comes back. Best results came when the model chose which tool to call and when, not from a fixed
           sequence. Caveat: maths benchmarks, non-reasoning models. Reasoning models already run something like
           this internally, so scaffolding adds less.
+
+      - layout: image
+        title: Cognitive prompting vs. cognitive tools
+        kicker: Ebouky et al., IBM Research 2025
+        image: ../sources/images/ebouky-cognitive-tools-fig1.png
+        caption: "Ebouky et al., Eliciting Reasoning in LMs with Cognitive Tools (2025), Fig. 1"
+        bullets:
+          - "**A**: all operations listed in one prompt"
+          - "**B**: each operation is a tool call with its own prompt"
+          - Only the result returns to the main trace
+          - That is context isolation applied to reasoning
+        source: notes/08-cognitive-tools.md
 
       - layout: code
         title: Verify with code where you can
@@ -948,9 +937,8 @@ parts:
           - text: "**03 — Harness engineering:** when the loop that assembles context becomes stateful"
             sub: ["Execution boundaries, orchestration, reliable agents (PRINCE)"]
           - text: "**06 — Eval:** RAG and grounding metrics, tracing where the tokens go"
-          - text: "**Run the code:** the snippets in each note; practice/01 builds BM25 by hand"
+          - text: "**Worked examples:** BM25 from scratch and retrieved few-shot, in generative-ai/02-rag-retrieval/rag.md"
           - text: "**Read:** Anthropic, Effective context engineering for AI agents; Li, AI Agents in Depth ch. 2–3"
-          - text: "**Copy from:** templates/ — schemas, prompt programs, minimal-context YAML"
         aside:
           title: The one idea to keep
           accent: "1E3A5F"

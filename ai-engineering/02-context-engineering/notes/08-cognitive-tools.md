@@ -28,6 +28,8 @@ The key design choice is that **each tool runs in its own context**. The tool ca
 ![Cognitive prompting puts all operations in one prompt; cognitive tools run each operation as a separate call with its own prompt](../sources/images/ebouky-cognitive-tools-fig1.png)
 *Image Source: Ebouky et al. (2025)*
 
+Panel A is *cognitive prompting*: every operation is listed in one prompt and runs in one trace. Panel B is *cognitive tools*: each operation is a tool call with its own prompt, and only its output returns to the main trace.
+
 Result: GPT-4.1 on AIME 2024 rises from **26.7% to 43.3%**, approaching o1-preview, with similar gains on open-weight models. No training is involved, only structured prompting.
 
 Two caveats. These gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
@@ -103,7 +105,7 @@ def self_correct(problem, max_iter=3):
     return solution
 ```
 
-Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [loop engineering](../../04-loop-engineering/loop-engineering.md).
+Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [03-harness — verification loops](../../03-harness-engineering/notes/05-verification-loops.md) and [04-loop — layered exits](../../04-loop-engineering/notes/09-failure-modes-and-guardrails.md#layered-exits).
 
 The swap is small. Here the verifier is Python's own compiler, from the upstream course's `03_control_loops.py`:
 

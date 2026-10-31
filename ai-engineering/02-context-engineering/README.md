@@ -93,7 +93,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ## Where to start
 
 - **Lecture deck:** [slides/context-engineering.pptx](slides/context-engineering.pptx) — the notes as a 3-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=02-context-engineering`).
-- **New to this:** read [the mental model](#the-mental-model) above, then chapters 01–06 in order, running the code snippets in each note. Then work through [practice/exercises.md](practice/exercises.md).
+- **New to this:** read [the mental model](#the-mental-model) above, then chapters 01–06 in order, running the code snippets in each note.
 - **Building an agent now:** [02](notes/02-context-anatomy.md), [05](notes/05-compression-compaction.md), [10](notes/10-tools-and-multi-agent.md), then the design order of questions in [13](notes/13-putting-it-together.md#designing-a-context-system-the-order-of-questions).
 - **Debugging one:** [11 — failure modes](notes/11-failure-modes.md), then [12 — evaluating context](notes/12-evaluating-context.md).
 
@@ -105,7 +105,6 @@ The rules from the topic notes on one page. Each group links to the chapter that
 02-context-engineering/
 ├── README.md               ← you are here: summary, rules of thumb, chapter index
 ├── notes/                  ← the chapters (read in order), plus the 99 appendix; figures and code inline
-├── practice/exercises.md   ← exercises per chapter and the capstone
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → context-engineering.pptx)
 ├── sources/                ← PDFs of the papers the chapters cite; images/ holds every figure the notes use
 └── references.md           ← papers and further reading, mapped to chapters
@@ -149,13 +148,13 @@ The upstream course's Python labs and the DAIR caching notebook are folded into 
 | Minimal context YAML (`minimal_context.yaml`), schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — input schemas](notes/07-structured-context.md#1-input-schemas--how-a-task-is-presented), [output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
 | External validator loop (`03_control_loops.py`), operations-as-data program (`05_prompt_programs.py`), self-graded stop caution (`07_recursive_patterns.py`) | [08 — self-correction loop](notes/08-cognitive-tools.md#the-self-correction-loop), [prompt programs](notes/08-cognitive-tools.md#prompt-programs) |
 
-### Practice
+### Worked examples elsewhere
 
-[practice/exercises.md](practice/exercises.md): short exercises for each chapter, plus the capstone from [13](notes/13-putting-it-together.md). The offline BM25 lab and `pe-rag.ipynb` moved to [genai 02 — practice](../../generative-ai/02-rag-retrieval/practice/), next to the pipeline material they exercise.
+BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [genai rag.md](../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch), next to the pipeline material they exercise.
 
 ### Related
-- [genai 02 — RAG & retrieval](../../generative-ai/02-rag-retrieval/README.md) — the retrieval pipeline in depth, conversational RAG, and the BM25 lab.
-- [skills-design.md](../03-harness-engineering/skills-design.md) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
+- [genai 02 — RAG & retrieval](../../generative-ai/02-rag-retrieval/README.md) — the retrieval pipeline in depth, conversational RAG, and the BM25 worked example.
+- [03-harness — progressive disclosure: skills](../03-harness-engineering/notes/03-tool-design.md#progressive-disclosure-skills) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
 
 ### Interviewing guide
 - [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.

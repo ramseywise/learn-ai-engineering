@@ -2,7 +2,7 @@
 
 > **Pillar:** [07-agentic-applications](README.md)
 > **Presumes:** [03-agentic-foundations/agent-fundamentals.md](../03-agentic-foundations/agent-fundamentals.md)
-> **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 9 — [book-en/chapter9.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (Apache-2.0)
+> **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 6 — [book-en/chapter6.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0)
 
 Static image and document understanding is a solved part of normal agent work. This note covers the three settings where **real-time constraints** make multimodality hard: voice dialogue, GUI operation and robot control. Input arrives continuously and output has a strict time budget. All three are moving the same way: from **serial pipelines** toward **end-to-end models**, and toward a **fast/slow division of labor**. Image and video *generation* is out of scope. It is an ordinary tool call.
 
@@ -231,11 +231,11 @@ All ch. 9 labs need API keys, GPUs or hardware, so they are linked upstream, not
 
 | Exp | Lab | Needs |
 |---|---|---|
-| 9-1 | [live-audio](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/live-audio): cascaded voice chat, Silero VAD, pluggable ASR/LLM/TTS | Node + provider keys + mic |
-| 9-2 | [phone-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/phone-agent): ReAct agent with a `make_phone_call` tool over PineClaw Voice | PineClaw + LLM keys |
-| 9-3 | [streaming-speech](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/streaming-speech): chunked "simulated streaming" ASR vs. a whole-utterance baseline | ASR API key |
-| 9-4 | [end-to-end-speech](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/end-to-end-speech): end-to-end vs. cascade latency and paralinguistic loss (uses `gpt-audio` in place of Step-Audio R1) | OpenAI key |
-| 9-5 | [controllable-tts](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/controllable-tts): control-token parser + reference voice library | TTS key |
+| 9-1 | [live-audio](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/live-audio): cascaded voice chat, Silero VAD, pluggable ASR/LLM/TTS | Node + provider keys + mic |
+| 9-2 | [phone-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/phone-agent): ReAct agent with a `make_phone_call` tool over PineClaw Voice | PineClaw + LLM keys |
+| 9-3 | [streaming-speech](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/streaming-speech): chunked "simulated streaming" ASR vs. a whole-utterance baseline | ASR API key |
+| 9-4 | [end-to-end-speech](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/end-to-end-speech): end-to-end vs. cascade latency and paralinguistic loss (uses `gpt-audio` in place of Step-Audio R1) | OpenAI key |
+| 9-5 | [controllable-tts](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/controllable-tts): control-token parser + reference voice library | TTS key |
 | 9-6 | [Anthropic computer-use demo](https://github.com/anthropics/claude-quickstarts/tree/main/computer-use-demo) | Docker + Anthropic key |
 | 9-7 | [browser-use](https://github.com/browser-use/browser-use) with SoM visualization | Playwright + model key |
 | 9-8 – 9-10 | [XLeRobot teleop](https://xlerobot.readthedocs.io/en/latest/software/getting_started/XLeRobot_teleop.html), [LLM agent control](https://xlerobot.readthedocs.io/en/latest/software/getting_started/LLM_agent.html), [LeRobot sim2real](https://github.com/StoneT2000/lerobot-sim2real/blob/main/docs/zero_shot_rgb_sim2real.md) | GPU for sim. Real arm to deploy |

@@ -54,7 +54,7 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
   evaluation pipelines in LangFuse: golden sets, LLM-as-judge, regression tracking.
 - **[`../06-observability/langfuse-mcp-python-main/`](../06-observability/langfuse-mcp-python-main/)** —
   LangFuse + MCP integration: observability for MCP-enabled agents.
-- **[`../../ai-engineering/06-eval/notebooks/evaluating-ai-agents/`](../../ai-engineering/06-eval/notebooks/evaluating-ai-agents/)** —
+- **[`../../ai-engineering/06-eval/notes/06-evaluating-agents.md`](../../ai-engineering/06-eval/notes/06-evaluating-agents.md)** —
   end-to-end agent evaluation: task decomposition, trajectory evaluation, benchmark design.
 
 ### Interviewing guides
@@ -74,21 +74,17 @@ with these frameworks, see [07-agentic-applications/](../07-agentic-applications
 - [agent-fundamentals.md](agent-fundamentals.md) — start here: the agent formula, the five context
   parts and their ablation, the ReAct trajectory, model-as-agent, model choice, and workflow vs. autonomous.
 - [agents-google-adk.md](agents-google-adk.md) — Google ADK: agent framework, tool use, deployment.
-- [agent-harness.md](../../ai-engineering/03-harness-engineering/agent-harness.md) — harness architecture: tool
-  registration, the agent loop, structured output parsing, error handling.
-- [agents-design.md](../../ai-engineering/03-harness-engineering/agents-design.md) — agent design patterns:
-  ReAct, plan-and-execute, reflection, multi-agent orchestration.
-- [agents-guardrails.md](../../ai-engineering/03-harness-engineering/agents-guardrails.md) — safety and
-  guardrails: input/output filtering, scope limiting, human-in-the-loop gates.
-- [reliable-agents.md](../../ai-engineering/03-harness-engineering/reliable-agents.md) — reliability patterns:
-  retries, fallbacks, circuit breakers, determinism vs. stochasticity tradeoffs.
-- [loop-engineering.md](../../ai-engineering/04-loop-engineering/loop-engineering.md) — loop reliability:
-  termination conditions, loop invariants, stuck-agent detection.
-- [deep-agents.md](../../ai-engineering/03-harness-engineering/deep-agents.md) — advanced agent patterns:
-  long-horizon planning, self-correction, agentic evals.
-- [memory.md](../../ai-engineering/02-context-engineering/sources/memory-augmented-rag-notion-export.md) — memory architectures: in-context,
-  episodic, semantic, procedural.
-- [context-engineering.md](../../ai-engineering/02-context-engineering/context-engineering.md) — context
+- [Harness engineering](../../ai-engineering/03-harness-engineering/README.md): harness architecture
+  ([what a harness is](../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md), [anatomy](../../ai-engineering/03-harness-engineering/notes/02-harness-anatomy.md)), tool design,
+  [orchestration](../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) and multi-agent patterns,
+  [execution boundaries](../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md) and guardrails,
+  [verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) and reliability,
+  [long-horizon execution](../../ai-engineering/03-harness-engineering/notes/06-long-horizon-execution.md) (Deep Agents, session lifecycle).
+- [Loop engineering](../../ai-engineering/04-loop-engineering/README.md) — loop reliability:
+  termination conditions, scorekeepers, stuck-agent detection.
+- [Memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) — memory architectures: in-context,
+  episodic, semantic, procedural; production memory designs.
+- [Context engineering](../../ai-engineering/02-context-engineering/README.md) — context
   assembly for agents: what to include, what to compress, what to externalize.
 
 ---
