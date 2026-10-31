@@ -2,6 +2,11 @@
 origin: curated (Li, AI Agents in Depth, ch. 6)
 sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md (Bojie Li, AI Agents in Depth, 2026, ch. 6; Apache-2.0)
+  - https://arxiv.org/abs/2312.08914 (Hong et al., CogAgent, 2023)
+  - https://arxiv.org/abs/2501.12326 (Qin et al., UI-TARS, 2025)
+  - https://arxiv.org/abs/2410.00037 (Défossez et al., Moshi, 2024)
+  - https://github.com/QwenLM/Qwen2.5-Omni/blob/main/assets/Qwen2.5_Omni.pdf (Qwen Team, Qwen2.5-Omni, 2025)
+  - https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf (Kimi Team, Kimi-Audio, 2025)
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -77,9 +82,10 @@ Two newer paths:
 
 **The models:**
 - **gpt-realtime** is native audio but still uses server-side VAD. It adds barge-in and **asynchronous function calls**, so the model keeps talking while a tool runs.
-- **Qwen3-Omni** splits into a Thinker (understanding and reasoning) and a Talker (speech), on MoE.
+- **Qwen3-Omni** splits into a Thinker (understanding and reasoning) and a Talker (speech), on MoE. The split comes from Qwen2.5-Omni (7B, dense), where the Talker reads the Thinker's hidden states. Omni costs some text ability: Qwen2.5-Omni scores 47.0 on MMLU-Pro against 56.3 for Qwen2.5-7B ([Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni/blob/main/assets/Qwen2.5_Omni.pdf) (Qwen Team, 2025-03)).
   - MoE raises **throughput** (less queueing). It does not lower **first-packet latency**.
   - First-packet latency, about 234 ms, comes from the Talker's multi-codebook autoregression plus a causal codec. Speech starts streaming as soon as the Thinker emits text.
+- **Kimi-Audio** (7B, 13M hours of audio) scores 76.93 on VoiceBench against 72.83 for Qwen2.5-Omni, on the vendor's own eval toolkit with a GPT-4o-mini judge. In production it is still turn-based behind VAD ([Kimi-Audio](https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf) (Kimi Team, 2025-04)).
 - **Step-Audio 2** scores 83% on its own paralinguistic benchmark, against about 44% for GPT-4o Audio and Qwen2.5-Omni.
 
 **The remaining flaw:** Omni still takes turns. A user pauses mid-number and Omni cuts in. Semantic turn detection only patches the turn framework. It doesn't remove it.
@@ -88,7 +94,7 @@ Two newer paths:
 
 Simultaneous interpretation and rhythm games have no turns at all. Full-duplex drops the turn assumption.
 
-- **Moshi** (Kyutai, 2024) models two audio streams, the user's and its own, plus an "inner monologue" text stream. Overlap and interruption need no special logic. About 200 ms end to end.
+- **Moshi** (Kyutai, 2024) models two audio streams, the user's and its own, plus an "inner monologue" text stream. Overlap and interruption need no special logic. Latency is 160 ms in theory and **about 200 ms in practice**. The audio training has a cost: text MMLU falls from 54.3 for its base LM to 49.7 ([arXiv:2410.00037](https://arxiv.org/abs/2410.00037) (Défossez et al., 2024-09)).
 - **TML Interaction Model** (Thinking Machines Lab, 2026). The argument: interactivity should live *inside* the model, not in a VAD harness around it. It works in **~200 ms micro-turns**, with audio, video and text interleaved. It can speak up unprompted ("that code has a bug"). TML-Interaction-Small is a 276B MoE with 12B active parameters, with a turn-switch latency of about 0.40 s against about 1.18 s for GPT-realtime-2.0. It is a research preview.
 - **GPT-Live** (OpenAI, 2026) is full-duplex at 150M-user scale. It waits while the user thinks, backchannels ("mm-hmm") and translates live.
 
@@ -176,6 +182,8 @@ See [03-tool-design](../../../ai-engineering/03-harness-engineering/notes/03-too
 Labeling turns fill-in-the-blank into multiple choice. All three routes still struggle with small elements and dense screens.
 
 **Resolution matters for coordinate prediction.** Claude was trained at XGA (1024×768), WXGA (1280×800) and FWXGA (1366×768). Pick the target by **aspect ratio**, scale the screenshot down, then map the coordinates back. Example: a 2560×1440 screen → FWXGA, and (683, 384) → (1280, 720). Squashing 16:9 into 4:3 shifts every prediction.
+
+**Screenshot-only models.** Two papers show the coordinate route working without a DOM. CogAgent ([arXiv:2312.08914](https://arxiv.org/abs/2312.08914) (Hong et al., 2023-12)) adds a 0.30B high-resolution cross-attention branch to CogVLM-17B. That lets it read 1120×1120 screenshots, where tiny icons and text survive, at under half the FLOPs of CogVLM at 490×490. On Mind2Web, from screenshots alone, it scored 58.2 against 54.4 for LLaMA2-70B reading the HTML and 30.9 for few-shot GPT-4. On Android-in-the-Wild it scored 76.88 against 74.27. The authors re-checked the "errors" and judged over 40% of them to be valid alternative paths, so the benchmark undercounts. UI-TARS ([arXiv:2501.12326](https://arxiv.org/abs/2501.12326) (Qin et al., 2025-01)) trains a native agent on Qwen2-VL that does perception, grounding, reasoning and action in one model. Its training includes DPO on corrected mistakes collected online. On ScreenSpot-Pro, a grounding test on high-resolution professional apps, the 72B model scored 38.1 against 31.1 for UGround-7B and 17.1 for Claude Computer Use. CogAgent scored 7.7 there. On OSWorld (screenshot-only, averaged over 3 runs), it scored 22.7 at a 15-step budget against Claude's 14.9, and 24.6 at 50 steps against 22.0. DPO alone moved the 72B model from 18.8 to 22.7. Thinking before each action was slightly worse with one sample, and helped only at 16–64 samples or out of domain. The team that built the model also ran almost all of these evaluations.
 
 **Dynamic screens: the observation interface.** Screenshot loops assume a static screen. They miss videos, toasts and meeting audio. The **Agent–Computer Observation Interface** (Li & Shi 2026, arXiv:2606.29472) is middleware that needs no retraining. It has three parts:
 1. Keyframe capture, gated by pixel diff and then a small model.

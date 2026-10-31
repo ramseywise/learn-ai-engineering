@@ -12,6 +12,8 @@ sources:
   - "Sculley et al., Hidden Technical Debt in Machine Learning Systems (NeurIPS 2015)"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
+  - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf
+  - https://arxiv.org/abs/2312.11805
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -96,6 +98,8 @@ The narrow-checks gap can appear without anyone trying to game it. Anthropic rep
 
 Grading formats can create the proxy gap too. Under binary grading, where a wrong answer and "I don't know" both score 0, guessing always has a higher expected score than abstaining. Kalai et al. count 9 of the 10 benchmarks on popular leaderboards that give abstention no credit, and argue that this is one reason models learn to hallucinate ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09); a position paper with no experiments). The fix is in the grader: see [04](04-graders.md#binary-vs-scales).
 
+The judge you train against is itself a proxy. DR Tulu trained a deep-research agent with RL on rubric rewards graded by GPT-4.1-mini, and evaluated it on benchmarks with their own rubrics and judges. Within one run, higher training reward usually meant better downstream scores. Across runs, **the run with the highest training reward was not necessarily the best downstream**, and the authors attribute this to the mismatch between the training and evaluation judges and rubrics ([DR Tulu](https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf) (Shao et al., 2025-11)). Pick checkpoints on the held-out eval, not on the training reward.
+
 Defenses:
 
 - **Multiple dimensions** with guardrails, never a single score ([04](04-graders.md#combining-graders-scoring-design)).
@@ -134,7 +138,7 @@ Two detection heuristics, with a cost trade-off (*AI Engineering*, ch. 4):
 | **N-gram overlap** | An eval sample that shares a 13-token sequence with the training data is "dirty" | More accurate. Needs the training data, and comparing every sample against it is expensive |
 | **Perplexity** | Unusually low perplexity on the eval text means the model finds it easy to predict, so it has probably seen it | Cheap and works without training data. Less accurate |
 
-Contamination is usually accidental: web scrapes pick up published benchmarks, and training and eval sets can share a source (the same maths textbooks). It is also sometimes deliberate and reasonable: a developer selects the model on clean benchmarks, then trains on the benchmark data before release because it is good data. Either way, report the score on the **clean subset** next to the full score. In OpenAI's GPT-3 analysis, 13 benchmarks had at least 40% of their samples in the training data, and the clean-vs-full gap went both ways (Brown et al. 2020):
+Contamination is usually accidental: web scrapes pick up published benchmarks, and training and eval sets can share a source (the same maths textbooks). It is also sometimes deliberate and reasonable: a developer selects the model on clean benchmarks, then trains on the benchmark data before release because it is good data. Either way, report the score on the **clean subset** next to the full score. In OpenAI's GPT-3 analysis, 13 benchmarks had at least 40% of their samples in the training data, and the clean-vs-full gap went both ways (Brown et al. 2020): Google's Gemini report measured how small the gap can be. About a hundred fine-tuning steps on web extracts matching HellaSwag's training set, which were not in pre-training, **lifted 1-shot validation accuracy to 89.6% for Gemini Pro and 96.0% for Gemini Ultra**, against 92.3% measured for GPT-4. Google then reported HellaSwag only in a decontaminated 10-shot setting, and dropped LAMBADA after finding leaks ([arXiv:2312.11805](https://arxiv.org/abs/2312.11805) (Gemini Team, 2023-12)).
 
 ![Relative difference in GPT-3's performance on the clean subset vs the full benchmark, per benchmark](../sources/images/huyen-ai-engineering-fig4-10.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 4-10*

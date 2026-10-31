@@ -14,6 +14,7 @@ sources:
   - https://arxiv.org/abs/2609.37725
   - https://arxiv.org/abs/2512.24601
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 6, 10 — sources/context-engineering-multi-agent-systems/"
+  - https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -152,6 +153,8 @@ Compression removes bulk after it has landed. **Sub-agent isolation** keeps it o
 The same idea applies to the input itself. A **Recursive Language Model** (RLM) never puts a long prompt in the window. The prompt sits as a variable in a Python REPL. The model writes code to inspect and slice it, and calls sub-models on the pieces ([arXiv:2512.24601](https://arxiv.org/abs/2512.24601) (Zhang et al., 2025-12)). On OOLONG-Pairs at 32K tokens, where the answer depends on pairs of lines throughout the input, GPT-5 scored 0.1 F1 both alone and with a summarize-on-overflow agent. As an RLM, with GPT-5-mini handling the sub-calls, it scored 58.0. On BrowseComp-Plus over 1,000 documents (6–11M tokens), the RLM reached 91.3% against the compaction agent's 70.5%. The authors' conclusion: "compaction is rarely expressive enough for tasks that require dense access throughout the prompt." Compaction decides once what to keep. An RLM keeps everything and decides per query what to read. The costs are latency (the sub-calls run one after another), a long tail of expensive runs, and weaker results with weaker models.
 
 **State extraction** is what makes compaction safe. If task state lives in a structured record — files touched, decisions, open items — rather than being implicit in the prose of the conversation, then summarizing the prose costs little. Agents that write their state down survive compaction; agents that keep it in the transcript do not.
+
+Code Researcher applies this to long codebase exploration. Each action's result goes into a memory of (action, result) pairs, and before writing the patch the agent filters that memory down to what is relevant. On 200 Linux kernel crashes, with GPT-4o, a 50K-token limit and 5 trajectories each, it resolved 48% against 31.5% for a customized SWE-agent ([Code Researcher](https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf) (Singh et al., 2025-06)). The comparison is to another agent, not to the same agent with summary compaction, so it shows the design works rather than that it beats summarizing.
 
 ---
 
