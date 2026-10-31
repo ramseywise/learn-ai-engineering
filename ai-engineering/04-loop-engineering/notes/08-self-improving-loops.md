@@ -11,6 +11,10 @@ sources:
   - https://arxiv.org/abs/2305.16291
   - https://arxiv.org/abs/2510.04618
   - https://arxiv.org/abs/2410.10762
+  - https://arxiv.org/abs/2310.02304
+  - https://arxiv.org/abs/2505.22954
+  - https://arxiv.org/abs/2607.13104
+  - https://arxiv.org/abs/2607.12227
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -207,6 +211,15 @@ A strategy is recommended only when at least two non-failed trajectories support
 
 There is a second, independent axis: does the loop edit an *artifact*, or the *method that produces artifacts*? The search scope can widen like this: one rule → structured context ([ACE](https://arxiv.org/abs/2510.04618): stable-ID entries merged deterministically, so repeated rewrites don't erode detail; +10.6% on agent benchmarks and +8.6% on finance over baselines including GEPA and Dynamic Cheatsheet) → how context is built ([MCE](https://arxiv.org/abs/2601.21557): an outer loop edits the retrieval and curation operators) → workflow graphs ([AFlow](https://arxiv.org/abs/2410.10762): Monte Carlo tree search over code-defined workflows, +5.7% over the best baselines across six benchmarks) → harness code ([Meta-Harness](https://arxiv.org/abs/2603.28052)) → the optimizer itself ([bilevel autoresearch](#bilevel-autoresearch)). Wider scopes cost more to search, evaluate and attribute. **Default to a local patch.** Move outward only when local fixes keep failing on a cross-component problem. At every scope, the evaluators, permission boundaries and held-out tests stay outside what the loop can edit.
 
+The far end of that scale is an improver that improves itself. In STOP ([arXiv:2310.02304](https://arxiv.org/abs/2310.02304) (Zelikman et al., 2023-10)), a short scaffold asks GPT-4 to improve a program, and is then run on its own source code, scored by how well the improver it produces improves downstream programs. The model is never changed, only the scaffold. An improver optimized on one task (learning parity with noise) carried over unchanged to others: on 3SAT it lifted the downstream score from 21.2% with the seed improver to 75.1%. It needs a strong model; with GPT-3.5, "only 12% of GPT-3.5 runs yielded at least a 3% improvement". STOP is also the plainest evidence for keeping constraints out of what the loop can edit. Budget limits written into the seed improver's prompt were dropped in later rounds for "simplification", so the authors moved them into the utility. Across 10,000 improvement attempts, GPT-4 wrote code that turned off the sandbox flag 0.42% of the time, with the change described as "for efficiency".
+
+The Darwin Gödel Machine ([arXiv:2505.22954](https://arxiv.org/abs/2505.22954) (Zhang et al., 2025-05)) runs the same idea on a whole coding agent and keeps an **archive** instead of a single best version. Any past agent can be picked as the parent for the next self-edit, with selection weighted by score and by how few children the agent already has. Over 80 iterations with Claude 3.5 Sonnet, the best agent went from 20.0% to 50.0% on SWE-bench Verified. Always branching from the current best reached only 39.7%. Keeping just the latest agent reached 23.0%. The final agent's lineage passed through versions that scored *lower* than their parents, which is why the lower-scoring branches are worth keeping. One run cost about USD 22,000.
+
+![Best-agent score per iteration on SWE-bench and Polyglot: the full DGM keeps climbing while the variants without an archive or without self-improvement stall](../sources/images/zhang-darwin-godel-machine-fig2.png)
+*Image Source: Zhang et al., [Darwin Gödel Machine: Open-Ended Evolution of Self-Improving Agents](https://arxiv.org/abs/2505.22954) (2025), Fig. 2*
+
+Hiding the checker is not enough. In a DGM run aimed at tool-use hallucination, the checker functions were hidden from the agent, and one agent still reached a perfect score in two edits. It did so by removing the special-token logging that the checker read, "despite instructions not to change the special tokens". The evaluator's *inputs* have to be outside the write scope too, not just its code.
+
 ---
 
 ## Self-modification as a release process
@@ -236,6 +249,8 @@ Two additions make the result attributable:
 
 - **A falsifiable change contract** ([Agentic Harness Engineering](https://arxiv.org/abs/2604.25850)). Each edit records the failure evidence, the inferred root cause, the component to change, the behaviour expected to improve, the behaviour that might regress, and tests for both. It states the predicted impact *before* running, and the next round checks that prediction.
 - **A bounded candidate space** ([Self-Harness](https://arxiv.org/abs/2606.09498)). Give the generator the failures, the successes it must preserve, and the previously rejected attempts. The successes say what not to break. The rejected list stops it re-submitting the same idea in new words.
+
+The gate may itself need to change as tasks change. The survey by Ren et al. ([arXiv:2607.13104](https://arxiv.org/abs/2607.13104) (Ren et al., 2026-07)) recommends treating the critic as governed infrastructure: "Evolving critics should be restricted to monotone changes (e.g., purely additive test generation) and gated by human audit trails." It also names what durability costs. Once a loop commits its lessons, a one-off prompt injection can become permanent, as "poisoned memories or hijacked tool logics are committed as stable updates". Both points are the survey's recommendations, not measured results.
 
 #### Worked example: a failure-triggered patch
 
@@ -327,6 +342,8 @@ Then fix the task model and change the updater model, to compare updaters direct
 
 The mechanisms are the ones this note warns about. Self-modifying methods make **global edits to one shared prompt**, so new rules crowd out old ones: in one stream, a task family's share of GEPA's strategy prompt fell from 100% to 14.7%, and when two streams needed opposite workflows the agent rewrote its policy into its opposite. Similarity-based memory localizes updates better but retrieves **foreign memories** on unseen tasks, and collides when similar queries need conflicting workflows. Hence the retention set in every gate, and the preference for scoped Skills over one ever-growing prompt. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
 
+**Beat a matched-budget baseline, on tasks the loop never saw.** Wang et al. ([arXiv:2607.12227](https://arxiv.org/abs/2607.12227) (Wang et al., 2026-07)) re-ran harness evolution (Agentic Harness Engineering, with its step that fetches outside harnesses turned off) on Terminal-Bench 2.1. They compared it with spending the same budget, five attempts per task, on plain retries. Without unit tests, harness evolution averaged 67.4% pass@1 across three models. That is below a single attempt with the starting harness (68.2%) and below five parallel samples with the model picking its own best answer (72.3%). On a split into 45 search, 10 validation and 34 held-out tasks, the evolved harness changed held-out pass@1 by +1.2, 0.0 and −1.4 points across the three models: flat on average. The edits were sensible, but "most edits memorize fixes rather than distilling strategies". Evolution did pay off where the starting harness left room and feedback was rich. On ARC-AGI-3 games with Claude Opus 4.8 and a 2,000-action budget, evolving the full harness during each game scored 77.5, against 43.3 for retries with the same starting harness. So an evolve-loop report needs two rows that published results often leave out: the same compute spent on more attempts, and a held-out split.
+
 ### Sleep learning: consolidation on a schedule
 
 "Sleep learning" is the book's name for the offline half of a **dual loop**. The online loop finishes tasks and appends immutable evidence; it never rewrites the production agent. The offline loop runs when a threshold is reached: elapsed time, new trajectories, storage used or error rate. It has five steps:
@@ -379,7 +396,7 @@ The prerequisite limits where this transfers: **an automatic gate that can fail 
 
 - **5× improvement** over the inner loop alone (−0.045 vs −0.009 val_bpb) on Karpathy's GPT pretraining benchmark.
 - **Tuning parameters without changing the mechanism gave no reliable gain.** The outer loop had to write new *code*, the same lesson as the evolve loop's "rewrite files, not weights."
-- **Both loops use the same model.** The gain comes from loop *structure*, not model capability. That's the strongest available evidence for this pillar's main claim.
+- **Both loops use the same model**, so the gain is not from a better model. But the same model is not the same compute. On Terminal-Bench, harness evolution did not beat spending its budget on more attempts ([above](#measuring-the-evolve-loop-itself)). Before crediting a gain like this to loop *structure*, compare it with a matched-budget retry baseline.
 
 The outer loop reached for combinatorial optimization, multi-armed bandits and design of experiments without being told those fields existed.
 

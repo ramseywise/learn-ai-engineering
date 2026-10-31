@@ -32,8 +32,15 @@
 | | Self-correction survey (TACL): self-review without tools is often neutral or harmful | [2406.01297](https://arxiv.org/abs/2406.01297) | 05 |
 | | RLEF: training on execution feedback | [2410.02089](https://arxiv.org/abs/2410.02089) | 05 |
 | | Plan-and-Act: a fine-tuned planner trained on synthetic plans, replanning after each step; 57.6% on WebArena-Lite | [2503.09572](https://arxiv.org/abs/2503.09572) | 05 |
-| | Tran & Kiela: debate among copies of one model matches a single agent at equal compute | [2604.02460](https://arxiv.org/abs/2604.02460) | 05 |
 | | Agentopia: 100 agents over ten simulated years | [2606.07513](https://arxiv.org/abs/2606.07513) | 05 |
+
+## AI Papers of the Week
+
+| | Paper | arXiv | Notes |
+|---|---|---|---|
+| ★ | Rusu, Khanzadeh, Alalfi, *Selective Forgetting: A Graph-Based Memory Framework for Long-Term LLM Agents* (2026): an extraction-based conversational KG loses to flat retrieval on LongMemEval (F1 0.417 vs. 0.468); importance-scored pruning removes 9.8% of nodes at no F1 cost | [2608.28978](https://arxiv.org/abs/2608.28978) · [PDF](sources/rusu-2026-selective-forgetting.pdf) | [12](notes/12-kg-as-shared-agent-memory.md#build-path) |
+| | Tran & Kiela, *Single-Agent LLMs Outperform Multi-Agent Systems on Multi-Hop Reasoning Under Equal Thinking Token Budgets* (2026): single agent best or tied at matched budgets on FRAMES and MuSiQue; the DPI argument assumes perfect context use, and heavy context corruption reverses it | [2604.02460](https://arxiv.org/abs/2604.02460) · [PDF](sources/tran-2026-single-agent-llms-outperform-multi.pdf) | [05](notes/05-topology-patterns.md#when-multi-agent-beats-single-agent) · [06](notes/06-when-not-to-build-a-graph.md#what-fan-out-costs) |
+| ★ | Kim et al., *Towards a Science of Scaling Agent Systems* (2025, Google/MIT): 260 controlled configurations; +80.8% to −70% vs. a single agent depending on task structure, mean −0.3%; negative returns once the single agent passes ~45%; 1.6–6.2× tokens; error amplification 17.2× independent vs. 4.4× centralized | [2512.08296](https://arxiv.org/abs/2512.08296) · [PDF](sources/kim-2025-towards-science-scaling-agent-systems.pdf) | [06](notes/06-when-not-to-build-a-graph.md#what-fan-out-costs) · [07](notes/07-failure-modes-at-scale.md#cascading-amplification) · [05](notes/05-topology-patterns.md#when-multi-agent-beats-single-agent) |
 
 ## Secondary and vendor posts
 

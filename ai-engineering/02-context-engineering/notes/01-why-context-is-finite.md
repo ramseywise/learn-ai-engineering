@@ -5,8 +5,10 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://research.trychroma.com/context-rot
   - https://arxiv.org/abs/2307.03172
+  - https://arxiv.org/abs/2512.24601
+  - https://arxiv.org/abs/2404.07143
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 1 — Why Context Is a Finite Resource
 
@@ -55,9 +57,13 @@ Observed failure shapes:
 | Instruction decay | System-prompt constraints obeyed early in a session are quietly dropped later |
 | Needle degradation | Exact-match retrieval of a planted fact degrades as surrounding filler increases, even when the fact is verbatim present |
 
-The last one is the important one. The fact is *there*, unmodified, and the model still misses it. This is why "include it just in case" is a real cost rather than free insurance — filler actively degrades retrieval of the signal it surrounds.
+Needle degradation is the easiest of these to measure, and it is no longer where frontier models break. Zhang, Kraska and Khattab report that "frontier models can now reliably solve these tasks in RULER [...] in the 1M+ token settings but struggle at far shorter lengths on OOLONG, a task where the answer depends explicitly on almost every line in the prompt" ([arXiv:2512.24601](https://arxiv.org/abs/2512.24601) (Zhang et al., 2025-12)). The effective window depends on the task, not just on the model. It shrinks as the answer comes to depend on more of the input. GPT-5 (272K window) stays near 100% on single-needle retrieval out to 262K tokens. On OOLONG, where the answer needs a linear pass over the input, it falls to about 30% by 262K. On OOLONG-Pairs, where the answer needs pairs of lines, it is near 0% by 33K. So ask how much of the context the answer depends on, not only how much context there is. A "1M window" claim usually rests on a needle test, which says little about a task that has to aggregate. Filler is still a real cost rather than free insurance. Rot shows up wherever attention has to spread across the window, and a dense task makes every line part of the signal.
 
-Long-context handling techniques (**position encoding interpolation**, letting a model address sequences longer than it trained on) extend the addressable range. They do not repeal rot — they move where it starts.
+![GPT-5 vs. RLM(GPT-5) across context lengths on S-NIAH, OOLONG and OOLONG-Pairs](../sources/images/zhang-recursive-language-models-fig1.png)
+
+*Image Source: Zhang, Kraska & Khattab, [Recursive Language Models](https://arxiv.org/abs/2512.24601) (2025), Fig. 1*
+
+Long-context handling techniques (**position encoding interpolation**, letting a model address sequences longer than it trained on) extend the addressable range. They do not repeal rot — they move where it starts. Architectural changes show the same pattern. Infini-attention adds a fixed-size compressive memory to each attention layer. A 1B model with it solved passkey retrieval out to 1M tokens, but only after fine-tuning on 5K-token passkey inputs. Zero-shot, it found passkeys hidden at the start or middle of the filler only 3–14% of the time at 32K–1M ([arXiv:2404.07143](https://arxiv.org/abs/2404.07143) (Munkhdalai et al., 2024-04)). Reach measured on the easiest needle test, after training on that test, is not an effective window for real work.
 
 ---
 

@@ -4,6 +4,10 @@ sources:
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
   - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
+  - https://arxiv.org/abs/2402.01306 (KTO)
+  - https://arxiv.org/abs/2506.21495 (offline vs semi-online vs online DPO/GRPO)
+  - https://arxiv.org/abs/2503.01067 (All Roads Lead to Likelihood)
+  - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -140,7 +144,9 @@ evaluation, DPO samples were preferred over PPO's 58% of the time. PPO degraded 
 quality at high sampling temperatures while DPO held up. The authors validated GPT-4 as judge
 with a human study. DPO's β was barely tuned.
 
-**Weaknesses:** Offline only — can't incorporate new feedback during training. Sensitive
+**Weaknesses:** Offline as published — it trains on a fixed set of pairs and can't
+incorporate new feedback during training. That is a property of the data pipeline, not the
+loss: the same DPO loss run on fresh samples from the current model works well (heuristic 2). Sensitive
 to dataset quality (bad preferred/rejected pairs have direct gradient impact). Can
 increase probability of rejected responses in some settings (the "DPO length problem").
 Does not generalize beyond the preference distribution seen in training.
@@ -219,17 +225,28 @@ Not appropriate for general instruction following or alignment training.
 
 ### KTO — Kahneman-Tversky Optimization
 
-**Paper:** Ethayarajh et al., 2023. Named after prospect theory (Kahneman-Tversky).
+**Paper:** [arXiv:2402.01306](https://arxiv.org/abs/2402.01306) (Ethayarajh et al., 2024-02),
+ICML 2024. Named after prospect theory (Kahneman-Tversky).
 
 **Motivation:** DPO requires paired (chosen, rejected) examples. KTO works with unpaired
 binary feedback — just labels of "desirable" or "undesirable" for individual outputs.
 This matches how feedback often arrives in practice.
 
 **Objective:** Maximizes the "human utility" of model outputs using a utility function
-that down-weights extreme rewards (mirroring how humans actually value outcomes).
+that down-weights extreme rewards (mirroring how humans actually value outcomes). Concretely,
+an example's gradient goes to zero once its implied reward is far from the reference point in
+either direction, so KTO stops learning from examples the policy finds too easy or too hard.
+The authors read that as ignoring likely-mislabelled feedback, at the risk of underfitting
+hard-but-correct data (their fix: lower β, more epochs).
 
 **When to use:** When preference pairs are hard to collect but binary thumbs-up/thumbs-down
-signals are abundant. More data-efficient than DPO when pairs are scarce.
+signals are abundant. More data-efficient than DPO when pairs are scarce. Trained on
+HH+OASST+SHP and judged by GPT-4 winrate against the SFT targets, KTO matched or beat DPO from
+Pythia-1.4B to Llama-30B. On Zephyr-β-SFT trained on UltraFeedback it raised GSM8K from 40.0
+(DPO) to 53.5, and on Llama-7B it still beat DPO with "up to 90% of the desirable data"
+discarded. At Llama-13B and 30B, KTO without SFT was competitive with SFT+KTO, while DPO
+always needed SFT first. The authors' own limit: "if your preference data has sufficiently little noise and
+sufficiently little intransitivity, then DPO will work better."
 
 ### IPO — Identity Preference Optimization
 
@@ -264,7 +281,7 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 | Needs reward model | Yes | No | Optional (DeepSeekMath used one; R1 used rules) | No | No |
 | Needs reference model | Yes (SFT) | Yes (SFT) | Yes (SFT) | Yes (SFT) | No |
 | Needs value function | Yes | No | No | No | No |
-| Online / offline | Online | Offline | Online | Offline | Offline |
+| Online / offline | Online | Offline as published; online and semi-online variants work | Online | Offline | Offline |
 | Requires paired data | Yes | Yes | No (verifiable) | No | Yes |
 | Memory cost | 4x model | 2x model | 3x model | 2x model | 1x model |
 | Reward hacking risk | High | Low | None (verifiable) | Low | Low |
@@ -273,12 +290,28 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 **Practitioner heuristics:**
 1. **Start with DPO.** It's cheaper, more stable, and works well for most instruction
    following and general alignment tasks. Requires a clean preference dataset.
-2. **Use PPO when you need online learning.** If the task distribution shifts (online
-   deployment, iterative labeling), PPO can adapt. DPO cannot.
+2. **Go online when you can afford generation, but that does not require PPO.** What helps
+   is sampling fresh responses from the current model and labelling them with an RM or a
+   verifier. The loss matters less. Lanchantin et al.
+   ([arXiv:2506.21495](https://arxiv.org/abs/2506.21495) (Lanchantin et al., 2025-06)) trained
+   Llama-3.1-8B-Instruct with offline DPO, semi-online DPO (generator re-synced every s steps),
+   online DPO and GRPO. On NuminaMath math, Math500 accuracy was 53.7% offline, against 58.9%
+   for semi-online DPO at s=100, 58.7% for online DPO and 58.1% for GRPO. On WildChat prompts
+   with an Athene-RM-8B reward, AlpacaEval 2.0 LC winrate (GPT-4-1106 judge) went from 53.2
+   offline to 83.1 for online DPO and 75.2 for GRPO. The gain shows up even with no new human
+   data. Swamy et al. ([arXiv:2503.01067](https://arxiv.org/abs/2503.01067) (Swamy et al.,
+   2025-03)) used Pythia-1.4B/2.8B on TL;DR. Online DPO ranked its own samples with an RM
+   trained on the *same* preferences, and it beat offline DPO on that data, including offline
+   DPO run for two epochs. Their explanation is a generation-verification gap. A reward model
+   is a simpler function to learn than a policy, and RL against it limits the search to
+   policies such a simple verifier supports, so "online PFT trades data for computation".
+   Where the gap disappears (two-word summaries), online gives "a minimal at best improvement
+   of ≈1% winrate".
 3. **Use GRPO for verifiable reasoning tasks.** Math, code, logic — anything where
    you can compute a reward without a human. DeepSeek-R1 is the existence proof.
 4. **Consider KTO when pairs are scarce.** Binary feedback (thumbs up/down) is easier
    to collect than ranked pairs. If your feedback data is unpaired, KTO is the right tool.
+   If you have clean, consistent pairs, its authors expect DPO to do better.
 5. **ORPO for single-stage training.** If you can't run SFT + DPO sequentially (cost,
    latency), ORPO collapses them into one pass.
 
@@ -299,6 +332,24 @@ Key findings:
 This validated the verifiable rewards paradigm and shifted the field's attention from
 "what alignment technique" to "what reward structure."
 
+**What RLVR adds, measured at large k.** Yue et al.
+([arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (Yue et al., 2025-04)) compared base
+models with their zero-RL counterparts: Qwen2.5-7B/14B/32B and LLaMA-3.1-8B trained with GRPO
+via SimpleRL-Zoo, plus Oat-Zero, DAPO, and code and vision RL runs. They measured pass@k up to
+k=1024. RL models win at small k, but the base models catch up and pass them as k grows. On
+Minerva at 32B, the base model solves about 9% more problems at k=128. On AIME24 with
+Qwen2.5-7B at k=1024, 13.3% of problems are solved only by the base model and 0.0% only by the
+RL model. The paper concludes that current RLVR "rarely elicits fundamentally new reasoning
+patterns". It makes the base model better at sampling paths it already had. The six
+algorithms they tried (PPO, GRPO, Reinforce++, RLOO, ReMax, DAPO) behave alike. Distillation
+from a stronger teacher, unlike RLVR, did push pass@k past the base model. The paper did not
+evaluate DeepSeek-R1-Zero itself. *This note's reading:* treat the "spontaneous"
+self-verification above as RL making existing base-model behaviour reliable at pass@1, not as
+proof of new capability.
+
+![Left: search trees for two problems, where RLVR concentrates sampling on a rewarded path the base model already had (Problem A) and loses a correct path the base model could reach (Problem B). Right: pass@k on Omni-MATH-Train for Qwen2.5-7B and GRPO checkpoints at steps 150, 300 and 450, where pass@1 rises with training while pass@256 falls slightly below the base model.](../sources/images/yue-rlvr-reasoning-boundary-fig1.png)
+*Image Source: Yue et al., [Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?](https://arxiv.org/abs/2504.13837) (2025), Fig. 1*
+
 ---
 
 ## Cross-links
@@ -309,5 +360,9 @@ This validated the verifiable rewards paradigm and shifted the field's attention
   alternative feedback source (still uses PPO or DPO at the optimization step)
 - **RL foundations:** [01-rl-foundations.md](01-rl-foundations.md) — MDP
   framing, value functions, policy gradients
-- **Papers:** (local copies indexed in [references.md](../references.md#core-papers)) [arXiv:2305.18290](https://arxiv.org/abs/2305.18290) (DPO)
+- **Papers:** (local copies indexed in [references.md](../references.md#core-papers)) [arXiv:2305.18290](https://arxiv.org/abs/2305.18290) (DPO),
+  [arXiv:2402.01306](https://arxiv.org/abs/2402.01306) (KTO),
+  [arXiv:2506.21495](https://arxiv.org/abs/2506.21495) (semi-online DPO vs GRPO),
+  [arXiv:2503.01067](https://arxiv.org/abs/2503.01067) (why online beats offline),
+  [arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (RLVR pass@k boundary)
 - **External:** DeepSeek-R1 (arXiv: 2501.12948), GRPO (arXiv: 2402.03300)

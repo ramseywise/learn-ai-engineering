@@ -26,6 +26,14 @@
 | ★ | Cemri et al., *Why Do Multi-Agent LLM Systems Fail?* (2025): 14 failure modes, 3 categories | [2503.13657](https://arxiv.org/abs/2503.13657) | 04 |
 | | Chhikara et al., *Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory* (2025) | [2504.19413](https://arxiv.org/abs/2504.19413) | 03 |
 
+## AI Papers of the Week
+
+| | Paper | arXiv | Notes |
+|---|---|---|---|
+| ★ | Zhou et al., *Filesystem-Based Memory for LLM Agents: Organization, Evolution, and Sustainability* (2026): verbatim or per-session stores match or beat agent curation; reorganizing condenses unless told to keep every fact; spend on the reader, not the writer; raw episodes for strong executors, distilled guidance for weak ones | [2607.26637](https://arxiv.org/abs/2607.26637) · [PDF](sources/zhou-2026-filesystem-based-memory-llm-agents.pdf) | [03](notes/03-memory-as-an-operating-system.md#designing-a-memory-agent) |
+| | Xu et al., *Rethinking the Value of Multi-Agent Workflow: A Strong Single Agent Baseline* (2026): a homogeneous workflow run as one role-playing agent keeps accuracy at lower (simulated KV-cache) cost, with a HotpotQA drop | [2601.12307](https://arxiv.org/abs/2601.12307) · [PDF](sources/xu-2026-rethinking-value-multi-agent-workflow.pdf) | [04](notes/04-multi-agent-design-patterns.md#why-multi-agent-systems-fail) |
+| | Li et al., *MemOS: An Operating System for Memory-Augmented Generation (MAG) in Large Language Models* (2025): parametric / activation / plaintext memory and the MemCube governance header; architecture only, no experiments | [2505.22101](https://arxiv.org/abs/2505.22101) · [PDF](sources/li-2025-memos.pdf) | [03](notes/03-memory-as-an-operating-system.md#memory-types-in-other-frameworks) |
+
 ## First-party docs
 
 | | Source | Notes |

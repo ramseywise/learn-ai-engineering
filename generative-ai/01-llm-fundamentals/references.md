@@ -70,6 +70,8 @@ cleaned: 2026-10-31
 | | Kojima et al., *Large Language Models are Zero-Shot Reasoners* (2022) | [2205.11916](https://arxiv.org/abs/2205.11916) | ✓ [kojima-2022-zero-shot-reasoners.pdf](sources/kojima-2022-zero-shot-reasoners.pdf) | 03 |
 | | Yao et al., *ReAct* (2022) | [2210.03629](https://arxiv.org/abs/2210.03629) | in [05-RL/sources](../05-RL/references.md#core-papers) | 03 |
 | | Manakul et al., *SelfCheckGPT* (2023) | [2303.08896](https://arxiv.org/abs/2303.08896) | ✓ [manakul-2023-selfcheckgpt.pdf](sources/manakul-2023-selfcheckgpt.pdf) | 01 |
+| | Bubeck et al., *Sparks of Artificial General Intelligence: Early experiments with GPT-4* (2023; read: abstract, §1, §8) | [2303.12712](https://arxiv.org/abs/2303.12712) | ✓ [bubeck-2023-sparks-artificial-general-intelligence.pdf](sources/bubeck-2023-sparks-artificial-general-intelligence.pdf) | 01 |
+| | Zhao et al., *A Survey of Large Language Models* (2023, v16 2025; read: abstract, §2.1) | [2303.18223](https://arxiv.org/abs/2303.18223) | ✓ [zhao-2023-survey-large-language-models.pdf](sources/zhao-2023-survey-large-language-models.pdf) | 01 |
 
 ### Routed in, not yet integrated
 

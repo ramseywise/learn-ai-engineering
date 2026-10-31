@@ -118,6 +118,8 @@ Further reading, cited in the notes:
 - Google ADK `LoopAgent`: https://adk.dev/agents/workflow-agents/loop-agents/
 - Vercel, agentic workflows: https://vercel.com/i/what-are-agentic-workflows · multi-step research agent: https://vercel.com/kb/guide/how-to-run-a-multi-step-research-agent-on-vercel
 
+Papers with local PDFs, mapped to notes: [references.md](references.md). **★** marks the ones to read first.
+
 ### Next layer
 → [05-graph-engineering/](../05-graph-engineering/README.md) — graph engineering composes loops into multi-agent topologies.
 

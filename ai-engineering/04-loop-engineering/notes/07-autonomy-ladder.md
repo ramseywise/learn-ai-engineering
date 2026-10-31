@@ -4,6 +4,7 @@ sources:
   - https://www.aibuilderclub.com/blog/types-of-agentic-loops
   - https://claude.com/blog/getting-started-with-loops
   - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
+  - https://arxiv.org/abs/2607.11881
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -61,6 +62,14 @@ you need at rung 2.
 
 Its weakness is exactly that stop condition — model judgment alone. That is tolerable only
 because you are present.
+
+Don't expect the model's own sense of "done" or "confident" to replace the verifier. A survey of
+LLM metacognition ([arXiv:2607.11881](https://arxiv.org/abs/2607.11881) (Liu et al., 2026-07))
+finds that models predict their own task success better than chance, but that "even when
+predictive metacognitive information is present, it often fails to lead to effective monitoring
+and behavior adaptation". Models also struggle "to decide when to persist (e.g., continue
+searching) or move on", which is the stop decision itself. The survey concludes that "LLMs are
+not yet capable of robust metacognition".
 
 ## 2 — Goal-based: hand off the stop condition
 

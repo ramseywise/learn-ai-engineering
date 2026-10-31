@@ -4,6 +4,10 @@ sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 1, ungraded lab + Assignment 1 "news RAG")
   - https://arxiv.org/abs/2005.11401 (Lewis et al. 2020, the paper that named RAG)
+  - https://arxiv.org/abs/2104.07567
+  - https://arxiv.org/abs/2310.03025
+  - https://arxiv.org/abs/2407.16833
+  - https://arxiv.org/abs/2409.01666
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -64,7 +68,7 @@ The retriever's job is hard because the two sides look nothing alike: prompts ar
 | Advantage | Mechanism |
 |---|---|
 | Injects missing knowledge | Facts arrive in the context, not the weights |
-| Fewer hallucinations | The model has text to copy from instead of guessing a probable continuation |
+| Fewer hallucinations | The model has text to copy from instead of guessing a probable continuation. In knowledge-grounded dialogue (BART-Large on Wizard of Wikipedia, unseen topics, human-rated), retrieval cut hallucinated responses from 68.2% to 8–21% depending on the architecture ([arXiv:2104.07567](https://arxiv.org/abs/2104.07567), Shuster et al., 2021-04) |
 | Stays up to date | Update the knowledge base, not the model |
 | Citations | Each retrieved doc has a source the answer can point to |
 | LLM does what it is good at | Writing and reasoning; the retriever does lookup |
@@ -78,7 +82,16 @@ Two limits, both still true with million-token windows:
 1. **Compute cost.** Attention cost grows with context length; every extra token is paid on every call.
 2. **Context window.** It is finite, and models attend less well to the middle of a long context (see [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md)).
 
-So the retriever has a trade-off of its own: return enough to cover the answer, but not so much that the relevant passage drowns. Notes 03–05 are about striking it.
+How the two trade off against quality has moved with the models:
+
+- **2023, 70B open models.** A 4K window plus top-5 retrieval matched a 16K long-context model at a fraction of the compute (Llama2-70B, average over seven long-document QA and summarisation sets: 36.02 vs 36.78). Adding retrieval to the 32K model still raised its average from 37.36 to 39.60. Llama2-7B gained nothing from it ([arXiv:2310.03025](https://arxiv.org/abs/2310.03025), Xu et al., 2023-10).
+- **2024, frontier models.** Reading the whole document beat top-5 RAG on the seven LongBench sets by 7.6 points on average for Gemini-1.5-Pro and 13.1 for GPT-4o, while RAG used about 17% of the tokens. The two answers were identical on 63% of queries, so the authors route instead of choosing. RAG answers first, prompted to say "unanswerable" when the chunks don't cover the question, and only those queries go to the full context. Averaged over all nine sets (adding two from ∞Bench), this *Self-Route* matched long context for GPT-4o (48.89 vs 48.67) at 61% of the tokens and came within 3.3 points for Gemini at 38%. RAG still won where the input outgrew the window: GPT-3.5-Turbo (16K) on ∞Bench's ~147K-word documents ([arXiv:2407.16833](https://arxiv.org/abs/2407.16833), Li et al., 2024-07).
+- **More retrieved context is not the fix either.** With chunks kept in document order rather than score order, Llama3.1-70B on ∞Bench En.QA peaked at 48K tokens of retrieved context (47.25 F1) and declined past it. That beat the same model reading the whole ~117K-token input (34.26). Document order alone was worth 6 F1 at 16K (44.43 vs 38.40) ([arXiv:2409.01666](https://arxiv.org/abs/2409.01666), Yu et al., 2024-09). This is two datasets, and the best context size was picked on the test set.
+
+![Bar charts for GPT-4o, GPT-3.5-Turbo and Gemini-1.5-Pro: long context scores highest or near-highest at 100% cost, RAG scores lower at 17% cost, Self-Route matches or approaches long context at 38–61% cost](../sources/images/li-self-route-fig1.png)
+*Image Source: Li et al., [Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Approach](https://arxiv.org/abs/2407.16833) (2024), Fig. 1*
+
+When the corpus fits the window of a frontier model, the case for RAG is cost and latency, with quality at parity only if you route. When it doesn't fit, retrieval is the only option. Either way, the retriever has a trade-off of its own: return enough to cover the answer, but not so much that the relevant passage drowns. Notes 03–05 are about striking it.
 
 ---
 
@@ -172,7 +185,7 @@ Three things the lab is teaching:
 |---|---|
 | Retrieval and generation are separable | `use_rag=False` gives a baseline with the same model |
 | The template is a design decision | `prompt=None` lets you swap instructions ("use only these docs" vs "add to your knowledge") |
-| `top_k` is the main retrieval knob | Too low misses the answer, too high dilutes it |
+| `top_k` is the main retrieval knob | Too low misses the answer, too high dilutes it. Going from 5 to 25 retrieved documents raised human-rated hallucination in Shuster et al.'s dialogue models (FiD-RAG 7.9% → 19.8%) |
 
 `llm_call(query, use_rag=...)` prints both answers side by side. The suggested queries ("How is global warming progressing in 2024?", "Tell me about the most recent advances in AI.") make the gap obvious: the baseline hedges about its cutoff, the RAG answer quotes 2024 headlines.
 

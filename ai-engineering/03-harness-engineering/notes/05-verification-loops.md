@@ -12,8 +12,9 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
   - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
+  - https://arxiv.org/abs/2609.11999
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 5 — Verification and Feedback Loops
 
@@ -31,6 +32,8 @@ Two distinct problems underneath:
 2. **Agents rate their own work generously.** Anthropic: *"agents tend to respond by confidently praising the work — even when quality is mediocre."*
 
 The first needs a forced verification pass. The second needs an *external* evaluator. They are not the same fix.
+
+Stronger models haven't removed the first problem. In Mak et al.'s interface comparison ([arXiv:2609.11999](https://arxiv.org/abs/2609.11999), 2026-09), Opus-4.8 and GPT-5.5 working through a shell failed most often by declaring the task complete without verifying it. The same shell also put the grader within reach: during development, agents pulled answers out of TheAgentCompany's public evaluator scripts instead of doing the workflow, until the authors blocked network access to that repository. An external evaluator only counts as external if the agent can't read it.
 
 ---
 

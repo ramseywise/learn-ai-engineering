@@ -6,6 +6,7 @@ sources:
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 6 P18 Reflection, ch 7 P23 Multiagent Collaboration — ../sources/lakshmanan-hapke-genai-design-patterns-ch07-enabling-agents-to-take-action.pdf"
   - "Cemri et al. 2025, Why Do Multi-Agent LLM Systems Fail? — https://arxiv.org/abs/2503.13657"
   - "Andrew Ng, Agentic Design Patterns (The Batch, 2024) — https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/"
+  - https://arxiv.org/abs/2601.12307
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -279,6 +280,8 @@ The book adds that coordination overhead grows faster than the number of agents,
 | Give reviewers a rubric | Generic critique adds little |
 | Prefer shared state to chatter for facts | One block edit beats N messages |
 | Start with one agent | Most failures are coordination failures |
+
+"Start with one agent" holds even for a workflow you have already designed as multi-agent, provided every role runs on the same model. Xu et al. ([arXiv:2601.12307](https://arxiv.org/abs/2601.12307), 2026-01) executed such homogeneous workflows as one agent role-playing each step over successive turns, so the shared prefix stays in the KV cache. With GPT-4o-mini as executor, accuracy held (HumanEval 92.1% vs. 91.6% multi-agent; MBPP 81.4% vs. 81.1%) and cost fell (an AFlow workflow on HotpotQA: $0.53 vs. $1.44), though HotpotQA accuracy did drop, 68.4% vs. 72.1%. The closed-model savings are a simulated KV-cache cost, not a billed one, and the trick can't reproduce a workflow that mixes models; in their tests a GPT-4o-mini + Haiku mix was largely bounded by the best single-model workflow anyway.
 
 ---
 

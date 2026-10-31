@@ -6,8 +6,9 @@ sources:
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
+  - https://arxiv.org/abs/2512.08296
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 7 — Failure Modes at Scale
 
@@ -66,6 +67,8 @@ Locks and reducers prevent **lost updates**, where two writers clobber one key. 
 ### Cascading amplification
 
 An early error becomes a premise for everything downstream. In the book's translation lab, the glossary agent rendered "reasoning" as 推理 (inference). The translator applied it faithfully, and the proofreader, checking against the glossary, saw perfect consistency and passed it. Every stage did its job and the error survived all of them. The fix is a check from an **independent perspective**: a reviewer that reads the output against the source, not against the upstream artifact.
+
+Topology sets how far an error travels. Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) counted trace-level errors relative to a single agent across six benchmarks: independent agents whose outputs were merged without any cross-checking amplified errors 17.2×, while a centralized orchestrator that validated workers' output before aggregating held it to 4.4×. Read that as descriptive: in their regression, once efficiency and overhead were controlled for, error amplification itself was not a significant predictor of success (p = 0.658).
 
 ### MAST: a taxonomy
 

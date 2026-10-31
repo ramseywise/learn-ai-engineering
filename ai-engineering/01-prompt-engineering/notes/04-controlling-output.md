@@ -4,6 +4,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7"
   - https://www.promptingguide.ai/introduction/settings
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - https://arxiv.org/abs/2408.02442
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -110,6 +111,8 @@ flowchart LR
 6. **Route it through a tool** — define a tool whose parameters *are* your output schema and require the model to call it ([05](05-tools-and-function-calling.md)).
 
 A schema guarantees **shape, not truth**: a valid JSON object can still hold hallucinated values. Validate the content as well ([09](09-evaluating-prompts.md)).
+
+Format can also cost accuracy, through two routes. The first is **key order**. Tam et al. found that in JSON mode, "100% of GPT 3.5 Turbo JSON-mode responses placed the 'answer' key before the 'reason' key, resulting in zero-shot direct answering instead of zero-shot chain-of-thought reasoning." The model committed to an answer before it had reasoned. The second is **schema strictness**. On GSM8K, Claude 3 Haiku scored 86.99% when told to "reply in JSON" and 23.44% when the prompt also spelled out a `{"reason": …, "answer": …}` schema. The losses were not parse failures: LLaMA 3 8B failed to parse only 0.148% of the time on the Last Letter task in JSON, yet still lost 38.15 points to free text. The effect reversed on classification. Answering in JSON instead of free text lifted Gemini 1.5 Flash on DDXPlus (medical diagnosis) from 41.6% to 60.3%, which the authors attribute to the format narrowing the possible answers. The paper tested only small and mid-size 2024 models (GPT-3.5 Turbo, Claude 3 Haiku, Gemini 1.5 Flash, LLaMA 3 8B, Gemma 2 9B) on simple schemas ([arXiv:2408.02442](https://arxiv.org/abs/2408.02442) (Tam et al., 2024-08)). For reasoning steps, put the reasoning field before the answer field, or let the model answer in prose and convert it to JSON in a second call. The paper's "NL-to-Format" setup did that and scored about the same as free text.
 
 Controlling *style* (Anthropic's guidance):
 - Say what to do, not what not to do: "Write in flowing prose paragraphs," not "Don't use markdown."

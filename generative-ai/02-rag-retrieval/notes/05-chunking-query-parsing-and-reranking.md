@@ -6,6 +6,8 @@ sources:
   - https://github.com/FullStackRetrieval-com/RetrievalTutorials (Kamradt, "5 Levels of Text Splitting", cited by the course)
   - https://arxiv.org/abs/2402.05131
   - https://arxiv.org/abs/2407.01219
+  - https://arxiv.org/abs/2410.13070
+  - https://aclanthology.org/2024.naacl-industry.23/
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -45,6 +47,8 @@ Chunk size is a balance. Too large (chapters): too many topics per vector, conte
 Context-aware chunking is the same idea as Anthropic's *contextual retrieval* (2024). The house treatment, with the numbers, is in [01 § chunking](01-rag-pipeline.md#chunking) and [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md).
 
 **Element-based chunking** is recursive splitting taken further: a document-layout model labels each element (title, narrative text, table, list), and chunks break at element boundaries. On FinanceBench (10-K and 10-Q filings, top-10 chunks, GPT-4 generator), element-based chunking answered 53.2% of questions correctly against 48.2% for the best fixed size (512 tokens) and 35.5% for 128 tokens, on manual grading. It also indexed about half as many chunks (62,529 vs 112,155) and needed no chunk-size tuning ([arXiv:2402.05131](https://arxiv.org/abs/2402.05131), Jimeno Yepes et al., 2024-02). The setting is one domain of table-heavy, strongly structured documents, so expect less on prose.
+
+**Semantic chunking** has the weaker evidence. A Vectara study ran fixed-size, breakpoint (the threshold method in the table) and clustering chunkers over ten retrieval sets and five evidence and answer sets, with the stella-1.5B embedder and gpt-4o-mini as generator. On the four real long-document sets, fixed-size chunks retrieved the right document best (HotpotQA F1@5 90.59 vs 87.37 for breakpoint). Evidence-retrieval F1 differed by under 2 points, and answer BERTScore by at most 0.01. Breakpoint chunking won big only on synthetic documents stitched together from unrelated short ones (NQ 63.93 vs 43.79), where topic boundaries are artificially sharp. Swapping the embedder mattered more: stella beat bge-large by 7.44% average F1 ([arXiv:2410.13070](https://arxiv.org/abs/2410.13070), Qu et al., 2024-10). The authors' own caveats: sentence embeddings without context, and no chunk-level ground truth.
 
 ### Code from the chunking lab
 
@@ -150,7 +154,7 @@ Retrieval is fast and imprecise; reranking is slow and precise. Run them in sequ
 2. **Rerank** each (query, candidate) pair with a cross-encoder or an LLM scorer.
 3. **Return** the best 3–10 to the LLM.
 
-The context budget is the same as without reranking; what changes is how relevant those 5–10 documents are. The course's toy case: "What is the capital of Canada?" retrieves "Toronto is in Canada" and "Canada is the maple syrup capital of the world" alongside "Ottawa is the capital of Canada". A bi-encoder scores them close together; the cross-encoder puts Ottawa first.
+The context budget is the same as without reranking; what changes is how relevant those 5–10 documents are. A banking-QA study at JPMorgan shows why recall alone is the wrong target. With the gold passage present, answer quality fell as the list grew (top-3 > top-5 > top-20), and less so when the gold passage sat near the top. Placing the gold passage first beat placing it last. The authors conclude that retrieval can't be optimised for recall alone, so "investing in a re-ranking system ... is still necessary" ([Zhao et al., NAACL 2024 Industry](https://aclanthology.org/2024.naacl-industry.23/), 2024-06). Most of their numbers are in figures only, and they assume each answer lives in one passage. The course's toy case: "What is the capital of Canada?" retrieves "Toronto is in Canada" and "Canada is the maple syrup capital of the world" alongside "Ottawa is the capital of Canada". A bi-encoder scores them close together; the cross-encoder puts Ottawa first.
 
 | Reranker | Quality | Cost |
 |---|---|---|
@@ -186,7 +190,7 @@ The house version of the reranking stage, with production numbers, is note [08 �
 
 | Rule | Why |
 |---|---|
-| Start with fixed-size or recursive chunks, 10–20% overlap | Good defaults; measure before getting clever |
+| Start with fixed-size or recursive chunks, 10–20% overlap | Good defaults; measure before getting clever. Semantic chunking did not beat fixed-size on real documents in Qu et al.; a better embedder moved results more |
 | Try context-aware chunking first when recall is low | Index-time cost only; no query latency |
 | Size `top_k` to chunk size | Many small or few large, same token budget |
 | Rewrite queries with a small LLM | Cheap, large gains on conversational prompts |
