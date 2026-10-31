@@ -10,6 +10,13 @@ sources:
   - "Patil et al. 2023, Gorilla — https://arxiv.org/abs/2305.15334"
   - "Qin et al. 2023, ToolLLM — https://arxiv.org/abs/2307.16789"
   - "Beurer-Kellner et al. 2025, Design Patterns for Securing LLM Agents against Prompt Injections — https://arxiv.org/abs/2506.08837"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 6"
+  - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
+  - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 1"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 2"
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
+  - "Sprague et al. 2024, To CoT or not to CoT? — https://arxiv.org/abs/2409.12183"
+  - "Mirzadeh et al. 2024, GSM-Symbolic — https://arxiv.org/abs/2410.05229"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -133,6 +140,14 @@ Question: {input}
 
 Use native calls. Keep the ReAct prompt as a reading of what the loop is doing.
 
+If you do run ReAct as text, Phoenix and Taylor's hand-built loop shows the three parts you need (*Prompt Engineering for Generative AI*, ch. 6):
+
+- **Parse the last action, not the first.** Use a case-insensitive regex such as `(?i)action\s*:\s*([^\n]+)`, which captures up to the end of the line, and a second one for `action_input`. Take the last match in the response.
+- **Stop before the observation.** Pass a stop sequence such as `"tool_result:"` so generation halts where the observation would start. Without it the model writes its own, fabricated, tool result.
+- **Expect parse failures.** Either send the bad response to a model to repair it, or retry the request from the previous state.
+
+Their comparison table (Table 6-2) is dated. It credits OpenAI function calling with single tool execution but not with sequential tool execution or an iterative thought process, and it calls ReAct less stable. That described 2023 agent wrappers, not the mechanism. Today a native tool-calling loop does both multi-step sequential calls and parallel calls in one turn, so the right column above is the one to build on.
+
 ---
 
 ## Caller and executor are different agents
@@ -196,6 +211,8 @@ The book lists three limits of MCP as of May 2025:
 | Mostly one-way: client calls server | A2A or ACP for agent-to-agent collaboration |
 | Calls time out at 30–60 s | Streamable HTTP transport, or return a job ID and poll |
 
+**MCP does not bypass the tool call.** Albada describes MCP as a way to "inject rich, dynamic context ... directly into the model's reasoning process without invoking separate tools", unlike API calls that "require full round-trip execution" (*Building Applications with AI Agents*, ch. 2). That is wrong. An MCP tool is invoked through a `tools/call` request and its result returns as an ordinary tool result: a full round trip. Resources and prompts are separate primitives that the client or user chooses to put into context. MCP standardizes how tools and context are discovered and transported. It doesn't give the model a cheaper channel into its reasoning.
+
 For when MCP beats an in-process function, and the tool-contract rules, see [harness 03 — tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md).
 
 ---
@@ -231,6 +248,8 @@ code_writer_agent.update_system_message(
 
 The book's rules for P22: run in a sandbox with CPU, memory, network and time limits (Docker or a VM); validate before running (parse, static analysis); send errors back so the model can repair them (P18 Reflection). It works best with a narrow DSL plus a parser. `LocalCommandLineCodeExecutor` runs on the host: the lab is fine, production is not. Execution boundaries are covered in [harness 04](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
 
+There is evidence that the interpreter does work that chain-of-thought (CoT) can't. Sprague et al. (2024) found that up to 95% of CoT's gain on MMLU comes from questions whose question or output contains "=", meaning symbolic or math problems. For other questions, nothing predicted when CoT would help. They also found that CoT is good at producing a plan but weaker at executing it, so the gain is larger when the plan goes to a Python interpreter. Mirzadeh et al.'s GSM-Symbolic (2024) rewrites GSM8K problems as templates. Accuracy drops when only the numbers change, falls sharply as problems get more complex, and is thrown off by irrelevant clauses, which the model turns into operations (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11). For arithmetic and symbolic steps, have the model write the expression and let code evaluate it.
+
 ---
 
 ## Making tool calls reliable
@@ -246,6 +265,33 @@ From the P21 section of the book, plus what the labs show:
 | Don't make the model fill in deterministic values | Inject IDs, dates and user context in code |
 | Return descriptive errors, not stack traces | The model can retry (P18 Reflection) |
 | Prefer code execution when the input is a DSL | SQL as a string beats twenty filter parameters |
+| Write the docstring as the tool's contract | LangChain's `@tool` builds the schema from the signature and docstring, and raises an error if the docstring is missing. A vague docstring makes invalid calls more likely (*AI Agents: The Definitive Guide*, ch. 1). |
+| Validate arguments before the tool runs | A Pydantic `args_schema` with `file_type: Literal["pdf", "txt"]` rejects bad calls at the boundary (*Prompt Engineering for Generative AI*, ch. 6) |
+| Use the return string to steer the next turn | A tool can return instructions as well as data: "Interview saved! ... You must tell the user that the interview is saved" (*Prompt Engineering for Generative AI*, ch. 6). The same channel carries prompt injection, so only your own tools should do this. |
+| Return tool exceptions as messages | LangGraph's `ToolNode` turns an exception into a `ToolMessage` carrying the error, so the model decides whether to retry (*Learning LangChain*, ch. 6) |
+
+Oshin and Campos add two structural fixes for when the model's choice of tool is the problem (*Learning LangChain*, ch. 6).
+
+**Always call a tool first.** If every query should start with a search, don't spend an LLM call deciding that. Make the entry node build the tool call itself:
+
+```python
+def first_model(state: State) -> State:
+    query = state["messages"][-1].content
+    call = ToolCall(name="duckduckgo_search", args={"query": query}, id=uuid4().hex)
+    return {"messages": AIMessage(content="", tool_calls=[call])}
+
+builder.add_edge(START, "first_model")
+builder.add_edge("first_model", "tools")   # then the usual model <-> tools loop
+```
+
+This saves one model call of latency and stops the model from deciding it doesn't need to search. It makes the agent worse if the rule isn't truly universal.
+
+**Preselect tools by retrieval.** Above roughly 10 tools, the model gets worse at picking the right one. Embed each tool's description in a vector store. Add a `select_tools` node that retrieves the relevant names for the query, and bind only those (`model.bind_tools(selected)`) before the loop starts. This also shortens the prompt. The retrieval step adds latency, so add it only once accuracy measurably drops as tools are added.
+
+![Agent graph with a select_tools node: start, select_tools, then a model and tools loop, then end](../sources/images/learning-langchain-fig6-3.png)
+*Image Source: Mayo Oshin & Nuno Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 6-3*
+
+A caution from the same chapter: its calculator tool calls `ast.literal_eval`, which rejects any arithmetic expression, so `"1933-1872"` raises an error. And when the model does the subtraction itself, it says Coolidge died at 61; the search result it had already retrieved says 60 (born July 1872, died January 1933). A correct tool beats model arithmetic, but only if the tool is actually correct. Test each tool on its own before blaming the loop.
 
 When the catalogue is too large to list, the field tried two fixes in 2023: fine-tune on API documentation, and retrieve the few relevant tools per request. Gorilla ([arXiv:2305.15334](https://arxiv.org/abs/2305.15334), Patil et al., 2023-05) fine-tuned LLaMA-7B on 1,645 TorchHub, TensorHub and HuggingFace calls. With no retriever it reached **71.7% AST accuracy on HuggingFace calls, against 19.8% for zero-shot GPT-4**. GPT-4's errors were mostly invented models and repos: 37% of its HuggingFace calls named an API that doesn't exist. Retrieval cut both ways. With the oracle document in the prompt, GPT-3.5 reached 89.7%. With BM25, every model fell below 20% on HuggingFace, and Gorilla dropped from 71.7% to 17.0%. A weak retriever is worse than none. ToolLLM ([arXiv:2307.16789](https://arxiv.org/abs/2307.16789), Qin et al., 2023-07) scaled to 16,464 RapidAPI endpoints with ChatGPT-generated instructions and solution paths. Swapping the ReAct loop for a depth-first search over call trees, which lets the model back up after a failed call, raised **ChatGPT's pass rate from 40.2% to 64.8%**. That beat GPT-4 with ReAct (57.2%). The fine-tuned 7B ToolLLaMA reached 66.7% with the same search, while Vicuna and Alpaca passed nothing. The pass rates are judged by ChatGPT, which agreed with human annotators 87.1% of the time, so read them as relative.
 
@@ -277,5 +323,7 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 | Why put a caller and an executor in different agents? | Approval, sandboxing and auditing sit between them |
 | When would you choose code execution over tools? | Open-ended computation or a DSL; when many calls would chain |
 | What does MCP add over function calling? | A protocol: tools live in a separate server any client can use |
+| Does MCP let the model use context without a tool round trip? | No. MCP tools are still `tools/call` round trips; resources and prompts are separate primitives the client chooses to load |
+| You have 40 tools and selection accuracy drops. What do you do? | Retrieve the few relevant tools per query and bind only those; measure that the extra latency pays off |
 
 → Next: [03 — memory as an operating system](03-memory-as-an-operating-system.md) — what the loop remembers between turns, and how the agent edits it with the same tool calls.

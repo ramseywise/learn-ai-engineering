@@ -8,6 +8,8 @@ sources:
   - https://arxiv.org/abs/2310.03025
   - https://arxiv.org/abs/2407.16833
   - https://arxiv.org/abs/2409.01666
+  - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
+  - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -58,6 +60,18 @@ The course's one-line definition: if you had to answer a question about somethin
 
 The split, and the name, come from Lewis et al. ([2020](../sources/2005.11401v4.pdf)). They paired a dense retriever over 21M 100-word Wikipedia chunks with a 400M-parameter BART generator, and fine-tuned the query encoder and generator together. The document encoder and index stayed frozen, which is why the index could be swapped out to update what the model knows. They tested this on 82 world leaders. With the 2016 Wikipedia index the model named 2016 leaders correctly 70% of the time, and with the 2018 index it named 2018 leaders correctly 68% of the time. With the wrong year's index it fell to 4–12%, and no retraining was involved. The course's version keeps the split and drops the joint training: an off-the-shelf retriever feeds a frozen LLM through the prompt.
 
+The retrieve-then-read pattern is older than the name. Huyen traces it to Chen et al. (2017), who paired a Wikipedia retriever with a "document reader" for open-domain QA (*AI Engineering*, ch. 6). Raieli and Iuculano sort the ways the two halves can be trained (*Building AI Agents*, ch. 6):
+
+| Paradigm | What is trained | Example |
+|---|---|---|
+| Training-free | Nothing; off-the-shelf retriever and LLM | The course, most production RAG |
+| Independent | Each half on its own objective | A fine-tuned embedder plus a separately fine-tuned LLM |
+| Sequential, retriever first | Retriever fixed, then the LLM learns to use what it returns | — |
+| Sequential, LLM first | LLM fixed, then the retriever learns from the LLM's signal | Izacard & Grave: the reader's attention scores supervise the retriever |
+| Joint | Both, end to end | Lewis et al. above |
+
+Huyen notes that fine-tuning the retriever and generator together improves results. The price is that the pair now has to be retrained together, which is one reason most systems stay training-free.
+
 The retriever's job is hard because the two sides look nothing alike: prompts are short, unstructured questions, and the knowledge base is anything from PDFs to tables to HTML.
 
 ![Prompts (unstructured) on the left, the retriever in the middle, documents in a wide range of formats on the right](../sources/images/hasan-dlai-rag-retriever-problem.png)
@@ -90,6 +104,12 @@ How the two trade off against quality has moved with the models:
 
 ![Bar charts for GPT-4o, GPT-3.5-Turbo and Gemini-1.5-Pro: long context scores highest or near-highest at 100% cost, RAG scores lower at 17% cost, Self-Route matches or approaches long context at 38–61% cost](../sources/images/li-self-route-fig1.png)
 *Image Source: Li et al., [Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Approach](https://arxiv.org/abs/2407.16833) (2024), Fig. 1*
+
+The books add three practical points:
+
+- **The threshold.** Anthropic's guidance, as Huyen reports it: a knowledge base under about 200K tokens (roughly 500 pages) can go whole in the prompt, with prompt caching to keep the cost down (*AI Engineering*, ch. 6). Huyen still expects RAG to outlast long context, because data grows faster than windows and models use long context less well than short.
+- **The costs.** Long-context models hallucinate more on long inputs and cost more per call. Also, "1M tokens isn't a lot" next to an organisation's documents (*Building AI Agents*, ch. 6). The same chapter says embedders max out around 32K tokens; that was true at the time of writing and is moving.
+- **Where the two meet.** Raieli and Iuculano expect RAG to change shape rather than disappear. Small-to-big retrieval grows into "retrieve the whole document". A router chooses between whole document and chunks, which is Self-Route above. Retrieval moves into the model's KV cache.
 
 When the corpus fits the window of a frontier model, the case for RAG is cost and latency, with quality at parity only if you route. When it doesn't fit, retrieval is the only option. Either way, the retriever has a trade-off of its own: return enough to cover the answer, but not so much that the relevant passage drowns. Notes 03–05 are about striking it.
 
@@ -210,6 +230,7 @@ Three things the lab is teaching:
 | Build the no-RAG baseline first | You can't show retrieval helped without it |
 | Keep source metadata through formatting | Citations need it, and so does debugging |
 | Treat the prompt template as code | It decides whether the model trusts, ignores or mixes the docs |
+| Treat context construction as feature engineering | Huyen's framing: what you retrieve and how you format it is to an LLM app what features are to a classical model (*AI Engineering*, ch. 6) |
 | Start with `top_k` around 5 | Then tune with the metrics in note 03 |
 
 ---

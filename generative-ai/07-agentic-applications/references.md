@@ -11,7 +11,8 @@
 | ★ | Weights & Biases, *Building Agents from Scratch* (Fully Connected London 2025 workshop), [morganmcg1/deep-research-bot](https://github.com/morganmcg1/deep-research-bot) (Apache-2.0). Kept in [practice/deep-research-bot/](practice/deep-research-bot/): notebooks 01–03, package, RACE eval | 02 |
 | ★ | Bojie Li, *AI Agents in Depth* (2026), [ch. 6 real-time multimodal agents](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (Apache-2.0): voice paradigms, fast/slow thinking, computer use, robotics. Figures as `li-ai-agents-in-depth-fig6-*` | 03 |
 | | Li, *AI Agents in Depth*, other application labs upstream: web search and search + codegen agents ([ch. 1](https://github.com/bojieli/ai-agent-book/tree/main/chapter1)); paper → slides → video, log diagnosis, text-to-SQL ([ch. 5](https://github.com/bojieli/ai-agent-book/tree/main/chapter5)) | — |
-| | *Context Engineering for Multi-Agent Systems*, [ch. 9 brand-agility marketing engine](sources/context-engineering-multi-agent-systems/ch09-architecting-brand-agility-strategic-marketing-engine.pdf). *Queued* | — |
+| | Denis Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025). Chapter PDF in [sources/context-engineering-multi-agent-systems/](sources/context-engineering-multi-agent-systems/). Folded in as: ch. 9 → [04](notes/04-application-patterns.md#worked-example-one-engine-a-new-domain) (re-tasking the Context Engine to marketing by changing only the corpus and goals, the 69.63 s run, and the ungrounded ROI pitch). The engine itself (ch. 4, 5, 8) is in [ai-engineering/03-harness-engineering](../../ai-engineering/03-harness-engineering/references.md). Notes cite it as (*Context Engineering for Multi-Agent Systems*, ch. N). Figure `context-engineering-multi-agent-systems-fig9-1` | 04 |
+| | Mayo Oshin & Nuno Campos, *Learning LangChain* (O'Reilly, 2025). Chapter PDFs in [../01-llm-fundamentals/sources/learning-langchain/](../01-llm-fundamentals/sources/learning-langchain/). Folded in as: ch. 11 → [04](notes/04-application-patterns.md) (chatbot, collaborative editing and ambient patterns, with the building blocks each needs). Notes cite it as (*Learning LangChain*, ch. N) | 04 |
 
 ## First-party docs and engineering posts
 
@@ -34,6 +35,8 @@
 | | Paper | arXiv | Notes |
 |---|---|---|---|
 | ★ | Du et al., *DeepResearch Bench: A Comprehensive Benchmark for Deep Research Agents* (2025): 100 tasks, RACE and FACT. Code in [practice/deep_research_bench/](practice/deep_research_bench/) | [2506.11763](https://arxiv.org/abs/2506.11763) | 02 |
+| | Wu et al., *Grounded Persuasive Language Generation for Automated Marketing* (2025). Cited by Rothman ch. 9; not yet read | [2502.16810](https://arxiv.org/abs/2502.16810) | 04 |
+| | Li et al., *LLM Generated Persona is a Promise with a Catch* (2025). Rothman ch. 9 further reading; not yet read | [2503.16527](https://arxiv.org/abs/2503.16527) | 04 |
 | | Jimenez et al., *SWE-bench* (2023). [Site](https://www.swebench.com/); [Terminal-Bench](https://www.tbench.ai/) is the shell-task counterpart | [2310.06770](https://arxiv.org/abs/2310.06770) | — |
 | | Vlasov et al., *Dialogue Transformers* (TED, 2019). [PDF](sources/vlasov-2019-dialogue-transformers.pdf) | [1910.00486](https://arxiv.org/abs/1910.00486) | *queued* |
 | | Bunk et al., *DIET: Lightweight Language Understanding for Dialogue Systems* (2020). [PDF](sources/bunk-2020-diet.pdf) | [2004.09936](https://arxiv.org/abs/2004.09936) | *queued* |
@@ -55,4 +58,5 @@
 | deep_research_bench README | Leaderboard "news" is vendor-heavy and moves weekly | The paper and the Hugging Face leaderboard |
 | `learning-towards-conversational-ai-survey-07d04bbf.pdf` | A second, different-sized copy of the Fu et al. survey (and 02 holds a third as `conversational-ai.pdf`) | Keep `learning-towards-conversational-ai-survey.pdf` |
 | `louvan-2020-…pdf` | Byte-identical to 02's `2011.00564v1.pdf` | This copy (07 is the better home) |
+| Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 | Presents an ungrounded ROI pitch (claims no source states, against the brand guide's own no-unguaranteed-promises rule) as the chapter's key success; one run per use case; end-of-chapter questions refer to a `BrandChecker` agent and an email-nurture use case the chapter doesn't contain (see 04) | The pattern (new corpus, same engine); check grounding claim by claim |
 | Licences | Kept: deep-research-bot (Apache-2.0), deep_research_bench (Apache-2.0 file; README badge says MIT). Removed: internet-search-agent snapshot (MIT, © 2025 Omidreza Amrollahi). Paper PDFs are redistributed as downloaded; Fu et al. is CC BY-NC-ND | Link upstream if the repo goes public |

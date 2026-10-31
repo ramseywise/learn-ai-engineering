@@ -3,6 +3,11 @@ origin: Deeplearning.ai-RAG-main
 sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3, "Information Retrieval with Vector Databases" part 1 + ungraded lab "Introduction to Weaviate API")
+  - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
+  - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5
+  - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
+  - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
+  - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -63,6 +68,40 @@ Each layer has exponentially fewer vectors (1000 → 100 → 10), which makes th
 
 The knobs (`M`, `efConstruction`, `ef`) and the HNSW-vs-Annoy comparison are in note [09 § ANN index types](09-vector-database-comparison.md#ann-index-types-hnsw-vs-annoy).
 
+### The other index families
+
+HNSW is one of several. Huyen's list (*AI Engineering*, ch. 6):
+
+| Family | Idea | Trade-off |
+|---|---|---|
+| **LSH** (locality-sensitive hashing) | Hash so that close vectors collide in the same bucket | Fast, cheap build; lower recall. The mirror image of HNSW |
+| **HNSW** | Layered proximity graph (above) | Fast, accurate queries; slow, memory-hungry build |
+| **IVF** (inverted file) | k-means clusters; search only the clusters nearest the query. Typical clusters hold 100–10,000 vectors | Recall depends on how many clusters you probe |
+| **PQ** (product quantization) | Split each vector into sub-vectors and replace each with a codebook ID | Much less memory; approximate distances |
+| **Annoy** | A forest of random-projection trees | Simple, static index ([09](09-vector-database-comparison.md#ann-index-types-hnsw-vs-annoy)) |
+
+Libraries combine them: FAISS's workhorse is IVF plus PQ. ScaNN, SPTAG and FLANN are the other common ones. Compare indexes on four numbers, as ANN-Benchmarks does: recall, queries per second, build time and index size.
+
+### FAISS by hand
+
+FAISS is the library most tutorials start with. Phoenix and Taylor's walkthrough shows the parts that matter in practice (*Prompt Engineering for GenAI*, ch. 5):
+
+```python
+import faiss, numpy as np
+
+index = faiss.IndexFlatL2(dim)                   # brute force: exact KNN, no training
+index.add(vectors.astype("float32"))             # FAISS wants float32, shape (n, dim)
+D, I = index.search(query.reshape(1, -1).astype("float32"), k)
+# D holds SQUARED L2 distances (smaller = closer); I holds row positions, not your IDs
+
+faiss.write_index(index, "docs.faiss")           # persist ...
+index = faiss.read_index("docs.faiss")           # ... and reload
+
+index1.add(index2.reconstruct_n(0, index2.ntotal))   # merge two flat indexes
+```
+
+Two traps. FAISS returns row positions, and merging renumbers them, so keep your own position → document-ID map. And `reconstruct_n` works directly only on flat indexes. The book says IVF indexes can't be reconstructed and must be rebuilt; FAISS can do it after `index.make_direct_map()`, but keeping the source vectors and rebuilding is simpler.
+
 ---
 
 ## What a vector database adds
@@ -77,6 +116,12 @@ A relational database doing vector search is running an inefficient KNN. A vecto
 | Dense vectors | Call the embedding model on each object |
 | HNSW index | Build the ANN graph |
 | Search | Vector, keyword, hybrid, filtered, reranked |
+
+A library such as FAISS is only the index. Iusztin and Labonne list what a database adds on top: create, update and delete; metadata filtering; persistence and backups (*LLM Engineer's Handbook*, ch. 4). Raieli and Iuculano call FAISS a good fit for immutable data for the same reason (*Building AI Agents*, ch. 5).
+
+**Filter before or after the vector search?** Filtering after the ANN search is simple, but can leave fewer than k results when the filter is selective. Filtering first, inside the index, keeps k results but needs index support (*LLM Engineer's Handbook*, ch. 4). PRINCE filters first ([01](01-rag-pipeline.md#a-tuned-pipeline-bayers-prince)).
+
+**Do you need a separate vector database at all?** Oshin and Campos argue for pgvector when your data already lives in Postgres. Vectors sit next to the rows they describe, one transaction updates both, and there's one less system to secure and back up (*Learning LangChain*, ch. 2). Raieli and Iuculano's caveat: SQL vector extensions have historically capped dimensions and scaled less far than dedicated stores (*Building AI Agents*, ch. 5). Their selection criteria are licence, language support, maturity, insert and query speed, access control, framework integration, and cost including backups.
 
 Weaviate is the open-source one the course uses. Note [09](09-vector-database-comparison.md) compares the stores used in production work: pgvector, OpenSearch (Bedrock KB), Elasticsearch, Pinecone, DuckDB, ChromaDB and Vertex AI Search.
 
@@ -180,7 +225,30 @@ client.close()                                 # embedded server keeps running o
 | `hybrid(alpha=…)` | fused | `reciprocal_rank_fusion` |
 | `rerank=Rerank(…)` | cross-encoder on top-k | note 05 |
 
-The lecture example weights hybrid as 25% vector / 75% keyword; the lab uses `alpha=0.3`. Tune alpha on your own eval set: keyword-heavy for catalogues with SKUs, vector-heavy for conversational queries.
+The lecture example weights hybrid as 25% vector / 75% keyword; the lab uses `alpha=0.3`. Some sources define alpha the other way round, with 0 as pure vector ([03 § hybrid search](03-keyword-semantic-and-hybrid-search.md#hybrid-search-and-reciprocal-rank-fusion)). Check before porting a value. Tune alpha on your own eval set: keyword-heavy for catalogues with SKUs, vector-heavy for conversational queries.
+
+---
+
+## Pinecone: a hosted example
+
+Phoenix and Taylor's Pinecone walkthrough shows the hosted side (*Prompt Engineering for GenAI*, ch. 5). Hosted means no servers to run and scaling handled for you. The cost is per-vector pricing, data leaving your network, and a vendor API that changes. The book's code already shows API drift: `create_index(dimension=1536, metric="cosine", spec=ServerlessSpec(...))` and `text-embedding-ada-002` were current in 2024.
+
+```python
+for i in range(0, len(docs), 10):                       # upsert in small batches
+    batch = docs[i:i + 10]
+    for attempt in range(5):                            # retry transient API errors
+        try:
+            index.upsert(vectors=[(d.id, d.vector, {"batch": i // 10, "text": d.text})
+                                  for d in batch])
+            break
+        except Exception:
+            time.sleep(5)
+
+index.query(vector=q, top_k=3, include_metadata=True,
+            filter={"batch": {"$eq": 1}})               # MongoDB-style metadata filter
+```
+
+Pinecone stores metadata numbers as 64-bit floats; the book's output shows `'batch': 10.0`. Compare IDs as strings, not as numbers in metadata. More metadata per vector also raises storage cost.
 
 ---
 

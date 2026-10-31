@@ -8,6 +8,11 @@ sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md
   - https://arxiv.org/abs/2310.11511
   - https://arxiv.org/abs/2305.06983
+  - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
+  - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
+  - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
+  - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2, ch. 3
+  - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
 cleaned: 2026-10-31
 ---
 
@@ -40,6 +45,24 @@ The same progression in practice, each step adding control at the cost of latenc
 | **Agentic RAG** | The model decides *whether*, *what* and *when* to retrieve, and loops until it has enough | Multi-step questions ([below](#agentic-rag)) |
 | **Graph-enhanced RAG** | Entities and relations extracted into a graph; retrieval walks edges | Multi-hop and "how is X related to Y" questions ([05-graph](../../../ai-engineering/05-graph-engineering/README.md)) |
 | **Text-to-SQL** | Generate a query against structured data instead of searching chunks | Filtering, counting, aggregation ([below](#text-to-sql-is-a-retrieval-strategy)) |
+
+### Where naive RAG fails
+
+Each advanced-RAG module exists to fix one failure of the naive pipeline. Raieli and Iuculano map those failures onto the step where they start (*Building AI Agents*, ch. 6):
+
+![Naive RAG pipeline (collection, indexing, query processing, search, ranked documents, prompt, LLM, answer) with red boxes marking the failures at each step: data-type issues and scalability at collection; missing content at the index; retrieval challenges, missed top ranks and not-in-context at search; contextual hallucination, wrong format, missed extraction and incorrect specificity at the answer](../sources/images/building-ai-agents-llms-rag-kgs-fig6-1.png)
+*Image Source: Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), Fig. 6.1*
+
+| Step | Failure | What it looks like |
+|---|---|---|
+| Collection and indexing | Data-type issues, missing content | One chunker applied to PDFs, HTML and tables alike; the answer was never indexed, or the index is stale |
+| Search | Missed top ranks | The answer chunk exists but ranks below k. Often the embedder is too small or was trained on another domain |
+| Context | Not in context | Retrieval found every relevant chunk, but too many to fit the window |
+| Generation | Failed extraction | The answer is in the prompt, but noise or conflicting chunks hide it (*contextual hallucination*, [06](06-generation-for-rag.md#hallucinations-and-citations)) |
+| Generation | Wrong format, incorrect specificity, incomplete | A table was asked for and prose came back; too general or too detailed; only part of a multi-part answer |
+| System | Redundancy, scale, flexibility | Near-duplicate chunks crowd out others; latency grows with volume; one component can't be swapped |
+
+Work out which row you are in before adding a module. A reranker fixes missed top ranks; it does nothing for missing content.
 
 ### Nine named patterns
 
@@ -95,6 +118,17 @@ Stage notes:
 - **Compression is query-conditional.** Reduce each document to the part that answers the current question, not a generic summary, which discards the specific detail the query needed.
 - **Structured formatting.** Wrap in tags with source attribution so the model can cite, and so injected content stays distinguishable from instructions ([framing](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#framing-retrieved-content)).
 
+Iusztin and Labonne sort the same operations into three stages (*LLM Engineer's Handbook*, ch. 4):
+
+- **Pre-retrieval** works on the data (sliding-window chunks, small-to-big, richer metadata) and on the query (routing, rewriting, HyDE, self-query).
+- **Retrieval** improves the search itself: hybrid weighting, filtered vector search, or an *instructor* embedder that takes a domain instruction alongside the text.
+- **Post-retrieval** trims what came back: prompt compression and cross-encoder reranking.
+
+![The LLM Twin RAG layout: an ingestion pipeline (clean, chunk, embed) marked as pre-retrieval, a vector DB holding embedded chunks with metadata, a query embedded the same way for retrieval, and the K retrieved chunks passing a post-retrieval step into the prompt with the template and user input](../sources/images/llm-engineers-handbook-fig4-5.png)
+*Image Source: Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), Fig. 4.5*
+
+One rule from the same chapter sits under all three stages. Preprocess the query exactly as you preprocessed the documents: the same cleaning and the same embedding model. Any mismatch is *training–serving skew*, and retrieval degrades without raising an error.
+
 ---
 
 ## Ingestion determines the ceiling
@@ -107,6 +141,44 @@ Retrieval can only return what parsing extracted. Parser capability comes in tie
 A tier-one parser over a PDF-heavy corpus silently turns every chart, diagram and table into nothing or garbled text. The retrieval layer then looks broken (low recall, irrelevant chunks) when the failure happened at ingestion. Check what the parser produced before tuning k, rerankers or chunk size.
 
 **Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/multimodal-agent)).
+
+### Keeping the index in sync
+
+The source changes after the first load. If re-ingestion is naive, the index either duplicates chunks or keeps ones whose source was deleted.
+
+**Batch first.** The Handbook's advice is to start with a scheduled batch pipeline and move to streaming only when freshness demands it. A batch run every minute is fine for thousands of records (*LLM Engineer's Handbook*, ch. 4). To find what changed, it lists the *change data capture* (CDC) options:
+
+| CDC method | How | Catch |
+|---|---|---|
+| Naive full pull | Re-read everything each run | Fine at thousands to tens of thousands of records |
+| Timestamp | Pull rows with `updated_at` after the last run | Misses deletes; scans the table |
+| Trigger | Database triggers write changes to an audit table | Adds write overhead to the source |
+| Log-based | Read the database's transaction log | Best fidelity and no source load, but vendor-specific and needs a queue |
+
+**Make writes idempotent.** The Handbook uses the MD5 of a chunk's content as its ID, so re-running the pipeline overwrites rather than duplicates. LangChain's indexing API goes further. A `RecordManager` stores a hash of each document's content and metadata, its write time and its source ID. On re-run it skips unchanged documents and, depending on `cleanup`, deletes stale ones (*Learning LangChain*, ch. 2):
+
+```python
+from langchain.indexes import SQLRecordManager, index
+
+record_manager = SQLRecordManager("pgvector/my_docs", db_url=DB_URL)
+record_manager.create_schema()
+
+# cleanup=None: only add; "incremental": also delete old versions of the sources in this batch;
+# "full": also delete every source NOT in this batch (pass the whole corpus, or lose data)
+index(docs, record_manager, vectorstore, cleanup="incremental", source_id_key="source")
+```
+
+The book uses the 2025 `langchain` / `langchain_community` import paths. Check current docs before copying.
+
+**Bulk deletes can be asynchronous.** Rothman's dual-RAG build clears a Pinecone namespace with `delete_all` and upserts straight after. Pinecone performs the delete in the background, so it can sweep away vectors written after the call returned. The fix is to poll the index stats until the namespace is empty before writing (*Context Engineering for MAS*, ch. 3):
+
+```python
+index.delete(delete_all=True, namespace=ns)
+while index.describe_index_stats().namespaces.get(ns, {"vector_count": 0})["vector_count"] > 0:
+    time.sleep(2)      # the delete is async: wait, or later upserts may be wiped
+```
+
+The Handbook also stores two snapshots of each document in its feature store: one cleaned (for fine-tuning) and one chunked and embedded (for RAG). Then a new chunking or embedding choice doesn't mean re-crawling.
 
 ---
 
@@ -138,6 +210,23 @@ def text_to_chunks(text, size=512, overlap=64, enc=tiktoken.get_encoding("cl100k
 
 Adapted from the DAIR prompt-engineering course's `04_rag_recipes.py`, which defaults to 1,000 tokens with 200 overlap and to `gpt-3.5-turbo` and `text-embedding-ada-002`. **Both models are legacy**; swap in a current embedding model.
 
+Token windows ignore structure. The Handbook's version splits on paragraphs first, then caps each piece at the embedder's own input limit, using the embedder's tokenizer (*LLM Engineer's Handbook*, ch. 4):
+
+```python
+from langchain.text_splitter import (RecursiveCharacterTextSplitter,
+                                     SentenceTransformersTokenTextSplitter)
+
+def chunk_text(text, model_id, max_tokens, chunk_overlap=50):
+    paragraphs = RecursiveCharacterTextSplitter(separators=["\n\n"], chunk_size=500,
+                                                chunk_overlap=0).split_text(text)
+    by_tokens = SentenceTransformersTokenTextSplitter(       # the embedder's tokenizer,
+        model_name=model_id, tokens_per_chunk=max_tokens,    # so no chunk is truncated
+        chunk_overlap=chunk_overlap)
+    return [c for p in paragraphs for c in by_tokens.split_text(p)]
+```
+
+Counting in the embedder's tokens has a cost: switch embedders and the chunks must be rebuilt, not just re-embedded (*AI Engineering*, ch. 6). Per-chunk sizes and overlaps from the books are compared in [05 § strategies](05-chunking-query-parsing-and-reranking.md#strategies).
+
 ---
 
 ## Hybrid retrieval
@@ -146,6 +235,8 @@ Adapted from the DAIR prompt-engineering course's `04_rag_recipes.py`, which def
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md) (2026), Figure 3-9: Hybrid Retrieval and Reranking Pipeline (Apache-2.0)*
 
 Lexical search (BM25) finds exact terms: names, error codes, identifiers. Dense search finds paraphrases. Run both, fuse the rankings (reciprocal rank fusion is the common default), then rerank the fused top-n with a cross-encoder. That pipeline is the reasonable default for production retrieval.
+
+Huyen names the two ways to combine retrievers (*AI Engineering*, ch. 6). **In sequence**: a cheap term-based retriever narrows the corpus, then vector search or a reranker reorders the survivors. **In parallel**: both run over the whole corpus and RRF merges the lists. Sequence is cheaper; parallel keeps documents that only one retriever would find.
 
 Each stage has its own job:
 
@@ -295,6 +386,40 @@ Three things generalise past the numbers:
 
 The funnel: **millions → hundreds (filter) → ~20 (hybrid + aggregate) → 7 (rerank)**. Retrieve wide, rerank hard, send narrow, with each narrowing done by a mechanism more accurate and more expensive than the last.
 
+### The same funnel at small scale: the LLM Twin
+
+The Handbook's retrieval module is PRINCE's shape, built over a Qdrant collection of one person's articles, posts and code (*LLM Engineer's Handbook*, ch. 9):
+
+![LLM Twin retrieval module: the query goes to self-query (extract metadata) and query expansion (N queries); each expanded query runs a filtered vector search returning K results; the N×K results are reranked; the top K ranked chunks form the context in the prompt sent to a SageMaker LLM endpoint](../sources/images/llm-engineers-handbook-fig9-1.png)
+*Image Source: Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), Fig. 9.1*
+
+1. **Self-query.** An LLM pulls the author's name out of the question; it becomes a metadata filter (`FieldCondition(key="author_id", match=MatchValue(value=...))`).
+2. **Query expansion.** `gpt-4o-mini` at temperature 0 writes N=3 variants, separated by a `#next-question#` token so the output splits cleanly.
+3. **Filtered vector search** per variant and per collection, in a thread pool.
+4. **Merge and dedupe** the N×K results with a set.
+5. **Rerank** with a small cross-encoder (`ms-marco-MiniLM-L-4-v2`) against the *original* query and keep the top K.
+
+```python
+def search(query: str, k: int = 3, expand_to_n: int = 3) -> list[Chunk]:
+    author = self_query(query)                          # metadata filter, or None
+    queries = expand(query, n=expand_to_n)              # includes the original
+    with ThreadPoolExecutor() as pool:                  # searches are I/O-bound
+        hits = pool.map(lambda q: vector_search(q, author, k), queries)
+    unique = list({c.id: c for batch in hits for c in batch}.values())   # dedupe
+    return rerank(query, unique, keep=k)                # score against the ORIGINAL query
+```
+
+Two details are worth copying, and one is a trap. The rerank target is the original question, the same rule PRINCE follows. Every chunk keeps its source link in metadata, so the answer can cite it. The trap: the book splits `k` across its three collections as `k // 3` and asserts `k >= 3`. With the default k=3, that is one chunk per collection, whatever the question needs.
+
+The chapter's improvement list:
+
+- Add chat memory: the last K messages, or a running summary plus the last K.
+- Put a router in front of the collections, so most questions search one or two of the three.
+- Add BM25 for hybrid search.
+- Use a multi-index library (Superlinked) to weight several embeddings per item.
+
+All four appear elsewhere in this note.
+
 ### Text-to-SQL is a retrieval strategy
 
 Vector search over chunks is the wrong tool for questions that need precise filtering, aggregation or comparison: "give me 50 studies done on rat", or any numerical rollup. Embedding similarity doesn't count, sum or compare. PRINCE routes these to a Text-to-SQL tool, and the decisions inside it mirror the RAG path:
@@ -302,6 +427,16 @@ Vector search over chunks is the wrong tool for questions that need precise filt
 - **Schema subsetting.** Only the schema components relevant to the query are injected, not the full schema: pre-filtering applied to the prompt instead of the corpus.
 - **Dynamic few-shot from a semantic layer.** Hand-picked (natural language → SQL) pairs live in their own vector collection. The user's query retrieves the most similar examples, which go into the prompt as in-context examples. This is retrieval used to *condition generation* rather than to supply answer content. New examples get added as failure patterns surface, and quality improves without retraining or prompt rewrites.
 - **Validation over review.** Generated SQL is checked mechanically (SELECT-only; DELETE/INSERT/UPDATE blocked). An earlier LLM-review step was *removed*: it flagged valid queries as broken often enough to cost more than it saved. Deterministic validation beat model judgment on a task with a checkable answer.
+
+Two more pieces from the books:
+
+- **Show the model the schema and a few rows.** For each table, put its `CREATE TABLE` statement and three sample rows in the prompt; Rajkumar et al. (2022) found that format worked best (*Learning LangChain*, ch. 3). The rows show what values actually look like, such as `'NY'` vs `'New York'`.
+- **Pick the table before writing SQL.** With many tables, Huyen adds a step in which the model chooses which tables are relevant. Only their schemas go into the Text-to-SQL prompt, and the query result goes to the generator alongside the question (*AI Engineering*, ch. 6).
+
+![Tabular RAG: the question "How many units of Fruity Fedora were sold in the last 7 days?" goes to a Text-to-SQL step over a sales table; the SQL is executed, and the SQL result plus the original question go to the generative model, which writes the response](../sources/images/huyen-ai-engineering-fig6-7.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 6-7*
+
+**Lock the database down as well as validating the SQL** (*Learning LangChain*, ch. 3). Connect as a read-only user, expose only the tables the app needs, and set a query timeout so a generated cross-join can't stall the database. A SELECT-only check stops writes, but it doesn't stop a SELECT that reads a salary table or runs for an hour.
 
 The same move works without SQL. The DAIR `pe-rag` notebook retrieves similar paper titles and uses them as style examples for generating new ones:
 
@@ -333,6 +468,33 @@ The examples are chosen per request, so the prompt stays short and on-topic. The
 
 The general shape: a retrieval layer that spans structured and unstructured data needs a **router**, not a single index. Choosing *which* retrieval mechanism to use is a decision made before any retrieval happens.
 
+### Routing
+
+Raieli and Iuculano list five kinds of router (*Building AI Agents*, ch. 6):
+
+| Router | Decides by | Trade-off |
+|---|---|---|
+| Logical | Hand-written rules on the query or user | Predictable; brittle as queries vary |
+| Keyword | Matching terms to sources | Cheap; misses paraphrase |
+| Zero-shot classifier | A classifier over source labels | No training data; fixed label set |
+| Function calling | The LLM picks a tool or source | Flexible; one LLM call per query |
+| Semantic | Cosine similarity between the query and a description of each route | Fast after setup; needs good route descriptions |
+
+Their banking and insurance example shows routing doing a second job. Sending a customer's question only to the indexes that customer may see is an access-control decision as well as a relevance one.
+
+LangChain implements the last two (*Learning LangChain*, ch. 3). The *logical* version uses structured output: the model must return one of a `Literal["python_docs", "js_docs"]` set, and code maps that label to a retriever. The *semantic* version embeds one prompt template per route and picks the template closest to the query:
+
+```python
+routes = {"physics": PHYSICS_PROMPT, "math": MATH_PROMPT}
+route_vecs = {name: embed(prompt) for name, prompt in routes.items()}   # once, at startup
+
+def route(query: str) -> str:
+    q = embed(query)
+    return max(route_vecs, key=lambda name: cosine(q, route_vecs[name]))  # argmax similarity
+```
+
+The book's logical router matches the returned label by lowercase substring (`"python_docs" in result.datasource.lower()`). That's fine for two labels; validate against the exact set once routes multiply. The book's code imports `langchain_core.pydantic_v1`, a shim deprecated since LangChain 0.3; use plain Pydantic v2 models.
+
 ---
 
 ## Index-time structures: RAPTOR, GraphRAG, filesystems
@@ -346,13 +508,34 @@ Flat chunks fail on aggregation and rule-induction questions however good the re
 | **Filesystem (OpenViking)** | Every resource gets L0 (~100-token abstract), L1 (~2k-token overview) and L2 (full text), with `.abstract`/`.overview` per directory | Navigation: most queries resolve at L1 | Progressive disclosure for a corpus. Needs **cross-links between files**, wiki-style, plus index pages. Weaker models append orphan files unless the writing prompt requires them to link and update the index |
 | **Knowledge discovery** | Extract a schema per case (bottom-up factor discovery), encode it, cluster into prototypes, rank the factors | "What decides outcomes here?" | The ranked factors also tell the agent which questions to ask, in order. Lab: upstream [3-13](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/structured-knowledge-extraction) (Chinese legal data) |
 
+Raieli and Iuculano's *hierarchical indexing* is the two-level version of RAPTOR. Summarise each document (one or more summaries per ~10 pages or 10K tokens), search the summaries first, then search chunks only inside the documents that matched. More levels give more precise routing, but the summaries multiply and each level adds a search step. The authors warn that with too many levels the number of summaries explodes combinatorially (*Building AI Agents*, ch. 6).
+
+### Embed one thing, return another
+
+What gets embedded doesn't have to be what goes to the model. LangChain's `MultiVectorRetriever` embeds a summary of each document (for tables and images, a summary written by a vision model) and stores the full original in a separate docstore under the same `doc_id`. Search runs over the summaries; the model gets the original (*Learning LangChain*, ch. 2).
+
+![Multi-representation indexing: a full document, table or image is summarised by GPT-4V; the summary is embedded into a vector store and the original goes into a docstore; a question matches the summary and the relevant full document is returned](../sources/images/learning-langchain-fig2-5.png)
+*Image Source: Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), Fig. 2-5*
+
+Rothman uses the same move for *procedural* context (*Context Engineering for MAS*, ch. 3). His system keeps two namespaces in one Pinecone index:
+
+- a *KnowledgeStore* of fact chunks;
+- a *ContextLibrary* of "semantic blueprints", JSON instructions for how to write a given kind of output.
+
+For each blueprint only its one-line description is embedded (the library card), and the JSON rides along in metadata. A Librarian agent finds the blueprint for the user's intent, a Researcher retrieves and synthesises facts, and a Writer combines the two. Facts decide what to say; the blueprint decides how to say it.
+
+![Dual RAG: in phase 1, raw-text knowledge data is chunked and semantic blueprints are reduced to descriptions; both are embedded into separate KnowledgeStore and ContextLibrary namespaces in Pinecone. In phase 2, an orchestrator sends an intent query to a Librarian agent (blueprint) and a topic query to a Researcher agent (facts), and a Writer agent combines them into the final output](../sources/images/context-engineering-multi-agent-systems-fig3-1.png)
+*Image Source: Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), Fig. 3.1*
+
+The Librarian has a gap. It queries with `top_k=1` and falls back to "generate the content neutrally" if nothing comes back. With no score threshold, nearest-neighbour search always returns *something* while the namespace holds any vector. The fallback fires only on an empty namespace, and an unrelated blueprint gets applied instead. Add a similarity floor.
+
 **When to use it:** if questions are "find the passage that says X", hybrid retrieval is enough. If they need cross-document synthesis or multi-level navigation, structured indexing is worth its large up-front LLM cost. Lab: upstream [3-8 structured-index](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/structured-index) (RAPTOR vs. GraphRAG over an Intel architecture manual).
 
 ---
 
 ## Agentic RAG
 
-Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. It's the most capable design and the hardest to evaluate, because the retrieval path differs per run ([02-context 12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md)). It's just-in-time retrieval ([02-context 04](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#just-in-time-context)) with a search tool. Agent-side patterns (retrieval as a tool, planners, verifiers) are in [08 — agentic RAG (PRINCE)](08-agentic-rag-prince.md).
+Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. It's the most capable design and the hardest to evaluate, because the retrieval path differs per run ([02-context 12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md)). It's just-in-time retrieval ([02-context 04](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#just-in-time-context)) with a search tool. Huyen frames it from the other side: RAG is a special case of an agent whose only tool is the retriever (*AI Engineering*, ch. 6). Raieli and Iuculano name three loop shapes (*Building AI Agents*, ch. 6). *Iterative* retrieval retrieves again with what the last generation produced. *Recursive* retrieval breaks the query into sub-queries. *Adaptive* retrieval lets the model decide when to retrieve, as FLARE and Self-RAG do ([above](#nine-named-patterns)). Agent-side patterns (retrieval as a tool, planners, verifiers) are in [08 — agentic RAG (PRINCE)](08-agentic-rag-prince.md).
 
 ### Agentic vs. single-pass: Li Experiment 3-9
 

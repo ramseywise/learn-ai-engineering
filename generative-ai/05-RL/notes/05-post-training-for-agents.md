@@ -4,6 +4,13 @@ sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md (Apache-2.0)
   - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
   - https://arxiv.org/abs/2507.08794 (LLM-judge verifiers fooled by content-free answers)
+  - https://arxiv.org/abs/2503.04412 (AB-MCTS, adaptive branching tree search)
+  - https://arxiv.org/abs/2404.00282 (survey of LLM-enhanced RL)
+  - Huyen, AI Engineering (O'Reilly, 2025), ch. 8
+  - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5
+  - Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 7
+  - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
+  - Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 8
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -13,6 +20,7 @@ cleaned: 2026-10-31
 > **Pillar:** [05-RL](../README.md)
 > **Presumes:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md), [03-preference-optimization.md](03-preference-optimization.md)
 > **Source:** Bojie Li, *AI Agents in Depth* (2026), ch. 8 — [book-en/chapter8.md](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0)
+> **Also folded in:** Huyen, *AI Engineering*, ch. 8; *LLM Engineer's Handbook*, ch. 5; Albada, *Building Applications with AI Agents*, ch. 7; Koenigstein, *AI Agents: The Definitive Guide*, ch. 3; Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 8 (see [references](../references.md#books))
 
 Two threads run through this note. **SFT memorizes, RL generalizes.** And **data and environment matter more than algorithms.**
 
@@ -46,6 +54,10 @@ Two threads run through this note. **SFT memorizes, RL generalizes.** And **data
 ---
 
 ## Why SFT memorizes and RL generalizes
+
+SFT is behaviour cloning, and it inherits behaviour cloning's covariate-shift failure: one early
+mistake puts the model in states the demonstrations never covered
+([01](01-rl-foundations.md#learning-from-experts-imitation-and-inverse-rl)).
 
 | | SFT | RL |
 |---|---|---|
@@ -95,6 +107,25 @@ The working order is **prior > environment > algorithm**. Classic RL still wins 
 
 **Lab:** [practice/01-q-learning-treasure-hunt](../practice/01-q-learning-treasure-hunt/) reproduces Exp 7-1 offline. The Exp 7-2 LLM agent is [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience) and needs an API key.
 
+**The other direction: LLMs inside a classic RL loop.** Everything else in this note trains
+the LLM. Raieli & Iuculano summarize the reverse, where a conventional RL agent keeps its own
+policy and an LLM helps it (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 8,
+after Cao et al.'s survey, [arXiv:2404.00282](https://arxiv.org/abs/2404.00282)). The LLM can
+fill one of four roles:
+
+| Role | What the LLM does | Main limit |
+|---|---|---|
+| Information processor | Turns instructions or observations into features or a formal task language | Extra compute; frozen features degrade under real-world shift |
+| Reward designer | Scores behaviour from a prompt (implicit), or writes reward-function code (explicit, e.g. Eureka-style) | Only as good as its pretraining knowledge of the task |
+| Decision-maker | Prunes a huge action space to plausible candidates, or acts directly as a sequence model | Inherits the LLM's biases; costly at inference |
+| Generator | World-model simulator for model-based RL, or explainer of the policy | Its abstract knowledge may not match the environment |
+
+The reward-designer row is the same idea as RULER and generative reward models below. The
+generator row is ZeroSearch and DreamGym (in [Data and environment](#data-and-environment--algorithm)).
+*Dated:* the book ends by saying its later LLM agents involve "no training" because training an LLM
+is too hard. That was a fair 2024 default for application teams, but agentic RL (ART, rLLM,
+veRL, below) has since made training the agent loop itself routine.
+
 ---
 
 ## What SFT is good for
@@ -113,6 +144,14 @@ SFT writes stable mappings and protocols into weights.
   4. Run SFT on what remains, then repeat as the model improves (STaR / RFT).
 
   RFT sits between SFT and RL: no reward model, no policy gradient.
+- **Function calling.** Albada's recipe (*Building Applications with AI Agents*, ch. 7): SFT
+  with LoRA and TRL's `SFTTrainer` on conversations where reasoning sits in `<think>…</think>`
+  and each call sits in `<tool_call>…</tool_call>`. Put each tool's JSON Schema in the training
+  examples, and validate every proposed call against the same schema at runtime (Pydantic,
+  Zod, Ajv) before executing it. Include examples where the right move is **not** to call:
+  "What's the weather in Boston?" calls `get_weather`; "Imagine it's snowing in Boston, what
+  should I wear?" doesn't. Try the base model's native function calling with schema
+  validation first. Tune only when that measurably falls short at your scale.
 - **Style and voice.** Orpheus clones a voice from reference-audio tokens. Sesame learns paralinguistic tokens such as `<laugh>`. Too few speakers in the data makes everyone sound the same.
 - **Activating latent capability.** SFT on gpt-oss-20b used a `reasoning language: X` instruction and no Chinese training data. The model then reasoned in Chinese, because multilingual pretraining already held the shared representation.
 - **Continued pretraining, not SFT, for new knowledge.** Mistral 7B learned Korean from Korean Wikipedia. Mixing about 80% Korean with 20% English avoided forgetting English. SFT on instructions came afterwards.
@@ -124,6 +163,50 @@ SFT writes stable mappings and protocols into weights.
 - Rejection sampling brings quality up to the bar.
 
 ---
+
+## Learning without weights first
+
+Albada calls in-context methods **nonparametric learning** and puts them before any
+fine-tuning, because they cost no retraining and can be undone (*Building Applications with
+AI Agents*, ch. 7). Three levels:
+
+1. **Exemplar learning.** Store successful runs (problem, action, outcome) and retrieve the
+   most similar ones as few-shot examples. Start with fixed examples in the prompt. Switch to
+   *dynamic* selection from a vector store once there are too many to fit, or they stop being
+   relevant to every input.
+2. **Reflexion** (Shinn et al., 2023). After a failed trial, the model writes a short
+   critique ending in a "Plan:" for next time. The plan goes into memory and is prepended on
+   the next attempt at the same task. No weights change.
+3. **Experiential learning** (ExpeL, Zhao et al., 2023). Reflexion learns within one task;
+   ExpeL learns *across* tasks. It contrasts failed and successful trials and keeps a short
+   list of general rules. Each update edits the list with explicit operations: `AGREE`
+   (upvote), `REMOVE` (contradictory or duplicate), `EDIT` and `ADD`. Rules that keep getting
+   upvoted survive.
+
+![ExpeL insight extraction: experiences from an experience pool pass through repeated model evaluations that upvote or downvote candidate rules, distilling them into a short list of insights.](../sources/images/building-applications-with-ai-agents-fig7-4.png)
+*Image Source: Michael Albada, *Building Applications with AI Agents* (O'Reilly, 2025), Fig. 7-4*
+
+These are the in-context versions of what RL does in weights: Reflexion is a verbal
+policy update, and ExpeL's upvoted rules work like a slowly learned prior. Memory design for
+storing them is in [context engineering](../../../ai-engineering/02-context-engineering/README.md).
+
+**When to fine-tune, and when to hold off.** Albada's checklist:
+
+| Fine-tune when | Hold off when |
+|---|---|
+| Narrow domain jargon or a strict style guide | You are still prototyping, or volume is low |
+| Every response must follow a fixed template | A new base model may beat your tuned one, wiping out the work |
+| Tool calls must be exact (dosages, trading APIs) | GPUs, annotation or latency budgets are tight |
+| You have hundreds to thousands of curated examples and the budget | — |
+| Retraining and versioning are manageable (if the domain changes often, upkeep can outweigh the gains) | — |
+
+His summary: "When in doubt, don't fine-tune your model." Huyen reaches the same order from
+the RAG side, "finetuning is for form, and RAG is for facts" (evidence in
+[02](02-rlhf-pipeline.md#sft-in-practice)). Albada's case for doing it anyway is small
+models: per Baytech Consulting, Phi-3-mini (3.8B) matched the 60% MMLU score of the 540B
+PaLM, a 142× size reduction in about two years. A tuned small model can then beat a prompted
+frontier model on cost and latency for one narrow job. That is a vendor-reported, single-benchmark
+comparison.
 
 ## When to choose SFT vs. RL
 
@@ -163,6 +246,75 @@ SFT writes stable mappings and protocols into weights.
 - **Diversity**, or the model collapses to one mode.
 - **Label accuracy.** Filter wrong CoT before you distill it.
 
+### Data engineering for post-training
+
+Huyen's chapter on dataset engineering and LLMEH's curation pipeline turn the three checks
+above into practice (*AI Engineering*, ch. 8; *LLM Engineer's Handbook*, ch. 5).
+
+**Quality and diversity both count.** Zhou et al. (2023) fine-tuned a 7B model on three
+2,000-example sets. The set that was both high-quality and diverse won:
+
+![Generation quality of a 7B model fine-tuned on 2,000 examples: wikiHow (high-quality, not diverse) 3.49, unfiltered Stack Exchange (diverse, low-quality) 3.33, filtered Stack Exchange (high-quality and diverse) 3.83.](../sources/images/huyen-ai-engineering-fig8-1.png)
+*Image Source: Chip Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 8-1 (from Zhou et al., 2023, CC BY 4.0)*
+
+Other data points: the Yi team found 10K carefully written instructions beat hundreds of
+thousands of noisy ones. LIMA's 65B Llama, tuned on 1,000 curated examples, was rated equal
+to or better than GPT-4 in 43% of human comparisons, but it was less robust than production
+models.
+
+**The mix changes by stage.** Llama 3's domain mix (Huyen, Table 8-1):
+
+| Domain | Pretraining | SFT | Preference |
+|---|---|---|---|
+| General English | 50% | 52.66% | 81.99% |
+| Math and reasoning | 25% | 21.19% | 5.89% |
+| Code | 17% | 14.89% | 6.93% |
+| Multilingual | 8% | 3.01% | 5.19% |
+
+**How much.** Start with about 50 well-made examples. Huyen: "in the vast majority of cases,
+you should see improvements after finetuning with 50–100 examples". If 50 show no gain,
+check hyperparameters and prompts before buying more data, because a bigger set rarely fixes
+it. Diversity in tasks saturates: in Flan, going from 9 to 282 tasks helped a lot, and gains
+after that were small up to 1,836. LLMEH's rough sizes: about 1M+ samples for a
+general-purpose instruct model, 100–100k for one task or domain. It treats data quality as
+three properties: accuracy, diversity and complexity.
+
+**Curation pipeline** (LLMEH ch. 5):
+
+1. **Rule-based filters:** length, keyword exclusion, format checks.
+2. **Deduplication:** exact (hashing), fuzzy (MinHash), semantic (embedding similarity).
+   Duplicates cost more than compute. In an Anthropic study, repeating 0.1% of the data 100
+   times degraded an 800M model to the level of a 400M one.
+3. **Decontamination:** the same dedup methods, run against every eval set. Otherwise your
+   benchmark scores measure memorization ([06-eval](../../../ai-engineering/06-eval/README.md)).
+4. **Quality scoring:** an LLM judge (with the biases in
+   [02](02-rlhf-pipeline.md#stage-2--reward-model-training)), a reward model such as ArmoRM,
+   or a small classifier like the fineweb-edu one.
+5. **Cleaning:** strip stray HTML and Markdown. Databricks reported +20% accuracy and 60%
+   fewer input tokens from that alone (Huyen).
+
+**Synthetic data works, with three limits.** Examples: AlphaGeometry trained on 100M
+synthetic problems. MetaMath grew a 15k-problem math set to about 400k by rewriting. Alpaca
+expanded 175 seed tasks to 52k pairs. Llama 3 generated over 2.7M synthetic coding examples
+with execution feedback. Nemotron-4 340B-Instruct used 98% synthetic data in post-training,
+generated by a *smaller* Mixtral teacher, and beat it. The limits:
+
+- **Superficial imitation.** Students copy the teacher's style but not its accuracy. Training
+  on solutions a student can't produce teaches it to write things that look like solutions
+  (Gudibande et al., 2023). This is the same warning as "distillation inherits errors" above.
+- **Model collapse.** Training recursively on generated data loses the tails of the
+  distribution (Shumailov et al., 2023). Mixing in real data avoids it (Gerstgrasser et al.,
+  2024), but no paper gives a safe ratio. The positive results (no saturation at about 1M
+  synthetic math samples; Nemotron's 98%) are all single-generation.
+- **Verification is the bottleneck.** About 20% of Llama 3's generated code solutions were
+  wrong at first and fixed through execution feedback. Without a check like that, synthetic
+  data adds noise at scale.
+
+Generation recipes in LLMEH: Evol-Instruct (rewrite seeds into harder variants) for
+instructions, UltraFeedback-style multi-model sampling plus judging for preferences. Its own
+3,335-pair instruction set cost under $0.50 in API calls. Distillation's classic result is
+DistilBERT: 40% smaller, 60% faster, 97% of BERT's language understanding retained.
+
 > **Often, good SFT data means you don't need RL.** Before 2025, Anthropic's recipe was large-scale high-quality SFT plus RLAIF ([04-constitutional-ai.md](04-constitutional-ai.md)), with little RLVR, and its coding models were already strong. Data decides how far you can go; RL decides how much higher.
 
 **Agentic data generation.** Autodata's Agentic Self-Instruct runs four roles:
@@ -182,7 +334,8 @@ It searches for tasks the strong solver passes, the weak solver fails, and the v
 ![Credit Assignment in Multi-Turn Interactions](../sources/images/li-ai-agents-in-depth-fig8-15.svg)
 *Figure 8-15, Credit Assignment in Multi-Turn Interactions. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md) (Apache-2.0).*
 
-Multi-turn adds **credit assignment**. Was it the question in turn 2 or the explanation in turn 7 that solved the ticket? It also adds **partial observability**.
+The general checklist for shaping a reward (and how agents hack it) is in
+[01](01-rl-foundations.md#engineering-an-rl-problem). Multi-turn adds **credit assignment**. Was it the question in turn 2 or the explanation in turn 7 that solved the ticket? It also adds **partial observability**.
 
 **Density.**
 
@@ -222,6 +375,57 @@ Use process rewards when the correctness of intermediate steps is easy to define
 - **γ = 1.** Episodes are short and success is what matters.
 - **PPO + GAE.** The value network estimates per-step advantage.
 - **GRPO.** It spreads one trajectory-level advantage evenly over every token, so a sharp question and filler small talk get the same credit. That is fine for short single-turn tasks but dilutes the signal over long horizons. This is why PPO with a value network still earns its cost for multi-turn agents.
+
+### Judges as rewards: RULER, ART and rLLM
+
+Koenigstein walks through three open-source frameworks that put an LLM judge inside the
+GRPO loop (*AI Agents: The Definitive Guide*, ch. 3):
+
+| Framework | What it adds | Scope |
+|---|---|---|
+| RULER | Relative LLM-as-judge scores as rewards | Reward modelling |
+| ART | GRPO training for tool-using agents | One agent's behaviour |
+| rLLM | RL over whole agent workflows | Several roles trained together |
+
+**RULER: rank, don't grade.** A judge asked for an absolute score is noisy and badly
+calibrated. GRPO only needs rankings within a group, because it normalizes rewards anyway.
+RULER samples several trajectories for one task and strips the prefix they share. A judge
+then scores each 0–1 against a short rubric (goal completion, efficiency), and the scores go
+straight into the group-normalized GRPO update. No reference answers are needed. (The
+book's section heading reads "Why Absolute Scoring is Easier", but its text argues the
+opposite: relative scoring is easier.)
+
+**ART: gate on correctness, then rank on quality.** The Countdown example (reach a target
+number from 3–4 given numbers) uses a hybrid reward. A deterministic checker gives a binary
+gate, and RULER's group-normalized score refines only the correct answers:
+
+```python
+alpha, beta = 0.7, 0.3                      # correctness vs. quality weight
+gate = 1.0 if t.metrics["correct"] >= 0.5 else 0.0
+final_reward = gate * (alpha + beta * ruler_norm)   # wrong answers get 0
+```
+
+This is the RLVP pattern above in another form: the verifiable signal comes first, and the
+learned judge only orders answers that already pass. A judge on its own can be fooled by
+content-free answers (see [Why SFT memorizes](#why-sft-memorizes-and-rl-generalizes)), and the
+gate protects against that. The book's held-out printout shows 8 of 10 Countdown items
+correct after 3 steps on 64 scenarios with 2 rollouts per group. No pre-training baseline is
+shown, so treat it as a smoke test, not evidence that the training helped.
+
+**rLLM: train the workflow you already run.** Subclass its `Workflow`, implement `run()`,
+and return an `Episode` with every trajectory and reward. rLLM handles rollouts, retries
+and the PPO/GRPO update. The book's example trains a solver and a judge together on the
+24 game. Solvers are rewarded for correct expressions, and the judge for picking a correct
+one. Because both roles share one `Episode`, the multi-agent system improves as a unit. This
+connects to [orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md).
+
+**Read with care: other books' RLVR definitions.** Albada describes RLVR as combining
+"preference learning with value-based policy optimization" and lists human evaluators among
+its graders (*Building Applications with AI Agents*, ch. 7). His Table 7-1 likewise defines
+reinforcement fine-tuning as "expert graders + policy gradient". That is closer to RLHF than to
+RLVR in the DeepSeek-R1 sense used here and in [03](03-preference-optimization.md): a
+programmatic verifier (answer key, tests, checker), usually GRPO, and no learned value or
+preference model. Call a reward "verifiable" only if code can compute it.
 
 ---
 
@@ -336,6 +540,42 @@ None beat SFT. On-policy distillation from a frozen Qwen3-32B converged smoothly
 
 ---
 
+## Test-time search instead of training
+
+Training raises what the model gets right on the first sample. Search spends inference
+compute to find answers it can already reach with enough samples. Yue et al.'s large-k
+result ([Why SFT memorizes](#why-sft-memorizes-and-rl-generalizes)) is the argument for
+trying search first: if the base model's pass@k already covers the task, a verifier plus
+search may get you most of the RL gain with no training run (*AI Agents: The Definitive
+Guide*, ch. 3).
+
+Koenigstein builds the idea up in steps:
+
+- **Repeated sampling** (breadth): N independent answers, then pick the best. Best-of-N.
+- **Sequential refinement** (depth): one answer, improved over and over.
+- **MCTS** combines the two. Select a node by UCT (average reward plus an exploration bonus),
+  expand it, simulate and score, then backpropagate the score to the root.
+- **AB-MCTS** (Inoue et al., 2025, [arXiv:2503.04412](https://arxiv.org/abs/2503.04412)).
+  Standard MCTS fixes the branching factor, but an LLM can always produce another answer. So
+  every node gets a **GEN** child meaning "sample a fresh answer here", and Thompson sampling
+  decides between going wider (GEN) and deeper (refine an existing child). **AB-MCTS-M** fits
+  a Bayesian mixed model per node, so it can estimate unexplored branches from their
+  siblings' scores. **AB-MCTS-A** is simpler: each answer node gets a **CONT** ("continue
+  refining") child next to GEN, with Gaussian or Beta priors on the scores.
+
+The book's demo runs Sakana's open-source TreeQuest for 5 steps (`tq.ABMCTSA()`, one
+`LLM-Refine` generator) on "write Fibonacci in Python". GPT-4o both writes the answer and
+grades it, so the demo shows the mechanics, not a gain. The search is only as good as its
+scorer. Use a real verifier (tests, a checker) whenever you have one. A self-judge brings
+back the false-positive problem from Zhao et al.
+
+**Search and training feed each other.** Search trajectories are rollouts, so rLLM can treat
+each tree node as a step and train the policy to search better. Search can also generate
+SFT data (keep the best leaf), which is how [distillation](#data-engineering-for-post-training)
+recipes often start.
+
+---
+
 ## Practical pitfalls
 
 1. **Using post-training to store facts.** Use RAG; post-training teaches how to use knowledge.
@@ -392,6 +632,6 @@ Fail fast before you fail at scale.
 
 ## Cross-links
 
-- **Upstream:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) (KL penalty, reward models), [03-preference-optimization.md](03-preference-optimization.md) (PPO / DPO / GRPO math), [01-rl-foundations.md](01-rl-foundations.md) (MDP, Q-learning)
+- **Upstream:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) (KL penalty, reward models, SFT in practice), [03-preference-optimization.md](03-preference-optimization.md) (PPO / DPO / GRPO math), [01-rl-foundations.md](01-rl-foundations.md) (MDP, Q-learning)
 - **Lateral:** [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) (environments as training grounds), [04-loop-engineering failure modes](../../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md)
 - **Downstream:** [03-agentic-foundations](../../03-agentic-foundations/README.md) (trajectories as the raw material for learning)

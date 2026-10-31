@@ -37,7 +37,9 @@ The two frameworks this course builds with, LangGraph and Google ADK, get full t
 README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
 notes/         01–06, the course; figures and code inline
-sources/       Generative AI Design Patterns chapter PDFs, the Letta lab handbook
+sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Definitive Guide,
+               Building Applications with AI Agents, Building AI Agents with LLMs, RAG, and KGs),
+               the Letta lab handbook
   images/      every figure the notes use (<author>-<slug>-fig<N>)
 ```
 
@@ -47,11 +49,11 @@ sources/       Generative AI Design Patterns chapter PDFs, the Letta lab handboo
 
 | # | Note | Covers |
 |---|---|---|
-| 1 | [Agent fundamentals](notes/01-agent-fundamentals.md) | Agent = LLM + context + tools, the context ablation, ReAct trajectory, model-as-agent, workflow vs autonomous, guardrails, how agents learn |
-| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, caller/executor split, MCP servers, code execution, reliability rules, six prompt-injection defenses |
+| 1 | [Agent fundamentals](notes/01-agent-fundamentals.md) | Agent = LLM + context + tools, the context ablation, ReAct trajectory, model-as-agent, agents as state machines, choosing and staffing models, workflow vs autonomous, guardrails, autonomy levels, how agents learn |
+| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, caller/executor split, MCP servers, code execution, reliability rules, always call a tool first, tool preselection, six prompt-injection defenses |
 | 3 | [Memory as an operating system](notes/03-memory-as-an-operating-system.md) | MemGPT's OS analogy, context compilation, core/recall/archival tiers, heartbeats, the Letta API, agentic RAG, P28 memory types, LangMem, shared blocks |
-| 4 | [Multi-agent design patterns](notes/04-multi-agent-design-patterns.md) | Ng's four patterns, AutoGen L1–L6 (conversation, sequential chats, reflection, tool use, coding, planning), Letta multi-agent, P23 architectures, why multi-agent systems fail |
-| 5 | [Framework survey](notes/05-framework-survey.md) | AutoGen, CrewAI, LangGraph deep research, Google ADK, OpenAI Agents SDK, smolagents, MCP vs A2A, MLflow eval, choosing a framework |
+| 4 | [Multi-agent design patterns](notes/04-multi-agent-design-patterns.md) | Ng's four patterns, AutoGen L1–L6 (conversation, sequential chats, reflection, tool use, coding, planning), planning strategies (plan-and-execute, ToT), Letta multi-agent, P23 architectures, supervisor/hierarchical/swarm, why multi-agent systems fail |
+| 5 | [Framework survey](notes/05-framework-survey.md) | AutoGen, CrewAI, LangGraph deep research, Google ADK, OpenAI Agents SDK, smolagents, LangGraph subgraphs and `interrupt`, MCP vs A2A, MLflow eval, choosing a framework |
 | 6 | [Google ADK intensive](notes/06-google-adk-intensive.md) | Kaggle five-day course notes, Days 1–3: agentic engineering, context types, the new SDLC, harness, protocols, agent skills |
 
 ## Rules of thumb
@@ -71,6 +73,12 @@ sources/       Generative AI Design Patterns chapter PDFs, the Letta lab handboo
 | Share facts through shared state, not through more messages | [04](notes/04-multi-agent-design-patterns.md) |
 | Start with one agent; most multi-agent failures are coordination failures | [04](notes/04-multi-agent-design-patterns.md) |
 | Pick the framework by its unit of programming: conversation, crew, graph or agent object | [05](notes/05-framework-survey.md) |
+| Use plain code or a fixed workflow when the steps are known; reach for an agent only when the path depends on what it finds | [01](notes/01-agent-fundamentals.md) |
+| Cap the loop and make the last step a wrap-up, not a silent cutoff | [01](notes/01-agent-fundamentals.md) |
+| A prompt restriction is not a permission: enforce limits in credentials and code | [01](notes/01-agent-fundamentals.md) |
+| Staff models by role: a cheap fast model for routine steps, a reasoning budget only where it pays | [01](notes/01-agent-fundamentals.md) |
+| Past roughly ten tools, retrieve the relevant few per turn instead of sending all of them | [02](notes/02-tool-use-and-react.md) |
+| Plan with the model, execute arithmetic and lookups in code | [02](notes/02-tool-use-and-react.md) |
 
 ---
 
@@ -91,6 +99,11 @@ sources/       Generative AI Design Patterns chapter PDFs, the Letta lab handboo
 - DeepLearning.AI, *LLMs as Operating Systems: Agent Memory* → notes 02–04.
 - DeepLearning.AI, *AI Agentic Design Patterns with AutoGen* → notes 02, 04.
 - Google × Kaggle, *5-Day AI Agents Intensive* → note 06.
+- Koenigstein, *AI Agents: The Definitive Guide* (O'Reilly, 2026; Early Release): ch. 1, 2, 4 → notes 01, 02, 04, 05 (agents as state machines, staffing models by role, cheap ToT, handoffs, `interrupt`).
+- Oshin & Campos, *Learning LangChain* (O'Reilly, 2025): ch. 6–7 → notes 02, 04, 05 (always call a tool first, tool preselection, reflection graph, supervisor, subgraphs).
+- Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024): ch. 6 → notes 01–04 (ReAct parsing, step caps, legacy memory classes, plan-and-execute, ToT).
+- Albada, *Building Applications with AI Agents* (O'Reilly, 2025): ch. 1–2 → notes 01, 02, 04, 05 (when an agent is warranted, scoping the first agent, model choice).
+- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025): ch. 4, 11 → notes 01, 02, 04 (planning taxonomy, autonomy levels, CoT limits, single vs multi-agent).
 
 ### Coursework and practice
 The labs are not copied into this repo. Run them from upstream:
@@ -104,8 +117,8 @@ The labs are not copied into this repo. Run them from upstream:
 | Framework POCs (AutoGen, CrewAI, LangGraph, ADK, smolagents, MCP, A2A, MLflow) | [adv-11/AgenticAIFrameworks](https://github.com/adv-11/AgenticAIFrameworks) | needs provider keys (OpenAI, Anthropic, Gemini, Mistral, Serper, Tavily, HF) per script; the MCP server runs offline except for arXiv search |
 
 ### Readings
-- [sources/](sources/): *Generative AI Design Patterns* ch. 1–10 PDFs; [the Letta lab handbook](sources/packer-wooders-agent-memory-handbook.pdf).
-- Papers (ReAct, MemGPT, Toolformer, prompt-injection patterns, multi-agent failures, Mem0) and the curated guides: [references.md](references.md).
+- [sources/](sources/): *Generative AI Design Patterns* ch. 1–10, *AI Agents: The Definitive Guide* ch. 1, 2, 4, *Building Applications with AI Agents* ch. 1–2, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* ch. 4, 11 PDFs; *Learning LangChain* and *Prompt Engineering for Generative AI* live in [01-llm-fundamentals/sources/](../01-llm-fundamentals/sources/); [the Letta lab handbook](sources/packer-wooders-agent-memory-handbook.pdf).
+- Papers (ReAct, MemGPT, Toolformer, prompt-injection patterns, multi-agent failures, Mem0, Tree of Thoughts, the planning survey, CoT limits) and the curated guides: [references.md](references.md).
 
 ### Interviewing guide
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep: agent harness, tool use, loop design, memory, multi-agent orchestration.

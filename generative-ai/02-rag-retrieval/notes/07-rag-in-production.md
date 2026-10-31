@@ -4,6 +4,11 @@ sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 5, "RAG Systems in Production" + ungraded lab "Tracing a RAG system" + Assignment 5 "Improving a RAG System")
   - https://docs.arize.com/phoenix (Arize Phoenix, used by the labs)
+  - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
+  - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 5, ch. 6
+  - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 7
+  - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4
+  - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), ch. 5
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -149,6 +154,8 @@ Why vector size matters:
 | OpenAI ada-002 | 1536 | 6 KB | 6 GB |
 | all-mpnet-base | 768 | 3 KB | 3 GB |
 
+Raieli and Iuculano put a number on the binary trade-off: sign-only vectors lose quality on their own, but rescoring the retrieved candidates at higher precision keeps up to 96% of full-precision similarity. They call 1-bit extreme and suggest float32 → int8 (256 levels) as the usual compromise (*Building AI Agents*, ch. 5).
+
 ---
 
 ## Cost
@@ -160,6 +167,13 @@ Why vector size matters:
 | Dedicated endpoints | Cheaper than per-token at steady high volume |
 | Tiered storage | HNSW index in RAM, vectors on disk, documents in object storage |
 | Multi-tenancy | One HNSW per tenant; load on demand, or by time zone when that tenant is awake |
+| Batch the embedding calls | Batching chunks through the embedder on a GPU speeds indexing by 10× or more, depending on batch size and hardware (*LLM Engineer's Handbook*, ch. 4) |
+
+What the retrieval side costs, from the books:
+
+- **Embedding is cheap once, expensive on repeat.** Phoenix and Taylor priced embedding the whole King James Bible (about 800,000 words, 4M tokens) at about $1.60, at ada-002's $0.0004 per 1K tokens. The price is dated; the shape isn't (*Prompt Engineering for GenAI*, ch. 5). Huyen's counterweight is churn: re-embedding 100 million documents a day is a real bill (*AI Engineering*, ch. 6).
+- **The vector database is not a rounding error.** Huyen reports that it's not unusual for a company's vector-database spend to be a fifth to a half of its spend on model APIs (*AI Engineering*, ch. 6).
+- **At high volume, compare against fine-tuning.** For heavy workloads, Phoenix and Taylor suggest the one-off cost of fine-tuning may beat the ongoing cost of longer prompts plus embeddings plus vector storage. Test whether the retrieved context is worth its cost and latency (*Prompt Engineering for GenAI*, ch. 5).
 
 Assignment 5 is a cost exercise. The Fashion Forward Hub bot from note 06 gets a `simplified` mode:
 
@@ -193,6 +207,8 @@ The router prompt gets the same treatment (under 180 tokens, same accuracy on th
 | **Caching** | Direct cache for repeated prompts; personalised cache where a small LLM adapts a cached answer (see note [10 — semantic cache](10-semantic-cache.md)) |
 | Remove components that don't pay | Measure each: reranker ~50 ms, query rewriter ~300 ms, router ~200 ms. Keep only those that move your metrics |
 | Binary vectors, sharding | Faster first-stage retrieval at scale |
+| Parallelism | Spark or Dask for ingestion; shard the index across nodes so each searches its part (*Building AI Agents*, ch. 6) |
+| LLM router with fallbacks | Route each prompt to a suitable model, and fall back to another when an API errors (*Building AI Agents*, ch. 6) |
 
 ---
 
@@ -206,6 +222,29 @@ The router prompt gets the same treatment (under 180 tokens, same accuracy on th
 | Vectors at rest | Chunks can be encrypted; vectors must be decrypted in memory to search |
 | **Vector inversion**: text reconstructed from embeddings | Add noise, apply transforms, reduce dimensionality |
 
+Raieli and Iuculano's threat list adds detail (*Building AI Agents*, ch. 6):
+
+- **Embedding inversion is practical.** Studies have recovered more than 70% of the words of the original text from embeddings, without sophisticated methods. Treat vectors as sensitive as the text.
+- **Knowledge poisoning.** PoisonedRAG ([arXiv:2402.07867](https://arxiv.org/abs/2402.07867)) injects a few crafted texts into the corpus so that a target question retrieves them and gets the attacker's answer.
+- **Membership inference.** If a document is in the corpus, the right query retrieves it into the prompt, so outputs reveal what the corpus contains.
+- **Defences.** Encryption in transit and at rest (AES-256, TLS), key rotation, user privileges, and GDPR and CCPA compliance. At the model boundary, programmable rails such as NVIDIA's NeMo Guardrails (input, output, retrieval and dialog rails, written in Colang) and classifiers such as Llama Guard, which labels prompts and responses safe or unsafe.
+
+**Defence against poisoned documents.** Rothman builds the two-stage attack into the design (*Context Engineering for MAS*, ch. 7). First a poisoned document enters the knowledge base; later it's retrieved and its text acts as an indirect prompt injection (Greshake et al., 2023). Two defences follow:
+
+1. **Separate ingestion from the application.** A separate ingestion pipeline, standing in for a data-management department, curates, chunks and embeds the knowledge base. The agents only read from it.
+2. **Sanitise every retrieved chunk before the LLM sees it.** `helper_sanitize_input` matches each chunk against injection regexes and raises `ValueError` on a hit. The researcher agent catches it, logs it and drops the chunk.
+
+![High-fidelity RAG and defence: a separate ingestion pipeline writes source-tagged chunks, and the research agent sanitises retrieved chunks before synthesis](../sources/images/context-engineering-multi-agent-systems-fig7-1.png)
+*Image Source: Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), Fig. 7-1*
+
+```python
+injection_patterns = [r"ignore previous instructions", r"ignore all prior commands",
+                      r"you are now in.*mode", r"act as", r"print your instructions",
+                      r"sudo|apt-get|yum|pip install"]
+```
+
+Rothman calls the list basic and says it needs constant extension. It also over-blocks. `act as` matches "react as" and "interact as", and the book's own prose ("to act as a defensive gateway") would be dropped. Any technical document that mentions `pip install` is discarded too. Because a dropped chunk fails silently, the corpus loses content with no error. Use the regex as a cheap first filter, log every drop, and put a model-based classifier (Llama Guard or similar) behind it.
+
 ---
 
 ## Multimodal RAG
@@ -215,6 +254,14 @@ The router prompt gets the same treatment (under 180 tokens, same accuracy on th
 | Multimodal embeddings | Text and images in one vector space; a text query finds an image |
 | Vision-language models | Images split into patches, each a token (100–1,000 per image) |
 | PDF RAG without parsing | Embed each page image as patch vectors and score ColBERT-style (note [05](05-chunking-query-parsing-and-reranking.md)); many vectors per page |
+
+Huyen's version of the first row uses CLIP: embed all texts and images with CLIP, embed the query, and return the nearest of both kinds (*AI Engineering*, ch. 6). Raieli and Iuculano set out the three designs (*Building AI Agents*, ch. 6):
+
+| Strategy | How | Catch |
+|---|---|---|
+| **One shared space** | A CLIP-style model embeds every modality; a vision-language model generates | CLIP and multimodal LLMs cost more; the embedder must capture each modality well |
+| **Ground everything in one modality** | Convert to the main one: image descriptions, audio transcripts | No new models, but conversion is costly and loses nuance |
+| **Separate retrieval per modality** | One embedder and one store per modality, retrieve from each | Needs a multimodal reranker to merge the results |
 
 The parse-or-don't decision for PDFs, and the production parsers, are in note [12 — Bedrock knowledge bases](12-bedrock-knowledge-bases.md) and [01 § chunking](01-rag-pipeline.md#chunking).
 

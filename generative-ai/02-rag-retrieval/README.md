@@ -93,7 +93,10 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–14 are product
 ### Books and courses
 - Zain Hasan, DeepLearning.AI, *Retrieval Augmented Generation (RAG)*: condensed into notes 02–07. The local snapshot was removed on 2026-10-31.
 - Li, *AI Agents in Depth*, ch. 3: synthesised into 01.
-- Routed book chapters (Huyen ch. 6, Rothman ch. 5–6, *Context Engineering for Multi-Agent Systems* ch. 3 and 7) are in [sources/](sources/) and queued for `/chapter`.
+- Huyen, *AI Engineering*, ch. 6 (RAG half): folded into 01–05 and 07.
+- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 5–6: folded into 01–07.
+- Rothman, *Context Engineering for Multi-Agent Systems*, ch. 3 and 7: folded into 01, 06 and 07.
+- Oshin & Campos, *Learning LangChain*, ch. 2–3; Iusztin & Labonne, *LLM Engineer's Handbook*, ch. 4 and 9; Phoenix & Taylor, *Prompt Engineering for Generative AI*, ch. 5: folded into 01 and 03–07. Their PDFs live in [01-llm-fundamentals/sources/](../01-llm-fundamentals/sources/).
 - Rows and chapter maps are in [references.md](references.md).
 
 ### Coursework and labs
