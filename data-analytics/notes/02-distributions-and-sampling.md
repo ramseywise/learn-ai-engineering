@@ -8,7 +8,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 1 — Distributions and Sampling
+# 2 — Distributions and Sampling
 
 > The four distributions that cover most analytics work, how `scipy.stats` exposes them, and why sample means behave (Law of Large Numbers, Central Limit Theorem) until N gets small.
 
@@ -16,7 +16,7 @@ cleaned: 2026-10-31
 
 ## Why start here
 
-Every test in notes 02–04 and every model in 05–09 is a statement about a distribution. A t-test assumes the sampling distribution of a mean is roughly Normal. A conversion rate is a Binomial proportion. Error counts per hour are Poisson. A Bayesian prior is a distribution over a parameter. If you can name the distribution behind the data, you can usually name the test.
+Every test in notes 04–08 and every model in 09–13 is a statement about a distribution. A t-test assumes the sampling distribution of a mean is roughly Normal. A conversion rate is a Binomial proportion. Error counts per hour are Poisson. A Bayesian prior is a distribution over a parameter. If you can name the distribution behind the data, you can usually name the test.
 
 | Data you have | Distribution | Parameters | Mean | Typical question |
 |---|---|---|---|---|
@@ -24,9 +24,9 @@ Every test in notes 02–04 and every model in 05–09 is a statement about a di
 | Count of successes in n yes/no trials (conversions, clicks) | Binomial | n, p | np | Is p higher in B than in A? |
 | Count of events in a fixed window (errors/hour, texts/day) | Poisson | λ | λ | Did the rate change? |
 | Waiting time between Poisson events | Exponential | λ | 1/λ | How long until the next event? |
-| A probability itself (a rate you are unsure of) | Beta | α, β | α/(α+β) | What do I believe p is? (note 05) |
+| A probability itself (a rate you are unsure of) | Beta | α, β | α/(α+β) | What do I believe p is? (note 09) |
 
-Poisson and Exponential are two views of the same process: if events arrive at rate λ per unit time, the count in one unit is Poisson(λ) and the gap between events is Exponential(λ). BMH ch. 1 uses Exponential priors on Poisson rates for exactly this reason (note 05).
+Poisson and Exponential are two views of the same process: if events arrive at rate λ per unit time, the count in one unit is Poisson(λ) and the gap between events is Exponential(λ). BMH ch. 1 uses Exponential priors on Poisson rates for exactly this reason (note 09).
 
 ---
 
@@ -74,7 +74,7 @@ plt.plot(x, stats.norm.pdf(x), "r-")
 samples.mean(), samples.std()   # close to 0 and 1, not equal
 ```
 
-The same "simulate and compare" habit returns in note 05 as the posterior predictive check.
+The same "simulate and compare" habit returns in note 09 as the posterior predictive check.
 
 ---
 
@@ -84,8 +84,8 @@ The same "simulate and compare" habit returns in note 05 as the posterior predic
 
 Two consequences from BMH ch. 4 that the rest of this course relies on:
 
-1. **Probability is a mean.** P(A) = E[1_A], the expected value of an indicator. So the fraction of samples where a condition holds estimates its probability. Every `np.mean(samples > 0)` in notes 05–09 is the LLN at work.
-2. **Expectations from samples.** E[f(Z)] ≈ (1/N) Σ f(Z_i). This is how posterior expected loss is computed in note 09: average the loss over posterior samples.
+1. **Probability is a mean.** P(A) = E[1_A], the expected value of an indicator. So the fraction of samples where a condition holds estimates its probability. Every `np.mean(samples > 0)` in notes 09–13 is the LLN at work.
+2. **Expectations from samples.** E[f(Z)] ≈ (1/N) Σ f(Z_i). This is how posterior expected loss is computed in note 13: average the loss over posterior samples.
 
 ### How fast it converges
 
@@ -101,7 +101,7 @@ error ≈ sqrt(Var(Z)) / sqrt(N)
 | 10,000 | 0.01 |
 | 1,000,000 | 0.001 |
 
-Halving the error costs four times the data. Note 03 turns the same arithmetic into a sample-size formula.
+Halving the error costs four times the data. Note 06 turns the same arithmetic into a sample-size formula.
 
 ---
 
@@ -115,7 +115,7 @@ This is why t-tests and z-tests work on conversion rates, revenue and other non-
 |---|---|
 | Symmetric, light tails, N ≥ 30 | good |
 | Proportions with np and n(1−p) both ≥ 10 | good (z-test for proportions) |
-| Heavy tails (revenue, session length) | slow; needs large N, or use a non-parametric test (note 02) or bootstrap |
+| Heavy tails (revenue, session length) | slow; needs large N, or use a non-parametric test (note 04) or bootstrap |
 | N < 30 and unknown σ | use the t distribution, not Normal |
 
 ---
@@ -154,9 +154,9 @@ The same shape shows up in real US census data (mail-back response rate against 
 
 | Setting | Small-N symptom | Fix |
 |---|---|---|
-| Ranking products by average rating | a 1-review 5-star item tops the list | rank by a lower credible bound (note 08) |
+| Ranking products by average rating | a 1-review 5-star item tops the list | rank by a lower credible bound (note 12) |
 | Comparing regions, stores, cohorts | the best and worst segments are the smallest | show N next to every rate; shrink toward the overall mean |
-| A/B test read early | huge lift on day one | fix the sample size in advance (note 03) |
+| A/B test read early | huge lift on day one | fix the sample size in advance (note 06) |
 | Model leaderboards on small eval sets | rank flips between runs | report a confidence interval, not a point |
 
 Andrew Gelman's line, quoted in BMH ch. 1, frames the Bayesian half of this course: *"Sample sizes are never large. If N is too small to get a sufficiently-precise estimate, you need to get more data (or make more assumptions). But once N is 'large enough,' you can start subdividing the data to learn more."* There is always a subgroup small enough to be noisy.
@@ -171,4 +171,4 @@ Andrew Gelman's line, quoted in BMH ch. 1, frames the Bayesian half of this cour
 
 ---
 
-→ Next: [02-hypothesis-testing.md](02-hypothesis-testing.md) — turning a distribution into a decision: t, chi-square, ANOVA, non-parametric tests and multiple comparisons.
+→ Next: [03-estimation.md](03-estimation.md) — from a sample to a reported number: maximum likelihood, standard errors, confidence intervals and the bootstrap.

@@ -8,7 +8,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 6 — MCMC and PyMC
+# 10 — MCMC and PyMC
 
 > Why we sample instead of computing the posterior, what Markov chain Monte Carlo does at each step, how to read traces and diagnostics, a full mixture model, and the map from PyMC3 code to PyMC 5.
 
@@ -16,13 +16,13 @@ cleaned: 2026-10-31
 
 ## Why sample at all
 
-With one or two conjugate parameters (note 05's coin) the posterior has a formula. With more, the posterior is a surface over N dimensions, and computing it on a grid costs k^N evaluations. BMH ch. 3's picture: the prior is a landscape over parameter space; the likelihood warps it, pulling up the regions consistent with the data. We need to explore the warped landscape without mapping all of it.
+With one or two conjugate parameters (note 09's coin) the posterior has a formula. With more, the posterior is a surface over N dimensions, and computing it on a grid costs k^N evaluations. BMH ch. 3's picture: the prior is a landscape over parameter space; the likelihood warps it, pulling up the regions consistent with the data. We need to explore the warped landscape without mapping all of it.
 
-> **MCMC returns samples from the posterior, not the posterior itself.** Every summary (mean, interval, P(B > A), expected loss) is then an average over samples, by the Law of Large Numbers (note 01).
+> **MCMC returns samples from the posterior, not the posterior itself.** Every summary (mean, interval, P(B > A), expected loss) is then an average over samples, by the Law of Large Numbers (note 02).
 
 Two consequences BMH stresses:
 
-- **A prior of zero stays zero.** If the prior assigns no mass to a region, no amount of data can move the posterior there. Choose supports generously (note 07).
+- **A prior of zero stays zero.** If the prior assigns no mass to a region, no amount of data can move the posterior there. Choose supports generously (note 11).
 - **Thousands of samples, not tens.** Summaries are Monte Carlo estimates; their error shrinks like 1/√(effective samples).
 
 ---
@@ -161,4 +161,4 @@ Shape gotcha: PyMC 5 samples have dimensions `(chain, draw, ...)`. Flatten with 
 
 ---
 
-→ Next: [07-priors-and-bandits.md](07-priors-and-bandits.md) — choosing priors, why the prior stops mattering at large N, and Thompson sampling for multi-armed bandits.
+→ Next: [11-priors-and-bandits.md](11-priors-and-bandits.md) — choosing priors, why the prior stops mattering at large N, and Thompson sampling for multi-armed bandits.

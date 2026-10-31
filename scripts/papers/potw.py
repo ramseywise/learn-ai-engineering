@@ -119,13 +119,38 @@ HOMES = {
     "agentic-apps": ("generative-ai/07-agentic-applications",
                      "built applications: chatbots, conversational AI and dialogue systems, deep-research agents, "
                      "human-AI interaction guidelines"),
+    "analytics": ("data-analytics",
+                  "statistics for analysts: probability, estimation (MLE, confidence intervals, bootstrap, power), "
+                  "hypothesis testing and multiple comparisons, regression and GLMs, online experiments (A/B tests, "
+                  "CUPED, sequential testing, sample-ratio mismatch, metric pitfalls), causal inference, Bayesian "
+                  "inference and MCMC, bandits, decision theory"),
     "classical-ml": ("data-science",
-                     "classical ML and deep-learning training: model interpretability (SHAP, LIME), calibration, "
-                     "normalization layers, classical NLP"),
+                     "classical ML and deep-learning training: supervised and unsupervised learning, tree ensembles "
+                     "and boosting, tabular deep learning vs trees, model evaluation, leakage and cross-validation, "
+                     "calibration, interpretability (SHAP, LIME), optimisers, regularisation, normalization layers, "
+                     "clustering and dimensionality reduction, classical NLP, sentence embeddings as features"),
+    "data-systems": ("data-engineering",
+                     "data systems: distributed storage and compute (GFS, MapReduce, Spark), warehouses and column "
+                     "stores, dimensional modelling, streaming (Kafka, Dataflow), table formats and lakehouse, "
+                     "ingestion and orchestration, data mesh and data architectures"),
     "ml-systems": ("data-engineering",
-                   "ML engineering and MLOps: ML technical debt, software engineering for ML, metric pitfalls, "
-                   "data warehousing and pipelines"),
+                   "MLOps: ML technical debt, software engineering for ML, data validation, drift and monitoring, "
+                   "feature stores, model registries and serving of classical models, MLOps maturity"),
+    "programming": ("programming",
+                    "programming foundations: the relational model, query processing and indexing, type systems "
+                    "(including TypeScript), concurrency models, modularity and software design. Not language "
+                    "tutorials or library docs"),
 }
+# Who the interest score is judged for. Homes not listed use DEFAULT_AUDIENCE.
+DEFAULT_AUDIENCE = "an AI engineer"
+AUDIENCE = {
+    "analytics": "a data analyst who designs experiments and reports on them",
+    "classical-ml": "a data scientist who trains and evaluates models",
+    "data-systems": "a data engineer who builds pipelines and warehouses",
+    "ml-systems": "an ML engineer who ships and monitors models",
+    "programming": "a working programmer who writes Python, SQL and TypeScript",
+}
+SUBJECT_HOMES = tuple(AUDIENCE)
 PILLARS = {k: folder for k, (folder, _) in HOMES.items()}
 # Readings that fit no home: kept in the ledger as `skipped`, never routed.
 OFF_SYLLABUS = {
@@ -374,22 +399,27 @@ def cmd_fetch(args):
 def note_inventory():
     """Lines of `[home] path — H1 title` for every note a reading could map to (repo-relative)."""
     lines = []
+    by_folder = {}  # two homes can share a folder (data-systems, ml-systems): list its notes once
     for home, folder in PILLARS.items():
-        base = REPO / folder
-        if "/" not in folder:  # subject folder without pillars: PDFs only, no note targets
-            lines.append(f"[{home}] {folder}/ — no notes; file the PDF only (note null)")
-            continue
-        candidates = sorted(base.glob("*.md")) + sorted((base / "notes").glob("*.md"))
-        found = False
-        for p in candidates:
-            if p.name in SKIP_NOTES:
-                continue
+        by_folder.setdefault(folder, []).append(home)
+    for folder, keys in by_folder.items():
+        label = "|".join(keys)
+        for p in home_notes(folder):
             h1 = next((l[2:].strip() for l in p.read_text(encoding="utf-8").splitlines() if l.startswith("# ")), p.stem)
-            lines.append(f"[{home}] {p.relative_to(REPO)} — {h1}")
-            found = True
-        if not found:
-            lines.append(f"[{home}] {folder}/ — no notes yet (note null)")
+            lines.append(f"[{label}] {p.relative_to(REPO)} — {h1}")
+        if not home_notes(folder):
+            lines.append(f"[{label}] {folder}/ — no notes yet (note null)")
     return "\n".join(lines)
+
+
+def home_notes(folder):
+    """A home's notes: top-level .md files plus every notes/*.md below it (subject folders nest
+    them, e.g. programming/python/01-foundations/notes/)."""
+    base = REPO / folder
+    found = sorted(base.glob("*.md")) + sorted(
+        p for p in base.rglob("*.md")
+        if p.parent.name == "notes" and not set(p.relative_to(base).parts) & PDF_SKIP_DIRS)
+    return [p for p in found if p.name not in SKIP_NOTES]
 
 
 TRIAGE_PROMPT = """You are triaging readings (papers, book chapters) for a learning repo. Each reading
@@ -413,23 +443,30 @@ For each reading below:
   0 = unrelated to anything here
    Judge against the home's scope, not only the notes listed: a home with few or no notes
    yet is still growing, so a core paper for its scope is 2 even with note null.
-4. interest — how much an AI engineer should know this reading, whether or not any home
+4. interest — how much {audience} should know this reading, whether or not any home
    or note covers it yet. Weigh the method (a new idea vs a tweak), the results (large,
    general gains vs a narrow benchmark) and the citations when given:
   3 = landmark: a technique, model, benchmark or result the field adopted or keeps citing
   2 = a notable new idea or a strong result worth knowing
   1 = incremental: a variant, a narrow benchmark, an application study
   0 = not for this audience (policy essays, pure neuroscience, unrelated fields)
-Prefer the most specific home: a RAG survey is `rag`, not `context`; PPO is `post-training`;
+5. source_role — what kind of source it is:
+  primary   = the paper, book or report that introduced the method, system, model or result
+  secondary = a textbook, survey, tutorial, review, position paper, or a study applying others' methods
+  docs      = documentation, a blog post or a talk
+{hint}Prefer the most specific home: a RAG survey is `rag`, not `context`; PPO is `post-training`;
 a CUDA or serving chapter is `inference`. Safety-flavoured work often has a home: prompt
 injection and jailbreaks are `prompt`, dangerous-capability and safety benchmarks are `eval`,
 RLHF and constitutional training are `post-training`. Use `safety` only for the rest.
+Statistics and experiment design are `analytics`; model training and evaluation methods are
+`classical-ml`; storage, compute and pipeline systems are `data-systems`; deploying and
+monitoring models is `ml-systems`.
 
 Readings (JSON):
 {papers}
 
 Reply with ONLY a JSON array, one object per reading, no prose:
-[{{"key": "...", "topic": "loop", "note": "ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md", "relevance": 3, "interest": 2, "reason": "<one sentence>"}}]
+[{{"key": "...", "topic": "loop", "note": "ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md", "relevance": 3, "interest": 2, "source_role": "primary", "reason": "<one sentence>"}}]
 """
 
 
@@ -440,13 +477,18 @@ def find_claude():
     return exe
 
 
-def triage_batch(batch, inventory, claude):
+def triage_batch(batch, inventory, claude, hint=None):
+    """`hint`: the home these readings were found for (discovery) or already sit in. It sets the
+    audience for the interest score; the model may still pick another home."""
     papers = json.dumps([{"key": r["key"], "title": r["title"], "summary": r["blurb"][:1200],
                           **({"citations": r["citations"], "year": paper_year(r)} if r.get("citations") is not None else {})}
                          for r in batch], ensure_ascii=False)
     homes = "\n".join(f"  {k} ({folder}) — {scope}" for k, (folder, scope) in HOMES.items())
     off = "\n".join(f"  {t} — {desc}" for t, desc in OFF_SYLLABUS.items())
-    prompt = TRIAGE_PROMPT.format(homes=homes, inventory=inventory, off=off, papers=papers)
+    hint_text = (f"These readings were found while looking for sources for `{hint}`. Use that home when it fits,\n"
+                 f"and another home or an off-syllabus key when it doesn't.\n") if hint else ""
+    prompt = TRIAGE_PROMPT.format(homes=homes, inventory=inventory, off=off, papers=papers,
+                                  audience=AUDIENCE.get(hint, DEFAULT_AUDIENCE), hint=hint_text)
     out = subprocess.run(
         [claude, "-p", "--model", TRIAGE_MODEL],
         input=prompt, capture_output=True, text=True, timeout=600, check=True,
@@ -522,22 +564,40 @@ def cmd_cite(args):
     log(f"cite: citation counts for {got}/{len(todo)} papers")
 
 
+# Statuses that mean the PDF is already held or read: re-triage updates home, note and role
+# but leaves the status alone, so `filed` keeps meaning "on disk, not yet read".
+HELD_STATUSES = ("filed", "downloaded", "integrated")
+
+
+def triage_hint(r):
+    return r.get("discovered_for") or r.get("pillar")
+
+
 def cmd_triage(args):
     rows = load_ledger()
-    pending = [r for r in rows if r["status"] == args.status and (args.backlog or not r.get("backlog"))
+    statuses = args.status if isinstance(args.status, list) else [args.status]
+    want_homes = getattr(args, "home", None)
+    pending = [r for r in rows if r["status"] in statuses and (args.backlog or not r.get("backlog"))
                and (not args.source or r["source"] == args.source)
-               and (not getattr(args, "local", False) or r.get("local_pdf"))]
+               and (not getattr(args, "local", False) or r.get("local_pdf"))
+               and (not want_homes or triage_hint(r) in want_homes)]
     if not pending:
         log("triage: nothing new")
         return
     inventory, claude = note_inventory(), find_claude()
     now = dt.datetime.now().isoformat(timespec="seconds")
-    for i in range(0, len(pending), TRIAGE_BATCH):
-        batch = pending[i : i + TRIAGE_BATCH]
+    # one audience per batch: group by the home each reading was found for or sits in
+    pending.sort(key=lambda r: triage_hint(r) or "")
+    batches = []
+    for hint in dict.fromkeys(triage_hint(r) for r in pending):
+        group = [r for r in pending if triage_hint(r) == hint]
+        batches += [(hint, group[i : i + TRIAGE_BATCH]) for i in range(0, len(group), TRIAGE_BATCH)]
+    done = 0
+    for n, (hint, batch) in enumerate(batches):
         try:
-            verdicts = triage_batch(batch, inventory, claude)
+            verdicts = triage_batch(batch, inventory, claude, hint=hint)
         except (subprocess.SubprocessError, ValueError, json.JSONDecodeError) as exc:
-            log(f"triage: batch {i // TRIAGE_BATCH} failed, left as new: {exc}")
+            log(f"triage: batch {n} ({hint or 'no home'}) failed, left as it was: {exc}")
             continue
         for r in batch:
             v = verdicts.get(r["key"])
@@ -550,11 +610,15 @@ def cmd_triage(args):
             if note and not ((REPO / note).is_file() and note.startswith(PILLARS[pillar] + "/")):
                 note = None
             rel, interest = int(v.get("relevance") or 0), int(v.get("interest") or 0)
+            role = v.get("source_role") if v.get("source_role") in ("primary", "secondary", "docs") else None
+            if r["status"] in HELD_STATUSES and not pillar and r.get("pillar"):  # a held PDF keeps its home
+                topic, pillar, note = r.get("topic"), r["pillar"], r.get("note")
             r.update(topic=topic, pillar=pillar, note=note, relevance=rel, interest=interest,
-                     reason=v.get("reason", ""), triaged_at=now)
-            r["status"] = triage_status(r, args.min_relevance)
+                     source_role=role, reason=v.get("reason", ""), triaged_at=now)
+            if r["status"] not in HELD_STATUSES:
+                r["status"] = triage_status(r, args.min_relevance)
         save_ledger(rows)
-        done = min(i + TRIAGE_BATCH, len(pending))
+        done += len(batch)
         log(f"triage: {done}/{len(pending)} done, {sum(r['status'] == 'queued' for r in pending)} queued so far")
     counts = {s: sum(r["status"] == s for r in pending) for s in ("queued", "parked", "skipped", "new")}
     log(f"triage: {counts['queued']} queued, {counts['parked']} parked, {counts['skipped']} skipped, "
@@ -727,7 +791,7 @@ def cmd_scan(args):
 
 def fetch_link_pdf(r):
     """Save the row's URL into its home's sources/ if it serves a PDF; return the repo path or None."""
-    url = r.get("url") or ""
+    url = r.get("oa_pdf_url") or r.get("url") or ""
     url = re.sub(r"openreview\.net/forum\?id=", "openreview.net/pdf?id=", url)
     url = re.sub(r"(github\.com/[^/]+/[^/]+)/blob/", r"\1/raw/", url)
     if not url.startswith("http"):
@@ -740,17 +804,26 @@ def fetch_link_pdf(r):
     if not data.startswith(b"%PDF"):
         return None
     sources = REPO / sources_rel(r["pillar"])
-    dest = sources / f"{words_slug(r['title'], 5)}-{(r.get('week_start') or '')[:4]}.pdf".replace("-.pdf", ".pdf")
+    if r.get("first_author") and r.get("year"):  # discovery rows know their author and year
+        dest = sources / f"{make_slug(r['title'], r['first_author'], r['year'])}.pdf"
+    else:
+        dest = sources / f"{words_slug(r['title'], 5)}-{(r.get('week_start') or '')[:4]}.pdf".replace("-.pdf", ".pdf")
+    if dest.exists():
+        return None
     sources.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(data)
     time.sleep(1)
     return str(dest.relative_to(REPO))
 
 
+# Sources whose PDFs download fetches; repo rows are already on disk.
+FETCHED_SOURCES = ("dair", "openalex", "curated")
+
+
 def cmd_download(args):
     rows = load_ledger()
     # repo PDFs stay `queued` for /chapter and /papers; this only fetches DAIR papers
-    queued = [r for r in rows if r["status"] == "queued" and r["source"] == "dair"
+    queued = [r for r in rows if r["status"] == "queued" and r["source"] in FETCHED_SOURCES
               and (args.backlog or not r.get("backlog"))
               and (r.get("relevance") or 0) >= (getattr(args, "fetch_min", None) or 0)
               and (not getattr(args, "home", None) or r.get("pillar") in args.home)]
@@ -1034,8 +1107,10 @@ def main():
         if name in ("triage", "run"):
             p.add_argument("--min-relevance", type=int, default=2)
         if name == "triage":
-            p.add_argument("--status", default="new", help="re-triage rows with this status (default new)")
-            p.add_argument("--source", choices=["dair", "repo"], help="only rows from this source")
+            p.add_argument("--status", nargs="+", default=["new"],
+                           help="re-triage rows with these statuses (default new); filed/downloaded/integrated keep their status")
+            p.add_argument("--source", choices=["dair", "repo", "openalex", "curated"], help="only rows from this source")
+            p.add_argument("--home", nargs="+", help="only rows found for, or sitting in, these homes")
             p.add_argument("--local", action="store_true", help="only rows whose PDF is already in the repo")
         if name == "download":
             p.add_argument("--limit", type=int, help="fetch at most this many PDFs, best first")

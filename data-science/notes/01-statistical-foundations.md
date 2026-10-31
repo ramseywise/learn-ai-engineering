@@ -79,7 +79,7 @@ Raising model complexity trades bias for variance. The test-error curve is U-sha
 
 ## Probability as ML uses it
 
-You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur:
+You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur. For the basics underneath them (conditional probability, expectation, variance) see [data-analytics 01 — Probability foundations](../../data-analytics/notes/01-probability-foundations.md); for maximum likelihood as an estimation method, [data-analytics 03 — Estimation](../../data-analytics/notes/03-estimation.md).
 
 | Idea | Used in | One line |
 |---|---|---|

@@ -8,7 +8,7 @@ sources:
 confidence: medium
 cleaned: 2026-10-31
 ---
-# 10 — Bayesian Machine Learning
+# 14 — Bayesian Machine Learning
 
 > Where the Bayesian track meets machine learning: latent-variable models fitted with EM, Bayesian logistic regression by MCMC, variational autoencoders, and Gaussian processes driving Bayesian optimisation. A map of the BayesianML coursework, with the ideas you need to read it.
 
@@ -16,7 +16,7 @@ cleaned: 2026-10-31
 
 ## Where this sits
 
-Notes 05–09 use Bayesian inference to estimate a handful of parameters and make decisions. Machine learning applies the same ideas at scale: thousands of parameters, latent variables per data point, and posteriors too large for MCMC. The BayesianML coursework (HSE's *Bayesian Methods for Machine Learning* on Coursera) covers that ground. BMH's own ch. 7 was never finished; its outline (Bayesian answers to overfitting, Salimans' *Don't Overfit* Kaggle solution, predictive distributions, model fitting with BIC, Gaussian processes) is essentially the syllabus below.
+Notes 09–13 use Bayesian inference to estimate a handful of parameters and make decisions. Machine learning applies the same ideas at scale: thousands of parameters, latent variables per data point, and posteriors too large for MCMC. The BayesianML coursework (HSE's *Bayesian Methods for Machine Learning* on Coursera) covers that ground. BMH's own ch. 7 was never finished; its outline (Bayesian answers to overfitting, Salimans' *Don't Overfit* Kaggle solution, predictive distributions, model fitting with BIC, Gaussian processes) is essentially the syllabus below.
 
 | Coursework | Topic | Inference method | Key idea |
 |---|---|---|---|
@@ -26,13 +26,13 @@ Notes 05–09 use Bayesian inference to estimate a handful of parameters and mak
 | [week_6](../practice/BayesianML/week_6/) | Gaussian processes, Bayesian optimisation | exact GP posterior, acquisition functions | tune hyperparameters with few evaluations |
 | [final_assignment](../practice/BayesianML/final_assignment/) | "Finding the suspect": VAE + Bayesian optimisation | both | search a VAE's latent space with human feedback |
 
-**Runnability:** legacy. The environment in `bayesian.yml` pins Python 3.7, TensorFlow 1.15, Keras 2.3.1, `pymc3==3.11.4` and `theano-pymc==1.1.2`; week 6 adds GPy, GPyOpt and xgboost by pip. Every notebook imports the Coursera `grader` module, which is not included, and none has saved outputs. Read them for the method; port to PyMC 5 with note 06's map before running.
+**Runnability:** legacy. The environment in `bayesian.yml` pins Python 3.7, TensorFlow 1.15, Keras 2.3.1, `pymc3==3.11.4` and `theano-pymc==1.1.2`; week 6 adds GPy, GPyOpt and xgboost by pip. Every notebook imports the Coursera `grader` module, which is not included, and none has saved outputs. Read them for the method; port to PyMC 5 with note 10's map before running.
 
 ---
 
 ## EM for Gaussian mixtures (week 2)
 
-The mixture model from note 06, fitted by optimisation instead of sampling. Each point x_i has a hidden label t_i ∈ {1..C}; the parameters are mixture weights π, means μ_c and covariances Σ_c.
+The mixture model from note 10, fitted by optimisation instead of sampling. Each point x_i has a hidden label t_i ∈ {1..C}; the parameters are mixture weights π, means μ_c and covariances Σ_c.
 
 | Step | Computes | Formula |
 |---|---|---|
@@ -56,7 +56,7 @@ def train_EM(X, C, rtol=1e-3, max_iter=100, restarts=10):
 
 EM vs MCMC on the same model:
 
-| | EM | MCMC (note 06) |
+| | EM | MCMC (note 10) |
 |---|---|---|
 | Output | a point estimate (MAP or MLE) of the parameters | samples from the full posterior |
 | Speed | fast, deterministic per restart | slower |
@@ -85,7 +85,7 @@ lb, ub = np.percentile(b, 2.5), np.percentile(b, 97.5)
 np.exp(lb), np.exp(ub)
 ```
 
-The exercise compares Metropolis-Hastings (needs many samples, highly autocorrelated) with NUTS (fewer, nearly independent samples), and ends on the point note 05 makes: a credible interval can be read the way people wish they could read a confidence interval.
+The exercise compares Metropolis-Hastings (needs many samples, highly autocorrelated) with NUTS (fewer, nearly independent samples), and ends on the point note 09 makes: a credible interval can be read the way people wish they could read a confidence interval.
 
 ```python
 # PyMC 5 port of the same model
@@ -134,7 +134,7 @@ mean, var = model.predict(X_new)
 # sparse GPs (inducing points) cut the O(n^3) cost for large n
 ```
 
-**Bayesian optimisation** uses the GP as a cheap surrogate for an expensive black-box function (a model's validation score as a function of its hyperparameters) and picks the next point to evaluate with an acquisition function that trades off exploration and exploitation, the same trade-off as the bandits in note 07.
+**Bayesian optimisation** uses the GP as a cheap surrogate for an expensive black-box function (a model's validation score as a function of its hyperparameters) and picks the next point to evaluate with an acquisition function that trades off exploration and exploitation, the same trade-off as the bandits in note 11.
 
 | Acquisition | Picks the point with |
 |---|---|

@@ -80,7 +80,7 @@ data-science/
 
 ## Resource map
 
-**Related notes:** [data-analytics 06 — MCMC and PyMC](../data-analytics/notes/06-mcmc-and-pymc.md) (Bayesian modelling lives there); [ai-engineering graph engineering 10 — building KGs with LLMs](../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md) (successor to the NER in note 12).
+**Related notes:** [data-analytics 10 — MCMC and PyMC](../data-analytics/notes/10-mcmc-and-pymc.md) (Bayesian modelling lives there); [ai-engineering graph engineering 10 — building KGs with LLMs](../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md) (successor to the NER in note 12).
 
 **Books and courses:** Müller & Guido; Sarkar, *Text Analytics with Python*; Karpathy, *Zero to Hero*; Ng's ML and DL courses; ISLR. Each is mapped to notes in [references.md](references.md).
 

@@ -8,7 +8,7 @@ sources:
 confidence: medium
 cleaned: 2026-10-31
 ---
-# 4 — Correlation, Confounding and Causation
+# 8 — Correlation, Confounding and Causation
 
 > Pearson vs Spearman, how a confounder manufactures correlation, how Simpson's paradox flips a result, partial correlation as the simplest control, and the quasi-experimental methods (DiD, IV, RD) you reach for when you cannot run an A/B test.
 
@@ -22,7 +22,7 @@ cleaned: 2026-10-31
 | Spearman ρ | monotonic association (Pearson on ranks) | no | ordinal data, skew, outliers, curved but monotonic |
 | Kendall τ | concordant vs discordant pairs | no | small samples, many ties |
 | Point-biserial | one binary, one continuous | | equivalent to a t-test |
-| Cramér's V | two categorical | | derived from chi-square (note 02) |
+| Cramér's V | two categorical | | derived from chi-square (note 04) |
 
 ```python
 # practice/5_Statistical_Analysis.ipynb, Part 4: one outlier
@@ -74,7 +74,7 @@ stats.pearsonr(residuals(ice_cream, temperature),
                residuals(drownings, temperature))   # near zero
 ```
 
-Multiple regression does the same thing in one step: the coefficient on X in `y ~ x + z` is the effect of X holding Z fixed. Both only remove confounders you measured. An unmeasured confounder is untouched, which is why randomisation (note 03) is the gold standard: it breaks the arrow from every confounder into treatment, measured or not.
+Multiple regression does the same thing in one step: the coefficient on X in `y ~ x + z` is the effect of X holding Z fixed. Both only remove confounders you measured. An unmeasured confounder is untouched, which is why randomisation (note 06) is the gold standard: it breaks the arrow from every confounder into treatment, measured or not.
 
 ### Bad controls
 
@@ -142,7 +142,7 @@ smf.ols("y ~ treated * post", data=df).fit().params["treated:post"]
 
 | Situation | First choice |
 |---|---|
-| You control assignment | A/B test (note 03) |
+| You control assignment | A/B test (note 06) |
 | A rollout hit some units and not others, with pre-period data | DiD; plot the pre-trends |
 | Treatment assigned by a threshold | RD |
 | Self-selected treatment, rich covariates | propensity weighting, plus a sensitivity analysis |
@@ -152,8 +152,8 @@ smf.ols("y ~ treated * post", data=df).fit().params["treated:post"]
 
 ## Regression as the bridge
 
-Regression is where this note hands off to data-science. A coefficient is a conditional association: the change in Y per unit of X *holding the other regressors fixed*. It becomes a causal effect only with one of the designs above, or when X was randomised. BMH ch. 6 (note 07) shows that ridge and lasso are Bayesian regression with Normal and Laplace priors, which is the bridge from this note to the Bayesian track.
+Regression is where this note hands off to data-science. A coefficient is a conditional association: the change in Y per unit of X *holding the other regressors fixed*. It becomes a causal effect only with one of the designs above, or when X was randomised. BMH ch. 6 (note 11) shows that ridge and lasso are Bayesian regression with Normal and Laplace priors, which is the bridge from this note to the Bayesian track.
 
 ---
 
-→ Next: [05-bayesian-inference.md](05-bayesian-inference.md) — the other way to answer "what do the data say": probability as belief, priors and posteriors, and the first PyMC models.
+→ Next: [09-bayesian-inference.md](09-bayesian-inference.md) — the other way to answer "what do the data say": probability as belief, priors and posteriors, and the first PyMC models.

@@ -8,7 +8,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 8 — Bayesian A/B Testing
+# 12 — Bayesian A/B Testing
 
 > Put a Beta prior on each arm's conversion rate, update it with the counts, and answer the question stakeholders actually ask: how likely is B better than A, and how much do we lose if we pick B and are wrong? The same lower-bound idea ranks items with few ratings.
 
@@ -16,7 +16,7 @@ cleaned: 2026-10-31
 
 ## The question changes
 
-| Frequentist A/B (note 03) | Bayesian A/B |
+| Frequentist A/B (note 06) | Bayesian A/B |
 |---|---|
 | "If A and B were equal, how surprising is this data?" (p-value) | "Given the data, what is P(B > A)?" |
 | fixed N set in advance | any N; unequal arms are fine |
@@ -24,7 +24,7 @@ cleaned: 2026-10-31
 | lift with a confidence interval | full posterior of the lift; credible interval |
 | peeking invalidates the test | peeking is less damaging, but a stopping rule is still needed |
 
-Note 03's AB notebook ([practice/AB-Bayes/AB_Testing_with_Python.ipynb](../practice/AB-Bayes/AB_Testing_with_Python.ipynb)) is, despite its folder name, entirely frequentist; a comment in it ("check out bayesian recursive learning method of adjusting proportions after establishing prior") is the pointer to this note. The code below runs on the same `successes` and `nobs` it computes.
+Note 06's AB notebook ([practice/AB-Bayes/AB_Testing_with_Python.ipynb](../practice/AB-Bayes/AB_Testing_with_Python.ipynb)) is, despite its folder name, entirely frequentist; a comment in it ("check out bayesian recursive learning method of adjusting proportions after establishing prior") is the pointer to this note. The code below runs on the same `successes` and `nobs` it computes.
 
 ---
 
@@ -60,7 +60,7 @@ Reading the output:
 
 ## Skip the sampler: Beta closed form
 
-Conversion data is Binomial and Beta is conjugate, so each arm's posterior is known exactly (note 05):
+Conversion data is Binomial and Beta is conjugate, so each arm's posterior is known exactly (note 09):
 
 ```
 p_A | data ~ Beta(α₀ + conversions_A, β₀ + visitors_A − conversions_A)
@@ -96,7 +96,7 @@ P(B > A) = 0.91 does not say how bad the 9% case is. Expected loss does.
 E[loss | choose B] = E[ max(p_A − p_B, 0) ]
 ```
 
-the average conversion rate you give up by shipping B, counting only the worlds where A was actually better. It is a loss function in the sense of note 09.
+the average conversion rate you give up by shipping B, counting only the worlds where A was actually better. It is a loss function in the sense of note 13.
 
 | Rule | Ship B when |
 |---|---|
@@ -111,7 +111,7 @@ The expected-loss rule is the most useful in practice: it stops early when B is 
 | Prior | Effect |
 |---|---|
 | Beta(1, 1) | uniform; fine once each arm has a few hundred visitors |
-| Weakly informative from history, e.g. Beta(3, 97) for a ~3% baseline | stabilises the first days of a test; washes out quickly (note 07) |
+| Weakly informative from history, e.g. Beta(3, 97) for a ~3% baseline | stabilises the first days of a test; washes out quickly (note 11) |
 | Strong prior from history, e.g. Beta(300, 9700) | demands real evidence before believing a big lift; guards against early-noise "wins" |
 
 Use the *same* prior for both arms. The prior encodes what you knew about conversion rates before the test, not which arm you hope wins.
@@ -124,7 +124,7 @@ Safer, not safe. The posterior is a valid summary at any N, so looking does not 
 
 ## Ranking with few observations (BMH ch. 4)
 
-The same machinery fixes the small-N trap from note 01. Sorting by raw upvote ratio puts a comment with 1 upvote and 0 downvotes (100%) above one with 999 and 1 (99.9%).
+The same machinery fixes the small-N trap from note 02. Sorting by raw upvote ratio puts a comment with 1 upvote and 0 downvotes (100%) above one with 999 and 1 (99.9%).
 
 ![Reddit comments with very different vote counts, illustrating why raw upvote ratio misranks](../sources/images/davidson-pilon-bmh-reddit-comments-fig1.png)
 *Image Source: Davidson-Pilon, Bayesian Methods for Hackers, ch. 4 (MIT)*
@@ -165,8 +165,8 @@ def lower_bound(u, d):
 | ads by click-through | clicks | impressions |
 | LLM prompts or models by eval pass rate | passes | eval cases |
 
-Limitations from BMH ch. 6: the lower bound favours old items with many votes. Ranking by a *sample* from each item's posterior (the comment-ranking bandit in note 07) gives new items a chance to be seen.
+Limitations from BMH ch. 6: the lower bound favours old items with many votes. Ranking by a *sample* from each item's posterior (the comment-ranking bandit in note 11) gives new items a chance to be seen.
 
 ---
 
-→ Next: [09-loss-functions-and-decisions.md](09-loss-functions-and-decisions.md) — turning a posterior into an action by minimising expected loss: squared, absolute and asymmetric losses, and the Price is Right and stock-prediction examples.
+→ Next: [13-loss-functions-and-decisions.md](13-loss-functions-and-decisions.md) — turning a posterior into an action by minimising expected loss: squared, absolute and asymmetric losses, and the Price is Right and stock-prediction examples.

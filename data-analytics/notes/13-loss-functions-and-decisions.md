@@ -7,7 +7,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 9 — Loss Functions and Bayesian Decisions
+# 13 — Loss Functions and Bayesian Decisions
 
 > A posterior is not a decision. Write down what a wrong answer costs, average that loss over the posterior, and pick the action that minimises it (the Bayes action). Squared loss gives the posterior mean, absolute loss the median, zero-one loss the MAP, and asymmetric losses give answers no point estimate would.
 
@@ -157,7 +157,7 @@ Step 4 is the lesson: optimise for the metric you are scored on, under uncertain
 
 | Decision | Loss to write down | Bayes action |
 |---|---|---|
-| Ship B or keep A | conversion lost if wrong: max(p_A − p_B, 0) | ship if expected loss < ε (note 08) |
+| Ship B or keep A | conversion lost if wrong: max(p_A − p_B, 0) | ship if expected loss < ε (note 12) |
 | Inventory or capacity forecast | stock-outs cost more than surplus | an upper quantile, not the mean |
 | Fraud threshold | cost of a missed fraud vs cost of a blocked customer | threshold where expected costs balance |
 | Price or bid | asymmetric payoff around a cutoff | shade toward the safe side, as in the showcase |
@@ -165,4 +165,4 @@ Step 4 is the lesson: optimise for the metric you are scored on, under uncertain
 
 ---
 
-→ Next: [10-bayesian-machine-learning.md](10-bayesian-machine-learning.md) — where the Bayesian track meets machine learning: EM, MCMC, variational autoencoders and Gaussian processes in the BayesianML coursework.
+→ Next: [14-bayesian-machine-learning.md](14-bayesian-machine-learning.md) — where the Bayesian track meets machine learning: EM, MCMC, variational autoencoders and Gaussian processes in the BayesianML coursework.
