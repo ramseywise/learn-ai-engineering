@@ -214,7 +214,7 @@ cal = CalibratedClassifierCV(clf, method="sigmoid", cv=5).fit(X_train, y_train) 
 | Random forest | Pulled away from 0 and 1 |
 | Deep networks | Overconfident; temperature scaling (one scalar on the logits) fixes most of it |
 
-Readings: Guo et al. 2017, *On Calibration of Modern Neural Networks* ([PDF](../sources/guo-2017-calibration-modern-neural-networks.pdf)), found modern deep nets overconfident and introduced temperature scaling; Minderer et al. 2021 ([PDF](../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf)) revisits this and finds recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size.
+Readings: Guo et al. 2017, *On Calibration of Modern Neural Networks* ([PDF](../sources/guo-2017-calibration-modern-neural-networks.pdf)), found modern deep nets overconfident. On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets; Minderer et al. 2021 ([PDF](../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf)) revisits this and finds recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size.
 
 ---
 

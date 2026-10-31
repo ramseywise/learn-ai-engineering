@@ -62,6 +62,7 @@ data-science/
 | 15 | [micrograd](notes/15-micrograd.md) | Scalar autograd engine, the chain rule, neurons to MLP, PyTorch mapping |
 | 16 | [makemore](notes/16-makemore.md) | Bigram to MLP to WaveNet character models, initialisation, BatchNorm, manual backprop |
 | 17 | [nanoGPT](notes/17-nanogpt.md) | Self-attention, the transformer block, reproducing GPT-2 124M |
+| 18 | LLM embeddings as features *(planned)* | Sentence-transformer and API embeddings fed to classical ML: classification with a linear head, clustering and BERTopic, embedding-based anomaly detection and recommenders, choosing a model on MTEB, cost vs. TF-IDF. Sources: Alammar & Grootendorst, *Hands-On LLMs* ch. 4, 5, 10 ([code](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)); Boykis, [*What are embeddings*](https://github.com/veekaybee/what_are_embeddings); [sentence-transformers](https://sbert.net/) docs |
 
 ## Rules of thumb
 

@@ -40,7 +40,7 @@
 | ★ | Gao et al., *Retrieval-Augmented Generation for Large Language Models: A Survey* (2023): naive / advanced / modular RAG. [PDF](sources/2312.10997v5.pdf); figures `gao-rag-survey-fig*` | [2312.10997](https://arxiv.org/abs/2312.10997) | 01 |
 | ★ | Es et al., *RAGAS: Automated Evaluation of Retrieval Augmented Generation* (2023). [PDF](sources/2309.15217v2.pdf) | [2309.15217](https://arxiv.org/abs/2309.15217) | 06, 07, 08 |
 | | Saad-Falcon et al., *ARES: An Automated Evaluation Framework for RAG Systems* (2023). [PDF](sources/2311.09476v2.pdf) | [2311.09476](https://arxiv.org/abs/2311.09476) | *queued* (pairs with 07's evaluation section) |
-| | Asai et al., *Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection* (2023). [PDF](sources/2310.11511v1.pdf) | [2310.11511](https://arxiv.org/abs/2310.11511) | 01 |
+| ★ | Asai et al., *Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection* (2023): a trained model emits reflection tokens to decide when to retrieve and to critique passages. Corrects the catalogue's use of the name in 01. [PDF](sources/2310.11511v1.pdf) | [2310.11511](https://arxiv.org/abs/2310.11511) | 01 |
 | | Gao et al., *Precise Zero-Shot Dense Retrieval without Relevance Labels* (HyDE, 2022) | [2212.10496](https://arxiv.org/abs/2212.10496) | 01, 05, 11 |
 | | Khattab & Zaharia, *ColBERT* (2020) | [2004.12832](https://arxiv.org/abs/2004.12832) | 05 |
 | | Sarthi et al., *RAPTOR* (2024) | [2401.18059](https://arxiv.org/abs/2401.18059) | 01 |
@@ -48,12 +48,12 @@
 | | Gao et al., *Enabling LLMs to Generate Text with Citations* (ALCE, 2023) | [2305.14627](https://arxiv.org/abs/2305.14627) | 06 |
 | | Malkov & Yashunin, *Efficient and robust ANN search using HNSW graphs* (2016) | [1603.09320](https://arxiv.org/abs/1603.09320) | 04, 09 |
 | | Qu et al., *Is Semantic Chunking Worth the Computational Cost?* (Findings of NAACL 2025). [PDF](sources/2025.findings-naacl.114.pdf) | [2410.13070](https://arxiv.org/abs/2410.13070) | *queued* (supports 05's "fixed-size first") |
-| | Jimeno Yepes et al., *Financial Report Chunking for Effective RAG* (2024). [PDF](sources/2402.05131v3.pdf) | [2402.05131](https://arxiv.org/abs/2402.05131) | *queued* |
-| | Wang et al., *Searching for Best Practices in RAG* (2024). [PDF](sources/2407.01219v1.pdf) | [2407.01219](https://arxiv.org/abs/2407.01219) | *queued* |
-| | Jiang et al., *Active Retrieval Augmented Generation* (FLARE, EMNLP 2023). [PDF](sources/2023.emnlp-main.495.pdf) | [2305.06983](https://arxiv.org/abs/2305.06983) | *queued* |
+| | Jimeno Yepes et al., *Financial Report Chunking for Effective RAG* (2024). [PDF](sources/2402.05131v3.pdf) | [2402.05131](https://arxiv.org/abs/2402.05131) | [05](notes/05-chunking-query-parsing-and-reranking.md#strategies) |
+| | Wang et al., *Searching for Best Practices in RAG* (2024). [PDF](sources/2407.01219v1.pdf) | [2407.01219](https://arxiv.org/abs/2407.01219) | [05](notes/05-chunking-query-parsing-and-reranking.md#rules-of-thumb) |
+| | Jiang et al., *Active Retrieval Augmented Generation* (FLARE, EMNLP 2023). [PDF](sources/2023.emnlp-main.495.pdf) | [2305.06983](https://arxiv.org/abs/2305.06983) | [01](notes/01-rag-pipeline.md) |
 | | Shuster et al., *Retrieval Augmentation Reduces Hallucination in Conversation* (Findings of EMNLP 2021). [PDF](sources/2021.findings-emnlp.320.pdf) | [2104.07567](https://arxiv.org/abs/2104.07567) | *queued* |
 | | Zhao et al., *Optimizing LLM Based RAG Pipelines in the Financial Domain* (NAACL 2024 industry). [PDF](sources/2024.naacl-industry.23.pdf) | — | *queued* |
-| | Cuconasu et al., *The Power of Noise: Redefining Retrieval for RAG Systems* (SIGIR 2024). [PDF](sources/3626772.3657834.pdf) | [2401.14887](https://arxiv.org/abs/2401.14887) | *queued* |
+| | Cuconasu et al., *The Power of Noise: Redefining Retrieval for RAG Systems* (SIGIR 2024). [PDF](sources/3626772.3657834.pdf) | [2401.14887](https://arxiv.org/abs/2401.14887) | [06](notes/06-generation-for-rag.md#why-rag-works-attention) |
 | | Salemi & Zamani, *Evaluating Retrieval Quality in Retrieval-Augmented Generation* (eRAG, SIGIR 2024). [PDF](sources/3626772.3657957.pdf) | [2404.13781](https://arxiv.org/abs/2404.13781) | *queued* |
 | | Touvron et al., *LLaMA* (2023). [PDF](sources/2302.13971v1.pdf) | [2302.13971](https://arxiv.org/abs/2302.13971) | background for 06; better homed in 01-llm-fundamentals |
 | | OpenAI, *GPT-4 Technical Report* (2023). [PDF](sources/2303.08774v6.pdf) | [2303.08774](https://arxiv.org/abs/2303.08774) | background for 06; better homed in 01-llm-fundamentals |

@@ -6,6 +6,7 @@ sources:
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 8 P28 Long-Term Memory — ../sources/lakshmanan-hapke-genai-design-patterns-ch08-addressing-constraints.pdf"
   - "Chhikara et al. 2025, Mem0 — https://arxiv.org/abs/2504.19413"
   - "adv-11/AgenticAIFrameworks: Letta/self-editing memory from scratch, LangGraph/langMem — https://github.com/adv-11/AgenticAIFrameworks"
+  - https://arxiv.org/abs/2304.03442
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -233,6 +234,16 @@ Lakshmanan and Hapke (P28 Long-Term Memory) and LangMem use a cognitive-science 
 | Semantic | facts extracted from conversations | human block, archival memory | `create_memory_manager` with schemas; Mem0 graph + vectors |
 
 The book's working-memory rule: trim to the token limit but keep the system prompt, and keep the trimmed list valid (never drop a tool call while keeping its result). Mem0's `memory.add(messages, user_id=...)` uses an LLM to extract facts, resolve contradictions with what is stored, and drop small talk and general knowledge; `memory.search(query, user_id=...)` returns ranked memories across types.
+
+The Mem0 paper ([arXiv:2504.19413](https://arxiv.org/abs/2504.19413), Chhikara et al., 2025-04) shows what extraction costs. On LOCOMO's long multi-session conversations, graded by an LLM judge, Mem0 scored 66.9% and the graph variant 68.4%. Passing the whole 26k-token conversation scored **72.9%**. Memory wins on cost: about 1.8k tokens per query instead of 26k, and p95 latency of 1.4 s instead of 17 s. Mem0 also beat its other memory baselines: OpenAI's memory at 52.9%, LangMem at 58.1%, and Zep at 66.0% (Zep also took hours to make new memories searchable). When the history still fits in the window and latency doesn't matter, full context is the more accurate baseline.
+
+The retrieval score most of these systems descend from is from *Generative Agents* ([arXiv:2304.03442](https://arxiv.org/abs/2304.03442), Park et al., 2023-04). It ran 25 simulated characters, each with a **memory stream** of timestamped observations. Each memory gets three scores, each min-max scaled to [0, 1]:
+
+- recency: exponential decay, factor 0.995 per game hour since the memory was last *retrieved*
+- importance: the LLM rates the memory 1–10 when it is stored, e.g. 2 for "cleaning up the room" and 8 for "asking your crush out"
+- relevance: cosine similarity to the current query
+
+The three are summed with equal weight. **Reflection** runs when the importance of recent events adds up past 150, which works out to two or three times a game day. It writes higher-level conclusions back into the stream as memories. In a believability ranking (TrueSkill), the full architecture scored μ = 29.9, without reflection 26.9, and without memory, reflection or planning 21.2. Human crowdworkers role-playing the agents scored 23.0. Memory errors persisted: agents missed facts they had observed, retrieved fragments, and embellished details.
 
 The LangGraph + LangMem course version, with semantic, episodic and procedural memory in an email assistant, is [04-agentic-frameworks 03](../../04-agentic-frameworks/notes/03-long-term-memory-with-langgraph.md).
 

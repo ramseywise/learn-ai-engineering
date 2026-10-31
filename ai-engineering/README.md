@@ -26,6 +26,12 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 Serving, KV cache, batching and GPU performance decide what every call above costs in
 latency and money. It is numbered seventh because it is read last, not because it sits on top.
 
+**Across all six: [multimodal](08-multimodal-engineering/README.md) and
+[safety and security](09-safety-and-security/README.md)** (both added 2026-10-31). Each
+changes every layer rather than adding one. Multimodal swaps text for images, documents and
+audio at the edges. Safety and security model the attack surface each layer opens. Read them
+after the six, in either order.
+
 ---
 
 ## Pillar → interviewing-guide crosswalk
@@ -39,6 +45,8 @@ latency and money. It is numbered seventh because it is read last, not because i
 | graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
 | eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](06-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
 | inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#planned-notes) (notes not yet written) |
+| multimodal | [08-multimodal-engineering/](08-multimodal-engineering/README.md) | — (closest: 2-llm-fundamentals) | [README](08-multimodal-engineering/README.md#planned-notes) (notes not yet written) |
+| safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
 
 ---
 

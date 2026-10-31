@@ -69,7 +69,7 @@ t4     1    1     0
 mean difference = Δ;  SE(Δ) = sd(differences) / √n
 ```
 
-Most tasks pass or fail on both versions, so the differences are mostly zero, and the SE of the difference is much smaller than the SE of either rate. Miller (Anthropic, "Adding Error Bars to Evals", 2024) shows pairing can cut the variance of a comparison substantially for free.
+Most tasks pass or fail on both versions, so the differences are mostly zero, and the SE of the difference is much smaller than the SE of either rate. Miller (Anthropic, "Adding Error Bars to Evals", 2024) shows pairing can cut the variance of a comparison substantially for free. The paired variance is the unpaired one minus twice the covariance, so the saving grows with how often the two versions agree on a question. Two versions of the same agent usually agree on most questions, which is the best case ([arXiv:2411.00640](https://arxiv.org/abs/2411.00640)).
 
 For binary outcomes, the same idea is **McNemar's test**: only the tasks where A and B disagree carry information. If B wins 14 and loses 6 of the 20 discordant tasks, that's evidence. If it wins 11 and loses 9, it isn't.
 
@@ -111,7 +111,7 @@ Repeats reduce the noise from sampling randomness within each task. They don't r
 
 ### Clustered tasks
 
-If tasks come in groups (10 questions about the same document, 5 turns of one conversation), they're not independent either. Use **clustered standard errors** (cluster by document or conversation). Miller reports clustered SEs can be several times larger than naive ones on popular benchmarks. Ignoring clustering makes results look more certain than they are.
+If tasks come in groups (10 questions about the same document, 5 turns of one conversation), they're not independent either. Use **clustered standard errors** (cluster by document or conversation). Miller reports clustered SEs over 3× larger than naive ones on DROP (1.34 vs. 0.44), about 1.9× on MGSM and barely different on RACE-H. How much clustering matters depends on how strongly questions within a cluster move together. Ignoring clustering makes results look more certain than they are.
 
 ---
 

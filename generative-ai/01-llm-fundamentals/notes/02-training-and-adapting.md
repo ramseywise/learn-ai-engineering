@@ -8,6 +8,8 @@ sources:
   - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 5–7"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 1, 5–8"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1–2"
+  - https://arxiv.org/abs/2305.18290
+  - https://arxiv.org/abs/2212.08073
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -78,7 +80,7 @@ The LLM Engineer's Handbook (ch. 5) adds the practical side: building an instruc
 SFT can only imitate. To make a model prefer the better of two acceptable answers, you train on comparisons:
 
 - **RLHF:** train a reward model on human rankings, then optimize the policy against it with PPO and a KL penalty to the SFT model.
-- **DPO** ([arXiv:2305.18290](https://arxiv.org/abs/2305.18290)): skip the reward model; optimize directly on (prompt, chosen, rejected) triples. Handbook ch. 6 walks through it.
+- **DPO** ([arXiv:2305.18290](https://arxiv.org/abs/2305.18290)): skip the reward model; optimize directly on (prompt, chosen, rejected) triples. The reward model's optimal policy has a closed form, so RLHF reduces to a classification loss with no sampling during training. It beat PPO-based RLHF at controlling sentiment and matched or beat it on summarization and single-turn dialogue. Handbook ch. 6 walks through it.
 - **Constitutional AI / RLAIF** ([arXiv:2212.08073](https://arxiv.org/abs/2212.08073)): a model critiques and ranks outputs against written principles in place of human labelers.
 
 All three are covered in [05-RL notes 02–04](../../05-RL/README.md#syllabus).
@@ -97,7 +99,7 @@ W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 
 - Only `A` and `B` are trained. On GPT-3 175B the paper reports 10,000× fewer trainable parameters and 3× less GPU memory than full fine-tuning, with comparable quality.
 - The update can be merged into `W` after training, so inference costs nothing extra; or kept separate so one base model serves many adapters.
-- **QLoRA** ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) keeps the frozen base in 4-bit and trains LoRA adapters on top, which brings 65B-parameter fine-tuning onto a single 48 GB GPU.
+- **QLoRA** ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) keeps the frozen base in 4-bit and trains LoRA adapters on top, which brings 65B-parameter fine-tuning onto a single 48 GB GPU. Three tricks make it fit: a 4-bit NormalFloat data type, quantizing the quantization constants themselves (about 3 GB saved at 65B), and paged optimizers that absorb memory spikes. Its Guanaco models reached 99.3% of ChatGPT's score on the Vicuna benchmark after 24 hours on one GPU. The authors themselves warn that those chatbot benchmarks are not trustworthy, so read the number as "close", not "equal".
 
 ```python
 from peft import LoraConfig, get_peft_model

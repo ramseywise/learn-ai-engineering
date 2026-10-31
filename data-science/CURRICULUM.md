@@ -32,7 +32,7 @@ NLP arc      Neural-network arc            From-scratch arc
 | Stage | Notes | Depends on | Notes on order |
 |---|---|---|---|
 | Core | 01 → 02 → 03, 05 → 04 → 06 | data-analytics | 05 needs only 02. Read 04 before trusting any score in 06 |
-| NLP arc | 08 → 09 → 10 → 11 → 12 → 13 | 02, 03, 04 | 10 and 11 can swap. 12 is optional for interviews |
+| NLP arc | 08 → 09 → 10 → 11 → 12 → 13, then 18 | 02, 03, 04; 05 and 14 for 18 | 10 and 11 can swap. 12 is optional for interviews. 18 (planned) closes the arc: the methods of 05, 09 and 10 rerun on LLM embeddings |
 | Neural-network arc | 07 → 14 | 02, 04; 11 for 14 | Learn backprop once in 07 or 15, then use the other as a check |
 | From-scratch arc | 15 → 16 → 17 | 02 (logistic regression, softmax) | Strictly sequential. Each part reuses the previous code. 16 part 3 is the most interview-relevant |
 
@@ -41,4 +41,5 @@ When 17 is done, continue to [generative-ai / 01 LLM fundamentals](../generative
 ## Known gaps
 
 - There is no hands-on comparison of sklearn gradient boosting, XGBoost and LightGBM with SHAP on a real dataset. Note 06 covers the APIs, but no notebook exercises them.
+- Note 18 (LLM embeddings as features) is planned, not written. Notes 05 and 11 cover anomaly detection, clustering and recommenders on classical features; nothing yet repeats them on sentence embeddings.
 - There are no notebooks for note 01. It is readings-only (ISLR ch. 2, *Statistics Done Wrong*).

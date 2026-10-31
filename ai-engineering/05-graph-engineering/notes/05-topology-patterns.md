@@ -7,6 +7,7 @@ sources:
   - https://www.aibuilderclub.com/blog/graph-engineering-with-claude-code
   - https://code.claude.com/docs/en/sub-agents
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
+  - https://arxiv.org/abs/2503.09572
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -208,7 +209,7 @@ Peer collaboration exists mostly to stop **premature termination**, which comes 
 ![Manager Parallel Coordination](../sources/images/li-ai-agents-in-depth-fig10-6.svg)
 *Image Source: Li, AI Agents in Depth, ch. 10, Fig. 10-6 (Apache-2.0)*
 
-To the manager, each sub-agent is a tool call that returns a structured summary. The weak point is the **planner**: a bad plan sinks every worker. Plan-and-Act ([arXiv:2503.09572](https://arxiv.org/abs/2503.09572); 54% on WebArena-Lite) puts the strongest model on planning. That doesn't contradict the advice to give a reviewer roughly the same capability as the agent it reviews; planner and reviewer are different roles.
+To the manager, each sub-agent is a tool call that returns a structured summary. The weak point is the **planner**: a bad plan sinks every worker. Plan-and-Act ([arXiv:2503.09572](https://arxiv.org/abs/2503.09572)) invests in the planner rather than the workers. It fine-tunes a dedicated LLaMA-3.3-70B planner on synthetic plans written back onto successful trajectories, and it **replans after every executor step** instead of committing to the first plan. Dynamic replanning took web-navigation success to 53.9%, and adding chain-of-thought to 57.6% on WebArena-Lite. That doesn't contradict the advice to give a reviewer roughly the same capability as the agent it reviews; planner and reviewer are different roles.
 
 - **Sequential:** the book translation lab runs Glossary → Translation → Proofreading under a manager that holds only the file index.
 - **Parallel:** workers report over a message bus. Redis Pub/Sub has no persistence, so a worker that is down misses messages; RabbitMQ persists them. The parallel-search lab runs 10 searchers that broadcast `target_found`; the manager takes a lock, sends `terminate` to the rest, and times out any worker after 2 minutes.

@@ -6,6 +6,7 @@ sources:
   - https://github.com/davidkimai/Context-Engineering (00_COURSE/05_memory_systems/00–04, 00_COURSE/03_context_management/02_memory_hierarchies.md) — snapshot 2026-08-14)
   - https://arxiv.org/abs/2610.29823
   - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2506.15841
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -306,7 +307,7 @@ Treating memory as an operating-system concern means each memory item has **meta
 
 ### MEM1: constant-size memory
 
-ReAct-style agents append every thought, action and observation, so context grows without bound. Zhou et al. (2506.15841) instead train agents to keep a single **internal state that is overwritten every turn**, merging new observations with what's worth keeping and discarding the rest. On long multi-hop QA it matches or beats larger models while using a near-constant amount of memory. The engineering takeaway doesn't need training: a fixed-size, rewritten state block outperforms an ever-growing log ([07](07-structured-context.md#2-state-schemas--what-carries-across-turns)).
+ReAct-style agents append every thought, action and observation, so context grows without bound. Zhou et al. (2506.15841) instead train agents to keep a single **internal state that is overwritten every turn**, merging new observations with what's worth keeping and discarding the rest. On a 16-question multi-hop QA task, MEM1-7B answered **3.5× more questions than Qwen2.5-14B while using 3.7× less peak memory**, and its memory stayed nearly flat as the number of questions grew ([arXiv:2506.15841](https://arxiv.org/abs/2506.15841)). The paper also tests the prompt without the training. Given MEM1's rewrite-the-state prompt, an untrained Qwen2.5-7B scored 0.40 exact matches against 0.17 with the full log, at a third of the peak tokens. So a fixed-size, rewritten state block beats an ever-growing log even without training ([07](07-structured-context.md#2-state-schemas--what-carries-across-turns)). Most of the gain still came from RL: the trained model scored 1.97, and fine-tuning on GPT-4o trajectories did much worse than RL.
 
 ![ReAct-style agents append every thought, action and observation; MEM1 replaces its internal state each step](../sources/images/zhou-mem1-fig1.png)
 *Image Source: Zhou et al. (2025)*

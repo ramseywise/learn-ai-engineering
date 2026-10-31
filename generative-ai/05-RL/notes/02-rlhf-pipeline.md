@@ -4,6 +4,7 @@ sources:
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2204.05862 (Anthropic HH-RLHF)
   - https://arxiv.org/abs/2303.08774 (GPT-4 technical report)
+  - https://arxiv.org/abs/1706.03741
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -84,7 +85,12 @@ Given responses y_w (preferred/"winner") and y_l (rejected/"loser") from prompt 
 P(y_w > y_l | x) = σ(r_θ(x, y_w) - r_θ(x, y_l))
 ```
 
-where `r_θ` is the reward model and `σ` is the sigmoid function. Training maximizes
+where `r_θ` is the reward model and `σ` is the sigmoid function. This setup predates LLMs.
+Christiano et al. ([arXiv:1706.03741](https://arxiv.org/abs/1706.03741), 2017) fit a
+Bradley-Terry reward model to non-expert comparisons of short trajectory clips. They used it to
+train Atari and MuJoCo agents with no access to the true reward, with humans labelling under
+1% of the agent's interactions. A simulated Hopper learned backflips from 900 comparisons,
+under an hour of one person's time. InstructGPT carried the recipe over to text. Training maximizes
 log-likelihood of human choices:
 
 ```
@@ -92,7 +98,10 @@ L_RM(θ) = -E[(x, y_w, y_l) ~ D] [ log σ(r_θ(x, y_w) - r_θ(x, y_l)) ]
 ```
 
 The reward model learns a total ordering over response quality. InstructGPT used ~33k
-comparison pairs from the same contractor pool.
+*prompts*, not pairs. Labelers ranked 4–9 responses per prompt, and every pair within a
+ranking became a comparison, so the real count was several times larger. All pairs from one
+prompt went into a single batch, which stops the reward model from overfitting to responses it
+sees in many pairs.
 
 ### Stage 3 — RL Optimization (PPO)
 
@@ -170,8 +179,10 @@ stability. DAPO and Open-Reasoner-Zero drop it; DeepSeek-R1-Zero's GRPO keeps it
 ### Alignment tax
 
 RLHF can reduce performance on capability benchmarks (coding, math, reasoning) while
-improving alignment metrics. InstructGPT noted a ~15% drop on some academic NLP tasks.
-Modern approaches (Constitutional AI, DPO with curated datasets) work to reduce this.
+improving alignment metrics. InstructGPT saw regressions on SQuAD, DROP, HellaSwag and WMT 2015
+French→English after PPO. Its fix was **PPO-ptx**: mix pretraining-gradient updates into
+PPO. That removed most of the regression without hurting labeler preference, and "InstructGPT" in
+the paper means the PPO-ptx model.
 
 ---
 
