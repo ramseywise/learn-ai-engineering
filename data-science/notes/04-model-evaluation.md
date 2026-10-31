@@ -196,6 +196,26 @@ On M&G's digits "is it a 9?" example, SVMs with `gamma` 1, 0.1 and 0.01 all have
 | Precision–recall | P vs R | Positive class rare; you care about the flagged set |
 | ROC | TPR vs FPR | Ranking quality overall; balanced-ish data |
 
+### Calibration: is a 0.8 really 80%?
+
+Thresholds and expected-cost decisions assume `predict_proba` means what it says. Check with a reliability diagram and fix with a held-out recalibration:
+
+```python
+from sklearn.calibration import CalibrationDisplay, CalibratedClassifierCV
+CalibrationDisplay.from_estimator(clf, X_test, y_test, n_bins=10)        # diagonal = calibrated
+cal = CalibratedClassifierCV(clf, method="sigmoid", cv=5).fit(X_train, y_train)   # Platt; "isotonic" with more data
+```
+
+| Model | Typical miscalibration |
+|---|---|
+| Logistic regression | Usually well calibrated |
+| Naive Bayes | Pushed towards 0 and 1 |
+| SVM (`decision_function`), boosted trees | Sigmoid-shaped distortion |
+| Random forest | Pulled away from 0 and 1 |
+| Deep networks | Overconfident; temperature scaling (one scalar on the logits) fixes most of it |
+
+Readings: Guo et al. 2017, *On Calibration of Modern Neural Networks* ([PDF](../sources/guo-2017-calibration-modern-neural-networks.pdf)), found modern deep nets overconfident and introduced temperature scaling; Minderer et al. 2021 ([PDF](../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf)) revisits this and finds recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size.
+
 ---
 
 ## Multiclass and regression metrics
@@ -294,6 +314,7 @@ The vendored M&G notebooks were written against scikit-learn 0.20. This repo's c
 | `GridSearchCV(..., iid=True)` | Drop `iid` | Removed 1.0 (0.24 deprecation) |
 | `LogisticRegression()` (convergence warnings on unscaled data) | `LogisticRegression(max_iter=1000)` or scale first | Default solver `lbfgs` since 0.22 |
 | `vectorizer.get_feature_names()` | `get_feature_names_out()` (all transformers) | Removed 1.2 |
+| `from sklearn.externals import joblib` | `import joblib` | Removed 0.23 |
 | `load_boston()` | `fetch_california_housing()` or `mglearn.datasets.load_extended_boston()` | Removed 1.2 |
 
 Where the fixes landed:
@@ -306,6 +327,7 @@ Where the fixes landed:
 | `01`, `03`, `06`, `08` | Clean |
 | `../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb` | `iid=True` removed from `GridSearchCV` (cells 41, 43) |
 | `04`, `07` and Sarkar `Ch04a`, `Ch06c`, `Ch06d`, `Ch06e`, `Ch07c`, `Ch09e` | `get_feature_names()` → `get_feature_names_out()` (2026-10-31; the 2026-07 audit missed it) |
+| Sarkar `Ch08c` | `sklearn.externals.joblib` → `joblib` (2026-10-31) |
 | Ng ML exercises | Clean (no sklearn) |
 
 `cross_validation` appearing in Sarkar's `Ch06b` is an LDA topic word in a notebook output, not an import.
