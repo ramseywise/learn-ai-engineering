@@ -9,7 +9,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 5 — Bayesian Inference
+# 9 — Bayesian Inference
 
 > Probability as a degree of belief. Start from a prior, update on data with Bayes' theorem, and keep the whole posterior distribution instead of a point estimate. Worked through four models: a coin, a texting-habit switchpoint, a privacy-preserving survey and the German tank problem.
 
@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 ## Two views of probability
 
-| | Frequentist (notes 01–04) | Bayesian (notes 05–09) |
+| | Frequentist (notes 02–08) | Bayesian (notes 09–13) |
 |---|---|---|
 | Probability is | long-run frequency of an event | degree of belief in an event |
 | Parameters are | fixed, unknown constants | random variables with distributions |
@@ -27,7 +27,7 @@ cleaned: 2026-10-31
 | Small N | wide intervals, unstable tests | prior regularises; posterior stays honest about uncertainty |
 | Large N | | converges to the frequentist answer: the likelihood swamps the prior |
 
-BMH ch. 1's framing: the frequentist asks "how often would I see data like this if the null were true?"; the Bayesian asks "given the data, what should I believe?". Both are useful. Bayesian methods earn their extra machinery when N is small, when you have real prior knowledge, or when the decision needs a probability ("how likely is B better than A?", note 08).
+BMH ch. 1's framing: the frequentist asks "how often would I see data like this if the null were true?"; the Bayesian asks "given the data, what should I believe?". Both are useful. Bayesian methods earn their extra machinery when N is small, when you have real prior knowledge, or when the decision needs a probability ("how likely is B better than A?", note 12).
 
 ---
 
@@ -63,7 +63,7 @@ Passing the tests raises your belief, but how far depends on where you started. 
 
 ## The coin: Beta-Binomial
 
-The cleanest Bayesian model, and the one under every Bayesian A/B test (note 08).
+The cleanest Bayesian model, and the one under every Bayesian A/B test (note 12).
 
 | Piece | Choice |
 |---|---|
@@ -244,11 +244,11 @@ The simulation in the talk also shows the bias-variance trade-off: the unbiased 
 
 | Want | Read |
 |---|---|
-| more PyMC mechanics | note 06 |
+| more PyMC mechanics | note 10 |
 | the talk's recommended path | BMH (this note), then McElreath's *Statistical Rethinking* ([sources/RM-StatRethink-Bayes.pdf](../sources/RM-StatRethink-Bayes.pdf)), then Gelman et al. *BDA3* |
 | Bayesian estimation as a t-test replacement | Kruschke, *Bayesian Estimation Supersedes the t Test* (BEST) |
 | the same ideas in plain Python | Downey, *Think Bayes* ([sources/think_bayes.pdf](../sources/think_bayes.pdf)) |
 
 ---
 
-→ Next: [06-mcmc-and-pymc.md](06-mcmc-and-pymc.md) — what `pm.sample` is actually doing, how to tell whether it worked, and how to port PyMC3 code to PyMC 5.
+→ Next: [10-mcmc-and-pymc.md](10-mcmc-and-pymc.md) — what `pm.sample` is actually doing, how to tell whether it worked, and how to port PyMC3 code to PyMC 5.

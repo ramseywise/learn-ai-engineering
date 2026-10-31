@@ -10,7 +10,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 2 — Hypothesis Testing
+# 4 — Hypothesis Testing
 
 > The null-hypothesis recipe, which test fits which data, what a p-value does and does not say, the non-parametric fallbacks, and why running twenty tests guarantees a false positive.
 
@@ -29,7 +29,7 @@ cleaned: 2026-10-31
 |---|---|
 | Type I error (α) | false positive: you reject a true H₀ |
 | Type II error (β) | false negative: you miss a real effect |
-| Power (1 − β) | chance of detecting an effect of a given size; note 03 |
+| Power (1 − β) | chance of detecting an effect of a given size; note 06 |
 | Effect size | how big the difference is, independent of N (Cohen's d, h, lift) |
 
 ### What a p-value is not
@@ -38,7 +38,7 @@ Reinhart's *Statistics Done Wrong* lists these; each is a common interview trap.
 
 | Wrong reading | Why it is wrong |
 |---|---|
-| "p = 0.03 means a 3% chance H₀ is true" | p assumes H₀ is true; it cannot be the probability of H₀. That needs a prior (note 05). |
+| "p = 0.03 means a 3% chance H₀ is true" | p assumes H₀ is true; it cannot be the probability of H₀. That needs a prior (note 09). |
 | "p = 0.2 means there is no effect" | the test may simply be underpowered |
 | "p = 0.0001 means a big effect" | with N in the millions, trivially small effects are significant; report the effect size and CI |
 | "p < 0.05 in one study, p > 0.05 in another, so they disagree" | the difference between significant and not significant is not itself significant |
@@ -159,8 +159,8 @@ reject, p_adj, _, _ = multipletests(p_values, alpha=0.05, method="holm")      # 
 ### Where multiplicity hides
 
 - **Many metrics** on one A/B test. Pick one primary metric in advance; treat the rest as exploratory.
-- **Many segments** ("it worked for Android users in Germany"). Each segment is a test. Also the small-N trap from note 01.
-- **Many looks** at the same test over time. That is peeking, note 03.
+- **Many segments** ("it worked for Android users in Germany"). Each segment is a test. Also the small-N trap from note 02.
+- **Many looks** at the same test over time. That is peeking, note 06.
 - **Data dredging.** The Michigan coursework script ([practice/courses/umich_statistical_analysis.py](../practice/courses/umich_statistical_analysis.py), week 4) lists three remedies: Bonferroni, holding out data to confirm what you found, and pre-registering what you expect and why.
 - **The garden of forking paths:** choices about outliers, transforms and subsets made after seeing the data. Reinhart's fix is to write the analysis plan first.
 
@@ -178,4 +178,4 @@ reject, p_adj, _, _ = multipletests(p_values, alpha=0.05, method="holm")      # 
 
 ---
 
-→ Next: [03-ab-testing.md](03-ab-testing.md) — hypothesis testing applied to product experiments: power, sample size, the two-proportion z-test and peeking.
+→ Next: [05-regression-and-glms.md](05-regression-and-glms.md) — the t-test as a regression: OLS, diagnostics, and logistic and Poisson GLMs.

@@ -70,7 +70,7 @@
 | | Paper | Link | Chapters |
 |---|---|---|---|
 | ★ | Miller, *Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations* (Anthropic, 2024): CLT error bars, clustered SEs, paired differences | [2411.00640](https://arxiv.org/abs/2411.00640) | 09 |
-| ★ | Dmitriev et al., *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017). [PDF](../../data-engineering/sources/2017-08-kddmetricinterpretationpitfalls.pdf) | — | 09, 11 |
+| ★ | Dmitriev et al., *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017). [PDF](../../data-analytics/sources/2017-08-kddmetricinterpretationpitfalls.pdf) | — | 09, 11 |
 
 ### Systems and practice
 

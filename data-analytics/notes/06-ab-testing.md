@@ -9,7 +9,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 3 — Frequentist A/B Testing
+# 6 — Frequentist A/B Testing
 
 > An A/B test is a two-sample hypothesis test with a sample size fixed in advance. Size it with a power calculation, randomise cleanly, test once with a two-proportion z-test, and report the lift with a confidence interval.
 
@@ -19,7 +19,7 @@ cleaned: 2026-10-31
 
 | Step | Decision | Failure if skipped |
 |---|---|---|
-| 1. Metric | one primary metric (conversion, revenue per user), plus guardrails | twenty metrics, one "wins" by chance (note 02) |
+| 1. Metric | one primary metric (conversion, revenue per user), plus guardrails | twenty metrics, one "wins" by chance (note 04) |
 | 2. Minimum detectable effect (MDE) | the smallest lift worth shipping | test runs forever or is underpowered |
 | 3. Sample size | power analysis from baseline, MDE, α, power | peeking, or stopping too early |
 | 4. Randomisation unit | user, not session or pageview | the same user sees both arms |
@@ -77,7 +77,7 @@ required_n = ceil(required_n)              # about 2360 per group
 | baseline closer to 50% | larger (variance p(1−p) peaks at 0.5) for the same absolute lift |
 | unequal split (ratio ≠ 1) | larger total N for the same power |
 
-The square in the formula is the LLN error rate from note 01: precision costs data quadratically.
+The square in the formula is the LLN error rate from note 02: precision costs data quadratically.
 
 ---
 
@@ -156,8 +156,8 @@ sum(pv < 0.05 for pv in pvs)   # several crossings; stopping at the first is a f
 |---|---|
 | a few planned interim looks | group-sequential design with O'Brien-Fleming or Pocock boundaries |
 | continuous monitoring | always-valid p-values / mSPRT (Optimizely, Eppo) |
-| you want a probability, not a test | Bayesian A/B, note 08 (peeking is less damaging, not free) |
-| you want to stop sending traffic to losers | a bandit, note 07 |
+| you want a probability, not a test | Bayesian A/B, note 12 (peeking is less damaging, not free) |
+| you want to stop sending traffic to losers | a bandit, note 11 |
 
 ---
 
@@ -167,11 +167,11 @@ sum(pv < 0.05 for pv in pvs)   # several crossings; stopping at the first is a f
 |---|---|---|
 | Novelty / primacy effect | lift fades after week one | run at least one full business cycle; look at lift by days since exposure |
 | Network effects | treatment users affect control users (marketplaces, social) | cluster randomisation by region or graph component |
-| Multiple metrics | a secondary metric "wins" | one primary metric, correct the rest (note 02) |
+| Multiple metrics | a secondary metric "wins" | one primary metric, correct the rest (note 04) |
 | Segment fishing | "it worked on iOS" | pre-register segments; treat others as hypotheses for the next test |
-| Simpson's paradox | arm mix differs across segments | stratify, note 04 |
+| Simpson's paradox | arm mix differs across segments | stratify, note 08 |
 | Variance too high | revenue tests never conclude | CUPED: regress out a pre-period covariate to cut variance |
 
 ---
 
-→ Next: [04-correlation-and-causation.md](04-correlation-and-causation.md) — what to do when you cannot randomise: confounding, Simpson's paradox, partial correlation and the quasi-experimental toolkit.
+→ Next: [07-experimentation-at-scale.md](07-experimentation-at-scale.md) — A/B testing on a platform: CUPED, always-valid sequential tests, sample ratio mismatch and metric pitfalls.

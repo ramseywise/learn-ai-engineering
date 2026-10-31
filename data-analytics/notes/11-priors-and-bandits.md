@@ -7,7 +7,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# 7 — Priors and Bandits
+# 11 — Priors and Bandits
 
 > How to choose a prior (objective, subjective, empirical, conjugate, Jeffreys), why the prior washes out as data grows, the regularisation-as-prior link, and Bayesian bandits: Thompson sampling as the online version of an A/B test.
 
@@ -40,7 +40,7 @@ BMH ch. 6's practical advice:
 | Normal(0, s) | ℝ | regression coefficients |
 | Wishart / LKJ | positive-definite matrices | covariance matrices; prefer LKJ in PyMC 5 |
 
-**Conjugate update for a rate:** Beta(1, 1) prior + X successes in N trials gives Beta(1 + X, 1 + N − X). This one line powers the bandit below and the Bayesian A/B test in note 08.
+**Conjugate update for a rate:** Beta(1, 1) prior + X successes in N trials gives Beta(1 + X, 1 + N − X). This one line powers the bandit below and the Bayesian A/B test in note 12.
 
 ---
 
@@ -158,7 +158,7 @@ Any strategy whose expected regret grows logarithmically "solves" the problem (i
 | Minimise instead (prizes are bad) | take `argmin` of the samples |
 | Non-stationary arms | learning rate: `wins = rate * wins + result`, `trials = rate * trials + 1`; `rate < 1` forgets old evidence faster |
 | Non-binary rewards | sample from the posterior of each arm's expected reward; needs MCMC if not conjugate |
-| Comment ranking | treat each comment as an arm with Beta(1 + U, 1 + D); on each page load, sample a score per comment and sort. New comments still get seen, unlike ranking by the lower bound (note 08) |
+| Comment ranking | treat each comment as an arm with Beta(1 + U, 1 + D); on each page load, sample a score per comment and sort. New comments still get seen, unlike ranking by the lower bound (note 12) |
 
 ### Bandit or A/B test?
 
@@ -170,4 +170,4 @@ Any strategy whose expected regret grows logarithmically "solves" the problem (i
 
 ---
 
-→ Next: [08-bayesian-ab-testing.md](08-bayesian-ab-testing.md) — the Bayesian answer to "is B better than A?": P(B > A), expected loss, and ranking by a lower credible bound.
+→ Next: [12-bayesian-ab-testing.md](12-bayesian-ab-testing.md) — the Bayesian answer to "is B better than A?": P(B > A), expected loss, and ranking by a lower credible bound.
