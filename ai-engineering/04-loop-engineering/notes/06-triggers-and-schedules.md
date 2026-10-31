@@ -45,6 +45,21 @@ A run-until-done loop needs a precise "done." A timer loop needs each run to be 
 
 **Prefer events to polling** when the source can notify you. A schedule that wakes up to find nothing is the most common waste in level-3 loops. When you must poll, put a **cheap deterministic pre-check** in front of the agent (fetch updates since the last run; wake the agent only if there's work).
 
+```mermaid
+flowchart LR
+    E["event<br/>Sentry · CI · ticket · Slack"] --> Q
+    T["schedule<br/>cron · /loop 15m"] --> P{"cheap pre-check<br/>(no model call):<br/>anything new since<br/>the last run?"}
+    P -->|no| X(["exit in seconds"])
+    P -->|yes| Q{"per-day cap<br/>left?"}
+    Q -->|no| AL(["alert, skip"])
+    Q -->|yes| L["agent loop<br/>per-run cap on steps,<br/>tokens and dollars"]
+    L --> SK{"scorekeeper"}
+    SK -->|green| OUT(["save, open PR, notify"])
+    SK -->|red or cap| ESC(["escalate to the inbox"])
+```
+
+Events go straight to the caps; a clock-driven run has to earn the model call through the pre-check first. Every unattended path ends at either the scorekeeper or a human.
+
 ---
 
 ## Claude Code

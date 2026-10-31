@@ -6,8 +6,10 @@ sources:
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter10.md
+  - https://arxiv.org/abs/2512.08296
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 7 — Failure Modes at Scale
 
@@ -34,7 +36,7 @@ Mechanical failures are mostly caught by the framework if you let it. Control fa
 | **Deadlock** | Run stalls at a join | A join waits for a branch that was never scheduled, or two nodes each wait for the other's output | Run idle with no node active | Make every join's inputs explicit; route errors to a node that still writes the expected key |
 | **Race on shared state** | `InvalidUpdateError`, or silently lost work outside LangGraph | Two parallel branches write one key with no reducer | The error, if your framework raises it | A reducer, or one writer per key ([03](03-state-and-reducers.md)) |
 | **Unbounded fan-out** | Token spend spikes; rate limits | `Send` over an input with no cap | Cost per run | Cap N; batch; budget per run *and* per node ([08](08-governance-and-production.md)) |
-| **Mis-routing** | Right answer from the wrong specialist, or a wrong answer from a confident one | Router prompt too vague; status values drift | Route distribution in traces; eval on the router alone | Treat the router as a classifier: give it a labelled test set ([06-eval](../../06-eval/README.md)) |
+| **Mis-routing** | Right answer from the wrong specialist, or a wrong answer from a confident one | Router prompt too vague; status values drift; a free-text label matched with an `else` default ([02](02-graph-primitives.md#edges-choose-what-runs-next), [05](05-topology-patterns.md#supervisor)) | Route distribution in traces; eval on the router alone; count of fallback-branch hits | Treat the router as a classifier: give it a labelled test set ([06-eval](../../06-eval/README.md)); constrain its output to a `Literal` with an explicit `unknown` route |
 | **File-space collision** | Parallel workers overwrite each other's files | Workers share a working directory | Diffs that don't match any one worker | One worktree or directory per worker |
 
 Every node that loops should be bounded on its own, not only the graph as a whole. n8n's workflow builder caps its Discovery node at 50 iterations and its Builder at 100 per session ([08](08-governance-and-production.md#case-study-n8ns-ai-workflow-builder)).
@@ -48,6 +50,8 @@ These failures only appear once work is parallel or spread across agents.
 ### Correlated errors
 
 Parallel workers usually share a model, a prompt template and a retrieval index. When one makes a mistake, the others tend to make the same one, so N agreeing workers are much less evidence than N independent ones. A synthesiser that counts votes will be confidently wrong. Vary what you can (sources, prompts, models), and make the synthesiser check claims against sources rather than against each other.
+
+The clearest example is a simulated court. Nine LLM "judges" each write an opinion on a case, and the majority opinion wins (Hamilton, 2023, [arXiv:2301.05327](https://arxiv.org/abs/2301.05327)). Raieli & Iuculano present it as a way to mitigate hallucination, then name the catch themselves: all nine judges are the same model, so they share its biases and the opinions come out repetitive. They suggest building the ensemble from different models (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 9). Nine copies of one model voting amounts to sampling one model nine times. That can smooth out sampling noise, but it can't outvote a bias all nine copies share.
 
 ### Verifiers need isolated context
 
@@ -66,6 +70,8 @@ Locks and reducers prevent **lost updates**, where two writers clobber one key. 
 ### Cascading amplification
 
 An early error becomes a premise for everything downstream. In the book's translation lab, the glossary agent rendered "reasoning" as 推理 (inference). The translator applied it faithfully, and the proofreader, checking against the glossary, saw perfect consistency and passed it. Every stage did its job and the error survived all of them. The fix is a check from an **independent perspective**: a reviewer that reads the output against the source, not against the upstream artifact.
+
+Topology sets how far an error travels. Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) counted trace-level errors relative to a single agent across six benchmarks: independent agents whose outputs were merged without any cross-checking amplified errors 17.2×, while a centralized orchestrator that validated workers' output before aggregating held it to 4.4×. Read that as descriptive: in their regression, once efficiency and overhead were controlled for, error amplification itself was not a significant predictor of success (p = 0.658).
 
 ### MAST: a taxonomy
 

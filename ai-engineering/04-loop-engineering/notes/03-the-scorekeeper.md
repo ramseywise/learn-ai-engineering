@@ -92,6 +92,16 @@ The maker trusts its own output and misses its own mistakes. Split the roles:
 - **Maker** produces the change.
 - **Checker** reviews it: a fresh agent with its own instructions and stricter rules, often a stronger model, and **without the maker's history**.
 
+```mermaid
+flowchart LR
+    S[("loop state<br/>what is next")] --> M["Maker<br/>one small change<br/>inside the write boundary"]
+    M -->|diff + hand-off| C["Checker<br/>fresh agent, no maker history<br/>runs the scorekeeper itself"]
+    SK[["scorekeeper<br/>tests · lint · held-out checks<br/>(outside the write boundary)"]] -.->|read-only| C
+    C -->|PASS| SAVE["save: commit,<br/>update state"]
+    C -->|FAIL + evidence| M
+    SAVE --> S
+```
+
 Three sources, one pattern:
 
 | Source | Maker | Checker |
@@ -101,6 +111,48 @@ Three sources, one pattern:
 | Google ADK | `RefinerAgent` | `CriticAgent` ([note 10](10-framework-bindings.md)) |
 
 A checker must be allowed to return **"clean."** A reviewer that cannot pass the work will make up findings. The same rule protects evolve loops ([note 08](08-self-improving-loops.md#the-anti-busywork-rule)).
+
+Two short prompts, adapted from *learn-harness-engineering* project 07, make the split concrete. Both read the loop contract ([note 09](09-failure-modes-and-guardrails.md#the-loop-contract)) and the loop state ([note 05](05-long-running-loops.md#memory-three-tiers-five-fields)). The maker does **one small change** inside the write boundary and checks its own work before handing over:
+
+```markdown
+## Your role
+You are the Maker. You implement one item per round and hand it to the Checker.
+1. Read the loop contract and loop state. "What is next" is your task;
+   the write boundary is your limit.
+2. Say your plan in two or three lines before editing.
+3. Make one small change. Run build, lint and unit tests yourself.
+4. Update "What was tried" in the state file.
+## Rules
+- Never edit tests, scoring scripts or the contract to make a check pass.
+- If the Checker's last report listed issues, fix those before anything new.
+- Judgment call or irreversible action? Add it to "Waiting for a human" and stop.
+## Hand-off
+Summary (1–3 lines) · Files changed · My checks (build/lint/tests)
+Where to look hardest: <the part you're least sure of>
+```
+
+The checker runs as a fresh agent, ideally a different or stronger model, and never trusts that summary:
+
+```markdown
+## Your role
+You are the Checker. Be strict, and be honest in both directions.
+1. Read the loop contract: the goal, the scorekeeper, the write boundary.
+2. Read the diff, not the Maker's summary of it.
+3. Run the scorekeeper commands yourself.
+## Checklist
+- Boundary: did any file outside the write boundary change? Were tests,
+  fixtures or scoring scripts touched? (Any yes is an automatic Fail.)
+- Tests: would they fail if the change were reverted?
+- Score: higher, equal or lower than the last score in the state file?
+## Report
+Verdict: PASS / FAIL / PASS WITH NOTES
+Scorekeeper output: <command>: <result> · Score: <before> → <after>
+Issues: [Critical | Medium | Minor] title · file:line · evidence · suggested fix
+A FAIL needs at least one Critical issue with evidence.
+A PASS needs the scorekeeper output to back it.
+```
+
+The original project-07 prompt told the checker that finding nothing was failure. This version deletes that line: PASS is a legitimate verdict when the scorekeeper output supports it.
 
 ---
 

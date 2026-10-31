@@ -5,6 +5,7 @@ sources:
   - https://vercel.com/kb/guide/how-to-run-a-multi-step-research-agent-on-vercel
   - https://vercel.com/i/what-are-agentic-workflows
   - https://www.langchain.com/blog/the-art-of-loop-engineering
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -37,6 +38,37 @@ A workflow agent that runs its `sub_agents` **in order, every pass**, until a st
 
 The documented refinement shape: `InitialWriterAgent` (draft) → `CriticAgent` (grade against criteria) → `RefinerAgent` (apply fixes, or call `exit_loop` when the critic returns its completion phrase, e.g. "No major issues found"). Sub-agents share state through the session state dict. Available in Python, TypeScript, Go and Java.
 
+```mermaid
+flowchart LR
+    W["InitialWriterAgent<br/>writes state['draft']"] --> C
+    subgraph L["LoopAgent 'Refine' · max_iterations=5 (backstop)"]
+        C["CriticAgent<br/>grades {draft}<br/>→ state['critique']"] --> R{"RefinerAgent:<br/>critique clean?"}
+        R -->|no: rewrite<br/>→ state['draft']| C
+    end
+    R -->|"yes: exit_loop()<br/>escalate = True"| D(["final draft"])
+    L -.->|cap reached| D2(["stop without<br/>a clean verdict"])
+```
+
+```python
+from google.adk.agents import LlmAgent, LoopAgent, SequentialAgent
+from google.adk.tools.tool_context import ToolContext
+
+def exit_loop(tool_context: ToolContext):
+    """Call only when the critic said 'No major issues found'."""
+    tool_context.actions.escalate = True     # ends the LoopAgent after this pass
+    return {}
+
+critic  = LlmAgent(name="CriticAgent",  instruction="Grade {draft} against the criteria...",
+                   output_key="critique")
+refiner = LlmAgent(name="RefinerAgent", instruction="If {critique} is clean, call exit_loop. "
+                   "Otherwise rewrite {draft}.", tools=[exit_loop], output_key="draft")
+
+refine = LoopAgent(name="Refine", sub_agents=[critic, refiner], max_iterations=5)  # backstop
+pipeline = SequentialAgent(name="Write", sub_agents=[initial_writer, refine])
+```
+
+`output_key` writes each agent's reply into session state, and `{draft}` / `{critique}` read it back into the next instruction. That's the whole memory between passes.
+
 Practices: write the completion criteria before the loop; always provide the escape hatch; keep `max_iterations` as the backstop, **not** the main exit.
 
 The critic/refiner split is the maker/checker pattern from [note 03](03-the-scorekeeper.md#maker-and-checker). Note that the critic's completion phrase is how it returns "clean."
@@ -52,7 +84,7 @@ The critic/refiner split is the maker/checker pattern from [note 03](03-the-scor
 
 **Durability** with `WorkflowAgent` from `@ai-sdk/workflow`: each tool's `execute` carries a `'use step'` directive, which makes it a checkpoint. Completed steps **replay from their recorded output** instead of running again, and failed steps retry automatically. Use `stream()` rather than `generate()` for long runs. Wiring: `withWorkflow()` in `next.config.ts`, `'use workflow'` on the workflow function.
 
-**Model routing per step**: a frontier model (`claude-fable-5`) for the loop's reasoning and synthesis, a smaller one (`claude-sonnet-5`) for aggregation and structured extraction via `generateObject()`. Model IDs use the `creator/model-name` format through the AI Gateway, with a failover list in `providerOptions.gateway.models`.
+**Model routing per step**: a frontier model (`claude-fable-5-1`) for the loop's reasoning and synthesis, a smaller one (`claude-sonnet-5-5`) for aggregation and structured extraction via `generateObject()`. Model IDs use the `creator/model-name` format through the AI Gateway, with a failover list in `providerOptions.gateway.models`.
 
 **Sandboxing** model-written code:
 
@@ -79,6 +111,13 @@ LangChain's four levels ([note 01](01-what-a-loop-is.md#the-map-of-this-pillar))
 
 In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edge that either loops back or routes to `END`, a `recursion_limit` as the hard cap, and a checkpointer for durability and human-in-the-loop interrupts. Once you are drawing the cycle as a graph, you're at the next layer: [05-graph](../../05-graph-engineering/README.md).
 
+What a running loop exposes to a watching human (*Learning LangChain*, ch. 8):
+
+- **Stream modes.** `stream_mode="updates"` (the default) yields `{node_name: output}` after each node, which tells you where the loop is. `"values"` yields the full state after each step. `"debug"` adds checkpoint, task and task-result events. Modes can be combined by passing a list. Token-level output comes from `astream_events(..., version="v2")`, filtered on `on_chat_model_stream`.
+- **Human controls** ([note 07](07-autonomy-ladder.md#the-controls-a-human-needs-while-a-loop-runs)), all keyed by `config={"configurable": {"thread_id": ...}}` on a graph compiled with a checkpointer. **Interrupt** by breaking out of the stream, wrapped in `aclosing` so the stream closes cleanly. **Resume** by invoking with `None` as input. **Restart** by invoking with new input on the same thread (a new `thread_id` starts blank). **Edit** with `get_state` and then `update_state`, which writes a new checkpoint. **Fork** by picking a config from `get_state_history` (most recent first) and invoking `None` against it.
+
+**Dated.** The book's **authorize** pattern passes `interrupt_before=["tools"]` at call time. Current LangGraph favours calling `interrupt()` inside the node and resuming with `Command(resume=...)`, which lets the node show the human a payload and receive a decision. Static `interrupt_before` at compile time is now mostly used for debugging. The examples also use `gpt-3.5-turbo`, which is retired.
+
 ---
 
 ## Working reference
@@ -87,4 +126,4 @@ In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edg
 
 ---
 
-→ Practice: [../practice/01-exercises.md](../practice/01-exercises.md) — build the loops from this syllabus.
+→ Back to the [README](../README.md).

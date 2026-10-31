@@ -82,8 +82,9 @@ The rules from the topic notes on one page. Each group links to the note that ex
 ├── notes/                  ← the topic notes (read in order)
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → prompt-engineering.pptx)
 └── sources/
-    ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/) and figures (images/), absorbed into notes/
-    └── images/               ← the DAIR guide's figures
+    ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/), absorbed into notes/
+    └── images/               ← figures used by notes and deck, flat: <author>-<slug>-fig<N>.<ext>
+                                (subfolders hold the DAIR guide's figures that are not used yet)
 ```
 
 ### Topic notes ([notes/](notes/))
@@ -127,11 +128,11 @@ Every source behind the notes, in one place. Local files come first, followed by
 
 | Source | Where | Use it for |
 |---|---|---|
-| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: [sources/prompt-eng-for-llms/images/](sources/prompt-eng-for-llms/images/) | The backbone of notes 01, 02, 04, 05, 06 and 09; its chapter notes are absorbed into them, and each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
+| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: `sources/images/berryman-prompt-engineering-for-llms-fig*.png` | The backbone of the pillar. Audited chapter by chapter (2026-10): ch. 1–3 → 01, 10; ch. 4–6 → 02, 03, 08; ch. 7–8 → 04, 05, 11; ch. 9 → 06; ch. 10 → 09 and eval [03–05](../06-eval/notes/); ch. 11 → 07. Each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
 | DAIR.AI *Prompt Engineering Guide* | [promptingguide.ai](https://www.promptingguide.ai/) · [GitHub](https://github.com/dair-ai/Prompt-Engineering-Guide) | The technique catalog (notes 03, 08, 10, 11). Its pages are absorbed into the notes, so check the live site for new additions |
 | DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [figures](sources/images/) | A one-hour 2023 overview; a good first pass. Its slides are superseded by our [deck](slides/deck.yaml) |
 
-The DAIR notebooks were absorbed into the notes as code snippets (each is credited where it appears). The two that run on their own moved to 02-context: [pe-rag.ipynb](../02-context-engineering/notebooks/pe-rag.ipynb) and [gemini-context-caching.ipynb](../02-context-engineering/notebooks/gemini-context-caching.ipynb).
+The DAIR notebooks were absorbed into the notes as code snippets (each is credited where it appears). The two that ran on their own (retrieval-augmented generation and Gemini context caching) went to 02-context and are folded into its notes ([04-retrieval](../02-context-engineering/notes/04-retrieval.md)).
 
 ### Elsewhere in this repo
 
@@ -139,14 +140,14 @@ These are books and papers already on disk that cover prompting from another ang
 
 | Reading | Where | Why |
 |---|---|---|
-| ★ Huyen, *AI Engineering* (O'Reilly 2025) — **Ch 5, Prompt Engineering** | [readings/ai_engineering/ai engineer/](<../readings/ai_engineering/ai engineer/5. Prompt Engineering _ AI Engineering.pdf>) | The best single chapter on prompting *as engineering*: in-context learning, prompt attacks and defenses, and prompt versioning. Ch 3–4 (evaluation) go with [09](notes/09-evaluating-prompts.md) |
-| Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly 2024) | [generative-ai/01-llm-fundamentals/readings/](<../../generative-ai/01-llm-fundamentals/readings/>) | The "five principles of prompting" (Ch 1), text-generation practice (Ch 3) and LangChain chaining (Ch 4). Ch 7–9 cover image prompting |
-| *Building Applications with AI Agents* — Ch 4 (Tool Use), Ch 12 (Protecting Agentic Systems) | [readings/ai_engineering/ai_agent_applications/](<../readings/ai_engineering/ai_agent_applications/>) | Goes deeper than [05](notes/05-tools-and-function-calling.md) and [10](notes/10-adversarial-prompting.md) |
-| Wei et al., *Chain-of-Thought Prompting* (2201.11903) | [readings/general/2201.11903v6.pdf](../readings/general/2201.11903v6.pdf) | The CoT paper ([03](notes/03-core-techniques.md#chain-of-thought)) |
-| Ouyang et al., *InstructGPT* (2203.02155) | [readings/general/2203.02155v1.pdf](../readings/general/2203.02155v1.pdf) | Why chat models follow instructions ([01](notes/01-how-models-read-prompts.md)) |
-| Bai et al., *Constitutional AI* (2212.08073) | [readings/general/2212.08073v1.pdf](../readings/general/2212.08073v1.pdf) | Principles-as-prompts; model self-critique |
-| Manakul et al., *SelfCheckGPT* (2303.08896) | [readings/general/2303.08896v3.pdf](../readings/general/2303.08896v3.pdf) | Sampling-consistency hallucination checks ([10 — factuality](notes/10-adversarial-prompting.md#factuality)) |
-| Zhao et al., *A Survey of LLMs* (2303.18223) | [readings/general/2303.18223v16.pdf](../readings/general/2303.18223v16.pdf) | Its section on prompting and in-context learning |
+| ★ Huyen, *AI Engineering* (O'Reilly 2025) — **Ch 5, Prompt Engineering** | [sources/huyen-ai-engineering/ch05](sources/huyen-ai-engineering/ch05-prompt-engineering.pdf) · figures: `sources/images/huyen-ai-engineering-fig5-*.png` | The best single chapter on prompting *as engineering*. Folded in as: ch. 5 chat templates → [01](notes/01-how-models-read-prompts.md); lost-in-the-middle and NIAH → [02](notes/02-prompt-anatomy.md#ordering); few-shot on strong models → [03](notes/03-core-techniques.md#few-shot); decomposition cost → [06](notes/06-chaining-and-workflows.md#why-split); prompt catalogs and tool pitfalls → [08](notes/08-prompt-optimization.md); automated attacks, training-data extraction, instruction hierarchy, violation vs. false-refusal rate → [10](notes/10-adversarial-prompting.md). Notes cite it as `(*AI Engineering*, ch. N)`. Ch 3–4 (evaluation) and ch. 10 (user feedback) are folded into the eval pillar ([06-eval references](../06-eval/references.md#books-and-courses)) and back [09](notes/09-evaluating-prompts.md) |
+| Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly 2024) | [generative-ai/01-llm-fundamentals/sources/](<../../generative-ai/01-llm-fundamentals/sources/>) | The "five principles of prompting" (Ch 1), text-generation practice (Ch 3) and LangChain chaining (Ch 4). Ch 7–9 cover image prompting. Folded in (2026-10) as: ch. 1 → [02](notes/02-prompt-anatomy.md), [03](notes/03-core-techniques.md#few-shot), [04](notes/04-controlling-output.md) (including a contradiction on its Fig 1-13), [09](notes/09-evaluating-prompts.md); ch. 3 → [03](notes/03-core-techniques.md), [04](notes/04-controlling-output.md), [06](notes/06-chaining-and-workflows.md), eval [05](../06-eval/notes/05-llm-as-judge.md); ch. 8 (Midjourney) → [11](notes/11-applications.md#prompting-image-generators); ch. 10 → [06](notes/06-chaining-and-workflows.md), [09](notes/09-evaluating-prompts.md). Figures: `sources/images/prompt-engineering-for-generative-ai-fig1-13.png`, `-fig10-1.png`. Notes cite it as `(*Prompt Engineering for Generative AI*, ch. N)` |
+| *Building Applications with AI Agents* — Ch 4 (Tool Use), Ch 12 (Protecting Agentic Systems) | [ch04](../03-harness-engineering/sources/building-applications-with-ai-agents/ch04-tool-use.pdf), [ch12](../03-harness-engineering/sources/building-applications-with-ai-agents/ch12-protecting-agentic-systems.pdf) | Goes deeper than [05](notes/05-tools-and-function-calling.md) and [10](notes/10-adversarial-prompting.md) |
+| Wei et al., *Chain-of-Thought Prompting* (2201.11903) | [sources/wei-2022-…](sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf) | The CoT paper ([03](notes/03-core-techniques.md#chain-of-thought)) |
+| Ouyang et al., *InstructGPT* (2203.02155) | [05-RL/sources/ouyang-2022-…](../../generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf) | Why chat models follow instructions ([01](notes/01-how-models-read-prompts.md)) |
+| Bai et al., *Constitutional AI* (2212.08073) | [05-RL/sources/bai-2022-…](../../generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf) | Principles-as-prompts; model self-critique |
+| Manakul et al., *SelfCheckGPT* (2303.08896) | [06-eval/sources/manakul-2023-…](../06-eval/sources/manakul-2023-selfcheckgpt.pdf) | Sampling-consistency hallucination checks ([10 — factuality](notes/10-adversarial-prompting.md#factuality)) |
+| Zhao et al., *A Survey of LLMs* (2303.18223) | [01-llm-fundamentals/sources/zhao-2023-…](../../generative-ai/01-llm-fundamentals/sources/zhao-2023-survey-large-language-models.pdf) | Its section on prompting and in-context learning |
 
 ### Vendor guides
 
@@ -175,9 +176,12 @@ These are the papers behind [03 — core techniques](notes/03-core-techniques.md
 |---|---|---|
 | Few-shot / in-context learning | Brown et al., *Language Models are Few-Shot Learners* (GPT-3) | 2005.14165 |
 | What makes few-shot work | ★ Min et al., *Rethinking the Role of Demonstrations* | 2202.12837 |
+| Many-shot ICL and OOD brittleness | de Wynter, *Is In-Context Learning Learning?* · [PDF](sources/wynter-2025-context-learning-learning.pdf) | 2509.10414 |
 | Instruction tuning (why zero-shot works) | Wei et al., *Finetuned Language Models Are Zero-Shot Learners* (FLAN) | 2109.01652 |
 | Chain-of-thought | ★ Wei et al. | 2201.11903 |
 | Zero-shot CoT ("Let's think step by step") | Kojima et al. | 2205.11916 |
+| Where CoT helps (math and symbolic) | ★ Sprague et al., *To CoT or not to CoT?* · [PDF](sources/sprague-2024-cot-or-not-cot.pdf) | 2409.12183 |
+| CoT under distribution shift | Zhao et al., *Is Chain-of-Thought Reasoning of LLMs a Mirage?* · [PDF](sources/zhao-2025-chain-thought-reasoning-llms-mirage.pdf) | 2508.01191 |
 | Auto-CoT | Zhang et al. | 2210.03493 |
 | Multimodal CoT | Zhang et al. | 2302.00923 |
 | GraphPrompt | Liu et al. | 2302.08043 |
@@ -190,6 +194,7 @@ These are the papers behind [03 — core techniques](notes/03-core-techniques.md
 | Active-Prompt | Diao et al. | 2302.12246 |
 | Directional stimulus prompting | Li et al. | 2302.11520 |
 | Reflexion | Shinn et al. | 2303.11366 |
+| Format restrictions vs reasoning ([04](notes/04-controlling-output.md#structured-output)) | Tam et al., *Let Me Speak Freely?* · [PDF](sources/tam-2024-let-me-speak-freely.pdf) | 2408.02442 |
 
 **Background:** Kaplan et al., *Scaling Laws* (2001.08361) · Christiano et al., *RLHF from human preferences* (1706.03741) · Bubeck et al., *Sparks of AGI* (2303.12712) — the source of the TiKZ unicorn and other probes in the [prompt library](notes/prompt-library.md).
 
@@ -208,6 +213,7 @@ For [08](notes/08-prompt-optimization.md).
 | Meta-prompting (structure-oriented) | Zhang et al. | 2311.11482 |
 | DSPy | ★ Khattab et al. · [dspy.ai](https://dspy.ai) | 2310.03714 |
 | TextGrad | Yuksekgonul et al. | 2406.07496 |
+| GEPA — reflective prompt evolution | Agrawal et al., *GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning* · [PDF](sources/agrawal-2025-gepa.pdf) | 2507.19457 |
 
 ### Reasoning models
 
@@ -217,6 +223,7 @@ For [07](notes/07-prompting-reasoning-models.md). This area moves fastest, so ch
 - DeepSeek-AI, *DeepSeek-R1: Incentivizing Reasoning Capability via RL* — 2501.12948
 - Raschka, [*Understanding Reasoning LLMs*](https://magazine.sebastianraschka.com/p/understanding-reasoning-llms) — an overview of how reasoning models are trained
 - *The Pitfalls of Reasoning for Instruction Following* — 2505.11423 (explicit CoT hurts instruction-following)
+- Ma et al., *Reasoning Models Can Be Effective Without Thinking* — 2504.09858 · [PDF](sources/ma-2025-reasoning-models-can-be-effective.pdf) (NoThinking prefill plus parallel sampling)
 - Anthropic, *Reasoning Models Don't Always Say What They Think* — 2505.05410 (CoT faithfulness)
 - Shojaee et al., [*The Illusion of Thinking*](https://machinelearning.apple.com/research/illusion-of-thinking) (Apple, 2025) — collapse on harder puzzles; read it with the rebuttals it prompted
 
@@ -226,7 +233,7 @@ For [09](notes/09-evaluating-prompts.md). Deeper material is in [06-eval](../06-
 
 - ★ Book Ch 10 — [sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf](sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf)
 - Clavié et al., *Large Language Models in the Workplace* — 2303.07142 (the case-study table)
-- Huyen, *AI Engineering* Ch 3–4 — [readings/ai_engineering/ai engineer/](<../readings/ai_engineering/ai engineer/>)
+- Huyen, *AI Engineering* Ch 3–4 — [ch03](../06-eval/sources/huyen-ai-engineering/ch03-evaluation-methodology.pdf), [ch04](../06-eval/sources/huyen-ai-engineering/ch04-evaluate-ai-systems.pdf)
 - Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena* — 2306.05685 (judge biases: position, verbosity, self-preference)
 - Husain, [*Your AI Product Needs Evals*](https://hamel.dev/blog/posts/evals/) — the practitioner's case for building the eval first
 
@@ -268,6 +275,17 @@ These are broader or more opinionated pieces, good once the notes feel familiar.
 - [Learn Prompting](https://learnprompting.org) — a beginner-friendly open course, an alternative to DAIR
 - Li, *AI Agents in Depth*, [ch. 2 §Prompt Engineering](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) — system-prompt design for agents. Labs: τ-bench prompt ablation (2-4), injection attacks (2-5), attention visualization (2-2), prompt patches from failures (8-3). Synthesised into [02](notes/02-prompt-anatomy.md) and [10](notes/10-adversarial-prompting.md), which link the labs upstream.
 - Context engineering — the successor framing (Karpathy, LangChain, Schmid, Lance Martin). Collected in [02-context](../02-context-engineering/README.md)
+
+### AI Papers of the Week
+
+Papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`).
+
+| Paper | Why read it | PDF | Maps to |
+|---|---|---|---|
+| Shojaee et al. (Apple), [*The Illusion of Thinking*](https://arxiv.org/abs/2506.06941) (Jun 2025) | On puzzles with tunable difficulty, non-thinking models match or beat thinking ones on easy instances. Thinking helps on medium ones, and both collapse to zero on hard ones, where thinking tokens drop despite budget left. The collapse is partly an artifact: full move lists overrun the output limit, and some River Crossing instances are unsolvable ([Lawsen, 2506.09250](https://arxiv.org/abs/2506.09250)) | [2506.06941](sources/illusion-thinking-2025.pdf) | [07](notes/07-prompting-reasoning-models.md#whats-different) |
+| Zaremba et al. (OpenAI), [*Trading Inference-Time Compute for Adversarial Robustness*](https://arxiv.org/abs/2501.18841) (Jan 2025) | More reasoning compute drives attack success on o1-preview and o1-mini towards zero for injections with an unambiguous goal, with no adversarial training. Human red-teamers needed 22.6 attempts at the highest compute vs. 11.0 at the lowest. No gain on ambiguous misuse prompts. Vendor-run | [2501.18841](sources/trading-test-time-compute-adversarial-2025.pdf) | [10](notes/10-adversarial-prompting.md#defenses-weakest-to-strongest) |
+| OpenAI, [*OpenAI o1 System Card*](https://arxiv.org/abs/2412.16720) (Dec 2024) | Adds a developer role (system > developer > user). o1 resolves role conflicts better than GPT-4o (0.78 vs. 0.68 developer over user) and holds a tutor instruction against jailbreaks 0.95 vs. 0.33. A CoT monitor flagged 0.17% of 102,443 chains as deceptive. Vendor self-report | [2412.16720](sources/openai-o1-2024.pdf) | [10](notes/10-adversarial-prompting.md#defenses-weakest-to-strongest), [07](notes/07-prompting-reasoning-models.md#known-failure-modes) |
+| Andriushchenko (EPFL), [*Adversarial Attacks on GPT-4 via Simple Random Search*](https://www.andriushchenko.me/gpt4adv.pdf) (Dec 2023) | Random search over a 10-character suffix, guided by the top-5 logprobs, raises P("Sure") on `gpt-4-1106-preview` from ≈1% to >50% for under $1. Two hand-picked requests and no success rate; superseded by [2404.02151](https://arxiv.org/abs/2404.02151) | [gpt4adv](sources/adversarial-attacks-gpt-4-2023.pdf) | [10](notes/10-adversarial-prompting.md#automated-attacks) |
 
 ---
 

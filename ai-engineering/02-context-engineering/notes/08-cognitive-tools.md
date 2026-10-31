@@ -25,9 +25,16 @@ cleaned: 2026-10-28
 
 The key design choice is that **each tool runs in its own context**. The tool call goes out with only what that step needs, and only the result comes back into the main trace. That is context isolation ([10](10-tools-and-multi-agent.md)) applied to reasoning.
 
-Result: GPT-4.1 on AIME 2024 rises from **26.7% to 43.3%**, approaching o1-preview, with similar gains on open-weight models. No training is involved, only structured prompting.
+![Cognitive prompting puts all operations in one prompt; cognitive tools run each operation as a separate call with its own prompt](../sources/images/ebouky-cognitive-tools-fig1.png)
+*Image Source: Ebouky et al. (2025)*
 
-Two caveats. These gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
+Panel A is *cognitive prompting*: every operation is listed in one prompt and runs in one trace. Panel B is *cognitive tools*: each operation is a tool call with its own prompt, and only its output returns to the main trace.
+
+Result: GPT-4.1 on AIME 2024 rises from **32.0% to 53.0%** pass@1, past o1-preview's 44.6%. No training is involved, only structured prompting. The comparison that matters most for context engineering is the middle condition. The same four operations listed in one prompt (cognitive prompting) reached **42.0%**. **Isolating each operation in its own call is worth another 11 points** over just naming the operations.
+
+Open-weight models gain too, but the gain grows with model size. Qwen2.5-32B on AIME went from 17.2% to 32.1% and Llama3.3-70B from 13.1% to 29.8%. Qwen2.5-7B (12.5% → 14.6%) and Llama3.1-8B (5.8% → 8.8%) barely moved. Those numbers are averaged over at least 8 runs ([arXiv:2506.12115](https://arxiv.org/abs/2506.12115) (Ebouky et al., 2025-06)).
+
+Two caveats. The tool prompts were hand-written and tuned to the models tested; the authors warn they may not transfer to other model families without more prompt work. And these gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
 
 ---
 
@@ -100,7 +107,36 @@ def self_correct(problem, max_iter=3):
     return solution
 ```
 
-Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [loop engineering](../../04-loop-engineering/loop-engineering.md).
+Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [03-harness — verification loops](../../03-harness-engineering/notes/05-verification-loops.md) and [04-loop — layered exits](../../04-loop-engineering/notes/09-failure-modes-and-guardrails.md#layered-exits).
+
+The swap is small. Here the verifier is Python's own compiler, from the upstream course's `03_control_loops.py`:
+
+````python
+import re
+
+def python_validator(response):
+    blocks = re.findall(r"```python(.*?)```", response, re.DOTALL)
+    if not blocks:
+        return False, "No Python code block found."
+    for i, block in enumerate(blocks, 1):
+        try:
+            compile(block, "<llm>", "exec")       # syntax only; tests would check behaviour
+        except SyntaxError as e:
+            return False, f"Syntax error in block {i}: {e}"
+    return True, "ok"
+
+def generate_checked(task, validate=python_validator, max_attempts=3):
+    prompt = task
+    for _ in range(max_attempts):
+        out = llm(prompt)
+        ok, feedback = validate(out)
+        if ok:
+            return out
+        prompt = f"{task}\n\nYour previous answer:\n{out}\n\nProblem: {feedback}\nFix it."
+    raise ValueError(f"still failing after {max_attempts} attempts: {feedback}")
+````
+
+The opposite design is a weak one. The upstream `07_recursive_patterns.py` stops its self-reflection loop when the model's *own* quality score (parsed by regex, default 0.5) clears 0.8. A self-graded stop condition inherits the blind spots the loop was meant to catch, so treat it as a demo, not a pattern.
 
 ---
 
@@ -130,6 +166,27 @@ Why this works when it does:
 
 Programs compose: `understand → analyze_tradeoffs → verify`. They can branch ("if fewer than two options survive step 3, expand the search") and loop (refine until the verifier passes).
 
+In code, a program is a list of operations plus shared state that later templates can read. This is the shape of the upstream `05_prompt_programs.py` `MultiStepProgram`:
+
+```python
+program = [
+    {"name": "reason",  "system": "You are a careful analyst.",
+     "template": "Solve step by step:\n{problem}"},
+    {"name": "verify",  "system": "You are a critical reviewer.",
+     "template": "Problem: {problem}\nSolution:\n{reason}\nList any errors, or say NONE."},
+    {"name": "correct", "system": "You are a careful analyst.",
+     "template": "Problem: {problem}\nDraft:\n{reason}\nReview:\n{verify}\nGive the final answer."},
+]
+
+def run(program, **inputs):
+    state = dict(inputs)
+    for op in program:
+        state[op["name"]] = llm(op["template"].format(**state), system=op["system"])
+    return state                       # every intermediate output, for audit
+```
+
+Because the steps are data, you can log, diff and eval each one, and reorder or drop steps without touching the runner.
+
 ### Cognitive tools vs. prompt programs
 
 | | Cognitive tool | Prompt program |
@@ -152,7 +209,7 @@ The IBM result favours the tool version. The best results came when **the model 
 
 ## Upstream library (what was condensed here)
 
-The upstream `cognitive-tools/` held about 100k words: the template families above, a program library (basic and advanced programs), domain schemas ([07](07-structured-context.md)) and "architectures" that compose tools into solver, tutor and research agents ([13](13-putting-it-together.md)). Copyable versions of the core templates are in [templates/prompts/](../templates/prompts/) (chain of thought, few-shot, minimal context, verification loop) and [prompt_program_template.py](../templates/prompt_program_template.py).
+The upstream `cognitive-tools/` held about 100k words: the template families above, a program library (basic and advanced programs), domain schemas ([07](07-structured-context.md)) and "architectures" that compose tools into solver, tutor and research agents ([13](13-putting-it-together.md)). The upstream repo keeps copyable versions of the core templates (chain of thought, few-shot, minimal context, verification loop) and a `prompt_program_template.py`: [davidkimai/Context-Engineering](https://github.com/davidkimai/Context-Engineering/tree/main/20_templates).
 
 ---
 

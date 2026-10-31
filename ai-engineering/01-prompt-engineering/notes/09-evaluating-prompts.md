@@ -4,8 +4,9 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - https://www.promptingguide.ai/applications/workplace_casestudy
   - https://arxiv.org/abs/2303.07142
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 10"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 9 — Evaluating Prompts
 
@@ -16,6 +17,8 @@ cleaned: 2026-10-28
 ## Build the eval first
 
 The evaluation framework is the oldest part of the GitHub Copilot codebase — older than the prompts or the UI. Without one, every change is a guess. **Always log latency and token counts too**: they're cheap to capture and catch regressions that have nothing to do with quality.
+
+Phoenix & Taylor tell the Copilot story differently: its builders "admit their eval process was haphazard and messy (but it got the job done!)", which they use to argue that testing doesn't have to be systematic (*Prompt Engineering for Generative AI*, ch. 10). The two accounts can both be true, since a harness can exist early and still be messy. Berryman was on the Copilot team. Take the shared point, that some testing beats none, and build the harness anyway.
 
 What you're testing determines the shape of the eval:
 
@@ -35,10 +38,12 @@ There are two settings. **Offline** eval runs on example cases, needs no users a
 
 ## Offline: the tech tree
 
-![Offline eval tech tree](../sources/prompt-eng-for-llms/images/fig-10-1-offline-eval-tech-tree.png)
+![Offline eval tech tree](../sources/images/berryman-prompt-engineering-for-llms-fig10-1.png)
 *Berryman & Ziegler, Fig 10-1.*
 
-**Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus content to suppress (ask for two paragraphs, show one; [04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
+**Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus wild guesses about why the PR was written. The fix for those was to ask for a paragraph on the functionality and a second on how it fits the project's goals, then show only the first ([04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
+
+Phoenix & Taylor's version of level 1 is a blind A/B in a notebook. They run each prompt variant 5 times, shuffle the 10 outputs, and rate each one thumbs-up or thumbs-down without seeing which prompt produced it. It surfaces problems fast. In their run the zero-shot prompt returned a numbered list where they wanted a comma-separated line, and they find a deviation in fewer than 10 runs as a rule (*Prompt Engineering for Generative AI*, ch. 1). It's a bug finder, not a way to pick a winner. Five samples per arm from one rater, who also wrote the prompts, can't separate two decent prompts ([06-eval/09](../../06-eval/notes/09-reading-results.md#how-many-tasks)). Their other observation is worth keeping: iterating against even a crude check often shows that much of a long prompt is superfluous or counterproductive, and the shorter prompt is cheaper and faster at the same quality.
 
 **Level 2 — the harness.** Hundreds to thousands of examples with **automatic scoring**, needed to see subtle effects. It has two independent problems: **where samples come from** and **how outputs are scored**.
 
@@ -56,11 +61,23 @@ Synthetic data works best when you can **start from the solution and invent the 
 
 ### Scoring outputs
 
-From most to least rigorous:
+From easiest to hardest to set up (the book's order, which is not an order of rigor; a repo's own unit tests can be stricter than a gold string):
 
-1. **Gold-standard match.** Exact match for labels; *partial* match on the one aspect that matters for free text. For classification, compare **logprobs** rather than the sampled label, which gives more statistical power from the same samples ([04](04-controlling-output.md)). Free-text exact match is vanishingly rare and only measures style. Pick an aspect that separates breaking from benign divergence, and that's neither so narrow it's unattainable nor so broad it's meaningless. For example, for "I'm chilly" the gold answer sets the heat to 77°F. Check *did it touch the heating system?*, because 74°F is a sane miss and touching the lights is a real failure. For code, check for an exact match after stripping comments and whitespace. For tool calls, test in order — *called a tool? → right tool? → valid syntax? → right values?* — because an early failure invalidates the later checks.
-2. **Functional test.** Does it parse, compile, pass the repo's own unit tests, and call only tools that exist with correctly typed arguments? The domain supplies the oracle. Copilot replayed function bodies in open-source repos and ran each repo's test suite (falling back to linter agreement). Often too weak alone, but sometimes surprisingly strong.
+1. **Gold-standard match.** Exact match for labels; *partial* match on the one aspect that matters for free text. For yes/no or classification, counting matches is enough. If you want more statistical power from the same samples, score the label's **logprob** instead ([04](04-controlling-output.md)). Free-text exact match gets rarer the longer the answer, until the metric is meaningless, and before that it rewards phrasing over correctness. Pick an aspect that separates breaking from benign divergence, and that's neither so narrow it's unattainable nor so broad it's meaningless. For example, for "I'm chilly" the gold answer sets the heat to 77°F. Check *did it adjust the heating at all?*, because 76°F is a sane miss, while chatting about blankets, setting the oven or adding chilli to the shopping list is a real failure. A sensible tool call with an absurd value (0°F) is possible but less likely. For code, check for an exact match after stripping comments and whitespace. For tool calls, score the first decision with a real chance of going wrong and treat the later ones as void if it fails: *called a tool? → right tool? → valid syntax?* Stop before exact values, where a different answer is often still reasonable. The aspect you pick comes from watching where your current setup fails, which is circular, but still better than a weak or misleading aspect.
+
+   ![Testing the right tool with the right syntax](../sources/images/berryman-prompt-engineering-for-llms-fig10-3.png)
+   *No tool, the wrong tool, bad syntax, a wrong parameter name or an out-of-range value make the suggestion useless. A correct call with a different value (75–79°F) is probably fine. Image Source: Berryman & Ziegler (2024), Fig. 10-3*
+2. **Functional test.** Does it parse, compile, pass the repo's own unit tests, and call only tools that exist with correctly typed arguments? The domain supplies the oracle. Copilot replayed function bodies in open-source repos and ran each repo's test suite. A weaker version checks only that linters accept the code. Often too weak alone, but sometimes surprisingly strong.
 3. **LLM-as-judge** — for qualities like helpfulness and tone. See below.
+
+Cheap programmatic checks belong next to these. Phoenix & Taylor's list: cost and latency per prompt, the number of calls per task, classification accuracy against labels, hallucination measured as terms that appear in the output but nowhere in the context, refusal rate by matching known refusal phrases, resistance to known injection strings, and similarity to a reference (*Prompt Engineering for Generative AI*, ch. 1).
+
+**Similarity to a reference is the weakest of these, so read its results carefully.** Phoenix & Taylor score four prompts for rewriting text in Mike Taylor's style (the text says "five different prompt approaches" but lists four). The metric is the cosine distance between ada-002 embeddings of the output and of a hand-rewritten reference, on three topics (*Prompt Engineering for Generative AI*, ch. 10):
+
+![Average embedding distance per prompt variant and test case](../sources/images/prompt-engineering-for-generative-ai-fig10-1.png)
+*Image Source: Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 10-1*
+
+The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 against the control's 0.052 (−17.75%). Before you act on a table like this, notice what it leaves out. It has three cases. It doesn't give the number of runs, though the text recommends 10 or more per case. It shows no spread, so a 0.009 difference has no error bar. And the winner changes with the case: D is best on Memetics, B on the other two. An embedding distance also rewards matching the topic and wording, and style is what's being tested. The authors' general advice is right: run several cases, many times each. The table just doesn't show that it was followed. For the same style task they suggest fine-tuning if you have enough samples (OpenAI recommends at least 50), or DSPy to search instructions and examples against your metric ([08](08-prompt-optimization.md)).
 
 **Decision checklist** (pick one of each):
 
@@ -70,36 +87,39 @@ From most to least rigorous:
 | App usage | Is the trickle fast enough, given app changes? | Functional test | Can you isolate an automatable critical aspect? |
 | Synthetic | Worth the synthesis effort? | LLM judge | Can people tell good from bad outputs? |
 
-**Multi-turn:** use **canned conversations** (score each turn against a scripted history — isolates turns but misses compounding errors) or an **LLM-mocked user** (end-to-end, but inherits the mock's biases).
+**Multi-turn:** use **canned conversations** (score each turn against a scripted history — isolates turns but misses compounding errors) or an **LLM-mocked user** played from a user profile, like an improv brief (end-to-end, but inherits the mock's misreadings of the domain and its assumptions about how users behave; often the best you can do).
 
 ---
 
 ## LLM-as-judge
 
-**Never let the model know it's grading its own work.** Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to defer at any hint of doubt. Frame the work as a third party's.
+**Never let the model know it's grading its own work.** The book ranks the framings: a judge is most accurate grading a third party, a bit worse grading "the user", and much worse grading itself. Self-grading gets pulled two ways at once: forum-style pretraining data isn't known for objective self-reflection, and RLHF trains the model to recant at any hint of doubt. Frame the work as a third party's.
 
 **SOMA** — a rubric recipe:
 
 | | Rule | Why |
 |---|---|---|
-| **S**pecific questions | "Did it pick the heating system?" — not "Is this right?" | A generic question is as hard as the task, and more ambiguous |
-| **O**rdinal scale | 1–5, with each level described | Yes/no hides degrees; undefined levels drift between runs |
+| **S**pecific questions | "Did it pick the heating system?" — not "Is this right?" | A generic question is as hard as the task, and more ambiguous. The exception is a task that is much easier to check than to do (is this poem a limerick?) |
+| **O**rdinal scale | 1–5, with each level described | Yes/no leaves the bar to the judge, so it drifts between runs. Five levels is a psychometrics default (the book cites Redford, *Machine Psychometrics*) |
 | **M**ulti-**A**spect | Score each dimension separately — e.g. **intent** (right plan?) vs. **execution** (carried out correctly?); Copilot used relevance / truth / completeness | One composite score lets the judge silently switch criteria |
 
-Copilot Chat's split was **RTC**: relevance, truth and completeness. Avoid **Goldilocks questions** that fold "enough" and "not too much" into one axis ("Is the length right?"). Split them into "complete?" and "concise?". Undefined scale levels also let the judge hold ambitious answers to a stricter bar than safe ones.
+Copilot Chat's split was **RTC**: relevance, truth and completeness. Avoid **Goldilocks questions** that fold "enough" and "not too much" into one axis ("Is the length right?"). Split them into "complete?" and "concise?". A bare "is it right?" also invites systematic bias: the judge may hold ambitious answers to a stricter bar than safe ones, or pass mostly-right answers while failing near-perfect ones that aren't completely right.
 
-A SOMA judge prompt, as an illustration (not from a source):
+One aspect of a SOMA judge, condensed from the book's Example 10-1. The task and scale come before the transcript, every level is described, and the analysis comes before the score. Run one such prompt per aspect:
 
 ```
-You are reviewing a smart-home assistant's response written by another system.
-Rate each aspect from 1 to 5 using the definitions below, then output JSON.
+I need your help evaluating a smart home assistant. Grade each interaction for
+effectiveness: whether the assistant's attempted action would remedy the user's problem.
+1 = would do nothing to address the problem, or make it worse
+2 = might address a small part, leaving the main part unaddressed
+3 = good chance of addressing a substantial part
+4 = not guaranteed to work completely, but should solve most of it
+5 = will definitely solve the problem completely
 
-intent (1 = acted on the wrong device or need ... 5 = picked exactly the right action)
-execution (1 = invalid tool call ... 5 = right tool, valid arguments, sensible values)
-completeness (1 = ignored part of the request ... 5 = addressed every part)
+User: I'm a bit chilly.
+Assistant: to=functions.set_room_temp {"temp": 77}
 
-<request>{user_message}</request>
-<response>{assistant_turn_with_tool_calls}</response>
+Give a thorough analysis, then end with "Effectiveness: X", where X is 1 to 5.
 ```
 
 Also:
@@ -114,7 +134,7 @@ Also:
 
 Offline eval is a lab. Live traffic is the only valid test — but its bandwidth is scarce, so **whittle candidates down offline first**.
 
-**A/B testing:** define **success metrics** (e.g., acceptance rate) and **guardrail metrics** (e.g., error or complaint rate) *before* starting. Off-the-shelf tools (Optimizely, VWO, AB Tasty) handle assignment and statistics. Your app only has to run in either mode behind a flag. Client-side apps must ship the new logic to most users before the test can start. Compare randomly assigned users only — "already updated" vs. "not yet" is a biased split, because update timing correlates with behavior.
+**A/B testing:** define **success metrics** (e.g., acceptance rate) and **guardrail metrics** (e.g., error or complaint rate) *before* starting. Off-the-shelf tools (Optimizely, VWO, AB Tasty) handle assignment and statistics. Your app only has to run in either mode behind a flag. Client-side apps must ship the new logic to most users before the test can start. Compare randomly assigned users only. "Already updated" vs. "not yet" is a biased split, because people who update quickly behave differently. Instead, randomize among users who already have the update and leave the rest out of the analysis.
 
 Metrics, from most direct to most incidental:
 
@@ -122,7 +142,7 @@ Metrics, from most direct to most incidental:
 |---|---|---|
 | Direct feedback | 👍/👎, "which is better?" (contrastive) | High quality and reusable as fine-tuning data, but intrusive. It captures frustration more than delight. Contrastive feedback is clearest, but nobody wants an ambient app asking after every action. **Delayed** feedback ("how was the trip?") often beats immediate |
 | Functional correctness | Compiled, booked, sent | Concrete, often binary |
-| **User acceptance** | Suggestion kept, link clicked | For Copilot, it predicted productivity better than fancier measures |
+| **User acceptance** | Suggestion kept, link clicked | For Copilot, acceptance correlated with users' self-reported productivity gains more strongly than fancier impact measures did |
 | Achieved impact | Share of the final email written by the assistant | Outcome-side |
 | Incidental | Latency, conversation length | Ambiguous alone; track them to catch shifts |
 
@@ -157,7 +177,7 @@ Lessons:
 ## Go deeper
 
 - Book: [Ch 10 PDF](../sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf) (the original chapter; everything above stands alone)
-- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-engineering.md](../../06-eval/eval-engineering.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
+- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
 - Papers and tools: [references.md](../README.md#evaluation)
 
 **Continue in 06-eval.** This chapter is the prompt-level view. Chapters 01–05 of [06-eval](../../06-eval/README.md) go deeper on the same ground and can be read right after this topic:

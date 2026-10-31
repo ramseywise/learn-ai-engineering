@@ -9,6 +9,8 @@ cleaned: 2026-10-28
 
 > A protocol shell is a structured prompt written in pseudo-code: an intent, the inputs, an ordered process and a declared output. The model doesn't execute it. The structure is useful because it is explicit, reusable and easy to share.
 
+"Protocol" here means a prompt pattern. Wire protocols that carry context between programs, such as the Model Context Protocol (MCP), are in [10](10-tools-and-multi-agent.md#mcp-a-protocol-for-moving-context).
+
 ---
 
 ## What a protocol shell is
@@ -142,7 +144,7 @@ The upstream list of seven, condensed to the tests that matter:
 
 **What's oversold:** the syntax has no special power. A well-structured markdown prompt with the same four sections performs about the same. The upstream claims about "field operations" (`/attractor.*`, `/resonance.*`) belong to the speculative track ([99](99-speculative-field-track.md)).
 
-**Use it when** you want a reusable, shareable procedure and the people using it don't write code. If they do write code, the same structure belongs in a prompt template with variables ([templates/](../templates/)).
+**Use it when** you want a reusable, shareable procedure and the people using it don't write code. If they do write code, the same structure belongs in a prompt template with variables ([08 — prompt programs](08-cognitive-tools.md#prompt-programs)).
 
 ---
 

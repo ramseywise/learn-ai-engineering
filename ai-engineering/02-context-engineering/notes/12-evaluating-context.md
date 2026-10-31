@@ -18,12 +18,14 @@ cleaned: 2026-10-28
 
 When an answer is wrong, the cause usually sits in one of four places:
 
-```
-right info exists? → retrieved? → placed and survived in the window? → used by the model?
-     (corpus)          (select)        (budget, compaction, order)        (faithfulness)
+```mermaid
+flowchart LR
+    E["Right info exists?<br/>(corpus)"] --> R["Retrieved?<br/>(select)"]
+    R --> S["Placed and survived in the window?<br/>(budget, compaction, order)"]
+    S --> U["Used by the model?<br/>(faithfulness)"]
 ```
 
-An end-to-end score tells you that something failed, but not where. Context evaluation instruments each stage so a failure points at a lever ([context-engineering.md](../context-engineering.md#the-four-levers)).
+An end-to-end score tells you that something failed, but not where. Context evaluation instruments each stage so a failure points at a lever ([the four levers](../README.md#the-mental-model)).
 
 ---
 
