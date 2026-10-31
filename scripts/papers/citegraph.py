@@ -420,11 +420,11 @@ def dblp_query(items):
     """items: (work id, doi or None, title). Returns {work id: [(key, venue, year, type)]}."""
     dois, titles = [], []
     for wid, doi, title in items:
-        if doi:
+        if doi and not re.search(r'[\s<>"{}|\\^`]', doi):  # skip DOIs that aren't valid IRIs
             for d in {doi, doi.upper(), doi.lower()}:
                 dois.append(f"({sparql_str(wid)} <https://doi.org/{d}>)")
         if title:
-            t = title.rstrip(".")
+            t = " ".join(title.split()).rstrip(".")  # newlines and tabs break the SPARQL literal
             titles += [f"({sparql_str(wid)} {sparql_str(t + '.')})", f"({sparql_str(wid)} {sparql_str(t)})"]
     q = f"""PREFIX dblp: <https://dblp.org/rdf/schema#>
 SELECT ?wid ?pub ?venue ?year ?type WHERE {{
@@ -460,6 +460,29 @@ SELECT ?wid ?pub ?venue ?year ?type WHERE {{
   FILTER(?type IN (dblp:Inproceedings, dblp:Article, dblp:Book, dblp:Incollection))
 }}"""
     return dblp_post(q)
+
+
+def dblp_safe(fn, items, key):
+    """Run a DBLP batch; if the endpoint rejects it (400), retry paper by paper and skip the one
+    it rejects, so one odd title doesn't stop the run."""
+    try:
+        return fn(items)
+    except urllib.error.HTTPError as exc:
+        if exc.code != 400:
+            raise
+    hits = defaultdict(list)
+    groups = defaultdict(list)
+    for it in items:
+        groups[key(it)].append(it)
+    for wid, its in groups.items():
+        try:
+            for k, v in fn(its).items():
+                hits[k] += v
+        except urllib.error.HTTPError as exc:
+            if exc.code != 400:
+                raise
+            log(f"dblp: {wid} rejected by DBLP (400); skipped")
+    return hits
 
 
 def dblp_post(q):
@@ -510,7 +533,7 @@ def cmd_dblp(args):
             for d in db.execute("SELECT doi, arxiv FROM work WHERE canon=?", (w["id"],)).fetchall():
                 items.append((w["id"], d["doi"] or (f"10.48550/arxiv.{d['arxiv']}" if d["arxiv"] else None), None))
             items.append((w["id"], None, w["title"]))
-        hits = dblp_query(items)
+        hits = dblp_safe(dblp_query, items, key=lambda it: it[0])
         for w in chunk:
             save_dblp(db, w["id"], pick_dblp(hits.get(w["id"], []), w["year"]), 1)
         db.commit()
@@ -522,7 +545,7 @@ def cmd_dblp(args):
     log(f"dblp: {len(todo)} works to retry with loose title matching (~30s per 100)")
     for i in range(0, len(todo), 100):
         chunk = todo[i:i + 100]
-        hits = dblp_fuzzy([(w["id"], w["title"]) for w in chunk])
+        hits = dblp_safe(dblp_fuzzy, [(w["id"], " ".join(w["title"].split())) for w in chunk], key=lambda it: it[0])
         for w in chunk:
             save_dblp(db, w["id"], pick_dblp(hits.get(w["id"], []), w["year"]), 2)
         db.commit()
