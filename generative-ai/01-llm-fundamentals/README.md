@@ -28,7 +28,7 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 01-llm-fundamentals/
 ├── README.md
 ├── references.md           every source, mapped to notes
-├── notes/                  01–06, read in order
+├── notes/                  01–06, read in order (07 planned)
 ├── practice/
 │   └── 01-typescript-sdk/  four runnable Anthropic SDK examples
 └── sources/                local PDFs (purchased chapters + papers)
@@ -50,6 +50,7 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 | 04 | [LangChain basics](notes/04-langchain-basics.md) | Chat models and messages; prompt templates; `with_structured_output` and output parsers; the Runnable interface; LCEL vs `@chain`; sequential and document chains; where the rest of *Learning LangChain* lives |
 | 05 | [Build a tiny GPT](notes/05-build-a-tiny-gpt.md) | Karpathy's Zero to Hero and Raschka mapped step by step; the nanoGPT config; bug-catching checks; what building it teaches |
 | 06 | [Calling models from code](notes/06-calling-models-from-code.md) | Messages API request and response shape; single call, streaming, forced-tool structured output, the tool loop, conversation state; production habits |
+| 07 | Open-weight models and local inference *(planned)* | Open vs. closed weights and licences; choosing a model (capability, context length, knowledge cutoff, price per token); the Hugging Face Hub and model cards; running a model locally with Ollama, llama.cpp and `transformers`; GGUF and 4-bit quantization from the user's side; when local beats an API. Sources: Labonne, [llm-course](https://github.com/mlabonne/llm-course); *LLM Engineer's Handbook* ch. 2 and 8 (in `sources/`); [HF LLM Course](https://huggingface.co/learn/llm-course); LLaMA, Llama 2, Llama 3.1 (queued in the ledger). Serving at scale stays in [ai-engineering/07](../../ai-engineering/07-inference-engineering/README.md) |
 
 ---
 

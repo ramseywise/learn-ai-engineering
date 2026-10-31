@@ -133,6 +133,13 @@ optimization, no online rollouts.
 **Strengths:** 2x cheaper than PPO (two models: policy + frozen reference), more stable
 training, no reward hacking through the reward model, simpler to implement.
 
+**The paper's evidence** is at small scale, with models up to 6B parameters. On TL;DR
+summarization, starting from the same GPT-J SFT model, DPO won about 61% of GPT-4-judged
+comparisons against the reference summaries, PPO 57% at its best temperature. In a human
+evaluation, DPO samples were preferred over PPO's 58% of the time. PPO degraded to base-model
+quality at high sampling temperatures while DPO held up. The authors validated GPT-4 as judge
+with a human study. DPO's β was barely tuned.
+
 **Weaknesses:** Offline only — can't incorporate new feedback during training. Sensitive
 to dataset quality (bad preferred/rejected pairs have direct gradient impact). Can
 increase probability of rejected responses in some settings (the "DPO length problem").
@@ -146,16 +153,22 @@ at moderate scale.
 
 ## GRPO — Group Relative Policy Optimization
 
-**Paper:** DeepSeek-Math (arXiv: 2402.03300), operationalized in DeepSeek-R1 (arXiv: 2501.12948).
+**Paper:** DeepSeek-Math ([arXiv:2402.03300](https://arxiv.org/abs/2402.03300)), operationalized in DeepSeek-R1 (arXiv: 2501.12948).
 
-**The insight:** For tasks with verifiable outcomes (math proofs, code execution, formal
-logic), you don't need a trained reward function — you can compute rewards directly. And
-you don't need a separate value network if you estimate advantages from a group of
-sampled outputs.
+**The insight:** you don't need a separate value network if you estimate advantages from
+a group of sampled outputs. That is GRPO's whole contribution in DeepSeekMath, and it still
+used a *trained* reward model there, both outcome and process supervision, with the reward
+model retrained during RL on a replay buffer. Dropping the reward model in favour of rule-based
+checks (answer correct? format right?) came with DeepSeek-R1. Together the two make
+the now-standard recipe for verifiable tasks: no critic and no learned reward.
+
+The DeepSeekMath result: GRPO on top of the 7B instruct model, using only GSM8K- and
+MATH-style chain-of-thought prompts, raised GSM8K from 82.9% to 88.2% and MATH from 46.8%
+to 51.7%. Out-of-domain benchmarks improved too.
 
 **Algorithm:**
 1. For each prompt `x`, sample a group of `G` outputs: `{y_1, y_2, ..., y_G}`
-2. Compute rewards `{r_1, ..., r_G}` (rule-based: correctness check, format check)
+2. Compute rewards `{r_1, ..., r_G}` (R1-style rule-based: correctness check, format check; or a reward model, as in DeepSeekMath)
 3. Normalize within the group: `A_i = (r_i - mean(r)) / std(r)`
 4. Update policy to increase probability of outputs with positive normalized advantage
 
@@ -171,7 +184,8 @@ where `r_t,i(θ)` is the token-level probability ratio for output `i`.
 
 **What GRPO removes:** The critic / value function. Advantages come from within-group
 comparison rather than a trained value estimator. This eliminates the fourth model PPO
-needs, cutting memory cost by ~25%.
+needs. The value model is usually the same size as the policy, so the saving is roughly
+one policy-sized model's weights, gradients and optimizer state.
 
 **Verifiable rewards in DeepSeek-R1:**
 - Math: output passes/fails formal verification (exact answer match, proof checker)
@@ -247,7 +261,7 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 
 | Property | PPO | DPO | GRPO | KTO | ORPO |
 |----------|-----|-----|------|-----|------|
-| Needs reward model | Yes | No | No (rule-based) | No | No |
+| Needs reward model | Yes | No | Optional (DeepSeekMath used one; R1 used rules) | No | No |
 | Needs reference model | Yes (SFT) | Yes (SFT) | Yes (SFT) | Yes (SFT) | No |
 | Needs value function | Yes | No | No | No | No |
 | Online / offline | Online | Offline | Online | Offline | Offline |

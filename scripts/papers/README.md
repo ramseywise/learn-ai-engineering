@@ -19,14 +19,15 @@ Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES
 
 | Home key | Folder |
 |---|---|
-| prompt, context, harness, loop, graph, eval, inference | `ai-engineering/01`–`07` |
+| prompt, context, harness, loop, graph, eval, inference, multimodal, safety | `ai-engineering/01`–`09` |
 | llm-fundamentals, rag, agents, frameworks, post-training, observability, agentic-apps | `generative-ai/01`–`07` |
 | classical-ml | `data-science/sources/` |
 | ml-systems | `data-engineering/sources/` |
 
-Topics with no home are kept in the ledger and never routed. Interpretability, safety research
-and multimodal work are *watched*: a notable paper there is `parked`, so it is still waiting when
-a pillar for it arrives. Domain applications and everything else are `skipped`.
+Topics with no home are kept in the ledger and never routed. Interpretability and alignment
+research are *watched*: a notable paper there is `parked`, so it is still waiting when a pillar
+for it arrives. Multimodal and safety were watched until 2026-10-31, when they got pillars 08 and 09.
+Domain applications, robotics and everything else are `skipped`.
 
 ## How triage scores a reading
 

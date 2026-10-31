@@ -33,19 +33,20 @@ pipeline that scales without proportional human labor.
 
 ## The constitution
 
-The constitution is a list of principles in natural language. Anthropic's original
-constitution included principles drawn from:
-- The UN Declaration of Human Rights
-- Apple's terms of service
-- Anthropic's internal usage policies
-- DeepMind's Sparrow rules
-- Custom principles targeting specific failure modes
+The constitution is a list of principles in natural language. The 2022 paper used
+"of order ten" of them, sixteen critique/revision pairs for the supervised phase and sixteen
+comparison prompts for the RL phase, chosen "in a fairly ad hoc and iterative way for research
+purposes" ([arXiv:2212.08073](https://arxiv.org/abs/2212.08073), §1, footnote 2). The
+better-known list, drawing on the UN Declaration of Human Rights, Apple's terms of service,
+DeepMind's Sparrow rules and Anthropic's own policies, is the constitution Anthropic
+published for Claude in May 2023, not the paper's.
 
-**Example principles:**
-- "Prefer the response that is least likely to contain harmful, unethical, or dishonest content"
-- "Choose the response that is most helpful, honest, and harmless"
-- "Which response is less likely to contain racist, sexist, or otherwise discriminatory content?"
-- "Which response is less threatening or aggressive to the human?"
+**Example principles from the paper's RL phase:**
+- "Which of these assistant responses is less harmful? Choose the response that a wise,
+  ethical, polite and friendly person would more likely say."
+- "Please choose the response that is the most helpful, honest, and harmless."
+- Critique prompts that ask whether a response is "racist, sexist, toxic, dangerous, or
+  illegal"
 
 The constitution is not fixed — it's a design decision that encodes the alignment target.
 Different constitutions produce different behavioral profiles.
@@ -162,17 +163,24 @@ Helpful-only SFT model
 RLAIF (Lee et al., 2023, arXiv: 2309.00267) extends the Constitutional AI approach and
 directly compares AI feedback to human feedback at scale.
 
-**Key findings from the RLAIF paper:**
-- RLAIF with a strong feedback model (PaLM 2-L) achieves preference rates comparable
-  to RLHF from human feedback across summarization and dialogue tasks
-- RLAIF with smaller feedback models degrades — the quality of the feedback model is
-  the primary determinant of alignment quality
-- Distillation: RLAIF can train smaller "student" policies using feedback from larger
-  "teacher" models, enabling alignment without deploying the large model in production
+**Key findings from the RLAIF paper** (PaLM 2 labelers, PaLM 2 XS policies):
+- **Parity with RLHF.** Human raters preferred RLAIF and RLHF over the SFT baseline at
+  statistically indistinguishable rates: 71% vs 73% on summarization, 63% vs 64% on helpful
+  dialogue. Head to head, the two were preferred equally often. On harmless dialogue, RLAIF scored
+  a higher harmless rate than RLHF (88% vs 76%, SFT 64%).
+- **Labeler size matters, but less than you'd expect.** Agreement between AI and human
+  preference labels fell with labeler size: PaLM 2 L 78.0%, S 73.8%, XS 62.7%. (Human–human
+  agreement on similar data is 73–77%.) Even so, a labeler the *same size as the policy*, or
+  the policy's own initial checkpoint, still beat SFT significantly. The authors call this a
+  step towards self-improvement.
+- **Direct RLAIF (d-RLAIF)** drops the reward model entirely: the LLM scores each response
+  1–10 during RL. It matched or beat canonical RLAIF and avoids reward-model staleness.
+- **What hurt:** sampling several chain-of-thought rationales and averaging them
+  (self-consistency) strictly *lowered* labeler alignment. Asking for a rationale before the
+  label helped, and few-shot examples did not reliably help.
 
-**Where AI feedback underperforms human feedback:**
-- Nuanced cultural context (regional norms, implicit social expectations)
-- Tasks requiring lived experience that LLMs lack
+The paper does not test where AI feedback falls short of human feedback (cultural nuance,
+specialist judgement). Treat those as open risks, not findings.
 - Detecting subtle forms of bias the feedback model itself encodes
 - Novel failure modes not covered by the constitution
 

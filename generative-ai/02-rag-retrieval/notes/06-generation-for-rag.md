@@ -4,6 +4,7 @@ sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 4, "LLMs and Text Generation" + labs 4.1 sampling, 4.2 prompt engineering, Assignment 4 "Fashion Forward Hub")
   - https://gradientscience.org/contextcite/ (ContextCite, cited by the course)
+  - https://arxiv.org/abs/2401.14887
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -27,6 +28,7 @@ An LLM is a decoder-only transformer. For each new token it runs the whole conte
 RAG works because attention lets every generated token look at the retrieved documents. Two consequences:
 
 - The model **may still ignore the context** if its weights pull harder. Prompting (below) and evaluation (RAGAS) are how you catch that.
+- **What else is in the context matters.** On NQ-open with 7B-class open models (Llama 2, Falcon, MPT, Phi-2), retrieved passages that score high but lack the answer pulled accuracy down more than unrelated passages did. Adding *random* documents sometimes raised accuracy, by up to 35% in the best case. Placing the gold passage next to the question also helped ([arXiv:2401.14887](https://arxiv.org/abs/2401.14887), Cuconasu et al., 2024-01). The authors offer no mechanism for the random-document effect and call for more research, so don't pad prompts with noise. The two findings to use: near-miss distractors are the real threat, and the best evidence goes closest to the question.
 - **Most of the cost is in the transformer.** Longer contexts mean more compute per token. This is the latency argument in note [07](07-rag-in-production.md).
 
 ---

@@ -125,7 +125,7 @@ Guard against it in the grader interface (`requires = {"retrieved_context"}`, [0
 | Framework | Gives you | Watch out for |
 |---|---|---|
 | **RAGAS** | Faithfulness, answer relevance, context precision / recall, reference-free | Generic definitions. Uncalibrated for your domain ([05](05-llm-as-judge.md#cross-checking-with-other-judges)) |
-| **ARES** (Saad-Falcon et al. 2023) | Fine-tuned small judges + a small human set with prediction-powered inference for confidence intervals | Setup cost. Worth it at volume |
+| **ARES** (Saad-Falcon et al. 2023) | Fine-tuned small judges + a small human set (~150 labels) with prediction-powered inference for confidence intervals. Beat RAGAS by 59 points on context-relevance and 14 on answer-relevance accuracy across KILT and SuperGLUE ([arXiv:2311.09476](https://arxiv.org/abs/2311.09476)) | Setup cost: synthetic training data plus judge fine-tuning per domain. Worth it at volume |
 | **DeepEval, TruLens, Phoenix evals** | Ready-made RAG judges, tracing integration | Same as RAGAS: calibrate before gating |
 
 Use frameworks to get started and for cross-checks. Gate on graders you've calibrated against your own labels.

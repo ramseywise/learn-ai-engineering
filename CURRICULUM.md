@@ -20,7 +20,7 @@ sequenced learning paths for each domain.
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear, 8 notes: ingest → transform → orchestrate → warehouse → monitor → feature-serve, then architectures and MLOps maturity; two DataTalks zoomcamps as runnable coursework |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree, 17 notes: classical-ML core, then the NLP, neural-net and from-scratch (micrograd → nanoGPT) arcs. Bayesian methods live in data-analytics |
 | Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar sequential (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications) |
-| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval), plus inference as the substrate |
+| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval), plus inference as the substrate and two cross-cuts: multimodal, safety and security |
 
 **Reading the table:** "Prerequisites" are recommendations, not gates. You can start
 generative-ai cold — you'll just revisit data-science concepts as they come up rather than
@@ -134,6 +134,20 @@ out of the repo would have dropped it. Inference sits under the six layers as th
 substrate: it prices every call they make. The freeze is relaxed in one direction only: a
 new pillar is added when the readings triage finds a body of sources with no home.
 
+**Decision 2026-10-31: `ai-engineering/08-multimodal-engineering/` and
+`ai-engineering/09-safety-and-security/` added.** Both were already watch topics in
+`scripts/papers/potw.py`: off-syllabus buckets kept "so it is still in the ledger when the pillar
+arrives". By 2026-10-31 the ledger held 205 multimodal and 83 safety papers with no home. A
+roadmap.sh comparison found the same two gaps: the repo had nothing on image or document input,
+multimodal RAG or speech outside one voice-agent note, and its security material was split across
+three notes, with no threat modelling, guardrail models or red-teaming tools. Both are cross-cuts,
+not layers: each changes all six foundations, so they are read after them. Alignment research
+(scheming, alignment faking) and interpretability stay parked. The engineering pillar covers
+the application side. Two smaller gaps from the same comparison went into existing homes:
+open-weight models and local inference became a planned note in `generative-ai/01`, and LLM
+embeddings as features (classification, clustering, anomaly detection) a planned note in
+`data-science`.
+
 A pillar is **done** when all five hold:
 
 1. **README** — what the pillar teaches, the order to read it in, prerequisites.
@@ -152,7 +166,8 @@ A pillar is **done** when all five hold:
 | Pillar | Left to do |
 |---|---|
 | ai-engineering 01–06 | Done on 1–2. Restructured 2026-10-31: each pillar is README + `references.md` + `notes/` (images and code inline) + `slides/` (deck.yaml, .pptx, .pdf) + `sources/` (PDFs, flat `images/`). `templates/`, `notebooks/` and code labs were folded into notes or linked upstream; the `practice/exercises.md` files were deleted. Check 3–5. |
-| generative-ai 01 LLM fundamentals | Done 2026-10-31 on 1–2: README, references, notes 01–06, `practice/01-typescript-sdk/`, book chapters in `sources/`. Check 3–5. The TypeScript lab pins an old model id. |
+| ai-engineering 07–09 | Scaffolded 2026-10-31: README with scope and planned notes, `references.md` seeded, empty `notes/` and `sources/`. 07 has its book in `sources/`; 08 and 09 wait on `multimodal` and `safety` becoming homes in `potw.py` so their parked papers route. Checks 1–5 open. |
+| generative-ai 01 LLM fundamentals | Done 2026-10-31 on 1–2: README, references, notes 01–06 (07 open-weight models planned), `practice/01-typescript-sdk/`, book chapters in `sources/`. Check 3–5. The TypeScript lab pins an old model id. |
 | generative-ai 02 RAG | Done 2026-10-31: README, references, notes 01–14, `sources/`. The DLAI snapshot was condensed into notes 02–07 and removed. Check 3–5. |
 | generative-ai 03 agentic foundations | Done 2026-10-31 on 1–2: notes 01–06, three snapshots removed. Left: fold *Design Patterns* chapters 1, 5 and 9, and integrate the three routed book folders in `sources/`. Check 3–5. |
 | generative-ai 04 agentic frameworks | Done 2026-10-31: notes 01–06, two snapshots removed. Check 3–5. |

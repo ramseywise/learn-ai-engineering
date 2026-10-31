@@ -95,6 +95,13 @@ HOMES = {
     "inference": ("ai-engineering/07-inference-engineering",
                   "inference and systems performance: serving, batching, KV cache, prefill/decode, quantization, "
                   "GPU hardware, CUDA kernels, compilers, distributed training/inference infrastructure"),
+    "multimodal": ("ai-engineering/08-multimodal-engineering",
+                   "building with non-text modalities: vision-language models, image and document input, OCR, "
+                   "multimodal RAG, speech (ASR, TTS, voice pipelines), image/video generation APIs, multimodal eval"),
+    "safety": ("ai-engineering/09-safety-and-security",
+               "LLM application security and safety: prompt injection defences, threat models (OWASP), guardrails "
+               "and guard models, red-teaming tools, jailbreaks, data leakage and privacy, supply chain, "
+               "harmful or biased output in deployment"),
     "llm-fundamentals": ("generative-ai/01-llm-fundamentals",
                          "how LLMs work: transformers, attention, embeddings, pretraining, scaling, tokenization, "
                          "classic NLP/LM papers, foundation-model surveys, generative image/audio models (VAE, GAN, diffusion, ViT)"),
@@ -123,14 +130,14 @@ PILLARS = {k: folder for k, (folder, _) in HOMES.items()}
 # Readings that fit no home: kept in the ledger as `skipped`, never routed.
 OFF_SYLLABUS = {
     "interpretability": "mechanistic interpretability, probing, model internals",
-    "safety": "alignment research, red-teaming, misuse, policy",
-    "multimodal": "vision, audio, video, robotics, embodied models (beyond the classic generative-model papers)",
+    "alignment": "alignment research: scheming, deceptive alignment, scalable oversight, AI policy",
+    "robotics": "robotics and embodied models",
     "domain-apps": "domain applications: science, medicine, finance, education",
     "other": "anything that fits none of the above",
 }
 # Off-syllabus topics we may grow a pillar for: a notable paper here is parked, not skipped,
 # so it is still in the ledger when the pillar arrives.
-WATCH = {"interpretability", "safety", "multimodal"}
+WATCH = {"interpretability", "alignment"}
 # Sort key for every reading: the homes first, then the off-syllabus buckets.
 TOPICS = {**{k: scope for k, (_, scope) in HOMES.items()}, **OFF_SYLLABUS}
 SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "CURRICULUM.md", "resources.md"}

@@ -7,6 +7,12 @@ sources:
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://cdn.openai.com/WebGPT.pdf (WebGPT)
+  - https://arxiv.org/abs/1312.5602
+  - https://arxiv.org/abs/1707.06347
+  - https://arxiv.org/abs/2402.03300
+  - https://arxiv.org/abs/1003.0146
+  - https://arxiv.org/abs/1802.09127
+  - https://arxiv.org/abs/1508.03326
 ---
 
 # 1 — RL Foundations for LLMs
@@ -62,7 +68,7 @@ on the full history. This is the key simplifying assumption that makes RL tracta
 ### Algorithm families
 
 **Value-based:** The agent estimates the expected long-term return (the "value") of
-states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks).
+states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks). DQN ([arXiv:1312.5602](https://arxiv.org/abs/1312.5602), Mnih et al., 2013) learned Q-values straight from raw pixels with a CNN. Its experience replay buffer broke the correlation between consecutive frames. With one architecture and one set of hyperparameters it played seven Atari games and beat a human expert on three.
 
 **Policy-based:** Directly optimize the policy without an explicit value function.
 Policy gradient methods compute `∇E[R]` and update `π_θ` toward higher-reward trajectories.
@@ -83,11 +89,34 @@ run? Strategies:
 - **ε-greedy:** With probability ε, take a random action; otherwise exploit
 - **UCB (Upper Confidence Bound):** Choose actions with high uncertainty to reduce
   uncertainty faster
-- **Entropy regularization (used in SAC, GRPO):** Add an entropy bonus to the reward to
-  encourage diverse action distributions
+- **Entropy regularization (SAC; optional in PPO):** Add an entropy bonus to the objective to
+  encourage diverse action distributions. The PPO paper includes one for its Atari runs and
+  turns it off for continuous control ([arXiv:1707.06347](https://arxiv.org/abs/1707.06347)).
+  GRPO as published has no entropy term; its only regularizer is the KL penalty to the
+  reference model ([arXiv:2402.03300](https://arxiv.org/abs/2402.03300)).
 
 In LLM contexts, temperature sampling at inference time is the primary exploration
 mechanism during data collection.
+
+**Contextual bandits** are the one-step case: observe a context, pick an action, get a
+reward, with no state carried forward. It is the right model for recommendation, routing and
+prompt or model selection. Two results anchor it:
+
+- **LinUCB** ([arXiv:1003.0146](https://arxiv.org/abs/1003.0146), Li et al., 2010) fits a
+  ridge regression per arm and picks the arm with the highest upper confidence bound. On over
+  33M events from the Yahoo! front-page news module it got a 12.5% click lift over a
+  context-free bandit. The paper's other lasting contribution is **replay evaluation**: a
+  bandit policy can be scored offline, without bias, on logs collected under a uniformly
+  random policy.
+- **Thompson sampling with neural nets** ([arXiv:1802.09127](https://arxiv.org/abs/1802.09127),
+  Riquelme et al., 2018) benchmarked approximate Bayesian deep nets as posteriors. Many methods
+  that work in supervised learning did poorly here because their uncertainty estimates converge
+  too slowly for online decisions. The robust choice was **NeuralLinear**: a network learns a
+  representation, and an exact Bayesian linear regression on its last layer supplies the
+  uncertainty.
+
+Zhou's survey ([arXiv:1508.03326](https://arxiv.org/abs/1508.03326)) covers the wider family:
+stochastic vs adversarial rewards, and UCB vs Thompson variants.
 
 ### RL applied to LLMs
 

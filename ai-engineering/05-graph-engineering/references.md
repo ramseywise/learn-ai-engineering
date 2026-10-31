@@ -31,7 +31,7 @@
 | ★ | Edge et al., *From Local to Global: A Graph RAG Approach to Query-Focused Summarization* (GraphRAG, 2024) | [2404.16130](https://arxiv.org/abs/2404.16130) | 11 |
 | | Self-correction survey (TACL): self-review without tools is often neutral or harmful | [2406.01297](https://arxiv.org/abs/2406.01297) | 05 |
 | | RLEF: training on execution feedback | [2410.02089](https://arxiv.org/abs/2410.02089) | 05 |
-| | Plan-and-Act: a strong planner model; 54% on WebArena-Lite | [2503.09572](https://arxiv.org/abs/2503.09572) | 05 |
+| | Plan-and-Act: a fine-tuned planner trained on synthetic plans, replanning after each step; 57.6% on WebArena-Lite | [2503.09572](https://arxiv.org/abs/2503.09572) | 05 |
 | | Tran & Kiela: debate among copies of one model matches a single agent at equal compute | [2604.02460](https://arxiv.org/abs/2604.02460) | 05 |
 | | Agentopia: 100 agents over ten simulated years | [2606.07513](https://arxiv.org/abs/2606.07513) | 05 |
 

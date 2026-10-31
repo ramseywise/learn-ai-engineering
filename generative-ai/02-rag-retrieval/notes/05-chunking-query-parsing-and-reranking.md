@@ -4,6 +4,8 @@ sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 3 part 2, ungraded lab "Chunking" + Assignment 3 "Building RAG systems with a Vector Database")
   - https://github.com/FullStackRetrieval-com/RetrievalTutorials (Kamradt, "5 Levels of Text Splitting", cited by the course)
+  - https://arxiv.org/abs/2402.05131
+  - https://arxiv.org/abs/2407.01219
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -41,6 +43,8 @@ Chunk size is a balance. Too large (chapters): too many topics per vector, conte
 *Image Source: Hasan, DeepLearning.AI RAG course, Module 3*
 
 Context-aware chunking is the same idea as Anthropic's *contextual retrieval* (2024). The house treatment, with the numbers, is in [01 § chunking](01-rag-pipeline.md#chunking) and [ai-engineering 02 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md).
+
+**Element-based chunking** is recursive splitting taken further: a document-layout model labels each element (title, narrative text, table, list), and chunks break at element boundaries. On FinanceBench (10-K and 10-Q filings, top-10 chunks, GPT-4 generator), element-based chunking answered 53.2% of questions correctly against 48.2% for the best fixed size (512 tokens) and 35.5% for 128 tokens, on manual grading. It also indexed about half as many chunks (62,529 vs 112,155) and needed no chunk-size tuning ([arXiv:2402.05131](https://arxiv.org/abs/2402.05131), Jimeno Yepes et al., 2024-02). The setting is one domain of table-heavy, strongly structured documents, so expect less on prose.
 
 ### Code from the chunking lab
 
@@ -187,7 +191,7 @@ The house version of the reranking stage, with production numbers, is note [08 �
 | Size `top_k` to chunk size | Many small or few large, same token budget |
 | Rewrite queries with a small LLM | Cheap, large gains on conversational prompts |
 | Over-retrieve 20–50, rerank to 3–10 | Cross-encoders are affordable on a short list |
-| Treat HyDE as an experiment | Helps on some corpora; always adds latency |
+| Treat HyDE as an experiment | Helps on some corpora; always adds latency. In one full-pipeline sweep, adding HyDE to hybrid search moved the average score 0.477 → 0.478, raised open-domain QA EM 0.347 → 0.393, dropped medical QA 0.750 → 0.460, and took latency from 1.5 s to 11.7 s per query ([arXiv:2407.01219](https://arxiv.org/abs/2407.01219), Wang et al., 2024-07, Table 11) |
 
 ---
 
