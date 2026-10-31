@@ -1,122 +1,39 @@
 # Data Analytics — Curriculum
 
-Last updated: 2026-07-22
+Last updated: 2026-10-31
 
-## Purpose
+> The sequenced path through this layer. What each note covers is in the [README syllabus](README.md#syllabus); sources, readings and removed snapshots are in [references.md](references.md).
 
-Data analytics is the foundation layer before specialization. Everything here is Python-first,
-dataset-level work. After completing these layers, you branch into data engineering, data science,
-or generative AI — this curriculum ends with that branching decision.
+## Prerequisites
 
-## The 6 Layers
-
-| # | Layer | What you learn | Notebooks / Material | Status |
-|---|---|---|---|---|
-| 1 | **Python fundamentals** | Language basics: types, control flow, functions, standard library | [`programming/python/`](../programming/python/README.md) 01–03 (notes + exercises) | Moved to `programming/` |
-| 2 | **Data wrangling** | NumPy arrays, pandas DataFrames, indexing, merging, cleaning | [`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md) notebooks 3–4, McKinney ch07–08 | Moved to `programming/` |
-| 3 | **EDA + visualization** | Exploratory data analysis; matplotlib/seaborn plotting; aggregation; time series | [`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md) notebooks 5–7, McKinney ch09–11 | Moved to `programming/` |
-| 4 | **Feature engineering** | Text feature representation; NLP preprocessing; TF-IDF, embeddings, classification features | [`../data-science/Text Analytics with Python/`](../data-science/Text%20Analytics%20with%20Python/) Ch03–05 | Present (in data-science) |
-| 5 | **Statistical analysis** | Hypothesis testing; distributions; A/B testing; correlation vs. causation | `5_Statistical_Analysis.ipynb`, `courses/` | Present (partial — see Layer 5 section) |
-| 6 | **Modeling + BI** | Semantic analysis; topic modeling; similarity; clustering; deep learning intro | `../data-science/Text Analytics with Python/` Ch06–10 | Present (in data-science) |
-
-## Notebook Map
-
-### Layers 1–3 live in `programming/` (since 2026-10-29)
-
-The seven `python-basics/` notebooks (`1_Overview` → `7_Time_Series`) moved to
-[`programming/python/04-python-for-data/`](../programming/python/04-python-for-data/README.md), next to the McKinney chapter notebooks and
-the Michigan/Wesleyan pandas scripts. Python 01–03 in the same track teach the language itself.
-
-### `courses/` (own coursework scripts, Layer 5)
-
-| Script | From |
+| Need | Where |
 |---|---|
-| `umich_statistical_analysis.py` | Michigan, *Applied Data Science with Python* |
-| `wesleyan_data_cleaning.py` | Wesleyan, *Data Analysis and Interpretation* |
-| `wesleyan_inferential_statistics.py` | Wesleyan, *Data Analysis and Interpretation* |
+| Python language basics | [programming/python/](../programming/python/README.md) 01–03 |
+| NumPy, pandas, plotting, time series | [programming/python/04-python-for-data/](../programming/python/04-python-for-data/README.md) |
+| High-school probability (events, conditional probability) | note 01 recaps what is needed |
 
-The NESARC survey data these Wesleyan scripts read isn't included.
+Text feature engineering and text modelling, listed as layers 4 and 6 in earlier versions of this file, are taught in [data-science/](../data-science/README.md).
 
-### `../data-science/Text Analytics with Python/` (companion to Dipanjan Sarkar's book, Chapters 01–10)
+## Path
 
-| Chapter | Topic | Layer |
-|---|---|---|
-| Ch01 — NLP Basics | Foundations of NLP | 1 — Python fundamentals |
-| Ch02 — Python for NLP | Python text tools | 1 — Python fundamentals |
-| Ch03 — Processing and Understanding Text | Tokenization, normalization | 4 — Feature engineering |
-| Ch04 — Feature Engineering for Text | TF-IDF, n-grams, embeddings | 4 — Feature engineering |
-| Ch05 — Text Classification | Supervised classification pipeline | 4 — Feature engineering |
-| Ch06 — Text Summarization + Topic Models | LDA, summarization | 6 — Modeling + BI |
-| Ch07 — Text Similarity + Clustering | Cosine similarity, K-means | 6 — Modeling + BI |
-| Ch08 — Semantic Analysis | Word vectors, semantic similarity | 6 — Modeling + BI |
-| Ch09 — Sentiment Analysis | Lexicon and ML-based sentiment | 6 — Modeling + BI |
-| Ch10 — Deep Learning | Neural text models | 6 — Modeling + BI |
+Do the frequentist track first; the Bayesian track reuses its vocabulary and re-answers its A/B question.
 
-**Note:** Some spaCy syntax in the Text Analytics notebooks is deprecated (spaCy 2.x → 3.x
-breaking changes). The conceptual content is sound; the API calls may need updating before running.
+| Step | Notes | Practice | Done when you can |
+|---|---|---|---|
+| 1. Distributions | [01](notes/01-distributions-and-sampling.md) | `practice/5_Statistical_Analysis.ipynb` part 1 | name the distribution behind a count, rate or waiting time and query it with `scipy.stats` |
+| 2. Testing | [02](notes/02-hypothesis-testing.md) | notebook part 2; `practice/courses/` Wesleyan scripts | pick the test for two groups, k groups or a contingency table, and correct for many tests |
+| 3. A/B testing | [03](notes/03-ab-testing.md) | notebook part 3; `practice/AB-Bayes/` | size a test, run the z-test, and explain why peeking inflates false positives |
+| 4. Causation | [04](notes/04-correlation-and-causation.md) | notebook part 4 | spot a confounder or collider and name the quasi-experimental design that fits |
+| 5. Bayesian basics | [05](notes/05-bayesian-inference.md), [06](notes/06-mcmc-and-pymc.md) | `practice/BayesianML/` week 4 (read only) | write a PyMC model, sample it, and check R-hat and ESS |
+| 6. Priors and decisions | [07](notes/07-priors-and-bandits.md), [08](notes/08-bayesian-ab-testing.md), [09](notes/09-loss-functions-and-decisions.md) | — | report P(B > A) with expected loss, and pick an action from a loss function |
+| 7. Bayesian ML (optional) | [10](notes/10-bayesian-machine-learning.md) | `practice/BayesianML/` weeks 2, 5, 6 (read only) | derive the EM updates for a GMM and explain the ELBO |
 
-## Layer 5 — Statistical Analysis Assessment
+Steps 1–4 are the critical path: model evaluation in data science and experiment monitoring in data engineering both assume them. Steps 5–7 can be done later.
 
-`5_Statistical_Analysis.ipynb` was added (2026-07-22) and covers the core curriculum. The gap
-is partially closed — see below for what's present vs what remains.
-
-### What the notebook covers
-
-| Part | Topics | Status |
-|---|---|---|
-| Part 1: Probability Distributions | Normal, binomial, Poisson; PDF/CDF; sampling; Central Limit Theorem | Present — executed |
-| Part 2: Hypothesis Testing | t-tests, chi-square, ANOVA, multiple comparisons (Bonferroni) | Present — executed |
-| Part 3: A/B Testing | Sample-size/power calculation, peeking pitfalls, practical framework | Present — executed |
-| Part 4: Correlation and Causation | Pearson vs Spearman, Simpson's paradox, confounding variables | Present — executed |
-
-### Remaining gaps
-
-These topics are **not** covered in the notebook and have no existing material in this repo:
-
-| Gap | Priority | Recommendation |
-|---|---|---|
-| Bayesian A/B testing | High | `../data-analytics/Bayes/AB-Bayes/AB_Testing_with_Python.ipynb` partially fills this — add a cross-reference or integration section |
-| Causal inference (DiD, IV, RD) | Medium | No existing notebook; add a Part 5 using `dowhy` or manual DiD examples |
-| Non-parametric tests (Mann-Whitney, Kolmogorov-Smirnov) | Low | One-off add to Part 2 |
-| Time-series testing (stationarity, autocorrelation) | Low | Covered better in `programming/python/04-python-for-data/7_Time_Series.ipynb`; cross-reference sufficient |
-
-### Readings that support this layer
-
-All in `readings/`:
-
-| Book | Focus |
-|---|---|
-| *Practical Statistics for Data Scientists* | Working-stats reference; pairs directly with Parts 1–3 |
-| *Statistics Done Wrong* (Reinhart) | Inference pitfalls; pairs with Part 2–3 (multiple comparisons, peeking) |
-| *An Introduction to Statistical Learning* (ISLR) | Theory for Parts 1–2; read after the notebook |
-| *Think Stats* / *Think Bayes* | Alternative probabilistic lens; bridge to `Bayes/` notebooks |
-
-### Criticality assessment
-
-**Critical for the learning path:** statistical analysis (Layer 5) is a prerequisite for:
-- Interpreting model evaluation metrics correctly (data-science Layer 3)
-- A/B testing in data engineering monitoring (data-engineering Foundation 5)
-- The deferred "Stats & Experimentation" interviewing pillar
-
-The notebook fills the critical path items (distributions, hypothesis testing, A/B testing).
-The remaining gaps (causal inference, Bayesian A/B) are nice-to-have for this layer — the Bayes
-notebooks in `Bayes/` cover the Bayesian track separately at higher depth.
-
-## Reference Links
-
-- **Python reference**: [`readings/Python for Data Analysis.pdf`](readings/Python%20for%20Data%20Analysis.pdf) (Wes McKinney, O'Reilly)
-- **Quick reference**: [`SimpleHacks.md`](SimpleHacks.md)
-- **Stats readings**: [`readings/`](readings/)
-
-## What Comes Next — The Branching Decision
-
-After completing data analytics foundations (Layers 1–4), pick one path based on your goal:
+## What comes next — the branching decision
 
 | Goal | Next subject |
 |---|---|
-| Build data pipelines and infrastructure | **Data Engineering** → `../data-engineering/CURRICULUM.md` |
-| Build predictive models and do ML research | **Data Science** → `../data-science/CURRICULUM.md` |
-| Build LLM-powered applications | **Generative AI** → `../generative-ai/` (01-llm-fundamentals first) |
-
-All three paths require the same Python + data wrangling foundation (Layers 1–3).
-Feature engineering (Layer 4) is most directly useful for data science and generative AI.
+| Build data pipelines and infrastructure | [data-engineering/](../data-engineering/README.md) |
+| Build predictive models and do ML research | [data-science/](../data-science/README.md) |
+| Build LLM-powered applications | [generative-ai/](../generative-ai/README.md), starting at 01-llm-fundamentals |

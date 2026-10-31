@@ -22,6 +22,16 @@ The order is not a matter of taste — it encodes a nesting rule:
 
 All six are peer foundations. Graph is ordered fifth (after loop) because it *presumes loop mastery*, but it is a first-class discipline — not a frontier add-on.
 
+**Underneath all six: [inference](07-inference-engineering/README.md)** (added 2026-10-31).
+Serving, KV cache, batching and GPU performance decide what every call above costs in
+latency and money. It is numbered seventh because it is read last, not because it sits on top.
+
+**Across all six: [multimodal](08-multimodal-engineering/README.md) and
+[safety and security](09-safety-and-security/README.md)** (both added 2026-10-31). Each
+changes every layer rather than adding one. Multimodal swaps text for images, documents and
+audio at the edges. Safety and security model the attack surface each layer opens. Read them
+after the six, in either order.
+
 ---
 
 ## Pillar → interviewing-guide crosswalk
@@ -29,11 +39,14 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 | Foundation | Depth (here) | Summary guide | Seed note(s) |
 |---|---|---|---|
 | prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) (security) |
-| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) | [context-engineering.md](02-context-engineering/context-engineering.md), [memory.md](02-context-engineering/sources/memory-augmented-rag-notion-export.md) |
-| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [agent-harness.md](03-harness-engineering/agent-harness.md), [agents-design.md](03-harness-engineering/agents-design.md) |
-| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [loop-engineering.md](04-loop-engineering/loop-engineering.md), [notes/](04-loop-engineering/notes/), [practice/](04-loop-engineering/practice/), [reliable-agents.md](03-harness-engineering/reliable-agents.md) |
-| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [graph-engineering.md](05-graph-engineering/graph-engineering.md), 05-graph-engineering/sources/, 05-graph-engineering/notebooks/ |
-| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [eval-engineering.md](06-eval/eval-engineering.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
+| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) | [README](02-context-engineering/README.md#the-mental-model), [notes/06-memory.md](02-context-engineering/notes/06-memory.md) |
+| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [notes/01-what-a-harness-is.md](03-harness-engineering/notes/01-what-a-harness-is.md), [notes/07-orchestration.md](03-harness-engineering/notes/07-orchestration.md) |
+| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
+| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
+| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](06-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
+| inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#planned-notes) (notes not yet written) |
+| multimodal | [08-multimodal-engineering/](08-multimodal-engineering/README.md) | — (closest: 2-llm-fundamentals) | [README](08-multimodal-engineering/README.md#planned-notes) (notes not yet written) |
+| safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
 
 ---
 

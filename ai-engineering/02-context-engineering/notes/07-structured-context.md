@@ -41,6 +41,14 @@ The rule of thumb: **tags for boundaries, markdown for prose, JSON for anything 
 
 ## Three places schemas go
 
+```mermaid
+flowchart LR
+    I["Input schema<br/>how the task is presented"] --> M[Model]
+    S["State schema<br/>what carries across turns"] <--> M
+    M --> O["Output schema<br/>what comes back, validated"]
+    O -- "validation error fed back" --> M
+```
+
 ### 1. Input schemas — how a task is presented
 
 The upstream "context schema" is a fixed skeleton for a task prompt:
@@ -64,7 +72,21 @@ The upstream "context schema" is a fixed skeleton for a task prompt:
 {schema or template for the answer}
 ```
 
-The value is in the fixed order and the empty slots. A missing `Constraints` section is visible at a glance, and every task in a system looks the same to the model. The copyable YAML and JSON versions are in [templates/](../templates/).
+The value is in the fixed order and the empty slots. A missing `Constraints` section is visible at a glance, and every task in a system looks the same to the model. The upstream course also ships the same idea as a YAML context file with a token budget and a history policy. Trimmed:
+
+```yaml
+metadata:
+  token_budget: 800              # target ceiling for the whole context
+system:
+  role: assistant
+  constraints: [provide accurate information, acknowledge uncertainty, avoid unnecessary verbosity]
+memory:
+  enabled: true
+  max_turns: 3                   # raw window
+  pruning_strategy: drop_oldest  # or: summarize, prioritize
+```
+
+Writing the budget and pruning policy into the context spec, rather than leaving them implicit in code, makes them reviewable ([03](03-budgeting-the-window.md#history)).
 
 ### 2. State schemas — what carries across turns
 
@@ -85,6 +107,28 @@ This is the compaction target ([05](05-compression-compaction.md)) and the memor
 ### 3. Output schemas — what comes back
 
 Use the provider's structured-output mode (a JSON schema enforced at decode time) when code consumes the answer. When it isn't available, put the schema in the prompt plus one filled example, and validate on receipt. See [controlling output](../../01-prompt-engineering/notes/04-controlling-output.md).
+
+The fallback loop, condensed from the upstream course's `06_schema_design.py`. The validator's error message goes back into the context, so the retry knows what to fix:
+
+````python
+import json, re, jsonschema
+
+def query_with_schema(task, schema, max_attempts=3):
+    prompt = (f"{task}\n\nRespond with a single JSON object that conforms to this schema, "
+              f"and nothing else:\n{json.dumps(schema, indent=2)}")
+    for _ in range(max_attempts):
+        raw = llm(prompt)
+        fenced = re.search(r"```(?:json)?\s*(.*?)```", raw, re.DOTALL)
+        try:
+            obj = json.loads(fenced.group(1) if fenced else raw)
+            jsonschema.validate(obj, schema)
+            return obj
+        except (json.JSONDecodeError, jsonschema.ValidationError) as e:
+            prompt += f"\n\nYour previous response did not conform. Error: {e}. Try again."
+    raise ValueError("no schema-valid response")
+````
+
+With decode-time enforcement, the parse step can't fail, but `jsonschema.validate` still earns its place for constraints the provider's schema subset doesn't support (patterns, cross-field rules).
 
 ---
 

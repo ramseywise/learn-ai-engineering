@@ -38,7 +38,7 @@ passes on your first try, move on.
 | Need | Where |
 |---|---|
 | Timed problems, HackerRank / LeetCode style | [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md), which links back here by `concepts:` slug |
-| Interview-format review | sisyphus `interviewing/guides/` Pillar 0 (programming) |
+| Interview-format review | sisyphus [interview guide Pillar 0 (programming)](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) |
 | More type puzzles | [type-challenges](https://github.com/type-challenges/type-challenges) hard and extreme |
 | More SQL | [PGExercises](https://pgexercises.com/), [Select Star SQL](https://selectstarsql.com/) |
 

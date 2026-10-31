@@ -10,7 +10,7 @@ sources:
   - https://www.aibuilderclub.com/blog/loop-engineering-anthropic-playbook
   - https://vercel.com/i/what-are-agentic-workflows
   - https://github.com/walkinglabs/learn-harness-engineering (lecture 13)
-  - "Bojie Li, AI Agents in Depth (2026), ch. 8 — https://github.com/bojieli/ai-agent-book"
+  - "Bojie Li, AI Agents in Depth (2026), ch. 9 — https://github.com/bojieli/ai-agent-book"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -85,6 +85,24 @@ Every loop needs several **independent** ways to stop, so one failing doesn't le
 | **Stall detector** | Score unchanged for K passes, or the same action repeated | Change strategy once, then escalate |
 | **Human escalation** | Blocker it can't clear, irreversible action, judgment call | Pause and hand over full context |
 
+The exits are checked in order after every pass, and only one of them is a success:
+
+```mermaid
+flowchart TD
+    P["pass ends"] --> S{"scorekeeper:<br/>goal met?"}
+    S -->|yes| OK(["save, report, stop"])
+    S -->|no| H{"blocker, irreversible<br/>action or judgment call?"}
+    H -->|yes| HU(["pause, hand a human<br/>the full context"])
+    H -->|no| B{"budget spent?<br/>tokens · $ · wall clock"}
+    B -->|yes| BE(["escalate, state saved"])
+    B -->|no| ST{"score flat K passes<br/>or same action repeated?"}
+    ST -->|first time| CS["change strategy once"] --> N
+    ST -->|again| SE(["escalate"])
+    ST -->|no| I{"N passes reached?"}
+    I -->|yes| IE(["escalate: a cap is not success"])
+    I -->|no| N["next pass"]
+```
+
 Decide the human handoff points **before** the first run: blockers, risky or irreversible actions, and anything that needs taste. A loop that asks at the right moment is safer than one that keeps going.
 
 Harness machinery for stall detection and retries: [harness note 05](../../03-harness-engineering/notes/05-verification-loops.md#loop-detection).
@@ -105,7 +123,7 @@ Anthropic's *Effective Harnesses for Long-Running Agents* lists what an unattend
 
 ## Guardrails for self-modifying loops
 
-A loop that edits itself can turn one mistake into a permanent one. Prompt injection from a web page gets summarized as "experience" and then fires in every later session. A malicious package found by search gets wrapped as a tool. A faulty verifier keeps approving regressions. Li (*AI Agents in Depth*, ch. 8) sets three boundaries:
+A loop that edits itself can turn one mistake into a permanent one. Prompt injection from a web page gets summarized as "experience" and then fires in every later session. A malicious package found by search gets wrapped as a tool. A faulty verifier keeps approving regressions. Li (*AI Agents in Depth*, ch. 9) sets three boundaries:
 
 | Boundary | Rule |
 |---|---|
@@ -135,7 +153,7 @@ The through-line: treat an autonomous run as a **thermostat**, not a conversatio
 
 ## Design checklist
 
-Before shipping a loop, answer each one. The fillable version is [templates/loop-contract.md](../templates/loop-contract.md).
+Before shipping a loop, answer each one. The fillable version is the [loop contract](#the-loop-contract) below.
 
 - [ ] Is it worth a loop: repeating work, and a scorekeeper that can validate it?
 - [ ] What is the **trigger**: manual, schedule or event?
@@ -150,6 +168,52 @@ Before shipping a loop, answer each one. The fillable version is [templates/loop
 - [ ] What is the **escalation path** when a cap trips without success?
 - [ ] Are parallel agents **isolated** (worktrees or sandboxes)?
 - [ ] Are traces captured well enough to feed a **hill-climbing** pass later?
+
+---
+
+## The loop contract
+
+The checklist as a file, `loop-contract.md`, filled in before the first pass and read by the maker and checker every round ([note 03](03-the-scorekeeper.md#maker-and-checker)). If a section is blank, the loop isn't ready.
+
+```markdown
+# Loop contract — auth-tests
+## Worth a loop?
+Repeats: until one goal is met · Why not one prompt: 6 failing tests, each needs a fix-and-rerun
+## Goal
+All tests in tests/auth/ pass.        # has an end → run-until-done (/goal); ongoing → timer (/loop)
+## Acceptance criteria (each a command)
+- [ ] `pytest tests/auth -q` passes
+- [ ] `ruff check src/auth` clean
+## Scorekeeper
+Command: `pytest tests/auth -q | tail -1` · Score: tests passing
+Held-out check (final gate only): `pytest tests/auth_edge -q`
+Checker (if model-graded): a different model from the maker; rubric at docs/rubric.md
+## Write boundary
+| May edit     | Must not edit                                 |
+| `src/auth/**` | `tests/**`, scoring scripts, this file        |
+Enforced by: a PreToolUse hook that blocks writes outside src/auth/   # not just this sentence
+## Trigger
+/goal
+## Stop rules
+| Exit       | Threshold                           | On trip                              |
+| Success    | scorekeeper + held-out green        | save, report                         |
+| Iterations | 20 passes                           | escalate                             |
+| Budget     | $5 or 60 minutes                    | escalate, state saved                |
+| Stall      | score unchanged 3 passes            | change strategy once, then escalate  |
+## Ratchet
+- [ ] A lower score rolls the change back automatically
+- [ ] Each green pass is committed before the next starts
+- [ ] Breaks are fixed before new work
+## Human gates
+Pause before: dependency changes, anything touching prod, deleting a test
+## How to work each pass
+1. Read this contract and loop-state.md.  2. Do the one item in "What is next".
+3. Run the scorekeeper. Up: commit. Down: revert.
+4. Stuck on the same error for 2 passes: change approach or simplify.
+5. Update loop-state.md before exiting.
+```
+
+The state file it points to is in [note 05](05-long-running-loops.md#memory-three-tiers-five-fields); the guarded script that enforces the stop rules and the ratchet is in [note 05](05-long-running-loops.md#the-ralph-loop).
 
 ---
 

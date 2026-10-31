@@ -136,7 +136,24 @@ The model forgets between runs, so state lives in files outside the conversation
 
 ## The whole loop in motion
 
-How the six parts fit into one pass (KodeKloud's sequence):
+How the six parts fit into one pass (KodeKloud's sequence). Each box is labelled with the block that supplies it:
+
+```mermaid
+flowchart TD
+    G["goal + scorekeeper<br/>(required first)"] --> R["read memory<br/><i>memory</i>"]
+    R --> W["create a worktree<br/><i>worktrees</i>"]
+    W --> K["load the matching skill<br/><i>skills</i>"]
+    K --> C["make ONE small change"]
+    C --> S{"run the scorekeeper"}
+    S -->|score down| RB["roll back,<br/>try another"] --> C
+    S -->|score up| V["sub-agent review<br/><i>sub-agents</i>"]
+    V --> X["open PR, update ticket<br/><i>connectors</i>"]
+    X --> M["write memory:<br/>score, tried, next"]
+    M -->|goal not met<br/><i>automation</i>| R
+    M -->|goal met or<br/>judgment needed| H(["stop / hand to a human"])
+```
+
+The same pass as a checklist:
 
 ```
 0. goal + scorekeeper defined        ← required before anything runs

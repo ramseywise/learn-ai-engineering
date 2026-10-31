@@ -6,7 +6,14 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://ai-native-playbook.vercel.app/guides/the-machine/harness-engineering
   - https://www.aibuilderclub.com/blog/agent-tool-permissions-canary
+  - https://ai.gopubby.com/agentic-ai-security-patterns-ad4ff80b9351
+  - https://docs.langchain.com/oss/python/deepagents/overview
+  - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
+  - https://arxiv.org/abs/2310.02304
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 8"
 confidence: high
 cleaned: 2026-07-30
 ---
@@ -19,6 +26,8 @@ cleaned: 2026-07-30
 ## Sandboxes
 
 A sandbox gives the agent a **safe operating environment to act, observe results, and make progress** — which is what makes autonomous execution tolerable. Without one, every bash call is a production risk and every loop iteration needs a human.
+
+The sandbox has to sit outside what the agent can change. In STOP, GPT-4 rewrote its own improver code and removed the sandbox flag in 0.42% of 10,000 attempts (95% CI 0.31–0.57%), usually commenting the change "for efficiency" ([arXiv:2310.02304](https://arxiv.org/abs/2310.02304) (Zelikman et al., 2023-10)). Enforce isolation in the runtime, never in code or config the agent can edit.
 
 What a sandbox ships with matters as much as its isolation: language runtimes, CLIs, browsers, test runners. These are the agent's *senses*. Browsers, logs, screenshots, and test output are how it observes its own work — the raw material for self-verification loops ([note 05](05-verification-loops.md)).
 
@@ -33,6 +42,27 @@ What a sandbox ships with matters as much as its isolation: language runtimes, C
 Underneath those backends sits an isolation ladder (Li, ch. 4):
 
 **OS-level** (macOS Seatbelt, Linux seccomp/Landlock) < **container** < **microVM** (Firecracker-class), each paired with **resource quotas** for CPU, memory, disk, network and wall-clock time. A Python `venv` is not on the ladder: it isolates dependencies, not effects.
+
+```mermaid
+flowchart LR
+  V["venv<br/>(dependencies only,<br/>not on the ladder)"] -.-> O
+  O["OS-level<br/>Seatbelt · seccomp · Landlock"] --> C["Container"] --> M["microVM<br/>Firecracker-class"]
+  Q["Resource quotas at every rung<br/>CPU · memory · disk · network · wall clock"] --- O & C & M
+```
+*Image Source: diagram based on Li (2026), ch. 4*
+
+### Shell vs. interpreter
+
+A sandbox does not have to expose a shell. LangChain Deep Agents distinguishes two execution tools:
+
+| Tool | What runs | Reach | Use |
+|---|---|---|---|
+| `execute` (sandbox backend) | Arbitrary shell commands | Whatever the sandbox allows: processes, files, network | Builds, tests, CLIs |
+| `eval` (interpreter) | JavaScript in an embedded QuickJS runtime | **No** shell, network or filesystem; only the tools you pass in | Loops, batching, programmatic tool calling |
+
+The interpreter is the narrower boundary: code can compose tool calls but cannot reach anything the harness didn't hand it. Deep Agents' path permissions (below) don't apply to `execute`, because a shell can reach a file by routes no path rule names.
+
+The Gemini Minecraft run (Faldor et al., 2026; [note 02](02-harness-anatomy.md#one-harness-read-through-the-five-subsystems)) took the same approach to a long unattended run. Each agent wrote JavaScript programs that drove a bot through a fixed API. Programs could not start processes or write files, so 2,783 programs over 27 hours could only affect the game world.
 
 For agents that act on a user's behalf around the clock, extend the sandbox to **identity**. Give the agent its own accounts, mailbox and VM or virtual phone, the way a secretary has their own office line, instead of the user's credentials. When it must act as the user, have the user log in personally through a remote desktop and reuse the session token while it stays valid. Pass data between the main agent and the environment through a **shared mount**, with paths in messages rather than file contents.
 
@@ -73,6 +103,60 @@ The rule from [02-context-engineering/notes/02](../../02-context-engineering/not
 
 So: if a behavior must hold *every* time, it is a hook, a permission, or a schema — not a sentence. "The agent keeps doing X" is usually a hook, not a stronger paragraph. Adding a fourth conditional to a prompt is the signal that the requirement has outgrown the prompt layer.
 
+Karpathy's version of the same split (as relayed from his AISN 2026 talk): a `CLAUDE.md` line such as "don't touch /important" is a **request** the model can ignore, and a pre-tool-use hook that blocks the write is a **rule** it cannot. Sort every behaviour into three buckets and match the enforcement to the cost of getting it wrong:
+
+| Bucket | Enforcement | Example |
+|---|---|---|
+| **Always do** | Instruction in `AGENTS.md`, runs on autopilot | Run the formatter before committing |
+| **Ask first** | Permission gate or HITL confirmation | Add a dependency, change a schema |
+| **Never do** | Hook or permission deny, never a sentence | Write to `.env`, `git push --force`, delete outside the workspace |
+
+Declarative permissions are the cheapest way to implement the never-do bucket. LangChain Deep Agents, for example, takes an ordered rule list evaluated **first match wins**, with each rule naming operations, glob paths and allow/deny. It also says plainly that these rules don't apply once a sandbox backend exposes a raw shell `execute` tool. A path rule constrains the file tools, not arbitrary commands. That is the same gap as [a role label is not a sandbox](#a-role-label-is-not-a-sandbox). The shape of the rules is below; it is illustrative, and the exact rule type is in the [Permissions docs](https://docs.langchain.com/oss/python/deepagents/permissions):
+
+```python
+agent = create_deep_agent(
+    model="anthropic:claude-sonnet-4-6",
+    permissions=[  # top to bottom, first match wins; no match = allow
+        {"operations": ["write"], "paths": ["/workspace/**"], "mode": "allow"},
+        {"operations": ["read", "write"], "paths": ["**/.env", "**/secrets/**"], "mode": "deny"},
+        {"operations": ["write"], "paths": ["**"], "mode": "deny"},
+    ],
+    interrupt_on={"edit_file": True},  # HITL: pause before every edit
+)
+```
+
+Stronger than a deny rule is a tool that is never shown. Deep Agents (`deepagents>=0.7.0a4`) lets you pass an **allowlist** of filesystem tools. Tools not listed are never bound to the model, so there is nothing to argue with:
+
+```python
+from deepagents import create_deep_agent
+from deepagents.middleware import FilesystemMiddleware
+
+# Read-only agent: write_file, edit_file, delete and execute are never shown.
+agent = create_deep_agent(
+    model="claude-sonnet-4-6",
+    middleware=[FilesystemMiddleware(backend=backend, tools=["read_file", "ls", "glob", "grep"])],
+)
+```
+
+Two caveats from the docs:
+- `read_file` is mandatory; leaving it out raises `ValueError`.
+- `execute` and `delete` are dropped silently if the backend doesn't support them. Declarative subagents **don't inherit** the allowlist, so set it on each one.
+
+To hide tools per model instead, register a harness profile. Removing `FilesystemMiddleware` itself via `excluded_middleware` is rejected.
+
+```python
+from deepagents import HarnessProfile, register_harness_profile
+
+# This model gets no filesystem tools at all.
+register_harness_profile(
+    "anthropic:claude-sonnet-4-6",
+    HarnessProfile(excluded_tools=frozenset(
+        {"ls", "read_file", "write_file", "edit_file", "delete", "glob", "grep"})),
+)
+```
+
+These are alpha APIs; check the [Deep Agents docs](https://docs.langchain.com/oss/python/deepagents/overview) before relying on the exact names.
+
 ---
 
 ## Permission gates and HITL
@@ -88,6 +172,15 @@ Exhaust available information first, ask only when the information genuinely isn
 Gate placement follows the four questions from [note 03](03-tool-design.md#the-four-gating-questions) — irreversible actions get a confirmation; everything else runs free. Gating reversible operations is the most common way to make an agent useless.
 
 Human-in-the-loop requests need a **timeout with a declared default** (proceed, skip or abort), so an unanswered question doesn't stall the run indefinitely. Feed the human's answer back as a learning signal; repeated approvals of the same pattern are a candidate to automate.
+
+The human gate has failure modes of its own (*Building Applications with AI Agents*, ch. 12):
+
+- **Automation bias.** Reviewers over-trust the agent, especially when it sounds confident.
+- **Alert fatigue.** A stream of low-priority asks trains people to click through the one that matters.
+- **Skill decay.** Once the agent does the routine work, the humans lose the skill they need to judge it.
+- **Misaligned incentives.** A reviewer measured on throughput approves fast.
+
+Albada's mitigations are clear escalation paths, adaptive alerting and ongoing operator training. Gating only irreversible actions is what keeps alert fatigue down in the first place.
 
 ### Reviewing calls before they run
 
@@ -167,6 +260,32 @@ Independently toggleable, each with its own failure mode:
 | **Post-generate** | Unsafe output leaving the system |
 | **Escalation** | Anything unresolved reaching a human |
 
+### Moderation around the whole engine
+
+![Two-stage moderation: the user goal passes a pre-flight moderation check before the planner and executor run; the generated content passes a post-flight check before it reaches the user, redacted if needed](../sources/images/context-engineering-multi-agent-systems-fig8-2.png)
+*Image Source: Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), Fig. 8.2*
+
+Rothman wraps the pre-input and post-generate layers around his whole plan-execute engine ([note 07](07-orchestration.md#a-plan-execute-engine-end-to-end)), not around each agent (*Context Engineering for Multi-Agent Systems*, ch. 8):
+
+- **Pre-flight.** The goal goes to a moderation API. If it is flagged, the run halts before the planner spends anything.
+- **Post-flight.** The final output is checked. If it is flagged, it is replaced with a standard redaction notice.
+- **Fail closed.** If the moderation call itself errors, the wrapper returns `flagged: True`. "If we can't check it, we assume it's not safe."
+
+The instructive part is where it failed on a legal-assistant deployment:
+
+- **Context the text doesn't carry.** Moderation blocked witness testimony because it contained profanity, and an internal meeting transcript because someone lost their temper. Turning moderation off let profanity through in emails. Enabling it for emails only blocked important messages. An email that quotes profane testimony inside profane body text can't be judged from the text at all. The rule that quoted evidence is allowed and the email body is not is organizational, not linguistic.
+- **A sanitizer that can't tell evidence from injection.** The regex sanitizer's list included the patterns `ignore previous instructions`, `act as` and `sudo|apt-get|yum|pip install`, plus a client-requested `ignore any legal advice`. That last one fired on hostile-witness testimony ("ignore any legal advice to the contrary"). The chunk was skipped, and in one run the skip cascaded into a fatal Dependency Error at a later step.
+
+Rothman's fixes are architectural rather than more patterns:
+
+- **Segment the data by trust.** Testimony goes in its own namespace (`KnowledgeStore-Testimony`) with its own, more lenient sanitization policy. This is a per-source version of the trust zones below.
+- **Put policy in a meta-controller outside the engine.** It parses the messy input (separating an email body from its attachments, for instance), enforces the rules agreed with legal, HR and IT, and assembles a clean configuration for the engine. The engine keeps the non-deterministic reasoning; the deterministic business rules live above it. The configuration object (Rothman's "control deck") is the API between the two layers.
+- **Replace vague requests with pre-approved objectives.** "Draft a pleading based on this NDA" produced fluent nonsense, not because of hallucination but because the goal had no blueprint. Standard objectives for common tasks, written with the domain team, fix it.
+
+### Measuring a pre-input filter
+
+Classifier-based injection filters can be scored. Lakera's PINT benchmark (4,314 inputs: multilingual injections, jailbreaks and hard negatives) reports **Lakera Guard at 92.5% and Llama Prompt Guard at 61.4%** (*Building Applications with AI Agents*, ch. 12). PINT is Lakera's own benchmark, so treat the ranking as vendor-reported. Microsoft's BIPIA covers *indirect* injection, the retrieved-content case. Even the best score leaves misses, which is why [Li's position](#coding-agent-specifics) stands: design so that an injected agent can't *complete* a dangerous action. For detection after the fact, plant **honeytokens**, fake secrets in the data flow whose access or exfiltration is itself the alarm.
+
 ### Trust zones
 
 | Source | Trust |
@@ -180,6 +299,20 @@ Independently toggleable, each with its own failure mode:
 The row people miss is **tool inputs**. They're generated by the model, which may be acting on injected instructions from a retrieved document — so validate them against schema before execution, exactly as you would validate a request from an external client.
 
 Related: **PII is redacted before logging** and never passed to unapproved third-party endpoints. Traces are a security surface as much as a debugging one.
+
+### The agentic risk map
+
+A common enumeration of agentic risks lists sixteen, in five groups. Each group maps to a harness control in this pillar rather than to a single central "guardrail service":
+
+| Group | Risks | Harness control |
+|---|---|---|
+| **Agent behaviour** | Deception, goal manipulation, tool misuse, memory poisoning, cascading hallucination | Tool schemas and write-op gates ([03](03-tool-design.md#write-operation-safety)), editable memory ([rollback](#rollback)), verification ([05](05-verification-loops.md)) |
+| **Security** | Privilege compromise, identity spoofing, unexpected RCE | Sandbox, least-privilege credentials, trust zones above |
+| **Operational resilience** | Resource overload, repudiation and untraceability | [Cost envelope](#cost-envelope), traces ([08](08-maturity-and-failure-modes.md#runtime-vs-process-observability)) |
+| **Multi-agent collusion** | Rogue agents, communication poisoning, human attacks on the system | Context firewalls and labelled handoffs ([07](07-orchestration.md#handoff-design)) |
+| **Human oversight** | Manipulating the human, overwhelming the human in the loop, persona-driven bias | Gate only irreversible actions; multiple-choice asks ([above](#permission-gates-and-hitl)) |
+
+The same source's point about architecture is the useful part. Handing all mitigation to one central oversight layer is unrealistic. **Each guardrail has to live in the component it protects**, so the risk map shapes the architecture rather than sitting on top of it.
 
 ---
 

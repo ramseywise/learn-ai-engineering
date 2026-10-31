@@ -16,7 +16,34 @@ cleaned: 2026-10-28
 
 ## Why evals are their own discipline
 
-Every layer below this one has an eval chapter: [prompts](../../01-prompt-engineering/notes/09-evaluating-prompts.md), [context](../../02-context-engineering/notes/12-evaluating-context.md), [harness verification](../../03-harness-engineering/notes/05-verification-loops.md), [the loop's scorekeeper](../../04-loop-engineering/notes/03-the-scorekeeper.md). Each one answers *what to measure at that layer*. This topic covers the machinery they all share: datasets, graders, judge calibration, traces, statistics, gates and production monitoring.
+**Every other layer makes claims. Evals are how you check them.** A prompt "works better", a context strategy "reduces hallucination", a harness "is more reliable", a loop "converges". Each is a hypothesis about a non-deterministic system, and only a measurement settles it.
+
+Eval engineering means building that measurement. You decide what correct means, collect tasks that represent real use, choose graders you can trust, run them repeatedly, and read the results honestly. Then you wire them into the places where decisions get made: CI, releases and production monitoring. It is an engineering discipline, not a QA afterthought, for three reasons:
+
+1. **The outputs are non-deterministic.** One run proves nothing. You need rates, repeats and error bars ([09](09-reading-results.md)).
+2. **"Correct" is often a judgment.** So the graders are themselves models or people, and they need measuring too ([05](05-llm-as-judge.md)).
+3. **The eval is software.** It has bugs, it drifts and it gets gamed. Treat a score drop as a claim about the eval before treating it as a claim about the system ([12](12-failure-modes.md)).
+
+```mermaid
+flowchart LR
+  P[01 prompt] --> C[02 context] --> H[03 harness] --> L[04 loop] --> G[05 graph]
+  P -. claims .-> E
+  C -. claims .-> E
+  H -. claims .-> E
+  L -. claims .-> E
+  E[06 eval: the shared machinery]
+```
+
+Every layer below this one has its own eval chapter. Each says **what** to measure at that layer:
+
+| Layer | Its eval chapter | Measures |
+|---|---|---|
+| Prompt | [01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md) | Output quality per prompt version |
+| Context | [02/12](../../02-context-engineering/notes/12-evaluating-context.md) | Whether the right content reached the model and got used |
+| Harness | [03/05](../../03-harness-engineering/notes/05-verification-loops.md) | Verification inside a run |
+| Loop | [04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md) | The stop condition a loop optimises against |
+
+This topic owns **how** to measure, for all of them: datasets, graders, judge calibration, traces, statistics, gates and production monitoring. It stands as its own topic because that machinery is the same everywhere, and copies spread across the layers would drift apart.
 
 Without that machinery, every change to a prompt, model, tool or retrieval config is a guess. The GitHub Copilot team built their eval framework before the prompts and before the UI ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#build-the-eval-first)). That order is the lesson.
 
@@ -46,11 +73,28 @@ Inspect AI uses the cleanest version of this split: a `Task` is a **dataset** + 
 
 ### The core flow
 
-```
-suite → pick task → run SUT (k trials) → capture trajectory + outcome → apply graders → aggregate
+```mermaid
+flowchart LR
+  D[Define correct] --> T[Build tasks] --> R[Run k trials] --> C[Capture trajectory + outcome]
+  C --> G[Grade] --> A[Aggregate with error bars] --> X[Decide]
+  X -. production failures become new tasks .-> T
 ```
 
-Everything in chapters 02–12 is about doing one of those arrows well.
+Each arrow is a chapter:
+
+| Step | Chapter |
+|---|---|
+| Define correct, error analysis, failure taxonomy | [02](02-defining-correct.md) |
+| Build tasks | [03](03-eval-datasets.md) |
+| Grade | [04](04-graders.md), [05](05-llm-as-judge.md) |
+| Agent trajectories, k trials | [06](06-evaluating-agents.md) |
+| RAG and grounding | [07](07-evaluating-rag-and-grounding.md) |
+| Capture traces | [08](08-tracing-and-observability.md) |
+| Aggregate and decide | [09](09-reading-results.md) |
+| Gate in CI | [10](10-evals-in-ci.md) |
+| Production and the loop back | [11](11-production-and-the-maturity-ladder.md) |
+| When the eval itself is wrong | [12](12-failure-modes.md) |
+| All of it, on one real system | [13](13-case-study-support-agent.md) |
 
 ---
 
@@ -111,9 +155,19 @@ You need both. Offline evals are the lab: cheap, repeatable, comparable. Online 
 
 ---
 
+## Five ideas that carry the topic
+
+1. **Read before you measure.** Failure modes come from error analysis on real traces, not from a list of generic metrics ([02](02-defining-correct.md#find-failure-modes-by-reading-error-analysis)).
+2. **Use the simplest grader you can trust.** Code first. Use a judge only where code can't reach, and only after calibrating it against people ([04](04-graders.md)).
+3. **Grade the path and the destination.** For agents, outcome and trajectory fail independently ([06](06-evaluating-agents.md#outcome-and-trajectory)).
+4. **A score without an error bar is an anecdote.** Pair, repeat, slice ([09](09-reading-results.md)).
+5. **The suite is alive.** Production failures become rows, saturated tasks graduate to regression, and you climb the maturity ladder one rung at a time ([11](11-production-and-the-maturity-ladder.md#the-ladder)).
+
+---
+
 ## Where it sits
 
-Eval measures every layer below it and inherits their weaknesses. If the harness exposes no trajectory, you can only grade outcomes. If the loop has no stop condition, a trial can't end cleanly. Eval also feeds the top of the loop stack: the hill-climbing loop ([04/08](../../04-loop-engineering/notes/08-self-improving-loops.md)) is an optimizer pointed at an eval. A weak eval there produces a system that gets better at the eval and no better at the job ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
+Eval measures every layer below it and inherits their weaknesses. It also has weaknesses of its own: an eval is only as good as its tasks (coverage), its graders (calibration) and its statistics (sample size). A well-built eval on an unrepresentative dataset gives precise answers to the wrong question. If the harness exposes no trajectory, you can only grade outcomes. If the loop has no stop condition, a trial can't end cleanly. Eval also feeds the top of the loop stack: the hill-climbing loop ([04/08](../../04-loop-engineering/notes/08-self-improving-loops.md)) is an optimizer pointed at an eval. A weak eval there produces a system that gets better at the eval and no better at the job ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
 
 ---
 

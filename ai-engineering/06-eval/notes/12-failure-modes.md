@@ -6,6 +6,8 @@ sources:
   - https://arxiv.org/abs/2404.12272
   - "Dmitriev et al., A Dirty Dozen (KDD 2017)"
   - "Sculley et al., Hidden Technical Debt in Machine Learning Systems (NeurIPS 2015)"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -33,6 +35,18 @@ A score drop is a claim that the system got worse. Often it's the eval that chan
 
 When a score drops:
 
+```mermaid
+flowchart LR
+  A[Score dropped] --> I{Infra errors up?}
+  I -- yes --> FI[Fix infra, re-run]
+  I -- no --> V{Any version changed?}
+  V -- yes --> FV[Pin / revert, re-run]
+  V -- no --> T{Grades on 10–20 failed traces correct?}
+  T -- no --> FG[Fix the grader or task]
+  T -- yes --> S{Drop concentrated in a slice?}
+  S --> X[Only now: change the agent]
+```
+
 1. **Infrastructure.** Errors, timeouts, rate limits, resource limits. Are error counts up?
 2. **Versions.** Did the dataset, grader, judge model or config change between runs?
 3. **Traces and grader decisions.** Read 10–20 failed transcripts *with* their grades. Is the grade right?
@@ -53,7 +67,9 @@ What to do:
 - **Add harder tasks** from the discovery set, new use cases, longer horizons, adversarial variants.
 - **Raise the bar**: pass^k instead of pass@1 ([06](06-evaluating-agents.md#non-determinism-run-every-task-k-times)), stricter grounding tier, tighter efficiency budget.
 
-Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can't separate models.
+Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can't separate models. GLUE (2018) saturated within a year and was replaced by SuperGLUE (2019); MMLU (2020) was largely replaced by MMLU-Pro (2024). In June 2024, less than a year after its previous revamp, Hugging Face replaced its leaderboard's whole benchmark set: GSM-8K gave way to MATH level 5, MMLU to MMLU-Pro, and GPQA, MuSR, BBH and IFEval were added (*AI Engineering*, ch. 3, 4). Expect those to saturate too (a 2024–25 snapshot).
+
+When you pick benchmarks for a custom leaderboard, check how strongly they correlate. On the January 2024 Hugging Face set, WinoGrande and MMLU correlated at 0.90 and ARC-C and MMLU at 0.87, while TruthfulQA sat around 0.45–0.55 against the rest. Two highly correlated benchmarks double-count one capability. A plain average also treats 80% on a hard benchmark the same as 80% on an easy one. HELM ranks by **mean win rate** instead: the fraction of times a model beats another, averaged across scenarios (*AI Engineering*, ch. 4).
 
 ---
 
@@ -67,6 +83,8 @@ Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can
 | **Narrow checks** | Code agent edits the tests instead of the code. Output matches the schema with empty content |
 | **Proxy metric** | 👍 rate optimized → flattery. Escalation rate cut → refuses to escalate when it should |
 | **Visible tests** | Agent overfits to tests it can see |
+
+Partial credit is a common version of the proxy gap. Yang et al. (2026) trained terminal agents on a dense reward: the fraction of checker tests passed. Under that reward, **failed trajectories collected 50% of all reward mass**, and 48 failures passed every executed scenario check yet still failed the task's terminal gate. Their fix kept the partial credit, because it helps exploration, but kept it *subordinate* to verified completion. Strict success means the full protected verifier passes, not the agent declaring itself done or a subset of checks passing. Rescoring under that rule cut the failures' share of reward to 29%. The lesson for any eval: when you award partial credit, report strict success beside it, and never let the sum of the partial scores outrank completion.
 
 Defenses:
 
@@ -98,6 +116,20 @@ The model may have seen your eval data:
 - **Your own leaks**: eval rows pasted into few-shot examples, fine-tuning data built from logs that include eval rows, eval rows in the retrieval index.
 - **Detection**: performance far above similar unseen tasks; the model completes a task's text verbatim; scores drop on paraphrased versions.
 
+Two detection heuristics, with a cost trade-off (*AI Engineering*, ch. 4):
+
+| Method | How | Trade-off |
+|---|---|---|
+| **N-gram overlap** | An eval sample that shares a 13-token sequence with the training data is "dirty" | More accurate. Needs the training data, and comparing every sample against it is expensive |
+| **Perplexity** | Unusually low perplexity on the eval text means the model finds it easy to predict, so it has probably seen it | Cheap and works without training data. Less accurate |
+
+Contamination is usually accidental: web scrapes pick up published benchmarks, and training and eval sets can share a source (the same maths textbooks). It is also sometimes deliberate and reasonable: a developer selects the model on clean benchmarks, then trains on the benchmark data before release because it is good data. Either way, report the score on the **clean subset** next to the full score. In OpenAI's GPT-3 analysis, 13 benchmarks had at least 40% of their samples in the training data, and the clean-vs-full gap went both ways (Brown et al. 2020):
+
+![Relative difference in GPT-3's performance on the clean subset vs the full benchmark, per benchmark](../sources/images/huyen-ai-engineering-fig4-10.png)
+*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 4-10*
+
+Benchmark maintainers can keep part of the data private and evaluate submissions against that hold-out. For your own fine-tunes there's a quick tell: if fine-tuning raises the base model's MMLU by 10 points, suspect the instruction data overlaps the test set before you celebrate (*LLM Engineer's Handbook*, ch. 7).
+
 ---
 
 ## Judge drift and misuse
@@ -105,10 +137,11 @@ The model may have seen your eval data:
 | Problem | Fix |
 |---|---|
 | Judge model silently updated | Pin the version; re-calibrate on change ([05](05-llm-as-judge.md#keep-it-calibrated)) |
+| Provider model update changes the system's behaviour | Re-run the suite on every model change. Chen et al. (2023) found GPT-3.5 and GPT-4 scores changed significantly on many benchmarks between March and June 2023. Moving from GPT-3.5-turbo-0301 to -1106 cost Voiceflow 10% on intent classification while it improved GoDaddy's support bot (*AI Engineering*, ch. 4): the same update can help one app and hurt another |
 | Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift)) |
 | Uncalibrated judge used as a release gate | Grader states: experimental never gates ([04](04-graders.md#grader-states-which-ones-can-block-a-release)) |
 | Judge from the same family as the SUT | Different model family ([05](05-llm-as-judge.md#known-biases)) |
-| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](case-study/calibration-results.md)) |
+| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](13-case-study-support-agent.md#calibration-results)) |
 
 ---
 
@@ -159,4 +192,4 @@ Schedule maintenance: review failure labels quarterly, prune dead rows, re-calib
 
 ---
 
-→ Back to the [README](../README.md). Practice: [practice/01-exercises.md](../practice/01-exercises.md).
+→ Next: [13-case-study-support-agent.md](13-case-study-support-agent.md) — every chapter applied to one real system.

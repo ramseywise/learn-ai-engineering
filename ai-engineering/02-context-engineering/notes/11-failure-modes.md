@@ -4,6 +4,7 @@ sources:
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://www.promptingguide.ai/guides/context-engineering-guide
   - https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 10, appendix A — sources/context-engineering-multi-agent-systems/"
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -100,6 +101,8 @@ The root cause is that context has no type system. Instructions and data are the
 
 Defense 5 is the load-bearing one. Every context-level defense is probabilistic. Only code-level controls are guarantees.
 
+**Check a retrieval store at both ends.** Rothman's engine sanitizes each document before it is embedded, and again when it is retrieved, so that a document missed at ingestion gets a second check. It moderates the user's goal before the task is queued, and the output before it is stored. The moderation call **fails closed**: an API error counts as flagged (*Context Engineering for Multi-Agent Systems*, ch. 10, appendix A). The placement is the lesson, not the filter. His sanitizer is a regex list ("ignore previous instructions", "act as"), and a paraphrase gets past it.
+
 Full treatment: [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) and pillar [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/00-overview.md).
 
 ---
@@ -113,6 +116,19 @@ When an agent misbehaves:
 3. **Search for contradictions.** Grep the window for the claim the agent got wrong; if it appears twice with different values, it's clash.
 4. **Check provenance.** Trace the wrong fact to its source. No legitimate source → poisoning or injection.
 5. **Test in isolation.** Same task, minimal context. Works → context problem. Still fails → prompt or capability problem, and belongs in [01-prompt](../../01-prompt-engineering/README.md).
+
+```mermaid
+flowchart TD
+    W[Print the actual window] --> Q{Occupancy above ~50%?}
+    Q -- yes --> RD[Suspect rot and distraction]
+    Q -- no --> C{Same claim twice, different values?}
+    C -- yes --> CL[Clash]
+    C -- no --> P{Wrong fact has a legitimate source?}
+    P -- no --> PI[Poisoning or injection]
+    P -- yes --> T{Same task, minimal context: works?}
+    T -- yes --> CP[Context problem]
+    T -- no --> PP[Prompt or capability problem]
+```
 
 Step 5 is the one that gets skipped, and it's the one that separates a context problem from a prompt problem.
 

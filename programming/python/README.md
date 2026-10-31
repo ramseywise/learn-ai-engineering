@@ -3,11 +3,11 @@
 > From your first `if` to async, typed, tested code, then on to pandas. Four modules: the
 > *Python for Everybody* spine (01–02), the language features engineering code relies on (03), and
 > Python for data (04).
-> Jump to: [Modules](#modules) · [Setup](#setup) · [How exercises work](#how-exercises-work) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
+> Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [How exercises work](#how-exercises-work) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
 
 ---
 
-## Modules
+## Syllabus
 
 ### 01 — Foundations
 
@@ -47,6 +47,30 @@ Seven course notebooks (arrays, DataFrames, plotting, aggregation, time series) 
 chapter notebooks and earlier Michigan/Wesleyan coursework. See [04-python-for-data/README.md](04-python-for-data/README.md).
 
 Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them.
+
+---
+
+## Layout
+
+```
+python/
+├── README.md
+├── check.sh                      ok / FAIL for every exercise or solution file; runs pytest for 06_tooling
+├── 01-foundations/
+│   ├── notes/                    01–05
+│   └── practice/
+│       ├── exercises/            01_…05_.py, stubs with the asserts at the bottom
+│       └── solutions/            same names, worked
+├── 02-informatics/               same shape, notes and exercises 01–05
+├── 03-language-for-engineers/    same shape, notes 01–07; 06_tooling/ is a uv package (pyproject.toml, src/, tests/)
+└── 04-python-for-data/
+    ├── README.md
+    ├── 1_Overview.ipynb … 7_Time_Series.ipynb
+    ├── mckinney/                 ch06–ch11, ch14; examples/ and datasets/ are fetched, not committed
+    ├── courses/                  three scripts kept from earlier coursework
+    ├── data/                     tmp.txt committed; the CSVs are fetched
+    └── fetch_data.sh
+```
 
 ---
 

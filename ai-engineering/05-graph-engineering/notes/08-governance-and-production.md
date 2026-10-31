@@ -45,6 +45,8 @@ Graphs amplify spend through fan-out, retries and dynamically spawned subtasks. 
 
 Per-node attribution is what makes the first one possible. Without `node_id` on every call, you only learn that a run was expensive, not why.
 
+The tenant level is the one a run-scoped framework can't enforce on its own, because the limit has to hold across many concurrent runs. [TrueFoundry](https://www.truefoundry.com/blog/graph-engineering-enterprise-guide) puts it in the gateway: each team or tenant gets a virtual account (or a metadata tag on every call), and the budget rule is keyed on that, with separate limits per account. That is a vendor selling a gateway, but the shape holds with any proxy: the budget key has to be something every call carries, which is one more reason to propagate the IDs above.
+
 ### Approval checkpoints
 
 Put human approval at the edges where consequence concentrates: irreversible, external, or expensive actions ([04](04-durable-execution-and-interrupts.md#where-approval-gates-go)). TrueFoundry calls this *"human approval checkpoints before configured sensitive tool calls at exactly the edges where consequence concentrates."*
@@ -75,7 +77,23 @@ Production readiness, in TrueFoundry's phrase, needs *"explicit ownership across
 
 A shipped supervisor-pattern graph, useful because its operating constants are published rather than guessed. The builder (the n8n feature that generates workflows from a prompt) is LangGraph with a **supervisor routing to five specialist subgraphs**.
 
-> **Source caution.** These details come from a third-party teardown (Rathod, Medium), not from n8n. The builder's code is in the n8n repository; check the constants there before relying on them.
+> **Source caution.** These details come from a third-party teardown ([Rathod, Medium](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8)), not from n8n. The builder's code is in the n8n repository; check the constants there before relying on them.
+
+```mermaid
+flowchart LR
+    U([user prompt]) --> SUP{Supervisor}
+    SUP --> D["Discovery<br/>≤50 iterations"]
+    SUP --> P[Planner]
+    P --> GATE{{"human approval<br/>interrupt()"}}
+    GATE -- approved --> B["Builder<br/>≤100 iterations"]
+    GATE -- revise --> P
+    SUP --> PU[Parameter Updater]
+    SUP --> R[Responder]
+    D & B & PU --> SUP
+    R --> OUT([reply])
+    B -. "validated tool calls,<br/>versionId + checksum" .-> WF[(workflow)]
+    PU -.-> WF
+```
 
 | Node | Role | Bound |
 |---|---|---|
@@ -105,12 +123,13 @@ What transfers:
 | Max prompt length | 5,000 chars |
 | Frontend payload cap | 400 KB |
 | Request timeout | 180 s |
+| Rate limit | 100 requests per period, per IP |
 
 The transferable idea: compaction triggers at 75% of the window, and **the artifact under construction is capped at 30K tokens**. The agent is never allowed to fill its own context with the thing it is editing.
 
 ### Deployment
 
-n8n self-hosts via npm, Docker or Docker Compose, with guides for the major clouds; without a licence key it runs as the free Community edition ([docs](https://docs.n8n.io/deploy/host-n8n)). That is the shape of a graph system you operate rather than demo: a runtime, a persistence layer for checkpoints, and a deployment surface (`~/.claude/refs/agent-runtime.md`).
+n8n self-hosts via npm, Docker or Docker Compose, with provider guides for AWS, Azure, GCP, DigitalOcean, Hetzner, Heroku and OpenShift. Every installation runs the same core: without a licence key it is the free Community edition, and a Business or Enterprise key unlocks those editions on the same install ([docs](https://docs.n8n.io/deploy/host-n8n)). That is the shape of a graph system you operate rather than demo: a runtime, a persistence layer for checkpoints, and a deployment surface (`~/.claude/refs/agent-runtime.md`).
 
 ---
 

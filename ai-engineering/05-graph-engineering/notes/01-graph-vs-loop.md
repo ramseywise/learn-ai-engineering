@@ -6,6 +6,7 @@ sources:
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
   - https://www.eigent.ai/blog/graph-engineering-ai-agents
   - https://www.aibuilderclub.com/blog/agent-graph-vs-loop-when-to-use
+  - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985
 confidence: high
 cleaned: 2026-10-28
@@ -31,6 +32,11 @@ Three framings worth holding together:
 The first is the one to build on. TrueFoundry and Eigent are vendor blogs; their framings are useful, but LangChain's comes from three years of running LangGraph in production.
 
 Anthropic's *Building Effective Agents* draws the same line from the other side. **Workflows** are systems where models and tools are orchestrated through predefined code paths; **agents** are systems where the model directs its own process. A graph is how you write a workflow down, and it is also how you mix the two: fixed paths where you know the route, an agent node where you don't.
+
+![Five workflow shapes (prompt chaining, parallelization, orchestrator-worker, evaluator-optimizer, routing) next to an agent loop of LLM call, tool and feedback](../sources/images/langchain-langgraph-docs-workflows-vs-agent.png)
+*Image Source: LangGraph docs, "Workflows and agents" (LangChain), after Anthropic's Building Effective Agents (2024)*
+
+Every box on the left is a graph you write down in advance. The box on the right is a loop. Most production graphs are the left-hand shapes with one or two right-hand boxes inside them.
 
 ---
 
@@ -70,6 +76,8 @@ The second lesson: **static edges are not enough.** Real systems mix *"known str
 ## Where loop ends and graph begins
 
 You are in graph territory once you need **more than one agent collaborating, with conditional handoffs and shared state across that collaboration.** One agent with a tool loop is loop engineering. Several agents with routing logic between them is graph engineering.
+
+A narrower rule of thumb from [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) (a vendor blog, so treat it as a heuristic): reach for a graph when the task has **three or more independent verification or research steps**. Below that, a sequential loop is cheaper and simpler. The full situation-to-choice lookup is in [06](06-when-not-to-build-a-graph.md#quick-reference).
 
 ### The default plus an escalation rule
 
@@ -131,8 +139,8 @@ They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system
 | 10 | [Building KGs with LLMs](10-building-kgs-with-llms.md) | B | How do you turn text into a graph you can trust? |
 | 11 | [KG-RAG and text-to-Cypher](11-kg-rag-and-text-to-cypher.md) | B | How do you retrieve from a graph in natural language? |
 | 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
+| 13 | [Learning on graphs](13-graph-ml-and-gnns.md) | B | What can a model learn from the graph's structure? |
 
-Labs: [P1 agent graph labs](../practice/01-agent-graph-labs.md) (Track A), [P2 knowledge graph labs](../practice/02-knowledge-graph-labs.md) (Track B).
 
 ---
 

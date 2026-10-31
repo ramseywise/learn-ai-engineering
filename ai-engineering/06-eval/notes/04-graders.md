@@ -5,9 +5,14 @@ sources:
   - https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
-  - case-study/gate-contract.md
+  - https://arxiv.org/abs/2401.07103
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
+  - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 4 — Graders
 
@@ -17,8 +22,8 @@ cleaned: 2026-10-28
 
 ## The three kinds
 
-![A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment](../images/ai-agent-book/fig7-4.svg)
-*Figure 7-4, A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment. From Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (Apache-2.0).*
+![A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment](../sources/images/li-ai-agents-in-depth-fig7-4.svg)
+*Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-4 (Apache-2.0)*
 
 | Grader | How it scores | Strength | Weakness | Use when |
 |---|---|---|---|---|
@@ -41,6 +46,8 @@ The four are layers, not alternatives:
 
 Run code graders first and stop early: an answer that fails the schema doesn't need a judge to tell you it's bad. That saves judge budget for the rows that need judgment.
 
+The same order works when you build the layers. Oshin & Campos advise starting with heuristic (code) evaluators, then adding human review, and only then an LLM judge that automates the human review you now understand (*Learning LangChain*, ch. 10).
+
 ---
 
 ## Code graders: more than you think
@@ -59,11 +66,32 @@ Teams reach for a judge too early. Most systems have more checkable properties t
 | Efficiency | Steps, tokens, latency, cost from the trace |
 | Exact facts | Number within tolerance, date matches, entity in an allowed set |
 
-For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
+For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless. Check values with a tolerance or a range, not equality: a thermostat call at 76°F when the reference says 77°F is probably fine, while no call or the wrong tool is not ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
+
+### Partial match: grade the aspect that breaks
+
+When exact match on the whole output is too strict, match on one aspect: code after stripping comments and whitespace, the destination country of a travel suggestion, the tool name of an action. Pick an aspect that separates breaking divergence from benign divergence, and that is neither so specific the model rarely hits it nor so general it means nothing. You find it by watching where the current system actually fails, which is circular, but still better than a weak or misleading aspect (*Prompt Engineering for LLMs*, ch. 10).
 
 ### Reference-based text metrics
 
-BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. The case study ruled out ROUGE-L for conversational answers for this reason ([case study](case-study/eval-architecture.md#why-we-use-custom-graders-instead-of-adks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
+BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. A survey's comparison table puts numbers on it: on SummEval summaries, the average Spearman correlation with human ratings was 0.19 for ROUGE-1 and 0.23 for BERTScore, against 0.51 for G-Eval (a GPT-4 judge). The LLM judges were also about 200–400× slower than word-overlap metrics in the authors' timing, and on machine translation their advantage was not significant ([arXiv:2401.07103](https://arxiv.org/abs/2401.07103) (Li et al., 2024-01)). The references themselves are a second problem (*AI Engineering*, ch. 3):
+
+- **They can be wrong.** The WMT 2023 Metrics shared task found many bad reference translations in its own data.
+- **They can be incomplete.** Adept's Fuyu wrote correct image captions that scored low because no reference phrased them that way.
+- **Overlap isn't correctness.** On HumanEval, OpenAI found correct and incorrect code solutions got similar BLEU scores.
+
+> **Contradiction.** Albada describes "modern practice" for agents as relying increasingly on embedding distance, BERTScore, BLEU and ROUGE to judge whether outputs meet the intent of a task (*Building Applications with AI Agents*, ch. 9). The correlation numbers above say otherwise for open-ended text: BERTScore at 0.23 against human ratings is a weak gate. The same chapter later warns that optimizing a single score such as BLEU leads to "formulaic or unnatural outputs". Follow the warning, not the recommendation.
+
+The case study ruled out ROUGE-L for conversational answers for this reason ([case study](13-case-study-support-agent.md#why-custom-graders-instead-of-a-frameworks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
+
+### Multiple-choice: format is part of the score
+
+Most public benchmarks are close-ended. In April 2024, 75% of the tasks in EleutherAI's lm-evaluation-harness were multiple-choice (MMLU, AGIEval, ARC-C) (*AI Engineering*, ch. 4). MCQ scoring looks like the safest code grader there is, but it has two traps:
+
+- **Format sensitivity.** Alzahrani et al. (2024) found that adding an extra space between question and answer, or a phrase like "Choices:", changed models' answers (*AI Engineering*, ch. 4). Freeze the template and report it with the score.
+- **How you read the answer.** The harness can score by log-likelihood (compare the model's probability of each option's full text) or by generation (let the model write a letter, then match it). Iusztin & Labonne recommend generation: it mirrors real use, it's easier to implement, and it discriminates better, because "low-quality models tend to overperform on probability-based evaluations" (*LLM Engineer's Handbook*, ch. 7). The two methods give different numbers for the same model, so don't compare scores across them.
+
+MCQs test whether a model can pick the good answer, not whether it can write one. Use them for knowledge and reasoning checks, not for summarization or other generation tasks.
 
 ---
 
@@ -100,7 +128,7 @@ class Grader(Protocol):
     def grade(self, task, output, trajectory=None, context=None) -> GraderResult: ...
 ```
 
-The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
+The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](13-case-study-support-agent.md#why-the-grounding-cross-check-showed-low-agreement)).
 
 ---
 
@@ -164,6 +192,8 @@ For judges and humans, prefer **binary pass/fail** per dimension over 1–5 scal
 
 Use an ordinal scale only when the levels are each *described* (what a 2 looks like vs. a 4), and only when the extra resolution changes a decision. If you have a scale, you can always threshold it into pass/fail later.
 
+Not everyone agrees. Berryman & Ziegler argue for judges to drop yes/no in favor of a described 1–5 scale. A bare "is it right?" leaves the bar to the judge, which may then hold ambitious answers to a stricter standard than safe ones, or pass mostly-right answers while failing near-perfect ones (*Prompt Engineering for LLMs*, ch. 10). Both camps blame the same failure, a bar the judge has to guess. Binary with written PASS/FAIL definitions and a scale with each level described both fix it.
+
 ---
 
 ## Checklist
@@ -179,7 +209,7 @@ Use an ordinal scale only when the levels are each *described* (what a 2 looks l
 
 ## Working reference
 
-[case-study/harness-patterns.md](case-study/harness-patterns.md) — four suite types and a tool-trajectory scorer in pytest.
+[13 · Case study: harness patterns](13-case-study-support-agent.md#harness-patterns) — four suite types and a tool-trajectory scorer in pytest.
 
 ---
 

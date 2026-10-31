@@ -4,7 +4,8 @@ sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://hamel.dev/blog/posts/field-guide/
   - https://arxiv.org/abs/2404.12272
-  - case-study/gate-contract.md
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -27,6 +28,10 @@ Before collecting data or writing a grader, answer four questions in writing:
 
 The fourth answer sets your thresholds. A system where errors are cheap can ship at a 90% pass rate. One where errors are expensive needs a lower rate plus a fallback path ([11](11-production-and-the-maturity-ladder.md)).
 
+**Map the eval metric to the business metric before you build.** Huyen's illustration for a support bot (her numbers are hypothetical, not measured): factual consistency of 80% lets you automate 30% of requests, 90% lets you automate 50%, and 98% lets you automate 90%. The same 80% might be unusable for billing questions yet good enough for product recommendations, so set the mapping per slice. Write down the **usefulness threshold** too: the score below which the system isn't worth shipping at all. A curve like this tells you whether the next 8 points are worth a quarter of work (*AI Engineering*, ch. 4).
+
+**Correct is not the same as good.** LinkedIn's first hurdle with its job-assessment feature was writing the guideline. "You are a terrible fit" can be correct and still be a bad answer. A good answer explains the gap between the job and the candidate's background and what they could do to close it. Put a worked example next to each score in the rubric ("this is a 1, and here's why"), and if people struggle to apply it, rewrite it before building a grader (*AI Engineering*, ch. 4).
+
 ### The two-expert test
 
 Anthropic's rule for a good task: **two domain experts would independently reach the same pass/fail verdict.** If they wouldn't, the ambiguity in the spec becomes noise in your metric, and no amount of grader tuning removes it.
@@ -44,6 +49,15 @@ You can't list failure modes in advance. You find them by reading outputs. The m
 3. **Axial coding.** Group the notes into categories. "Stale source", "ignored context", "wrong tool". Expect 5–15.
 4. **Count.** Rank categories by frequency × cost. That ranking is your eval roadmap: build graders for the top few first.
 5. **Repeat** until new traces stop producing new categories (theoretical saturation, usually 50–100 traces).
+
+```mermaid
+flowchart LR
+  T[Collect ~100 traces] --> O[Open coding:<br/>first failure, free text]
+  O --> A[Axial coding:<br/>5–15 categories]
+  A --> K[Count:<br/>frequency × cost]
+  K --> G[Build graders<br/>for the top few]
+  K -. new categories still appearing .-> T
+```
 
 Note the *first* failure only. Later failures in a trajectory are often caused by the first, and counting them inflates the wrong category.
 
@@ -70,7 +84,7 @@ Rules for a usable taxonomy:
 - **Ordered by pipeline stage.** A failure upstream masks everything downstream, so label the earliest one.
 - **Include the eval's own failures.** `context_missing` (the grader got no passage text) is a label too. It stops eval bugs being counted as system bugs ([12](12-failure-modes.md#eval-bugs-look-like-agent-bugs)).
 
-A worked example from a RAG support agent ([case study](case-study/gate-contract.md#failure-taxonomy)), grouped by stage:
+A worked example from a RAG support agent ([case study](13-case-study-support-agent.md#failure-taxonomy)), grouped by stage:
 
 | Stage | Labels |
 |---|---|
@@ -81,7 +95,28 @@ A worked example from a RAG support agent ([case study](case-study/gate-contract
 | Generation | `citation_hallucination`, `unsupported_claim`, `incomplete_answer` |
 | Behavior | `wrong_escalation`, `refusal`, `schema_violation` |
 
-Copy-ready skeleton: [templates/failure-taxonomy.md](../templates/failure-taxonomy.md).
+Keep the taxonomy as a small versioned file next to the eval code, with one named owner. Fill it from your own error analysis: don't pre-fill labels you haven't seen in traces. A skeleton:
+
+```markdown
+# Failure taxonomy: <system>   (owner: <one person> · v1 · traces coded: <n>)
+
+Rules: label the FIRST failure in a trace only · one label → one fix ·
+snake_case names are stable (rename = new version + migration note)
+
+| Stage               | Label           | Definition (what you see in the trace)  | Likely fix          | Grader | Count | Cost |
+|---------------------|-----------------|-----------------------------------------|---------------------|--------|-------|------|
+| Retrieval           | rank_miss       | Expected source indexed, not in top-k   | Retrieval config    | Code   |       |      |
+| Generation          | unsupported_claim | A claim not in the retrieved passages | Prompt / grounding  | Judge  |       |      |
+| Eval infrastructure | context_missing | Grader received no passage text         | Fix trace capture   | Code   |       | —    |
+| Eval infrastructure | infra_error     | Timeout, rate limit, crash before output| Retry / capacity    | Code   |       | —    |
+
+Priority: rank by count × cost (low/medium/high, from the cost-of-error criterion).
+The top 3 get graders first.
+
+Change log: | version | date | change | reason |
+```
+
+**Count** comes from the latest coding pass. **Cost** comes from the cost-of-error answer in your success criteria. Count × cost decides which failures get a grader first. The change log matters because dashboards aggregate by label name.
 
 ---
 

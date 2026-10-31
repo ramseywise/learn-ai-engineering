@@ -5,8 +5,11 @@ sources:
   - https://www.anthropic.com/engineering/multi-agent-research-system
   - https://www.anthropic.com/engineering/building-effective-agents
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
+  - https://arxiv.org/abs/2512.08296
+  - https://arxiv.org/abs/2604.02460
+  - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 6 — When Not to Build a Graph
 
@@ -30,6 +33,11 @@ The test: can you name the nodes before the run starts? If not, can `Send` deriv
 
 Anthropic's multi-agent research system is the first-party anchor. In their write-up, agents use about **4× the tokens of a chat interaction**, and multi-agent systems about **15×**. In exchange, the multi-agent version beat a single agent by a wide margin on their research eval, and token usage alone explained most of the variance in performance. Their conclusion: multi-agent systems pay off for tasks whose value is high enough to cover the tokens, and that **parallelise well**. Tasks where every agent needs the same context, or with many dependencies between agents, are a poor fit.
 
+Kim et al. ([arXiv:2512.08296](https://arxiv.org/abs/2512.08296), 2025-12) tested that conclusion under controlled conditions: 260 configurations across six agentic benchmarks, five architectures and three model families (GPT-5, Gemini 2.x, Claude Sonnet 3.7–4.5), with compute matched. The spread was enormous. A centralized team scored 80.8% higher than a single agent on Finance Agent, where the work decomposes into parallel subtasks; every multi-agent variant lost 39–70% on PlanCraft, where each step constrains the next; and the mean change across all multi-agent configurations was −0.3% (95% CI [−58.7%, +77.2%]). The one predictor that held up under their most conservative statistics was the single agent's own score: once it was above about 45%, adding agents had negative returns. Multi-agent runs spent 1.6–6.2× the tokens of a single agent at matched performance. Their caveats: only 20 tasks per cell on SWE-bench Verified and Terminal-Bench, and prompts were not tuned per model. Tran & Kiela ([arXiv:2604.02460](https://arxiv.org/abs/2604.02460), 2026-04) get the same answer from the other side: on multi-hop QA at matched thinking-token budgets, a single agent was best or tied with every multi-agent variant ([05](05-topology-patterns.md#when-multi-agent-beats-single-agent)).
+
+![Box plots for six benchmarks comparing a single agent with four multi-agent architectures: every multi-agent variant gains 57–81% on Finance Agent and loses 39–70% on PlanCraft, with small losses on SWE-bench Verified](../sources/images/kim-2025-scaling-agent-systems-fig2.png)
+*Image Source: Kim et al., [Towards a Science of Scaling Agent Systems](https://arxiv.org/abs/2512.08296) (2025), Fig. 2*
+
 flowtivity puts the trade-off as a table. Its numbers are vendor estimates, so use them as a shape to test rather than as constants:
 
 | Metric | Loop | Graph (fan-out) |
@@ -38,7 +46,7 @@ flowtivity puts the trade-off as a table. Its numbers are vendor estimates, so u
 | Tokens per cycle | Lower | ~3× higher (flowtivity) |
 | Break-even pass rate | — | ~50% (flowtivity) |
 
-The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even with [Lab 5](../practice/01-agent-graph-labs.md#lab-5--break-even-measurement).
+The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even: run the same task set through the loop and through the graph, and record tokens, wall-clock time and pass rate for each.
 
 > **Rule: a graph needs genuine job separation to justify its overhead.** If the branches share most of their context, you're paying N times for the same reading.
 
@@ -54,6 +62,15 @@ Beyond tokens, every node you add brings:
 - **Harder debugging**: a wrong answer now has N places it could have come from.
 
 All of that is pure overhead when the problem had one specialty to begin with.
+
+**A "multi-agent system" that is a pipeline.** Raieli & Iuculano's travel planner (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 9) has four "agents":
+
+- a random-forest weather model that picks the best month;
+- an embedding search over hotel descriptions (top k = 5 by cosine similarity);
+- a GPT-2 itinerary writer;
+- a GPT-2 email writer.
+
+A controller calls them in a fixed order. No step decides anything, so no edge is conditional and nothing loops. That makes it a four-stage pipeline, and it is better for it: each stage can be tested on its own, and the cheapest model that works is used per stage. The one design choice worth copying is that the trip price (`price × nights + $100 × days`) is computed in code, because "LLMs are not good at arithmetic". Before calling something multi-agent, check whether any node chooses what runs next ([02](02-graph-primitives.md#edges-choose-what-runs-next)). If none does, build a function chain and skip the graph runtime.
 
 ---
 
@@ -81,7 +98,21 @@ When a graph is justified, grow it in this order:
 4. **Measure a baseline** with the loop you have, then with the graph: tokens, wall-clock time, pass rate.
 5. **Add nodes one at a time**, each justified by a signal from [01](01-graph-vs-loop.md#the-default-plus-an-escalation-rule).
 
-This is flowtivity's AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with "measure" made explicit. A 3–5 node graph with one honest verification step beats a twelve-node topology whose failure modes you can't reason about.
+```mermaid
+flowchart TD
+    A[Loop fails or stalls] --> B{Overloaded verifier?}
+    B -- yes --> C[Split into per-criterion checks<br/>make what you can code]
+    C --> D{Pass rate recovers?}
+    D -- yes --> SHIP([Ship the loop])
+    D -- no --> E[That one criterion earns a node]
+    B -- no --> F[Mark real vs incidental edges]
+    E --> G[Sketch 3–5 nodes]
+    F --> G
+    G --> H[Baseline loop vs graph:<br/>tokens, wall-clock, pass rate]
+    H --> I[Add nodes one at a time,<br/>each justified by a signal from note 01]
+```
+
+This is [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/)'s AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with "measure" made explicit. Their fifth stage, **TYPE**, comes last on purpose: once the topology is stable, give the relationships it records explicit types (`DEPENDS_ON`, `SUPERSEDES`, `DECIDED_BY` …) so later runs can reason over why things are connected, not only that they are. That is the knowledge-graph side of the pillar; the edge-type list and its caveats are in [09](09-kg-fundamentals-and-cypher.md#typed-edges-the-edge-type-is-the-knowledge). A 3–5 node graph with one honest verification step beats a twelve-node topology whose failure modes you can't reason about.
 
 ---
 
@@ -92,6 +123,7 @@ This is flowtivity's AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with 
 | Single agent, tool-augmented reasoning | Loop |
 | Open-ended research with unknowable steps | Harness + loop, **not** a graph |
 | Simple task, low per-cycle pass rate | Loop: fan-out cost isn't recovered |
+| Single agent already passes more than ~45% | Loop: extra agents had negative returns (Kim et al.) |
 | Verifier failing on several criteria | Split the verifier first |
 | Several agents with conditional handoffs | Graph |
 | 3+ independent verification or research steps | Graph (parallel review) |

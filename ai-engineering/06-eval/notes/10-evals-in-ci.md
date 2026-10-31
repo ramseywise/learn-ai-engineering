@@ -3,8 +3,8 @@ origin: synthesis
 sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://www.langchain.com/blog/agent-evaluation-readiness-checklist
-  - case-study/gate-contract.md
-  - case-study/harness-patterns.md
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9, 10"
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -50,7 +50,7 @@ Why:
 - **Results are an artifact.** Upload them, diff them against the last run, attach them to the PR.
 - **Flakiness is visible.** Retries and infra errors are recorded in phase 1, not swallowed.
 
-The case study's harness splits each suite this way: an execution step writes rows, and pytest assertions read them ([case study](case-study/harness-patterns.md)).
+The case study's harness splits each suite this way: an execution step writes rows, and pytest assertions read them ([case study](13-case-study-support-agent.md#harness-patterns)).
 
 ---
 
@@ -76,8 +76,12 @@ Update the baseline deliberately: after a release, store its results as the new 
 
 Inside a mature suite, gates are **ordered by pipeline stage**. A later gate only runs on the rows an earlier one says are fair ([03](03-eval-datasets.md#row-eligibility-is-this-row-fair-for-this-gate)):
 
-```
-data quality → retrieval → generation → grader calibration → release
+```mermaid
+flowchart LR
+  D[Data quality<br/>valid, mapped, eligible] --> R[Retrieval<br/>retrieval_eligible rows]
+  R --> G[Generation<br/>generation_eligible rows]
+  G --> C[Grader calibration<br/>gating judges calibrated]
+  C --> L[Release<br/>all pass + budget]
 ```
 
 | Gate | Checks | Fails when |
@@ -108,26 +112,47 @@ Every gate produces the same shape, so failures are actionable:
 
 A gate that only says `FAILED` sends someone on a half-day hunt.
 
-Generic contract: [templates/gate-contract.md](../templates/gate-contract.md).
+Write the gates down as a **contract**: a small config file (e.g. `evals/gates.yaml`) that the assert step reads, so thresholds change by reviewed diff and not by someone editing a script. Per gate it records:
+
+| Field | Example |
+|---|---|
+| Runs on pool | `generation_eligible` |
+| Graders (name · version · state) | `grounding · v3 · calibrated` |
+| Fails when (absolute) | `schema_valid < 0.99` |
+| Fails when (vs. baseline) | upper bound of paired Δ grounding < −0.03 |
+| Fails when (per slice) | any slice with n ≥ 20 drops > 10 points |
+| Efficiency budget | cost per success ≤ 1.2 × baseline; p95 latency ≤ budget |
+| Blocks | merge / release / nothing (alert only) |
+
+Changing a threshold is a reviewed change with a reason, like changing a test. A full eight-gate contract for a RAG system is worked through in [13](13-case-study-support-agent.md#the-gate-ladder).
 
 ---
 
 ## A CI workflow
 
-Shape of a GitHub Actions job (full version: [templates/eval.yml](../templates/eval.yml)):
+Two jobs: a cheap **smoke** job (code graders only, one trial) on every relevant PR, and a **regression** job that runs only if smoke passes. A nightly cron runs the full suite and alerts instead of blocking. The core of the regression job:
 
 ```yaml
 on:
   pull_request:
     paths: ["prompts/**", "src/agent/**", "src/retrieval/**", "evals/**"]
+  schedule:
+    - cron: "0 3 * * *"                    # nightly full suite
 jobs:
-  eval:
+  regression:
+    needs: smoke                           # smoke = code graders only, --trials 1
     steps:
-      - run: python -m evals.run --suite regression --trials 3 --out results.jsonl   # phase 1
-      - run: python -m evals.assert results.jsonl --baseline baselines/prod.jsonl   # phase 2
+      # Phase 1: run. Costly, non-deterministic; records infra errors, never drops rows
+      - run: python -m evals.run --suite regression --trials 3 --concurrency 8 --cache .eval-cache --out results.jsonl
+        env: {ANTHROPIC_API_KEY: "${{ secrets.EVAL_API_KEY }}"}   # separate, spend-capped key
       - uses: actions/upload-artifact@v4
+        if: always()
         with: {name: eval-results, path: results.jsonl}
-      - run: python -m evals.report results.jsonl >> $GITHUB_STEP_SUMMARY            # PR summary
+      # Phase 2: assert. Free, deterministic; paired comparison against the stored baseline
+      - run: python -m evals.assert results.jsonl --baseline baselines/prod.jsonl --contract evals/gates.yaml --report report.md
+        continue-on-error: ${{ github.event_name == 'schedule' }}  # nightly alerts, doesn't block
+      - if: always()
+        run: cat report.md >> "$GITHUB_STEP_SUMMARY"            # PR summary
 ```
 
 Practical details:
@@ -147,6 +172,23 @@ Anthropic describes eval suites as living artifacts: a team owns the infrastruct
 - **Infra owner**: runner, CI, dashboards, cost.
 - **Criteria owner** ([02](02-defining-correct.md#one-person-decides)): pass/fail definitions, the taxonomy, calibration sign-off.
 - **Every engineer**: adds a row when they fix a bug.
+
+Production metrics need owners too, and they cut across teams. Albada's point: a five-second planning delay is usually a prompt or workflow decision, not an infrastructure limit, so no single team can own latency. His template assigns each metric with a RACI chart: **R**esponsible does the work, **A**ccountable owns the outcome, **C**onsulted gives input, **I**nformed is kept updated (*Building Applications with AI Agents*, ch. 10). Condensed:
+
+| Metric | Product | ML engineers | Infra / SRE |
+|---|---|---|---|
+| Latency (planning, tool calls) | A, C | R, I | R, C |
+| Hallucination rate | C, I | **A**, R | I |
+| Task success rate | **A**, R (defines success) | C | I |
+| Token usage / cost | C | R, I | **A**, R |
+| Input drift | I | **A**, R | C |
+| Fallback / retry frequency | C | R | **A**, I |
+| User feedback | **A**, R | C | I |
+| Dashboards and triage rituals | C | C | **A**, R |
+
+Exactly one A per row. Adapt the columns to your org. The point is that no metric is left without an A.
+
+The release gate itself can be stated the same way. Albada's example combines a threshold and a no-regression rule: at least 95% tool recall on refund and cancellation scenarios, and promotion blocked by any regression in multi-turn tests (*Building Applications with AI Agents*, ch. 9). That's the absolute-floor and regression-set rows of [the gate table](#the-regression-gate).
 
 ---
 
