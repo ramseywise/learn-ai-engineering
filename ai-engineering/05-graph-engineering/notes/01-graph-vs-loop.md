@@ -6,6 +6,7 @@ sources:
   - https://www.truefoundry.com/blog/graph-engineering-enterprise-guide
   - https://www.eigent.ai/blog/graph-engineering-ai-agents
   - https://www.aibuilderclub.com/blog/agent-graph-vs-loop-when-to-use
+  - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - https://medium.com/@GaoDalie_AI/forget-loop-engineering-graph-engineering-is-about-this-713a9cf2e985
 confidence: high
 cleaned: 2026-10-28
@@ -75,6 +76,8 @@ The second lesson: **static edges are not enough.** Real systems mix *"known str
 ## Where loop ends and graph begins
 
 You are in graph territory once you need **more than one agent collaborating, with conditional handoffs and shared state across that collaboration.** One agent with a tool loop is loop engineering. Several agents with routing logic between them is graph engineering.
+
+A narrower rule of thumb from [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/) (a vendor blog, so treat it as a heuristic): reach for a graph when the task has **three or more independent verification or research steps**. Below that, a sequential loop is cheaper and simpler. The full situation-to-choice lookup is in [06](06-when-not-to-build-a-graph.md#quick-reference).
 
 ### The default plus an escalation rule
 

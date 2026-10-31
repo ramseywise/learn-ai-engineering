@@ -38,7 +38,7 @@ flowtivity puts the trade-off as a table. Its numbers are vendor estimates, so u
 | Tokens per cycle | Lower | ~3× higher (flowtivity) |
 | Break-even pass rate | — | ~50% (flowtivity) |
 
-The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even with [lab A5](../practice/exercises.md#a5--break-even-measurement).
+The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even: run the same task set through the loop and through the graph, and record tokens, wall-clock time and pass rate for each.
 
 > **Rule: a graph needs genuine job separation to justify its overhead.** If the branches share most of their context, you're paying N times for the same reading.
 
@@ -95,7 +95,7 @@ flowchart TD
     H --> I[Add nodes one at a time,<br/>each justified by a signal from note 01]
 ```
 
-This is flowtivity's AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with "measure" made explicit. A 3–5 node graph with one honest verification step beats a twelve-node topology whose failure modes you can't reason about.
+This is [flowtivity](https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/)'s AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with "measure" made explicit. Their fifth stage, **TYPE**, comes last on purpose: once the topology is stable, give the relationships it records explicit types (`DEPENDS_ON`, `SUPERSEDES`, `DECIDED_BY` …) so later runs can reason over why things are connected, not only that they are. That is the knowledge-graph side of the pillar; the edge-type list and its caveats are in [09](09-kg-fundamentals-and-cypher.md#typed-edges-the-edge-type-is-the-knowledge). A 3–5 node graph with one honest verification step beats a twelve-node topology whose failure modes you can't reason about.
 
 ---
 
