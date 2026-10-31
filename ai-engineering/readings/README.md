@@ -7,7 +7,7 @@ lives under `ai-engineering/` only because the tooling points here. It covers al
 |---|---|
 | `ledger.jsonl` | One row per reading, repo-wide: DAIR AI Papers of the Week (2023 onward) and every PDF found in the repo. The single source of truth for what we have, where it lives, and whether it has been worked into the notes. |
 | `blurbs/<year>.jsonl` | A summary per ledger row, used only as triage input. The DAIR summary for papers, the first-page text for PDFs. Split by year to stay under the pre-commit size limit. |
-| `general/`, `ai_engineering/` | PDFs still waiting to be routed. These folders should empty out. |
+| `general/`, `ai_engineering/` | PDFs not yet routed, and the `skipped` ones that have no home (off-syllabus). Nothing else should stay here. |
 
 A PDF does not stay here. Once triage gives it a home, `route` moves it into that home's
 `sources/` folder, where the notes that use it live.
@@ -21,8 +21,8 @@ Each reading gets one *home*: the folder whose notes it feeds. The map is `HOMES
 |---|---|
 | prompt, context, harness, loop, graph, eval, inference | `ai-engineering/01`–`07` |
 | llm-fundamentals, rag, agents, frameworks, post-training, observability, agentic-apps | `generative-ai/01`–`07` |
-| classical-ml | `data-science/readings/` |
-| ml-systems | `data-engineering/readings/` |
+| classical-ml | `data-science/sources/` |
+| ml-systems | `data-engineering/sources/` |
 
 Topics with no home (mechanistic interpretability, safety research, robotics and other
 multimodal work, domain applications) are kept in the ledger as `skipped` and never routed.
@@ -30,8 +30,9 @@ multimodal work, domain applications) are kept in the ledger as `skipped` and ne
 ## Status lifecycle
 
 ```
-new ──triage──▶ queued ──download / route──▶ downloaded ──/papers or /chapter──▶ integrated
-          └───▶ skipped (no home, or a DAIR paper below relevance 2)
+new ──triage──▶ queued ──download (DAIR, arXiv)──▶ downloaded ──/papers──────────▶ integrated
+          │        └──route (PDF already in the repo; stays queued)──/papers or /chapter──▶ integrated
+          └───▶ skipped (no home, or a DAIR paper below relevance 2 that we don't hold)
 ```
 
 ## Commands
@@ -41,6 +42,7 @@ make papers-status                                        # counts, and how many
 python3 scripts/papers/potw.py route                      # dry run: where each triaged PDF would go
 python3 scripts/papers/potw.py route --apply              # move them (git mv) and drop duplicate copies
 python3 scripts/papers/potw.py triage --status skipped --source repo   # re-triage after HOMES changes
+python3 scripts/papers/potw.py triage --local --backlog   # DAIR rows whose PDF is already in the repo
 make papers                                               # weekly: fetch DAIR, triage, download
 ```
 
