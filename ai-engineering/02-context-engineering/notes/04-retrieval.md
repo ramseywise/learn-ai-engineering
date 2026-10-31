@@ -174,7 +174,7 @@ def contextualize(doc, chunks, llm):
     return [llm(PREFIX_PROMPT.format(doc=doc, chunk=c)) + "\n" + c for c in chunks]
 ```
 
-Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); the sparse half offline in [BM25 from scratch](../../../generative-ai/02-rag-retrieval/practice/01-bm25-from-scratch/README.md) (exercise 5).
+Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); the sparse half as a worked example in [BM25 from scratch](../../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch).
 
 ---
 
@@ -255,7 +255,7 @@ Everything that decides *which* chunks a retriever can return lives in [generati
 - Bayer's PRINCE pipeline and its Text-to-SQL path,
 - RAG architectures, from naive to agentic and graph-enhanced, and conversational (multi-turn) RAG.
 
-Hands-on: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/practice/01-bm25-from-scratch/README.md) (offline) and [pe-rag.ipynb](../../../generative-ai/02-rag-retrieval/practice/pe-rag.ipynb) (retrieved few-shot examples).
+Worked examples: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch) (offline) and [retrieved few-shot examples](../../../generative-ai/02-rag-retrieval/rag.md#text-to-sql-is-a-retrieval-strategy) (DAIR `pe-rag`).
 
 ---
 

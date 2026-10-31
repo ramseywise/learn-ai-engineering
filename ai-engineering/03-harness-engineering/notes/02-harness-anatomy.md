@@ -73,7 +73,7 @@ The nine components describe what *ships*. For diagnosing a failing agent, a coa
 
 Two of these map onto Norman's two gulfs from interaction design. The **gulf of execution** (the agent knows what it wants but can't act on it) is a tools or environment gap. The **gulf of evaluation** (it acted but can't tell whether that worked) is a feedback gap. Agents usually fail on evaluation. They are rarely stuck; they are confidently wrong.
 
-**Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing. [Practice lab 6](../practice/exercises.md#lab-6--capstone-full-harness-cleanup-ablation) runs this end to end.
+**Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing.
 
 ### One harness, read through the five subsystems
 

@@ -7,7 +7,7 @@ cleaned: 2026-10-31
 ---
 # Harness Engineering — Primary Sources and Upstream Course
 
-> The primary sources behind notes [09](notes/09-repo-as-system-of-record.md)–[10](notes/10-scope-and-done.md), the [exercises](practice/exercises.md) and the 2026-10 additions to [notes/](notes/), plus what was kept from the *learn-harness-engineering* course and what was dropped. The full source list for notes 01–08 is in the [README](README.md#external-sources).
+> The primary sources behind notes [09](notes/09-repo-as-system-of-record.md)–[10](notes/10-scope-and-done.md) and the 2026-10 additions to [notes/](notes/), plus what was kept from the *learn-harness-engineering* course and what was dropped. The full source list for notes 01–08 is in the [README](README.md#external-sources).
 
 ---
 
@@ -40,7 +40,7 @@ cleaned: 2026-10-31
 | L07–L08 (scope, feature lists) | [10](notes/10-scope-and-done.md) |
 | L09–L10 (premature done, end-to-end testing) | [05](notes/05-verification-loops.md#the-three-layer-termination-check) |
 | L11 (observability) | [08](notes/08-maturity-and-failure-modes.md#runtime-vs-process-observability) |
-| Projects 01–06 | [Exercises](practice/exercises.md), rewritten to work on any repo |
+| Projects 01–06 | Dropped (the exercises built on them were removed 2026-10-31) |
 | Resource templates + harness-creator skill templates | Trimmed excerpts inline in [06](notes/06-long-horizon-execution.md#the-session-lifecycle), [05](notes/05-verification-loops.md#grading-criteria-beat-vibes), [08](notes/08-maturity-and-failure-modes.md#the-quality-document), [10](notes/10-scope-and-done.md#the-triple). The full copy-ready set lived in `templates/` until 2026-10-31; it is in git history at commit `6ee939f` |
 | OpenAI advanced repo template | Layout described in [09](notes/09-repo-as-system-of-record.md#encoding-knowledge-the-agent-cant-see); files in git history at `6ee939f` (`templates/openai-repo-template/`) |
 | harness-creator skill (gotchas, pattern references) | [08](notes/08-maturity-and-failure-modes.md#builder-gotchas) · [07](notes/07-orchestration.md#handoff-design) |
@@ -50,7 +50,7 @@ cleaned: 2026-10-31
 - **The Electron app projects and TypeScript demos.** The starter and solution code taught the app more than the harness. The labs now run on your own repo.
 - **Translations** (zh, ja, ko, es, fr, vi, pt, de) and the VitePress website tooling.
 - **The rest of the harness-creator skill.** The gotchas and patterns were folded into the notes. The skill's own instructions duplicated the course.
-- **L13 and project 07 (loop engineering).** These became [04-loop-engineering/notes/](../04-loop-engineering/notes/) and the [loop labs](../04-loop-engineering/practice/exercises.md).
+- **L13 and project 07 (loop engineering).** These became [04-loop-engineering/notes/](../04-loop-engineering/notes/).
 - **Unsourced statistics and "a team found…" anecdotes.** Only numbers traceable to a cited source were kept.
 - **The duplicate `CLAUDE.md` template.** `CLAUDE.md` can be a pointer or symlink to `AGENTS.md`.
 

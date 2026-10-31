@@ -117,7 +117,58 @@ def _promise_action(self, trajectory):
 
 Every dimension returns a verdict, a score, the turns that prove it and a confidence. The run is rejected if any outcome or process dimension fails, whatever the average says. In the lab, the false promise and the privacy leak both average **0.571**, yet one needs a harness consistency check and the other an identity gate plus output redaction. The over-refusal averages 0.714 and would sail through a threshold.
 
-Lab: [practice/02-trajectory-verifier](../practice/02-trajectory-verifier/README.md) builds the three layers and compares them with a single score on four labelled trajectories.
+#### Worked example: three layers, one verdict
+
+The three layers are three verifiers behind one interface. Code decides outcome and process; only the quality layer may be an LLM, and it is swappable (a deterministic heuristic judge keeps the example offline). Adapted from Li's Experiment 9-1:
+
+```python
+class TrajectoryVerifier:
+    def __init__(self, quality_judge=None):
+        self.result_verifier = ResultVerifier()     # outcome: final order state (code)
+        self.process_verifier = ProcessVerifier()   # process: policy, privacy, grounding, promise-action (code)
+        self.quality_judge = quality_judge or HeuristicQualityJudge()  # quality: rubric (heuristic or LLM)
+
+    def evaluate(self, trajectory):
+        dims = [*self.result_verifier.evaluate(trajectory),
+                *self.process_verifier.evaluate(trajectory),
+                *self.quality_judge.evaluate(trajectory)]
+        # any hard failure rejects the run, whatever the average says
+        critical = [d.dimension for d in dims if d.verdict == FAIL and d.dimension in {
+            "task_resolution", "rule_compliance", "privacy_boundary",
+            "factual_reliability", "promise_action_consistency"}]
+        return {"overall_score": round(sum(d.score for d in dims) / len(dims), 3),  # kept only for contrast
+                "release_recommendation": "reject" if critical else "review_or_accept",
+                "critical_failures": critical,
+                "dimensions": [asdict(d) for d in dims]}   # verdict, score, evidence, confidence each
+```
+
+On the four expert-labelled trajectories, the average and the diagnosis tell different stories:
+
+```text
+cs-good-refund         score=1.000 decision=review_or_accept failures=['none']
+cs-false-promise       score=0.571 decision=reject  failures=['task_resolution', 'factual_reliability', 'promise_action_consistency']
+cs-policy-and-privacy  score=0.571 decision=reject  failures=['task_resolution', 'rule_compliance', 'privacy_boundary']
+cs-over-refusal        score=0.714 decision=review_or_accept failures=['expression_quality', 'compliant_flexibility']
+```
+
+**Calibration** is the comparison that earns the verifier its place as a learning signal. For each dimension, count how often the verifier's FAIL matches the expert's FAIL:
+
+```python
+for dim in dimensions:
+    tp = fp = fn = 0
+    for traj, report in pairs:
+        expected = traj["expert_labels"].get(dim)            # human verdict
+        predicted = {d["dimension"]: d["verdict"] for d in report["dimensions"]}.get(dim)
+        tp += expected == FAIL and predicted == FAIL
+        fp += expected != FAIL and predicted == FAIL           # false alarm
+        fn += expected == FAIL and predicted != FAIL           # missed failure
+    per_dim[dim] = {"precision_on_failures": tp / (tp + fp) if tp + fp else 1.0,
+                    "recall_on_failures":    tp / (tp + fn) if tp + fn else 1.0}
+```
+
+The offline heuristic judge scores 1.0 on all seven dimensions, which is expected, since the sample data spells out the quality facts. Swap in an LLM judge and watch this table per dimension, not the total, and re-run it whenever the model version changes.
+
+Run it: upstream [chapter9/trajectory-verifier](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/trajectory-verifier) (Exp. 9-1, Apache-2.0). Clone the repo, then `cd chapter9/trajectory-verifier && python demo.py`; it is offline, and `--judge llm` switches to an LLM judge.
 
 ---
 
@@ -183,7 +234,28 @@ Two additions make the result attributable:
 - **A falsifiable change contract** ([Agentic Harness Engineering](https://arxiv.org/abs/2604.25850)). Each edit records the failure evidence, the inferred root cause, the component to change, the behaviour expected to improve, the behaviour that might regress, and tests for both. It states the predicted impact *before* running, and the next round checks that prediction.
 - **A bounded candidate space** ([Self-Harness](https://arxiv.org/abs/2606.09498)). Give the generator the failures, the successes it must preserve, and the previously rejected attempts. The successes say what not to break. The rejected list stops it re-submitting the same idea in new words.
 
-Lab: [practice/03-self-modifying-agent](../practice/03-self-modifying-agent/README.md). Repeated `retryable=false` calls trigger a patch to `retry_policy.py`. A request is raised only when **at least two** failure trajectories show the same tool and error code. The bug and the minimal patch:
+#### Worked example: a failure-triggered patch
+
+Adapted from Li's Experiment 9-6. Production trajectories show the agent calling a payment tool again and again after a `retryable=false` error. The fix belongs in code, not in a prompt line saying "don't repeat the call". The **trigger** is evidence, not a single bad run: a change request is raised only when **at least two** failure trajectories show the same tool and error code.
+
+```python
+def diagnose(trajectories):
+    repeated = defaultdict(list)
+    for t in trajectories:   # failed, told not to retry, retried anyway
+        if t["outcome"] == "failure" and not t["retryable"] and t["attempts"] > 1:
+            repeated[(t["tool"], t["error_code"])].append(t)
+    patterns = [{"tool": tool, "error_code": code,
+                 "source_case_ids": [t["id"] for t in items]}
+                for (tool, code), items in repeated.items()
+                if len(items) >= 2]                        # one failure is an anecdote
+    if not patterns:
+        return {"change_required": False}                  # "no change needed" is a valid result
+    return {"change_required": True, "target": "stable/retry_policy.py",
+            "patterns": patterns,
+            "reason": "retry policy ignores retryable=false; fix in code, not the prompt"}
+```
+
+The bug and the minimal patch, written to a candidate directory, never to stable:
 
 ```python
 def should_retry(error_code, retryable, attempt):
@@ -207,7 +279,24 @@ checks["old_task_regression"] = all((
 decision = "release_to_canary" if all(checks.values()) else "reject_candidate"
 ```
 
+A run of the demo:
+
+```text
+diagnosed target: stable/retry_policy.py
+source cases: run-payment-001, run-payment-002
+-NON_RETRYABLE_CODES = {"AUTH_DENIED", "INVALID_ARGUMENT"}
++NON_RETRYABLE_CODES = {"AUTH_DENIED", "INVALID_ARGUMENT", "PAYMENT_DECLINED"}
++    if not retryable or error_code in NON_RETRYABLE_CODES:
++        return False
+checks: {'static_compile': True, 'failure_replay': True, 'old_task_regression': True}
+decision: release_to_canary
+stable file unchanged: True
+rollback version: fcd37db6ebb1
+```
+
 The manifest records the source cases, the diff, each check, and the candidate and rollback versions. Swap in an LLM as the patch writer and nothing else changes: a plausible patch that breaks timeout retries still gets `reject_candidate`.
+
+Run it: upstream [chapter9/self-modifying-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-modifying-agent) (Exp. 9-6, Apache-2.0). Clone the repo, then `cd chapter9/self-modifying-agent && python demo.py`; it is offline, and `--generator llm` uses an LLM patch writer.
 
 ### Measuring the evolve loop itself
 

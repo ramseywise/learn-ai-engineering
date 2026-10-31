@@ -37,16 +37,14 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 ## Start here
 
 1. Read the notes in order (table below). They are the course: every slide's claim, table, code and figure is in the note it comes from.
-2. Do the lab named in each row as you go: [practice/exercises.md](practice/exercises.md) has Part A (agent graph labs A1–A7, one graph grown through notes 01–08) and Part B (knowledge graph labs B1–B9: the Neo4j course, your own domain, measured extraction, text-to-Cypher, a shared-memory swarm, link prediction).
-3. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 4-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
-4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 4-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
+3. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Layout
 
 ```
 README.md      this file: overview, start here, rules of thumb, sources
 notes/         01–13, the course; figures and code inline
-practice/      exercises.md (Part A agent graph labs, Part B knowledge graph labs)
 slides/        deck.yaml + graph-engineering.pptx
 sources/       book chapters and PDFs, the archived deep note, the LangGraph style deck
   images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
@@ -59,21 +57,21 @@ sources/       book chapters and PDFs, the archived deep note, the LangGraph sty
 
 Read the notes in order; each one is earned by the one before. Notes 01–08 are Track A (agent graphs). Notes 09–13 are Track B (knowledge graphs); note 12 joins the two tracks, and note 13 adds learning on graphs.
 
-| # | Note | Covers | Lab |
-|---|---|---|---|
-| 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map | [lab A1](practice/exercises.md#a1--generate-then-verify) |
-| 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify | [lab A1](practice/exercises.md#a1--generate-then-verify) |
-| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test | [lab A2](practice/exercises.md#a2--fan-out-and-merge) |
-| 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go | [lab A3](practice/exercises.md#a3--checkpoint-and-interrupt) |
-| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping | [lab A4](practice/exercises.md#a4--subgraphs-and-the-parallel-review-graph) |
-| 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption | [lab A5](practice/exercises.md#a5--break-even-measurement) |
-| 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check | [lab A6](practice/exercises.md#a6--fault-injection) |
-| 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study | [lab A7](practice/exercises.md#a7--trace-and-attribute) |
-| 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet | [labs B1–B2](practice/exercises.md#b1--cypher-on-the-movies-graph) |
-| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals | [labs B3–B4](practice/exercises.md#b3--build-the-10-k-graph) |
-| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes, schema-first text-to-Cypher, the LangGraph QA agent | [labs B5–B6](practice/exercises.md#b5--chat-with-the-10-k-graph) |
-| 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost | [labs B7–B8](practice/exercises.md#b7--swarm-with-and-without-shared-memory) |
-| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims | [lab B9](practice/exercises.md#b9--predict-missing-links) |
+| # | Note | Covers |
+|---|---|---|
+| 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map |
+| 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify |
+| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test |
+| 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go |
+| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping |
+| 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption |
+| 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check |
+| 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study |
+| 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet |
+| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals |
+| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes, schema-first text-to-Cypher, the LangGraph QA agent |
+| 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost |
+| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims |
 
 ## Rules of thumb
 
@@ -101,7 +99,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ### Deep notes
 - [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md): the original single deep note, archived. A `§N` reference in a note means a section of this file.
-- Memory-augmented RAG notes moved to [02-context-engineering/sources/memory-augmented-rag-notion-export.md](../02-context-engineering/sources/memory-augmented-rag-notion-export.md); what was new is merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md).
+- Memory-augmented RAG notes are merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md) (memory designs) and [generative-ai/02-rag-retrieval/rag.md](../../generative-ai/02-rag-retrieval/rag.md) (retrieval).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
 - [sources/kg-and-llms-in-action/](sources/kg-and-llms-in-action/) — the depth layer under notes 09–13 (ch1–3 → 09, ch4–8 → 10, ch13–15 → 11, ch9–12 → 13; chapter PDFs in `pdf/`). Chapter-by-chapter notes: KG+LLM hybrid systems, ontology-driven construction, multisource integration, LLM-driven extraction, named entity disambiguation, graph feature engineering, GNNs (representation learning, node classification, link prediction), KG-powered RAG, text-to-Cypher, and a LangGraph QA agent — plus graph-theory and Neo4j/Cypher appendices.
@@ -110,7 +108,7 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Notebooks and course code
-- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course. Run the hosted notebooks as labs [B1](practice/exercises.md#b1--cypher-on-the-movies-graph), [B3](practice/exercises.md#b3--build-the-10-k-graph) and [B5](practice/exercises.md#b5--chat-with-the-10-k-graph).
+- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course.
   - **Credentials:** `notebooks/knowledge-graphs-for-rag/code/.env` is the only file left of the local copy of the course. It holds live credentials, is gitignored and has never been committed. Rotate the keys if the repo or that folder is ever shared, and delete the file once you no longer run the notebooks locally.
 - [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing); used in the Track A labs. An `LG L#` reference means `Lesson_#_Student.ipynb` there (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.

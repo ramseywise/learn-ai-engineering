@@ -92,7 +92,7 @@ each project's `pyproject.toml`. Don't install them all at once.
 - ★ [Sutton & Barto, *Reinforcement Learning: An Introduction*](http://incompleteideas.net/book/the-book-2nd.html)
 - [Hugging Face Deep RL Course](https://huggingface.co/learn/deep-rl-course/en/unit0/introduction)
 - [OpenAI Spinning Up](https://spinningup.openai.com/)
-- *AI Agents in Depth* ch. 7–8 ([upstream](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md)): synthesised into [post-training-for-agents.md](05-RL/post-training-for-agents.md), with labs linked upstream.
+- *AI Agents in Depth* ch. 8 ([upstream](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md)): synthesised into [post-training-for-agents.md](05-RL/post-training-for-agents.md), with labs linked upstream.
 
 ## 06 — Observability and evals → [pillar](06-observability/README.md) · [ai-engineering/06-eval](../ai-engineering/06-eval/README.md)
 

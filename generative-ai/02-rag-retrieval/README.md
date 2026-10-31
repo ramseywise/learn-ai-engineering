@@ -25,9 +25,11 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 - **[`Deeplearning.ai-RAG-main/`](Deeplearning.ai-RAG-main/)** —
   DeepLearning.AI RAG course: building a document-QA pipeline with embeddings, vector
   stores, and faithfulness evaluation.
-- **[`../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/`](../../ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag/)** —
-  knowledge graphs as a retrieval layer: structured retrieval over graph databases,
-  KG-augmented context assembly.
+- **05-graph-engineering, knowledge graphs for RAG** —
+  [KG fundamentals and Cypher](../../ai-engineering/05-graph-engineering/notes/09-kg-fundamentals-and-cypher.md),
+  [building KGs with LLMs](../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md) and
+  [KG-RAG and text-to-Cypher](../../ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md):
+  knowledge graphs as a retrieval layer, with structured retrieval over graph databases.
 
 ### Interviewing guides
 
@@ -52,17 +54,19 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
   [rag/semantic-cache.md](rag/semantic-cache.md) — project reference specs.
 - [images/](images/) — figures used by rag.md.
 
-### Practice
+### Worked examples
 
-- [practice/01-bm25-from-scratch](practice/01-bm25-from-scratch/README.md) — BM25 by hand, standard
-  library only, offline (Li, Exp. 3-5). `uv run --with pytest python -m pytest practice/01-bm25-from-scratch`.
-- [practice/pe-rag.ipynb](practice/pe-rag.ipynb) — retrieved few-shot examples with ChromaDB (DAIR
-  prompt-engineering course; legacy models, needs an API key).
+- [BM25 from scratch](rag.md#bm25-from-scratch) — tokenisation, IDF, the k1/b term score and ranking
+  in ~40 lines, with sample output. Full engine and tests upstream:
+  [Li 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding).
+- [Retrieved few-shot examples with ChromaDB](rag.md#text-to-sql-is-a-retrieval-strategy) — the DAIR
+  `pe-rag` pipeline; notebook upstream at
+  [dair-ai/Prompt-Engineering-Guide](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb).
 
 ### Readings
 
 - [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
-- Li, *AI Agents in Depth*, [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md). Synthesized into [rag.md](rag.md) (hybrid stages, metrics, RAPTOR/GraphRAG/filesystem, agentic RAG), [02-context 04 — retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) (just-in-time retrieval, contextual retrieval, index-time distillation) and [06 — memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) (formats, Mem0, two-tier memory, three-level eval). Pipeline material is in [rag.md](rag.md). Offline lab: [BM25 from scratch](practice/01-bm25-from-scratch/README.md). The other labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) need models or API keys: [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
+- Li, *AI Agents in Depth*, [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md). Synthesized into [rag.md](rag.md) (hybrid stages, metrics, RAPTOR/GraphRAG/filesystem, agentic RAG), [02-context 04 — retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) (just-in-time retrieval, contextual retrieval, index-time distillation) and [06 — memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) (formats, Mem0, two-tier memory, three-level eval). Pipeline material is in [rag.md](rag.md). Worked example: [BM25 from scratch](rag.md#bm25-from-scratch). The other labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) need models or API keys: [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
 - [`../../ai-engineering/05-graph-engineering/sources/`](../../ai-engineering/05-graph-engineering/sources/) — knowledge
   graphs for retrieval reference material.
 

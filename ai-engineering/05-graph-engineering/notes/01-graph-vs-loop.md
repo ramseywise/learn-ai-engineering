@@ -138,7 +138,6 @@ They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system
 | 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
 | 13 | [Learning on graphs](13-graph-ml-and-gnns.md) | B | What can a model learn from the graph's structure? |
 
-Labs: [Part A labs](../practice/exercises.md#part-a--agent-graph-labs) (Track A), [Part B labs](../practice/exercises.md#part-b--knowledge-graph-labs) (Track B).
 
 ---
 

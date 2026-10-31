@@ -173,4 +173,4 @@ Schedule maintenance: review failure labels quarterly, prune dead rows, re-calib
 
 ---
 
-→ Next: [13-case-study-support-agent.md](13-case-study-support-agent.md) — every chapter applied to one real system. Practice: [practice/exercises.md](../practice/exercises.md).
+→ Next: [13-case-study-support-agent.md](13-case-study-support-agent.md) — every chapter applied to one real system.

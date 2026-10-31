@@ -306,7 +306,7 @@ Treating memory as an operating-system concern means each memory item has **meta
 
 ### MEM1: constant-size memory
 
-Zhou et al. (2506.15841) train agents to keep a single **internal state that is overwritten every turn**, merging new observations with what's worth keeping and discarding the rest. On long multi-hop QA it matches or beats larger models while using a near-constant amount of memory. The engineering takeaway doesn't need training: a fixed-size, rewritten state block outperforms an ever-growing log ([07](07-structured-context.md#2-state-schemas--what-carries-across-turns)).
+ReAct-style agents append every thought, action and observation, so context grows without bound. Zhou et al. (2506.15841) instead train agents to keep a single **internal state that is overwritten every turn**, merging new observations with what's worth keeping and discarding the rest. On long multi-hop QA it matches or beats larger models while using a near-constant amount of memory. The engineering takeaway doesn't need training: a fixed-size, rewritten state block outperforms an ever-growing log ([07](07-structured-context.md#2-state-schemas--what-carries-across-turns)).
 
 ![ReAct-style agents append every thought, action and observation; MEM1 replaces its internal state each step](../sources/images/zhou-mem1-fig1.png)
 *Image Source: Zhou et al. (2025)*

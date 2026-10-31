@@ -221,7 +221,7 @@ Move to the next stage only when the current one has been measured.
 
 `~/.claude/refs/agent-memory.md`: taxonomy, persistence by lifetime (in-turn → session → cross-session → **cross-agent**), and the single-writer rule. `~/.claude/refs/agent-architecture.md`: when to fan out.
 
-Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [memory-augmented-rag-notion-export.md](../../02-context-engineering/sources/memory-augmented-rag-notion-export.md) (product memory designs). Practice: [lab B7](../practice/exercises.md#b7--swarm-with-and-without-shared-memory) and [lab B8](../practice/exercises.md#b8--contamination-drill).
+Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (memory types and hygiene); [its production memory designs](../../02-context-engineering/notes/06-memory.md) (ChatGPT, OpenClaw, Memoria). Practice: [lab B7](../practice/exercises.md#b7--swarm-with-and-without-shared-memory) and [lab B8](../practice/exercises.md#b8--contamination-drill).
 
 ---
 

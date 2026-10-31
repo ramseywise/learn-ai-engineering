@@ -188,4 +188,4 @@ Every "what's left to do" lives in the feature list, not in chat history, TODO c
 
 ---
 
-→ Next: [../practice/exercises.md](../practice/exercises.md) — build and measure a harness on a repo of your own.
+→ Next: [04-loop-engineering](../../04-loop-engineering/README.md) — run the harness again, against a goal, until a scorekeeper says stop.

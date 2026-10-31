@@ -230,7 +230,70 @@ def judge_pair(question, a, b) -> str:
     return first if first == second else "tie"      # a win must survive the swap
 ```
 
-Lab: [practice/02-elo-leaderboard](../practice/02-elo-leaderboard/README.md).
+### Worked example: online Elo vs. a Bradley–Terry fit
+
+These snippets are trimmed from Li's Elo leaderboard lab (link below). Both methods read the same battle table: one row per vote, with `model_a`, `model_b` and `winner` ∈ {`model_a`, `model_b`, `tie`}.
+
+**Elo** walks the votes in order and nudges two ratings per vote:
+
+```python
+def expected(r_a, r_b):                       # P(A beats B) from the rating gap
+    return 1 / (1 + 10 ** ((r_b - r_a) / 400))
+
+def update(ratings, a, b, winner, k=4, init=1000):
+    r_a, r_b = ratings.get(a, init), ratings.get(b, init)
+    e_a = expected(r_a, r_b)
+    s_a = {"model_a": 1.0, "model_b": 0.0}.get(winner, 0.5)   # a tie is half a win
+    ratings[a] = r_a + k * (s_a - e_a)        # surprise × K
+    ratings[b] = r_b + k * ((1 - s_a) - (1 - e_a))
+```
+
+**Bradley–Terry** ignores order. It counts wins per pair, then fits every strength at once with a logistic regression, which is how Chatbot Arena computes its leaderboard:
+
+```python
+models = sorted(set(df.model_a) | set(df.model_b))
+def pivot(rows):                              # counts per (a, b), on the full square
+    return (pd.pivot_table(rows, index="model_a", columns="model_b",
+                           aggfunc="size", fill_value=0)
+              .reindex(index=models, columns=models, fill_value=0))
+
+a_win = pivot(df[df.winner == "model_a"])
+b_win = pivot(df[df.winner == "model_b"])
+tie   = pivot(df[df.winner.str.startswith("tie")])
+tie   = tie + tie.T                           # a tie counts for both directions
+wins  = 2 * a_win + 2 * b_win.T + tie         # wins weigh 2, a tie 1 each way
+
+X, y, w = [], [], []
+for i, m_a in enumerate(models):
+    for j, m_b in enumerate(models):
+        if i == j: continue
+        x = np.zeros(len(models)); x[i], x[j] = np.log(10), -np.log(10)
+        X += [x, x]; y += [1, 0]              # the same pair, once as a win, once as a loss
+        w += [wins.loc[m_a, m_b], wins.loc[m_b, m_a]]
+
+lr = LogisticRegression(fit_intercept=False, penalty=None).fit(X, y, sample_weight=w)
+ratings = pd.Series(400 * lr.coef_[0] + 1000, index=models)
+```
+
+Two details are easy to get wrong:
+
+- **Ties.** Count a tie as half a win for each side, in both methods. Drop ties and two models that keep drawing drift apart on noise.
+- **The pivot.** Reindex every pivot to the full model × model square *before* you add the transpose. Small samples give pivots with different rows and columns, and pandas aligns on labels, so `tie + tie.T` on a ragged pivot fills cells with NaN or zeroes them. The ties then vanish from the fit without an error.
+
+Why run both? **Elo depends on the order of the votes. Bradley–Terry is a global fit, so it doesn't.** Here is the lab's offline simulator: 3,000 battles between eight models with known skills, 10% ties. Elo (K = 4) was run on five shuffles of the same battles:
+
+```text
+                true     BT   Elo min  Elo max
+gpt-4           1250   1116     1114     1133
+claude-3-opus   1225   1114     1100     1110
+gemini-1.5-pro  1180   1058     1051     1068
+mixtral-8x7b    1075    974      955      988
+vicuna-13b       935    876      862      887
+```
+
+Both recover the true order, and the gaps between models match. The absolute level differs because each method anchors its own mean. Elo moved up to 34 points depending only on the order of the votes. At K = 32 the spread reached 148 points, enough to swap the top two. Use Elo for a live, streaming leaderboard. Use Bradley–Terry, with bootstrap confidence intervals, for any ranking you publish or gate on.
+
+**Run the full lab:** [ai-agent-book/chapter7/elo-leaderboard](https://github.com/bojieli/ai-agent-book/tree/main/chapter7/elo-leaderboard) (Li, ch. 7 Elo leaderboard lab, formerly 6-6; Apache-2.0). Inside it, run `pip install -r requirements.txt && python quickstart.py` for an offline demo. `python cli.py --help` lists the simulate → Elo → leaderboard pipeline.
 
 ---
 

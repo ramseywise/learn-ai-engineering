@@ -127,7 +127,7 @@ starting point for the [evolve loop](08-self-improving-loops.md#the-evolve-loop)
 | 4 | Self-feeding loop | Finds its own next task in external state (issues, feature list) | capability 3 |
 | 5 | Fleet orchestration | Several loops in parallel, sharing a memory layer | — |
 
-Most teams sit between 2 and 3. Level 1 pays off fastest. The [practice labs](../practice/exercises.md) follow roughly this order.
+Most teams sit between 2 and 3. Level 1 pays off fastest.
 
 ---
 
