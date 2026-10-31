@@ -4,6 +4,7 @@ sources:
   - https://arxiv.org/abs/2507.13334
   - https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
   - https://research.trychroma.com/context-rot
+  - https://arxiv.org/abs/2307.03172
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -49,7 +50,7 @@ Observed failure shapes:
 
 | Shape | What it looks like |
 |---|---|
-| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle" |
+| Middle neglect | Information at the start and end is recalled; the middle is not — "lost in the middle". GPT-3.5 with the answer mid-context scored below its own no-documents baseline ([prompt 02](../../01-prompt-engineering/notes/02-prompt-anatomy.md#ordering)) |
 | Distractor sensitivity | Plausible-but-wrong content nearby pulls the answer off target more as the window grows |
 | Instruction decay | System-prompt constraints obeyed early in a session are quietly dropped later |
 | Needle degradation | Exact-match retrieval of a planted fact degrades as surrounding filler increases, even when the fact is verbatim present |

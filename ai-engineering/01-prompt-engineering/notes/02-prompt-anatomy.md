@@ -7,6 +7,7 @@ sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - https://arxiv.org/abs/2307.03172
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -147,7 +148,7 @@ Two attention effects pull against each other:
 
 Together they create the **Valley of Meh**: early-to-mid prompt content is used least effectively, and the valley widens as prompts grow. There's no full fix — put your best material at the start or end, and keep the prompt short.
 
-The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, they moved the one document that contains the answer through 10, 20 or 30 retrieved documents (about 2K, 4K and 6K tokens). Accuracy was U-shaped in every model they tested. With 20 documents, GPT-3.5-Turbo scored about 76% when the answer came first, about 63% when it came last, and dropped to about 54% in the middle:
+The evidence is Liu et al. (2023), *Lost in the Middle*. In multi-document QA, they moved the one document that contains the answer through 10, 20 or 30 retrieved documents (about 2K, 4K and 6K tokens). Accuracy was U-shaped in every model they tested. With 20 documents, GPT-3.5-Turbo scored about 76% when the answer came first, about 63% when it came last, and dropped to about 54% in the middle. That is **below its 56.1% closed-book score with no documents at all**: an answer buried in the middle was worse than no retrieval. Extended-context versions of the same models often scored the same as the base versions, so a bigger window doesn't fix the position problem ([arXiv:2307.03172](https://arxiv.org/abs/2307.03172)):
 
 ![Accuracy vs. position of the answer document, Liu et al. 2023](../sources/images/huyen-ai-engineering-fig5-4.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-4, reproducing Liu et al. (2023)*

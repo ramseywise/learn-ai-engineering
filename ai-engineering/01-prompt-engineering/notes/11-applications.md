@@ -6,6 +6,8 @@ sources:
   - https://www.promptingguide.ai/applications/synthetic_rag
   - https://www.promptingguide.ai/applications/coding
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 11"
+  - https://arxiv.org/abs/2306.11644
+  - https://arxiv.org/abs/2305.07759
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -32,6 +34,8 @@ the noun "{noun}" and the adjective "{adjective}". The story should have the
 following features: {feature_1}, {feature_2}. Remember to only use simple words!
 ```
 
+The seeding is what made the data usable. Asking for "a story a child would understand" with no seeds gives near-duplicates, even at high temperature. On the seeded dataset, models **under 10M parameters** wrote fluent, consistent stories, and a 28M model's completions held up against GPT2-XL, which is about 50× larger ([arXiv:2305.07759](https://arxiv.org/abs/2305.07759)).
+
 The recipe:
 1. Identify the dimensions that should vary (topic, audience, length, tone, **label**).
 2. Build a list of values for each dimension, by hand or generated.
@@ -52,7 +56,7 @@ Story:
 
 ### Pattern 3 — textbook-quality data (phi-1)
 
-Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material, varying **topic** and **target audience**. A 1.3B-parameter model trained on it rivaled models ten times its size on HumanEval. **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
+Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material with GPT-3.5, varying **topic** and **target audience**. They mixed it with 6B tokens of web code filtered for textbook quality, so the synthetic part is a seventh of the data. The resulting 1.3B-parameter phi-1 reached **50.6% pass@1 on HumanEval** after 4 days on 8 A100s, ahead of open models ten times its size ([arXiv:2306.11644](https://arxiv.org/abs/2306.11644)). **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
 
 ![phi-1 synthetic textbook sample](../sources/images/gunasekar-textbooks-are-all-you-need-sample.png)
 *A generated "textbook" passage: a definition, a worked example, then runnable code. Gunasekar et al. (2023), via DAIR.*

@@ -5,6 +5,8 @@ sources:
   - https://www.promptingguide.ai/techniques/meta_prompting
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 5, Ch 9"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - https://arxiv.org/abs/2309.03409
+  - https://arxiv.org/abs/2406.07496
 confidence: medium
 cleaned: 2026-10-28
 ---
@@ -69,7 +71,7 @@ The famous result: APE found a better zero-shot CoT trigger than *"Let's think s
 *Image Source: Zhou et al. (2022), via DAIR*
 
 Related work, in the same spirit:
-- **OPRO** (2023) — the LLM is the optimizer, shown past prompts and their scores in its context. Found *"Take a deep breath and work on this problem step-by-step."*
+- **OPRO** (2023) — the LLM is the optimizer, shown past prompts and their scores in its context. Found *"Take a deep breath and work on this problem step-by-step."*, which scored 80.2% on GSM8K with PaLM 2-L against 71.8% for "Let's think step by step". Across scorer models the best optimized prompts beat human-written ones by up to 8 points on GSM8K and up to 50 on Big-Bench Hard tasks ([arXiv:2309.03409](https://arxiv.org/abs/2309.03409), Yang et al., 2023-09). Each scorer model converged on a different best prompt, so re-run the search when you change models.
 - **Prompt-OIRL** — offline inverse RL to choose query-dependent prompts.
 - **AutoPrompt**, **prefix tuning**, **prompt tuning** — gradient-based search over discrete tokens or continuous "soft prompts." These need model access, and are closer to fine-tuning ([04](04-controlling-output.md#when-prompting-isnt-enough-fine-tuning)).
 
@@ -117,7 +119,7 @@ Generated prompts are a **first draft, not a result** — they still have to win
 - **Instruction optimization** — proposes and searches over instruction wordings (MIPRO-style).
 - **Fine-tuning** — can distill the compiled program into weights.
 
-**TextGrad** does a similar job with "textual gradients": LLM-written critiques propagated back through a pipeline to revise each component's prompt. **Promptbreeder** (Fernando et al., DeepMind, 2023) treats the search as evolution. An LLM mutates a seed prompt, guided by a set of *mutator prompts*, and the best mutants are mutated again until one meets the target.
+**TextGrad** does a similar job with "textual gradients": LLM-written critiques propagated back through a pipeline to revise each component's prompt. It took GPT-4o's zero-shot accuracy on GPQA from 51% to 55% ([arXiv:2406.07496](https://arxiv.org/abs/2406.07496), Yuksekgonul et al., 2024-06). **Promptbreeder** (Fernando et al., DeepMind, 2023) treats the search as evolution. An LLM mutates a seed prompt, guided by a set of *mutator prompts*, and the best mutants are mutated again until one meets the target.
 
 Use these when you have a multi-step pipeline, a scorable metric, and dozens to hundreds of labeled examples. Skip them for one-off prompts or tasks you can't score automatically.
 
