@@ -3,6 +3,7 @@ origin: Deeplearning.ai-RAG-main
 sources:
   - https://www.deeplearning.ai/courses/retrieval-augmented-generation-rag/
   - https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (Module 1, ungraded lab + Assignment 1 "news RAG")
+  - https://arxiv.org/abs/2005.11401 (Lewis et al. 2020, the paper that named RAG)
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -50,6 +51,8 @@ The course's one-line definition: if you had to answer a question about somethin
 |---|---|---|
 | **Retriever** | Given the prompt, find the most relevant documents | An index over the **knowledge base** |
 | **LLM** | Given prompt + documents, write the answer | Only its weights. It sees the docs because they are in the context window |
+
+The split, and the name, come from Lewis et al. ([2020](../sources/2005.11401v4.pdf)). They paired a dense retriever over Wikipedia with a seq2seq generator and trained the two end to end. The course's version keeps the split and drops the joint training: an off-the-shelf retriever feeds a frozen LLM through the prompt.
 
 The retriever's job is hard because the two sides look nothing alike: prompts are short, unstructured questions, and the knowledge base is anything from PDFs to tables to HTML.
 
