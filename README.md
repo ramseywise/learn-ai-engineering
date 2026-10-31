@@ -19,9 +19,9 @@ material, organized into six subjects. Each subject folder has its own README.
 | Subject | What it covers |
 |---|---|
 | [Programming](programming/README.md) | [Python](programming/python/README.md) (foundations → informatics → engineering idioms → pandas), [SQL](programming/sql/README.md) (`SELECT` to query plans, SQL Murder Mystery capstone), [TypeScript](programming/typescript/README.md) (JS for Python developers → typed LLM apps) |
-| [Data Analytics](data-analytics/README.md) | Statistical analysis, Bayesian A/B testing, Michigan/Wesleyan statistics coursework |
-| [Data Engineering](data-engineering/README.md) | DataTalks Data Engineering (Docker, workflow, DWH, batch, streaming) and MLOps (tracking, orchestration, deployment, monitoring), data mesh |
-| [Data Science](data-science/README.md) | Intro to ML in Python, Andrew Ng's ML and Deep Learning courses, Text Analytics with Python, intro to NLP, Karpathy's *nn-zero-to-hero* |
+| [Data Analytics](data-analytics/README.md) | Ten notes from distributions and hypothesis testing to Bayesian inference, Bayesian A/B testing and Bayesian ML, plus Michigan/Wesleyan statistics coursework |
+| [Data Engineering](data-engineering/README.md) | Eight notes on the pipeline (ingest → transform → orchestrate → warehouse → monitor → serve), data architectures and MLOps maturity, backed by the DataTalks Data Engineering and MLOps zoomcamps |
+| [Data Science](data-science/README.md) | Seventeen notes: classical ML, NLP, neural nets and from-scratch builds, practised in Intro to ML in Python, Andrew Ng's ML and Deep Learning courses, Text Analytics with Python and Karpathy's *nn-zero-to-hero* |
 | [Generative AI](generative-ai/README.md) | Seven pillars: LLM fundamentals → RAG → agentic foundations → agentic frameworks → RL & alignment → observability → agentic applications |
 | [AI Engineering](ai-engineering/README.md) | Six foundations: prompt → context → harness → loop → graph → eval |
 
@@ -29,10 +29,10 @@ Generative AI builds things with LLMs; AI Engineering is the discipline that mak
 
 ## Readings
 
-Reference papers and book chapters sit next to the pillar that uses them, in `readings/` or
-`sources/` folders, for example
-[`ai-engineering/readings/`](ai-engineering/readings/) and
-[`generative-ai/01-llm-fundamentals/readings/`](generative-ai/01-llm-fundamentals/readings/).
-External links (courses, books, papers, tools) are in
-[generative-ai/resources.md](generative-ai/resources.md) and
+Reference papers and book chapters sit in the `sources/` folder of the pillar that uses them, for
+example [`generative-ai/01-llm-fundamentals/sources/`](generative-ai/01-llm-fundamentals/sources/).
+New PDFs land in the inbox at [`ai-engineering/readings/`](ai-engineering/readings/), and the
+`/readings` skill routes them to their home. External links (courses, books, papers, tools) are in
+each pillar's `references.md`, the
+[general resources](generative-ai/README.md#general-resources) list and
 [ai-engineering/SOURCES.md](ai-engineering/SOURCES.md).

@@ -67,7 +67,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 **Getting content in** ([04](notes/04-retrieval.md))
 - Prefer **just-in-time** retrieval through lightweight identifiers (paths, IDs, queries) over pre-loading everything.
-- Decide **retrieve, cache or load it all** before building a pipeline. When you do retrieve: hybrid search plus a reranker, retrieve wide and send narrow ([pipeline mechanics](../../generative-ai/02-rag-retrieval/rag.md)).
+- Decide **retrieve, cache or load it all** before building a pipeline. When you do retrieve: hybrid search plus a reranker, retrieve wide and send narrow ([pipeline mechanics](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md)).
 - Wrap retrieved text in tags with source and date, and tell the model to say when the answer isn't there.
 
 **Keeping it small** ([05](notes/05-compression-compaction.md), [06](notes/06-memory.md), [07](notes/07-structured-context.md))
@@ -119,7 +119,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 **The levers**
 
-4. [Retrieval: one lever on the window](notes/04-retrieval.md) — retrieve vs. cache vs. load it all, just-in-time retrieval, how much to retrieve, where results land and how they're framed, contextual retrieval, index-time distillation, caching, validation. Pipeline mechanics (chunking, hybrid search, PRINCE, RAG architectures) are in [genai 02 — rag.md](../../generative-ai/02-rag-retrieval/rag.md).
+4. [Retrieval: one lever on the window](notes/04-retrieval.md) — retrieve vs. cache vs. load it all, just-in-time retrieval, how much to retrieve, where results land and how they're framed, contextual retrieval, index-time distillation, caching, validation. Pipeline mechanics (chunking, hybrid search, PRINCE, RAG architectures) are in [genai 02 — rag.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md).
 5. [Compression and compaction](notes/05-compression-compaction.md) — the compaction pipeline, tool-result clearing, state extraction, memory hierarchies, compression techniques, crash recovery.
 6. [Memory](notes/06-memory.md) — memory types, structured note-taking, index-plus-detail, hygiene, MemOS-style lifecycle, MEM1, reconstructive memory.
 7. [Structured context and schemas](notes/07-structured-context.md) — choosing a format, input/state/output schemas, knowledge graphs, schema design principles.
@@ -143,14 +143,14 @@ The upstream course's Python labs and the DAIR caching notebook are folded into 
 |---|---|
 | Layer-by-layer token cost (`02_expand_context.py`), drop-oldest history fit (upstream `control_loop.py`) | [03 — measuring token efficiency](notes/03-budgeting-the-window.md#measuring-token-efficiency), [history](notes/03-budgeting-the-window.md#history) |
 | Contextual-retrieval prefix, explicit caching (`gemini-context-caching.ipynb`, ported to `google-genai`) | [04 — contextual retrieval](notes/04-retrieval.md#contextual-retrieval), [caching](notes/04-retrieval.md#caching) |
-| Overlap chunker and hybrid fusion (`04_rag_recipes.py`), retrieved few-shot (`pe-rag.ipynb`) | [genai rag.md — chunking](../../generative-ai/02-rag-retrieval/rag.md#chunking), [hybrid retrieval](../../generative-ai/02-rag-retrieval/rag.md#hybrid-retrieval), [Text-to-SQL](../../generative-ai/02-rag-retrieval/rag.md#text-to-sql-is-a-retrieval-strategy) |
+| Overlap chunker and hybrid fusion (`04_rag_recipes.py`), retrieved few-shot (`pe-rag.ipynb`) | [genai rag.md — chunking](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#chunking), [hybrid retrieval](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#hybrid-retrieval), [Text-to-SQL](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#text-to-sql-is-a-retrieval-strategy) |
 | Memoria-style memory wrapper and decay weighting | [06 — production memory designs](notes/06-memory.md#production-memory-designs) |
 | Minimal context YAML (`minimal_context.yaml`), schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — input schemas](notes/07-structured-context.md#1-input-schemas--how-a-task-is-presented), [output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
 | External validator loop (`03_control_loops.py`), operations-as-data program (`05_prompt_programs.py`), self-graded stop caution (`07_recursive_patterns.py`) | [08 — self-correction loop](notes/08-cognitive-tools.md#the-self-correction-loop), [prompt programs](notes/08-cognitive-tools.md#prompt-programs) |
 
 ### Worked examples elsewhere
 
-BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [genai rag.md](../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch), next to the pipeline material they exercise.
+BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [genai rag.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#bm25-from-scratch), next to the pipeline material they exercise.
 
 ### Related
 - [genai 02 — RAG & retrieval](../../generative-ai/02-rag-retrieval/README.md) — the retrieval pipeline in depth, conversational RAG, and the BM25 worked example.
@@ -160,8 +160,8 @@ BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [gena
 - [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
 ### Course code
-- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main/) — memory as an OS primitive.
-- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main/) — long-term memory patterns.
+- [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/notes/03-memory-as-an-operating-system.md) — memory as an OS primitive.
+- [Long-Term-Agentic-Memory-With-LangGraph-main](../../generative-ai/04-agentic-frameworks/notes/03-long-term-memory-with-langgraph.md) — long-term memory patterns.
 
 ### Next layer
 → [03-harness-engineering/](../03-harness-engineering/README.md) — the harness wraps the loops that assemble context.

@@ -82,4 +82,4 @@ per finished revision.
 ## Subjects without pillars
 
 `data-science/` and `data-engineering/` are not split into pillars. Readings homed there
-(`classical-ml`, `ml-systems`) go in `<subject>/readings/` until those subjects get pillars.
+(`classical-ml`, `ml-systems`) go in `<subject>/sources/`, the same as pillar readings.

@@ -13,7 +13,7 @@ cleaned: 2026-10-31
 ---
 # 4 — Retrieval: One Lever on the Window
 
-> Select is the lever that decides what comes back into the window, and when. This note covers retrieval as a context decision: whether to retrieve at all, who decides what to load, how much to send, and where it lands. The retrieval pipeline itself (parsing, chunking, hybrid search, reranking, RAG architectures, Text-to-SQL) is in the RAG module: [generative-ai/02-rag-retrieval/rag.md](../../../generative-ai/02-rag-retrieval/rag.md).
+> Select is the lever that decides what comes back into the window, and when. This note covers retrieval as a context decision: whether to retrieve at all, who decides what to load, how much to send, and where it lands. The retrieval pipeline itself (parsing, chunking, hybrid search, reranking, RAG architectures, Text-to-SQL) is in the RAG module: [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md).
 
 ---
 
@@ -61,7 +61,7 @@ A file path costs ~10 tokens. The file costs 5,000. If the agent needs three of 
 
 Metadata carries signal for free. A path like `tests/integration/test_auth_retry.py` tells the agent about scope, purpose, and relationship before a single byte of content is read. Naming conventions are a retrieval optimization.
 
-The figure's agentic side is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. Li's Experiment 3-9 shows when it pays: a simple legal question gives the same answer either way and the single pass is faster; a compound one (several sub-questions joined by a missing link) needs the agent's second, targeted round. The full comparison is in [rag.md](../../../generative-ai/02-rag-retrieval/rag.md#agentic-vs-single-pass-li-experiment-3-9).
+The figure's agentic side is ReAct applied to retrieval: *assess what's missing → plan a query → retrieve → reason → check whether the question is answered*. Li's Experiment 3-9 shows when it pays: a simple legal question gives the same answer either way and the single pass is faster; a compound one (several sub-questions joined by a missing link) needs the agent's second, targeted round. The full comparison is in [rag.md](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#agentic-vs-single-pass-li-experiment-3-9).
 
 ### Costs
 
@@ -96,7 +96,7 @@ Claude Code is this pattern: `CLAUDE.md` loads every session; everything else is
 
 When you do retrieve upfront, the window-side decisions are the same whatever the pipeline looks like.
 
-**Retrieve wide, rerank, send narrow.** Recall and precision are different jobs. A fast first stage pulls a wide candidate set (tens of chunks); a slower, more accurate reranker picks the few that reach the window. Bayer's PRINCE pipeline narrows millions of vectors to 7 chunks this way; the mechanics, with its 0.7/0.3 hybrid weighting, are in [rag.md](../../../generative-ai/02-rag-retrieval/rag.md#a-tuned-pipeline-bayers-prince).
+**Retrieve wide, rerank, send narrow.** Recall and precision are different jobs. A fast first stage pulls a wide candidate set (tens of chunks); a slower, more accurate reranker picks the few that reach the window. Bayer's PRINCE pipeline narrows millions of vectors to 7 chunks this way; the mechanics, with its 0.7/0.3 hybrid weighting, are in [rag.md](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#a-tuned-pipeline-bayers-prince).
 
 **Scale depth to the task, not a fixed k:**
 
@@ -174,7 +174,7 @@ def contextualize(doc, chunks, llm):
     return [llm(PREFIX_PROMPT.format(doc=doc, chunk=c)) + "\n" + c for c in chunks]
 ```
 
-Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); the sparse half as a worked example in [BM25 from scratch](../../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch).
+Labs: upstream [3-11 contextual-retrieval](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/contextual-retrieval); the sparse half as a worked example in [BM25 from scratch](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#bm25-from-scratch).
 
 ---
 
@@ -187,7 +187,7 @@ Naive RAG, meaning raw documents chunked and indexed unprocessed, fails on two q
 
 Attention is soft retrieval, not a summarizer. Spend compute **at index time** to turn cases into statistics and rules, so the window receives the conclusion rather than the evidence it would have to reason over. It's the same "distill, don't retrieve" idea as the status bar ([02](02-context-anatomy.md#runtime-state-the-agent-status-bar)), applied to a corpus.
 
-The structured indexes that do this at scale (RAPTOR summary trees, GraphRAG, OpenViking's L0/L1/L2 filesystem, knowledge discovery) and when they're worth their up-front LLM cost are in [rag.md — index-time structures](../../../generative-ai/02-rag-retrieval/rag.md#index-time-structures-raptor-graphrag-filesystems). OpenViking's three tiers are the context-engineering idea in its purest form: a ~100-token abstract, a ~2k-token overview and the full text per resource, so most queries resolve at the overview and never load the rest.
+The structured indexes that do this at scale (RAPTOR summary trees, GraphRAG, OpenViking's L0/L1/L2 filesystem, knowledge discovery) and when they're worth their up-front LLM cost are in [rag.md — index-time structures](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#index-time-structures-raptor-graphrag-filesystems). OpenViking's three tiers are the context-engineering idea in its purest form: a ~100-token abstract, a ~2k-token overview and the full text per resource, so most queries resolve at the overview and never load the rest.
 
 ---
 
@@ -221,7 +221,7 @@ Two distinct caches, often confused:
   ```
 
   **Deprecated:** the DAIR notebook this replaces used the old `google-generativeai` package (`caching.CachedContent.create`, `GenerativeModel.from_cached_content`) and `gemini-1.5-flash-001`. That SDK is superseded by `google-genai` and that model is retired.
-- **Retrieval caching** (application-level) caches the *results* of expensive retrieval keyed by query similarity. A near-duplicate query reuses the prior result set instead of re-running search, planning, or sub-query generation. Cuts cost and latency on hot queries. Design notes: [semantic-cache.md](../../../generative-ai/02-rag-retrieval/rag/semantic-cache.md).
+- **Retrieval caching** (application-level) caches the *results* of expensive retrieval keyed by query similarity. A near-duplicate query reuses the prior result set instead of re-running search, planning, or sub-query generation. Cuts cost and latency on hot queries. Design notes: [semantic-cache.md](../../../generative-ai/02-rag-retrieval/notes/10-semantic-cache.md).
 
 ---
 
@@ -238,7 +238,7 @@ Conflict detection matters most. Two retrieved documents contradicting each othe
 
 **Governance pushes these checks into the index** (Li, ch. 3):
 
-- **Expiry.** Tag each chunk with a version and effective/expiry dates, and filter at query time. A superseded policy left in the index gets retrieved *alongside* its replacement. The index type matters: some support incremental updates, some need a full rebuild ([vector-databases.md](../../../generative-ai/02-rag-retrieval/rag/vector-databases.md#ann-index-types-hnsw-vs-annoy)).
+- **Expiry.** Tag each chunk with a version and effective/expiry dates, and filter at query time. A superseded policy left in the index gets retrieved *alongside* its replacement. The index type matters: some support incremental updates, some need a full rebuild ([vector-databases.md](../../../generative-ai/02-rag-retrieval/notes/09-vector-database-comparison.md#ann-index-types-hnsw-vs-annoy)).
 - **Permissions at the retrieval layer, not after it.** Push the permission filter *into* the vector query. Once an unauthorized document is in the context, nothing guarantees it stays out of the answer. Multi-tenant systems also isolate vector indexes and metadata per tenant.
 - **Retrieved text is the main indirect-injection channel.** Tag its source ([framing](#framing-retrieved-content)), and never let retrieved content alone trigger a side-effecting action (transfer, delete, send). Those need their own authorization check ([harness 04](../../03-harness-engineering/notes/04-execution-boundaries.md)). *Knowledge poisoning* is the same attack, made before indexing.
 
@@ -246,7 +246,7 @@ Conflict detection matters most. Two retrieved documents contradicting each othe
 
 ## The pipeline, in the RAG module
 
-Everything that decides *which* chunks a retriever can return lives in [generative-ai/02-rag-retrieval/rag.md](../../../generative-ai/02-rag-retrieval/rag.md):
+Everything that decides *which* chunks a retriever can return lives in [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md):
 
 - the pre-retrieval pipeline (filter → search → rerank → dedup → compress → format) and a production Bedrock example,
 - ingestion and parser tiers (retrieval can only return what parsing extracted),
@@ -255,7 +255,7 @@ Everything that decides *which* chunks a retriever can return lives in [generati
 - Bayer's PRINCE pipeline and its Text-to-SQL path,
 - RAG architectures, from naive to agentic and graph-enhanced, and conversational (multi-turn) RAG.
 
-Worked examples: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/rag.md#bm25-from-scratch) (offline) and [retrieved few-shot examples](../../../generative-ai/02-rag-retrieval/rag.md#text-to-sql-is-a-retrieval-strategy) (DAIR `pe-rag`).
+Worked examples: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#bm25-from-scratch) (offline) and [retrieved few-shot examples](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#text-to-sql-is-a-retrieval-strategy) (DAIR `pe-rag`).
 
 ---
 

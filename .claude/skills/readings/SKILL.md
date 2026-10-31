@@ -31,6 +31,7 @@ a triage.
 ```bash
 python3 scripts/papers/potw.py scan                          # new inbox PDFs into the ledger
 python3 scripts/papers/potw.py triage --source repo --backlog  # homes + notes for new rows
+python3 scripts/papers/potw.py triage --local --backlog      # DAIR rows whose PDF is already here
 python3 scripts/papers/potw.py route                         # dry run: where each PDF goes
 python3 scripts/papers/potw.py route --apply
 ```
@@ -38,7 +39,9 @@ python3 scripts/papers/potw.py route --apply
 Read the dry run before applying. Check that book chapters land together under one
 `sources/<book-slug>/` and that nothing obviously off-topic is going to a pillar. To fix a
 wrong home, edit that row's `topic`, `pillar` and `note` in the ledger (one JSON object
-per line), then rerun the dry run. Skipped rows stay where they are.
+per line), then rerun the dry run. Skipped rows stay where they are. Route removes an
+inbox copy only when the same file already sits in the right home. A copy filed in the
+wrong home stays in the row's `copies` list; mention those so `/pillar` can clear them.
 
 ## Step 3 — Recommend the next run
 

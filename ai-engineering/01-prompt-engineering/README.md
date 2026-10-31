@@ -140,14 +140,14 @@ These are books and papers already on disk that cover prompting from another ang
 
 | Reading | Where | Why |
 |---|---|---|
-| ★ Huyen, *AI Engineering* (O'Reilly 2025) — **Ch 5, Prompt Engineering** | [readings/ai_engineering/ai engineer/](<../readings/ai_engineering/ai engineer/5. Prompt Engineering _ AI Engineering.pdf>) | The best single chapter on prompting *as engineering*: in-context learning, prompt attacks and defenses, and prompt versioning. Ch 3–4 (evaluation) go with [09](notes/09-evaluating-prompts.md) |
-| Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly 2024) | [generative-ai/01-llm-fundamentals/readings/](<../../generative-ai/01-llm-fundamentals/readings/>) | The "five principles of prompting" (Ch 1), text-generation practice (Ch 3) and LangChain chaining (Ch 4). Ch 7–9 cover image prompting |
-| *Building Applications with AI Agents* — Ch 4 (Tool Use), Ch 12 (Protecting Agentic Systems) | [readings/ai_engineering/ai_agent_applications/](<../readings/ai_engineering/ai_agent_applications/>) | Goes deeper than [05](notes/05-tools-and-function-calling.md) and [10](notes/10-adversarial-prompting.md) |
-| Wei et al., *Chain-of-Thought Prompting* (2201.11903) | [readings/general/2201.11903v6.pdf](../readings/general/2201.11903v6.pdf) | The CoT paper ([03](notes/03-core-techniques.md#chain-of-thought)) |
-| Ouyang et al., *InstructGPT* (2203.02155) | [readings/general/2203.02155v1.pdf](../readings/general/2203.02155v1.pdf) | Why chat models follow instructions ([01](notes/01-how-models-read-prompts.md)) |
-| Bai et al., *Constitutional AI* (2212.08073) | [readings/general/2212.08073v1.pdf](../readings/general/2212.08073v1.pdf) | Principles-as-prompts; model self-critique |
-| Manakul et al., *SelfCheckGPT* (2303.08896) | [readings/general/2303.08896v3.pdf](../readings/general/2303.08896v3.pdf) | Sampling-consistency hallucination checks ([10 — factuality](notes/10-adversarial-prompting.md#factuality)) |
-| Zhao et al., *A Survey of LLMs* (2303.18223) | [readings/general/2303.18223v16.pdf](../readings/general/2303.18223v16.pdf) | Its section on prompting and in-context learning |
+| ★ Huyen, *AI Engineering* (O'Reilly 2025) — **Ch 5, Prompt Engineering** | [sources/huyen-ai-engineering/ch05](sources/huyen-ai-engineering/ch05-prompt-engineering.pdf) | The best single chapter on prompting *as engineering*: in-context learning, prompt attacks and defenses, and prompt versioning. Ch 3–4 (evaluation) go with [09](notes/09-evaluating-prompts.md) |
+| Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly 2024) | [generative-ai/01-llm-fundamentals/sources/](<../../generative-ai/01-llm-fundamentals/sources/>) | The "five principles of prompting" (Ch 1), text-generation practice (Ch 3) and LangChain chaining (Ch 4). Ch 7–9 cover image prompting |
+| *Building Applications with AI Agents* — Ch 4 (Tool Use), Ch 12 (Protecting Agentic Systems) | [ch04](../03-harness-engineering/sources/building-applications-with-ai-agents/ch04-tool-use.pdf), [ch12](../03-harness-engineering/sources/building-applications-with-ai-agents/ch12-protecting-agentic-systems.pdf) | Goes deeper than [05](notes/05-tools-and-function-calling.md) and [10](notes/10-adversarial-prompting.md) |
+| Wei et al., *Chain-of-Thought Prompting* (2201.11903) | [sources/wei-2022-…](sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf) | The CoT paper ([03](notes/03-core-techniques.md#chain-of-thought)) |
+| Ouyang et al., *InstructGPT* (2203.02155) | [05-RL/sources/ouyang-2022-…](../../generative-ai/05-RL/sources/ouyang-2022-training-language-models-follow-instructions.pdf) | Why chat models follow instructions ([01](notes/01-how-models-read-prompts.md)) |
+| Bai et al., *Constitutional AI* (2212.08073) | [05-RL/sources/bai-2022-…](../../generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf) | Principles-as-prompts; model self-critique |
+| Manakul et al., *SelfCheckGPT* (2303.08896) | [06-eval/sources/manakul-2023-…](../06-eval/sources/manakul-2023-selfcheckgpt.pdf) | Sampling-consistency hallucination checks ([10 — factuality](notes/10-adversarial-prompting.md#factuality)) |
+| Zhao et al., *A Survey of LLMs* (2303.18223) | [01-llm-fundamentals/sources/zhao-2023-…](../../generative-ai/01-llm-fundamentals/sources/zhao-2023-survey-large-language-models.pdf) | Its section on prompting and in-context learning |
 
 ### Vendor guides
 
@@ -227,7 +227,7 @@ For [09](notes/09-evaluating-prompts.md). Deeper material is in [06-eval](../06-
 
 - ★ Book Ch 10 — [sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf](sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf)
 - Clavié et al., *Large Language Models in the Workplace* — 2303.07142 (the case-study table)
-- Huyen, *AI Engineering* Ch 3–4 — [readings/ai_engineering/ai engineer/](<../readings/ai_engineering/ai engineer/>)
+- Huyen, *AI Engineering* Ch 3–4 — [ch03](../06-eval/sources/huyen-ai-engineering/ch03-evaluation-methodology.pdf), [ch04](../06-eval/sources/huyen-ai-engineering/ch04-evaluate-ai-systems.pdf)
 - Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena* — 2306.05685 (judge biases: position, verbosity, self-preference)
 - Husain, [*Your AI Product Needs Evals*](https://hamel.dev/blog/posts/evals/) — the practitioner's case for building the eval first
 

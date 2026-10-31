@@ -220,7 +220,7 @@ The four common strategies, from cheapest to most engineered:
 | **Retrieval-based** | Store user messages, replies, tool outputs and extracted memories in a vector store; retrieve by semantic, hybrid, or recency + relevance search | Scales; crosses sessions | Retrieval noise; **embedding drift** when the embedding model changes; added latency |
 | **Query rewriting** | Use memory to rewrite the turn into a standalone query ("what about the second one?" → "what about the second product you mentioned earlier?") rather than injecting memory directly | Better retrieval for multi-turn RAG (NVIDIA's recommended mode for accuracy); datasets CANARD, QReCC | Can drop context; rewrites are unstable |
 
-The retrieval side of these (history-aware retrieval, CONQRR, agentic retrieval) is in [rag.md — conversational RAG](../../../generative-ai/02-rag-retrieval/rag.md#conversational-multi-turn-rag).
+The retrieval side of these (history-aware retrieval, CONQRR, agentic retrieval) is in [rag.md — conversational RAG](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#conversational-multi-turn-rag).
 
 ---
 
@@ -239,7 +239,7 @@ Four shipped designs, from simplest to most engineered. Note how little machiner
 
 It works because the resident tier is tiny and curated. That's the resident half of [two-tier memory](#two-tier-memory-overview-plus-details), without the retrieved half.
 
-**OpenClaw: logs plus curated facts plus hybrid search.** Three pieces: `memory/YYYY-MM-DD.md`, append-only daily logs that keep the original detail; `MEMORY.md`, curated facts the agent maintains itself; and `memory_search`, a hybrid search weighted **70% vector similarity + 30% keyword**. That's the same split Bayer found by experiment for document retrieval (0.7/0.3, [rag.md](../../../generative-ai/02-rag-retrieval/rag.md#a-tuned-pipeline-bayers-prince)). Its rollback-friendly consolidation is described under [hygiene](#memory-hygiene).
+**OpenClaw: logs plus curated facts plus hybrid search.** Three pieces: `memory/YYYY-MM-DD.md`, append-only daily logs that keep the original detail; `MEMORY.md`, curated facts the agent maintains itself; and `memory_search`, a hybrid search weighted **70% vector similarity + 30% keyword**. That's the same split Bayer found by experiment for document retrieval (0.7/0.3, [rag.md](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#a-tuned-pipeline-bayers-prince)). Its rollback-friendly consolidation is described under [hygiene](#memory-hygiene).
 
 **Memoria: a summary plus a decayed user graph.** Memoria (Sarmah, Sarin et al., BlackRock; Python package announced as forthcoming) wraps an existing chat app with four modules:
 
