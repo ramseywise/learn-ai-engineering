@@ -42,7 +42,9 @@ Mikolov et al. (2013) proposed two shallow architectures. Sarkar's Ch04b builds 
 | CBOW | Target word from the average of its context words | `([w-2, w-1, w+1, w+2], w)` | Frequent words; faster |
 | Skip-gram | Each context word from the target | `(w, w-2)`, `(w, w-1)`, ... | Rare words; small corpora |
 
-Skip-gram with **negative sampling** turns the expensive softmax over the vocabulary into binary classification: is this (word, context) pair real, or a random pair?
+The original paper ([arXiv:1301.3781](https://arxiv.org/abs/1301.3781)) measured the two on its analogy test set (8,869 semantic and 10,675 syntactic questions). With 300-d vectors trained on 783M words, **skip-gram scored 50.0% on semantic questions against CBOW's 15.5%**, and 55.9% against 53.1% on syntactic ones. CBOW trained in about a day and skip-gram in about three. The "rare words, small corpora" rule of thumb in the table comes from the later word2vec documentation, not from this paper. The paper also shows that more data and wider vectors both help, and that each must grow with the other.
+
+The 2013 paper made the output layer cheap with a hierarchical softmax over a Huffman tree. **Negative sampling** came in the follow-up paper (Mikolov et al., 2013-10, [arXiv:1310.4546](https://arxiv.org/abs/1310.4546)). It turns the expensive softmax over the vocabulary into binary classification: is this (word, context) pair real, or a random pair?
 
 ```python
 # Sarkar Ch04b: skip-gram with negative sampling, from scratch in Keras (sketch)

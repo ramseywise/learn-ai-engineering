@@ -7,6 +7,7 @@ sources:
   - https://github.com/karpathy/makemore
   - Bengio et al. 2003, A Neural Probabilistic Language Model
   - van den Oord et al. 2016, WaveNet
+  - https://arxiv.org/abs/2105.07576
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -153,7 +154,7 @@ with torch.no_grad():                                    # running stats for inf
 | Makes the preceding bias redundant | Use `bias=False` in the linear layer before it |
 | Small batches → noisy statistics | Hence LayerNorm (normalise across features of one example) in transformers ([17](17-nanogpt.md)) |
 
-Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([PDF](../sources/wu-2021-rethinking-batch-batchnorm.pdf)) catalogues the problems that come from that batch dependence; Ioffe & Szegedy's original ([PDF](../sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works.
+Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([arXiv:2105.07576](https://arxiv.org/abs/2105.07576), 2021-05) catalogues the problems that come from that batch dependence, using ImageNet ResNet-50s. The running average in the code above lags behind the weights. That is worst early in training and in large-batch runs, where the learning rate is higher and there are fewer updates. With a total batch of 8,192 the validation error swung from epoch to epoch. **Recomputing the statistics once after training on 10³–10⁴ samples** ("PreciseBN", the calibrated option in the table) stayed stable and cost about 0.5% extra compute if done every epoch. It also cut error by 3.5 points for a model normalised over batches of 2. The other caveats are that small normalisation batches widen the gap between training and test behaviour, and that mixing domains in one batch shifts the statistics. Examples in a batch can also leak information to each other through the shared mean. Ioffe & Szegedy's original ([PDF](../sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works.
 
 ### PyTorch-ifying, and the diagnostics to look at
 

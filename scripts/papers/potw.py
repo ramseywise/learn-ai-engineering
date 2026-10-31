@@ -725,9 +725,34 @@ def cmd_scan(args):
     log(f"scan: {len(pdfs)} PDFs in the repo, {added} new rows; {found}/{len(rows)} readings have a local PDF")
 
 
+def fetch_link_pdf(r):
+    """Save the row's URL into its home's sources/ if it serves a PDF; return the repo path or None."""
+    url = r.get("url") or ""
+    url = re.sub(r"openreview\.net/forum\?id=", "openreview.net/pdf?id=", url)
+    url = re.sub(r"(github\.com/[^/]+/[^/]+)/blob/", r"\1/raw/", url)
+    if not url.startswith("http"):
+        return None
+    try:
+        data = http_get(url, timeout=120)
+    except Exception as exc:
+        log(f"download: {r['key']} link failed: {exc}")
+        return None
+    if not data.startswith(b"%PDF"):
+        return None
+    sources = REPO / sources_rel(r["pillar"])
+    dest = sources / f"{words_slug(r['title'], 5)}-{(r.get('week_start') or '')[:4]}.pdf".replace("-.pdf", ".pdf")
+    sources.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    time.sleep(1)
+    return str(dest.relative_to(REPO))
+
+
 def cmd_download(args):
     rows = load_ledger()
-    queued = [r for r in rows if r["status"] == "queued" and (args.backlog or not r.get("backlog"))]
+    # repo PDFs stay `queued` for /chapter and /papers; this only fetches DAIR papers
+    queued = [r for r in rows if r["status"] == "queued" and r["source"] == "dair"
+              and (args.backlog or not r.get("backlog"))
+              and (r.get("relevance") or 0) >= (getattr(args, "fetch_min", None) or 0)]
     # best first, so a partial run (or --limit) fetches the papers most worth reading
     queued.sort(key=lambda r: (-(r.get("relevance") or 0), -(r.get("interest") or 0), -(cites_per_year(r) or 0)))
     if getattr(args, "limit", None):
@@ -739,8 +764,16 @@ def cmd_download(args):
             r["status"] = "downloaded"
             log(f"download: {r['key']} already at {r['local_pdf']}")
             continue
-        if not r["arxiv"]:
-            r["status"] = "link-only"
+        if not r["arxiv"]:  # no arXiv id: the link itself may be a PDF (a lab's report, OpenReview)
+            path = fetch_link_pdf(r)
+            if path:
+                r.update(status="downloaded", have_pdf=True, local_pdf=path, slug=Path(path).stem,
+                         downloaded_at=dt.datetime.now().isoformat(timespec="seconds"))
+                save_ledger(rows)
+                done += 1
+                log(f"download: {r['key']} -> {path}")
+            else:
+                r["status"] = "link-only"  # a web page: /papers reads it online
             continue
         try:
             title, author, year = arxiv_meta(r["arxiv"])
@@ -984,6 +1017,7 @@ def main():
             p.add_argument("--local", action="store_true", help="only rows whose PDF is already in the repo")
         if name == "download":
             p.add_argument("--limit", type=int, help="fetch at most this many PDFs, best first")
+            p.add_argument("--min-relevance", dest="fetch_min", type=int, help="only papers at this relevance or higher")
         if name in ("triage", "download"):
             p.add_argument("--backlog", action="store_true", help="include backfilled papers")
         else:
