@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test link-check learn papers papers-status papers-route papers-install slides
+.PHONY: help lint test link-check learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -45,6 +45,18 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootout gui/$$(id -u)/com.wiseer.potw 2>/dev/null || true
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
+
+papers-nightly-install:  ## Install the nightly /papers integration job (daily 01:00)
+	@mkdir -p .claude/logs
+	@cp scripts/papers/com.wiseer.papers-nightly.plist ~/Library/LaunchAgents/
+	@launchctl bootout gui/$$(id -u)/com.wiseer.papers-nightly 2>/dev/null || true
+	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.papers-nightly.plist
+	@echo "Installed com.wiseer.papers-nightly — log: .claude/logs/papers-nightly.log"
+
+papers-nightly-uninstall:  ## Remove the nightly /papers job
+	@launchctl bootout gui/$$(id -u)/com.wiseer.papers-nightly 2>/dev/null || true
+	@rm -f ~/Library/LaunchAgents/com.wiseer.papers-nightly.plist
+	@echo "Removed com.wiseer.papers-nightly"
 
 # PILLAR is a dir under ai-engineering/ (01-prompt-engineering) or a path (generative-ai/02-rag-retrieval)
 SLIDES_DIR = $(if $(findstring /,$(PILLAR)),$(PILLAR),ai-engineering/$(PILLAR))
