@@ -82,8 +82,9 @@ The rules from the topic notes on one page. Each group links to the note that ex
 ├── notes/                  ← the topic notes (read in order)
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → prompt-engineering.pptx)
 └── sources/
-    ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/) and figures (images/), absorbed into notes/
-    └── images/               ← the DAIR guide's figures
+    ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/), absorbed into notes/
+    └── images/               ← figures used by notes and deck, flat: <author>-<slug>-fig<N>.<ext>
+                                (subfolders hold the DAIR guide's figures that are not used yet)
 ```
 
 ### Topic notes ([notes/](notes/))
@@ -127,11 +128,11 @@ Every source behind the notes, in one place. Local files come first, followed by
 
 | Source | Where | Use it for |
 |---|---|---|
-| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: [sources/prompt-eng-for-llms/images/](sources/prompt-eng-for-llms/images/) | The backbone of notes 01, 02, 04, 05, 06 and 09; its chapter notes are absorbed into them, and each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
+| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: `sources/images/berryman-prompt-engineering-for-llms-fig*.png` | The backbone of notes 01, 02, 04, 05, 06 and 09; its chapter notes are absorbed into them, and each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
 | DAIR.AI *Prompt Engineering Guide* | [promptingguide.ai](https://www.promptingguide.ai/) · [GitHub](https://github.com/dair-ai/Prompt-Engineering-Guide) | The technique catalog (notes 03, 08, 10, 11). Its pages are absorbed into the notes, so check the live site for new additions |
 | DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [figures](sources/images/) | A one-hour 2023 overview; a good first pass. Its slides are superseded by our [deck](slides/deck.yaml) |
 
-The DAIR notebooks were absorbed into the notes as code snippets (each is credited where it appears). The two that run on their own moved to 02-context: [pe-rag.ipynb](../02-context-engineering/notebooks/pe-rag.ipynb) and [gemini-context-caching.ipynb](../02-context-engineering/notebooks/gemini-context-caching.ipynb).
+The DAIR notebooks were absorbed into the notes as code snippets (each is credited where it appears). The two that ran on their own (retrieval-augmented generation and Gemini context caching) went to 02-context and are folded into its notes ([04-retrieval](../02-context-engineering/notes/04-retrieval.md)).
 
 ### Elsewhere in this repo
 

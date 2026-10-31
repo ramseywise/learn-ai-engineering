@@ -14,7 +14,28 @@ Memory and tool design are **sub-components of this layer and the harness layer*
 
 **Inherits the weaknesses of:** prompt engineering. A well-assembled window can't compensate for poorly written instructions inside it.
 
-Overview note: [context-engineering.md](context-engineering.md), covering the thesis, the four levers, the prompt ↔ context boundary and context types.
+### Where the boundaries are
+
+| Prompt engineering | Context engineering |
+|---|---|
+| The instructions and examples themselves | What to *include* alongside the instructions |
+| How you phrase the task, format requests, structure XML | Which documents, memory, tool outputs and history to inject |
+| Role setting, CoT, few-shot, output format | Window composition, token budget, retrieval strategy |
+
+Once you're deciding *what* is in the window rather than *how* to phrase what's already there, you're doing context engineering. The other edge: once assembly becomes stateful and conditional, a loop that decides *when* to retrieve, compact or spawn, you've crossed into the harness ([03-harness](../03-harness-engineering/README.md)).
+
+### What goes in
+
+| Type | Source | Volatility |
+|---|---|---|
+| Static | Role, instructions, rules | Stable across sessions |
+| Dynamic | Date and time, user, environment | Per turn |
+| Retrieved | Vector store, search, file reads | Per query |
+| Historical | Prior states, revisions, outputs | Grows monotonically |
+
+Historical is the only type without a natural bound, and compaction exists to bound it ([02 — context types](notes/02-context-anatomy.md#context-types-taxonomy), [05](notes/05-compression-compaction.md)).
+
+**Security.** Context has no type system: instructions and data are the same tokens. Prompt injection is therefore a context-layer problem as much as a prompt-layer one, and every added context source is added attack surface ([11 — prompt injection](notes/11-failure-modes.md#prompt-injection)).
 
 ---
 
@@ -31,6 +52,8 @@ Four levers respond to that constraint. Apply them in order, because cost rises 
 | **Compress** | Can this be smaller? | [03](notes/03-budgeting-the-window.md), [05](notes/05-compression-compaction.md) |
 | **Isolate** | Does this need a separate window? | [10](notes/10-tools-and-multi-agent.md) |
 
+Isolate is last because it costs the most: real tokens multiply, and context is lost between agents.
+
 ---
 
 ## Rules of thumb
@@ -44,7 +67,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 **Getting content in** ([04](notes/04-retrieval.md))
 - Prefer **just-in-time** retrieval through lightweight identifiers (paths, IDs, queries) over pre-loading everything.
-- Use **hybrid search plus a reranker** as the default. Retrieve small chunks and return their parent section.
+- Decide **retrieve, cache or load it all** before building a pipeline. When you do retrieve: hybrid search plus a reranker, retrieve wide and send narrow ([pipeline mechanics](../../generative-ai/02-rag-retrieval/rag.md)).
 - Wrap retrieved text in tags with source and date, and tell the model to say when the answer isn't there.
 
 **Keeping it small** ([05](notes/05-compression-compaction.md), [06](notes/06-memory.md), [07](notes/07-structured-context.md))
@@ -70,7 +93,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ## Where to start
 
 - **Lecture deck:** [slides/context-engineering.pptx](slides/context-engineering.pptx) — the notes as a 3-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=02-context-engineering`).
-- **New to this:** read [context-engineering.md](context-engineering.md), then chapters 01–06 in order, running the code snippets in each note.
+- **New to this:** read [the mental model](#the-mental-model) above, then chapters 01–06 in order, running the code snippets in each note. Then work through [practice/exercises.md](practice/exercises.md).
 - **Building an agent now:** [02](notes/02-context-anatomy.md), [05](notes/05-compression-compaction.md), [10](notes/10-tools-and-multi-agent.md), then the design order of questions in [13](notes/13-putting-it-together.md#designing-a-context-system-the-order-of-questions).
 - **Debugging one:** [11 — failure modes](notes/11-failure-modes.md), then [12 — evaluating context](notes/12-evaluating-context.md).
 
@@ -81,13 +104,10 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ```
 02-context-engineering/
 ├── README.md               ← you are here: summary, rules of thumb, chapter index
-├── context-engineering.md  ← pillar overview
-├── notes/                  ← the chapters (read in order), plus the 99 appendix
+├── notes/                  ← the chapters (read in order), plus the 99 appendix; figures and code inline
+├── practice/exercises.md   ← exercises per chapter and the capstone
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → context-engineering.pptx)
-├── notebooks/              ← the original labs, folded into notes/ as snippets
-├── practice/               ← offline labs adapted from AI Agents in Depth
-├── templates/              ← copyable schemas, prompt programs and prompt templates
-├── sources/                ← PDFs of the papers the chapters cite
+├── sources/                ← PDFs of the papers the chapters cite; images/ holds every figure the notes use
 └── references.md           ← papers and further reading, mapped to chapters
 ```
 
@@ -100,7 +120,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 **The levers**
 
-4. [Retrieval strategies](notes/04-retrieval.md) — pre-computed vs. just-in-time, the pre-retrieval pipeline, RAG architectures (modular, agentic, graph), chunking, hybrid search, framing retrieved content.
+4. [Retrieval: one lever on the window](notes/04-retrieval.md) — retrieve vs. cache vs. load it all, just-in-time retrieval, how much to retrieve, where results land and how they're framed, contextual retrieval, index-time distillation, caching, validation. Pipeline mechanics (chunking, hybrid search, PRINCE, RAG architectures) are in [genai 02 — rag.md](../../generative-ai/02-rag-retrieval/rag.md).
 5. [Compression and compaction](notes/05-compression-compaction.md) — the compaction pipeline, tool-result clearing, state extraction, memory hierarchies, compression techniques, crash recovery.
 6. [Memory](notes/06-memory.md) — memory types, structured note-taking, index-plus-detail, hygiene, MemOS-style lifecycle, MEM1, reconstructive memory.
 7. [Structured context and schemas](notes/07-structured-context.md) — choosing a format, input/state/output schemas, knowledge graphs, schema design principles.
@@ -122,25 +142,19 @@ The upstream course's Python labs and the DAIR caching notebook are folded into 
 
 | Code | Now in |
 |---|---|
-| Layer-by-layer token cost (`02_expand_context.py`), drop-oldest history fit ([templates/control_loop.py](templates/control_loop.py)) | [03 — measuring token efficiency](notes/03-budgeting-the-window.md#measuring-token-efficiency), [history](notes/03-budgeting-the-window.md#history) |
-| Overlap chunker and hybrid fusion (`04_rag_recipes.py`), explicit caching (`gemini-context-caching.ipynb`, ported to `google-genai`), retrieved few-shot (`pe-rag.ipynb`) | [04 — chunking](notes/04-retrieval.md#chunking), [hybrid retrieval](notes/04-retrieval.md#hybrid-retrieval), [caching](notes/04-retrieval.md#caching) |
-| Schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
+| Layer-by-layer token cost (`02_expand_context.py`), drop-oldest history fit (upstream `control_loop.py`) | [03 — measuring token efficiency](notes/03-budgeting-the-window.md#measuring-token-efficiency), [history](notes/03-budgeting-the-window.md#history) |
+| Contextual-retrieval prefix, explicit caching (`gemini-context-caching.ipynb`, ported to `google-genai`) | [04 — contextual retrieval](notes/04-retrieval.md#contextual-retrieval), [caching](notes/04-retrieval.md#caching) |
+| Overlap chunker and hybrid fusion (`04_rag_recipes.py`), retrieved few-shot (`pe-rag.ipynb`) | [genai rag.md — chunking](../../generative-ai/02-rag-retrieval/rag.md#chunking), [hybrid retrieval](../../generative-ai/02-rag-retrieval/rag.md#hybrid-retrieval), [Text-to-SQL](../../generative-ai/02-rag-retrieval/rag.md#text-to-sql-is-a-retrieval-strategy) |
+| Memoria-style memory wrapper and decay weighting | [06 — production memory designs](notes/06-memory.md#production-memory-designs) |
+| Minimal context YAML (`minimal_context.yaml`), schema-in-prompt, validate and retry (`06_schema_design.py`) | [07 — input schemas](notes/07-structured-context.md#1-input-schemas--how-a-task-is-presented), [output schemas](notes/07-structured-context.md#3-output-schemas--what-comes-back) |
 | External validator loop (`03_control_loops.py`), operations-as-data program (`05_prompt_programs.py`), self-graded stop caution (`07_recursive_patterns.py`) | [08 — self-correction loop](notes/08-cognitive-tools.md#the-self-correction-loop), [prompt programs](notes/08-cognitive-tools.md#prompt-programs) |
-
-[pe-rag.ipynb](notebooks/pe-rag.ipynb) still runs on its own; the 01-prompt pillar links to it.
 
 ### Practice
 
-| Lab | Notes |
-|---|---|
-| [01 — BM25 from scratch](practice/01-bm25-from-scratch/README.md): inverted index, IDF and saturation, with every score traceable (Li, Exp. 3-5). Offline, no API key | [04](notes/04-retrieval.md#hybrid-retrieval) |
-
-### Templates
-
-[templates/](templates/): `minimal_context.yaml`, schema templates ([YAML](templates/schema_template.yaml), [JSON](templates/schema_template.json)), [prompt_program_template.py](templates/prompt_program_template.py), [control_loop.py](templates/control_loop.py), [scoring_functions.py](templates/scoring_functions.py), and [prompt templates](templates/prompts/) (chain of thought, few-shot, minimal context, verification loop, expert guides).
+[practice/exercises.md](practice/exercises.md): short exercises for each chapter, plus the capstone from [13](notes/13-putting-it-together.md). The offline BM25 lab and `pe-rag.ipynb` moved to [genai 02 — practice](../../generative-ai/02-rag-retrieval/practice/), next to the pipeline material they exercise.
 
 ### Related
-- [memory-augmented-rag-notion-export.md](sources/memory-augmented-rag-notion-export.md) — memory depth: in-context, external, episodic, semantic.
+- [genai 02 — RAG & retrieval](../../generative-ai/02-rag-retrieval/README.md) — the retrieval pipeline in depth, conversational RAG, and the BM25 lab.
 - [skills-design.md](../03-harness-engineering/skills-design.md) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
 
 ### Interviewing guide

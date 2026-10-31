@@ -37,6 +37,17 @@ A workflow agent that runs its `sub_agents` **in order, every pass**, until a st
 
 The documented refinement shape: `InitialWriterAgent` (draft) → `CriticAgent` (grade against criteria) → `RefinerAgent` (apply fixes, or call `exit_loop` when the critic returns its completion phrase, e.g. "No major issues found"). Sub-agents share state through the session state dict. Available in Python, TypeScript, Go and Java.
 
+```mermaid
+flowchart LR
+    W["InitialWriterAgent<br/>writes state['draft']"] --> C
+    subgraph L["LoopAgent 'Refine' · max_iterations=5 (backstop)"]
+        C["CriticAgent<br/>grades {draft}<br/>→ state['critique']"] --> R{"RefinerAgent:<br/>critique clean?"}
+        R -->|no: rewrite<br/>→ state['draft']| C
+    end
+    R -->|"yes: exit_loop()<br/>escalate = True"| D(["final draft"])
+    L -.->|cap reached| D2(["stop without<br/>a clean verdict"])
+```
+
 ```python
 from google.adk.agents import LlmAgent, LoopAgent, SequentialAgent
 from google.adk.tools.tool_context import ToolContext
@@ -107,4 +118,4 @@ In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edg
 
 ---
 
-→ Practice: [../practice/01-exercises.md](../practice/01-exercises.md) — build the loops from this syllabus.
+→ Practice: [../practice/exercises.md](../practice/exercises.md) — build the loops from this syllabus.

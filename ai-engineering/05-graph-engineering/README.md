@@ -1,8 +1,7 @@
 # 05 — Graph Engineering
 
 > Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
-> Position in the stack: fifth foundation — builds on [04-loop](../04-loop-engineering/README.md); *graphs make agent organizations programmable*.
-> Overview: [graph-engineering.md](graph-engineering.md)
+> Position in the stack: fifth foundation, prompt → context → harness → loop → **graph**. Builds on [04-loop](../04-loop-engineering/README.md).
 
 ---
 
@@ -10,15 +9,49 @@
 
 Graph engineering is the discipline of designing the **topology** of a multi-agent system: which nodes exist (agents, deterministic functions, routers, human checkpoints), which transitions between them are permitted, and how the runtime work graph forms and mutates. Where loop engineering governs individual agent behavior (one agent, one cycle), graph engineering governs the structure connecting multiple agents — conditional routing, shared state, parallel fan-out and merge, and hierarchical composition of subgraphs.
 
-*"Graphs make agent organizations programmable the way loops make individual agent behavior programmable."*
+> **Graphs make agent organisations programmable the way loops make individual agent behaviour programmable.**
 
 Graph is a **peer fifth foundation**, ordered after loop because it presumes loop mastery — but it is a first-class discipline, not an advanced optional tier. The relationship is containment, not replacement: per LangChain, *"a loop is just a directed, cyclic graph."*
 
-**Two things called "graph engineering."** Agent graphs are *execution topology* (nodes = computation, edges = permitted transitions). Knowledge graphs are *retrieval structure* (nodes = entities, edges = typed relationships). Both live in this pillar; keep the distinction sharp.
+The operative rule is the opposite of "build a graph": **start with a loop, and add a node only when a signal forces it** ([note 01](notes/01-graph-vs-loop.md)). The five signals are distinct specialties, parallel fan-out and join, a different model or toolset per step, control flow that must be auditable, and an overloaded verifier. Each names something a single loop structurally can't do.
 
-**Not everything should be a graph.** Work whose steps can't be named ahead of time — generic deep research is the canonical case — belongs in a harness with a good loop. Forcing it into deterministic paths is the wrong move, and graph fan-out runs ~3× the tokens per cycle (Anthropic's multi-agent research system: ~15× a chat turn).
+Production agents are **not DAGs**. They need cycles for retry and revision, conditional edges for routing, and durable state so they can pause. That is why the substrate is a cyclic state machine with a checkpointer, not a pipeline runner.
+
+**Two things called "graph engineering."** Keep the distinction sharp:
+
+| | Agent graph (Track A, notes 01–08) | Knowledge graph (Track B, notes 09–13) |
+|---|---|---|
+| Nodes are | Units of computation | Entities |
+| Edges are | Permitted transitions | Typed relationships |
+| The graph is | Execution topology | Data structure for retrieval |
+| Runtime concern | Routing, state, cost | Traversal, entity resolution |
+
+They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent system, a shared knowledge graph is often the memory the execution graph coordinates through.
+
+**Not everything should be a graph.** Work whose steps can't be named ahead of time — generic deep research is the canonical case — belongs in a harness with a good loop ([note 06](notes/06-when-not-to-build-a-graph.md)). Forcing it into deterministic paths is the wrong move, and graph fan-out runs ~3× the tokens per cycle (Anthropic's multi-agent research system: ~15× a chat turn).
 
 **Inherits the weaknesses of:** loop engineering — a graph routing between unreliable loops inherits all loop failures at the organizational scale, and adds coordination failures on top.
+
+---
+
+## Start here
+
+1. Read the notes in order (table below). They are the course: every slide's claim, table, code and figure is in the note it comes from.
+2. Do the lab named in each row as you go: [practice/exercises.md](practice/exercises.md) has Part A (agent graph labs A1–A7, one graph grown through notes 01–08) and Part B (knowledge graph labs B1–B9: the Neo4j course, your own domain, measured extraction, text-to-Cypher, a shared-memory swarm, link prediction).
+3. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 4-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
+4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+
+## Layout
+
+```
+README.md      this file: overview, start here, rules of thumb, sources
+notes/         01–13, the course; figures and code inline
+practice/      exercises.md (Part A agent graph labs, Part B knowledge graph labs)
+slides/        deck.yaml + graph-engineering.pptx
+sources/       book chapters and PDFs, the archived deep note, the LangGraph style deck
+  images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
+  images/unreferenced/   course images not used anywhere yet, kept for review
+```
 
 ---
 
@@ -28,37 +61,46 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 | # | Note | Covers | Lab |
 |---|---|---|---|
-| 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map | [Lab 1](practice/01-agent-graph-labs.md#lab-1--generate-then-verify) |
-| 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify | [Lab 1](practice/01-agent-graph-labs.md#lab-1--generate-then-verify) |
-| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test | [Lab 2](practice/01-agent-graph-labs.md#lab-2--fan-out-and-merge) |
-| 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go | [Lab 3](practice/01-agent-graph-labs.md#lab-3--checkpoint-and-interrupt) |
-| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping | [Lab 4](practice/01-agent-graph-labs.md#lab-4--subgraphs-and-the-parallel-review-graph) |
-| 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption | [Lab 5](practice/01-agent-graph-labs.md#lab-5--break-even-measurement) |
-| 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check | [Lab 6](practice/01-agent-graph-labs.md#lab-6--fault-injection) |
-| 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study | [Lab 7](practice/01-agent-graph-labs.md#lab-7--trace-and-attribute) |
-| 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet | [KG Labs 1–2](practice/02-knowledge-graph-labs.md#lab-1--cypher-on-the-movies-graph) |
-| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals | [KG Labs 3–4](practice/02-knowledge-graph-labs.md#lab-3--build-the-10-k-graph) |
-| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes, schema-first text-to-Cypher, the LangGraph QA agent | [KG Labs 5–6](practice/02-knowledge-graph-labs.md#lab-5--chat-with-the-10-k-graph) |
-| 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost | [KG Labs 7–8](practice/02-knowledge-graph-labs.md#lab-7--swarm-with-and-without-shared-memory) |
-| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims | [KG Lab 9](practice/02-knowledge-graph-labs.md#lab-9--predict-missing-links) |
+| 1 | [Graph vs. loop](notes/01-graph-vs-loop.md) | Definition, containment, production agents aren't DAGs, the five signals, the decision tree, two senses of "graph", the map | [lab A1](practice/exercises.md#a1--generate-then-verify) |
+| 2 | [Graph primitives](notes/02-graph-primitives.md) | Node kinds, spending agency per node, edges, the minimal program, generate-then-verify | [lab A1](practice/exercises.md#a1--generate-then-verify) |
+| 3 | [State and reducers](notes/03-state-and-reducers.md) | Typed state, reducers, parallel-write races, Send fan-out, handoffs, the true-dependency test | [lab A2](practice/exercises.md#a2--fan-out-and-merge) |
+| 4 | [Durable execution and interrupts](notes/04-durable-execution-and-interrupts.md) | Checkpointers, threads, `interrupt()`, editing state, time travel, where gates go | [lab A3](practice/exercises.md#a3--checkpoint-and-interrupt) |
+| 5 | [Topology patterns](notes/05-topology-patterns.md) | Generate-then-verify, supervisor, fan-out, subgraphs, handoff; the Claude Code mapping | [lab A4](practice/exercises.md#a4--subgraphs-and-the-parallel-review-graph) |
+| 6 | [When not to build a graph](notes/06-when-not-to-build-a-graph.md) | Unnameable work, fan-out cost, premature graphs, split the verifier, incremental adoption | [lab A5](practice/exercises.md#a5--break-even-measurement) |
+| 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check | [lab A6](practice/exercises.md#a6--fault-injection) |
+| 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study | [lab A7](practice/exercises.md#a7--trace-and-attribute) |
+| 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet | [labs B1–B2](practice/exercises.md#b1--cypher-on-the-movies-graph) |
+| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals | [labs B3–B4](practice/exercises.md#b3--build-the-10-k-graph) |
+| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes, schema-first text-to-Cypher, the LangGraph QA agent | [labs B5–B6](practice/exercises.md#b5--chat-with-the-10-k-graph) |
+| 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost | [labs B7–B8](practice/exercises.md#b7--swarm-with-and-without-shared-memory) |
+| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, predictions as claims | [lab B9](practice/exercises.md#b9--predict-missing-links) |
 
-### Where to start
+## Rules of thumb
 
-- **Lecture deck:** [slides/graph-engineering.pptx](slides/graph-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=05-graph-engineering`).
-
-### Practice and templates
-
-- [P1 — Agent graph labs](practice/01-agent-graph-labs.md): seven labs that grow one graph through notes 01–08.
-- [P2 — Knowledge graph labs](practice/02-knowledge-graph-labs.md): nine labs: the Neo4j course, your own domain, measured extraction, text-to-Cypher, a shared-memory swarm, and link prediction.
-- [templates/generate-then-verify.py](templates/generate-then-verify.py) and [templates/fan-out-merge.py](templates/fan-out-merge.py): runnable LangGraph skeletons. [templates/graph-update.schema.json](templates/graph-update.schema.json): the `GraphUpdate` write contract from note 12.
+| Rule | Note |
+|---|---|
+| Generate-then-verify is the highest-yield first graph | [02](notes/02-graph-primitives.md), [05](notes/05-topology-patterns.md) |
+| Spend agency per node: code where you can, one LLM call where you must, an agent only where the path is unknown | [02](notes/02-graph-primitives.md) |
+| Every shared key has one writer or a reducer | [03](notes/03-state-and-reducers.md) |
+| Does the next step read the previous step's output? If not, fan out | [03](notes/03-state-and-reducers.md) |
+| Gate the edges where consequences concentrate, not every node | [04](notes/04-durable-execution-and-interrupts.md) |
+| "We need a graph" is often an overloaded verifier: strengthen it and ship the loop | [06](notes/06-when-not-to-build-a-graph.md) |
+| Fan-out is expensive (Anthropic's multi-agent research system: ~15× a chat turn's tokens), so measure break-even | [06](notes/06-when-not-to-build-a-graph.md) |
+| Verifiers see the task and the output, never the generator's reasoning | [07](notes/07-failure-modes-at-scale.md) |
+| Keep at least one anchor the graph can't edit | [07](notes/07-failure-modes-at-scale.md) |
+| Errors compound per hop: at 85% per hop, a 5-hop answer is ~44% right | [10](notes/10-building-kgs-with-llms.md) |
+| Never merge entities destructively; keep provenance on every edge | [10](notes/10-building-kgs-with-llms.md), [12](notes/12-kg-as-shared-agent-memory.md) |
+| Vector search first, canned traversals for named question shapes, text-to-Cypher only with a validator | [11](notes/11-kg-rag-and-text-to-cypher.md) |
+| If a run's only durable record is its chat transcript, you have no graph | [12](notes/12-kg-as-shared-agent-memory.md) |
+| Beat a domain-informed feature baseline before trusting a learned embedding | [13](notes/13-graph-ml-and-gnns.md) |
+| A predicted edge is a claim: flag it, score it, keep it out of default traversals | [13](notes/13-graph-ml-and-gnns.md) |
 
 ---
 
 ## Resource map
 
 ### Deep notes
-- [graph-engineering.md](graph-engineering.md): pillar overview with the thesis, the two senses of "graph", the topic notes and rules of thumb.
-- [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md): the original single deep note, archived. The `§N` references in OUTLINE.md point here.
+- [sources/graph-engineering-deep-note.md](sources/graph-engineering-deep-note.md): the original single deep note, archived. A `§N` reference in a note means a section of this file.
 - Memory-augmented RAG notes moved to [02-context-engineering/sources/memory-augmented-rag-notion-export.md](../02-context-engineering/sources/memory-augmented-rag-notion-export.md); what was new is merged into 02-context [notes/06-memory.md](../02-context-engineering/notes/06-memory.md).
 
 ### Book notes — *Knowledge Graphs and LLMs in Action* (Manning)
@@ -68,8 +110,9 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 - [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Notebooks and course code
-- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024): its Cypher and LangChain code is folded into the notes as commented snippets (L1–L2 → note 09, L3–L6 → note 10, L4–L7 → note 11, with deprecated APIs flagged), and its figures are in [images/kg-for-rag/](images/kg-for-rag/). Run the hosted notebooks as KG Labs 1, 3 and 5.
-- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing); used in the Track A labs.
+- DeepLearning.AI × Neo4j, [*Knowledge Graphs for RAG*](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) (Kollegger, 2024). The course notebooks are folded into the notes as commented snippets (L1–L2 → note 09, L3–L7 graph building → note 10, L3–L7 retrieval queries → note 11), with deprecated APIs flagged; its figures are in [sources/images/](sources/images/) as `kollegger-knowledge-graphs-for-rag-*`. An `L#` reference in a note is a lesson of this course. Run the hosted notebooks as labs [B1](practice/exercises.md#b1--cypher-on-the-movies-graph), [B3](practice/exercises.md#b3--build-the-10-k-graph) and [B5](practice/exercises.md#b5--chat-with-the-10-k-graph).
+  - **Credentials:** `notebooks/knowledge-graphs-for-rag/code/.env` is the only file left of the local copy of the course. It holds live credentials, is gitignored and has never been committed. Rotate the keys if the repo or that folder is ever shared, and delete the file once you no longer run the notebooks locally.
+- [AI-Agents-in-LangGraph-main](../../generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main/) — LangGraph agent graphs (nodes, edges, state, conditional routing); used in the Track A labs. An `LG L#` reference means `Lesson_#_Student.ipynb` there (L1 ReAct from scratch, L2 LangGraph components, L3 agentic search, L4 persistence and streaming).
 - [sources/langgraph_extended.pptx](sources/langgraph_extended.pptx) — *LangGraph: A Visual Guide* (26 slides): nodes, edges, state and reducers, memory, checkpointers and durable execution, interrupts and time travel, streaming, subgraphs, observability, and LangGraph vs Google ADK. Also the style reference for the course's `make slides` decks.
 
 ### Readings
@@ -78,6 +121,9 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ### External references
 - LangGraph docs: https://docs.langchain.com/langgraph
+- Anthropic, [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) and [How we built our multi-agent research system](https://www.anthropic.com/engineering/multi-agent-research-system) (source of the ~15× token figure).
+- Edge et al., [From Local to Global: a Graph RAG approach](https://arxiv.org/abs/2404.16130) (GraphRAG, 2024).
+- Anthropic, [knowledge graph construction cookbook](https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide).
 - LangGraph GitHub: https://github.com/langchain-ai/langgraph
 - [3 years of graph engineering with LangGraph](https://www.langchain.com/blog/3-years-of-graph-engineering-with-langgraph) — production agents need cycles; loops are simplified graphs.
 - [Graph engineering: enterprise guide](https://www.truefoundry.com/blog/graph-engineering-enterprise-guide) — identity, cost attribution, approval checkpoints, 7-question production checklist.
@@ -89,6 +135,25 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 - [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — the true-dependency test for what parallelizes; verifier context isolation; swarm cost anchors.
 - [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — production supervisor-pattern LangGraph case study: six agents, per-node iteration bounds, optimistic locking, published context budgets.
 - [Hosting n8n](https://docs.n8n.io/deploy/host-n8n) — deployment surface for a self-hosted graph runtime.
+
+### Source quality
+
+Several external references above are secondary or vendor posts. Per [SOURCES.md](../SOURCES.md), Tier 2 sources are gap-detectors, not citations of record. The notes flag numbers that rest on them; corroborate before you quote them:
+
+| Source | Problem | Corroborate via |
+|---|---|---|
+| flowtivity.ai, "graph engineering 2026 guide" | Vendor marketing; supplies most of the hard numbers (~3× tokens, ~50% break-even, ~18% typed-edge gain, 53.4 vs 42.9% multi-hop, "~3× faster") and the OpenClaw / Codex tooling claims | Your own measurements (lab A5); the GraphRAG paper; LangGraph docs |
+| youmind.com viral-article landing page | Source of the Bun $165k figure and Dynamic Workflows limits | Anthropic docs for Dynamic Workflows; Bun's own post; otherwise drop |
+| pkhamdee.blog | Personal blog synthesising primary sources | Karpathy's autoresearch repo; Anthropic's KG cookbook; Anthropic engineering posts |
+| [sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf](sources/graph-engineering-karpathy-loop-anthropic-playbook-2026.pdf) | Community-compiled; carries an Anthropic logo but says "not affiliated … not endorsed" | Cite as secondary only |
+| explainx.ai/post/graph-engineering | SEO aggregator | Drop; LangChain's "3 years of graph engineering" has the same line first-hand |
+| Medium, GaoDalie "Forget loop engineering" | Opinion piece; overstates | A quote at most, not evidence |
+| Medium, Rathod n8n deep dive | Third-party teardown | n8n's own source and `docs.n8n.io` |
+| aibuilderclub.com | Tier 2 aggregator | Claude Code docs (subagents, hooks), Claude Agent SDK docs, *Building effective agents* |
+| truefoundry.com enterprise guide | Vendor (sells an AI gateway); gateway-centric framing | OpenTelemetry GenAI semantic conventions; LangSmith / LangGraph tracing docs |
+| eigent.ai blog | Vendor blog; sound framing but uncited | Keep as framing; anchor Goodhart in the original literature |
+
+First-party and fine to cite: LangChain's "3 years of graph engineering with LangGraph", the LangGraph docs and GitHub, `docs.n8n.io`, Anthropic's engineering posts, Addy Osmani.
 
 ### Previous and next layer
 ← Builds on [04-loop-engineering/](../04-loop-engineering/README.md)

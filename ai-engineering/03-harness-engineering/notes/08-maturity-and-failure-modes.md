@@ -7,8 +7,9 @@ sources:
   - https://addyosmani.com/blog/agent-harness-engineering/
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - https://martinfowler.com/articles/reliable-llm-bayer.html
+  - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 8 — Harness Maturity and Failure Modes
 
@@ -112,6 +113,8 @@ The corollary is that **cheap-and-wrong is the more expensive failure**, because
 
 The maturity ladder says *what* to build; these are the mechanisms that keep a Stage 2–3 harness running once real traffic hits it. All four come from PRINCE, and all four are unglamorous.
 
+PRINCE's own framing: the LangGraph workflow *is* the harness. It decides which component can act, which tools it can use, where the workflow can pause, how failures are retried, how state is persisted, and when to move from research to reflection to writing. Those are the control points for recovery, inspection, evaluation and human intervention that an unconstrained autonomous agent lacks. (PRINCE's retrieval stack is in [genai/02 agent-rag-patterns](../../../generative-ai/02-rag-retrieval/rag/agent-rag-patterns.md).)
+
 ### Resume from the failed node
 
 State persisted **after every step** means a failure resumes from that step instead of restarting the workflow. PRINCE checkpoints agent state to Postgres via a LangGraph checkpointer, with application-level state (logs, intermediate steps, citations) kept separately in DynamoDB.
@@ -164,7 +167,7 @@ Without runtime signals the agent can't tell "correct" from "looks correct", and
 - **One trace per session, one span per task, sub-spans per verification step**, using OpenTelemetry conventions so it plugs into standard tooling (Jaeger etc.). This is the raw material for [trace-driven improvement](05-verification-loops.md#trace-driven-improvement).
 - For UI work, a **browser validation loop**: snapshot before, trigger exactly one path, snapshot after, compare, fix the smallest responsible layer, re-run until the same path is clean twice.
 
-Process artifacts are covered in [note 05](05-verification-loops.md#sprint-contracts) (contracts, rubrics). Templates: [evaluator-rubric.md](../templates/evaluator-rubric.md).
+Process artifacts are covered in [note 05](05-verification-loops.md#sprint-contracts) (contracts, rubrics).
 
 ---
 
@@ -179,9 +182,7 @@ A per-area health record that both agents and humans read, so codebase quality i
 
 The scale: **A** all verification passing, clean and legible; **B** passing with minor gaps; **C** partially working, hard for agents to follow; **D** broken or structurally unsound.
 
-It does three jobs. A fresh session reads it and **fixes the lowest grade first.** The periodic cleanup loop ([practice/02](practice/02-session-lifecycle.md#entropy-management-two-cleanup-modes)) updates it, so the change history shows whether the repo is getting stronger or weaker. And it gives the subtraction pass below a baseline to measure against. Update it after significant sessions and before a new phase of work, not on a separate cleanup day.
-
-Template: [quality-document.md](../templates/quality-document.md).
+It does three jobs. A fresh session reads it and **fixes the lowest grade first.** The periodic cleanup loop ([note 06](06-long-horizon-execution.md#entropy-management-two-cleanup-modes)) updates it, so the change history shows whether the repo is getting stronger or weaker. And it gives the subtraction pass below a baseline to measure against. Update it after significant sessions and before a new phase of work, not on a separate cleanup day.
 
 ---
 
@@ -258,6 +259,21 @@ The third points somewhere interesting:
 
 Rather than a fixed configuration, the harness becomes a system that *compiles* a task specification into the tool set, context, and constraint layer that task needs.
 
+### An early step: a family of harnesses and a router
+
+The Object-Oriented Harness paper (Li G. et al., 2026, Google Cloud) is a concrete step toward the third frontier. Instead of one global harness, it evolves a **hierarchy of harness subclasses**. Each subclass inherits its parent's components and overrides or adds one. A **router** picks a harness per task, using lessons recorded about which harness worked on which kind of task.
+
+![Three designs: (a) one global harness, (b) a flat family of harnesses with a router, (c) an object-oriented hierarchy where specialized harnesses inherit from a base](../sources/images/li-object-oriented-harness-fig1.png)
+*Image Source: Li G. et al. (2026)*
+
+Reported gain: up to **+15.79 points absolute** over the base harness. The findings matter for iterative simplification as much as for the frontier:
+
+- **A component that helps one task class can hurt another.** The paper cites evolved memory that helps hard tasks and hurts easy ones, and benchmark results where adding tools, skills or agents degraded behaviour. A single global harness has to carry every component for every task. Specialization lets each one live only where it pays.
+- **"Valid" is not "correct".** One subclass overrides the write backend for office documents, because a file that opens in the right format can still have the wrong content. Its verification is specific to that task class.
+- **Keep discovery and evaluation sets separate.** A harness evolved and scored on the same tasks overfits to them, just as a model does.
+
+The subtraction protocol above still applies, now per subclass: a component that never helps any task class gets deleted from the base.
+
 ---
 
 ## Builder gotchas
@@ -318,4 +334,4 @@ Items 1–8 get you to Stage 2. Items 9–16 get you to Stage 3. Item 17 keeps i
 
 ---
 
-→ Next: [practice/01-repo-as-system-of-record.md](practice/01-repo-as-system-of-record.md) — the practice track: building this harness into a real repo.
+→ Next: [09-repo-as-system-of-record.md](09-repo-as-system-of-record.md) — building this harness into a real repo.

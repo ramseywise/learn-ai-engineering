@@ -33,6 +33,18 @@ A score drop is a claim that the system got worse. Often it's the eval that chan
 
 When a score drops:
 
+```mermaid
+flowchart LR
+  A[Score dropped] --> I{Infra errors up?}
+  I -- yes --> FI[Fix infra, re-run]
+  I -- no --> V{Any version changed?}
+  V -- yes --> FV[Pin / revert, re-run]
+  V -- no --> T{Grades on 10–20 failed traces correct?}
+  T -- no --> FG[Fix the grader or task]
+  T -- yes --> S{Drop concentrated in a slice?}
+  S --> X[Only now: change the agent]
+```
+
 1. **Infrastructure.** Errors, timeouts, rate limits, resource limits. Are error counts up?
 2. **Versions.** Did the dataset, grader, judge model or config change between runs?
 3. **Traces and grader decisions.** Read 10–20 failed transcripts *with* their grades. Is the grade right?
@@ -67,6 +79,8 @@ Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can
 | **Narrow checks** | Code agent edits the tests instead of the code. Output matches the schema with empty content |
 | **Proxy metric** | 👍 rate optimized → flattery. Escalation rate cut → refuses to escalate when it should |
 | **Visible tests** | Agent overfits to tests it can see |
+
+Partial credit is a common version of the proxy gap. Yang et al. (2026) trained terminal agents on a dense reward: the fraction of checker tests passed. Under that reward, **failed trajectories collected 50% of all reward mass**, and 48 failures passed every executed scenario check yet still failed the task's terminal gate. Their fix kept the partial credit, because it helps exploration, but kept it *subordinate* to verified completion. Strict success means the full protected verifier passes, not the agent declaring itself done or a subset of checks passing. Rescoring under that rule cut the failures' share of reward to 29%. The lesson for any eval: when you award partial credit, report strict success beside it, and never let the sum of the partial scores outrank completion.
 
 Defenses:
 
@@ -108,7 +122,7 @@ The model may have seen your eval data:
 | Criteria drift: the team's idea of "pass" moved but the judge didn't | Version criteria; re-label a sample when they change ([02](02-defining-correct.md#criteria-drift)) |
 | Uncalibrated judge used as a release gate | Grader states: experimental never gates ([04](04-graders.md#grader-states-which-ones-can-block-a-release)) |
 | Judge from the same family as the SUT | Different model family ([05](05-llm-as-judge.md#known-biases)) |
-| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](case-study/calibration-results.md)) |
+| Generic off-the-shelf metric trusted because it's popular | Calibrate against your labels; expect inversions ([case study](13-case-study-support-agent.md#calibration-results)) |
 
 ---
 
@@ -159,4 +173,4 @@ Schedule maintenance: review failure labels quarterly, prune dead rows, re-calib
 
 ---
 
-→ Back to the [README](../README.md). Practice: [practice/01-exercises.md](../practice/01-exercises.md).
+→ Next: [13-case-study-support-agent.md](13-case-study-support-agent.md) — every chapter applied to one real system. Practice: [practice/exercises.md](../practice/exercises.md).

@@ -85,21 +85,21 @@ Q: The odd numbers in this group add up to an even number: 15, 32, 5, 13, 82, 7,
 A:
 ```
 
-![Standard prompting vs. chain-of-thought prompting](../sources/images/cot.png)
+![Standard prompting vs. chain-of-thought prompting](../sources/images/wei-chain-of-thought-fig1.png)
 *Image Source: Wei et al. (2022)*
 
 PaLM 540B: GSM8K math ~20% → ~60%; StrategyQA 69.4% → 75.6%; symbolic-reasoning tasks improve too. Like few-shot itself, it's an emergent ability of large models.
 
 **Zero-shot CoT** (Kojima et al., 2022): append *"Let's think step by step."* No examples needed.
 
-![Zero-shot CoT](../sources/images/zero-cot.png)
+![Zero-shot CoT](../sources/images/kojima-zero-shot-reasoners-fig1.png)
 *Image Source: Kojima et al. (2022)*
 
 **Plan-and-solve**: front-load a plan — *"Let's first understand the problem and devise a plan to solve the problem. Then, let's carry out the plan and solve the problem step by step."* Helps where zero-shot CoT skips steps. It uses no tools — it's closer to zero-shot CoT than to ReAct — but the two combine naturally: plan first, then run the think-act-observe loop.
 
 **Auto-CoT** (Zhang et al., 2022): build the CoT examples automatically — cluster the questions, pick a representative from each cluster, generate its reasoning with zero-shot CoT. Diversity matters because hand-picked or generated demos can share the same mistakes. Simple heuristics (question ≤ 60 tokens, ≤ 5 reasoning steps) filter out bad demos.
 
-![Auto-CoT: cluster questions, then sample a demonstration from each cluster](../sources/images/auto-cot.png)
+![Auto-CoT: cluster questions, then sample a demonstration from each cluster](../sources/images/zhang-auto-cot-overview.png)
 *Image Source: Zhang et al. (2022)*
 
 Practical notes:
@@ -107,11 +107,17 @@ Practical notes:
 - **Reasoning must come first.** "Answer, then explain" gets you rationalization, not reasoning.
 - Variants worth knowing by name: **pause tokens** (fine-tune on a meaningless "pause" token, then insert ~10 after the question: the extra positions give earlier information time to integrate, buying compute without words — the model's "uh, um"), **Multimodal CoT** (two stages — generate a rationale from text + image, then infer the answer from it; a 1B model beat GPT-3.5 on ScienceQA), **Graph prompting** (GraphPrompt, for graph-structured tasks — niche).
 
+![Multimodal CoT: the rationale combines what the text says and what the image shows before the answer](../sources/images/zhang-multimodal-cot-fig1.png)
+*Image Source: Zhang et al. (2023)*
+
 ---
 
 ## Self-consistency
 
 Sample several CoT completions at non-zero temperature and take the **majority answer** (Wang et al., 2022). Replaces greedy decoding: different reasoning paths that converge on one answer are more trustworthy than any single path.
+
+![Single-path reasoning (CoT) vs. multi-path reasoning (CoT-SC, ToT)](../sources/images/dair-single-vs-multi-path-reasoning.png)
+*Image Source: DAIR.AI, Introduction to AI Agents (task decomposition). Left: one reasoning chain. Middle: CoT-SC samples several chains and votes. Right: ToT branches at every step.*
 
 Use it on arithmetic and commonsense tasks with a single extractable answer. It's N× the cost, and it doesn't help open-ended generation, where there's nothing to vote on. The same idea underlies **branch-solve-merge**: fan out to N solvers (high temperature or different assigned perspectives), then have a merge step synthesize the result.
 
@@ -121,7 +127,7 @@ Use it on arithmetic and commonsense tasks with a single extractable answer. It'
 
 Two calls: first ask the model to generate facts relevant to the question, then answer with those facts in the prompt (Liu et al., 2022).
 
-![Generated knowledge: a few-shot prompt samples knowledge statements, which are then integrated with the question](../sources/images/gen-knowledge.png)
+![Generated knowledge: a few-shot prompt samples knowledge statements, which are then integrated with the question](../sources/images/liu-generated-knowledge-overview.png)
 *Image Source: Liu et al. (2022)*
 
 ```
@@ -137,12 +143,17 @@ With knowledge, the answer flips from a confident wrong "Yes" to "No." It works 
 
 Generalizes CoT into **search**: generate several candidate "thoughts" (intermediate steps), have the model **evaluate** each one (sure / maybe / impossible), and explore with BFS or DFS, backtracking from dead ends (Yao et al., 2023; Long, 2023). On Game of 24, GPT-4 with CoT solved 4% and with ToT 74%.
 
-![IO, CoT, CoT-SC and Tree of Thoughts compared](../sources/images/TOT.png)
+![IO, CoT, CoT-SC and Tree of Thoughts compared](../sources/images/yao-tree-of-thoughts-fig1.png)
 *Image Source: Yao et al. (2023)*
+
+The Game of 24 results also show what buys the gain. Sampling more CoT chains helps only a little (CoT-SC with 100 samples: 9%; best of 100 CoT: 49%), while a breadth of 5 kept candidates at each step reaches 74%. Most CoT failures happen at the first step, which is exactly where ToT's evaluate-and-backtrack helps:
+
+![Game of 24: success by method, scale analysis, and the step at which CoT fails](../sources/images/yao-tree-of-thoughts-game-of-24-results.png)
+*Image Source: Yao et al. (2023), Table 2 and Fig. 3*
 
 Both steps are ordinary prompts. On Game of 24, a *propose* prompt generates candidate next steps and a *value* prompt rates whether the remaining numbers can still reach 24:
 
-![ToT on Game of 24: a propose prompt generates thoughts, a value prompt evaluates them](../sources/images/TOT2.png)
+![ToT on Game of 24: a propose prompt generates thoughts, a value prompt evaluates them](../sources/images/yao-tree-of-thoughts-fig2.png)
 *Image Source: Yao et al. (2023)*
 
 Real ToT needs a controller loop in code, so it's an orchestration pattern ([04-loop](../../04-loop-engineering/README.md)) more than a prompt. A cheap single-prompt approximation (Hulbert, 2023):
@@ -161,7 +172,7 @@ The question is...
 
 The model writes code; an **interpreter** computes the answer (Gao et al., 2022). This moves exact computation out of the model, following the [tokens rule](01-how-models-read-prompts.md#property-1--tokens-not-characters): don't ask the model to do what code does reliably.
 
-![PAL: the model writes reasoning as code, an interpreter computes the answer](../sources/images/pal.png)
+![PAL: the model writes reasoning as code, an interpreter computes the answer](../sources/images/gao-pal-fig1.png)
 *Image Source: Gao et al. (2022)*
 
 How it works: the few-shot examples are *code with the reasoning in comments*, so the model's completion is a program. Your app runs it and reads a variable:
@@ -204,11 +215,14 @@ Action 3: Finish[Arthur's Magazine]
 
 A trace that recovers from a miss — the failed `Search[Front Row]` returns suggestions, and the next thought picks the right one:
 
-![A ReAct trace on HotpotQA](../sources/images/react.png)
+![A ReAct trace on HotpotQA](../sources/images/yao-react-fig1.png)
 *Image Source: Yao et al. (2022)*
 
 What the results show:
-- **Knowledge tasks (HotpotQA, FEVER):** ReAct grounds answers in retrieved facts, so it hallucinates less than CoT. But it's more brittle: one uninformative search derails it. The best results combined them: **ReAct ↔ CoT-SC**, falling back from one to the other when it gets stuck or unsure.
+- **Knowledge tasks (HotpotQA, FEVER):** ReAct grounds answers in retrieved facts, so it hallucinates less than CoT. But it's more brittle: one uninformative search derails it. The best results combined them: **ReAct ↔ CoT-SC**, falling back from one to the other when it gets stuck or unsure (best: 35.1 EM on HotpotQA with ReAct → CoT-SC and 64.6 on FEVER with CoT-SC → ReAct, vs. 29.4 / 56.3 for CoT alone).
+
+  ![ReAct prompting results on HotpotQA and FEVER](../sources/images/yao-react-table1.png)
+  *Image Source: Yao et al. (2022), Table 1*
 - **With few-shot prompting alone, ReAct underperformed** standard and CoT prompting on HotpotQA at every model size. Fine-tuning on ~3,000 traces flipped that: a fine-tuned 8B ReAct beat a prompted 62B model, and a fine-tuned 62B beat a prompted 540B. Reasoning strategy plus light fine-tuning can stand in for scale. **Act** (tools, no Thought step) is worse than ReAct but still beats no tools.
 - **Decision tasks (ALFWorld, WebShop):** reasoning is what makes acting work — 71% vs. 45% for Act-only on ALFWorld. There the thoughts decompose the goal into subgoals, inject commonsense, pull the useful detail out of observations, track progress and re-plan on exceptions.
 
@@ -229,7 +243,7 @@ agent.run("Who is Olivia Wilde's boyfriend? What is his current age raised to th
 
 Pick demonstrations of multi-step reasoning **and** tool use from a task library, run them with a frozen model, and **pause generation whenever a tool is called**, splice in its output, then resume (Paranjape et al., 2023). Beats few-shot and Auto-CoT on BigBench and MMLU. Humans can fix mistakes by editing the task library or adding tools. Today this is mostly what native tool calling does, so it's of historical interest ([05](05-tools-and-function-calling.md)).
 
-![ART: select demonstrations from a task library, pause generation at tool calls, resume with the output](../sources/images/ART.png)
+![ART: select demonstrations from a task library, pause generation at tool calls, resume with the output](../sources/images/paranjape-art-overview.png)
 *Image Source: Paranjape et al. (2023)*
 
 ---
@@ -238,7 +252,7 @@ Pick demonstrations of multi-step reasoning **and** tool use from a task library
 
 Auto-CoT picks *representative* questions to annotate. Active-Prompt picks the *most uncertain* ones (Diao et al., 2023): sample k answers per training question, measure disagreement, have humans write CoT for the top-uncertainty questions, and use those as the examples. It's active learning applied to choosing few-shot examples.
 
-![Active-Prompt: estimate uncertainty, select, annotate, infer](../sources/images/active-prompt.png)
+![Active-Prompt: estimate uncertainty, select, annotate, infer](../sources/images/diao-active-prompt-overview.png)
 *Image Source: Diao et al. (2023)*
 
 ---
@@ -247,7 +261,7 @@ Auto-CoT picks *representative* questions to annotate. Active-Prompt picks the *
 
 A small tuned **policy model** generates a hint (keywords, a "stimulus") that's added to the main LLM's prompt (Li et al., 2023). For summarization, the hint is a list of keywords to cover. The policy model is trained with supervised learning and RL, so a cheap model steers an expensive frozen one. It's a research pattern, but the idea of having a small model write part of the big model's prompt reappears in routing and query-rewriting.
 
-![Directional stimulus prompting vs. standard prompting](../sources/images/dsp.jpeg)
+![Directional stimulus prompting vs. standard prompting](../sources/images/li-directional-stimulus-prompting-overview.jpg)
 *Image Source: Li et al. (2023)*
 
 ---
@@ -262,10 +276,13 @@ Verbal reinforcement learning (Shinn et al., 2023). Three parts:
 | **Evaluator** | Scores the trajectory — exact match, heuristics, unit tests, or an LLM judge |
 | **Self-reflection** | Turns the score into natural-language feedback, stored in memory for the next attempt |
 
-![Reflexion: actor, evaluator and self-reflection, with short- and long-term memory](../sources/images/research/reflexion.png)
+![Reflexion: actor, evaluator and self-reflection, with short- and long-term memory](../sources/images/shinn-reflexion-overview.png)
 *Image Source: Shinn et al. (2023)*
 
-Loop: attempt → evaluate → reflect → retry with the reflection in context. HumanEval pass@1 reached 91% vs. GPT-4's 80% at the time.
+Loop: attempt → evaluate → reflect → retry with the reflection in context. HumanEval pass@1 reached 91% vs. GPT-4's 80% at the time. The gain depends on the evaluator: on HumanEval the model writes its own unit tests, and on the harder LeetCode set (15% vs. 7.5%) it still roughly doubles the baseline:
+
+![Reflexion pass@1 on code benchmarks vs. the prior state of the art](../sources/images/shinn-reflexion-programming-results.png)
+*Image Source: Shinn et al. (2023)*
 
 **It works only when you get a do-over**, ideally with an objective evaluator (tests, compilers, checkers). It's useless for irreversible actions, and with a weak evaluator it reinforces confident mistakes. Memory is a sliding window, so long retry histories get truncated. Reflexion is a loop pattern; implementation lives in [04-loop](../../04-loop-engineering/README.md), and evaluator design in [09-evaluating-prompts](09-evaluating-prompts.md).
 

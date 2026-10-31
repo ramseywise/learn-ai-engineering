@@ -41,6 +41,14 @@ The rule of thumb: **tags for boundaries, markdown for prose, JSON for anything 
 
 ## Three places schemas go
 
+```mermaid
+flowchart LR
+    I["Input schema<br/>how the task is presented"] --> M[Model]
+    S["State schema<br/>what carries across turns"] <--> M
+    M --> O["Output schema<br/>what comes back, validated"]
+    O -- "validation error fed back" --> M
+```
+
 ### 1. Input schemas — how a task is presented
 
 The upstream "context schema" is a fixed skeleton for a task prompt:
@@ -64,7 +72,21 @@ The upstream "context schema" is a fixed skeleton for a task prompt:
 {schema or template for the answer}
 ```
 
-The value is in the fixed order and the empty slots. A missing `Constraints` section is visible at a glance, and every task in a system looks the same to the model. The copyable YAML and JSON versions are in [templates/](../templates/).
+The value is in the fixed order and the empty slots. A missing `Constraints` section is visible at a glance, and every task in a system looks the same to the model. The upstream course also ships the same idea as a YAML context file with a token budget and a history policy. Trimmed:
+
+```yaml
+metadata:
+  token_budget: 800              # target ceiling for the whole context
+system:
+  role: assistant
+  constraints: [provide accurate information, acknowledge uncertainty, avoid unnecessary verbosity]
+memory:
+  enabled: true
+  max_turns: 3                   # raw window
+  pruning_strategy: drop_oldest  # or: summarize, prioritize
+```
+
+Writing the budget and pruning policy into the context spec, rather than leaving them implicit in code, makes them reviewable ([03](03-budgeting-the-window.md#history)).
 
 ### 2. State schemas — what carries across turns
 

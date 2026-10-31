@@ -5,7 +5,7 @@ sources:
   - https://www.aibuilderclub.com/blog/how-to-evaluate-ai-agents
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
-  - case-study/gate-contract.md
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -17,7 +17,7 @@ cleaned: 2026-10-28
 
 ## The three kinds
 
-![A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment](../images/ai-agent-book/fig7-4.svg)
+![A Spectrum of Verification Modes, from Deterministic Verification to Model Judgment](../sources/images/li-ai-agents-in-depth-fig7-4.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-4 (Apache-2.0)*
 
 | Grader | How it scores | Strength | Weakness | Use when |
@@ -63,7 +63,7 @@ For tool calls, check **in order** and stop at the first failure: *called a tool
 
 ### Reference-based text metrics
 
-BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. The case study ruled out ROUGE-L for conversational answers for this reason ([case study](case-study/eval-architecture.md#why-we-use-custom-graders-instead-of-adks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
+BLEU, ROUGE and embedding similarity compare an output to a reference string. They're cheap and deterministic but correlate poorly with quality for open-ended answers: a correct answer worded differently scores low. The case study ruled out ROUGE-L for conversational answers for this reason ([case study](13-case-study-support-agent.md#why-custom-graders-instead-of-a-frameworks-built-in-eval)). Use them for tightly constrained outputs (translation of fixed strings, extraction) or as a cheap tracking signal, not a gate.
 
 ---
 
@@ -100,7 +100,7 @@ class Grader(Protocol):
     def grade(self, task, output, trajectory=None, context=None) -> GraderResult: ...
 ```
 
-The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
+The `requires` field matters. A grounding grader handed URLs instead of passage text should return "can't grade" (`context_missing`), not a made-up score ([case study](13-case-study-support-agent.md#why-the-grounding-cross-check-showed-low-agreement)).
 
 ---
 
@@ -179,7 +179,7 @@ Use an ordinal scale only when the levels are each *described* (what a 2 looks l
 
 ## Working reference
 
-[case-study/harness-patterns.md](case-study/harness-patterns.md) — four suite types and a tool-trajectory scorer in pytest.
+[13 · Case study: harness patterns](13-case-study-support-agent.md#harness-patterns) — four suite types and a tool-trajectory scorer in pytest.
 
 ---
 

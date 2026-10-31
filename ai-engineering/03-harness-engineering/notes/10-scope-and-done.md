@@ -4,14 +4,15 @@ sources:
   - https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents
   - https://openai.com/index/harness-engineering/
   - https://github.com/walkinglabs/learn-harness-engineering
+  - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
-# P3 — Scope and Done
+# 10 — Scope and Done
 
 > An agent left alone starts five things and finishes none. Limit it to one active feature, and let a passing check be the only way that feature counts as done.
 
-The [acceptance baseline](../01-what-a-harness-is.md#the-four-parts) from note 01, made concrete for a coding agent: a feature list in the repo that defines the work, gates completion, and carries state between sessions. Adapted from *learn-harness-engineering* lectures 07–08.
+The [acceptance baseline](01-what-a-harness-is.md#the-four-parts) from note 01, made concrete for a coding agent: a feature list in the repo that defines the work, gates completion, and carries state between sessions. Adapted from *learn-harness-engineering* lectures 07–08.
 
 ---
 
@@ -27,6 +28,18 @@ Anthropic's long-running-agents post names this directly: broad prompts make age
 Overreach spreads attention thin, which causes under-finish. The half-done code raises complexity, which invites more overreach. Humans have a sense of "that's enough for now". Agents don't: one more "while I'm here" costs nearly nothing to generate. It's the same queueing math as Kanban (Little's Law): more work in progress means longer lead time per item and more items that never land.
 
 The tell is that **lines of code written goes up while verified features stay flat.**
+
+---
+
+## Before the list: the spec
+
+A feature list is only as good as the understanding behind it. Karpathy (as relayed from his AISN 2026 talk) puts the spec first: it is how your understanding reaches the model. He finds plan mode too high-level: *"you have to work with your agent to design a spec that is very detailed."* Three disciplines:
+
+1. **Uncover the goal, not the task.** "Create an end-of-month report" is a task. The goal is the decision the report drives, and it is the one thing the model can never infer. Extract it on purpose, for example: *"interview me to identify the goal of this project."*
+2. **Agile specs, not waterfall.** People hand an agent everything at once because delegation feels efficient. Bias toward smaller, compartmentalized specs with a checkpoint, a review and an adjustment each round. This is WIP = 1 below, applied to the spec.
+3. **Precision with explicit sign-off.** Every assumption the model makes is a chance to drift. When the model drafts the spec, have it ask: *"make me verify key decisions explicitly."*
+
+The feature list below is that spec in a form the harness can check.
 
 ---
 
@@ -107,18 +120,22 @@ Plus **evidence** once it passes: a commit, test output or screenshot.
 }
 ```
 
-Full template plus JSON Schema: [templates/feature_list.json](../../templates/feature_list.json), [feature_list.schema.json](../../templates/feature_list.schema.json).
+A JSON Schema for the file lets a pre-commit hook reject entries missing any part of the triple.
 
 ---
 
 ## States and the pass gate
 
+```mermaid
+stateDiagram-v2
+  [*] --> not_started
+  not_started --> active: scheduler picks it (WIP = 1)
+  active --> passing: verification run succeeds
+  active --> blocked: explicit blocker recorded
+  blocked --> active: blocker resolved
+  passing --> [*]
 ```
-not_started ──► active ──► passing
-                  │  ▲
-                  ▼  │
-                blocked
-```
+*Image Source: diagram based on learn-harness-engineering, lecture 08*
 
 Four states only. The important rule is **pass-state gating: the only way into `passing` is a successful run of that feature's verification.** Ideally a script runs the checks and flips the state. The agent requests verification; it doesn't edit the status field to say it passed.
 
@@ -161,7 +178,7 @@ The value of the list depends on the strength of its checks:
 | "Component renders" | "User can click New Chat and see an empty thread" |
 | "Endpoint exists" | "POST returns 201 and the item is retrievable" |
 
-Loose checks give you a list of `passing` features that don't work. When in doubt, verify the *behavior* the user would see, not the artifact the agent wrote. Layered checks and E2E are covered in [note 05](../05-verification-loops.md#the-three-layer-termination-check).
+Loose checks give you a list of `passing` features that don't work. When in doubt, verify the *behavior* the user would see, not the artifact the agent wrote. Layered checks and E2E are covered in [note 05](05-verification-loops.md#the-three-layer-termination-check).
 
 ---
 
@@ -171,10 +188,4 @@ Every "what's left to do" lives in the feature list, not in chat history, TODO c
 
 ---
 
-## Working reference
-
-Templates: [feature_list.json](../../templates/feature_list.json), [AGENTS.md](../../templates/AGENTS.md) (work rules and definition of done).
-
----
-
-→ Next: [04-exercises.md](04-exercises.md) — build and measure a harness on a repo of your own.
+→ Next: [../practice/exercises.md](../practice/exercises.md) — build and measure a harness on a repo of your own.

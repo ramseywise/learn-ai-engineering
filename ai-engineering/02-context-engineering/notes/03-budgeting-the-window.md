@@ -121,7 +121,7 @@ Pick examples that are diverse and include near-misses at the boundary, rather t
 
 Production systems combine all three: structured state for decisions, a rolling summary for narrative, and a short raw window for the most recent turns. Details in [05](05-compression-compaction.md) and [06](06-memory.md).
 
-Windowing in its simplest form reserves the output first, then drops the oldest turn until the rest fits. This is the core of the pillar's [templates/control_loop.py](../templates/control_loop.py) `ContextManager`:
+Windowing in its simplest form reserves the output first, then drops the oldest turn until the rest fits. This is the core of the upstream course's `ContextManager` (`control_loop.py`):
 
 ```python
 def fit_history(fixed, history, count, max_tokens=4000, reserved=1000):  # count: str -> int tokens
@@ -131,7 +131,7 @@ def fit_history(fixed, history, count, max_tokens=4000, reserved=1000):  # count
     return history
 ```
 
-The template estimates tokens by word count. Pass the model's tokenizer (or the provider's token-count endpoint) as `count` instead: words undercount tokens by about a quarter on English prose, and by more on code and non-English text.
+The upstream version estimates tokens by word count. Pass the model's tokenizer (or the provider's token-count endpoint) as `count` instead: words undercount tokens by about a quarter on English prose, and by more on code and non-English text.
 
 ### Evidence
 
@@ -147,6 +147,21 @@ Prompt caching changes the cost side of the budget without changing the attentio
 
 - **Cost budget:** stable content is close to free once cached, so order stable before dynamic ([02](02-context-anatomy.md#ordering-stable-before-dynamic)).
 - **Quality budget:** every token still competes for attention, cached or not. A cache hit doesn't make bloat harmless.
+
+### Cache engineering: edit the KV cache, not the text
+
+The catch with editing context is that most context edits destroy the cache. Summarizing an old tool result or dropping a turn changes the text, so everything after the edit is prefilled again. In agent workloads that bill is large: Fu et al. (Tsinghua, 2026, [arXiv:2610.28577](https://arxiv.org/abs/2610.28577)) measure **KV-cache reads at 82.4% of API cost**. History dependence also means matching on prefixes alone misses most of the reuse that is available.
+
+![Context engineering edits text and re-prefills; cache engineering drops or repositions KV entries directly](../sources/images/fu-cache-engineering-agents-fig1.png)
+*Image Source: Fu et al. (2026)*
+
+Their alternative, **cache engineering** (implemented as AKV), lets the agent act on the KV cache directly. It drops or repositions cached entries rather than rewriting the text, so nothing is re-prefilled:
+
+- A **rolling-drop policy for tool responses** beats threshold summarization by **+1.7 points at 27.7% lower cost**.
+- Serving gains reach **1.2× throughput and 1.5× P95 latency**.
+- Letting the agent refine its own cache policy (recursive self-improvement) cuts a further **7.1%** of cost.
+
+This needs control of the serving stack, so it's not something you can do through a hosted API today. The budgeting lesson carries over anyway. Decide edits with the cache in mind: batch them, make them at stable boundaries, and prefer dropping whole blocks over rewriting text in the middle of the prefix.
 
 ---
 

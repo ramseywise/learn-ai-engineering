@@ -20,7 +20,7 @@ These labs continue the [harness labs](../../03-harness-engineering/notes/practi
 - **Start from a working harness.** `AGENTS.md`, an `init.sh` that sets up the environment, and a test command that runs clean. If you did the harness labs, start from that commit.
 - **One repo, one agent, one model** for all labs, so the loop design is the only thing that changes.
 - **Branch per lab**: `loop-goal`, `loop-timer`, `loop-maker-checker`, `loop-ralph`, `loop-evolve`.
-- **Contract before the first pass.** Fill in [loop-contract.md](../templates/loop-contract.md). A blank section means the loop isn't ready ([note 01](../notes/01-what-a-loop-is.md#two-things-before-anything-runs)).
+- **Contract before the first pass.** Copy the [loop contract](../notes/09-failure-modes-and-guardrails.md#the-loop-contract) into the repo as `loop-contract.md` and fill it in. A blank section means the loop isn't ready ([note 01](../notes/01-what-a-loop-is.md#two-things-before-anything-runs)).
 - **Green first.** Get one saved, green pass before you scale anything ([note 01](../notes/01-what-a-loop-is.md#green-first)).
 - **Set a budget cap** on every unattended run. Write down what it was and whether it tripped.
 
@@ -69,7 +69,7 @@ A run log, one row per run:
 
 **Rung:** 2–3, without you in the room. **Notes:** [03](../notes/03-the-scorekeeper.md#maker-and-checker), [04](../notes/04-building-blocks.md), [05](../notes/05-long-running-loops.md).
 
-1. Set up: [maker-prompt.md](../templates/maker-prompt.md), [checker-prompt.md](../templates/checker-prompt.md), [loop-state.md](../templates/loop-state.md). The checker is a separate agent with no maker history, ideally a different model.
+1. Set up: the maker and checker prompts from [note 03](../notes/03-the-scorekeeper.md#maker-and-checker), and a `loop-state.md` from [note 05](../notes/05-long-running-loops.md#memory-three-tiers-five-fields). The checker is a separate agent with no maker history, ideally a different model.
 2. Write the control logic: who goes first, how the checker's report reaches the maker, when a round ends. Stop on two consecutive PASS verdicts with the scorekeeper green, or at the round cap.
 3. Run at least **five rounds** without intervening unless a human gate fires.
 4. Log each round in the state file: what the maker did, the checker's verdict and issues, the score, and whether you stepped in and why.
@@ -89,7 +89,7 @@ A run log, one row per run:
 **Rung:** 2, re-entrant across context windows. **Notes:** [05](../notes/05-long-running-loops.md#the-ralph-loop), [09](../notes/09-failure-modes-and-guardrails.md#the-two-ratchet-rules).
 
 1. Run the bare one-liner (`while :; do cat PROMPT.md | claude -p; done`) on a throwaway branch for **10 minutes**, then kill it. Note what it did after the work was finished.
-2. Run [ralph.sh](../templates/ralph.sh) on the same task with `SCORE_CMD` set to a command that prints one number, plus `MAX_ITERS`, `MAX_MINUTES` and `STALL_LIMIT`.
+2. Save the guarded script from [note 05](../notes/05-long-running-loops.md#the-ralph-loop) as `ralph.sh` and run it on the same task with `SCORE_CMD` set to a command that prints one number, plus `MAX_ITERS`, `MAX_MINUTES` and `STALL_LIMIT`.
 3. Make `PROMPT.md` read and update `loop-state.md` every pass.
 4. Deliberately break one thing mid-run (edit a test so it fails). Check that the loop fixes the break before new work, and that a pass which lowered the score was rolled back.
 5. Compare `git log` from both runs.

@@ -36,15 +36,33 @@ citation and faithfulness measurement, and knowledge-graph-augmented retrieval.
 
 ### Cleaned notes
 
-- [rag.md](rag.md) — RAG architecture: retrieval pipeline,
-  chunking strategies, hybrid search, reranking, faithfulness and groundedness evaluation.
-- [graph-engineering.md](../../ai-engineering/05-graph-engineering/graph-engineering.md) — knowledge
-  graph patterns: entity extraction, graph construction, KG-for-RAG, graph traversal.
+- [rag.md](rag.md) — the RAG pipeline: architectures (naive / advanced / modular, nine named
+  patterns), pre-retrieval stage order, ingestion and parser tiers, chunking, hybrid retrieval
+  (BM25 + dense, RRF and weighted fusion, rerank, metrics), a first production pipeline (Bedrock KB),
+  a tuned one (Bayer's PRINCE, Text-to-SQL), index-time structures (RAPTOR, GraphRAG, filesystems),
+  agentic RAG (Li Exp. 3-9), conversational multi-turn RAG, monitoring and production checklist.
+  Most of the pipeline material moved here from [02-context 04](../../ai-engineering/02-context-engineering/notes/04-retrieval.md),
+  which now covers retrieval as one context lever.
+- [rag/agent-rag-patterns.md](rag/agent-rag-patterns.md) — retrieval inside an agent: patterns for
+  retrieval as a tool, planning and verification.
+- [rag/vector-databases.md](rag/vector-databases.md) — store comparison, ANN index types (HNSW vs. ANNOY),
+  embedding dimension compatibility.
+- [rag/bedrock-kb.md](rag/bedrock-kb.md), [rag/gcp-vertex-vs-bedrock.md](rag/gcp-vertex-vs-bedrock.md),
+  [rag/hc-rag-pipeline.md](rag/hc-rag-pipeline.md), [rag/retrieval-improvements.md](rag/retrieval-improvements.md),
+  [rag/semantic-cache.md](rag/semantic-cache.md) — project reference specs.
+- [images/](images/) — figures used by rag.md.
+
+### Practice
+
+- [practice/01-bm25-from-scratch](practice/01-bm25-from-scratch/README.md) — BM25 by hand, standard
+  library only, offline (Li, Exp. 3-5). `uv run --with pytest python -m pytest practice/01-bm25-from-scratch`.
+- [practice/pe-rag.ipynb](practice/pe-rag.ipynb) — retrieved few-shot examples with ChromaDB (DAIR
+  prompt-engineering course; legacy models, needs an API key).
 
 ### Readings
 
 - [`3-rag/`](3-rag/) — RAG reference papers and book chapters.
-- Li, *AI Agents in Depth*, [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md). Synthesized into [02-context 04 — retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) (hybrid stages, metrics, contextual retrieval, index-time distillation, RAPTOR/GraphRAG/filesystem, agentic RAG) and [06 — memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) (formats, Mem0, two-tier memory, three-level eval). Offline lab: [BM25 from scratch](../../ai-engineering/02-context-engineering/practice/01-bm25-from-scratch/README.md). The other labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) need models or API keys: [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
+- Li, *AI Agents in Depth*, [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md). Synthesized into [rag.md](rag.md) (hybrid stages, metrics, RAPTOR/GraphRAG/filesystem, agentic RAG), [02-context 04 — retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) (just-in-time retrieval, contextual retrieval, index-time distillation) and [06 — memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) (formats, Mem0, two-tier memory, three-level eval). Pipeline material is in [rag.md](rag.md). Offline lab: [BM25 from scratch](practice/01-bm25-from-scratch/README.md). The other labs (ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG) need models or API keys: [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
 - [`../../ai-engineering/05-graph-engineering/sources/`](../../ai-engineering/05-graph-engineering/sources/) — knowledge
   graphs for retrieval reference material.
 

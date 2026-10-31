@@ -1,4 +1,4 @@
-# Harness Engineering — lecture deck. Built from notes/01–08 and notes/practice/01–03.
+# Harness Engineering — lecture deck. Built from notes/01–10.
 # Build:  make slides PILLAR=03-harness-engineering [PREVIEW=1] [PDF=1] [STRICT=1]
 # Spec:   .claude/skills/slides/references/deck-spec.md
 
@@ -20,6 +20,7 @@ parts:
   - title: Foundations
     summary: What a harness is · Harness anatomy
     slides:
+
       - layout: statement
         title: The thesis
         kicker: What a harness is
@@ -70,6 +71,23 @@ parts:
           Model quality shifts per-step accuracy a few points. Harness structure changes how many steps must
           succeed in a row and what happens when one doesn't. Harness thickness depends on the model, so always
           state the model when you report a harness result.
+
+
+      - layout: image
+        title: Same model, better interfaces
+        kicker: Agashe et al., Agent S4
+        image: ../sources/images/agashe-evolving-agent-interfaces-fig2.png
+        caption: OSWorld V2 binary success against cost per task (Agashe et al., 2026)
+        bullets:
+          - "Only the **interfaces** evolved: tools, observation formats, when-to-use notes"
+          - "Qwen3.8-27B: **5.6% → 21.3%** (3.8×)"
+          - "Above Opus 4.8 (20.6%) and GPT-5.5 (13.0%)"
+          - "At about **1.5%** and **4.3%** of their cost per task"
+        source: notes/01-what-a-harness-is.md
+        notes: >-
+          Model and harness loop were held fixed. A meta-agent reads the task agent's trajectories, without success
+          labels, and rewrites the interface repository; validation tasks it never sees decide which versions
+          survive. On ScienceBoard the same model went from 41.4% to 58.6%.
 
       - layout: steps
         title: Four nested scopes of engineering
@@ -184,6 +202,19 @@ parts:
           tools or environment gap; the gulf of evaluation is a feedback gap. Ablation turns the table into a
           method: remove one subsystem at a time on a fixed task and see what breaks.
 
+
+      - layout: image
+        title: One small harness, all five subsystems
+        kicker: Faldor et al., Gemini in Minecraft
+        image: ../sources/images/faldor-gemini-argon-minecraft-fig2.png
+        caption: Four coding agents, one shared server, a fifth Observer that never plays (Faldor et al., 2026)
+        source: notes/02-harness-anatomy.md
+        notes: >-
+          Tools: one action, write and run a JavaScript program. Environment: programs can't start processes or write files. State: private and team-shared memory; world saved every 5 min. Feedback: text after every program, plus the Observer.
+          Four general-purpose Gemini 4 Argon coding agents, with nothing Minecraft-specific, beat the game in
+          27 h 14 min. There are no pixels and no keyboard: the agent acts by writing code, which makes bash-style
+          composition the whole action space.
+
       - layout: steps
         title: The minimum viable harness
         kicker: Six items
@@ -206,6 +237,7 @@ parts:
   - title: Tools and boundaries
     summary: Tool design · Execution boundaries and guardrails
     slides:
+
       - layout: compare
         title: Design for an agent, not a programmer
         kicker: ACI, not API
@@ -271,7 +303,7 @@ parts:
       - layout: image
         title: Discover tools; don't preload them
         kicker: Li, Fig. 4-2
-        image: ../images/ai-agent-book/fig4-2.svg
+        image: ../sources/images/li-ai-agents-in-depth-fig4-2.svg
         caption: Two-level matching, server then tool (Li, AI Agents in Depth, 2026, Apache-2.0)
         bullets:
           - "Five MCP servers ≈ **55K tokens**, ~30% of a 200K window, before the first message"
@@ -314,7 +346,7 @@ parts:
       - layout: image
         title: Coding agents edit by exact match
         kicker: Li, Fig. 5-4
-        image: ../images/ai-agent-book/fig5-4.svg
+        image: ../sources/images/li-ai-agents-in-depth-fig5-4.svg
         caption: Five file-editing schemes and their trade-offs (Li, AI Agents in Depth, 2026, Apache-2.0)
         bullets:
           - "**Old → new string** (Claude Code): predictable; fails loudly if not unique"
@@ -429,6 +461,7 @@ parts:
   - title: Verification and long horizons
     summary: Verification loops · Long-horizon execution
     slides:
+
       - layout: table
         title: Three layers before "done"
         kicker: Termination check
@@ -490,6 +523,19 @@ parts:
           External evaluators can be tuned to scepticism far more easily than generators can be made self-critical.
           The evaluator drives the app with Playwright: reading code verifies intent, driving the app verifies
           behaviour. The ROI question is rarely "is it cheaper" but "does it produce a result at all".
+
+
+      - layout: image
+        title: An observer checks claims against the record
+        kicker: Faldor et al., hour 12
+        image: ../sources/images/faldor-gemini-argon-minecraft-fig14.png
+        caption: A claim of 14 banked Ender Eyes, retracted two minutes later (Faldor et al., 2026)
+        source: notes/05-verification-loops.md
+        notes: >-
+          A fifth agent, the Observer, never played; it checked claims against the game record. A restart had restored a save from after the agent's death; its inventory was empty. The success message came from an unguarded branch of its own script. Without the retraction, three agents plan around items that don't exist.
+          The agents were told to verify each action and report honestly. An unguarded branch that prints success
+          without checking the world is the same failure as code written and never tested. The Observer
+          intervened only when the environment itself failed: six server restarts in 27 hours.
 
       - layout: code
         title: Sprint contracts are written before the work
@@ -617,7 +663,7 @@ parts:
 
       - layout: code
         title: The handoff separates verified from assumed
-        kicker: templates/session-handoff.md
+        kicker: Session handoff skeleton
         lang: markdown
         code: |-
           ## Verified Now
@@ -656,10 +702,23 @@ parts:
           verification gate from note 05 decides whether the loop actually ends. Decomposition is scaffolding
           around a model limit: Opus 4.6 let Anthropic remove sprint decomposition entirely.
 
+
+      - layout: image
+        title: What a 27-hour run looks like
+        kicker: "Faldor et al., 27 h 14 min"
+        image: ../sources/images/faldor-gemini-argon-minecraft-fig1.png
+        caption: Four agents, 27 h 14 min, 605 deaths along the bottom (Faldor et al., 2026)
+        source: notes/06-long-horizon-execution.md
+        notes: >-
+          2,783 programs; 22% ended in error; 6 server restarts. ~24,000 model calls, 91% of input tokens cached; about $520. Shared notes outlived 605 deaths; 42 helpers reused, one in 1,519 programs. Reached The End at 13 h 33, then ~13 more hours on the last two steps.
+          State outside the context, tools that accumulate, honest reporting. Progress is not linear: the harness
+          has to keep a run alive through the plateau, the stretch where context anxiety would end it early.
+          Limitations: privileged bot API, Easy difficulty, pretraining knowledge of Minecraft, a single run.
   # ───────────────────────────────────────────────────────────── Part 4
   - title: Orchestration and maturity
     summary: Multi-agent harnesses · Maturity and failure modes
     slides:
+
       - layout: bullets
         title: Subagents are a context firewall first
         kicker: Orchestration
@@ -805,6 +864,7 @@ parts:
   - title: Practice
     summary: Repo as system of record · Session lifecycle · Scope and done
     slides:
+
       - layout: table
         title: The fresh-session test
         kicker: Repo as system of record
@@ -818,7 +878,7 @@ parts:
           - ["How do I verify it?", "Test, lint and check commands"]
           - ["Where are we now?", "Progress log, feature list, git history"]
         takeaway: Every unanswered question gets guessed, and every new session guesses again.
-        source: notes/practice/01-repo-as-system-of-record.md
+        source: notes/09-repo-as-system-of-record.md
         notes: >-
           The repo is the agent's whole world: knowledge in Slack or people's heads doesn't exist for it. Four rules
           for the map: knowledge next to code, one entry file, minimal but complete, update with the code.
@@ -844,11 +904,11 @@ parts:
           - Red lines at the top or bottom, never the middle (lost in the middle)
           - "Each rule records its source, scope and expiry"
           - Audit and delete dead rules like unused dependencies
-        source: notes/practice/01-repo-as-system-of-record.md
+        source: notes/09-repo-as-system-of-record.md
         notes: >-
           A long instruction file crowds the budget, buries constraints in the middle, flattens priority and decays
-          into contradiction. OpenAI's layout routes architecture, product specs, design docs and exec plans into
-          their own files; templates/openai-repo-template packages it.
+          into contradiction. Length targets differ by source: Osmani ~60 lines, OpenAI ~100, this course 50–200.
+          Start near 60 and grow only when a fresh session keeps guessing.
 
       - layout: flow
         title: One feature at a time, passed by evidence
@@ -859,7 +919,7 @@ parts:
           - {label: passing, sub: only via its verification run}
         caption: "`blocked` hangs off active. A script flips the state; the agent requests verification, never edits the field."
         takeaway: "Verified completion rate = verified ÷ activated. Under WIP = 1 it sits at **1.0** between features."
-        source: notes/practice/03-scope-and-done.md
+        source: notes/10-scope-and-done.md
         notes: >-
           Each feature carries behaviour, verification and state, plus evidence once it passes. Rules for AGENTS.md:
           don't mark complete because code was added, don't rewrite the list to hide unfinished work, don't weaken
@@ -871,6 +931,7 @@ parts:
     agenda: false
     divider: false
     slides:
+
       - layout: cards
         title: Rules of thumb
         kicker: The pillar on one slide
@@ -897,8 +958,7 @@ parts:
         bullets:
           - text: "**04 — Loop engineering:** the loops the harness runs, and how they improve themselves"
           - text: "**06 — Eval:** graders, calibration and pass^k, the binary evals every rule here depends on"
-          - text: "**Do the labs:** notes/practice/04-exercises.md, six labs on a repo of your own"
-          - text: "**Copy from:** templates/, with `AGENTS.md`, `init.sh`, feature list, progress, handoff, rubric"
+          - text: "**Do the labs:** practice/exercises.md, six labs on a repo of your own"
           - text: "**Read:** Anthropic on long-running harnesses; OpenAI on harness engineering; Li, AI Agents in Depth"
         aside:
           title: The one idea to keep

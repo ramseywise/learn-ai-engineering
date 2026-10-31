@@ -38,10 +38,10 @@ A results log, one row per run:
 1. Write the success criteria: what the user needs, never-events, unit of success, cost of error ([02](../notes/02-defining-correct.md#success-criteria-before-code)).
 2. Collect 50–100 traces: real if you have them, otherwise synthetic along 3 dimensions ([03](../notes/03-eval-datasets.md#synthetic-data-done-right)).
 3. **Open code**: one free-text note per trace on the *first* thing that went wrong.
-4. **Axial code**: group into 5–15 categories. Fill in [failure-taxonomy.md](../templates/failure-taxonomy.md).
+4. **Axial code**: group into 5–15 categories. Write it up with the taxonomy skeleton in [02](../notes/02-defining-correct.md#the-failure-taxonomy).
 5. Rank by count × cost. Pick the top three.
 6. **Two-expert test**: give 20 outputs and your criteria to someone else. Compare verdicts. Fix the criteria where you disagreed.
-7. Turn the 20–50 clearest failures into rows matching [evalset.schema.json](../templates/evalset.schema.json). Include negative and boundary cases.
+7. Turn the 20–50 clearest failures into rows matching the row schema in [03](../notes/03-eval-datasets.md). Include negative and boundary cases.
 
 **Learning outcome:** whether the failures you *expected* are the ones that actually happen. They usually aren't.
 
@@ -113,10 +113,10 @@ A results log, one row per run:
 **Rung:** 3, trustworthy. **Notes:** [05](../notes/05-llm-as-judge.md).
 
 1. Pick the judge from Lab 3 that matters most.
-2. Rewrite it from [judge-prompt.md](../templates/judge-prompt.md): one criterion, binary, critique first, `CANNOT_GRADE`.
+2. Rewrite it from the judge prompt in [05](../notes/05-llm-as-judge.md#writing-the-judge-prompt): one criterion, binary, critique first, `CANNOT_GRADE`.
 3. Label 100–150 outputs yourself (or use real 👍/👎 if you have it). Split train / dev / test.
 4. Iterate on dev. Read every disagreement and classify it: prompt problem, criteria problem, or hard case.
-5. Measure on test **once**. Fill in [judge-calibration.md](../templates/judge-calibration.md).
+5. Measure on test **once**. Write the calibration record described in [05](../notes/05-llm-as-judge.md#calibrate-against-human-labels).
 6. Run the bias checks: length correlation, and order swap if it's pairwise.
 7. Cross-check against one off-the-shelf metric (RAGAS or a Phoenix template). Do they agree with each other? With your labels?
 8. Decide: calibrated (for which job?) or experimental.
@@ -129,9 +129,9 @@ A results log, one row per run:
 
 **Rung:** 3, enforced. **Notes:** [10](../notes/10-evals-in-ci.md).
 
-1. Write a [gate-contract.md](../templates/gate-contract.md) for your suite: pools, gates in pipeline order, thresholds against the baseline.
+1. Write a gate contract ([10](../notes/10-evals-in-ci.md#the-gate-ladder)) for your suite: pools, gates in pipeline order, thresholds against the baseline.
 2. Split your runner into `run` → `results.jsonl` → `assert`.
-3. Add [eval.yml](../templates/eval.yml): smoke on every PR, regression on relevant paths, nightly full.
+3. Add a CI workflow ([10](../notes/10-evals-in-ci.md#a-ci-workflow)): smoke on every PR, regression on relevant paths, nightly full.
 4. Store a baseline from your current main branch.
 5. Open a PR that deliberately regresses one slice. Confirm the per-slice floor catches it, and the gate output names the slice and failure label.
 6. Open a PR that changes only a README. Confirm no eval runs.

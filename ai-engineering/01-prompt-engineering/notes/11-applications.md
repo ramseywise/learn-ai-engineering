@@ -54,14 +54,14 @@ Story:
 
 Gunasekar et al. (2023) generated ~1B tokens of "textbook" Python material, varying **topic** and **target audience**. A 1.3B-parameter model trained on it rivaled models ten times its size on HumanEval. **The target audience is a cheap diversity lever**: a high-school student, an undergraduate, and a PhD candidate produce very different text on the same topic.
 
-![phi-1 synthetic textbook sample](../sources/images/synthetic_diversity/textbooks_1.png)
+![phi-1 synthetic textbook sample](../sources/images/gunasekar-textbooks-are-all-you-need-sample.png)
 *A generated "textbook" passage: a definition, a worked example, then runnable code. Gunasekar et al. (2023), via DAIR.*
 
 ### Pattern 4 — synthetic queries for retrieval (Promptagator)
 
 Retrievers degrade in niche domains and low-resource languages. Dai et al. (2022) showed that **8 labeled examples plus an unlabeled corpus** are enough: few-shot prompt an LLM to write a query for each document, then train the retriever on the (query, document) pairs.
 
-![Promptagator pipeline](../sources/images/synthetic_rag/synthetic_rag_2.png)
+![Promptagator pipeline](../sources/images/dai-promptagator-pipeline.png)
 *A few-shot prompt turns domain documents into synthetic (query, document) pairs, which train a small dual encoder. Dai et al. (2022), via DAIR.*
 
 ```
@@ -75,7 +75,7 @@ A concise counter-argument query related to the argument #N:
 
 - "Relevance" depends on the search intent (supporting vs. counter-argument, etc.) — say which one. The paper used a different prompt label per dataset:
 
-  ![Promptagator per-dataset prompts](../sources/images/synthetic_rag/synthetic_rag_4.png)
+  ![Promptagator per-dataset prompts](../sources/images/dai-promptagator-per-dataset-prompts.png)
   *The same passage → query template, relabeled per intent ("Counter argument:", "Vexed question:", "Is it true that"). Dai et al. (2022).*
 - Label ~20 examples and **randomly sample 2–8 per prompt** for diversity.
 - In the paper, ~50k synthetic pairs matched the quality of a model trained on a comparable amount of human labels.
@@ -101,7 +101,7 @@ Retrieval itself belongs to [02-context](../../02-context-engineering/notes/04-r
 | Schema → SQL | Table and column definitions, then the question | Include the actual schema; generate fixtures to test against |
 | Explain code | Code first, then "Explain the above" | A narrow system prompt ("Python only") can make the model refuse adjacent tasks |
 
-![Instruction → code in chat mode](../sources/images/code-generation/chat-mode.png)
+![Instruction → code in chat mode](../sources/images/dair-code-generation-chat-mode.png)
 *The system prompt fixes the language and "code only," and the user turn is the task. DAIR, Code generation.*
 
 A debugging prompt from the Code Llama notebook. The system role sets the job, and the user turn gives the code, the observed output and the expected output:
@@ -190,7 +190,6 @@ Conversational UI also keeps a human in the loop who can catch drift before it c
 
 - Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../README.md#applications)
 - Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (multimodality, Artifacts)
-- Runnable: [pe-rag.ipynb](../../02-context-engineering/notebooks/pe-rag.ipynb) (retrieval-augmented title generation)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 
 ---

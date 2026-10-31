@@ -25,6 +25,9 @@ cleaned: 2026-10-28
 
 The key design choice is that **each tool runs in its own context**. The tool call goes out with only what that step needs, and only the result comes back into the main trace. That is context isolation ([10](10-tools-and-multi-agent.md)) applied to reasoning.
 
+![Cognitive prompting puts all operations in one prompt; cognitive tools run each operation as a separate call with its own prompt](../sources/images/ebouky-cognitive-tools-fig1.png)
+*Image Source: Ebouky et al. (2025)*
+
 Result: GPT-4.1 on AIME 2024 rises from **26.7% to 43.3%**, approaching o1-preview, with similar gains on open-weight models. No training is involved, only structured prompting.
 
 Two caveats. These gains are on maths benchmarks with non-reasoning models. On reasoning models (o-series, extended thinking) the model already runs something like this loop internally, so explicit scaffolding adds less and can get in the way ([prompting reasoning models](../../01-prompt-engineering/notes/07-prompting-reasoning-models.md)).
@@ -202,7 +205,7 @@ The IBM result favours the tool version. The best results came when **the model 
 
 ## Upstream library (what was condensed here)
 
-The upstream `cognitive-tools/` held about 100k words: the template families above, a program library (basic and advanced programs), domain schemas ([07](07-structured-context.md)) and "architectures" that compose tools into solver, tutor and research agents ([13](13-putting-it-together.md)). Copyable versions of the core templates are in [templates/prompts/](../templates/prompts/) (chain of thought, few-shot, minimal context, verification loop) and [prompt_program_template.py](../templates/prompt_program_template.py).
+The upstream `cognitive-tools/` held about 100k words: the template families above, a program library (basic and advanced programs), domain schemas ([07](07-structured-context.md)) and "architectures" that compose tools into solver, tutor and research agents ([13](13-putting-it-together.md)). The upstream repo keeps copyable versions of the core templates (chain of thought, few-shot, minimal context, verification loop) and a `prompt_program_template.py`: [davidkimai/Context-Engineering](https://github.com/davidkimai/Context-Engineering/tree/main/20_templates).
 
 ---
 

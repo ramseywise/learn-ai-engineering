@@ -6,8 +6,7 @@ sources:
   - https://arxiv.org/abs/2305.14627
   - https://arxiv.org/abs/2303.08896
   - https://arxiv.org/abs/2109.07958
-  - case-study/grounding-claims.md
-  - case-study/gate-contract.md
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -21,11 +20,14 @@ cleaned: 2026-10-28
 
 ## Split the pipeline
 
-```
-query → [rewrite] → retrieve → [rerank] → context → generate → answer (+ citations)
-           │           │           │          │          │            │
-       rewrite hit   recall@k    MRR/nDCG   context    faithful    citations
-                                            precision  complete    valid
+```mermaid
+flowchart LR
+  Q[query] --> W[rewrite<br/><i>rewrite hit</i>]
+  W --> R[retrieve<br/><i>recall@k, hit rate</i>]
+  R --> K[rerank<br/><i>MRR, nDCG@k</i>]
+  K --> C[context<br/><i>context precision</i>]
+  C --> G[generate<br/><i>faithful, complete</i>]
+  G --> A[answer + citations<br/><i>citations valid</i>]
 ```
 
 | Stage | Question | Metric | Needs |
@@ -66,7 +68,7 @@ Getting **expected sources** is the expensive part. Options, cheapest first: the
 2. **Verify each claim** against the retrieved passages: *supported*, *contradicted*, or *not found*.
 3. **Score** = supported ÷ total. Report contradicted separately: a contradiction is worse than an omission.
 
-This is the core of RAGAS faithfulness (Es et al. 2023) and of the case study's grounding grader ([case study](case-study/grounding-claims.md)). Benefits: partial credit, a pointer to the exact bad claim, and easier work for the judge than a holistic verdict.
+This is the core of RAGAS faithfulness (Es et al. 2023) and of the case study's grounding grader ([case study](13-case-study-support-agent.md#grounding-claims-before-the-answer)). Benefits: partial credit, a pointer to the exact bad claim, and easier work for the judge than a holistic verdict.
 
 ### Grounding tiers
 
@@ -110,7 +112,7 @@ Then, with a judge: **citation precision** (does the cited passage support the s
 
 ## Pass the text, not the pointer
 
-The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against RAGAS showed near-zero agreement for exactly this reason ([case study](case-study/grader-methodology.md#why-the-cross-check-showed-low-agreement)).
+The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against RAGAS showed near-zero agreement for exactly this reason ([case study](13-case-study-support-agent.md#why-the-grounding-cross-check-showed-low-agreement)).
 
 Guard against it in the grader interface (`requires = {"retrieved_context"}`, [04](04-graders.md#the-grader-interface)) and label it `context_missing` in the taxonomy. Assert in CI that grounding graders received non-empty text.
 

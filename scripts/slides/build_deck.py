@@ -895,15 +895,25 @@ def contact_sheets(pngs: list[Path], out_dir: Path) -> list[Path]:
     return sheets
 
 
-def write_pdf(pngs: list[Path], pdf: Path) -> Path:
-    """One page per slide, rasterised from the rendered PNGs (no speaker notes, no selectable text)."""
+def write_pdf(pngs: list[Path], pdf: Path, width: int = 1600) -> Path:
+    """One page per slide, rasterised from the rendered PNGs (no speaker notes, no selectable text).
+
+    Pages are downsampled to `width` px and JPEG-encoded: sharp on screen, ~5 MB a deck, since
+    the PDF is committed and every rebuild adds a copy to git history.
+    """
     from PIL import Image
 
-    pages = [Image.open(p).convert("RGB") for p in pngs]
+    pages = []
+    for p in pngs:
+        img = Image.open(p).convert("RGB")
+        if img.width > width:
+            img = img.resize((width, round(img.height * width / img.width)), Image.LANCZOS)
+        pages.append(img)
     # Write beside the target, then rename: a viewer with the PDF open reloads on change and
     # would otherwise read a half-written file and report it corrupt.
     tmp = pdf.with_name(f".{pdf.name}.tmp")
-    pages[0].save(tmp, format="PDF", save_all=True, append_images=pages[1:], resolution=180, quality=90)
+    pages[0].save(tmp, format="PDF", save_all=True, append_images=pages[1:],
+                  resolution=width / 13.333, quality=80)
     tmp.replace(pdf)
     return pdf
 

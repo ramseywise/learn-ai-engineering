@@ -101,7 +101,12 @@ Choose the embedding along three axes:
 
 ### Message passing
 
-A GNN layer has each node **aggregate** its neighbours' vectors and **update** its own. After *k* layers a node's embedding encodes its *k*-hop neighbourhood. The variants fix specific problems:
+A GNN layer has each node **aggregate** its neighbours' vectors and **update** its own. After *k* layers a node's embedding encodes its *k*-hop neighbourhood.
+
+![Message passing for target node A: A aggregates messages from its neighbours D, B and C, and each of those messages was itself aggregated from that neighbour's own neighbours, so two layers reach A's two-hop neighbourhood](../sources/images/negro-kg-and-llms-in-action-fig11-5.png)
+*Image Source: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 11.5 (2025)*
+
+The picture is two layers unrolled: the boxes on the right are the first layer's aggregations at D, B and C, and the big box is the second layer's aggregation at A. The variants fix specific problems:
 
 - **Normalisation** stops high-degree nodes from dominating.
 - **Attention** (GAT) weights neighbours by relevance. Multi-head attention is the transformer mechanism applied to a neighbourhood.
@@ -148,7 +153,7 @@ A predicted edge is the clearest case of note 12's rule that **claims are not tr
 
 `~/.claude/refs/agent-eval.md`: precision/recall trade-offs and held-out evaluation.
 
-Depth: [ch9](../sources/kg-and-llms-in-action/09-ml-on-knowledge-graphs.md) (task taxonomy, karate club), [ch10](../sources/kg-and-llms-in-action/10-graph-feature-engineering.md) (manual features, metapaths, DWPC, ReFeX), [ch11](../sources/kg-and-llms-in-action/11-graph-representation-learning-gnns.md) (embeddings, KG decoders, message passing), [ch12](../sources/kg-and-llms-in-action/12-node-classification-link-prediction.md) (PyG walkthroughs). Practice: [KG Lab 9](../practice/02-knowledge-graph-labs.md#lab-9--predict-missing-links).
+Depth: [ch9](../sources/kg-and-llms-in-action/09-ml-on-knowledge-graphs.md) (task taxonomy, karate club), [ch10](../sources/kg-and-llms-in-action/10-graph-feature-engineering.md) (manual features, metapaths, DWPC, ReFeX), [ch11](../sources/kg-and-llms-in-action/11-graph-representation-learning-gnns.md) (embeddings, KG decoders, message passing), [ch12](../sources/kg-and-llms-in-action/12-node-classification-link-prediction.md) (PyG walkthroughs). Practice: [lab B9](../practice/exercises.md#b9--predict-missing-links).
 
 ---
 

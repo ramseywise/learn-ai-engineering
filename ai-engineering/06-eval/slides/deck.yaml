@@ -1,4 +1,4 @@
-# Eval Engineering — lecture deck. Built from notes/01–12 and the README rules of thumb.
+# Eval Engineering — lecture deck. Built from notes/01–13 and the README rules of thumb.
 # Build:  make slides PILLAR=06-eval [PREVIEW=1] [PDF=1] [STRICT=1]
 # Spec:   .claude/skills/slides/references/deck-spec.md
 
@@ -233,7 +233,7 @@ parts:
       - layout: image
         title: Code first, judge above it, humans calibrate
         kicker: Three kinds of grader
-        image: ../images/ai-agent-book/fig7-4.svg
+        image: ../sources/images/li-ai-agents-in-depth-fig7-4.svg
         caption: "Verification modes, deterministic to model judgment (Li, AI Agents in Depth, Fig. 7-4)"
         bullets:
           - "**Code:** deterministic, free, hard to argue with"
@@ -256,7 +256,8 @@ parts:
           class Grader(Protocol):
               name: str
               version: str
-              requires: set[str]   # e.g. {"retrieved_context"}
+              # e.g. {"retrieved_context"}: skip if missing
+              requires: set[str]
 
               def grade(self, task, output,
                         trajectory=None,
@@ -404,7 +405,7 @@ parts:
       - layout: image
         title: Pairwise votes become a ranking
         kicker: Elo and Bradley–Terry
-        image: ../images/ai-agent-book/fig7-6.svg
+        image: ../sources/images/li-ai-agents-in-depth-fig7-6.svg
         caption: "Elo rating from pairwise comparisons (Li, AI Agents in Depth, Fig. 7-6)"
         bullets:
           - "Expected: E = 1 / (1 + 10^((R_B − R_A)/400))"
@@ -464,7 +465,7 @@ parts:
       - layout: image
         title: One grader per component
         kicker: DeepLearning.AI, Evaluating AI Agents
-        image: ../images/evaluating-ai-agents/lab-3-router_skill_eval.png
+        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab3-router-skill-eval.png
         caption: "Router and skill evaluators (DeepLearning.AI & Arize, Lab 3)"
         bullets:
           - "**Router:** right tool, right parameters (LLM judge)"
@@ -534,7 +535,7 @@ parts:
       - layout: image
         title: Convergence is relative to what you observed
         kicker: Course Lab 4
-        image: ../images/evaluating-ai-agents/lab-4-experiment1.png
+        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab4-convergence-experiment.png
         caption: "Convergence experiment (DeepLearning.AI & Arize, Lab 4)"
         bullets:
           - "**17** paraphrases of one question"
@@ -608,7 +609,7 @@ parts:
       - layout: image
         title: A trace is a tree of spans
         kicker: Tracing, course Lab 2
-        image: ../images/evaluating-ai-agents/lab-2-spans_agent.png
+        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab2-spans.png
         caption: "One agent run in Phoenix (DeepLearning.AI & Arize, Lab 2)"
         bullets:
           - "**Model call:** model ID, full input, tokens, latency"
@@ -712,7 +713,7 @@ parts:
       - layout: image
         title: "A worked example: 7 questions, one run"
         kicker: Course Lab 5
-        image: ../images/evaluating-ai-agents/lab-5-experiments.png
+        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab5-experiments.png
         caption: "v1 vs v2 experiment (DeepLearning.AI & Arize, Lab 5)"
         bullets:
           - "v2 adds \"Think before you respond.\" to the SQL prompt"
@@ -743,6 +744,21 @@ parts:
           Watch Simpson's paradox: B can beat A in every slice and lose overall if the slice mix differs.
           Slice 20 ways and one will be "significant" by chance; pre-register the slices that gate.
           Then read 10–20 flipped transcripts before accepting any change.
+
+      - layout: image
+        title: Slice by difficulty, not just by topic
+        kicker: Yang et al. 2026, Terminal-Bench RSI
+        image: ../sources/images/yang-terminal-rsi-fig10.png
+        caption: "Success by difficulty stratum across self-improvement rounds (Yang et al. 2026, Fig. 10)"
+        bullets:
+          - "**Easy** tasks: 32% → 73%. The headline gain lives here"
+          - "**Extreme** tasks: 0 → 4.9 → 11.0 → 6.1 → 11.0%"
+          - "One pooled rate hides where progress stalls"
+        takeaway: Report the strata. A rising average can sit on a flat hard tail.
+        source: notes/09-reading-results.md
+        notes: >-
+          The same paper reports Mean@R next to pass@R (chapter 06) and shows partial-credit
+          reward drifting from strict success (chapter 12).
 
       - layout: code
         title: A report that supports a decision
@@ -859,7 +875,7 @@ parts:
       - layout: image
         title: Humans calibrate, judges cover
         kicker: Two-layer online review
-        image: ../images/two-layer-eval-human-llm-calibration.png
+        image: ../sources/images/course-two-layer-eval-human-llm-calibration.png
         caption: Two-layer review of the production trace stream
         bullets:
           - "Grade **10–20%** of traces, chosen by rule"
@@ -932,15 +948,36 @@ parts:
             body: Sample by rule. Humans calibrate the judges. Debug infra before the agent.
         source: README.md#rules-of-thumb
 
+      - layout: table
+        title: "Worked example: which judges earned a gate"
+        kicker: Case study, chapter 13
+        lead: 50 tasks, 25 liked and 25 disliked by users. Δ is liked minus disliked mean score.
+        header: [Grader, Δ, "Cohen's d", Verdict]
+        widths: [4, 1.6, 1.8, 2.6]
+        rows:
+          - ["**Custom answer_relevancy v3**", "**+0.214**", "0.75", "Strong: ship"]
+          - [DeepEval answer_relevancy, "+0.086", "0.25", Weak]
+          - [Custom completeness, "+0.030", "0.07", Marginal]
+          - [DeepEval completeness, "−0.042", "—", "**Inverted**"]
+          - [Custom escalation, "0.000", "0.00", "No signal: don't gate"]
+          - [DeepEval escalation, "−0.080", "—", "**Inverted**"]
+        highlight: [0]
+        takeaway: Validate judges against users, not against other judges. Calibration doesn't transfer across domains.
+        source: notes/13-case-study-support-agent.md
+        notes: >-
+          Custom answer_relevancy went from Δ −0.080 at v2 to +0.214 at v3 on the same sample. The
+          grounding cross-check failed for an eval reason: the judge got URLs, not passages. On the
+          routing agent's staging traffic the same graders separated near zero.
+
       - layout: bullets
         title: Where to go next
         kicker: Measures every layer below
         bullets:
-          - text: "**Practice:** practice/01-exercises.md, eight labs on one system"
-            sub: ["Elo leaderboard lab in practice/02-elo-leaderboard"]
-          - text: "**Templates:** judge prompt, calibration sheet, failure taxonomy, gate contract, eval.yml"
-          - text: "**Case study:** a real multi-agent support system's eval design, mistakes included"
-          - text: "**Course:** DeepLearning.AI, Evaluating AI Agents (Arize Phoenix)"
+          - text: "**Practice:** practice/exercises.md, eight labs on one system"
+            sub: ["Elo leaderboard lab in practice/02-elo-leaderboard, runs offline"]
+          - text: "**Copy-ready snippets:** judge prompt (05), failure taxonomy (02), row schema (03), gate contract and CI workflow (10)"
+          - text: "**Worked example:** chapter 13, a real multi-agent support system's eval design, mistakes included"
+          - text: "**Course:** DeepLearning.AI, Evaluating AI Agents (Arize Phoenix), folded into 05, 06 and 08"
           - text: "**Loops:** 04-loop-engineering, where an eval becomes the optimizer's target"
         aside:
           title: The one idea to keep

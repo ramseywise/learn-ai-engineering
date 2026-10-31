@@ -39,6 +39,16 @@ Treat every claim below as **hypothesis or metaphor** unless it's tied to a pape
 | **Quantum semantics** | Meaning is undetermined until "observed" by an interpretive context; Bell-style tests show non-classical contextuality | Agostino et al. (2506.10077) report CHSH-style violations in LLM interpretation of ambiguous phrases. Practical version: an ambiguous prompt has no fixed meaning, so disambiguate with context. The quantum framing adds no technique |
 | **Unified field theory** | Combines symbolic, field and quantum views into one framework | No testable content beyond the parts above |
 
+Two of the rows rest on real papers, and their figures show how modest the grounded versions are. Wang et al.'s "attractor" is a 2-cycle: paraphrase a text over and over and it alternates between two clusters of near-identical outputs.
+
+![Successive paraphrasing falls into a 2-cycle between two clusters](../sources/images/wang-attractor-cycles-fig1.png)
+*Image Source: Wang et al. (2025)*
+
+Yang et al.'s "symbolic mechanism" is a three-stage circuit of attention heads. Abstraction heads map tokens to variables, induction heads find the pattern over variables, and retrieval heads map the predicted variable back to a token.
+
+![Symbol abstraction, symbolic induction and retrieval heads](../sources/images/yang-emergent-symbolic-mechanisms-fig1.png)
+*Image Source: Yang et al. (2025)*
+
 ---
 
 ## The NOCODE advanced modules

@@ -62,7 +62,7 @@ The primary source is Microsoft Research's GraphRAG paper, Edge et al., *From Lo
 
 The judge was an LLM in head-to-head comparisons, not people and not a ground-truth accuracy measure. So the result is "graph community summaries help whole-corpus questions". It does not show that graphs are more accurate than vectors in general.
 
-The 53.4% vs. 42.9% multi-hop figures that graph-engineering.md §9 quoted come from a vendor blog with no stated method. They're dropped here. If you want a number for your own data, [KG Lab 6](../practice/02-knowledge-graph-labs.md#lab-6--text-to-cypher-as-generate-then-verify) measures it.
+The 53.4% vs. 42.9% multi-hop figures that the original deep note ([sources/graph-engineering-deep-note.md](../sources/graph-engineering-deep-note.md)) §9 quoted come from a vendor blog with no stated method. They're dropped here. If you want a number for your own data, [lab B6](../practice/exercises.md#b6--text-to-cypher-as-generate-then-verify) measures it.
 
 ---
 
@@ -79,6 +79,30 @@ The 53.4% vs. 42.9% multi-hop figures that graph-engineering.md §9 quoted come 
 **Triples lose meaning.** "If it rains next week I'll cancel the beach trip and go to the museum" becomes `(user, plans, beach trip)` and `(user, backup, museum)`, and the condition is gone. Extraction errors also contaminate the graph. Li's recommendation (*AI Agents in Depth*, ch. 3): keep the core record in natural language, and use the graph as an *index* for the domains that need multi-hop and disambiguation (medical, legal, family relationships). For "drill from concept to detail" questions, a RAPTOR summary tree fits better than a graph ([02-context 04](../../02-context-engineering/notes/04-retrieval.md#distill-at-index-time-beyond-flat-chunks)).
 
 **Default order:** start with vector. Add canned traversals for the multi-hop question shapes you can name. Add text-to-Cypher only for the long tail, and only with a validator. Ch13 takes the same position: its ReAct agent's tools use **precanned Cypher queries** because free-form generation fails too often, with a vector-search tool as a fallback. This is the agency rule from [note 02](02-graph-primitives.md) again.
+
+### Vector search inside the graph
+
+The vector mode doesn't need a separate store. Course L3 puts a vector index on a node property of the movies graph and queries it with Cypher, so the hit comes back as a node you can keep walking from:
+
+```cypher
+// 1. Index a property (1536 = OpenAI embedding size)
+CREATE VECTOR INDEX movie_tagline_embeddings IF NOT EXISTS
+FOR (m:Movie) ON (m.taglineEmbedding)
+OPTIONS {indexConfig: {`vector.dimensions`: 1536, `vector.similarity_function`: 'cosine'}};
+
+// 2. Embed each tagline in the database and store it on the node
+MATCH (movie:Movie) WHERE movie.tagline IS NOT NULL
+WITH movie, genai.vector.encode(movie.tagline, "OpenAI", {token: $openAiApiKey}) AS vector
+CALL db.create.setNodeVectorProperty(movie, "taglineEmbedding", vector);
+
+// 3. Similarity search: embed the question, ask the index for top-k nodes
+WITH genai.vector.encode($question, "OpenAI", {token: $openAiApiKey}) AS q
+CALL db.index.vector.queryNodes('movie_tagline_embeddings', $top_k, q)
+  YIELD node AS movie, score
+RETURN movie.title, movie.tagline, score
+```
+
+`SHOW VECTOR INDEXES` lists what exists. The index is approximate k-nearest-neighbour search over an HNSW graph. As in [note 10](10-building-kgs-with-llms.md#stage-5-assembly-with-the-course-as-worked-example), `genai.vector.encode` is the course-era name of the GenAI plugin function; check your Neo4j version before reusing it.
 
 ### Hybrid in practice: a `retrieval_query`
 
@@ -115,6 +139,46 @@ retriever = store.as_retriever()
 ```
 
 On a question about ransomware protection, the windowed retriever's answer also named NetApp's ONTAP software, which the plain retriever's answer left out. The course wires the retriever into `RetrievalQAWithSourcesChain` and calls it with `chain({"question": q})`; both the class and the call style are deprecated, so use `create_retrieval_chain` or an LCEL pipe with `.invoke`. One more lesson from L4 carries over: the plain chain made up an answer to a question about Apple, which isn't in the NetApp filing, until the prompt said *"If you are unsure about the answer, say you don't know."*
+
+---
+
+## Structured lookups by name and by place
+
+Before reaching for a model, note how many questions are a fixed query with a parameter. Once L7 adds `Address` nodes ([note 10](10-building-kgs-with-llms.md#stage-5-assembly-with-the-course-as-worked-example)), two more index types answer them: **full-text** for fuzzy names and **point distance** for "near". Vector search ranks by cosine similarity of embeddings; geospatial search ranks by distance between points.
+
+```cypher
+// Full-text: fuzzy name match, then traverse (SHOW FULLTEXT INDEXES lists the names)
+CALL db.index.fulltext.queryNodes("fullTextManagerNames", "Royal Bank") YIELD node, score
+WITH node AS mgr LIMIT 1
+MATCH (mgr:Manager)-[:LOCATED_AT]->(addr:Address)
+RETURN mgr.managerName, addr;
+
+// Aggregate over the new edges: which states have the most investment firms?
+MATCH (:Manager)-[:LOCATED_AT]->(addr:Address)
+RETURN addr.state AS state, count(*) AS numManagers ORDER BY numManagers DESC LIMIT 10;
+
+// Top firms in a city: the value sits on the OWNS_STOCK_IN edge
+MATCH (mgr:Manager)-[:LOCATED_AT]->(addr:Address), (mgr)-[owns:OWNS_STOCK_IN]->(:Company)
+WHERE addr.city = 'San Francisco'
+RETURN mgr.managerName, sum(owns.value) AS totalInvestmentValue
+ORDER BY totalInvestmentValue DESC LIMIT 10;
+
+// "Near": point.distance is in metres, so 10 km is 10000
+MATCH (sc:Address) WHERE sc.city = 'Santa Clara'
+MATCH (com:Company)-[:LOCATED_AT]->(addr:Address)
+WHERE point.distance(addr.location, sc.location) < 10000
+RETURN com.companyName;
+
+// Both together; full-text tolerates the typo "Palo Aalto"
+CALL db.index.fulltext.queryNodes("fullTextCompanyNames", "Palo Aalto Networks") YIELD node AS com
+MATCH (com)-[:LOCATED_AT]->(comAddr:Address), (mgr:Manager)-[:LOCATED_AT]->(mgrAddr:Address)
+WHERE point.distance(comAddr.location, mgrAddr.location) < 20000
+RETURN mgr.managerName,
+       toInteger(point.distance(comAddr.location, mgrAddr.location) / 1000) AS distanceKm
+ORDER BY distanceKm LIMIT 10;
+```
+
+Two cautions from the notebook. One query filters `WHERE addr.city = 'California'`, which returns nothing because California is a state; plausible-looking filter mistakes are not only an LLM problem. And the Palo Alto query in the notebook computes distance from `com.location` rather than `comAddress.location`; the version above uses the address node, which is where the course put location. These canned queries are the "graph traversal (canned)" row of the table above, and they make the best few-shot examples for the next section.
 
 ---
 
@@ -172,7 +236,7 @@ Ch14 classifies at two levels before generating anything:
 
 In course L7, LangChain's `GraphCypherQAChain` was told to follow the schema and still summed a `value` property on `Company`, which doesn't exist. The property is on the `OWNS_STOCK_IN` relationship. **One few-shot example with the right pattern fixed it.** Text-to-Cypher fails on plausible-looking schema mistakes, and those are exactly what a schema check catches.
 
-![The SEC graph the chain queries: Manager OWNS_STOCK_IN Company, both LOCATED_AT Address, Company FILED Form, Chunk PART_OF Form, Form SECTION Chunk, and Chunk NEXT Chunk](../images/kg-for-rag/sec-graph-schema.png)
+![The SEC graph the chain queries: Manager OWNS_STOCK_IN Company, both LOCATED_AT Address, Company FILED Form, Chunk PART_OF Form, Form SECTION Chunk, and Chunk NEXT Chunk](../sources/images/kollegger-knowledge-graphs-for-rag-sec-graph-schema.png)
 *Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
 
 The L7 chain is the minimal text-to-Cypher setup: the schema string from `kg.schema`, rules, and few-shot examples, each a comment with the question followed by its Cypher. The course grows the example list one failure at a time:
@@ -210,13 +274,10 @@ chain.invoke({"query": "What investment firms are near Santa Clara?"})   # cours
 
 Ch15 implements the expert pipeline in LangGraph:
 
-```
-START → intent_detection → schema_extraction → text_to_cypher → query_execution
-                                  ▲                                   │
-                                  └────────── "retry" (≤3) ───────────┤
-                                                                      ├── "summarize" → generate_summary → END
-                                                                      └── "END" → END
-```
+![The ch15 LangGraph pipeline: START, intent detection, schema extraction, text to Cypher, query execution; from query execution a dashed Retry edge goes back to text to Cypher, a dashed Summarize edge to generate summary and then END, and a dashed END edge straight to END](../sources/images/negro-kg-and-llms-in-action-fig15-3.png)
+*Image Source: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 15.3 (2025)*
+
+The retry edge goes back to `text_to_cypher`, not to schema extraction: the schema doesn't change between attempts, only the query does, now with the database's error in the prompt.
 
 ```python
 def post_query_execution(state):
@@ -244,7 +305,7 @@ Ch15 summarises only when the output is a graph or a map, and only when the ques
 
 `~/.claude/refs/agent-context.md`: retrieval and context assembly. `~/.claude/refs/agent-reliability.md`: bounded retries.
 
-Depth: [ch13](../sources/kg-and-llms-in-action/13-kg-powered-rag.md), [ch14](../sources/kg-and-llms-in-action/14-natural-language-kg-questions.md), [ch15](../sources/kg-and-llms-in-action/15-qa-agent-with-langgraph.md). Practice: [KG Lab 5](../practice/02-knowledge-graph-labs.md#lab-5--chat-with-the-10-k-graph) and [KG Lab 6](../practice/02-knowledge-graph-labs.md#lab-6--text-to-cypher-as-generate-then-verify).
+Depth: [ch13](../sources/kg-and-llms-in-action/13-kg-powered-rag.md), [ch14](../sources/kg-and-llms-in-action/14-natural-language-kg-questions.md), [ch15](../sources/kg-and-llms-in-action/15-qa-agent-with-langgraph.md). Practice: [lab B5](../practice/exercises.md#b5--chat-with-the-10-k-graph) and [lab B6](../practice/exercises.md#b6--text-to-cypher-as-generate-then-verify).
 
 ---
 

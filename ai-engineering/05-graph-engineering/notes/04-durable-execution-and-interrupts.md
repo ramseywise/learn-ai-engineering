@@ -39,7 +39,7 @@ graph.invoke({"task": "..."}, config)
 | **Thread** | The sequence of checkpoints for one run, keyed by `thread_id` |
 | **Resume** | Invoke again with the same `thread_id`; execution continues from the latest checkpoint |
 
-![Graph, super-steps, checkpoints, thread and StateSnapshot shown as layers: each node's super-step saves a checkpoint holding state and the next node, and a thread collects them](../images/langgraph/checkpoints-and-threads.png)
+![Graph, super-steps, checkpoints, thread and StateSnapshot shown as layers: each node's super-step saves a checkpoint holding state and the next node, and a thread collects them](../sources/images/langchain-langgraph-docs-checkpoints-and-threads.png)
 *Image Source: LangGraph docs, persistence (LangChain), via sources/langgraph_extended.pptx*
 
 The `thread_id` is the run's identity. Pick it deliberately (a ticket ID, a session key, `workflow-{id}-user-{id}`), because resuming means knowing it.
@@ -76,12 +76,12 @@ While paused you can read the state with `graph.get_state(config)`, and **edit**
 
 There is also a static form, `compile(interrupt_before=["publish"])`, which pauses before a node runs. It's useful for debugging. Prefer `interrupt()` in production, because the node can pass the human exactly what they need to decide.
 
-![interrupt_before and interrupt_after pause at the boundaries of node B and are for debugging; interrupt() fires anywhere inside the node and is for real human-in-the-loop work](../images/langgraph/interrupt-before-after.png)
+![interrupt_before and interrupt_after pause at the boundaries of node B and are for debugging; interrupt() fires anywhere inside the node and is for real human-in-the-loop work](../sources/images/langchain-langgraph-docs-interrupt-before-after.png)
 *Image Source: LangGraph docs, human-in-the-loop (LangChain), via sources/langgraph_extended.pptx*
 
 The same call works inside a **tool**. The model calls the tool as usual, the tool pauses to show the human its arguments, and approval or rejection decides whether it executes. The gate then travels with the tool to every graph that uses it.
 
-![An agent node calls a tool; inside the tool, interrupt() shows the arguments and asks for approval, then either executes and returns the result or cancels](../images/langgraph/interrupt-inside-tool.png)
+![An agent node calls a tool; inside the tool, interrupt() shows the arguments and asks for approval, then either executes and returns the result or cancels](../sources/images/langchain-langgraph-docs-interrupt-inside-tool.png)
 *Image Source: LangGraph docs, human-in-the-loop (LangChain), via sources/langgraph_extended.pptx*
 
 > **Gotcha: on resume, the interrupted node runs again from its first line.** Anything before `interrupt()` executes twice. Keep side effects after the interrupt, or make them idempotent.

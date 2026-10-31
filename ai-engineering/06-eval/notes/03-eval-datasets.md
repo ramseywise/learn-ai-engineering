@@ -6,7 +6,7 @@ sources:
   - https://hamel.dev/blog/posts/field-guide/
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
-  - case-study/gate-contract.md
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -85,7 +85,7 @@ Check the dataset against the distribution you care about:
 
 A row can be a valid task but unfair for a particular measurement. If the expected source isn't in the index, scoring that row on retrieval measures your corpus, not your retriever.
 
-The case study handles this with **named row pools**, each a subset of the one above it ([case study](case-study/gate-contract.md#canonical-row-pools)):
+The case study handles this with **named row pools**, each a subset of the one above it ([case study](13-case-study-support-agent.md#row-pools)):
 
 | Pool | Contains | Fair for |
 |---|---|---|
@@ -94,6 +94,17 @@ The case study handles this with **named row pools**, each a subset of the one a
 | `retrieval_eligible_gt` | Mapped rows whose source is actually indexed | Retrieval metrics |
 | `generation_eligible_gt` | Rows where retrieval found the expected source | Answer quality |
 | `quality_sample` | Deterministic, cost-capped sample of the above | LLM judges |
+
+```mermaid
+flowchart LR
+  A[all_gt<br/>demand] -->|source maps to a doc| B[source_mapped_gt<br/>corpus coverage]
+  B -->|source is indexed| C[retrieval_eligible_gt<br/>retrieval metrics]
+  C -->|retrieval found it| D[generation_eligible_gt<br/>answer quality]
+  D -->|deterministic, cost-capped| E[quality_sample<br/>LLM judges]
+  B -. dropped rows .-> X[diagnostic slice]
+  C -.-> X
+  D -.-> X
+```
 
 The rule: **a downstream gate never silently scores rows an upstream gate marked ineligible.** Ineligible rows appear only as a separate diagnostic slice. Otherwise a retrieval miss shows up as a "bad answer" and you fix the wrong thing.
 
@@ -126,7 +137,17 @@ What matters:
 - **Labels** for slicing, **eligibility** per gate, **provenance** for trust.
 - **Graders named per row**, so a row only gets graders that make sense for it.
 
-Schema: [templates/evalset.schema.json](../templates/evalset.schema.json).
+Pin the row format with a JSON Schema and validate every row on load. The useful enums:
+
+| Field | Values | Why |
+|---|---|---|
+| `reference.expected_tool_calls[].match` | `EXACT`, `NORMALIZED`, `ANY_ARGS`, `JUDGE` | How strictly each call's arguments must match |
+| `reference.tool_match_mode` | `EXACT`, `IN_ORDER`, `ANY_ORDER`, `SUBSET`, `SUPERSET` | How the whole trajectory is compared ([06](06-evaluating-agents.md)) |
+| `reference.forbidden_tools` | tool names | Negative cases: the agent must *not* call these |
+| `reference.expected_state` | object | End-state assertions for outcome grading |
+| `labels.case_type` | `positive`, `negative`, `boundary`, `out_of_scope`, `adversarial` | Balance and slicing |
+| `split` | `dev`, `test`, `regression`, `discovery` | Keeps tuning data out of the reported number |
+| `provenance.source` | `production`, `ticket`, `feedback`, `expert`, `synthetic`, `benchmark` | Trust and drift checks |
 
 ---
 
@@ -134,7 +155,7 @@ Schema: [templates/evalset.schema.json](../templates/evalset.schema.json).
 
 - **Split it.** Keep a **dev** set you iterate against and a **held-out test** set you look at rarely. Tuning prompts against the full set overfits to it, exactly as in ML ([12](12-failure-modes.md#overfitting-the-dev-set)). For judge calibration, use train/dev/test splits of the human labels too ([05](05-llm-as-judge.md#calibrate-against-human-labels)).
 - **Version it.** Datasets change. Store them in git (or a dataset tool with versions) and record the dataset version in every result. A score from v3 and a score from v4 are not comparable.
-- **Freeze the reference with the data.** If labels came from a grader, record the grader version. Change the grader and the labels shift ([case study](case-study/grader-methodology.md#would-different-judges-give-different-golden-traces)).
+- **Freeze the reference with the data.** If labels came from a grader, record the grader version. Change the grader and the labels shift ([case study](13-case-study-support-agent.md#would-different-judges-give-different-golden-traces)).
 - **Keep it out of training and prompts.** Don't paste eval rows into few-shot examples. Don't fine-tune on them. Don't let the agent see them at runtime.
 - **Reset state per trial.** If tasks touch a database, sandbox or file system, every trial starts from a clean snapshot. Otherwise one trial's side effects look like the next trial's failure.
 

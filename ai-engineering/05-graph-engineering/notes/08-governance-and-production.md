@@ -77,6 +77,22 @@ A shipped supervisor-pattern graph, useful because its operating constants are p
 
 > **Source caution.** These details come from a third-party teardown (Rathod, Medium), not from n8n. The builder's code is in the n8n repository; check the constants there before relying on them.
 
+```mermaid
+flowchart LR
+    U([user prompt]) --> SUP{Supervisor}
+    SUP --> D["Discovery<br/>≤50 iterations"]
+    SUP --> P[Planner]
+    P --> GATE{{"human approval<br/>interrupt()"}}
+    GATE -- approved --> B["Builder<br/>≤100 iterations"]
+    GATE -- revise --> P
+    SUP --> PU[Parameter Updater]
+    SUP --> R[Responder]
+    D & B & PU --> SUP
+    R --> OUT([reply])
+    B -. "validated tool calls,<br/>versionId + checksum" .-> WF[(workflow)]
+    PU -.-> WF
+```
+
 | Node | Role | Bound |
 |---|---|---|
 | Supervisor | Routes each message to a subgraph | — |

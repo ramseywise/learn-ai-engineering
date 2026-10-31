@@ -15,8 +15,14 @@ cleaned: 2026-10-28
 
 ## Anatomy of the ideal completion
 
-```
-[preamble] → [the solution] → [recognizable end] → [fluffy postscript]
+```mermaid
+flowchart LR
+    P["Preamble<br/>boilerplate · reasoning · fluff"] --> S["The solution"]
+    S --> E["Recognizable end<br/>closing tag · next header · stop sequence"]
+    E -.->|"stop here"| F["Fluffy postscript<br/>never generated"]
+    style S fill:#1E3A5F,color:#fff
+    style E fill:#D4621A,color:#fff
+    style F fill:#CBD5E1
 ```
 
 Every token *before* the solution costs latency and money. Nothing after the recognizable end matters if you stop generating there. So the job is to **shape the preamble** and **make the end detectable**.
@@ -87,7 +93,12 @@ if resp.choices[0].finish_reason == "length":   # hit max_tokens, not the stop
 
 ## Structured output
 
-From weakest to strongest guarantee:
+From weakest to strongest guarantee. Climb only as far as you need:
+
+```mermaid
+flowchart LR
+    A[Ask] --> B[Show] --> C[Fence] --> D[Prefill] --> E[Constrain] --> F[Tool schema]
+```
 
 1. **Ask for it** — "Return JSON with keys `name`, `date`." Fine for prototypes, breaks at scale.
 2. **Show it** — a schema or one complete example in the prompt. Matching the format of the prompt to the format you want also helps: markdown in, markdown out; prose in, prose out.
@@ -143,7 +154,7 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 - **LoRA** freezes the base weights and trains small low-rank "diff" matrices. They're cheap to store, so one deployment can serve many LoRAs, one per customer or task. LoRA doesn't teach new tricks; it teaches *which* existing ones to use. It's good at shifting *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt. Trained on outcome data, it also picks up priors nobody wrote down: budget-conscious users reject "Monaco" but book after "Prague" suggestions.
 - **Soft prompting** uses gradient descent over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it.
 
-![Should you fine-tune? A decision flow](../sources/prompt-eng-for-llms/images/fig-7-8-should-you-fine-tune.png)
+![Should you fine-tune? A decision flow](../sources/images/berryman-prompt-engineering-for-llms-fig7-8.png)
 *Image Source: Berryman & Ziegler (2024), Fig. 7-8*
 
 Reach for it when the static part of your prompt is long, stable, and still not followed reliably — or when you have outcome data encoding preferences you can't articulate. The payoff: after continued pre-training or LoRA you can typically **drop the static context entirely** — instructions and examples now live in the weights, so prompts get shorter, cheaper and faster. Then **make the prompt look like the start of your fine-tuning documents**. If it resembles pre-training data instead, the model follows the old path (a modified Little Red Riding Hood principle).

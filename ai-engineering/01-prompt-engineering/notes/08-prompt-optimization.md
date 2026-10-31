@@ -15,10 +15,11 @@ cleaned: 2026-10-28
 
 ## The loop
 
-```
-template v1 ──► run on eval set ──► score ──► propose changes ──► template v2 ──► …
-                        ▲                          │
-                        └──── keep if it beats ◄───┘
+```mermaid
+flowchart LR
+    T["Template vN"] --> R["Run on eval set"] --> S["Score"] --> P["Propose changes<br/>you · APE/OPRO · DSPy"]
+    P --> T2["Template vN+1"]
+    T2 -->|"keep only if it beats vN"| R
 ```
 
 The proposer can be you, an LLM (APE, OPRO, meta-prompting), or a framework (DSPy, TextGrad). The parts that matter are the same in every case: **a fixed eval set, a metric, and a record of every version.**
@@ -43,10 +44,13 @@ Zhou et al. (2022) framed instruction-writing as black-box search:
 2. Each candidate is run on a **target model** and scored.
 3. Keep the best, optionally resample variants of it, and repeat.
 
-![APE pipeline](../sources/images/APE.png)
+![APE pipeline](../sources/images/zhou-ape-overview.png)
 *Propose instructions from demonstrations, score each by the log-probability of the correct outputs, and resample near the winners. Zhou et al. (2022), via DAIR.*
 
-The famous result: APE found a better zero-shot CoT trigger than *"Let's think step by step"*. **"Let's work this out in a step by step way to be sure we have the right answer"** improved MultiArith and GSM8K.
+The famous result: APE found a better zero-shot CoT trigger than *"Let's think step by step"*. **"Let's work this out in a step by step way to be sure we have the right answer"** improved MultiArith and GSM8K. On MultiArith it scored 82.0 against 78.7 for the human-written trigger. The table also shows how much the wording alone moves the score: human-written triggers range from 45.7 to 78.7, and no trigger at all gets 17.7:
+
+![Zero-shot CoT triggers: APE's discovered prompt vs. human-designed ones](../sources/images/zhou-ape-zero-shot-cot-triggers.png)
+*Image Source: Zhou et al. (2022), via DAIR*
 
 Related work, in the same spirit:
 - **OPRO** (2023) — the LLM is the optimizer, shown past prompts and their scores in its context. Found *"Take a deep breath and work on this problem step-by-step."*
@@ -72,7 +76,7 @@ Solution structure:
   4. Final answer: \boxed{[answer]}
 ```
 
-![Structure meta-prompt for MATH](../sources/images/techniques/meta-prompting.png)
+![Structure meta-prompt for MATH](../sources/images/zhang-meta-prompting-math-structure.png)
 *Top: the structure meta-prompt. Bottom: example solutions that follow it. Zhang et al. (2024), via DAIR.*
 
 Compared with few-shot it's token-efficient, avoids anchoring on specific example content ([03](03-core-techniques.md#few-shot)), and behaves like zero-shot. It assumes the model already knows the domain, so it degrades on genuinely novel tasks.
@@ -82,7 +86,7 @@ Compared with few-shot it's token-efficient, avoids anchoring on specific exampl
 - Vendor tools do this: Anthropic's prompt generator and prompt improver, and OpenAI's playground optimizer.
 - The **evaluator–optimizer** pattern automates it: a judge scores outputs, writes feedback, and a meta-prompt turns that feedback into a revised prompt ([06](06-chaining-and-workflows.md#workflow-patterns-anthropics-taxonomy), [07](07-prompting-reasoning-models.md#where-reasoning-models-earn-their-cost)).
 
-![Evaluator-optimizer prompt loop](../sources/images/reasoning-llms/llm_as_a_judge.JPG)
+![Evaluator-optimizer prompt loop](../sources/images/dair-evaluator-optimizer-prompt-loop.jpg)
 *Each round, the judge's feedback goes to a meta-prompt that rewrites the system prompt, and the best version is logged. DAIR, Reasoning LLMs Guide.*
 
 Generated prompts are a **first draft, not a result** — they still have to win on your eval.

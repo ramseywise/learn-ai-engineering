@@ -68,7 +68,7 @@ findings: Annotated[list[str], dedupe]
 
 LangGraph runs a graph in **super-steps**. Every node scheduled for the same super-step runs in parallel, and their updates are applied together when the step ends. If two of them write a key that has **no reducer**, there is no rule for which one wins, and LangGraph refuses: it raises `InvalidUpdateError` rather than silently dropping one write.
 
-![Nodes A and B share super-step 1 after START, so checkpoint v3 holds both writes merged by the reducer before node C runs in super-step 2](../images/langgraph/parallel-super-step.png)
+![Nodes A and B share super-step 1 after START, so checkpoint v3 holds both writes merged by the reducer before node C runs in super-step 2](../sources/images/langchain-langgraph-docs-parallel-super-step.png)
 *Image Source: LangGraph docs, persistence (LangChain), via sources/langgraph_extended.pptx*
 
 The table is the point: there is **no checkpoint between A and B**. Both writes reach state at the same boundary (v3), so the reducer on `bar` is the only thing that decides how they combine.
@@ -102,7 +102,58 @@ Each `review_file` instance runs in parallel with its own private input, and eac
 
 Fan-out and reducers are one feature: **Send creates the parallel writers, the reducer makes their writes safe.**
 
-Cap N before you fan out (`state["changed_files"][:MAX_FANOUT]`), because an unbounded list is an unbounded bill ([07](07-failure-modes-at-scale.md)). [templates/fan-out-merge.py](../templates/fan-out-merge.py) is a runnable version with the cap; delete the reducer on `findings` to see the `InvalidUpdateError`.
+Cap N before you fan out (`state["changed_files"][:MAX_FANOUT]`), because an unbounded list is an unbounded bill ([07](07-failure-modes-at-scale.md)). A complete version that runs offline with no model (`uv run --with langgraph python fan_out.py`):
+
+```python
+from typing import Annotated, TypedDict
+import operator
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import Send
+
+MAX_FANOUT = 20  # cap N (note 07: unbounded fan-out)
+
+class State(TypedDict):
+    items: list[str]
+    findings: Annotated[list[str], operator.add]  # many writers, merged by append
+    summary: str
+
+class ItemInput(TypedDict):
+    item: str
+
+def plan(state: State) -> dict:
+    return {}  # e.g. retrieve or list the items to review
+
+def fan_out(state: State) -> list[Send]:
+    return [Send("review_item", {"item": x}) for x in state["items"][:MAX_FANOUT]]
+
+def review_item(inp: ItemInput) -> dict:
+    # Each instance gets only its own input. Replace with a model call.
+    return {"findings": [f"{inp['item']}: ok"]}
+
+def synthesize(state: State) -> dict:
+    return {"summary": f"{len(state['findings'])} findings"}
+
+builder = StateGraph(State)
+builder.add_node("plan", plan)
+builder.add_node("review_item", review_item)
+builder.add_node("synthesize", synthesize)
+builder.add_edge(START, "plan")
+builder.add_conditional_edges("plan", fan_out, ["review_item"])
+builder.add_edge("review_item", "synthesize")
+builder.add_edge("synthesize", END)
+graph = builder.compile()
+
+out = graph.invoke({"items": ["a.py", "b.py", "c.py"], "findings": []})
+print(out["summary"], out["findings"])
+# 3 findings ['a.py: ok', 'b.py: ok', 'c.py: ok']
+```
+
+Now change `findings` to a plain `list[str]` and run it again. It fails on the first super-step:
+
+```
+InvalidUpdateError: At key 'findings': Can receive only one value per step.
+Use an Annotated key to handle multiple values.
+```
 
 ---
 
