@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test link-check learn papers papers-status papers-install slides
+.PHONY: help lint test link-check learn papers papers-status papers-route papers-install slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -31,11 +31,14 @@ learn:  ## Process arXiv paper queue in librarian and surface top picks (cd libr
 	@echo "  ARXIV_FETCH_ENABLED=true uv run cartographer --cron"
 	@echo "  (run from $(LIBRARIAN_DIR))"
 
-papers:  ## Fetch new AI Papers of the Week, triage, download PDFs into pillar sources/
+papers:  ## Fetch new AI Papers of the Week, scan repo PDFs, triage, download into home sources/
 	@python3 scripts/papers/potw.py run
 
 papers-status:  ## Paper ledger counts by status
 	@python3 scripts/papers/potw.py status
+
+papers-route:  ## Move triaged PDFs from the readings/ inbox to their home's sources/ [APPLY=1]
+	@python3 scripts/papers/potw.py route $(if $(APPLY),--apply)
 
 papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@cp scripts/papers/com.wiseer.potw.plist ~/Library/LaunchAgents/
@@ -43,8 +46,11 @@ papers-install:  ## Install the weekly launchd job (Monday 11:00)
 	@launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.wiseer.potw.plist
 	@echo "Installed com.wiseer.potw — log: .claude/logs/potw.log"
 
-slides:  ## Build a pillar deck: make slides PILLAR=01-prompt-engineering [PREVIEW=1] [PDF=1] [STRICT=1]
+# PILLAR is a dir under ai-engineering/ (01-prompt-engineering) or a path (generative-ai/02-rag-retrieval)
+SLIDES_DIR = $(if $(findstring /,$(PILLAR)),$(PILLAR),ai-engineering/$(PILLAR))
+
+slides:  ## Build a pillar deck: make slides PILLAR=01-prompt-engineering|generative-ai/02-rag-retrieval [PREVIEW=1] [PDF=1] [STRICT=1]
 	@test -n "$(PILLAR)" || { echo "usage: make slides PILLAR=<pillar-dir> [PREVIEW=1] [PDF=1] [STRICT=1]"; exit 1; }
 	@uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py python scripts/slides/build_deck.py \
-		ai-engineering/$(PILLAR)/slides/deck.yaml \
-		$(if $(PREVIEW),--preview ai-engineering/$(PILLAR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict)
+		$(SLIDES_DIR)/slides/deck.yaml \
+		$(if $(PREVIEW),--preview $(SLIDES_DIR)/slides/.preview) $(if $(PDF),--pdf) $(if $(STRICT),--strict)

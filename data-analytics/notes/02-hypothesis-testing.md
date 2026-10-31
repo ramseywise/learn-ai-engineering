@@ -3,6 +3,7 @@ origin: own coursework
 sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_inferential_statistics.py
+  - ../practice/courses/umich_statistical_analysis.py
   - ../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
   - ../sources/Practical_Statistics_for_Data_Scientist.pdf
   - https://docs.scipy.org/doc/scipy/reference/stats.html
@@ -160,6 +161,7 @@ reject, p_adj, _, _ = multipletests(p_values, alpha=0.05, method="holm")      # 
 - **Many metrics** on one A/B test. Pick one primary metric in advance; treat the rest as exploratory.
 - **Many segments** ("it worked for Android users in Germany"). Each segment is a test. Also the small-N trap from note 01.
 - **Many looks** at the same test over time. That is peeking, note 03.
+- **Data dredging.** The Michigan coursework script ([practice/courses/umich_statistical_analysis.py](../practice/courses/umich_statistical_analysis.py), week 4) lists three remedies: Bonferroni, holding out data to confirm what you found, and pre-registering what you expect and why.
 - **The garden of forking paths:** choices about outliers, transforms and subsets made after seeing the data. Reinhart's fix is to write the analysis plan first.
 
 ---

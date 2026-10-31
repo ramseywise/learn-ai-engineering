@@ -213,5 +213,5 @@ See [04-constitutional-ai.md](04-constitutional-ai.md) for the full pipeline.
   vs GRPO: the algorithm evolution from RLHF through offline preference optimization
 - **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md) — RLAIF and
   AI-generated feedback at scale
-- **Papers in repo:** [`sources/ouyang-2022-instructgpt.pdf`](../sources/ouyang-2022-instructgpt.pdf)
-  (InstructGPT), [`01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf`](../../01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf) (GPT-4)
+- **Papers:** (local copies indexed in [references.md](../references.md#core-papers)) [arXiv:2203.02155](https://arxiv.org/abs/2203.02155)
+  (InstructGPT), [arXiv:2303.08774](https://arxiv.org/abs/2303.08774) (GPT-4)

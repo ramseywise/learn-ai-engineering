@@ -118,7 +118,7 @@ OFF_SYLLABUS = {
 # Sort key for every reading: the homes first, then the off-syllabus buckets.
 TOPICS = {**{k: scope for k, (_, scope) in HOMES.items()}, **OFF_SYLLABUS}
 SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "CURRICULUM.md", "resources.md"}
-PDF_SKIP_DIRS = {".git", "node_modules", ".venv", "idk"}
+PDF_SKIP_DIRS = {".git", "node_modules", ".venv", "idk", "slides", "datasets"}  # slides/ holds our own decks
 STOPWORDS = {"a", "an", "the", "of", "for", "and", "in", "on", "to", "with", "via", "is", "are", "by", "from", "at"}
 
 # 2023-25 headings omit the trailing "- YYYY"; fall back to the page's year
@@ -699,6 +699,7 @@ def cmd_route(args):
         extra = [c for c in r.get("copies") or [] if c.startswith(args.src) and (REPO / c).exists()]
         for c in extra:
             print(f"{'rm' if args.apply else 'would rm'}  {c}  (duplicate)")
+        taken.add(rel)  # in a dry run too, so clashes show up before --apply
         if not args.apply:
             continue
         git_mv(src, dest)
@@ -706,7 +707,6 @@ def cmd_route(args):
             git_rm(REPO / c)
             dropped += 1
         taken.discard(r["local_pdf"])
-        taken.add(rel)
         r["local_pdf"] = rel
         r["copies"] = [c for c in r.get("copies") or [] if c not in extra] or None
         r["area"] = rel.split("/")[0]
@@ -714,6 +714,8 @@ def cmd_route(args):
     if args.apply:
         save_ledger(rows)
     left = sum(1 for r in rows if (r.get("local_pdf") or "").startswith(args.src))
+    if not args.apply:
+        left -= len(todo)
     log(f"route: {moved if args.apply else len(todo)} {'moved' if args.apply else 'to move'}, "
         f"{dropped} duplicates removed; {left} PDFs left under {args.src}"
         + ("" if args.apply else " (dry run; --apply to move)"))

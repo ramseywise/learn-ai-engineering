@@ -98,7 +98,7 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
   Use `crop --clip x0,y0,x1,y1` for vector figures (no xref); render the page with `page`
   first and look at it with Read to choose the box. Look at the saved PNG before embedding
   it. Caption it the way the notes already do:
-  `*Image Source: <Author>, [<Title>](<url>) (<year>), Fig. <N>*`, plus the licence when there is one.
+  `*Image Source: <Author>, [<Title>](https://...) (<year>), Fig. <N>*`, plus the licence when there is one.
   At most one figure per paper; none is fine.
 
 ## Step 5 — Close out
