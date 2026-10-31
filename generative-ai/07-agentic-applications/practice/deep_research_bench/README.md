@@ -64,8 +64,6 @@ This process yielded **100 high-quality benchmark tasks** (50 Chinese, 50 Englis
 
 ## Evaluation Framework
 
-![Framework Overview](pics/framework.png)
-
 DeepResearch Bench introduces two complementary evaluation methodologies designed to comprehensively assess Deep Research Agents:
 
 ### 🎯 RACE (Reference-based Adaptive Criteria-driven Evaluation)

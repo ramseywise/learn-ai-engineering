@@ -31,7 +31,7 @@ data-science/
 ├── practice/
 │   ├── Intro to Machine Learning in Python/ Müller & Guido companion notebooks + mglearn
 │   ├── Text Analytics with Python/          Sarkar 2e companion notebooks, Ch01–Ch10
-│   ├── intro-to-nlp/                        own coursework: NLTK, TensorFlow NLP, transformers, word2vec (data/ CSVs gitignored)
+│   ├── intro-to-nlp/                        own coursework: NLTK, TensorFlow NLP, transformers, word2vec (data/ gitignored except irish-lyrics.txt)
 │   ├── nn-zero-to-hero/                     Karpathy: micrograd/, makemore/, nanogpt/ (+ build-nanogpt)
 │   ├── approaching-almost-any-nlp-problem-on-kaggle.ipynb
 │   ├── deep-learning-starter-simple-lstm.ipynb
@@ -89,7 +89,7 @@ data-science/
 |---|---|---|
 | [Intro to Machine Learning in Python/](practice/Intro%20to%20Machine%20Learning%20in%20Python/) | 01–05, 08, 09 | Offline. Needs scikit-learn ≥ 1.4, `mglearn` (bundled) and graphviz; 07 needs the aclImdb download |
 | [Text Analytics with Python/](practice/Text%20Analytics%20with%20Python/) | 08–14 | Needs nltk/spaCy/gensim models; partly legacy (spaCy 2, standalone keras, gensim 3, `skater`, TF ≤ 2.15 for Ch10a); Ch09–10 need `movie_reviews.csv` (not in repo) |
-| [intro-to-nlp/](practice/intro-to-nlp/) | 08, 10, 11, 13, 14 | Own DeepLearning.AI TensorFlow NLP and Hugging Face course work. Data is in `data/` (CSVs are gitignored and local only; unzip `IMDB Dataset.csv.zip` on a fresh clone; PetFinder, Yelp and text-emotion CSVs are not in git). Notebooks read `./data/`, so start Jupyter in `intro-to-nlp/`. `tf.keras` 2.x `Tokenizer` API; transformers notebook needs internet for model downloads |
+| [intro-to-nlp/](practice/intro-to-nlp/) | 08, 10, 11, 13, 14 | Own DeepLearning.AI TensorFlow NLP and Hugging Face course work. Data is in `data/`, which is gitignored (every file but `irish-lyrics.txt` is over the 1 MB pre-commit limit). On a fresh clone, download: [sarcasm.json](https://storage.googleapis.com/laurencemoroney-blog.appspot.com/sarcasm.json), [IMDB Dataset.csv](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews), PetFinder train/test/breed labels ([Kaggle](https://www.kaggle.com/c/petfinder-adoption-prediction/data)); Yelp, text-emotion and `all_data_new.csv` have no recorded source. Notebooks read `./data/`, so start Jupyter in `intro-to-nlp/`. `tf.keras` 2.x `Tokenizer` API; transformers notebook needs internet for model downloads |
 | [nn-zero-to-hero/](practice/nn-zero-to-hero/) | 15–17 | micrograd offline (graphviz, torch). makemore needs `names.txt` (not in repo). nanoGPT `bigram.py` offline CPU, `gpt.py` GPU, `build-nanogpt` 8×GPU + FineWeb-Edu |
 | [approaching-almost-any-nlp-problem-on-kaggle.ipynb](practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb) | 09 | Legacy (needs Kaggle spooky-author data + GloVe; old keras/xgboost APIs) |
 | [deep-learning-starter-simple-lstm.ipynb](practice/deep-learning-starter-simple-lstm.ipynb) | 14 | GPU recommended; needs Kaggle Ventilator Pressure data |
