@@ -5,11 +5,11 @@ sources:
   - https://www.promptingguide.ai/applications/generating_textbooks
   - https://www.promptingguide.ai/applications/synthetic_rag
   - https://www.promptingguide.ai/applications/coding
-  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 11"
+  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 7, Ch 8, Ch 11"
   - https://arxiv.org/abs/2306.11644
   - https://arxiv.org/abs/2305.07759
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 11 — Applications
 
@@ -19,7 +19,7 @@ cleaned: 2026-10-28
 
 ## Synthetic data generation
 
-The use cases: eval sets ([09](09-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), and test fixtures.
+The use cases: eval sets ([09](09-evaluating-prompts.md#sourcing-samples)), training data for a small local model (distilling a big model into a cheap one), fine-tuning documents when you can't collect enough real successes ([04](04-controlling-output.md#when-prompting-isnt-enough-fine-tuning)), and test fixtures.
 
 **The core problem is diversity.** Even at high temperature, models produce repetitive, trope-heavy samples. Raising the temperature isn't enough — **inject the randomness into the prompt**.
 
@@ -165,7 +165,7 @@ The biggest lever for code is the same as everywhere: **context** — the releva
 
 ## Images and multimodal prompts
 
-**How it works** (the likely design; vendors don't publish specifics): a vision encoder turns image patches into vectors of the same size as text-token embeddings. Positional information is added so spatial layout survives, and the image vectors are concatenated with the text and run through the same transformer. Video is the naive extension, sampled frames fed in as a sequence of images. To the model, an image is just more context tokens, so the same rules apply:
+**How it works** (the likely design; vendors don't publish specifics): a vision encoder turns image patches into vectors (the book describes a convolutional network; current models mostly use a ViT-style encoder over patches) of the same size as text-token embeddings. Positional information is added so spatial layout survives, and the image vectors are concatenated with the text and run through the same transformer. Video is the naive extension, sampled frames fed in as a sequence of images. To the model, an image is just more context tokens, so the same rules apply:
 
 - **Include only relevant images.** Irrelevant images distract just like irrelevant text.
 - **Introduce each image in the text**: say what it is and what it's for ("The screenshot below is the failing checkout page").
@@ -185,6 +185,10 @@ When people collaborate, they talk *about* a persistent thing, such as a file, c
 - **Regeneration isn't editing.** The model still rewrites the whole object on every change, so it doesn't scale to long documents. Prefer diffs and edit tools.
 - **Support several objects**, each with a short name the user and the prompt can both use. Otherwise a new topic overwrites the only slot.
 - **Let the user edit directly** and feed that diff into the next prompt, so the model knows what changed.
+
+The critique dates from mid-2024. Products have since moved on some of it (ChatGPT's Canvas, October 2024, lets the user edit the object directly), so read the list as design requirements, not as a description of current tools.
+
+The prompt-side half of this is the book's ch. 8 **artifact**: a piece of data attached to a user or assistant message, kept in the context and shown in the UI so the user can see what the agent is attending to and dismiss what it shouldn't be ([05](05-tools-and-function-calling.md#context-for-a-tool-using-agent)).
 
 Conversational UI also keeps a human in the loop who can catch drift before it compounds ([06](06-chaining-and-workflows.md)). Without a designed object layer, a chat wrapper is just a gimmick.
 

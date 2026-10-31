@@ -128,7 +128,7 @@ Every source behind the notes, in one place. Local files come first, followed by
 
 | Source | Where | Use it for |
 |---|---|---|
-| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: `sources/images/berryman-prompt-engineering-for-llms-fig*.png` | The backbone of notes 01, 02, 04, 05, 06 and 09; its chapter notes are absorbed into them, and each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
+| ★ Berryman & Ziegler, *Prompt Engineering for LLMs* (O'Reilly 2024) | PDFs: [sources/prompt-eng-for-llms/reading/](sources/prompt-eng-for-llms/reading/) · figures: `sources/images/berryman-prompt-engineering-for-llms-fig*.png` | The backbone of the pillar. Audited chapter by chapter (2026-10): ch. 1–3 → 01, 10; ch. 4–6 → 02, 03, 08; ch. 7–8 → 04, 05, 11; ch. 9 → 06; ch. 10 → 09 and eval [03–05](../06-eval/notes/); ch. 11 → 07. Each note's *Go deeper* links the chapter PDF. Written by two of the original GitHub Copilot engineers |
 | DAIR.AI *Prompt Engineering Guide* | [promptingguide.ai](https://www.promptingguide.ai/) · [GitHub](https://github.com/dair-ai/Prompt-Engineering-Guide) | The technique catalog (notes 03, 08, 10, 11). Its pages are absorbed into the notes, so check the live site for new additions |
 | DAIR lecture (Elvis Saravia) | [video](https://youtu.be/dOxUroR57xs) · [figures](sources/images/) | A one-hour 2023 overview; a good first pass. Its slides are superseded by our [deck](slides/deck.yaml) |
 

@@ -5,7 +5,7 @@ sources:
   - "Knowledge Graphs for RAG (DeepLearning.AI × Neo4j, 2024), L3–L6: https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/"
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
 confidence: medium-high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 10 — Building KGs with LLMs: Extraction and Resolution
 
@@ -75,7 +75,7 @@ This is the "spend agency per node" rule from [note 02](02-graph-primitives.md):
 
 ## Stage 2: extraction
 
-Extraction is two tasks: **NER** (find the mentions and assign types) and **relation extraction** (a typed edge between two mentions). The book's running example is the Rockefeller Archive Center: program officers' typewritten diaries from the 1930s, full of shorthand, mined for who talked with whom about which research (Negro et al., *Knowledge Graphs and LLMs in Action*, Manning 2025, ch. 5; [ch. 5 PDF](../sources/kg-and-llms-in-action/ch05-extracting-domain-knowledge.pdf)). Generic NER types (`Person`, `Organization`, `Location`) are not enough there: the valuable entity is the research topic, which no off-the-shelf model or dictionary recognises (*KG & LLMs in Action*, ch. 5).
+Extraction is two tasks: **NER** (find the mentions and assign types) and **relation extraction** (a typed edge between two mentions). The book's running example is the Rockefeller Archive Center: program officers' typewritten diaries from the 1930s, full of shorthand, mined for who talked with whom about which research (Negro et al., *Knowledge Graphs and LLMs in Action*, Manning 2025, ch. 5). Generic NER types (`Person`, `Organization`, `Location`) are not enough there: the valuable entity is the research topic, which no off-the-shelf model or dictionary recognises (*KG & LLMs in Action*, ch. 5).
 
 Lessons from ch. 5:
 
@@ -84,27 +84,27 @@ Lessons from ch. 5:
 - **Define entity types for the domain, and name them carefully.** Renaming the type "Topic" to "Occupation" gave more complete and more stable extraction with an otherwise identical prompt. The type name works as an instruction to the model (*KG & LLMs in Action*, ch. 5).
 - **Use schema-constrained output.** Structured outputs, tool schemas or Pydantic models ([01-prompt note 04](../../01-prompt-engineering/notes/04-controlling-output.md)). Free-text extraction then needs a parser, and the parser becomes another place for errors. JSON also lets an edge carry properties: the book's final prompt stored the sentiment of each `TALKED_ABOUT` and the job title on `WORKS_FOR` (*KG & LLMs in Action*, ch. 5).
 - **Pick one direction per relation and keep it.** `(person)-[:WORKS_FOR]->(org)` and `(org)-[:EMPLOYS]->(person)` are both fine; mixing them across documents is not (*KG & LLMs in Action*, ch. 5).
-- **Set temperature to 0, then test stability.** Run the same document several times and compare the outputs. The book's rule of thumb: high temperature for creative text, about 0.2 for code, 0 for fact extraction. Instability tells you the prompt is ambiguous (*KG & LLMs in Action*, ch. 5).
+- **Set temperature to 0, then test stability anyway.** Run the same document several times and compare the outputs. The book's rule of thumb: high temperature for creative text, about 0.2 for code, 0 for fact extraction. Temperature 0 does not make output stable: the v1 run below was at temperature 0 and a second identical run still lost a topic. Instability tells you the prompt is ambiguous (*KG & LLMs in Action*, ch. 5).
 - **Write prompt unit tests.** Keep a list of (snippet, expected triples), run it in bulk on every prompt change, and read the failures. This stops a fix for one case from silently breaking an earlier one (*KG & LLMs in Action*, ch. 5).
 - **Look at a mini-KG at each milestone.** Build the graph from a few dozen pages and look at it before scaling up. Missing edge types and junk hubs are easy to spot in a picture and easy to miss in JSON (*KG & LLMs in Action*, ch. 5).
 - **Don't trust LLM character offsets.** Recompute span positions deterministically ([NED, step 1](#ned-against-an-ontology-ch78)).
-- **Fine-tune only when prompting plateaus**, and only once you have the labelled data the evaluation section below would produce anyway.
+- **Fine-tune only when prompting plateaus**, and only once you have the labelled data the evaluation section below would produce anyway. Inference costs more too: at the time of writing, OpenAI charged 10 times more per prediction from a custom fine-tuned model (*KG & LLMs in Action*, ch. 5; a dated price, check current rates).
 
-The LLM also does two jobs a classic pipeline needs separate models for. It resolves coreference within a page ("he", "Mayer" → *J. B. Mayer*), and it expands abbreviations ("Prof. Chem." → *Professor of Chemistry*). That is why LLM extraction needs less clean-up afterwards, though still some ([graph-based ER](#graph-based-er-ch6)) (*KG & LLMs in Action*, ch. 5–6).
+The LLM also does two jobs a classic pipeline needs separate models for. It resolves coreference within a page ("he", "Mayer" → *J. B. Mayer*), and it expands abbreviations ("Prof. Chem." → *Professor of Chemistry*). Neither came free. The v1 output still had `"has title", "Prof. Chem."` unexpanded; expansion appeared only after v2 added a note on how the diaries abbreviate. The baseline was worse, though: "None of the off-the-shelf coreference models we tested could resolve these shortened names into canonical forms" ("S." for *J. R. Smith*, "U.Cal." for *University of California*). That is why LLM extraction needs less clean-up afterwards, though still some ([graph-based ER](#graph-based-er-ch6)) (*KG & LLMs in Action*, ch. 5–6).
 
-**Chunking.** The book chunks by page, which keeps provenance simple. A diary entry can run over a page break, so the full project first used a cheap model to find entry boundaries (entries are usually under three pages) and extracted per entry (*KG & LLMs in Action*, ch. 6; [ch. 6 PDF](../sources/kg-and-llms-in-action/ch06-building-kgs-with-llms.pdf)).
+**Chunking.** The book chunks by page, which keeps provenance simple. A diary entry can run over a page break, so the full project first used a cheap model (ChatGPT-3.5-Turbo) to find entry boundaries (entries are usually under three pages) and extracted per entry (*KG & LLMs in Action*, ch. 6).
 
 ### Iterating the extraction prompt (ch5)
 
-Ch. 5 runs three prompt versions over the same diary paragraph with GPT-4o mini. What went wrong at each step generalises:
+Ch. 5 runs three prompt versions over the same diary paragraph with GPT-4o mini at temperature 0. It is one paragraph, judged by eye, and the book reports no precision or recall for it. What went wrong at each step still generalises:
 
 | Version | Prompt | What went wrong | Fix in the next version |
 |---|---|---|---|
-| v1 | "Extract all entities and relations" + one worked example | **Relation fragmentation**: `specializes in`, `is measuring`, `is interested in`, `demonstrates` for one concept. **Label fragmentation**: `field`, `research`, `theory` for what is one type. **Instability**: a second identical run dropped two topics | List the allowed entity and relation types |
-| v2 | Allowed types, each relation with a one-line gloss, plus notes on how people and organisations are abbreviated | Mostly normalised; a few off-list relations still leaked and one topic was still missed | Enrich the worked example |
-| v3 | Worked example now shows every relation the model got wrong (`student of`, `works on` twice) | Stable classes, all target relations, long-form organisation names | Switch to JSON so edges carry properties |
+| v1 | "Extract all entities and relations" + one worked example | **Relation fragmentation**: `specializes in`, `is measuring`, `is interested in`, `demonstrates` for one concept. **Label fragmentation**: `field`, `research`, `theory` for what is one type. **Instability**: a second identical run lost *theory of Raman spectra*, which the first had found (*straight calorimetric method* was missing from both runs) | List the allowed entity and relation types |
+| v2 | Allowed types, each relation with a one-line gloss, plus notes on how people and organisations are abbreviated | Entity labels normalised (every topic became `occupation`) and titles expanded. Relations were not: only one of the topic edges used `works on`, the rest came back as `measures`, `specializes in`, `is interested in`, `talked about`. *Calorimetric method* was still missed | Enrich the worked example |
+| v3 | Worked example now shows every relation the model got wrong (`student of`, `works on` twice) | The book calls it "Eureka!": stable classes, the target relations, long-form organisation names, and the calorimetric topic found at last. Read the output and it is not complete. *Mechanical models of various atoms* and *Raman spectra*, which v1 and v2 found, are gone, and an unlisted `works at` (Max Born, Gottingen) survives | Switch to JSON so edges carry properties |
 
-Source: *KG & LLMs in Action*, ch. 5. With a fragmented schema, a Cypher question such as "who works on organic chemistry?" has to list every synonym of `works on`. At thousands of pages that is not workable, so normalising at the prompt is cheaper than normalising afterwards.
+Source: *KG & LLMs in Action*, ch. 5. Each fix bought something and cost something, which is why one paragraph checked by eye is not an evaluation ([stage 6](#stage-6-evaluating-extraction)). With a fragmented schema, a Cypher question such as "who works on organic chemistry?" has to list every synonym of `works on`. At thousands of pages that is not workable, so normalising at the prompt is cheaper than normalising afterwards.
 
 The book lists the important types rather than pasting the full schema, so the model can still surface types nobody anticipated (*KG & LLMs in Action*, ch. 5). A minimal version of the v2/v3 shape:
 
@@ -175,24 +175,25 @@ There are two related problems:
 
 ### Keep mentions, never merge at extraction time
 
-The book's three-layer model (ch6):
+The book's three layers (ch6), using its labels:
 
 ```
-(:Document)-[:HAS_PAGE]->(:Page)-[:MENTIONS]->(:Entity)        ← metagraph: raw mentions
-(:Entity)-[:META_SIMILAR]->(:Entity)                            ← resolution evidence
-(:Entity)-[:RESOLVES_TO]->(:Canonical)                          ← the KG proper
+(:File)──(:Page)                                                ← document layer: OCR text
+(:Page)──(:Entity {name})-[:RELATED_TO_ENTITY {type}]->(:Entity) ← metagraph: one node per mention
+(:Entity)-[:META_SIMILAR|META_PERSONS_SIMILAR]-(:Entity)         ← resolution evidence
+(:Person) (:Organization) (:Occupation) (:Title)                 ← KG layer, built from resolved clusters
 ```
 
-Extraction writes **mentions**. Resolution writes **similarity edges and canonical nodes** on top of them. Nothing is deleted, so the KG can be rebuilt from the metagraph whenever resolution changes. Ch7 does the same thing with `EntityMention` and `MedicalEntity` nodes joined by `DISAMBIGUATED_TO`, and appendix C with a `REPRESENTS` edge to a `NormalizedDisease` node. In all three, **resolution is reversible**. That property is what [note 12](12-kg-as-shared-agent-memory.md) depends on.
+Extraction writes **mentions**: the book stresses it creates, "not merge!", one `Entity` per mention per page. Resolution writes **similarity edges** on top of them, and the KG layer is generated from the resulting clusters. Nothing is deleted, so the KG can be rebuilt from the metagraph whenever resolution changes. Appendix C keeps source nodes the same way, with a `REPRESENTS` edge to a `NormalizedDisease` node. Ch7 is weaker than it looks: its `EntityMention` node is `MERGE`d on the lowercased string, so it is one node per distinct surface form across the whole corpus, with the per-page offsets kept as arrays on the `MENTIONS_MENTION` edge. Re-resolving one occurrence of "Zika" without touching the others is not possible there. Where mentions stay per occurrence, **resolution is reversible**. That property is what [note 12](12-kg-as-shared-agent-memory.md) depends on.
 
-In the book the layers are a document layer (`File` and `Page` nodes holding the OCR text), a metagraph (one unmerged `Entity` per mention, linked to its page) and the KG layer (`Person`, `Organization`, `Occupation` with `WORKS_ON`, `WORKS_FOR` and so on). The book's rule is that an LLM cannot write the KG layer directly. Keeping the metagraph gives three things: provenance for every edge, a UI that can show the source snippet behind any node, and the ability to re-tune resolution and regenerate the KG (*KG & LLMs in Action*, ch. 6; [ch. 6 PDF](../sources/kg-and-llms-in-action/ch06-building-kgs-with-llms.pdf)).
+In the book the layers are a document layer (`File` and `Page` nodes holding the OCR text), a metagraph (one unmerged `Entity` per mention, linked to its page) and the KG layer (`Person`, `Organization`, `Occupation` with `WORKS_ON`, `WORKS_FOR` and so on). The book's rule is that an LLM cannot write the KG layer directly. Keeping the metagraph gives three things: provenance for every edge, a UI that can show the source snippet behind any node, and the ability to re-tune resolution and regenerate the KG (*KG & LLMs in Action*, ch. 6). Everything ch6 shows ran on 150 pages of Warren Weaver's 1939 diary, out of more than 10,000 pages in the project, and the OCR may have misspelled names. The book says so: "The results in the previous section are based on only 150 pages."
 
 ### Normalise before you resolve (ch6)
 
 Look at the metagraph's statistics first (top entities per type, top relation types), then turn what you see into rules (*KG & LLMs in Action*, ch. 6):
 
 - **Lowercase** where case carries no meaning (topics, occupations).
-- **Strip titles** that leaked into names. GPT sometimes returned "Prof. X" even when told to keep title and name apart, and without clean-up that is a second node for the same person.
+- **Strip titles** that leaked into names. GPT sometimes returned "Prof. X" even when told to keep title and name apart, and without clean-up that is a second node for the same person. Match titles as whole words: the book's query uses `STARTS WITH` over a title list, which would also strip the front of "Deane" or "Sirius".
 
 Write the result to a separate property and keep the raw `name`:
 
@@ -211,7 +212,7 @@ MATCH (e:Entity {label: 'Occupation'}) SET e.name_normalized = toLower(e.name);
 1. **Normalise** names (strip titles, lowercase, remove punctuation).
 2. **Collect evidence** that two mentions are the same entity:
    - **String similarity**, the obvious signal and also the risky one. Encode the domain's naming rules: a surname match alone gives many false positives, while surname plus a compatible first name or initial is much safer. Build a stop-word list for generic tokens first, otherwise every organisation with "Foundation" in its name looks similar (*KG & LLMs in Action*, ch. 6);
-   - **Relational signals**: same employer, same topics, same Louvain community over the `TALKED_WITH`/`TALKED_ABOUT` network (a John Doe in Antarctic maritime research and a John Doe in cosmology sit in different conversation clusters), close in embedding space (*KG & LLMs in Action*, ch. 6).
+   - **Relational signals**: same employer, same topics, same Louvain community over the `TALKED_WITH`/`TALKED_ABOUT` network (a John Doe in Antarctic maritime research and a John Doe in cosmology sit in different conversation clusters), same or semantically similar occupations (*KG & LLMs in Action*, ch. 6). The book applies embeddings to occupations only, not to people.
 3. Write a `META_SIMILAR` edge wherever the evidence is strong enough.
 4. Run **weakly connected components** over `META_SIMILAR`. Each component becomes one canonical entity, named after its longest name.
 5. Send borderline clusters to a **human review queue**. Ch6 found **Laurence Irving**, a physiologist, inside the cyclotron subgraph. GPT had spelled his name "Lawrence" because Ernest Lawrence appeared on the same page. That was an extraction error, and only a person looking at the graph caught it. The book's conclusion: build a feedback loop so analysts can confirm or reject graph content (*KG & LLMs in Action*, ch. 6).
@@ -251,13 +252,13 @@ String similarity alone causes false merges, and a misspelled extraction gives i
 
 Give the model the unique names of one type *together with their extraction descriptions*, and ask for clusters of the form `{canonical, aliases[]}`. The descriptions are what stop two different people named Armstrong from being merged. The failure modes are **dropped names** (a name that appears in no cluster; fall back to a singleton cluster) and **over-merging** (the cookbook's example folds "Gemini 12" into "Project Gemini").
 
-Appendix C weighs the same choice for normalisation against a domain linker. An LLM recognises equivalences with no surface pattern ("gastric adenocarcinoma" ≈ "stomach cancer"), works in domains that have no scispaCy (legal, finance), and needs no knowledge base for common entities. The costs: mappings can change between runs, which makes the build hard to reproduce, and it needs far more compute than a small linker (*KG & LLMs in Action*, appendix C; [appendix C PDF](../sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.pdf)). If you use one, cache its decisions as edges so a rebuild replays them instead of re-asking.
+Appendix C weighs the same choice for normalisation against a domain linker. An LLM recognises equivalences with no surface pattern ("gastric adenocarcinoma" ≈ "stomach cancer"), works in domains that have no scispaCy (legal, finance), and needs no knowledge base for common entities. The costs: mappings can change between runs, which makes the build hard to reproduce, and it needs far more compute than a small linker (*KG & LLMs in Action*, appendix C). If you use one, cache its decisions as edges so a rebuild replays them instead of re-asking.
 
 ### NED against an ontology (ch7–8)
 
-**NED** links a mention to a *ground entity* in a reference knowledge base, using the mention's context. In the book's ECDC bulletin example, "Zika" occurs three times with three meanings: the virus, congenital Zika syndrome and Zika virus infection. Each is a separate UMLS concept with its own CUI (concept unique identifier), semantic type and definitions (*KG & LLMs in Action*, ch. 7; [ch. 7 PDF](../sources/kg-and-llms-in-action/ch07-named-entity-disambiguation.pdf)). Ambiguity runs both ways: one string can mean several entities ("Zika"), and several strings can mean one entity ("AIDS", "Acquired Immunodeficiency Syndrome"). A `DISAMBIGUATED_TO` edge from mention to entity handles both (*KG & LLMs in Action*, ch. 7).
+**NED** links a mention to a *ground entity* in a reference knowledge base, using the mention's context. In the book's ECDC bulletin example, "Zika" occurs three times with three meanings: the virus, congenital Zika syndrome and Zika virus infection. Each is a separate UMLS concept with its own CUI (concept unique identifier), semantic type and definitions (*KG & LLMs in Action*, ch. 7). Ambiguity runs both ways: one string can mean several entities ("Zika"), and several strings can mean one entity ("AIDS", "Acquired Immunodeficiency Syndrome"). A `DISAMBIGUATED_TO` edge from mention to entity handles both (*KG & LLMs in Action*, ch. 7).
 
-**A general LLM is not a linker.** Asked to disambiguate the Zika passage, ChatGPT returned surface terms without separating virus from infection. Asked for UMLS IDs, it said it couldn't assign them. The knowledge base isn't in the model, so high-precision domains need an ontology in the loop (*KG & LLMs in Action*, ch. 7).
+**A general LLM is not a linker.** Asked to disambiguate the Zika passage, ChatGPT returned surface terms without separating virus from infection. Asked for UMLS IDs, it said it couldn't assign them. That was an undated chat session with no tools, and the book warns the responses vary, so treat it as an illustration. The knowledge base isn't in the model, so high-precision domains need an ontology in the loop (*KG & LLMs in Action*, ch. 7).
 
 Three phases:
 
@@ -265,9 +266,9 @@ Three phases:
 2. **Candidate ranking and disambiguation.** Choose the candidate that fits the context. Ch8 does this by finding **shortest paths** between candidate concepts and the other entities in the document (dropping **hub** nodes such as "Infectious process", which connect everything to everything), turning the paths into sentences, summarising them, and then asking the LLM to choose. That is how "Zika" next to "microcephaly" resolves to *congenital Zika virus infection*.
 3. **Ontology integration.** The resolved entity gains its ontology neighbourhood: synonyms, parents and related concepts.
 
-Use NED when a reference ontology exists (medicine, law, finance identifiers). Use ER when it doesn't.
+Use NED when a reference ontology exists (medicine, law, finance identifiers). Use ER when it doesn't. That is how the book split its own projects: for the archive's 1930s disciplines, many no longer pursued, there was "no hope of compiling a named entity dictionary or knowledge base", so ch6 resolves mentions against each other (*KG & LLMs in Action*, ch. 6).
 
-**Baseline: a domain linker (ch7).** scispaCy with its UMLS linker does all three phases in a few lines, and on the ECDC passage it gives each "Zika" the right CUI (*KG & LLMs in Action*, ch. 7):
+**Baseline: a domain linker (ch7).** scispaCy with its UMLS linker does all three phases in a few lines, and on the ECDC passage it gives each "Zika" the right CUI: *Zika virus* (chars 75–85) → C0318793 Zika Virus, *congenital Zika syndrome* (135–159) → C4546023, *Zika virus infection* (268–288) → C0276289. Every recognised span contains its own cue word, which is what makes this easy (*KG & LLMs in Action*, ch. 7; UMLS 2022AA, and the book warns results "may vary slightly" because scispaCy extraction is nondeterministic):
 
 ```python
 import spacy
@@ -282,9 +283,9 @@ for ent in nlp(text).ents:
     print(ent.text, [(cui, kb.cui_to_entity[cui].canonical_name) for cui, _ in best])
 ```
 
-Ch. 8 names its limits: it is tied to one domain, the knowledge base is hard to extend, and it ranks on nearby words, not on the relations in the ontology. Give it a passage without the cue words "congenital" or "syndrome" and it falls back to *Zika Virus Infection* for every "Zika", and finds no candidate at all for "Zika disease" (*KG & LLMs in Action*, ch. 8; [ch. 8 PDF](../sources/kg-and-llms-in-action/ch08-ned-open-llms-ontologies.pdf)).
+Ch. 8 names its limits: it is tied to one domain, the knowledge base is hard to extend, and it ranks on nearby words, not on the relations in the ontology. Give it a passage without the cue words "congenital" or "syndrome" and it ranks *Zika Virus Infection* first for both bare "Zika" mentions, including "Zika belongs to the Flaviviridae virus family", where the virus is meant. It finds no candidate at all for "Zika disease" (*KG & LLMs in Action*, ch. 8).
 
-**Open LLM + ontology (ch8).** The replacement runs locally: Llama 3.1 8B served by Ollama, which speaks the OpenAI Chat Completions API, so the client code only changes `base_url` (*KG & LLMs in Action*, ch. 8). The ontology is used at every stage:
+**Open LLM + ontology (ch8).** The replacement runs locally: Llama 3.1 8B served by Ollama, which speaks the OpenAI Chat Completions API, so the client code only changes `base_url`. The book ran it at temperature 0 and dates its results to October 2024 (*KG & LLMs in Action*, ch. 8). The ontology is used at every stage:
 
 ```mermaid
 flowchart LR
@@ -331,30 +332,33 @@ flowchart LR
   RETURN [n IN nodes(p) | n.name] AS names, [r IN relationships(p) | r.type] AS types;
   ```
 
-Results: for "Severe outcomes of Zika ... causing microcephaly and congenital malformations", the paths from *Congenital Zika virus infection* to the microcephaly candidates (through a shared *Congenital* occurrence node) select that concept. This is exactly the case where scispaCy failed. Given nine asthma candidates (*Mild asthma*, *Intrinsic asthma*, *Asthma attack*, ...) in a sentence about treating asthma and allergic rhinitis together, it chooses plain *Asthma* rather than a qualified variant (*KG & LLMs in Action*, ch. 8). Both are single worked examples, not a benchmark.
+Results: the chapter reports one sentence. For "Severe outcomes of Zika ... causing microcephaly and congenital malformations", 13 paths survive the hub filter, mostly through a shared *Congenital* occurrence node. The final picks are *Congenital Zika virus infection* (762725007) for "Zika", *Micrencephaly* for "microcephaly" and *Multiple congenital malformations* for "congenital malformations" (*KG & LLMs in Action*, ch. 8). There is no gold label and no accuracy figure, and the picks are arguable. NER labelled "Zika" an *Organism*, and the sentence is about the virus crossing the placenta, yet the context pulled it to a disease concept. "Multiple" is more specific than the text. The chapter's asthma case (nine candidates, plain *Asthma* chosen) is not a result: it is the worked example inside the disambiguation prompt, with its answer supplied.
 
 **Ontology integration: the schema ch7 builds.** UMLS is the crosswalk: each SNOMED and HPO concept lists its UMLS IDs, so a disambiguated `MedicalEntity` (keyed by CUI) links to them with a plain `MERGE` (*KG & LLMs in Action*, ch. 7).
 
 ```
-(:File)-[:CONTAINS_PAGE]->(:Page)-[:MENTIONS]->(:EntityMention)-[:DISAMBIGUATED_TO {score}]->(:MedicalEntity)
-(:Page)-[:MENTIONS_ENTITY {sentence_index, start_chars, end_chars}]->(:MedicalEntity)
+(:File)-[:CONTAINS_PAGE]->(:Page)-[:MENTIONS_MENTION {start_chars, end_chars, sentence_index, type}]->(:EntityMention)
+(:EntityMention)-[:DISAMBIGUATED_TO {confidence}]->(:MedicalEntity)
+(:Page)-[:MENTIONS_ENTITY {sentence_index}]->(:MedicalEntity)
 (:MedicalEntity)-[:IS_SNOMED_ENTITY]->(:SnomedEntity)-[:SNOMED_RELATION {type}]->(:SnomedEntity)
 (:MedicalEntity)-[:IS_HPO_ENTITY|IS_DISEASE_ENTITY]->(:HpoEntity|HpoDiseaseEntity)
-(:MedicalEntity)-[:COOCCUR {count, sentences}]-(:MedicalEntity)      ← same-sentence pairs
+(:MedicalEntity)-[:COOCCURR {count, sentences}]-(:MedicalEntity)     ← same-sentence pairs (book's spelling)
 ```
 
-HPO comes in as OWL through the n10s plugin. `COOCCUR` connects every pair of entities mentioned in the same sentence and counts how often. On the SoHO corpus (EU regulatory documents, EDQM guides and ECDC bulletins on blood, tissues, cells and organs) this gave over 25,000 edges (*KG & LLMs in Action*, ch. 7).
+`EntityMention` is one node per lowercased surface string, and the offsets live as arrays on `MENTIONS_MENTION`. The book also appends offsets onto the `MedicalEntity` node itself across all pages, which loses which page each offset belongs to; keep offsets on edges only. `IS_SNOMED_ENTITY` is made where the SNOMED concept's UMLS ID list contains the CUI. `HpoDiseaseEntity` comes from HPO's `phenotype.hpoa` annotations, linked by `HAS_PHENOTYPIC_FEATURE` (*KG & LLMs in Action*, ch. 7).
+
+HPO comes in as OWL through the n10s plugin. `COOCCURR` connects every pair of entities mentioned in the same sentence and counts how often. On the SoHO corpus (EU regulatory documents, EDQM guides and ECDC bulletins on blood, tissues, cells and organs) this gave over 25,000 edges (*KG & LLMs in Action*, ch. 7).
 
 ### What a disambiguated graph buys you (ch7)
 
 | Use | How | Book's result |
 |---|---|---|
-| **Conceptual search** | Match the query against entity *aliases*, then return pages that mention the entity, with the matched span | "breakbone fever" (a dengue synonym) never appears literally; full-text search latched onto "fever". The full-text top hit ranked only 19th by entity mentions. Also separates "islets of Langerhans" from "islands" |
+| **Conceptual search** | Match the query against entity *aliases*, then return pages that mention the entity, with the matched span | "breakbone fever" (a dengue synonym) never appears literally; full-text search latched onto "fever". The full-text top hit ranked only 19th by entity mentions (17 mentions, against 22 for the conceptual top hit). Also separates "islets of Langerhans" from "islands" |
 | **Structured search** | Follow ontology edges from a start entity, then back to pages | `FINDING_SITE` from *Islets of Langerhans* found a *Hyperglycemia* mention in an organ-donor protocol; three `CAUSATIVE_AGENT` hops from *Zika virus* reach yellow fever, dengue, chikungunya, rubella |
-| **Interpretability** | Ontology path between two co-occurring entities explains why they co-occur | Zika co-occurs with dengue and chikungunya; SNOMED links them via shared flavivirus parents |
-| **Discovery / new knowledge** | A frequent co-occurrence with **no** meaningful ontology path is a candidate fact | Zika + Guillain-Barré: 195 co-occurrences. Removing hub paths took 11,185 paths down to 9, all through generic nodes such as *Viral disease*. So SNOMED lacks the causal link that the text supports |
+| **Interpretability** | Ontology path between two co-occurring entities explains why they co-occur | Zika co-occurs with dengue and chikungunya; SNOMED links them via shared flavivirus parents. The book's prose calls Zika a togavirus; it is a flavivirus, as its own SNOMED paths show |
+| **Discovery / new knowledge** | A frequent co-occurrence with **no** meaningful ontology path is a candidate fact | Zika + Guillain-Barré: 195 same-sentence co-occurrences. Removing paths through the 350 highest-degree nodes took 11,185 shortest paths (up to 8 hops) down to 9, all still through generic nodes such as *Viral disease*. So SNOMED lacks the causal link that the text supports |
 
-Source: *KG & LLMs in Action*, ch. 7. The last row reverses the usual direction: here the text-built graph proposes edits to the ontology. Any such candidate is an `INFERRED` claim for a domain expert to review, not a fact (see [note 12](12-kg-as-shared-agent-memory.md) on writing claims vs. facts).
+Source: *KG & LLMs in Action*, ch. 7. Co-occurrence counts need a condition too: they are sentence-level counts on one corpus, and boilerplate inflates them (the top co-occurring entity with Zika is *Communicable Diseases*, 606, likely from the bulletin header "COMMUNICABLE DISEASE THREATS REPORT"). The last row reverses the usual direction: here the text-built graph proposes edits to the ontology. Any such candidate is an `INFERRED` claim for a domain expert to review, not a fact (see [note 12](12-kg-as-shared-agent-memory.md) on writing claims vs. facts).
 
 ### Measure what normalisation did
 
@@ -374,10 +378,11 @@ What it measured on the miRNA graph:
 | 1 | 5,911,305 | 6,179,329 | +4.5% |
 | 2 | 1,244,305 | 1,010,851 | −18.7% |
 | 3 | 35,795 | 25,888 | −27.6% |
+| 4 | 870 | 612 | −29.6% |
 | 5 | 46 | 22 | −52.1% |
 | 6 | 1 | 0 | −100% |
 
-Source: *KG & LLMs in Action*, appendix C. WCC barely moved: the giant component went from 5,010 to 6,033 nodes, partly because the new `NormalizedDisease` nodes are counted too. The graph was already one dominant component, so WCC is the weaker check here and the path-length shift is the useful one. The book's reason it matters downstream is that message-passing embeddings ([note 13](13-graph-ml-and-gnns.md#message-passing)) improve when related nodes are fewer hops apart (*KG & LLMs in Action*, appendix C). For measurements like this, build the projection with `gds.graph.project.cypher`, which can define a miRNA–miRNA edge through shared diseases. It is slower than a native projection but more flexible (*KG & LLMs in Action*, appendix C).
+Source: *KG & LLMs in Action*, appendix C. The distances are over a miRNA–miRNA projection: before, two miRNAs are linked if they share a `Disease` node; after, if they share a `NormalizedDisease`. Most pairs were already at distance 1, so the shift is real but modest. WCC barely moved: the giant component went from 5,010 to 6,033 nodes, partly because the new `NormalizedDisease` nodes are counted too, and the two tiny components each gained one node. The book's verdict is "no significant changes". The graph was already one dominant component, so WCC is the weaker check here and the path-length shift is the useful one. The book's reason it matters downstream is that message-passing embeddings ([note 13](13-graph-ml-and-gnns.md#message-passing)) improve when related nodes are fewer hops apart. That is argued, not measured: the appendix runs no link prediction before and after (*KG & LLMs in Action*, appendix C). For measurements like this the book builds the projection with `gds.graph.project.cypher`, which can define a miRNA–miRNA edge through shared diseases, and runs all-pairs shortest paths, which was in GDS's alpha tier at the time. Both are dated: newer GDS versions deprecate `gds.graph.project.cypher` in favour of Cypher aggregation projections, so check your version's docs.
 
 ---
 
@@ -501,20 +506,20 @@ The course's list of where to grow next is a useful default: cross-link companie
 
 **Try it on the course graph.** Add the uniqueness constraint *before* the L6 manager import, run it again without the constraint, and count the duplicate `Company` nodes the constraint prevented. On the L5 chunks, compare top-k retrieval with and without the ±1 `NEXT` window on three questions.
 
-**Curate before you scale** (appendix C). Start from a few sources that matter for the task. Every extra loosely related dataset adds reconciliation work and noise (*KG & LLMs in Action*, appendix C; [appendix C PDF](../sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.pdf)). The appendix's miRNA graph shows the moves:
+**Curate before you scale** (appendix C). Start from a few sources that matter for the task. Every extra loosely related dataset adds reconciliation work and noise (*KG & LLMs in Action*, appendix C). The appendix's miRNA graph shows the moves:
 
-- **Keep source semantics as separate relation types.** HMDD and miR2Disease give a `RELATED_TO` association. dbDEMC gives up/down-regulation in cancer, which becomes `REGULATES`. Collapsing them would lose what each source actually asserts.
-- **Label provenance.** Each source adds its own label (or property) to the nodes it touches, so a single query can count the entities two sources agree on. Overlap between independent curated sources is a cheap confidence signal.
+- **Keep source semantics as separate relation types.** HMDD gives an experiment-supported association, loaded as `RELATED_TO` with category, description and PubMed ID. dbDEMC (up/down-regulation in cancer) and miR2Disease (deregulation in disease) both load as `REGULATES`, with the direction as a property. Collapsing them would lose what each source actually asserts.
+- **Label provenance.** Each source adds its own label (`MiRNA_HMDD`, `MiRNA_dbDEMC`, `MiRNA_miR2Disease`) to the nodes it touches, so a single query can count the entities sources agree on. In the appendix 328 miRNAs are in all three sources and 2,550 only in dbDEMC. Overlap between independent curated sources is a cheap confidence signal.
 - **`MERGE` is the fusion step.** Shared identifiers join the sources on load. After the merge, a single miRNA (hsa-mir-155) connects to brain and heart diseases that came from different datasets.
-- **Sanity-check after every load.** Look at node and edge counts, top-degree nodes and median degree. The graph grew from 1,207 miRNAs / 18,732 associations / 849 diseases after HMDD alone to 4,874 / 118,806 / 1,144 after all three sources (*KG & LLMs in Action*, appendix C). The next step is the normalisation [measured above](#measure-what-normalisation-did).
+- **Sanity-check after every load.** Look at node and edge counts, top-degree nodes and median degree. The graph grew from 1,207 miRNAs / 18,732 associations / 849 diseases after HMDD alone to 4,874 / 118,806 / 1,144 after all three sources (*KG & LLMs in Action*, appendix C). The book's own overlap table sums to 3,872 miRNAs, not 4,874, which is the kind of mismatch these checks exist to catch. The next step is the normalisation [measured above](#measure-what-normalisation-did).
 
 ### Integrating structured sources (ch4)
 
-Not every KG starts from text. Ch4 fuses public structured datasets: protein–protein interactions with disease associations (DisGeNET), the pharmacology graph **Hetionet**, and the **Clinical Knowledge Graph** (*KG & LLMs in Action*, ch. 4; [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration.pdf)). The work moves from extraction to three other steps. They follow the general pattern the chapter takes from Yang et al.: **merge** nodes from many sources, **link** the nodes that are the same concept, **prune** what's irrelevant.
+Not every KG starts from text. Ch4 fuses public structured datasets: protein–protein interactions with disease associations (DisGeNET), the pharmacology graph **Hetionet**, and the **Clinical Knowledge Graph** (*KG & LLMs in Action*, ch. 4). The work moves from extraction to three other steps. They follow the general pattern the chapter takes from Yang et al.: **merge** nodes from many sources, **link** the nodes that are the same concept, **prune** what's irrelevant.
 
 - **Identity mapping.** Every source is mapped onto shared codes (UMLS, Disease Ontology) before `MERGE`. This is entity resolution, made easier because the identifiers are curated. In the PPI case only 290 of 519 DisGeNET diseases mapped to Disease Ontology, so expect a lossy join and report it (*KG & LLMs in Action*, ch. 4).
 - **Schema alignment.** Reconcile what each source means by its edge types before they share a graph. The PPI model has two parts: a monopartite `Protein–Protein` interaction graph, and a bipartite `Disease–Protein` association graph on top of it.
-- **Validation.** Check counts, orphans and degree distributions after each load. The PPI load gave 342,354 interactions among 21,559 proteins. WCC found 27 components, one of them holding 21,521 proteins, and Louvain found 48 communities with modularity 0.546 (*KG & LLMs in Action*, ch. 4).
+- **Validation.** Check counts, orphans and degree distributions after each load. The PPI load gave 342,354 interactions among 21,559 proteins. WCC found 27 components, one of them holding 21,521 proteins, and Louvain found 48 communities with modularity 0.546 (*KG & LLMs in Action*, ch. 4, Table 4.2; the prose nearby says "around 0.40", which contradicts the table).
 
 Loading pattern: key constraints first, then batched idempotent writes.
 
@@ -557,20 +562,20 @@ def pathway_metrics(G: nx.Graph, proteins: set) -> dict:
 | Density | 0.07 (whole network: 0.0015) | Denser than the background, but sparse internally |
 | Conductance | 0.96 | Pathways connect mostly *outward* |
 
-Source: *KG & LLMs in Action*, ch. 4. Run the same metrics on the Louvain clusters and the picture flips: nearly all proteins sit in one component and conductance is much lower. A disease pathway is a different object from a topological community, so don't use one as a proxy for the other.
+Source: *KG & LLMs in Action*, ch. 4. Two more points on the distributions show how fragmented pathways are: only about 10% of pathways have more than 60% of their proteins in their largest component, and 90% of diseases have a density below 0.17. Run the same metrics on the Louvain clusters and the picture flips: most proteins sit in one large component and conductance improves, so clusters are better connected inside than outside. A disease pathway is a different object from a topological community, so don't use one as a proxy for the other.
 
-The other two sources show what mature integrated KGs look like. **Hetionet** combines 29 resources into 47,031 nodes of 11 types and 2,250,197 edges of 24 types, and stores the supporting references on the edges. **CKG** links 33 node labels with 51 relationship types to support queries such as finding altered functions, suggesting drugs for regulated proteins and surfacing possible confounders (*KG & LLMs in Action*, ch. 4). For patient data the chapter gives two privacy-preserving options. One is to load only statistical relationships (diseases, symptoms, outcomes and their weights) and leave out patient records. The other is a de-identified generic clinical KG, with patient EHR data added only when strictly necessary and with consent.
+The other two sources show what mature integrated KGs look like. **Hetionet** combines 29 resources into 47,031 nodes of 11 types and 2,250,197 edges of 24 types. Some edge types carry their provenance: each of the 11,571 Compound–binds–Gene edges stores its reference as a relationship property. **CKG** links 33 node labels with 51 relationship types to support queries such as finding altered functions, suggesting drugs for regulated proteins and surfacing possible confounders (*KG & LLMs in Action*, ch. 4). For patient data the chapter gives two privacy-preserving options. One is to load only statistical relationships (diseases, symptoms, outcomes and their weights) and leave out patient records. The other is a de-identified generic clinical KG, with patient EHR data added only when strictly necessary and with consent.
 
-The LLM's role here is to **interpret** the quantitative output (a DWPC ranking, a set of protein–disease links) as a domain narrative. It doesn't replace expert judgement, which matters most in the clinical case. The prompt shape the chapter uses (with Claude Sonnet 4) has four parts: a domain-expert role, the raw result rows, a statement of how each metric was computed, and numbered questions (which hits are known, which are plausible, what to validate next). The output is a hypothesis list for a human to check, not a finding (*KG & LLMs in Action*, ch. 4).
+The LLM's role here is to **interpret** the quantitative output (a DWPC ranking, a set of protein–disease links) as a domain narrative. It doesn't replace expert judgement, which matters most in the clinical case. The prompt the chapter uses (with Claude.ai Sonnet 4.0) has four parts: a biomedical-assistant role, the raw result rows (pathway, DWPC, PC, gene count), one line of context on what DWPC means, and five numbered asks: biological significance, relation to pathogenesis, therapeutic implications, unexpected findings, follow-up questions. The output is a hypothesis list for a human to check, not a finding. The book's words: "We do not suggest using results from LLMs without proper interpretation by physicians and researchers" (*KG & LLMs in Action*, ch. 4). Check the rows before you send them. The book's prompt mixes DWPC scores from two different metapath queries (four rows from the disease–gene–process query, the glycoprotein row from the query with an extra gene–gene hop) under one label, and the model then interprets them side by side. DWPC values are only comparable within one metapath and one damping exponent.
 
 ---
 
 ## Domain examples in the book (one paragraph each)
 
-- **Archives (ch6).** Rockefeller Archive Center documents: people, institutions and funding. This is the source of the Ernest Lawrence ER example. Three mentions on different pages were resolved to one person using string similarity, a shared employer and related `Occupation`s. Two of the mentions were six hops apart in the graph, which a relational database would make hard to find.
+- **Archives (ch6).** Rockefeller Archive Center documents: people, institutions and funding. This is the source of the Ernest Lawrence ER example. Three mentions on different pages were resolved to one person using string similarity, a shared employer and related `Occupation`s. Two of the mentions were six hops apart in the graph, which a relational database would make hard to find. The resolved graph then supports network questions: centrality over `TALKED_WITH`, `TALKED_ABOUT`, `WORKS_WITH` and `STUDENT_OF` picks out influencers and bridges (Bohr, Lawrence), and the sentiment stored on `TALKED_ABOUT` shows who was critical of whom.
 - **Biomedical NED (ch7–8).** ECDC bulletins linked to UMLS (scispaCy) and SNOMED (open LLM with graph paths). Co-occurrence edges are checked against ontology paths. A co-occurrence with no ontology path is a candidate new fact.
 - **Biomedical integration (ch4).** PPI and disease networks, Hetionet (a celiac-disease case study using metapaths and DWPC) and the Clinical Knowledge Graph, with LLM-assisted interpretation of pathway analyses.
-- **miRNA (appendix C).** A KG built from structured sources: curated datasets, disease-ontology normalisation and DWPC path scoring to rank disease–target hypotheses.
+- **miRNA (appendix C).** A KG built from structured sources: curated datasets, disease-ontology normalisation and DWPC path scoring to rank disease–target hypotheses. The DWPC query runs disease → miRNA → target on the raw `Disease` name "celiac disease", not the normalised node, with damping 0.4, PC ≥ 2 and targets with at least 5 miRNAs. The top hit, NM_080601 (PTPN11), has DWPC 0.00417 from only 2 paths and 25 miRNAs, against 111 or more for most of the rest. Validation is a literature check on the first few hits; for the others the book found no supporting articles.
 
 ---
 
@@ -578,7 +583,7 @@ The LLM's role here is to **interpret** the quantitative output (a DWPC ranking,
 
 `~/.claude/refs/agent-eval.md`: gold sets and gating. `~/.claude/refs/agent-memory.md`: semantic memory writes.
 
-Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration.pdf) (multisource integration, DWPC), [ch. 5 PDF](../sources/kg-and-llms-in-action/ch05-extracting-domain-knowledge.pdf), [ch. 6 PDF](../sources/kg-and-llms-in-action/ch06-building-kgs-with-llms.pdf), [ch. 7 PDF](../sources/kg-and-llms-in-action/ch07-named-entity-disambiguation.pdf), [ch. 8 PDF](../sources/kg-and-llms-in-action/ch08-ned-open-llms-ontologies.pdf), [appendix C PDF](../sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.pdf).
+Depth: *KG & LLMs in Action* ch. 4–8 and appendix C; the chapter files are listed in [references.md](../references.md).
 
 ---
 

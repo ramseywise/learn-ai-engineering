@@ -5,7 +5,7 @@ sources:
   - https://www.promptingguide.ai/introduction/settings
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 4 — Controlling Output
 
@@ -31,7 +31,7 @@ Every token *before* the solution costs latency and money. Nothing after the rec
 |---|---|
 | **Structural boilerplate** (an opening `{`, a heading) | Put it in the *prompt*. Cheaper, and it guarantees the format |
 | **Reasoning** | Let it run long — this is CoT, and it buys correctness ([03](03-core-techniques.md#chain-of-thought)) |
-| **Fluff** (disclaimers, "Great question!") | Few-shot examples that skip the intro, or an explicit "answer directly" instruction. Failing that, give it a slot: `1. [answer] 2. [caveats] 3. [background]`, then parse slot 1. A slot doesn't always kill the intro, so parse defensively |
+| **Fluff** (disclaimers, "Great question!") | Mostly an RLHF habit, though models without RLHF occasionally do it too. Few-shot examples that skip the intro, or an explicit "answer directly" instruction. Failing that, give it a slot: `1. [answer] 2. [caveats] 3. [background]`, then parse slot 1. A slot doesn't always kill the intro (the book shows ChatGPT adding one against explicit instructions), so parse defensively |
 
 ---
 
@@ -47,11 +47,12 @@ Every token *before* the solution costs latency and money. Nothing after the rec
 | `presence_penalty` | Flat penalty on any token that has appeared | Pushes toward new topics. **Tune one penalty, not both** |
 
 Caveats:
-- **Temperature 0 is not deterministic** in practice (batching and floating-point effects). Tests need to tolerate variation or mock the model.
+- **Temperature 0 is not deterministic** in practice (batching and floating-point effects). The book reports computed probabilities moving by several percentage points between reruns, enough to change which token is on top. Tests need to tolerate variation or mock the model.
+- **The book's temperature regimes:** 0 when correctness matters most; 0.1–0.4 for a few alternatives or a slightly more colourful single answer; 0.5–0.7 for many (10+) independent solutions; 1 to mirror the training distribution. Above 1, errors compound over long generations, because temperature acts only at the last step: the model reads its own earlier slips as a pattern and imitates them.
 - **Reasoning models often fix or ignore these** — some don't accept temperature/top_p at all ([07](07-prompting-reasoning-models.md)).
 - Provider support differs — penalties and logprobs are OpenAI-style features many APIs don't expose.
 
-**Best-of-n:** generate n completions at moderate temperature and keep the best-scoring one. Rule of thumb from the book: `temperature ≈ sqrt(n) / 10`. At temperature 0, the n completions are identical.
+**Best-of-n:** generate n completions at moderate temperature (most APIs take an `n` parameter; OpenAI's maxed out at 128, and the book notes n = 128 doesn't take much longer than n = 1, since the completions run in parallel) and keep the one with the best logprob score ([below](#logprobs-reading-confidence)). The book's rule of thumb, which it calls "completely unscientific": `temperature ≈ sqrt(n) / 10`, so 0.2 for n = 4. At temperature 0, the n completions are identical.
 
 **Beam search** is the decoding-side cousin: instead of committing token by token, it keeps several candidate continuations alive and looks a few tokens ahead so the model doesn't paint itself into a corner. Output is more globally coherent, but compute is much higher, so hosted APIs rarely expose it. Best-of-n is the version you control.
 
@@ -67,13 +68,14 @@ Decide up front how your parser will find the answer.
 | Fenced code | ` ```lang\n ` | `\n```\n` | Yes |
 | Numbered list, first item | `1.` | `\n2.` | Yes |
 | XML | `<answer>` | `</answer>` | Yes |
-| JSON / braced code | `{` | matching closing brace | No — count braces while streaming, or parse |
+| JSON string value | `"key": "` | the next unescaped `"` | No — a plain `"` stop would fire on `\"` |
+| Braced code (Java), whole JSON object | `{` | matching closing brace | No — count braces while streaming, or parse |
 | YAML / indented languages (Python) | the key or `def` line | first line back at the starting indent | Partly — `\n` + a top-level token works if you know what comes next |
 
 Stop-sequence tips:
-- **Prefer stop sequences to streaming-and-cancel.** Stopping server-side wastes nothing; cancelling over the network always wastes some tokens.
+- **Prefer stop sequences to streaming-and-cancel.** Stopping server-side wastes nothing; cancelling over the network always wastes some tokens. More APIs accept stops than support cancelling a stream. But a stop is a fixed string, so for the "No" rows above (a matching brace, a dedent) streaming and cancelling in your own code is the only way to end early. Combine the two: add the common fixed-string endings as stops and catch the rest while streaming.
 - **Lead with a newline** (`\n#`, not `#`) so a `#` in a comment or phone number doesn't trigger a stop.
-- Add *likely* continuations as extra stops — after a Python function, `\ndef` and `\nclass` are safe because method bodies are indented.
+- Add *likely* continuations as extra stops — after a Python class, `\nclass`, `\ndef` and `\nif` are safe because the class's own methods are indented.
 - **Use domain knowledge to sharpen stops.** If you know what *follows* the answer in this kind of document (the next section's header, the next field), stop on exactly that.
 
 ```python
@@ -118,15 +120,18 @@ Controlling *style* (Anthropic's guidance):
 
 ## Logprobs: reading confidence
 
-A logprob is the log-probability of each emitted token (0 = certain; `exp()` converts it to a probability). Where the API exposes them — some providers disable them, especially for newer models — they're your best instrument.
+A logprob is the log-probability of each emitted token (0 = certain; `exp()` converts it to a probability: logprobs of −0.405 for "Yes" and −1.099 for "No" mean about 67% and 33%). The API can also return the top alternatives the model considered at each position, at no extra compute, since the model computes the full distribution anyway. Where the API exposes them — some providers disable them, the book says for fear of being reverse-engineered — they're your best instrument. If you'll need them, that constrains your model choice.
 
-Reading the numbers: single-digit negatives are normal for free text; double-digit negatives mean something odd happened. Tokens near the *start* of a text run lower because the model has less context to go on. Expect jitter of about ±1 between identical calls (the same nondeterminism as temperature 0).
+Reading the numbers: the chosen token usually sits between −2 and 0, single-digit negatives are normal for free text; double-digit negatives mean something odd happened. Tokens near the *start* of a text run lower because the model has less context to go on. Expect jitter of about ±1 between identical calls (the same nondeterminism as temperature 0).
 
-- **Quality score.** Average token probability over the completion (or its first tokens — what Copilot found most predictive). Use it to gate: show only high-confidence suggestions, warn on low ones, retry, add context, or escalate to a stronger model. The book's warning: **don't be like Clippy** — interrupting users with low-confidence output costs more trust than staying quiet.
+- **Quality score.** Average rather than sum: a summed logprob falls with length and with harmless paraphrase ("for example" vs. "for instance" can halve a probability without lowering quality). The plain mean of the token logprobs is a good default when you can't experiment. Building Copilot, Ziegler found the mean of the *probabilities* (not logprobs) of the *first* tokens, `(exp(lp_1) + … + exp(lp_n)) / n`, predictive of overall quality. Use it to gate: show only high-confidence suggestions, warn on low ones, retry, add context, or escalate to a stronger model. The book's warning: **don't be like Clippy** — interrupting users with low-confidence output costs more trust than staying quiet.
 - **Classification.** Use a format like `1. [positive | negative | neutral]` so the decision is the first token after a known start, then read the probabilities of each label.
-  - **Prefix-collision pitfall:** in the book's region classifier, "Europe" scored 44% on the first token and `North` 55% — but `North` was split between North America (42%) and Northeast Asia (13%). Sampling picks `North`, then the less likely continuation can win, and the output is "Northeast Asia" when Europe was the single best label. **Give every label a distinct first token.**
-  - **Calibration:** the model's 50% isn't your threshold. Shift per-label logprobs by constants fitted on labeled data (e.g. add 0.3 to "Yes" if the model under-calls it), using logistic regression or cross-entropy minimization to fit them. **Logit bias** applies the same shift at generation time where available.
-- **Prompt debugging.** With `echo=true` (where supported), logprobs on the *prompt* flag surprising tokens: typos and odd phrasing show up as deep dips, below roughly −13.
+  - **Prefix-collision pitfall:** in the book's region classifier (real gpt-3.5-turbo-instruct probabilities), the first token was `North` at 55% and `Europe` at 44%. After `North`, `-East` took 76% and `America` 23%, so Northeast Asia totals 55% × 76% ≈ 42% and North America about 13%. Europe, at 44%, is the single most likely label, but greedy decoding commits to `North` first because two labels pool their mass there, then picks `-East`, and outputs "Northeast Asia". **Give every label a distinct first token.**
+
+    ![Prefix collision: North 55% vs. Europe 44%, then -East 76% vs. America 23%](../sources/images/berryman-prompt-engineering-for-llms-fig7-5.png)
+    *Image Source: Berryman & Ziegler (2024), Fig. 7-5*
+  - **Calibration:** the model's 50% isn't your threshold. In the book's example, an app blocks emails the model judges unprofessional, and it blocks too many. Shift per-label logprobs by constants (add 0.3 to "Yes" before comparing with "No", so the model must be clearly surer of "No" to block). Find the constants by experiment or by minimizing cross-entropy on labeled data, as in logistic regression. **Logit bias** applies the same shift at generation time where available.
+- **Prompt debugging.** With `echo=true` (where supported), logprobs on the *prompt* flag surprising tokens, even with zero completion tokens requested. In the book's test, the typo "complution" tokenized as `compl` + `ution` and dipped below −13. The same signal marks passages of high information density, which you can point the app's or the user's attention to.
 
 ---
 
@@ -134,6 +139,7 @@ Reading the numbers: single-digit negatives are normal for free text; double-dig
 
 The trade-offs, in rough order: **intelligence → speed → cost → ease of use → features** (tool use, logprobs, vision, context length) **→ special requirements** (open weights, data residency). Tightening one narrows the rest; cheap and very smart don't coexist.
 
+- Pick the smallest model that reliably does the task. Cost matters at volume: a solo project making one request a day can splurge on a premium model, while high-volume simple requests want a small one.
 - Match the model to the step, not the app: a small fast model for autocomplete, classification or routing; a frontier model for multistep reasoning; an open-weight model when data can't leave your infrastructure or you need logprobs the API hides.
 - Put an abstraction layer between your code and the provider (for example [LiteLLM](https://docs.litellm.ai/)).
 - Prototype on a slightly bigger model than you think you can afford. Prices fall, and your prompts will already be tuned for it.
@@ -152,6 +158,8 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 | Soft prompting | What a static prompt would say | Hundreds | Hours |
 
 - **LoRA** freezes the base weights and trains small low-rank "diff" matrices. They're cheap to store, so one deployment can serve many LoRAs, one per customer or task. LoRA doesn't teach new tricks; it teaches *which* existing ones to use. It's good at shifting *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt. Trained on outcome data, it also picks up priors nobody wrote down: budget-conscious users reject "Monaco" but book after "Prague" suggestions.
+- **Data.** Training documents should show successful interactions: factually correct, using only the background you want learned, in the target format. Sources: write them, hire contractors, synthesize them ([11](11-applications.md#synthetic-data-generation)), or mine telemetry for successes (accepted suggestions, likes) or logs of humans doing the task you're automating. Whether you can get them decides whether fine-tuning is worth it. **Loss masking**, where the framework supports it, trains only on the answer part of each document, not on the prompt part.
+- **Trade-off.** Fine-tuning usually weakens the model on generic documents while sharpening it on yours.
 - **Soft prompting** uses gradient descent over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it.
 
 ![Should you fine-tune? A decision flow](../sources/images/berryman-prompt-engineering-for-llms-fig7-8.png)

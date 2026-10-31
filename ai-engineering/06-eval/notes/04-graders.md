@@ -7,7 +7,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 4 — Graders
 
@@ -59,7 +59,11 @@ Teams reach for a judge too early. Most systems have more checkable properties t
 | Efficiency | Steps, tokens, latency, cost from the trace |
 | Exact facts | Number within tolerance, date matches, entity in an allowed set |
 
-For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
+For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless. Check values with a tolerance or a range, not equality: a thermostat call at 76°F when the reference says 77°F is probably fine, while no call or the wrong tool is not ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
+
+### Partial match: grade the aspect that breaks
+
+When exact match on the whole output is too strict, match on one aspect: code after stripping comments and whitespace, the destination country of a travel suggestion, the tool name of an action. Pick an aspect that separates breaking divergence from benign divergence, and that is neither so specific the model rarely hits it nor so general it means nothing. You find it by watching where the current system actually fails, which is circular, but still better than a weak or misleading aspect (*Prompt Engineering for LLMs*, ch. 10).
 
 ### Reference-based text metrics
 
@@ -163,6 +167,8 @@ For judges and humans, prefer **binary pass/fail** per dimension over 1–5 scal
 - Rates of binary outcomes have simple statistics ([09](09-reading-results.md)).
 
 Use an ordinal scale only when the levels are each *described* (what a 2 looks like vs. a 4), and only when the extra resolution changes a decision. If you have a scale, you can always threshold it into pass/fail later.
+
+Not everyone agrees. Berryman & Ziegler argue for judges to drop yes/no in favor of a described 1–5 scale. A bare "is it right?" leaves the bar to the judge, which may then hold ambitious answers to a stricter standard than safe ones, or pass mostly-right answers while failing near-perfect ones (*Prompt Engineering for LLMs*, ch. 10). Both camps blame the same failure, a bar the judge has to guess. Binary with written PASS/FAIL definitions and a scale with each level described both fix it.
 
 ---
 

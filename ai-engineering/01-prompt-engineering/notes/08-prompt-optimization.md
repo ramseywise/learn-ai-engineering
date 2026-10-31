@@ -3,12 +3,12 @@ origin: synthesis
 sources:
   - https://www.promptingguide.ai/techniques/ape
   - https://www.promptingguide.ai/techniques/meta_prompting
-  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 5, Ch 9"
+  - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 4, Ch 5, Ch 6, Ch 9"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://arxiv.org/abs/2309.03409
   - https://arxiv.org/abs/2406.07496
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 8 — Prompt Optimization
 
@@ -138,7 +138,7 @@ Huyen's three warnings (*AI Engineering*, ch. 5):
 Before reaching for a framework:
 
 1. **Find the failure category** in the eval results — format, missing context, wrong reasoning, instruction ignored.
-2. **Fix the cheapest layer first**: clarity of the instruction ([02](02-prompt-anatomy.md#writing-instructions)) → missing context → ordering → examples → CoT → splitting the task ([06](06-chaining-and-workflows.md)) → a stronger model → fine-tuning.
+2. **Fix the cheapest layer first**: clarity of the instruction ([02](02-prompt-anatomy.md#writing-instructions)) → missing context → ordering → examples → CoT → splitting the task ([06](06-chaining-and-workflows.md)) → a stronger model → fine-tuning. Ordering includes the assembly's knobs: the priority tiers, scores and elastic versions that decide which snippets make the cut are parameters to tune against the eval like any wording (book, Ch 6; [02](02-prompt-anatomy.md#formatting-injected-content)). A stronger model costs money and latency. When the book was written, GPT-4 could cost 20 times as much as gpt-3.5-turbo, and early Copilot chose the small, fast Codex model because users would not wait for a bigger one (book, Ch 4).
 3. **Change one thing at a time** and re-score.
 4. **Keep the losers.** Recording what didn't work stops you re-trying it.
 

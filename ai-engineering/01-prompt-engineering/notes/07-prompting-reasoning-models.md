@@ -7,7 +7,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 11"
   - https://arxiv.org/abs/2505.11423
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
 # 7 — Prompting Reasoning Models
 
@@ -113,9 +113,15 @@ Use deep research only for multi-source, time-sensitive questions that need care
 
 ## Intelligence trends (and what they don't fix)
 
-- **Benchmarks saturate.** Frontier models ace MMLU, HellaSwag, GSM8K and similar benchmarks. Partly the models are better, and partly benchmark text leaks into training data (contamination). The fixes are rotating leaderboards and **non-memorizable** tests such as ARC-AGI, which are generated from an effectively unbounded space. For your own app this means **public scores don't predict your task.** Build your own eval ([09](09-evaluating-prompts.md)).
-- **Cheaper and faster.** In **distillation**, a small student learns from a large teacher's full next-token distribution rather than from single labels. **Quantization** stores weights in 8 bits instead of 32. Both cut cost and latency for a modest loss of accuracy.
-- **Plan for the trend.** Cost, latency and context-window limits keep improving, so don't over-engineer around today's limits. Intelligence gains don't fill in missing context, though (see below).
+The book went to press in 2024, before the first reasoning models (o1 shipped in September 2024). Its only nod to them is that better RLHF was making chat models "express their chain-of-thought reasoning" more. Read its forecasts as a 2024 baseline.
+
+- **Benchmarks saturate.** Leading models ace MMLU, HellaSwag, GSM8K and similar benchmarks. Partly the models are better, and partly benchmark text leaks into training data (contamination). The book's fixes are refreshed leaderboards (it names the Open LLM Leaderboard 2, since retired) and tests built to resist memorization, such as ARC-AGI. The book calls ARC-AGI "algorithmically generated" and impossible to memorize. In fact its puzzles are hand-designed and protected by a private test set, and even it gave way: in December 2024 o3 scored 76% on ARC-AGI-1's semi-private set (88% at high compute), and ARC-AGI-2 replaced it in 2025. For your own app this means **public scores don't predict your task.** Build your own eval ([09](09-evaluating-prompts.md)).
+
+  ![Benchmark saturation](../sources/images/berryman-prompt-engineering-for-llms-fig11-2.png)
+  *Top scores on the Hugging Face Open LLM Leaderboard (v1, open models), Sep 2023 to May 2024. Thin lines are human baselines. GSM8K went from under 10 to the human line in under a year. Image Source: Berryman & Ziegler (2024), Fig. 11-2*
+
+- **Cheaper and faster.** In **distillation**, a small student learns from a large teacher's full next-token distribution rather than from single labels. **Quantization** stores weights in fewer bits. The book says 8 bits instead of 32, but LLM weights are normally held in 16-bit formats, so in practice it is 8 or 4 bits instead of 16. Both cut cost and latency for a modest loss of accuracy.
+- **Plan for the trend.** The book's 2024 bet: what is too expensive, too slow, too long for the context or too hard for the model today will not be tomorrow, so don't over-engineer around today's limits. Cost per token and window size have moved that way since. A window that holds the input is not a model that uses all of it well, though, and intelligence gains don't fill in missing context (see below).
 
 ---
 
@@ -124,7 +130,7 @@ Use deep research only for multi-source, time-sensitive questions that need care
 The book's closing lessons hold for reasoning models too — maybe more so:
 
 - **It's still document completion** that mimics training data. Familiar formats still win.
-- **It isn't psychic.** Smarter models don't fix missing context. If *you* would need a piece of information to solve the problem, so does the model ([02-context](../../02-context-engineering/README.md)).
+- **It isn't psychic.** Smarter models don't fix missing context. If *you* would need a piece of information to solve the problem, so does the model. Put it in the prompt, or give the model the tools and instructions to fetch it ([02-context](../../02-context-engineering/README.md)).
 - **It's easily distracted.** Irrelevant context costs more when the model reasons over all of it.
 - **It must be able to decipher the prompt.** If a human couldn't parse the fully rendered prompt, the model probably can't either.
 - **It needs to be led** — on goals and constraints now, rather than on steps.
