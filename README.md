@@ -31,7 +31,7 @@ Generative AI builds things with LLMs; AI Engineering is the discipline that mak
 
 Reference papers and book chapters sit in the `sources/` folder of the pillar that uses them, for
 example [`generative-ai/01-llm-fundamentals/sources/`](generative-ai/01-llm-fundamentals/sources/).
-New PDFs land in the inbox at [`scripts/readings/`](scripts/readings/), and the
+New PDFs land in the inbox at [`scripts/papers/inbox/`](scripts/papers/inbox/), and the
 `/readings` skill routes them to their home. External links (courses, books, papers, tools) are in
 each pillar's `references.md`, the
 [general resources](generative-ai/README.md#general-resources) list and

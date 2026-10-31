@@ -37,7 +37,7 @@ papers:  ## Fetch new AI Papers of the Week, scan repo PDFs, triage, download in
 papers-status:  ## Paper ledger counts by status
 	@python3 scripts/papers/potw.py status
 
-papers-route:  ## Move triaged PDFs from the scripts/readings/ inbox to their home's sources/ [APPLY=1]
+papers-route:  ## Move triaged PDFs from the scripts/papers/inbox/ to their home's sources/ [APPLY=1]
 	@python3 scripts/papers/potw.py route $(if $(APPLY),--apply)
 
 papers-install:  ## Install the weekly launchd job (Monday 11:00)

@@ -15,7 +15,7 @@ A *home* is the folder whose notes a reading feeds (HOMES below): the ai-enginee
 generative-ai pillars, plus data-science and data-engineering for classical ML and ML
 systems. `pillar` in the ledger is the home key. `note` and `local_pdf` are repo-relative.
 
-Ledger: scripts/readings/ledger.jsonl, one reading per line — the single source of
+Ledger: scripts/papers/ledger.jsonl, one reading per line — the single source of
 truth for what we have and where it came from. `source` is "dair" (fetched from AI Papers
 of the Week) or "repo" (a PDF found in the repo). Keyed by arXiv id, else the DAIR URL,
 else `sha1:<hash>` of the file, so moving a PDF keeps its row. Every triaged paper gets a
@@ -59,11 +59,11 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 AI_ENG = REPO / "ai-engineering"
-READINGS = REPO / "scripts" / "readings"
+READINGS = REPO / "scripts" / "papers"  # the ledger and blurbs live next to this script
 LEDGER = READINGS / "ledger.jsonl"
 # summaries/abstracts for triage, one file per year to stay under the pre-commit size limit
 BLURBS = READINGS / "blurbs"
-INBOX = "scripts/readings/"  # PDFs dropped here wait for `route`
+INBOX = "scripts/papers/inbox/"  # PDFs dropped here wait for `route`
 # empty fields aren't written to the ledger; load_ledger puts these back as None
 FIELDS = ("arxiv", "url", "pillar", "note", "topic", "local_pdf", "copies", "sha1")
 RAW_URL = "https://raw.githubusercontent.com/dair-ai/AI-Papers-of-the-Week/main/years/{year}.md"
@@ -216,18 +216,22 @@ def _read_ledger():
         r.pop("pdf", None)  # old rows: AI_ENG-relative copy of local_pdf
         if r.get("note") and not r["note"].startswith(tuple(f"{f.split('/')[0]}/" for f in PILLARS.values())):
             r["note"] = f"ai-engineering/{r['note']}"  # old rows: notes were AI_ENG-relative
-        for k in ("local_pdf", "copies"):  # readings/ moved from ai-engineering/ to scripts/
-            old = "ai-engineering/readings/"
-            if isinstance(r.get(k), str) and r[k].startswith(old):
-                r[k] = INBOX + r[k][len(old):]
-            elif isinstance(r.get(k), list):
-                r[k] = [INBOX + c[len(old):] if c.startswith(old) else c for c in r[k]]
+        for k in ("local_pdf", "copies"):  # the inbox moved: ai-engineering/readings/, scripts/readings/
+            r[k] = (move_inbox(r[k]) if isinstance(r.get(k), str)
+                    else [move_inbox(c) for c in r[k]] if isinstance(r.get(k), list) else r.get(k))
         if r.get("topic") == "applications":
             r["topic"] = "domain-apps"  # renamed when agentic-apps got a home
         for k in FIELDS:
             r.setdefault(k, None)
         r.setdefault("have_pdf", False)
     return rows
+
+
+def move_inbox(path):
+    for old in ("ai-engineering/readings/", "scripts/readings/"):
+        if path.startswith(old):
+            return INBOX + path[len(old):]
+    return path
 
 
 def empty(v):
@@ -465,6 +469,8 @@ def triage_status(r, min_relevance):
     # a PDF already in the repo only needs a home; a DAIR paper must earn its download
     floor = 1 if r["source"] == "repo" or r.get("local_pdf") else min_relevance
     if r.get("pillar"):
+        if interest == 0 and r.get("interest") is not None and rel < 2:  # boilerplate, a sample file
+            return "skipped"
         if rel >= floor or interest >= 3:  # a landmark paper is queued even if no note fits yet
             return "queued"
         return "parked" if interest >= 2 else "skipped"
@@ -476,7 +482,7 @@ def triage_status(r, min_relevance):
 def cmd_cite(args):
     """Citation counts for every row with an arXiv id, from Semantic Scholar (100 ids a call)."""
     rows = load_ledger()
-    todo = [r for r in rows if r.get("arxiv") and (getattr(args, "refresh", False) or r.get("citations") is None)]
+    todo = [r for r in rows if r.get("arxiv") and (getattr(args, "refresh", False) or not r.get("cited_at"))]
     now = dt.datetime.now().isoformat(timespec="seconds")
     got = 0
     for i in range(0, len(todo), 100):
@@ -484,7 +490,10 @@ def cmd_cite(args):
         body = json.dumps({"ids": [f"ARXIV:{re.sub(r'v\d+$', '', r['arxiv'])}" for r in batch]}).encode()
         for wait in (0, 5, 30, 90):
             time.sleep(wait)
-            req = urllib.request.Request(S2_BATCH, data=body, headers={"Content-Type": "application/json", "User-Agent": USER_AGENT})
+            headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT}
+            if os.environ.get("S2_API_KEY"):  # a free key lifts the shared rate limit
+                headers["x-api-key"] = os.environ["S2_API_KEY"]
+            req = urllib.request.Request(S2_BATCH, data=body, headers=headers)
             try:
                 with urllib.request.urlopen(req, timeout=120) as resp:
                     found = json.load(resp)
@@ -496,8 +505,9 @@ def cmd_cite(args):
             log("cite: Semantic Scholar kept answering 429; try again later")
             break
         for r, f in zip(batch, found):
-            if f:  # null when Semantic Scholar doesn't know the id
-                r.update(citations=f.get("citationCount"), influential=f.get("influentialCitationCount"), cited_at=now)
+            r["cited_at"] = now  # f is null when Semantic Scholar doesn't know the id
+            if f:
+                r.update(citations=f.get("citationCount"), influential=f.get("influentialCitationCount"))
                 got += 1
         save_ledger(rows)
         log(f"cite: {min(i + 100, len(todo))}/{len(todo)} looked up")
@@ -927,10 +937,16 @@ def cmd_status(args):
 def cmd_mark(args):
     rows = load_ledger()
     hits = [r for r in rows if r["key"] in args.keys]
+    if args.home and args.home not in HOMES:
+        sys.exit(f"mark: unknown home {args.home!r}; one of {', '.join(HOMES)}")
+    if args.note and not (args.home and (REPO / args.note).is_file() and args.note.startswith(PILLARS[args.home] + "/")):
+        sys.exit(f"mark: --note must be an existing note under {PILLARS.get(args.home, '--home')}/")
     for r in hits:
         r["status"] = args.status
+        if args.home:  # a home set by hand: triage leaves it alone unless re-run on this status
+            r.update(pillar=args.home, topic=args.home, note=args.note, reason=f"homed by hand: {args.why or ''}".strip())
     save_ledger(rows)
-    print(f"marked {len(hits)} as {args.status}")
+    print(f"marked {len(hits)} as {args.status}" + (f" in {args.home}" if args.home else ""))
 
 
 def cmd_run(args):
@@ -983,6 +999,9 @@ def main():
     p = sub.add_parser("mark")
     p.add_argument("status", choices=["new", "queued", "parked", "skipped", "downloaded", "link-only", "filed", "integrated"])
     p.add_argument("keys", nargs="+")
+    p.add_argument("--home", help="also set the home (a HOMES key), e.g. to place a parked paper")
+    p.add_argument("--note", help="the note it feeds (repo-relative), with --home")
+    p.add_argument("--why", help="one line kept as the row's reason, with --home")
     p.set_defaults(fn=cmd_mark)
     args = ap.parse_args()
     args.fn(args)

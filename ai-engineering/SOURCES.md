@@ -87,7 +87,7 @@ Landed in the 2026-07-31 sweep:
 
 Automated. A weekly launchd job (`com.wiseer.potw`, Monday 11:00) reads
 [dair-ai/AI-Papers-of-the-Week](https://github.com/dair-ai/AI-Papers-of-the-Week) from GitHub,
-records every paper in [scripts/readings/ledger.jsonl](../scripts/readings/ledger.jsonl), triages it to a
+records every paper in [scripts/papers/ledger.jsonl](../scripts/papers/ledger.jsonl), triages it to a
 pillar and note, and downloads relevant arXiv PDFs into that pillar's `sources/`. `/papers` then
 writes the findings into the notes. See [scripts/papers/potw.py](../scripts/papers/potw.py).
 

@@ -6,7 +6,7 @@ description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week 
 You are integrating research papers into the AI-engineering course notes. The weekly job
 (`scripts/papers/potw.py run`, launchd `com.wiseer.potw`) has already fetched DAIR's AI
 Papers of the Week, triaged each paper to a home and note, and downloaded the PDF into
-the home's `sources/`. PDFs that were already in the repo (the `scripts/readings/`
+the home's `sources/`. PDFs that were already in the repo (the `scripts/papers/inbox/`
 inbox) are triaged the same way and moved home by `potw.py route`. Homes are the keys of
 `HOMES` in `scripts/papers/potw.py`: the six ai-engineering pillars plus `inference`
 (`ai-engineering/07-inference-engineering/`), the generative-ai pillars (`rag`, `agents`,
@@ -28,7 +28,7 @@ python3 scripts/papers/potw.py status --list queued   # repo PDFs: already local
 
 Each line is JSON: `key`, `title`, `pillar` (the home key), `note` (repo-relative path, or
 null), `relevance`, `pdf` (repo-relative local PDF), `reason`, `url`. Take queued rows only
-when `pdf` is set and outside `scripts/readings/`; if a queued PDF still sits in the
+when `pdf` is set and outside `scripts/papers/inbox/`; if a queued PDF still sits in the
 inbox, run `python3 scripts/papers/potw.py route --apply` first. Skip rows whose `pdf` is a
 book chapter (`sources/<book-slug>/chNN-…`); those belong to `/chapter`. Filter by
 `$ARGUMENTS` if given: a home key (`loop`, `rag`), one or more keys / arXiv ids, `cited`
