@@ -133,6 +133,16 @@ Better options:
 | Partial dependence / ICE | Average prediction as one feature varies | `sklearn.inspection.PartialDependenceDisplay` |
 | SHAP values | Game-theoretic per-prediction attribution; sums to prediction − baseline; `TreeExplainer` is exact and fast for trees | `shap` library |
 
+**Readings on explanation** (in `../sources/`):
+
+| Paper | Use it for |
+|---|---|
+| Ribeiro et al. 2016, *"Why Should I Trust You?"* ([PDF](../sources/ribeiro-2016-why-should-i-trust-you.pdf)) | LIME: local surrogate models around one prediction ([13](13-sentiment-analysis.md) applies it to text) |
+| Lundberg & Lee 2017, *A Unified Approach to Interpreting Model Predictions* ([PDF](../sources/lundberg-2017-unified-approach-interpreting-model-predictions.pdf)) | SHAP: shows LIME, DeepLIFT and others are additive feature attributions and Shapley values are the unique one with consistency guarantees |
+| Lipton 2016, *The Mythos of Model Interpretability* ([PDF](../sources/lipton-2016-mythos-model-interpretability.pdf)) | What "interpretable" can mean (transparency vs post-hoc explanation) and why the word is used loosely |
+| Miller 2017, *Explanation in AI: Insights from the Social Sciences* ([PDF](../sources/miller-2017-explanation-artificial-intelligence.pdf)) | People want contrastive, selective explanations ("why this and not that"), not full attributions |
+| Dodge et al. 2019, *Explaining Models* ([PDF](../sources/dodge-2019-explaining-models.pdf)); *Are Explanations Helpful?* ([PDF](../sources/explanations-helpful-comparative-study-effects-explanations.pdf)) | User studies: explanation style changes fairness judgments and reliance, and explanations do not reliably improve human–AI decisions |
+
 ---
 
 ## Stacking and voting

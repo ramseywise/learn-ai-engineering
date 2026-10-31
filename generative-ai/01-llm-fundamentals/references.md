@@ -51,8 +51,8 @@ cleaned: 2026-10-31
 
 | | Paper | arXiv | PDF | Maps to |
 |---|---|---|---|---|
-| ★ | Vaswani et al., *Attention Is All You Need* (2017) | [1706.03762](https://arxiv.org/abs/1706.03762) | — | 01 |
-| | Devlin et al., *BERT* (2018) | [1810.04805](https://arxiv.org/abs/1810.04805) | — | 01 |
+| ★ | Vaswani et al., *Attention Is All You Need* (2017) | [1706.03762](https://arxiv.org/abs/1706.03762) | ✓ [vaswani-2017-attention-all-you-need.pdf](sources/vaswani-2017-attention-all-you-need.pdf) | 01 |
+| | Devlin et al., *BERT* (2018) | [1810.04805](https://arxiv.org/abs/1810.04805) | ✓ [devlin-2018-bert.pdf](sources/devlin-2018-bert.pdf) | 01 |
 | | Holtzman et al., *The Curious Case of Neural Text Degeneration* (nucleus sampling, 2019) | [1904.09751](https://arxiv.org/abs/1904.09751) | — | 01 |
 | ★ | Kaplan et al., *Scaling Laws for Neural Language Models* (2020) | [2001.08361](https://arxiv.org/abs/2001.08361) | — | 01 |
 | ★ | Brown et al., *Language Models are Few-Shot Learners* (GPT-3, 2020) | [2005.14165](https://arxiv.org/abs/2005.14165) | — | 01, 03 |
@@ -70,6 +70,23 @@ cleaned: 2026-10-31
 | | Kojima et al., *Large Language Models are Zero-Shot Reasoners* (2022) | [2205.11916](https://arxiv.org/abs/2205.11916) | ✓ [kojima-2022-zero-shot-reasoners.pdf](sources/kojima-2022-zero-shot-reasoners.pdf) | 03 |
 | | Yao et al., *ReAct* (2022) | [2210.03629](https://arxiv.org/abs/2210.03629) | in [05-RL/sources](../05-RL/references.md#core-papers) | 03 |
 | | Manakul et al., *SelfCheckGPT* (2023) | [2303.08896](https://arxiv.org/abs/2303.08896) | ✓ [manakul-2023-selfcheckgpt.pdf](sources/manakul-2023-selfcheckgpt.pdf) | 01 |
+
+### Routed in, not yet integrated
+
+Placed in [sources/](sources/) by the readings router (`scripts/papers/potw.py route`) on 2026-10-31 and queued in the ledger for `/papers` and `/chapter`. Not yet folded into the notes.
+
+| Source | arXiv | PDF | Likely note |
+|---|---|---|---|
+| Huyen, *AI Engineering* (O'Reilly, 2025), ch. 1 Introduction to Building AI Applications with Foundation Models | — | [ch01](sources/huyen-ai-engineering/ch01-introduction-building-ai-applications-foundation-models.pdf) | 01, 02 |
+| Huyen, *AI Engineering*, ch. 2 Understanding Foundation Models | — | [ch02](sources/huyen-ai-engineering/ch02-understanding-foundation-models.pdf) | 01, 02 |
+| *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt), ch. 2 The Transformer | — | [ch02](sources/building-ai-agents-llms-rag-kgs/ch02-transformer-model-behind-modern-ai-revolution.pdf) | 01 |
+| Same book, ch. 3 Exploring LLMs as a Powerful AI Engine | — | [ch03](sources/building-ai-agents-llms-rag-kgs/ch03-exploring-llms-as-powerful-ai-engine.pdf) | 01, 02 |
+| Mikolov et al., *Efficient Estimation of Word Representations* (word2vec, 2013) | [1301.3781](https://arxiv.org/abs/1301.3781) | [mikolov-2013-…](sources/mikolov-2013-efficient-estimation-word-representations-vector.pdf) | 01 |
+| Press et al., *Train Short, Test Long* (ALiBi, 2021) | [2108.12409](https://arxiv.org/abs/2108.12409) | [press-2021-…](sources/press-2021-train-short-test-long.pdf) | 01 |
+| Goodfellow et al., *Generative Adversarial Networks* (2014) | [1406.2661](https://arxiv.org/abs/1406.2661) | [goodfellow-2014-…](sources/goodfellow-2014-generative-adversarial-networks.pdf) | — (generative models beyond text) |
+| Kingma & Welling, *Auto-Encoding Variational Bayes* (2013) | [1312.6114](https://arxiv.org/abs/1312.6114) | [kingma-2013-…](sources/kingma-2013-auto-encoding-variational-bayes.pdf) | — |
+| Dosovitskiy et al., *An Image is Worth 16x16 Words* (ViT, 2020) | [2010.11929](https://arxiv.org/abs/2010.11929) | [dosovitskiy-2020-…](sources/dosovitskiy-2020-image-worth-16x16-words.pdf) | — |
+| Rombach et al., *High-Resolution Image Synthesis with Latent Diffusion Models* (2021) | [2112.10752](https://arxiv.org/abs/2112.10752) | [rombach-2021-…](sources/rombach-2021-high-resolution-image-synthesis-latent.pdf) | — |
 
 ### Held here, used elsewhere
 
