@@ -7,6 +7,8 @@ sources:
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/rising-wave.md
   - https://dlthub.com/docs/intro
   - https://kafka.apache.org/documentation/
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 3"
+  - https://github.com/PacktPublishing/LLM-Engineers-Handbook
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -286,6 +288,41 @@ Swap the broker, keep the client code: that is the practical meaning of "Kafka A
 ## Streaming SQL: RisingWave (Workshop 2)
 
 Workshop 2 ("Stream processing with SQL") uses RisingWave, a Postgres-wire-compatible streaming database. You create a source over a Kafka topic and define `CREATE MATERIALIZED VIEW ... AS SELECT ...`; the engine maintains the view incrementally as events arrive, so a dashboard query reads a precomputed answer. It sits between ksqlDB (stream-native SQL) and a warehouse (batch SQL), and it is the course's only example of serving a continuously updated aggregate with plain SQL. Workshop materials live upstream only: [rising-wave.md](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/rising-wave.md).
+
+---
+
+## Unstructured ingest: crawling documents for an LLM
+
+The zoomcamps ingest tables. An LLM application usually ingests documents: articles, repos and posts scraped from the web. The *LLM Engineer's Handbook* builds this as an ordinary ETL into a document store, and three of its design choices transfer (*LLM Engineer's Handbook*, ch. 3):
+
+- **Normalize by content type, not by source.** Every crawler emits one of three document classes (article, repository, post), with the source URL kept in metadata. Adding a new site means one new crawler. If each source got its own document class, every downstream layer would need code for it.
+- **Dispatch on the URL's domain, with a fallback.** A registry maps domain patterns to crawler classes. Anything unmatched goes to a generic HTML crawler.
+- **A schemaless store is fine at small scale.** MongoDB as the "warehouse" suits hundreds of heterogeneous text documents. The authors say to move to Snowflake or BigQuery at millions. The feature pipeline reads from this store on its own schedule. The store is the only contract between the two.
+
+```python
+import re
+from urllib.parse import urlparse
+
+class CrawlerDispatcher:
+    def __init__(self):
+        self._registry: dict[str, type[BaseCrawler]] = {}
+
+    def register(self, domain: str, crawler: type[BaseCrawler]) -> "CrawlerDispatcher":
+        self._registry[rf"https://(www\.)?{re.escape(domain)}/*"] = crawler
+        return self
+
+    def get_crawler(self, url: str) -> BaseCrawler:
+        for pattern, crawler in self._registry.items():
+            if re.match(pattern, url):
+                return crawler()
+        return CustomArticleCrawler()          # generic fallback: fetch HTML, extract text
+
+dispatcher = (CrawlerDispatcher()
+              .register("medium.com", MediumCrawler)
+              .register("github.com", GithubCrawler))
+```
+
+Count successes and attempts per domain on every run (the book's pipeline writes them into run metadata). A crawler that silently starts returning empty pages is the unstructured version of a source that stops sending. One caution the book skips: its Medium and LinkedIn crawlers log in and drive a browser with Selenium. That is fragile, and it is against those platforms' terms. Prefer official APIs, exports or RSS where they exist.
 
 ---
 

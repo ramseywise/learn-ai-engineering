@@ -7,6 +7,7 @@ sources:
   - https://www.promptingguide.ai/applications/pf
   - https://www.anthropic.com/research/building-effective-agents
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3, 10"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -54,6 +55,8 @@ Prompt 2 (answer)
 ```
 
 Each step can be tested and tuned separately, and you can add a third step (strip citations, translate, reformat) without touching the others. XML tags at the hand-off points make the parsing trivial ([04](04-controlling-output.md#structured-output)).
+
+**Least-to-most** is the chain for building something up in layers: ask for the architecture of a small Flask app, then the code for one route, then a test for that route, each prompt building on the last answer. Its weakness is the one every chain has, made worse by keeping state in chat history. A weak early answer starves every later step, and in a long run the first outputs fall out of the context window. Check each intermediate answer before you build on it (*Prompt Engineering for Generative AI*, ch. 3).
 
 ---
 
@@ -217,6 +220,12 @@ Orchestration at scale is covered in [03-harness](../../03-harness-engineering/n
 - Run that set as a regression harness before shipping any prompt change.
 - Once a task is live, record its real inputs and outputs too.
 - In production, sample traffic for quality drift and A/B test competing task implementations.
+
+**Chains fail quietly in the glue code.** Phoenix & Taylor's blog-writing chain (interview → outline → one section per subheading with retrieved web pages → style rewrite → image) shows three ways (*Prompt Engineering for Generative AI*, ch. 10):
+
+- **A format rule the model can't follow.** Their starting single prompt asks for "a minimum of 9 sections" of "a minimum of two paragraphs". They predict the model will ignore it, because models are bad at counting. Moving to one call per outline subheading fixes the count by construction.
+- **A retry loop that drops work.** The section loop retries retrieval with fewer documents (`k` = 5, 4, …) when a call raises. The text says it falls back to no documents if every attempt fails. But in the printed code the fallback only sets `relevant_documents = ""` after the loop has ended and never writes the section, so the post just loses it. The `except` also catches errors from the generation call itself, so a generation failure is misreported as a retrieval problem. Make each step either produce its output or fail loudly, and check the assembled result against the plan (one section per subheading).
+- **A template that never fills in.** The first image function sends `'''an illustration of "+prompt+". in Corporate Memphis ...'''`, a plain string, so the image API gets the literal text `"+prompt+"` and every image comes from the style words alone. A later version uses an f-string. Log the final rendered prompt for every call, not the template.
 
 ---
 

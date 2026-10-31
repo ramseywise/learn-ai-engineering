@@ -1,6 +1,7 @@
 ---
 origin: curated
-sources: []
+sources:
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 7, 9"
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -14,6 +15,7 @@ cleaned: 2026-10-31
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
+| ★ Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024). Chapter PDFs live in [generative-ai/01-llm-fundamentals/sources/prompt-engineering-for-generative-ai/](../../generative-ai/01-llm-fundamentals/sources/prompt-engineering-for-generative-ai/). Folded in as: ch. 7 (diffusion models) → [06](notes/06-generating-images-and-video.md#how-a-diffusion-model-makes-an-image), [provenance](notes/06-generating-images-and-video.md#provenance-and-training-data-risk); ch. 9 (Stable Diffusion) → [06](notes/06-generating-images-and-video.md#the-controls) controls, editing, customizing, hosted vs self-hosted. Corrected: LoRA "adds new layers"; SDXL's 6.6B is base + refiner. Dated: model lineup, LoRA "experimental". Ch. 8 (Midjourney) not used. Notes cite it as `(*Prompt Engineering for GenAI*, ch. N)` | ch. 7, 9 | ✓ (in generative-ai/01) | 06 |
 | Noyan, Marafioti, Farré, Zohar, *Vision Language Models: Building VLMs with Hugging Face* (O'Reilly, 2026). Not yet in the repo | the whole book: VLM architecture, document understanding, zero-shot use, multimodal RAG | not in repo | 02 · 03 · 04 |
 | Alammar & Grootendorst, *Hands-On Large Language Models* (O'Reilly, 2024). Not yet in the repo; code is Apache-2.0 at [HandsOnLLM](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models) | ch. 9 Multimodal LLMs | not in repo | 01 · 02 |
 

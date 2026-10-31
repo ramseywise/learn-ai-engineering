@@ -6,6 +6,7 @@ sources:
   - https://www.coursera.org/specializations/deep-learning
   - ../sources/buduma-fundamentals-of-deep-learning.pdf
   - https://www.tensorflow.org/guide/migrate
+  - "Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), appendix A"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -133,6 +134,38 @@ On the "moons" data, after the same epochs: mini-batch GD 79.7%, momentum 79.7%,
 ### Tensorflow Tutorial
 
 The course's first framework notebook: build a 3-layer softmax network for the SIGNS hand-gesture dataset in TF1 graph mode (placeholders, `tf.Session`, `tf.contrib.layers.xavier_initializer`). It is the notebook most broken by TF2; see the [migration section](#tensorflow-1x-to-2x-status-and-migration-map) below.
+
+### The PyTorch training loop
+
+The TF1 notebook's role in current code belongs to PyTorch. The loop is the same everywhere, and each line of it hides a common bug (*Build a Large Language Model (From Scratch)*, appendix A):
+
+```python
+train_loader = DataLoader(train_ds, batch_size=32, shuffle=True,
+                          drop_last=True,       # a tiny last batch gives a noisy final update
+                          num_workers=4)        # 0 = load in the main process; the GPU waits
+for epoch in range(num_epochs):
+    model.train()                               # dropout / batch-norm in training mode
+    for x, y in train_loader:
+        x, y = x.to(device), y.to(device)
+        logits = model(x)                       # no softmax: cross_entropy applies log-softmax itself
+        loss = F.cross_entropy(logits, y)
+        optimizer.zero_grad()                   # gradients accumulate across .backward() calls by default
+        loss.backward()
+        optimizer.step()
+    model.eval()
+    with torch.no_grad():                       # no graph built: less memory, faster
+        val_acc = (model(x_val).argmax(1) == y_val).float().mean()
+torch.save(model.state_dict(), "model.pth")      # weights only; rebuild the class, then load_state_dict
+```
+
+`num_workers=4` is Raschka's rule of thumb for real datasets. Keep it at 0 for tiny datasets and in notebooks, where worker processes cost more than they save and can crash the kernel. To go multi-GPU with `DistributedDataParallel`, run one process per GPU (from a script; DDP doesn't work inside Jupyter) and change four things:
+
+- call `init_process_group("nccl", rank=rank, world_size=world_size)` at startup;
+- wrap the model with `DDP(model.to(rank), device_ids=[rank])`;
+- give the loader `sampler=DistributedSampler(train_ds)` and `shuffle=False`, so each rank sees a disjoint shard;
+- call `train_loader.sampler.set_epoch(epoch)` every epoch, or every epoch reuses the same order.
+
+Gradients are averaged across replicas after each backward pass, so the replicas stay identical. [17](17-nanogpt.md) runs the same pattern at GPT-2 scale with `torchrun`.
 
 ---
 

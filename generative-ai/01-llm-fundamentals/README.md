@@ -33,9 +33,12 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 │   └── 01-typescript-sdk/  four runnable Anthropic SDK examples
 └── sources/                local PDFs (purchased chapters + papers)
     ├── build-a-large-language-model-from-scratch/   Raschka, ch. 1–7 + appendices A–B
+    ├── building-ai-agents-llms-rag-kgs/             Raieli & Iuculano, ch. 2–3
+    ├── huyen-ai-engineering/                        Huyen, ch. 1–2
     ├── learning-langchain/                          Oshin & Campos, ch. 1–11
     ├── llm-engineers-handbook/                      Iusztin & Labonne, ch. 1–12
-    └── prompt-engineering-for-generative-ai/        Phoenix & Taylor, ch. 1–10
+    ├── prompt-engineering-for-generative-ai/        Phoenix & Taylor, ch. 1–10
+    └── images/                                      figures used in the notes
 ```
 
 ---
@@ -44,8 +47,8 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 
 | # | Note | Covers |
 |---|---|---|
-| 01 | [How LLMs work](notes/01-how-llms-work.md) | Next-token prediction; BPE tokens; embeddings and positional encodings (learned, sinusoidal, RoPE); scaled dot-product, causal and multi-head attention; the transformer block and GPT stack; encoder vs decoder; scaling laws, GPT-3, Chinchilla, LLaMA, GPT-4; decoding (temperature, top-k, top-p); base vs assistant models |
-| 02 | [Training and adapting models](notes/02-training-and-adapting.md) | Pretraining loop and loss sanity checks; SFT (classification and instruction); InstructGPT recipe; RLHF/DPO/RLAIF in brief; LoRA, QLoRA and PEFT; prompt vs retrieve vs fine-tune; the FTI architecture |
+| 01 | [How LLMs work](notes/01-how-llms-work.md) | Next-token prediction; BPE tokens; embeddings and positional encodings (learned, sinusoidal, RoPE); scaled dot-product, causal and multi-head attention; the transformer block and GPT stack; encoder vs decoder; scaling laws, GPT-3, Chinchilla, LLaMA, GPT-4; where the parameters sit, weight tying, Pre-LN; prefill, decode and the KV cache; model size, memory, MoE and non-transformer alternatives; decoding (temperature, top-k, top-p, min-p), test-time compute and structured output; inconsistency and two hypotheses for hallucination; base vs assistant models |
+| 02 | [Training and adapting models](notes/02-training-and-adapting.md) | Pretraining loop, teacher forcing and loss sanity checks; an overfitting run; pretraining data and its limits; training compute and cost; Chinchilla in practice; SFT (classification and instruction) and its data cost; reward models and comparison data; InstructGPT recipe; RLHF/DPO/RLAIF in brief; LoRA, QLoRA, adapters and PEFT; quantization, pruning and distillation; prompt vs retrieve vs fine-tune; the FTI architecture |
 | 03 | [Prompting fundamentals](notes/03-prompting-fundamentals.md) | Why naive prompts fail; the five principles (direction, format, examples, evaluation, division of labor); chain-of-thought and zero-shot CoT; standard practices for lists, JSON/YAML, style unbundling, summarization, chunking, classification; links to technique depth |
 | 04 | [LangChain basics](notes/04-langchain-basics.md) | Chat models and messages; prompt templates; `with_structured_output` and output parsers; the Runnable interface; LCEL vs `@chain`; sequential and document chains; where the rest of *Learning LangChain* lives |
 | 05 | [Build a tiny GPT](notes/05-build-a-tiny-gpt.md) | Karpathy's Zero to Hero and Raschka mapped step by step; the nanoGPT config; bug-catching checks; what building it teaches |
@@ -83,7 +86,7 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 - [05-RL](../05-RL/README.md): the post-training stage of note 02 in depth (RLHF, DPO, Constitutional AI).
 - [04-agentic-frameworks](../04-agentic-frameworks/README.md): LangGraph, the step after note 04.
 
-**Books and courses:** Raschka (★), Phoenix & Taylor (★), Alammar & Grootendorst (★), *Learning LangChain*, *LLM Engineer's Handbook*, Karpathy Zero to Hero (★), CS336. Chapter → note mapping in [references.md](references.md).
+**Books and courses:** Raschka (★), Phoenix & Taylor (★), Huyen's *AI Engineering* (★), Alammar & Grootendorst (★), *Building AI Agents with LLMs, RAG, and Knowledge Graphs*, *Learning LangChain*, *LLM Engineer's Handbook*, Karpathy Zero to Hero (★), CS336. Chapter → note mapping in [references.md](references.md).
 
 **Practice**
 

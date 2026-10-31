@@ -4,6 +4,7 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - https://www.promptingguide.ai/applications/workplace_casestudy
   - https://arxiv.org/abs/2303.07142
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 10"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -16,6 +17,8 @@ cleaned: 2026-10-31
 ## Build the eval first
 
 The evaluation framework is the oldest part of the GitHub Copilot codebase — older than the prompts or the UI. Without one, every change is a guess. **Always log latency and token counts too**: they're cheap to capture and catch regressions that have nothing to do with quality.
+
+Phoenix & Taylor tell the Copilot story differently: its builders "admit their eval process was haphazard and messy (but it got the job done!)", which they use to argue that testing doesn't have to be systematic (*Prompt Engineering for Generative AI*, ch. 10). The two accounts can both be true, since a harness can exist early and still be messy. Berryman was on the Copilot team. Take the shared point, that some testing beats none, and build the harness anyway.
 
 What you're testing determines the shape of the eval:
 
@@ -39,6 +42,8 @@ There are two settings. **Offline** eval runs on example cases, needs no users a
 *Berryman & Ziegler, Fig 10-1.*
 
 **Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus wild guesses about why the PR was written. The fix for those was to ask for a paragraph on the functionality and a second on how it fits the project's goals, then show only the first ([04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
+
+Phoenix & Taylor's version of level 1 is a blind A/B in a notebook. They run each prompt variant 5 times, shuffle the 10 outputs, and rate each one thumbs-up or thumbs-down without seeing which prompt produced it. It surfaces problems fast. In their run the zero-shot prompt returned a numbered list where they wanted a comma-separated line, and they find a deviation in fewer than 10 runs as a rule (*Prompt Engineering for Generative AI*, ch. 1). It's a bug finder, not a way to pick a winner. Five samples per arm from one rater, who also wrote the prompts, can't separate two decent prompts ([06-eval/09](../../06-eval/notes/09-reading-results.md#how-many-tasks)). Their other observation is worth keeping: iterating against even a crude check often shows that much of a long prompt is superfluous or counterproductive, and the shorter prompt is cheaper and faster at the same quality.
 
 **Level 2 — the harness.** Hundreds to thousands of examples with **automatic scoring**, needed to see subtle effects. It has two independent problems: **where samples come from** and **how outputs are scored**.
 
@@ -64,6 +69,15 @@ From easiest to hardest to set up (the book's order, which is not an order of ri
    *No tool, the wrong tool, bad syntax, a wrong parameter name or an out-of-range value make the suggestion useless. A correct call with a different value (75–79°F) is probably fine. Image Source: Berryman & Ziegler (2024), Fig. 10-3*
 2. **Functional test.** Does it parse, compile, pass the repo's own unit tests, and call only tools that exist with correctly typed arguments? The domain supplies the oracle. Copilot replayed function bodies in open-source repos and ran each repo's test suite. A weaker version checks only that linters accept the code. Often too weak alone, but sometimes surprisingly strong.
 3. **LLM-as-judge** — for qualities like helpfulness and tone. See below.
+
+Cheap programmatic checks belong next to these. Phoenix & Taylor's list: cost and latency per prompt, the number of calls per task, classification accuracy against labels, hallucination measured as terms that appear in the output but nowhere in the context, refusal rate by matching known refusal phrases, resistance to known injection strings, and similarity to a reference (*Prompt Engineering for Generative AI*, ch. 1).
+
+**Similarity to a reference is the weakest of these, so read its results carefully.** Phoenix & Taylor score four prompts for rewriting text in Mike Taylor's style (the text says "five different prompt approaches" but lists four). The metric is the cosine distance between ada-002 embeddings of the output and of a hand-rewritten reference, on three topics (*Prompt Engineering for Generative AI*, ch. 10):
+
+![Average embedding distance per prompt variant and test case](../sources/images/prompt-engineering-for-generative-ai-fig10-1.png)
+*Image Source: Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 10-1*
+
+The one-shot "describe this writing sample" prompt (B) wins overall, 0.043 against the control's 0.052 (−17.75%). Before you act on a table like this, notice what it leaves out. It has three cases. It doesn't give the number of runs, though the text recommends 10 or more per case. It shows no spread, so a 0.009 difference has no error bar. And the winner changes with the case: D is best on Memetics, B on the other two. An embedding distance also rewards matching the topic and wording, and style is what's being tested. The authors' general advice is right: run several cases, many times each. The table just doesn't show that it was followed. For the same style task they suggest fine-tuning if you have enough samples (OpenAI recommends at least 50), or DSPy to search instructions and examples against your metric ([08](08-prompt-optimization.md)).
 
 **Decision checklist** (pick one of each):
 

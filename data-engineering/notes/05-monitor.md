@@ -5,6 +5,7 @@ sources:
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/04-analytics-engineering
   - https://docs.evidentlyai.com/
   - https://grafana.com/docs/grafana/latest/administration/provisioning/
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), appendix (MLOps principles)"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -36,6 +37,18 @@ MLOps 5.1 sorts monitoring into layers. Each needs a different signal and a diff
 | Pipeline freshness | Did data arrive? | Max `loaded_at` vs now | `dbt source freshness` |
 
 Prediction drift is the first alarm to wire up when labels arrive late. It needs no ground truth, and when the output distribution moves, something upstream moved.
+
+### Three kinds of drift
+
+Drift metrics are proxies: they flag trouble without labels by comparing a **reference window** (data the model is known to handle) with a **test window** (recent production data) (*LLM Engineer's Handbook*, appendix):
+
+| Drift | What moved | Typical response |
+|---|---|---|
+| Data (covariate) drift | P(inputs): new segment, pipeline bug, schema change | Fix upstream if it's a bug; otherwise consider retraining before quality drops |
+| Target drift | P(outputs): shape changes, classes appear or vanish | Often a schema change for the model head (add a class, an "unknown" bucket) rather than a retrain |
+| Concept drift | P(output \| input): the same inputs now mean something else | Retrain on recent data; arrives gradually, suddenly (an external event) or periodically (seasonality) |
+
+The test depends on the column: Kolmogorov–Smirnov for one numeric feature, chi-squared for a categorical one, one test per feature. Text and other embedded inputs are multivariate. The usual approach there is to reduce the embeddings of both windows and compare them with maximum mean discrepancy (MMD), a kernel distance between the two distributions. `alibi-detect` ships `KSDrift` and `MMDDrift`, and Evidently has embedding-drift methods too. Several kinds of drift can happen at once, which is why the per-column test suite below matters for finding the source.
 
 ---
 
@@ -188,7 +201,9 @@ Two things to change before production. Metrics are keyed by `begin + timedelta(
 
 `dashboards/data_drift.json` charts the three columns over `timestamp`: **Prediction drift**, **Number of drifted columns**, **Share of missing values**. Grafana alert rules on the same queries (for example `num_drifted_columns > 2` for two consecutive batches) close the loop. The MLOps project rubric gives full monitoring marks only when a threshold triggers an alert or a retraining run ([08](08-mlops-maturity-and-best-practices.md)); the Mage sensor in MLOps 3.4 is the retraining half.
 
-Give every alert an owner and an action (page, open a ticket, trigger retraining). An alert nobody acts on trains the team to ignore the channel, and requiring two consecutive breaches is the cheapest guard against one noisy batch.
+Give every alert an owner and an action (page, open a ticket, trigger retraining). An alert nobody acts on trains the team to ignore the channel, and requiring two consecutive breaches is the cheapest guard against one noisy batch. For statistical drift tests the p-value is the threshold, and the same trade-off applies: set it too loose and false positives drown the real ones.
+
+Before a drift alert triggers retraining, rule out the cheap explanations: is the data valid, did a schema change, is it one outlier? Retraining is the expensive response and fixes none of those (*LLM Engineer's Handbook*, appendix).
 
 ---
 

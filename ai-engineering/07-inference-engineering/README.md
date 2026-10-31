@@ -2,7 +2,7 @@
 
 > Depth layer. Summary: no dedicated interview guide yet; the closest is 9-system-design, from [00-start-here](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
 > Position in the stack: *the substrate every other layer runs on*.
-> Jump to: [Scope](#scope) · [Planned notes](#planned-notes) · [References](#references)
+> Jump to: [Scope](#scope) · [Reading order](#reading-order) · [References](#references)
 
 ---
 
@@ -37,29 +37,28 @@ without turning into a GPU course.
 
 ---
 
-## Planned notes
+## Reading order
 
 Notes are written from the sources by the `/chapter` skill, one source chapter at a time.
-The outline below is the target; rename or merge as the material dictates.
 
 | # | Note | Main sources |
 |---|---|---|
-| 01 | Why inference is its own discipline: latency, throughput, cost | Huyen ch. 9; *AI Systems Performance Engineering* ch. 1 |
-| 02 | The hardware: GPUs, memory hierarchy, interconnect | ch. 2, 6 |
-| 03 | The platform: OS, containers, Kubernetes, storage, networking | ch. 3–5 |
-| 04 | Kernels: occupancy, memory access, arithmetic intensity, pipelining | ch. 7–12 |
-| 05 | Compilers and frameworks: PyTorch profiling, torch.compile, Triton, XLA | ch. 13–14 |
-| 06 | Serving at scale: batching, routing, multi-node inference | ch. 15–16 |
-| 07 | Prefill, decode and the KV cache | ch. 17–18 |
-| 08 | Adaptive inference: speculative decoding, quantization, early exit | ch. 19; Huyen ch. 9 |
-| 09 | Checklist and AI-assisted tuning | ch. 20, appendix |
+| 01 | [Why inference is its own discipline: latency, throughput, cost](notes/01-why-inference-is-its-own-discipline.md) | Huyen ch. 9; *AI Systems Performance Engineering* ch. 1 |
+| 02 | [The hardware: GPUs, memory hierarchy, interconnect](notes/02-the-hardware.md) | ch. 2, 6 |
+| 03 | [The platform: OS, containers, Kubernetes, storage, networking](notes/03-the-platform.md) | ch. 3–5 |
+| 04 | [Kernels: occupancy, memory access, arithmetic intensity, pipelining](notes/04-kernels.md) | ch. 7–12 |
+| 05 | [Compilers and frameworks: profiling, torch.compile, Triton, XLA](notes/05-compilers-and-frameworks.md) | ch. 13–14; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8 |
+| 06 | [Serving at scale: deployment, batching, routing, parallelism, autoscaling](notes/06-serving-at-scale.md) | ch. 15–16; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8, 10 |
+| 07 | [Prefill, decode and the KV cache](notes/07-prefill-decode-kv-cache.md) | ch. 17–19; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8 |
+| 08 | [Adaptive inference: speculative decoding, quantization, early exit](notes/08-adaptive-inference.md) | ch. 15, 16, 19; Huyen ch. 9; *LLM Engineer's Handbook* ch. 8 |
+| 09 | [Checklist and AI-assisted tuning](notes/09-checklist-and-ai-assisted-tuning.md) | ch. 20, appendix |
 
 ---
 
 ## Layout
 
 ```
-notes/                       topic notes (see Planned notes)
+notes/                       topic notes (see Reading order)
 references.md                papers and books, mapped to notes
 sources/<book-slug>/chNN-*.pdf   book chapters
 sources/<author-year-slug>.pdf   papers
