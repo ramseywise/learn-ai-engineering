@@ -6,6 +6,7 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8, 10"
   - https://www.usenix.org/conference/osdi22/presentation/yu
   - https://arxiv.org/abs/2309.06180
+  - https://arxiv.org/abs/2305.05176
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -81,7 +82,7 @@ With more than one replica, the router decides latency as much as the GPU does.
 
 - **Round-robin is a poor default for LLMs.** The Handbook's autoscaling design puts an ALB in front of replicas with round-robin (*LLM Engineer's Handbook*, ch. 10). Requests differ in cost by orders of magnitude, and replicas differ in which prefixes they already have cached. Route by **load** (queue depth, KV utilization) and by **cache affinity** (send a request to the replica holding its prefix). Fregly covers both (*AISPE*, ch. 17), and llm-d and Dynamo's router implement them ([07](07-prefill-decode-kv-cache.md#prefix-caching)).
 - **Length-aware batching.** Self-attention prefill cost grows roughly with N(N+1)/2. In Fregly's example, six prompts of [6K, 2K, 6K, 2K, 2K, 2K] split naively across two GPUs put both 6K prompts on one GPU: ~38.0M Q·K products on the critical path. Rebalanced as [2K, 2K, 6K] on each GPU, the critical path drops to ~22.0M, **42% less**, and TTFT falls with it (*AISPE*, ch. 16).
-- **Model cascades.** Send easy queries to a small model and escalate on low confidence. Fregly's claim: routing 60% of queries to a 10× smaller model gives "potentially a 5× overall cost reduction". The arithmetic does not support 5×. Relative cost is 0.6 × 0.1 + 0.4 × 1 = 0.46, about **2.2×**, and less if escalated queries pay for both models. The idea is sound; the number is not. Cascades also move cost into routing quality, which is an eval problem ([06-eval](../../06-eval/README.md)).
+- **Model cascades.** Send easy queries to a small model and escalate on low confidence. Fregly's claim: routing 60% of queries to a 10× smaller model gives "potentially a 5× overall cost reduction". The arithmetic does not support 5×. Relative cost is 0.6 × 0.1 + 0.4 × 1 = 0.46, about **2.2×**, and less if escalated queries pay for both models. The idea is sound; the number is not. FrugalGPT measured a real cascade over 12 commercial APIs at March 2023 prices, with a small DistilBERT scorer deciding when to escalate: it matched GPT-4's accuracy at 98.3% lower cost on HEADLINES and 59–73% lower on two other short-answer tasks ([arXiv:2305.05176](https://arxiv.org/abs/2305.05176) (Chen et al., 2023-05)). The scorer needs labelled in-distribution examples, and latency was not measured. Cascades also move cost into routing quality, which is an eval problem ([06-eval](../../06-eval/README.md)).
 
 ---
 

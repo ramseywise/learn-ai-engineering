@@ -9,6 +9,10 @@ sources:
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Chip Huyen, AI Engineering (O'Reilly, 2025), ch. 6"
+  - https://arxiv.org/abs/2506.02153
+  - https://arxiv.org/abs/2512.16301
+  - https://pub.sakana.ai/ai-scientist-v2/paper/paper.pdf
+  - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -143,7 +147,7 @@ The same frame gives an **autonomy spectrum**:
 - A tool-calling agent is an HSM with a `WORKING` loop: multi-step, with reflection and memory.
 - A multi-agent system is a set of subgraphs under a supervisor superstate.
 
-Nearly every production system sits in the middle. Koenigstein calls this **orchestrated autonomy**: the model chooses freely inside regions you designed, but it cannot redesign its control graph, invent new topologies or reliably create its own tools. AI Scientist v2 shows how far that goes today. It submitted three papers to an ICLR 2025 workshop and one was accepted, at workshop level, not the main track. Reviewers found methodological gaps and shallow analysis, and the system still made citation errors and misleading figure descriptions (*AI Agents: The Definitive Guide*, ch. 1).
+Nearly every production system sits in the middle. Koenigstein calls this **orchestrated autonomy**: the model chooses freely inside regions you designed, but it cannot redesign its control graph, invent new topologies or reliably create its own tools. AI Scientist v2 shows how far that goes today. It submitted three papers to an ICLR 2025 workshop and one was accepted, at workshop level, not the main track. Reviewers found methodological gaps and shallow analysis, and the system still made citation errors and misleading figure descriptions (*AI Agents: The Definitive Guide*, ch. 1). Sakana's own paper shows how much of the run was orchestrated. An experiment-manager agent runs best-first tree search over experiment code in four fixed stages, and a VLM reviews the figures. Humans then picked 3 of about 20 generated ideas and, for each, the best manuscript across several seeds ([Sakana AI, 2025-04](https://pub.sakana.ai/ai-scientist-v2/paper/paper.pdf)). The accepted paper averaged 6.33 (scores 6, 7, 6), roughly the top 45% of 43 submissions, at a workshop whose acceptance rates the authors put at 60–80%. Their own code review found about 57% overlap between its training and test sets, and the paper was withdrawn after review as agreed with the organizers.
 
 ---
 
@@ -173,6 +177,12 @@ Agents learn in three ways, which differ in where the update lives and how long 
 
 They work together at different timescales. Depth: [loop 08 — self-improving loops](../../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md).
 
+The parameters row splits by *what* gets trained. Jiang et al. sort weight updates into four kinds. You can train the agent on tool-execution signals (A1, such as passing tests) or on judgments of its final output (A2). Or you can freeze the agent and train its tools instead, either independently of any agent (T1, such as a pretrained retriever) or against the frozen agent's own feedback (T2) ([arXiv:2512.16301](https://arxiv.org/abs/2512.16301) (Jiang et al., 2025-12)). T2 can be far cheaper. The s3 searcher, rewarded by how much its retrieved documents lift a frozen generator above naive top-k retrieval, reached 58.9% average QA accuracy from 2.4k training examples. Search-R1, which trains the whole agent (A2), needed about 170k examples for comparable accuracy, so s3 used about 70× less data and trained about 33× faster. A trained specialist can also *graduate* into a tool. SWE-Grep is an RL-trained code-search subagent that coding agents call, so the main agent's weights never change. The survey's open-problems section lists what goes wrong when the agent learns:
+
+- RL for reasoning can erode the safety guardrails set during SFT (their DeepSeek-R1 case study).
+- Trial and error with real tools can take actions that resetting the episode cannot undo.
+- A compromised tool can return injected data that turns the calling agent into a confused deputy.
+
 ---
 
 ## Choosing a model
@@ -185,7 +195,7 @@ Release cycles move too fast for version picks, so here are the directions:
 - **Multimodality** is a hard requirement if inputs include images, audio or video. Coverage differs widely.
 - **Open vs. closed.** Closed models lead on capability. Open weights win on cost, private deployment and fine-tuning. A common hybrid path is to start on managed APIs (closed, or open models from a hosted provider) while roles are still forming, then self-host once the team and the need for control grow (*AI Agents: The Definitive Guide*, ch. 4).
 - **Price doesn't track quality.** In Albada's mid-2025 snapshot, DeepSeek-v3 scored 87.2 on MMLU at 2.75× / 3.65× the cheapest model's input/output price. Claude 4 Opus with extended thinking scored 86.5 at 75× / 125× (*Building Applications with AI Agents*, ch. 2). Koenigstein quotes closed models at up to $150 / $600 per M input/output tokens (o1-pro), against about $0.3 / $3 for open models over 200B parameters on low-cost hosts (*AI Agents: The Definitive Guide*, ch. 4). Both snapshots are dated, but the point holds: benchmark the cheaper model before assuming you need the flagship.
-- **Staff by role, not one model for everything.** Koenigstein's research team uses Qwen3-32B with thinking off for the researchers, note taker and writer. The analyst gets Qwen3-235B-A22B with a 1,536-token thinking budget plus a ModernBERT encoder that scores documents. GPT-4.1 is the supervisor that routes and decides when to finish. Turn thinking on for planning, decomposition, tool selection and verification. Turn it off for short, low-risk turns. Budgets of about 1,000+ thinking tokens work for non-trivial reasoning; raise them for math, code and multi-tool plans. Too small a budget truncates the reasoning (*AI Agents: The Definitive Guide*, ch. 4). Albada makes the same point from the other side: route simple queries to small models and design for a *multimodel* system from the start (*Building Applications with AI Agents*, ch. 1).
+- **Staff by role, not one model for everything.** Koenigstein's research team uses Qwen3-32B with thinking off for the researchers, note taker and writer. The analyst gets Qwen3-235B-A22B with a 1,536-token thinking budget plus a ModernBERT encoder that scores documents. GPT-4.1 is the supervisor that routes and decides when to finish. Turn thinking on for planning, decomposition, tool selection and verification. Turn it off for short, low-risk turns. Budgets of about 1,000+ thinking tokens work for non-trivial reasoning; raise them for math, code and multi-tool plans. Too small a budget truncates the reasoning (*AI Agents: The Definitive Guide*, ch. 4). Albada makes the same point from the other side: route simple queries to small models and design for a *multimodel* system from the start (*Building Applications with AI Agents*, ch. 1). NVIDIA's position paper pushes the default further: most agent calls are narrow, repetitive, format-bound subtasks, so a model under 10B should be the default and the LLM the exception. They cite serving a 7B model at 10–30× lower latency, energy and FLOPs than a 70–175B one. Their migration path is to log every non-chat agent call, collect 10k–100k examples, cluster them into tasks and fine-tune a specialist per cluster ([arXiv:2506.02153](https://arxiv.org/abs/2506.02153) (Belcak et al., 2025-06)). The paper runs no experiments. Its estimates that 40–70% of LLM calls in MetaGPT, Open Operator and Cradle could move to small models come from reading the code, not from measurement, and the authors' employer sells the inference stack they recommend.
 - **Keep the prefix byte-stable.** Reordering messages, trimming old turns or injecting documents into the middle of the context invalidates the cached KV entries after the change. Put the static system prompt first and append new material at the end (*AI Agents: The Definitive Guide*, ch. 4).
 
 ---
@@ -250,7 +260,7 @@ Guardrails are defense in depth. No single one suffices, so layer specialized on
 
 **A prompt restriction is not a permission.** LangChain's default SQL-agent prompt stops the agent from running `INSERT`, `UPDATE` or `DELETE`. Phoenix and Taylor swap in a custom prompt prefix, and the same agent then happily runs CRUD statements against the database (*Prompt Engineering for Generative AI*, ch. 6). Whoever edits the prompt changes what the agent may do. Enforce the boundary below the model: read-only database credentials, or a tool that cannot write.
 
-**What the user must be able to see.** Bansal et al. (Microsoft, 2024), as summarized in *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (ch. 11), list the communication an agent needs in each direction:
+**What the user must be able to see.** Bansal et al. ([Microsoft Research, 2024-12](https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf)), as summarized in *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (ch. 11), list the communication an agent needs in each direction. The paper also names four challenges that cut across both directions: helping the user verify behavior, keeping behavior consistent, choosing the level of detail, and choosing which past interactions to draw on. It frames all twelve as the work of building common ground before, during and after a run:
 
 | Direction | The agent must support |
 |---|---|

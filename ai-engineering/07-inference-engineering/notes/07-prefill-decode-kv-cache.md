@@ -9,6 +9,8 @@ sources:
   - https://arxiv.org/abs/2308.16369
   - https://arxiv.org/abs/2311.18677
   - https://arxiv.org/abs/2407.00079
+  - https://arxiv.org/abs/2405.04434
+  - https://arxiv.org/abs/2502.13189
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -113,12 +115,16 @@ Capacity budget: free memory after weights is the KV budget. Fregly's example is
 | Technique | Mechanism | Typical effect | Source |
 |---|---|---|---|
 | **MQA / GQA** | Share K/V across query heads | KV ÷ (query heads / KV heads), e.g. 8× for 64→8 | Huyen ch. 9; Fregly ch. 17 |
-| **MLA** (DeepSeek) | Store a low-rank latent instead of full K/V | Large KV cut; fast decode kernels (FlashMLA; ThunderMLA claims +20–35% over it) | Fregly ch. 1, 18 |
+| **MLA** (DeepSeek) | Store a low-rank latent instead of full K/V | DeepSeek-V2 caches 576 values per token per layer (512 latent + 64 RoPE key), the size of GQA with 2.25 groups; in its MoE ablations MLA kept 4–14% of MHA's KV and scored slightly higher. Fast decode kernels (FlashMLA; ThunderMLA claims +20–35% over it) | Fregly ch. 1, 18; [arXiv:2405.04434](https://arxiv.org/abs/2405.04434) (DeepSeek-AI, 2024-05) |
 | **Local / sliding-window attention** | Attend to the last W tokens only | Huyen: 10k context with a 1k window ≈ 10× smaller | Huyen ch. 9 |
 | **Cross-layer attention** | Share KV across adjacent layers | Character.AI: >20× KV reduction, with conversations averaging 180 messages | Huyen ch. 9 |
 | **KV quantization** | FP8 (or INT8/INT4) K/V | 2× (FP8) to 4× (INT4); vLLM and TensorRT-LLM support FP8 KV | Fregly ch. 18–19 ([08](08-adaptive-inference.md#kv-cache-quantization)) |
 | **Eviction / compression** | Drop or merge low-importance entries | Workload-dependent; only safe with restricted-attention layers | Fregly ch. 18 |
 | **Offload / tiering** | Spill cold KV to CPU DRAM or NVMe; fetch on reuse | Capacity; costs PCIe/NVLink-C2C bandwidth | Fregly ch. 17–18 |
+
+The MLA trade is real but its headline numbers are stacked. DeepSeek-V2's 93.3% KV cut and 5.76× generation throughput (8×H800) are measured against the dense DeepSeek 67B, with FP8 weights, ~6-bit KV quantization and MoE sparsity on top of MLA, so they are not MLA's effect alone. Its own 7B dense ablation shows why plain sharing is not free: MMLU falls from 45.2 (MHA) to 41.2 (GQA-8) and 37.9 (MQA) ([arXiv:2405.04434](https://arxiv.org/abs/2405.04434) (DeepSeek-AI, 2024-05)).
+
+Block-sparse attention cuts prefill compute, not cache size. MoBA scores key blocks by their mean-pooled key and lets each query attend to its top-k blocks plus its own. On Llama-3.1-8B extended to 1M tokens (4,096-token blocks, top-12, last 3 layers kept dense) it matched full attention on RULER (0.782 vs 0.785) and ran the attention layers 6.5× faster at 1M-token prefill. Decode switches back to full attention, so the KV cache stays the same size ([arXiv:2502.13189](https://arxiv.org/abs/2502.13189) (Lu et al., 2025-02)). It is a vendor report on one model, and the speedup is for attention alone, not end to end.
 
 ---
 

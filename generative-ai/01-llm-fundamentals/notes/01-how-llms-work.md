@@ -21,6 +21,12 @@ sources:
   - https://arxiv.org/abs/2412.15115
   - https://arxiv.org/abs/2502.05171
   - https://arxiv.org/abs/2503.09573
+  - https://arxiv.org/abs/2405.21060
+  - https://arxiv.org/abs/2405.04517
+  - https://arxiv.org/abs/2309.16588
+  - https://arxiv.org/abs/2306.05284
+  - https://arxiv.org/abs/2305.07922
+  - https://arxiv.org/abs/2301.00704
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -121,6 +127,8 @@ Masking with −∞ *before* the softmax matters. Raschka first zeroes the weigh
 
 In an encoder–decoder model there is a second kind, **cross-attention**: the *queries* come from the decoder and the *keys and values* from the encoder's output, so each target token can look at the whole source sentence. *Building AI Agents* (ch. 2) has this the wrong way round, with queries from the encoder.
 
+Large transformers also put tokens to uses nobody designed. Darcet et al. studied vision transformers, where the tokens are image patches ([arXiv:2309.16588](https://arxiv.org/abs/2309.16588) (Darcet et al., 2023-09)). In DINOv2 ViT-g, about 2% of patch tokens, almost all on plain background, ended up with roughly 10× the norm of the rest. Linear probes showed these tokens had dropped their own patch's content and position and held image-wide information instead. In effect, the model was using them as scratch space. They appeared only in ViT-L and larger, and only after about a third of training. The fix was to append four learned "register" tokens that carry no input and are thrown away at the output. That removed the outliers and lifted DINOv2 ViT-L's ADE20k segmentation from 46.6 to 47.9 mIoU, with ImageNet linear-probe accuracy at 84.3 before and 84.8 after. Those are single training runs.
+
 Attention cost grows with the square of sequence length. *Building AI Agents* (ch. 3) puts it as 4,096 tokens costing 64× the attention compute of 512, which is (4,096 / 512)². The parameter count does not grow with context; only compute and the cache of keys and values do (next section).
 
 ---
@@ -167,6 +175,15 @@ Running a decoder has two phases (*AI Engineering*, ch. 2):
 
 Decode is sequential, so latency adds up per token. Huyen's arithmetic: at 10 ms per token, a 100-token answer takes a full second, against the roughly 100 ms that users expect from a web request (*AI Engineering*, ch. 1). Serving tricks for both phases (batching, paged KV cache, speculative decoding) are in [ai-engineering/07-inference-engineering](../../../ai-engineering/07-inference-engineering/README.md).
 
+One-token-per-step decoding comes from the training objective, not from the transformer itself. Muse trains a transformer to fill in masked image tokens, the way BERT fills in words, and then decodes a 256-token image in 24 parallel steps instead of 256. On Google's own TPUv4 timings, Muse-3B took 0.5 s per 256×256 image against 6.4 s for the autoregressive Parti-3B, with a similar zero-shot COCO FID (7.88 against 8.10) ([arXiv:2301.00704](https://arxiv.org/abs/2301.00704) (Chang et al., 2023-01)). The cost is an assumption that tokens filled in during the same step are independent of each other, given everything else. MusicGen measures that cost on audio tokens, where each time step has four codebook tokens. The test used a 300M model on 30-second clips from an in-domain test set ([arXiv:2306.05284](https://arxiv.org/abs/2306.05284) (Copet et al., 2023-06)):
+
+- **Fully sequential** (6,000 steps): FAD 0.86.
+- **All four codebooks at once** (1,500 steps): FAD worsened to 2.58.
+- **Each codebook offset by one step from the last** (still 1,500 steps): FAD 0.96, recovering most of the loss.
+
+![Four grids of audio tokens, codebooks k1 to k4 by sequence step: Flattening puts one codebook token per step, taking 4n steps; Parallel predicts all four codebooks of a time step together in n steps; Coarse First does all k1 tokens, then k2 to k4 together, in 2n steps; Delay shifts each codebook one step later than the one below, still about n steps](../sources/images/copet-musicgen-fig1.png)
+*Image Source: Copet et al., [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284) (2023), Fig. 1*
+
 | Architecture | Attention | Training objective | Examples | Good at |
 |---|---|---|---|---|
 | Encoder-only | Bidirectional | Masked-token prediction | BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04805)) | Classification, embeddings, retrieval |
@@ -176,6 +193,8 @@ Decode is sequential, so latency adds up per token. Huyen's arithmetic: at 10 ms
 BERT masks 15% of input tokens and learns to fill them in from both sides; the two original sizes were 110M and 340M parameters (*Building AI Agents*, ch. 2). Huyen frames the same split as *masked* versus *autoregressive* language models: the first sees both directions and suits classification and embeddings, the second sees only the past and can generate (*AI Engineering*, ch. 1).
 
 Almost every chat model is decoder-only. Embedding models used in [02-rag-retrieval](../../02-rag-retrieval/README.md) are usually encoder-style.
+
+The table says how a model was trained, but one model can serve more than one row. CodeT5+ trains a single encoder–decoder on a mix of span denoising, causal language modelling and text–code contrastive matching. It then runs the encoder alone for code search and the decoder alone for completion ([arXiv:2305.07922](https://arxiv.org/abs/2305.07922) (Wang et al., 2023-05)). After task fine-tuning, the 770M model scored 77.4 MRR on CodeSearchNet text-to-code retrieval, against UniXcoder's 74.4. The decoder-only mode depends on having trained for it: without the causal-LM objective, the same 770M model's line-completion exact match on PY150 fell from 44.9 to 36.2. These are the authors' own evaluations. The authors also say that Codex and CodeGen were trained on GitHub code without removing overlap with these benchmarks, so comparisons against those models are not clean.
 
 ---
 
@@ -204,6 +223,8 @@ Huyen names three numbers that signal scale: **parameters** (capacity to learn),
 **Sparse models break the link between parameters and cost.** In a mixture-of-experts (MoE) layer, the feed-forward block is replaced by several expert feed-forward blocks and a small router that sends each token to a few of them. Mixtral 8x7B has 46.7B parameters in total, but each token passes through only 12.9B, so it runs at roughly the cost of a 13B dense model while needing the memory of a 47B one (*AI Engineering*, ch. 2). *Building AI Agents* (ch. 3) says GPT-4 and Gemini are MoE models, and *Prompt Engineering for GenAI* (ch. 2) gives GPT-4 1.7T parameters. Neither figure has been confirmed by OpenAI or Google; they are press estimates. The same chapter dates GPT-4 to 2024; it was released in March 2023.
 
 **Not every LLM is a transformer.** Huyen surveys the alternatives to quadratic attention (*AI Engineering*, ch. 2): RWKV, an RNN that can be trained in parallel; state-space models (S4, H3, Mamba), whose cost grows linearly with sequence length, with Mamba-3B reported to beat transformers of its size and match transformers twice its size; and Jamba, which interleaves transformer and Mamba layers in a 52B-total, 12B-active MoE with a 256K-token context. The Mamba comparison is the authors' own, on language-modelling benchmarks at up to 3B parameters. Every architecture in this note is still the transformer; the alternatives matter when context length, not parameter count, is the cost that hurts. Nor does every LLM generate left to right. Block diffusion is autoregressive over blocks of tokens and fills in each block by denoising, keeping the KV cache across blocks ([arXiv:2503.09573](https://arxiv.org/abs/2503.09573) (Arriola et al., 2025-03)). At 110M parameters on OpenWebText it narrows the perplexity gap with block size 4 (at most 20.73, against 17.54 for autoregressive and at most 22.98 for the earlier masked-diffusion model MDLM). It still trails, and the paper shows no wall-clock speedup at that scale.
+
+The line between transformers and the alternatives is thinner than it looks. Mamba-2 shows that a state-space layer whose state transition is a scalar times the identity computes causal attention with the softmax removed and a learned, input-dependent decay applied to the scores. The same layer can therefore run as a linear-time recurrence or as quadratic matrix multiplications on tensor cores ([arXiv:2405.21060](https://arxiv.org/abs/2405.21060) (Dao & Gu, 2024-05)). At 2.7B parameters trained on 300B Pile tokens, Mamba-2 matched a Transformer++ baseline (Pile perplexity 6.09 against 6.13, zero-shot average 60.2 for both). Replacing 6 of its 64 layers with attention beat both (5.95, 61.0). The authors' guess is that attention does exact look-up of earlier tokens, while the SSM has to compress everything into a fixed-size state. In their 350M sweep, about 10% attention layers was best, but anything from 3 to 9 attention layers landed within 0.03 perplexity. xLSTM rebuilds the LSTM with exponential gates and a matrix-valued memory. At 1.3B parameters on 300B SlimPajama tokens it reached validation perplexity 8.89, against 9.14 for Mamba and 9.44 for a Llama-style transformer ([arXiv:2405.04517](https://arxiv.org/abs/2405.04517) (Beck et al., 2024-05)). Read both papers' comparisons with care: the authors trained every baseline themselves, ran each configuration once and stopped at 2.7B and 1.3B parameters. xLSTM's own paper says its kernels were about 4× slower than FlashAttention.
 
 ---
 

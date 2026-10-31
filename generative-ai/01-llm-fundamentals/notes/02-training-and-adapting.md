@@ -13,6 +13,10 @@ sources:
   - https://github.com/rasbt/LLMs-from-scratch
   - https://arxiv.org/abs/2305.18290
   - https://arxiv.org/abs/2212.08073
+  - https://arxiv.org/abs/2412.15115
+  - https://arxiv.org/abs/2404.14219
+  - https://arxiv.org/abs/2312.11805
+  - https://arxiv.org/abs/2304.01373
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -66,6 +70,8 @@ Things worth knowing about the loss:
 
 Real pretraining runs add data curation (deduplication, quality filtering, mixing code and text), learning-rate warmup and cosine decay, gradient clipping and mixed precision. Raschka also loads the released GPT-2 weights into the hand-built model, which proves the architecture in [note 01](01-how-llms-work.md) matches the real one (*LLMs from Scratch*, ch. 5).
 
+Not every curation step is a guaranteed win. Pythia trained eight model sizes, from 70M to 12B parameters, twice each: once on the Pile (300B tokens) and once on a near-deduplicated Pile of 207B tokens, run for about 1.5 epochs so that it also reached 300B. Both runs used the same data order and saved 154 checkpoints ([arXiv:2304.01373](https://arxiv.org/abs/2304.01373) (Biderman et al., 2023-04)). On eight standard benchmarks, deduplication showed "no clear benefit", and seeing the data a second time did no visible harm. The same suite showed that memorized 32-token sequences turn up at a steady rate through training, fitting a Poisson process. So putting sensitive data early or late in training does not change how much of it gets memorized. Each size was trained with one seed; the authors estimate that 25 seeds would have cost about $10 million. The 12B model alone took 72,300 A100-hours.
+
 ### What the data is
 
 Most pretraining text starts as Common Crawl, a scrape of billions of web pages, usually filtered into something like Google's C4. Filtering is crude: GPT-2's WebText kept only pages linked from Reddit posts with at least three upvotes (*AI Engineering*, ch. 2). The mix decides what the model is good at. English is 45.88% of Common Crawl and Russian, second, about 6%, which shows up later as worse quality and higher token cost in other languages (note 01, Tokens). Newer reports filter with a model instead. Qwen2.5 used Qwen2-Instruct as the quality filter, downsampled e-commerce, social media and entertainment, upsampled science and technology, and grew the corpus from 7T to 18T tokens ([arXiv:2412.15115](https://arxiv.org/abs/2412.15115) (Qwen Team, 2024-12)). Phi-3 pushed filtering hardest, keeping heavily filtered web data plus synthetic text in what Microsoft calls a "data optimal regime" ([arXiv:2404.14219](https://arxiv.org/abs/2404.14219) (Abdin et al., 2024-04)). **phi-3-mini (3.8B, 3.3T tokens) scored 68.8% on MMLU 5-shot, close to Mixtral 8x7B's 70.5%, but 64.0 on TriviaQA against Mixtral's 82.2.** Filtering kept reasoning and gave up stored facts. Both results come from Microsoft's internal eval pipeline, and the data was not released.
@@ -109,6 +115,8 @@ The *LLM Engineer's Handbook* (ch. 5) adds the practical side: building an instr
 
 **Rule:** SFT teaches the *form* of an answer far more than new facts. Fine-tuning on a knowledge base to make a model "know" it tends to produce confident paraphrases with errors. For facts that change or need citations, use retrieval ([02-rag-retrieval](../../02-rag-retrieval/README.md)).
 
+Fine-tuning can also erase what pretraining taught. The effect shrinks with scale and can be offset by replaying old data. When PaLM-E unfroze its LLM for multimodal training, its language-generation score dropped by 87.3% (relative) at 12B but by only 3.9% at 562B ([arXiv:2303.03378](https://arxiv.org/abs/2303.03378) (Driess et al., 2023-03)). Qwen-VL mixed pure-text samples into its multimodal training and held MMLU at 50.7, against 49.9 for the LLM it started from ([arXiv:2308.12966](https://arxiv.org/abs/2308.12966) (Bai et al., 2023-08)).
+
 ---
 
 ## Preference optimization, briefly
@@ -143,6 +151,7 @@ W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 - The update can be merged into `W` after training, so inference costs nothing extra; or kept separate so one base model serves many adapters.
 - What LoRA is *not*: *Prompt Engineering for GenAI* (ch. 2) calls it "low-rank approximations" that make the network run on consumer hardware. LoRA is low-rank *adaptation*. It shrinks the number of *trainable* parameters during fine-tuning; it does not make the model smaller or faster at inference. Shrinking the model is quantization, pruning or distillation (below).
 - **QLoRA** ([arXiv:2305.14314](https://arxiv.org/abs/2305.14314)) keeps the frozen base in 4-bit and trains LoRA adapters on top, which brings 65B-parameter fine-tuning onto a single 48 GB GPU. Three tricks make it fit: a 4-bit NormalFloat data type, quantizing the quantization constants themselves (about 3 GB saved at 65B), and paged optimizers that absorb memory spikes. Its Guanaco models reached 99.3% of ChatGPT's score on the Vicuna benchmark after 24 hours on one GPU. The authors themselves warn that those chatbot benchmarks are not trustworthy, so read the number as "close", not "equal".
+- **GaLore** ([arXiv:2403.03507](https://arxiv.org/abs/2403.03507) (Zhao et al., 2024-03)) targets optimizer memory instead of the trainable-parameter count. It projects each gradient into a low-rank subspace, cutting optimizer-state memory by up to 65.5%. That is enough to pre-train LLaMA-7B on a 24 GB consumer GPU. Unlike LoRA it updates all the weights, so it also works for pre-training. Its 8-bit 7B run on C4 reached a validation perplexity of 14.65 after 150K steps, a single run.
 
 ```python
 from peft import LoraConfig, get_peft_model
@@ -155,7 +164,7 @@ model = get_peft_model(base_model, config)   # model.print_trainable_parameters(
 Three ways to cut memory and latency once a model is trained (*Building AI Agents*, ch. 2–3):
 
 - **Quantization** stores weights in fewer bits. The basic affine scheme maps a float `x` to an integer `x_q = round(x / s) + z`, with a scale `s` and zero point `z` chosen per tensor, channel or block. Halving the bits halves the weight memory (note 01, Reading a model's size).
-- **Pruning** removes weights or whole layers. Classic prune-and-retrain cycles are too expensive at LLM scale, and the book reports that many one-shot methods fail to remove more than about 10% of weights before the model collapses. SparseGPT reached 60% sparsity on the 175B-class models OPT-175B and BLOOM-176B without retraining (the book says "170-billion-parameter models"). Gromov et al. ([arXiv:2403.17887](https://arxiv.org/abs/2403.17887)) dropped many of the deeper layers of large open models with little loss, and found larger models more redundant than small ones.
+- **Pruning** removes weights or whole layers. Classic prune-and-retrain cycles are too expensive at LLM scale, and the book reports that many one-shot methods fail to remove more than about 10% of weights before the model collapses. SparseGPT reached 60% sparsity on the 175B-class models OPT-175B and BLOOM-176B without retraining (the book says "170-billion-parameter models"). Wanda also needs no retraining. It holds LLaMA-7B at 7.26 perplexity at 50% unstructured sparsity, against 5.68 dense, but perplexity reaches 84.5 at 70% ([arXiv:2306.11695](https://arxiv.org/abs/2306.11695) (Sun et al., 2023-06)). Unstructured sparsity also gives no speedup on its own; see [inference 08](../../../ai-engineering/07-inference-engineering/notes/08-adaptive-inference.md#quantization). Gromov et al. ([arXiv:2403.17887](https://arxiv.org/abs/2403.17887)) dropped many of the deeper layers of large open models with little loss, and found larger models more redundant than small ones.
 - **Distillation** trains a small *student* to match a large *teacher*'s output distribution, typically with a KL-divergence loss on temperature-softened logits plus the usual loss on the labels. DistilGPT-2 is a distilled GPT-2. In the LLM era the cheaper variant is to fine-tune a small model on a large model's generated outputs, which is distillation without access to the teacher's logits. Google's on-device Gemini Nano models (1.8B and 3.25B) were distilled from larger Gemini models and shipped with 4-bit weights ([arXiv:2312.11805](https://arxiv.org/abs/2312.11805) (Gemini Team, 2023-12)).
 
 Quantization for *serving* (int8/int4 weights, KV-cache compression) is an inference topic; see *LLM Engineer's Handbook* ch. 8 and [ai-engineering/07-inference-engineering](../../../ai-engineering/07-inference-engineering/README.md).

@@ -276,6 +276,17 @@ These are broader or more opinionated pieces, good once the notes feel familiar.
 - Li, *AI Agents in Depth*, [ch. 2 §Prompt Engineering](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter2.md) — system-prompt design for agents. Labs: τ-bench prompt ablation (2-4), injection attacks (2-5), attention visualization (2-2), prompt patches from failures (8-3). Synthesised into [02](notes/02-prompt-anatomy.md) and [10](notes/10-adversarial-prompting.md), which link the labs upstream.
 - Context engineering — the successor framing (Karpathy, LangChain, Schmid, Lance Martin). Collected in [02-context](../02-context-engineering/README.md)
 
+### AI Papers of the Week
+
+Papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`).
+
+| Paper | Why read it | PDF | Maps to |
+|---|---|---|---|
+| Shojaee et al. (Apple), [*The Illusion of Thinking*](https://arxiv.org/abs/2506.06941) (Jun 2025) | On puzzles with tunable difficulty, non-thinking models match or beat thinking ones on easy instances. Thinking helps on medium ones, and both collapse to zero on hard ones, where thinking tokens drop despite budget left. The collapse is partly an artifact: full move lists overrun the output limit, and some River Crossing instances are unsolvable ([Lawsen, 2506.09250](https://arxiv.org/abs/2506.09250)) | [2506.06941](sources/illusion-thinking-2025.pdf) | [07](notes/07-prompting-reasoning-models.md#whats-different) |
+| Zaremba et al. (OpenAI), [*Trading Inference-Time Compute for Adversarial Robustness*](https://arxiv.org/abs/2501.18841) (Jan 2025) | More reasoning compute drives attack success on o1-preview and o1-mini towards zero for injections with an unambiguous goal, with no adversarial training. Human red-teamers needed 22.6 attempts at the highest compute vs. 11.0 at the lowest. No gain on ambiguous misuse prompts. Vendor-run | [2501.18841](sources/trading-test-time-compute-adversarial-2025.pdf) | [10](notes/10-adversarial-prompting.md#defenses-weakest-to-strongest) |
+| OpenAI, [*OpenAI o1 System Card*](https://arxiv.org/abs/2412.16720) (Dec 2024) | Adds a developer role (system > developer > user). o1 resolves role conflicts better than GPT-4o (0.78 vs. 0.68 developer over user) and holds a tutor instruction against jailbreaks 0.95 vs. 0.33. A CoT monitor flagged 0.17% of 102,443 chains as deceptive. Vendor self-report | [2412.16720](sources/openai-o1-2024.pdf) | [10](notes/10-adversarial-prompting.md#defenses-weakest-to-strongest), [07](notes/07-prompting-reasoning-models.md#known-failure-modes) |
+| Andriushchenko (EPFL), [*Adversarial Attacks on GPT-4 via Simple Random Search*](https://www.andriushchenko.me/gpt4adv.pdf) (Dec 2023) | Random search over a 10-character suffix, guided by the top-5 logprobs, raises P("Sure") on `gpt-4-1106-preview` from ≈1% to >50% for under $1. Two hand-picked requests and no success rate; superseded by [2404.02151](https://arxiv.org/abs/2404.02151) | [gpt4adv](sources/adversarial-attacks-gpt-4-2023.pdf) | [10](notes/10-adversarial-prompting.md#automated-attacks) |
+
 ---
 
 ## Working References

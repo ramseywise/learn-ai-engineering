@@ -15,6 +15,12 @@ sources:
   - https://arxiv.org/abs/2410.13848
   - https://github.com/deepseek-ai/Janus/blob/main/janus_pro_tech_report.pdf
   - https://arxiv.org/abs/2410.00037
+  - https://arxiv.org/abs/2408.11039
+  - https://arxiv.org/abs/2410.13720
+  - https://arxiv.org/abs/2301.00704
+  - https://arxiv.org/abs/2303.05511
+  - https://arxiv.org/abs/2304.08818
+  - https://arxiv.org/abs/2307.04725
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -38,6 +44,10 @@ The latent space is continuous. Interpolating between two points in it, say a do
 
 ![Janus architecture: an understanding encoder and a separate generation encoder feed one autoregressive transformer, which has a text head and an image head](../sources/images/wu-janus-fig2.png)
 *Image Source: Wu et al., [Janus: Decoupling Visual Encoding for Unified Multimodal Understanding and Generation](https://arxiv.org/abs/2410.13848) (2024), Fig. 2*
+
+The two approaches can share one model. Transfusion trains a single transformer with next-token loss on text and diffusion loss on continuous VAE patches of the image. On its scaling curves it matches a Chameleon-style discrete-token model's image FID with **34× less compute**. Its 7.3B model, trained on about 2T tokens of text and image patches, scores 0.63 on GenEval, against 0.55 for SDXL and 0.68 for SD3, which trained on synthetic captions ([arXiv:2408.11039](https://arxiv.org/abs/2408.11039) (Zhou et al., 2024-08)).
+
+Two other families give up some quality for speed. Muse predicts masked VQ tokens in parallel rather than one at a time, producing a 256-token image in 24 steps. On Google's own TPUv4 timings, a batch of 256×256 images took 0.5 s on Muse-3B, 6.4 s on Parti-3B and 9.1 s on Imagen, and Muse reached a zero-shot COCO FID of 7.88 ([arXiv:2301.00704](https://arxiv.org/abs/2301.00704) (Chang et al., 2023-01)). GigaGAN scales a StyleGAN-style GAN to 1B parameters. It makes a 512px image in one forward pass of 0.13 s, with a zero-shot COCO FID of 9.09 against 9.62 for Stable Diffusion v1.5, both on the authors' runs ([arXiv:2303.05511](https://arxiv.org/abs/2303.05511) (Kang et al., 2023-03)). Size alone did not get it there: a StyleGAN2 made 5.7× larger got worse (FID 29.91 to 34.07), and the model only scaled once the paper's attention and architecture changes were added. The authors concede its images trail DALL·E 2 in realism and composition. Because it keeps a GAN latent space, prompt interpolation and style mixing still work.
 
 The course has no note yet on diffusion internals: the noise schedule, U-Net vs. DiT denoisers, and why classifier-free guidance works. When one is written, [generative-ai/01](../../../generative-ai/01-llm-fundamentals/README.md) is its home.
 
@@ -175,7 +185,11 @@ Two operational rules from the self-hosted side (ch. 9):
 
 ## Video
 
-The book doesn't cover video prompting. It records the timeline up to early 2024: RunwayML's Gen-2, AnimateDiff in the open-source community, Stable Video Diffusion (November 2023), and OpenAI's Sora (February 2024). It claims everything about image prompting carries over (ch. 7). The controls above do carry over: seed, steps, guidance, and an image as a conditioning input (image-to-video). What doesn't carry over is cost, since each second of video is many frames, and consistency between frames, which no single-image setting controls. This section needs a video-specific source before it can say more.
+The book doesn't cover video prompting. It records the timeline up to early 2024: RunwayML's Gen-2, AnimateDiff in the open-source community, Stable Video Diffusion (November 2023), and OpenAI's Sora (February 2024). It claims everything about image prompting carries over (ch. 7). The controls above do carry over: seed, steps, guidance, and an image as a conditioning input (image-to-video). What doesn't carry over is cost, since each second of video is many frames, and consistency between frames, which no single-image setting controls.
+
+The open video models of 2023 started from a frozen image model and trained only new temporal layers. Video LDM inserts temporal attention and 3D-convolution layers between Stable Diffusion's frozen spatial layers and fine-tunes the autoencoder's decoder on video. Without that decoder fine-tune, reconstruction FVD on driving footage is 390.88; with it, 32.94 ([arXiv:2304.08818](https://arxiv.org/abs/2304.08818) (Blattmann et al., 2023-04)). Because the image layers stay frozen, the temporal layers drop into a DreamBooth-personalized checkpoint without retraining. Its zero-shot UCF-101 FVD of 550.61 still trailed Make-A-Video's 367.23. AnimateDiff turned this into the community workflow: a motion module trained once on SD 1.5 plugs into any personalized SD 1.5 checkpoint, and a MotionLoRA of about 30 MB learns a camera move from 20–50 reference clips in 1–2 hours ([arXiv:2307.04725](https://arxiv.org/abs/2307.04725) (Guo et al., 2023-07)). Its quantitative evidence is thin: a user ranking and CLIP scores against two adapted baselines, on prompts the authors chose.
+
+Meta's Movie Gen shows what frame count costs at scale. It is a 30B transformer trained with flow matching on video latents compressed 8×8×8, and a 16-second 768px clip at 16 fps fills a context of about 73K tokens ([arXiv:2410.13720](https://arxiv.org/abs/2410.13720) (Polyak et al., 2024-10)). In Meta's own human evaluation its net win rate on overall quality was +35.0 against Runway Gen3, +8.2 against Sora, and +3.9 against Kling 1.5, which the paper counts as on par. Sora could only be judged on the videos OpenAI chose to publish, so Meta compared them with a hand-picked best of five from Movie Gen.
 
 ## What has dated
 

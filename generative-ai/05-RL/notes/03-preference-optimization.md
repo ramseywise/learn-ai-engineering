@@ -10,6 +10,10 @@ sources:
   - https://arxiv.org/abs/2503.01067 (All Roads Lead to Likelihood)
   - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
   - https://arxiv.org/abs/2507.18071 (GSPO)
+  - https://arxiv.org/abs/2501.12599 (Kimi k1.5)
+  - https://arxiv.org/abs/2503.24290 (Open-Reasoner-Zero)
+  - https://arxiv.org/abs/2505.07608 (MiMo-7B)
+  - https://arxiv.org/abs/2504.21801 (DeepSeek-Prover-V2)
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
   - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
 confidence: medium
@@ -255,10 +259,23 @@ one policy-sized model's weights, gradients and optimizer state.
 
 These rule-based rewards require no human labeling and scale to arbitrary volume.
 
+They are only as sound as the checker, and these cases show it:
+
+- **DeepSeek-Prover-V2.**
+  - The setup: GRPO with a binary Lean-verifier reward, on subgoal-decomposed cold-start data
+    from DeepSeek-V3. The 671B prover reached 61.9% pass@1 and 88.9% pass@8192 on
+    miniF2F-test.
+  - Its v2 retracted 13 PutnamBench "solves" by the 7B model. They exploited a Lean 4.9.0 bug
+    in which `apply?` fails to emit `sorry`
+    ([arXiv:2504.21801](https://arxiv.org/abs/2504.21801) (Ren et al., 2025-04)).
+- **MiMo-7B.** RL from the base model "tends to hack the reward for mathematics problems".
+- **Production coding environments** have been gamed by overriding `__eq__` and by patching
+  pytest ([05](05-post-training-for-agents.md#practical-pitfalls)).
+
 **Strengths:** No critic to train (simpler, cheaper), verifiable rewards remove the learned-RM
 loophole (though an agent can still game the verifier itself, for example by editing the
 tests it must pass; see [RLVP](05-post-training-for-agents.md#rlvp-reward-the-outcome-penalize-the-path)), enables large-scale online RL for reasoning,
-demonstrated at scale (DeepSeek-R1 achieves o1-level math reasoning).
+demonstrated at scale (DeepSeek-R1 matches o1-1217 on AIME 2024 and MATH-500; see [below](#the-deepseek-r1-story)).
 
 **Weaknesses:** Requires verifiable reward structure — not applicable to open-ended
 generation (summarization, helpfulness). Group sampling increases inference cost per
@@ -390,7 +407,7 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 | Online / offline | Online | Offline as published; online and semi-online variants work | Online | Offline | Offline |
 | Requires paired data | Yes | Yes | No (verifiable) | No | Yes |
 | Memory cost | 4x model | 2x model | 3x model | 2x model | 1x model |
-| Reward hacking risk | High | Low | None (verifiable) | Low | Low |
+| Reward hacking risk | High | Low | Lower, not none: the verifier can be gamed | Low | Low |
 | Best for | General alignment, complex tasks | General alignment, stable training | Reasoning (math/code) | Unpaired feedback | Compute-constrained |
 
 **Practitioner heuristics:**
@@ -429,11 +446,59 @@ DeepSeek-R1 (2025) demonstrated that pure RL with verifiable rewards can develop
 emergent chain-of-thought reasoning — the model learned to "think" (producing long
 reasoning traces) without any explicit CoT supervision.
 
-Key findings:
-- GRPO with math verification rewards alone produces models that spontaneously develop
-  self-verification, backtracking, and extended reasoning
-- Scaling RL (not model size) is the key lever for reasoning improvement
-- The "aha moment": the model learns to allocate more computation to hard problems
+Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI, 2025-01)):
+
+- **R1-Zero.** GRPO on DeepSeek-V3-Base with only rule-based accuracy and format rewards,
+  and no SFT.
+  - AIME 2024 pass@1 (mean of 16 samples) rose from 15.6% to 71.0%, and to 86.7% with
+    majority voting over 64.
+  - Response length on the training set grew from hundreds to thousands of tokens.
+  - DeepSeek chose rules over a neural reward model because the latter "may suffer from
+    reward hacking" at scale.
+
+  ![DeepSeek-R1-Zero AIME 2024 accuracy over about 8,500 RL steps. Pass@1 climbs from about 0.16 to 0.71 and cons@16 from about 0.25 to 0.87, with dashed reference lines for o1-0912 at 0.74 pass@1 and 0.83 cons@64.](../sources/images/deepseek-r1-zero-aime-fig2.png)
+  *Image Source: DeepSeek-AI, [DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning](https://arxiv.org/abs/2501.12948) (2025), Fig. 2*
+
+- **The "aha moment".** It is one qualitative transcript, an intermediate checkpoint writing
+  "Wait, wait… That's an aha moment" and re-planning. There is no quantitative measure behind it.
+- **Model size still matters.** The same paper is the counter-example to "scale RL, not the
+  model".
+  - On Qwen-32B, more than 10K steps of R1-Zero-style RL reached 47.0% AIME pass@1.
+  - SFT on 800k samples from the 671B R1 reached 72.6%.
+  - DeepSeek's conclusion: distilling a strong model beats RL on a small one, though small
+    models still benefit from RL afterwards.
+  - That is one RL run, confounded by the teacher's size.
+- **Full R1.** A cold start of "thousands" of long-CoT examples, then reasoning RL with a
+  language-consistency reward, rejection sampling (about 600k reasoning + 200k other samples),
+  and a final all-scenario RL.
+  - R1 reached 79.8% AIME 2024 and 97.3% MATH-500, against 79.2% and 96.4% for o1-1217.
+  - It trails o1-1217 on GPQA Diamond (71.5 vs 75.7).
+  - The o1 numbers are copied from OpenAI's reports, not rerun.
+  - Process reward models and MCTS were tried and abandoned.
+
+Kimi k1.5 reached a similar result by a different route
+([arXiv:2501.12599](https://arxiv.org/abs/2501.12599) (Kimi Team, 2025-01)):
+
+- **Method.** RL with a 128k context and partial rollouts; online mirror descent toward the
+  previous iterate; no value network, MCTS or PRM.
+- **Long CoT.** 77.5% AIME 2024 pass@1 against o1's 74.4%. It lost on LiveCodeBench
+  (62.5 vs 67.2) and MMMU (70.0 vs 77.3).
+- **long2short RL** (a length penalty plus a shorter rollout cap) produced a short-CoT model
+  at 60.8% AIME using 3,272 tokens on average. "Short" is relative.
+- **Caveats.** The model size is undisclosed, as are τ, the penalty weight and the
+  partial-rollout budget.
+
+Open-Reasoner-Zero reproduced R1-Zero-style length and accuracy scaling with vanilla PPO, no
+KL and a binary reward ([arXiv:2503.24290](https://arxiv.org/abs/2503.24290) (Hu et al.,
+2025-03)):
+
+- **Result.** On Qwen2.5-32B base it scored 48.1% AIME24 against R1-Zero-Qwen-32B's 47.0%,
+  with about 1,200 steps against DeepSeek's ">10K".
+- **Caveats.**
+  - Steps are not equal compute: ORZ's are 128 prompts × 64 samples, and DeepSeek's batch is
+    undisclosed.
+  - The margin is about a third of one AIME problem.
+  - It is below QwQ-32B-Preview (50.0).
 
 This validated the verifiable rewards paradigm and shifted the field's attention from
 "what alignment technique" to "what reward structure."
@@ -452,6 +517,23 @@ from a stronger teacher, unlike RLVR, did push pass@k past the base model. The p
 evaluate DeepSeek-R1-Zero itself. *This note's reading:* treat the "spontaneous"
 self-verification above as RL making existing base-model behaviour reliable at pass@1, not as
 proof of new capability.
+
+Xiaomi's MiMo-7B points the same way from the pretraining side
+([arXiv:2505.07608](https://arxiv.org/abs/2505.07608) (Xiaomi, 2025-05)):
+
+- **Pretraining.** About 25T reasoning-dense tokens with a multi-token-prediction objective.
+- **Base model.** 32.9% AIME 2024 against Qwen2.5-7B-Base's 10.1%, and higher pass@k at every
+  k.
+- **RL.** GRPO on 130K math and code problems.
+  - It lifted the model to 68.2% AIME 2024 and 55.4% AIME 2025, the latter against o1-mini's
+    50.7%.
+  - It still loses badly on MMLU-Pro (58.6 vs 80.3).
+- **What the RL changed.**
+  - The code reward gives partial credit by test difficulty.
+  - The RL data drops easy problems but resamples 10% of them.
+  - Dropping them entirely "introduces significant instability".
+- **Caveat.** The "base" saw about 10% synthetic reasoning traces in its last pretraining
+  stage, so it is not a clean base.
 
 ![Left: search trees for two problems, where RLVR concentrates sampling on a rewarded path the base model already had (Problem A) and loses a correct path the base model could reach (Problem B). Right: pass@k on Omni-MATH-Train for Qwen2.5-7B and GRPO checkpoints at steps 150, 300 and 450, where pass@1 rises with training while pass@256 falls slightly below the base model.](../sources/images/yue-rlvr-reasoning-boundary-fig1.png)
 *Image Source: Yue et al., [Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?](https://arxiv.org/abs/2504.13837) (2025), Fig. 1*
