@@ -1,11 +1,13 @@
 ---
-origin: vendored snapshot: Text Analytics with Python (kept as practice) + vendored snapshot: intro-to-nlp (condensed here, removed) + own coursework (Ng DL Sequence Models W2)
+origin: vendored snapshot: Text Analytics with Python (kept as practice) + own coursework: intro-to-nlp (kept as practice) + own coursework (Ng DL Sequence Models W2)
 sources:
   - ../practice/Text Analytics with Python/Ch04 - Feature Engineering for Text Representation/Ch04b - Feature Engineering Text Data - Advanced Deep Learning Strategies.ipynb
   - ../practice/Text Analytics with Python/Ch07 - Text Similarity and Clustering/
   - ../Ng's Deep Learning Nbks/Sequence Models/Week2/
   - ../sources/sarkar-text-analytics-with-python-2e.pdf
-  - intro-to-nlp/word2vec/word_embeddings_word2vec.ipynb, intro-to-nlp/tensorFlow/encoding-embeddings/*, intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb (removed 2026-10-31)
+  - ../practice/intro-to-nlp/word2vec/word_embeddings_word2vec.ipynb
+  - ../practice/intro-to-nlp/tensorFlow/encoding-embeddings/
+  - ../practice/intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb
   - https://arxiv.org/abs/1301.3781
   - https://nlp.stanford.edu/projects/glove/
 confidence: high

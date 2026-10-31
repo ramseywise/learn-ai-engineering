@@ -1,11 +1,11 @@
 ---
-origin: vendored snapshot: Text Analytics with Python (kept as practice) + Intro to Machine Learning in Python (kept) + vendored snapshot: intro-to-nlp (condensed here, removed)
+origin: vendored snapshot: Text Analytics with Python (kept as practice) + Intro to Machine Learning in Python (kept) + own coursework: intro-to-nlp (kept as practice)
 sources:
   - ../practice/Text Analytics with Python/Ch06 - Text Summarization and Topic Models/
   - ../practice/Text Analytics with Python/Ch07 - Text Similarity and Clustering/Ch07c - Document Clustering.ipynb
   - ../practice/Intro to Machine Learning in Python/07-working-with-text-data.ipynb
   - ../sources/sarkar-text-analytics-with-python-2e.pdf
-  - intro-to-nlp/nltk/text_summarization_nltk.ipynb (removed 2026-10-31)
+  - ../practice/intro-to-nlp/nltk/text_summarization_nltk.ipynb
 confidence: high
 cleaned: 2026-10-31
 ---
