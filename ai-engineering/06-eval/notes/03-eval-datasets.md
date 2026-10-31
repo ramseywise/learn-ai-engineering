@@ -9,6 +9,9 @@ sources:
   - https://arxiv.org/abs/2407.01502
   - https://arxiv.org/abs/2509.10414
   - https://arxiv.org/abs/2508.01191
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-31
@@ -31,7 +34,7 @@ The first useful dataset is **20–50 tasks taken from real failures**: user com
 | **LLM-graded sample** | 50–200 | Cost-capped subset for expensive judges |
 | **Large harness** | 1,000+ | Detecting small effects. Usually needs synthetic or logged data |
 
-Grow toward the next stage when the current one can't separate two versions you need to tell apart. Statistics tells you when that is ([09](09-reading-results.md)).
+Grow toward the next stage when the current one can't separate two versions you need to tell apart. Statistics tells you when that is ([09](09-reading-results.md)). For scale, Oshin & Campos suggest 10–50 starter examples for a LangChain app (*Learning LangChain*, ch. 10), and Huyen reports that the tasks in EleutherAI's eval harness have a median of 1,000 examples, with an average of 2,159. The Inverse Scaling prize organizers called 300 the absolute minimum and preferred 1,000, especially for synthesized examples (*AI Engineering*, ch. 4).
 
 ---
 
@@ -57,6 +60,14 @@ Don't ask a model for "100 test questions". You'll get 100 variations of the sam
 4. Read a sample. Delete the unrealistic ones.
 
 If you want several queries per tuple, ask for them in one call. Provided the output fits, that gives more variety than repeated calls at temperature > 0. Synthesis is easiest when you can start from the answer and invent the question backward. It is riskiest when the model doesn't know the domain well, because the rows come out as simplistic tropes, popular misconceptions or plain errors (*Prompt Engineering for LLMs*, ch. 10).
+
+Once a working set exists, **mutate it toward the edges** instead of generating from scratch. Albada lists three targeted moves (*Building Applications with AI Agents*, ch. 9):
+
+- **Adversarial:** "Find a user message that causes the agent to contradict itself."
+- **Counterfactual:** change one word in a passing case and see whether the agent fails.
+- **Interpolation:** blend two intents into one deliberately ambiguous request.
+
+Have a person review each mutated row before it joins the set.
 
 Two traps:
 
@@ -145,7 +156,7 @@ What matters:
 - **Labels** for slicing, **eligibility** per gate, **provenance** for trust.
 - **Graders named per row**, so a row only gets graders that make sense for it.
 
-Pin the row format with a JSON Schema and validate every row on load. The useful enums:
+Pin the row format with a JSON Schema and validate every row on load. A schema checks types, not consistency, so add **cross-field checks** too: every ID in `expected` must appear in the input. Albada's own example row shows why. The input order is `A89268`, the expected refund is `issue_refund(order_id="A12345", amount=19.99)`, and a correct agent would fail that row forever (*Building Applications with AI Agents*, ch. 9). The useful enums:
 
 | Field | Values | Why |
 |---|---|---|
@@ -177,6 +188,9 @@ If eval rows end up in a model's training data, the score measures memory, not a
 | **Parameterized templates** | AndroidWorld, τ²-bench | The task is a template ("change `[CONTACT_NAME]`'s number to `[NEW_PHONE]`"), filled with fresh values every run. A memorized action sequence won't replay. Fixing some parameters while varying others gives you controlled experiments |
 | **Temporal freshness** | SWE-bench-Live | Keep adding tasks created after the model's training cutoff |
 | **Canaries** | Terminal-Bench | Embed a unique GUID in the data. If a model can produce it, the set has leaked |
+| **Closed test set** | Enterprise Scenarios Leaderboard | Keep some test sets unpublished "to prevent gaming of the leaderboard" (*LLM Engineer's Handbook*, ch. 7) |
+
+For non-English suites, Iusztin & Labonne recommend human-translated versions of general benchmarks over machine-translated ones, plus tasks written in the native language (*LLM Engineer's Handbook*, ch. 7). How to detect contamination after the fact is in [12](12-failure-modes.md#contamination).
 
 ---
 

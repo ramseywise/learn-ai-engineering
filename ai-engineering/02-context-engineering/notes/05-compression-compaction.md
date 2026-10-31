@@ -13,6 +13,7 @@ sources:
   - https://papers.voltropy.com/LCM
   - https://arxiv.org/abs/2609.37725
   - https://arxiv.org/abs/2512.24601
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 6, 10 — sources/context-engineering-multi-agent-systems/"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -81,6 +82,7 @@ Both papers fix it the same way: take the rules out of the summary's hands.
 - **Phase boundaries** — a completed plan step, a finished skill invocation, a focus switch
 - Before spawning subagents that will re-derive context
 - After large reads that won't be needed again
+- **Per input, before the call.** Count an input's tokens before it reaches a generation agent. Above a set budget, route it through the summarizer first (*Context Engineering for Multi-Agent Systems*, ch. 10). This compresses the payload rather than the history, so nothing overflows in the first place
 
 Phase boundaries are the better trigger. Compacting at a natural seam produces a clean summary; compacting mid-edit at 95% occupancy forces a summary of an incoherent state.
 
@@ -122,7 +124,7 @@ Li's Experiment 2-9 tracks OpenAI co-founders' current roles with Kimi K3 capped
 | Context-aware + citations (4.1%) | 223k tokens. Lossy content, lossless index back to the sources |
 | Adaptive window: batch at 80%, `[COMPRESSED]` marker so nothing is compressed twice | 175k tokens; full fidelity during the early broad-gathering phase |
 
-The design principles: information value is uneven (decision points > evidence > noise). Keep semantics intact ("Sutskever left OpenAI in May 2024", not "Sutskever left"). The same text should compress differently for different tasks. And *compression is understanding*, so the compressor needs near-main-model capability. Context-aware compression cut tokens by more than 75%. Lab: [2-9 context-compression](https://github.com/bojieli/ai-agent-book/tree/main/chapter2/context-compression).
+The design principles: information value is uneven (decision points > evidence > noise). Keep semantics intact ("Sutskever left OpenAI in May 2024", not "Sutskever left"). The same text should compress differently for different tasks. And *compression is understanding*, so the compressor needs near-main-model capability. Context-aware compression cut tokens by more than 75%. Rothman builds the same idea into an agent's interface: his Summarizer takes a required `summary_objective` alongside the text. An objective like "Extract the names of all involved parties, the key financial figures…" replaces "Summarize this text". His demo takes one 253-token paragraph to 110 tokens (56.5%). That is a single example, not a measurement (*Context Engineering for Multi-Agent Systems*, ch. 6). Lab: [2-9 context-compression](https://github.com/bojieli/ai-agent-book/tree/main/chapter2/context-compression).
 
 ### The production ladder
 

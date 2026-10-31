@@ -5,6 +5,8 @@ sources:
   - https://arize.com/docs/phoenix
   - https://langfuse.com/docs
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 10"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
   - eval-harness.md (retired 2026-10-28)
 confidence: high
 cleaned: 2026-10-28
@@ -116,6 +118,7 @@ Instrument with OTel (or OpenInference, which Phoenix uses and maps to it), and 
 | **LangSmith** | Tight LangChain / LangGraph integration. Datasets, experiments, annotation queues |
 | **Braintrust, W&B Weave** | Experiment-centric. Strong comparison views |
 | **Your APM** (Datadog, Honeycomb, Grafana) | Already where ops looks. Accepts OTel GenAI spans |
+| **Open-source ops stacks** (Grafana + Loki + Tempo, ELK, SigNoz) | Logs, traces and alerts beside service health, so SREs and AI engineers share one dashboard. No built-in evals: you push grader scores in as span attributes or metrics (*Building Applications with AI Agents*, ch. 10) |
 
 Pick on: can it run evals over stored traces, attach scores back to spans, build datasets from traces, and compare two experiments side by side? Those four turn a trace viewer into an eval platform.
 
@@ -153,6 +156,33 @@ Traces are where cost lives. Roll up per span → per request → per user / fea
 
 ---
 
+## What to watch, and when to page someone
+
+Huyen borrows three DevOps numbers to grade the monitoring itself (*AI Engineering*, ch. 10):
+
+- **MTTD**, mean time to detection: how long until you notice something broke.
+- **MTTR**, mean time to response: how long from detection to resolution.
+- **CFR**, change failure rate: the share of deploys that need a fix or rollback. If you don't know it, the platform isn't observable enough. A high CFR is a signal for the offline eval pipeline ([10](10-evals-in-ci.md)), which should be catching bad changes before they ship.
+
+Metrics detect, logs explain. Her example: metrics say something broke five minutes ago, and you go to the logs to see what. If the logs arrive 15 minutes late, MTTR can't beat 15 minutes. Since you can't know which log you'll need, **log everything**: model endpoint and name, sampling settings, prompt template, the final prompt, every intermediate output, every tool call and its output. Make every metric sliceable by user, release, prompt or chain version, and time. Start with the failures that are easiest to count and to fix, such as invalid JSON and other format errors.
+
+Albada's alert examples for an agent (*Building Applications with AI Agents*, ch. 10):
+
+| Alert | Example threshold |
+|---|---|
+| Hallucination rate | > 5% over the last 30 minutes |
+| Retry loops | > 3 in one session |
+| Critical-tool latency | average up > 50% |
+| Task abandonment | > 15% |
+| Retries across sessions | > 20% of sessions |
+| Accuracy | drops > 5–10% over a rolling 24 hours |
+
+These are illustrations, not measured thresholds. Set yours from your own baseline variance, or the pager will fire on noise. Distribution-drift statistics for inputs (KS, PSI, embedding distance) are covered in [11](11-production-and-the-maturity-ladder.md#drift).
+
+**Failure or variation?** Albada's triage for a bad output: rerun it 3–5 times. If it fails more than 80% of the reruns, treat it as a systematic bug and send it to engineering. If it doesn't reproduce, compare it to the baseline distribution before acting. Expected variation gets logged for drift watch, not fixed. This is the per-task pass-rate distribution from [06](06-evaluating-agents.md#non-determinism-run-every-task-k-times) applied to one production trace.
+
+---
+
 ## Privacy and retention
 
 Traces contain user input, which means PII. Decide up front:
@@ -161,6 +191,8 @@ Traces contain user input, which means PII. Decide up front:
 - Who can see raw traces.
 - How long they're kept, and whether eval rows derived from them inherit the same limit.
 - Whether users consented to their conversations being used for evaluation.
+
+Redact **at span export**, not in the dashboard. OTel exporters provide hooks for scrubbing data as spans leave the process, so raw PII never reaches the backend. Put raw traces behind role-based access control (*Building Applications with AI Agents*, ch. 10).
 
 ---
 

@@ -11,6 +11,14 @@ cleaned: 2026-10-31
 
 ---
 
+## Books
+
+| | Source | Notes |
+|---|---|---|
+| ★ | Michael Albada, *Building Applications with AI Agents* (O'Reilly, 2025). Chapter PDFs in [sources/building-applications-with-ai-agents/](sources/building-applications-with-ai-agents/). Folded in as: ch. 3 → [05](notes/05-verification-loops.md); ch. 4 → [03](notes/03-tool-design.md), [05](notes/05-verification-loops.md); ch. 5 → [03](notes/03-tool-design.md), [07](notes/07-orchestration.md); ch. 12 → [04](notes/04-execution-boundaries.md), [08](notes/08-maturity-and-failure-modes.md). Ch. 11 and 13 are in [loop engineering](../04-loop-engineering/references.md#books). Ch. 4's MCP transport and security claims are dated. Notes cite it as `(*Building Applications with AI Agents*, ch. N)` | 03, 04, 05, 07, 08 |
+| ★ | Denis Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025). Chapter PDFs in [sources/context-engineering-multi-agent-systems/](sources/context-engineering-multi-agent-systems/). Folded in as: ch. 4 → [07](notes/07-orchestration.md); ch. 5 → [05](notes/05-verification-loops.md), [07](notes/07-orchestration.md), [08](notes/08-maturity-and-failure-modes.md); ch. 8 → [04](notes/04-execution-boundaries.md), [07](notes/07-orchestration.md). The book's "MCP" is its own message envelope, not the Model Context Protocol. Notes cite it as `(*Context Engineering for Multi-Agent Systems*, ch. N)` | 04, 05, 07, 08 |
+| | Mayo Oshin and Nuno Campos, *Learning LangChain* (O'Reilly, 2025). Chapter PDFs in [generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Folded in as: ch. 8 → [07](notes/07-orchestration.md#double-texting-the-same-problem-in-a-chat-app). Ch. 8's human-control material is in [loop engineering](../04-loop-engineering/references.md#books). Notes cite it as `(*Learning LangChain*, ch. N)` | 07 |
+
 ## Primary sources
 
 | Source | Why read it | Maps to |

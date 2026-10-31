@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2609.12191
   - https://arxiv.org/abs/2504.13837
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
@@ -86,6 +88,23 @@ def trajectory_score(expected: list[Call], actual: list[Call], mode="in_order") 
     matched = match_calls(expected, actual, mode)          # mode-specific matching
     return len(matched) / max(len(expected), len(actual))  # extras lower the score
 ```
+
+Two set-level numbers are worth logging next to the trajectory score, because they point at different fixes. Albada's **tool recall** asks whether the agent made every expected call; low recall means it skipped an essential action. **Tool precision** asks whether it avoided calls it didn't need; low precision means it misread the goal (*Building Applications with AI Agents*, ch. 9). Rewritten from his version:
+
+```python
+def tool_metrics(pred_tools: list[str], expected_calls: list[dict]) -> dict:
+    exp, pred = {c["tool"] for c in expected_calls}, set(pred_tools)
+    if not exp:                                    # nothing expected
+        return {"tool_recall": 1.0, "tool_precision": 0.0 if pred else 1.0}
+    tp = len(exp & pred)
+    return {"tool_recall": tp / len(exp), "tool_precision": tp / len(pred) if pred else 0.0}
+```
+
+These are sets, so a tool that should be called twice counts once, and order is ignored. Use them as diagnostics beside a match mode, not instead of one. (Albada's version returns perfect precision when nothing was expected, even if the agent called a refund tool. That hides exactly the negative cases from [02](02-defining-correct.md#positive-and-negative-cases).)
+
+> **Contradiction.** Albada's companion `param_accuracy` counts an expected call as matched only if `pred["params"] == exp["params"]`: whole-dict equality (*Building Applications with AI Agents*, ch. 9). That fails a refund of `19.990` against `19.99`, or an extra optional argument, as hard as a wrong order ID. Use the per-argument rules above. Keep exact equality for IDs, where it is the rule.
+
+Oshin & Campos test agents at three granularities (*Learning LangChain*, ch. 10): the **final response**, a **single step** (given this prompt and tool set, is the next tool call right?), and the **trajectory**. Their trajectory checks are the match modes in the table: "all expected tools, any order" is `set(expected) <= set(calls)`, "in order" is a subsequence check, and exact match compares the lists. Single-step tests are the cheap ones. They need no environment and pin down one decision, so write them for the steps that fail most. Their examples run each case three times (`num_repetitions=3`) because the agent is non-deterministic ([below](#non-determinism-run-every-task-k-times)).
 
 Labeling expected tool calls is real work. Two shortcuts:
 
@@ -267,6 +286,8 @@ A single cooperative simulated user flatters the agent. In GAUGE (Bodhwani et al
 **τ²-bench** (the successor) adds a **dual-control environment**: the simulated user can also call tools on the shared state. The agent says "switch to airplane mode", and the user's action really changes the environment. This fits tech support, where the user has to do part of the work, and tests whether the agent notices state changes it didn't make. It also tightened success conditions ("only an *excellent* speed rating counts") and generates task parameters fresh each run.
 
 Grade multi-turn runs at both levels: per turn (grounded, on-policy) and per conversation (goal reached, turns used, escalation correct).
+
+Albada's example release gate for a support agent puts both kinds of number in the gate: at least 95% tool recall on refund and cancellation scenarios, and promotion blocked on any regression in multi-turn tests such as address changes (*Building Applications with AI Agents*, ch. 9). The 95% is an illustration, not a measured threshold. Set yours from the cost of a missed refund ([10](10-evals-in-ci.md#the-regression-gate)).
 
 ---
 

@@ -11,6 +11,10 @@ sources:
   - https://hamel.dev/blog/posts/llm-judge/
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
+  - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
+  - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-31
@@ -35,6 +39,10 @@ Use a judge when the quality is semantic (is this complete? is it grounded? is t
 
 Pairwise judging is more reliable than pointwise for "which is better", because relative judgments are easier than absolute ones. But you can't monitor production with it, because there's no second answer to compare against. Most systems use pointwise for gates and pairwise for A/B decisions.
 
+**A judge is model + prompt + sampling settings.** Change any of the three and you have a different judge (*AI Engineering*, ch. 3). Huyen's example: coherence was 90% last month and 92% this month. That means nothing unless the judge was identical both times, and a coworker fixing a typo in the judge prompt counts as a change. The same criterion name doesn't mean the same judge across tools either. MLflow, Ragas and LlamaIndex all ship a "faithfulness" judge, but MLflow scores 1–5, Ragas 0 or 1, and LlamaIndex YES/NO, so one (context, answer) pair can get 3, 1 and NO. Her rule: don't trust a judge whose model and prompt you can't see.
+
+**Off-the-shelf specialized judges** exist if a general model is too costly: reward models such as Google's Cappy (360M parameters, a 0–1 correctness score for a prompt–response pair), reference-based judges such as Prometheus (prompt, response, reference and rubric in, a 1–5 score out, with the reference defined as a 5), and preference models such as PandaLM and JudgeLM (*AI Engineering*, ch. 3). These are 2023 models: calibrate them like any other judge.
+
 ---
 
 ## Writing the judge prompt
@@ -47,6 +55,8 @@ A judge that checks "quality" will silently switch between criteria from row to 
 |---|---|
 | "Rate this response's quality 1–10" | "Does the answer state a specific menu path that appears in the source document? PASS or FAIL" |
 | "Is this helpful?" | "Does the answer address every question the user asked? List each question, then mark each addressed or not" |
+
+Huyen reports the same from practice: judges do better on classification than on numerical scores, discrete scores beat continuous ones, and the wider the discrete range, the worse the judge gets (*AI Engineering*, ch. 3). Oshin & Campos give the matching rule: a judge prompt a person could replicate, and no 0–10 scale with vague distinctions between scores (*Learning LangChain*, ch. 10).
 
 ### Structure that works
 
@@ -88,6 +98,8 @@ Rules that go with it:
 
 - **Parse `<verdict>` strictly.** Anything else counts as a grader error, not a FAIL.
 - **Pin the judge model** to a different family from the system under test, and version the prompt (`grounding-v3`).
+- **Give it the reference answer when you have one.** Iusztin & Labonne note that adding a ground-truth answer as context improves the judge's accuracy (*LLM Engineer's Handbook*, ch. 7). That's the reference-guided shape above.
+- **Set temperature to 0**, as Huyen advises (*AI Engineering*, ch. 4). The worked example in *LLM Engineer's Handbook* (ch. 7) runs its GPT-4o-mini judge at temperature 0.8, single pass. That **contradicts** this rule: at 0.8 the same answer can get a different score on a rerun, and the chapter reports no repeat runs to show how much. If you must sample (to estimate judge variance, say), run several times and report the spread ([09](09-reading-results.md#repeats-and-clustering)).
 - **A prompt change resets the judge to experimental** until it is re-calibrated (below).
 
 A compact version from the DeepLearning.AI course's analysis-clarity judge (Lab 3). It is one criterion, delimited data, and the explanation before the label:
@@ -120,7 +132,9 @@ Decomposition gives partial credit, finds *which* claim failed, and is easier fo
 
 ## Known biases
 
-Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases that matter most. Strong judges agreed with human preferences about as often as humans agreed with each other (over 80%) *once these were controlled*. A later survey sorts the documented biases into four groups (presentation, social, content, cognitive) and names fifteen. Among them are bandwagon (siding with a stated majority) and distraction, where an irrelevant sentence such as "System Star likes to eat oranges and apples" shifts the verdict ([arXiv:2412.05579](https://arxiv.org/abs/2412.05579) (Li et al., 2024-12)). The table keeps the ones worth testing for on your own data.
+Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases that matter most. Strong judges agreed with human preferences about as often as humans agreed with each other (over 80%) *once these were controlled*. Huyen gives the exact figures: GPT-4 agreed with humans 85% of the time, against 81% between humans. AlpacaEval's judges correlated 0.98 with human rankings (*AI Engineering*, ch. 3). The 2023 bias sizes she cites are a useful baseline for what to test: GPT-4 gave its own answers a 10% higher win rate and Claude-v1 25%. GPT-4 and Claude-1 preferred ~100-word answers with factual errors over ~50-word correct ones (Wu & Aji). On creative tasks, an answer twice as long almost always won (Saito et al.). AI judges favor the *first* answer in a pair, the opposite of the human recency bias.
+
+People aren't a clean baseline either. Iusztin & Labonne note that human raters also favor long, confident answers, especially nicely formatted Markdown (*LLM Engineer's Handbook*, ch. 7). Calibrate against expert labels written to a rubric, not casual preference. A later survey sorts the documented biases into four groups (presentation, social, content, cognitive) and names fifteen. Among them are bandwagon (siding with a stated majority) and distraction, where an irrelevant sentence such as "System Star likes to eat oranges and apples" shifts the verdict ([arXiv:2412.05579](https://arxiv.org/abs/2412.05579) (Li et al., 2024-12)). The table keeps the ones worth testing for on your own data.
 
 | Bias | What happens | Mitigation |
 |---|---|---|
@@ -153,6 +167,10 @@ The master-key row comes from Zhao et al., who tested judges that grade reasonin
 7. **Record** the judge model, prompt version and test metrics. Re-run when any of them changes.
 
 Keep one calibration record per judge version. It holds: the label counts per split (train/dev/test, PASS/FAIL); human–human agreement on a double-labelled subset (the ceiling); one line per dev iteration (prompt change → TPR/TNR); the test confusion matrix with TPR, TNR, precision, κ, separation and the `CANNOT_GRADE` rate; the bias checks (position swap, length, self-preference); and a decision (calibrated for gating, tracking only, or rework).
+
+**Few-shot examples help consistency, not necessarily accuracy.** Zheng et al. raised GPT-4's consistency from 65% to 77.5% by putting evaluation examples in the prompt, but the longer prompt quadrupled their judge cost, and "high consistency may not imply high accuracy": the judge can make the same mistake every time (*AI Engineering*, ch. 3). LangSmith turns calibration into a loop: when a person corrects a judge verdict, the correction, with an optional explanation, is stored and fed back as a few-shot example on later runs (*Learning LangChain*, ch. 10). Draw those examples from the train split only, or the test agreement you report is inflated.
+
+**Evaluate the evaluator with seeded cases.** Phoenix & Taylor write test cases that are known to contain an issue and cases known not to, then count false positives (the judge invents an issue) and false negatives (it misses one) (*Prompt Engineering for Generative AI*, ch. 3). Their own demo claims "near 100% accuracy" for a GPT-4 conciseness judge on 10 responses they generated to be concise or verbose. That's a sanity check, not a calibration: 10 rows give a confidence interval tens of points wide ([09](09-reading-results.md#how-many-tasks)), and synthetic extremes are easier than real borderline cases.
 
 ### What to measure
 
@@ -224,6 +242,13 @@ When there's no absolute standard, ask "which is better, A or B?" and turn many 
 - **Bradley–Terry** gives each system a latent strength. P(A beats B) depends only on the difference in strengths.
 - **Elo** is the online-update form of that model. Everyone starts at 1000. After each match, the winner gains points in proportion to how surprising the win was. A 1200-rated model is expected to beat a 1000-rated one about 76% of the time, and an upset moves both ratings more.
 - **Chatbot Arena** ranks models this way from millions of blind human votes. The catch: the ranking reflects what users happened to ask. A flood of coding questions lifts coding models.
+
+Huyen adds numbers to the Arena caveats (*AI Engineering*, ch. 3, figures from 2023–24):
+
+- **It switched from Elo to Bradley–Terry**, then rescales BT scores to look like Elo. Elo depends on the order of matches, as the worked example below shows.
+- **Coverage is thin.** In January 2024, 57 models and 244,000 comparisons averaged only 153 comparisons per model pair (1,596 pairs).
+- **The prompts aren't your traffic.** Of 33,000 published prompts, 180 were "hello" or "hi", and one brainteaser was asked 44 times.
+- **Preference isn't capability.** "B beats A" fits B good and A bad, both bad, or both good. If A resolves 70% of support tickets, a 51% win rate for B says nothing about how many B would resolve, so you can't weigh it against B costing twice as much.
 
 The update in two lines, with K setting how far one match moves a rating:
 
@@ -321,6 +346,8 @@ Judges multiply cost: every trial × every judge × every repeat. Ways to contro
 - A cost-capped, deterministic **quality sample** for judges, not every row ([03](03-eval-datasets.md#row-eligibility-is-this-row-fair-for-this-gate)).
 - A smaller judge model once it's calibrated as well as the large one on your test split.
 - Cache judge results keyed by (output hash, judge version).
+
+Know the multiplier. Using GPT-4 to generate and to judge one criterion doubles the calls. Judging three criteria (quality, factual consistency, toxicity) quadruples them (*AI Engineering*, ch. 3). The usual answer is **spot-checking**: a cheap model generates and a strong judge scores 1% of responses, which buys cost at the price of missed failures. Choose the sample rate against the error bar you need ([09](09-reading-results.md#how-many-tasks)).
 
 ---
 

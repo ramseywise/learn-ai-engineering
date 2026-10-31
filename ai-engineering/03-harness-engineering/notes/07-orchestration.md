@@ -9,6 +9,9 @@ sources:
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 4 — https://github.com/bojieli/ai-agent-book"
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 5"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 4, 5, 8"
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -86,6 +89,8 @@ Splits production from judgment — the structural answer to self-evaluation bia
 | **Manager hierarchy** | One orchestrator delegates and integrates; it can nest | The default for open-ended work |
 | **All-to-all** | Agents chat freely | Brainstorming and low-stakes creative work only, because it is hard to predict and control |
 
+Albada's rules for the static shapes (*Building Applications with AI Agents*, ch. 5): **set a maximum chain length**, because errors compound down a chain. Move to a graph only when you must both branch *and* later consolidate. A graph costs more model calls and adds new failure classes: cycles, unreachable nodes and conflicting state merges. So cap its depth and branching factor, unit-test every router function, and use tracing to check that every path reaches a terminal node.
+
 How to cut the work is a separate choice from the topology. **Functional** decomposition splits by expertise (research, code, review). **Spatial** splits by file or directory, which parallelizes well until the files depend on each other. **Temporal** splits into stages where later ones need earlier ones finished. **Data-driven** splits by data partition for large datasets processed chunk by chunk.
 
 ### Full pipeline
@@ -141,6 +146,63 @@ ADK 2.0 treats **compiled workflows as first-class nodes**, so self-contained su
 
 ---
 
+## A plan-execute engine, end to end
+
+![Context Engine: a Planner reads the Agent Registry and has the LLM produce a JSON plan; the Executor runs Librarian, Researcher and Writer steps in order, chaining each output into the next, while a Tracer logs every step](../sources/images/context-engineering-multi-agent-systems-fig4-1.png)
+*Image Source: Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), Fig. 4.1*
+
+Rothman's Context Engine (*Context Engineering for Multi-Agent Systems*, ch. 4) is a compact, fully coded manager hierarchy. Four parts:
+
+- **Agent Registry.** Maps each agent name to a handler and a capability description. The Planner reads only those descriptions, so "the clarity of this description directly determines the quality of the Planner's reasoning". Agent descriptions are tool descriptions ([note 03](03-tool-design.md)) one level up.
+- **Planner.** One LLM call in JSON mode turns the goal into a list of `{step, agent, input}`. Inputs can point at earlier outputs with a placeholder such as `"$$STEP_1_OUTPUT$$"`. The parser accepts a bare list and also unwraps `{"plan": [...]}`, because models add the wrapper unprompted.
+- **Executor.** Runs steps in order. It resolves placeholders against a state dict, calls the agent, and stores the result under `STEP_N_OUTPUT`.
+- **ExecutionTrace.** Logs the planned input, the resolved input and the output of every step. It is returned even when the run fails.
+
+The resolver is where the design pays off:
+
+```python
+import re
+REF = re.compile(r"^\$\$(STEP_\d+_OUTPUT)\$\$$")
+
+def resolve(value, state):
+    if isinstance(value, str) and (m := REF.match(value)):
+        key = m.group(1)
+        if key not in state:          # the plan referenced a step that never ran
+            raise ValueError(f"Dependency Error: {key} not found")
+        return state[key]
+    if isinstance(value, dict):
+        return {k: resolve(v, state) for k, v in value.items()}
+    if isinstance(value, list):
+        return [resolve(v, state) for v in value]
+    return value
+```
+
+A missing reference **fails fast** instead of passing the literal placeholder string to the next agent. The run halts at that step, and the trace shows which step broke and what it was given.
+
+Two cautions:
+
+- **The book's "MCP" is not the Model Context Protocol.** In the code it is a homegrown `create_mcp_message(sender, content)` dict envelope passed between in-process functions. That is fine as a message format, but nothing in it is MCP as [note 03](03-tool-design.md#mcp-vs-in-process) uses the term.
+- **One skipped chunk can take down the run.** In ch. 8, a sanitizer skipped a retrieved chunk of legitimate testimony, and a later step failed with a fatal Dependency Error ([note 04](04-execution-boundaries.md#moderation-around-the-whole-engine)). Fail-fast is right, but the step that drops data has to say so.
+
+### The latency budget of a sequential plan
+
+Sequential plans add their latencies together. Rothman's ch. 8 estimate for a three-step plan (Librarian → Researcher → Writer) with moderation on both ends. These are illustrative figures that vary with model, network and load:
+
+| Call | ≈ ms |
+|---|---|
+| Moderation, pre-flight | 200 |
+| Planner | 3,000 |
+| Embeddings (×2) | 150 each |
+| Vector-DB queries (×2) | 250 each |
+| Researcher synthesis | 4,000 |
+| Writer | 2,500 |
+| Moderation, post-flight | 200 |
+| **Total** | **≈ 10,700** |
+
+That is at least eight API calls in a row, and the generation calls dominate. Measured runs in ch. 5 were far slower than the estimate: **148 s and 151 s** for three-step plans with gpt-5 as the generation model, run from Colab. Rothman's levers: run independent calls in parallel, cache repeated retrievals and plans, and use smaller, faster models for the simpler steps. The broader point is that each extra agent in a sequential plan adds its full latency to the user's wait.
+
+---
+
 ## Multi-agent failure modes
 
 Named problems that emerge specifically from orchestration:
@@ -167,6 +229,7 @@ What crosses a boundary is the whole design. The short version: **define interfa
 - **State on disk, references in the message.** Large artifacts go to files; the handoff carries paths ([note 06](06-long-horizon-execution.md#tool-call-offloading)).
 - **Declare what was *not* done.** Scoped claims prevent the orchestrator from assuming coverage that doesn't exist.
 - **Label every source in the subagent's prompt.** Li's convention: a role statement, then inputs tagged `[FROM_MAIN_AGENT]`, `[FROM_USER]` and `[TOOL_RESULT]`, then explicit boundaries, then a JSON output schema. A subagent that can't tell instructions from data will follow injected text.
+- **Key the payload, and keep the keys stable.** Rothman's engine broke when two agents were "upgraded" to return dicts (`{"blueprint_json": ...}`, `{"facts": ...}`) instead of strings. The Writer still expected raw strings, so the upgraded pipeline broke at its last step (*Context Engineering for Multi-Agent Systems*, ch. 5). Whenever an agent's output shape changes, every consumer of that output has to change in the same commit.
 - **Synthesize, don't delegate understanding.** "Based on your findings, fix the auth bug" pushes the orchestrator's job onto the worker. The orchestrator reads the findings and hands down a precise spec: the file, the line, the change, and what done looks like.
 
 ---
@@ -205,6 +268,20 @@ Hard-coded rules miss semantics. Li recommends a **small classifier LLM as the e
 Placeholders invite hallucinated results, so interrupt only when it is genuinely urgent. For batches, the model tends to answer only the last event. Number them (`[Unprocessed event 2/4] User note: Beijing data only`) and end with a summary line ("4 events: 1 tool result, 2 user messages, 1 reminder; address all of them").
 
 Polling is the fallback, not the design. Timers and heartbeats make an agent *look* proactive, but an OTP request during a live phone call can't wait five minutes for the next tick. Real proactivity needs a push channel from the outside world into the queue.
+
+### Double texting: the same problem in a chat app
+
+Oshin and Campos (*Learning LangChain*, ch. 8) list the options for a user who sends a second message while the first run is still going:
+
+| Strategy | Behaviour | Cost |
+|---|---|---|
+| **Refuse** | Reject new input until the run finishes | Simplest; pushes concurrency onto the caller |
+| **Handle independently** | Start a second run on a new thread | The user sees two separate runs that can't be reconciled |
+| **Queue** | Run the new input after the current run | Queue grows without bound, and later inputs may already be stale |
+| **Interrupt** | Stop the current run and restart with both inputs | Choose what to keep: nothing, the last completed step, the in-progress step too, or wait for the current node to finish |
+| **Fork and merge** | Run both in parallel and merge the state afterwards | Needs merge-friendly state (CRDT-style) or manual conflict resolution. If you have either, the authors rate this the best option overall |
+
+The interrupt row hits the same pairing constraint as Li's rule 3. OpenAI's API requires every assistant message carrying tool calls to be followed immediately by its tool messages, so an interrupted run's state must be cleaned up or padded before the next model call.
 
 Labs, upstream: [4-4 event-triggered email agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/agent-with-event-trigger) · [4-5 async agent with interruption](https://github.com/bojieli/ai-agent-book/tree/main/chapter6/async-agent).
 

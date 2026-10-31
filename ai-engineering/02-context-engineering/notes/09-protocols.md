@@ -9,6 +9,8 @@ cleaned: 2026-10-28
 
 > A protocol shell is a structured prompt written in pseudo-code: an intent, the inputs, an ordered process and a declared output. The model doesn't execute it. The structure is useful because it is explicit, reusable and easy to share.
 
+"Protocol" here means a prompt pattern. Wire protocols that carry context between programs, such as the Model Context Protocol (MCP), are in [10](10-tools-and-multi-agent.md#mcp-a-protocol-for-moving-context).
+
 ---
 
 ## What a protocol shell is

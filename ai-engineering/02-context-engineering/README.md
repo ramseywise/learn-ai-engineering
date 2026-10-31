@@ -125,7 +125,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 7. [Structured context and schemas](notes/07-structured-context.md) — choosing a format, input/state/output schemas, knowledge graphs, schema design principles.
 8. [Cognitive tools and prompt programs](notes/08-cognitive-tools.md) — the IBM cognitive-tools result, template families, the self-correction loop, prompt programs.
 9. [Protocols](notes/09-protocols.md) — protocol shells, Pareto-lang, the protocol catalogue: context engineering without code.
-10. [Multi-agent context and tool design](notes/10-tools-and-multi-agent.md) — sub-agent isolation, orchestrator-holds-plan, token-efficient tools, tool-integration patterns, orchestration and coordination.
+10. [Multi-agent context and tool design](notes/10-tools-and-multi-agent.md) — sub-agent isolation, orchestrator-holds-plan, token-efficient tools, tool-integration patterns, MCP as context plumbing (who controls each primitive, transports, server design), orchestration and coordination.
 
 **Practice**
 

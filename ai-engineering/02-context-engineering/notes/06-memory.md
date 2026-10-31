@@ -7,6 +7,8 @@ sources:
   - https://arxiv.org/abs/2610.29823
   - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2506.15841
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 4 — generative-ai/01-llm-fundamentals/sources/learning-langchain/"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6, 13 — sources/building-applications-with-ai-agents/"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -135,6 +137,7 @@ Practices:
 - **Absolute dates, not relative.** "Last week" written six months ago is now false. Timestamps must resolve independently of read time.
 - **Don't store what's derivable.** Code structure, git history, and file layout are already in the repo. Memory holds what the artifacts *don't* record — decisions, preferences, corrections, and the reasons behind them.
 - **Verify before relying.** A memory naming a file, function, or flag reflects what was true when written. Check that it still exists before acting on it.
+- **Scope memory to the agent's audience.** A team agent that recalls something said in a private one-to-one chat is a breach. Personal agents default to isolated memory and share only when explicitly allowed. Team agents use shared, access-controlled spaces. Org-wide agents run under retention rules, logging and audit. At every scope, users can see what the agent remembers, and why, and can delete it or turn memory off (*Building Applications with AI Agents*, ch. 13).
 
 The last two are the difference between memory that compounds and memory that decays. Memory should hold what cannot be re-derived; anything re-derivable should be re-derived, because the source of truth stays current and the memory does not.
 
@@ -162,6 +165,25 @@ The tension: prior revisions are exactly the content that fills a window fastest
 
 Frameworks draw the same line. LangGraph's [memory docs](https://docs.langchain.com/oss/javascript/langgraph/memory) split **thread-scoped** state (message history and working state, persisted per thread by a checkpointer) from **long-term** memory in a store, organised by **namespaces** (per user, per org) and shared across threads. The docs carry the warning this pillar is built on: long histories distract the model, raise cost and latency, and degrade quality, so short-term memory needs its own forgetting and compression ([05](05-compression-compaction.md)).
 
+Oshin and Campos list what a production chat history needs beyond "append the messages" (*Learning LangChain*, ch. 4):
+
+- **Atomic updates.** Record the question and the answer together, so a failure doesn't leave half a turn.
+- **Durable storage.** A checkpointer backed by SQLite or Postgres, keyed by `thread_id`.
+- **Control** over what is stored and what is sent.
+- **State you can inspect and edit outside a model call** (`get_state` / `update_state`).
+
+The trimming defaults that keep a cut history valid:
+
+```python
+trim_messages(messages, max_tokens=N, strategy="last",  # keep the newest
+              token_counter=model,      # count with the target model's tokenizer
+              include_system=True,      # never trim the system message
+              allow_partial=False,      # drop a message whole rather than cut it
+              start_on="human")         # never keep an answer without its question
+```
+
+Two related helpers clean the list before it is sent. `filter_messages` keeps messages by type, name or id. `merge_message_runs` joins consecutive messages of the same type, which some providers (Anthropic among them) reject.
+
 ---
 
 ## The memory loop
@@ -182,7 +204,12 @@ flowchart TD
 ```
 *Image Source: memory-augmented agent architecture, after the author's Notion notes and the Azure / LangGraph memory docs*
 
-The loop is **dual retrieval**: one path reads static knowledge (the RAG index), the other reads history and user memory, and a reasoning step merges the two before generation. After the answer, the memory store is updated with the new interaction (session summary, extracted facts, feedback).
+The loop is **dual retrieval**: one path reads static knowledge (the RAG index), the other reads history and user memory, and a reasoning step merges the two before generation. Albada names the two paths:
+
+- **Knowledge** is external, verifiable content, fetched at generation time.
+- **Memory** is the agent's own history: prior exchanges, tool outputs and state updates.
+
+His "semantic experience memory" embeds each new user input and searches all past interactions with it. A **fixed slice of the window is reserved** for the top matches, and the rest goes to the system message, the latest input and the most recent turns. The reservation is the useful part: experience memory gets a budget line of its own ([03](03-budgeting-the-window.md)), rather than competing with recent turns for whatever room is left (*Building Applications with AI Agents*, ch. 6). After the answer, the memory store is updated with the new interaction (session summary, extracted facts, feedback).
 
 Read as a lifecycle, every memory system makes five decisions, and most failures trace to one of them:
 

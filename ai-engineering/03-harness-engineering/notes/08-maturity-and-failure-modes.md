@@ -8,6 +8,8 @@ sources:
   - https://harness-engineering.ai/blog/what-is-harness-engineering/
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -168,6 +170,12 @@ Without runtime signals the agent can't tell "correct" from "looks correct", and
 - For UI work, a **browser validation loop**: snapshot before, trigger exactly one path, snapshot after, compare, fix the smallest responsible layer, re-run until the same path is clean twice.
 
 Process artifacts are covered in [note 05](05-verification-loops.md#sprint-contracts) (contracts, rubrics).
+
+**A run status is not a content verdict.** One of Rothman's published traces reads `Trace Status: Success`, while the Researcher step's own output begins "Note: The provided 'Sources' are unrelated to Apollo" (*Context Engineering for Multi-Agent Systems*, ch. 5). The book's walkthrough still describes that step as retrieving facts "related to the Apollo 11 mission", and the final answer was fluent, so the facts most likely came from the model's own memory rather than the knowledge base. The runtime layer recorded that every step returned. Nothing checked whether the retrieval step had anything to retrieve. Give steps a way to report "no grounding found" as a status the trace and the evaluator can see, not as prose inside a successful output.
+
+**Starting alert thresholds.** Albada's illustrative defaults (*Building Applications with AI Agents*, ch. 12): error or hallucination rate above **5% over a rolling hour**; **p99 latency above 2 s** on critical operations; **80% sustained** CPU, GPU or memory utilization; output drift (semantic similarity to expected outputs) **below 0.85**; and **any** race condition or synchronization failure in a multi-agent setup. Treat these as a first draft to tune against your own baseline. A 2 s p99 is impossible for the multi-call plans in [note 07](07-orchestration.md#the-latency-budget-of-a-sequential-plan). His point about tuning is the important one: thresholds that ignore workload peaks cause alert fatigue.
+
+**Test recovery by breaking things on purpose.** Chaos engineering applied to agents (ch. 12): inject faults such as a 500 ms latency spike on a dependency, noisy inputs or a killed plug-in, and watch whether the agent recovers. Run game days against a named hypothesis ("what if state sync fails across the swarm?") and measure recovery time and recovery point objectives. Control the blast radius: start in a sandbox, then move to production with automated rollback. This is the only way to find out whether the [recovery ladder](05-verification-loops.md#failure-recovery-and-termination) works before an outage tests it for you.
 
 ---
 

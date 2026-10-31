@@ -13,6 +13,8 @@ sources:
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
   - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
   - https://arxiv.org/abs/2609.11999
+  - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
+  - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -338,7 +340,7 @@ Li's taxonomy (ch. 5, distilled from production harness source code) sorts failu
 
 1. **Silent retry**, with backoff and jitter, honouring `retry-after`. Retry the main loop; *drop* failed background calls such as title generation, so they don't amplify into quota contention.
 2. **Degrade and continue.** On truncation, raise the output cap, then ask the model to continue from the break. On persistent overload, fall back to another model, stripping provider-specific blocks from the history first.
-3. **Surface to the user**, along with what was already tried.
+3. **Surface to the user**, along with what was already tried. Albada's UX version (*Building Applications with AI Agents*, ch. 3): say what can't be done, offer an alternative or a hand-off to a human, and keep the user's context so they don't have to repeat themselves. For background work, the same rule applies before anything fails: tell the user when the task starts, give an estimated completion time, and end with a short summary.
 
 Tool-layer errors never end the session. They come back as structured tool results, and malformed arguments are repaired programmatically. Treat the **whole recovery loop** as the unit: hold back intermediate errors from users and event subscribers until recovery has definitely failed.
 
@@ -358,6 +360,10 @@ Not all failures are retryable:
 | **Schema violation** | Return the validation error; retry once with it in context |
 | **Context exhaustion** | Compact or reset, then resume ([note 06](06-long-horizon-execution.md)) |
 | **Fatal** | Stop; surface the error |
+
+Albada's corrective flow for malformed calls (*Building Applications with AI Agents*, ch. 4) sharpens the schema row. **Validate** every response against the schema (jsonschema or Pydantic). If a required tool call was skipped, trigger it yourself; if the JSON is invalid, ask the model to fix it. **Regenerate only the broken part** rather than the whole exchange. When retries run out, **fall back**: a backup model, a clarifying question to the user, cached data, or a safe default. Log every validation error, retry and fallback.
+
+A common shortcut breaks the "not all failures are retryable" rule. Rothman's hardened engine (*Context Engineering for Multi-Agent Systems*, ch. 5) decorates its LLM and embedding calls with tenacity's `@retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))`. With no `retry=` filter, that retries **every** exception, refusals and bugs included, and the waits alone can add minutes before the first real failure shows. Its good half: after the last attempt the wrapper logs and re-raises, so the executor halts instead of passing on an empty string. Restrict the decorator to transient error types (`retry=retry_if_exception_type((RateLimitError, APIConnectionError, APITimeoutError))`).
 
 Retry budget is **per-invocation, not per-tool** — otherwise five tools with three retries each become fifteen attempts. Circuit-break after 5 consecutive failures with a 60s cooldown, then fail fast.
 

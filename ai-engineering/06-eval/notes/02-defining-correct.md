@@ -4,6 +4,7 @@ sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://hamel.dev/blog/posts/field-guide/
   - https://arxiv.org/abs/2404.12272
+  - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
   - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
@@ -26,6 +27,10 @@ Before collecting data or writing a grader, answer four questions in writing:
 | What does it cost to be wrong? | — | "A wrong menu path costs a support ticket. A wrong tax answer costs a fine" |
 
 The fourth answer sets your thresholds. A system where errors are cheap can ship at a 90% pass rate. One where errors are expensive needs a lower rate plus a fallback path ([11](11-production-and-the-maturity-ladder.md)).
+
+**Map the eval metric to the business metric before you build.** Huyen's illustration for a support bot (her numbers are hypothetical, not measured): factual consistency of 80% lets you automate 30% of requests, 90% lets you automate 50%, and 98% lets you automate 90%. The same 80% might be unusable for billing questions yet good enough for product recommendations, so set the mapping per slice. Write down the **usefulness threshold** too: the score below which the system isn't worth shipping at all. A curve like this tells you whether the next 8 points are worth a quarter of work (*AI Engineering*, ch. 4).
+
+**Correct is not the same as good.** LinkedIn's first hurdle with its job-assessment feature was writing the guideline. "You are a terrible fit" can be correct and still be a bad answer. A good answer explains the gap between the job and the candidate's background and what they could do to close it. Put a worked example next to each score in the rubric ("this is a 1, and here's why"), and if people struggle to apply it, rewrite it before building a grader (*AI Engineering*, ch. 4).
 
 ### The two-expert test
 

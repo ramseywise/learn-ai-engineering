@@ -5,6 +5,7 @@ sources:
   - https://vercel.com/kb/guide/how-to-run-a-multi-step-research-agent-on-vercel
   - https://vercel.com/i/what-are-agentic-workflows
   - https://www.langchain.com/blog/the-art-of-loop-engineering
+  - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -109,6 +110,13 @@ The research agent's loop in one line: *"search, read, aggregate, synthesize, th
 LangChain's four levels ([note 01](01-what-a-loop-is.md#the-map-of-this-pillar)) map onto its own products: `create_agent` (L1), `RubricMiddleware` and `after_agent` hooks (L2), LangSmith Deployment cron and webhooks (L3), and LangSmith Engine for trace-driven harness rewrites (L4).
 
 In LangGraph a loop is an explicit cycle in the graph: a node, a conditional edge that either loops back or routes to `END`, a `recursion_limit` as the hard cap, and a checkpointer for durability and human-in-the-loop interrupts. Once you are drawing the cycle as a graph, you're at the next layer: [05-graph](../../05-graph-engineering/README.md).
+
+What a running loop exposes to a watching human (*Learning LangChain*, ch. 8):
+
+- **Stream modes.** `stream_mode="updates"` (the default) yields `{node_name: output}` after each node, which tells you where the loop is. `"values"` yields the full state after each step. `"debug"` adds checkpoint, task and task-result events. Modes can be combined by passing a list. Token-level output comes from `astream_events(..., version="v2")`, filtered on `on_chat_model_stream`.
+- **Human controls** ([note 07](07-autonomy-ladder.md#the-controls-a-human-needs-while-a-loop-runs)), all keyed by `config={"configurable": {"thread_id": ...}}` on a graph compiled with a checkpointer. **Interrupt** by breaking out of the stream, wrapped in `aclosing` so the stream closes cleanly. **Resume** by invoking with `None` as input. **Restart** by invoking with new input on the same thread (a new `thread_id` starts blank). **Edit** with `get_state` and then `update_state`, which writes a new checkpoint. **Fork** by picking a config from `get_state_history` (most recent first) and invoking `None` against it.
+
+**Dated.** The book's **authorize** pattern passes `interrupt_before=["tools"]` at call time. Current LangGraph favours calling `interrupt()` inside the node and resuming with `Command(resume=...)`, which lets the node show the human a payload and receive a decision. Static `interrupt_before` at compile time is now mostly used for debugging. The examples also use `gpt-3.5-turbo`, which is retired.
 
 ---
 
