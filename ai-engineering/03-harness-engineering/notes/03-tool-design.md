@@ -157,7 +157,7 @@ The return path is as much a part of the tool as the call. Rules by tool type:
 
 ### Coding-agent search and edit tools
 
-![Five file-editing schemes, each with an example edit and its trade-off: diff + apply model, old→new string, line numbers, and others](../images/ai-agent-book/fig5-4.svg)
+![Five file-editing schemes, each with an example edit and its trade-off: diff + apply model, old→new string, line numbers, and others](../sources/images/li-ai-agents-in-depth-fig5-4.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter5.md) (2026), Fig. 5-4 (Apache-2.0)*
 
 Search, from coarse to fine:
@@ -193,7 +193,7 @@ Skills invert this. A short name and description (*what* + *when*, ~10 tokens) s
 
 ### Tool discovery at scale
 
-![Two-level tool matching: semantic search picks the GitHub server (0.92) from five, then the top-3 of its 26 tools](../images/ai-agent-book/fig4-2.svg)
+![Two-level tool matching: semantic search picks the GitHub server (0.92) from five, then the top-3 of its 26 tools](../sources/images/li-ai-agents-in-depth-fig4-2.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter4.md) (2026), Fig. 4-2 (Apache-2.0)*
 
 The cost of eager loading is concrete. Li measures five typical MCP servers at about 55K tokens of definitions, roughly 30% of a 200K window, before the first user message. The fixes, from heaviest to lightest:
@@ -204,7 +204,7 @@ The cost of eager loading is concrete. Li measures five typical MCP servers at a
 
 **KV-cache rule for dynamic tools.** Never insert a newly loaded schema into the static prefix; that invalidates the whole cache. Append it at the end of the context *on the turn it is discovered*, and then leave it pinned where it landed, where it becomes ordinary cached history. Cache invalidation then comes only from TTL expiry or from modifying, removing or reordering tools already loaded. The cost is that weaker models handle schemas mid-trajectory poorly and may need post-training for it.
 
-MCP solves **interoperability**. Skills solve **choice overload**. They are complementary, not rivals.
+MCP solves **interoperability**. Skills solve **choice overload**. They are complementary, not rivals. A pattern seen early with skills: accuracy drops in the gap between calling one tool and orchestrating several. Skills close part of that gap by making the multi-tool procedure explicit without bloating the system prompt. What matters is tool quality, not tool quantity.
 
 This is the same mechanism as layer 2 in [02-context-engineering/notes/02](../../02-context-engineering/notes/02-context-anatomy.md#layer-2--on-demand-knowledge), applied to capability rather than knowledge.
 
@@ -227,13 +227,15 @@ description: Use when deploying to production or rolling back.
 
 **2. Add negative examples.** A misfire costs a full body load plus a wrong-track start. "Don't call this skill when… (and what to do instead)" is worth more than another positive example, because the positive case is usually obvious from the name and the negative case never is.
 
-**3. Put templates and worked examples inside the skill.** They cost nothing until the skill fires, so the body is the right home for bulky, consistently shaped outputs: structured reports, triage summaries, analysis write-ups.
+**3. Put templates and worked examples inside the skill.** They cost nothing until the skill fires, so the body is the right home for bulky, consistently shaped outputs: structured reports, escalation triage summaries, account plans, data-analysis write-ups. A worked example in the body beats a paragraph describing the format.
 
 **4. Design for long runs early.** A skill that runs for more than a few minutes should assume it will be interrupted: write progress to disk and resume from a checkpoint ([02-context/05](../../02-context-engineering/notes/05-compression-compaction.md#crash-recovery)).
 
 **5. For determinism, invoke explicitly.** Routing on descriptions is probabilistic. When a skill must run, write `Use the <skill name> skill.` in the instruction.
 
 **6. Skills plus network is an exfiltration path.** A skill body is instructions the agent follows. An injected instruction with network reach can move data out. The defensible default is **skills allowed, shell allowed, network on a minimal per-task allowlist**. Treat tool output as untrusted ([note 04](04-execution-boundaries.md#the-five-protection-layers)).
+
+Skills also improve with use. Karpathy's line (as relayed from his AISN 2026 talk): *"the best way to find a leak in a hose is to run water through it."* Run the skill on real tasks, fix what breaks, and the skill set compounds ([note 09](09-repo-as-system-of-record.md#karpathys-environment-layer)).
 
 ---
 

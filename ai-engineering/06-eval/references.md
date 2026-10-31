@@ -38,6 +38,7 @@
 |---|---|---|---|
 | | Chen et al., *Evaluating Large Language Models Trained on Code* (Codex, 2021): the unbiased pass@k estimator | [2107.03374](https://arxiv.org/abs/2107.03374) | 06 |
 | ★ | Yao et al., *τ-bench: A Benchmark for Tool-Agent-User Interaction* (2024): pass^k, simulated users, policy-following | [2406.12045](https://arxiv.org/abs/2406.12045) | 06 |
+| | Yang et al., *Terminal-RSI: Recursive Self-Improving Terminal Agents via Recursive Self-Rewrite and Policy-Refine* (2026): partial credit vs. strict verified success (failures took 50% of dense-reward mass), Mean@R vs. pass@R, difficulty-stratified results. [PDF](sources/yang-2026-terminal-rsi.pdf) | [2610.22192](https://arxiv.org/abs/2610.22192) | 06, 09, 12 |
 
 ### RAG and grounding
 
@@ -45,7 +46,9 @@
 |---|---|---|---|
 | ★ | Es et al., *RAGAS: Automated Evaluation of Retrieval Augmented Generation* (2023). [PDF](../readings/general/ragas_automated_evaluation.pdf) | [2309.15217](https://arxiv.org/abs/2309.15217) | 07 |
 | | Saad-Falcon et al., *ARES: An Automated Evaluation Framework for RAG Systems* (2023) | [2311.09476](https://arxiv.org/abs/2311.09476) | 07 |
-| | Gao et al., *Enabling Large Language Models to Generate Text with Citations* (ALCE, 2023): citation precision/recall | [2305.14627](https://arxiv.org/abs/2305.14627) | 07 |
+| | Gao et al., *Enabling Large Language Models to Generate Text with Citations* (ALCE, 2023): citation precision/recall | [2305.14627](https://arxiv.org/abs/2305.14627) | 07, 13 |
+| | Qi et al., *Model Internals-based Answer Attribution for Trustworthy Retrieval-Augmented Generation* (EMNLP 2024): self-generated citations are often unreliable | [2406.13663](https://arxiv.org/abs/2406.13663) | 13 |
+| | Chen et al., *Concise and Sufficient Sub-Sentence Citations for RAG* (2025): sub-sentence citations cut verification cost | [2509.20859](https://arxiv.org/abs/2509.20859) | 13 |
 | | Manakul et al., *SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection* (2023). [PDF](../readings/general/2303.08896v3.pdf) | [2303.08896](https://arxiv.org/abs/2303.08896) | 07 |
 | | Lin et al., *TruthfulQA: Measuring How Models Mimic Human Falsehoods* (2021). [PDF](../readings/general/truthfulQA_how_models_mimic_human_falsehoods.pdf) | [2109.07958](https://arxiv.org/abs/2109.07958) | 07 |
 | | Shuster et al., *Retrieval Augmentation Reduces Hallucination in Conversation* (EMNLP Findings 2021). [PDF](../readings/general/2021.findings-emnlp.320.pdf) | [2104.07567](https://arxiv.org/abs/2104.07567) | 07 |

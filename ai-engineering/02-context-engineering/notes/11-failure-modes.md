@@ -114,6 +114,19 @@ When an agent misbehaves:
 4. **Check provenance.** Trace the wrong fact to its source. No legitimate source → poisoning or injection.
 5. **Test in isolation.** Same task, minimal context. Works → context problem. Still fails → prompt or capability problem, and belongs in [01-prompt](../../01-prompt-engineering/README.md).
 
+```mermaid
+flowchart TD
+    W[Print the actual window] --> Q{Occupancy above ~50%?}
+    Q -- yes --> RD[Suspect rot and distraction]
+    Q -- no --> C{Same claim twice, different values?}
+    C -- yes --> CL[Clash]
+    C -- no --> P{Wrong fact has a legitimate source?}
+    P -- no --> PI[Poisoning or injection]
+    P -- yes --> T{Same task, minimal context: works?}
+    T -- yes --> CP[Context problem]
+    T -- no --> PP[Prompt or capability problem]
+```
+
 Step 5 is the one that gets skipped, and it's the one that separates a context problem from a prompt problem.
 
 ---

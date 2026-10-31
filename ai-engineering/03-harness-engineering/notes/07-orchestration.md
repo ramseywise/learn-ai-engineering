@@ -8,8 +8,9 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://robearlam.com/blog/an-introduction-to-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 4 — https://github.com/bojieli/ai-agent-book"
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-10-31
 ---
 # 7 — Orchestration and Multi-Agent Harnesses
 
@@ -29,7 +30,7 @@ A search that reads 40 files and finds 3 relevant ones should return **the 3**, 
 
 The settled default: **orchestrator holds the plan; subagents hold the details.** Sub-agents return summaries only — search and debugging detail stays in their own contexts.
 
-The sizing rule that follows: **give each subagent the minimum context, authority and execution budget needed to finish one clearly defined task.** Deep Agents' built-in `task` tool encodes the same contract. Each call gets a fresh agent instance, runs on its own until it finishes, and returns **one final report**. It is stateless, so it can't send a stream of messages back to the parent.
+The sizing rule that follows: **give each subagent the minimum context, authority and execution budget needed to finish one clearly defined task.** Deep Agents' built-in `task` tool encodes the same contract. Each call gets a fresh agent instance, runs on its own until it finishes, and returns **one final report**. It is stateless, so it can't send a stream of messages back to the parent. The parent can still watch: `stream.subagents` gives a typed stream per subagent for UIs and tracing, without that output entering the parent's context.
 
 ---
 
@@ -159,7 +160,7 @@ Two more problems are specific to many agents. **Hallucinations amplify**: one a
 
 ## Handoff design
 
-What crosses a boundary is the whole design:
+What crosses a boundary is the whole design. The short version: **define interfaces, not vibes.** Each agent needs a schema for its inputs and outputs: which fields, which types, which IDs or references get passed along. Handoffs break more often than the models do.
 
 - **Structured, not prose.** A typed schema — findings, files touched, confidence, open questions — beats a paragraph.
 - **Summaries, never transcripts.** Sending a subagent's full history back defeats the firewall.
@@ -176,7 +177,7 @@ Collaboration tools reduce to a small set of primitives: `spawn` and `cancel`, `
 
 ## Asynchronous agents: events and safe points
 
-![Three ways to handle an event that arrives mid-task: cancel and restart, queue until a safe point, or run in parallel](../images/ai-agent-book/fig6-2.svg)
+![Three ways to handle an event that arrives mid-task: cancel and restart, queue until a safe point, or run in parallel](../sources/images/li-ai-agents-in-depth-fig6-2.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md) (2026), Fig. 6-2 (Apache-2.0)*
 
 A resident agent receives user messages, tool results, timers, webhooks and messages from other agents, all at unpredictable times. Li's model (ch. 4) is an **event loop**: each iteration drains a batch of events from the queue, appends them to the trajectory, calls the LLM once, and runs the tools it chose. Events are consumed **only at safe points**, meaning the end of a reasoning stretch or a tool return, never mid-step. Cancellation is checked at safe points too, the same discipline as Go's `ctx.Done()`.
@@ -206,6 +207,26 @@ Placeholders invite hallucinated results, so interrupt only when it is genuinely
 Polling is the fallback, not the design. Timers and heartbeats make an agent *look* proactive, but an OTP request during a live phone call can't wait five minutes for the next tick. Real proactivity needs a push channel from the outside world into the queue.
 
 Labs, upstream: [4-4 event-triggered email agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/agent-with-event-trigger) · [4-5 async agent with interruption](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/async-agent).
+
+---
+
+## Coordination without a coordinator: four agents in Minecraft
+
+Most of this note designs coordination in advance. The Gemini Minecraft run (Faldor et al., 2026; harness in [note 02](02-harness-anatomy.md#one-harness-read-through-the-five-subsystems), timeline in [note 06](06-long-horizon-execution.md#what-a-27-hour-run-looks-like)) shows how much four agents organize on their own when the harness gives them the right shared surfaces. There was no orchestrator. Each agent had the same instructions, a shared chat and shared notes.
+
+What emerged over 27 hours:
+
+| Behaviour | What happened | The harness surface behind it |
+|---|---|---|
+| **Specialization** | One agent took tools, the fortress and the stronghold; one took supplies and six of the ten crystals; one the Nether portal and the crystal plan; one built Enderman shelters and landed the final blow | Shared chat, where agents announced what they were taking |
+| **Shared memory** | Locations, plans and lessons were written to notes every agent could read | Shared notes outside every context window |
+| **Own tools** | 42 reusable helper functions, reused across thousands of later programs | A code-writing action space ([note 03](03-tool-design.md)) |
+| **Rescues** | Agents went to help a teammate stuck or dying | Shared chat plus each agent's position in the world |
+| **Corrections** | Agents retracted false claims and flagged teammates' contradictions | The instruction to report honestly, plus an Observer agent checking claims ([note 05](05-verification-loops.md#an-observer-that-checks-claims-against-the-record)) |
+
+The chat stayed small: **229 messages** across 2,783 programs, roughly 50 to 80 per agent. Coordination happened through a few short messages and a shared written record, not constant conversation. That is the [protocols-between-tasks](#protocols-precede-collaboration) rule arriving on its own.
+
+The caution: one run, one game, on Easy. It shows that emergent coordination *can* hold for a day. It doesn't show that it will in your domain, where a silently wrong shared note costs more than a death in Minecraft.
 
 ---
 

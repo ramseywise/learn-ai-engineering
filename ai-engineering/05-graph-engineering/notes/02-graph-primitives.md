@@ -110,13 +110,83 @@ A node can also return `Command(goto="node_b", update={...})` to combine a state
 
 The highest-yield first graph is a job that **splits into a produce step and an independent check step**: draft-then-review, research-then-write, build-then-test.
 
-```
-START → generate (LLM) → validate (code: schema, tests) → review (LLM) ─┬→ END
-             ↑                                                          │
-             └───────────────── feedback, while attempts < N ───────────┘
+```mermaid
+flowchart LR
+    S([START]) --> G["generate<br/>(LLM)"]
+    G --> V["validate<br/>(code: schema, tests)"]
+    V -- pass --> R["review<br/>(LLM, sees task + output only)"]
+    V -- "fail, attempts < N" --> G
+    R -- PASS --> E([END])
+    R -- "FAIL + feedback, attempts < N" --> G
+    V -- "fail, attempts = N" --> E
+    R -- "attempts = N" --> E
 ```
 
-The separation is what creates the value; any parallelism is a bonus. Note the agency budget: the validator is code, so it catches what code can catch before you pay for the LLM reviewer. A copy-ready version is in [templates/generate-then-verify.py](../templates/generate-then-verify.py).
+The separation is what creates the value; any parallelism is a bonus. Note the agency budget: the validator is code, so it catches what code can catch before you pay for the LLM reviewer.
+
+A copy-ready version (`pip install langgraph langchain-anthropic`). Two writers append to `feedback`, so it carries a reducer; every other key has one writer:
+
+```python
+from typing import Annotated, TypedDict
+import operator
+from langchain_anthropic import ChatAnthropic
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import StateGraph, START, END
+
+MAX_ATTEMPTS = 3
+model = ChatAnthropic(model="claude-sonnet-5-5", temperature=0)
+
+class State(TypedDict):
+    task: str
+    draft: str                                    # one writer: generate
+    feedback: Annotated[list[str], operator.add]  # validate and review both append
+    attempts: int
+    verdict: str                                  # one writer per step: validate or review
+
+def generate(state: State) -> dict:
+    notes = "\n".join(state.get("feedback", [])) or "none"
+    prompt = f"Task:\n{state['task']}\n\nFeedback on earlier attempts:\n{notes}"
+    return {"draft": model.invoke(prompt).content,
+            "attempts": state.get("attempts", 0) + 1}
+
+def validate(state: State) -> dict:
+    # Deterministic checks first: a schema check, a test run, a linter.
+    problems = [] if state["draft"].strip() else ["validator: draft is empty"]
+    return {"feedback": problems, "verdict": "fail" if problems else ""}
+
+def review(state: State) -> dict:
+    # The reviewer sees the task and the output, not the generator's reasoning (note 07).
+    reply = model.invoke(f"Task:\n{state['task']}\n\nOutput:\n{state['draft']}\n\n"
+                         "Reply PASS, or FAIL followed by one line saying what to fix.").content.strip()
+    if reply.startswith("PASS"):
+        return {"verdict": "pass"}
+    return {"verdict": "fail", "feedback": [f"reviewer: {reply}"]}
+
+def after_validate(state: State) -> str:
+    if state["verdict"] != "fail":
+        return "review"
+    return "generate" if state["attempts"] < MAX_ATTEMPTS else END
+
+def after_review(state: State) -> str:
+    if state["verdict"] == "pass" or state["attempts"] >= MAX_ATTEMPTS:
+        return END
+    return "generate"
+
+builder = StateGraph(State)
+builder.add_node("generate", generate)
+builder.add_node("validate", validate)
+builder.add_node("review", review)
+builder.add_edge(START, "generate")
+builder.add_edge("generate", "validate")
+builder.add_conditional_edges("validate", after_validate)
+builder.add_conditional_edges("review", after_review)
+graph = builder.compile(checkpointer=InMemorySaver())   # pause/resume/replay, note 04
+
+result = graph.invoke({"task": "Write a haiku about state machines."},
+                      {"configurable": {"thread_id": "gtv-1"}})
+```
+
+The bound lives in the two routers, not in the model: after `MAX_ATTEMPTS` the graph ends with `verdict == "fail"` and the caller decides what to do ([07](07-failure-modes-at-scale.md)).
 
 ---
 

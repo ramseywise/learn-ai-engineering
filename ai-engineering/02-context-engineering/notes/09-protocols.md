@@ -142,7 +142,7 @@ The upstream list of seven, condensed to the tests that matter:
 
 **What's oversold:** the syntax has no special power. A well-structured markdown prompt with the same four sections performs about the same. The upstream claims about "field operations" (`/attractor.*`, `/resonance.*`) belong to the speculative track ([99](99-speculative-field-track.md)).
 
-**Use it when** you want a reusable, shareable procedure and the people using it don't write code. If they do write code, the same structure belongs in a prompt template with variables ([templates/](../templates/)).
+**Use it when** you want a reusable, shareable procedure and the people using it don't write code. If they do write code, the same structure belongs in a prompt template with variables ([08 — prompt programs](08-cognitive-tools.md#prompt-programs)).
 
 ---
 

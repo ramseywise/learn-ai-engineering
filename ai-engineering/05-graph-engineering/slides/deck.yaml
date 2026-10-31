@@ -1,4 +1,4 @@
-# Graph Engineering — lecture deck. Built from notes/01–13 and the rules of thumb in graph-engineering.md.
+# Graph Engineering — lecture deck. Built from notes/01–13 and the rules of thumb in README.md.
 # Build:  make slides PILLAR=05-graph-engineering [PREVIEW=1]
 # Spec:   .claude/skills/slides/references/deck-spec.md
 
@@ -37,7 +37,7 @@ parts:
       - layout: image
         title: Workflows are graphs; agents are loops inside them
         kicker: Anthropic, Building Effective Agents (2024)
-        image: ../images/langgraph/workflows-vs-agent.png
+        image: ../sources/images/langchain-langgraph-docs-workflows-vs-agent.png
         caption: "LangGraph docs, \"Workflows and agents\", after Anthropic (2024)"
         bullets:
           - "**Workflow:** predefined code paths"
@@ -205,7 +205,7 @@ parts:
 
       - layout: image
         title: Parallel writes without a reducer fail
-        image: ../images/langgraph/parallel-super-step.png
+        image: ../sources/images/langchain-langgraph-docs-parallel-super-step.png
         caption: LangGraph docs (LangChain), via sources/langgraph_extended.pptx
         bullets:
           - "Branches A and B run in **one super-step**"
@@ -241,7 +241,7 @@ parts:
         notes: >-
           Static edges can't express "one reviewer per changed file". Send can. The cap matters: Send
           over an input with no bound is the unbounded fan-out failure from note 07.
-          templates/fan-out-merge.py has a MAX_FANOUT constant and a reducer-removal experiment.
+          Note 03 has the runnable program with a MAX_FANOUT constant and the reducer-removal experiment.
 
       - layout: code
         title: Checkpoints make a graph pausable
@@ -275,7 +275,7 @@ parts:
 
       - layout: image
         title: Static breakpoints vs. interrupt()
-        image: ../images/langgraph/interrupt-before-after.png
+        image: ../sources/images/langchain-langgraph-docs-interrupt-before-after.png
         caption: LangGraph docs, human-in-the-loop (LangChain)
         bullets:
           - "`interrupt_before/after`: node boundaries, for **debugging**"
@@ -330,7 +330,7 @@ parts:
 
       - layout: image
         title: "Subgraphs: share keys, or map at the boundary"
-        image: ../images/langgraph/subgraph-state-patterns.png
+        image: ../sources/images/langchain-langgraph-docs-subgraph-state-patterns.png
         caption: LangGraph docs, subgraphs (LangChain)
         bullets:
           - "**Shared keys:** add the compiled subgraph directly"
@@ -344,7 +344,7 @@ parts:
       - layout: image
         title: Shared vs. isolated context
         kicker: "Li, AI Agents in Depth, ch. 10"
-        image: ../images/ai-agent-book/fig10-1.svg
+        image: ../sources/images/li-ai-agents-in-depth-fig10-1.svg
         caption: "Li, AI Agents in Depth, ch. 10, Fig. 10-1 (Apache-2.0)"
         bullets:
           - "**Shared:** one trajectory, like threads; nothing lost, everything accumulates"
@@ -504,7 +504,7 @@ parts:
       - layout: image
         title: "A knowledge graph: entities and typed relationships"
         kicker: Knowledge Graphs for RAG (2024)
-        image: ../images/kg-for-rag/relationship-properties.png
+        image: ../sources/images/kollegger-knowledge-graphs-for-rag-relationship-properties.png
         caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
         bullets:
           - "**Nodes** carry labels and properties"
@@ -607,7 +607,7 @@ parts:
       - layout: image
         title: "Extract, enhance, expand"
         kicker: Knowledge Graphs for RAG, L3–L6
-        image: ../images/kg-for-rag/extract-enhance-expand.png
+        image: ../sources/images/kollegger-knowledge-graphs-for-rag-extract-enhance-expand.png
         caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
         bullets:
           - "**Extract:** 10-K text → `Chunk` nodes with embeddings"
@@ -740,7 +740,7 @@ parts:
       - layout: image
         title: The failure to expect, and its one-example fix
         kicker: Course L7
-        image: ../images/kg-for-rag/sec-graph-schema.png
+        image: ../sources/images/kollegger-knowledge-graphs-for-rag-sec-graph-schema.png
         caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
         bullets:
           - "`value` lives on `OWNS_STOCK_IN`, not on `Company`"
@@ -762,7 +762,7 @@ parts:
           - {label: Text-to-Cypher, sub: relationships → reasoning → query}
           - {label: Execute, sub: the database is the verifier}
           - {label: Summarise, sub: for map or graph output}
-        loop: "retry with the error message, at most 3 times"
+        loop: "on error, back to Text-to-Cypher with the message, at most 3 times"
         bullets:
           - Generate-then-verify with a **bounded back-edge**
           - Typed state is the audit trail, and a free dataset of failures
@@ -837,7 +837,7 @@ parts:
         bullets:
           - Workers **submit**, never write directly
           - Note 03's reducer at database scale
-          - "Contract: `templates/graph-update.schema.json`"
+          - "Contract: the `GraphUpdate` JSON Schema in note 12"
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
           Many writers are allowed, but they all go through one serialising, validating merge
@@ -921,18 +921,18 @@ parts:
           - {title: Gates, body: "Gate the edges where consequences concentrate, not every node"}
           - {title: Verifiers, body: "See the task and the output, never the generator's reasoning"}
           - {title: Anchors, accent: "D4621A", body: "Keep at least one anchor the graph can't edit"}
-        source: graph-engineering.md#rules-of-thumb
+        source: README.md#rules-of-thumb
         notes: >-
-          The full table in graph-engineering.md adds: fan out only when the next step doesn't read
+          The full table in the README adds: fan out only when the next step doesn't read
           the previous step's output; "we need a graph" is often an overloaded verifier; fan-out
           costs about 15× a chat turn, so measure break-even.
 
       - layout: bullets
         title: Where to go next
         bullets:
-          - "**P1 agent graph labs:** seven labs that grow one graph through Parts 1–2"
-          - "**P2 knowledge graph labs:** the Neo4j course, your own domain, a shared-memory swarm"
-          - "**Templates:** `generate-then-verify.py`, `fan-out-merge.py`, `graph-update.schema.json`"
+          - "**Part A labs (A1–A7):** grow one graph through Parts 1–2 of this talk"
+          - "**Part B labs (B1–B9):** the Neo4j course, your own domain, a shared-memory swarm"
+          - "**The notes:** every slide here has its code and figures in notes 01–13"
           - "**Knowledge Graphs for RAG:** the hosted DeepLearning.AI × Neo4j course"
           - "**06-eval:** measure whether the whole system is correct"
         aside:

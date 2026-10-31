@@ -10,6 +10,7 @@ sources:
   - https://docs.langchain.com/oss/python/deepagents/overview
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 4–5 — https://github.com/bojieli/ai-agent-book"
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
 cleaned: 2026-07-30
 ---
@@ -36,6 +37,27 @@ What a sandbox ships with matters as much as its isolation: language runtimes, C
 Underneath those backends sits an isolation ladder (Li, ch. 4):
 
 **OS-level** (macOS Seatbelt, Linux seccomp/Landlock) < **container** < **microVM** (Firecracker-class), each paired with **resource quotas** for CPU, memory, disk, network and wall-clock time. A Python `venv` is not on the ladder: it isolates dependencies, not effects.
+
+```mermaid
+flowchart LR
+  V["venv<br/>(dependencies only,<br/>not on the ladder)"] -.-> O
+  O["OS-level<br/>Seatbelt · seccomp · Landlock"] --> C["Container"] --> M["microVM<br/>Firecracker-class"]
+  Q["Resource quotas at every rung<br/>CPU · memory · disk · network · wall clock"] --- O & C & M
+```
+*Image Source: diagram based on Li (2026), ch. 4*
+
+### Shell vs. interpreter
+
+A sandbox does not have to expose a shell. LangChain Deep Agents distinguishes two execution tools:
+
+| Tool | What runs | Reach | Use |
+|---|---|---|---|
+| `execute` (sandbox backend) | Arbitrary shell commands | Whatever the sandbox allows: processes, files, network | Builds, tests, CLIs |
+| `eval` (interpreter) | JavaScript in an embedded QuickJS runtime | **No** shell, network or filesystem; only the tools you pass in | Loops, batching, programmatic tool calling |
+
+The interpreter is the narrower boundary: code can compose tool calls but cannot reach anything the harness didn't hand it. Deep Agents' path permissions (below) don't apply to `execute`, because a shell can reach a file by routes no path rule names.
+
+The Gemini Minecraft run (Faldor et al., 2026; [note 02](02-harness-anatomy.md#one-harness-read-through-the-five-subsystems)) took the same approach to a long unattended run. Each agent wrote JavaScript programs that drove a bot through a fixed API. Programs could not start processes or write files, so 2,783 programs over 27 hours could only affect the game world.
 
 For agents that act on a user's behalf around the clock, extend the sandbox to **identity**. Give the agent its own accounts, mailbox and VM or virtual phone, the way a secretary has their own office line, instead of the user's credentials. When it must act as the user, have the user log in personally through a remote desktop and reuse the session token while it stays valid. Pass data between the main agent and the environment through a **shared mount**, with paths in messages rather than file contents.
 
@@ -97,6 +119,38 @@ agent = create_deep_agent(
     interrupt_on={"edit_file": True},  # HITL: pause before every edit
 )
 ```
+
+Stronger than a deny rule is a tool that is never shown. Deep Agents (`deepagents>=0.7.0a4`) lets you pass an **allowlist** of filesystem tools. Tools not listed are never bound to the model, so there is nothing to argue with:
+
+```python
+from deepagents import create_deep_agent
+from deepagents.middleware import FilesystemMiddleware
+
+# Read-only agent: write_file, edit_file, delete and execute are never shown.
+agent = create_deep_agent(
+    model="claude-sonnet-4-6",
+    middleware=[FilesystemMiddleware(backend=backend, tools=["read_file", "ls", "glob", "grep"])],
+)
+```
+
+Two caveats from the docs:
+- `read_file` is mandatory; leaving it out raises `ValueError`.
+- `execute` and `delete` are dropped silently if the backend doesn't support them. Declarative subagents **don't inherit** the allowlist, so set it on each one.
+
+To hide tools per model instead, register a harness profile. Removing `FilesystemMiddleware` itself via `excluded_middleware` is rejected.
+
+```python
+from deepagents import HarnessProfile, register_harness_profile
+
+# This model gets no filesystem tools at all.
+register_harness_profile(
+    "anthropic:claude-sonnet-4-6",
+    HarnessProfile(excluded_tools=frozenset(
+        {"ls", "read_file", "write_file", "edit_file", "delete", "glob", "grep"})),
+)
+```
+
+These are alpha APIs; check the [Deep Agents docs](https://docs.langchain.com/oss/python/deepagents/overview) before relying on the exact names.
 
 ---
 

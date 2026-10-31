@@ -19,7 +19,7 @@ cleaned: 2026-10-28
 
 A single general prompt trades **strength for generality**: it will attempt anything, but it executes multi-step work poorly. A chat agent sits in the general/weak corner. Narrowing its system message and tools buys some strength, and a workflow goes all the way: one job, split into small tasks run with high fidelity, coordinated by a supervisor (LLM or plain code).
 
-![Generality vs. strength](../sources/prompt-eng-for-llms/images/fig-9-1-generality-vs-strength.png)
+![Generality vs. strength](../sources/images/berryman-prompt-engineering-for-llms-fig9-1.png)
 *Berryman & Ziegler, Fig 9-1.*
 
  The book's example (scrape Shopify stores → invent a plug-in per store → email the owner) degrades predictably as you push one agent at it:
@@ -176,7 +176,7 @@ The optimization pass started by asking whether these were the right tasks at al
 | **Orchestrator–workers** | An LLM splits the task dynamically and delegates | Multi-file code changes |
 | **Evaluator–optimizer** | One prompt generates, another critiques, loop | Translation with a critic; Reflexion |
 
-![Routing workflow](../sources/images/agents/routing.png)
+![Routing workflow](../sources/images/dair-n8n-routing-workflow.png)
 *Routing in a workflow builder (n8n): a small model classifies with a structured-output parser, and a switch sends each type to its own chain. DAIR, AI workflows vs. agents.*
 
 ---
@@ -190,7 +190,7 @@ The optimization pass started by asking whether these were the right tasks at al
 | Predictability | High | Lower |
 | Good for | Well-defined, repeatable tasks; production reliability; cost control | Open-ended tasks where the steps can't be known up front |
 
-![Task-planner agent](../sources/images/agents/task-planner-agent.png)
+![Task-planner agent](../sources/images/dair-task-planner-agent.png)
 *An agent: the model, memory and tools hang off one node, and the model decides the order. DAIR.*
 
 **Start with a workflow.** Move to agentic routing only when fixed topologies can't express the problem. Most production systems are hybrids: a workflow routes requests to agents that handle the open-ended subtasks.

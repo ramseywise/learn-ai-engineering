@@ -50,7 +50,7 @@ For models where thinking is a switch:
 3. Escalate to **medium**, then **high**, only while it keeps improving your eval scores ([09](09-evaluating-prompts.md)).
 4. Use few-shot examples to fix *style and format*, not reasoning.
 
-![Escalating reasoning effort](../sources/images/reasoning-llms/hybrid_reasoning_models.JPG)
+![Escalating reasoning effort](../sources/images/dair-hybrid-reasoning-effort-escalation.jpg)
 *Evaluate after each step and stop at the first satisfactory one. DAIR, Reasoning LLMs Guide.*
 
 **Optimize for accuracy first, then latency and cost.**
@@ -67,10 +67,10 @@ Use them for the reasoning-heavy *module* of an application, not the whole thing
 - Large codebases, algorithmic and scientific work, literature synthesis, ambiguous knowledge-intensive tasks.
 - **Writing prompts for other models** — meta-prompting ([08](08-prompt-optimization.md)).
 
-![Orchestrator-worker agent](../sources/images/reasoning-llms/orchestrator_worker_LI_1.JPG)
+![Orchestrator-worker agent](../sources/images/dair-orchestrator-worker-agent.jpg)
 *The reasoning model sits in the orchestrator, breaking the query into subtasks. Cheaper models run the parallel search workers and summaries. DAIR.*
 
-![Agentic RAG](../sources/images/reasoning-llms/agentic_rag.JPG)
+![Agentic RAG](../sources/images/dair-agentic-rag.jpg)
 *Agentic RAG: a reasoning retrieval agent decides whether to answer directly or call the vector store, a reasoning chain, or web search. DAIR.*
 
 Simple extraction, classification and rewriting rarely need one.
@@ -97,7 +97,7 @@ Deep-research products (OpenAI, Gemini and Claude Research) are reasoning models
 - **Give it a plan and be specific** about the scope, the time period, and the sources you trust.
 - **Answer its clarifying questions thoroughly.** That's the cheapest point to steer the run.
 
-  ![Deep research clarifying questions](../sources/images/deep-research/deep_research_clarify.JPG)
+  ![Deep research clarifying questions](../sources/images/dair-deep-research-clarifying-questions.jpg)
   *The agent asks about scope before it starts. "Both / no preference" wastes the cheapest steering point. DAIR, Deep Research guide.*
 
 - **Supply keywords.** The model turns your prompt into search queries, so precise terms (product names, technical terms, brands) save searches.
@@ -106,7 +106,7 @@ Deep-research products (OpenAI, Gemini and Claude Research) are reasoning models
 - **Upload the documents you already have**, especially for technical or niche topics the web covers poorly.
 - **Verify the sources yourself.** Known weaknesses are citation errors, a bias toward certain domains, date-sensitive queries, and paywalled content.
 
-Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [03-harness-engineering/deep-agents.md](../../03-harness-engineering/deep-agents.md).
+Use deep research only for multi-source, time-sensitive questions that need careful synthesis. A plain reasoning model or a standard model is enough for everything else. Building your own deep agent is covered in [03-harness-engineering](../../03-harness-engineering/README.md).
 
 ---
 

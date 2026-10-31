@@ -10,6 +10,8 @@ sources:
   - https://medium.com/data-science-collective/ai-agents-complete-course-f226aa4550a1
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
+  - "Li G. et al., Object-Oriented Harness (2026), arXiv 2610.28380 — sources/li-2026-object-oriented-harness.pdf"
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -74,7 +76,7 @@ This is what grounds a solution in tests and creates the feedback signal that se
 
 E2E also **changes how the agent writes code.** An agent that knows it will be checked end to end starts thinking about upstream interfaces, boundaries and error paths. The cost is seconds of test time, which is negligible in an agent loop.
 
-One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [practice/03](practice/03-scope-and-done.md).)
+One ordering rule falls out: **no refactoring before the core behavior is verified.** "Cleaning up while I'm here" moves the line between verified and unverified code, and can break paths that were implicitly working. Order the work as correctness, then performance, then style. (Scope discipline for the same reason: [note 10](10-scope-and-done.md).)
 
 ---
 
@@ -104,7 +106,7 @@ Human review is the most expensive verifier, and it repeats itself. The ratchet 
 4. Give it a WHAT/WHY/FIX message.
 5. Wire it into the standard verification path, and note the rule's source in the topic doc.
 
-Review comments become docs, and docs that keep getting ignored become checks. Each promoted comment is one category of mistake that never needs a human again. This is how OpenAI "captures taste once and enforces it continuously" ([practice/02](practice/02-session-lifecycle.md#entropy-management-two-cleanup-modes)).
+Review comments become docs, and docs that keep getting ignored become checks. Each promoted comment is one category of mistake that never needs a human again. This is how OpenAI "captures taste once and enforces it continuously" ([note 06](06-long-horizon-execution.md#entropy-management-two-cleanup-modes)).
 
 ---
 
@@ -186,6 +188,17 @@ A second run in the same post (a browser DAW) shows where the money goes: planne
 
 **The evaluator needs calibrating too.** Early versions found real problems, then talked themselves into calling them minor and approved anyway. The fix was a development loop on the evaluator: read its logs, find where its judgment diverged from a human's, and tighten the QA prompt on exactly those points. Hard per-dimension thresholds (any dimension below the bar fails the sprint) stopped one strong dimension from averaging away a weak one.
 
+### An observer that checks claims against the record
+
+The Gemini Minecraft run (Faldor et al., 2026) put the same split into a team of agents playing without a human. Four agents were told to verify each action, build reusable tools, share memory and **report honestly**. A fifth agent, the **Observer**, did no playing. It checked agents' claims against the game record, reported specification gaming, and intervened only when the environment itself failed (six server restarts in 27 hours).
+
+The instruction to report honestly showed up in the transcripts. At hour 12 one agent announced that all 14 Ender Eyes were banked in a chest. Two minutes later it retracted the claim: a server restart had restored a save from after its death, it had respawned with an empty inventory, and the success message had come from an unguarded branch of its own script.
+
+![An agent announces 14 Ender Eyes banked, then retracts: the message came from an unguarded script branch](../sources/images/faldor-gemini-argon-minecraft-fig14.png)
+*Image Source: Faldor et al. (2026)*
+
+An unguarded branch that prints "success" without checking the world is the same failure as code written and never tested. What caught it was a habit the harness asked for: check the real state, then report. Without the retraction, three other agents would have planned around Ender Eyes that didn't exist.
+
 ---
 
 ## Grading criteria beat vibes
@@ -201,7 +214,7 @@ Subjective judgment doesn't transfer to an evaluator agent. Replace it with **we
 
 The generalizable move: **name the dimensions, weight them, score each separately.** A single 1–10 score collapses distinct failures into one number and gives the generator nothing actionable.
 
-For code work, the pillar's [evaluator rubric](../templates/evaluator-rubric.md) scores six harness-level dimensions 0–2 and ends in a three-way verdict:
+For code work, an evaluator rubric can score six harness-level dimensions 0–2 and end in a three-way verdict:
 
 ```markdown
 | Category          | Question                                                    | Score (0-2) |
@@ -286,6 +299,19 @@ Paired with the **two-retry rule**:
 > **Cap retries at two per gate failure. Beyond that, the problem is in the context or the specification — not the execution.**
 
 Three failures on the same gate means the agent lacks information or the spec is wrong. More attempts spend money to confirm that.
+
+### Nudges the harness injects
+
+Loop detection is one of several messages a harness can inject at a set point in the run. The Object-Oriented Harness paper (Li G. et al., 2026) evolved harnesses as a class hierarchy. One lineage, for tasks whose deliverable is a written file, added three injected nudges, each subclass inheriting the one before:
+
+![Inheritance chain of harnesses: s9 completion check, s12 near-budget reminder, s29 tool-error guidance](../sources/images/li-object-oriented-harness-fig9.png)
+*Image Source: Li G. et al. (2026)*
+
+- **Completion check** (s9). Before the agent finishes, request another turn if it never attempted a write. A narrow version of `PreCompletionChecklistMiddleware` above.
+- **Near-budget reminder** (s12). Near the turn limit, if no write has succeeded yet, prompt the agent to write now instead of exploring further.
+- **Tool-error guidance** (s29). Add corrective hints for unrecoverable errors or repeated unproductive results, rather than a bare stack trace ([agent-oriented error messages](#agent-oriented-error-messages)).
+
+Each one is a hook ([note 04](04-execution-boundaries.md#hooks-deterministic-control-flow)), not a sentence in the system prompt. It fires at the right moment instead of competing for attention from the start.
 
 ---
 

@@ -133,7 +133,7 @@ attribution: smaller line under it
 
 ### `image`
 ```yaml
-image: ../sources/images/cot.png    # relative to the YAML; .png/.jpg/.svg (SVG is rasterised)
+image: ../sources/images/wei-chain-of-thought-fig1.png   # relative to the YAML; .png/.jpg/.svg (SVG is rasterised)
 caption: Standard vs. CoT prompting (Wei et al., 2022)
 bullets: [...]                      # optional: image left, bullets right
 ```

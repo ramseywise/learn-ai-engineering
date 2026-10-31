@@ -14,7 +14,7 @@ It's a peer layer, not a QA step. Every other layer makes claims ("this prompt i
 
 **Inherits the weaknesses of:** all the layers it measures, plus its own. It can only grade what the harness exposes (no traces, no trajectory evals), and an eval is only as good as its tasks, its graders and its sample size.
 
-Overview note: [eval-engineering.md](eval-engineering.md), covering the thesis, where evals sit in the stack and the core flow.
+The thesis, where evals sit in the stack and the core flow open [chapter 01](notes/01-what-an-eval-is.md#why-evals-are-their-own-discipline).
 
 ---
 
@@ -78,11 +78,12 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ## Where to start
 
 - **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=06-eval`).
-- **New to evals:** [eval-engineering.md](eval-engineering.md), then chapters 01–05 in order. **01–05 can be read right after [01-prompt-engineering](../01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
-- **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md), then [Labs 1–4](practice/01-exercises.md).
-- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/case-study/README.md).
+- **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01–05 can be read right after [01-prompt-engineering](../01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
+- **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md), then [Labs 1–4](practice/exercises.md).
+- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/13-case-study-support-agent.md).
 - **A number moved and you don't know why:** [09](notes/09-reading-results.md), then [12](notes/12-failure-modes.md#the-debug-order).
 - **Shipping:** [10](notes/10-evals-in-ci.md), [11](notes/11-production-and-the-maturity-ladder.md).
+- **See it all on one real system:** [13](notes/13-case-study-support-agent.md), a multi-agent support system's eval design, including its mistakes.
 
 ---
 
@@ -91,17 +92,13 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ```
 06-eval/
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
-├── eval-engineering.md           ← pillar overview
-├── notes/                        ← the chapters (read in order)
-│   └── case-study/               ← a real multi-agent support system's eval design, including its mistakes
-├── notebooks/
-│   └── evaluating-ai-agents/     ← DeepLearning.AI course notebooks (Phoenix), labs 1–5
+├── notes/                        ← chapters 01–13, read in order; figures and code inline
 ├── practice/
-│   ├── 01-exercises.md           ← eight labs, one system, vibes → monitored
-│   └── 02-elo-leaderboard/       ← Elo / Bradley–Terry from pairwise votes (AI Agents in Depth, lab 6-6)
+│   ├── exercises.md              ← eight labs, one system, vibes → monitored
+│   └── 02-elo-leaderboard/       ← Elo / Bradley–Terry from pairwise votes (AI Agents in Depth, lab 6-6); runs offline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)
-├── templates/                    ← dataset schema, taxonomy, judge prompt, calibration sheet, gate contract, CI workflow
 ├── sources/                      ← papers filed for this pillar
+│   └── images/                   ← every figure the notes and deck use (unreferenced/ holds unused course images)
 └── references.md                 ← papers and further reading, mapped to chapters
 ```
 
@@ -130,13 +127,17 @@ The rules from the topic notes on one page. Each group links to the chapter that
 11. [Production and the maturity ladder](notes/11-production-and-the-maturity-ladder.md) — the ladder (levels 0–4), online sampling, two-layer review, drift, A/B tests, feedback, the improvement loop.
 12. [When evals go wrong](notes/12-failure-modes.md) — eval bugs that look like agent bugs, the debug order, saturation, Goodhart, overfitting, contamination, judge drift, eval debt.
 
-### Notebooks
+**Worked example**
 
-DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents)). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
+13. [Case study: a multi-agent support system](notes/13-case-study-support-agent.md) — routing vs. domain evals, free labels from metadata, an eight-gate ladder with row pools and a failure taxonomy, claim-level grounding, grader selection against user sentiment, calibration results (including inverted off-the-shelf metrics and a grounding check that failed for an eval reason).
+
+### Course code
+
+DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course ([runnable notebooks upstream](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents), with the data and helpers they need). Lab 1 builds the sales-data agent the other labs evaluate; labs 2–5 trace it, add router and skill evals, add trajectory evals and run experiments in Phoenix. The instructive code is folded into the notes: router and skill evals and convergence in [06](notes/06-evaluating-agents.md#evaluate-the-components-then-the-whole), tracing in [08](notes/08-tracing-and-observability.md#anatomy-of-a-trace), the v1-vs-v2 experiment in [09](notes/09-reading-results.md#a-worked-example-that-needs-this).
 
 ### Practice
 
-[practice/01-exercises.md](practice/01-exercises.md): eight labs on one system. Labs 2–5 pair with the course notebooks:
+[practice/exercises.md](practice/exercises.md): eight labs on one system. Labs 2–5 pair with the course notebooks:
 
 | Lab | Course notebook | Chapters |
 |---|---|---|
@@ -149,15 +150,11 @@ DeepLearning.AI's [*Evaluating AI Agents*](https://www.deeplearning.ai/short-cou
 | 7 — Gate it in CI | — | [10](notes/10-evals-in-ci.md) |
 | 8 — Online | — | [11](notes/11-production-and-the-maturity-ladder.md), [12](notes/12-failure-modes.md) |
 
-[practice/02-elo-leaderboard](practice/02-elo-leaderboard/README.md): build a leaderboard from pairwise votes with online Elo and Bradley–Terry, recover a known ranking from simulated battles, then judge pairs with an order-swapping LLM judge. Pairs with [05](notes/05-llm-as-judge.md#pairwise-ranking-elo-and-bradleyterry). Runs offline: `python cli.py`.
+[practice/02-elo-leaderboard](practice/02-elo-leaderboard/README.md): build a leaderboard from pairwise votes with online Elo and Bradley–Terry, recover a known ranking from simulated battles, then judge pairs with an order-swapping LLM judge. Pairs with [05](notes/05-llm-as-judge.md#pairwise-ranking-elo-and-bradleyterry). Runs offline with no API key: `python cli.py` (about 240 KB, 3.9k lines of Python with 38 tests; the `llm` source and `llm_judge.py` need a key).
 
-### Templates
+### Copy-ready snippets
 
-[templates/](templates/): [evalset.schema.json](templates/evalset.schema.json), [failure-taxonomy.md](templates/failure-taxonomy.md), [judge-prompt.md](templates/judge-prompt.md), [judge-calibration.md](templates/judge-calibration.md), [gate-contract.md](templates/gate-contract.md), [eval.yml](templates/eval.yml).
-
-### Case study
-
-[notes/case-study/](notes/case-study/README.md): the eval design for a multi-agent, RAG-grounded support system — routing vs. domain evals, the full gate contract, claim-level grounding, and judge calibration results (including inverted off-the-shelf metrics and a grounding check that failed for an eval reason).
+Trimmed templates live inline in the chapter that teaches them: the failure-taxonomy skeleton in [02](notes/02-defining-correct.md#the-failure-taxonomy), the row schema and its enums in [03](notes/03-eval-datasets.md), the judge prompt and calibration record in [05](notes/05-llm-as-judge.md#writing-the-judge-prompt), and the gate contract and CI workflow in [10](notes/10-evals-in-ci.md).
 
 ### Related
 - [support-agent-observability.md](../../generative-ai/06-observability/support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.

@@ -43,7 +43,7 @@ invoke_agent  support-agent                       2.8s   $0.012
 
 Here is the course agent's trace in Phoenix. The agent span wraps two router turns. The first calls a tool, which makes its own LLM call and runs SQL. The second writes the answer:
 
-![Span tree for one agent run: AgentRun (agent) contains router_call (chain) with an LLM chat completion, handle_tool_calls (chain) with the lookup_sales_data tool, its LLM call and execute_sql_query, then a second router_call and LLM call](../images/evaluating-ai-agents/lab-2-spans_agent.png)
+![Span tree for one agent run: AgentRun (agent) contains router_call (chain) with an LLM chat completion, handle_tool_calls (chain) with the lookup_sales_data tool, its LLM call and execute_sql_query, then a second router_call and LLM call](../sources/images/deeplearning-ai-evaluating-ai-agents-lab2-spans.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 2*
 
 Auto-instrumentation gives you the LLM spans. Your own code adds the agent, chain and tool spans around them:
@@ -125,7 +125,7 @@ Pick on: can it run evals over stored traces, attach scores back to spans, build
 
 The loop that makes traces pay off:
 
-![Traces flow from the agent into an observability platform. The evaluation layer queries traces and writes annotations back to them](../images/evaluating-ai-agents/lab-3-traces.png)
+![Traces flow from the agent into an observability platform. The evaluation layer queries traces and writes annotations back to them](../sources/images/deeplearning-ai-evaluating-ai-agents-lab3-traces.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 3*
 
 ```

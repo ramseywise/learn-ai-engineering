@@ -33,7 +33,7 @@ The same shape appears at three scales:
 
 ## The evolve loop
 
-![The continual-evolution loop: execute a task, record the trajectory, form outcome/process/quality signals, generate candidate updates to knowledge, instructions, programs or parameters, then verify and release a new agent version](../images/ai-agent-book/fig9-1.svg)
+![The continual-evolution loop: execute a task, record the trajectory, form outcome/process/quality signals, generate candidate updates to knowledge, instructions, programs or parameters, then verify and release a new agent version](../sources/images/li-ai-agents-in-depth-fig9-1.svg)
 *Image Source: Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (2026), Fig. 9-1 (Apache-2.0)*
 
 > **An evolve loop is a loop with a second, slower loop pointed at it. The fast loop does the work. The slow loop edits the fast loop.**
@@ -123,7 +123,7 @@ Lab: [practice/02-trajectory-verifier](../practice/02-trajectory-verifier/README
 
 ## Where the lesson goes: four media
 
-![Four carriers for a lesson: knowledge docs, prompts and Skills, programs and harness, parameters; easy to update at one end, internalized at the other](../images/ai-agent-book/fig9-3.svg)
+![Four carriers for a lesson: knowledge docs, prompts and Skills, programs and harness, parameters; easy to update at one end, internalized at the other](../sources/images/li-ai-agents-in-depth-fig9-3.svg)
 *Image Source: Li, [*AI Agents in Depth*](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter9.md) (2026), Fig. 9-3 (Apache-2.0)*
 
 The [four edit targets](#the-four-edit-targets) say *which part* of the loop's config to change. The book adds a second question: *what medium* should hold the lesson. The answer depends on how the capability is best represented, not on how long it has been around.
@@ -165,6 +165,18 @@ An agent "modifying its own code" never means the running process overwrites its
 4. Replay the failure trajectories.
 5. Run the old-task regression suite.
 6. Emit `release_to_canary` or `reject_candidate`. A passing candidate goes to **canary**; it never overwrites stable directly.
+
+```mermaid
+flowchart LR
+    F["failure trajectories<br/>(≥ 2, same cause)"] --> B["branch<br/>from stable"]
+    B --> P["minimal patch<br/>in a candidate dir"]
+    P --> C["static checks,<br/>unit tests,<br/>security scan"]
+    C --> R["replay failures +<br/>old-task regression"]
+    R -->|all pass| CAN(["release_to_canary"])
+    R -->|any fail| REJ(["reject_candidate"])
+    C -->|fail| REJ
+    G[["the gate: validators, tests,<br/>thresholds, audit log<br/>(outside the loop's write scope)"]] -.-> C & R
+```
 
 Two additions make the result attributable:
 
@@ -218,7 +230,7 @@ Then fix the task model and change the updater model, to compare updaters direct
 
 **Plasticity costs stability.** Chen et al. (2026) ran three self-evolving methods (ReasoningBank memory retrieval, GEPA prompt evolution, Meta-Harness) on four task streams that drift in topic, workflow or domain. Self-evolution raised aggregate scores on most streams, but across all twelve runs the more a method learned on new tasks, the more it forgot on old ones (**r = −0.72**):
 
-![Plasticity against stability across four drift scenarios: methods that gain more on new tasks lose more on old ones](../sources/images/chen-2026-plasticity-vs-stability.png)
+![Plasticity against stability across four drift scenarios: methods that gain more on new tasks lose more on old ones](../sources/images/chen-self-evolving-agents-continual-learners-fig2.png)
 *Image Source: Chen et al. (2026), Are Self-Evolving Agents Continual Learners?, Fig. 2*
 
 The mechanisms are the ones this note warns about. Self-modifying methods make **global edits to one shared prompt**, so new rules crowd out old ones: in one stream, a task family's share of GEPA's strategy prompt fell from 100% to 14.7%, and when two streams needed opposite workflows the agent rewrote its policy into its opposite. Similarity-based memory localizes updates better but retrieves **foreign memories** on unseen tasks, and collides when similar queries need conflicting workflows. Hence the retention set in every gate, and the preference for scoped Skills over one ever-growing prompt. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
@@ -294,7 +306,7 @@ Measurements worth quoting when arguing about loop horizons:
 
 DiscoveryRSI (Zhong et al., 2026) is a research-scale version of the same loop, aimed at hypothesis generation in the life sciences. A multi-agent evolutionary search grows hypothesis trees; selected investigations are compiled into executable tasks; and the system learns from three signals: credit assigned to the hypotheses that drove an assessment, **harness replay** to find productive strategies and recurring failures, and re-discovery that applies accepted improvements to new investigations. Over two rounds of self-improvement a 27B model's hypothesis quality rose from **4.86 to 5.39**, and the share of evolve/repair moves rose from 77.5% to 91.7%:
 
-![DiscoveryRSI: hypothesis hits in later published research, quality rising over two RSI rounds, and human-rated gain per revision](../sources/images/zhong-2026-discoveryrsi-results.png)
+![DiscoveryRSI: hypothesis hits in later published research, quality rising over two RSI rounds, and human-rated gain per revision](../sources/images/zhong-discoveryrsi-fig1.png)
 *Image Source: Zhong et al. (2026), DiscoveryRSI, Fig. 1*
 
 Read the headline numbers with the next section in mind. "Quality" is an automated rubric score, the human review is described as preliminary, and the best hit rate against later publications is **6.3%**. The loop improves on what it can measure, and the measurement is still the weak part.

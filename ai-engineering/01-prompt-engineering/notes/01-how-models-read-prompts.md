@@ -38,12 +38,14 @@ Each step fixed the previous one's bottleneck, and the last two steps created pr
 
 1. **Seq2seq (2014)** — an RNN encoder compresses the whole input into one fixed-size "thought vector" for the decoder. Long inputs get compressed lossily: the *information bottleneck*.
 
-   ![Figure 1-3. A translation seq2seq model](../sources/prompt-eng-for-llms/images/fig-1-3-seq2seq.png)
+   ![Figure 1-3. A translation seq2seq model](../sources/images/berryman-prompt-engineering-for-llms-fig1-3.png)
+   *Image Source: Berryman & Ziegler (2024), Fig. 1-3*
 
 2. **Attention (2015)** — keep every encoder state and let the decoder "soft search" over them at each step. Bottleneck gone.
 3. **Transformer (2017)** — drop recurrence entirely, keep only attention. Far more parallelizable and better at modeling data, at the price of a **fixed context window** — the limit we still engineer around.
 
-   ![Figure 1-4. Transformer architecture](../sources/prompt-eng-for-llms/images/fig-1-4-transformer-architecture.png)
+   ![Figure 1-4. Transformer architecture](../sources/images/berryman-prompt-engineering-for-llms-fig1-4.png)
+   *Image Source: Berryman & Ziegler (2024), Fig. 1-4*
 
 4. **GPT (2018)** — decoder only, pretrain on unlabeled text, then fine-tune per task. Good only at the task it was tuned for.
 5. **GPT-2 (2019)** — ~10× scale. The raw model, with no task fine-tuning, matched tuned models on many benchmarks (appending `TL;DR` elicits a summary).
@@ -63,6 +65,11 @@ Text is split into learned sub-word tokens (~4 English characters each) before t
 | Typos change the token sequence | `ghost` = 1 token, `gohst` = 3 (`g`-`oh`-`st`) | Models notice typos well (the pattern looks wrong) but don't silently autocorrect |
 | Case and rare characters cost attention | `strange new worlds` = 4 tokens, `STRANGE NEW WORLDS` = 6; 😊 = 2; random IDs and keys < 2 chars/token | Avoid SHOUTING, ASCII art, and random IDs where you can |
 | Tokens are the unit of cost and length | context window = prompt + completion tokens; billing is per token | Measure with a real tokenizer (`tiktoken`, Hugging Face), not character counts |
+
+Karpathy's list of failures that trace back to the tokenizer (spelling, string reversal, arithmetic, non-English text, the "SolidGoldMagikarp" glitch token, YAML being cheaper than JSON) is a good checklist of what not to ask the model to do directly:
+
+![Why LLMs can't spell, reverse strings or do simple arithmetic: tokenization](../sources/images/karpathy-tokenization-weirdness.png)
+*Image Source: Karpathy, "Let's build the GPT Tokenizer" (2024), via DAIR*
 
 Vocabularies also carry **special tokens** — e.g. an end-of-text token appended to every training document, which is how the model learns where a completion should stop. ChatML's role markers ([Property 5](#property-5--chat-models-are-completion-models-wearing-a-transcript)) are the same idea.
 
@@ -122,9 +129,15 @@ Base models complete documents and have no built-in notion of "answer this" or "
 
 Why honesty needs the RL stage, not just SFT: labelers writing ideal answers can't see what the model actually knows. They write confident text beyond its knowledge (teaching it to fabricate) or hedge on things it knows (teaching it to hedge everything). Ranking completions the *model itself* produced gives a direct signal: content consistent with its own knowledge scores higher. The cost is the **alignment tax** — measurable capability loss on some tasks — partly offset by mixing pretraining data back into RL training.
 
+The GPT-4 report shows the honesty effect directly. On TruthfulQA's adversarial questions, the GPT-4 base model scored about 30%, little better than GPT-3.5's base model. After RLHF, GPT-4 reached about 60%:
+
+![TruthfulQA accuracy for base vs. RLHF models](../sources/images/openai-gpt4-truthfulqa.png)
+*Image Source: OpenAI, GPT-4 Technical Report (2023)*
+
 Instruction tuning generalizes: train on enough tasks phrased as instructions (FLAN used 1.8k) and the model follows instructions for tasks it never saw.
 
-![Instruction and chain-of-thought fine-tuning generalize to unseen tasks (FLAN)](../sources/images/flan-1.png)
+![Instruction and chain-of-thought fine-tuning generalize to unseen tasks (FLAN)](../sources/images/chung-flan-instruction-finetuning-overview.png)
+*Image Source: Chung et al. (2022)*
 
 **From instruct to chat.** Instruct models were trained to treat prompts as requests, but a raw prompt string never says "your turn now," so the model had to guess whether to continue or answer. **ChatML** makes turn-taking explicit with reserved tokens:
 

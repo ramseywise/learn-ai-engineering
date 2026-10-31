@@ -7,6 +7,8 @@ sources:
   - https://vercel.com/academy/build-ai-agent-harness
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Bojie Li, AI Agents in Depth (2026), ch. 5 — https://github.com/bojieli/ai-agent-book"
+  - https://docs.langchain.com/oss/python/deepagents/overview
+  - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
 cleaned: 2026-07-29
 ---
@@ -46,6 +48,15 @@ LangChain's anatomy, grouped by the job each does:
 
 Supporting: git versioning, planning files, test runners, self-verification hooks.
 
+LangChain's Deep Agents docs group the same parts by the capability a user sees:
+
+| Capability group | Parts |
+|---|---|
+| **Execution environment** | Tools, a virtual filesystem, permissions, code execution |
+| **Context management** | Skills, memory, summarization and tool-output offloading, prompt caching |
+| **Delegation** | A to-do list, subagents |
+| **Steering** | Human-in-the-loop interrupts |
+
 ---
 
 ## The five subsystems
@@ -62,7 +73,24 @@ The nine components describe what *ships*. For diagnosing a failing agent, a coa
 
 Two of these map onto Norman's two gulfs from interaction design. The **gulf of execution** (the agent knows what it wants but can't act on it) is a tools or environment gap. The **gulf of evaluation** (it acted but can't tell whether that worked) is a feedback gap. Agents usually fail on evaluation. They are rarely stuck; they are confidently wrong.
 
-**Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing. [Practice lab 6](practice/04-exercises.md#lab-6--capstone-full-harness-cleanup-ablation) runs this end to end.
+**Ablation** turns the table into a method. Remove one subsystem at a time on a fixed task and watch what breaks, and you learn which parts of *your* harness are load-bearing. [Practice lab 6](../practice/exercises.md#lab-6--capstone-full-harness-cleanup-ablation) runs this end to end.
+
+### One harness, read through the five subsystems
+
+DeepMind's Minecraft run (Faldor et al., 2026) is a compact example because the harness is small and fully described. Four general-purpose Gemini 4 Argon coding agents, with nothing Minecraft-specific, beat the game in 27 h 14 min.
+
+![Four coding agents each write a JavaScript program; a Mineflayer bot runs it on a shared Minecraft server; text comes back with position, health, inventory or the error; the players share chat and notes; a fifth Observer agent reads the record and never plays](../sources/images/faldor-gemini-argon-minecraft-fig2.png)
+*Image Source: Faldor et al. (2026)*
+
+| Subsystem | In the Minecraft harness |
+|---|---|
+| Instructions | A one-paragraph objective plus a general part reused across environments: observe before acting, verify after, validate new tools on short tasks, record lessons, report honestly, don't exploit the evaluation |
+| Tools | One action: write and run a JavaScript program through the Mineflayer bot, with a timeout the agent picks (60 s by default). Plus the usual coding tools: shell, file editing, version control, web search |
+| Environment | Each agent on its own cloud machine. Programs can't start processes or write files. The server saves the world every 5 minutes and restarts from the last save |
+| State | Memory with a private and a team-shared part; values on the bot's global object persist between programs; compaction with an instruction to keep work in progress and next steps |
+| Feedback | Text back after every program (position, health, inventory, what it found, or the error); game chat; an independent Observer agent that checks claims against the server log |
+
+The action space is the interesting choice. There are no pixels and no keyboard. The agent acts by writing code, which makes bash-style composition ([below](#bash-as-a-general-purpose-tool)) the whole action space.
 
 ---
 
@@ -80,6 +108,8 @@ The filesystem is the primitive that the others lean on, because it solves four 
 This is the mechanism behind **state externalization** ([note 06](06-long-horizon-execution.md)) — progress lives in files, so the loop becomes re-entrant and independent of any single context window. It's also the mechanism behind **tool-call offloading**: keep the head and tail of a large tool output in-window above a token threshold, write the full output to disk, and let the model read it back only if needed. A 2,000-line log becomes ~40 lines plus a path.
 
 Git deserves separate mention: it is the only rollback mechanism most harnesses have. Branch-per-agent turns parallel experimentation into a safe operation with a free undo.
+
+**The filesystem is an interface, not a disk.** Deep Agents makes the backend pluggable behind the same file tools: in-memory agent state (the default, scoped to one thread), local disk, a LangGraph store that persists across threads, a composite that routes paths to different backends (for example `/memories/` to the store and everything else to state), or a custom backend. This is the filesystem version of "swap the backend, the tools don't change" ([below](#curriculum-view-the-causal-build-order)).
 
 **State across messages.** An always-on ("sessionless") agent, like OpenClaw reached over a chat app, may get its next message minutes or days later. Li splits the state in two:
 

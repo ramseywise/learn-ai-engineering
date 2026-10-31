@@ -31,7 +31,10 @@ first and keep what still matches the notes.
   - the claim it makes
   - the numbers that back the claim
   - any contrast, table, pipeline or ladder it contains
-- `sources/images/` (if present). Figures from the papers can go on `image` slides.
+- `sources/images/` (if present). Figures from the papers can go on `image` slides. Images
+  sit flat in that folder, named `<first-author-lastname>-<short-title>-fig<N>.<ext>` (e.g.
+  `li-ai-agents-in-depth-fig5-4.svg`). A figure the notes don't show yet goes into the note
+  first, then onto a slide: the notes are the source of truth.
 
 ## Step 3 — Plan
 
@@ -73,9 +76,11 @@ per sheet, in `ai-engineering/<pillar>/slides/.preview/`. That folder is gitigno
    - two adjacent slides that look identical
 3. Rebuild until the deck is clean. `--strict` (`make slides … STRICT=1`) exits non-zero if
    any warning is left.
-4. For the user's review, add `PDF=1`. It writes `slides/<topic>.pdf`, one page per slide,
-   which opens in a VS Code tab. The pages are images, with no speaker notes. The PDF is
-   gitignored because it is regenerated from the YAML.
+4. Add `PDF=1` on the final build. It writes `slides/<topic>.pdf`, one page per slide, which
+   opens in a VS Code tab. The pages are images (1600 px, JPEG), with no speaker notes. The
+   PDF is **committed** alongside the `.pptx`, at about 5 MB per deck. The size hook skips
+   `.pdf`, but every rebuild adds a copy to history, so regenerate it once per finished
+   revision, not on every iteration.
 5. Check the size: `ls -la ai-engineering/<pillar>/slides/*.pptx`. **Keep the `.pptx` under
    1000 KB.** The pre-commit hook `check-added-large-files --maxkb=1000` rejects anything
    bigger, and the decks so far are 270–860 KB. The builder already shrinks every image to
@@ -92,7 +97,7 @@ per sheet, in `ai-engineering/<pillar>/slides/.preview/`. That folder is gitigno
 
 ## Step 7 — Stage, don't commit
 
-`git add` the YAML, the `.pptx` and the README change, and nothing in `.preview/`. Show
+`git add` the YAML, the `.pptx`, the `.pdf` and the README change, and nothing in `.preview/`. Show
 `git status` and `git diff --staged --stat`, and suggest a commit message such as
 `docs(<pillar>): lecture deck from notes`. Don't commit.
 

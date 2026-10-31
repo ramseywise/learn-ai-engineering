@@ -38,7 +38,7 @@ flowtivity puts the trade-off as a table. Its numbers are vendor estimates, so u
 | Tokens per cycle | Lower | ~3× higher (flowtivity) |
 | Break-even pass rate | — | ~50% (flowtivity) |
 
-The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even with [Lab 5](../practice/01-agent-graph-labs.md#lab-5--break-even-measurement).
+The logic behind the break-even is sound even if the number isn't: when most cycles fail and get redone, you pay the fan-out cost for work that gets thrown away. Fan-out pays when per-cycle success is high and the branches are genuinely independent. Find your own break-even with [lab A5](../practice/exercises.md#a5--break-even-measurement).
 
 > **Rule: a graph needs genuine job separation to justify its overhead.** If the branches share most of their context, you're paying N times for the same reading.
 
@@ -80,6 +80,20 @@ When a graph is justified, grow it in this order:
 3. **Sketch 3–5 nodes.** Not twelve.
 4. **Measure a baseline** with the loop you have, then with the graph: tokens, wall-clock time, pass rate.
 5. **Add nodes one at a time**, each justified by a signal from [01](01-graph-vs-loop.md#the-default-plus-an-escalation-rule).
+
+```mermaid
+flowchart TD
+    A[Loop fails or stalls] --> B{Overloaded verifier?}
+    B -- yes --> C[Split into per-criterion checks<br/>make what you can code]
+    C --> D{Pass rate recovers?}
+    D -- yes --> SHIP([Ship the loop])
+    D -- no --> E[That one criterion earns a node]
+    B -- no --> F[Mark real vs incidental edges]
+    E --> G[Sketch 3–5 nodes]
+    F --> G
+    G --> H[Baseline loop vs graph:<br/>tokens, wall-clock, pass rate]
+    H --> I[Add nodes one at a time,<br/>each justified by a signal from note 01]
+```
 
 This is flowtivity's AUDIT → IDENTIFY → DESIGN → IMPLEMENT sequence, with "measure" made explicit. A 3–5 node graph with one honest verification step beats a twelve-node topology whose failure modes you can't reason about.
 

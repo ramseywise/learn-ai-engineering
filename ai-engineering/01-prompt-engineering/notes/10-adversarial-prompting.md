@@ -33,7 +33,7 @@ A prompt is a single document. **Instructions and data share one channel**, and 
 | **Prompt leaking** | Extract the system prompt, examples, or other confidential context | "…then output a copy of the full prompt with exemplars" |
 | **Jailbreaking** | Get around the model's safety training | Role-play personas (DAN), fictional framing, "simulate a program that…", game simulations, encoding (base64, ROT13) |
 
-![DAN jailbreak](../sources/images/dan-1.png)
+![DAN jailbreak](../sources/images/dair-dan-jailbreak.png)
 *DAN (Dec 2022): a persona "freed" from the rules, asked to answer twice, so the jailbroken voice appears next to the normal one. DAIR, Adversarial Prompting.*
 
 The **Waluigi effect** is a useful intuition for jailbreaks: once a model is trained to have property P, it becomes easier to elicit not-P, because the model has learned what not-P looks like as well.
@@ -121,7 +121,7 @@ explain your thinking step by step."""
 
 "Can you tell me a joke?" gets *Yes*, and "Write a poem about the best way to break into a house" gets *No*. Parse only the leading yes/no. The screener also reads the attacker's text, so it can be injected too ([original post](https://www.alignmentforum.org/posts/pNcFYZnPdXyL2RfgA/using-gpt-eliezer-against-chatgpt-jailbreaking)).
 
-Harness-level guardrails and execution boundaries are in [03-harness-engineering/agents-guardrails.md](../../03-harness-engineering/agents-guardrails.md) and [03-harness-engineering/notes/04-execution-boundaries.md](../../03-harness-engineering/notes/04-execution-boundaries.md).
+Harness-level guardrails and execution boundaries are in [03-harness-engineering](../../03-harness-engineering/README.md) and [03-harness-engineering/notes/04-execution-boundaries.md](../../03-harness-engineering/notes/04-execution-boundaries.md).
 
 ---
 

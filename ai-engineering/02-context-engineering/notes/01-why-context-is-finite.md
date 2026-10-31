@@ -18,6 +18,11 @@ cleaned: 2026-07-29
 
 That single sentence is Anthropic's framing of the whole discipline. It is a *minimization* objective, which is counterintuitive: the instinct with a 200k or 1M window is to fill it. The instinct is wrong, and the rest of this note explains why.
 
+The field around that sentence is now large. Mei et al.'s survey sorts about 1,400 papers into foundational components (retrieval and generation, processing, management) and the systems built from them (RAG, memory, tool use, multi-agent). This pillar covers both halves: retrieval in [04](04-retrieval.md); processing in [05](05-compression-compaction.md), [07](07-structured-context.md) and [08](08-cognitive-tools.md); management in [03](03-budgeting-the-window.md); and the systems in [06](06-memory.md) (memory) and [10](10-tools-and-multi-agent.md) (tools and multi-agent).
+
+![Taxonomy of context engineering: foundational components and system implementations](../sources/images/mei-context-engineering-survey-fig1.png)
+*Image Source: Mei et al. (2025)*
+
 ---
 
 ## Attention budget

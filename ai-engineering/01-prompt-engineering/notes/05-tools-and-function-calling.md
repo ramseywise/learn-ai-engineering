@@ -19,7 +19,7 @@ A bare chat model has no *agency*, meaning no ability to complete tasks on its o
 
 The model never touches the world. It **proposes** a call, and your code **executes** it and appends the result.
 
-![Function-calling flow: tool definitions and messages in, a tool call out, the app executes it, results go back, final response](../sources/images/agents/function-calling-flow.png)
+![Function-calling flow: tool definitions and messages in, a tool call out, the app executes it, results go back, final response](../sources/images/dair-function-calling-flow.jpg)
 *Image Source: promptingguide.ai*
 
 ```
@@ -60,7 +60,7 @@ Two knobs worth knowing:
 
 In a conversational agent, wrap that in an outer user-input loop. The book's `run_conversation` does it: take input, append it as a `user` message, run the tool loop, and only return to the user once the reply has no tool calls. The **observation** (tool result) becomes context for the next step, which is ReAct with the bookkeeping done by the API ([03](03-core-techniques.md#react--reason--act)).
 
-![Conversational agent sequence: user → app → model, with zero or more tool invocations looped before the assistant message returns](../sources/prompt-eng-for-llms/images/fig-8-2-conversational-agent-sequence.png)
+![Conversational agent sequence: user → app → model, with zero or more tool invocations looped before the assistant message returns](../sources/images/berryman-prompt-engineering-for-llms-fig8-2.png)
 *Image Source: Berryman & Ziegler (2024), Fig. 8-2*
 
 The outer loop is what adds state across turns. In the book's thermostat agent, the model points out that 64°F is "actually quite cool" when the user says it's hot. It reads "LOTS cooler" as 50°F rather than something extreme. When asked to put things back, it restores the *original* 64°F, which it can do only by reading the earlier turns.

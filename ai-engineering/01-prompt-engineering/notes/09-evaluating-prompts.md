@@ -35,7 +35,7 @@ There are two settings. **Offline** eval runs on example cases, needs no users a
 
 ## Offline: the tech tree
 
-![Offline eval tech tree](../sources/prompt-eng-for-llms/images/fig-10-1-offline-eval-tech-tree.png)
+![Offline eval tech tree](../sources/images/berryman-prompt-engineering-for-llms-fig10-1.png)
 *Berryman & Ziegler, Fig 10-1.*
 
 **Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus content to suppress (ask for two paragraphs, show one; [04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
@@ -157,7 +157,7 @@ Lessons:
 ## Go deeper
 
 - Book: [Ch 10 PDF](../sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf) (the original chapter; everything above stands alone)
-- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [eval-engineering.md](../../06-eval/eval-engineering.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
+- Eval systems and grounding methodology: [06-eval](../../06-eval/README.md) · [maturity ladder](../../06-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
 - Papers and tools: [references.md](../README.md#evaluation)
 
 **Continue in 06-eval.** This chapter is the prompt-level view. Chapters 01–05 of [06-eval](../../06-eval/README.md) go deeper on the same ground and can be read right after this topic:

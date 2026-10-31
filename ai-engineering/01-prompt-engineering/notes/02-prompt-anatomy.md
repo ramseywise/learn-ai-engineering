@@ -27,6 +27,11 @@ An LLM application is a translator between two domains: the **user's** (question
 2. **Model → completion.**
 3. **Completion → user domain** (*transform back*): parse the text into something the user can act on — an answer, a code edit, a function call, a UI update.
 
+Once the model can call tools, the middle step becomes a loop of its own: the model asks for a tool, the app runs it against external APIs, and the result goes back into the prompt until the model produces a final completion ([05](05-tools-and-function-calling.md)).
+
+![The application loop with an internal tool loop](../sources/images/berryman-prompt-engineering-for-llms-fig4-3.png)
+*Image Source: Berryman & Ziegler (2024), Fig. 4-3*
+
 The loop gets harder along four dimensions: **interaction state** (single call vs. multi-turn), **external context** (none vs. many sources), **reasoning depth** (direct answer vs. multi-step), and **tool use** (pure text vs. actions in the world).
 
 **A worked example (book, Ch 4).** A user asks a completion model for help with a math question. Sending the question raw invites any continuation. Instead, rewrite it as a document the model has seen thousands of times:
@@ -68,7 +73,8 @@ Chat models give you 1, 3 and 4 almost for free through fine-tuning. **Criterion
 
 All four in one prompt — an instruction with a fallback, a context passage, the question, and `Answer:` as the output indicator (from DAIR's lecture notebook):
 
-![Context-QA prompt: instruction, context, question, output indicator](../sources/images/chatgpt-classic.png)
+![Context-QA prompt: instruction, context, question, output indicator](../sources/images/dair-context-qa-prompt.png)
+*Image Source: DAIR.AI prompt-engineering lecture (2023)*
 
 Not every prompt needs all four. The split that matters for engineering is by *origin* (app logic vs. a variable source), not by what the text says:
 
@@ -116,7 +122,7 @@ Dynamic content is chosen per request, so the questions are practical ones:
 
 To find candidate context, sort sources along two axes: **proximity** to what the user is doing right now (the open file, the current page) and **stability** (a user profile changes rarely; a cursor position changes every keystroke). Close-and-volatile sources are usually the most relevant and the most expensive to keep fresh.
 
-**Retrieval (RAG)** fetches the snippets most similar to the query — lexical (BM25) or embedding search. Chekhov's gun applies: retrieve 2 reviews when 1 is relevant, and the model will use both. The core is short (book, Ch 5; a full pipeline is in [pe-rag.ipynb](../../02-context-engineering/notebooks/pe-rag.ipynb)):
+**Retrieval (RAG)** fetches the snippets most similar to the query — lexical (BM25) or embedding search. Chekhov's gun applies: retrieve 2 reviews when 1 is relevant, and the model will use both. The core is short (book, Ch 5; the full pipeline is in [02-context retrieval](../../02-context-engineering/notes/04-retrieval.md)):
 
 ```python
 def retrieve_reviews(index, query, reviews, k=2):
@@ -142,11 +148,11 @@ Together they create the **Valley of Meh**: early-to-mid prompt content is used 
 
 **The default skeleton:**
 
-```
-1. Introduction   — what kind of document this is and what the task is
-2. Context        — the "long parade" of reference material
-3. Refocus        — restate the question
-4. Transition     — the nudge from reading to answering
+```mermaid
+flowchart LR
+    I["1. Introduction<br/>what document, what task"] --> C["2. Context<br/>the long parade of reference material"]
+    C --> R["3. Refocus<br/>restate the question"]
+    R --> T["4. Transition<br/>the nudge from reading to answering"]
 ```
 
 - **Introduction** frames the document so the model reads the context with the task in mind.
@@ -259,7 +265,6 @@ A template is the unit you version, test and optimize — see [08-prompt-optimiz
 ## Go deeper
 
 - Book: [Ch 4](../sources/prompt-eng-for-llms/reading/04-designing-llm-applications.pdf) (four criteria, the application loop) · [Ch 5](../sources/prompt-eng-for-llms/reading/05-prompt-content.pdf) (static vs. dynamic, RAG, summarization) · [Ch 6](../sources/prompt-eng-for-llms/reading/06-assembling-the-prompt.pdf) (Valley of Meh, archetypes, snippets, assembly)
-- Runnable: [pe-rag.ipynb](../../02-context-engineering/notebooks/pe-rag.ipynb) (retrieval into the prompt)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 
 ---

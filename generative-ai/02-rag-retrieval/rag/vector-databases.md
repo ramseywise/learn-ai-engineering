@@ -133,6 +133,19 @@ See [gcp-vertex-vs-bedrock.md](gcp-vertex-vs-bedrock.md) for a detailed head-to-
 
 ---
 
+## ANN index types: HNSW vs. ANNOY
+
+The approximate-nearest-neighbour index decides how the store behaves when the corpus changes (Li, *AI Agents in Depth*, ch. 3):
+
+| Index | Structure | Inserts | Memory | Recall | Suits |
+|---|---|---|---|---|---|
+| **HNSW** | Layered proximity graph | Incremental | Higher | Very high | Live corpora that change often |
+| **ANNOY** | Forest of random-projection trees | **Full rebuild** on change | Low | Good | Static corpora; fast build |
+
+The insert behaviour is also a governance point: expiring a superseded document in an ANNOY index means rebuilding it, so stale content lingers until the next rebuild ([02-context 04 — context validation](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#context-validation)). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding) benchmarks both.
+
+---
+
 ## Retrieval quality levers (apply to any store)
 
 1. **Hybrid search** — combine dense (semantic) + sparse (BM25/ELSER) scores. Bedrock does this automatically; pgvector requires ParadeDB or a separate BM25 index.

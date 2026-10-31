@@ -77,7 +77,7 @@ For binary outcomes, the same idea is **McNemar's test**: only the tasks where A
 
 The DeepLearning.AI course's final lab runs exactly this setup. It uses one dataset and two agent versions, where v2 adds "Think before you respond." to the SQL-generation prompt. The same evaluators score both:
 
-![Experiment: one dataset runs through Agent v1 and Agent v2. Evaluators 1 and 2 score them 0.86 and 0.95 for v1 and 0.82 and 0.99 for v2](../images/evaluating-ai-agents/lab-5-experiments.png)
+![Experiment: one dataset runs through Agent v1 and Agent v2. Evaluators 1 and 2 score them 0.86 and 0.95 for v1 and 0.82 and 0.99 for v2](../sources/images/deeplearning-ai-evaluating-ai-agents-lab5-experiments.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 5*
 
 ```python
@@ -127,6 +127,11 @@ A flat headline can hide a win and a loss that cancel out:
 | **Overall** | 310 | 84% | 85% | +1 |
 
 "+1 overall" would ship a change that breaks non-English users. Always break results down by the slices you labeled ([03](03-eval-datasets.md#coverage-and-balance)), and show *n* per slice so nobody over-reads a 12-task slice.
+
+Slicing by difficulty does the same job for capability claims. Yang et al. (2026) fixed four difficulty strata over 322 terminal-agent tasks, then tracked each stratum across training stages. The headline mean rose steadily. The strata did not: Easy climbed from 32% to 73%, while Extreme went 0 → 4.9 → 11.0 → **6.1** → 11.0%. That dip at the fourth stage is invisible in the aggregate.
+
+![Task-mean success by difficulty stratum (Easy, Medium, Hard, Extreme) across five training stages. Easy rises from 31.78% to 72.88%; Extreme rises to 10.98%, dips to 6.10%, then recovers](../sources/images/yang-terminal-rsi-fig10.png)
+*Image Source: Yang et al. (2026), Figure 10*
 
 Watch for **Simpson's paradox**: B can beat A in every slice and lose overall (or the reverse) if the slice mix differs between runs. Compare on identical task sets.
 

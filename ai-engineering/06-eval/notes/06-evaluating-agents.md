@@ -8,7 +8,7 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2411.15114
   - https://www.deeplearning.ai/short-courses/evaluating-ai-agents/
-  - case-study/eval-architecture.md
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -20,7 +20,7 @@ cleaned: 2026-10-28
 
 ## Outcome and trajectory
 
-![The Four Stages of an Agent Evaluation System](../images/ai-agent-book/fig7-1.svg)
+![The Four Stages of an Agent Evaluation System](../sources/images/li-ai-agents-in-depth-fig7-1.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-1 (Apache-2.0)*
 
 ```
@@ -84,7 +84,7 @@ def trajectory_score(expected: list[Call], actual: list[Call], mode="in_order") 
 Labeling expected tool calls is real work. Two shortcuts:
 
 - **Label from successful traces.** Run the agent, have a human confirm the good runs, and save their trajectories as references.
-- **Bootstrap from metadata.** If the system already logs which domain or sub-agent handled a request, that's a free routing label ([case study](case-study/eval-architecture.md#strand-e--response-metadata-signals)).
+- **Bootstrap from metadata.** If the system already logs which domain or sub-agent handled a request, that's a free routing label ([case study](13-case-study-support-agent.md#free-labels-from-response-metadata)).
 
 If there's no single correct path, don't force one. Use a **judge over the trajectory** with a rubric ("did the agent look up the order before changing it?") or check **invariants** ("never `issue_refund` before `lookup_order`").
 
@@ -94,12 +94,12 @@ If there's no single correct path, don't force one. Use a **judge over the traje
 
 An agent is a router plus skills plus a final answer. Evaluate each, because an end-to-end failure doesn't say which one broke. The DeepLearning.AI [*Evaluating AI Agents*](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) course (code: [upstream repo](https://github.com/ginny100/DeepLearning.AI-Evaluating-AI-Agents)) builds exactly this on a sales-data agent: a function-calling router that picks between three tools and loops until it can answer.
 
-![Course agent: a GPT-4o-mini router with function calling dispatches to three tools (lookup sales data, data analysis, data visualization) and loops back](../images/evaluating-ai-agents/lab-1-agent.png)
+![Course agent: a GPT-4o-mini router with function calling dispatches to three tools (lookup sales data, data analysis, data visualization) and loops back](../sources/images/deeplearning-ai-evaluating-ai-agents-lab1-agent.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 1*
 
 Each box gets its own grader. Three are LLM judges and one is plain code:
 
-![One evaluator per component: router function-calling choice and parameter extraction (LLM judge), SQL generation correctness (LLM judge), analysis clarity (LLM judge), visualization code is runnable (code)](../images/evaluating-ai-agents/lab-3-router_skill_eval.png)
+![One evaluator per component: router function-calling choice and parameter extraction (LLM judge), SQL generation correctness (LLM judge), analysis clarity (LLM judge), visualization code is runnable (code)](../sources/images/deeplearning-ai-evaluating-ai-agents-lab3-router-skill-eval.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 3*
 
 | Component | Question | Grader in the course |
@@ -145,7 +145,7 @@ These APIs have moved since the course was recorded. `px.Client()` and `SpanEval
 
 ### Routing vs. domain evals in multi-agent systems
 
-With a supervisor and sub-agents, split the suites ([case study](case-study/eval-architecture.md#the-core-gap-routing-vs-domain-evals)):
+With a supervisor and sub-agents, split the suites ([case study](13-case-study-support-agent.md#architecture-routing-vs-domain-evals)):
 
 - **Routing eval**: does the supervisor pick the right sub-agent? Seed with queries on the boundaries between domains.
 - **Domain eval**: given correct routing, does each sub-agent call the right tools and produce the right output?
@@ -171,6 +171,8 @@ If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)
 - **pass@k** fits tools where a user or system can retry and pick a good result: code generation with tests, candidate generation. From *n* samples with *c* correct, the unbiased estimator is pass@k = 1 − C(n−c, k) / C(n, k) (Chen et al. 2021, the Codex paper).
 - **pass^k** fits customer-facing agents, where every user gets one try. τ-bench (Yao et al. 2024) introduced it and showed agents that look fine on pass@1 falling sharply at pass^8.
 
+State which one you report. Yang et al. (2026) give both for a common set of *n* tasks and *R* repeats: **Mean@R** = average over all n·R binary attempts (the expected one-shot success rate), and **pass@R** = fraction of tasks solved in *at least one* repeat. Neither can be reconstructed from the other once aggregated, so log per-attempt results, not just the summary.
+
 Also report the **per-task pass rate distribution**. A suite at 70% could be "every task passes 70% of the time" (flaky) or "70% of tasks always pass, 30% never do" (capability gaps). They need different fixes.
 
 ---
@@ -192,7 +194,7 @@ Log these on every trial. They catch regressions that pass rates miss:
 
 The course's Lab 4 asks the same question 17 ways ("average quantity per transaction", paraphrased), runs the agent on each, and scores how close each run came to the shortest path:
 
-![Convergence experiment: a dataset of paraphrased questions goes through the task run_agent_and_track_path, the evaluator evaluate_path_length, and out comes a convergence score](../images/evaluating-ai-agents/lab-4-experiment1.png)
+![Convergence experiment: a dataset of paraphrased questions goes through the task run_agent_and_track_path, the evaluator evaluate_path_length, and out comes a convergence score](../sources/images/deeplearning-ai-evaluating-ai-agents-lab4-convergence-experiment.png)
 *Image Source: DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 4*
 
 ```python
@@ -236,7 +238,7 @@ So the levers are turn count and context growth, not just a cheaper model ([02-c
 | **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope |
 | **Research** | Citation validity, coverage of required facts, source quality ([07](07-evaluating-rag-and-grounding.md)) |
 | **Computer use** | End-state checks on the environment. Sandboxed, reset per trial |
-| **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](case-study/harness-patterns.md#adversarial-cases)) |
+| **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](13-case-study-support-agent.md#adversarial-cases)) |
 
 ### Multi-turn evaluation
 

@@ -22,7 +22,7 @@ cleaned: 2026-08-03
 
 # Graph Engineering — deep note
 
-> **Archived source (2026-10-28).** This was the pillar's single deep note. Its content is now split into the chapter sequence [notes/01–12](../notes/01-graph-vs-loop.md), which re-sources or flags several of its numbers, and the pillar overview is [graph-engineering.md](../graph-engineering.md). Where this file and the chapters disagree, the chapters are current. Kept for the `§N` references in [OUTLINE.md](../OUTLINE.md).
+> **Archived source (2026-10-28).** This was the pillar's single deep note. Its content is now split into the chapter sequence [notes/01–12](../notes/01-graph-vs-loop.md), which re-sources or flags several of its numbers, and the pillar overview and rules of thumb are in the [README](../README.md). Where this file and the chapters disagree, the chapters are current. Kept for the `§N` references in the notes.
 
 ## 1. Definition and where it sits
 
@@ -611,7 +611,7 @@ intend to operate rather than demo — see `~/.claude/refs/agent-runtime.md`.
 - Coursera code — KG for RAG: [`notebooks/knowledge-graphs-for-rag`](../notebooks/knowledge-graphs-for-rag/)
 - Readings — KG book chapters and source PDFs: [`sources/`]()
 - LangGraph docs: https://docs.langchain.com/langgraph
-- Loop engineering note: [`loop-engineering.md`](../../04-loop-engineering/loop-engineering.md)
+- Loop engineering note: [04-loop-engineering](../../04-loop-engineering/README.md)
 - [From Karpathy's loops to shared knowledge graphs](https://pkhamdee.blog/2026/07/21/graph-engineering-from-karpathys-loops-to-shared-knowledge-graphs/) — loop → swarm → graph progression; KG as shared memory; five-plane architecture (§9).
 - [Graph engineering vs agent loops](https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops) — true-dependency test, verifier context isolation, swarm cost anchors (§9).
 - [Inside n8n's AI Workflow Builder](https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8) — supervisor-pattern LangGraph case study with published constants (§14).

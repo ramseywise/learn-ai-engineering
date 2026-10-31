@@ -7,8 +7,7 @@ sources:
   - https://hamel.dev/blog/posts/llm-judge/
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
-  - case-study/grader-methodology.md
-  - case-study/calibration-results.md
+  - 13-case-study-support-agent.md
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -54,7 +53,38 @@ A judge that checks "quality" will silently switch between criteria from row to 
 5. **Reason, then verdict.** Ask for a short critique first, then a final label in a fixed format (`"verdict": "PASS"`). Reasoning first improves accuracy and gives you something to read when the judge is wrong.
 6. **An escape hatch**: `CANNOT_GRADE` when the inputs are missing or the case is out of scope. Without it the judge guesses.
 
-Template: [templates/judge-prompt.md](../templates/judge-prompt.md).
+A reusable single-criterion judge prompt with all six parts:
+
+```text
+You are reviewing a response written by a customer-support assistant. Your job is to check
+one thing only: <CRITERION, one sentence>.
+
+## Definitions
+PASS: <precise condition, e.g. "every specific fact (menu path, number, date, price) in the
+response appears in the SOURCES">.
+FAIL: <precise condition, e.g. "any specific fact is absent from or contradicts the SOURCES">.
+Ignore everything else: length, tone and formatting do not affect this verdict.
+CANNOT_GRADE: the SOURCES are empty, or the question is outside <domain>.
+
+## Examples                                   (2–4, from the TRAIN split only)
+<example> …a clear PASS…                       <verdict>PASS</verdict> </example>
+<example> …tricky FAIL: looks right, one invented detail… <verdict>FAIL</verdict> </example>
+<example> …short but correct (guards against verbosity bias)… <verdict>PASS</verdict> </example>
+
+## Task
+<question>{{question}}</question>
+<sources>{{retrieved_context_text}}</sources>
+<response>{{response}}</response>
+
+First write a short critique in <critique> tags: list each relevant claim and whether it
+meets the PASS definition. Then give your verdict in <verdict> tags: PASS, FAIL or CANNOT_GRADE.
+```
+
+Rules that go with it:
+
+- **Parse `<verdict>` strictly.** Anything else counts as a grader error, not a FAIL.
+- **Pin the judge model** to a different family from the system under test, and version the prompt (`grounding-v3`).
+- **A prompt change resets the judge to experimental** until it is re-calibrated (below).
 
 A compact version from the DeepLearning.AI course's analysis-clarity judge (Lab 3). It is one criterion, delimited data, and the explanation before the label:
 
@@ -113,7 +143,7 @@ Zheng et al. ("Judging LLM-as-a-Judge", MT-Bench, 2023) documented the biases th
 6. **Measure on test once.** That's the number you report. If you tune against test, it's a dev set.
 7. **Record** the judge model, prompt version and test metrics. Re-run when any of them changes.
 
-Worksheet: [templates/judge-calibration.md](../templates/judge-calibration.md).
+Keep one calibration record per judge version. It holds: the label counts per split (train/dev/test, PASS/FAIL); human–human agreement on a double-labelled subset (the ceiling); one line per dev iteration (prompt change → TPR/TNR); the test confusion matrix with TPR, TNR, precision, κ, separation and the `CANNOT_GRADE` rate; the bias checks (position swap, length, self-preference); and a decision (calibrated for gating, tracking only, or rework).
 
 ### What to measure
 
@@ -129,10 +159,10 @@ Accuracy alone hides the failure you care about. Report the two error rates sepa
 
 Rules of thumb:
 
-- **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](case-study/grader-methodology.md#decision-framework)).
+- **Different jobs, different metric.** A release gate needs high TNR (catch bad outputs). A golden-label builder needs high precision on PASS (clean labels). If one judge can't do both, use two ([case study](13-case-study-support-agent.md#decision-framework)).
 - **Benchmark against human–human agreement.** If two experts agree 85% of the time, a judge at 83% is about as good as a second expert. Expecting 99% is expecting better than humans.
 - **Small separation means the threshold is doing the work.** If PASS and FAIL means differ by < 0.05, the judge isn't discriminating. Fix the prompt.
-- **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](case-study/calibration-results.md)). Generic metrics aren't tuned to your users.
+- **Inverted separation means it measures something else.** The case study found off-the-shelf judges scoring *disliked* answers higher on completeness and escalation ([case study](13-case-study-support-agent.md#calibration-results)). Generic metrics aren't tuned to your users.
 
 ### Correcting the pass rate
 
@@ -149,7 +179,7 @@ Example: judge passes 80% of production outputs, TPR 0.95, TNR 0.80 → (0.80 + 
 ## Keep it calibrated
 
 - **Re-calibrate when anything changes**: judge model, judge prompt, the system under test (new failure types appear), or the user population.
-- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](case-study/calibration-results.md#domain-shift-pattern-to-watch)). Calibration is per domain.
+- **Watch for domain shift.** The case study's judges separated well on one product's traffic and near-zero on another, because users there disliked answers for different reasons (tone, escalation, multi-turn context) ([case study](13-case-study-support-agent.md#domain-shift)). Calibration is per domain.
 - **Keep a human sample flowing.** A 5–10% human-reviewed sample in production is what tells you the judge is drifting ([11](11-production-and-the-maturity-ladder.md#two-layer-online-review)).
 - **Pin the judge model version.** A provider updating the judge silently changes all your scores.
 - **Don't mix judges** across runs you intend to compare.
@@ -170,7 +200,7 @@ The same pattern extends to other modalities. Score TTS output with an audio mod
 
 ## Pairwise ranking: Elo and Bradley–Terry
 
-![Elo Rating and Pairwise Comparison Ranking](../images/ai-agent-book/fig7-6.svg)
+![Elo Rating and Pairwise Comparison Ranking](../sources/images/li-ai-agents-in-depth-fig7-6.svg)
 *Image Source: Li, [AI Agents in Depth](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter7.md) (2026), Fig. 7-6 (Apache-2.0)*
 
 When there's no absolute standard, ask "which is better, A or B?" and turn many such votes into a ranking.

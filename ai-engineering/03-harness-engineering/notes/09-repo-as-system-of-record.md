@@ -6,14 +6,16 @@ sources:
   - https://arxiv.org/abs/2307.03172
   - https://humanlayer.dev/articles/harness-engineering-for-coding-agents/
   - https://github.com/walkinglabs/learn-harness-engineering
+  - https://addyosmani.com/blog/agent-harness-engineering/
+  - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-10-31
 ---
-# P1 — The Repo as System of Record
+# 9 — The Repo as System of Record
 
 > If it isn't in the repository, it doesn't exist for the agent. The harness starts with the map.
 
-The theory notes describe the harness as components. This note and the next three are the practice track, about what goes into an actual repository so a coding agent can work in it across many sessions. Adapted from the *learn-harness-engineering* course (lectures 03–04 plus its OpenAI-advanced SOPs). The course's own team anecdotes and percentages are left out because they are unsourced. The principles are kept.
+Notes 01–08 describe the harness as components. This note and [note 10](10-scope-and-done.md) are about what goes into an actual repository so a coding agent can work in it across many sessions; the session routine that uses these files is in [note 06](06-long-horizon-execution.md#the-session-lifecycle). Adapted from the *learn-harness-engineering* course (lectures 03–04 plus its OpenAI-advanced SOPs). The course's own team anecdotes and percentages are left out because they are unsourced. The principles are kept.
 
 ---
 
@@ -71,9 +73,9 @@ project/
 ├── ARCHITECTURE.md        # domains, layers, allowed dependency directions
 ├── src/api/ARCHITECTURE.md
 ├── src/db/CONSTRAINTS.md  # MUST / MUST NOT
-├── feature_list.json      # what's done, with evidence (see P3)
-├── progress.md            # where we are (see P2)
-└── init.sh                # standard startup + verification path (see P2)
+├── feature_list.json      # what's done, with evidence (note 10)
+├── progress.md            # where we are (note 06)
+└── init.sh                # standard startup + verification path (note 06)
 ```
 
 ---
@@ -87,7 +89,9 @@ The common failure: the agent makes a mistake, you add a rule, it works for a wh
 - **Flat priority.** "Never use `eval()`", "prefer functional style" and "we fixed a WebSocket leak last week" look identical. The agent has no signal for which is a red line.
 - **Decay and contradiction.** Adding feels free and deleting feels risky, so the file only grows, and rules written months apart start disagreeing.
 
-The fix is **progressive disclosure.** The entry file stays at 50–200 lines:
+The fix is **progressive disclosure.** The entry file is an index, and the details live in topic docs read on demand. OpenAI calls `AGENTS.md` a *table of contents, not an encyclopedia*, and keeps theirs to about 100 lines.
+
+How long, exactly? The sources disagree. Osmani says under ~60 lines ([note 01](01-what-a-harness-is.md#the-ratchet)), OpenAI about 100, the *learn-harness-engineering* course 50–200. They agree on the rule behind the number: **everything in the root file is read on every task, so each line has to earn that.** Start near 60. Grow only when a line traces to a real failure ([the ratchet](01-what-a-harness-is.md#the-ratchet)), and move a section out to a topic doc once it applies to only some tasks:
 
 ```markdown
 # AGENTS.md
@@ -122,7 +126,17 @@ Topic docs run 50–150 lines each and are read only when the task needs them.
 
 Anti-patterns to check for: the same rule in several places; obsolete rules nobody audits; conditional rules so specific they almost never fire; long tool manuals in startup context.
 
-Same idea from the context side: [02-context](../../../02-context-engineering/README.md), especially progressive disclosure and stable-before-dynamic ordering.
+Same idea from the context side: [02-context](../../02-context-engineering/README.md), especially progressive disclosure and stable-before-dynamic ordering.
+
+### Karpathy's environment layer
+
+Karpathy's version of the same idea (as relayed from his AISN 2026 talk) treats the repo as the workshop the agent works in. Most people rebuild it from scratch every session. Three parts carry over between sessions:
+
+1. **`CLAUDE.md` as the operating contract.** Repo layout, skill routing, where to look for what, standing rules. *"It's your world and AI is living in it, not the other way around."*
+2. **An LLM knowledge base.** A folder system of your own curated material, laid out so the model knows where information lives. *"Your data is your moat."*
+3. **Skills for anything repeated.** One handbook per recurring task ([note 03](03-tool-design.md#progressive-disclosure-skills)). *"The best way to find a leak in a hose is to run water through it"*: using a skill shows where it needs fixing, so the set improves with use.
+
+The fourth part of his environment layer, rules vs. requests, is in [note 04](04-execution-boundaries.md#prompts-vs-hooks).
 
 ---
 
@@ -143,7 +157,7 @@ The procedure: **classify each piece, then file it where it belongs.**
 
 Write for discoverability, not completeness: short files, clear names, linked to each other. Store durable rules, not meeting transcripts. **Update the repo in the same session the decision is made**, and delete the stale copy so there is one truth.
 
-That layout is OpenAI's, packaged as [templates/openai-repo-template/](../../templates/openai-repo-template/). Start from the minimal [templates/](../../templates/) and move up when the repo outgrows it.
+That layout is OpenAI's. Start with the minimal set (`AGENTS.md`, `init.sh`, `feature_list.json`, `progress.md`) and add the `docs/` folders when the repo outgrows it.
 
 ---
 
@@ -159,9 +173,9 @@ Cross-cutting concerns (auth, telemetry, external APIs) enter only through named
 
 1. Map the codebase into domains and write the allowed directions into `ARCHITECTURE.md`.
 2. Pick the **single costliest boundary violation** and add one executable guardrail for it, such as a lint rule, an import-graph test or a script in CI.
-3. Make the guardrail's error message tell the agent how to fix it ([note 05](../05-verification-loops.md#agent-oriented-error-messages)).
+3. Make the guardrail's error message tell the agent how to fix it ([note 05](05-verification-loops.md#agent-oriented-error-messages)).
 
-Done when a fresh agent can tell which layer owns a change and at least one important boundary is enforced mechanically. This is the practical form of [note 04 — encode constraints, don't document them](../04-execution-boundaries.md#encode-constraints-dont-document-them).
+Done when a fresh agent can tell which layer owns a change and at least one important boundary is enforced mechanically. This is the practical form of [note 04 — encode constraints, don't document them](04-execution-boundaries.md#encode-constraints-dont-document-them).
 
 ---
 
@@ -179,8 +193,7 @@ A useful lens for agent state:
 ## Working reference
 
 `~/.claude/refs/agent-context.md` — what loads at startup vs. on demand.
-Templates: [AGENTS.md](../../templates/AGENTS.md), [openai-repo-template/](../../templates/openai-repo-template/).
 
 ---
 
-→ Next: [02-session-lifecycle.md](02-session-lifecycle.md) — making each session start fast and end clean.
+→ Next: [10-scope-and-done.md](10-scope-and-done.md) — one feature at a time, and what "done" means.

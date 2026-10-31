@@ -67,7 +67,33 @@ Memory is the set of notes the loop reads at the start of every session so it ca
 | **What is next** | The very next step, so the next pass starts fast | `Check token refresh path in auth/session.py` |
 | **Waiting for a human** | Items that need a decision or sign-off | `Approve dropping the legacy cookie` |
 
-A ready-made file with these fields: [templates/loop-state.md](../templates/loop-state.md).
+The fields fit in one short file, `loop-state.md`, that every pass reads first and rewrites last. Keep it to "now" and "recent"; older entries move to the archive section at the bottom:
+
+```markdown
+# Loop state
+Updated: 2026-10-30 14:05 · Pass: 7 · Status: in progress   # in progress / done / blocked / stopped
+
+## Goal
+All tests in tests/auth/ pass      # copied from the loop contract; if they differ, the contract wins
+## Last score
+41/47 passing · held-out: not run
+## What was tried
+- pass 7: mock the clock in test_expiry → no change → rolled back
+- pass 6: fix refresh-token TTL → 38 → 41 → kept
+## What is next
+Check the token refresh path in auth/session.py
+## Waiting for a human
+- Approve dropping the legacy cookie (breaks sessions older than 30 days)
+
+| Passes | Saved | Rolled back | Checker fails | Human interventions | Cost so far |
+|---|---|---|---|---|---|
+| 7 | 4 | 3 | 1 | 0 | $2.10 |
+
+## Archive
+<older "what was tried" entries; delete anything that no longer reflects the code>
+```
+
+The run-stats row is what the evolve loop reads later ([note 08](08-self-improving-loops.md#cadence-and-inputs)), and what tells you a loop is rolling back more than it saves.
 
 "What was tried" earns its place. Without it, a fresh pass reruns the attempt that failed an hour ago.
 
@@ -87,27 +113,58 @@ while :; do cat PROMPT.md | claude -p; done
 
 Each run starts with a fresh context. The prompt tells the agent to read the plan and progress files, do the next item, update the files and exit. The filesystem carries everything between runs. That one-liner is the whole idea of re-entrant loops.
 
-What it lacks: a stop condition, a budget and a scorekeeper. A production version (the [templates/ralph.sh](../templates/ralph.sh) template) adds:
+What it lacks: a stop condition, a budget and a scorekeeper. A production version adds:
 
 - an **iteration cap** and a **wall-clock or cost cap**
 - a **done check** that runs the scorekeeper, not the agent's own claim
 - a **stall check**: stop if the score hasn't moved in N passes
 - a log line per pass
 
-The core of it is the ratchet: run the agent, re-score, then roll back, save or count a stall. Condensed from the template (`log` stands in for its timestamped `tee` line):
+The core of it is the ratchet: run the agent, re-score, then roll back, save or count a stall.
+
+```mermaid
+flowchart LR
+    A["agent pass<br/>fresh context,<br/>reads PROMPT.md + state"] --> B{"re-score"}
+    B -->|lower| RB["git reset --hard<br/>stall += 1"]
+    B -->|higher| SV["git commit<br/>best = now, stall = 0"]
+    B -->|same| ST["stall += 1"]
+    RB & SV & ST --> D{"done check<br/>(scorekeeper)"}
+    D -->|pass| OK(["exit 0: success"])
+    D -->|not yet| CAP{"stall, clock<br/>or iteration cap?"}
+    CAP -->|no| A
+    CAP -->|yes| ESC(["exit 1/2/3: escalate"])
+```
+
+A complete, guarded script (save it as `ralph.sh`; Lab 4 uses it):
 
 ```bash
-best=$(score)                      # SCORE_CMD prints one number, higher is better
+#!/usr/bin/env bash
+# Usage: SCORE_CMD='pytest -q | tail -1' ./ralph.sh PROMPT.md
+#   SCORE_CMD prints one number (higher is better) as its last line.
+#   DONE_CMD (optional) exits 0 when the goal is met; defaults to SCORE_CMD.
+set -euo pipefail
+PROMPT_FILE="${1:?usage: ralph.sh PROMPT.md}"
+MAX_ITERS="${MAX_ITERS:-20}"; MAX_MINUTES="${MAX_MINUTES:-60}"; STALL_LIMIT="${STALL_LIMIT:-3}"
+SCORE_CMD="${SCORE_CMD:?set SCORE_CMD}"; DONE_CMD="${DONE_CMD:-$SCORE_CMD}"
+AGENT_CMD="${AGENT_CMD:-claude -p}"; LOG="${LOG:-ralph.log}"
+
+score() { bash -c "$SCORE_CMD" 2>/dev/null | tail -1 | grep -Eo '[0-9]+(\.[0-9]+)?' | tail -1 || echo 0; }
+log()   { echo "$(date -u +%FT%TZ) $*" | tee -a "$LOG"; }
+
+deadline=$(( $(date +%s) + MAX_MINUTES * 60 ))
+best=$(score); stall=0; log "start score=$best"
 for ((i = 1; i <= MAX_ITERS; i++)); do
   (( $(date +%s) > deadline )) && { log "STOP wall-clock cap"; exit 2; }
   $AGENT_CMD < "$PROMPT_FILE" >> "$LOG" 2>&1 || true   # fresh context every pass
   now=$(score)
   if awk "BEGIN{exit !($now < $best)}"; then           # worse: undo the pass
     git reset --hard -q HEAD && git clean -fdq; stall=$((stall + 1))
+    log "pass=$i score=$now < $best ROLLED BACK"
   elif awk "BEGIN{exit !($now > $best)}"; then         # better: commit it
-    git add -A && git commit -qm "ralph pass $i: $best -> $now"; best=$now; stall=0
+    git add -A && git commit -qm "ralph pass $i: $best -> $now" || true
+    log "pass=$i score=$now SAVED"; best=$now; stall=0
   else
-    stall=$((stall + 1))                               # no movement
+    stall=$((stall + 1)); log "pass=$i score=$now no change"   # no movement
   fi
   bash -c "$DONE_CMD" >/dev/null 2>&1 && { log "DONE"; exit 0; }   # scorekeeper, not the agent
   (( stall >= STALL_LIMIT )) && { log "STOP stalled; escalate"; exit 3; }
@@ -115,7 +172,7 @@ done
 log "STOP iteration cap; escalate"; exit 1             # a cap is not success
 ```
 
-Each exit has its own code, so whatever wraps the script can tell success (0) from a cap (1), the clock (2) and a stall (3).
+The bare one-liner keeps running after the work is finished; this one stops on the scorekeeper's word or a cap, and its `git log` is a list of validated improvements. Each exit has its own code, so whatever wraps the script can tell success (0) from a cap (1), the clock (2) and a stall (3).
 
 Harnesses now ship this pattern: hooks catch the agent's attempt to finish and re-inject the prompt into a fresh context ([harness note 06](../../03-harness-engineering/notes/06-long-horizon-execution.md#ralph-loops)), and `/goal` does it as a built-in ([note 06](06-triggers-and-schedules.md#claude-code)).
 

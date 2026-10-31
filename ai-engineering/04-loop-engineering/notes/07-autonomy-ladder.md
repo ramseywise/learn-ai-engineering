@@ -35,6 +35,19 @@ deciding when to stop.
 
 In Claude Code: rung 2 is `/goal`, rung 3 is `/loop`, rung 4 is `/schedule` ([note 06](06-triggers-and-schedules.md#claude-code)).
 
+```mermaid
+flowchart BT
+    R1["<b>1 · Turn-based</b><br/>hand off: tool approval<br/>you start every turn, the model judges done"]
+    R2["<b>2 · Goal-based</b> · /goal<br/>hand off: the stop condition<br/>needs a measurable end state"]
+    R3["<b>3 · Time-based</b> · /loop<br/>hand off: the trigger, to a clock<br/>session-scoped, your permissions"]
+    R4["<b>4 · Proactive</b> · /schedule<br/>hand off: trigger and session<br/>own credentials, runs with no one watching"]
+    R1 -->|"a verifier that returns a boolean"| R2
+    R2 -->|"that verifier, seen catching a real failure"| R3
+    R3 -->|"evidence the loop works unattended,<br/>a cost ceiling, owned credentials"| R4
+```
+
+The label on each arrow is the evidence you need before you climb.
+
 ---
 
 ## 1 — Turn-based: hand off tool approval
@@ -114,7 +127,7 @@ starting point for the [evolve loop](08-self-improving-loops.md#the-evolve-loop)
 | 4 | Self-feeding loop | Finds its own next task in external state (issues, feature list) | capability 3 |
 | 5 | Fleet orchestration | Several loops in parallel, sharing a memory layer | — |
 
-Most teams sit between 2 and 3. Level 1 pays off fastest. The [practice labs](../practice/01-exercises.md) follow roughly this order.
+Most teams sit between 2 and 3. Level 1 pays off fastest. The [practice labs](../practice/exercises.md) follow roughly this order.
 
 ---
 

@@ -182,12 +182,18 @@ The Neo4j course builds an SEC filings graph one stage at a time:
 | L4 | 10-K text split into `Chunk` nodes with embeddings, so Neo4j is also the vector store |
 | L5 | `NEXT` links between chunks (a linked list), `PART_OF` to the form; window retrieval over neighbours |
 | L6 | A second source (Form 13 investment managers) merged onto the same `Company` nodes; uniqueness constraints; full-text index |
+| L7 | `Address` nodes geocoded from the company and manager address strings, a point index, `LOCATED_AT` edges |
 
 L6 is appendix C's lesson at small scale: **`MERGE` on a shared identity key is how sources are fused**, and it only works if identities have been resolved first.
 
 The course names its build loop **extract, enhance, expand**: pull out nodes from a source, give them an index or a unique key, then connect them. Its advice is to start with a **minimum viable graph** and grow it one source at a time.
 
-![Extract, enhance, expand for four node types: Chunk from the 10-K JSON (vector embedding, NEXT), Form (unique chunk IDs, PART_OF), Company from Form 13 (unique cusip6, FILED) and Manager (full-text index of names, OWNS_STOCK_IN)](../images/kg-for-rag/extract-enhance-expand.png)
+![Extract, enhance, expand for four node types: Chunk from the 10-K JSON (vector embedding, NEXT), Form (unique chunk IDs, PART_OF), Company from Form 13 (unique cusip6, FILED) and Manager (full-text index of names, OWNS_STOCK_IN)](../sources/images/kollegger-knowledge-graphs-for-rag-extract-enhance-expand.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+**Before the graph: clean the source.** The 10-K filings come from SEC EDGAR as text files with embedded XML. The course's JSON was produced by regex clean-up, parsing the XML with Beautiful Soup, pulling out the company's CIK (the SEC's company identifier) and keeping four sections: Items 1, 1A, 7 and 7A. The instructor's prep code is public at [neo4j-product-examples/data-prep-sec-edgar](https://github.com/neo4j-product-examples/data-prep-sec-edgar). Its plan of attack for L4 is five steps: split each section into chunks, make each chunk a node with its metadata as properties, create a vector index, embed every chunk into it, then search by similarity. At that point Neo4j is only a vector store; the graph starts in L5.
+
+![Two node types and their properties: Chunk (chunkId, chunkSeqId, cik, cusip6, f10kItem, formId, names, source, text, textEmbedding) and Form (formId, source, cik, cusip6)](../sources/images/kollegger-knowledge-graphs-for-rag-form10k-chunk-and-form-nodes.png)
 *Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
 
 **L3–L4: chunks as nodes, with a key and an embedding.** Each 10-K section is split (`RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)`) and every chunk gets a deterministic ID, so reloading is idempotent:
@@ -212,7 +218,7 @@ CALL db.create.setNodeVectorProperty(c, "textEmbedding", v);
 
 **L5: structure between chunks.** Chunks of one section become a linked list, and each chunk points to its form:
 
-![Three Chunk nodes linked in order by NEXT, each with a PART_OF edge up to one Form node](../images/kg-for-rag/chunk-next-part-of.png)
+![Three Chunk nodes linked in order by NEXT, each with a PART_OF edge up to one Form node](../sources/images/kollegger-knowledge-graphs-for-rag-chunk-next-part-of.png)
 *Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
 
 ```cypher
@@ -230,7 +236,11 @@ MERGE (c)-[:PART_OF]->(f);
 
 The `NEXT` links are what make window retrieval possible in [note 11](11-kg-rag-and-text-to-cypher.md#retrieval-modes). The course also adds a `SECTION` edge from the form to the first chunk of each item (`chunkSeqId = 0`).
 
-**L6: fuse a second source on a shared key.** Form 13 holdings add `Manager` nodes and attach them to the **same** `Company` nodes, matched on the CUSIP:
+**L6: fuse a second source on a shared key.** Form 13 is filed by institutional investment managers to report the companies they hold. It adds `Manager` nodes and attaches them to the **same** `Company` nodes, matched on the CUSIP:
+
+![Two new node types from Form 13: Manager (managerCIK, managerName, managerAddress) and Company (companyName, cusip6, cusip)](../sources/images/kollegger-knowledge-graphs-for-rag-form13-manager-and-company-nodes.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
 
 ```cypher
 CREATE CONSTRAINT unique_manager IF NOT EXISTS
@@ -249,7 +259,16 @@ CREATE FULLTEXT INDEX fullTextManagerNames IF NOT EXISTS
 FOR (m:Manager) ON EACH [m.managerName];
 ```
 
+Why a constraint when `MERGE` already matches on `managerCik`? The Cypher manual is explicit: *"Under concurrent updates, `MERGE` only guarantees the existence of the `MERGE` pattern, but not uniqueness."* The constraint is what guarantees one node per key. After L6 the course graph holds 643 nodes (`Chunk`, `Form`, `Company`, `Manager`) and 722 relationships (`NEXT`, `PART_OF`, `SECTION`, `FILED`, `OWNS_STOCK_IN`).
+
 Notice that `value` and `shares` live on the **edge**, not on `Company`. That detail is what trips text-to-Cypher up in [note 11](11-kg-rag-and-text-to-cypher.md#the-failure-to-expect).
+
+**L7: one more extract, enhance, expand round.** Both `Company` and `Manager` carry an address string. The course turns them into nodes: **extract** the full address strings and geocode them to city, state, country and latitude/longitude; **enhance** with a geospatial index on `Address.location` so distance queries are cheap; **expand** with `(:Manager|:Company)-[:LOCATED_AT]->(:Address)`. Queries then read location from the `Address` node, not from the old string properties. The location questions this answers are in [note 11](11-kg-rag-and-text-to-cypher.md#structured-lookups-by-name-and-by-place).
+
+![Address nodes: source is the Company and Manager address strings; extract Address with city, state and country; enhance with a geospatial location index; expand with LOCATED_AT from Manager and Company, alongside the Manager OWNS_STOCK_IN Company edge](../sources/images/kollegger-knowledge-graphs-for-rag-address-nodes.png)
+*Image Source: Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)*
+
+The course's list of where to grow next is a useful default: cross-link companies that mention each other (suppliers, competitors), extract people, places and topics from the text, add more form types or related sources, and add users so feedback can refine relevance.
 
 **Curate before you scale** (appendix C). Start from a few sources that matter for the task. Every extra loosely related dataset adds reconciliation work and noise.
 
@@ -283,7 +302,7 @@ The LLM's role here is to **interpret** the quantitative output (a DWPC ranking,
 
 `~/.claude/refs/agent-eval.md`: gold sets and gating. `~/.claude/refs/agent-memory.md`: semantic memory writes.
 
-Depth: [ch4](../sources/kg-and-llms-in-action/04-multisource-integration.md) (multisource integration, DWPC), [ch5](../sources/kg-and-llms-in-action/05-extracting-domain-knowledge.md), [ch6](../sources/kg-and-llms-in-action/06-building-kgs-with-llms.md), [ch7](../sources/kg-and-llms-in-action/07-named-entity-disambiguation.md), [ch8](../sources/kg-and-llms-in-action/08-ned-open-llms-ontologies.md), [appendix C](../sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.md). Practice: [KG Lab 3](../practice/02-knowledge-graph-labs.md#lab-3--build-the-10-k-graph) and [KG Lab 4](../practice/02-knowledge-graph-labs.md#lab-4--tiered-extraction-with-a-false-merge-rate).
+Depth: [ch4](../sources/kg-and-llms-in-action/04-multisource-integration.md) (multisource integration, DWPC), [ch5](../sources/kg-and-llms-in-action/05-extracting-domain-knowledge.md), [ch6](../sources/kg-and-llms-in-action/06-building-kgs-with-llms.md), [ch7](../sources/kg-and-llms-in-action/07-named-entity-disambiguation.md), [ch8](../sources/kg-and-llms-in-action/08-ned-open-llms-ontologies.md), [appendix C](../sources/kg-and-llms-in-action/appendix-c-kgs-from-structured-sources.md). Practice: [lab B3](../practice/exercises.md#b3--build-the-10-k-graph) and [lab B4](../practice/exercises.md#b4--tiered-extraction-with-a-false-merge-rate).
 
 ---
 

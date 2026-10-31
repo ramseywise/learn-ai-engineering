@@ -19,13 +19,15 @@ The pattern: specialized agents handle focused tasks with **clean context window
 
 The economics are the point. A sub-agent may burn 100k tokens exploring a codebase and return a 2k-token summary. The orchestrator pays 2k for work that would have cost it 100k of its own window — and, more importantly, would have left 98k of exploration debris polluting the window it needs for synthesis.
 
-```
-Orchestrator (holds plan, stays small)
-  ├── Sub-agent A: explore subsystem X  ->  2k summary  (spent 80k internally)
-  ├── Sub-agent B: explore subsystem Y  ->  2k summary  (spent 60k internally)
-  └── Sub-agent C: explore subsystem Z  ->  2k summary  (spent 90k internally)
-
-Orchestrator window: ~6k of findings, not 230k of exploration.
+```mermaid
+flowchart TB
+    O["Orchestrator<br/>holds the plan, stays small"]
+    O --> A["Sub-agent A: explore subsystem X<br/>spends 80k internally"]
+    O --> B["Sub-agent B: explore subsystem Y<br/>spends 60k internally"]
+    O --> C["Sub-agent C: explore subsystem Z<br/>spends 90k internally"]
+    A -- "2k summary" --> R["Orchestrator window<br/>~6k of findings, not 230k of exploration"]
+    B -- "2k summary" --> R
+    C -- "2k summary" --> R
 ```
 
 The sub-agent's window is **discarded**, not merged. That discarding is the feature.
