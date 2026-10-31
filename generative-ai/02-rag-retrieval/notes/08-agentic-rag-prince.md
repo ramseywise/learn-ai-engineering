@@ -5,7 +5,7 @@ sources:
 confidence: high
 cleaned: 2026-10-31
 ---
-# Agentic RAG in Production: the PRINCE Retrieval Stack
+# 8 — Agentic RAG in production: the PRINCE retrieval stack
 
 > Retrieval inside an agent is two pipelines. Unstructured documents go through RAG. Structured records go through Text-to-SQL. A coordinator routes between them.
 
@@ -230,3 +230,7 @@ pipelines. Better metadata improves both Text-to-SQL and the chunk-level filters
 
 Related: the context-engineering pillar covers the retrieval pipeline as context assembly
 ([ai-engineering/02-context-engineering](../../../ai-engineering/02-context-engineering/README.md)).
+
+---
+
+→ Next: [09-vector-database-comparison.md](09-vector-database-comparison.md) — the vector stores behind both pipelines, and how to choose one.

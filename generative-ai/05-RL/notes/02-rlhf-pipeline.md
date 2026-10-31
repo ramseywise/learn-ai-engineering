@@ -1,6 +1,16 @@
-# RLHF Pipeline
+---
+origin: web-authored
+sources:
+  - https://arxiv.org/abs/2203.02155 (InstructGPT)
+  - https://arxiv.org/abs/2204.05862 (Anthropic HH-RLHF)
+  - https://arxiv.org/abs/2303.08774 (GPT-4 technical report)
+confidence: medium
+cleaned: 2026-10-31
+---
 
-> **Pillar:** [05-RL](README.md)
+# 2 — RLHF Pipeline
+
+> **Pillar:** [05-RL](../README.md)
 > **Presumes:** transformer architecture, supervised fine-tuning basics
 > **Papers:** InstructGPT (2203.02155), Anthropic RLHF (2204.05862), GPT-4 (2303.08774)
 
@@ -128,7 +138,7 @@ manifestations:
 
 **Mechanism:** The reward model is an imperfect proxy for human preference. It was
 trained on a finite dataset and generalizes imperfectly. The RL optimizer finds
-out-of-distribution inputs that exploit this gap. See: [reward hacking patterns](../01-llm-fundamentals/rl.md#risks).
+out-of-distribution inputs that exploit this gap. See: [reward hacking patterns](01-rl-foundations.md).
 
 ### Overoptimization
 
@@ -155,7 +165,7 @@ Forward KL would force the policy to cover every mode of the SFT model, which is
 goal. In practice the penalty is computed **per token and added to the reward**, not as a
 separate loss term, so it flows through the PPO/GRPO advantage. Most RLVR runs keep it for
 stability. DAPO and Open-Reasoner-Zero drop it; DeepSeek-R1-Zero's GRPO keeps it. More in
-[post-training-for-agents.md](post-training-for-agents.md#why-sft-memorizes-and-rl-generalizes).
+[post-training-for-agents.md](05-post-training-for-agents.md#why-sft-memorizes-and-rl-generalizes).
 
 ### Alignment tax
 
@@ -176,7 +186,7 @@ Modern approaches (Constitutional AI, DPO with curated datasets) work to reduce 
 - PPO requires four models simultaneously: policy, reference (frozen SFT), reward model,
   value function. Memory cost is ~4x the base model.
 - This is a primary motivation for DPO — eliminates the reward model and value function.
-  See [preference-optimization.md](preference-optimization.md).
+  See [03-preference-optimization.md](03-preference-optimization.md).
 
 **Dataset quality dominates.** InstructGPT's team found labeler quality (consistency,
 calibration, demographic diversity) mattered more than volume. Biases in labeler pool
@@ -191,17 +201,17 @@ with AI-generated critiques guided by a written constitution. RLAIF (RL from AI 
 runs the same three-stage pipeline but uses AI feedback at Stage 2 instead of human
 raters. This scales alignment without proportional human labor.
 
-See [constitutional-ai.md](constitutional-ai.md) for the full pipeline.
+See [04-constitutional-ai.md](04-constitutional-ai.md) for the full pipeline.
 
 ---
 
 ## Cross-links
 
-- **Upstream:** [01-llm-fundamentals/rl.md](../01-llm-fundamentals/rl.md) — RL foundations
+- **Upstream:** [01-rl-foundations.md](01-rl-foundations.md) — RL foundations
   (MDP, policy, reward function), MARL, RL-in-RAG
-- **Algorithms:** [preference-optimization.md](preference-optimization.md) — PPO vs DPO
+- **Algorithms:** [03-preference-optimization.md](03-preference-optimization.md) — PPO vs DPO
   vs GRPO: the algorithm evolution from RLHF through offline preference optimization
-- **Constitutional AI:** [constitutional-ai.md](constitutional-ai.md) — RLAIF and
+- **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md) — RLAIF and
   AI-generated feedback at scale
-- **Papers in repo:** [`2-llm-rlhf/2203.02155v1.pdf`](2-llm-rlhf/2203.02155v1.pdf)
-  (InstructGPT), [`2-llm-rlhf/2303.08774v6.pdf`](2-llm-rlhf/2303.08774v6.pdf) (GPT-4)
+- **Papers in repo:** [`sources/ouyang-2022-instructgpt.pdf`](../sources/ouyang-2022-instructgpt.pdf)
+  (InstructGPT), [`01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf`](../../01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf) (GPT-4)

@@ -1,4 +1,14 @@
-# LangSmith — Reference Spec
+---
+origin: own coursework
+sources:
+  - https://docs.smith.langchain.com/
+  - https://docs.smith.langchain.com/evaluation
+confidence: medium
+cleaned: 2026-10-31
+---
+# 5 — LangSmith
+
+> LangChain's hosted tracing and eval platform: auto-tracing for LangGraph, manual `@traceable` wiring for ADK, datasets, `evaluate()`, and annotation queues.
 
 Tracing, evaluation, and dataset management for the eval platform agents. Both `support_adk`
 and `support_lg` send traces here; LangSmith is the eval loop for live agent runs.
@@ -179,3 +189,7 @@ client.list_runs(project_name="google-adk", filter='eq(feedback_key, "grounding"
 LangSmith references in this doc are historical/secondary. Prefer LangFuse for
 new the eval platform experiments unless a specific workflow explicitly requires
 LangSmith.
+
+---
+
+→ Next: [06-framework-selection.md](06-framework-selection.md) — choosing between LangGraph, ADK and the other agent SDKs once you have seen what each makes easy.

@@ -1,7 +1,7 @@
 ---
 origin: notion-export
 confidence: medium
-cleaned: 2026-07-25
+cleaned: 2026-10-31
 sources:
   - Sutton & Barto, "Reinforcement Learning: An Introduction" (2020)
   - https://arxiv.org/abs/2203.02155 (InstructGPT)
@@ -9,7 +9,9 @@ sources:
   - https://cdn.openai.com/WebGPT.pdf (WebGPT)
 ---
 
-# Reinforcement Learning for LLMs
+# 1 — RL Foundations for LLMs
+
+> The MDP vocabulary, the algorithm families and the exploration problem, then how RL shows up in multi-agent systems and RAG. Notes 02–05 build on this.
 
 This note covers RL foundations as they apply to LLM alignment and agentic systems.
 Three sections:
@@ -19,10 +21,10 @@ Three sections:
 3. [RL in RAG](#3-rl-in-rag) — query rewriting, retrieval policy, tool use, Self-RAG
 
 **For RLHF pipeline depth** (SFT → reward model → PPO, Bradley-Terry, reward hacking):
-see [05-RL/rlhf-pipeline.md](../05-RL/rlhf-pipeline.md)
+see [02 — RLHF pipeline](02-rlhf-pipeline.md)
 
 **For algorithm comparison** (PPO vs DPO vs GRPO vs KTO/ORPO):
-see [05-RL/preference-optimization.md](../05-RL/preference-optimization.md)
+see [03 — Preference optimization](03-preference-optimization.md)
 
 ---
 
@@ -92,7 +94,7 @@ mechanism during data collection.
 LLMs are trained using RL primarily at two stages:
 
 1. **RLHF alignment (post-pretraining):** The LLM is the policy; each token is an
-   action; the reward model scores completed responses. See [05-RL/rlhf-pipeline.md](../05-RL/rlhf-pipeline.md).
+   action; the reward model scores completed responses. See [02-rlhf-pipeline.md](02-rlhf-pipeline.md).
 
 2. **Agentic RL (tool use, retrieval, reasoning):** The LLM takes multi-step actions
    in an environment (web browser, code executor, knowledge base). Rewards are task
@@ -245,7 +247,7 @@ rollout involves retrieval). **DPO** is increasingly used as the optimizer for p
 tuned retrieval decisions: collect (prompt, good-retrieval-outcome, bad-retrieval-outcome)
 triples, then train with DPO's offline objective.
 
-See [05-RL/preference-optimization.md](../05-RL/preference-optimization.md) for DPO details.
+See [03-preference-optimization.md](03-preference-optimization.md) for DPO details.
 
 ### Challenges in RL for RAG
 
@@ -269,11 +271,11 @@ See [05-RL/preference-optimization.md](../05-RL/preference-optimization.md) for 
 The RLHF pipeline (SFT → reward model → PPO) and preference optimization algorithms
 (DPO, GRPO, KTO, ORPO) are covered in depth in the 05-RL pillar:
 
-- **RLHF pipeline:** [05-RL/rlhf-pipeline.md](../05-RL/rlhf-pipeline.md) — three stages,
+- **RLHF pipeline:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) — three stages,
   Bradley-Terry model, KL penalty, reward hacking failure modes
-- **Algorithm comparison:** [05-RL/preference-optimization.md](../05-RL/preference-optimization.md)
+- **Algorithm comparison:** [03-preference-optimization.md](03-preference-optimization.md)
   — PPO vs DPO vs GRPO vs KTO/IPO/ORPO, decision framework, DeepSeek-R1 story
-- **Constitutional AI / RLAIF:** [05-RL/constitutional-ai.md](../05-RL/constitutional-ai.md)
+- **Constitutional AI / RLAIF:** [04-constitutional-ai.md](04-constitutional-ai.md)
   — AI-generated feedback, critique-revision loop, scaling alignment
 
 ---
@@ -294,10 +296,14 @@ The RLHF pipeline (SFT → reward model → PPO) and preference optimization alg
 
 ## Cross-links
 
-- **Upstream:** [05-RL/README.md](../05-RL/README.md) — full topic map and resource
+- **Upstream:** [05-RL README](../README.md) — full topic map and resource
   index for the RL & alignment pillar
-- **Downstream:** [03-agentic-foundations/README.md](../03-agentic-foundations/README.md)
+- **Downstream:** [03-agentic-foundations/README.md](../../03-agentic-foundations/README.md)
   — RL-trained agents (ReAct, Reflexion), multi-agent coordination
-- **RLHF depth:** [05-RL/rlhf-pipeline.md](../05-RL/rlhf-pipeline.md)
-- **Algorithm depth:** [05-RL/preference-optimization.md](../05-RL/preference-optimization.md)
-- **Constitutional AI:** [05-RL/constitutional-ai.md](../05-RL/constitutional-ai.md)
+- **RLHF depth:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md)
+- **Algorithm depth:** [03-preference-optimization.md](03-preference-optimization.md)
+- **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md)
+
+---
+
+**Next:** [02 — RLHF pipeline](02-rlhf-pipeline.md) applies the policy-gradient half of this note to language models.

@@ -1,4 +1,13 @@
-# Retrieval Improvement Research
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 11 — Retrieval improvement research
+
+> An ablation of five retrieval configurations (MRR, P@1, latency) and the shortlist of improvements worth testing next.
 
 Status: Research — evaluating options after initial ablation run (2026-05-09)
 
@@ -159,4 +168,8 @@ Match on path-only (`/da/articles/622808-...`) to avoid protocol/domain drift be
 
 ### ProductWiki: never the primary retrieval target
 
-ProductWiki is a flat concept glossary with no numeric article IDs and no Partner equivalent. For `definition` queries it provides a context frame only — the actual answer still comes from help center articles. This is why ProductWiki misses in eval results are **expected and correct** (not ranking failures). The source router in `semantic-cache.md` encodes this: `definition` intent → ProductWiki as context enrichment + help center for the answer.
+ProductWiki is a flat concept glossary with no numeric article IDs and no Partner equivalent. For `definition` queries it provides a context frame only — the actual answer still comes from help center articles. This is why ProductWiki misses in eval results are **expected and correct** (not ranking failures). The source router in [10 — semantic cache](10-semantic-cache.md#source-routing--tier-2) encodes this: `definition` intent → ProductWiki as context enrichment + help center for the answer.
+
+---
+
+→ Next: [12-bedrock-knowledge-bases.md](12-bedrock-knowledge-bases.md) — the managed backend the experiments ran against.

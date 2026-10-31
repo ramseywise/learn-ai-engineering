@@ -22,6 +22,10 @@ The order is not a matter of taste — it encodes a nesting rule:
 
 All six are peer foundations. Graph is ordered fifth (after loop) because it *presumes loop mastery*, but it is a first-class discipline — not a frontier add-on.
 
+**Underneath all six: [inference](07-inference-engineering/README.md)** (added 2026-10-31).
+Serving, KV cache, batching and GPU performance decide what every call above costs in
+latency and money. It is numbered seventh because it is read last, not because it sits on top.
+
 ---
 
 ## Pillar → interviewing-guide crosswalk
@@ -34,6 +38,7 @@ All six are peer foundations. Graph is ordered fifth (after loop) because it *pr
 | loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
 | graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
 | eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](06-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/support-agent-observability.md) |
+| inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#planned-notes) (notes not yet written) |
 
 ---
 

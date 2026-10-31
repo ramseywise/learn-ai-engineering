@@ -1,4 +1,11 @@
-# kb_rag pipeline — architecture reference
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 14 — kb_rag pipeline: architecture decision record
 
 > **Note:** This is an ADR (architecture decision record) distilled from the 2026-06-04 module refactor. It captures decisions and deferred items from that point in time. For the current module layout see `src/support_agents/kb_rag/README.md`.
 
@@ -109,6 +116,10 @@ Kept: `SCORE_DELTA_ENABLED`, `SCORE_DELTA_MIN` — valid reranker confidence sig
 | Item | Why deferred | Where to pick up |
 |---|---|---|
 | `CHUNKER_STRATEGY` env var + `/config` endpoint | One-liner; no design needed | `config.py` + `main.py:/config` |
-| `HtmlAwareChunker` as ingest default | Needs ablation to validate vs FixedChunker | `retrieval-improvements.md` |
+| `HtmlAwareChunker` as ingest default | Needs ablation to validate vs FixedChunker | [11](11-retrieval-improvements.md) |
 | `SCORE_DELTA` wiring in `agent.py` | Valid signal, just not read at request time | `agent.py` confidence gate check |
 | Split `datastore/local.py` (587 lines) | Different risk profile; `ChromaVectorIndex` has test coverage | Separate PR |
+
+---
+
+→ This is the last note in the pillar. Next layer: [03-agentic-foundations](../../03-agentic-foundations/README.md), then the agentic applications in [07](../../07-agentic-applications/README.md).

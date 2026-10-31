@@ -1,12 +1,17 @@
 ---
 name: papers
-description: "Integrate downloaded AI Papers of the Week into the course: read each PDF in a pillar's sources/, add a row to that pillar's references.md, and write the finding into the note it maps to. Optional filter: /papers loop, /papers 2610.28577. Run from the learn-ai-engineering repo."
+description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars. Optional filter: /papers loop, /papers rag, /papers 2610.28577. Run from the learn-ai-engineering repo."
 ---
 
 You are integrating research papers into the AI-engineering course notes. The weekly job
 (`scripts/papers/potw.py run`, launchd `com.wiseer.potw`) has already fetched DAIR's AI
-Papers of the Week, triaged each paper to a pillar and note, and downloaded the PDF into
-`ai-engineering/<pillar>/sources/`. Your job is the part that needs judgement: turn the
+Papers of the Week, triaged each paper to a home and note, and downloaded the PDF into
+the home's `sources/`. PDFs that were already in the repo (the `ai-engineering/readings/`
+inbox) are triaged the same way and moved home by `potw.py route`. Homes are the keys of
+`HOMES` in `scripts/papers/potw.py`: the six ai-engineering pillars plus `inference`
+(`ai-engineering/07-inference-engineering/`), the generative-ai pillars (`rag`, `agents`,
+`post-training`, …) and two subject folders (`classical-ml`, `ml-systems`) that hold PDFs
+only. Book chapters go through `/chapter`, not this skill. Your job is the part that needs judgement: turn the
 paper into citations and findings in the notes.
 
 The notes are the product. A paper earns a place by changing, sharpening, or evidencing a
@@ -18,12 +23,18 @@ claim a note makes. It never earns a "Recent papers" list bolted onto the end.
 
 ```bash
 python3 scripts/papers/potw.py status --list downloaded
+python3 scripts/papers/potw.py status --list queued   # repo PDFs: already local, nothing to download
 ```
 
-Each line is JSON: `key`, `title`, `pillar`, `note` (path under `ai-engineering/`),
-`relevance`, `pdf`, `reason`, `url`. Filter by `$ARGUMENTS` if given: a pillar name
-(`loop`), or one or more arXiv ids. If nothing is downloaded, say so and suggest
-`make papers`. Work one pillar at a time.
+Each line is JSON: `key`, `title`, `pillar` (the home key), `note` (repo-relative path, or
+null), `relevance`, `pdf` (repo-relative local PDF), `reason`, `url`. Take queued rows only
+when `pdf` is set and outside `ai-engineering/readings/`; if a queued PDF still sits in the
+inbox, run `python3 scripts/papers/potw.py route --apply` first. Skip rows whose `pdf` is a
+book chapter (`sources/<book-slug>/chNN-…`); those belong to `/chapter`. Filter by
+`$ARGUMENTS` if given: a home key (`loop`, `rag`), or one or more keys / arXiv ids. If
+nothing is ready, say so and suggest `make papers`. Work one home at a time. Rows homed in
+`classical-ml` or `ml-systems` have no notes: check the PDF is filed under that subject's
+`readings/` and mark them integrated.
 
 ## Step 2 — Read
 
@@ -48,8 +59,9 @@ For each paper:
 
 ## Step 3 — references.md
 
-Each pillar has (or gets) `ai-engineering/<pillar>/references.md`. If missing, create it
-in the shape of `02-context-engineering/references.md`: frontmatter
+Each pillar has (or gets) `<home folder>/references.md` (see
+`ai-engineering/PILLAR-LAYOUT.md`). If missing, create it in the shape of
+`ai-engineering/02-context-engineering/references.md`: frontmatter
 (`origin: curated`, `sources:`, `confidence:`), `# <Pillar> — Papers and Further
 Reading`, a one-line intro pointing at `sources/` and the README.
 
@@ -74,6 +86,20 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
   "at 7B"). No number without its setup.
 - Add the arXiv URL to the note's frontmatter `sources:` list.
 - Link the PDF only from references.md, not from the note body.
+- **Figures.** If the paper has one figure that explains the claim better than a sentence
+  (an architecture, the headline plot), add it next to the paragraph. Use
+  `scripts/papers/figures.py`:
+  ```bash
+  uv run -q --with pymupdf python scripts/papers/figures.py captions <pdf>
+  uv run -q --with pymupdf python scripts/papers/figures.py list <pdf> --pages 1-8
+  uv run -q --with pymupdf python scripts/papers/figures.py extract <pdf> --page P --xref X \
+      --out <home>/sources/images/<author>-<short-title>-fig<N>.png
+  ```
+  Use `crop --clip x0,y0,x1,y1` for vector figures (no xref); render the page with `page`
+  first and look at it with Read to choose the box. Look at the saved PNG before embedding
+  it. Caption it the way the notes already do:
+  `*Image Source: <Author>, [<Title>](<url>) (<year>), Fig. <N>*`, plus the licence when there is one.
+  At most one figure per paper; none is fine.
 
 ## Step 5 — Close out
 

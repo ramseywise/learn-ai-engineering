@@ -1,4 +1,11 @@
-# Semantic Cache for Support Agents
+---
+origin: notion-export
+sources:
+  - own work notes (support-agent RAG project)
+confidence: medium
+cleaned: 2026-10-31
+---
+# 10 — Semantic cache for support agents
 
 > **Hackathon experiment slot.** Zero-RAG-cost path for queries that closely match the golden dataset.
 >
@@ -373,3 +380,7 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 - **Cache staleness**: if Product product changes, cached answers become wrong. Add a `build_date` field to the npz and log a warning if the file is > 30 days old. Rebuild cadence TBD.
 - **Language mismatch**: seed is Danish; if a user writes in English, similarity will be lower and queries will fall through to CRAG — which is correct behaviour. Track hit rate by detected `query_language` in the AB notebook to confirm.
 - **Seed size**: if the golden dataset pipeline yields < 50 high-scoring rows (e.g. support corpus A responses are generally low quality), the cache hit rate on real traffic will be negligible. In that case, expand the seed by running the SA agent on the full 500-query stratified set and using its responses (rather than original support corpus A responses) as the cache source.
+
+---
+
+→ Next: [11-retrieval-improvements.md](11-retrieval-improvements.md) — what an ablation run says about which retrieval changes are worth making.

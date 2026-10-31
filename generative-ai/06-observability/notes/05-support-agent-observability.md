@@ -1,9 +1,19 @@
-# Support Agents — Observability & Experiment Tracking
+---
+origin: own coursework
+sources:
+  - notion-export: support agents observability
+  - ./01-tracing-with-langfuse.md
+confidence: medium
+cleaned: 2026-10-31
+---
+# 5 — Support Agent Observability (worked example)
+
+> A worked example of notes 01–04 applied: the schema contract for what a two-framework support agent logs, how eval runs are identified and reproduced, and the grounding-tier promotion policy.
 
 Schema contract for what every agent logs and how eval runs are identified, reproduced,
 and compared. Platform wiring lives in the tooling docs:
-→ [langfuse.md](../04-agentic-frameworks/notes/langfuse.md) (primary)
-→ [langsmith.md](../04-agentic-frameworks/notes/langsmith.md) (secondary / SupportAgent)
+→ [01-tracing-with-langfuse.md](01-tracing-with-langfuse.md) (primary)
+→ [05-langsmith.md](../../04-agentic-frameworks/notes/05-langsmith.md) (secondary / SupportAgent)
 
 ---
 
@@ -247,3 +257,7 @@ Layer 4 grounding tiers are promoted to hard failures conservatively — new che
 | `evals/metrics/retrieval.py` | Retrieval metrics and URL matching helpers |
 | `evals/pipelines/evaluation.py` | Live local eval runner that writes graded output JSON |
 | `core/preprocessing/bkh/pii_scrub.py` | Call before any external LLM grader (GDPR layer) |
+
+---
+
+→ Next: this is the last note of the pillar. The eval theory behind it is in [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) ([13 — case study: support agent](../../../ai-engineering/06-eval/notes/13-case-study-support-agent.md)); the layer that ships these agents is [07-agentic-applications](../../07-agentic-applications/README.md).

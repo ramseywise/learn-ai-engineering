@@ -1,6 +1,6 @@
 # Lab 1 — Q-learning on a treasure hunt
 
-> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 7-1 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience), Apache-2.0). This lab keeps only the game environment, the tabular Q-learning agent and its training script. The upstream LLM agent (Experiment 7-2) needs an API key and is left out. Concepts: [post-training for agents](../../post-training-for-agents.md#classic-rl-vs-llm-rl-why-priors-win).
+> Adapted from Bojie Li, *AI Agents in Depth*, Experiment 7-1 ([upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/learning-from-experience), Apache-2.0). This lab keeps only the game environment, the tabular Q-learning agent and its training script. The upstream LLM agent (Experiment 7-2) needs an API key and is left out. Concepts: [post-training for agents](../../notes/05-post-training-for-agents.md#classic-rl-vs-llm-rl-why-priors-win).
 
 A text adventure with hidden rules. The agent has to learn several things nobody tells it:
 
