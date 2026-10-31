@@ -3,6 +3,7 @@ origin: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval
 confidence: medium
 sources:
   - https://arxiv.org/abs/2312.10997
+  - https://arxiv.org/abs/2402.19473
   - https://pub.towardsai.net/9-rag-architectures-that-save-you-months-of-dev-work-0e219eb637cb
   - https://martinfowler.com/articles/reliable-llm-bayer.html
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md
@@ -35,6 +36,8 @@ The Gao et al. survey arranges RAG as three paradigms. **Naive RAG** is index â†
 
 ![Three RAG paradigms: Naive RAG (index, retrieve, prompt a frozen LLM); Advanced RAG with pre-retrieval and post-retrieval stages; Modular RAG with swappable modules and patterns](../sources/images/gao-rag-survey-fig3.png)
 *Image Source: Gao et al. (2024), [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997), Figure 3*
+
+All three paradigms put retrieved text into the prompt. Zhao et al. sort RAG on a second axis, by where the retrieved object enters the generator. **Query-based** RAG puts it in the input; that is the prompt-stuffing this note covers. **Latent-representation** RAG fuses retrieved encodings inside the model (FiD, RETRO's chunked cross-attention), which needs training to align the two spaces. **Logit-based** RAG blends retrieval scores into the next-token distribution at each decoding step (kNN-LM). **Speculative** RAG uses retrieval in place of generation: retrieved drafts for speculative decoding (REST), or a cached answer instead of a model call (GPTCache, [10](10-semantic-cache.md)). Only the first and last work with a model behind an API. The survey reports no experiments of its own ([arXiv:2402.19473](https://arxiv.org/abs/2402.19473) (Zhao et al., 2024-02)).
 
 The same progression in practice, each step adding control at the cost of latency and complexity:
 

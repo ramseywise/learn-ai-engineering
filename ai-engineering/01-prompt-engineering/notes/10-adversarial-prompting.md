@@ -9,6 +9,9 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://arxiv.org/abs/2302.12173
+  - https://www.andriushchenko.me/gpt4adv.pdf
+  - https://arxiv.org/abs/2412.16720
+  - https://arxiv.org/abs/2501.18841
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -48,6 +51,8 @@ Jailbreaks can be searched for instead of hand-written. Zou et al. (2023) optimi
 
 ![PAIR: an attacker LLM iteratively refines a jailbreak against a target LLM](../sources/images/huyen-ai-engineering-fig5-11.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-11, from Chao et al. (2023) (CC BY 4.0)*
+
+Exposed log-probabilities make the search cheaper. Andriushchenko ran random search over a 10-character suffix against `gpt-4-1106-preview`, changing one character per step and keeping the change if the logprob of "Sure" rose. Over 1,000 iterations the probability of "Sure" went from about 1% to over 50%, at under $1 per suffix. The demo uses two hand-picked requests and reports no attack success rate. It still shows that any API exposing top-k logprobs gives an attacker a gradient to climb ([gpt4adv.pdf](https://www.andriushchenko.me/gpt4adv.pdf) (Andriushchenko, 2023-12), later extended in [arXiv:2404.02151](https://arxiv.org/abs/2404.02151)).
 
 The same loop is how you red-team your own app ([Defenses](#defenses-weakest-to-strongest)).
 
@@ -97,7 +102,7 @@ No prompt-level defense is complete. Layer them.
 
 **Measure two rates, not one.** The **violation rate** is the share of attack attempts that succeed. The **false refusal rate** is the share of safe requests the system refuses. A system that refuses everything scores zero violations and is useless, so track both on every change. Benchmarks (AdvBench, PromptRobust) and probing tools ([PyRIT](https://github.com/Azure/PyRIT), [garak](https://github.com/NVIDIA/garak)) run catalogs of known attacks against your system. A red team supplies the attacks nobody has catalogued yet (*AI Engineering*, ch. 5).
 
-**At the model level, train an instruction hierarchy.** Wallace et al. (OpenAI, 2024) fine-tuned models to follow a ranked order when instructions conflict: **system > user > model output > tool output**. Tool output is ranked lowest, so an "IGNORE PREVIOUS INSTRUCTIONS" inside a search result loses to everything above it. On their evaluations this increased robustness by up to 63%, with minimal loss on standard capability benchmarks. You can't apply this yourself through an API, but it's a reason to pick models trained this way and to keep retrieved text in `tool` messages.
+**At the model level, train an instruction hierarchy.** Wallace et al. (OpenAI, 2024) fine-tuned models to follow a ranked order when instructions conflict: **system > user > model output > tool output**. Tool output is ranked lowest, so an "IGNORE PREVIOUS INSTRUCTIONS" inside a search result loses to everything above it. On their evaluations this increased robustness by up to 63%, with minimal loss on standard capability benchmarks. You can't apply this yourself through an API, but it's a reason to pick models trained this way and to keep retrieved text in `tool` messages. OpenAI's o1 adds a developer role between the two, giving **system > developer > user**. Against GPT-4o, o1 resolves more conflicts in favour of the higher role: 0.78 vs. 0.68 for developer over user and 0.80 vs. 0.74 for system over developer. It also holds a math-tutor instruction against user jailbreaks 0.95 vs. 0.33 of the time when the instruction sits in the system message. One case regressed. When the system message protects a phrase and the attack arrives in a developer message, o1 kept the phrase back 0.70 of the time, against 0.82 for GPT-4o. These are OpenAI's own evals ([arXiv:2412.16720](https://arxiv.org/abs/2412.16720) (OpenAI, 2024-12)). Reasoning compute is a second model-level lever. On o1-preview and o1-mini, with no adversarial training, attack success on prompt injections with an unambiguous goal (a hidden instruction in a math problem, an injected web page in a browsing task) fell towards zero as the model spent more reasoning tokens. In human red-teaming of o1-preview, the number of attempts needed for a successful attack rose from 11.0 at the lowest compute setting to 22.6 at the highest. It did not help with misuse prompts whose harm is a judgement call. Attackers can also tell the model to think less, or bait it into wasting compute ("nerd sniping"). The study is vendor-run, and the compute axes are unlabelled ([arXiv:2501.18841](https://arxiv.org/abs/2501.18841) (Zaremba et al., 2025-01)).
 
 ![The instruction hierarchy: system > user > model outputs > tool outputs](../sources/images/huyen-ai-engineering-fig5-16.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 5-16, after Wallace et al. (2024)*

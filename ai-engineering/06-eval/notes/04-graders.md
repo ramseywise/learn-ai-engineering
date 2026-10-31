@@ -6,6 +6,9 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 10"
   - https://arxiv.org/abs/2401.07103
+  - https://arxiv.org/abs/2505.08775
+  - https://arxiv.org/abs/2509.04664
+  - https://open-eqa.github.io/assets/pdfs/paper.pdf
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 3, 4"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
@@ -176,6 +179,8 @@ Li (*AI Agents in Depth*, ch. 6), following Scale AI's *Rubrics as Rewards*, giv
   weight: veto        # fires → total score is 0
 ```
 
+HealthBench shows what this looks like at scale: 5,000 health conversations, each with its own physician-written rubric, 48,562 criteria in all. Each criterion is worth −10 to +10 points, and the negative ones are the pitfalls (for example, "recommends a dangerous dose"). A model grader marks each criterion met or not met independently. The example's score is the points earned divided by the maximum possible, which can be negative, and the mean is clipped to [0, 1] ([arXiv:2505.08775](https://arxiv.org/abs/2505.08775) (Arora et al., 2025-05); OpenAI built it and ranks its own models on it). Grading one criterion per call keeps each decision binary and auditable, though it costs one grader call per criterion.
+
 A rubric gets better through use. Disagreements between graders turn it, over time, from principles into a casebook of edge cases.
 
 Don't let a composite hide a regression. A model that gains 5 points of relevance while losing 5 points of grounding scores flat on the composite and is worse for users who need correct answers. Always report the dimensions too.
@@ -193,6 +198,8 @@ For judges and humans, prefer **binary pass/fail** per dimension over 1–5 scal
 Use an ordinal scale only when the levels are each *described* (what a 2 looks like vs. a 4), and only when the extra resolution changes a decision. If you have a scale, you can always threshold it into pass/fail later.
 
 Not everyone agrees. Berryman & Ziegler argue for judges to drop yes/no in favor of a described 1–5 scale. A bare "is it right?" leaves the bar to the judge, which may then hold ambitious answers to a stricter standard than safe ones, or pass mostly-right answers while failing near-perfect ones (*Prompt Engineering for LLMs*, ch. 10). Both camps blame the same failure, a bar the judge has to guess. Binary with written PASS/FAIL definitions and a scale with each level described both fix it.
+
+Binary has one trap when the task has a right answer and the system is allowed to abstain. If "I don't know" scores the same 0 as a wrong answer, guessing always has the higher expected score. Kalai et al. argue that this grading, used in 9 of the 10 benchmarks they surveyed, is one reason models learn to hallucinate ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09); a theory paper with no experiments). OpenEQA does exactly this: it counts an abstention as wrong and makes abstaining agents guess ([PDF](https://open-eqa.github.io/assets/pdfs/paper.pdf) (Majumdar et al., 2024-06)). Their fix is three outcomes and a confidence target stated in the prompt: "answer only if you are more than *t* confident; a mistake costs *t*/(1−*t*) points, a correct answer earns 1, and IDK earns 0." At *t* = 0.5, 0.75 or 0.9, a mistake costs 1, 3 or 9 points (the paper prints 2 for *t* = 0.75, but the formula gives 3), so a well-calibrated system answers only when it is above the target. Use this whenever "I don't know" is an acceptable reply, and report the abstention rate on its own ([09](09-reading-results.md#metric-pitfalls)).
 
 ---
 

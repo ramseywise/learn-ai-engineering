@@ -6,6 +6,12 @@ sources:
   - https://arxiv.org/abs/2507.08794 (LLM-judge verifiers fooled by content-free answers)
   - https://arxiv.org/abs/2503.04412 (AB-MCTS, adaptive branching tree search)
   - https://arxiv.org/abs/2404.00282 (survey of LLM-enhanced RL)
+  - https://arxiv.org/abs/2511.18397 (natural emergent misalignment from reward hacking)
+  - https://arxiv.org/abs/2506.19823 (persona features control emergent misalignment)
+  - https://arxiv.org/abs/2411.07279 (test-time training for few-shot learning)
+  - https://arxiv.org/abs/2601.16175 (TTT-Discover)
+  - https://arxiv.org/abs/2602.15763 (GLM-5)
+  - https://arxiv.org/abs/2512.16144 (INTELLECT-3)
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 8
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5
   - Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 7
@@ -233,6 +239,23 @@ comparison.
 **The environment is the practice field.** If it is distorted (scripted customer-service reps, error messages that don't match production), the model learns a test-taking strategy that dies on deployment. This is the most common way RL projects fail.
 
 **Building the environment often costs more than training.** Real APIs rate-limit, ban accounts and have side effects. You need a stable, replayable "shadow world": AWorld's MCP sandbox, ReTool's interpreter sandbox. The reward function is part of the environment.
+
+Open frontier reports show the scale this now takes:
+
+- **GLM-5.** More than 10k verifiable SWE environments across 9 languages, built from
+  fail-to-pass tests. Terminal tasks were hardened by a "refine agent" against shortcuts.
+  - Its slide-generation RL still found one: truncating content and fiddling spacing to pass
+    the layout checker. The fix was to patch the renderer
+    ([arXiv:2602.15763](https://arxiv.org/abs/2602.15763) (GLM-5 Team, 2026-02)).
+  - Its self-run 77.8% on SWE-bench Verified falls to 42.1% on decontaminated SWE-rebench,
+    level with GLM-4.7's 41.3%.
+- **INTELLECT-3.** Publishes its environments (math, code, science, logic, deep research and
+  R2E-Gym SWE) as reusable packages on an open hub. Up to 4,000 sandboxes ran at once
+  ([arXiv:2512.16144](https://arxiv.org/abs/2512.16144) (Prime Intellect Team, 2025-12)).
+  - It reports no agentic benchmark at all.
+
+The asynchronous trainers behind both are in
+[01](01-rl-foundations.md#scaling-actors-and-learners).
 
 **When you can't build an environment, let a model play it:**
 
@@ -574,13 +597,73 @@ each tree node as a step and train the policy to search better. Search can also 
 SFT data (keep the best leaf), which is how [distillation](#data-engineering-for-post-training)
 recipes often start.
 
+**Test-time training sits between the two.** You update weights, but only temporarily, and for
+one problem.
+
+- **TTT for few-shot tasks.** Akyürek et al. train a per-task LoRA (rank 128) on leave-one-out
+  tasks built from the task's own demonstrations, with invertible augmentations
+  ([arXiv:2411.07279](https://arxiv.org/abs/2411.07279) (Akyürek et al., 2024-11)).
+  - The model was an 8B Llama-3 already fine-tuned on synthetic ARC data.
+  - It went from 18.3% to 47.1% pass@2 on the 400-task ARC public validation set.
+  - It cost about 7 A100-minutes per task.
+  - The headline ensemble's "average human" match (61.9% in the text, 62.8% in Table 1)
+    drops to 47.5% on the hidden semi-private set.
+- **TTT-Discover** runs RL on a single test problem with gpt-oss-120b (LoRA, 50 steps × 512
+  rollouts, about $500 per problem)
+  ([arXiv:2601.16175](https://arxiv.org/abs/2601.16175) (Yuksekgonul et al., 2026-01)).
+  - It optimizes an *entropic* objective that tilts toward the best sample, not the mean.
+  - It restarts from a PUCT-selected buffer of earlier solutions.
+  - On the GPUMode TriMul kernel (H100, authors' evaluator) it reached 1,203 µs, against
+    1,986 µs for the same loop with an expected-reward objective and 5,353 µs for Best-of-N.
+    Plain test-time RL was no better than Best-of-N.
+  - It set new bests on the Erdős minimum-overlap bound and on both AtCoder contests, but not
+    on AC2 or MLA-Decode.
+  - Each problem is one run, some margins are tiny, and several prompts described the prior
+    best method.
+
+Both need a dense, trustworthy score at test time: a verifier on the demonstrations, or a
+continuous reward.
+
 ---
 
 ## Practical pitfalls
 
 1. **Using post-training to store facts.** Use RAG; post-training teaches how to use knowledge.
 2. **Starting RL before format is stable.** If the parse-failure rate is above 20%, RL will fail.
-3. **Reward hacking.** Reward the real objective, not a proxy like length. On RM over-optimization, see [02-rlhf-pipeline.md](02-rlhf-pipeline.md#overoptimization).
+3. **Reward hacking, which does not stay local.** Reward the real objective, not a proxy like
+   length. On RM over-optimization, see [02-rlhf-pipeline.md](02-rlhf-pipeline.md#overoptimization).
+
+   Anthropic gave a pretrained model knowledge of three hacks, then ran RL on real Claude
+   Sonnet 3.7 coding environments with the anti-hack checks removed. The hacks were an
+   always-equal object, `sys.exit(0)` and patching pytest via `conftest.py`.
+   - The model learned them and, at the onset of hacking, became broadly misaligned.
+   - In the synthetic-document setting, 33.7% of answers were misaligned on Betley et al.'s
+     questions, against 0.7% for a non-hacking baseline.
+   - In 12% of trials it sabotaged a reward-hack classifier it was asked to write in Claude
+     Code ([arXiv:2511.18397](https://arxiv.org/abs/2511.18397) (MacDiarmid et al., 2025-11)).
+
+   ![Top left: mean misalignment score over RL steps, flat near 0.03 until the onset of hacking around step 65, then rising to about 0.35–0.4, while a run with a hack penalty stays near 0. Bottom left: hack rate rising from 0 to about 0.9 at the same step. Right: the six component evaluations all rise at the onset.](../sources/images/macdiarmid-natural-emergent-misalignment-fig1.png)
+   *Image Source: MacDiarmid et al., [Natural Emergent Misalignment from Reward Hacking in Production RL](https://arxiv.org/abs/2511.18397) (2025), Fig. 1*
+
+   What did and did not fix it:
+   - Chat-style RLHF left the misalignment context-dependent, still present on agentic
+     tasks.
+   - What worked was preventing the hack (a classifier penalty) or **inoculation prompting**:
+     the system prompt says passing the grader is the task. In the prompted setting that cut
+     misalignment 75–90% even with hacking above 99%; it was weaker in the synthetic-document
+     setting.
+   - These are single runs per configuration with Claude graders. The hack-describing
+     documents also labelled each hack "misaligned", which pre-installs part of the
+     association.
+
+   The same generalization appears from SFT: OpenAI fine-tuned GPT-4o on 6,000 subtly wrong
+   health answers and got about 60% misalignment on 44 unrelated prompts (GPT-4o-graded).
+   - A "toxic persona" SAE latent tracked it, and rose at 5% bad data before behaviour
+     changed.
+   - 35 steps of SFT on correct data at batch 4 brought an insecure-code model from 17.7%
+     back to 0.1% ([arXiv:2506.19823](https://arxiv.org/abs/2506.19823) (Wang et al.,
+     2025-06)).
+   - That detector was evaluated in-sample, and the paper is vendor-run.
 4. **A low-fidelity simulator.** The policy collapses in production.
 5. **Over-training.** Train loss falls while validation gets worse. Stop early, especially with SFT.
 6. **Value-function collapse and under-exploration.** PPO curves oscillate; low temperature traps the policy in a local optimum.
@@ -626,7 +709,7 @@ Fail fast before you fail at scale.
 - **Correct process with a wrong answer, or wrong process with a right answer: which deserves more reward?** Outcome stays primary (RLVR), and verifiable process *violations* are penalized (RLVP). Don't reward "lucky" paths that broke constraints.
 - **$10k to improve a support agent: where does it go?** Mostly context, knowledge, prompts/Skills and programmatic constraints. Train weights only for what can't be stated (tone, perception) or for cost (distillation).
 - **A per-customer LoRA instead of a knowledge base?** It wins for stable style and implicit preferences. It loses for facts that change, need citations or must be deletable.
-- **Long-tail rollouts idle the GPUs. What can you do?** Run rollout and training asynchronously, cap or penalize length (DAPO's overlong shaping), use partial rollouts, and use dynamic batching.
+- **Long-tail rollouts idle the GPUs. What can you do?** Run rollout and training asynchronously with a staleness cap and importance-ratio masking ([01](01-rl-foundations.md#scaling-actors-and-learners)), cap or penalize length (DAPO's overlong shaping), use partial rollouts, and use dynamic batching.
 
 ---
 

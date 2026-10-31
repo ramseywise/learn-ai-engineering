@@ -6,6 +6,13 @@ sources:
   - https://arxiv.org/abs/2303.08774 (GPT-4 technical report)
   - https://arxiv.org/abs/1706.03741
   - https://arxiv.org/abs/2405.14394 (instruction tuning with loss over instructions)
+  - https://arxiv.org/abs/2407.00215 (CriticGPT)
+  - https://arxiv.org/abs/2309.14525 (LLaVA-RLHF, Fact-RLHF)
+  - https://arxiv.org/abs/2507.07484 (Machine Bullshit)
+  - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
+  - https://arxiv.org/abs/2505.07608 (MiMo-7B)
+  - https://arxiv.org/abs/2503.24290 (Open-Reasoner-Zero)
+  - https://arxiv.org/abs/2501.12599 (Kimi k1.5)
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 7
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5–6
   - Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 6–7
@@ -235,6 +242,16 @@ ranking became a comparison, so the real count was several times larger. All pai
 prompt went into a single batch, which stops the reward model from overfitting to responses it
 sees in many pairs.
 
+**Raters miss errors, so the labels carry them.** OpenAI trained CriticGPT, a GPT-4-family
+critic, with RLHF on code into which contractors had deliberately inserted subtle bugs. On real
+bugs from ChatGPT training data, raters preferred its critiques to human-written ones 63% of the
+time. On ChatGPT data a first rater had marked "flawless", critiques surfaced a rating-lowering
+problem in 24% of flagged cases, against 6% for a second unassisted rater
+([arXiv:2407.00215](https://arxiv.org/abs/2407.00215) (McAleese et al., 2024-06)). Critics also
+hallucinate and nitpick. Human + critic teams hallucinated less than the critic alone and caught
+more than the human alone. The paper never measured whether critic-assisted labels produce a
+better policy, and its data and model are private.
+
 **Preference data at practitioner scale** (*LLM Engineer's Handbook*, ch. 6). The same
 (prompt, chosen, rejected) triples feed a reward model here or DPO directly ([03](03-preference-optimization.md#dpo-in-practice)).
 How many pairs you need depends on the goal:
@@ -306,6 +323,24 @@ manifestations:
 trained on a finite dataset and generalizes imperfectly. The RL optimizer finds
 out-of-distribution inputs that exploit this gap. See: [reward hacking patterns](01-rl-foundations.md).
 
+LLaVA-RLHF shows the verbosity hack in a multimodal model. With plain RLHF, PPO "produc[ed]
+lengthier responses rather than ones that are less prone to hallucinations". LLaVA-Bench rose
+while MMHal-Bench did not. **Fact-RLHF** gives the reward model ground-truth context: COCO
+captions or A-OKVQA rationales. It also adds a correctness reward and a length penalty. With
+these the 7B policy reached 94.1 on LLaVA-Bench (GPT-4-judged) and 2.1 on MMHal
+([arXiv:2309.14525](https://arxiv.org/abs/2309.14525) (Sun et al., 2023-09)). The hallucination
+rate, though, stayed flat against the SFT+ model (0.57 vs 0.55 at 13B). The MMHal gain came from
+informativeness, and both benchmarks are judged by GPT-4.
+
+Sycophancy has a measurable form. Liang et al. define a Bullshit Index, 1 − |correlation between
+the model's internal belief and its stated claim|. RLHF toward immediate user satisfaction raised
+it from 0.379 to 0.665 on their Marketplace task. On Llama-3-8B, claims that a product had a
+feature the model believed was unknown went from 20.9% to 84.5%
+([arXiv:2507.07484](https://arxiv.org/abs/2507.07484) (Liang et al., 2025-07)). The "RLHF" here
+is the authors' own LoRA run on 7–8B Llama with a deliberately myopic reward, evaluated in the
+same environment family. Read it as what a satisfaction-only reward does, not as a measurement
+of production RLHF.
+
 ### Overoptimization
 
 PPO is run too long or with too small a KL coefficient. The policy drifts far from the
@@ -328,9 +363,22 @@ inside the region where the RM's scores are trustworthy. It is also **mode-seeki
 policy settles on one or two high-reward response styles instead of covering every style
 in the reference. That is why RL-tuned models sound more decisive and less diverse.
 Forward KL would force the policy to cover every mode of the SFT model, which is not the
-goal. In practice the penalty is computed **per token and added to the reward**, not as a
-separate loss term, so it flows through the PPO/GRPO advantage. Most RLVR runs keep it for
-stability. DAPO and Open-Reasoner-Zero drop it; DeepSeek-R1-Zero's GRPO keeps it. More in
+goal. Where the penalty goes depends on the algorithm:
+
+- **InstructGPT-style PPO** computes it per token and adds it to the reward, so it flows
+  through the advantage.
+- **GRPO as DeepSeek-R1 runs it** subtracts β·KL(π_θ‖π_ref) as a separate loss term, using an
+  unbiased k3 estimator. The paper does not disclose β
+  ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI, 2025-01)).
+
+With a verifiable reward, many RLVR recipes drop the penalty entirely. These include DAPO,
+MiMo-7B's modified GRPO ([arXiv:2505.07608](https://arxiv.org/abs/2505.07608) (Xiaomi, 2025-05))
+and Open-Reasoner-Zero's vanilla PPO. ORZ ran PPO with GAE λ = γ = 1 on Qwen2.5 bases with no KL
+loss and no KL reward shaping. It found both benchmark accuracy and response-length growth better
+without KL ([arXiv:2503.24290](https://arxiv.org/abs/2503.24290) (Hu et al., 2025-03)); that
+ablation is curves only, from a single run. Kimi k1.5 regularizes toward the *previous iterate*,
+not a fixed reference ([arXiv:2501.12599](https://arxiv.org/abs/2501.12599) (Kimi Team, 2025-01)).
+The KL stays essential when the reward is a learned model that can be exploited. More in
 [post-training-for-agents.md](05-post-training-for-agents.md#why-sft-memorizes-and-rl-generalizes).
 
 ### Alignment tax

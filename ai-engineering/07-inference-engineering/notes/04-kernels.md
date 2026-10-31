@@ -4,6 +4,7 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 7–12"
   - https://docs.nvidia.com/cuda/cuda-c-programming-guide/
   - https://docs.nvidia.com/nsight-compute/ProfilingGuide/
+  - https://arxiv.org/abs/2407.08608
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -219,7 +220,7 @@ Instead of every warp loading then computing, dedicate warps to roles.
 
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 10-4*
 
-In the figure, warps 1–4 only load tiles of A and B; after each barrier, a separate group of compute warps (5–8, then 9–12) runs the matrix multiply on the data just loaded, while the loaders start on the next tile. Loads and tensor-core math overlap without any warp doing both. CUTLASS's "ping-pong" kernels go further: two consumer warpgroups alternate between MMA and epilogue. FlashAttention-3 uses the same idea to reach ~75% of H100 peak FP16 by overlapping GEMM, softmax and TMA. Table 10-3 (illustrative) puts warp specialization ~10% ahead of double buffering.
+In the figure, warps 1–4 only load tiles of A and B; after each barrier, a separate group of compute warps (5–8, then 9–12) runs the matrix multiply on the data just loaded, while the loaders start on the next tile. Loads and tensor-core math overlap without any warp doing both. CUTLASS's "ping-pong" kernels go further: two consumer warpgroups alternate between MMA and epilogue. FlashAttention-3 uses the same idea, overlapping GEMM, softmax and TMA. Its headline 740 TFLOPs/s (75% of H100 SXM5 FP16 peak) is the best case: forward pass, head dim 256, no causal mask, 16k tokens. At the common head dim 128 it peaks near 648 TFLOPs/s (~65%), or ~616 with a causal mask, still 1.5–2.0× FlashAttention-2; in its ablation (head dim 128, 8,448 tokens) dropping warp specialization costs 661 → 570 TFLOPs/s ([arXiv:2407.08608](https://arxiv.org/abs/2407.08608) (Shah et al., 2024-07)). It is Hopper-only and tuned for training and prefill, not decode. Table 10-3 (illustrative) puts warp specialization ~10% ahead of double buffering.
 
 Do not copy the book's warp-specialized listing. The compute warp releases the buffer before computing on it, which races with the loader. The block-collective `memcpy_async` is called by one warp only. And per-warp tile loops give warps different trip counts, so the shared pipeline stages fall out of step. The book also says "each warp has its own scheduler". An SM has four schedulers shared by all its warps.
 

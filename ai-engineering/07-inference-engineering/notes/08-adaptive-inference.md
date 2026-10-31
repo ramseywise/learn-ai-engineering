@@ -7,6 +7,8 @@ sources:
   - https://arxiv.org/abs/2302.01318
   - https://arxiv.org/abs/2208.07339
   - https://pytorch.org/blog/accelerating-generative-ai-2/
+  - https://arxiv.org/abs/2306.11695
+  - https://arxiv.org/abs/2312.12456
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -83,7 +85,7 @@ Two of the Handbook's descriptions are wrong or dated. Its Medusa passage, rough
 
 ## Quantization
 
-Quantization stores numbers in fewer bits. Weight-only quantization is "by far the most popular approach", because it works out of the box and decode is bandwidth-bound (*AI Engineering*, ch. 9). Huyen also notes the floor: you can't go below 1 bit per value. Pruning can remove more than 90% of weights in research settings (Frankle & Carbin, 2019), but it is rare in production. Sparse kernels need hardware support, and the gains are usually smaller than quantization's.
+Quantization stores numbers in fewer bits. Weight-only quantization is "by far the most popular approach", because it works out of the box and decode is bandwidth-bound (*AI Engineering*, ch. 9). Huyen also notes the floor: you can't go below 1 bit per value. Pruning can remove more than 90% of weights in small research networks (Frankle & Carbin, 2019), but LLMs tolerate much less. Wanda prunes by weight magnitude times input-activation norm, with no retraining: LLaMA-7B at 50% unstructured sparsity goes from 5.68 to 7.26 WikiText perplexity, but at 70% it reaches 84.5. Unstructured sparsity buys no GPU speed, and its 2:4 pattern gives ~1.6× on linear-layer matmuls but only 1.24× end to end on 7B ([arXiv:2306.11695](https://arxiv.org/abs/2306.11695) (Sun et al., 2023-06)). So pruning is rare in production. Sparse kernels need hardware support, and the gains are usually smaller than quantization's.
 
 ### The two basic schemes
 
@@ -188,6 +190,8 @@ If a token is easy, stop computing early (*AISPE*, ch. 19):
 - **Speculative MoE routing** predicts expert assignment ahead of time, to start all-to-all transfers early. The book reports about 30% less communication time.
 
 The book's "30–50% savings on reasoning tasks" for early exit mixes two things: cutting a chain of thought short (fewer *tokens*) and exiting layers early (fewer *layers per token*). They are different mechanisms with different risks. In batched serving, per-token early exit also has a practical problem: sequences in one batch exit at different depths, which leaves the GPU partly idle unless the kernels handle ragged depth.
+
+Activation sparsity skips neurons instead of layers. PowerInfer finds that in ReLU models a small hot set of neurons fires for most tokens (17% of OPT-30B's neurons account for 80% of activations). It keeps the hot neurons on the GPU, computes the cold ones on the CPU, and predicts which will fire. On one RTX 4090 at batch 1 it averages 7.23× llama.cpp in FP16 (up to 11.69× on Falcon-40B) and 2.89× in INT4 ([arXiv:2312.12456](https://arxiv.org/abs/2312.12456) (Song et al., 2023-12)). It needs ReLU-sparse models, so SwiGLU models such as Llama must be ReLU-fied first; the gains shrink with long prompts and larger batches, and on an A100 it is 18–29% slower than vLLM.
 
 Ch. 19 closes with an **RL-based runtime tuner** that adjusts batch size, precision and parallelism on the fly. It insists on a **kill switch** that reverts to a known-good static configuration. That is the right shape for any adaptive controller: bounded actions, monitored rewards, and a fast fallback.
 

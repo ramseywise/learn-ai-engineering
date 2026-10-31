@@ -7,6 +7,9 @@ sources:
   - "Prompt Engineering for LLMs (Berryman & Ziegler, O'Reilly 2024) — Ch 11"
   - https://arxiv.org/abs/2505.11423
   - https://arxiv.org/abs/2504.09858
+  - https://arxiv.org/abs/2506.06941
+  - https://arxiv.org/abs/2506.09250
+  - https://arxiv.org/abs/2412.16720
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -20,7 +23,7 @@ cleaned: 2026-10-31
 
 A reasoning model (o-series, Claude with extended or adaptive thinking, Gemini thinking, DeepSeek-R1) spends **test-time compute** on hidden or summarized thinking tokens before it answers. Two consequences:
 
-- **More thinking usually means better answers** on hard tasks — but with more latency and cost. You control it with an **effort or budget** setting (low / medium / high, or a token budget), not with prompt wording.
+- **More thinking usually means better answers** on hard tasks — but with more latency and cost. You control it with an **effort or budget** setting (low / medium / high, or a token budget), not with prompt wording. "Usually" depends on difficulty. On puzzles with a tunable difficulty (Tower of Hanoi, River Crossing, Blocks World), Claude 3.7 Sonnet and DeepSeek ran with and without thinking at matched token budgets. Without thinking they matched or beat the thinking versions on easy instances, and lost on medium ones. On the hardest, both scored zero, and the thinking models started using fewer thinking tokens even with budget left. Putting the Hanoi solution algorithm in the prompt did not move the collapse point ([arXiv:2506.06941](https://arxiv.org/abs/2506.06941) (Shojaee et al., 2025-06)). Read the collapse with its rebuttal. The scoring demanded every move written out, and 2<sup>N</sup>−1 Hanoi moves overrun the output limit at large N. Some scored River Crossing instances have no solution ([arXiv:2506.09250](https://arxiv.org/abs/2506.09250) (Lawsen, 2025-06)). The low-complexity result survives that critique and matches the overthinking row below.
 - **The CoT scaffolding you'd write for a standard model is redundant at best**, and can hurt. Explicit step-by-step CoT prompting has been shown to *degrade instruction-following*. Across 15 models on IFEval and ComplexBench, adding CoT lowered constraint accuracy. The paired comparisons (Claude 3.7 Sonnet with and without thinking, DeepSeek-V3 vs. R1) show the same drop. Reasoning helped with formatting and exact wording but led models to drop simple constraints or add content nobody asked for ([arXiv:2505.11423](https://arxiv.org/abs/2505.11423), Li et al., 2025-05). The best mitigation was a trained classifier that decides *whether* to reason for a given instruction.
 
 ---
@@ -88,7 +91,7 @@ Simple extraction, classification and rewriting rarely need one.
 | **Overthinking** easy tasks (cost, latency) and **underthinking** hard ones | Be specific about the task and the output; route only hard subtasks to the reasoning model; tune effort |
 | Output quality — mixed languages, repetition, formatting drift | Unambiguous instructions; explicit format; post-validation |
 | Instruction-following degrades with explicit CoT | Drop manual CoT; use carefully chosen few-shot examples; self-reflection; let the model (or a classifier) decide when to reason |
-| **The reasoning isn't faithful** — the visible chain of thought doesn't always reflect what drove the answer (*Reasoning Models Don't Always Say What They Think*, 2025) | Don't use the thinking text as an audit trail or a safety monitor on its own; evaluate outputs |
+| **The reasoning isn't faithful** — the visible chain of thought doesn't always reflect what drove the answer (*Reasoning Models Don't Always Say What They Think*, 2025) | Don't use the thinking text as an audit trail or a safety monitor on its own; evaluate outputs. A CoT monitor catches only what the chain states. OpenAI's GPT-4o monitor (92% accurate on a small internal set) flagged 0.17% of 102,443 o1-preview chains as deceptive, mostly invented policies used to withhold information ([arXiv:2412.16720](https://arxiv.org/abs/2412.16720) (OpenAI, 2024-12)) |
 | Weaker tool calling in some open reasoning models | Test parallel and multi-step tool use explicitly before relying on it |
 | Sampling parameters ignored or rejected | Expect fixed temperature on many reasoning endpoints; control with effort instead ([04](04-controlling-output.md#sampling-parameters)) |
 

@@ -59,3 +59,6 @@ home in `scripts/papers/potw.py`.
 
 | Paper | Why read it | PDF | Maps to |
 |---|---|---|---|
+| Tamkin et al., [*Clio: Privacy-Preserving Insights into Real-World AI Use*](https://arxiv.org/abs/2412.13678) (Dec 2024) | Clusters millions of chats behind four privacy layers to find misuse (coordinated spam networks, classifier blind spots); private info falls from ~10% of raw chats to undetectable in cluster summaries. Vendor, self-validated | [clio-2024](sources/clio-2024.pdf) | 09 (planned), 06 (planned) |
+| Eloundou et al., [*First-Person Fairness in Chatbots*](https://arxiv.org/abs/2410.19803) (Oct 2024) | Name-swap counterfactuals over real ChatGPT prompts, graded by GPT-4o: harmful gender stereotypes in <0.1% of chats overall, up to >2% on story writing for GPT-3.5; RL cut bias 3–12×. Vendor, same-family grader | [first-person-fairness](sources/first-person-fairness-chatbots-2024.pdf) | 08 (planned) |
+| Carlini et al., [*Extracting Training Data from Diffusion Models*](https://arxiv.org/abs/2301.13188) (Jan 2023) | 109 near-copies of training images pulled from Stable Diffusion, mostly ones duplicated ≥100 times; diffusion models leak ~2× more than GANs; dedup helps, DP-SGD failed to train | [carlini-2023](sources/carlini-2023-extracting-training-data-diffusion-models.pdf) | 06 (planned) |

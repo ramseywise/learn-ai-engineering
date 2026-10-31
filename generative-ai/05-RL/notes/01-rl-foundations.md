@@ -15,6 +15,8 @@ sources:
   - https://arxiv.org/abs/1003.0146
   - https://arxiv.org/abs/1802.09127
   - https://arxiv.org/abs/1508.03326
+  - https://arxiv.org/abs/2512.16144 (INTELLECT-3)
+  - https://arxiv.org/abs/2602.15763 (GLM-5)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -583,6 +585,24 @@ Football. LLM RL faces the same choice in a different shape. Generation is the a
 wall-clock time. Asynchronous rollout pipelines trade freshness for throughput, and their
 staleness correction plays the role V-trace played for IMPALA. The framing transfers from the
 2020 book. The systems do not.
+
+Two 2025–26 open reports show what that correction looks like now: double-sided masking of the
+token-level ratio π_train / π_inference rather than a V-trace-style truncated weight.
+
+- **INTELLECT-3.** A 106B-total / 12B-active MoE post-trained from GLM-4.5-Air on prime-rl.
+  - The setup: 16 training nodes and 44 inference nodes, with in-flight weight updates.
+  - Rollouts more than 8 policy versions old are discarded.
+  - Tokens whose ratio falls outside [0.5, 5] are masked out of the loss
+    ([arXiv:2512.16144](https://arxiv.org/abs/2512.16144) (Prime Intellect Team, 2025-12)).
+  - Without the masking, runs crashed days in. In-flight updates more than halved step time.
+- **GLM-5.** Agentic RL runs fully asynchronously, with the rollout engine's own log-probs as
+  the behaviour policy.
+  - Tokens outside [1−ε_l, 1+ε_h] are masked, and samples older than a version gap τ are
+    dropped ([arXiv:2602.15763](https://arxiv.org/abs/2602.15763) (GLM-5 Team, 2026-02)).
+  - Its sharpest lesson is about mismatch: a non-deterministic top-k in the sparse-attention
+    indexer collapsed RL entropy within a few steps.
+
+Neither report ablates the correction quantitatively, and GLM-5 does not disclose ε or τ.
 
 ### What has dated since 2020
 

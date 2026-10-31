@@ -65,6 +65,15 @@
 | | Touvron et al., *LLaMA* (2023). [PDF](sources/2302.13971v1.pdf) | [2302.13971](https://arxiv.org/abs/2302.13971) | background for 06; better homed in 01-llm-fundamentals |
 | | OpenAI, *GPT-4 Technical Report* (2023). [PDF](sources/2303.08774v6.pdf) | [2303.08774](https://arxiv.org/abs/2303.08774) | background for 06; better homed in 01-llm-fundamentals |
 
+## AI Papers of the Week
+
+Papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-the-Week) sync (`make papers`, then `/papers`).
+
+| | Paper | arXiv | Notes |
+|---|---|---|---|
+| | Radhakrishnan et al. (Google), *Knowing When to Ask: Bridging Large Language Models and Data* (DataGemma, Sep 2024). With Data Commons tables in the prompt, Gemini 1.5 Pro copies statistics 98.6–98.9% accurately, but only 72–76% of its inferences from them are right. Coverage is 24–29% of 101 hand-made queries, graded mostly by the authors. [PDF](sources/datagemma-2024.pdf) | [2409.13741](https://arxiv.org/abs/2409.13741) | [06](notes/06-generation-for-rag.md#hallucinations-and-citations) |
+| | Zhao et al. (Peking University), *Retrieval-Augmented Generation for AI-Generated Content: A Survey* (Feb 2024). Classifies RAG by where retrieval enters the generator: input, latent, logits or speculative. Covers text, code, image, audio, video and 3D; no experiments of its own. [PDF](sources/zhao-2024-retrieval-augmented-generation-ai-generated.pdf) | [2402.19473](https://arxiv.org/abs/2402.19473) | [01](notes/01-rag-pipeline.md#naive-advanced-modular) |
+
 ## Secondary and vendor posts
 
 Use these as gap-detectors, not citations of record (see [SOURCES.md](../../ai-engineering/SOURCES.md) Tier 2).
