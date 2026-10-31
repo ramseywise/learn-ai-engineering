@@ -87,7 +87,7 @@ common at scale.
 
 ## DPO — Direct Preference Optimization
 
-**Paper:** Rafailov et al., 2023 (arXiv: 2305.18290). In repo at [`sources/rafailov-2023-dpo.pdf`](../sources/rafailov-2023-dpo.pdf).
+**Paper:** Rafailov et al., 2023 (arXiv: 2305.18290). [arXiv:2305.18290](https://arxiv.org/abs/2305.18290); local copy indexed in [references.md](../references.md#core-papers).
 
 **The insight:** The RLHF objective (maximize reward subject to KL constraint) has a
 closed-form optimal policy. DPO reparameterizes the reward model in terms of the policy
@@ -295,5 +295,5 @@ This validated the verifiable rewards paradigm and shifted the field's attention
   alternative feedback source (still uses PPO or DPO at the optimization step)
 - **RL foundations:** [01-rl-foundations.md](01-rl-foundations.md) — MDP
   framing, value functions, policy gradients
-- **Papers in repo:** [`sources/rafailov-2023-dpo.pdf`](../sources/rafailov-2023-dpo.pdf) (DPO)
+- **Papers:** (local copies indexed in [references.md](../references.md#core-papers)) [arXiv:2305.18290](https://arxiv.org/abs/2305.18290) (DPO)
 - **External:** DeepSeek-R1 (arXiv: 2501.12948), GRPO (arXiv: 2402.03300)

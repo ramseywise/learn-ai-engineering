@@ -37,7 +37,7 @@ Canonical docs:
 | Dimension | Google ADK | LangGraph |
 |---|---|---|
 | **Core unit** | `Agent` (stateful, has identity) | `Node` (stateless function on shared state) |
-| **Composition** | Recursive tree: `Agent(sub_agents=[...])` | DAG: `graph.add_edge(A, B)` |
+| **Composition** | Recursive tree: `Agent(sub_agents=[...])` | Directed graph, cycles allowed: `graph.add_edge(A, B)` |
 | **Control flow** | Agent decides (LLM chooses tool/sub-agent) | Explicit: conditional edges + routing functions |
 | **State** | Mutable dict via `ToolContext` | Immutable `TypedDict` passed through; nodes return diffs |
 | **Execution** | `runner.run_async()` → async event generator | `graph.ainvoke(state)` → final state dict |

@@ -1,5 +1,5 @@
 ---
-origin: vendored
+origin: book-condensed
 sources:
   - https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md (Apache-2.0)
 confidence: medium

@@ -12,7 +12,7 @@ cleaned: 2026-10-31
 > **Pillar:** [05-RL](../README.md)
 > **Presumes:** [RLHF pipeline](02-rlhf-pipeline.md) — Constitutional AI extends the RLHF framework
 > **Papers:** Constitutional AI (arXiv: 2212.08073), RLAIF (arXiv: 2309.00267)
-> **Paper in repo:** [`sources/bai-2022-constitutional-ai.pdf`](../sources/bai-2022-constitutional-ai.pdf)
+> **Paper:** [arXiv:2212.08073](https://arxiv.org/abs/2212.08073); local copy indexed in [references.md](../references.md#core-papers)
 
 ---
 
@@ -250,4 +250,4 @@ training) that substitutes AI-generated labels for human labels.
   training step can be replaced with DPO or other offline methods; Constitutional AI
   generates the preference data, not the optimizer
 - **RL foundations:** [01 — RL foundations](01-rl-foundations.md)
-- **Paper in repo:** [`sources/bai-2022-constitutional-ai.pdf`](../sources/bai-2022-constitutional-ai.pdf) (the duplicate copies were removed in the 2026-10-31 cleanup)
+- **Paper:** [arXiv:2212.08073](https://arxiv.org/abs/2212.08073); local copy indexed in [references.md](../references.md#core-papers)
