@@ -2,7 +2,7 @@
 origin: vendored snapshots: Text Analytics with Python (kept as practice) + own coursework: intro-to-nlp (kept as practice)
 sources:
   - ../practice/Text Analytics with Python/Ch09 - Sentiment Analysis/
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
   - ../practice/intro-to-nlp/tensorFlow/neural-network/ (CNN and RNN/LSTM sentiment)
   - ../practice/intro-to-nlp/word-cloud/world-cloud-pet-finder.ipynb
   - https://github.com/cjhutto/vaderSentiment
@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 ## The task and the data
 
-Sentiment is binary or graded polarity (positive, negative, sometimes neutral or a 1–5 score); finer forms are **aspect-based** (the battery is great, the screen is poor) and emotion detection. All of Sarkar's chapter 9 uses the 50,000-review IMDb dataset (`movie_reviews.csv`, balanced, 35k train / 15k test), normalised with the chapter's `text_normalizer.py` (HTML strip, accent removal, contraction expansion, lemmatisation, stopwords; see [08](08-text-representation.md)).
+Sentiment is binary or graded polarity (positive, negative, sometimes neutral or a 1–5 score); finer forms are **aspect-based** (the battery is great, the screen is poor) and emotion detection. All of Sarkar's chapter 9 uses the 50,000-review IMDb dataset (`movie_reviews.csv`, balanced, 35k train / 15k test), normalised with the chapter's `text_normalizer.py` (HTML strip, accent removal, contraction expansion, lemmatisation, stopwords; see [08](01-text-representation.md)).
 
 **Normalisation warning for sentiment:** default stopword lists contain *not*, *no*, *nor*, and *very*. Removing them turns "not good" into "good". Sarkar's normaliser keeps negations out of the stopword list; check yours.
 
@@ -31,7 +31,7 @@ A lexicon maps words to polarity scores; a document's score is an aggregate. No 
 |---|---|---|---|
 | TextBlob (Pattern) | Polarity −1..1, subjectivity 0..1 per adjective | Averages, handles some modifiers ("very") and negation | Quick, adjective-centred |
 | AFINN | Integer −5..+5 per word (~3,300 words, plus emoticons) | Sum | Long documents get extreme scores; threshold on the sum |
-| SentiWordNet | Pos / neg / objectivity per WordNet synset ([12](12-semantic-analysis-and-ner.md)) | POS-tag, take first synset, sum pos − neg, normalise by token count | Sense choice is naive (always first synset) |
+| SentiWordNet | Pos / neg / objectivity per WordNet synset ([12](05-semantic-analysis-and-ner.md)) | POS-tag, take first synset, sum pos − neg, normalise by token count | Sense choice is naive (always first synset) |
 | VADER | Valence per word, tuned on social media | Rules for negation, intensifiers ("extremely"), "but", caps, punctuation, emoji; `compound` −1..1 | Best of the lexicons on short informal text |
 
 ```python
@@ -66,7 +66,7 @@ Lexicons reach roughly 70% accuracy on long movie reviews (the book reports AFIN
 
 ## 2. Supervised models (ch. 9b)
 
-With labels, the text classification recipe from [09](09-text-classification.md) applies directly.
+With labels, the text classification recipe from [09](02-text-classification.md) applies directly.
 
 ```python
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -105,7 +105,7 @@ model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accur
 model.fit(avg_wv_train, y_train_onehot, epochs=5, batch_size=100, validation_split=0.1)
 ```
 
-Averaging word vectors throws away word order and negation scope, which is why it loses to bigrams. The averaging function is in [11](11-embeddings-and-similarity.md).
+Averaging word vectors throws away word order and negation scope, which is why it loses to bigrams. The averaging function is in [11](04-embeddings-and-similarity.md).
 
 ---
 
@@ -135,11 +135,11 @@ The intro-to-nlp notebooks compared four architectures on the same IMDb split (f
 | SimpleRNN | `SimpleRNN(64) → Dense(1)` | Vanishing gradients on 120-token reviews |
 | LSTM | `LSTM(64) → Dense(1)` (or `Bidirectional(LSTM(64))`) | Handles negation scope; slower |
 
-All of them show the same learning-curve shape: training accuracy climbs towards 1.0, validation peaks around epoch 2 and loss then rises. Use early stopping on `val_loss` ([07](07-neural-networks-fundamentals.md)).
+All of them show the same learning-curve shape: training accuracy climbs towards 1.0, validation peaks around epoch 2 and loss then rises. Use early stopping on `val_loss` ([07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md)).
 
 **A bug worth remembering.** The LSTM notebook's "experiment" cells pad two hand-written reviews to `maxlen=20`, but the model was trained on length 120. Keras runs it anyway (the LSTM accepts any length), the predictions are off, and nothing errors. Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
 
-The CNN/RNN mechanics belong to [14](14-neural-text-models.md); the contextual models that replaced them (a fine-tuned DistilBERT gets ~93% on IMDb, an off-the-shelf `pipeline("sentiment-analysis")` ~89% with no training) are in [14 — Transformers pipelines](14-neural-text-models.md#transformers-pipelines).
+The CNN/RNN mechanics belong to [14](../../02-deep-learning/notes/02-neural-text-models.md); the contextual models that replaced them (a fine-tuned DistilBERT gets ~93% on IMDb, an off-the-shelf `pipeline("sentiment-analysis")` ~89% with no training) are in [14 — Transformers pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines).
 
 ---
 
@@ -160,11 +160,11 @@ exp = explainer.explain_instance(norm_test_reviews[100], pipe.predict_proba, num
 exp.show_in_notebook()        # words highlighted by contribution to 'positive'
 ```
 
-For a linear pipeline, the global coefficients already explain the model ([09](09-text-classification.md)); LIME earns its cost on nonlinear models. SHAP's text explainer is the more principled alternative ([06](06-ensembles.md) covers SHAP values and lists the explanation papers, including LIME's: [Ribeiro et al. 2016](../sources/ribeiro-2016-why-should-i-trust-you.pdf)).
+For a linear pipeline, the global coefficients already explain the model ([09](02-text-classification.md)); LIME earns its cost on nonlinear models. SHAP's text explainer is the more principled alternative ([06](../../01-classical-ml/notes/06-ensembles.md) covers SHAP values and lists the explanation papers, including LIME's: [Ribeiro et al. 2016](../../sources/ribeiro-2016-why-should-i-trust-you.pdf)).
 
 ### Topic models per class
 
-Split the corpus by label and run NMF on each half ([10](10-topic-models-and-summarization.md)): the topics of the negative reviews are the complaint themes.
+Split the corpus by label and run NMF on each half ([10](03-topic-models-and-summarization.md)): the topics of the negative reviews are the complaint themes.
 
 ```python
 pos_docs = [r for r, s in zip(norm_reviews, sentiments) if s == "positive"]
@@ -210,14 +210,14 @@ Findings were EDA-grade: many "names" are descriptions ("Kitten", "Puppies", "No
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch09a - Unsupervised Lexical`](../practice/Text%20Analytics%20with%20Python/Ch09%20-%20Sentiment%20Analysis/Ch09a%20-%20Sentiment%20Analysis%20-%20Unsupervised%20Lexical.ipynb) | TextBlob, AFINN, SentiWordNet, VADER | Needs data: `movie_reviews.csv.bz2` (not in this snapshot; IMDb 50k from the book repo). `afinn`, `textblob`, spaCy `en_core_web_sm` |
+| [`Ch09a - Unsupervised Lexical`](../practice/text-analytics-with-python/Ch09%20-%20Sentiment%20Analysis/Ch09a%20-%20Sentiment%20Analysis%20-%20Unsupervised%20Lexical.ipynb) | TextBlob, AFINN, SentiWordNet, VADER | Needs data: `movie_reviews.csv.bz2` (not in this snapshot; IMDb 50k from the book repo). `afinn`, `textblob`, spaCy `en_core_web_sm` |
 | `Ch09b - Supervised` | BoW/TF-IDF + LR/SVM; word2vec and GloVe + dense net | Needs data as above; standalone `keras`, `keras.layers.normalization` (TF 1.x era), gensim 3 `size=` / `index2word`, spaCy vectors model |
 | `Ch09c - Advanced Deep Learning` | Embedding + LSTM | Needs data; standalone `keras`; `predict_classes` removed in TF 2.6 |
 | `Ch09d - Model Interpretation` | LIME explanations | Needs data; legacy: `skater` is unmaintained, swap in `lime` |
 | `Ch09e - Topic Models` | NMF per sentiment class, pyLDAvis | Needs data; NMF `alpha` → `alpha_W`; pyLDAvis `.sklearn` → `.lda_model` |
 
-The intro-to-nlp CNN/RNN sentiment notebooks are in [`practice/intro-to-nlp/tensorFlow/neural-network/`](../practice/intro-to-nlp/tensorFlow/neural-network/) and the PetFinder word clouds in [`practice/intro-to-nlp/word-cloud/`](../practice/intro-to-nlp/word-cloud/). Their data is in `practice/intro-to-nlp/data/` (CSVs gitignored, local only).
+The intro-to-nlp CNN/RNN sentiment notebooks are in [`practice/intro-to-nlp/tensorFlow/neural-network/`](../practice/intro-to-nlp/tensorFlow/neural-network) and the PetFinder word clouds in [`practice/intro-to-nlp/word-cloud/`](../practice/intro-to-nlp/word-cloud). Their data is in `practice/intro-to-nlp/data/` (CSVs gitignored, local only).
 
 ---
 
-→ Next: [14-neural-text-models.md](14-neural-text-models.md) — RNNs, LSTMs, text generation, pre-trained encoders and Hugging Face pipelines.
+→ Next: [14-neural-text-models.md](../../02-deep-learning/notes/02-neural-text-models.md) — RNNs, LSTMs, text generation, pre-trained encoders and Hugging Face pipelines.

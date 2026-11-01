@@ -11,7 +11,7 @@ cleaned: 2026-10-31
 
 > A scalar-valued automatic differentiation engine in about 100 lines, and a tiny neural-network library on top of it. Every framework in this folder (Keras, PyTorch, JAX) does exactly this, vectorised over tensors. After this note, `loss.backward()` is not magic: it is a topological sort and the chain rule applied once per node.
 
-This is the first of three notes on Karpathy's *Neural Networks: Zero to Hero*. [16](16-makemore.md) builds language models from bigrams to a WaveNet-style CNN; [17](17-nanogpt.md) builds GPT. Watch the lecture and code along in the notebooks; these notes are the summary to come back to.
+This is the first of three notes on Karpathy's *Neural Networks: Zero to Hero*. [16](02-makemore.md) builds language models from bigrams to a WaveNet-style CNN; [17](03-nanogpt.md) builds GPT. Watch the lecture and code along in the notebooks; these notes are the summary to come back to.
 
 ---
 
@@ -25,7 +25,7 @@ h = 1e-6
 (f(3.0 + h) - f(3.0)) / h       # ≈ 14.0   (analytically 6x − 4 = 14)
 ```
 
-With several inputs, nudge one at a time to get the partial derivative with respect to each. For `d = a*b + c` at `a=2, b=−3, c=10`: ∂d/∂a = b = −3, ∂d/∂b = a = 2, ∂d/∂c = 1. Numerical gradients are how you *check* an implementation (Ng's gradient checking in [07](07-neural-networks-fundamentals.md) is the same idea); they are far too slow to train with, one forward pass per parameter.
+With several inputs, nudge one at a time to get the partial derivative with respect to each. For `d = a*b + c` at `a=2, b=−3, c=10`: ∂d/∂a = b = −3, ∂d/∂b = a = 2, ∂d/∂c = 1. Numerical gradients are how you *check* an implementation (Ng's gradient checking in [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) is the same idea); they are far too slow to train with, one forward pass per parameter.
 
 ---
 
@@ -227,7 +227,7 @@ micrograd builds one graph node per scalar multiply. That is fine for 41 paramet
 | `backward()` topo sort | the autograd engine |
 | `p.data += -lr * p.grad` | `torch.optim.SGD` (Adam keeps running averages of grad and grad²) |
 
-[16 — makemore part 4](16-makemore.md#part-4-becoming-a-backprop-ninja) does the tensor version by hand: deriving the backward pass for cross-entropy, batch norm and a linear layer and checking each against autograd.
+[16 — makemore part 4](02-makemore.md#part-4-becoming-a-backprop-ninja) does the tensor version by hand: deriving the backward pass for cross-entropy, batch norm and a linear layer and checking each against autograd.
 
 ---
 
@@ -237,7 +237,7 @@ micrograd builds one graph node per scalar multiply. That is fine for 41 paramet
 |---|---|
 | Add `relu`, `log`, and true division with gradient for both operands | Writing local derivatives |
 | Replace squared error with a softmax cross-entropy on 3 classes | Why cross-entropy's gradient is `p − y` |
-| Train the MLP on `sklearn.datasets.make_moons` with a hinge loss and L2 penalty (the micrograd repo's demo) | Regularisation, decision boundaries ([02](02-supervised-learning.md)) |
+| Train the MLP on `sklearn.datasets.make_moons` with a hinge loss and L2 penalty (the micrograd repo's demo) | Regularisation, decision boundaries ([02](../../01-classical-ml/notes/02-supervised-learning.md)) |
 | Compare every gradient to a finite-difference estimate | Gradient checking |
 | Use a node twice (`a*a`) and verify `+=` gives `2a` | Gradient accumulation |
 
@@ -254,4 +254,4 @@ Lecture: [The spelled-out intro to neural networks and backpropagation](https://
 
 ---
 
-→ Next: [16-makemore.md](16-makemore.md) — character-level language models from bigram counts to a WaveNet-style CNN, and how to keep deep networks trainable.
+→ Next: [16-makemore.md](02-makemore.md) — character-level language models from bigram counts to a WaveNet-style CNN, and how to keep deep networks trainable.

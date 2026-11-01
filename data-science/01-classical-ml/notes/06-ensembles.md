@@ -60,7 +60,7 @@ A single unpruned tree scored 0.937 on the same split. The forest gets 0.972 wit
 | `n_jobs=-1` | Train trees on all cores | Always |
 | `random_state` | Results vary between seeds with few trees | Fix it for reproducibility |
 
-**Strengths:** strong out of the box, no scaling, handles mixed feature types, parallel, OOB score for free. **Weaknesses:** poor on very high-dimensional sparse data (text: use linear models, [09](09-text-classification.md)); slow to predict with many deep trees; less interpretable than one tree; cannot extrapolate beyond the training range.
+**Strengths:** strong out of the box, no scaling, handles mixed feature types, parallel, OOB score for free. **Weaknesses:** poor on very high-dimensional sparse data (text: use linear models, [09](../../03-nlp/notes/02-text-classification.md)); slow to predict with many deep trees; less interpretable than one tree; cannot extrapolate beyond the training range.
 
 `ExtraTreesClassifier` adds a third source of randomness (random split thresholds); faster, sometimes as good.
 
@@ -137,11 +137,11 @@ Better options:
 
 | Paper | Use it for |
 |---|---|
-| Ribeiro et al. 2016, *"Why Should I Trust You?"* ([PDF](../sources/ribeiro-2016-why-should-i-trust-you.pdf)) | LIME: local surrogate models around one prediction ([13](13-sentiment-analysis.md) applies it to text) |
-| Lundberg & Lee 2017, *A Unified Approach to Interpreting Model Predictions* ([PDF](../sources/lundberg-2017-unified-approach-interpreting-model-predictions.pdf)) | SHAP: shows LIME, DeepLIFT and others are additive feature attributions and Shapley values are the unique one with consistency guarantees |
-| Lipton 2016, *The Mythos of Model Interpretability* ([PDF](../sources/lipton-2016-mythos-model-interpretability.pdf)) | What "interpretable" can mean. *Transparency* splits into simulatability (a person can step through the whole model), decomposability (each input and parameter means something) and algorithmic transparency (the training procedure is understood). *Post-hoc* explanations are text, visualisations, local explanations and examples. Two cautions apply to this section. A linear model on heavily engineered features is not more transparent than a deep net. Post-hoc explanations such as SHAP and permutation importance can mislead, because they describe the model without being the model |
-| Miller 2017, *Explanation in AI: Insights from the Social Sciences* ([PDF](../sources/miller-2017-explanation-artificial-intelligence.pdf)) | People want contrastive, selective explanations ("why this and not that"), not full attributions |
-| Dodge et al. 2019, *Explaining Models* ([PDF](../sources/dodge-2019-explaining-models.pdf)); *Are Explanations Helpful?* ([PDF](../sources/explanations-helpful-comparative-study-effects-explanations.pdf)) | User studies: explanation style changes fairness judgments and reliance, and explanations do not reliably improve human–AI decisions |
+| Ribeiro et al. 2016, *"Why Should I Trust You?"* ([PDF](../../sources/ribeiro-2016-why-should-i-trust-you.pdf)) | LIME: local surrogate models around one prediction ([13](../../03-nlp/notes/06-sentiment-analysis.md) applies it to text) |
+| Lundberg & Lee 2017, *A Unified Approach to Interpreting Model Predictions* ([PDF](../../sources/lundberg-2017-unified-approach-interpreting-model-predictions.pdf)) | SHAP: shows LIME, DeepLIFT and others are additive feature attributions and Shapley values are the unique one with consistency guarantees |
+| Lipton 2016, *The Mythos of Model Interpretability* ([PDF](../../sources/lipton-2016-mythos-model-interpretability.pdf)) | What "interpretable" can mean. *Transparency* splits into simulatability (a person can step through the whole model), decomposability (each input and parameter means something) and algorithmic transparency (the training procedure is understood). *Post-hoc* explanations are text, visualisations, local explanations and examples. Two cautions apply to this section. A linear model on heavily engineered features is not more transparent than a deep net. Post-hoc explanations such as SHAP and permutation importance can mislead, because they describe the model without being the model |
+| Miller 2017, *Explanation in AI: Insights from the Social Sciences* ([PDF](../../sources/miller-2017-explanation-artificial-intelligence.pdf)) | People want contrastive, selective explanations ("why this and not that"), not full attributions |
+| Dodge et al. 2019, *Explaining Models* ([PDF](../../sources/dodge-2019-explaining-models.pdf)); *Are Explanations Helpful?* ([PDF](../../sources/explanations-helpful-comparative-study-effects-explanations.pdf)) | User studies: explanation style changes fairness judgments and reliance, and explanations do not reliably improve human–AI decisions |
 
 ---
 
@@ -156,7 +156,7 @@ stack = StackingClassifier(
     final_estimator=LogisticRegression(), cv=5)   # meta-model trained on out-of-fold predictions
 ```
 
-Gains are usually small and the system gets harder to maintain. Kaggle uses stacking heavily (see the Kaggle NLP notebook in [09](09-text-classification.md)); production usually doesn't.
+Gains are usually small and the system gets harder to maintain. Kaggle uses stacking heavily (see the Kaggle NLP notebook in [09](../../03-nlp/notes/02-text-classification.md)); production usually doesn't.
 
 ---
 
@@ -204,8 +204,8 @@ To fill the gap: a notebook comparing `GradientBoostingClassifier`, `HistGradien
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`02-supervised-learning.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/02-supervised-learning.ipynb), section "Ensembles of Decision Trees" | Random forests, gradient boosting, feature importances on breast cancer | Offline; `scikit-learn>=1.4`, local `mglearn` |
+| [`02-supervised-learning.ipynb`](../practice/intro-to-ml-in-python/02-supervised-learning.ipynb), section "Ensembles of Decision Trees" | Random forests, gradient boosting, feature importances on breast cancer | Offline; `scikit-learn>=1.4`, local `mglearn` |
 
 ---
 
-→ Next: [07-neural-networks-fundamentals.md](07-neural-networks-fundamentals.md) — from the sklearn MLP to backprop by hand and the Deep Learning Specialization.
+→ Next: [07-neural-networks-fundamentals.md](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) — from the sklearn MLP to backprop by hand and the Deep Learning Specialization.

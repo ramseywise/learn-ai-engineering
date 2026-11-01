@@ -4,7 +4,7 @@ sources:
   - https://www.statlearning.com/
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/Intro to Machine Learning in Python/01-introduction.ipynb
-  - ../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -31,11 +31,11 @@ The rest of this note is about that last sentence.
 | Term | Meaning | Where it shows up |
 |---|---|---|
 | Sample, data point | One row $x_i$ with features $x_{i1..p}$ | Everywhere |
-| Feature | One column; numeric, categorical, text, image | [03](03-feature-engineering-and-pipelines.md), [08](08-text-representation.md) |
+| Feature | One column; numeric, categorical, text, image | [03](03-feature-engineering-and-pipelines.md), [08](../../03-nlp/notes/01-text-representation.md) |
 | Target, label | The $y$ you want to predict | Supervised learning only |
 | Supervised | Learn $x \to y$ from labelled pairs | [02](02-supervised-learning.md), [06](06-ensembles.md) |
 | Unsupervised | Find structure in $x$ alone | [05](05-unsupervised-learning.md) |
-| Classification | $y$ is a class from a finite set | [02](02-supervised-learning.md), [09](09-text-classification.md) |
+| Classification | $y$ is a class from a finite set | [02](02-supervised-learning.md), [09](../../03-nlp/notes/02-text-classification.md) |
 | Regression | $y$ is a real number | [02](02-supervised-learning.md) |
 | Generalisation | Performance on data not used to fit | [04](04-model-evaluation.md) |
 
@@ -62,7 +62,7 @@ $$
 
 Raising model complexity trades bias for variance. The test-error curve is U-shaped: falls while bias drops, rises once variance dominates. The sweet spot is the model you want.
 
-![Training and test accuracy against model complexity: underfitting on the left, overfitting on the right, the sweet spot in between](../sources/images/mueller-guido-overfitting-underfitting-cartoon.png)
+![Training and test accuracy against model complexity: underfitting on the left, overfitting on the right, the sweet spot in between](../../sources/images/mueller-guido-overfitting-underfitting-cartoon.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, ch. 2 (companion repo `images/`)*
 
 | Symptom | Training score | Test score | Diagnosis | Fix |
@@ -79,16 +79,16 @@ Raising model complexity trades bias for variance. The test-error curve is U-sha
 
 ## Probability as ML uses it
 
-You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur. For the basics underneath them (conditional probability, expectation, variance) see [data-analytics 01 — Probability foundations](../../data-analytics/notes/01-probability-foundations.md); for maximum likelihood as an estimation method, [data-analytics 03 — Estimation](../../data-analytics/notes/03-estimation.md).
+You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur. For the basics underneath them (conditional probability, expectation, variance) see [data-analytics 01 — Probability foundations](../../../data-analytics/02-probability-and-statistics/notes/01-probability-foundations.md); for maximum likelihood as an estimation method, [data-analytics 03 — Estimation](../../../data-analytics/02-probability-and-statistics/notes/03-estimation.md).
 
 | Idea | Used in | One line |
 |---|---|---|
-| Likelihood | Logistic regression, naive Bayes, language models ([16](16-makemore.md)) | How probable the observed data is under the model's parameters; training maximises it |
-| Negative log-likelihood | Cross-entropy loss everywhere, from [02](02-supervised-learning.md) to [17](17-nanogpt.md) | $-\frac1n \sum \log p_\theta(y_i \mid x_i)$; minimising it is maximum likelihood |
-| Gaussian | Anomaly detection ([05](05-unsupervised-learning.md)), weight initialisation ([16](16-makemore.md)) | Mean and variance describe it fully; sums of many small effects tend toward it |
-| Conditional independence | Naive Bayes ([02](02-supervised-learning.md), [09](09-text-classification.md)) | Assume features are independent given the class; wrong, but the classifier is often still good |
+| Likelihood | Logistic regression, naive Bayes, language models ([16](../../04-llms-from-scratch/notes/02-makemore.md)) | How probable the observed data is under the model's parameters; training maximises it |
+| Negative log-likelihood | Cross-entropy loss everywhere, from [02](02-supervised-learning.md) to [17](../../04-llms-from-scratch/notes/03-nanogpt.md) | $-\frac1n \sum \log p_\theta(y_i \mid x_i)$; minimising it is maximum likelihood |
+| Gaussian | Anomaly detection ([05](05-unsupervised-learning.md)), weight initialisation ([16](../../04-llms-from-scratch/notes/02-makemore.md)) | Mean and variance describe it fully; sums of many small effects tend toward it |
+| Conditional independence | Naive Bayes ([02](02-supervised-learning.md), [09](../../03-nlp/notes/02-text-classification.md)) | Assume features are independent given the class; wrong, but the classifier is often still good |
 
-The Bayesian reading of the same models (priors as regularisers, posteriors instead of point estimates, MCMC) lives in the data-analytics subject: [`../../data-analytics/notes/`](../../data-analytics/notes/). Ridge regression is the MAP estimate under a Gaussian prior on the weights; lasso is the MAP estimate under a Laplace prior. That is the bridge between the two subjects.
+The Bayesian reading of the same models (priors as regularisers, posteriors instead of point estimates, MCMC) lives in the data-analytics subject: [`data-analytics/04-bayesian-analysis/`](../../../data-analytics/04-bayesian-analysis/README.md). Ridge regression is the MAP estimate under a Gaussian prior on the weights; lasso is the MAP estimate under a Laplace prior. That is the bridge between the two subjects.
 
 ---
 
@@ -117,7 +117,7 @@ Two ways to break this, both covered in [04](04-model-evaluation.md):
 
 Müller & Guido's first application, classifying iris species with k-nearest neighbours, shows the shape every estimator shares (*Introduction to ML with Python*, ch. 1, "A first application").
 
-![Iris flower with petal and sepal labelled](../sources/images/mueller-guido-iris-petal-sepal.png)
+![Iris flower with petal and sepal labelled](../../sources/images/mueller-guido-iris-petal-sepal.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, ch. 1*
 
 ```python
@@ -146,7 +146,7 @@ Before fitting, **look at the data**. A scatter matrix (`pd.plotting.scatter_mat
 | `fit_transform(X)` | Transformers | Fit then transform, sometimes faster |
 | `score(X, y)` | Supervised models | Default metric |
 
-![scikit-learn API summary: which estimators have fit, predict, transform, score](../sources/images/mueller-guido-api-table.png)
+![scikit-learn API summary: which estimators have fit, predict, transform, score](../../sources/images/mueller-guido-api-table.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, ch. 8*
 
 Because every estimator has this shape, you can chain them ([03 — pipelines](03-feature-engineering-and-pipelines.md)) and search over them ([04 — grid search](04-model-evaluation.md)). Writing your own estimator means subclassing `BaseEstimator` (and `TransformerMixin` or `ClassifierMixin`), taking every hyperparameter in `__init__` without logic, and returning `self` from `fit` (*Introduction to ML with Python*, ch. 8).
@@ -177,18 +177,18 @@ The classical-ML part is a tree, not a line: after supervised learning you can g
 | Neural networks | 07 | 02 |
 | NLP | 08–14 | 02, 04; 07 for 13–14 |
 | From scratch to GPT | 15–17 | 07 |
-| Bayesian methods | [data-analytics](../../data-analytics/notes/) | 01 |
+| Bayesian methods | [data-analytics](../../../data-analytics/04-bayesian-analysis/README.md) | 01 |
 
 ---
 
 ## Reading map
 
-These books live in data-analytics' [`sources/`](../../data-analytics/sources/) (shared with the stats course), apart from Müller & Guido which is [here](../sources/mueller-guido-introduction-to-ml-with-python.pdf).
+These books live in data-analytics' [`sources/`](../../../data-analytics/sources) (shared with the stats course), apart from Müller & Guido which is [here](../../sources/mueller-guido-introduction-to-ml-with-python.pdf).
 
 | Book | Read with | Focus |
 |---|---|---|
 | James, Witten, Hastie, Tibshirani, Taylor, *An Introduction to Statistical Learning* (Python ed.) | ch. 2 → 01; ch. 3–4 → 02; ch. 5 → 04; ch. 6 → 03; ch. 8 → 06; ch. 10 → 07; ch. 12 → 05 | The canonical theory text; free at [statlearning.com](https://www.statlearning.com/) |
-| Müller & Guido, *Introduction to Machine Learning with Python* | ch. 1–8 → 01–06, 08 | The code-first companion; notebooks in [practice](../practice/Intro%20to%20Machine%20Learning%20in%20Python/) |
+| Müller & Guido, *Introduction to Machine Learning with Python* | ch. 1–8 → 01–06, 08 | The code-first companion; notebooks in [practice](../practice/intro-to-ml-in-python) |
 | Bruce, Bruce & Gedeck, *Practical Statistics for Data Scientists* | ch. 1–3 before 04 | Working statistics, chapter-level |
 | Reinhart, *Statistics Done Wrong* | Before reading any metric in 04 | Inference pitfalls |
 | Efron & Hastie, *Computer Age Statistical Inference* | After 06 | Frequentist-to-Bayes bridge, bootstrap, boosting theory |
@@ -200,7 +200,7 @@ Return to these after each later note: a technique you have just used makes the 
 
 ## Practice
 
-- [`01-introduction.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/01-introduction.ipynb) — NumPy, SciPy sparse matrices, pandas, the iris kNN. Runs offline; needs `scikit-learn>=1.4` and the local `mglearn` package (run from the notebook's folder).
+- [`01-introduction.ipynb`](../practice/intro-to-ml-in-python/01-introduction.ipynb) — NumPy, SciPy sparse matrices, pandas, the iris kNN. Runs offline; needs `scikit-learn>=1.4` and the local `mglearn` package (run from the notebook's folder).
 - [`practice/udacity_mlnd_python_practice.ipynb`](../practice/udacity_mlnd_python_practice.ipynb) — own Udacity MLND Connect Intensive exercise: pandas and seaborn plots (histogram, scatter, bar) of the iris data, the "look at your data" step above. Needs `seaborn` and a `data/iris.txt` that is not in the repo (substitute `sns.load_dataset("iris")`).
 
 ---

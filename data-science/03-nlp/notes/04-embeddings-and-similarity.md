@@ -4,7 +4,7 @@ sources:
   - ../practice/Text Analytics with Python/Ch04 - Feature Engineering for Text Representation/Ch04b - Feature Engineering Text Data - Advanced Deep Learning Strategies.ipynb
   - ../practice/Text Analytics with Python/Ch07 - Text Similarity and Clustering/
   - ../Ng's Deep Learning Nbks/Sequence Models/Week2/
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
   - ../practice/intro-to-nlp/word2vec/word_embeddings_word2vec.ipynb
   - ../practice/intro-to-nlp/tensorFlow/encoding-embeddings/
   - ../practice/intro-to-nlp/tensorFlow/text-processing/text_preprocessing_and_word_embeddings.ipynb
@@ -25,7 +25,7 @@ cleaned: 2026-10-31
 
 ## From sparse to dense
 
-A one-hot or TF-IDF vector ([08](08-text-representation.md)) has one dimension per vocabulary word: "hotel" and "motel" are orthogonal, exactly as far apart as "hotel" and "banana". An **embedding** maps each word to a dense vector of 50–300 numbers learned so that words used in similar contexts get similar vectors.
+A one-hot or TF-IDF vector ([08](01-text-representation.md)) has one dimension per vocabulary word: "hotel" and "motel" are orthogonal, exactly as far apart as "hotel" and "banana". An **embedding** maps each word to a dense vector of 50–300 numbers learned so that words used in similar contexts get similar vectors.
 
 | | One-hot / TF-IDF | Embedding |
 |---|---|---|
@@ -76,7 +76,7 @@ model.wv.most_similar("god", topn=5)
 model.wv["jesus"]                              # the 100-d vector
 ```
 
-The condensed NLP course notebooks trained the same model on NLTK's Project Gutenberg books (`most_similar("father")`) and on a news corpus (`most_similar("president")`), then plotted the vectors with t-SNE ([05](05-unsupervised-learning.md#manifold-learning-t-sne)). On a corpus of a few books the neighbours are already sensible: family words cluster, character names cluster.
+The condensed NLP course notebooks trained the same model on NLTK's Project Gutenberg books (`most_similar("father")`) and on a news corpus (`most_similar("president")`), then plotted the vectors with t-SNE ([05](../../01-classical-ml/notes/05-unsupervised-learning.md#manifold-learning-t-sne)). On a corpus of a few books the neighbours are already sensible: family words cluster, character names cluster.
 
 ### GloVe and FastText
 
@@ -104,7 +104,7 @@ def complete_analogy(a, b, c, word_to_vec):
 
 The same notebook shows the vectors encode social bias: projecting names and occupations onto the `woman - man` direction separates "receptionist" from "engineer". It removes the bias component from gender-neutral words (**neutralise**) and makes gendered pairs equidistant from the neutral axis (**equalise**), after Bolukbasi et al. (2016). Embeddings learned from text inherit the text's associations; any similarity system built on them does too.
 
-Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([14](14-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
+Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([14](../../02-deep-learning/notes/02-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
 
 ---
 
@@ -123,11 +123,11 @@ weights = model.layers[0].get_weights()[0]             # (vocab_size, 16)
 # write vecs.tsv (one vector per line) and meta.tsv (one word per line) -> projector.tensorflow.org
 ```
 
-Trained for one task, the vectors organise by that task: in the projector the IMDb embedding splits into a "positive" and a "negative" pole rather than by topic. Pretrained vectors (GloVe, word2vec) carry general meaning; task-trained ones carry what the label needed. You can initialise with pretrained vectors and freeze or fine-tune them (the Kaggle notebook's LSTM in [09](09-text-classification.md#worked-example-the-kaggle-recipe), *Emojify*).
+Trained for one task, the vectors organise by that task: in the projector the IMDb embedding splits into a "positive" and a "negative" pole rather than by topic. Pretrained vectors (GloVe, word2vec) carry general meaning; task-trained ones carry what the label needed. You can initialise with pretrained vectors and freeze or fine-tune them (the Kaggle notebook's LSTM in [09](02-text-classification.md#worked-example-the-kaggle-recipe), *Emojify*).
 
 ### Learning-curve check
 
-The *embeddings learning curve* notebook trains on the sarcasm headlines and plots train/validation loss per epoch: validation loss bottoms out after a few epochs and climbs while accuracy stays flat, the overfitting signature of [04](04-model-evaluation.md#learning-curves-and-bias-variance-diagnosis). Smaller vocabulary, shorter sequences, smaller embedding dimension, or dropout flatten it.
+The *embeddings learning curve* notebook trains on the sarcasm headlines and plots train/validation loss per epoch: validation loss bottoms out after a few epochs and climbs while accuracy stays flat, the overfitting signature of [04](../../01-classical-ml/notes/04-model-evaluation.md#learning-curves-and-bias-variance-diagnosis). Smaller vocabulary, shorter sequences, smaller embedding dimension, or dropout flatten it.
 
 ---
 
@@ -138,8 +138,8 @@ The *embeddings learning curve* notebook trains on the sarcasm headlines and plo
 | Average of word vectors | `np.mean([wv[w] for w in doc if w in wv], axis=0)` | Baseline; loses order; Sarkar's Ch04b clusters the toy corpus correctly with it |
 | TF-IDF-weighted average | Weight each word vector by its TF-IDF | Better: downweights common words |
 | Doc2Vec | Learn a paragraph vector alongside word vectors | Better than averaging; needs training |
-| Topic proportions | LDA/NMF ([10](10-topic-models-and-summarization.md)) | Interpretable, coarse |
-| Sentence encoders | Universal Sentence Encoder ([14](14-neural-text-models.md)), Sentence-BERT, modern embedding APIs | Current practice |
+| Topic proportions | LDA/NMF ([10](03-topic-models-and-summarization.md)) | Interpretable, coarse |
+| Sentence encoders | Universal Sentence Encoder ([14](../../02-deep-learning/notes/02-neural-text-models.md)), Sentence-BERT, modern embedding APIs | Current practice |
 
 ---
 
@@ -200,14 +200,14 @@ $k_1 \approx 1.2$–2 saturates term frequency; $b \approx 0.75$ normalises for 
 | Recommender type | Uses | Cold start |
 |---|---|---|
 | Content-based (this section) | Item features (text) | Works for new items, not new users |
-| Collaborative filtering ([05](05-unsupervised-learning.md#recommender-systems-ng-ex8-part-2)) | User–item ratings | Fails for new items and users |
+| Collaborative filtering ([05](../../01-classical-ml/notes/05-unsupervised-learning.md#recommender-systems-ng-ex8-part-2)) | User–item ratings | Fails for new items and users |
 | Hybrid | Both | |
 
 ---
 
 ## The bridge to retrieval
 
-Everything in RAG is here in small: documents become vectors (TF-IDF, BM25, or a neural encoder), a query becomes a vector, cosine similarity ranks candidates, and hybrid systems fuse lexical (BM25) and dense scores. The jump is in the encoder: contextual sentence embeddings trained contrastively (like the triplet-loss face embeddings in [07](07-neural-networks-fundamentals.md#convolutional-networks-dl-course-4)) instead of averaged word vectors. Continue in `../../generative-ai/02-rag-retrieval/README.md`.
+Everything in RAG is here in small: documents become vectors (TF-IDF, BM25, or a neural encoder), a query becomes a vector, cosine similarity ranks candidates, and hybrid systems fuse lexical (BM25) and dense scores. The jump is in the encoder: contextual sentence embeddings trained contrastively (like the triplet-loss face embeddings in [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md#convolutional-networks-dl-course-4)) instead of averaged word vectors. Continue in `../../generative-ai/02-rag-retrieval/README.md`.
 
 ---
 
@@ -215,10 +215,10 @@ Everything in RAG is here in small: documents become vectors (TF-IDF, BM25, or a
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch04b - Advanced Deep Learning Strategies`](../practice/Text%20Analytics%20with%20Python/Ch04%20-%20Feature%20Engineering%20for%20Text%20Representation/Ch04b%20-%20Feature%20Engineering%20Text%20Data%20-%20Advanced%20Deep%20Learning%20Strategies.ipynb) | CBOW and skip-gram in Keras, gensim word2vec, document vectors, GloVe via spaCy, FastText | Needs `nltk` Gutenberg data, spaCy `en_vecs` (→ `en_core_web_md`); standalone `keras` 2.x; gensim 3 argument names (`size`, `iter`) |
-| [`Ch07a`](../practice/Text%20Analytics%20with%20Python/Ch07%20-%20Text%20Similarity%20and%20Clustering/), `Ch07b` | Distance metrics, TF-IDF movie recommender, BM25 | Runs offline; `tmdb_5000_movies.csv.gz` included |
-| [`Operations on word vectors - v2`](../Ng's%20Deep%20Learning%20Nbks/Sequence%20Models/Week2/Word%20Vector%20Representation/Operations%20on%20word%20vectors%20-%20v2.ipynb), [`Emojify - v2`](../Ng's%20Deep%20Learning%20Nbks/Sequence%20Models/Week2/Emojify/Emojify%20-%20v2.ipynb) (own) | Cosine, analogies, debiasing; GloVe-based classifier | Legacy: needs the course's `w2v_utils`/`emo_utils` and `glove.6B.50d.txt` (not in the repo) |
+| [`Ch04b - Advanced Deep Learning Strategies`](../practice/text-analytics-with-python/Ch04%20-%20Feature%20Engineering%20for%20Text%20Representation/Ch04b%20-%20Feature%20Engineering%20Text%20Data%20-%20Advanced%20Deep%20Learning%20Strategies.ipynb) | CBOW and skip-gram in Keras, gensim word2vec, document vectors, GloVe via spaCy, FastText | Needs `nltk` Gutenberg data, spaCy `en_vecs` (→ `en_core_web_md`); standalone `keras` 2.x; gensim 3 argument names (`size`, `iter`) |
+| [`Ch07a`](../practice/text-analytics-with-python/Ch07%20-%20Text%20Similarity%20and%20Clustering), `Ch07b` | Distance metrics, TF-IDF movie recommender, BM25 | Runs offline; `tmdb_5000_movies.csv.gz` included |
+| [`Operations on word vectors - v2`](../../02-deep-learning/practice/ng-deep-learning/Sequence%20Models/Week2/Word%20Vector%20Representation/Operations%20on%20word%20vectors%20-%20v2.ipynb), [`Emojify - v2`](../../02-deep-learning/practice/ng-deep-learning/Sequence%20Models/Week2/Emojify/Emojify%20-%20v2.ipynb) (own) | Cosine, analogies, debiasing; GloVe-based classifier | Legacy: needs the course's `w2v_utils`/`emo_utils` and `glove.6B.50d.txt` (not in the repo) |
 
 ---
 
-→ Next: [12-semantic-analysis-and-ner.md](12-semantic-analysis-and-ner.md) — meaning beyond vectors: WordNet, named entities, taggers and semantic representations.
+→ Next: [12-semantic-analysis-and-ner.md](05-semantic-analysis-and-ner.md) — meaning beyond vectors: WordNet, named entities, taggers and semantic representations.

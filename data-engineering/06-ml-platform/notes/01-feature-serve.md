@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Foundation 6 of 6, where data engineering hands off to the model. The tables from [04](04-warehouse-and-store.md) become training sets. The run that wins becomes a registered model. The model becomes a service whose outputs [05](05-monitor.md) watches. The zoomcamp material is MLOps 01 (the baseline model), MLOps 02 (MLflow tracking and registry) and MLOps 04 (deployment).
+Foundation 6 of 6, where data engineering hands off to the model. The tables from [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) become training sets. The run that wins becomes a registered model. The model becomes a service whose outputs [05](../../05-quality-and-observability/notes/01-monitor.md) watches. The zoomcamp material is MLOps 01 (the baseline model), MLOps 02 (MLflow tracking and registry) and MLOps 04 (deployment).
 
 ---
 
@@ -53,9 +53,9 @@ def prepare_features(ride):
 |---|---|
 | Pickle `(dv, lr)` together, or log an sklearn `Pipeline` | The fitted vocabulary of `PU_DO` values is part of the model; ship it with the model |
 | One `prepare_features` used by training, batch, web and stream | Otherwise you get **train/serve skew**: the same ride produces different features in two code paths |
-| Test `prepare_features` directly | MLOps 06's first unit test does exactly this ([08](08-mlops-maturity-and-best-practices.md)) |
+| Test `prepare_features` directly | MLOps 06's first unit test does exactly this ([08](02-mlops-maturity-and-best-practices.md)) |
 
-The zoomcamp has no feature store. When features are shared across models and teams (the "who owns feature engineering code?" scenario in [07](07-data-architectures-mesh-fabric-mdw.md)), a feature store such as Feast stores the definitions once and serves them offline for training and online for inference. That's beyond this material.
+The zoomcamp has no feature store. When features are shared across models and teams (the "who owns feature engineering code?" scenario in [07](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)), a feature store such as Feast stores the definitions once and serves them offline for training and online for inference. That's beyond this material.
 
 ---
 
@@ -146,7 +146,7 @@ model = mlflow.pyfunc.load_model("models:/nyc-taxi-regressor@champion")
 | Stage (legacy) | `None` / `Staging` / `Production` / `Archived`; one fixed lifecycle |
 | Alias (current) | A movable named pointer (`champion`, `challenger`) to a version; as many as you need |
 
-**The registry labels; it doesn't deploy.** Moving the `champion` alias changes nothing in production by itself. A CI/CD pipeline or a service that resolves the alias at startup does the deploying ([08](08-mlops-maturity-and-best-practices.md)). The course services load by `RUN_ID` from S3, which pins an exact artifact and sidesteps the registry entirely. That's simpler and reproducible, but promotion then means a redeploy with a new env var.
+**The registry labels; it doesn't deploy.** Moving the `champion` alias changes nothing in production by itself. A CI/CD pipeline or a service that resolves the alias at startup does the deploying ([08](02-mlops-maturity-and-best-practices.md)). The course services load by `RUN_ID` from S3, which pins an exact artifact and sidesteps the registry entirely. That's simpler and reproducible, but promotion then means a redeploy with a new env var.
 
 Selection rule from the module: filter on the quality metric, then break ties on operational cost (model size, prediction latency), both of which MLflow records.
 
@@ -224,7 +224,7 @@ def lambda_handler(event, context):
 |---|---|
 | `event['Records']` loop | Lambda receives Kinesis records in batches |
 | `base64.b64decode` | Kinesis delivers payloads base64-encoded |
-| `PartitionKey=str(ride_id)` | Same role as a Kafka key ([01](01-ingest.md)): ordering per ride |
+| `PartitionKey=str(ride_id)` | Same role as a Kafka key ([01](../../02-ingest-and-modelling/notes/01-ingest.md)): ordering per ride |
 | `TEST_RUN` flag | Run the handler locally without writing to AWS; MLOps 06 replaces this with an injectable callback |
 | Container image `public.ecr.aws/lambda/python:3.11` | Lambda's 250 MB zip limit is too small for mlflow + sklearn |
 
@@ -242,11 +242,11 @@ SHARD_ITERATOR=$(aws kinesis get-shard-iterator --stream-name ride_predictions \
 aws kinesis get-records --shard-iterator $SHARD_ITERATOR
 ```
 
-Then push the image to ECR and point a Lambda at it with a Kinesis trigger. MLOps 06 turns this whole setup into Terraform ([08](08-mlops-maturity-and-best-practices.md)).
+Then push the image to ECR and point a Lambda at it with a Kinesis trigger. MLOps 06 turns this whole setup into Terraform ([08](02-mlops-maturity-and-best-practices.md)).
 
 ### Batch scoring
 
-The Prefect flow that reads a month of trips from S3, loads the model by `RUN_ID`, and writes `taxi_type=/year=/month=/{run_id}.parquet` is worked through in [03](03-orchestrate.md), because its lessons (logical dates, deterministic output paths, backfills) are orchestration lessons. Its output rows carry `actual_duration`, `predicted_duration`, `diff` and `model_version`, which makes the batch output a monitoring table for free. The Spark version of batch scoring is `mapPartitions` in [04](04-warehouse-and-store.md).
+The Prefect flow that reads a month of trips from S3, loads the model by `RUN_ID`, and writes `taxi_type=/year=/month=/{run_id}.parquet` is worked through in [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md), because its lessons (logical dates, deterministic output paths, backfills) are orchestration lessons. Its output rows carry `actual_duration`, `predicted_duration`, `diff` and `model_version`, which makes the batch output a monitoring table for free. The Spark version of batch scoring is `mapPartitions` in [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md).
 
 ---
 
@@ -264,4 +264,4 @@ The Prefect flow that reads a month of trips from S3, loads the model by `RUN_ID
 
 ---
 
-→ Next: [07-data-architectures-mesh-fabric-mdw.md](07-data-architectures-mesh-fabric-mdw.md) — the six foundations describe one pipeline; the next note asks how an organisation arranges many of them and who owns each part.
+→ Next: [07-data-architectures-mesh-fabric-mdw.md](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) — the six foundations describe one pipeline; the next note asks how an organisation arranges many of them and who owns each part.

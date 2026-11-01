@@ -10,26 +10,26 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |---|---|---|---|---|---|---|---|---|
 |  | secondary | [Tooling and Installation / LLM Engineer's Handbook]() |  |  | secondary |  | 1/1 | `sha1:98e4eddcb9a7` |
 
-## data-engineering/notes/01-ingest.md
+## data-engineering/02-ingest-and-modelling/notes/01-ingest.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | primary | [Data Validation for Machine Learning](https://proceedings.mlsys.org/paper/2019/file/5878a7ab84fb43402106c575658472fa-Paper.pdf) | 2019 | 181 | primary |  | 2/2 | `openalex:W2946595616` |
 
-## data-engineering/notes/03-orchestrate.md
+## data-engineering/03-transform-and-orchestrate/notes/02-orchestrate.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | primary | [TFX](https://doi.org/10.1145/3097983.3098021) | 2017 | 350 | primary |  | 2/2 | `doi:10.1145/3097983.3098021` |
 
-## data-engineering/notes/05-monitor.md
+## data-engineering/05-quality-and-observability/notes/01-monitor.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | secondary | [A survey on concept drift adaptation](https://doi.org/10.1145/2523813) | 2014 | 3735 | secondary |  | 2/2 | `doi:10.1145/2523813` |
 |  | primary | [Failing Loudly: An Empirical Study of Methods for Detecting Dataset Shift](https://arxiv.org/abs/1810.11953) |  | 535 | primary |  | 2/2 | `1810.11953` |
 
-## data-engineering/notes/08-mlops-maturity-and-best-practices.md
+## data-engineering/06-ml-platform/notes/02-mlops-maturity-and-best-practices.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|

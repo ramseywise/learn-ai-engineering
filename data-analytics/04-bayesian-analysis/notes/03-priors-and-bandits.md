@@ -3,7 +3,7 @@ origin: CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hack
 sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 6 Getting our priorities straight)
   - http://jmlr.csail.mit.edu/proceedings/papers/v22/kaufmann12/kaufmann12.pdf (Kaufmann et al., Bayes-UCB)
-  - ../sources/RM-StatRethink-Bayes.pdf
+  - ../../sources/RM-StatRethink-Bayes.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -170,4 +170,4 @@ Any strategy whose expected regret grows logarithmically "solves" the problem (i
 
 ---
 
-→ Next: [12-bayesian-ab-testing.md](12-bayesian-ab-testing.md) — the Bayesian answer to "is B better than A?": P(B > A), expected loss, and ranking by a lower credible bound.
+→ Next: [12-bayesian-ab-testing.md](04-bayesian-ab-testing.md) — the Bayesian answer to "is B better than A?": P(B > A), expected loss, and ranking by a lower credible bound.

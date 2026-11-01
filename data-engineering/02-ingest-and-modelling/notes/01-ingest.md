@@ -20,7 +20,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Ingest is foundation 1 of 6: **ingest** → transform → orchestrate → warehouse/store → monitor → feature-serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. Background reading: Kleppmann, *Designing Data-Intensive Applications* ([sources/](../sources/kleppmann-designing-data-intensive-applications.pdf)), ch. 4 (encoding and schema evolution, which is why the Kafka section uses Avro with a registry) and ch. 11 (stream processing). The zoomcamp material splits the job three ways:
+Ingest is foundation 1 of 6: **ingest** → transform → orchestrate → warehouse/store → monitor → feature-serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. Background reading: Kleppmann, *Designing Data-Intensive Applications* ([sources/](../../sources/kleppmann-designing-data-intensive-applications.pdf)), ch. 4 (encoding and schema evolution, which is why the Kafka section uses Avro with a registry) and ch. 11 (stream processing). The zoomcamp material splits the job three ways:
 
 | Mode | Zoomcamp material | What it teaches |
 |---|---|---|
@@ -60,9 +60,9 @@ What the pattern gets right, and what it leaves to you:
 | Property | `ingest_data.py` | What production adds |
 |---|---|---|
 | Bounded memory | Yes, 100k-row chunks | Same |
-| Schema from data | `head(n=0).to_sql` | An explicit schema (see the Spark `StructType` in [04](04-warehouse-and-store.md)) so a bad file can't redefine a column |
+| Schema from data | `head(n=0).to_sql` | An explicit schema (see the Spark `StructType` in [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) so a bad file can't redefine a column |
 | Idempotency | `if_exists='replace'` on every run, a full reload | Partition-scoped overwrite or merge on a key, so a rerun of one day replaces only that day |
-| Types | Only the two timestamps are cast | Cast every column at the boundary or in staging ([02](02-transform.md)) |
+| Types | Only the two timestamps are cast | Cast every column at the boundary or in staging ([02](../../03-transform-and-orchestrate/notes/01-transform.md)) |
 | Partial failure | A crash mid-loop leaves a half-loaded table | Load to a temp table, swap on success |
 
 Source data: `https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2021-01.csv.gz`. The NYC TLC data is now Parquet at the origin; the DataTalks mirror keeps CSV for the course.
@@ -90,7 +90,7 @@ docker run -it --network=pg-network taxi_ingest:v001 \
 pgcli -h localhost -p 5432 -u root -d ny_taxi
 ```
 
-The `docker-compose.yaml` in the module replaces the network and two `docker run` calls with two services, `postgres:13` and `pgadmin` on port 8080; compose creates the shared network for you. The point of the container is that the *ingest job* becomes a unit an orchestrator can schedule ([03](03-orchestrate.md)), not a script on someone's laptop.
+The `docker-compose.yaml` in the module replaces the network and two `docker run` calls with two services, `postgres:13` and `pgadmin` on port 8080; compose creates the shared network for you. The point of the container is that the *ingest job* becomes a unit an orchestrator can schedule ([03](../../03-transform-and-orchestrate/notes/02-orchestrate.md)), not a script on someone's laptop.
 
 ---
 
@@ -222,7 +222,7 @@ producer.produce(topic=topic, key=key_serializer(key, ctx), value=value_serializ
 producer.flush()
 ```
 
-The registry rejects a producer whose schema breaks the subject's compatibility rule, which turns "an event schema changed and nobody told us" (a scenario in [07](07-data-architectures-mesh-fabric-mdw.md)) from a silent downstream break into a failed deploy upstream.
+The registry rejects a producer whose schema breaks the subject's compatibility rule, which turns "an event schema changed and nobody told us" (a scenario in [07](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)) from a silent downstream break into a failed deploy upstream.
 
 ### Processing the stream: four ways in the module
 
@@ -336,7 +336,7 @@ Count successes and attempts per domain on every run (the book's pipeline writes
 | Failure unit | One file or one day | One message; needs idempotent sinks |
 | Operational cost | A scheduled container | Always-on brokers, schema registry, consumers |
 
-Default to batch. Move a source to streaming when a named consumer needs the freshness. Real-time inference ([06](06-feature-serve.md), Kinesis + Lambda) is the course's example of a consumer that does.
+Default to batch. Move a source to streaming when a named consumer needs the freshness. Real-time inference ([06](../../06-ml-platform/notes/01-feature-serve.md), Kinesis + Lambda) is the course's example of a consumer that does.
 
 ---
 
@@ -353,4 +353,4 @@ Default to batch. Move a source to streaming when a named consumer needs the fre
 
 ---
 
-→ Next: [02-transform.md](02-transform.md) — the raw tables ingest lands are the `source()` that dbt staging models select from.
+→ Next: [02-transform.md](../../03-transform-and-orchestrate/notes/01-transform.md) — the raw tables ingest lands are the `source()` that dbt staging models select from.

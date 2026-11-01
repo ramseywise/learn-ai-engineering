@@ -10,7 +10,7 @@ A course on neural networks that starts all the way at the basics. The course is
 Backpropagation and training of neural networks. Assumes basic knowledge of Python and a vague recollection of calculus from high school.
 
 - [YouTube video lecture](https://www.youtube.com/watch?v=VMj-3S1tku0)
-- [Jupyter notebook files](micrograd/)
+- [Jupyter notebook files](micrograd)
 - [micrograd Github repo](https://github.com/karpathy/micrograd)
 
 ---

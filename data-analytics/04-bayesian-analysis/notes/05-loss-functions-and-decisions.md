@@ -165,4 +165,4 @@ Step 4 is the lesson: optimise for the metric you are scored on, under uncertain
 
 ---
 
-→ Next: [14-bayesian-machine-learning.md](14-bayesian-machine-learning.md) — where the Bayesian track meets machine learning: EM, MCMC, variational autoencoders and Gaussian processes in the BayesianML coursework.
+→ Next: [14-bayesian-machine-learning.md](06-bayesian-machine-learning.md) — where the Bayesian track meets machine learning: EM, MCMC, variational autoencoders and Gaussian processes in the BayesianML coursework.

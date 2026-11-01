@@ -5,7 +5,7 @@ sources:
   - ../practice/Intro to Machine Learning in Python/07-working-with-text-data.ipynb
   - ../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb
   - https://www.kaggle.com/code/abhishek/approaching-almost-any-nlp-problem-on-kaggle
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 ## The task
 
-Assign one (multi-class) or several (multi-label) labels to a document: spam/ham, sentiment, topic, author, intent, toxicity. Everything in [02](02-supervised-learning.md)–[04](04-model-evaluation.md) applies; what changes is that features are very many, very sparse and mostly irrelevant individually.
+Assign one (multi-class) or several (multi-label) labels to a document: spam/ham, sentiment, topic, author, intent, toxicity. Everything in [02](../../01-classical-ml/notes/02-supervised-learning.md)–[04](../../01-classical-ml/notes/04-model-evaluation.md) applies; what changes is that features are very many, very sparse and mostly irrelevant individually.
 
 | Datasets used in the practice notebooks | Classes | Size |
 |---|---|---|
@@ -43,7 +43,7 @@ grid = GridSearchCV(pipe, param_grid, cv=5, n_jobs=-1).fit(text_train, y_train)
 print(grid.best_params_, grid.best_score_)    # IMDb: C=100, (1, 3), CV 0.91
 ```
 
-The vectoriser is inside the pipeline, so the vocabulary and IDF are refit on each training fold ([03](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)).
+The vectoriser is inside the pipeline, so the vocabulary and IDF are refit on each training fold ([03](../../01-classical-ml/notes/03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)).
 
 M&G's IMDb progression:
 
@@ -96,13 +96,13 @@ Then he grid-searches `MultinomialNB(alpha)`, `LogisticRegression(C)` and `Linea
 | Averaged FastText | `SGDClassifier` | Below TF-IDF |
 | Averaged GloVe | `MLPClassifier` | Better than linear on the same vectors, still not above tuned TF-IDF |
 
-Averaging throws away word order and dilutes the informative words with common ones. Dense vectors win when training data is small, the vocabulary at test time differs, or the vectors are contextual and fine-tuned ([14](14-neural-text-models.md)). [11](11-embeddings-and-similarity.md) explains the vectors themselves.
+Averaging throws away word order and dilutes the informative words with common ones. Dense vectors win when training data is small, the vocabulary at test time differs, or the vectors are contextual and fine-tuned ([14](../../02-deep-learning/notes/02-neural-text-models.md)). [11](04-embeddings-and-similarity.md) explains the vectors themselves.
 
 ---
 
 ## Metrics for text classification
 
-Sarkar's ch. 5a re-derives the metrics of [04](04-model-evaluation.md#metrics-keep-the-end-goal-in-mind) on breast cancer before applying them to text; the additional points for text:
+Sarkar's ch. 5a re-derives the metrics of [04](../../01-classical-ml/notes/04-model-evaluation.md#metrics-keep-the-end-goal-in-mind) on breast cancer before applying them to text; the additional points for text:
 
 | Situation | Metric |
 |---|---|
@@ -133,11 +133,11 @@ Your copy of Abhishek Thakur's *Approaching (Almost) Any NLP Problem on Kaggle*,
 | 2 | Counts, word 1–3-grams | `LogisticRegression` | Counts beat TF-IDF here |
 | 3 | TF-IDF / counts | `MultinomialNB` | NB on counts is the best of the basic models |
 | 4 | TF-IDF → `TruncatedSVD(120)` → `StandardScaler` | `SVC(probability=True)` | SVMs need dense, scaled, low-dim input; slow |
-| 5 | TF-IDF, counts, SVD | XGBoost | Trees on sparse text are mediocre ([06](06-ensembles.md)) |
+| 5 | TF-IDF, counts, SVD | XGBoost | Trees on sparse text are mediocre ([06](../../01-classical-ml/notes/06-ensembles.md)) |
 | 6 | Pipeline SVD + scaler + LR; NB alone | `GridSearchCV` with a log-loss scorer | Tuned NB alpha: 8% better than default |
 | 7 | GloVe 840B averaged sentence vectors | XGBoost | Dense vectors help trees |
-| 8 | GloVe embedding layer (frozen) | LSTM, Bi-LSTM, GRU (Keras), early stopping | Sequence models on embeddings ([14](14-neural-text-models.md)) |
-| 9 | All of the above | Ensembling | Blend out-of-fold predictions ([06](06-ensembles.md#stacking-and-voting)) |
+| 8 | GloVe embedding layer (frozen) | LSTM, Bi-LSTM, GRU (Keras), early stopping | Sequence models on embeddings ([14](../../02-deep-learning/notes/02-neural-text-models.md)) |
+| 9 | All of the above | Ensembling | Blend out-of-fold predictions ([06](../../01-classical-ml/notes/06-ensembles.md#stacking-and-voting)) |
 
 ```python
 # The grid search in step 6, with a custom scorer
@@ -154,7 +154,7 @@ model = GridSearchCV(clf, param_grid, scoring=mll_scorer, cv=2, n_jobs=-1).fit(x
 Two things in the notebook to *not* copy into production:
 
 - **The vectoriser is fit on train + validation text** ("semi-supervised"). Legitimate on Kaggle where test text is given; leakage anywhere you must score unseen data.
-- **The grid search is outside a pipeline that contains the vectoriser**, so CV folds share a vocabulary. Small effect here; see [03](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist).
+- **The grid search is outside a pipeline that contains the vectoriser**, so CV folds share a vocabulary. Small effect here; see [03](../../01-classical-ml/notes/03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist).
 
 ---
 
@@ -176,10 +176,10 @@ Two things in the notebook to *not* copy into production:
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch05a`](../practice/Text%20Analytics%20with%20Python/Ch05%20-%20Text%20Classification/), `Ch05b`, `Ch05c` | Metrics; six classifiers on 20 Newsgroups; word2vec/GloVe/FastText features | Needs internet once (`fetch_20newsgroups`); `Ch05c` needs spaCy `en_core_web_md` and `gensim` (the `size=` argument is `vector_size=` in gensim 4) |
-| [`07-working-with-text-data.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/07-working-with-text-data.ipynb) | IMDb sentiment with BoW/TF-IDF/n-grams, coefficients | Needs the `aclImdb` download into `data/` |
+| [`Ch05a`](../practice/text-analytics-with-python/Ch05%20-%20Text%20Classification), `Ch05b`, `Ch05c` | Metrics; six classifiers on 20 Newsgroups; word2vec/GloVe/FastText features | Needs internet once (`fetch_20newsgroups`); `Ch05c` needs spaCy `en_core_web_md` and `gensim` (the `size=` argument is `vector_size=` in gensim 4) |
+| [`07-working-with-text-data.ipynb`](../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb) | IMDb sentiment with BoW/TF-IDF/n-grams, coefficients | Needs the `aclImdb` download into `data/` |
 | [`approaching-almost-any-nlp-problem-on-kaggle.ipynb`](../practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb) (own) | The full Kaggle ladder | Needs the Kaggle `spooky` data and `glove.840B.300d.txt` (5.6 GB) at `../input/`; `xgboost`, standalone `keras` 2.x (`keras.layers.recurrent`); `make_scorer(needs_proba=True)` removed in scikit-learn 1.6 |
 
 ---
 
-→ Next: [10-topic-models-and-summarization.md](10-topic-models-and-summarization.md) — unsupervised text: keyphrases, topic models and extractive summaries.
+→ Next: [10-topic-models-and-summarization.md](03-topic-models-and-summarization.md) — unsupervised text: keyphrases, topic models and extractive summaries.

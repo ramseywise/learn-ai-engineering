@@ -16,13 +16,13 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | secondary | [Are Explanations Helpful? A Comparative Study of the Effects of Explanations in AI-Assisted Decision-Making]() |  |  | secondary |  | 1/1 | `sha1:4651320fa75c` |
 |  |  | [Introduction to Machine Learning with Python]() |  |  |  |  | 1/None | `sha1:c723c0805830` |
 
-## data-science/notes/01-statistical-foundations.md
+## data-science/01-classical-ml/notes/01-statistical-foundations.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | secondary | [Statistical modeling: The two cultures](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.156.4933) | 2001 | 1312 | secondary |  | 2/1 | `openalex:W2160455305` |
 
-## data-science/notes/02-supervised-learning.md
+## data-science/01-classical-ml/notes/02-supervised-learning.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -35,13 +35,13 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | secondary | [ex2]() |  |  | secondary |  | 1/1 | `sha1:18383495f656` |
 |  | secondary | [ex6]() |  |  | secondary |  | 1/1 | `sha1:f08192fa9d53` |
 
-## data-science/notes/03-feature-engineering-and-pipelines.md
+## data-science/01-classical-ml/notes/03-feature-engineering-and-pipelines.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | primary | [Scikit-learn: Machine Learning in Python](https://doi.org/10.48550/arxiv.1201.0490) | 2012 | 69606 | primary |  | 2/3 | `1201.0490` |
 
-## data-science/notes/04-model-evaluation.md
+## data-science/01-classical-ml/notes/04-model-evaluation.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -51,7 +51,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | secondary | [Revisiting the Calibration of Modern Neural Networks](https://arxiv.org/abs/2106.07998) |  | 656 | secondary |  | 2/2 | `2106.07998` |
 |  | secondary | [ex5]() |  |  | secondary |  | 1/1 | `sha1:aabf34241f6e` |
 
-## data-science/notes/05-unsupervised-learning.md
+## data-science/01-classical-ml/notes/05-unsupervised-learning.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -63,7 +63,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | secondary | [ex7]() |  |  | secondary |  | 1/1 | `sha1:eb82db7dcc86` |
 |  | secondary | [ex8]() |  |  | secondary |  | 1/1 | `sha1:d9031c38111b` |
 
-## data-science/notes/06-ensembles.md
+## data-science/01-classical-ml/notes/06-ensembles.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -73,7 +73,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | primary | [LightGBM: A Highly Efficient Gradient Boosting Decision Tree](https://hal.science/hal-03953007) | 2017 | 10510 | primary |  | 2/2 | `openalex:W2768348081` |
 |  | primary | [CatBoost: unbiased boosting with categorical features](https://doi.org/10.48550/arxiv.1706.09516) | 2017 | 3041 | primary |  | 2/2 | `1706.09516` |
 
-## data-science/notes/07-neural-networks-fundamentals.md
+## data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -87,20 +87,20 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | secondary | [ex3]() |  |  | secondary |  | 1/1 | `sha1:af4b1cf391aa` |
 |  | secondary | [ex4]() |  |  | secondary |  | 1/1 | `sha1:6dd87e0ba863` |
 
-## data-science/notes/08-text-representation.md
+## data-science/03-nlp/notes/01-text-representation.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | secondary | [Natural Language Processing with Python]() |  |  | secondary |  | 2/1 | `sha1:303290a82e71` |
 |  | secondary | [Text Analytics with Python]() |  |  | secondary |  | 2/1 | `sha1:1906a2fc0a8d` |
 
-## data-science/notes/10-topic-models-and-summarization.md
+## data-science/03-nlp/notes/03-topic-models-and-summarization.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
 |  | primary | [BERTopic: Neural topic modeling with a class-based TF-IDF procedure](https://doi.org/10.48550/arxiv.2203.05794) | 2022 | 1425 | primary |  | 2/2 | `2203.05794` |
 
-## data-science/notes/11-embeddings-and-similarity.md
+## data-science/03-nlp/notes/04-embeddings-and-similarity.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|

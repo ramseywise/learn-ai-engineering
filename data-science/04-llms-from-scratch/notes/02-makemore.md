@@ -2,8 +2,8 @@
 origin: vendored snapshot: nn-zero-to-hero (Karpathy, MIT; kept as practice)
 sources:
   - ../practice/nn-zero-to-hero/makemore/
-  - ../sources/ioffe-2015-batch-normalization.pdf
-  - ../sources/wu-2021-rethinking-batch-batchnorm.pdf
+  - ../../sources/ioffe-2015-batch-normalization.pdf
+  - ../../sources/wu-2021-rethinking-batch-batchnorm.pdf
   - https://github.com/karpathy/makemore
   - Bengio et al. 2003, A Neural Probabilistic Language Model
   - van den Oord et al. 2016, WaveNet
@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 > Five lectures on one task: given a dataset of 32,033 names, learn to generate new ones that sound like names. The model gets better at each step (bigram counts → neural bigram → MLP → deep MLP with BatchNorm → WaveNet-style hierarchy), and along the way you learn the whole language-modelling framework, how to keep a deep network trainable, and how to backpropagate through tensors by hand.
 
-The arc continues from [15](15-micrograd.md) (scalar autograd) and ends at [17](17-nanogpt.md) (the transformer).
+The arc continues from [15](01-micrograd.md) (scalar autograd) and ends at [17](03-nanogpt.md) (the transformer).
 
 ---
 
@@ -154,9 +154,9 @@ with torch.no_grad():                                    # running stats for inf
 | Normalises with **batch** statistics | Each example's output depends on the others in its batch: a jitter that acts as a regulariser |
 | Training vs inference differ | At inference use running (or post-training calibrated) mean/var; forgetting `model.eval()` is a classic bug |
 | Makes the preceding bias redundant | Use `bias=False` in the linear layer before it |
-| Small batches → noisy statistics | Hence LayerNorm (normalise across features of one example) in transformers ([17](17-nanogpt.md)) |
+| Small batches → noisy statistics | Hence LayerNorm (normalise across features of one example) in transformers ([17](03-nanogpt.md)) |
 
-Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([arXiv:2105.07576](https://arxiv.org/abs/2105.07576), 2021-05) catalogues the problems that come from that batch dependence, using ImageNet ResNet-50s. The running average in the code above lags behind the weights. That is worst early in training and in large-batch runs, where the learning rate is higher and there are fewer updates. With a total batch of 8,192 the validation error swung from epoch to epoch. **Recomputing the statistics once after training on 10³–10⁴ samples** ("PreciseBN", the calibrated option in the table) stayed stable and cost about 0.5% extra compute if done every epoch. It also cut error by 3.5 points for a model normalised over batches of 2. The other caveats are that small normalisation batches widen the gap between training and test behaviour, and that mixing domains in one batch shifts the statistics. Examples in a batch can also leak information to each other through the shared mean. Ioffe & Szegedy's original ([PDF](../sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works. Ba et al. introduced LayerNorm to remove exactly this batch dependence. It takes the mean and variance over one example's hidden units, so it runs at batch size 1 and does the same thing in training and inference. They tested it in recurrent networks. In convolutional nets they found that BatchNorm still won ([arXiv:1607.06450](https://arxiv.org/abs/1607.06450) (Ba et al., 2016, preprint)).
+Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([arXiv:2105.07576](https://arxiv.org/abs/2105.07576), 2021-05) catalogues the problems that come from that batch dependence, using ImageNet ResNet-50s. The running average in the code above lags behind the weights. That is worst early in training and in large-batch runs, where the learning rate is higher and there are fewer updates. With a total batch of 8,192 the validation error swung from epoch to epoch. **Recomputing the statistics once after training on 10³–10⁴ samples** ("PreciseBN", the calibrated option in the table) stayed stable and cost about 0.5% extra compute if done every epoch. It also cut error by 3.5 points for a model normalised over batches of 2. The other caveats are that small normalisation batches widen the gap between training and test behaviour, and that mixing domains in one batch shifts the statistics. Examples in a batch can also leak information to each other through the shared mean. Ioffe & Szegedy's original ([PDF](../../sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works. Ba et al. introduced LayerNorm to remove exactly this batch dependence. It takes the mean and variance over one example's hidden units, so it runs at batch size 1 and does the same thing in training and inference. They tested it in recurrent networks. In convolutional nets they found that BatchNorm still won ([arXiv:1607.06450](https://arxiv.org/abs/1607.06450) (Ba et al., 2016, preprint)).
 
 ### PyTorch-ifying, and the diagnostics to look at
 
@@ -169,7 +169,7 @@ The lecture rewrites the network as `Linear`, `BatchNorm1d`, `Tanh` classes with
 | Weight-gradient to data std ratio per parameter | Roughly the same order everywhere; the last layer often stands out at init |
 | **Update-to-data ratio** `log10(std(lr * grad) / std(data))` over steps | Around **−3**: each step changes a weight by ~1/1000 of its size. Much lower: lr too small; much higher: too large |
 
-These plots are the tool for "my deep net won't train". [07](07-neural-networks-fundamentals.md) covers the same initialisation and normalisation ideas from Ng's course.
+These plots are the tool for "my deep net won't train". [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) covers the same initialisation and normalisation ideas from Ng's course.
 
 ---
 
@@ -262,7 +262,7 @@ The original WaveNet ([arXiv:1609.03499](https://arxiv.org/abs/1609.03499) (van 
 | MLP (Part 2) | 3 | ~2.17 |
 | MLP + init fixes + BatchNorm (Part 3) | 3 | ~2.10 |
 | WaveNet-style (Part 5) | 8 | ~1.99 |
-| Transformer ([17](17-nanogpt.md)) | block_size | lower again; the makemore repo's transformer reaches ~1.9 |
+| Transformer ([17](03-nanogpt.md)) | block_size | lower again; the makemore repo's transformer reaches ~1.9 |
 
 ---
 
@@ -280,4 +280,4 @@ All need `names.txt` from [karpathy/makemore](https://github.com/karpathy/makemo
 
 ---
 
-→ Next: [17-nanogpt.md](17-nanogpt.md) — self-attention, the transformer block, and reproducing GPT-2 (124M).
+→ Next: [17-nanogpt.md](03-nanogpt.md) — self-attention, the transformer block, and reproducing GPT-2 (124M).

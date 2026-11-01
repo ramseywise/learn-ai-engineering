@@ -4,7 +4,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 
 **triage** is Haiku's guess, **graph** is the citation graph's role (blank until citegraph runs).
 
-## data-engineering/notes/02-transform.md
+## data-engineering/03-transform-and-orchestrate/notes/01-transform.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -12,7 +12,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | primary | [Resilient distributed datasets: a fault-tolerant abstraction for in-memory cluster computing](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.225.856) | 2012 | 3622 | primary |  | 2/3 | `openalex:W2131975293` |
 |  | primary | [Spark SQL](https://doi.org/10.1145/2723372.2742797) | 2015 | 1254 | primary |  | 2/2 | `doi:10.1145/2723372.2742797` |
 
-## data-engineering/notes/04-warehouse-and-store.md
+## data-engineering/04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|
@@ -27,7 +27,7 @@ Generated 2026-10-31 by `discover.py review`. Mark **keep** `y` or `n` (blank le
 |  | primary | [The Data Warehouse Toolkit]() |  |  | primary |  | 2/2 | `sha1:48680f797799` |
 |  | secondary | [Designing Data-Intensive Applications]() |  |  | secondary |  | 2/3 | `sha1:003340115254` |
 
-## data-engineering/notes/07-data-architectures-mesh-fabric-mdw.md
+## data-engineering/07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md
 
 | keep | role | title | year | cites | triage | graph | rel/int | key |
 |---|---|---|---|---|---|---|---|---|

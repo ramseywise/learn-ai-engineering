@@ -4,7 +4,7 @@ sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/Intro to Machine Learning in Python/04-representing-data-feature-engineering.ipynb
   - ../practice/Intro to Machine Learning in Python/06-algorithm-chains-and-pipelines.ipynb
-  - ../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -177,7 +177,7 @@ Inside each CV split, the validation fold was already used to fit the scaler. Th
 
 A pipeline chains transformers and a final estimator into one estimator, so `fit`, `predict`, `score` and cross-validation treat the whole chain as one model.
 
-![Overview of the training and prediction process in a pipeline](../sources/images/mueller-guido-pipeline.png)
+![Overview of the training and prediction process in a pipeline](../../sources/images/mueller-guido-pipeline.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/pipeline.png`*
 
 ```python
@@ -245,8 +245,8 @@ Every step except the last must have `fit` and `transform`. The last needs `fit`
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`04-representing-data-feature-engineering.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/04-representing-data-feature-engineering.ipynb) | Encoding, binning, polynomials, transforms, selection, Citi Bike | Offline; `scikit-learn>=1.4`, local `mglearn`; data in `data/` |
-| [`06-algorithm-chains-and-pipelines.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/06-algorithm-chains-and-pipelines.ipynb) | Leakage, pipelines, grid search over pipelines | Offline; same |
+| [`04-representing-data-feature-engineering.ipynb`](../practice/intro-to-ml-in-python/04-representing-data-feature-engineering.ipynb) | Encoding, binning, polynomials, transforms, selection, Citi Bike | Offline; `scikit-learn>=1.4`, local `mglearn`; data in `data/` |
+| [`06-algorithm-chains-and-pipelines.ipynb`](../practice/intro-to-ml-in-python/06-algorithm-chains-and-pipelines.ipynb) | Leakage, pipelines, grid search over pipelines | Offline; same |
 
 ---
 

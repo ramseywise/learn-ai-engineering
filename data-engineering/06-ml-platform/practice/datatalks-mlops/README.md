@@ -99,11 +99,11 @@ We encourage [Learning in Public](https://datatalks.club/docs/courses/zoomcamp-l
 [More details](06-best-practices)
 
 
-### [Project](07-project/)
+### [Project](07-project)
 
 * End-to-end project with all the things above
 
-[More details](07-project/)
+[More details](07-project)
 
 
 

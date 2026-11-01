@@ -1,12 +1,14 @@
 ---
 name: pillar
-description: "Bring one pillar (ai-engineering/NN-* or generative-ai/NN-*) to the standard layout in ai-engineering/PILLAR-LAYOUT.md and the definition of done in CURRICULUM.md: README with reading order, notes/ with frontmatter, references.md, sources/ with flat images/, vendored course snapshots folded into notes and listed for removal. Usage: /pillar generative-ai/02-rag-retrieval, or /pillar new <name> to scaffold a new pillar. Run from the learn-ai-engineering repo."
+description: "Bring one pillar (<area>/NN-* in ai-engineering, generative-ai, data-analytics, data-science or data-engineering) to the standard layout in ai-engineering/PILLAR-LAYOUT.md and the definition of done in CURRICULUM.md: README with reading order, notes/ with frontmatter, references.md, sources/ with flat images/, vendored course snapshots folded into notes and listed for removal. Usage: /pillar generative-ai/02-rag-retrieval, or /pillar new <name> to scaffold a new pillar. Run from the learn-ai-engineering repo."
 ---
 
 You are normalising one pillar so it looks and works like the others. Read
 `ai-engineering/PILLAR-LAYOUT.md` (the target tree and house style) and the "Definition of
 done" section of `CURRICULUM.md` first. The best worked examples are
 `ai-engineering/02-context-engineering/` and `ai-engineering/05-graph-engineering/`.
+
+Check each note with `make chapter-check PILLAR=<pillar>` and list what falls short of the chapter standard.
 
 The pillar's content is the point. Do not rewrite notes that already work. Move, rename,
 add frontmatter, write the missing README and references.md, and fold vendored material
@@ -16,7 +18,7 @@ in. Content changes beyond that are for `/papers` and `/chapter`.
 
 ## Step 1 — Inventory
 
-`$ARGUMENTS` is a pillar path (`generative-ai/02-rag-retrieval`, or `ai-engineering/04`).
+`$ARGUMENTS` is a pillar path (`generative-ai/02-rag-retrieval`, `data-science/03-nlp`, or `ai-engineering/04`). Raw course folders go in the pillar's `practice/`. The four subject areas keep one shared `sources/` at the subject root (see PILLAR-LAYOUT).
 `new <name>` scaffolds a new pillar instead (skip to Step 4, then add it to `HOMES` in
 `scripts/papers/potw.py`, to the subject map in `CURRICULUM.md` and to the parent README).
 

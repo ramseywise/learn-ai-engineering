@@ -139,7 +139,7 @@ In mixtures, "cluster 0" and "cluster 1" can swap meaning between chains or mid-
 
 ## PyMC3 to PyMC 5 migration map
 
-BMH, the talk and most blog posts before 2022 use PyMC3 (Theano backend). The vendored BMH snapshot was already ported to PyMC 5; the BayesianML week 4 coursework was not, and is pinned at `pymc3==3.11.4 theano-pymc==1.1.2` (see [practice/BayesianML/](../practice/BayesianML/)).
+BMH, the talk and most blog posts before 2022 use PyMC3 (Theano backend). The vendored BMH snapshot was already ported to PyMC 5; the BayesianML week 4 coursework was not, and is pinned at `pymc3==3.11.4 theano-pymc==1.1.2` (see [practice/BayesianML/](../practice/BayesianML)).
 
 | PyMC3 | PyMC 5 |
 |---|---|
@@ -161,4 +161,4 @@ Shape gotcha: PyMC 5 samples have dimensions `(chain, draw, ...)`. Flatten with 
 
 ---
 
-→ Next: [11-priors-and-bandits.md](11-priors-and-bandits.md) — choosing priors, why the prior stops mattering at large N, and Thompson sampling for multi-armed bandits.
+→ Next: [11-priors-and-bandits.md](03-priors-and-bandits.md) — choosing priors, why the prior stops mattering at large N, and Thompson sampling for multi-armed bandits.

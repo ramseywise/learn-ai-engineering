@@ -21,7 +21,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Foundation 4 of 6. Ingest ([01](01-ingest.md)) lands files in a bucket; transform ([02](02-transform.md)) runs SQL somewhere. This note is the *somewhere*. The zoomcamp material is DE 03 (BigQuery) and DE 05 (Spark batch). Background reading: Kleppmann, *Designing Data-Intensive Applications* (DDIA, [sources/](../sources/kleppmann-designing-data-intensive-applications.pdf)), ch. 3 (storage engines, column-oriented storage), ch. 6 (partitioning) and ch. 10 (batch processing).
+Foundation 4 of 6. Ingest ([01](../../02-ingest-and-modelling/notes/01-ingest.md)) lands files in a bucket; transform ([02](../../03-transform-and-orchestrate/notes/01-transform.md)) runs SQL somewhere. This note is the *somewhere*. The zoomcamp material is DE 03 (BigQuery) and DE 05 (Spark batch). Background reading: Kleppmann, *Designing Data-Intensive Applications* (DDIA, [sources/](../../sources/kleppmann-designing-data-intensive-applications.pdf)), ch. 3 (storage engines, column-oriented storage), ch. 6 (partitioning) and ch. 10 (batch processing).
 
 ---
 
@@ -138,7 +138,7 @@ curl -d '{"instances": [{"passenger_count":1, "trip_distance":12.2, "PULocationI
   -X POST http://localhost:8501/v1/models/tip_model:predict
 ```
 
-BQML is the cheapest path from warehouse to a baseline model. The MLflow path in [06](06-feature-serve.md) is the one that scales to custom models and a registry.
+BQML is the cheapest path from warehouse to a baseline model. The MLflow path in [06](../../06-ml-platform/notes/01-feature-serve.md) is the one that scales to custom models and a registry.
 
 ---
 
@@ -192,7 +192,7 @@ GROUP BY 1, 2, 3
 df_result.coalesce(1).write.parquet(output, mode='overwrite')
 ```
 
-This is the same monthly-revenue mart as the dbt model in [02](02-transform.md), written in Spark: the logic is portable, the engine is a cost and scale decision. `coalesce(1)` makes one output file without a shuffle; fine for a small result, a bottleneck for a large one.
+This is the same monthly-revenue mart as the dbt model in [02](../../03-transform-and-orchestrate/notes/01-transform.md), written in Spark: the logic is portable, the engine is a cost and scale decision. `coalesce(1)` makes one output file without a shuffle; fine for a small result, a bottleneck for a large one.
 
 UDFs exist for logic SQL can't express (`F.udf(crazy_stuff, returnType=types.StringType())`) but run row-at-a-time in Python. Prefer built-in `F.*` functions.
 
@@ -235,7 +235,7 @@ def apply_model_in_batch(rows):
 df_predicts = duration_rdd.mapPartitions(apply_model_in_batch).toDF().drop('Index')
 ```
 
-That is batch scoring at Spark scale, the big-data sibling of the Prefect batch scorer in [03](03-orchestrate.md).
+That is batch scoring at Spark scale, the big-data sibling of the Prefect batch scorer in [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md).
 
 ### Where Spark runs
 
@@ -266,11 +266,11 @@ duckdb.sql("""
 """).df()
 ```
 
-It is also a dbt target (`dbt-duckdb`) and a dlt destination ([01](01-ingest.md)), which makes a laptop-only version of this whole course possible.
+It is also a dbt target (`dbt-duckdb`) and a dlt destination ([01](../../02-ingest-and-modelling/notes/01-ingest.md)), which makes a laptop-only version of this whole course possible.
 
 **Polars**: a Rust DataFrame library with a lazy query optimiser and multi-threaded execution. It's the default over pandas for large local processing; `scan_parquet(...).filter(...).group_by(...).agg(...).collect()` pushes filters into the scan the way Spark does.
 
-**Delta Lake / Apache Iceberg**: open table formats that add a transaction log on top of Parquet in object storage. They give ACID writes, schema evolution, time travel (`VERSION AS OF`), `MERGE` upserts and hidden partitioning. They turn the course's "bucket of Parquet files" into tables that Spark, Trino, DuckDB, Snowflake and BigQuery can all read and write safely. This is the *lakehouse* in Serra's taxonomy ([07](07-data-architectures-mesh-fabric-mdw.md)): the lake behaves like a warehouse, so the modern data warehouse's copy into a relational warehouse becomes optional.
+**Delta Lake / Apache Iceberg**: open table formats that add a transaction log on top of Parquet in object storage. They give ACID writes, schema evolution, time travel (`VERSION AS OF`), `MERGE` upserts and hidden partitioning. They turn the course's "bucket of Parquet files" into tables that Spark, Trino, DuckDB, Snowflake and BigQuery can all read and write safely. This is the *lakehouse* in Serra's taxonomy ([07](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)): the lake behaves like a warehouse, so the modern data warehouse's copy into a relational warehouse becomes optional.
 
 | Need | Course tool | Modern default |
 |---|---|---|
@@ -294,4 +294,4 @@ Sources: [DuckDB docs](https://duckdb.org/docs/), [Polars docs](https://docs.pol
 
 ---
 
-→ Next: [05-monitor.md](05-monitor.md) — once data and models sit in tables and serve predictions, you need to know when they go wrong: drift, missing values, freshness.
+→ Next: [05-monitor.md](../../05-quality-and-observability/notes/01-monitor.md) — once data and models sit in tables and serve predictions, you need to know when they go wrong: drift, missing values, freshness.

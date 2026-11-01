@@ -20,7 +20,7 @@ cleaned: 2026-10-31
 | | Karpathy, *Neural Networks: Zero to Hero* | Raschka, *Build a Large Language Model (From Scratch)* |
 |---|---|---|
 | Format | Video lectures + notebooks | Book chapters + notebooks |
-| Local copy | [data-science/practice/nn-zero-to-hero](../../../data-science/practice/nn-zero-to-hero/README.md) (MIT) | Chapter PDFs listed in [references.md](../references.md#books) (purchased); code at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) |
+| Local copy | [data-science/practice/nn-zero-to-hero](../../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/README.md) (MIT) | Chapter PDFs listed in [references.md](../references.md#books) (purchased); code at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) |
 | Starts from | Scalar autograd (micrograd) | PyTorch basics (appendix A) |
 | Tokenizer | Characters first; BPE in lecture 8 | BPE (tiktoken GPT-2) from ch. 2 |
 | Ends at | GPT-2 (124M) reproduction in `build-nanogpt/` | Loading GPT-2 weights, then fine-tuning (ch. 6–7) |
@@ -47,7 +47,7 @@ Doing both is not redundant: Karpathy builds intuition from the bottom up, Rasch
 
 ## The tiny model
 
-The config in [`nanogpt/gpt.py`](../../../data-science/practice/nn-zero-to-hero/nanogpt/) trains a character-level model on Tiny Shakespeare:
+The config in [`nanogpt/gpt.py`](../../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/nanogpt) trains a character-level model on Tiny Shakespeare:
 
 ```python
 batch_size = 64      # sequences per step

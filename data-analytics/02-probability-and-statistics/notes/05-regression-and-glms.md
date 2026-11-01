@@ -2,8 +2,8 @@
 origin: synthesis
 sources:
   - https://avehtari.github.io/ROS-Examples/ (Gelman, Hill & Vehtari, Regression and Other Stories, free PDF; not yet held)
-  - ../sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf (ch. 3–4)
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 4, Regression and Prediction)
+  - ../../sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf (ch. 3–4)
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 4, Regression and Prediction)
 confidence: low
 cleaned: 2026-10-31
 ---
@@ -44,7 +44,7 @@ A t-test (note 04) is a regression with one binary regressor. Seeing it that way
 
 ## Prediction vs explanation
 
-- Where this note stops and [data-science](../../data-science/README.md) starts: held-out error vs coefficient SEs.
+- Where this note stops and [data-science](../../../data-science/README.md) starts: held-out error vs coefficient SEs.
 
 ---
 
@@ -58,4 +58,4 @@ A t-test (note 04) is a regression with one binary regressor. Seeing it that way
 
 ---
 
-→ Next: [06-ab-testing.md](06-ab-testing.md) — hypothesis testing applied to product experiments: power, sample size, the two-proportion z-test and peeking.
+→ Next: [06-ab-testing.md](../../03-experimentation-and-causality/notes/01-ab-testing.md) — hypothesis testing applied to product experiments: power, sample size, the two-proportion z-test and peeking.

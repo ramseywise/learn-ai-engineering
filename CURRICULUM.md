@@ -117,6 +117,16 @@ The curriculum is **structurally frozen** as of 2026-10-28: the six subjects and
 pillars above are the full set. New material goes into an existing pillar; a new top-level
 folder or pillar needs a reason written here first.
 
+**Decision 2026-11-01: every subject is pillars, and a note is a chapter.** data-analytics,
+data-science and data-engineering move from flat `notes/` to `<NN-pillar>/` folders with raw courses
+under `practice/`, reversing the flat shape chosen 2026-10-31. Their PDFs stay in one shared
+`sources/` per subject, since books span pillars. `programming/python/04-python-for-data` returns to
+`data-analytics/01-python-for-data-analysis` with chapters written over the notebooks, reversing part
+of the 2026-10-29 decision. Python is the language of the data areas and generative-ai. ai-engineering
+labs are TypeScript first with a Python twin where a framework needs it. See
+[CONTENT-PLAN.md](CONTENT-PLAN.md), [PILLAR-LAYOUT](ai-engineering/PILLAR-LAYOUT.md) and the
+[deck spec](.claude/skills/slides/references/deck-spec.md).
+
 **Decision 2026-10-29: `programming/` added as a sixth subject.** Python, SQL and TypeScript
 are prerequisites for every other subject, but the repo only had seven pandas notebooks
 (`data-analytics/python-basics/`) and no SQL or TypeScript at all. Language fluency doesn't belong in

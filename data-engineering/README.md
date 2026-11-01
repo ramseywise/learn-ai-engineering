@@ -19,11 +19,11 @@ The coursework is two complete DataTalksClub zoomcamps, kept as worked material.
 
 ## Start here
 
-1. Read [01-ingest](notes/01-ingest.md) and run DE 01 `2_docker_sql` (Docker + Postgres). It's the setup every later module reuses.
-2. Read [02-transform](notes/02-transform.md) and [04-warehouse-and-store](notes/04-warehouse-and-store.md) together: dbt models are only as good as the tables underneath them.
-3. Read [03-orchestrate](notes/03-orchestrate.md) for the scheduling ideas (logical dates, idempotent outputs, backfills) and the orchestration-tool inconsistency between the two courses.
-4. Switch to MLOps: [06-feature-serve](notes/06-feature-serve.md), then [05-monitor](notes/05-monitor.md). Train, track, deploy, then watch.
-5. Finish with [08-mlops-maturity-and-best-practices](notes/08-mlops-maturity-and-best-practices.md) (tests, IaC, CI/CD) and [07-data-architectures-mesh-fabric-mdw](notes/07-data-architectures-mesh-fabric-mdw.md) (the interview-level architecture questions).
+1. Read [01-ingest](02-ingest-and-modelling/notes/01-ingest.md) and run DE 01 `2_docker_sql` (Docker + Postgres). It's the setup every later module reuses.
+2. Read [02-transform](03-transform-and-orchestrate/notes/01-transform.md) and [04-warehouse-and-store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) together: dbt models are only as good as the tables underneath them.
+3. Read [03-orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) for the scheduling ideas (logical dates, idempotent outputs, backfills) and the orchestration-tool inconsistency between the two courses.
+4. Switch to MLOps: [06-feature-serve](06-ml-platform/notes/01-feature-serve.md), then [05-monitor](05-quality-and-observability/notes/01-monitor.md). Train, track, deploy, then watch.
+5. Finish with [08-mlops-maturity-and-best-practices](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) (tests, IaC, CI/CD) and [07-data-architectures-mesh-fabric-mdw](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) (the interview-level architecture questions).
 
 ---
 
@@ -48,14 +48,14 @@ data-engineering/
 
 | # | Note | Covers |
 |---|---|---|
-| 01 | [Ingest](notes/01-ingest.md) | Batch vs incremental vs stream; chunked loader into Postgres; Docker, compose, Terraform on GCP; dlt (merge, incremental cursors); Kafka (keys, partitions, delivery semantics, Avro + schema registry, windows); RisingWave; DDIA ch. 4 and 11 |
-| 02 | [Transform](notes/02-transform.md) | ETL vs ELT; staging/core/marts layers; dbt project, models, macros, packages, tests, seeds, freshness; dbt Cloud vs Core; BI on top |
-| 03 | [Orchestrate](notes/03-orchestrate.md) | DAGs, retries, logical dates, backfills; Mage (DE 02, MLOps 03); Prefect 2 (MLOps 04/05, legacy); the course-to-course tool inconsistency; Dagster assets and Airflow as the gaps |
-| 04 | [Warehouse and store](notes/04-warehouse-and-store.md) | OLTP vs OLAP; BigQuery external tables, partitioning, clustering, cost; BQML and model export; Spark DataFrames, SQL, UDFs, joins, RDDs, Dataproc; DuckDB, Polars, Delta Lake and Iceberg as the gaps |
-| 05 | [Monitor](notes/05-monitor.md) | What to monitor (service, data, model); Evidently reports, test suites, metrics to Postgres; Grafana dashboards and alerts; pipeline-side checks |
-| 06 | [Feature-serve](notes/06-feature-serve.md) | One `prepare_features` against train/serve skew; MLflow tracking, autolog, hyperopt, three server set-ups; the registry (stages → aliases); web service, Kinesis + Lambda stream, batch scoring |
-| 07 | [Data architectures](notes/07-data-architectures-mesh-fabric-mdw.md) | Modern data warehouse, data fabric, lakehouse; data mesh's four principles and domain types; Serra's skepticism and mesh types; Strengholt's six topologies; scenario prompts mapped to mechanisms |
-| 08 | [MLOps maturity and best practices](notes/08-mlops-maturity-and-best-practices.md) | Microsoft maturity levels 0–4 and where the course reaches; testable refactor; pytest, LocalStack integration tests, pre-commit, Makefile; Terraform modules and remote state; GitHub Actions CI/CD; the capstone rubric |
+| 01 | [Ingest](02-ingest-and-modelling/notes/01-ingest.md) | Batch vs incremental vs stream; chunked loader into Postgres; Docker, compose, Terraform on GCP; dlt (merge, incremental cursors); Kafka (keys, partitions, delivery semantics, Avro + schema registry, windows); RisingWave; DDIA ch. 4 and 11 |
+| 02 | [Transform](03-transform-and-orchestrate/notes/01-transform.md) | ETL vs ELT; staging/core/marts layers; dbt project, models, macros, packages, tests, seeds, freshness; dbt Cloud vs Core; BI on top |
+| 03 | [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) | DAGs, retries, logical dates, backfills; Mage (DE 02, MLOps 03); Prefect 2 (MLOps 04/05, legacy); the course-to-course tool inconsistency; Dagster assets and Airflow as the gaps |
+| 04 | [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) | OLTP vs OLAP; BigQuery external tables, partitioning, clustering, cost; BQML and model export; Spark DataFrames, SQL, UDFs, joins, RDDs, Dataproc; DuckDB, Polars, Delta Lake and Iceberg as the gaps |
+| 05 | [Monitor](05-quality-and-observability/notes/01-monitor.md) | What to monitor (service, data, model); Evidently reports, test suites, metrics to Postgres; Grafana dashboards and alerts; pipeline-side checks |
+| 06 | [Feature-serve](06-ml-platform/notes/01-feature-serve.md) | One `prepare_features` against train/serve skew; MLflow tracking, autolog, hyperopt, three server set-ups; the registry (stages → aliases); web service, Kinesis + Lambda stream, batch scoring |
+| 07 | [Data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) | Modern data warehouse, data fabric, lakehouse; data mesh's four principles and domain types; Serra's skepticism and mesh types; Strengholt's six topologies; scenario prompts mapped to mechanisms |
+| 08 | [MLOps maturity and best practices](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) | Microsoft maturity levels 0–4 and where the course reaches; testable refactor; pytest, LocalStack integration tests, pre-commit, Makefile; Terraform modules and remote state; GitHub Actions CI/CD; the capstone rubric |
 
 ---
 
@@ -63,17 +63,17 @@ data-engineering/
 
 | Rule | Note |
 |---|---|
-| Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [01](notes/01-ingest.md), [03](notes/03-orchestrate.md) |
-| Commit stream offsets after processing, never before | [01](notes/01-ingest.md) |
-| Put a schema contract at every producer/consumer boundary (Avro + registry, dbt tests at `error` on staging) | [01](notes/01-ingest.md), [02](notes/02-transform.md) |
-| Define each metric once, in one mart, with an owner | [02](notes/02-transform.md), [07](notes/07-data-architectures-mesh-fabric-mdw.md) |
-| Partition on the filter column; cluster on the next one; don't partition tables under 1 GB | [04](notes/04-warehouse-and-store.md) |
-| Reach for DuckDB or Polars before Spark when the data fits on one machine | [04](notes/04-warehouse-and-store.md) |
-| Monitor inputs and predictions, not just accuracy; alert only on what someone will act on | [05](notes/05-monitor.md) |
-| One feature function shared by training and every serving path | [06](notes/06-feature-serve.md) |
-| The registry labels models; CI/CD deploys them | [06](notes/06-feature-serve.md), [08](notes/08-mlops-maturity-and-best-practices.md) |
-| Inject side effects so the service can be unit-tested; integration-test the real container against LocalStack | [08](notes/08-mlops-maturity-and-best-practices.md) |
-| A data mesh is an ownership model, not a storage choice; contracts before decentralisation | [07](notes/07-data-architectures-mesh-fabric-mdw.md) |
+| Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [01](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
+| Commit stream offsets after processing, never before | [01](02-ingest-and-modelling/notes/01-ingest.md) |
+| Put a schema contract at every producer/consumer boundary (Avro + registry, dbt tests at `error` on staging) | [01](02-ingest-and-modelling/notes/01-ingest.md), [02](03-transform-and-orchestrate/notes/01-transform.md) |
+| Define each metric once, in one mart, with an owner | [02](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+| Partition on the filter column; cluster on the next one; don't partition tables under 1 GB | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
+| Reach for DuckDB or Polars before Spark when the data fits on one machine | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
+| Monitor inputs and predictions, not just accuracy; alert only on what someone will act on | [05](05-quality-and-observability/notes/01-monitor.md) |
+| One feature function shared by training and every serving path | [06](06-ml-platform/notes/01-feature-serve.md) |
+| The registry labels models; CI/CD deploys them | [06](06-ml-platform/notes/01-feature-serve.md), [08](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) |
+| Inject side effects so the service can be unit-tested; integration-test the real container against LocalStack | [08](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) |
+| A data mesh is an ownership model, not a storage choice; contracts before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
 
 ---
 
@@ -96,7 +96,7 @@ Two zoomcamps, *Designing Data-Intensive Applications*, and three chapters of *D
 
 Labels: **offline** = runs on a laptop with no account once data is downloaded · **Docker** · **GCP** / **AWS** = needs a cloud account (and billing) · **pin** = unpinned dependencies; pin as stated · **legacy** = API or tool superseded · **reading** = videos or text, no code. No notebook was executed for this pass.
 
-**[DataTalks Data Engineering/](DataTalks%20Data%20Engineering/README.md)**
+**[DataTalks Data Engineering/](02-ingest-and-modelling/practice/datatalks-de/README.md)**
 
 | Module | Note | Needs |
 |---|---|---|
@@ -109,7 +109,7 @@ Labels: **offline** = runs on a laptop with no account once data is downloaded �
 | `projects/` | 01–05 | Reading: project brief and dataset list |
 | Workshop 1 (dlt), Workshop 2 (RisingWave) | 01 | Upstream only (cohort links in the README). dlt runs offline with DuckDB; RisingWave needs Docker |
 
-**[DataTalks MLOps/](DataTalks%20MLOps/README.md)**
+**[DataTalks MLOps/](06-ml-platform/practice/datatalks-mlops/README.md)**
 
 | Module | Note | Needs |
 |---|---|---|

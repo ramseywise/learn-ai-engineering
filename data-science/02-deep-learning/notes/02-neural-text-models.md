@@ -3,8 +3,8 @@ origin: vendored snapshots: Text Analytics with Python (kept), own coursework: i
 sources:
   - ../practice/Text Analytics with Python/Ch10 - The Promise of Deep Learning/
   - ../practice/deep-learning-starter-simple-lstm.ipynb
-  - ../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf
-  - ../sources/buduma-fundamentals-of-deep-learning.pdf
+  - ../../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf
+  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
   - ../practice/intro-to-nlp/tensorFlow/ (tensor intro, pipeline review, RNN classification, LSTM text generation)
   - ../practice/intro-to-nlp/transformers/transformers_models_apis.ipynb
   - https://huggingface.co/docs/transformers/main_classes/pipelines
@@ -13,7 +13,7 @@ cleaned: 2026-10-31
 ---
 # 14 — Neural Text Models
 
-> From bags of words to models that read in order. Recurrent networks (RNN, LSTM, GRU) and 1-D convolutions over learned embeddings, next-word text generation with an LSTM, transfer learning with pre-trained sentence encoders, and finally pre-trained transformers behind a one-line `pipeline()`. This is the last stop before building a language model from scratch in [15](15-micrograd.md)–[17](17-nanogpt.md).
+> From bags of words to models that read in order. Recurrent networks (RNN, LSTM, GRU) and 1-D convolutions over learned embeddings, next-word text generation with an LSTM, transfer learning with pre-trained sentence encoders, and finally pre-trained transformers behind a one-line `pipeline()`. This is the last stop before building a language model from scratch in [15](../../04-llms-from-scratch/notes/01-micrograd.md)–[17](../../04-llms-from-scratch/notes/03-nanogpt.md).
 
 ---
 
@@ -45,7 +45,7 @@ history = model.fit(train_texts, train_labels, epochs=10,
                     callbacks=[keras.callbacks.EarlyStopping(patience=2, restore_best_weights=True)])
 ```
 
-The notebooks used the older `Tokenizer(num_words=10000, oov_token="<OOV>")` + `texts_to_sequences` + `pad_sequences(maxlen=250, padding="post", truncating="post")`. Those live in `tf.keras.preprocessing`, which is deprecated and absent from Keras 3; [08](08-text-representation.md) has the mapping.
+The notebooks used the older `Tokenizer(num_words=10000, oov_token="<OOV>")` + `texts_to_sequences` + `pad_sequences(maxlen=250, padding="post", truncating="post")`. Those live in `tf.keras.preprocessing`, which is deprecated and absent from Keras 3; [08](../../03-nlp/notes/01-text-representation.md) has the mapping.
 
 Choices that matter:
 
@@ -55,7 +55,7 @@ Choices that matter:
 | `max_length`, truncation side | Long reviews lose their end (`post`) or beginning (`pre`); the verdict is often at the end | Cover the 90th percentile of lengths |
 | `embedding_dim` | Capacity of each word vector | 16–300 |
 | `mask_zero=True` | Recurrent layers skip padding | On for RNNs |
-| Pre-trained embeddings | `Embedding(..., embeddings_initializer=Constant(glove_matrix), trainable=False)` | Helps with small data ([11](11-embeddings-and-similarity.md)) |
+| Pre-trained embeddings | `Embedding(..., embeddings_initializer=Constant(glove_matrix), trainable=False)` | Helps with small data ([11](../../03-nlp/notes/04-embeddings-and-similarity.md)) |
 
 ---
 
@@ -92,7 +92,7 @@ The **GRU** merges the forget and input gates into one update gate and drops the
 | `Bidirectional(LSTM(n))` | 2× | Reads both ways, output 2n; for classification, not generation |
 | Stacked: `LSTM(n, return_sequences=True)` then `LSTM(n)` | — | Lower layer must return the full sequence |
 
-Ng's Sequence Models course builds the RNN and LSTM cells by hand in NumPy ([07](07-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) lists those notebooks).
+Ng's Sequence Models course builds the RNN and LSTM cells by hand in NumPy ([07](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) lists those notebooks).
 
 ### 1-D convolutions
 
@@ -107,7 +107,7 @@ The RNN classification notebook (`vocab_size=10000`, `embedding_dim=16`, `max_le
 | Embedding + GlobalAveragePooling + Dense | ~0.87 | Seconds per epoch; overfits after epoch 2–3 |
 | Embedding + Conv1D + GlobalMaxPooling | ~0.88 | Fast, overfits quickly |
 | Embedding + Bidirectional LSTM(64) | ~0.87–0.89 | Slowest; validation loss rises while training accuracy hits 0.99 |
-| TF-IDF bigrams + logistic regression ([09](09-text-classification.md)) | ~0.90 | No GPU, no tuning |
+| TF-IDF bigrams + logistic regression ([09](../../03-nlp/notes/02-text-classification.md)) | ~0.90 | No GPU, no tuning |
 
 The lesson the curves teach: on 25k labelled reviews, a model that learns its embeddings from scratch has too many parameters for the data, and overfitting dominates. Pre-training (below) is what changed that.
 
@@ -147,9 +147,9 @@ What goes wrong and why it matters for what follows:
 
 | Symptom | Cause | Fix (and where it reappears) |
 |---|---|---|
-| Output loops ("the the the", repeated lines) | Greedy `argmax` | Sample from the softmax with a temperature; top-k / top-p ([17](17-nanogpt.md)) |
+| Output loops ("the the the", repeated lines) | Greedy `argmax` | Sample from the softmax with a temperature; top-k / top-p ([17](../../04-llms-from-scratch/notes/03-nanogpt.md)) |
 | Grammatical for a few words, then drifts | Small corpus; context is one line | More data, longer context |
-| Huge output layer | Word-level vocabulary | Character or subword tokens ([16](16-makemore.md), BPE in [17](17-nanogpt.md)) |
+| Huge output layer | Word-level vocabulary | Character or subword tokens ([16](../../04-llms-from-scratch/notes/02-makemore.md), BPE in [17](../../04-llms-from-scratch/notes/03-nanogpt.md)) |
 | Bidirectional generator | Uses the future at training time but not at sampling | Causal (left-to-right) models only |
 
 This is the same task, next-token prediction trained with cross-entropy, that makemore and nanoGPT solve with better architectures.
@@ -180,7 +180,7 @@ class VentilatorLoss(nn.Module):
         return ((w * (y - preds).abs()).sum(-1) / w.sum(-1))
 ```
 
-Worth copying: a per-step MLP before the LSTM, a masked loss that matches the metric, `GroupKFold` by `breath_id` so no breath is in both train and validation ([04](04-model-evaluation.md)), `seed_everything` plus deterministic cuDNN, and a linear warm-up scheduler. `Bidirectional` is legitimate here because the whole breath is known at prediction time.
+Worth copying: a per-step MLP before the LSTM, a masked loss that matches the metric, `GroupKFold` by `breath_id` so no breath is in both train and validation ([04](../../01-classical-ml/notes/04-model-evaluation.md)), `seed_everything` plus deterministic cuDNN, and a linear warm-up scheduler. `Bidirectional` is legitimate here because the whole breath is known at prediction time.
 
 ---
 
@@ -193,7 +193,7 @@ Instead of learning embeddings from 25k reviews, start from an encoder pre-train
 | NNLM (`nnlm-en-dim128`) | 128-d, a feed-forward language model's embedding | Fine-tuning adds a few points |
 | Universal Sentence Encoder (`universal-sentence-encoder/2`) | 512-d, transformer/DAN trained on many tasks | Best: ~0.86 frozen, ~0.90 fine-tuned |
 
-![Accuracy of IMDb classifiers built on different TF-Hub sentence encoders, frozen vs fine-tuned](../sources/images/sarkar-universal-embeddings-classification.png)
+![Accuracy of IMDb classifiers built on different TF-Hub sentence encoders, frozen vs fine-tuned](../../sources/images/sarkar-universal-embeddings-classification.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), ch. 10 figure*
 
 The modern equivalent is three lines and needs no TF 1.x estimator:
@@ -205,7 +205,7 @@ X_train = enc.encode(train_texts, batch_size=64, show_progress_bar=True)
 clf = LogisticRegression(max_iter=1000).fit(X_train, train_labels)   # frozen encoder + linear head
 ```
 
-A frozen pre-trained encoder plus logistic regression is a strong baseline for any small labelled text set, and the same vectors power semantic search ([11](11-embeddings-and-similarity.md), [`../../generative-ai/02-rag-retrieval/README.md`](../../generative-ai/02-rag-retrieval/README.md)).
+A frozen pre-trained encoder plus logistic regression is a strong baseline for any small labelled text set, and the same vectors power semantic search ([11](../../03-nlp/notes/04-embeddings-and-similarity.md), [`../../generative-ai/02-rag-retrieval/README.md`](../../../generative-ai/02-rag-retrieval/README.md)).
 
 ---
 
@@ -231,13 +231,13 @@ pipeline("zero-shot-classification")(text, candidate_labels=["education", "polit
 
 | Task | Default model family | Architecture | Earlier note |
 |---|---|---|---|
-| sentiment-analysis | DistilBERT fine-tuned on SST-2 | Encoder | [13](13-sentiment-analysis.md) |
-| ner | BERT fine-tuned on CoNLL-03 | Encoder | [12](12-semantic-analysis-and-ner.md) |
+| sentiment-analysis | DistilBERT fine-tuned on SST-2 | Encoder | [13](../../03-nlp/notes/06-sentiment-analysis.md) |
+| ner | BERT fine-tuned on CoNLL-03 | Encoder | [12](../../03-nlp/notes/05-semantic-analysis-and-ner.md) |
 | question-answering | DistilBERT on SQuAD (extractive span) | Encoder | — |
 | fill-mask | DistilRoBERTa | Encoder (masked LM) | — |
-| summarization, translation | BART / T5 | Encoder–decoder | [10](10-topic-models-and-summarization.md) |
-| text-generation | GPT-2 | Decoder (causal LM) | [17](17-nanogpt.md) |
-| zero-shot-classification | BART-large-MNLI | Encoder–decoder, NLI trick | [09](09-text-classification.md) |
+| summarization, translation | BART / T5 | Encoder–decoder | [10](../../03-nlp/notes/03-topic-models-and-summarization.md) |
+| text-generation | GPT-2 | Decoder (causal LM) | [17](../../04-llms-from-scratch/notes/03-nanogpt.md) |
+| zero-shot-classification | BART-large-MNLI | Encoder–decoder, NLI trick | [09](../../03-nlp/notes/02-text-classification.md) |
 
 Pin a `model=` in anything you keep; defaults change between library versions. A pipeline is tokenizer → model → post-processing; open it up with `AutoTokenizer` / `AutoModelForSequenceClassification` when you need batching control or fine-tuning (`Trainer`).
 
@@ -249,20 +249,20 @@ Pin a `model=` in anything you keep; defaults change between library versions. A
 |---|---|---|
 | Sarkar `Ch10a` (universal embeddings) | `tf.estimator`, `hub.text_embedding_column`, `tf.estimator.inputs.numpy_input_fn` | Partly migrated: the confusion-matrix cell uses `tf.math.confusion_matrix(...).numpy()`, but the estimator API was removed in TF 2.16 and the TF-Hub v1 modules need `tensorflow_hub` with TF ≤ 2.15. Read for the idea; use `sentence-transformers` to run it |
 | Sarkar `Ch04b`, `Ch09b`, `Ch09c` | Standalone `keras` 2.x, `keras.layers.normalization`, `predict_classes` | Legacy; port to `tensorflow.keras` / Keras 3 |
-| Kaggle NLP notebook | `keras.layers.recurrent`, standalone keras | Legacy ([09](09-text-classification.md)) |
+| Kaggle NLP notebook | `keras.layers.recurrent`, standalone keras | Legacy ([09](../../03-nlp/notes/02-text-classification.md)) |
 | intro-to-nlp (practice) | `tf.keras` 2.x with `preprocessing.text.Tokenizer` | Snippets in this note use `TextVectorization` |
-| Ng Sequence Models | standalone `keras` 2.x, TF 1.x backend | Legacy, reading-only ([07](07-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map)) |
+| Ng Sequence Models | standalone `keras` 2.x, TF 1.x backend | Legacy, reading-only ([07](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map)) |
 | own `deep-learning-starter-simple-lstm` | PyTorch + `transformers` scheduler | Current |
 
-The general TF 1.x → 2.x map (sessions, placeholders, `tf.contrib`) is in [07](07-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map).
+The general TF 1.x → 2.x map (sessions, placeholders, `tf.contrib`) is in [07](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map).
 
 ---
 
 ## What attention fixed
 
-An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. Attention lets every position look directly at every other position with learned weights, and the transformer drops recurrence entirely. Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([15](15-micrograd.md)), language-model training ([16](16-makemore.md)), and the transformer itself ([17](17-nanogpt.md)). The LLM-level view continues in [`../../generative-ai/01-llm-fundamentals/README.md`](../../generative-ai/01-llm-fundamentals/README.md).
+An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. Attention lets every position look directly at every other position with learned weights, and the transformer drops recurrence entirely. Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([15](../../04-llms-from-scratch/notes/01-micrograd.md)), language-model training ([16](../../04-llms-from-scratch/notes/02-makemore.md)), and the transformer itself ([17](../../04-llms-from-scratch/notes/03-nanogpt.md)). The LLM-level view continues in [`../../generative-ai/01-llm-fundamentals/README.md`](../../../generative-ai/01-llm-fundamentals/README.md).
 
-**Reading:** Building AI Agents with LLMs, RAG, and Knowledge Graphs, ch. 1 ([PDF](../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf)) walks the same arc, from one-hot and TF-IDF through word2vec to RNN, LSTM, GRU and CNN text classifiers. Buduma, *Fundamentals of Deep Learning* ([PDF](../sources/buduma-fundamentals-of-deep-learning.pdf)), covers the recurrent and embedding chapters in more depth.
+**Reading:** Building AI Agents with LLMs, RAG, and Knowledge Graphs, ch. 1 ([PDF](../../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf)) walks the same arc, from one-hot and TF-IDF through word2vec to RNN, LSTM, GRU and CNN text classifiers. Buduma, *Fundamentals of Deep Learning* ([PDF](../../sources/buduma-fundamentals-of-deep-learning.pdf)), covers the recurrent and embedding chapters in more depth.
 
 ---
 
@@ -270,11 +270,11 @@ An encoder RNN squeezes a whole sentence into one final state, and its steps can
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch10a - Text Classification with Universal Embeddings`](../practice/Text%20Analytics%20with%20Python/Ch10%20-%20The%20Promise%20of%20Deep%20Learning/Ch10a%20-%20Deep%20Transfer%20Learning%20for%20NLP%20-%20Text%20Classification%20with%20Universal%20Embeddings.ipynb) | TF-Hub NNLM and USE encoders, frozen vs fine-tuned | Legacy: needs TF ≤ 2.15 + `tensorflow_hub`, internet for the modules, GPU recommended, IMDb `movie_reviews.csv` (not in this snapshot) |
+| [`Ch10a - Text Classification with Universal Embeddings`](../../03-nlp/practice/text-analytics-with-python/Ch10%20-%20The%20Promise%20of%20Deep%20Learning/Ch10a%20-%20Deep%20Transfer%20Learning%20for%20NLP%20-%20Text%20Classification%20with%20Universal%20Embeddings.ipynb) | TF-Hub NNLM and USE encoders, frozen vs fine-tuned | Legacy: needs TF ≤ 2.15 + `tensorflow_hub`, internet for the modules, GPU recommended, IMDb `movie_reviews.csv` (not in this snapshot) |
 | [`deep-learning-starter-simple-lstm`](../practice/deep-learning-starter-simple-lstm.ipynb) | PyTorch BiLSTM sequence regression, masked loss, GroupKFold | Needs data: Kaggle `ventilator-pressure-prediction`; GPU (5 folds × 200 epochs); `transformers` for the scheduler |
 
-The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/`](../practice/intro-to-nlp/tensorFlow/) and the transformers notebook in [`practice/intro-to-nlp/transformers/`](../practice/intro-to-nlp/transformers/). They use the older `Tokenizer` API.
+The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/`](../../03-nlp/practice/intro-to-nlp/tensorFlow) and the transformers notebook in [`practice/intro-to-nlp/transformers/`](../../03-nlp/practice/intro-to-nlp/transformers). They use the older `Tokenizer` API.
 
 ---
 
-→ Next: [15-micrograd.md](15-micrograd.md) — a scalar autograd engine in ~100 lines, the machinery under every model above.
+→ Next: [15-micrograd.md](../../04-llms-from-scratch/notes/01-micrograd.md) — a scalar autograd engine in ~100 lines, the machinery under every model above.

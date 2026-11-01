@@ -44,7 +44,7 @@
 ### 04 — Python for data
 
 Seven course notebooks (arrays, DataFrames, plotting, aggregation, time series) plus McKinney's
-chapter notebooks and earlier Michigan/Wesleyan coursework. See [04-python-for-data/README.md](04-python-for-data/README.md).
+chapter notebooks and earlier Michigan/Wesleyan coursework. See [04-python-for-data/README.md](../../data-analytics/01-python-for-data-analysis/README.md).
 
 Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them.
 

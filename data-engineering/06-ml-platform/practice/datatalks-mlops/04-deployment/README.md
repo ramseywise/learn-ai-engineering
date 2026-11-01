@@ -15,7 +15,7 @@
 </a>
 
 
-[See code here](web-service/)
+[See code here](web-service)
 
 
 ## 4.3 Web-services: Getting the models from the model registry (MLflow)
@@ -25,7 +25,7 @@
 </a>
 
 
-[See code here](web-service-mlflow/)
+[See code here](web-service-mlflow)
 
 
 ## 4.4 (Optional) Streaming: Deploying models with Kinesis and Lambda
@@ -36,7 +36,7 @@
 
 Note: Since some of the steps in this video requires the use of AWS services which incur some cost on the user, it is optional to code along to this video. However, as material in Module 6 is based on the content of this video, we still highly recommended that you watch it.
 
-[See code here](streaming/)
+[See code here](streaming)
 
 
 ## 4.5 Batch: Preparing a scoring script
@@ -46,7 +46,7 @@ Note: Since some of the steps in this video requires the use of AWS services whi
 </a>
 
 
-[See code here](batch/)
+[See code here](batch)
 
 
 ## 4.6 MLOps Zoomcamp 4.6 - Batch scoring with Mage

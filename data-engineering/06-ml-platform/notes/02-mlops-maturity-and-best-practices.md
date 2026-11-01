@@ -19,7 +19,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Like [07](07-data-architectures-mesh-fabric-mdw.md), this is cross-cutting. It isn't one of the six foundations: it's the engineering wrapped around all of them. The material is MLOps 01 section 1.5 (the maturity model), MLOps 06 (best practices) and MLOps 07 (the capstone project rubric).
+Like [07](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md), this is cross-cutting. It isn't one of the six foundations: it's the engineering wrapped around all of them. The material is MLOps 01 section 1.5 (the maturity model), MLOps 06 (best practices) and MLOps 07 (the capstone project rubric).
 
 ---
 
@@ -41,10 +41,10 @@ A coarser cut of the same ladder has three tiers: manual (notebooks), **continuo
 
 | Level | Course material | Note |
 |---|---|---|
-| 0 → 1 | MLOps 01 notebook; MLOps 04 Dockerised service | [06](06-feature-serve.md) |
-| 2 | MLflow tracking and registry (MLOps 02); orchestrated training (MLOps 03) | [06](06-feature-serve.md), [03](03-orchestrate.md) |
+| 0 → 1 | MLOps 01 notebook; MLOps 04 Dockerised service | [06](01-feature-serve.md) |
+| 2 | MLflow tracking and registry (MLOps 02); orchestrated training (MLOps 03) | [06](01-feature-serve.md), [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md) |
 | 3 | Tests, IaC and CI/CD that deploy the Lambda (MLOps 06) | this note |
-| 4 | Evidently monitoring + alerts (MLOps 05); conditional retraining is only a capstone criterion | [05](05-monitor.md) |
+| 4 | Evidently monitoring + alerts (MLOps 05); conditional retraining is only a capstone criterion | [05](../../05-quality-and-observability/notes/01-monitor.md) |
 
 The course gets you to a solid level 3 with monitoring attached. The closed loop of level 4 is left for the project.
 
@@ -111,7 +111,7 @@ def test_predict():
 
 The course's tests cover code. An ML system changes when any of code, data or model changes, so it needs tests on all three (*LLM Engineer's Handbook*, appendix):
 
-- **Data validity**, run in the feature pipeline. For tabular data: no nulls where none are allowed, categoricals only take expected values, floats stay in range. For text: length, encoding, language, special characters. These belong next to the dbt and Mage checks in [05](05-monitor.md#pipeline-side-monitoring-from-earlier-notes).
+- **Data validity**, run in the feature pipeline. For tabular data: no nulls where none are allowed, categoricals only take expected values, floats stay in range. For text: length, encoding, language, special characters. These belong next to the dbt and Mage checks in [05](../../05-quality-and-observability/notes/01-monitor.md#pipeline-side-monitoring-from-earlier-notes).
 - **Model sanity**, the cheap catches for a training run that finishes without error and is still wrong. Check input and output tensor shapes. Check that loss falls after one batch. Check that the model can overfit a tiny batch to near-zero loss. Run the pipeline on every supported device (CPU and GPU) and check that early-stopping and checkpoint logic fires. These are slow, so gate them in CI on changes to model code.
 - **Behaviour**, treating the model as a black box ([CheckList](https://arxiv.org/abs/2005.04118), Ribeiro et al., 2020). *Minimum functionality*: simple cases it must always get right. *Invariance*: a perturbation that shouldn't change the output (synonym swap) doesn't. *Directional*: a perturbation that should change the output does.
 
@@ -251,9 +251,9 @@ output "lambda_function" { value = "${var.lambda_function_name}_${var.project_id
 | Environments via var files | `vars/stg.tfvars`, `vars/prod.tfvars`: `terraform apply -var-file=vars/stg.tfvars` |
 | Outputs as an interface | CD reads `lambda_function`, `model_bucket`, `ecr_repo` to know what to update |
 
-Compare the GCP Terraform in [01](01-ingest.md): same tool, different provider. The concepts carry over.
+Compare the GCP Terraform in [01](../../02-ingest-and-modelling/notes/01-ingest.md): same tool, different provider. The concepts carry over.
 
-`scripts/deploy_manual.sh` then sets the Lambda's `RUN_ID` with `aws lambda update-function-configuration --environment "Variables={...}"`. It picks the latest run by S3 `LastModified` and is marked "NOT FOR PRODUCTION!". In practice the run comes from the registry alias ([06](06-feature-serve.md)).
+`scripts/deploy_manual.sh` then sets the Lambda's `RUN_ID` with `aws lambda update-function-configuration --environment "Variables={...}"`. It picks the latest run by S3 `LastModified` and is marked "NOT FOR PRODUCTION!". In practice the run comes from the registry alias ([06](01-feature-serve.md)).
 
 ### CI/CD with GitHub Actions
 
@@ -317,4 +317,4 @@ The "best practices" row is MLOps 06, one for one. The monitoring row is the onl
 
 ---
 
-→ Next: this is the last note in the folder. The path continues in [data science](../../data-science/README.md), where the models these pipelines serve are built and evaluated, and in [AI engineering](../../ai-engineering/README.md), where the same tracking, serving and monitoring patterns apply to LLM systems.
+→ Next: this is the last note in the folder. The path continues in [data science](../../../data-science/README.md), where the models these pipelines serve are built and evaluated, and in [AI engineering](../../../ai-engineering/README.md), where the same tracking, serving and monitoring patterns apply to LLM systems.

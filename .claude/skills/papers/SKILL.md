@@ -153,3 +153,7 @@ make link-check
 Report, per paper: verdict (verified / sharpens / extends / contradicts / skipped), the note and
 section changed, and one line on what changed. Call out every **contradicts** first.
 Don't commit — the user reviews the diff.
+
+## Chapter standard and subject homes
+
+A note you touch must still meet the chapter section of `ai-engineering/PILLAR-LAYOUT.md`. Run `make chapter-check PILLAR=<pillar>` after editing. In the four subject areas, notes live in `<subject>/<NN-pillar>/notes/` and PDFs stay in `<subject>/sources/`. Add the row to the `references.md` of the pillar whose note it maps to.

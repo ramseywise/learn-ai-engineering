@@ -109,7 +109,7 @@ The knob is **`C`, the inverse of regularisation strength**: high `C` fits each 
 | | |
 |---|---|
 | Knob | `alpha` (regression), `C` (classification) |
-| Good at | Very many features; sparse data (text, [09](09-text-classification.md)); huge datasets (`SGDClassifier`, `solver="sag"`); fast to train and predict; coefficients readable |
+| Good at | Very many features; sparse data (text, [09](../../03-nlp/notes/02-text-classification.md)); huge datasets (`SGDClassifier`, `solver="sag"`); fast to train and predict; coefficients readable |
 | Fails on | Low-dimensional data with non-linear boundaries, unless you add features ([03](03-feature-engineering-and-pipelines.md)) |
 | Caution | Coefficients of correlated features can flip sign; don't over-read them |
 
@@ -125,7 +125,7 @@ Fit per-class statistics of each feature independently and apply Bayes' rule. Tr
 | `BernoulliNB` | Binary | Count of non-zero per feature |
 | `MultinomialNB` | Counts (word counts) | Mean count per feature |
 
-Knob: `alpha` (additive smoothing: pretends every feature was seen `alpha` extra times in every class). Naive Bayes is the classic fast text baseline ([09](09-text-classification.md)); usually slightly worse than a linear model, trained much faster.
+Knob: `alpha` (additive smoothing: pretends every feature was seen `alpha` extra times in every class). Naive Bayes is the classic fast text baseline ([09](../../03-nlp/notes/02-text-classification.md)); usually slightly worse than a linear model, trained much faster.
 
 ---
 
@@ -183,7 +183,7 @@ Tune them **together** ([04 — grid search](04-model-evaluation.md#grid-search)
 | Good at | Small and medium data (up to ~10k samples) with features on similar scales; complex boundaries in few dimensions |
 | Fails on | 100k+ samples (memory and time); unscaled features; interpretation |
 
-Ng's ex6 implements the Gaussian kernel by hand and uses `sklearn.svm.SVC` on three 2-D datasets, then builds a **spam classifier**: email preprocessing (lower-case, strip HTML, normalise URLs, numbers and addresses, Porter stemming), a 1,899-word vocabulary, binary word-presence features, a linear SVM. That is the bag-of-words pipeline of [08](08-text-representation.md) written out by hand.
+Ng's ex6 implements the Gaussian kernel by hand and uses `sklearn.svm.SVC` on three 2-D datasets, then builds a **spam classifier**: email preprocessing (lower-case, strip HTML, normalise URLs, numbers and addresses, Porter stemming), a 1,899-word vocabulary, binary word-presence features, a linear SVM. That is the bag-of-words pipeline of [08](../../03-nlp/notes/01-text-representation.md) written out by hand.
 
 ```python
 # Ng ex6: the Gaussian kernel, from scratch
@@ -213,7 +213,7 @@ mlp = MLPClassifier(hidden_layer_sizes=[10, 10], alpha=1.0,
 | `activation` | `relu` (default) or `tanh` |
 | `random_state` | Different seeds give visibly different boundaries on small data |
 
-The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). [07](07-neural-networks-fundamentals.md) builds them from scratch.
+The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) builds them from scratch.
 
 ---
 
@@ -239,7 +239,7 @@ A probability is only as good as the model's **calibration**: an overfit model r
 
 ## Which model, when
 
-![Decision boundaries of ten classifiers on three toy datasets](../sources/images/mueller-guido-classifier-comparison.png)
+![Decision boundaries of ten classifiers on three toy datasets](../../sources/images/mueller-guido-classifier-comparison.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/` (after scikit-learn's classifier comparison)*
 
 | Model | Knob | Scale features? | Good for | Avoid when |
@@ -266,7 +266,7 @@ Your own Coursera work implements the maths that scikit-learn hides. Each is the
 | ex1 | Linear regression, one and many variables; batch gradient descent; feature normalisation; the normal equation | `computeCost`, `descendGradient`, `normEqtn` |
 | ex2 | Logistic regression; regularised logistic regression on polynomial features (`mapFeature` to degree 6); decision boundary | `computeCost`, `optimizeTheta` (via `scipy.optimize`) |
 | ex3 | Vectorised one-vs-all logistic regression on 5,000 handwritten digits; feed-forward with given NN weights | `predictOneVsAll`, `propagateForward` |
-| ex4 | NN training: backpropagation, gradient checking, random initialisation | Taken up in [07](07-neural-networks-fundamentals.md) |
+| ex4 | NN training: backpropagation, gradient checking, random initialisation | Taken up in [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) |
 | ex6 | Gaussian-kernel SVM; spam classifier | See [above](#kernelized-support-vector-machines) |
 
 The core of ex1 and ex2, vectorised:
@@ -306,8 +306,8 @@ Three things these make concrete that the library hides: gradient descent diverg
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`02-supervised-learning.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/02-supervised-learning.ipynb) | Everything above except the Ng section | Offline; `scikit-learn>=1.4`, local `mglearn`; `graphviz` for tree plots |
-| [`ex1`](../Ng's%20Machine%20Learning%20Nbks/ex1/ex1.ipynb), [`ex2`](../Ng's%20Machine%20Learning%20Nbks/ex2/ex2.ipynb), [`ex3`](../Ng's%20Machine%20Learning%20Nbks/ex3/ex3.ipynb), [`ex6`](../Ng's%20Machine%20Learning%20Nbks/ex6/ex6.ipynb) | From-scratch linear/logistic regression, one-vs-all, SVMs, spam | Legacy: Python 2.7 kernels (`print` statements); ex3 uses `scipy.misc.toimage`, removed in SciPy 1.2. Data in each `data/` folder |
+| [`02-supervised-learning.ipynb`](../practice/intro-to-ml-in-python/02-supervised-learning.ipynb) | Everything above except the Ng section | Offline; `scikit-learn>=1.4`, local `mglearn`; `graphviz` for tree plots |
+| [`ex1`](../practice/ng-machine-learning/ex1/ex1.ipynb), [`ex2`](../practice/ng-machine-learning/ex2/ex2.ipynb), [`ex3`](../practice/ng-machine-learning/ex3/ex3.ipynb), [`ex6`](../practice/ng-machine-learning/ex6/ex6.ipynb) | From-scratch linear/logistic regression, one-vs-all, SVMs, spam | Legacy: Python 2.7 kernels (`print` statements); ex3 uses `scipy.misc.toimage`, removed in SciPy 1.2. Data in each `data/` folder |
 
 ---
 

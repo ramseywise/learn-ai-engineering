@@ -93,7 +93,7 @@ Most of an LLM's surprising behaviour (hallucination, sensitivity to wording, in
 | Lab | What it shows | Run |
 |---|---|---|
 | [01-typescript-sdk](practice/01-typescript-sdk/) | One request, streaming, structured output via a forced tool, the tool loop, multi-turn history | needs Node, `npm install @anthropic-ai/sdk tsx typescript` and `ANTHROPIC_API_KEY`; makes paid API calls. `npx tsx 01-api-call.ts` |
-| [data-science/practice/nn-zero-to-hero](../../data-science/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
+| [data-science/practice/nn-zero-to-hero](../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
 
 **Readings:** local PDFs in [sources/](sources/), indexed with arXiv ids in [references.md](references.md#core-papers). Papers held here but owned by other pillars are listed under [Held here, used elsewhere](references.md#held-here-used-elsewhere).
 

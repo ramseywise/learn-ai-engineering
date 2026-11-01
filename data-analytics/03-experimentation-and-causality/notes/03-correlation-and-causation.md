@@ -2,7 +2,7 @@
 origin: own coursework
 sources:
   - ../practice/5_Statistical_Analysis.ipynb
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf
   - https://www.pywhy.org/dowhy/
   - https://mixtape.scunning.com/
 confidence: medium
@@ -156,4 +156,4 @@ Regression is where this note hands off to data-science. A coefficient is a cond
 
 ---
 
-→ Next: [09-bayesian-inference.md](09-bayesian-inference.md) — the other way to answer "what do the data say": probability as belief, priors and posteriors, and the first PyMC models.
+→ Next: [09-bayesian-inference.md](../../04-bayesian-analysis/notes/01-bayesian-inference.md) — the other way to answer "what do the data say": probability as belief, priors and posteriors, and the first PyMC models.

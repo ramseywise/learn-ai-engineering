@@ -5,7 +5,7 @@ sources:
   - ../practice/AB-Bayes/AB_Testing_with_Python.ipynb
   - https://www.kaggle.com/datasets/zhangluyuan/ab-testing (ab_data.csv, not included)
   - https://www.statsmodels.org/stable/stats.html#power-and-sample-size-calculations
-  - ../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
+  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -174,4 +174,4 @@ sum(pv < 0.05 for pv in pvs)   # several crossings; stopping at the first is a f
 
 ---
 
-→ Next: [07-experimentation-at-scale.md](07-experimentation-at-scale.md) — A/B testing on a platform: CUPED, always-valid sequential tests, sample ratio mismatch and metric pitfalls.
+→ Next: [07-experimentation-at-scale.md](02-experimentation-at-scale.md) — A/B testing on a platform: CUPED, always-valid sequential tests, sample ratio mismatch and metric pitfalls.

@@ -1,6 +1,6 @@
 # Content plan — from notes to a course
 
-Status: 2026-11-01, proposed. Companion to [CURRICULUM.md](CURRICULUM.md) (what the course is) and
+Status: 2026-11-01, approved. All four decisions in section 6 were accepted. Companion to [CURRICULUM.md](CURRICULUM.md) (what the course is) and
 [ai-engineering/PILLAR-LAYOUT.md](ai-engineering/PILLAR-LAYOUT.md) (what a pillar folder looks like).
 This file says what is wrong with the material as coursework, the standard every area converges on,
 and the order of work.

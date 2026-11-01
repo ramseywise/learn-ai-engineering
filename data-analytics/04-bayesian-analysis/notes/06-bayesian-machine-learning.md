@@ -4,7 +4,7 @@ sources:
   - ../practice/BayesianML/
   - https://www.coursera.org/learn/bayesian-methods-in-machine-learning (HSE, Bayesian Methods for Machine Learning)
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 7 Bayesian Machine Learning, unfinished outline)
-  - ../sources/computer age statistical inference.pdf
+  - ../../sources/computer age statistical inference.pdf
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -20,11 +20,11 @@ Notes 09–13 use Bayesian inference to estimate a handful of parameters and mak
 
 | Coursework | Topic | Inference method | Key idea |
 |---|---|---|---|
-| [week_2](../practice/BayesianML/week_2/) | Gaussian mixture model | Expectation-maximisation | latent cluster labels, soft assignments |
-| [week_4](../practice/BayesianML/week_4/) | Markov chains, Bayesian logistic regression | MCMC (Metropolis, NUTS) in PyMC3 | odds ratio with a credible interval |
-| [week_5](../practice/BayesianML/week_5/) | Variational autoencoder on MNIST | variational inference (ELBO) | amortised posterior via an encoder network |
-| [week_6](../practice/BayesianML/week_6/) | Gaussian processes, Bayesian optimisation | exact GP posterior, acquisition functions | tune hyperparameters with few evaluations |
-| [final_assignment](../practice/BayesianML/final_assignment/) | "Finding the suspect": VAE + Bayesian optimisation | both | search a VAE's latent space with human feedback |
+| [week_2](../practice/BayesianML/week_2) | Gaussian mixture model | Expectation-maximisation | latent cluster labels, soft assignments |
+| [week_4](../practice/BayesianML/week_4) | Markov chains, Bayesian logistic regression | MCMC (Metropolis, NUTS) in PyMC3 | odds ratio with a credible interval |
+| [week_5](../practice/BayesianML/week_5) | Variational autoencoder on MNIST | variational inference (ELBO) | amortised posterior via an encoder network |
+| [week_6](../practice/BayesianML/week_6) | Gaussian processes, Bayesian optimisation | exact GP posterior, acquisition functions | tune hyperparameters with few evaluations |
+| [final_assignment](../practice/BayesianML/final_assignment) | "Finding the suspect": VAE + Bayesian optimisation | both | search a VAE's latent space with human feedback |
 
 **Runnability:** legacy. The environment in `bayesian.yml` pins Python 3.7, TensorFlow 1.15, Keras 2.3.1, `pymc3==3.11.4` and `theano-pymc==1.1.2`; week 6 adds GPy, GPyOpt and xgboost by pip. Every notebook imports the Coursera `grader` module, which is not included, and none has saved outputs. Read them for the method; port to PyMC 5 with note 10's map before running.
 
@@ -165,11 +165,11 @@ The final project combines both: train a VAE on faces, then use Bayesian optimis
 
 | Topic | Source |
 |---|---|
-| EM, VI and GPs alongside the frequentist toolkit | Efron & Hastie, *Computer Age Statistical Inference* ([sources/](../sources/computer%20age%20statistical%20inference.pdf)) |
-| Bayesian regression and multilevel models in depth | McElreath, *Statistical Rethinking* ([sources/](../sources/RM-StatRethink-Bayes.pdf)) |
-| Learning-focused statistics in Python | James et al., *ISLP* ([sources/](../sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf)) |
+| EM, VI and GPs alongside the frequentist toolkit | Efron & Hastie, *Computer Age Statistical Inference* ([sources/](../../sources/computer%20age%20statistical%20inference.pdf)) |
+| Bayesian regression and multilevel models in depth | McElreath, *Statistical Rethinking* ([sources/](../../sources/RM-StatRethink-Bayes.pdf)) |
+| Learning-focused statistics in Python | James et al., *ISLP* ([sources/](../../sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf)) |
 | Modern PyMC | [pymc.io examples gallery](https://www.pymc.io/projects/examples/en/latest/gallery.html), bambi |
 
 ---
 
-→ Next: leave the statistics layer. Model building continues in [data-science](../../data-science/README.md); pipelines in [data-engineering](../../data-engineering/README.md); LLM applications in [generative-ai](../../generative-ai/README.md).
+→ Next: leave the statistics layer. Model building continues in [data-science](../../../data-science/README.md); pipelines in [data-engineering](../../../data-engineering/README.md); LLM applications in [generative-ai](../../../generative-ai/README.md).

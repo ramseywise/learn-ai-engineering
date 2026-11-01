@@ -73,7 +73,7 @@ Notes (path, then its headings):
 {notes}
 
 Reply with ONLY a JSON object mapping each note path to its list of queries, no prose:
-{{"data-analytics/notes/01-example.md": ["...", "..."]}}
+{{"data-analytics/02-probability-and-statistics/notes/01-example.md": ["...", "..."]}}
 """
 
 

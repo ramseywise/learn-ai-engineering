@@ -1,8 +1,8 @@
 ---
 origin: synthesis
 sources:
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 2, Data and Sampling Distributions)
-  - ../sources/computer%20age%20statistical%20inference.pdf (Efron & Hastie, ch. 2–4, 10–11)
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 2, Data and Sampling Distributions)
+  - ../../sources/computer%20age%20statistical%20inference.pdf (Efron & Hastie, ch. 2–4, 10–11)
   - Efron, Bootstrap Methods: Another Look at the Jackknife (Annals of Statistics, 1979; not yet held)
 confidence: low
 cleaned: 2026-10-31

@@ -1,11 +1,11 @@
 ---
 origin: handout-synthesis
 sources:
-  - ../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf
-  - ../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf
-  - ../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf
-  - ../sources/strengholt-data-mesh-topologies.pdf
-  - ../sources/data-mesh-scenario-prompts-handout.pdf
+  - ../../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf
+  - ../../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf
+  - ../../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf
+  - ../../sources/strengholt-data-mesh-topologies.pdf
+  - ../../sources/data-mesh-scenario-prompts-handout.pdf
   - https://martinfowler.com/articles/data-mesh-principles.html
 confidence: medium
 cleaned: 2026-10-31
@@ -18,7 +18,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-This note isn't one of the six foundations. It sits above them. The material is five PDFs in [sources/](../sources/): three chapter excerpts (10, 11 and 13), which from their content are James Serra's *Deciphering Data Architectures* (O'Reilly, 2024); Piethein Strengholt's data-mesh topologies article; and a scenario-prompts handout for discussion. The excerpts have no title page, so the attribution is inferred (see [references.md](../references.md)). Confidence is `medium` because these are opinionated secondary sources rather than course code.
+This note isn't one of the six foundations. It sits above them. The material is five PDFs in [sources/](../../sources): three chapter excerpts (10, 11 and 13), which from their content are James Serra's *Deciphering Data Architectures* (O'Reilly, 2024); Piethein Strengholt's data-mesh topologies article; and a scenario-prompts handout for discussion. The excerpts have no title page, so the attribution is inferred (see [references.md](../../references.md)). Confidence is `medium` because these are opinionated secondary sources rather than course code.
 
 | Question | Architecture | Section |
 |---|---|---|
@@ -34,11 +34,11 @@ A **modern data warehouse (MDW)** is a relational data warehouse (RDW) plus a da
 
 | Stage | What happens | Zoomcamp equivalent |
 |---|---|---|
-| Ingestion | Pull from sources into the lake | [01](01-ingest.md): dlt, Kafka, `wget` into GCS |
-| Storage | Raw files in the lake | GCS bucket from Terraform ([01](01-ingest.md)) |
-| Transformation | Clean, join, conform | dbt ([02](02-transform.md)), Spark ([04](04-warehouse-and-store.md)) |
-| Data modeling | Star schema in the RDW | dbt `core` facts and dims ([02](02-transform.md)) |
-| Visualization | Reports, dashboards | Looker Studio / Metabase ([02](02-transform.md)) |
+| Ingestion | Pull from sources into the lake | [01](../../02-ingest-and-modelling/notes/01-ingest.md): dlt, Kafka, `wget` into GCS |
+| Storage | Raw files in the lake | GCS bucket from Terraform ([01](../../02-ingest-and-modelling/notes/01-ingest.md)) |
+| Transformation | Clean, join, conform | dbt ([02](../../03-transform-and-orchestrate/notes/01-transform.md)), Spark ([04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) |
+| Data modeling | Star schema in the RDW | dbt `core` facts and dims ([02](../../03-transform-and-orchestrate/notes/01-transform.md)) |
+| Visualization | Reports, dashboards | Looker Studio / Metabase ([02](../../03-transform-and-orchestrate/notes/01-transform.md)) |
 
 The data-engineering zoomcamp *is* an MDW: GCS lake → BigQuery warehouse → dbt models → Looker Studio.
 
@@ -71,11 +71,11 @@ Serra says MDWs are most popular under about 10 TB. Above that, the cost of copy
 | Temporary lake + EDW | Land data in a lake, load the EDW from it, retire the old ETL over time |
 | All-in-one | Lake only, query it directly. Close to a lakehouse |
 
-**Case study (Wilson & Gunkerk):** under 1 TB, so the firm chose a symmetric multiprocessing (SMP) database (a single node, e.g. Azure SQL Database) rather than a massively parallel processing (MPP) warehouse. Lesson: don't buy MPP for data that fits on one machine. That's the same point as the "don't partition tables under 1 GB" rule in [04](04-warehouse-and-store.md), at a larger scale.
+**Case study (Wilson & Gunkerk):** under 1 TB, so the firm chose a symmetric multiprocessing (SMP) database (a single node, e.g. Azure SQL Database) rather than a massively parallel processing (MPP) warehouse. Lesson: don't buy MPP for data that fits on one machine. That's the same point as the "don't partition tables under 1 GB" rule in [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md), at a larger scale.
 
 ### The lakehouse
 
-A lakehouse drops the RDW copy and adds warehouse features (ACID transactions, schema enforcement, time travel) to the lake through an open table format: Delta Lake, Apache Iceberg or Hudi. The zoomcamp doesn't teach table formats. The gap and a comparison table are in [04](04-warehouse-and-store.md#modern-gaps-duckdb-polars-delta-lake-and-iceberg).
+A lakehouse drops the RDW copy and adds warehouse features (ACID transactions, schema enforcement, time travel) to the lake through an open table format: Delta Lake, Apache Iceberg or Hudi. The zoomcamp doesn't teach table formats. The gap and a comparison table are in [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md#modern-gaps-duckdb-polars-delta-lake-and-iceberg).
 
 ---
 
@@ -89,7 +89,7 @@ A **data fabric** is an MDW plus features that make the data findable, governed 
 | Metadata catalog | Search across all datasets, with **lineage** (where a column came from) |
 | Master data management (MDM) | One golden record per customer, product, supplier |
 | Data virtualization | Query data where it sits, without copying |
-| Real-time processing | Streams alongside batch ([01](01-ingest.md)) |
+| Real-time processing | Streams alongside batch ([01](../../02-ingest-and-modelling/notes/01-ingest.md)) |
 | APIs | Programmatic access for apps |
 | Services | Reusable shared functions such as data quality and masking |
 | Products | Packaged, documented datasets for consumers |
@@ -102,7 +102,7 @@ Serra's rule of thumb: an MDW with three or more of these is a data fabric. The 
 
 | You have | Consider |
 |---|---|
-| Under about 1 TB, one team | A single SMP database. Or DuckDB ([04](04-warehouse-and-store.md)) |
+| Under about 1 TB, one team | A single SMP database. Or DuckDB ([04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) |
 | Up to about 10 TB, BI-heavy | MDW |
 | Many sources, governance pain, lineage questions | Data fabric (MDW plus catalog, MDM, policies) |
 | Large data, data science heavy, cost-sensitive | Lakehouse |
@@ -125,7 +125,7 @@ Centralised architectures have a central data team own ingestion, modelling and 
 
 **Data product vs data as a product:** a *data product* is any useful dataset or model. *Data as a product* is the discipline of treating it like a product: discoverable, addressable, trustworthy, self-describing, interoperable, secure. A **data contract** is the written, enforced interface: schema, semantics, SLA and owner.
 
-**Federated governance example:** one domain stores US states as `CA`, another as `California`. Joining them silently fails. A global standard ("ISO 3166-2 codes") set by the federated group and enforced in the platform fixes it. That is a dbt test ([02](02-transform.md)) promoted from one project to an organisational rule.
+**Federated governance example:** one domain stores US states as `CA`, another as `California`. Joining them silently fails. A global standard ("ISO 3166-2 codes") set by the federated group and enforced in the platform fixes it. That is a dbt test ([02](../../03-transform-and-orchestrate/notes/01-transform.md)) promoted from one project to an organisational rule.
 
 **Domain types:**
 
@@ -198,32 +198,32 @@ The handout groups discussion prompts into three themes. For each, here is the m
 
 | Prompt (paraphrased) | Root cause | Mechanism | Note |
 |---|---|---|---|
-| A Looker KPI is wrong; who fixes it? | No owner for the metric definition | Metric defined once in a dbt mart with an owner in `schema.yml` | [02](02-transform.md) |
-| Snowplow event schema changed upstream and broke models | No contract between producer and consumer | Data contract; schema registry | [01](01-ingest.md) (Avro + registry), principle 2 |
-| Who approves a dbt PR that changes a shared model? | Unclear ownership of shared models | CODEOWNERS per model folder; CI runs `dbt build` on the PR | [02](02-transform.md), [08](08-mlops-maturity-and-best-practices.md) |
-| Who owns feature engineering code? | Features built in notebooks per model | One `prepare_features`, then a feature store | [06](06-feature-serve.md) |
-| Drift detected; who retrains? | Monitoring with no action owner | Alert → conditional retraining flow with an owner | [05](05-monitor.md), [03](03-orchestrate.md) |
+| A Looker KPI is wrong; who fixes it? | No owner for the metric definition | Metric defined once in a dbt mart with an owner in `schema.yml` | [02](../../03-transform-and-orchestrate/notes/01-transform.md) |
+| Snowplow event schema changed upstream and broke models | No contract between producer and consumer | Data contract; schema registry | [01](../../02-ingest-and-modelling/notes/01-ingest.md) (Avro + registry), principle 2 |
+| Who approves a dbt PR that changes a shared model? | Unclear ownership of shared models | CODEOWNERS per model folder; CI runs `dbt build` on the PR | [02](../../03-transform-and-orchestrate/notes/01-transform.md), [08](../../06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) |
+| Who owns feature engineering code? | Features built in notebooks per model | One `prepare_features`, then a feature store | [06](../../06-ml-platform/notes/01-feature-serve.md) |
+| Drift detected; who retrains? | Monitoring with no action owner | Alert → conditional retraining flow with an owner | [05](../../05-quality-and-observability/notes/01-monitor.md), [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md) |
 
 ### Theme 2: limited governance and QA
 
 | Prompt | Root cause | Mechanism | Note |
 |---|---|---|---|
-| Where does this column come from? | No lineage | dbt docs DAG; fabric metadata catalog | [02](02-transform.md), section 2 |
-| Two dashboards show different numbers | Two definitions of one metric | One mart per metric; a semantic layer | [02](02-transform.md) |
-| Can't reproduce last quarter's experiment | Untracked data, params and code | MLflow runs with data path and git SHA tags | [06](06-feature-serve.md) |
-| Is the model fair across groups? | No segment-level evaluation | Evidently reports per segment; fairness checks in CI | [05](05-monitor.md) |
+| Where does this column come from? | No lineage | dbt docs DAG; fabric metadata catalog | [02](../../03-transform-and-orchestrate/notes/01-transform.md), section 2 |
+| Two dashboards show different numbers | Two definitions of one metric | One mart per metric; a semantic layer | [02](../../03-transform-and-orchestrate/notes/01-transform.md) |
+| Can't reproduce last quarter's experiment | Untracked data, params and code | MLflow runs with data path and git SHA tags | [06](../../06-ml-platform/notes/01-feature-serve.md) |
+| Is the model fair across groups? | No segment-level evaluation | Evidently reports per segment; fairness checks in CI | [05](../../05-quality-and-observability/notes/01-monitor.md) |
 
 ### Theme 3: "The pipeline is a monster"
 
 | Prompt | Root cause | Mechanism | Note |
 |---|---|---|---|
-| A new analyst takes weeks to onboard | Undocumented, tangled models | Layers (staging/core/marts), dbt docs, a README per domain | [02](02-transform.md) |
+| A new analyst takes weeks to onboard | Undocumented, tangled models | Layers (staging/core/marts), dbt docs, a README per domain | [02](../../03-transform-and-orchestrate/notes/01-transform.md) |
 | Adding a KPI to Looker takes a sprint | Every change passes through one central team | Domain ownership; self-serve platform | principles 1 and 3 |
-| An upstream change breaks things downstream | No contracts, no tests at boundaries | Contracts plus dbt tests at `error` severity at the staging boundary | [02](02-transform.md), [01](01-ingest.md) |
+| An upstream change breaks things downstream | No contracts, no tests at boundaries | Contracts plus dbt tests at `error` severity at the staging boundary | [02](../../03-transform-and-orchestrate/notes/01-transform.md), [01](../../02-ingest-and-modelling/notes/01-ingest.md) |
 | No single source of truth | Copies in several stores | MDW with one serving layer; MDM | section 1–2 |
-| Events dropped silently | At-most-once delivery; no reconciliation | Commit offsets after processing; row-count checks | [01](01-ingest.md), [05](05-monitor.md) |
-| Need real-time inference | Batch-only architecture | Stream deployment (Kinesis/Lambda or Kafka) | [06](06-feature-serve.md), [01](01-ingest.md) |
-| Each model rebuilds the same feature pipeline | No feature reuse | Feature store; features as a data product | [06](06-feature-serve.md) |
+| Events dropped silently | At-most-once delivery; no reconciliation | Commit offsets after processing; row-count checks | [01](../../02-ingest-and-modelling/notes/01-ingest.md), [05](../../05-quality-and-observability/notes/01-monitor.md) |
+| Need real-time inference | Batch-only architecture | Stream deployment (Kinesis/Lambda or Kafka) | [06](../../06-ml-platform/notes/01-feature-serve.md), [01](../../02-ingest-and-modelling/notes/01-ingest.md) |
+| Each model rebuilds the same feature pipeline | No feature reuse | Feature store; features as a data product | [06](../../06-ml-platform/notes/01-feature-serve.md) |
 
 Use these as interview practice: name the root cause first (usually ownership or a missing contract), then the mechanism, then the trade-off.
 
@@ -241,4 +241,4 @@ Use these as interview practice: name the root cause first (usually ownership or
 
 ---
 
-→ Next: [08-mlops-maturity-and-best-practices.md](08-mlops-maturity-and-best-practices.md) — this note covered how the organisation arranges its data; the next measures how automated the ML half of it is, and the engineering practices (tests, IaC, CI/CD) that move a team up the levels.
+→ Next: [08-mlops-maturity-and-best-practices.md](../../06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) — this note covered how the organisation arranges its data; the next measures how automated the ML half of it is, and the engineering practices (tests, IaC, CI/CD) that move a team up the levels.

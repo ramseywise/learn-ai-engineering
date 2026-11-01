@@ -12,7 +12,7 @@ By this stage of the course you should have already:
   * fhv data - Year 2019.
 
 > [!NOTE]
-> * We have two quick hack to load that data quicker, follow [this video](https://www.youtube.com/watch?v=Mork172sK_c&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs) for option 1 or check instructions in [week3/extras](../03-data-warehouse/extras) for option 2
+> * We have two quick hack to load that data quicker, follow [this video](https://www.youtube.com/watch?v=Mork172sK_c&list=PLaNLNpjZpzwgneiI-Gl8df8GCsPYp_6Bs) for option 1 or check instructions in [week3/extras](../../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/03-data-warehouse/extras) for option 2
 
 ## Setting up your environment
 

@@ -17,7 +17,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Foundation 5 of 6. Everything upstream (ingest, transform, orchestrate, store) can fail silently: a schema changes, a source stops sending, a feature's distribution shifts. Monitoring turns those into numbers with thresholds. The zoomcamp material is MLOps 05 (Evidently + Postgres + Grafana, with Prefect for the batch loop). Pipeline-side checks come from earlier notes: dbt tests and source freshness ([02](02-transform.md)), Mage `@test` blocks ([03](03-orchestrate.md)).
+Foundation 5 of 6. Everything upstream (ingest, transform, orchestrate, store) can fail silently: a schema changes, a source stops sending, a feature's distribution shifts. Monitoring turns those into numbers with thresholds. The zoomcamp material is MLOps 05 (Evidently + Postgres + Grafana, with Prefect for the batch loop). Pipeline-side checks come from earlier notes: dbt tests and source freshness ([02](../../03-transform-and-orchestrate/notes/01-transform.md)), Mage `@test` blocks ([03](../../03-transform-and-orchestrate/notes/02-orchestrate.md)).
 
 The CURRICULUM.md snapshot listed "Prometheus" for MLOps 05. The 2024 module doesn't use it: metrics go into Postgres and Grafana reads them from there.
 
@@ -58,7 +58,7 @@ The test depends on the column: Kolmogorov–Smirnov for one numeric feature, ch
 |---|---|---|
 | When | A scheduled job over the last window (a day here) | Per request or per micro-window |
 | Mechanism | Orchestrated job computes metrics, writes to a DB | Service emits metrics; collector aggregates |
-| Fits | Batch scoring ([03](03-orchestrate.md)), daily pipelines | Web/stream serving ([06](06-feature-serve.md)) |
+| Fits | Batch scoring ([03](../../03-transform-and-orchestrate/notes/02-orchestrate.md)), daily pipelines | Web/stream serving ([06](../../06-ml-platform/notes/01-feature-serve.md)) |
 | Drift tests | Full distribution tests on the window | Approximate or windowed |
 
 The course simulates online monitoring with batch: one day of February 2022 every 10 seconds.
@@ -191,7 +191,7 @@ def batch_monitoring_backfill():
             # sleep so one "day" lands every SEND_TIMEOUT = 10 seconds
 ```
 
-The design in one sentence: **monitoring is a pipeline**, with a scheduled job, an idempotent write keyed by the batch's logical timestamp (not `now()`), and a backfill. Everything in [03](03-orchestrate.md) applies to it.
+The design in one sentence: **monitoring is a pipeline**, with a scheduled job, an idempotent write keyed by the batch's logical timestamp (not `now()`), and a backfill. Everything in [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md) applies to it.
 
 Two things to change before production. Metrics are keyed by `begin + timedelta(i)`, which is right, but the table is dropped on every run, so history is lost. And `fillna(0)` before predict hides the missing values the third metric is meant to catch: impute in the model's preprocessing, not in the monitor.
 
@@ -199,7 +199,7 @@ Two things to change before production. Metrics are keyed by `begin + timedelta(
 
 ## Dashboard and alerts
 
-`dashboards/data_drift.json` charts the three columns over `timestamp`: **Prediction drift**, **Number of drifted columns**, **Share of missing values**. Grafana alert rules on the same queries (for example `num_drifted_columns > 2` for two consecutive batches) close the loop. The MLOps project rubric gives full monitoring marks only when a threshold triggers an alert or a retraining run ([08](08-mlops-maturity-and-best-practices.md)); the Mage sensor in MLOps 3.4 is the retraining half.
+`dashboards/data_drift.json` charts the three columns over `timestamp`: **Prediction drift**, **Number of drifted columns**, **Share of missing values**. Grafana alert rules on the same queries (for example `num_drifted_columns > 2` for two consecutive batches) close the loop. The MLOps project rubric gives full monitoring marks only when a threshold triggers an alert or a retraining run ([08](../../06-ml-platform/notes/02-mlops-maturity-and-best-practices.md)); the Mage sensor in MLOps 3.4 is the retraining half.
 
 Give every alert an owner and an action (page, open a ticket, trigger retraining). An alert nobody acts on trains the team to ignore the channel, and requiring two consecutive breaches is the cheapest guard against one noisy batch. For statistical drift tests the p-value is the threshold, and the same trade-off applies: set it too loose and false positives drown the real ones.
 
@@ -233,13 +233,13 @@ A **Report** describes (distributions, scores). A **TestSuite** asserts (pass/fa
 
 | Check | Where | Note |
 |---|---|---|
-| `unique`, `not_null`, `relationships`, `accepted_values` | dbt `schema.yml` | [02](02-transform.md) |
-| Source freshness `error_after: {count: 6, period: hour}` | dbt `sources:` | [02](02-transform.md) |
-| Assertion on block output | Mage `@test` | [03](03-orchestrate.md) |
-| Schema compatibility on produce | Kafka Schema Registry | [01](01-ingest.md) |
-| Bytes scanned per query | BigQuery job metadata | [04](04-warehouse-and-store.md) |
+| `unique`, `not_null`, `relationships`, `accepted_values` | dbt `schema.yml` | [02](../../03-transform-and-orchestrate/notes/01-transform.md) |
+| Source freshness `error_after: {count: 6, period: hour}` | dbt `sources:` | [02](../../03-transform-and-orchestrate/notes/01-transform.md) |
+| Assertion on block output | Mage `@test` | [03](../../03-transform-and-orchestrate/notes/02-orchestrate.md) |
+| Schema compatibility on produce | Kafka Schema Registry | [01](../../02-ingest-and-modelling/notes/01-ingest.md) |
+| Bytes scanned per query | BigQuery job metadata | [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
 
-Data observability as a discipline is covered in the awesome-list podcast with Barr Moses ([references](../references.md)).
+Data observability as a discipline is covered in the awesome-list podcast with Barr Moses ([references](../../references.md)).
 
 ---
 
@@ -259,4 +259,4 @@ The code uses Evidently's pre-0.7 API (`evidently.report.Report`, `evidently.met
 
 ---
 
-→ Next: [06-feature-serve.md](06-feature-serve.md) — the model being monitored came from somewhere: tracked experiments, a registry entry, and a deployment as a web service, a stream consumer or a batch job.
+→ Next: [06-feature-serve.md](../../06-ml-platform/notes/01-feature-serve.md) — the model being monitored came from somewhere: tracked experiments, a registry entry, and a deployment as a web service, a stream consumer or a batch job.

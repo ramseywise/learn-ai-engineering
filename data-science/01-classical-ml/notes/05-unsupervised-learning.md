@@ -5,7 +5,7 @@ sources:
   - ../practice/Intro to Machine Learning in Python/03-unsupervised-learning.ipynb
   - ../Ng's Machine Learning Nbks/ex7/ex7.ipynb
   - ../Ng's Machine Learning Nbks/ex8/ex8.ipynb
-  - ../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -99,7 +99,7 @@ X_nmf = nmf.transform(X_test)
 | Changing `n_components` | First components unchanged | All components change |
 | Good for | Compression, decorrelation, visualisation | Interpretable parts; separating additive sources (M&G unmix three signals) |
 
-NMF over word counts is a topic model: see [10](10-topic-models-and-summarization.md).
+NMF over word counts is a topic model: see [10](../../03-nlp/notes/03-topic-models-and-summarization.md).
 
 ---
 
@@ -112,7 +112,7 @@ from sklearn.manifold import TSNE
 digits_tsne = TSNE(random_state=42).fit_transform(digits.data)   # no transform(): can't map new points
 ```
 
-On the 8×8 digits, PCA's 2-D projection overlaps most classes; t-SNE separates nearly all ten without seeing labels. Rules for reading a t-SNE plot: cluster sizes and distances between clusters mean little; run more than one `perplexity`; never use it as features for a model. UMAP is the faster, more structure-preserving alternative in current practice. [11](11-embeddings-and-similarity.md) uses t-SNE to plot word vectors.
+On the 8×8 digits, PCA's 2-D projection overlaps most classes; t-SNE separates nearly all ten without seeing labels. Rules for reading a t-SNE plot: cluster sizes and distances between clusters mean little; run more than one `perplexity`; never use it as features for a model. UMAP is the faster, more structure-preserving alternative in current practice. [11](../../03-nlp/notes/04-embeddings-and-similarity.md) uses t-SNE to plot word vectors.
 
 ---
 
@@ -165,7 +165,7 @@ Start with every point as its own cluster; repeatedly merge the two most similar
 
 No `predict` for new points. The merge history is a tree, drawn as a **dendrogram**:
 
-![Dendrogram of the clustering, with lines indicating splits into two and three clusters](../sources/images/mueller-guido-dendrogram.png)
+![Dendrogram of the clustering, with lines indicating splits into two and three clusters](../../sources/images/mueller-guido-dendrogram.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/`*
 
 ```python
@@ -174,7 +174,7 @@ linkage_array = ward(X)
 dendrogram(linkage_array)   # long vertical lines = merging very different clusters: a natural cut
 ```
 
-Sarkar uses the same Ward dendrogram to cluster movies by their descriptions in [10](10-topic-models-and-summarization.md).
+Sarkar uses the same Ward dendrogram to cluster movies by their descriptions in [10](../../03-nlp/notes/03-topic-models-and-summarization.md).
 
 ### DBSCAN
 
@@ -253,7 +253,7 @@ def cofi_cost(X, Theta, Y, R, lam):
     return J, X_grad, Theta_grad
 ```
 
-Ex8 checks the gradient numerically, adds a new user's ratings, **mean-normalises** each movie's ratings (otherwise a user with no ratings gets predicted 0 for everything), and optimises with `scipy.optimize.fmin_cg`. This is low-rank matrix factorisation: the same idea as PCA and NMF, fitted only on observed entries. It is the ancestor of the embedding models in [11](11-embeddings-and-similarity.md): $x^{(i)}$ is a learned movie embedding.
+Ex8 checks the gradient numerically, adds a new user's ratings, **mean-normalises** each movie's ratings (otherwise a user with no ratings gets predicted 0 for everything), and optimises with `scipy.optimize.fmin_cg`. This is low-rank matrix factorisation: the same idea as PCA and NMF, fitted only on observed entries. It is the ancestor of the embedding models in [11](../../03-nlp/notes/04-embeddings-and-similarity.md): $x^{(i)}$ is a learned movie embedding.
 
 ---
 
@@ -261,9 +261,9 @@ Ex8 checks the gradient numerically, adds a new user's ratings, **mean-normalise
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`03-unsupervised-learning.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/03-unsupervised-learning.ipynb) | Scaling, PCA, eigenfaces, NMF, t-SNE, k-means, agglomerative, DBSCAN, evaluation | Needs internet once: `fetch_lfw_people` downloads ~200 MB; otherwise offline with `scikit-learn>=1.4`, `mglearn` |
-| [`ex7.ipynb`](../Ng's%20Machine%20Learning%20Nbks/ex7/ex7.ipynb) | k-means from scratch, image compression, PCA, eigenfaces | Legacy: Python 2.7; `scipy.misc.imread`/`toimage` removed in SciPy 1.2 (use `imageio` / `PIL`) |
-| [`ex8.ipynb`](../Ng's%20Machine%20Learning%20Nbks/ex8/ex8.ipynb) | Gaussian anomaly detection, collaborative filtering | Legacy: Python 2.7 kernel; data in `ex8/data/` |
+| [`03-unsupervised-learning.ipynb`](../practice/intro-to-ml-in-python/03-unsupervised-learning.ipynb) | Scaling, PCA, eigenfaces, NMF, t-SNE, k-means, agglomerative, DBSCAN, evaluation | Needs internet once: `fetch_lfw_people` downloads ~200 MB; otherwise offline with `scikit-learn>=1.4`, `mglearn` |
+| [`ex7.ipynb`](../practice/ng-machine-learning/ex7/ex7.ipynb) | k-means from scratch, image compression, PCA, eigenfaces | Legacy: Python 2.7; `scipy.misc.imread`/`toimage` removed in SciPy 1.2 (use `imageio` / `PIL`) |
+| [`ex8.ipynb`](../practice/ng-machine-learning/ex8/ex8.ipynb) | Gaussian anomaly detection, collaborative filtering | Legacy: Python 2.7 kernel; data in `ex8/data/` |
 
 ---
 

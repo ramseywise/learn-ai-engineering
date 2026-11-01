@@ -1,6 +1,7 @@
 # Pillar layout
 
-The shape every pillar folder converges on, in `ai-engineering/` and `generative-ai/` alike.
+The shape every pillar folder converges on, in all five pillared areas: `ai-engineering/`, `generative-ai/`,
+`data-analytics/`, `data-science/` and `data-engineering/`. `programming/` keeps its tracks and modules.
 The skills (`/chapter`, `/papers`, `/pillar`, `/slides`, `/readings`) read this file and write
 to this shape. Pillars 01, 02 and 05 of ai-engineering are the worked examples.
 
@@ -9,6 +10,7 @@ to this shape. Pillars 01, 02 and 05 of ai-engineering are the worked examples.
   README.md
   references.md
   notes/NN-<topic>.md
+  practice/                                notebooks, scripts, raw course folders
   sources/
     <author>-<year>-<short-title>.pdf      papers
     <book-slug>/chNN-<chapter-slug>.pdf    book chapters (appendix-<x>-<slug>.pdf for appendices)
@@ -62,10 +64,31 @@ The notes are the product. Everything else in the folder serves them.
 - **`confidence: high`** needs peer-reviewed evidence for the note's central claims, or a stated
   reason (a primary vendor report, a reproduced result) when they rest on preprints.
 
+## notes/: the chapter
+
+A note is a chapter of a book. Its target is 2,000 to 5,000 words. Under 1,500 is a skeleton and
+says so in a `status: skeleton` frontmatter line. Over 7,000 is two chapters. A chapter has these
+parts in this order. `make chapter-check PILLAR=<pillar>` checks them.
+
+1. **Hook.** One paragraph before the first H2: the problem this chapter solves and what goes wrong
+   without it.
+2. **Concepts in prose.** One H2 per concept, each with a worked example in code that runs as
+   written. Numbers come with their setup.
+3. **At least one figure or diagram.** A paper figure from `sources/images/`, a Mermaid block, or
+   an ASCII diagram in a `text` fence written for the note.
+4. **`## Pitfalls`.** What practitioners get wrong, with the symptom.
+5. **`## Try it`.** Two to four exercises with answers in a `<details>` block or linked to `practice/`.
+6. **`## Interview checklist`.** A table of questions with the answers filled in.
+7. **`## Next`.** The link to the following note, or to the next pillar on the last note.
+
+Programming modules are exercise-driven at 300 to 600 words and are exempt from this section.
+
 ## references.md
 
 Frontmatter (`origin: curated`, `sources:`, `confidence:`, `cleaned:`), then tables in this
-order: **Books**, **Core papers**, **AI Papers of the Week**. Each row says why to read it,
+order: **Books**, **Core papers**, **AI Papers of the Week**, **Courses and videos**.
+Courses and videos are linked, never vendored, and each row gives the platform, free or paid, the
+notes it supports, and which weeks or playlists to watch. Each row says why to read it,
 links the local PDF, and maps to the notes that use it. **★** marks a reading that changed a
 claim. The local PDF is linked from here and nowhere else.
 
@@ -94,7 +117,11 @@ Mark preprint-only rows in the hand-written tables with ⚑.
 Built by `/slides` from `deck.yaml`. Never hand-edit the `.pptx`. The `.pdf` is committed once
 per finished revision.
 
-## Subjects without pillars
+## Subject areas
 
-`data-science/` and `data-engineering/` are not split into pillars. Readings homed there
-(`classical-ml`, `ml-systems`) go in `<subject>/sources/`, the same as pillar readings.
+`data-analytics/`, `data-science/` and `data-engineering/` are pillared like the others, with one
+difference: their PDFs and images stay in one shared `<subject>/sources/` at the subject root. Their
+books span several pillars and the readings ledger homes them by subject. So a note links figures as
+`../../sources/images/<file>`, and `<subject>/references.md` holds the books shared across pillars
+while each pillar's `references.md` maps its own notes. `<subject>/CURRICULUM.md` is the sequenced
+path across the pillars.

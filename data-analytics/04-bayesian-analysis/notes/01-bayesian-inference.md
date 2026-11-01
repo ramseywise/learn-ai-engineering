@@ -4,8 +4,8 @@ sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 1 Introduction, ch. 2 A little more on PyMC)
   - https://github.com/prasoon2211/bayesian_inference_talk (DataTalks.Club talk, Introduction to Bayesian Inference for Parameter Estimation)
   - https://www.eadan.net/blog/german-tank-problem/
-  - ../sources/bayes_for_hackers.pdf
-  - ../sources/think_bayes.pdf
+  - ../../sources/bayes_for_hackers.pdf
+  - ../../sources/think_bayes.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -123,7 +123,7 @@ Daily counts of text messages over 74 days. Did the rate change at some point?
 | Rates are positive, near the observed mean | λ₁, λ₂ ~ Exponential(1 / mean(counts)) |
 | The switch could be any day | τ ~ DiscreteUniform(0, n_days − 1) |
 
-![Graph of the switchpoint model: tau and two lambdas feed a deterministic lambda that parameterises the observed Poisson counts](../sources/images/davidson-pilon-bmh-sms-model-fig1.png)
+![Graph of the switchpoint model: tau and two lambdas feed a deterministic lambda that parameterises the observed Poisson counts](../../sources/images/davidson-pilon-bmh-sms-model-fig1.png)
 *Image Source: Davidson-Pilon, Bayesian Methods for Hackers, ch. 2 (MIT)*
 
 ```python
@@ -245,10 +245,10 @@ The simulation in the talk also shows the bias-variance trade-off: the unbiased 
 | Want | Read |
 |---|---|
 | more PyMC mechanics | note 10 |
-| the talk's recommended path | BMH (this note), then McElreath's *Statistical Rethinking* ([sources/RM-StatRethink-Bayes.pdf](../sources/RM-StatRethink-Bayes.pdf)), then Gelman et al. *BDA3* |
+| the talk's recommended path | BMH (this note), then McElreath's *Statistical Rethinking* ([sources/RM-StatRethink-Bayes.pdf](../../sources/RM-StatRethink-Bayes.pdf)), then Gelman et al. *BDA3* |
 | Bayesian estimation as a t-test replacement | Kruschke, *Bayesian Estimation Supersedes the t Test* (BEST) |
-| the same ideas in plain Python | Downey, *Think Bayes* ([sources/think_bayes.pdf](../sources/think_bayes.pdf)) |
+| the same ideas in plain Python | Downey, *Think Bayes* ([sources/think_bayes.pdf](../../sources/think_bayes.pdf)) |
 
 ---
 
-→ Next: [10-mcmc-and-pymc.md](10-mcmc-and-pymc.md) — what `pm.sample` is actually doing, how to tell whether it worked, and how to port PyMC3 code to PyMC 5.
+→ Next: [10-mcmc-and-pymc.md](02-mcmc-and-pymc.md) — what `pm.sample` is actually doing, how to tell whether it worked, and how to port PyMC3 code to PyMC 5.

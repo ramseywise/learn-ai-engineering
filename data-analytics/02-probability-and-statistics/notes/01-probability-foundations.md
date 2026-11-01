@@ -2,8 +2,8 @@
 origin: synthesis
 sources:
   - https://projects.iq.harvard.edu/stat110 (Blitzstein & Hwang, Introduction to Probability, free PDF; not yet held)
-  - ../sources/thinkstats.pdf
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf
+  - ../../sources/thinkstats.pdf
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf
 confidence: low
 cleaned: 2026-10-31
 ---

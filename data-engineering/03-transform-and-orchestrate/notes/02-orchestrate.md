@@ -21,7 +21,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Foundation 3 of 6. Ingest ([01](01-ingest.md)) and transform ([02](02-transform.md)) are tasks. Orchestration decides when they run, in what order, with which parameters, and what happens on failure. Confidence is `medium` because DE 02 in this snapshot is a README of video links with no code; the worked code comes from MLOps 03 (Mage, upstream repo), MLOps 04 (Prefect batch scoring) and MLOps 05 (Prefect monitoring backfill).
+Foundation 3 of 6. Ingest ([01](../../02-ingest-and-modelling/notes/01-ingest.md)) and transform ([02](01-transform.md)) are tasks. Orchestration decides when they run, in what order, with which parameters, and what happens on failure. Confidence is `medium` because DE 02 in this snapshot is a README of video links with no code; the worked code comes from MLOps 03 (Mage, upstream repo), MLOps 04 (Prefect batch scoring) and MLOps 05 (Prefect monitoring backfill).
 
 ---
 
@@ -109,12 +109,12 @@ cd mlops && ./scripts/start.sh        # UI on http://localhost:6789
 |---|---|---|
 | 3.0 | Why operationalise | Productivity, reliability, reproducibility, time-to-value |
 | 3.1 | Data preparation | Ingest, prepare, build the training set; data validations as blocks |
-| 3.2 | Training | sklearn and XGBoost with hyperopt; experiments to MLflow ([06](06-feature-serve.md)) |
+| 3.2 | Training | sklearn and XGBoost with hyperopt; experiments to MLflow ([06](../../06-ml-platform/notes/01-feature-serve.md)) |
 | 3.3 | Observability | SHAP dashboards and alerting |
 | 3.4 | Triggers | `sensors/detect_new_data.py` fires the retraining pipeline; an inference pipeline served via API |
 | 3.5 | Deployment | AWS permissions, Terraform deploy, CI/CD with GitHub Actions |
 
-Unit 3.4 is the bridge to monitoring: a **sensor** polls for new data and triggers retraining, which is the "conditional retraining" the MLOps project rubric rewards ([08](08-mlops-maturity-and-best-practices.md)).
+Unit 3.4 is the bridge to monitoring: a **sensor** polls for new data and triggers retraining, which is the "conditional retraining" the MLOps project rubric rewards ([08](../../06-ml-platform/notes/02-mlops-maturity-and-best-practices.md)).
 
 `03-orchestration/requirements.txt` pins `mlflow==3.17.2`, `prefect==3.9.0`, `pandas==3.1.0`, `scikit_learn==1.9.1`, `xgboost==3.4.1`, `hyperopt==0.3.0`.
 
@@ -191,7 +191,7 @@ def ride_duration_prediction_backfill():
 
 It works only because the flow takes `run_date` as a parameter and writes to a path derived from it. **A pipeline that reads "today" from the clock can't be backfilled.**
 
-MLOps 05 reuses the pattern: `@flow batch_monitoring_backfill` loops over days, computes Evidently metrics per day and inserts them into Postgres ([05](05-monitor.md)).
+MLOps 05 reuses the pattern: `@flow batch_monitoring_backfill` loops over days, computes Evidently metrics per day and inserts them into Postgres ([05](../../05-quality-and-observability/notes/01-monitor.md)).
 
 **Legacy label.** `prefect.orion` was renamed in Prefect 2.10 and `Deployment.build_from_flow` is gone in Prefect 3, which uses `flow.serve(cron=...)` or `flow.deploy(...)`. The flow and task decorators carry over unchanged. Run the course code with a pinned Prefect 2 or port the deploy script. Source: [Prefect docs](https://docs.prefect.io/).
 
@@ -246,4 +246,4 @@ The dependency is the function argument. Sources: [Dagster docs](https://docs.da
 
 ---
 
-→ Next: [04-warehouse-and-store.md](04-warehouse-and-store.md) — the tasks orchestration schedules run against storage; how that storage is laid out (partitions, clusters, file formats) decides what each run costs.
+→ Next: [04-warehouse-and-store.md](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) — the tasks orchestration schedules run against storage; how that storage is laid out (partitions, clusters, file formats) decides what each run costs.

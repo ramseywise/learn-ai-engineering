@@ -15,7 +15,7 @@ cleaned: 2026-10-31
 
 ## Where it sits
 
-Foundation 2 of 6. Ingest ([01](01-ingest.md)) lands raw data that is untyped, duplicated and named by the source system. Transform makes it usable. Orchestrate ([03](03-orchestrate.md)) schedules it, and the warehouse ([04](04-warehouse-and-store.md)) executes it. The zoomcamp material is DE 04, *Analytics engineering*, and its worked project `taxi_rides_ny/`.
+Foundation 2 of 6. Ingest ([01](../../02-ingest-and-modelling/notes/01-ingest.md)) lands raw data that is untyped, duplicated and named by the source system. Transform makes it usable. Orchestrate ([03](02-orchestrate.md)) schedules it, and the warehouse ([04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)) executes it. The zoomcamp material is DE 04, *Analytics engineering*, and its worked project `taxi_rides_ny/`.
 
 DE 04 assumes week 3 is done: a running warehouse (BigQuery or Postgres) with yellow and green trip data for 2019–2020 and FHV for 2019 loaded.
 
@@ -177,7 +177,7 @@ inner join dim_zones as dropoff_zone on trips_unioned.dropoff_locationid = dropo
 Three things to see:
 
 1. **`ref()` builds the DAG.** dbt parses every `ref` to order the run: staging before core, `dim_zones` (built from the `taxi_zone_lookup` seed) before `fact_trips`. You never write the order by hand.
-2. **Union needs identical column lists.** The two staging models are written to the same column order so `select *` unions safely. The Spark version of this union in [04](04-warehouse-and-store.md) has to compute the common columns explicitly.
+2. **Union needs identical column lists.** The two staging models are written to the same column order so `select *` unions safely. The Spark version of this union in [04](../../04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) has to compute the common columns explicitly.
 3. **The inner joins drop rows.** Trips with an unknown zone vanish from the fact table. That is a business decision hiding in a join type; a test or a comment should say so.
 
 The mart aggregates the fact for one question, monthly revenue by zone:
@@ -231,7 +231,7 @@ models:
 
 Every test in the course is `severity: warn`, so a failure never stops the build. That's fine for a homework dataset with known dirt. In production, decide per test: keys `error`, descriptive columns `warn`. A test that only warns is a test nobody reads.
 
-The `sources:` block also has a commented-out `freshness:` with `error_after: {count: 6, period: hour}` and `loaded_at_field`. Uncomment it and `dbt source freshness` becomes your first ingest monitor ([05](05-monitor.md)).
+The `sources:` block also has a commented-out `freshness:` with `error_after: {count: 6, period: hour}` and `loaded_at_field`. Uncomment it and `dbt source freshness` becomes your first ingest monitor ([05](../../05-quality-and-observability/notes/01-monitor.md)).
 
 ---
 
@@ -258,9 +258,9 @@ DE 04 shows two paths:
 | Path | Setup | Scheduling |
 |---|---|---|
 | dbt Cloud | `dbt_cloud_setup.md`: connect BigQuery with a service-account key, link the repo | dbt Cloud jobs, `dbt build` on a cron, with a production environment and target dataset |
-| dbt Core locally (Postgres in the course) | `docker_setup/` (Dockerfile + compose) or `pip install dbt-bigquery` / `dbt-postgres`, plus `~/.dbt/profiles.yml` | Your orchestrator runs `dbt build` as a task ([03](03-orchestrate.md)) |
+| dbt Core locally (Postgres in the course) | `docker_setup/` (Dockerfile + compose) or `pip install dbt-bigquery` / `dbt-postgres`, plus `~/.dbt/profiles.yml` | Your orchestrator runs `dbt build` as a task ([03](02-orchestrate.md)) |
 
-The module ends by charting `dm_monthly_zone_revenue` in Google Data Studio (now Looker Studio) or Metabase. A dashboard on a mart, never on a staging view, is the rule that keeps metric logic in one place, which is the "two dashboards show different numbers" scenario in [07](07-data-architectures-mesh-fabric-mdw.md).
+The module ends by charting `dm_monthly_zone_revenue` in Google Data Studio (now Looker Studio) or Metabase. A dashboard on a mart, never on a staging view, is the rule that keeps metric logic in one place, which is the "two dashboards show different numbers" scenario in [07](../../07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md).
 
 ---
 
@@ -275,4 +275,4 @@ The module ends by charting `dm_monthly_zone_revenue` in Google Data Studio (now
 
 ---
 
-→ Next: [03-orchestrate.md](03-orchestrate.md) — `dbt build` is one task; orchestration decides when it runs, what runs before it, and what happens when it fails.
+→ Next: [03-orchestrate.md](02-orchestrate.md) — `dbt build` is one task; orchestration decides when it runs, what runs before it, and what happens when it fails.

@@ -11,7 +11,7 @@ cleaned: 2026-10-31
 ---
 # 17 — nanoGPT: the Transformer from Scratch
 
-> Two lectures. First, grow a character-level bigram model on Tiny Shakespeare into a decoder-only transformer, one idea at a time: self-attention, multiple heads, feed-forward, residual connections, LayerNorm, dropout. Second, write GPT-2 (124M) from an empty file, load OpenAI's weights to check it, then train it from scratch on 10B tokens with every trick that makes it fast. This is where data science hands over to [`../../generative-ai/01-llm-fundamentals/README.md`](../../generative-ai/01-llm-fundamentals/README.md).
+> Two lectures. First, grow a character-level bigram model on Tiny Shakespeare into a decoder-only transformer, one idea at a time: self-attention, multiple heads, feed-forward, residual connections, LayerNorm, dropout. Second, write GPT-2 (124M) from an empty file, load OpenAI's weights to check it, then train it from scratch on 10B tokens with every trick that makes it fast. This is where data science hands over to [`../../generative-ai/01-llm-fundamentals/README.md`](../../../generative-ai/01-llm-fundamentals/README.md).
 
 ---
 
@@ -88,9 +88,9 @@ class Head(nn.Module):
 | Attention is communication on a directed graph | Nodes aggregate values from nodes that point to them; the mask defines the graph |
 | No notion of position | Attention is a set operation, so add **positional embeddings** (`nn.Embedding(block_size, n_embd)`) to the token embeddings |
 | Batch elements never talk | Each sequence is processed independently |
-| Remove the mask → encoder block | Sentiment, NER: all tokens see each other ([14](14-neural-text-models.md)'s BERT pipelines) |
+| Remove the mask → encoder block | Sentiment, NER: all tokens see each other ([14](../../02-deep-learning/notes/02-neural-text-models.md)'s BERT pipelines) |
 | Self- vs cross-attention | Self: q, k, v all from `x`. Cross: q from `x`, k and v from another source (an encoder, in translation) |
-| Scale by `1/sqrt(head_size)` | q·k has variance ≈ head_size; without scaling softmax saturates towards one-hot at init (the same saturation story as tanh in [16](16-makemore.md#part-3-activations-gradients-and-batchnorm)) |
+| Scale by `1/sqrt(head_size)` | q·k has variance ≈ head_size; without scaling softmax saturates towards one-hot at init (the same saturation story as tanh in [16](02-makemore.md#part-3-activations-gradients-and-batchnorm)) |
 
 ### From one head to a transformer block
 
@@ -131,13 +131,13 @@ The full model: token embedding + position embedding → `n_layer` blocks → fi
 | 4 heads of 8 | Several kinds of relation at once | ~2.28 |
 | Feed-forward per token | Computation after communication | ~2.24 |
 | Stack blocks | Depth; but optimisation gets hard | worse without the next two |
-| **Residual connections** | A gradient superhighway: `+` routes gradient unchanged to every block (micrograd's addition rule, [15](15-micrograd.md)); blocks start near identity and phase in | ~2.08 |
+| **Residual connections** | A gradient superhighway: `+` routes gradient unchanged to every block (micrograd's addition rule, [15](01-micrograd.md)); blocks start near identity and phase in | ~2.08 |
 | **LayerNorm**, pre-norm | Normalise each token's features; per-example, so unlike BatchNorm no batch coupling and train = inference | ~2.06 |
 | Scale up + dropout 0.2 | `n_embd=384, n_head=6, n_layer=6, block_size=256, lr=3e-4`, 10.8M params, ~15 min on an A100 | **~1.48** |
 
 The output (`more.txt`) is convincingly Shakespeare-shaped nonsense: "LUCIO: We muse hath resistes him so sovere". Pre-norm (LayerNorm before each sublayer) differs from the 2017 paper's post-norm and is what GPT-2 onward use.
 
-What Part 1 deliberately leaves out: the encoder and cross-attention (needed for translation, not for a pure language model), and everything after pre-training (supervised fine-tuning and RLHF; ChatGPT = this + those stages, see [`../../generative-ai/01-llm-fundamentals/README.md`](../../generative-ai/01-llm-fundamentals/README.md)).
+What Part 1 deliberately leaves out: the encoder and cross-attention (needed for translation, not for a pure language model), and everything after pre-training (supervised fine-tuning and RLHF; ChatGPT = this + those stages, see [`../../generative-ai/01-llm-fundamentals/README.md`](../../../generative-ai/01-llm-fundamentals/README.md)).
 
 ---
 
@@ -231,14 +231,14 @@ Outcome: one epoch of 10B tokens (~2 hours on 8×A100, roughly $10–20 of rente
 
 | Note | Model | Learns from | Context |
 |---|---|---|---|
-| [02](02-supervised-learning.md) | Logistic regression | Hand-made features | — |
-| [09](09-text-classification.md) | TF-IDF + LR | Word counts | Bag of n-grams |
-| [11](11-embeddings-and-similarity.md) | word2vec | Co-occurrence | Window of ~5 |
-| [14](14-neural-text-models.md) | LSTM | Labels or next word | Recurrent state |
-| [16](16-makemore.md) | MLP / WaveNet | Next character | 3–8 chars |
+| [02](../../01-classical-ml/notes/02-supervised-learning.md) | Logistic regression | Hand-made features | — |
+| [09](../../03-nlp/notes/02-text-classification.md) | TF-IDF + LR | Word counts | Bag of n-grams |
+| [11](../../03-nlp/notes/04-embeddings-and-similarity.md) | word2vec | Co-occurrence | Window of ~5 |
+| [14](../../02-deep-learning/notes/02-neural-text-models.md) | LSTM | Labels or next word | Recurrent state |
+| [16](02-makemore.md) | MLP / WaveNet | Next character | 3–8 chars |
 | 17 | Transformer | Next token, 10B tokens | 1,024 tokens, full attention |
 
-What comes next is scale, instruction tuning, RLHF, and using these models as components: tokenisation and model internals in [`../../generative-ai/01-llm-fundamentals/README.md`](../../generative-ai/01-llm-fundamentals/README.md), retrieval in [`../../generative-ai/02-rag-retrieval/README.md`](../../generative-ai/02-rag-retrieval/README.md).
+What comes next is scale, instruction tuning, RLHF, and using these models as components: tokenisation and model internals in [`../../generative-ai/01-llm-fundamentals/README.md`](../../../generative-ai/01-llm-fundamentals/README.md), retrieval in [`../../generative-ai/02-rag-retrieval/README.md`](../../../generative-ai/02-rag-retrieval/README.md).
 
 ---
 
@@ -257,4 +257,4 @@ Lectures: [Let's build GPT](https://www.youtube.com/watch?v=kCc8FmEb1nY) (2 h), 
 
 ---
 
-→ Next layer: [`../../generative-ai/01-llm-fundamentals/README.md`](../../generative-ai/01-llm-fundamentals/README.md) — LLMs as systems: tokenisation, pre-training at scale, post-training, inference.
+→ Next layer: [`../../generative-ai/01-llm-fundamentals/README.md`](../../../generative-ai/01-llm-fundamentals/README.md) — LLMs as systems: tokenisation, pre-training at scale, post-training, inference.

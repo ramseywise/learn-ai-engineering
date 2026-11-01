@@ -6,8 +6,8 @@ sources:
   - ../practice/Text Analytics with Python/Ch03 - Processing and Understanding Text/
   - ../practice/Text Analytics with Python/Ch04 - Feature Engineering for Text Representation/Ch04a - Feature Engineering Text Data - Traditional Strategies.ipynb
   - ../practice/Intro to Machine Learning in Python/07-working-with-text-data.ipynb
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
-  - ../sources/bird-klein-loper-nlp-with-python.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/bird-klein-loper-nlp-with-python.pdf
   - ../practice/intro-to-nlp/nltk/text_preprocessing_nltk.ipynb
   - ../practice/intro-to-nlp/tensorFlow/text-processing/
   - ../practice/intro-to-nlp/tensorFlow/tensor-intro-review/tensorFlow_tokenizing_review.ipynb
@@ -26,7 +26,7 @@ M&G ch. 7 sorts string columns into four kinds before doing anything:
 
 | Kind | Example | Treat as |
 |---|---|---|
-| Categorical | Favourite colour from a dropdown | One-hot ([03](03-feature-engineering-and-pipelines.md#categorical-variables)) |
+| Categorical | Favourite colour from a dropdown | One-hot ([03](../../01-classical-ml/notes/03-feature-engineering-and-pipelines.md#categorical-variables)) |
 | Free strings that map to categories | "midnight blue", "blu" typed by hand | Clean into categories |
 | Structured strings | Addresses, dates, phone numbers | Parse into fields |
 | Text | Reviews, tweets, documents | This note |
@@ -81,7 +81,7 @@ Beyond tokens, Sarkar's ch. 3b covers the syntax layer that later notes use:
 | Dependency parsing | Head → dependent arcs (`nsubj`, `dobj`) | spaCy `token.dep_`, `token.head` |
 | Constituency parsing | Phrase-structure tree | Stanford CoreNLP (Ch03c, needs a Java server) |
 
-These features power the rule-based extraction in [12](12-semantic-analysis-and-ner.md) and keyphrase chunking in [10](10-topic-models-and-summarization.md).
+These features power the rule-based extraction in [12](05-semantic-analysis-and-ner.md) and keyphrase chunking in [10](03-topic-models-and-summarization.md).
 
 ---
 
@@ -89,7 +89,7 @@ These features power the rule-based extraction in [12](12-semantic-analysis-and-
 
 Ignore order; represent each document by how often each vocabulary word appears.
 
-![Bag-of-words processing: tokenise, build vocabulary, encode](../sources/images/mueller-guido-bag-of-words.png)
+![Bag-of-words processing: tokenise, build vocabulary, encode](../../sources/images/mueller-guido-bag-of-words.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/bag_of_words.png`*
 
 ```python
@@ -155,7 +155,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 tv = TfidfVectorizer(min_df=5, ngram_range=(1, 2), sublinear_tf=True)   # sublinear: 1 + log(tf)
 ```
 
-**TF-IDF is a fitted transform.** The IDF comes from the training corpus, so it belongs inside the pipeline ([03](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)). M&G show the words with the lowest IDF on IMDb are "the", "and", "movie", "film": corpus-specific stop words TF-IDF finds by itself.
+**TF-IDF is a fitted transform.** The IDF comes from the training corpus, so it belongs inside the pipeline ([03](../../01-classical-ml/notes/03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)). M&G show the words with the lowest IDF on IMDb are "the", "and", "movie", "film": corpus-specific stop words TF-IDF finds by itself.
 
 ---
 
@@ -168,7 +168,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 sim = cosine_similarity(tv_matrix)        # (n_docs, n_docs); TF-IDF rows are unit length, so this is a dot product
 ```
 
-Sarkar's ch. 4a clusters the 8-document toy corpus (weather, animals, food) with Ward linkage on that similarity matrix and recovers the three topics; with LDA topic features it does the same. [11](11-embeddings-and-similarity.md) builds a movie recommender on this idea and [10](10-topic-models-and-summarization.md) does the topic models properly.
+Sarkar's ch. 4a clusters the 8-document toy corpus (weather, animals, food) with Ward linkage on that similarity matrix and recovers the three topics; with LDA topic features it does the same. [11](04-embeddings-and-similarity.md) builds a movie recommender on this idea and [10](03-topic-models-and-summarization.md) does the topic models properly.
 
 ---
 
@@ -204,7 +204,7 @@ model = tf.keras.Sequential([vec, tf.keras.layers.Embedding(10_000, 16), ...])
 | Sequence length | Cover ~90–95% of documents | Plot the length distribution |
 | Padding / truncating | `"pre"` (default) or `"post"` | For RNNs, `pre`-padding keeps the real tokens near the final state |
 
-Word-level vocabularies can't handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead; [14](14-neural-text-models.md#transformers-pipelines) uses one, and [17 — nanoGPT](17-nanogpt.md) and `../../generative-ai/01-llm-fundamentals/README.md` build BPE.
+Word-level vocabularies can't handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead; [14](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines) uses one, and [17 — nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) and `../../generative-ai/01-llm-fundamentals/README.md` build BPE.
 
 ---
 
@@ -213,19 +213,19 @@ Word-level vocabularies can't handle new words or misspellings. Transformer mode
 | Representation | Dimensions | Order kept? | Semantics? | Use with |
 |---|---|---|---|---|
 | Bag of words (counts / binary) | Vocabulary size, sparse | No | No | Naive Bayes, linear models |
-| n-gram TF-IDF | Larger, sparse | Locally | No | Linear models: the strong classical baseline ([09](09-text-classification.md)) |
-| Topic proportions (LDA, NMF) | 10–200, dense | No | Coarse | Exploration, features ([10](10-topic-models-and-summarization.md)) |
-| Averaged word vectors | 100–300, dense | No | Yes | Small data ([11](11-embeddings-and-similarity.md)) |
-| Token-id sequences + learned embedding | Sequence × embed dim | Yes | Learned | CNN / RNN / transformer ([14](14-neural-text-models.md)) |
-| Sentence embeddings | 384–1024, dense | Encoded | Yes | Retrieval, few-shot classification ([11](11-embeddings-and-similarity.md), [14](14-neural-text-models.md)) |
+| n-gram TF-IDF | Larger, sparse | Locally | No | Linear models: the strong classical baseline ([09](02-text-classification.md)) |
+| Topic proportions (LDA, NMF) | 10–200, dense | No | Coarse | Exploration, features ([10](03-topic-models-and-summarization.md)) |
+| Averaged word vectors | 100–300, dense | No | Yes | Small data ([11](04-embeddings-and-similarity.md)) |
+| Token-id sequences + learned embedding | Sequence × embed dim | Yes | Learned | CNN / RNN / transformer ([14](../../02-deep-learning/notes/02-neural-text-models.md)) |
+| Sentence embeddings | 384–1024, dense | Encoded | Yes | Retrieval, few-shot classification ([11](04-embeddings-and-similarity.md), [14](../../02-deep-learning/notes/02-neural-text-models.md)) |
 
 ---
 
 ## Reading
 
-- *Natural Language Processing with Python* (Bird, Klein & Loper) in [`../sources/bird-klein-loper-nlp-with-python.pdf`](../sources/bird-klein-loper-nlp-with-python.pdf): ch. 1–3 (corpora, raw text, regex, normalisation) and 5 (tagging) are the NLTK reference for this note.
-- Sarkar ch. 3–4 in [`../sources/sarkar-text-analytics-with-python-2e.pdf`](../sources/sarkar-text-analytics-with-python-2e.pdf).
-- M&G ch. 7 in [`../sources/mueller-guido-introduction-to-ml-with-python.pdf`](../sources/mueller-guido-introduction-to-ml-with-python.pdf).
+- *Natural Language Processing with Python* (Bird, Klein & Loper) in [`../sources/bird-klein-loper-nlp-with-python.pdf`](../../sources/bird-klein-loper-nlp-with-python.pdf): ch. 1–3 (corpora, raw text, regex, normalisation) and 5 (tagging) are the NLTK reference for this note.
+- Sarkar ch. 3–4 in [`../sources/sarkar-text-analytics-with-python-2e.pdf`](../../sources/sarkar-text-analytics-with-python-2e.pdf).
+- M&G ch. 7 in [`../sources/mueller-guido-introduction-to-ml-with-python.pdf`](../../sources/mueller-guido-introduction-to-ml-with-python.pdf).
 
 ---
 
@@ -233,13 +233,13 @@ Word-level vocabularies can't handle new words or misspellings. Transformer mode
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch01 - Natural Language Processing Basics`](../practice/Text%20Analytics%20with%20Python/Ch01%20-%20Natural%20Language%20Processing%20Basics/) | Corpora, POS-tagged sentences | Needs `nltk` data downloads; spaCy 2 model shortcut `'en'` → use `en_core_web_sm` |
-| [`Ch02 - Python for NLP`](../practice/Text%20Analytics%20with%20Python/Ch02%20-%20Python%20for%20Natural%20Language%20Processing/) | Strings, regex | Runs offline |
-| [`Ch03a - Text Wrangling`](../practice/Text%20Analytics%20with%20Python/Ch03%20-%20Processing%20and%20Understanding%20Text/Ch03a%20-%20Text%20Wrangling.ipynb), `Ch03b` | Tokenisation, normalisation, stemming, POS, chunking, parsing | Needs `nltk` data, spaCy model (`'en_core'` → `en_core_web_sm`), local `contractions.py` and `big.txt` |
+| [`Ch01 - Natural Language Processing Basics`](../practice/text-analytics-with-python/Ch01%20-%20Natural%20Language%20Processing%20Basics) | Corpora, POS-tagged sentences | Needs `nltk` data downloads; spaCy 2 model shortcut `'en'` → use `en_core_web_sm` |
+| [`Ch02 - Python for NLP`](../practice/text-analytics-with-python/Ch02%20-%20Python%20for%20Natural%20Language%20Processing) | Strings, regex | Runs offline |
+| [`Ch03a - Text Wrangling`](../practice/text-analytics-with-python/Ch03%20-%20Processing%20and%20Understanding%20Text/Ch03a%20-%20Text%20Wrangling.ipynb), `Ch03b` | Tokenisation, normalisation, stemming, POS, chunking, parsing | Needs `nltk` data, spaCy model (`'en_core'` → `en_core_web_sm`), local `contractions.py` and `big.txt` |
 | `Ch03c - BONUS - Stanford CoreNLP` | Constituency/dependency parsing via CoreNLP | Needs service: a running CoreNLP Java server |
-| [`Ch04a - Traditional Strategies`](../practice/Text%20Analytics%20with%20Python/Ch04%20-%20Feature%20Engineering%20for%20Text%20Representation/Ch04a%20-%20Feature%20Engineering%20Text%20Data%20-%20Traditional%20Strategies.ipynb) | BoW, n-grams, TF-IDF from scratch, similarity, clustering | Runs offline; `scikit-learn>=1.2` (fixed to `get_feature_names_out`) |
-| [`07-working-with-text-data.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/07-working-with-text-data.ipynb) | BoW, TF-IDF, n-grams, lemmatisation, LDA on IMDb | Needs the IMDb `aclImdb` download (~80 MB) into `data/`; `spacy`, `nltk` |
+| [`Ch04a - Traditional Strategies`](../practice/text-analytics-with-python/Ch04%20-%20Feature%20Engineering%20for%20Text%20Representation/Ch04a%20-%20Feature%20Engineering%20Text%20Data%20-%20Traditional%20Strategies.ipynb) | BoW, n-grams, TF-IDF from scratch, similarity, clustering | Runs offline; `scikit-learn>=1.2` (fixed to `get_feature_names_out`) |
+| [`07-working-with-text-data.ipynb`](../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb) | BoW, TF-IDF, n-grams, lemmatisation, LDA on IMDb | Needs the IMDb `aclImdb` download (~80 MB) into `data/`; `spacy`, `nltk` |
 
 ---
 
-→ Next: [09-text-classification.md](09-text-classification.md) — put a classifier on those features, and the Kaggle recipe that wins with them.
+→ Next: [09-text-classification.md](02-text-classification.md) — put a classifier on those features, and the Kaggle recipe that wins with them.

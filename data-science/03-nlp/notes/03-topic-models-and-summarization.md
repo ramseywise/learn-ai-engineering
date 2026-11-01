@@ -4,14 +4,14 @@ sources:
   - ../practice/Text Analytics with Python/Ch06 - Text Summarization and Topic Models/
   - ../practice/Text Analytics with Python/Ch07 - Text Similarity and Clustering/Ch07c - Document Clustering.ipynb
   - ../practice/Intro to Machine Learning in Python/07-working-with-text-data.ipynb
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
   - ../practice/intro-to-nlp/nltk/text_summarization_nltk.ipynb
 confidence: high
 cleaned: 2026-10-31
 ---
 # 10 — Topic Models, Keyphrases and Summarization
 
-> Unsupervised text analysis: find the phrases that matter (collocations, chunked noun phrases), the themes running through a corpus (LSI, LDA, NMF), the groups of similar documents (clustering), and the sentences that best represent a document (LSA and TextRank summaries). All of it is matrix factorisation or graph ranking over the representations of [08](08-text-representation.md).
+> Unsupervised text analysis: find the phrases that matter (collocations, chunked noun phrases), the themes running through a corpus (LSI, LDA, NMF), the groups of similar documents (clustering), and the sentences that best represent a document (LSA and TextRank summaries). All of it is matrix factorisation or graph ranking over the representations of [08](01-text-representation.md).
 
 ---
 
@@ -35,7 +35,7 @@ finder.nbest(BigramAssocMeasures.raw_freq, 10)    # frequency alone returns "of 
 
 ### Weighted tag-based phrases
 
-Chunk noun phrases with a POS grammar ([08](08-text-representation.md#linguistic-structure-sarkar-ch-1-3b)), then weight each phrase by TF-IDF across the corpus. This finds "artificial neural network" rather than "neural" + "network" separately.
+Chunk noun phrases with a POS grammar ([08](01-text-representation.md#linguistic-structure-sarkar-ch-1-3b)), then weight each phrase by TF-IDF across the corpus. This finds "artificial neural network" rather than "neural" + "network" separately.
 
 ```python
 grammar = r"NP: {<DT>? <JJ>* <NN.*>+}"
@@ -52,7 +52,7 @@ A topic is a distribution over words; a document is a mixture of topics. All thr
 |---|---|---|---|---|
 | LSI / LSA | Truncated SVD | TF-IDF or counts | Signed: hard to read | `TruncatedSVD`, `gensim.LsiModel` |
 | LDA | Bayesian generative model with Dirichlet priors, fit by variational Bayes or Gibbs sampling | **Counts** (not TF-IDF) | Probabilities | `LatentDirichletAllocation`, `gensim.LdaModel`, MALLET |
-| NMF | Non-negative factorisation ([05](05-unsupervised-learning.md#non-negative-matrix-factorisation)) | TF-IDF | Non-negative: readable parts | `sklearn.decomposition.NMF` |
+| NMF | Non-negative factorisation ([05](../../01-classical-ml/notes/05-unsupervised-learning.md#non-negative-matrix-factorisation)) | TF-IDF | Non-negative: readable parts | `sklearn.decomposition.NMF` |
 
 ### LSI from scratch
 
@@ -142,10 +142,10 @@ linkage_matrix = ward(cosine_distance)                       # hierarchical on t
 dendrogram(linkage_matrix, orientation="left", labels=titles)
 ```
 
-![Ward hierarchical clustering of popular movies by description](../sources/images/sarkar-movie-hierarchical-clusters.png)
+![Ward hierarchical clustering of popular movies by description](../../sources/images/sarkar-movie-hierarchical-clusters.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), companion repo `Ch07/movie_hierachical_clusters.png`*
 
-He also tries **affinity propagation**, which picks the number of clusters itself from similarity "messages" (and finds many small ones). The lessons match [05](05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster.
+He also tries **affinity propagation**, which picks the number of clusters itself from similarity "messages" (and finds many small ones). The lessons match [05](../../01-classical-ml/notes/05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster.
 
 ---
 
@@ -207,12 +207,12 @@ Sarkar runs both on the Wikipedia text of *The Elder Scrolls V: Skyrim*; the con
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch06a`](../practice/Text%20Analytics%20with%20Python/Ch06%20-%20Text%20Summarization%20and%20Topic%20Models/) | Collocations, PMI, tag-based keyphrases | Needs `nltk` data (Gutenberg corpus); `elephants.txt` included |
+| [`Ch06a`](../practice/text-analytics-with-python/Ch06%20-%20Text%20Summarization%20and%20Topic%20Models) | Collocations, PMI, tag-based keyphrases | Needs `nltk` data (Gutenberg corpus); `elephants.txt` included |
 | `Ch06b`, `Ch06c`, `Ch06d` | LSI from scratch, LDA (gensim, MALLET, sklearn), NMF, coherence tuning, pyLDAvis | Needs internet: NIPS papers (`nips12raw_str602.tgz`, not in the repo); MALLET needs a Java install; `pyLDAvis.sklearn` → `pyLDAvis.lda_model`; `test_data/` included |
 | `Ch06e` | LSA and TextRank summaries | Runs offline; `networkx`, `nltk` |
-| [`Ch07c - Document Clustering`](../practice/Text%20Analytics%20with%20Python/Ch07%20-%20Text%20Similarity%20and%20Clustering/Ch07c%20-%20Document%20Clustering.ipynb) | k-means, affinity propagation, Ward dendrogram on TMDB movies | Runs offline; `tmdb_5000_movies.csv.gz` included |
-| [`07-working-with-text-data.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/07-working-with-text-data.ipynb), last section | LDA on IMDb | Needs the `aclImdb` download |
+| [`Ch07c - Document Clustering`](../practice/text-analytics-with-python/Ch07%20-%20Text%20Similarity%20and%20Clustering/Ch07c%20-%20Document%20Clustering.ipynb) | k-means, affinity propagation, Ward dendrogram on TMDB movies | Runs offline; `tmdb_5000_movies.csv.gz` included |
+| [`07-working-with-text-data.ipynb`](../../01-classical-ml/practice/intro-to-ml-in-python/07-working-with-text-data.ipynb), last section | LDA on IMDb | Needs the `aclImdb` download |
 
 ---
 
-→ Next: [11-embeddings-and-similarity.md](11-embeddings-and-similarity.md) — dense word and document vectors, and what similarity on them buys.
+→ Next: [11-embeddings-and-similarity.md](04-embeddings-and-similarity.md) — dense word and document vectors, and what similarity on them buys.

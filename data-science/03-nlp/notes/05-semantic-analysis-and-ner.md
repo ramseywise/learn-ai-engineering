@@ -2,8 +2,8 @@
 origin: vendored snapshot: Text Analytics with Python (kept as practice)
 sources:
   - ../practice/Text Analytics with Python/Ch08 - Semantic Analysis/
-  - ../sources/sarkar-text-analytics-with-python-2e.pdf
-  - ../sources/bird-klein-loper-nlp-with-python.pdf
+  - ../../sources/sarkar-text-analytics-with-python-2e.pdf
+  - ../../sources/bird-klein-loper-nlp-with-python.pdf
   - https://wordnet.princeton.edu/
   - https://spacy.io/usage/linguistic-features#named-entities
   - https://sklearn-crfsuite.readthedocs.io/
@@ -51,7 +51,7 @@ lesk(word_tokenize("Lead is a very soft, malleable metal"), "lead", "n")   # Syn
 lesk(word_tokenize("John is the actor who plays the lead"), "lead", "n")    # a leading role
 ```
 
-**Lesk** picks the sense whose dictionary definition overlaps most with the context words. It is a weak baseline; contextual embeddings ([14](14-neural-text-models.md)) disambiguate implicitly and much better. WordNet's lasting uses are lemmatisation ([08](08-text-representation.md)), query expansion with synonyms and hypernyms, and as a hand-built taxonomy, an early knowledge graph.
+**Lesk** picks the sense whose dictionary definition overlaps most with the context words. It is a weak baseline; contextual embeddings ([14](../../02-deep-learning/notes/02-neural-text-models.md)) disambiguate implicitly and much better. WordNet's lasting uses are lemmatisation ([08](01-text-representation.md)), query expansion with synonyms and hypernyms, and as a hand-built taxonomy, an early knowledge graph.
 
 ---
 
@@ -75,7 +75,7 @@ doc = nlp(text)
 displacy.render(doc, style="ent", jupyter=True)
 ```
 
-![spaCy NER output with entities highlighted in a news paragraph](../sources/images/sarkar-spacy-ner.png)
+![spaCy NER output with entities highlighted in a news paragraph](../../sources/images/sarkar-spacy-ner.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), companion repo `Ch08/spacy_ner.png`*
 
 The notebook's text is a news paragraph about parliaments asking Mark Zuckerberg to testify. spaCy gets most entities right, mislabels a few (an organisation tagged as a person, a nationality as GPE). Counting `ent.label_` over a corpus gives a quick profile of what a collection is about.
@@ -89,7 +89,7 @@ The same text through Stanford's CRF-based tagger (`nltk.tag.StanfordNERTagger`,
 | spaCy `en_core_web_sm/md/lg/trf` | CNN or transformer | 18 (OntoNotes) | Fast, Python-native; `trf` most accurate |
 | Stanford NER / CoreNLP | CRF | 3, 4, 7 or 12 | Java service |
 | stanza | BiLSTM-CRF | 18 | Python; many languages |
-| Hugging Face token classification | Fine-tuned BERT-style | Any | `pipeline("ner")` ([14](14-neural-text-models.md#transformers-pipelines)) |
+| Hugging Face token classification | Fine-tuned BERT-style | Any | `pipeline("ner")` ([14](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines)) |
 | LLM extraction | Prompted | Any, defined in the prompt | Flexible schema; check precision |
 
 ---
@@ -167,7 +167,7 @@ Sarkar also builds a small first-order model (a domain of entities and a valuati
 
 ## Where this goes next
 
-NER and relation extraction populate knowledge graphs; WordNet-style taxonomies become ontologies. Building knowledge graphs from text with LLMs, including entity resolution, is in [`../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md`](../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md).
+NER and relation extraction populate knowledge graphs; WordNet-style taxonomies become ontologies. Building knowledge graphs from text with LLMs, including entity resolution, is in [`../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md`](../../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md).
 
 ---
 
@@ -175,11 +175,11 @@ NER and relation extraction populate knowledge graphs; WordNet-style taxonomies 
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`Ch08a - Exploring WordNet`](../practice/Text%20Analytics%20with%20Python/Ch08%20-%20Semantic%20Analysis/Ch08a%20-%20Exploring%20WordNet.ipynb) | Synsets, relations, similarity, Lesk | Runs offline after `nltk.download("wordnet")` |
+| [`Ch08a - Exploring WordNet`](../practice/text-analytics-with-python/Ch08%20-%20Semantic%20Analysis/Ch08a%20-%20Exploring%20WordNet.ipynb) | Synsets, relations, similarity, Lesk | Runs offline after `nltk.download("wordnet")` |
 | `Ch08b - Named Entity Recognition` | spaCy, Stanford NER, CoreNLP | spaCy part: needs `en_core_web_sm` (notebook uses the spaCy 2 `'en'` shortcut). Stanford parts: needs service (Java, Stanford NER jars, CoreNLP server; hard-coded Windows paths) |
 | `Ch08c - Building NER Taggers` | CRF tagger on GMB, end-to-end pipeline | Runs offline; `sklearn-crfsuite`; `ner_dataset.csv.gz` included; `sklearn.externals.joblib` fixed to `joblib` |
 | `Ch08d - Analyzing Semantic Representations` | Propositional and first-order logic in NLTK | Runs offline (resolution prover); Prover9 cells need the external binary |
 
 ---
 
-→ Next: [13-sentiment-analysis.md](13-sentiment-analysis.md) — lexicons, supervised models and deep models for opinion, plus what drives it.
+→ Next: [13-sentiment-analysis.md](06-sentiment-analysis.md) — lexicons, supervised models and deep models for opinion, plus what drives it.

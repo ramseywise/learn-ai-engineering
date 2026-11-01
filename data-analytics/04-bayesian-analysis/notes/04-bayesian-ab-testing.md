@@ -24,7 +24,7 @@ cleaned: 2026-10-31
 | lift with a confidence interval | full posterior of the lift; credible interval |
 | peeking invalidates the test | peeking is less damaging, but a stopping rule is still needed |
 
-Note 06's AB notebook ([practice/AB-Bayes/AB_Testing_with_Python.ipynb](../practice/AB-Bayes/AB_Testing_with_Python.ipynb)) is, despite its folder name, entirely frequentist; a comment in it ("check out bayesian recursive learning method of adjusting proportions after establishing prior") is the pointer to this note. The code below runs on the same `successes` and `nobs` it computes.
+Note 06's AB notebook ([practice/AB-Bayes/AB_Testing_with_Python.ipynb](../../03-experimentation-and-causality/practice/AB-Bayes/AB_Testing_with_Python.ipynb)) is, despite its folder name, entirely frequentist; a comment in it ("check out bayesian recursive learning method of adjusting proportions after establishing prior") is the pointer to this note. The code below runs on the same `successes` and `nobs` it computes.
 
 ---
 
@@ -126,7 +126,7 @@ Safer, not safe. The posterior is a valid summary at any N, so looking does not 
 
 The same machinery fixes the small-N trap from note 02. Sorting by raw upvote ratio puts a comment with 1 upvote and 0 downvotes (100%) above one with 999 and 1 (99.9%).
 
-![Reddit comments with very different vote counts, illustrating why raw upvote ratio misranks](../sources/images/davidson-pilon-bmh-reddit-comments-fig1.png)
+![Reddit comments with very different vote counts, illustrating why raw upvote ratio misranks](../../sources/images/davidson-pilon-bmh-reddit-comments-fig1.png)
 *Image Source: Davidson-Pilon, Bayesian Methods for Hackers, ch. 4 (MIT)*
 
 BMH's fix: give each comment a posterior over its true upvote ratio and sort by the **95% least plausible value**, the 5th percentile of the posterior. A comment ranks high only if we are confident its ratio is high.
@@ -169,4 +169,4 @@ Limitations from BMH ch. 6: the lower bound favours old items with many votes. R
 
 ---
 
-→ Next: [13-loss-functions-and-decisions.md](13-loss-functions-and-decisions.md) — turning a posterior into an action by minimising expected loss: squared, absolute and asymmetric losses, and the Price is Right and stock-prediction examples.
+→ Next: [13-loss-functions-and-decisions.md](05-loss-functions-and-decisions.md) — turning a posterior into an action by minimising expected loss: squared, absolute and asymmetric losses, and the Price is Right and stock-prediction examples.

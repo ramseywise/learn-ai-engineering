@@ -39,7 +39,8 @@ no number and no divider.
 | `title` | title-bar text (required). Keep it under ~60 characters |
 | `kicker` | small line at the right of the breadcrumb strip |
 | `lead` | one sentence under the breadcrumb, before the body |
-| `takeaway` | tinted strip at the bottom: the one line to remember |
+| `takeaway` | tinted strip at the bottom: the one line to remember, and the flashcard answer. Required on every content slide except `statement` |
+| `recall` | optional flashcard question when the title is not one. Not drawn on the slide |
 | `source` | note path, shown in the footer and appended to the speaker notes |
 | `notes` | speaker notes: what to say, context left off the slide |
 
@@ -148,6 +149,25 @@ bullets: [...]                      # optional: image left, bullets right
 | `0F7490` | dark teal: alternative or secondary |
 | `5B21B6` | purple: the occasional third category |
 | `94A3B8` / `CBD5E1` | greys: de-emphasised steps |
+
+## The story
+
+A deck is the lecture a teacher would give over the notes, not the notes compressed. The builder
+warns on each rule it can check, so `STRICT=1` fails until they hold.
+
+- **Spine.** Every part runs problem, what breaks, principle, technique, evidence, what you do on
+  Monday. The first slide of a part is a `statement` or `image` that poses the problem. The last
+  one's `takeaway` closes the part.
+- **Layout mix.** No layout above 25% of the deck. No three consecutive slides with one layout.
+  Each part has at least one `code` block or worked example and one `image` or `flow`.
+- **Flashcard pairs.** `title` (or `recall`) is the prompt and `takeaway` is the answer. Librarian
+  imports one card per slide and attaches it to the lesson named in `source:`, so write a takeaway
+  that stands alone. `source:` must name the note file, as in `notes/03-estimation.md`.
+- **Coverage.** Every note in the pillar has at least one slide with `source:` pointing at it.
+- **Size.** 30 to 45 content slides for a pillar of 10 or more notes, 15 to 30 for a smaller pillar,
+  15 to 25 for a programming module.
+
+Closing parts (`agenda: false`) are exempt from takeaway and part-mix checks.
 
 ## Writing rules
 

@@ -5,7 +5,7 @@ navy title bar with an orange edge, a pale breadcrumb strip, white cards with co
 stripes, square bullet markers, and a tinted takeaway strip.
 
     uv run -q --with python-pptx --with pyyaml --with pillow --with resvg-py \
-        python scripts/slides/build_deck.py ai-engineering/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict]
+        python scripts/slides/build_deck.py <area>/<pillar>/slides/deck.yaml [--preview DIR] [--pdf] [--strict]
 
 The spec format and layout catalogue are in .claude/skills/slides/references/deck-spec.md.
 Text is shrunk to fit its region; anything still too big at the minimum size is reported
@@ -827,9 +827,45 @@ def build(spec_path: Path) -> Path:
         if in_agenda:
             agenda_idx += 1
 
+    check_story(parts, base)
     out = base / deck.get("output", f"{base.parent.name}.pptx")
     prs.save(out)
     return out
+
+
+def check_story(parts: list[dict], base: Path) -> None:
+    """Warn where the deck breaks the story rules in deck-spec.md (spine, mix, flashcards, coverage)."""
+    slides = [(p, sl) for p in parts for sl in p.get("slides", [])]
+    if not slides:
+        return
+    layouts = [sl.get("layout", "bullets") for _, sl in slides]
+    for name in sorted(set(layouts)):
+        share = layouts.count(name) / len(layouts)
+        if len(layouts) >= 8 and share > 0.25:
+            warn("deck", f"layout '{name}' is {share:.0%} of slides (limit 25%)")
+    for i in range(len(layouts) - 2):
+        if layouts[i] == layouts[i + 1] == layouts[i + 2]:
+            warn("deck", f"three '{layouts[i]}' slides in a row from '{plain(slides[i][1].get('title', ''))}'")
+    for part, sl in slides:
+        # A statement is a pose, not a card; a closing part is a wrap-up.
+        if part.get("agenda", True) and sl.get("layout", "bullets") != "statement" and not sl.get("takeaway"):
+            warn(f"slide '{plain(sl.get('title', ''))}'", "no takeaway, so no flashcard answer")
+    for part in parts:
+        if not part.get("agenda", True):
+            continue
+        names = [sl.get("layout", "bullets") for sl in part.get("slides", [])]
+        has_code = "code" in names or "code:" in yaml.safe_dump(part.get("slides", []))
+        if not has_code:
+            warn(f"part '{part['title']}'", "no code or worked example")
+        if not {"image", "flow"} & set(names):
+            warn(f"part '{part['title']}'", "no image or flow slide")
+        if names and names[0] not in ("statement", "image"):
+            warn(f"part '{part['title']}'", "should open on a statement or image that poses the problem")
+    notes_dir = base.parent / "notes"
+    cited = " ".join(str(sl.get("source", "")) for _, sl in slides)
+    for note in sorted(notes_dir.glob("*.md")) if notes_dir.is_dir() else []:
+        if note.name not in cited:
+            warn("coverage", f"no slide has source: pointing at {note.name}")
 
 
 def render_pngs(pptx: Path, out_dir: Path, size: int = 2400) -> list[Path]:
@@ -923,7 +959,7 @@ def main() -> None:
     ap.add_argument("spec", type=Path)
     ap.add_argument("--preview", type=Path, metavar="DIR", help="write per-slide PNGs + contact sheets here")
     ap.add_argument("--pdf", action="store_true", help="also write <output>.pdf next to the .pptx (macOS)")
-    ap.add_argument("--strict", action="store_true", help="exit 1 if any slide overflows")
+    ap.add_argument("--strict", action="store_true", help="exit 1 on any warning (overflow or story rules)")
     args = ap.parse_args()
 
     out = build(args.spec)

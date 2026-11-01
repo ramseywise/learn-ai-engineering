@@ -4,7 +4,7 @@ sources:
   - https://github.com/amueller/introduction_to_ml_with_python
   - ../practice/Intro to Machine Learning in Python/05-model-evaluation-and-improvement.ipynb
   - ../Ng's Machine Learning Nbks/ex5/ex5.ipynb
-  - ../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -12,7 +12,7 @@ cleaned: 2026-10-31
 
 > Cross-validation instead of one split, grid search with a held-out test set (or nested CV), a metric chosen from the business consequence of each error type, thresholds read off precision–recall and ROC curves, and learning curves to decide whether you need more data or a different model.
 
-This is the layer interviews probe hardest: metric interpretation, train/test discipline and leakage are the most common failure modes. See the interviewing guide linked from the [README](../README.md).
+This is the layer interviews probe hardest: metric interpretation, train/test discipline and leakage are the most common failure modes. See the interviewing guide linked from the [README](../../README.md).
 
 ---
 
@@ -61,7 +61,7 @@ What it doesn't do: return a model. `cross_val_score` evaluates a *procedure*; r
 
 Hyperparameters (`C`, `gamma`, `max_depth`) are not learned by `fit`. Search them, but the score you used to pick them is no longer an honest estimate.
 
-![Overview of the parameter selection and model evaluation process with GridSearchCV](../sources/images/mueller-guido-gridsearch-overview.png)
+![Overview of the parameter selection and model evaluation process with GridSearchCV](../../sources/images/mueller-guido-gridsearch-overview.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, companion repo `images/`*
 
 The three-way split from [01](01-statistical-foundations.md): pick parameters on validation, report on test once.
@@ -214,7 +214,7 @@ cal = CalibratedClassifierCV(clf, method="sigmoid", cv=5).fit(X_train, y_train) 
 | Random forest | Pulled away from 0 and 1 |
 | Deep networks | Overconfident; temperature scaling (one scalar on the logits) fixes most of it |
 
-Readings: Guo et al. 2017, *On Calibration of Modern Neural Networks* ([PDF](../sources/guo-2017-calibration-modern-neural-networks.pdf)), found modern deep nets overconfident. On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets; Minderer et al. 2021 ([PDF](../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf)) revisits this and finds recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size.
+Readings: Guo et al. 2017, *On Calibration of Modern Neural Networks* ([PDF](../../sources/guo-2017-calibration-modern-neural-networks.pdf)), found modern deep nets overconfident. On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets; Minderer et al. 2021 ([PDF](../../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf)) revisits this and finds recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size.
 
 ---
 
@@ -338,8 +338,8 @@ Where the fixes landed:
 
 | Notebook | Covers | Runs |
 |---|---|---|
-| [`05-model-evaluation-and-improvement.ipynb`](../practice/Intro%20to%20Machine%20Learning%20in%20Python/05-model-evaluation-and-improvement.ipynb) | Everything above except ex5 | Offline; `scikit-learn>=1.4`, local `mglearn` |
-| [`ex5.ipynb`](../Ng's%20Machine%20Learning%20Nbks/ex5/ex5.ipynb) | Regularised linear regression, learning curves, polynomial features, selecting $\lambda$ | Legacy: Python 2.7 kernel; `scipy.io.loadmat` data in `ex5/data/` |
+| [`05-model-evaluation-and-improvement.ipynb`](../practice/intro-to-ml-in-python/05-model-evaluation-and-improvement.ipynb) | Everything above except ex5 | Offline; `scikit-learn>=1.4`, local `mglearn` |
+| [`ex5.ipynb`](../practice/ng-machine-learning/ex5/ex5.ipynb) | Regularised linear regression, learning curves, polynomial features, selecting $\lambda$ | Legacy: Python 2.7 kernel; `scipy.io.loadmat` data in `ex5/data/` |
 
 ---
 

@@ -4,8 +4,8 @@ sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - ../practice/courses/wesleyan_inferential_statistics.py
   - ../practice/courses/umich_statistical_analysis.py
-  - ../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf
+  - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf
   - https://docs.scipy.org/doc/scipy/reference/stats.html
 confidence: high
 cleaned: 2026-10-31

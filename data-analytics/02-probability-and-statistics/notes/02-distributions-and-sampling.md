@@ -3,8 +3,8 @@ origin: own coursework
 sources:
   - ../practice/5_Statistical_Analysis.ipynb
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 4, The Greatest Theorem Never Told)
-  - ../sources/Practical_Statistics_for_Data_Scientist.pdf
-  - ../sources/thinkstats.pdf
+  - ../../sources/Practical_Statistics_for_Data_Scientist.pdf
+  - ../../sources/thinkstats.pdf
 confidence: high
 cleaned: 2026-10-31
 ---

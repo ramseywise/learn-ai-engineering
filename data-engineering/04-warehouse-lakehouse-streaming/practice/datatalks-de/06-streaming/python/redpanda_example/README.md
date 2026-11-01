@@ -14,7 +14,7 @@ The aim of this module is to have a good grasp on the foundation of these Kafka/
 
 ## 1. Pre-requisites
 
-If you have been following the [module-06](./../../../06-streaming/README.md) videos, you might already have installed the `kafka-python` library, so you can move on to [Docker](#2-docker) section.
+If you have been following the [module-06](../../README.md) videos, you might already have installed the `kafka-python` library, so you can move on to [Docker](#2-docker) section.
 
 If you have not, this is the only package you need to install in your virtual environment for this Redpanda lesson.
 

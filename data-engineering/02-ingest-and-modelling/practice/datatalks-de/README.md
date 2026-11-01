@@ -3,7 +3,7 @@
 
 ## Syllabus
 
-### [Module 1: Containerization and Infrastructure as Code](01-docker-terraform/)
+### [Module 1: Containerization and Infrastructure as Code](01-docker-terraform)
 
 * Course overview
 * Introduction to GCP
@@ -13,17 +13,17 @@
 * Preparing the environment for the course
 * Homework
 
-[More details](01-docker-terraform/)
+[More details](01-docker-terraform)
 
 
-### [Module 2: Workflow Orchestration](02-workflow-orchestration/)
+### [Module 2: Workflow Orchestration](../../../03-transform-and-orchestrate/practice/datatalks-de/02-workflow-orchestration)
 
 * Data Lake
 * Workflow orchestration
 * Workflow orchestration with Mage
 * Homework
 
-[More details](02-workflow-orchestration/)
+[More details](../../../03-transform-and-orchestrate/practice/datatalks-de/02-workflow-orchestration)
 
 
 ### [Workshop 1: Data Ingestion](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/dlt.md)
@@ -38,7 +38,7 @@
 [More details](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/dlt.md)
 
 
-### [Module 3: Data Warehouse](03-data-warehouse/)
+### [Module 3: Data Warehouse](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/03-data-warehouse)
 
 * Data Warehouse
 * BigQuery
@@ -47,10 +47,10 @@
 * Internals of BigQuery
 * BigQuery Machine Learning
 
-[More details](03-data-warehouse/)
+[More details](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/03-data-warehouse)
 
 
-### [Module 4: Analytics engineering](04-analytics-engineering/)
+### [Module 4: Analytics engineering](../../../03-transform-and-orchestrate/practice/datatalks-de/04-analytics-engineering)
 
 * Basics of analytics engineering
 * dbt (data build tool)
@@ -62,10 +62,10 @@
 * Visualizing the data with google data studio and metabase
 
 
-[More details](04-analytics-engineering/)
+[More details](../../../03-transform-and-orchestrate/practice/datatalks-de/04-analytics-engineering)
 
 
-### [Module 5: Batch processing](05-batch/)
+### [Module 5: Batch processing](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/05-batch)
 
 * Batch processing
 * What is Spark
@@ -73,16 +73,16 @@
 * Spark SQL
 * Internals: GroupBy and joins
 
-[More details](05-batch/)
+[More details](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/05-batch)
 
-### [Module 6: Streaming](06-streaming/)
+### [Module 6: Streaming](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/06-streaming)
 
 * Introduction to Kafka
 * Schemas (avro)
 * Kafka Streams
 * Kafka Connect and KSQL
 
-[More details](06-streaming/)
+[More details](../../../04-warehouse-lakehouse-streaming/practice/datatalks-de/06-streaming)
 
 
 ### [Workshop 2: Stream Processing with SQL](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/rising-wave.md)

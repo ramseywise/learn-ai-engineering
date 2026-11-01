@@ -1,6 +1,6 @@
 ---
 name: slides
-description: "Build a lecture deck (.pptx) for an ai-engineering or generative-ai pillar from its notes, in the course's house style (the LangGraph deck look). Writes <pillar>/slides/deck.yaml, renders it with scripts/slides/build_deck.py, previews every slide and fixes overflow. Usage: /slides 02-context-engineering, /slides generative-ai/02-rag-retrieval. Run from the learn-ai-engineering repo."
+description: "Build a lecture deck (.pptx) for any pillar (ai-engineering, generative-ai, data-analytics, data-science, data-engineering) or programming module from its notes, in the course's house style (the LangGraph deck look). Writes <pillar>/slides/deck.yaml, renders it with scripts/slides/build_deck.py, previews every slide and fixes overflow. Usage: /slides 02-context-engineering, /slides generative-ai/02-rag-retrieval, /slides data-analytics/06-applied-analyses, /slides programming/python/01-foundations. Run from the learn-ai-engineering repo."
 ---
 
 You are turning one pillar's notes into a lecture deck. The notes are the source of truth.
@@ -19,9 +19,9 @@ catalogue, the palette and the writing rules. The worked example is
 ## Step 1 — Pick the pillar
 
 `$ARGUMENTS` names a pillar directory under `ai-engineering/` (`02-context-engineering`, or
-just `02`), or a path such as `generative-ai/02-rag-retrieval`. Below, `<pillar>` means
-that full path, and `make slides PILLAR=` takes either form. A generative-ai pillar that
-does not yet match `ai-engineering/PILLAR-LAYOUT.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
+just `02`), a path such as `data-science/03-nlp`, or a programming module such as
+`programming/sql/01-select`. Below, `<pillar>` means that full path, and `make slides PILLAR=`
+takes any of these forms. A pillar that does not yet match `ai-engineering/PILLAR-LAYOUT.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
 and pick the first. If `slides/deck.yaml` already exists, you are **revising** it. Read it
 first and keep what still matches the notes.
 
@@ -43,7 +43,7 @@ first and keep what still matches the notes.
 - **Parts.** Mirror the README groupings, usually 3–5 parts. Add a closing part with
   `agenda: false, divider: false` containing a rules-of-thumb `cards` slide and a
   where-next `bullets` slide.
-- **Slides.** Plan about 2–4 slides per note, and 30–45 content slides in total. Choose
+- **Slides.** Plan about 2–4 slides per note, within the size rule in deck-spec.md. Follow its story rules: each part opens by posing the problem and every content slide has a `takeaway`. Choose
   each slide's layout from the content's shape (see the writing rules in deck-spec.md).
   Avoid long runs of the same layout.
 - **Order.** Follow the notes. Put a pillar's thesis first, as a `statement`.

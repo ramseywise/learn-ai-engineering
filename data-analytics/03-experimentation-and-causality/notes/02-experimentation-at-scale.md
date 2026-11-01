@@ -2,7 +2,7 @@
 origin: synthesis
 sources:
   - Kohavi, Tang & Xu, Trustworthy Online Controlled Experiments (Cambridge, 2020; not yet held)
-  - ../sources/2017-08-kddmetricinterpretationpitfalls.pdf (Dmitriev et al., A Dirty Dozen, KDD 2017)
+  - ../../sources/2017-08-kddmetricinterpretationpitfalls.pdf (Dmitriev et al., A Dirty Dozen, KDD 2017)
   - Deng, Xu, Kohavi & Walker, CUPED (WSDM 2013; not yet held)
   - Johari, Koomen, Pekelis & Walsh, Peeking at A/B Tests (KDD 2017; not yet held)
 confidence: low
@@ -45,7 +45,7 @@ Note 06 covers one well-run test. At scale the hard parts are different: tests a
 ## Many tests, many metrics
 
 - Overall evaluation criterion, guardrail metrics; false discovery across a platform (note 04).
-- Hand-off: online evaluation of LLM features in [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md) uses the same machinery.
+- Hand-off: online evaluation of LLM features in [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) uses the same machinery.
 
 ---
 
@@ -59,4 +59,4 @@ Note 06 covers one well-run test. At scale the hard parts are different: tests a
 
 ---
 
-→ Next: [08-correlation-and-causation.md](08-correlation-and-causation.md) — what to do when you cannot randomise: confounding, Simpson's paradox, partial correlation and the quasi-experimental toolkit.
+→ Next: [08-correlation-and-causation.md](03-correlation-and-causation.md) — what to do when you cannot randomise: confounding, Simpson's paradox, partial correlation and the quasi-experimental toolkit.
