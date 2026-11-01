@@ -12,9 +12,11 @@ sources:
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 7
   - https://arxiv.org/abs/2503.23513
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 6 — Generation for RAG
+
+Tallybook's retriever now returns the refund page, and the bot still tells a customer they have 45 days. The document says 30. Nothing in the retrieval metrics moved, because retrieval worked, and the mistake happened in the last step: a model given the right text can ignore it, blend it with what it remembers, or cite a page it never used. This chapter is about that last step, the settings and prompts that keep an answer tied to its evidence and the checks that catch it when it comes loose.
 
 > The LLM half of RAG: how a decoder-only transformer turns the augmented prompt into tokens, which sampling knobs control that, how to choose a model, how to write prompts that keep answers grounded and cited, how to measure faithfulness with RAGAS, and when to split one LLM call into an agentic workflow. RAG adds knowledge; fine-tuning changes behaviour.
 
@@ -31,7 +33,7 @@ An LLM is a decoder-only transformer. For each new token it runs the whole conte
 | Feed-forward layers | Per-token processing of what attention gathered |
 | Token loop | One token at a time, conditioned on all before |
 
-RAG works because attention lets every generated token look at the retrieved documents. Two consequences:
+RAG works because attention lets every generated token look at the retrieved documents. Three consequences:
 
 - The model **may still ignore the context** if its weights pull harder. Prompting (below) and evaluation (RAGAS) are how you catch that.
 - **What else is in the context matters.** On NQ-open with small open models (Llama2-7B, Falcon-7B, MPT-7B and Phi-2 at 2.7B, all 4-bit), retrieved passages that score high but lack the answer pulled accuracy down more than unrelated passages did. Adding a single such distractor to the gold passage cost up to 25%, and picking distractors with a retriever trained on hard negatives made it worse, not better. Adding *random* documents sometimes raised accuracy: +35% relative for Llama2-7B with four retrieved passages (about 0.19 → 0.25). Placing the gold passage next to the question also helped ([arXiv:2401.14887](https://arxiv.org/abs/2401.14887), Cuconasu et al., 2024-01). For the random-document effect the authors offer only a tentative lead (attention entropy rose about 3× with noise added) and say they can't explain it yet, so don't pad prompts with noise. The two findings to use: near-miss distractors are the real threat, and the best evidence goes closest to the question.
@@ -62,11 +64,52 @@ top-p adapts to the model's confidence, which top-k does not. When the model is 
 
 Temperature changes the **shape** of the distribution; top-p and top-k change **which tokens are eligible**. Setting `temperature=1` does not make output deterministic.
 
+Both are small enough to compute by hand. Say the prompt ends "Annual plans can be refunded within", and the model's logits favour "30":
+
+```python
+import numpy as np
+
+tokens = np.array(["30", "14", "60", "90", "soon"])
+logits = np.array([3.0, 2.2, 1.0, 0.5, -1.0])
+
+def probs(logits, temperature=1.0):
+    scaled = logits / temperature
+    return np.exp(scaled) / np.exp(scaled).sum()
+
+def nucleus(p, top_p):
+    order = np.argsort(-p)
+    cut = np.searchsorted(np.cumsum(p[order]), top_p) + 1   # first total >= top_p
+    return order[:cut]
+
+for T in [0.3, 1.0, 3.0]:
+    print(f"T={T:<4}", dict(zip(tokens.tolist(), probs(logits, T).round(3).tolist())))
+
+p = probs(logits)
+print("top_p=0.85 keeps:", tokens[nucleus(p, 0.85)].tolist())
+confident = probs(np.array([6.0, 2.2, 1.0, 0.5, -1.0]))
+print("same top_p, confident model keeps:", tokens[nucleus(confident, 0.85)].tolist())
+
+rng = np.random.default_rng(0)
+print("T=1 samples:", rng.choice(tokens, size=8, p=p).tolist())
+```
+
+```text
+T=0.3  {'30': 0.934, '14': 0.065, '60': 0.001, '90': 0.0, 'soon': 0.0}
+T=1.0  {'30': 0.593, '14': 0.267, '60': 0.08, '90': 0.049, 'soon': 0.011}
+T=3.0  {'30': 0.336, '14': 0.257, '60': 0.172, '90': 0.146, 'soon': 0.089}
+top_p=0.85 keeps: ['30', '14']
+same top_p, confident model keeps: ['30']
+T=1 samples: ['14', '30', '30', '30', '14', '60', '14', '14']
+```
+
+At T=1 the wrong "14" gets sampled regularly, which is how a correct context can still produce a wrong number if the model is unsure. Lower temperature concentrates on the favoured token, whichever token that is. The nucleus shrinks as the model gets confident, which is the adaptation top-k can't do. These logits are invented for illustration.
+
 ### Parameters by task
 
 Lab 4.2 routes each query to a parameter set:
 
 ```python
+# illustrative: needs the course's generate_params_dict, generate_with_single_input and a Together API key
 def answer_query(query):
     label = decide_if_technical_or_creative(query).lower()   # one cheap LLM call
     if label == "technical":     # documentation, procedures: be precise
@@ -124,9 +167,50 @@ Chat models take a list of `{role, content}` messages (`system`, `user`, `assist
 | Reasoning models | Few-shot examples tend to *hurt*; drop prior reasoning tokens from history |
 | Context pruning | Keep the last N messages; summarise or drop older ones |
 
+Here is the template over Tallybook. The system message, the numbered documents and the id they carry are the parts that later checks depend on:
+
+```python
+from ragkit import DOC_BY_ID, Retriever
+
+SYSTEM = ("Answer only from the documents below. Judge whether each is relevant. "
+          "Cite documents as [DOC n] after each claim. If the answer is not in them, "
+          "say the documents do not contain it.")
+
+def build_messages(query, doc_ids, history=(), keep_turns=4):
+    numbered = "\n".join(f"[DOC {n}] {DOC_BY_ID[i].full} (source: {i})"
+                         for n, i in enumerate(doc_ids, 1))
+    return ([{"role": "system", "content": SYSTEM}]
+            + list(history)[-keep_turns:]
+            + [{"role": "user", "content": f"{numbered}\n\nQuestion: {query}"}])
+
+query = "How long do refunds take to arrive?"
+doc_ids = Retriever().hybrid(query, k=2)
+for message in build_messages(query, doc_ids):
+    print(message["role"].upper(), "|", message["content"][:150])
+```
+
+```text
+SYSTEM | Answer only from the documents below. Judge whether each is relevant. Cite documents as [DOC n] after each claim. If the answer is not in them, say th
+USER | [DOC 1] Refund policy. Annual plans can be refunded in full within 30 days of payment. After 30 days we refund the unused months minus a 10 percent fe
+```
+
 ### Order and size of the context
 
 Liu et al.'s lost-in-the-middle result (models use information at the start and end of a long context better than in the middle) gives a cheap reordering trick. Raieli and Iuculano describe an alternating pattern: chunks at even ranks go to the front of the list and odd ranks to the back, so the strongest chunks sit at both edges. It matters most with a wide top-k (*Building AI Agents*, ch. 6).
+
+```python
+def edges_first(ranked):
+    # Rank 1 at the front, rank 2 at the back, working in toward the middle.
+    front = ranked[0::2]           # ranks 1, 3, 5...
+    back = ranked[1::2][::-1]      # ranks 6, 4, 2...
+    return front + back
+
+print(edges_first([f"rank{i}" for i in range(1, 8)]))
+```
+
+```text
+['rank1', 'rank3', 'rank5', 'rank7', 'rank6', 'rank4', 'rank2']
+```
 
 When the retrieved text is too long, compress it before generation (*Building AI Agents*, ch. 6):
 
@@ -147,6 +231,8 @@ And when one call over all chunks is the wrong shape, a response synthesizer mak
 Two pieces of Lab 4.2 that the assignment reuses:
 
 ```python
+# illustrative: needs the course's generate_with_single_input and generate_with_multiple_input,
+# a Together API key, and `query` and `transcript` from the lab
 # 1. LLM as a classifier: precise instructions, labelled examples (incl. edge cases),
 #    and max_tokens 1–2 so it can only emit the label
 prompt = f"""Label the following instruction as an FAQ-related query or a product-related query.
@@ -172,6 +258,32 @@ result = generate_with_multiple_input(
     response_format={"type": "json_schema", "schema": VoiceNote.model_json_schema()},
 )
 ```
+
+The schema also gives you a validator on your side of the call, and that is what the code path after the model depends on. These two strings stand in for model responses. The second has the wrong shape:
+
+```python
+from pydantic import BaseModel, Field, ValidationError
+
+class CitedAnswer(BaseModel):
+    answer: str
+    citations: list[str] = Field(min_length=1)
+
+good = '{"answer": "Refunds take 5 to 10 working days.", "citations": ["kb-04"]}'
+bad = '{"answer": "Refunds take 5 to 10 working days.", "citations": []}'
+
+for raw in [good, bad]:
+    try:
+        print("ok:", CitedAnswer.model_validate_json(raw).citations)
+    except ValidationError as err:
+        print("rejected:", err.errors()[0]["msg"])
+```
+
+```text
+ok: ['kb-04']
+rejected: List should have at least 1 item after validation, not 0
+```
+
+A schema guarantees shape only. A hallucinated citation like `["kb-99"]` passes, and the checks in the next section are what catch it.
 
 The "old-fashioned way" in the lab (a smart-home prompt listing every device ID with JSON examples, `{{ }}` escaped inside the f-string) works but is long and fragile; the schema parameter guarantees parseable output.
 
@@ -201,6 +313,72 @@ The grounding prompt is weakest exactly when retrieval misses. In a banking-QA s
 2. After generation, the agent appends a `**Sources:**` list programmatically from the retrieved chunks' metadata, instead of trusting the LLM to name them.
 
 The weak spot is in the book's own trace. Asked about the Juno mission, the answer cites `[1]` and lists both `juno_mission_overview.txt` and `perseverance_rover_tools.txt`. The Perseverance file was retrieved but contributed nothing. Appending every retrieved source records what the model saw, not what it used. Citation is not attribution: for that you need per-claim matching, such as ContextCite above or the fuzzy citation matching Raieli and Iuculano describe, which matches the response against the chunks with n-gram TF-IDF (*Building AI Agents*, ch. 6).
+
+Three of these checks cost no model call, so run them on every answer. Does each `[DOC n]` exist? Does each claim have one? Does every number in the answer appear in the cited text? The answers below stand in for model output, and the third has the error from this chapter's opening:
+
+```python
+import re
+from ragkit import DOC_BY_ID
+
+docs = [DOC_BY_ID["kb-04"], DOC_BY_ID["kb-06"]]         # [DOC 1], [DOC 2]
+
+def check_answer(answer, docs):
+    problems = []
+    for sentence in re.split(r"(?<=[.\]])\s+(?!\[)", answer.strip()):
+        cited = [int(n) for n in re.findall(r"\[DOC (\d+)\]", sentence)]
+        if not cited:
+            problems.append(f"no citation: {sentence!r}")
+        for n in cited:
+            if n > len(docs):
+                problems.append(f"no such document: [DOC {n}]")
+        text = " ".join(docs[n - 1].full for n in cited if n <= len(docs))
+        for number in re.findall(r"\d+", re.sub(r"\[DOC \d+\]", "", sentence)):
+            if cited and number not in text:
+                problems.append(f"number {number} not in cited text")
+    return problems or ["ok"]
+
+print(check_answer("Annual plans are refundable within 30 days. [DOC 1]", docs))
+print(check_answer("Annual plans are refundable within 30 days. [DOC 7]", docs))
+print(check_answer("Annual plans are refundable within 45 days. [DOC 1]", docs))
+print(check_answer("Refunds are usually quick.", docs))
+```
+
+```text
+['ok']
+['no such document: [DOC 7]', 'number 30 not in cited text']
+['number 45 not in cited text']
+["no citation: 'Refunds are usually quick.'"]
+```
+
+Each check covers one failure and misses others. It can't tell that a sentence reasons badly from a correct number, which is DataGemma's inferred-claim problem, so an LLM judge still has a job to do.
+
+To get closer to attribution without another LLM call, match each answer sentence to the chunk it most resembles. This is a small version of the fuzzy matching Raieli and Iuculano describe, with character n-gram TF-IDF. Two documents were retrieved and the answer used one:
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from ragkit import DOC_BY_ID
+
+retrieved = ["kb-04", "kb-02"]
+answer = ["Annual plans can be refunded within 30 days of payment.",
+          "The money reaches the original card in 5 to 10 working days."]
+
+vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 5))
+matrix = vectorizer.fit_transform([DOC_BY_ID[i].full for i in retrieved] + answer)
+scores = cosine_similarity(matrix[len(retrieved):], matrix[:len(retrieved)])
+
+for sentence, row in zip(answer, scores):
+    print(f"{retrieved[row.argmax()]}  {row.max():.2f}  {sentence}")
+print("appended by a naive Sources list:", retrieved)
+print("actually matched:", sorted({retrieved[row.argmax()] for row in scores}))
+```
+
+```text
+kb-04  0.57  Annual plans can be refunded within 30 days of payment.
+kb-04  0.37  The money reaches the original card in 5 to 10 working days.
+appended by a naive Sources list: ['kb-04', 'kb-02']
+actually matched: ['kb-04']
+```
 
 Rothman's negative-result test is worth copying. With only Juno and Perseverance documents loaded, ask for a story about the Apollo 11 landing. A grounded system replies that the provided documents do not contain this information, rather than writing the story from the model's memory. Keep a few such out-of-corpus questions in every regression set.
 
@@ -244,6 +422,7 @@ Build simple ones by hand; reach for a framework as they grow. These are Anthrop
 Assignment 4 builds exactly this for a clothing store ("Fashion Forward Hub"):
 
 ```python
+# illustrative: needs the assignment's helpers, a Together API key and embedded Weaviate
 def answer_query(query: str) -> dict:
     label = check_if_faq_or_product(query)          # router, max_tokens=1, temperature=0
     if label not in ("FAQ", "Product"):             # router failed: answer from history
@@ -263,6 +442,37 @@ def answer_query(query: str) -> dict:
 ```
 
 The metadata step is query parsing (note [05](05-chunking-query-parsing-and-reranking.md)) done with structured output: the LLM sees the allowed values for each field and returns JSON that becomes a Weaviate filter.
+
+The control flow matters more than the model, and it runs without one. Here is a router for Tallybook that sends questions to the retriever or to smalltalk and treats a bad label as an event, with a stand-in for the small classifier:
+
+```python
+from ragkit import Retriever
+
+retriever = Retriever()
+ALLOWED = {"HELP", "SMALLTALK"}
+
+def classify(query):                     # stand-in for a one-token LLM call
+    if "weather" in query:
+        return "Sure! I think"           # what a small model can really return
+    return "SMALLTALK" if query.lower().startswith(("hi", "thanks")) else "HELP"
+
+def answer_query(query):
+    label = classify(query).strip()
+    if label not in ALLOWED:             # never let a bad label pick a branch
+        return {"route": "fallback", "docs": []}
+    if label == "SMALLTALK":
+        return {"route": "smalltalk", "docs": []}
+    return {"route": "retrieval", "docs": retriever.hybrid(query, k=2)}
+
+for q in ["thanks, that fixed it", "how do I rotate an API key", "what's the weather"]:
+    print(f"{q:<30}", answer_query(q))
+```
+
+```text
+thanks, that fixed it          {'route': 'smalltalk', 'docs': []}
+how do I rotate an API key     {'route': 'retrieval', 'docs': ['kb-01', 'kb-02']}
+what's the weather             {'route': 'fallback', 'docs': []}
+```
 
 ---
 
@@ -301,4 +511,55 @@ Raieli and Iuculano's examples by task (*Building AI Agents*, ch. 5). Specialise
 | M4 Lab 4.1 (sampling parameters), Lab 4.2 (classification, params by task, structured output) ([upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG)) | needs an API key (Together.ai); not copied |
 | M4 Assignment 4 (Fashion Forward Hub chatbot) | needs Together API key + embedded Weaviate; not copied |
 
-→ Next: [07-rag-in-production.md](07-rag-in-production.md) — the system works on a laptop; now evaluate it with traces, cut its cost and latency, secure it, and extend it to images and PDFs.
+---
+
+## Pitfalls
+
+- **Assuming a grounding prompt handles missing evidence.** Symptom: confident answers to questions the corpus can't answer. Zhao et al.'s nine prompt variants made no salient difference, so test with out-of-corpus questions and handle them upstream.
+- **Treating citations as attribution.** Symptom: every answer lists sources, and some contributed nothing (Rothman's Juno trace). Match claims to chunks if you need to know what was used.
+- **Trusting a number because it has a citation.** Symptom: rankings and comparisons are wrong while quotes are right. DataGemma's inferred claims ran 71.9–76.4% against 98.6–98.9% for copied ones. Check derived claims separately.
+- **High temperature on factual answers.** Symptom: the same question gets a different number on reruns. Use near-zero temperature and a low top-p.
+- **Unvalidated router output.** Symptom: a stray label sends a query down the wrong branch silently. Validate against an allowed set and have an explicit fallback.
+- **Fine-tuning to teach facts.** Symptom: costly retraining and stale answers. Fine-tune for behaviour and use RAG for knowledge. Balaguer et al. saw fine-tuning Llama2-13B land below the off-the-shelf chat model.
+- **Padding the prompt because one paper saw noise help.** Cuconasu et al.'s random-document effect has no agreed explanation. Use the safe findings: near-miss distractors hurt, and best evidence goes next to the question.
+
+---
+
+## Try it
+
+1. In the sampling block, set the logits to `[1.2, 1.0, 1.0, 0.9, 0.8]`. How many tokens does `top_p=0.85` keep, and what does that mean about asking this model a factual question?
+2. Add `"Annual plans are refundable within 30 days, which is the longest in the industry. [DOC 1]"` to `check_answer`. What does it report, and is that right?
+3. A hallucination appears in 3% of answers, and your faithfulness score says 0.97. List two cheaper checks you'd run before adding a second LLM judge.
+
+<details>
+<summary>Answers</summary>
+
+1. All five, since the distribution is nearly flat and the cumulative total is still 0.834 at the fourth token. The model has no firm belief. Sampling settings can make it consistent and can't make it right, so the fix is better context.
+2. It reports `['ok']`, and that's wrong. "Longest in the industry" is an unsupported claim attached to a correct number and a real citation. Regex checks catch mechanical failures only, which is why claim-level judging exists.
+3. Citation existence and number containment, as in the block above, plus a regression set of out-of-corpus questions that must return "not in the documents". They catch whole classes of failure on every request at almost no cost.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Temperature vs top-p? | Temperature reshapes the distribution. top-p restricts which tokens are eligible, keeping the smallest set whose cumulative probability reaches p, so it adapts to the model's confidence. |
+| Settings for factual RAG? | Temperature near 0 and a low top-p, with an "only from the documents, cite, say if absent" prompt. |
+| Why can a model still ignore good context? | Its weights can pull harder than the context. Wu et al. show that the further a context departs from the model's prior, the more it trusts itself. |
+| What is pseudo-helpfulness? | Zhao et al.'s term for models answering when the gold passage is absent, using loosely related context or invention. Nine prompt variants made no salient difference. |
+| Which retrieved passages hurt most? | High-scoring ones that lack the answer. Cuconasu et al. saw up to a 25% drop from a single such distractor added to the gold passage. |
+| How would you order the context? | Put the strongest chunks at the edges (lost in the middle), or nearest the question (Cuconasu et al.). It matters most with a wide top-k. |
+| Are citations proof of attribution? | No. Appending all retrieved sources records what the model saw. Per-claim matching such as ContextCite records what it used. |
+| What do RAGAS relevancy and faithfulness measure? | Relevancy: generate prompts that could have produced the answer and compare with the real prompt. Faithfulness: the share of extracted claims supported by the documents. Both lean on an LLM judge. |
+| Why use a JSON schema over a prompt request? | The schema makes output parseable and gives you a validator. It doesn't make the content true. |
+| RAG or fine-tuning? | RAG for knowledge and freshness, fine-tuning for behaviour and format. Balaguer et al.: GPT-4 went 75% → 81% fine-tuned and 86% with RAG on top. RARE trains with retrieved documents in the prompt to get both. |
+| When do you split one call into a workflow? | When small steps such as routing and relevance checks can run on a cheap model, or the task needs branches or loops. Start simple and validate each output. |
+
+---
+
+## Next
+
+[07 — RAG in production](07-rag-in-production.md): the system works on a laptop. Now evaluate it with traces, cut its cost and latency, secure it, and extend it to images and PDFs.

@@ -154,7 +154,7 @@ good = {"name": "search", "arguments": '{"query": "EU shipping rules"}'}
 bad = {"name": "search", "arguments": '{"query": '}
 wrong = {"name": "search", "arguments": '{"topic": "x"}'}
 print(run(ScriptedModel([[bad], [good], "(plain text) a cited answer"]), "Shipping rules?"))
-print(run(ScriptedModel([[wrong], [good], [good], [good]]), "Keep searching"))
+print(run(ScriptedModel([[wrong], [good], [good]]), "Keep searching"))
 ```
 
 Output:
@@ -166,7 +166,7 @@ answered at step 3: (plain text) a cited answer
   step 1 search: Error executing tool: search() got an unexpected keyword argument 'topic'
   step 2 search: 3 sources on EU shipping rules
   step 3 search: 3 sources on EU shipping rules
-forced at the end: [{'name': 'search', 'arguments': '{"query": "EU shipping rules"}'}]
+forced at the end: (plain text) best answer from what I have
 ```
 
 ---
@@ -385,7 +385,7 @@ Once you know the loop, a recent paper can be read by asking which part it chang
 
 | Part changed | System | The idea, and what was measured |
 |---|---|---|
-| Retrieval | Open Deep Search ([Alzubi et al.](https://arxiv.org/abs/2503.20201), 2025) | An open search tool plus a reasoning agent. With DeepSeek-R1, 82.4% on SimpleQA and 30.1% on FRAMES at the base setting, and the authors report a 9.7% FRAMES gain on GPT-4o Search Preview for the best configuration (75.3%) |
+| Retrieval | Open Deep Search ([Alzubi et al.](https://arxiv.org/abs/2503.20201), 2025) | An open search tool plus a reasoning agent wrapped around any LLM. DeepSeek-R1 alone scored 82.4% on SimpleQA and 30.1% on FRAMES; with ODS, 88.3% and 75.3%. The authors report a 9.7% FRAMES gain over GPT-4o Search Preview |
 | Plan shape | TTD-DR ([Han et al.](https://arxiv.org/abs/2507.16075), 2025) | Starts from a draft and revises it with retrieval, like denoising. 69.1% and 74.5% win rates against OpenAI Deep Research in side-by-side comparisons on two long-form tasks; the judging setup is the authors' own |
 | Interleaving | WebThinker ([Li et al.](https://arxiv.org/abs/2504.21776), NeurIPS 2025) | Think, search and draft are interleaved instead of fixed phases, with online DPO to tune tool use |
 | Who owns the plan | Universal Deep Research ([Belcak et al.](https://arxiv.org/abs/2509.00244), 2025) | Users write the strategy in natural language. The authors report that devising strategies was tedious even for those who value the control |

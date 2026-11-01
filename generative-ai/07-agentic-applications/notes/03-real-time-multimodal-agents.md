@@ -7,8 +7,11 @@ sources:
   - https://arxiv.org/abs/2410.00037 (Défossez et al., Moshi, 2024)
   - https://github.com/QwenLM/Qwen2.5-Omni/blob/main/assets/Qwen2.5_Omni.pdf (Qwen Team, Qwen2.5-Omni, 2025)
   - https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf (Kimi Team, Kimi-Audio, 2025)
+  - https://arxiv.org/abs/2409.06666 (Fang et al., LLaMA-Omni, 2024)
+  - https://arxiv.org/abs/2411.18279 (Zhang et al., LLM-Brained GUI Agents survey, TMLR 2025)
+  - https://arxiv.org/abs/2510.02250 (Gonzalez-Pumariega et al., Agent S3, 2025)
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — Real-time multimodal agents: voice, computer use, robotics
 
@@ -46,7 +49,45 @@ The framing comes from OpenAI's GPT-Live launch (2026). It matches the three gen
 | TTS first segment | 200–500 ms | |
 | **Total** | **≈ 0.95–2.3 s** | Above ~2 s, people get restless |
 
-**Queueing makes it worse.** Total latency ≈ idle latency × 1/(1 − utilization). That is 2× at 50% load and 5× at 80%, which is why voice servers can't run hot.
+**Queueing makes it worse.** Total latency ≈ idle latency × 1/(1 − utilization). That is 2× at 50% load and 5× at 80%, which is why voice servers can't run hot. The arithmetic is short enough to run, and it shows what a capacity decision costs in the only unit a caller feels:
+
+```python
+STAGES_MS = {  # low and high typical values from the table above
+    "VAD end-of-speech": (500, 800),
+    "ASR": (50, 200),
+    "LLM time to first token": (100, 500),
+    "LLM first segment": (100, 300),
+    "TTS first segment": (200, 500),
+}
+BUDGET_MS = 2000  # roughly where people get restless
+
+low = sum(stage[0] for stage in STAGES_MS.values())
+high = sum(stage[1] for stage in STAGES_MS.values())
+print(f"idle: {low} to {high} ms")
+
+for utilization in (0.0, 0.5, 0.7, 0.8, 0.9):
+    factor = 1 / (1 - utilization)
+    # Silence detection waits on the speaker, not the server, so only the model stages queue.
+    wait_low, wait_high = STAGES_MS["VAD end-of-speech"]
+    total_low, total_high = wait_low + (low - wait_low) * factor, wait_high + (high - wait_high) * factor
+    verdict = "ok" if total_high <= BUDGET_MS else "over budget at the slow end"
+    if total_low > BUDGET_MS:
+        verdict = "over budget even at the fast end"
+    print(f"{utilization:>4.0%} load  x{factor:>4.1f}  {total_low:>5.0f} to {total_high:>5.0f} ms  {verdict}")
+```
+
+Output:
+
+```text
+idle: 950 to 2300 ms
+  0% load  x 1.0    950 to  2300 ms  over budget at the slow end
+ 50% load  x 2.0   1400 to  3800 ms  over budget at the slow end
+ 70% load  x 3.3   2000 to  5800 ms  over budget at the slow end
+ 80% load  x 5.0   2750 to  8300 ms  over budget even at the fast end
+ 90% load  x10.0   5000 to 15800 ms  over budget even at the fast end
+```
+
+Note the refinement over the rule of thumb: silence detection is not queueing, so it does not scale with load. That is also why cutting the VAD wait pays off at any load, and why semantic turn detection and full-duplex models get so much attention.
 
 **Full-chain streaming** keeps the modules but makes each one emit early:
 - ASR transcribes while the user is still talking.
@@ -85,6 +126,7 @@ Two newer paths:
 - **Qwen3-Omni** splits into a Thinker (understanding and reasoning) and a Talker (speech), on MoE. The split comes from Qwen2.5-Omni (7B, dense), where the Talker reads the Thinker's hidden states. Omni costs some text ability: Qwen2.5-Omni scores 47.0 on MMLU-Pro against 56.3 for Qwen2.5-7B ([Qwen2.5-Omni](https://github.com/QwenLM/Qwen2.5-Omni/blob/main/assets/Qwen2.5_Omni.pdf) (Qwen Team, 2025-03)).
   - MoE raises **throughput** (less queueing). It does not lower **first-packet latency**.
   - First-packet latency, about 234 ms, comes from the Talker's multi-codebook autoregression plus a causal codec. Speech starts streaming as soon as the Thinker emits text.
+- **LLaMA-Omni** shows the architecture at small scale: a speech encoder, a speech adaptor, Llama-3.1-8B and a streaming speech decoder, trained on the InstructS2S-200K dataset that the authors built for it ([Fang et al.](https://arxiv.org/abs/2409.06666), 2024, preprint). It is a useful reading because the parts are open and simple.
 - **Kimi-Audio** (7B, 13M hours of audio) scores 76.93 on VoiceBench against 72.83 for Qwen2.5-Omni, on the vendor's own eval toolkit with a GPT-4o-mini judge. In production it is still turn-based behind VAD ([Kimi-Audio](https://github.com/MoonshotAI/Kimi-Audio/blob/master/assets/kimia_report.pdf) (Kimi Team, 2025-04)).
 - **Step-Audio 2** scores 83% on its own paralinguistic benchmark, against about 44% for GPT-4o Audio and Qwen2.5-Omni.
 
@@ -185,6 +227,20 @@ Labeling turns fill-in-the-blank into multiple choice. All three routes still st
 
 **Screenshot-only models.** Two papers show the coordinate route working without a DOM. CogAgent ([arXiv:2312.08914](https://arxiv.org/abs/2312.08914) (Hong et al., 2023-12)) adds a 0.30B high-resolution cross-attention branch to CogVLM-17B. That lets it read 1120×1120 screenshots, where tiny icons and text survive, at under half the FLOPs of CogVLM at 490×490. On Mind2Web, from screenshots alone, it scored 58.2 against 54.4 for LLaMA2-70B reading the HTML and 30.9 for few-shot GPT-4. On Android-in-the-Wild it scored 76.88 against 74.27. The authors re-checked the "errors" and judged over 40% of them to be valid alternative paths, so the benchmark undercounts. UI-TARS ([arXiv:2501.12326](https://arxiv.org/abs/2501.12326) (Qin et al., 2025-01)) trains a native agent on Qwen2-VL that does perception, grounding, reasoning and action in one model. Its training includes DPO on corrected mistakes collected online. On ScreenSpot-Pro, a grounding test on high-resolution professional apps, the 72B model scored 38.1 against 31.1 for UGround-7B and 17.1 for Claude Computer Use. CogAgent scored 7.7 there. On OSWorld (screenshot-only, averaged over 3 runs), it scored 22.7 at a 15-step budget against Claude's 14.9, and 24.6 at 50 steps against 22.0. DPO alone moved the 72B model from 18.8 to 22.7. Thinking before each action was slightly worse with one sample, and helped only at 16–64 samples or out of domain. The team that built the model also ran almost all of these evaluations.
 
+**From apps to whole desktops.** The GUI-agent literature moved fast, and a survey is the best way in. Zhang et al. organize it around an LLM "brain" and GUI automation "hands", across web, mobile and desktop ([LLM-Brained GUI Agents](https://arxiv.org/abs/2411.18279), TMLR 2025). Read in order, these papers trace how the problem shifted:
+
+| Paper | Move | Evidence |
+|---|---|---|
+| [Enabling conversational interaction](https://arxiv.org/abs/2209.08655) (Wang et al., CHI 2023) | Prompt one LLM, with a handful of examples, for four mobile UI conversation tasks | Before agents: showed that a screen can be text an LLM reads |
+| [AppAgent](https://arxiv.org/abs/2312.13771) (Zhang et al., 2023) | Reduce the action space to taps and swipes, and build a knowledge base by exploring or watching a demonstration | 50 tasks across 10 apps |
+| [SeeAct](https://arxiv.org/abs/2401.01614) (Zheng et al., 2024) | Separate generating the action from grounding it to an element | GPT-4V completes 51.1% of live-site tasks with oracle grounding, with a large gap for the best real grounding. So grounding was the bottleneck |
+| [Dawn of GUI agents](https://arxiv.org/abs/2411.10323) (Hu et al., 2024) | A case study of Claude 3.5 Computer Use over planning, action and critic | Qualitative. Useful for how it fails |
+| [GUI-R1](https://arxiv.org/abs/2504.10458) (Luo et al., 2025) | Reinforcement fine-tuning with a unified action space, GRPO and a small amount of curated data | Points to RL instead of more demonstrations ([post-training note](../../05-RL/notes/05-post-training-for-agents.md)) |
+| [OpenCUA](https://arxiv.org/abs/2508.09123) (Wang et al., NeurIPS 2025) | Open dataset, AgentNet, across 3 operating systems and 200+ apps, with reflective reasoning traces | Opens up what labs had kept private |
+| [Agent S3](https://arxiv.org/abs/2510.02250) (Gonzalez-Pumariega et al., 2025, preprint) | Run several rollouts, then pick a winner by comparing behaviour narratives | 72.6% on OSWorld, 9.2 points above the prior best and level with the 72.36% human figure, at a 100-step budget, so a generous allowance |
+
+Agent S3 is worth a second look, because its parallel rollouts spend extra time and compute for reliability. That is the reverse of the latency story in this note: an agent with no one waiting can buy accuracy with more tries, and a voice agent cannot.
+
 **Dynamic screens: the observation interface.** Screenshot loops assume a static screen. They miss videos, toasts and meeting audio. The **Agent–Computer Observation Interface** (Li & Shi 2026, arXiv:2606.29472) is middleware that needs no retraining. It has three parts:
 1. Keyframe capture, gated by pixel diff and then a small model.
 2. Speech transcription, gated by volume.
@@ -202,6 +258,41 @@ The text narration does most of the work, more than frame selection. Across eigh
 - There's no systematic fix yet. Agents can't predict their next action while the current one is still executing.
 
 The workaround is **fast/slow decoupling** (Li & Shi, *Talking While Acting*). A fast voice model talks to the user while a slow VLM operates the browser. They share a **plain-text contract**, a rolling status line such as "filling the form, still need your date of birth". **The fast model must never say "done" until the status confirms it.** Voice responses got about 15× faster.
+
+The contract is simple enough to test. In this stub the slow agent is a generator that updates a status line. The fast model only reads the status, and the rule that protects the user lives in code and not in a prompt:
+
+```python
+def slow_agent():
+    yield "working", "opening the booking page"
+    yield "working", "filling the form"
+    yield "needs_user", "need your date of birth to continue"
+    yield "working", "submitting the form"
+    yield "done", "booked, confirmation 7Q2"
+
+
+def fast_reply(user_said, state, status):
+    if "done" in user_said and state != "done":
+        return f"Not yet: {status}."  # the rule: never claim completion before the status does
+    if state == "needs_user":
+        return f"One question: {status}."
+    if state == "done":
+        return f"All set: {status}."
+    return f"Still on it, {status}."
+
+
+for (state, status), said in zip(slow_agent(), ["book it", "is it done?", "1990-01-02", "done yet?", "ok"]):
+    print(f"user: {said:<12} status: {state:<10} fast: {fast_reply(said, state, status)}")
+```
+
+Output:
+
+```text
+user: book it      status: working    fast: Still on it, opening the booking page.
+user: is it done?  status: working    fast: Not yet: filling the form.
+user: 1990-01-02   status: needs_user fast: One question: need your date of birth to continue.
+user: done yet?    status: working    fast: Not yet: submitting the form.
+user: ok           status: done       fast: All set: booked, confirmation 7Q2.
+```
 
 ---
 
@@ -257,14 +348,52 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 
 ---
 
-## Interview questions
+## Pitfalls
 
-- **Why does a voice agent feel slow even when the LLM is fast?** The serial sum (VAD silence wait + ASR + TTFT + TTS ≈ 1–2 s), multiplied by queueing at load. Fix it with streaming, speculative generation, semantic turn detection or full-duplex.
-- **End-to-end or cascade for a support line that must capture order numbers exactly?** Content-determined, so a (self-)cascade with structured transcripts is as accurate and debuggable. Go end-to-end when tone and emotion drive the outcome.
-- **How do you add deep reasoning without adding latency?** Use a fast foreground model with a background reasoner on a text or status channel. Hand it the full context, never let the fast model claim completion early, and resolve contradictions in favor of the slow model *before* speaking.
-- **How do you observe an end-to-end voice model?** Log the input audio, the event tokens and the inner-monologue or text stream. Run self-cascade replays to localize errors to perception vs. reasoning.
-- **DOM indexing or pure vision for Computer Use?** Index when structure exists, fall back to SoM or coordinates on canvas, and keep both paths. Pick the route per model.
-- **Action chunking vs. sudden change?** Use shorter chunks near contact, re-plan on visual anomaly triggers, and blend overlapping chunks.
+- **Optimizing the model and ignoring the queue.** A faster LLM is worth little on a server at 90% load.
+- **Measuring average latency.** Users remember the slow turns. Track tail latency per stage, since queueing makes the tail much worse than the mean.
+- **A silence threshold as turn detection.** Pauses inside a turn can run longer than gaps between turns, so one threshold fails both ways.
+- **Letting the fast model claim completion.** A confident "done" while the slow agent is still working is the worst failure of a fast/slow system. Enforce it from the status, in code.
+- **Two independent minds.** A filler model and a reasoner with no shared channel will contradict each other. Give them a contract, and let the slow side correct before speech where possible.
+- **Benchmarks that hide cost.** A high OSWorld score at 100 steps can still be unusable, at seconds per step, for someone waiting.
+- **Coordinate prediction on the wrong aspect ratio.** Squashing the screenshot shifts every click. Scale by aspect ratio and map back.
+- **Irreversible actions on the fast path.** "Click first, look later" needs a gate for anything you cannot undo. Treat what appears on a screen as untrusted input too, since a page can carry instructions for the agent.
+
+## Try it
+
+1. **Find the load limit.** Using the latency block, at what utilization does the slow end of the range first cross 2 seconds? How much further does the fast end go?
+
+   <details><summary>Answer</summary>
+
+   Solve `800 + 1500 / (1 - u) = 2000`, which gives `u = -0.25`, so the slow end is over budget even when idle (2,300 ms). The fast end solves `500 + 450 / (1 - u) = 2000`, which gives `u = 0.70`. The printed table agrees: it crosses between 70% and 80%. So the slow-end stack needs a design change, whereas a fast-end stack needs a utilization limit.
+   </details>
+
+2. **Cut the VAD wait.** Change the VAD stage to `(100, 300)`, as a semantic turn detector might give you. What load can you now carry at the slow end?
+
+   <details><summary>Answer</summary>
+
+   Solve `300 + 1500 / (1 - u) = 2000`, which gives `u` of about 0.12. A small gain at the slow end, because the model stages dominate it, but at the fast end `100 + 450 / (1 - u) = 2000` gives about 0.76. Check both by editing the block. This is the argument for treating turn detection and model speed as separate levers.
+   </details>
+
+3. **Break the contract.** Remove the completion check from `fast_reply`. Which user line now produces a wrong statement? Write the assertion that would catch it in a test.
+
+   <details><summary>Answer</summary>
+
+   The "is it done?" turn now gets "Still on it", which is honest by luck, because the reply only reads the state. The contract matters when a real fast model writes the sentence itself, so test the output: `assert not ("done" in reply.lower() and state != "done")`, run over a transcript from a real or stubbed model. Do not rely on the wording of the prompt.
+   </details>
+
+## Interview checklist
+
+| Question | Strong answer |
+|---|---|
+| Why does a voice agent feel slow even when the LLM is fast? | The serial sum (VAD silence wait + ASR + TTFT + TTS, about 1 to 2 s), multiplied by queueing at load. Fix it with streaming, speculative generation, semantic turn detection or full-duplex. |
+| End-to-end or cascade for a support line that must capture order numbers exactly? | Content-determined, so a (self-)cascade with structured transcripts is as accurate and debuggable. Go end-to-end when tone and emotion drive the outcome. |
+| How do you add deep reasoning without adding latency? | Use a fast foreground model with a background reasoner on a text or status channel. Hand it the full context, never let the fast model claim completion early, and resolve contradictions in favour of the slow model *before* speaking. |
+| How do you observe an end-to-end voice model? | Log the input audio, the event tokens and the inner-monologue or text stream. Run self-cascade replays to localize errors to perception or reasoning. |
+| DOM indexing or pure vision for Computer Use? | Index when structure exists, fall back to SoM or coordinates on canvas, and keep both paths. Pick the route per model. |
+| Action chunking versus sudden change? | Use shorter chunks near contact, re-plan on visual anomaly triggers, and blend overlapping chunks. |
+| What did SeeAct show about GUI agents? | With oracle grounding GPT-4V completed 51.1% of live-site tasks, with a large gap to real grounding. Finding the element, rather than choosing the action, was the bottleneck at that time. |
+| Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used multiple rollouts at a 100-step budget. Agents still take many more steps and much longer than people, and efficiency is now the bottleneck. |
 
 ---
 
@@ -274,4 +403,6 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 - **Lateral:** [harness tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md) (the computer/bash/editor action space), [context anatomy](../../../ai-engineering/02-context-engineering/notes/02-context-anatomy.md) (Agent Status Bar as the fast/slow channel), [orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) (fast/slow as a two-agent pattern)
 - **Downstream:** [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) (OSWorld, AndroidWorld, simulation environments)
 
-→ Next: back to the [pillar README](../README.md), then the depth layer, [ai-engineering](../../../ai-engineering/README.md): context, harness, loop and graph engineering for the systems built here.
+## Next
+
+Voice and screens make the time budget hard. [A coding agent](04-coding-agent.md) has a looser clock and a stricter judge: tests that return a verdict, on tools that can do real damage.

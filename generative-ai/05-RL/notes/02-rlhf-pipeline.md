@@ -22,7 +22,7 @@ sources:
   - https://doi.org/10.18653/v1/w17-4508 (Webis-TLDR-17)
   - https://arxiv.org/abs/2201.08239 (LaMDA)
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 2 — RLHF Pipeline
@@ -31,6 +31,8 @@ cleaned: 2026-10-31
 > **Presumes:** transformer architecture, supervised fine-tuning basics
 > **Papers:** InstructGPT (2203.02155), Anthropic RLHF (2204.05862), GPT-4 (2303.08774)
 > **Books:** Huyen, *AI Engineering*, ch. 7; Iusztin & Labonne, *LLM Engineer's Handbook*, ch. 5–6; Raschka, *Build an LLM from Scratch*, ch. 6–7 (see [references](../references.md#books))
+
+Base GPT-3 could continue any text and would not reliably answer a question. InstructGPT, a smaller model trained with a reward made from human rankings, was preferred by the labelers. The gap between those two is this chapter, and it is also where "the reward is the product" stopped being a metaphor: the reward model is a learned stand-in for human judgment, and PPO will exploit every flaw in it. Read this as three stages and one failure mode.
 
 ---
 
@@ -58,7 +60,7 @@ come from humans ([arXiv:1606.01541](https://arxiv.org/abs/1606.01541) (Li et al
 
 ## Three-stage pipeline
 
-```
+```text
 Base LLM (pretrained)
       |
       v
@@ -89,65 +91,6 @@ next token on internet text" to "follows instructions in a dialogue format."
 InstructGPT used ~13k SFT examples written by contractors. The SFT model is not the
 final product — it's the starting policy for RL. Its job is to produce plausible
 completions that the reward model can meaningfully score.
-
-**Where Stage 1 comes from.** Fine-tuning on instructions predates InstructGPT. It started
-as *instruction tuning*, introduced by two concurrent ICLR 2022 papers. Both rewrote
-existing NLP datasets as natural-language instructions, trained on many of them, and tested
-on task types held out of training:
-
-- **FLAN** ([arXiv:2109.01652](https://arxiv.org/abs/2109.01652) (Wei et al., ICLR 2022))
-  tuned the 137B LaMDA-PT on 62 datasets in 12 clusters, with ten templates per dataset.
-  Zero-shot, it **beat zero-shot GPT-3 175B on 20 of 25 datasets**. The gain needed scale:
-  at 8B and below, the same tuning *hurt* held-out tasks. It also did little for tasks
-  already phrased as sentence completion (commonsense, coreference), where an instruction
-  adds nothing.
-- **T0** ([arXiv:2110.08207](https://arxiv.org/abs/2110.08207) (Sanh et al., ICLR 2022))
-  got the gain from an 11B encoder-decoder T5. It matched or beat GPT-3 on 9 of 11 held-out
-  datasets at about 1/16 the size, and the gain held at 3B. The authors put the gap with
-  FLAN's 8B result down to architecture and pretraining objective. Training on more prompt
-  wordings per dataset also made T0 less sensitive to how a prompt was phrased.
-  Those wordings came from PromptSource, a tool for writing prompts as Jinja templates. Its
-  collection, P3, holds over 2,000 prompts for about 170 datasets, and T0 trained on a subset.
-  Contributors were asked for 5–10 prompts per dataset, and in early experiments prompts that
-  listed the valid answers did better ([doi:10.18653/v1/2022.acl-demo.9](https://doi.org/10.18653/v1/2022.acl-demo.9)
-  (Bach et al., ACL 2022)).
-
-Later papers scaled the recipe and found where it stops paying:
-
-- **Tasks beat instances.** Super-NaturalInstructions ([EMNLP 2022](https://doi.org/10.18653/v1/2022.emnlp-main.340), Wang et al.)
-  collected 1,616 tasks with expert-written definitions. Held-out ROUGE-L grew log-linearly
-  with the number of training tasks but **saturated at about 64 examples per task**. Its 11B
-  Tk-Instruct beat InstructGPT 175B by 9.9 ROUGE-L on 119 unseen English tasks. That
-  benchmark is short-answer and academic, which suits a model trained in its format.
-- **Most of the gain comes early and cheap.** Flan-PaLM ([arXiv:2210.11416](https://arxiv.org/abs/2210.11416) (Chung et al., JMLR 2024))
-  tuned on 1,836 tasks and gained 9.4% on average over PaLM 540B. Most of that came from the
-  first 282 tasks. Fine-tuning cost 0.2% of pretraining compute. Tuning without
-  chain-of-thought examples **degraded** CoT reasoning; nine CoT datasets in the mix kept it.
-- **Mix the prompt formats.** The Flan Collection ([arXiv:2301.13688](https://arxiv.org/abs/2301.13688) (Longpre et al., ICML 2023))
-  ablated the recipe on T5-XL (3B). Training on zero-shot, few-shot and CoT templates
-  together improved all three settings; adding just 10% few-shot templates lifted zero-shot
-  scores by 2%+. Input inversion and balancing the task sources also mattered. MetaICL
-  ([NAACL 2022](https://doi.org/10.18653/v1/2022.naacl-main.201), Min et al.) had shown the
-  few-shot half: meta-training a 770M GPT-2 Large to read k examples in context, across 142
-  datasets, beat models with about 8× the parameters on unseen tasks.
-- **The skill crosses languages.** BLOOMZ ([ACL 2023](https://doi.org/10.18653/v1/2023.acl-long.891), Muennighoff et al.)
-  fine-tuned the multilingual BLOOM on the English-only P3 mix and still improved held-out
-  non-English tasks. After training on its 46-language xP3 mix, it improved XNLI even in
-  languages that were tiny traces in pretraining (Thai at about 0.006% of the corpus).
-
-What carried over into chat SFT: many diverse tasks over many examples of one task, mixed
-prompt formats, and a small compute bill. What didn't: these were templated academic tasks,
-judged by accuracy or ROUGE, not open-ended dialogue judged by people.
-
-**How much demonstration data?** LIMA ([arXiv:2305.11206](https://arxiv.org/abs/2305.11206) (Zhou et al., NeurIPS 2023))
-fine-tuned LLaMA 65B on 1,000 curated examples and no RLHF. Across 300 test prompts, people
-rated its answers equal to or better than GPT-4's in 43% of comparisons and DaVinci003's in
-65%. The authors' **Superficial Alignment Hypothesis**: knowledge and capabilities come from
-pretraining, and alignment mostly picks which format to answer in. The 7B ablations support
-it. Up to 16× more Stack Exchange data gave no gain, while filtering for quality added
-0.5 points on a 6-point scale. Two limits: LIMA is less robust than product models (an
-unlucky sample or an adversarial prompt often gets a weak answer), and the 1,000 examples
-took real effort to write.
 
 **Why SFT first?** The base model's output distribution is too broad for PPO to explore
 efficiently. SFT narrows the distribution toward the target task domain before RL begins.
@@ -195,11 +138,21 @@ pairs split 935/55/110, padded per batch, with padding targets set to `-100` (Py
 (*Build an LLM from Scratch*, ch. 7):
 
 ```python
+import torch
+
+pad_id = 50256
+inputs = torch.tensor([11, 22, 33, pad_id, pad_id, pad_id])
 # targets = inputs shifted left by one; pad with EOS, then hide all but the first pad
+targets = torch.cat([inputs[1:], torch.tensor([pad_id])])
 mask = targets == pad_id
 idx = mask.nonzero().squeeze()
 if idx.numel() > 1:
     targets[idx[1:]] = -100        # cross_entropy ignores -100
+print(targets.tolist())
+```
+
+```text
+[22, 33, 50256, -100, -100, -100]
 ```
 
 **Loss masking is a default, not a law.** [Note 05](05-post-training-for-agents.md#the-three-stages)
@@ -272,6 +225,7 @@ A100. The library was Unsloth, which claims 2–5× faster training and up to 80
 (*LLM Engineer's Handbook*, ch. 5). The shape of that config:
 
 ```python
+# illustrative: needs Unsloth, a GPU and a loaded base model
 model = FastLanguageModel.get_peft_model(
     model, r=32, lora_alpha=32, lora_dropout=0,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj",
@@ -313,12 +267,37 @@ reads only the **last token's** logits, because under causal attention it is the
 has seen the whole message (*Build an LLM from Scratch*, ch. 6):
 
 ```python
+import torch
+import torch.nn.functional as F
+
+class TinyGPT(torch.nn.Module):       # stand-in with the attribute names Raschka's model uses
+    def __init__(self):
+        super().__init__()
+        self.embed = torch.nn.Embedding(100, 768)
+        self.trf_blocks = torch.nn.Sequential(torch.nn.Linear(768, 768), torch.nn.Linear(768, 768))
+        self.final_norm = torch.nn.LayerNorm(768)
+        self.out_head = torch.nn.Linear(768, 100)
+    def forward(self, x):
+        return self.out_head(self.final_norm(self.trf_blocks(self.embed(x))))
+
+torch.manual_seed(0)
+model = TinyGPT()
+x, y = torch.randint(0, 100, (4, 8)), torch.tensor([0, 1, 1, 0])
+
 for p in model.parameters():
     p.requires_grad = False
 model.out_head = torch.nn.Linear(768, 2)          # new head, trainable
 for p in [*model.trf_blocks[-1].parameters(), *model.final_norm.parameters()]:
     p.requires_grad = True
 loss = F.cross_entropy(model(x)[:, -1, :], y)     # last token only
+
+trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+total = sum(p.numel() for p in model.parameters())
+print(f"loss {loss.item():.3f}; training {trainable:,} of {total:,} weights")
+```
+
+```text
+loss 0.466; training 593,666 of 1,261,058 weights
 ```
 
 Five epochs (AdamW 5e-5, batch 8) took 5.65 minutes on an M3 MacBook Air and raised test
@@ -330,6 +309,8 @@ GPT-2 355M with Llama 3 8B as a judge on a 0–100 scale: 50.32 on his 110 test 
 setup gives the *untuned* Llama 3 8B base 58.51 and Llama 3 8B Instruct 82.6. A small model
 on 1,100 examples won't beat a larger base model. Those are 2024 small-model numbers for the
 mechanics, not a benchmark. For judge design see [06-eval](../../../ai-engineering/06-eval/README.md).
+
+**Where the demonstrations come from.** Instruction tuning, InstructGPT's labeler counts and the data engineering behind a good SFT set are in [06](06-data-and-environments.md#where-the-demonstrations-came-from).
 
 ### Stage 2 — Reward Model Training
 
@@ -450,33 +431,48 @@ made the step labels about 2.6× more data-efficient. The paper never trains a p
 the PRM. DeepSeek-R1 tried PRMs and dropped them: a "step" is hard to define in general reasoning,
 labelling steps doesn't scale, and a model-based PRM invites reward hacking. It credits them only as
 rerankers and search guides ([03](03-preference-optimization.md)). The agent version of the trade-off is in
-[05](05-post-training-for-agents.md#reward-design-for-multi-turn-agents).
+[07](07-reward-design-and-tool-calling.md#reward-design-for-multi-turn-agents).
 
-**Preference data at practitioner scale** (*LLM Engineer's Handbook*, ch. 6). The same
-(prompt, chosen, rejected) triples feed a reward model here or DPO directly ([03](03-preference-optimization.md#dpo-in-practice)).
-How many pairs you need depends on the goal:
+You can fit the Bradley-Terry model itself in a few lines. Below, four answers have hidden quality scores, a simulated labeler compares random pairs, and the "reward model" is one learned number per answer, trained by gradient ascent on the log-likelihood:
 
-| Goal | Pairs |
-|---|---|
-| General-purpose alignment (frontier labs, several rounds, heavy synthetic data) | Millions |
-| Open-source model improvement, or "healing" a model after merging or pruning | 10k–100k |
-| Task-specific: style, refusals | 100–10k |
-| Identity ("I was trained by you, not by OpenAI") | 200–500 |
+```python
+import numpy as np
 
-Fewer pairs than SFT examples, because DPO is "less destructive than SFT" and changes the
-model less. When an LLM judges candidate answers, LLMEH prefers **pairwise ranking over
-absolute scoring**, since preferences are comparative to begin with. The judge's biases still
-apply: position (favours the first answer), length (favours the longer one) and family
-(favours its own model family). Zheng et al. measured the first two on MT-Bench: given two similar
-answers in both orders, GPT-4 gave the same verdict 65% of the time and Claude-v1 23.8%. Padding an
-answer with a reworded copy of its own list fooled Claude-v1 and GPT-3.5 on 91.3% of 23 answers and
-GPT-4 on 8.7% ([arXiv:2306.05685](https://arxiv.org/abs/2306.05685) (Zheng et al., NeurIPS 2023)).
-Their self-preference data was too thin for the authors to call it a bias. The fixes: randomize A/B order, use few-shot
-examples with balanced scores, and use a jury of several models. For a chatbot it targets
-about 80% judge–human agreement (*LLM Engineer's Handbook*, ch. 5). Reward models such as
-ArmoRM can also act as the scorer. The book's worked example skips the judge: the
-human-written blog paragraph is "chosen" and an LLM-generated answer is "rejected", and
-filtering left 1,467 pairs.
+rng = np.random.default_rng(0)
+true_quality = np.array([2.0, 1.0, 0.0, -1.0])   # hidden score of four answers
+n = len(true_quality)
+
+def p_prefer(score_a, score_b):                  # Bradley-Terry
+    return 1 / (1 + np.exp(score_b - score_a))
+
+pairs = rng.integers(0, n, size=(2000, 2))
+pairs = pairs[pairs[:, 0] != pairs[:, 1]]
+a_wins = rng.random(len(pairs)) < p_prefer(true_quality[pairs[:, 0]], true_quality[pairs[:, 1]])
+winner = np.where(a_wins, pairs[:, 0], pairs[:, 1])
+loser = np.where(a_wins, pairs[:, 1], pairs[:, 0])
+
+scores = np.zeros(n)                             # the tiny "reward model"
+for _ in range(500):
+    p = p_prefer(scores[winner], scores[loser])
+    grad = np.zeros(n)
+    np.add.at(grad, winner, 1 - p)               # gradient of log p(winner beats loser)
+    np.add.at(grad, loser, -(1 - p))
+    scores += 0.5 * grad / len(winner)
+
+print("true  (centered):", np.round(true_quality - true_quality.mean(), 2))
+print("learned         :", np.round(scores - scores.mean(), 2))
+print(f"P(answer 0 beats answer 1): {p_prefer(scores[0], scores[1]):.2f}, true {p_prefer(2.0, 1.0):.2f}")
+```
+
+```text
+true  (centered): [ 1.5  0.5 -0.5 -1.5]
+learned         : [ 1.54  0.65 -0.52 -1.67]
+P(answer 0 beats answer 1): 0.71, true 0.73
+```
+
+Only the differences between scores are identified, which is why the output is centered. A real reward model replaces the table of numbers with a network over (prompt, response), so it can score text it has never compared.
+
+**Getting preference data without a labeling team.** How many pairs a goal needs, and how practitioners generate and filter them, is in [06](06-data-and-environments.md#preference-data-at-practitioner-scale).
 
 ### Stage 3 — RL Optimization (PPO)
 
@@ -529,7 +525,7 @@ manifestations:
 
 **Mechanism:** The reward model is an imperfect proxy for human preference. It was
 trained on a finite dataset and generalizes imperfectly. The RL optimizer finds
-out-of-distribution inputs that exploit this gap. See: [reward hacking patterns](01-rl-foundations.md).
+out-of-distribution inputs that exploit this gap. See: [reward hacking patterns](10-engineering-rl-systems.md#engineering-an-rl-problem).
 
 Casper et al.'s survey of RLHF's open problems sorts each failure into *tractable* (better method
 fixes it) and *fundamental* (fixing it would take something that is no longer RLHF)
@@ -694,7 +690,7 @@ own authors agreed with each other only about 60% of the time on 4-way choices (
 They suggest asking labelers to *name a problem* instead of ranking, since two people who disagree on
 the worst flaw may still agree that a flaw exists. Practitioner data engineering for both SFT and
 preference sets (dedup, decontamination, synthetic data, how many examples) is in
-[05](05-post-training-for-agents.md#data-engineering-for-post-training).
+[06](06-data-and-environments.md#data-engineering-for-post-training).
 
 ---
 
@@ -707,15 +703,39 @@ raters. This scales alignment without proportional human labor.
 
 See [04-constitutional-ai.md](04-constitutional-ai.md) for the full pipeline.
 
----
+## Pitfalls
 
-## Cross-links
+- **Skipping the SFT baseline.** Run the eval after Stage 1. Without that number you can't tell what RL added.
+- **Trusting reward during training.** Reward rises as the policy overfits the reward model. Track a held-out human or judge score, and stop when it turns down.
+- **Train/serve template mismatch.** A different chat template at serving is a silent quality bug.
+- **Setting the KL coefficient once.** Too low and the policy drifts into hacks, too high and it barely changes. Tune it against the held-out score.
+- **Mixing reward-model and policy data.** A reward model scored on its own training prompts looks better than it is.
 
-- **Upstream:** [01-rl-foundations.md](01-rl-foundations.md) — RL foundations
-  (MDP, policy, reward function), MARL, RL-in-RAG
-- **Algorithms:** [03-preference-optimization.md](03-preference-optimization.md) — PPO vs DPO
-  vs GRPO: the algorithm evolution from RLHF through offline preference optimization
-- **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md) — RLAIF and
-  AI-generated feedback at scale
-- **Papers:** (local copies indexed in [references.md](../references.md#core-papers)) [arXiv:2203.02155](https://arxiv.org/abs/2203.02155)
-  (InstructGPT), [arXiv:2303.08774](https://arxiv.org/abs/2303.08774) (GPT-4)
+## Try it
+
+1. In the mask block, remove all the padding from `inputs`. Which positions become `-100`, and why does the code guard with `idx.numel() > 1`?
+2. In the Bradley-Terry toy, cut the 2,000 comparisons to 50 and try several seeds. Which is steadier, the order of the scores or the gaps between them? How does that bear on Stage 2 labeling budgets?
+3. Run the Bradley-Terry toy with every comparison involving answer 3 removed. Where does it end up in the ranking?
+
+<details><summary>Answers</summary>
+
+1. None: `[22, 33, 50256]`. The shifted-in pad is the first EOS, and it stays as a target. `squeeze()` then returns a 0-dimensional tensor, on which `idx[1:]` would fail, and the guard avoids that.
+2. The order is steadier. At seed 0 we got `[1.35 0.35 -0.38 -1.31]` against a true `[1.5 0.5 -0.5 -1.5]`, and the gaps move more than the order from seed to seed. This toy has only four answers to compare; a reward model has to generalize to new text, which is why real budgets are far larger.
+3. It never moves from its starting score, so the worst answer lands above answer 2: we got `[1.0 0.01 -1.01 0.0]`. A reward model has no reason to be right outside its pairs, which is the out-of-distribution route to reward hacking.
+
+</details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Name the three stages. | SFT on demonstrations, reward model on ranked pairs, PPO against the reward model with a KL penalty to the SFT model. |
+| How many models does PPO RLHF hold in memory? | Four: policy, reference, reward model, value model. |
+| Why pairs instead of scores? | Humans compare more consistently than they score. Bradley-Terry turns comparisons into a scalar. |
+| Why a KL penalty? | It keeps the policy where the reward model can be trusted and limits reward hacking. |
+| What is reward hacking? | Output that scores high on the reward model and low with humans, often seen as verbosity or sycophancy. |
+| What is the alignment tax? | Capability benchmarks falling while alignment metrics improve. InstructGPT reduced it with PPO-ptx, by mixing pretraining-gradient updates into PPO. |
+
+## Next
+
+[03 — Preference optimization](03-preference-optimization.md) removes models from this stack: PPO to DPO to GRPO. [04 — Constitutional AI](04-constitutional-ai.md) replaces the human labels. [01](01-rl-foundations.md) holds the RL foundations (MDP, policy, reward). Papers: [arXiv:2203.02155](https://arxiv.org/abs/2203.02155) (InstructGPT) and [arXiv:2303.08774](https://arxiv.org/abs/2303.08774) (GPT-4), with local copies indexed in [references.md](../references.md#core-papers).

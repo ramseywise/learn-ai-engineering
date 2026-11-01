@@ -2,7 +2,7 @@
 
 Pillar 05 says to start with a loop and add a node only when a signal forces it. This lab is what
 the graph looks like once two signals have forced it: parallel retrieval with a join, and a human
-checkpoint that has to survive a restart. It is 100 lines of graph, with every primitive from
+checkpoint that has to survive a restart. It is about 100 lines of graph, with every primitive from
 [note 02](../../notes/02-graph-primitives.md), [note 03](../../notes/03-state-and-reducers.md) and
 [note 04](../../notes/04-durable-execution-and-interrupts.md) used once.
 

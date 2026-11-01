@@ -90,3 +90,29 @@ def embed(text, dim=512):
 
 def similarity(a, b):
     return sum(x * y for x, y in zip(embed(a), embed(b)))
+
+
+def run_version(lf, version):
+    """Run one agent version over the golden set with the real experiment runner; one row per item."""
+    from langfuse import Evaluation
+
+    def task(*, item, **kwargs):
+        return stub_agent(BY_INPUT[item["input"]], version)
+
+    def judge(*, input, output, **kwargs):
+        score, reason = stub_judge(BY_INPUT[input], output, version)
+        return Evaluation(name="judge_score", value=score, comment=reason)
+
+    def embedding(*, output, expected_output, **kwargs):
+        return Evaluation(name="embedding_similarity", value=round(similarity(output, expected_output), 3))
+
+    data = [{"input": g["input"], "expected_output": g["expected_output"], "metadata": {"id": g["id"], "category": g["category"]}}
+            for g in GOLDEN]
+    result = lf.run_experiment(name="support-golden", run_name=version, data=data, task=task,
+                               evaluators=[judge, embedding], metadata={"version": version})
+    rows = []
+    for r in result.item_results:
+        scores = {e.name: e.value for e in r.evaluations}
+        rows.append({"version": version, "id": r.item["metadata"]["id"], "category": r.item["metadata"]["category"],
+                     "output": r.output, **scores})
+    return rows

@@ -1,7 +1,7 @@
 ---
 origin: notion-export
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 sources:
   - Sutton & Barto, "Reinforcement Learning: An Introduction" (2020)
   - Phil Winder, "Reinforcement Learning: Industrial Applications of Intelligent Agents" (O'Reilly, 2020), ch. 1–9, 11
@@ -23,14 +23,9 @@ sources:
 
 # 1 — RL Foundations for LLMs
 
-> The MDP vocabulary, the Bellman equations, and the path from Q-learning to the PPO clip and max-entropy RL, with each piece tied to where LLM RL uses it. Then how RL shows up in multi-agent systems and RAG. Notes 02–05 build on this.
+The treasure-hunt lab from [00](00-rl-in-plain-language.md) needs about 10,000 games to win a puzzle with an 11-move answer, and yet the same family of ideas now trains models that reason and write code. This chapter is the bridge. It puts precise notation on agent, reward, policy and value, then follows one thread from the Q-learning table in that lab to the PPO clip used on language models, and stops to explain why each step was needed. Every piece is tied to the place LLM RL uses it.
 
-This note covers RL foundations as they apply to LLM alignment and agentic systems.
-Three sections:
-
-1. [RL Foundations](#1-rl-foundations) — MDP, Bellman, TD and Q-learning, policy gradients up to the PPO clip, entropy and SAC, exploration, learning from experts, problem design
-2. [Multi-Agent RL (MARL)](#2-multi-agent-rl-marl) — CTDE, MADDPG, QMIX — for agent coordination
-3. [RL in RAG](#3-rl-in-rag) — query rewriting, retrieval policy, tool use, Self-RAG
+**Where the rest went.** Multi-agent RL and RL in RAG now live in [11](11-multi-agent-and-rag-rl.md#multi-agent-rl-marl); imitation learning, hierarchy, problem design and scaling live in [10](10-engineering-rl-systems.md#learning-from-experts-imitation-and-inverse-rl).
 
 **For RLHF pipeline depth** (SFT → reward model → PPO, Bradley-Terry, reward hacking):
 see [02 — RLHF pipeline](02-rlhf-pipeline.md)
@@ -40,7 +35,7 @@ see [03 — Preference optimization](03-preference-optimization.md)
 
 ---
 
-## 1. RL Foundations
+## Foundations
 
 Unlike supervised learning (trained on a labeled answer key) or unsupervised learning
 (finds patterns in unlabeled data), RL relies on **trial and error**. An agent learns
@@ -186,6 +181,15 @@ SARSA      (on-policy):   Q(s,a) ← Q(s,a) + α [ r + γ·Q(s',a')        − Q
 def q_update(Q, s, a, r, s_next, done, alpha=0.1, gamma=0.99):
     target = r if done else r + gamma * max(Q[s_next].values())  # SARSA: Q[s_next][a_next]
     Q[s][a] += alpha * (target - Q[s][a])                        # alpha * TD error
+
+# One step of a corridor: moving right from cell 3 costs 0.5 and lands next to a known payoff
+Q = {3: {"left": 0.0, "right": 0.0}, 4: {"left": 0.0, "right": 10.0}}
+q_update(Q, s=3, a="right", r=-0.5, s_next=4, done=False)
+print(round(Q[3]["right"], 3))   # 0.1 * (-0.5 + 0.99 * 10.0 - 0.0)
+```
+
+```text
+0.94
 ```
 
 Q-learning bootstraps from the best next action, so it learns the value of the greedy policy
@@ -312,12 +316,24 @@ as the baseline. They add no KL term and no critic, and on COCO detection mAP ro
 over-optimization, and Ahmadian et al. report only LLM-judged win rates.
 
 ```python
+import torch
+
 def reinforce_with_baseline_loss(logp, returns, values):
     # logp: log π(a_t|s_t) for the actions taken; returns: G_t; values: V(s_t)
     adv = (returns - values).detach()            # no gradient through the baseline
     policy_loss = -(adv * logp).mean()           # ascend E[A · ∇log π]
     value_loss = (returns - values).pow(2).mean()
     return policy_loss + 0.5 * value_loss
+
+logp = torch.tensor([-0.7, -1.2], requires_grad=True)
+values = torch.tensor([1.0, 1.0], requires_grad=True)
+loss = reinforce_with_baseline_loss(logp, torch.tensor([3.0, 0.0]), values)
+loss.backward()
+print(round(loss.item(), 3), logp.grad.tolist())  # better-than-baseline action: pushed up
+```
+
+```text
+1.35 [-1.0, 0.5]
 ```
 
 **Actor-critic tuning.** In Winder's CartPole experiments the n-step actor-critic learned far
@@ -362,11 +378,26 @@ entropy bonus weighted by c2, which some of their experiments set to zero (*Rein
 Learning*, ch. 6).
 
 ```python
+import torch
+
 def ppo_clip_loss(logp_new, logp_old, adv, eps=0.2):
     ratio = (logp_new - logp_old).exp()
     unclipped = ratio * adv
     clipped = ratio.clamp(1 - eps, 1 + eps) * adv
     return -torch.min(unclipped, clipped).mean()   # minimize the negative lower bound
+
+adv = torch.tensor([1.0])
+for ratio in [1.1, 1.5, 3.0]:
+    logp_new = torch.log(torch.tensor([ratio])).requires_grad_()
+    loss = ppo_clip_loss(logp_new, torch.zeros(1), adv)
+    loss.backward()
+    print(f"ratio {ratio}: loss {loss.item():.2f}, gradient {logp_new.grad.item():.2f}")
+```
+
+```text
+ratio 1.1: loss -1.10, gradient -1.10
+ratio 1.5: loss -1.20, gradient 0.00
+ratio 3.0: loss -1.20, gradient 0.00
 ```
 
 > **Contradicts.** Winder describes the negative-advantage case as "at low ratios … the policy
@@ -388,7 +419,7 @@ def ppo_clip_loss(logp_new, logp_old, adv, eps=0.2):
 Q-critic, replay, soft target updates and action noise. TD3 fixes its overestimation with
 clipped double-Q, delayed policy updates and target-policy smoothing; Winder recommends TD3
 over DDPG (*Reinforcement Learning*, ch. 6). Neither is used for LLMs. They matter here only
-because MADDPG ([§2](#2-multi-agent-rl-marl)) is built on DDPG.
+because MADDPG ([11](11-multi-agent-and-rag-rl.md#multi-agent-rl-marl)) is built on DDPG.
 
 ### Entropy and maximum-entropy RL (SAC)
 
@@ -492,222 +523,6 @@ prompt or model selection. Two results anchor it:
 Zhou's survey ([arXiv:1508.03326](https://arxiv.org/abs/1508.03326)) covers the wider family:
 stochastic vs adversarial rewards, and UCB vs Thompson variants.
 
-### Learning from experts: imitation and inverse RL
-
-When demonstrations exist, an agent need not start from scratch (*Reinforcement Learning*,
-ch. 8). Each classical method has a direct LLM counterpart:
-
-| Classical method | What it does | LLM counterpart |
-|---|---|---|
-| **Behavior cloning** | Supervised learning of the expert's action in each demonstrated state | SFT on demonstrations ([02](02-rlhf-pipeline.md), stage 1) |
-| **DQfD, GAIL, SQIL** | RL with a pull toward expert behavior, via a supervised loss, an adversarial discriminator, or replay-buffer reward relabelling | SFT warm start, then RL with a KL anchor |
-| **Inverse RL** | Learn a reward that explains the demonstrations, solve the MDP, compare, repeat | A learned reward model ([02](02-rlhf-pipeline.md), stage 2) |
-
-Winder's objection to behavior cloning is the one [05](05-post-training-for-agents.md) makes
-about SFT. The clone is lost in any state the expert never visited, and in high dimensions it
-will reach such states. SQIL's remedy is to let the agent deviate and then nudge it back toward
-expert states, with a weight that sets how much expert advice to use. That is the role the KL
-term plays in RLHF.
-
-Inverse RL assumes the expert is optimal, which demonstrations rarely are, and it re-solves the
-MDP at every iteration, which limits it to small state spaces. Preference-based reward
-modelling sidesteps both: people compare outcomes rather than demonstrate them, and the reward
-is fit once. Winder also notes that failed demonstrations are easier to collect than good ones
-and can be used by demoting their reward (*Reinforcement Learning*, ch. 8). Rejected responses
-in a preference pair play exactly that role.
-
-> **Dated.** Winder says behavior cloning "isn't popular because it overfits the expert
-> demonstrations" (*Reinforcement Learning*, ch. 8). For LLMs the order reversed: next-token
-> prediction on human text is behavior cloning at internet scale, and it supplies the prior
-> that makes later RL tractable. The covariate-shift objection still holds, and it is the
-> argument for following SFT with on-policy RL.
-
-### Beyond the flat MDP: hierarchy and curricula
-
-- **Hierarchical RL** splits a problem into subtasks, with high-level policies choosing among
-  low-level skills over longer timescales. Winder recommends designing the hierarchy by hand
-  when the separation of concerns is obvious, before trying learned hierarchies such as HIRO
-  (subgoals as intrinsic rewards) or DIAYN (unsupervised skill discovery) (*Reinforcement
-  Learning*, ch. 8). A planner LLM delegating to tool-using executors is a hand-designed
-  hierarchy.
-- **Curriculum learning** orders tasks from easy to hard so the agent finds reward early;
-  self-play generates the curriculum automatically. Winder's chapter 11 states the principle:
-  learning works only when the gap between knowing and not knowing is small. RLVR uses the same
-  idea when it keeps only prompts the current model solves sometimes but not always (DAPO's
-  dynamic sampling, [arXiv:2503.14476](https://arxiv.org/abs/2503.14476)). A prompt solved by
-  every sample in a group, or by none, gives GRPO zero advantage and no gradient.
-
-**Horizon length alone can break LLM RL, and shortening it is the fix.** Kim et al.
-([arXiv:2605.02572](https://arxiv.org/abs/2605.02572), ICML 2026) built Sudoku and Rush Hour tasks in
-which only the number of required moves changes. Every Sudoku needs only basic solving techniques,
-and they kept only puzzles the model could already solve when asked for the whole answer in one step. Qwen3-1.7B was given an SFT warm start
-and then trained with REINFORCE and a batch-normalized baseline. On 11–20 empty cells RL improved
-steadily. On 21–30 it collapsed, and the collapse came with a surge of maximum-length responses.
-Letting the policy emit a variable-length **macro action** (several moves per turn) kept training
-stable. Forcing the same policy back to one move per turn brought the collapse back, so the horizon
-was the cause and not the better starting policy. Fixed-length macros did worse than flexible ones.
-Per-subgrid rewards, a hand-designed subgoal hierarchy, also fixed it. The pattern held on WebShop,
-at 4B, and with a GRPO-style optimizer. Policies trained on short horizons generalized to longer
-unseen ones, which makes a short-to-long curriculum work on Rush Hour where training on the long tasks
-directly did not. These are puzzle environments with one small model family, and most results are
-reported as curves.
-
-### Engineering an RL problem
-
-Winder's practical chapters argue that the algorithm is rarely the bottleneck. Most of the
-work is in defining the MDP, the reward, the state and the actions (*Reinforcement Learning*,
-ch. 9 and 11).
-
-**Start simple.** Before training anything, picture a random policy acting in the environment.
-If it never stumbles on the right behavior, RL is unlikely to help. Then ask whether you could
-solve the task yourself from the agent's observations. Build up baselines in order: random,
-then the cross-entropy method, then plain Q-learning or a policy gradient. Shrink the state and
-action spaces, and simplify the goal, before scaling up (*Reinforcement Learning*, ch. 11).
-
-**State engineering.** Represent the state as faithfully as you can and let the policy do the
-rest. Engineering features that solve the task is a sign the problem is supervised. One reliable
-measurement can beat learning from pixels: in QT-Opt, adding a gripper-height reading improved
-grasping of unseen objects by 12% (*Reinforcement Learning*, ch. 9). Normalize observations to
-zero mean and unit variance, and watch for statistics that drift (ch. 11).
-
-**Reward engineering** is "arguably the most important task in RL" (*Reinforcement Learning*,
-ch. 9). Agents optimize the reward you wrote, not the one you meant. Winder's example is a Unity
-agent meant to use a box to jump a wall, which learned to slip around the edge of the arena.
-His checklist for a reward:
-
-- fast to compute, since it is called millions of times
-- correlated with the true objective
-- low-noise; combining several noisy proxies helps
-- encodes non-functional requirements such as safety or cost
-- discriminates between states by more than the noise in the value estimates, or the agent
-  circles
-- smooth, because discontinuous rewards give jerky policies
-- simple
-
-Clipping rewards to ±1, as DQN does, can throw away the signal. In Pac-Man it makes fruit worth
-the same as a dot, and normalizing instead turns the agent into a ghost-hunting fruit-seeker
-(ch. 9). The same failure appears in LLM RL as [reward hacking](02-rlhf-pipeline.md), and the
-same checklist applies to [multi-turn agent rewards](05-post-training-for-agents.md).
-
-**Action design.** Decide whether actions are binary, discrete, continuous or mixed; whether
-several can happen at once; and whether a hierarchy is hiding in them. Changing that choice
-later can force a change of algorithm. For massive action spaces, policy gradients avoid the
-`max`. The book's YouTube example ranks the top k items rather than choosing a combination
-(ch. 9).
-
-**Online, offline, concurrent.** Online learning explores but needs a live or simulated
-environment. Offline learning uses logs but cannot explore and suffers distribution shift
-(see [DQN](#deep-q-networks-and-learning-from-logs)). Concurrent learning runs many agents in
-parallel on one problem (ch. 9). Simulations are worth building first, but a policy that works
-perfectly in simulation can still fail in the real world (ch. 9).
-
-**Debugging.** RL bugs hide: rewards arrive late and noise masks errors. Winder cites Engstrom
-et al.: code-level optimizations account for more of PPO's advantage over TRPO than the clip
-does (ch. 11). Log and plot observations, actions and rewards. Track the value function at
-fixed states over time, watching for oscillation or a stall. Monitor action entropy, which
-shows whether the agent is still exploring, and the KL between successive policies, which shows
-whether updates are too large or too small. Start with a linear model, a fixed seed and a single
-thread. RLHF and GRPO runs are watched through the same kind of dashboard: reward, KL to the
-reference model, entropy and response length.
-
-**Comparing runs.** One training run is one sample. Colas et al. needed **at least 15 reruns
-per algorithm**, each with a different seed, to show with statistical confidence that SAC beats TD3 on
-Half-Cheetah-v2. At that sample size, and with roughly normal returns, Welch's t-test was the most robust
-test. Nonparametric tests (Mann–Whitney, bootstrap, permutation) need many more runs to reach the
-same power (ch. 10). RL returns are often not normal: rare stuck episodes, capped rewards, and
-variances that differ between algorithms. A seed that "should" reproduce a run often doesn't,
-because some library's RNG went unset. Plot the per-seed curves first, then test.
-
-### Scaling: actors and learners
-
-Rollouts are sequential, so you can't speed up one agent by adding GPUs. RL scales by splitting
-**actors**, which generate experience, from **learners**, which update the policy (ch. 10). Two
-designs bracket the space:
-
-| Design | How it works | Cost |
-|---|---|---|
-| Synchronous (DD-PPO) | Every worker collects a batch, then all exchange gradients | Each update waits for the slowest worker, so stragglers are cut off preemptively. Wijmans et al. report near-linear scaling to 256 GPUs |
-| Asynchronous (IMPALA, SEED) | Actors push trajectories into a queue; the learner trains on whatever arrives | The data is slightly off-policy and needs an importance-weighted correction (V-trace) |
-
-Throughput is the reason to accept that staleness. Espeholt et al. priced one billion frames at
-**\$236 for IMPALA against \$54 for SEED** on DeepMind Lab, and \$899 against \$369 on Google Research
-Football. LLM RL faces the same choice in a different shape. Generation is the actor and dominates
-wall-clock time. Asynchronous rollout pipelines trade freshness for throughput, and their
-staleness correction plays the role V-trace played for IMPALA. The framing transfers from the
-2020 book. The systems do not.
-
-In LLM RL the actor is usually a serving engine, most often vLLM. Its PagedAttention
-([arXiv:2309.06180](https://arxiv.org/abs/2309.06180), Kwon et al., SOSP 2023) lets the samples
-drawn for one prompt share that prompt's KV blocks copy-on-write, which is exactly the access
-pattern of a GRPO or RLOO group. The paper measured a 6.1–9.8% KV-memory saving for 2–6 parallel
-samples on OPT-13B with short Alpaca prompts, so the saving grows with prompt length. The mechanism
-is covered in
-[inference engineering](../../../ai-engineering/07-inference-engineering/notes/07-prefill-decode-kv-cache.md#pagedattention).
-Because the trainer and the serving engine are separate programs, their log-probs can disagree,
-which is the mismatch the reports below correct for.
-
-**Evolution strategies are the extreme of the actor–learner split.** ES perturbs the weights,
-scores each perturbed copy and averages the perturbations weighted by score. Workers exchange only
-scalar fitnesses, and no gradient flows through the model. Salimans et al. (2017) scaled it this way
-on MuJoCo and Atari. Sarkar et al. ([arXiv:2511.16652](https://arxiv.org/abs/2511.16652),
-2025-11, preprint) make it practical at billions of parameters. EGGROLL uses rank-r (often rank-1)
-perturbations, the way LoRA does, and regenerates the noise from a seed. Training then runs at **up
-to 91% of pure batch-inference throughput**, where naive ES manages 0.41%. They run the
-population inside vLLM as multi-LoRA serving, so the inference engine is the trainer and no
-mismatch is left to correct. The results:
-
-- On Qwen3-4B-Base with DeepScaleR maths, EGGROLL averaged 41.4% across five maths benchmarks, the same
-  as an RL run. That RL figure is copied from another paper with matched settings, not rerun.
-- A 14B RWKV-7 went from 13% to 30% on AIME24 after 12 hours on 32 GPUs. At that size GRPO did not
-  fit in memory with Adam.
-- Because fitness needs no gradient, ES can optimize pass@k directly. On Qwen3-1.7B with k=4, the
-  number of distinct answers per four samples rose under pass@k training and fell under pass@1
-  training.
-
-The head-to-head wins over GRPO are on RWKV models at equal hardware and wall-clock.
-
-Optimizer memory is also what stops gradient-based full-weight RL from fitting, and it can be cut
-without leaving gradients behind. LoGRA keeps each weight's gradient as a low-rank sketch, lets the
-optimizer act on the sketch, and sets the step size from a predicted-KL budget
-([arXiv:2610.06647](https://arxiv.org/abs/2610.06647) (Zhang et al., 2026-10, preprint)). On
-Qwen2.5-Math with PPO on one 8×H100 node, **average training memory fell 21.8% at 1.5B and 45.7% at
-7B, and a 27B Qwen model trained for over 1,100 steps where dense Adam ran out of memory.** Peak MATH-500
-Pass@1 was 67.87 vs 63.77 at 1.5B and 72.33 vs 72.48 at 7B. The setup is deliberately simple: math
-only, one sample per prompt, a running-mean baseline. In its own comparison at 1.5B, plain LoRA had
-higher mean Pass@1 (70.45 vs 68.47) at more memory (13.2 vs 7.2 GiB).
-
-Two 2025–26 open reports show what that correction looks like now: double-sided masking of the
-token-level ratio π_train / π_inference rather than a V-trace-style truncated weight.
-
-- **INTELLECT-3.** A 106B-total / 12B-active MoE post-trained from GLM-4.5-Air on prime-rl.
-  - The setup: 16 training nodes and 44 inference nodes, with in-flight weight updates.
-  - Rollouts more than 8 policy versions old are discarded.
-  - Tokens whose ratio falls outside [0.5, 5] are masked out of the loss
-    ([arXiv:2512.16144](https://arxiv.org/abs/2512.16144) (Prime Intellect Team, 2025-12)).
-  - Without the masking, runs crashed days in. In-flight updates more than halved step time.
-- **GLM-5.** Agentic RL runs fully asynchronously, with the rollout engine's own log-probs as
-  the behaviour policy.
-  - Tokens outside [1−ε_l, 1+ε_h] are masked, and samples older than a version gap τ are
-    dropped ([arXiv:2602.15763](https://arxiv.org/abs/2602.15763) (GLM-5 Team, 2026-02)).
-  - Its sharpest lesson is about mismatch: a non-deterministic top-k in the sparse-attention
-    indexer collapsed RL entropy within a few steps.
-
-Neither report ablates the correction quantitatively, and GLM-5 does not disclose ε or τ.
-
-### What has dated since 2020
-
-Winder's book predates LLM RL. The foundations hold; the defaults have moved:
-
-| 2020 view (*Reinforcement Learning*) | 2025–26 LLM RL |
-|---|---|
-| Most state-of-the-art algorithms are off-policy (ch. 1) | PPO and GRPO are on-policy; replay buffers are rare |
-| SAC beats PPO; entropy bonuses drive exploration (ch. 7) | Discrete tokens, KL to a reference model; entropy *collapse* is the problem |
-| Behavior cloning overfits and is unpopular (ch. 8) | Pretraining plus SFT is behavior cloning, and it comes first |
-| A learned critic (A2C, PPO) is the standard baseline (ch. 5–6) | GRPO and RLOO drop the critic and use group statistics ([03](03-preference-optimization.md), and the REINFORCE paragraph above) |
-| Rewards are shaped by hand or learned by IRL (ch. 8–9) | Learned reward models (RLHF) or verifiable checkers (RLVR) |
-| Tabula rasa agents are sample-inefficient (ch. 11) | A pretrained prior makes exploration targeted: in [05](05-post-training-for-agents.md)'s treasure hunt, Q-learning needs ~10,000 episodes and an LLM agent wins on the first try |
-| Offline learning is the field's biggest open challenge (ch. 11) | Partly solved for preferences (DPO); online RL is still preferred for reasoning |
-
 ### RL applied to LLMs
 
 LLMs are trained using RL primarily at two stages:
@@ -721,236 +536,16 @@ LLMs are trained using RL primarily at two stages:
 
 ---
 
-## 2. Multi-Agent RL (MARL)
-
-MARL applies RL to systems with multiple interacting agents — each observing the
-environment and making decisions, with each agent's actions affecting other agents'
-environments.
-
-**When to use MARL vs. single-agent RL:**
-- MARL: every agent's action influences others — leads to state changes that affect the
-  joint reward. Trading systems, multi-robot coordination, multi-agent LLM pipelines.
-- Single-agent RL in RAG: the environment is the RAG system + user feedback. One agent,
-  multiple actions (rewrite, retrieve, answer). See Section 3.
-
-### The non-stationarity problem
-
-In a multi-agent system, as each agent updates its policy, the environment appears to
-shift from every other agent's perspective — other agents are changing, which changes
-the effective transition function. This makes standard single-agent RL unstable.
-
-**Centralized Training with Decentralized Execution (CTDE)** is the dominant framework
-for addressing this. During training, the critic gets global state information (what all
-agents are doing). At deployment, each agent's actor uses only local observations —
-no central server required.
-
-CTDE stabilizes training because: the critic always has the full picture and can correctly
-attribute credit or blame to each agent's actions. The learned knowledge is baked into
-the actor weights.
-
-**Two formalisms** (*Reinforcement Learning*, ch. 8). A **Markov game** extends the MDP to
-agents acting in parallel: each has its own actions and rewards, and the state is shared. An
-**extensive-form game** represents turns, chance and information as a tree, as in poker; it is
-the more common model in the literature.
-
-**Why independent learners struggle.** Running single-agent Q-learning or policy gradients in
-each agent is the obvious first try. It can find stable but suboptimal policies in simple
-settings, and it tends not to converge as complexity grows. Replay buffers stop helping, because
-the stored transitions were generated by other agents' old policies. When learning must stay
-decentralized, **hysteretic learning** uses a smaller learning rate for negative TD errors, on
-the assumption that a bad outcome was caused by a teammate exploring. That makes agents
-optimistic, which can cause problems of its own (*Reinforcement Learning*, ch. 8).
-
-**Why the critic is the place to centralize.** The actor-critic gradient already conditions
-the critic on the agent's action. Extending it to condition on *all* agents' actions makes the
-environment stationary from the critic's point of view. Each agent keeps its own actor and
-critic, so agents may have different rewards, which lets the same method handle cooperative and
-competitive settings (*Reinforcement Learning*, ch. 8). For multi-agent LLM pipelines the
-analogue is training against a judge that sees the whole transcript while each role acts on its
-own context.
-
-### Algorithm families
-
-**Value Decomposition Methods:** Decompose the joint value function into individual
-agent value functions that sum (or combine) to give the global Q-value.
-- **VDN (Value Decomposition Networks):** `Q_total = Σ Q_i` — simple sum; assumes
-  agent rewards are independent
-- **QMIX:** Uses a monotonic mixing network to combine agent Q-values; the global Q-value
-  is a non-linear monotone function of individual Q-values. Handles coordination without
-  requiring full independence.
-
-**Central-Critic Methods (Actor-Critic under CTDE):**
-- **MADDPG (Multi-Agent Deep Deterministic Policy Gradient):** Each agent has its own
-  actor (local observations) and critic (global state + all agents' actions).
-  Deterministic policy gradients for continuous action spaces. Each agent also learns
-  approximations of the other agents' policies while they are changing, a source of
-  nonstationarity that MADDPG damps by updating a random subset of policies
-  (*Reinforcement Learning*, ch. 8).
-- **COMA (Counterfactual Multi-Agent):** Addresses the credit assignment problem —
-  "how much did my action contribute to the joint reward?" Uses a counterfactual baseline
-  to isolate each agent's marginal contribution.
-- **MAPPO (Multi-Agent PPO):** PPO extended to CTDE. Each agent uses PPO's clipped
-  surrogate objective; the critic receives global state. Empirically strong for
-  cooperative tasks.
-
-**Competitive methods:**
-- **Nash-Q:** Generalizes Q-learning to Nash equilibria in zero-sum games
-- **Self-play:** Agents are trained against copies of themselves — used for games
-  (AlphaGo, AlphaStar) and increasingly for LLM red-teaming
-
-### MARL challenges
-
-- **Non-stationarity:** Partially addressed by CTDE; not fully solved
-- **Credit assignment:** Hard to attribute joint outcomes to individual agent actions
-- **Scalability:** Coordination complexity grows with agent count; most MARL algorithms
-  struggle beyond ~10-20 agents
-- **Sample efficiency:** Multi-agent interaction space is large; collecting useful
-  experiences requires many environment steps
-- **Evaluation:** Standard single-agent metrics don't transfer; need to measure emergent
-  coordination quality
-
-### Multi-Agent Path Finding (MAPF)
-
-A specialized MARL subproblem: planning collision-free routes for multiple agents from
-start to goal. Used in warehouse robotics, autonomous vehicle coordination. Requires
-exact collision avoidance — standard RL exploration is inadequate, so MAPF often uses
-hybrid approaches (classical search + RL for local decisions).
-
----
-
-## 3. RL in RAG
-
-RAG can be modeled as a sequential decision process with multiple decision points:
-
-- When to retrieve (or skip retrieval)?
-- How to rewrite the query for better retrieval?
-- Which retrieved evidence to use?
-- When to stop and generate an answer?
-
-RL provides a principled framework for learning policies over these decisions, optimizing
-for end-to-end task quality rather than intermediate retrieval metrics.
-
-### Decision points and reward signals
-
-| Sub-task | Action space | Reward signal |
-|----------|-------------|---------------|
-| Query rewriting | Rewritten query variants | Retrieval quality (NDCG, recall@k) |
-| Evidence selection | Rank/rerank retrieved passages | Answer F1, faithfulness |
-| Continue-or-stop retrieval | Stop / continue (multi-hop) | Accuracy minus latency cost |
-| Tool use | Search / click / synthesize | Human preference or task completion |
-| End-to-end | Full pipeline | QA F1 or human evaluation |
-
-### Pattern 1 — Online RL over retrieval and tool actions
-
-The model interacts with a retrieval or browsing environment via discrete actions,
-trained with behavior cloning (imitation from demonstrations) then optimized against a
-reward model built from human preferences.
-
-**WebGPT** (OpenAI, 2021) is the canonical example: GPT-3 trained to use a text-based web
-browser through search, click, scroll and quote actions. Humans compared two model-generated
-answers to the same question, both written with browsing, and a reward model learned from about
-16k of those comparisons. The RL loop: generate action sequence → execute in browser → the reward
-model scores the final answer → PPO update, with a per-token KL penalty toward the
-behavior-cloned model. Humans label offline; they are not in the loop. RL was not the best
-optimizer here. Sampling 64 answers and keeping the one the RM scored highest was preferred to
-the BC model 68% of the time, RL only 58%, and RL added nothing on top of best-of-n
-([arXiv:2112.09332](https://arxiv.org/abs/2112.09332) (Nakano et al., 2021, preprint)).
-
-This is structurally identical to RLHF except the "response" is an action sequence
-rather than text, and the environment is the web browser rather than the generation step.
-
-**Search-R1** ([arXiv:2503.09516](https://arxiv.org/abs/2503.09516), Jin et al., COLM 2025)
-removes the demonstrations and the reward model. The model writes `<search>` queries. The
-environment returns passages inside `<information>` tags. The only reward is exact match on the final
-answer. Retrieved tokens are **masked out of the loss**, so the policy is not trained to reproduce
-text it did not write. Setup: Qwen2.5-7B-base with PPO, an E5 retriever over 2018 Wikipedia
-returning three passages, trained on NQ plus HotpotQA. It averaged 0.431 exact match across seven
-QA sets, against 0.304 for one-shot RAG and 0.348 for rejection-sampling fine-tuning on the same
-search loop. Without the mask the average fell to 0.343. GRPO converged faster but its reward
-collapsed in some runs, while PPO stayed stable.
-
-### Pattern 2 — RL module for specific sub-task
-
-Instead of end-to-end RL, train a specialized RL module for one decision (e.g., query
-rewriting). The rewriting strategy is optimized based on whether the rewrite improves
-final retrieval/response quality — not supervised on "what the ideal rewrite looks like."
-
-**Advantage:** Decomposes the problem. Each module has a clear reward signal. Simpler
-to train and debug than full-pipeline RL.
-
-**Disadvantage:** Sub-optimal if sub-task rewards don't align with end-task quality.
-Query recall improvement doesn't always translate to answer quality improvement.
-
-### Pattern 3 — Self-RAG: adaptive retrieval without classic RL
-
-Self-RAG (Asai et al., 2023) trains a model to retrieve on demand and emit **reflection
-tokens** — special tokens that critique evidence and generation quality at inference time.
-Not classic RL (no online rollouts, no reward model), but operationalizes a *policy over
-retrieval decisions* learned during training.
-
-Key reflection token types:
-- `[Retrieve]` — should I retrieve?
-- `[IsREL]` — is this passage relevant to the query?
-- `[IsSUP]` — is the claim supported by the passage?
-- `[IsUSE]` — is the generated response useful?
-
-These tokens allow inference-time controllability: retrieval can be turned off for
-factual queries the model is confident about and turned on for uncertain claims. This
-substantially improves groundedness and citation accuracy over fixed-retrieval RAG.
-
-**RARE** ([arXiv:2503.23513](https://arxiv.org/abs/2503.23513), Wang et al., KDD 2026) is a
-similar training-time recipe for domain reasoning. Retrieved documents go into the training prompt
-and are masked from the loss, so the model learns to reason over knowledge rather than memorize it.
-The reasoning traces are distilled from QwQ-32B. On MedQA, Llama-3.1-8B reached 84.1%, against 83.0%
-for both GPT-4 with RAG and the same 8B model fine-tuned and then given RAG. DeepSeek-R1 with RAG
-scored 92.8%. The gain is modest, and almost all of it comes from supervised fine-tuning. The RL is
-one small KTO table. KTO in place of SFT raised PubHealth from 66.4% to 69.2% but lowered CoVERT
-from 66.7% to 65.0%.
-
-### RL vs. DPO for RAG optimization
-
-Standard RLHF/PPO requires online rollouts — expensive at RAG pipeline scale (each
-rollout involves retrieval). **DPO** is increasingly used as the optimizer for preference-
-tuned retrieval decisions: collect (prompt, good-retrieval-outcome, bad-retrieval-outcome)
-triples, then train with DPO's offline objective.
-
-See [03-preference-optimization.md](03-preference-optimization.md) for DPO details.
-
-### Challenges in RL for RAG
-
-- **Reward sparsity:** End-task reward (final answer quality) is a single signal at the
-  end of a multi-step trajectory. Intermediate retrieval actions have no direct reward.
-  Partial mitigation: reward shaping (intermediate retrieval quality scores). With a pretrained
-  model the sparse signal can be enough: Search-R1 (Pattern 1) learned multi-turn search from
-  final-answer exact match alone.
-- **Scalability:** Each RL training step requires retrieval — slow and expensive.
-  Offline methods (Self-RAG, DPO over retrieval decisions) are faster but lose online
-  adaptation. **ZeroSearch** ([arXiv:2505.04588](https://arxiv.org/abs/2505.04588), Sun et al.,
-  2025-05, preprint) keeps the loop online but replaces the search engine with an LLM fine-tuned to
-  write relevant or noisy documents on request. A curriculum makes the documents noisier as training
-  goes on. For about 64,000 training queries, Google through SerpAPI cost $586.7, against $70.8 of
-  GPU time for a 14B simulator and $17.7 for a 3B one. On Qwen-2.5-3B-Base it averaged 34.47 exact
-  match over seven QA sets, against 32.81 for Search-R1 trained on real Google. In that setup
-  REINFORCE (34.47) edged out GRPO (33.17) and PPO (32.67). The simulator can only return what it
-  knows, so it does not replace retrieval over a private or fresh corpus.
-- **Evaluation difficulty:** RAG quality is multi-dimensional (retrieval quality +
-  faithfulness + answer quality + latency). Single reward scalars are imperfect proxies.
-- **Reward hacking:** Model learns to retrieve passages that trigger high reward model
-  scores without genuine factual grounding.
-- **Distribution shift:** The retrieval corpus and user query distribution change over
-  time; policies trained on historical data degrade.
-
----
-
 ## RLHF and DPO — pointer
 
 The RLHF pipeline (SFT → reward model → PPO) and preference optimization algorithms
-(DPO, GRPO, KTO, ORPO) are covered in depth in the 05-RL pillar:
+(DPO, GRPO, KTO, ORPO) are covered in depth in this pillar:
 
 - **RLHF pipeline:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) — three stages,
   Bradley-Terry model, KL penalty, reward hacking failure modes
 - **Algorithm comparison:** [03-preference-optimization.md](03-preference-optimization.md)
-  — PPO vs DPO vs GRPO vs KTO/IPO/ORPO, decision framework, DeepSeek-R1 story
+  — PPO vs DPO vs GRPO vs KTO/IPO/ORPO, decision framework
+- **DeepSeek-R1 story:** [08-reasoning-rl-deepseek-r1.md](08-reasoning-rl-deepseek-r1.md)
 - **Constitutional AI / RLAIF:** [04-constitutional-ai.md](04-constitutional-ai.md)
   — AI-generated feedback, critique-revision loop, scaling alignment
 
@@ -973,18 +568,40 @@ The RLHF pipeline (SFT → reward model → PPO) and preference optimization alg
 - **PyMARL** — MARL-specific: QMIX, COMA, VDN implementations
 - **PettingZoo** — multi-agent Gymnasium-compatible environments
 
----
+## Pitfalls
 
-## Cross-links
+- **Reading a learned value as ground truth.** Q-learning's max favours estimates that are too high, and function approximation with bootstrapping can diverge. Check learned values against real returns before trusting them.
+- **Copying the off-policy habit into LLM training.** The cliff world shows on-policy methods value what the agent will actually do. Reusing old rollouts without a ratio and a clip, as in PPO, or a staleness cap ([10](10-engineering-rl-systems.md#scaling-actors-and-learners)), silently trains on another policy's data.
+- **Treating the PPO clip as a guard against all large changes.** It stops the incentive to move further past the bound in the helpful direction. It does not cap the ratio itself, so several epochs can still push past 1+ε. Track the KL divergence as well.
+- **Dropping the baseline to simplify.** REINFORCE without a baseline or group normalization has variance large enough to hide all progress on sparse rewards.
+- **Assuming the discount is cosmetic.** A low γ can make the far goal invisible, and γ close to 1 on long episodes raises variance.
 
-- **Upstream:** [05-RL README](../README.md) — full topic map and resource
-  index for the RL & alignment pillar
-- **Downstream:** [03-agentic-foundations/README.md](../../03-agentic-foundations/README.md)
-  — RL-trained agents (ReAct, Reflexion), multi-agent coordination
-- **RLHF depth:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md)
-- **Algorithm depth:** [03-preference-optimization.md](03-preference-optimization.md)
-- **Constitutional AI:** [04-constitutional-ai.md](04-constitutional-ai.md)
+## Try it
 
----
+1. Change the `q_update` example so `done=True`. What is `Q[3]["right"]` now, and what information did the agent lose?
+2. In the PPO block, add a sample with `adv = -1.0` and ratios 0.5, 0.9 and 1.5. For which ratio is the gradient zero?
+3. Set `gamma` to 0.9 in the lab (`discount_factor` in `rl_agent.py`), rerun 10,000 episodes, then compare the win rate with the default. Explain the result using the bootstrapped target.
 
-**Next:** [02 — RLHF pipeline](02-rlhf-pipeline.md) applies the policy-gradient half of this note to language models.
+<details><summary>Answers</summary>
+
+1. −0.05, which is 0.1 × −0.5. The target drops the bootstrapped next-state value, so the agent no longer sees the payoff ahead.
+2. Ratio 0.5. With a negative advantage the objective is flat below 1−ε, and 0.9 and 1.5 still push the probability down. This matches Fig. 6-5 above and not the book's paragraph, as the note under the plot says.
+3. It still won 100 of 100 test games at 10,000 episodes in our run. Eleven moves out, the treasure's discounted worth falls from about 90 to about 35, while the small pickup bonuses keep the early moves pointing the right way. Remove those bonuses as well and the lab's exercise 2 shows how much they were doing.
+
+</details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Q-learning vs SARSA? | Q-learning bootstraps from the best next action and learns the greedy policy (off-policy). SARSA bootstraps from the action actually taken and learns the exploring policy (on-policy). |
+| What does a baseline do in REINFORCE? | It subtracts expected return so that only better- or worse-than-expected actions move the policy. Variance falls, and the gradient stays unbiased. |
+| What is GAE? | A λ-weighted sum of TD errors, trading bias (λ near 0) against variance (λ near 1). |
+| Why does PPO clip? | To reuse a batch for several epochs without the policy moving too far from the one that collected it, and without TRPO's second-order machinery. |
+| Is PPO on-policy? | Data collection is on-policy and data is discarded soon after. The ratio corrects for drift within those few epochs. |
+| How does max-entropy RL differ? | It adds policy entropy to the objective, so the agent keeps options open while it optimizes reward. |
+| Which family do LLMs use and why? | Policy methods. The action space is the whole vocabulary at each step, and no table or argmax over next actions is practical. |
+
+## Next
+
+[02 — RLHF pipeline](02-rlhf-pipeline.md) applies the policy-gradient half of this note to language models. [05-RL README](../README.md) has the full reading order, and [03-agentic-foundations](../../03-agentic-foundations/README.md) covers the agents (ReAct, Reflexion) these methods train. The depth notes on algorithms and on Constitutional AI are [03](03-preference-optimization.md) and [04](04-constitutional-ai.md).

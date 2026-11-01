@@ -4,7 +4,7 @@ sources:
   - https://arxiv.org/abs/2212.08073 (Constitutional AI)
   - https://arxiv.org/abs/2309.00267 (RLAIF)
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 4 — Constitutional AI and RLAIF
@@ -13,6 +13,8 @@ cleaned: 2026-10-31
 > **Presumes:** [RLHF pipeline](02-rlhf-pipeline.md) — Constitutional AI extends the RLHF framework
 > **Papers:** Constitutional AI (arXiv: 2212.08073), RLAIF (arXiv: 2309.00267)
 > **Paper:** [arXiv:2212.08073](https://arxiv.org/abs/2212.08073); local copy indexed in [references.md](../references.md#core-papers)
+
+If the reward is the product, whoever writes the reward decides what the model becomes. In RLHF, that decision is spread across thousands of labelers' private judgments. Constitutional AI moves it into a document anyone can read, then has a model apply the document to its own answers. The optimizer doesn't change. What changes is where the preference labels come from, and that brings its own problem: a labeler that shares the model's blind spots.
 
 ---
 
@@ -107,6 +109,55 @@ you're interested in chemistry, I'd be happy to discuss safe experiments instead
 The model learns from its own revised outputs — self-improvement through structured
 critique.
 
+The loop is simple enough to run with stubs standing in for the model. Each round samples one principle, critiques the reply against it, and revises when the critique finds something. The first draft and the final reply form a (rejected, chosen) pair:
+
+```python
+import random
+
+random.seed(3)
+PRINCIPLES = [
+    ("Point out where the reply states a guess as a fact.", "guess-as-fact"),
+    ("Point out where the reply gives dosing or legal specifics with no caveat.", "no-caveat"),
+]
+
+def model(prompt):                     # stand-in for the helpful-only model
+    return "The dose is definitely 800 mg every 2 hours."
+
+def critique(reply, tag):              # stand-in for the model critiquing itself
+    if tag == "guess-as-fact" and "definitely" in reply:
+        return "'definitely' overstates what I know."
+    if tag == "no-caveat" and "mg" in reply and "pharmacist" not in reply:
+        return "Gives a dose with no pointer to a professional."
+    return None
+
+def revise(reply, note):               # stand-in for the model revising itself
+    if "overstates" in note:
+        reply = reply.replace("definitely ", "often said to be ")
+    if "professional" in note:
+        reply += " Check the label or ask a pharmacist before relying on this."
+    return reply
+
+def sl_cai_example(prompt, rounds=2):
+    first = reply = model(prompt)
+    for _ in range(rounds):
+        text, tag = random.choice(PRINCIPLES)   # one principle sampled per round
+        note = critique(reply, tag)
+        if note:
+            reply = revise(reply, note)
+    return {"prompt": prompt, "rejected": first, "chosen": reply}
+
+for _ in range(3):
+    print(sl_cai_example("What dose of ibuprofen should I take?")["chosen"])
+```
+
+```text
+The dose is often said to be 800 mg every 2 hours.
+The dose is definitely 800 mg every 2 hours. Check the label or ask a pharmacist before relying on this.
+The dose is often said to be 800 mg every 2 hours.
+```
+
+The three runs differ because a different principle was sampled each time, which is the point of sampling: different critiques across the dataset, and no single rule dominates.
+
 ### Phase 2 — Reinforcement Learning from AI Feedback (RLAIF)
 
 **Goal:** Train a harmlessness reward model using AI-generated preference labels.
@@ -140,9 +191,42 @@ human rater entirely at the RM training stage.
 
 ---
 
+**Noise averages out and bias does not.** Why worry about an AI labeler that is more consistent than a human? Here is a simulated labeler choosing between answers that differ in quality and in length, with a linear preference model fit on its labels. The labeler in the first row is noisy but fair. The one in the second is nearly noiseless, but it likes longer answers.
+
+```python
+import numpy as np
+
+rng = np.random.default_rng(0)
+
+def learned_weights(n_pairs, label_noise, length_bias):
+    """Fit preference weights from labels; each pair differs in quality and in length."""
+    quality, length = rng.normal(size=(2, n_pairs))
+    judged = quality + length_bias * length + rng.normal(scale=label_noise, size=n_pairs)
+    y = np.sign(judged)                                 # +1 if the labeler prefers answer A
+    X = np.column_stack([quality, length])
+    w = np.linalg.lstsq(X, y, rcond=None)[0]            # a linear preference model
+    return w / np.abs(w).sum()                          # share of weight on each feature
+
+print("labeler                      pairs   quality  length")
+for name, noise, bias in [("noisy, unbiased", 3.0, 0.0), ("clean, length-biased", 0.1, 0.5)]:
+    for n in [300, 30000]:
+        q, l = learned_weights(n, noise, bias)
+        print(f"{name:<28} {n:>5}   {q:6.2f}  {l:6.2f}")
+```
+
+```text
+labeler                      pairs   quality  length
+noisy, unbiased                300     0.89    0.11
+noisy, unbiased              30000     0.99   -0.01
+clean, length-biased           300     0.67    0.33
+clean, length-biased         30000     0.67    0.33
+```
+
+A hundred times more data cleans up the noisy labeler, and doesn't touch the biased one. A preference model trained on a consistent labeler inherits its bias in full.
+
 ## Full pipeline diagram
 
-```
+```text
 Helpful-only SFT model
         |
         v
@@ -202,7 +286,7 @@ improve chain-of-thought *answers*: majority-voting about 40 sampled reasoning p
 PaLM 540B from 56.5% to 74.4% on GSM8K
 ([arXiv:2203.11171](https://arxiv.org/abs/2203.11171) (Wang et al., ICLR 2023)). A trick
 that helps when there's one right answer does not carry over to judging preferences. See
-[test-time search](05-post-training-for-agents.md#test-time-search-instead-of-training).
+[test-time search](09-test-time-search-and-training.md#test-time-search-instead-of-training).
 
 ---
 
@@ -322,14 +406,38 @@ training) that substitutes AI-generated labels for human labels.
 | Coverage | Bounded by human availability | Scales with compute |
 | Auditability | Hard (rater decisions not logged) | Easy (critique chains are logged) |
 
----
+## Pitfalls
 
-## Cross-links
+- **Assuming AI labels are unbiased because they are consistent.** Consistency is not correctness. The length-biased rows of the labeler table above show consistent bias surviving any amount of data.
+- **Writing principles nobody tested.** A principle reads well and may still produce preachy or evasive answers. Sample outputs per principle, and revise the document as you would code.
+- **Dropping the helpfulness data.** The harmlessness phase alone drives refusals. Keep a helpfulness signal in the reward.
+- **Letting the same model grade and answer without a check.** Shared blind spots pass through. Keep a human-labeled audit set, and report labeler agreement against it.
 
-- **Baseline:** [02-rlhf-pipeline.md](02-rlhf-pipeline.md) — the three-stage RLHF pipeline
-  Constitutional AI extends
-- **Algorithms:** [03-preference-optimization.md](03-preference-optimization.md) — the RM
-  training step can be replaced with DPO or other offline methods; Constitutional AI
-  generates the preference data, not the optimizer
-- **RL foundations:** [01 — RL foundations](01-rl-foundations.md)
-- **Paper:** [arXiv:2212.08073](https://arxiv.org/abs/2212.08073); local copy indexed in [references.md](../references.md#core-papers)
+## Try it
+
+1. Change the labeler table to `length_bias=0.2`. Does the length weight at 30,000 pairs fall to zero?
+2. In the critique loop, change the stub model's reply to `"The label gives the dose."`. What do chosen and rejected look like now, and what filter should the pipeline have?
+3. Write one new principle and one critique request for a support bot that must not promise refunds, then run them by hand against three of your own bot's replies.
+
+<details><summary>Answers</summary>
+
+1. No. It falls to 0.16 and stays there at 300 and at 30,000 pairs. Volume reduces noise, not bias, so audit bias against humans.
+2. They are identical, because no critique fired. Such a pair carries no signal, so drop every pair where the revision changed nothing.
+3. There is no single answer. A good principle is checkable: "never state a refund will be issued; say what the policy is and who decides".
+
+</details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What two phases does CAI have? | SL-CAI (critique, revise, fine-tune on revisions) and RLAIF (AI preference labels, preference model, RL). |
+| What does CAI replace? | Human harmlessness labels. The optimizer stays the same, and helpfulness labels may still be human. |
+| Why is the constitution an advantage? | Values become explicit, auditable and easy to change. |
+| What is the main risk of AI feedback? | Correlated errors: noise averages out, shared bias does not. |
+| How is RLAIF different from RLHF at training time? | Only the labeler. The reward model and PPO stages have the same shape. |
+| How does red-teaming relate? | It supplies the hard prompts that the constitution's critique loop needs in order to be useful. |
+
+## Next
+
+[05 — Post-training for agents](05-post-training-for-agents.md) moves from chat alignment to the decision every agent team faces: SFT, RL or no training at all. Baseline: [02](02-rlhf-pipeline.md); optimizers: [03](03-preference-optimization.md), since the reward-model step can be replaced with DPO (Constitutional AI generates the preference data, not the optimizer); foundations: [01](01-rl-foundations.md). Paper: [arXiv:2212.08073](https://arxiv.org/abs/2212.08073), local copy indexed in [references.md](../references.md#core-papers).
