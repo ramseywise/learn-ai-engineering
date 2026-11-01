@@ -11,9 +11,9 @@ in each note's frontmatter. Vendored files are also listed in [CURRICULUM.md →
 | Jake VanderPlas, [*A Whirlwind Tour of Python*](https://github.com/jakevdp/WhirlwindTourOfPython) | CC0 | 03 · 01–04 |
 | [Python documentation](https://docs.python.org/3/) (tutorial, data model, `itertools`, `functools`, `contextlib`, `asyncio`) | PSF | 03 |
 | [uv](https://docs.astral.sh/uv/), [Ruff](https://docs.astral.sh/ruff/), [pytest](https://docs.pytest.org/), [Pydantic](https://docs.pydantic.dev/) | MIT / Apache-2.0 | 03 · 05–06 |
-| Wes McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/), 2nd ed., [code and data](https://github.com/wesm/pydata-book/tree/2nd-edition) | Code and data MIT; book proprietary | 04 chapter notebooks; data downloaded by `fetch_data.sh` |
-| University of Michigan, *Applied Data Science with Python*; Wesleyan, *Data Analysis and Interpretation* (Coursera) | Proprietary | Own course notes in 04 `courses/`; no course data included |
-| Ben Gorman, [*DataWrangling*](https://github.com/ben519/DataWrangling) | Read online | 04 `courses/wrangle_pandas.py` (reads its CSVs from GitHub) |
+| Wes McKinney, [*Python for Data Analysis*](https://wesmckinney.com/book/), 2nd ed., [code and data](https://github.com/wesm/pydata-book/tree/2nd-edition) | Code and data MIT; book proprietary | Moved with the hand-off: chapter notebooks and `fetch_data.sh` are in [data-analytics 01](../data-analytics/01-python-for-data-analysis/references.md) |
+| University of Michigan, *Applied Data Science with Python*; Wesleyan, *Data Analysis and Interpretation* (Coursera) | Proprietary | Moved with the hand-off: own course notes in [data-analytics 01](../data-analytics/01-python-for-data-analysis/references.md) `practice/courses/`; no course data included |
+| Ben Gorman, [*DataWrangling*](https://github.com/ben519/DataWrangling) | Read online | Moved with the hand-off: [data-analytics 01](../data-analytics/01-python-for-data-analysis/references.md) `practice/courses/wrangle_pandas.py` (reads its CSVs from GitHub) |
 | Luciano Ramalho, *Fluent Python*, 2nd ed. | Proprietary | Further reading for 03 |
 
 ## SQL

@@ -19,7 +19,28 @@ npx tsx test.ts    # the assertions, one per stop reason
 Real output with the stub:
 
 ```text
-RUN_OUTPUT
+
+--- honest maker: stop=passed, 3 iterations, 308 tokens, shippable=true
+  #1  visible 1/4   held-out 0/4
+  #2  visible 3/4   held-out 0/4
+  #3  visible 4/4   held-out 4/4
+
+--- maker memorises the visible checks: stop=gamed, 3 iterations, 310 tokens, shippable=false
+  #1  visible 1/4   held-out 0/4
+  #2  visible 3/4   held-out 0/4
+  #3  visible 4/4   held-out 0/4
+
+--- ordinary overfit: stop=gamed, 2 iterations, 189 tokens, shippable=false
+  #1  visible 1/4   held-out 0/4
+  #2  visible 4/4   held-out 3/4
+
+--- stuck maker: stop=no_progress, 3 iterations, 299 tokens, shippable=false
+  #1  visible 1/4   held-out 0/4
+  #2  visible 1/4   held-out 0/4
+  #3  visible 1/4   held-out 0/4
+
+--- expensive maker: stop=passed, 1 iterations, 76 tokens, shippable=true
+  #1  visible 4/4   held-out 4/4
 ```
 
 The second run is the one to study. Its visible score reaches 4/4 by memorising the inputs, and only

@@ -44,7 +44,6 @@ parts:
           - {label: Prefill, sub: "all input tokens in parallel; compute-bound; sets TTFT", accent: "1E3A5F"}
           - {label: KV cache, sub: "the state that links the phases", accent: "0F7490"}
           - {label: Decode, sub: "one token per step, re-reads weights + KV; bandwidth-bound; sets TPOT"}
-        loop: repeat per output token
         caption: "Output tokens cost **2–4×** input tokens at API providers; one adds about the latency of **100** input tokens (Anyscale, 2023)."
         takeaway: Prefill is compute-bound and sets TTFT; decode is memory-bandwidth-bound and sets TPOT.
         source: notes/01-why-inference-is-its-own-discipline.md
@@ -61,14 +60,14 @@ parts:
         lang: arithmetic
         code: |-
           # Cost (Huyen's worked example)
-          $2/hour at 100 output tokens/s      = $5.56 per million output tokens
-          1,000 requests x 200 output tokens  = $1.11 decode
-          prefill at 100 requests/minute      = $0.33
-          total                               = $1.44
+          $2/hour at 100 output tok/s = $5.56 per M tok
+          1,000 requests x 200 tokens = $1.11 decode
+          prefill, 100 requests/min   = $0.33
+          total                       = $1.44
 
           # Bandwidth: 7B model, FP16, 100 tokens/s
-          7B x 2 bytes x 100                  = 700 GB/s
-          A100 rated at 2 TB/s                = 70% MBU
+          7B x 2 bytes x 100          = 700 GB/s
+          A100 rated at 2 TB/s        = 70% MBU
         bullets:
           - "**Throughput is cost:** it maps directly to dollars per token."
           - "**Compare per request:** tokenizers differ across models."
@@ -266,12 +265,15 @@ parts:
         recall: What does torch.compile need from your model to pay off, and how do you enforce it in CI?
         lang: python
         code: |-
-          # Decode: pre-allocate the KV cache so every step has one shape
-          model.generation_config.cache_implementation = "static"
+          # Decode: fix the KV shape with a static cache
+          cfg = model.generation_config
+          cfg.cache_implementation = "static"
           model.forward = torch.compile(
-              model.forward, mode="reduce-overhead", fullgraph=True)
+              model.forward,
+              mode="reduce-overhead",
+              fullgraph=True)
 
-          # CI: mark known-dynamic dims, then fail on any recompile
+          # CI: allow known dims, fail on any recompile
           torch._dynamo.mark_dynamic(input_ids, 1)
           torch.compiler.set_stance("fail_on_recompile")
         bullets:
@@ -341,14 +343,14 @@ parts:
         recall: Why is round-robin a poor default for routing LLM requests?
         lang: arithmetic
         code: |-
-          # Length-aware batching: prefill cost grows roughly N(N+1)/2
-          prompts [6K, 2K, 6K, 2K, 2K, 2K] across two GPUs
-          both 6K on one GPU       critical path ~38.0M Q*K products
-          [2K, 2K, 6K] on each     critical path ~22.0M       42% less
+          # Length-aware: prefill cost ~ N(N+1)/2
+          [6K,2K,6K,2K,2K,2K] on two GPUs
+          both 6K on one GPU: ~38.0M Q*K products
+          [2K,2K,6K] on each: ~22.0M, 42% less
 
-          # Cascade: 60% of queries go to a 10x smaller model
+          # Cascade: 60% go to a 10x smaller model
           0.6 x 0.1 + 0.4 x 1.0 = 0.46 relative cost
-          about 2.2x cheaper     the book's claimed 5x does not hold
+          about 2.2x cheaper, not the book's claimed 5x
         bullets:
           - "Requests differ in cost by orders of magnitude."
           - "Replicas differ in which prefixes they hold."
@@ -386,15 +388,17 @@ parts:
         recall: How do you compute KV cache bytes per token, and which head count do you use?
         lang: text
         code: |-
-          KV bytes/token = 2 x n_layers x n_kv_heads x head_dim x bytes
+          bytes/token = 2 x layers x kv_heads
+                          x head_dim x bytes
 
-          Llama 2 7B  (FP16, MHA)        0.5 MB/token; 1.07 GB at 2,048
-          Llama 2 13B (FP16, MHA)        0.82 MB/token; 3.36 GB at 4,096
-            same, with GQA-8             0.67 GB
-            same, with MQA               0.084 GB
+          Llama 2 7B,  FP16, MHA   0.5 MB/token
+            1.07 GB at 2,048 tokens
+          Llama 2 13B, FP16, MHA   0.82 MB/token
+            3.36 GB at 4,096 tokens
+            GQA-8 0.67 GB, MQA 0.084 GB
 
-          500B+ MHA, batch 512, 2,048    ~3 TB, 3x the weights
-          Budget: 70 GB weights on 180 GB usable = about 110 GB of KV
+          500B+ MHA, batch 512, 2,048: ~3 TB
+          70 GB weights on 180 GB: ~110 GB for KV
         bullets:
           - "Use `n_kv_heads`, not attention heads."
           - "Budget ÷ bytes per token = tokens in flight."
@@ -572,7 +576,7 @@ parts:
         recall: In what order do you walk the inference checklist?
         steps:
           - {title: Method, text: "Define the SLO. Profile first. Benchmark realistic length distributions. Keep a regression job."}
-          - {title: Host and GPU, text: "Persistence mode, NUMA pinning, THP `madvise`, ECC on."}
+          - {title: Host and GPU, text: "Persistence mode, NUMA pinning, THP `madvise`."}
           - {title: Placement, text: "Smallest TP inside one NVLink domain. Route on prefix affinity. Disaggregate if long prompts block decode."}
           - {title: Engine, text: "Continuous batching, chunked prefill, paged KV with prefix caching, warm replicas."}
           - {title: Kernels and precision, text: "FP8 first, then validate lower. Add speculation at low-to-moderate batch."}

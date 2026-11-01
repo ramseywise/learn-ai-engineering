@@ -20,7 +20,33 @@ npx tsx test.ts    # the assertions
 Real output with the stub:
 
 ```text
-RUN_OUTPUT
+model: stub. Unpacked context is 4581 tokens.
+
+--- roomy: window 8000, reserve 1000, limit 6600, used 4581
+  everything kept
+  by layer: system 173, tools 300, memory 162, retrieved 2518, history 1414, task 14
+  answer: annual plans can be refunded within 30 days of renewal [doc-refunds]
+
+--- tight: window 3500, reserve 500, limit 2825, used 2825
+  truncated doc-seats    900 -> 852
+  dropped   doc-sso      900 -> 0
+  dropped   turn-1       202 -> 0
+  dropped   turn-2       202 -> 0
+  dropped   turn-3       202 -> 0
+  dropped   turn-4       202 -> 0
+  by layer: system 173, tools 300, memory 162, retrieved 1570, history 606, task 14
+  answer: annual plans can be refunded within 30 days of renewal [doc-refunds]
+
+--- tight, relevance ranked wrongly: window 3500, reserve 500, limit 2825, used 2651
+  dropped   doc-refunds  718 -> 0
+  dropped   turn-1       202 -> 0
+  dropped   turn-2       202 -> 0
+  dropped   turn-3       202 -> 0
+  dropped   turn-4       202 -> 0
+  dropped   turn-5       202 -> 0
+  dropped   turn-6       202 -> 0
+  by layer: system 173, tools 300, memory 162, retrieved 1800, history 202, task 14
+  answer: I can't find that in the supplied documents.
 ```
 
 The third run is the lesson: the budget is the same as the second, and only the relevance ranking

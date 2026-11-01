@@ -1,0 +1,391 @@
+# SQL track: study deck (flashcards). Covers notes/01-10.
+# Build:  make slides PILLAR=programming/sql [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: SQL
+  subtitle: From SELECT to query plans
+  tagline: |-
+    Filtering · NULL · Aggregation · Joins
+    CTEs · Window functions · Indexes · SQL from Python
+  reference: "Notes: programming/sql"
+  output: sql.pptx
+  notes: >-
+    The study deck for the SQL track. Every slide is a flashcard: the title is the question and
+    the takeaway is the rule that answers it. Asking one table a question, then combining rows,
+    then making it correct and fast in a real system.
+
+parts:
+  - title: Asking a table a question
+    summary: Evaluation order · NULL logic · Aggregates · WHERE and HAVING · Pivots
+    slides:
+      - layout: statement
+        title: Why can't WHERE see a column alias?
+        kicker: The problem
+        statement: You write `SELECT` first, and the database evaluates it nearly last. Most "why can't I use that here" errors come from that gap.
+        attribution: A query describes the rows you want, and the database decides how to fetch them.
+        takeaway: "`WHERE` runs before `SELECT`, so in standard SQL it can't see `SELECT` aliases. `ORDER BY` runs after, so it can."
+        source: notes/01-select-and-filter.md
+        notes: Postgres rejects an alias in WHERE. SQLite accepts it as an extension, so don't rely on it if the query may move.
+
+      - layout: flow
+        title: In what order does SQL evaluate a query?
+        kicker: Order of evaluation
+        steps:
+          - {label: "`FROM` / `JOIN`", sub: which rows exist}
+          - {label: "`WHERE`", sub: filter rows}
+          - {label: "`GROUP BY` / `HAVING`", sub: "collapse, then filter groups"}
+          - {label: "`SELECT` / `DISTINCT`", sub: "aliases and window functions appear here"}
+          - {label: "`ORDER BY` / `LIMIT`", sub: can use aliases}
+        bullets:
+          - "**Rows have no order**: without `ORDER BY`, `LIMIT 10` returns an arbitrary ten rows"
+          - "**Always parenthesise** mixed `AND` and `OR`, because `AND` binds tighter"
+        takeaway: FROM, WHERE, GROUP BY, HAVING, SELECT, DISTINCT, ORDER BY, LIMIT. Rows have no order unless you ask for one.
+        source: notes/01-select-and-filter.md
+        notes: Large OFFSETs get slow because skipped rows are still read. Production APIs page by key instead.
+
+      - layout: table
+        title: What does a comparison with NULL return?
+        kicker: Three-valued logic
+        header: [Expression, Result]
+        widths: [3, 5]
+        rows:
+          - ["`NULL = NULL`", "`NULL`, which is not true"]
+          - ["`NULL <> 1`", "`NULL`"]
+          - ["`1 + NULL`", "`NULL`"]
+          - ["`NULL AND false`", "`false`"]
+          - ["`NULL OR true`", "`true`"]
+        takeaway: "`NULL` means unknown, and `WHERE` keeps only true rows. Test with `IS NULL`, never `= NULL`."
+        source: notes/02-nulls-and-expressions.md
+        notes: "COALESCE is standard and returns the first non-NULL. Prefer half-open ranges to BETWEEN for timestamps. `7 / 2` is 3: integer division catches people in every dialect."
+
+      - layout: code
+        title: Why can NOT IN return no rows at all?
+        kicker: The NULL trap
+        lang: sql
+        code: |-
+          -- Drops rows where person is NULL, not just lake's
+          SELECT * FROM Survey WHERE person != 'lake';
+
+          -- Says what you mean
+          SELECT * FROM Survey WHERE person != 'lake' OR person IS NULL;
+
+          -- One NULL from the subquery and this is never true
+          WHERE x NOT IN (SELECT y FROM t)
+
+          -- Safe
+          WHERE NOT EXISTS (SELECT 1 FROM t WHERE t.y = x)
+        takeaway: One `NULL` in the subquery makes `x NOT IN (...)` never true, so use `NOT EXISTS` for anti-joins.
+        source: notes/02-nulls-and-expressions.md
+        notes: The same logic is why `person != 'lake'` silently drops NULL rows.
+
+      - layout: bullets
+        title: What is the difference between count(*) and count(col)?
+        kicker: Aggregates
+        bullets:
+          - "`count(*)` counts rows, `NULL`s included"
+          - "`count(col)` counts non-`NULL` values, and `count(DISTINCT col)` the distinct ones"
+          - "`sum`, `avg`, `min` and `max` ignore `NULL`, so `avg` divides by the non-`NULL` count"
+          - "`sum` of zero rows is `NULL`, not 0: wrap it in `COALESCE(…, 0)`"
+          - "A bare column outside `GROUP BY` is an error in Postgres, and an arbitrary value in SQLite"
+        takeaway: "`count(*)` counts rows and `count(col)` skips `NULL`. In a grouped query, every column is a key or an aggregate."
+        source: notes/03-aggregation.md
+        notes: SQLite accepting a bare column is a silent bug.
+
+      - layout: compare
+        title: When do you filter with WHERE, and when with HAVING?
+        kicker: Rows and groups
+        emphasis: none
+        left:
+          title: "WHERE: rows, before grouping"
+          code: |-
+            SELECT facid, sum(slots)
+            FROM bookings
+            WHERE starttime >= '2012-09-01'
+            GROUP BY facid;
+          tag: Can't see aggregates
+        right:
+          title: "HAVING: groups, after grouping"
+          code: |-
+            SELECT facid, sum(slots)
+            FROM bookings
+            GROUP BY facid
+            HAVING sum(slots) > 1000;
+          tag: Can see aggregates
+        takeaway: "`WHERE` filters rows before grouping and `HAVING` filters groups after. Push all you can into `WHERE`."
+        source: notes/03-aggregation.md
+        notes: Fewer rows reach the grouping step when the filter is in WHERE.
+
+      - layout: code
+        title: How do you pivot rows into columns portably?
+        kicker: Conditional aggregation
+        lang: sql
+        code: |-
+          SELECT facid,
+                 sum(CASE WHEN strftime('%m', starttime) = '07' THEN slots ELSE 0 END) AS jul,
+                 sum(CASE WHEN strftime('%m', starttime) = '08' THEN slots ELSE 0 END) AS aug
+          FROM bookings
+          WHERE starttime >= '2012-07-01' AND starttime < '2012-09-01'
+          GROUP BY facid;
+        takeaway: Put `CASE` inside an aggregate, one per output column. It is the portable way to pivot.
+        source: notes/03-aggregation.md
+        notes: Postgres and DuckDB also have count(*) FILTER (WHERE ...). SQLite has no ROLLUP, so emulate it with UNION ALL.
+
+  - title: Combining rows
+    summary: Join kinds · The LEFT JOIN trap · CTEs · Recursion · Window functions
+    slides:
+      - layout: statement
+        title: What happens to a row with no partner?
+        kicker: The problem
+        statement: A join pairs rows that satisfy a condition. The kind of join decides who survives, and the key decides how many rows come out.
+        takeaway: The join kind decides what happens to unmatched rows. If rows multiply, the key isn't unique on one side.
+        source: notes/04-joins.md
+        notes: Bookings joined to members stays at 4,044 rows because memid is unique in members.
+
+      - layout: table
+        title: Which rows does each join keep?
+        kicker: Join kinds
+        header: [Join, Keeps]
+        widths: [2.6, 6]
+        rows:
+          - ["`JOIN`", "Only matching pairs"]
+          - ["`LEFT JOIN`", "Every left row, with `NULL`s on the right where there's no match"]
+          - ["`FULL OUTER JOIN`", "Unmatched rows from both sides"]
+          - ["`CROSS JOIN`", "Every pair, useful for facility × month grids"]
+          - ["Self-join", "One table, two aliases, for a key pointing back into the table"]
+          - ["Anti-join", "`LEFT JOIN … WHERE right.key IS NULL`: rows with no match"]
+        takeaway: An inner join drops unmatched rows, and a `LEFT JOIN` keeps every left row with `NULL`s on the right.
+        source: notes/04-joins.md
+        notes: UNION deduplicates, UNION ALL keeps duplicates and is faster. Rewrite RIGHT JOIN as LEFT JOIN for readability.
+
+      - layout: compare
+        title: How does WHERE undo a LEFT JOIN?
+        kicker: The LEFT JOIN trap
+        left:
+          title: Filter in WHERE
+          code: |-
+            FROM facilities f
+            LEFT JOIN bookings b
+              ON b.facid = f.facid
+            WHERE b.starttime >= '2012-09-01'
+          tag: NULL rows are thrown away
+        right:
+          title: Filter in ON
+          code: |-
+            FROM facilities f
+            LEFT JOIN bookings b
+              ON b.facid = f.facid
+             AND b.starttime >= '2012-09-01'
+          tag: Facilities with no bookings stay
+        takeaway: A `WHERE` filter on the right table discards the `NULL` rows, so put the condition in `ON`. Count `b.bookid`, not `*`.
+        source: notes/04-joins.md
+        notes: A facility with no bookings still has one row, so count(*) would return 1.
+
+      - layout: code
+        title: Why use a CTE instead of a nested subquery?
+        kicker: Common table expressions
+        lang: sql
+        code: |-
+          WITH member_slots AS (
+            SELECT memid, sum(slots) AS slots FROM bookings GROUP BY memid
+          ),
+          ranked AS (
+            SELECT memid, slots,
+                   slots * 1.0 / (SELECT sum(slots) FROM member_slots) AS share
+            FROM member_slots
+          )
+          SELECT m.surname, r.slots, round(r.share * 100, 1) AS pct
+          FROM ranked r JOIN members m USING (memid)
+          ORDER BY r.slots DESC LIMIT 5;
+        takeaway: A CTE names each step so the query reads top to bottom and each step can be tested alone, usually at no cost.
+        source: notes/05-subqueries-and-ctes.md
+        notes: Postgres 12+, DuckDB and SQLite inline CTEs unless you ask for MATERIALIZED. A correlated subquery in principle runs once per outer row, so watch it on large tables.
+
+      - layout: flow
+        title: How does a recursive CTE work?
+        kicker: Recursive CTEs
+        steps:
+          - {label: Anchor, sub: the starting rows}
+          - {label: "`UNION ALL`", sub: joins the two halves}
+          - {label: Step, sub: refers to the CTE itself}
+          - {label: Stop, sub: when the step returns no rows}
+        loop: repeat the step on the new rows
+        bullets:
+          - "Use it for hierarchies, graphs and date series"
+          - "A cycle in the data loops forever without a depth limit or a visited-path check"
+        takeaway: An anchor, `UNION ALL`, then a step that reads the CTE, repeated until no rows come back. Always give it a stopping condition.
+        source: notes/05-subqueries-and-ctes.md
+        notes: A date series plus a LEFT JOIN makes empty days show up as zeros.
+
+      - layout: code
+        title: How do you get the top N rows per group?
+        kicker: Window functions
+        lang: sql
+        code: |-
+          -- func(args) OVER (PARTITION BY ... ORDER BY ... ROWS BETWEEN ...)
+          WITH ranked AS (
+            SELECT memid, bookid, slots,
+                   row_number() OVER (PARTITION BY memid
+                                      ORDER BY slots DESC, bookid) AS rn
+            FROM bookings
+          )
+          SELECT * FROM ranked WHERE rn <= 3;
+        takeaway: A window function computes over a group and keeps every row. Rank inside a CTE, because you can't filter on it in the same query.
+        source: notes/06-window-functions.md
+        notes: Add a unique column to the ORDER BY so the result is deterministic.
+
+      - layout: table
+        title: How do row_number, rank and dense_rank differ?
+        kicker: Ranking and frames
+        header: [Function, "Ranks for 10, 10, 8", Ties]
+        widths: [2.4, 2.4, 3.6]
+        rows:
+          - ["`row_number()`", "1, 2, 3", "Arbitrary tie-break, always unique"]
+          - ["`rank()`", "1, 1, 3", "Ties share a rank, then gaps"]
+          - ["`dense_rank()`", "1, 1, 2", "Ties share a rank, no gaps"]
+        lead: "`ORDER BY` with no frame defaults to `RANGE`, which includes peers. Say `ROWS` when sort keys repeat."
+        takeaway: "`row_number` is always unique, `rank` leaves gaps after ties and `dense_rank` doesn't."
+        source: notes/06-window-functions.md
+        notes: "`sum(sum(slots)) OVER (...)` aggregates per group first, then windows, because window functions run after GROUP BY. `lag` and `lead` compare with neighbouring rows."
+
+  - title: Correct, fast and safe
+    summary: Constraints · Transactions · Query plans · Composite indexes · Sargable predicates · Parameters
+    slides:
+      - layout: statement
+        title: Who should enforce the rules on your data?
+        kicker: The problem
+        statement: A schema makes promises about its data, an index makes a query fast at a price, and a parameter keeps a value from becoming code. All three belong below your application.
+        takeaway: Constraints let the database keep the schema's promises, so the rules hold for every program that writes.
+        source: notes/07-modeling-and-ddl.md
+        notes: "Data hygiene: atomic values, a stable meaningless key, no redundant data, explicit units."
+
+      - layout: cards
+        title: What does each constraint promise?
+        kicker: Constraints
+        cards:
+          - {title: PRIMARY KEY, body: "Unique and not `NULL`. One per table, and it can span columns."}
+          - {title: UNIQUE, body: "No duplicates, though it allows multiple `NULL`s."}
+          - {title: "NOT NULL, CHECK", body: "The value is present, and meets a condition on each row."}
+          - {title: REFERENCES, body: "The value exists in the parent. SQLite needs `PRAGMA foreign_keys = ON` per connection."}
+        takeaway: Primary keys, `UNIQUE`, `NOT NULL`, `CHECK` and foreign keys are promises, and SQLite enforces foreign keys only after the pragma.
+        source: notes/07-modeling-and-ddl.md
+        notes: The foreign keys pragma is the single most common SQLite surprise.
+
+      - layout: compare
+        title: How do you make writes safe to re-run?
+        kicker: Upserts and transactions
+        emphasis: none
+        left:
+          title: Upsert
+          code: |-
+            INSERT INTO facilities (facid, name)
+            VALUES (9, 'Spa')
+            ON CONFLICT (facid) DO UPDATE
+              SET name = excluded.name;
+          tag: "`excluded` is the row you tried to insert"
+        right:
+          title: Transaction
+          code: |-
+            BEGIN;
+            UPDATE accounts
+              SET balance = balance - 100
+              WHERE id = 1;
+            UPDATE accounts
+              SET balance = balance + 100
+              WHERE id = 2;
+            COMMIT;
+          tag: Every statement or none
+        takeaway: Idempotent loads use upserts or delete-then-insert in a transaction. Check `UPDATE` and `DELETE` with `SELECT count(*)` first.
+        source: notes/07-modeling-and-ddl.md
+        notes: UPDATE or DELETE without WHERE changes every row. A view is a saved query, so it always reflects current data.
+
+      - layout: flow
+        title: How do you read a query plan?
+        kicker: EXPLAIN QUERY PLAN
+        steps:
+          - {label: "`SEARCH b`", sub: "outer loop: index range on `memid`, `starttime`"}
+          - {label: "`SEARCH f`", sub: "inner loop: one primary-key lookup per row"}
+          - {label: Temp b-tree, sub: "for `GROUP BY`: no index sorts by name"}
+          - {label: Temp b-tree, sub: "for `ORDER BY`: `n` exists only after grouping"}
+        bullets:
+          - "`SCAN` reads every row, `SEARCH` uses an index, and `COVERING INDEX` never reads the table"
+          - "Filtered only by `date(starttime) = …`, the same table plans as `SCAN bookings`"
+        takeaway: The first line is the outer table of the join. Ask whether it is a `SEARCH` or a `SCAN`, and how many rows it feeds the rest.
+        source: notes/08-indexes-and-query-plans.md
+        notes: Real plan from clubdata.db. Postgres and DuckDB use EXPLAIN ANALYZE, so compare estimated with actual rows. A big gap means stale statistics.
+
+      - layout: table
+        title: Which queries can use an index on (memid, starttime)?
+        kicker: Composite indexes
+        header: [Query, "Uses the index?"]
+        widths: [4, 4.6]
+        rows:
+          - ["`WHERE memid = 5`", "Yes, using the leftmost prefix"]
+          - ["`WHERE memid = 5 AND starttime >= …`", "Yes: equality first, then a range"]
+          - ["`WHERE starttime >= …`", "Not efficiently: the leading column is missing"]
+          - ["`WHERE memid > 5 AND starttime = …`", "Only for `memid`: nothing narrows after a range"]
+        takeaway: Put equality columns first and the range or sort column last, like a phone book sorted by surname then first name.
+        source: notes/08-indexes-and-query-plans.md
+        notes: "A B-tree lookup costs O(log n) against a full scan's O(n). Every write also updates every index, and low-selectivity predicates rightly ignore it."
+
+      - layout: table
+        title: What makes a predicate sargable?
+        kicker: Sargable predicates
+        header: [Not sargable, Rewrite]
+        widths: [3.6, 5]
+        rows:
+          - ["`date(starttime) = '2012-09-14'`", "`starttime >= '2012-09-14' AND starttime < '2012-09-15'`"]
+          - ["`slots * 2 > 6`", "`slots > 3`"]
+          - ["`lower(surname) = 'smith'`", "An expression index on `lower(surname)`"]
+          - ["`surname LIKE '%mith'`", "Full-text search or a trigram index"]
+        takeaway: Wrapping an indexed column in a function usually hides it from the index, so compare the bare column.
+        source: notes/08-indexes-and-query-plans.md
+        notes: Columnar engines such as DuckDB and BigQuery use zone maps rather than B-trees, so read fewer columns and partition instead.
+
+      - layout: compare
+        title: How do values get from Python into SQL safely?
+        kicker: Parameters
+        left:
+          title: Pasted string
+          code: |-
+            conn.execute(
+              f"SELECT * FROM members "
+              f"WHERE surname = '{name}'")
+          tag: SQL injection
+        right:
+          title: Parameter
+          code: |-
+            conn.execute(
+              "SELECT * FROM members "
+              "WHERE surname = ?", (name,))
+          tag: A value can never become code
+        takeaway: The driver sends SQL and values separately. Parameters work only for values, so check table names against an allow-list.
+        source: notes/09-sql-from-python.md
+        notes: The sqlite3 with block commits or rolls back but does not close. Filter and aggregate in SQL, reshape and plot in pandas. DuckDB queries CSV, Parquet and DataFrames directly.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What are the SQL rules?
+        cards:
+          - {title: Logic, body: "`IS NULL`, not `= NULL`. `NOT EXISTS`, not `NOT IN`. Parenthesise `AND`/`OR`."}
+          - {title: Joins, body: "Check the row count. Right-table filters go in `ON`."}
+          - {title: Writes, body: "Constraints, transactions, and a `SELECT count(*)` first."}
+          - {title: Speed, body: "Read the plan. Equality first, range last. Keep the column bare."}
+        takeaway: Handle `NULL` deliberately, check row counts after joins, read the plan, and pass values as parameters.
+        source: notes/02-nulls-and-expressions.md
+        notes: These condense the ten notes.
+
+      - layout: steps
+        title: How do you practise all of it at once?
+        kicker: Capstone
+        steps:
+          - {title: Find the report, text: "Filter on several columns: a murder, 2018-01-15, SQL City"}
+          - {title: Find the witnesses, text: "`LIKE` and `ORDER BY … DESC LIMIT 1`"}
+          - {title: Cross-reference, text: "Multi-table joins over check-ins, plates and events"}
+          - {title: Narrow down, text: "Subqueries and `GROUP BY … HAVING count(*) = 3`"}
+        takeaway: The SQL Murder Mystery uses only notes 01 to 05. Keep going after your first answer, because there is a second twist.
+        source: notes/10-capstone-murder-mystery.md
+        notes: "`bash practice/setup.sh` downloads the database. Then SQL 09 hands off to pandas in data-analytics 01."

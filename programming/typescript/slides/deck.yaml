@@ -1,0 +1,352 @@
+# TypeScript track: study deck (flashcards). Covers notes/01-09.
+# Build:  make slides PILLAR=programming/typescript [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: TypeScript
+  subtitle: A checker in front of JavaScript, for Python developers
+  tagline: |-
+    JavaScript runtime · Narrowing · Generics
+    Utility types · Async · Zod · LLM APIs
+  reference: "Notes: programming/typescript"
+  output: typescript.pptx
+  notes: >-
+    The study deck for the TypeScript track. Every slide is a flashcard: the title is the question
+    and the takeaway is the rule that answers it. What runs and what the checker sees, then
+    deriving types from types, then async work and untrusted data at the boundary.
+
+parts:
+  - title: The runtime and the checker
+    summary: Type stripping · JavaScript traps · Shapes · unknown · Narrowing · Tagged unions
+    slides:
+      - layout: statement
+        title: What is left of your types when the code runs?
+        kicker: The problem
+        statement: Nothing. The checker runs and disappears, `x as User` checks nothing, and an `interface` produces no code. What executes is JavaScript.
+        takeaway: There are no runtime types, so learn the JavaScript runtime first and validate anything from outside the program.
+        source: notes/01-js-for-python-devs.md
+        notes: Note 08 covers validating data from outside.
+
+      - layout: table
+        title: Which command checks types, and which runs code?
+        kicker: How TS runs
+        header: [Command, What happens]
+        widths: [2.4, 6]
+        rows:
+          - ["`tsc --noEmit`", "Type-checks only. Nothing runs"]
+          - ["`node file.ts`", "Node 22.18+ **strips** the types and runs the rest, with no checking at all"]
+          - ["`tsc` or a bundler", "Emits `.js` files for production"]
+        takeaway: "`node file.ts` strips types without checking them, so `tsc --noEmit` is a separate step you must run."
+        source: notes/01-js-for-python-devs.md
+        notes: "Numbers are 64-bit floats, and integers are exact only up to 2^53. Use bigint beyond that."
+
+      - layout: cards
+        title: Which JavaScript behaviours catch Python developers?
+        kicker: JavaScript traps
+        cards:
+          - {title: "`sort()`", body: "Sorts in place and compares as strings. Write `sort((a, b) => a - b)`."}
+          - {title: Truthiness, body: "`[]` and `{}` are truthy, the opposite of Python."}
+          - {title: Equality, body: "Always `===`, except `x == null`. `[1] === [1]` is false: by reference."}
+          - {title: "`for…in`", body: "Iterates keys. Use `for…of` on arrays."}
+          - {title: "`??` and `||`", body: "`??` replaces only `null` and `undefined`. `||` also replaces `0` and `\"\"`."}
+          - {title: "`const`", body: "Stops reassignment, not mutation. `{ ...a }` copies only one level."}
+        takeaway: "`[]` is truthy, `sort()` compares strings, `===` compares references, and `const` doesn't stop mutation."
+        source: notes/01-js-for-python-devs.md
+        notes: "`structuredClone` is the deep copy. Most TS code uses plain objects, functions and unions more than class hierarchies."
+
+      - layout: compare
+        title: What is the difference between any and unknown?
+        kicker: Everyday types
+        emphasis: right
+        left:
+          title: any
+          bullets:
+            - Turns the checker off
+            - Spreads to everything it touches
+          tag: Avoid it
+        right:
+          title: unknown
+          bullets:
+            - Could be anything
+            - You must narrow before using it
+          tag: The safe top type
+        takeaway: "`any` turns checking off and spreads. `unknown` forces you to narrow first, so use it for outside data."
+        source: notes/02-everyday-types.md
+        notes: "never is a value that can't exist. void is a function that returns nothing useful. Always set strict: true, which turns on strictNullChecks."
+
+      - layout: bullets
+        title: Does TypeScript check a type's name or its shape?
+        kicker: Structural typing
+        bullets:
+          - "Shape: any object with `x: number` and `y: number` **is** a `Point`, like a Python `Protocol`"
+          - "One exception: an object **literal** with extra properties is an error, because that is usually a typo"
+          - "Use `interface` for object shapes you'll extend, and `type` for unions, tuples and the rest"
+          - "Annotate the boundaries and let inference handle the inside"
+        takeaway: TypeScript checks shape, not name. Annotate parameters, returns and exports, and let inference do the rest.
+        source: notes/02-everyday-types.md
+        notes: A function's signature is its contract, and the annotation catches accidental changes. Both interface and type are erased at runtime.
+
+      - layout: flow
+        title: How does narrowing work?
+        kicker: Follow one value
+        steps:
+          - {label: Start, sub: "`x: string | number | null`"}
+          - {label: "`x === null`", sub: "yes: `x: null`. no: `string | number`"}
+          - {label: "`typeof x === 'string'`", sub: "yes: `x: string`"}
+          - {label: The rest, sub: "only `x: number` is left"}
+        caption: The checker follows your control flow, so guard clauses with an early `return` narrow everything after them.
+        takeaway: On a union you can use only what every member has. Each branch removes members until one type is left.
+        source: notes/03-unions-and-narrowing.md
+        notes: Narrowing also works with instanceof, 'role' in x and Array.isArray. A predicate returning `x is T` is a promise you make, and the checker trusts it unverified.
+
+      - layout: code
+        title: How do you make a switch exhaustive?
+        kicker: Discriminated unions
+        lang: ts
+        code: |-
+          type Shape =
+            | { kind: 'circle'; radius: number }
+            | { kind: 'rect'; width: number; height: number };
+
+          function area(s: Shape): number {
+            switch (s.kind) {
+              case 'circle': return Math.PI * s.radius ** 2;
+              case 'rect':   return s.width * s.height;
+              default: {
+                const unreachable: never = s;   // compile error if a member is forgotten
+                throw new Error('unhandled: ' + JSON.stringify(unreachable));
+              }
+            }
+          }
+        takeaway: Give each member a literal `kind` and assign the `default` branch to `never`, so a new member becomes a compile error.
+        source: notes/03-unions-and-narrowing.md
+        notes: This is how you model API responses and LLM content blocks.
+
+  - title: Types from types
+    summary: Generics · keyof · Utility types · Mapped types · Conditional types · When to stop
+    slides:
+      - layout: statement
+        title: Why not type the helper as any?
+        kicker: The problem
+        statement: "`first(xs: any[]): any` works for every array and forgets what it was given. Copying a type by hand for each variant drifts out of date."
+        takeaway: A generic works for many types without forgetting which it was given. Write a type once and derive the rest.
+        source: notes/04-generics.md
+        notes: Python's TypeVar is the same idea.
+
+      - layout: code
+        title: How do you type a safe property getter?
+        kicker: Generics and keyof
+        lang: ts
+        code: |-
+          function get<T, K extends keyof T>(obj: T, key: K): T[K] {
+            return obj[key];
+          }
+          const user = { id: 1, name: 'Ada' };
+          get(user, 'name');   // string
+          get(user, 'nope');   // error: not a key of the object
+
+          type Result<T, E = string> = { ok: true; value: T } | { ok: false; error: E };
+        takeaway: "`keyof T` is the union of keys and `T[K]` is that property's type. A type parameter should appear at least twice."
+        source: notes/04-generics.md
+        notes: If T is used once, write the concrete type or unknown. Overloads handle a return type that depends on an argument value.
+
+      - layout: table
+        title: Which utility types do you use weekly?
+        kicker: Utility types
+        header: [Utility, Result, Typical use]
+        widths: [2.6, 3, 3]
+        rows:
+          - ["`Partial<T>`", "Every property optional", "Update payloads"]
+          - ["`Pick<T, 'a'>`, `Omit<T, 'id'>`", "Keep or drop keys", "View models, create payloads"]
+          - ["`Record<K, V>`", "Keys `K`, values `V`", "Lookup tables"]
+          - ["`Exclude<U, X>`, `Extract<U, X>`", "Remove or keep union members", "Filtering kinds"]
+          - ["`ReturnType<F>`, `Parameters<F>`", "A function's output and input", "Typing wrappers"]
+          - ["`Awaited<T>`", "Unwrap a `Promise`", "`Awaited<ReturnType<typeof f>>`"]
+        takeaway: Derive payload and wrapper types with `Partial`, `Pick`, `Omit` and `ReturnType` rather than repeating fields.
+        source: notes/05-type-transformations.md
+        notes: "`A & B` has every property of both, which combines types without repeating fields."
+
+      - layout: flow
+        title: How does a mapped type build a new type?
+        kicker: Mapped types
+        steps:
+          - {label: "`keyof T`", sub: the union of keys}
+          - {label: "`K in keyof T`", sub: loop over them}
+          - {label: "`T[K] | null`", sub: compute each property}
+          - {label: "`Nullable<T>`", sub: a new object type}
+        caption: "`type Nullable<T> = { [K in keyof T]: T[K] | null }`"
+        bullets:
+          - "`readonly` and `?` add modifiers, and `-readonly` and `-?` remove them"
+          - "`as` remaps keys, and mapping a key to `never` drops it"
+        takeaway: A mapped type loops over keys to build a new object type. `Required` and `Readonly` are built this way.
+        source: notes/05-type-transformations.md
+        notes: "Template literal types build key names: `on${Capitalize<Event>}`."
+
+      - layout: compare
+        title: What do infer and distribution do in a conditional type?
+        kicker: Conditional types
+        emphasis: none
+        left:
+          title: infer
+          code: |-
+            type ElementOf<T> =
+              T extends readonly (infer E)[]
+                ? E : never;
+          tag: Pattern-matches a piece of a type
+        right:
+          title: Distribution
+          code: |-
+            type IsString<T> =
+              T extends string ? true : false;
+
+            IsString<string | number>  // boolean
+          tag: "`[T] extends [string]` turns it off"
+        takeaway: "`infer` captures part of a type. A bare type parameter distributes over a union, unless both sides are in brackets."
+        source: notes/05-type-transformations.md
+        notes: Type-level code is real code. Use utility types freely, mapped types sometimes, and deep recursion only in libraries.
+
+  - title: Async and the boundary
+    summary: The event loop · Promise.all · Async bugs · Tooling · Zod · LLM responses
+    slides:
+      - layout: statement
+        title: What makes a network response hard to type?
+        kicker: The problem
+        statement: It arrives later, it can fail, and `as User` compiles without checking a thing. An LLM API is all of that at once.
+        takeaway: Slow work returns a `Promise`, and outside data is `unknown` until you parse it at the boundary.
+        source: notes/06-async.md
+        notes: Notes 06 to 09 take time and trust one at a time.
+
+      - layout: flow
+        title: In what order does JavaScript run sync code, promises and timers?
+        recall: In what order do sync code, promises and timers run?
+        kicker: The event loop
+        steps:
+          - {label: Task, sub: run until the call stack is empty}
+          - {label: Microtasks, sub: "empty the queue: promise callbacks, code after `await`"}
+          - {label: Next task, sub: a ready timer or I/O callback}
+          - {label: Wait, sub: for the operating system if nothing is ready}
+        loop: repeat for every task
+        caption: "`log`, `setTimeout(0)`, `.then`, `log` prints: sync, sync, microtask, timer."
+        takeaway: Sync code finishes first, then all microtasks, then the next timer or I/O callback, so a timer of 0 still waits.
+        source: notes/06-async.md
+        notes: A long synchronous loop freezes everything, the same as blocking asyncio's loop in Python 03 note 07.
+
+      - layout: compare
+        title: How do you run two async calls in parallel?
+        kicker: Sequential or parallel
+        left:
+          title: Sequential
+          code: |-
+            const a = await getA();
+            const b = await getB();
+          tag: "Total time: a + b"
+        right:
+          title: Parallel
+          code: |-
+            const [a, b] = await Promise.all(
+              [getA(), getB()]);
+          tag: "Total time: max(a, b)"
+        takeaway: A promise starts when created, so `Promise.all` runs calls in parallel. It fails fast, and `allSettled` doesn't.
+        source: notes/06-async.md
+        notes: "`await` pauses only the current function. An async function always returns a Promise. `race` does not cancel the loser."
+
+      - layout: table
+        title: What are the common async bugs?
+        kicker: Common bugs
+        header: [Bug, Fix]
+        widths: [3.6, 5]
+        rows:
+          - ["A forgotten `await`", "The lint rule `no-floating-promises`"]
+          - ["`await` inside `forEach`", "`for…of` for sequential, `Promise.all(xs.map(…))` for parallel"]
+          - ["`Promise.all` over 10,000 requests", "Limit concurrency with a worker pool"]
+          - ["A timeout via `race` with no cleanup", "Clear the timer, and pass an `AbortSignal` to cancel the work"]
+        takeaway: "`forEach` doesn't await its callbacks and `race` doesn't cancel the loser, so use `for…of` and `AbortSignal`."
+        source: notes/06-async.md
+        notes: "`AbortSignal.timeout(5_000)` cancels the request itself. `for await` handles streams."
+
+      - layout: cards
+        title: What does a modern TypeScript setup need?
+        kicker: Modules and tooling
+        cards:
+          - {title: ES modules, body: "`\"type\": \"module\"` and named exports. `import type` is erased, and Node's stripping needs it."}
+          - {title: tsconfig, body: "`strict` on, with checked index access and verbatim module syntax. `noEmit` when another tool runs the code."}
+          - {title: Tools, body: "`tsc --noEmit` to check, ESLint for floating promises, `node --test` or Vitest."}
+          - {title: Declarations, body: "`.d.ts` holds types only. Try `@types/x` first. Interfaces merge, and aliases don't."}
+        takeaway: Use ES modules, `strict` and `import type`, and run `tsc --noEmit` in CI. Most TypeScript pain is config pain.
+        source: notes/07-modules-and-tooling.md
+        notes: "The flags: strict, noUncheckedIndexedAccess, verbatimModuleSyntax, erasableSyntaxOnly, skipLibCheck, noEmit. In ESM use import.meta.dirname. Module augmentation works because interfaces merge."
+
+      - layout: code
+        title: How do you get a type and a runtime check from one definition?
+        kicker: Zod
+        lang: ts
+        code: |-
+          const User = z.object({
+            id: z.number().int().positive(),
+            email: z.email(),
+            role: z.enum(['user', 'admin']).default('user'),
+          });
+          type User = z.infer<typeof User>;      // the static type comes from the schema
+
+          User.parse(data);                      // a User, or throws ZodError
+          const r = User.safeParse(data);        // { success, data } or { success, error }
+        takeaway: Parse, don't validate. Turn `unknown` into a precise type once at the edge, and trust it everywhere after that.
+        source: notes/08-runtime-validation-zod.md
+        notes: "Parse at config, HTTP, files, LLM output and tool inputs. `coerce.boolean()` treats \"false\" as true, so use an enum for env flags."
+
+      - layout: table
+        title: What should your loop do for each stop_reason?
+        kicker: LLM responses
+        header: ["stop_reason", Your loop]
+        widths: [2, 6]
+        rows:
+          - ["`end_turn`", "Done"]
+          - ["`tool_use`", "Run the tools and send back `tool_result` blocks with the same `tool_use_id`"]
+          - ["`max_tokens`", "Raise the limit or continue, and don't trust a truncated tool call"]
+          - ["`pause_turn`", "Send the turn back to continue"]
+          - ["`refusal`", "Handle it before reading `content`"]
+        takeaway: Handle `stop_reason` in an exhaustive `switch` with a `default`, because the API adds new values over time.
+        source: notes/09-typescript-for-ai-apps.md
+        notes: Tool inputs are model output, which makes them untrusted. Validate them, confine file paths and gate anything destructive.
+
+      - layout: code
+        title: Why must you never assume content[0] is text?
+        kicker: Content blocks
+        lang: ts
+        code: |-
+          const text = message.content
+            .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+            .map((b) => b.text)
+            .join('\n');
+
+          const stream = client.messages.stream({ model, max_tokens: 16000, messages });
+          stream.on('text', (delta) => process.stdout.write(delta));
+          const final = await stream.finalMessage();   // the complete Message
+        takeaway: Content is a discriminated union of blocks, and with thinking on the first often isn't text, so narrow on `type`.
+        source: notes/09-typescript-for-ai-apps.md
+        notes: Keep prompt-building and block parsing as pure functions, log usage on every response, and pin the model ID in one config value.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What are the TypeScript rules?
+        cards:
+          - {title: Types, body: "`strict` on. `unknown` over `any`. No `as` on outside data."}
+          - {title: Unions, body: "A literal `kind`, an exhaustive `switch`, and `never` in the `default`."}
+          - {title: Async, body: "`await` everything. `Promise.all` with a limit. An `AbortSignal` to cancel."}
+          - {title: Boundary, body: "Parse once at the edge with one schema, including tool inputs."}
+        takeaway: Turn on `strict`, avoid `any` and `as`, make unions exhaustive, and parse outside data once at the edge.
+        source: notes/03-unions-and-narrowing.md
+        notes: These condense the nine notes.
+
+      - layout: bullets
+        title: Where do you go after TypeScript?
+        bullets:
+          - "**`ai-engineering`**: every pillar's code is Python or TypeScript"
+          - "**Type challenges**: `node check.ts easy` and `node check.ts medium`, from `practice/`"
+          - "**The real API**: `node examples/claude.ts` with `ANTHROPIC_API_KEY` set"
+        takeaway: Next is the AI engineering pillars, after finishing Python 03 and TypeScript 09, then the type challenges for practice.
+        source: notes/09-typescript-for-ai-apps.md
+        notes: See programming/CURRICULUM.md for the order of the tracks.

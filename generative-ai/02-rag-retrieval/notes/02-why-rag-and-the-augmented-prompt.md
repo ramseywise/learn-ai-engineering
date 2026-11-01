@@ -11,9 +11,11 @@ sources:
   - Huyen, *AI Engineering* (O'Reilly, 2025), ch. 6
   - Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 6
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 2 — Why RAG, and the augmented prompt
+
+Ask a chat model for Tallybook's refund window and it will give you one. It sounds right, because refund windows are usually 14 or 30 days, and the model has seen plenty of them. It has never seen this company's policy, so the number is a guess in the voice of a fact. Retraining won't fix that, since the policy is private and changes whenever finance changes it. The fix is older and simpler: look it up first, then answer from what you found.
 
 > RAG is "put the missing facts in the prompt, automatically": a retriever picks documents from a knowledge base, the prompt template splices them in, and the LLM answers from them. This note covers why that works and what the smallest version looks like in code.
 
@@ -58,7 +60,7 @@ The course's one-line definition: if you had to answer a question about somethin
 | **Retriever** | Given the prompt, find the most relevant documents | An index over the **knowledge base** |
 | **LLM** | Given prompt + documents, write the answer | Only its weights. It sees the docs because they are in the context window |
 
-The split, and the name, come from Lewis et al. ([2020](../sources/2005.11401v4.pdf)). They paired a dense retriever over 21M 100-word Wikipedia chunks with a 400M-parameter BART generator, and fine-tuned the query encoder and generator together. The document encoder and index stayed frozen, which is why the index could be swapped out to update what the model knows. They tested this on 82 world leaders. With the 2016 Wikipedia index the model named 2016 leaders correctly 70% of the time, and with the 2018 index it named 2018 leaders correctly 68% of the time. With the wrong year's index it fell to 4–12%, and no retraining was involved. The course's version keeps the split and drops the joint training: an off-the-shelf retriever feeds a frozen LLM through the prompt.
+The split, and the name, come from Lewis et al. ([arXiv:2005.11401](https://arxiv.org/abs/2005.11401), NeurIPS 2020). They paired a dense retriever over 21M 100-word Wikipedia chunks with a 400M-parameter BART generator, and fine-tuned the query encoder and generator together. The document encoder and index stayed frozen, which is why the index could be swapped out to update what the model knows. They tested this on 82 world leaders. With the 2016 Wikipedia index the model named 2016 leaders correctly 70% of the time, and with the 2018 index it named 2018 leaders correctly 68% of the time. With the wrong year's index it fell to 4–12%, and no retraining was involved. The course's version keeps the split and drops the joint training: an off-the-shelf retriever feeds a frozen LLM through the prompt.
 
 The retrieve-then-read pattern is older than the name. Huyen traces it to Chen et al. (2017), who paired a Wikipedia retriever with a "document reader" for open-domain QA (*AI Engineering*, ch. 6). Raieli and Iuculano sort the ways the two halves can be trained (*Building AI Agents*, ch. 6):
 
@@ -155,6 +157,21 @@ Query: {query}
 """
 
 query = "What is the most expensive house? And the bigger one?"
+print(generate_prompt(query, house_info))
+```
+
+```text
+
+Use the following houses information to answer users queries.
+House located at 123 Maple Street, Springfield, priced at $250000, 3 bedrooms.
+House located at 456 Elm Avenue, Shelbyville, priced at $300000, 4 bedrooms.
+Query: What is the most expensive house? And the bigger one?
+```
+
+The lab then sends the bare question and the augmented prompt to the same model and compares the answers:
+
+```python
+# illustrative: needs an API key; the wrapper is defined in the course's utilities
 generate_with_single_input(prompt=query, role="user")            # guesses
 generate_with_single_input(prompt=generate_prompt(query, house_info),
                            role="assistant")                     # reads it off
@@ -169,6 +186,7 @@ generate_with_single_input(prompt=generate_prompt(query, house_info),
 The graded assignment adds a real retriever over the Kaggle *News Headlines 2024* dataset (BBC News). The structure is the one every later lab keeps:
 
 ```python
+# illustrative: needs the course's retrieve() and query_news() and its news dataset
 def get_relevant_data(query: str, top_k: int = 5) -> list[dict]:
     # retrieve() returns indices of the top_k most relevant articles;
     # query_news() looks those indices up in the dataset
@@ -209,6 +227,74 @@ Three things the lab is teaching:
 
 `llm_call(query, use_rag=...)` prints both answers side by side. The suggested queries ("How is global warming progressing in 2024?", "Tell me about the most recent advances in AI.") make the gap obvious: the baseline hedges about its cutoff, the RAG answer quotes 2024 headlines.
 
+## The same structure over Tallybook
+
+Here is that structure over the running example, so it runs with no key and no dataset. `reader` is a stand-in for an LLM that only returns the context sentence sharing the most words with the question, and says it doesn't know when there's no context. A stand-in is enough here because this block exercises the plumbing around the model: where the documents come from, how the prompt is built, and what the baseline looks like.
+
+```python
+import re
+from ragkit import DOC_BY_ID, Retriever, tokenize
+
+retriever = Retriever()
+
+def get_relevant_data(query, top_k=3):
+    return [DOC_BY_ID[i] for i in retriever.dense(query, k=top_k)]
+
+def format_relevant_data(docs):
+    # Keep the id: it becomes the citation.
+    return "\n".join(f"[{d.id}] {d.title}: {d.text}" for d in docs)
+
+def generate_final_prompt(query, top_k=3, use_rag=True):
+    if not use_rag:
+        return query                                 # baseline: bare question
+    return (f"Answer only from the documents and cite the id in brackets.\n"
+            f"Documents:\n{format_relevant_data(get_relevant_data(query, top_k))}\n"
+            f"Question: {query}")
+
+def reader(prompt, query):                           # stand-in for an LLM
+    best, best_overlap = "I don't know.", 0
+    for doc_id, body in re.findall(r"^\[(kb-\d+)\] (.+)$", prompt, re.M):
+        for sentence in re.split(r"(?<=[.])\s+", body):
+            overlap = len(set(tokenize(sentence)) & set(tokenize(query)))
+            if overlap > best_overlap:
+                best, best_overlap = f"{sentence} [{doc_id}]", overlap
+    return best
+
+query = "How long do refunds take to reach the card?"
+print("no RAG:", reader(generate_final_prompt(query, use_rag=False), query))
+print("RAG:   ", reader(generate_final_prompt(query), query))
+```
+
+```text
+no RAG: I don't know.
+RAG:    Refunds reach the original card in 5 to 10 working days. [kb-04]
+```
+
+A real model would phrase this better, and it would also answer the no-RAG line with a confident guess. That is worse than the honest "I don't know" the stand-in gives, and it is why you build the baseline: you need to see what the model says when it has nothing.
+
+`top_k` is the first knob you get. Raising it buys recall and costs context. Here is that trade-off measured on the 20 labelled questions, counting words as a rough proxy for tokens:
+
+```python
+from ragkit import DOC_BY_ID, QUERIES, Retriever, recall_at_k
+
+retriever = Retriever()
+for k in [1, 2, 3, 5, 10]:
+    runs = [(retriever.hybrid(q, k=k, pool=18), rel) for q, rel, _ in QUERIES]
+    recall = sum(recall_at_k(r, rel, k) for r, rel in runs) / len(runs)
+    words = sum(len(DOC_BY_ID[i].full.split()) for r, _ in runs for i in r) / len(runs)
+    print(f"top_k={k:<2}  recall@k={recall:.2f}  context words per query={words:.0f}")
+```
+
+```text
+top_k=1   recall@k=0.55  context words per query=43
+top_k=2   recall@k=0.85  context words per query=86
+top_k=3   recall@k=0.95  context words per query=128
+top_k=5   recall@k=0.95  context words per query=211
+top_k=10  recall@k=1.00  context words per query=393
+```
+
+Past the point where recall flattens, each extra document pays for words the model has to read past, with no new answer in them. Shuster et al.'s dialogue result in the table above is the same shape measured on human-rated hallucination.
+
 ---
 
 ## Where RAG is used
@@ -241,4 +327,50 @@ Three things the lab is teaching:
 |---|---|
 | M1 ungraded lab (house prompt) and Assignment 1 (news RAG) ([upstream](https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG)) | needs an API key (Together.ai, via the Coursera proxy); not copied |
 
-→ Next: [03-keyword-semantic-and-hybrid-search.md](03-keyword-semantic-and-hybrid-search.md) — what `retrieve()` actually does: BM25, embeddings, hybrid fusion, and how to measure a retriever.
+---
+
+## Pitfalls
+
+- **No baseline.** Symptom: everyone agrees the RAG answers look good, and no one can say what retrieval added. Keep a `use_rag=False` path and compare.
+- **Dropping source metadata while formatting.** Symptom: answers can't cite anything, and debugging a wrong answer means guessing which document caused it. Carry the id through every stage.
+- **A template that invites the model's own knowledge.** Symptom: answers mix your documents with outdated training data. The course's assignment deliberately says "add it to your overall knowledge". For factual support use, say "only from the documents".
+- **Stuffing the corpus because the window allows it.** Symptom: the bill grows and quality does not. Whole-document reading can win on frontier models (Li et al. above), and it still costs several times the tokens. Route between the two if you have both.
+- **Treating `top_k` as a constant.** Symptom: recall is fine on simple questions and multi-part ones miss half their answer. Tune it against labelled data, per query type if needed.
+
+---
+
+## Try it
+
+1. Run the Tallybook block with `query = "How do I close my account?"`. Which sentence does the reader pick, and is it the best one?
+2. Change `retriever.dense` to `retriever.sparse` in `get_relevant_data` and rerun with "can I get my money back". What happens, and what does it say about a pipeline where only the retriever changed?
+3. Your corpus is 150K tokens and rarely changes. Long context or RAG? Give your reasoning and name what you would measure.
+
+<details>
+<summary>Answers</summary>
+
+1. Dense search finds `kb-06`, and the reader takes the sentence with the most shared words. It can only reward word overlap, so it may pick a sentence that shares words and misses the action. A real model reads meaning, which is why this is a plumbing test and not a quality test.
+2. BM25 returns only `kb-03`, which contains "Back off", so the reader answers with an irrelevant sentence or "I don't know". The prompt and the reader didn't change, so the failure is pure retrieval. This is why you measure retrieval on its own.
+3. Under Anthropic's rough threshold as Huyen reports it (about 200K tokens), whole-corpus plus prompt caching is a reasonable first build. Measure accuracy on your own questions, and cost and latency per call, against a RAG baseline. Li et al.'s Self-Route suggests trying both behind a router if volume is high.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What problem does RAG solve? | The model lacks private, real-time and hard-to-access facts. Retrieval supplies them in the prompt at inference time, with no retraining. |
+| Why is updating an index better than retraining? | Lewis et al. swapped a 2016 Wikipedia index for 2018 and the model named 2018 world leaders correctly 68% of the time. With the wrong year's index it fell to 4–12%, and no retraining was involved. |
+| What does RAG cost you? | A retrieval step of added latency, an index to keep in sync, and a new failure surface. |
+| Does RAG reduce hallucination? | In Shuster et al.'s dialogue setup, hallucinated responses dropped from 68.2% to 8–21%. More documents can push it back up: 7.9% to 19.8% going from 5 to 25 with FiD-RAG. |
+| Long context or RAG? | Long context can beat top-5 RAG on quality with frontier models, at much higher token cost. Li et al.'s Self-Route answers with RAG and falls back to full context only for "unanswerable" outputs. When the corpus doesn't fit the window, retrieval is the only option. |
+| How much retrieved context is optimal? | It depends on the model and data. Yu et al. saw Llama3.1-70B peak at 48K tokens on one benchmark, and document order alone added 6 F1 at 16K. |
+| Name the training paradigms for retriever and generator. | Training-free, independent, sequential in either order, and joint. Most production systems stay training-free because joint training ties the pair together. |
+| What is the smallest possible RAG? | Fetch text and format it into the prompt template. The augmentation step is an f-string. |
+
+---
+
+## Next
+
+[03 — Keyword, semantic and hybrid search](03-keyword-semantic-and-hybrid-search.md): what `retrieve()` actually does, with BM25, embeddings, hybrid fusion and how to measure a retriever.

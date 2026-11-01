@@ -2,6 +2,7 @@
 
 > From "JavaScript for Python developers" to typed LLM apps, in nine modules. Each module is a
 > short note plus exercises that are checked by the type checker, by `node --test`, or by both.
+> Study deck: [typescript.pptx](slides/typescript.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [How exercises are checked](#how-exercises-are-checked) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
 
 ---
@@ -33,6 +34,7 @@ Solutions sit next to each vendored exercise (`index.solution.ts`), in
 typescript/
 ├── README.md
 ├── notes/                        01–09
+├── slides/                       deck.yaml and the built study deck; `make slides PILLAR=programming/typescript`
 └── practice/                     one npm project: package.json, tsconfig.json, .gitignore (node_modules/)
     ├── check.ts                  one tsc run with the errors grouped by exercise; --solutions swaps the solutions in
     ├── exercises/                own runtime exercises 01, 06, 08, 09

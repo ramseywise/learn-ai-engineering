@@ -7,6 +7,7 @@ sources:
   - "Nicole Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 1, 4"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 1, 2"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 11"
+  - "Valliappa Lakshmanan & Hannes Hapke, Generative AI Design Patterns (O'Reilly, 2025), ch. 1"
   - "James Phoenix & Mike Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 6"
   - "Chip Huyen, AI Engineering (O'Reilly, 2025), ch. 6"
   - https://arxiv.org/abs/2506.02153
@@ -20,11 +21,81 @@ sources:
   - https://arxiv.org/abs/2406.04151
   - https://arxiv.org/abs/2207.05608 (Inner Monologue)
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 1 — Agent fundamentals
 
 > Agent = LLM + Context + Tools. What each term covers, how the ReAct loop ties them together, and when to choose a workflow or an autonomous agent.
+
+An inventory manager checks three products every Monday and decides what to reorder. A language model can read the sales figures and recommend an order in one call. That is not yet an agent. It becomes one when it looks the figures up itself, places the order, notices the supplier rejected it and tries again, and each of those steps adds a way to fail that a single call never had. This chapter takes that small job apart: what an agent is made of, how the loop runs, how much freedom to give it, and which parts must stay out of the model's hands.
+
+---
+
+## The running example: a restock agent
+
+Lakshmanan and Hapke open their book with the smallest useful agent: a single model call with the system prompt "you are an inventory manager who orders just in time", given stock levels and four weeks of sales for three items. Its answer was to order 300 of itemB, justified by recent weekly sales of 70 to 90 units, a two-week delivery time and some safety stock (*Generative AI Design Patterns*, ch. 1). They define agents modestly, as small software components that deliver a capability using a model. Such a component becomes more autonomous as it plans, picks its own tools, recovers from errors and judges when it has finished, and they name four traits to look for: goal orientation, planning and reasoning, perception and action, and adaptability. They also warn that truly agentic behavior remains aspirational, because the same input can produce a different plan on another run.
+
+That warning sets the design rule of this pillar. Anything that can be computed should be computed, and the model should be checked against it. The book's data, in plain Python:
+
+```python
+# Check the model's reorder against arithmetic the model cannot talk its way past.
+from dataclasses import dataclass
+
+@dataclass
+class InventoryItem:
+    name: str
+    quantity_on_hand: int
+    weekly_sold: list[int]     # past four weeks, oldest first
+    weeks_to_deliver: int
+
+ITEMS = [
+    InventoryItem("itemA", 300, [50, 70, 80, 100], 2),
+    InventoryItem("itemB", 100, [70, 80, 90, 70], 2),
+    InventoryItem("itemC", 200, [80, 70, 90, 80], 1),
+]
+
+def weeks_of_cover(item: InventoryItem) -> float:
+    peak = max(item.weekly_sold)                       # plan for the worst recent week
+    return item.quantity_on_hand / peak
+
+for item in ITEMS:
+    cover = weeks_of_cover(item)
+    verdict = "ORDER NOW" if cover < item.weeks_to_deliver else "ok"
+    print(f"{item.name}: {cover:.1f} weeks of cover, {item.weeks_to_deliver} to deliver -> {verdict}")
+
+# The stub stands in for the model's structured answer in Lakshmanan & Hapke's example.
+proposed = {"item": "itemB", "quantity": 300}
+item = next(i for i in ITEMS if i.name == proposed["item"])
+peak = max(item.weekly_sold)
+on_arrival = item.quantity_on_hand - item.weeks_to_deliver * peak
+print(f"\nproposed {proposed['quantity']} of {item.name}: on arrival, stock is {on_arrival} at peak sales")
+print(f"after delivery: {max(on_arrival, 0) + proposed['quantity']} units, "
+      f"{(max(on_arrival, 0) + proposed['quantity']) / peak:.1f} weeks of cover")
+
+# Why a long autonomous chain needs checkpoints: per-step reliability compounds.
+for per_step in (0.99, 0.95):
+    for steps in (10, 100):
+        print(f"{per_step:.0%} per step over {steps:>3} steps -> {per_step ** steps:6.1%} end to end")
+```
+
+```text
+itemA: 3.0 weeks of cover, 2 to deliver -> ok
+itemB: 1.1 weeks of cover, 2 to deliver -> ORDER NOW
+itemC: 2.2 weeks of cover, 1 to deliver -> ok
+
+proposed 300 of itemB: on arrival, stock is -80 at peak sales
+after delivery: 300 units, 3.3 weeks of cover
+99% per step over  10 steps ->  90.4% end to end
+99% per step over 100 steps ->  36.6% end to end
+95% per step over  10 steps ->  59.9% end to end
+95% per step over 100 steps ->   0.6% end to end
+```
+
+The check agrees with the model about which item to order. It also finds something the model's explanation did not state: at peak sales itemB runs out about 80 units before any order can arrive, so 300 units is a recovery rather than a just-in-time order. A person would want to know that, and the arithmetic surfaced it for free.
+
+The last four lines show why agents get harder as they run longer. If each step works 95% of the time and failures are independent, a 10-step run succeeds about 60% of the time and a 100-step run almost never. Independence is a simplification, but the direction holds: a longer chain needs checks between steps, not just a better model.
+
+The later chapters keep this example. [02](02-tool-use-and-react.md) gives it tools, [03](03-memory-as-an-operating-system.md) gives it memory across Mondays, [04](04-multi-agent-design-patterns.md) adds a reviewer, [05](05-framework-survey.md) adds a human approval gate, and [06](06-google-adk-intensive.md) packages its policy as a skill, and [07](07-guardrails-and-autonomy.md) puts limits around it.
 
 ---
 
@@ -129,6 +200,81 @@ That run took three iterations and four tool calls. Because the context accumula
 
 The round cap needs a wrap-up step. A capped loop can stop right after a tool result, with no closing assistant message. So when the cap is hit, add one last instruction ("answer now from what you have, in the requested format") and make one more call with tools off. Koenigstein's minimal loop caps at `max_steps=8` and ends this way (*AI Agents: The Definitive Guide*, ch. 1). LangChain's legacy `AgentExecutor` defaulted to `max_iterations=15`, with `max_execution_time` as a second, wall-clock bound (*Prompt Engineering for Generative AI*, ch. 6).
 
+### The loop in one screen
+
+Here is that loop with the restock agent. The model is scripted so that the code runs without an API key: `decide` returns what a real model would return, and swapping in an API call changes one method. Everything else in the block is the part you own, and it stays the same when the model is real.
+
+```python
+# The whole agent in one screen: a stubbed model, two tools, a step cap, a forced wrap-up.
+import json
+
+STOCK = {"itemB": {"on_hand": 100, "weekly_sold": [70, 80, 90, 70], "weeks_to_deliver": 2}}
+ORDERS = []
+
+def get_stock(item):
+    return STOCK[item]
+
+def place_order(item, quantity):
+    ORDERS.append((item, quantity))
+    return {"status": "placed", "item": item, "quantity": quantity}
+
+TOOLS = {"get_stock": get_stock, "place_order": place_order}
+
+class ScriptedModel:
+    """Replays decisions in order, as a real LLM would decide them. Swap for an API call."""
+    def __init__(self, decisions):
+        self.decisions, self.calls = list(decisions), 0
+
+    def decide(self, messages):
+        self.calls += 1
+        if messages[-1]["role"] == "system":            # the wrap-up instruction
+            return {"text": "Stopped at the step limit. Order status unconfirmed."}
+        return self.decisions.pop(0)
+
+def run_agent(model, goal, max_steps):
+    messages = [{"role": "user", "content": goal}]
+    for step in range(1, max_steps + 1):
+        decision = model.decide(messages)
+        if "text" in decision:                          # no tool call: the model is done
+            print(f"step {step}: answer  {decision['text']}")
+            return decision["text"]
+        name, args = decision["tool"], decision["args"]
+        result = TOOLS[name](**args)                    # the harness acts, not the model
+        print(f"step {step}: {name}({args}) -> {json.dumps(result)}")
+        messages.append({"role": "assistant", "content": decision})
+        messages.append({"role": "tool", "content": json.dumps(result)})
+    messages.append({"role": "system", "content": "Step limit reached. Report status now."})
+    return model.decide(messages)["text"]
+
+plan = [
+    {"tool": "get_stock", "args": {"item": "itemB"}},
+    {"tool": "place_order", "args": {"item": "itemB", "quantity": 300}},
+    {"text": "Ordered 300 of itemB: on-hand stock runs out before a 2-week delivery."},
+]
+
+run_agent(ScriptedModel(plan), "Check itemB and reorder if needed.", max_steps=5)
+print("orders:", ORDERS)
+
+print("\n-- same agent, cap of 1 --")
+ORDERS.clear()
+print(run_agent(ScriptedModel(plan), "Check itemB and reorder if needed.", max_steps=1))
+print("orders:", ORDERS)
+```
+
+```text
+step 1: get_stock({'item': 'itemB'}) -> {"on_hand": 100, "weekly_sold": [70, 80, 90, 70], "weeks_to_deliver": 2}
+step 2: place_order({'item': 'itemB', 'quantity': 300}) -> {"status": "placed", "item": "itemB", "quantity": 300}
+step 3: answer  Ordered 300 of itemB: on-hand stock runs out before a 2-week delivery.
+orders: [('itemB', 300)]
+
+-- same agent, cap of 1 --
+step 1: get_stock({'item': 'itemB'}) -> {"on_hand": 100, "weekly_sold": [70, 80, 90, 70], "weeks_to_deliver": 2}
+Stopped at the step limit. Order status unconfirmed.
+orders: []
+```
+
+Three things are worth reading closely. The model never touches `ORDERS`; it only names a tool, and the harness acts. The result goes back into `messages`, so the next decision can see it. And the capped run ends with an honest status rather than silence or a claim that the order went through, which is exactly what the wrap-up step is for.
+
 ---
 
 ## Agents as state machines
@@ -210,6 +356,7 @@ Release cycles move too fast for version picks, so here are the directions:
 - **Open vs. closed.** Closed models lead on capability. Open weights win on cost, private deployment and fine-tuning. A common hybrid path is to start on managed APIs (closed, or open models from a hosted provider) while roles are still forming, then self-host once the team and the need for control grow (*AI Agents: The Definitive Guide*, ch. 4).
 - **Price doesn't track quality.** In Albada's mid-2025 snapshot, DeepSeek-v3 scored 87.2 on MMLU at 2.75× / 3.65× the cheapest model's input/output price. Claude 4 Opus with extended thinking scored 86.5 at 75× / 125× (*Building Applications with AI Agents*, ch. 2). Koenigstein quotes closed models at up to $150 / $600 per M input/output tokens (o1-pro), against about $0.3 / $3 for open models over 200B parameters on low-cost hosts (*AI Agents: The Definitive Guide*, ch. 4). Both snapshots are dated, but the point holds: benchmark the cheaper model before assuming you need the flagship.
 - **Staff by role, not one model for everything.** Koenigstein's research team uses Qwen3-32B with thinking off for the researchers, note taker and writer. The analyst gets Qwen3-235B-A22B with a 1,536-token thinking budget plus a ModernBERT encoder that scores documents. GPT-4.1 is the supervisor that routes and decides when to finish. Turn thinking on for planning, decomposition, tool selection and verification. Turn it off for short, low-risk turns. Budgets of about 1,000+ thinking tokens work for non-trivial reasoning; raise them for math, code and multi-tool plans. Too small a budget truncates the reasoning (*AI Agents: The Definitive Guide*, ch. 4). Albada makes the same point from the other side: route simple queries to small models and design for a *multimodel* system from the start (*Building Applications with AI Agents*, ch. 1). NVIDIA's position paper pushes the default further: most agent calls are narrow, repetitive, format-bound subtasks, so a model under 10B should be the default and the LLM the exception. They cite serving a 7B model at 10–30× lower latency, energy and FLOPs than a 70–175B one. Their migration path is to log every non-chat agent call, collect 10k–100k examples, cluster them into tasks and fine-tune a specialist per cluster ([arXiv:2506.02153](https://arxiv.org/abs/2506.02153) (Belcak et al., 2025-06)). The paper runs no experiments. Its estimates that 40–70% of LLM calls in MetaGPT, Open Operator and Cradle could move to small models come from reading the code, not from measurement, and the authors' employer sells the inference stack they recommend.
+- **Know the four tiers.** Lakshmanan and Hapke sort models into frontier, distilled, open-weight and locally hostable. On the LMArena leaderboard of April 6, 2025, they read Gemini Flash as about 20 times cheaper than Gemini Pro for a modest drop in rating, and they note that a 400-point Elo gap means roughly 10:1 odds of being preferred (*Generative AI Design Patterns*, ch. 1). The prices have moved since, but the method lasts: plot rating against price and start at the knee of the curve.
 - **Keep the prefix byte-stable.** Reordering messages, trimming old turns or injecting documents into the middle of the context invalidates the cached KV entries after the change. Put the static system prompt first and append new material at the end (*AI Agents: The Definitive Guide*, ch. 4).
 
 ---
@@ -256,42 +403,53 @@ For planning failures, generate K plans per (task, tool inventory) pair and repo
 
 ## Guardrails
 
-Guardrails are defense in depth. No single one suffices, so layer specialized ones, starting with the risks you've already seen.
-
-| Position | Mechanisms |
-|---|---|
-| Input | Relevance classifier (off-topic); safety classifier (jailbreak = user attacks directly; prompt injection = attacker acts via external data); content moderation; rules (blocklists, length limits, regex) |
-| Execution | Tool risk rating by reversibility, permission level and financial impact; high risk → review or human confirmation |
-| Output | PII filter; brand/content validation |
-
-**Constitutional Classifiers** (Anthropic, 2026) is the reference design for classifier guardrails:
-
-- A natural-language constitution generates the synthetic training data.
-- The question and answer are judged together, so "food flavorings" can be read as code for reagents.
-- Screening has two stages. A near-free activation probe sees every conversation, and anything suspicious goes to a stronger classifier rather than straight to refusal. Stage one can therefore over-flag cheaply.
-
-**Escalate to a human** when a failure threshold is exceeded (retries or operations past their cap) and before high-risk operations (cancellations, large refunds, payments), at least until reliability is proven. Depth: [harness 04 — execution boundaries](../../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md).
-
-**A prompt restriction is not a permission.** LangChain's default SQL-agent prompt stops the agent from running `INSERT`, `UPDATE` or `DELETE`. Phoenix and Taylor swap in a custom prompt prefix, and the same agent then happily runs CRUD statements against the database (*Prompt Engineering for Generative AI*, ch. 6). Whoever edits the prompt changes what the agent may do. Enforce the boundary below the model: read-only database credentials, or a tool that cannot write.
-
-**What the user must be able to see.** Bansal et al. ([Microsoft Research, 2024-12](https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf)), as summarized in *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (ch. 11), list the communication an agent needs in each direction. The paper also names four challenges that cut across both directions: helping the user verify behavior, keeping behavior consistent, choosing the level of detail, and choosing which past interactions to draw on. It frames all twelve as the work of building common ground before, during and after a run:
-
-| Direction | The agent must support |
-|---|---|
-| User → agent | Unambiguous goal acquisition, with disambiguation of vague goals; respect for user preferences that may differ from the annotators' preferences baked in during alignment; feedback that actually changes later behavior |
-| Agent → user | Its capabilities and limits (what data, tools and network access it has); planned actions, flagging those that need explicit approval; progress, so the user can stop it; side effects (the cheapest offer turns out to need a subscription); whether the goal was fully, partly or not attained |
-
-Environment changes also make agents non-deterministic even at temperature 0. The same plan can produce a different outcome on a different day.
-
-**How much autonomy exists today.** Gao et al. (*Cell*, 2024) define autonomy levels for science agents:
-
-- Level 0: an ML model used as a tool by the researcher.
-- Level 1: a research assistant. The human defines the hypothesis and the tasks, and the agent completes them with a restricted tool set (ChemCrow).
-- Level 2: a collaborator that helps refine the hypothesis and define the tasks that test it.
-- Level 3: a scientist that proposes novel hypotheses, defines tasks to test them and completes them, as a peer.
-
-Raieli and Iuculano judge that no agent is beyond Level 1. Mitchell et al. (2025) go further and argue that fully autonomous agents should not be developed, because autonomous systems can make catastrophic errors from trivial causes (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 11). This fits the orchestrated-autonomy view above: keep the model's freedom inside designed regions, and keep humans at the gates.
+The loop above has no opinion about what a tool is allowed to do, so that has to be enforced elsewhere: around inputs, around execution, around outputs, and by people at the points where an action cannot be undone. The governing rule is that **a prompt restriction is not a permission**, so the boundary belongs below the model, in credentials and tools. [07 — guardrails and autonomy](07-guardrails-and-autonomy.md) covers the positions, the patterns that lower risk before you filter it, what the user must be able to see, and how much autonomy exists today.
 
 ---
 
-→ Next: [02 — tool use and the ReAct loop](02-tool-use-and-react.md) — the mechanics of a tool call, from raw function calling to MCP. Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).
+## Pitfalls
+
+- **Calling a single LLM call an agent, or a workflow an agent.** Ask who decides the next step at run time. If your code does, it is a workflow, and that is often the better system.
+- **Trusting the model's own explanation.** A fluent justification is not a check. In the example above, the arithmetic found a stockout the explanation left out. Compute what can be computed.
+- **Treating "the agent said it finished" as success.** Verify the goal against the environment: read the order back from the system of record.
+- **Stopping at the step cap with no wrap-up.** The trajectory ends on a tool result and the user gets nothing, or the last message implies work that never happened.
+- **Putting permissions in the prompt.** A prompt can be edited or overridden. Use read-only credentials and tools that cannot perform the forbidden action.
+- **Picking the flagship model first.** Price does not track quality on your task. Measure on your own cases, and staff by role.
+
+---
+
+## Try it
+
+1. Run the coverage check with itemC's delivery time changed to 3 weeks. What changes, and what does that tell you about which input the decision depends on?
+2. The restock loop's cap is 5 and the plan takes 3 steps. Set `max_steps=2`. What happens to `ORDERS`, and is the final message honest?
+3. In the coverage check, a model recommends ordering 300 of itemA. Write the one-line test that would reject it, and say what number it needs that the model does not have to be trusted for.
+
+<details>
+<summary>Answers</summary>
+
+1. itemC now has 2.2 weeks of cover against 3 weeks of delivery, so it flips to `ORDER NOW`. The decision depends on delivery time as much as on sales, so a stale delivery figure produces a wrong order however good the model is.
+2. Step 1 reads the stock and step 2 places the order, so `ORDERS` holds `('itemB', 300)`. The loop then stops before the model's closing message, and the wrap-up reports "Order status unconfirmed" although the order did go through. The status is cautious but incomplete. A better harness builds the wrap-up from the trajectory, so it can state the actions that were taken.
+3. `assert weeks_of_cover(item) < item.weeks_to_deliver`. itemA has 3.0 weeks of cover against 2 weeks of delivery, so the test fails and the order goes to review. The numbers come from the system of record, so nothing here relies on the model's arithmetic.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Short answer |
+|---|---|
+| What is an agent, in one line? | A model in a loop that chooses actions through tools, with context carrying state between steps, inside a harness that executes those actions and enforces limits |
+| Who decides the next step in a workflow and in an agent? | Your code in a workflow; the model in an agent. Most production systems mix the two ([orchestrated autonomy](#agents-as-state-machines)) |
+| When is an agent the wrong choice? | When inputs vary little and the path is known. Plain code, a workflow or RAG is cheaper, faster and easier to test |
+| Why do long agent runs fail more often? | Per-step errors compound: at 95% per step, 10 steps is about 60% and 100 steps is under 1%, assuming independent failures |
+| What are the exit conditions of the loop? | A final-output tool, a reply with no tool calls, an unrecoverable error, or the round cap. The cap needs a wrap-up call |
+| Why do token costs grow quadratically with run length? | The whole trajectory is re-sent on each turn, so the input grows with every step and is paid for every time |
+| Where does a permission belong? | Below the model, in credentials and tools. A prompt can be edited or overridden ([07](07-guardrails-and-autonomy.md)) |
+| How should you pick a model? | Evaluate on your own tasks, weigh price against quality per role, and treat speed as latency, since rounds run in sequence |
+
+---
+
+## Next
+
+→ [02 — tool use and the ReAct loop](02-tool-use-and-react.md): the mechanics of a tool call, from raw function calling to MCP. Production view: [harness 01 — what a harness is](../../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) (Model + Harness).

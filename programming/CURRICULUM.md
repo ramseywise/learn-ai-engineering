@@ -1,6 +1,6 @@
 # Programming — Curriculum
 
-Last updated: 2026-10-29
+Last updated: 2026-11-01
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ read it. SQL starts once Python 01 is done, and TypeScript once Python 03 is don
 | 1. Write programs | 01 foundations (5 notes) | — | — | 2 weeks |
 | 2. Talk to the world | 02 informatics (5 notes) | 01–05: select → CTEs | — | 2–3 weeks |
 | 3. Write it like an engineer | 03 language for engineers (7 notes) | 06–09: windows, DDL, indexes, SQL from Python | — | 3 weeks |
-| 4. Analyse data | 04 Python for data (7 notebooks + McKinney) | 10: capstone | 01–05: JS → type transformations | 3–4 weeks |
+| 4. Analyse data | Hand-off to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) (pandas, notebooks and McKinney) | 10: capstone | 01–05: JS → type transformations | 3–4 weeks |
 | 5. Build typed apps | — | — | 06–09: async, tooling, Zod, TS for AI apps | 2 weeks |
 
 Skip what you already know. Every module's exercises double as a placement test: if the file
@@ -27,10 +27,10 @@ passes on your first try, move on.
 | When you finish | You're ready for |
 |---|---|
 | Python 02 · 05 | SQL 01 (the Python side of databases ends there; SQL itself starts) |
-| SQL 09 | Python 04 notebook 4 (joins in pandas, with the SQL mental model) |
+| SQL 09 | [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md), notebook `4_DataFrames` (joins in pandas, with the SQL mental model) |
 | Python 03 · 07 | TypeScript 06 (the same async model with promises) |
 | Python 03 · 05 | TypeScript 02 and 08 (types and boundary validation, now with a stricter checker) |
-| Python 04 | [data-analytics](../data-analytics/CURRICULUM.md), [data-science](../data-science/CURRICULUM.md) |
+| Python 03 | [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) (Python for data analysis, which picks up where this track stops), then the rest of [data-analytics](../data-analytics/CURRICULUM.md) and [data-science](../data-science/CURRICULUM.md) |
 | Python 03 + TypeScript 09 | [ai-engineering](../ai-engineering/README.md) (every pillar's code is Python or TS) |
 
 ## Practice beyond the course

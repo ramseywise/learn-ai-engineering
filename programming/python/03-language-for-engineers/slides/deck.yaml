@@ -1,0 +1,398 @@
+# Python 03 Language for engineers: study deck (flashcards). Covers notes/01-07.
+# Build:  make slides PILLAR=programming/python/03-language-for-engineers [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Python for Engineers
+  subtitle: The language features production code relies on
+  tagline: |-
+    Data model · Iterators · Closures · Errors
+    Types · Tooling · Concurrency
+  reference: "Notes: programming/python/03-language-for-engineers"
+  output: python-for-engineers.pptx
+  notes: >-
+    The study deck for Python 03. Every slide is a flashcard: the title is the question and the
+    takeaway is the rule that answers it. How the language works, then how to write code that
+    holds up, then how to run many things at once.
+
+parts:
+  - title: How the language works
+    summary: Names and objects · Dunder methods · Iterators · Generators · Closures · Decorators
+    slides:
+      - layout: statement
+        title: Why does Python's "weird" behaviour keep surprising people?
+        kicker: The problem
+        statement: A function changes your list, a default argument remembers old calls, and a second loop over a generator finds nothing. One model explains the first two, and a protocol explains the third.
+        takeaway: Names are labels on objects, not boxes holding values. Most surprising Python behaviour follows from that.
+        source: notes/01-data-model-and-idioms.md
+        notes: Everything is an object with an identity, a type and a value.
+
+      - layout: code
+        title: What is the difference between mutating and rebinding?
+        kicker: Names and objects
+        lang: text
+        code: |-
+          b = a             a ───┐
+                                 ├──► [1, 2, 3]         one object, two names
+                            b ───┘
+
+          b.append(4)       a ───┐
+                                 ├──► [1, 2, 3, 4]      mutate: both names see it
+                            b ───┘
+
+          b = [9]           a ───► [1, 2, 3, 4]
+                            b ───► [9]                  rebind: only b moves
+        takeaway: Mutating changes the object, so every name sees it. Rebinding moves one label, so nothing else changes.
+        source: notes/01-data-model-and-idioms.md
+        notes: Arguments are passed by assignment, so a function that mutates is visible to the caller and one that rebinds is not.
+
+      - layout: compare
+        title: When do you use == and when do you use is?
+        kicker: Equality and hashability
+        emphasis: none
+        left:
+          title: == and is
+          bullets:
+            - "`==` compares values by calling `__eq__`"
+            - "`is` compares identity"
+            - "Use `is` only for `None`, `True`, `False` and sentinels"
+          tag: Equal is not identical
+        right:
+          title: Hashable
+          bullets:
+            - "Dict keys and set members need a hash that never changes"
+            - "Immutable built-ins are hashable, lists and dicts aren't"
+            - "A tuple is hashable only if its contents are"
+          tag: "Define `__eq__`? Define `__hash__` too"
+        takeaway: "`==` compares values and `is` compares identity. Use `is` only for `None`, `True`, `False` and sentinels."
+        source: notes/01-data-model-and-idioms.md
+        notes: Defining __eq__ without __hash__ stops instances working as keys. A frozen dataclass solves it.
+
+      - layout: table
+        title: How does Python syntax map to methods?
+        kicker: The data model
+        header: [You write, Python calls]
+        widths: [3, 5]
+        rows:
+          - ["`len(x)`", "`x.__len__()`"]
+          - ["`x[k]`, `x[k] = v`", "`__getitem__`, `__setitem__`"]
+          - ["`for i in x`", "`__iter__`, then `__next__`"]
+          - ["`a + b`, `a == b`, `a < b`", "`__add__`, `__eq__`, `__lt__`"]
+          - ["`if x:`", "`__bool__`, else `__len__`"]
+          - ["`with x:`, `x(...)`", "`__enter__` and `__exit__`, `__call__`"]
+        takeaway: Syntax calls dunder methods, so implementing them plugs your objects into the language.
+        source: notes/01-data-model-and-idioms.md
+        notes: "Idioms by reflex: `first, *rest = xs`, `a, b = b, a`, `zip(xs, ys, strict=True)`, `{**defaults, **overrides}`. `copy.copy` is shallow and `copy.deepcopy` goes all the way down."
+
+      - layout: flow
+        title: What does a for loop actually do?
+        kicker: The iterator protocol
+        steps:
+          - {label: "`iter(xs)`", sub: "calls `__iter__`, returns an iterator"}
+          - {label: "`next(it)`", sub: "calls `__next__`, returns a value"}
+          - {label: Bind, sub: "the value goes to `x`, and the body runs"}
+          - {label: "`StopIteration`", sub: the loop catches it and ends}
+        loop: "repeat `next` until exhausted"
+        caption: A list is an iterable, and can make new iterators. An iterator is single-use and stays empty once exhausted.
+        takeaway: A `for` loop calls `iter()` once, then `next()` until `StopIteration`. Iterators are single-use, so a second pass yields nothing.
+        source: notes/02-generators-and-iteration.md
+        notes: That is why looping twice over a generator or a map object silently yields nothing the second time.
+
+      - layout: code
+        title: Why would you write a generator?
+        kicker: Laziness
+        lang: python
+        code: |-
+          def read_records(path):
+              with open(path, encoding="utf-8") as f:
+                  for line in f:
+                      if line.strip() and not line.startswith("#"):
+                          yield line.rstrip("\n").split(",")
+
+          total = sum(x * x for x in range(10**6))   # generator expression: no list built
+        takeaway: A function with `yield` runs only as values are requested and holds one item at a time, so memory stays constant.
+        source: notes/02-generators-and-iteration.md
+        notes: The with block stays open until the generator finishes or is collected. Consume it fully. Stop comprehensions at two for clauses.
+
+      - layout: table
+        title: Which itertools do you actually use?
+        kicker: itertools
+        header: [Function, Does]
+        widths: [3.2, 5]
+        rows:
+          - ["`islice(it, n)`", "First n items of any iterator"]
+          - ["`chain.from_iterable(xs)`", "Flatten one level"]
+          - ["`groupby(it, key)`", "Group **consecutive** equal keys, so sort first"]
+          - ["`batched(it, n)`", "Tuples of n (3.12+)"]
+          - ["`pairwise(it)`", "`(a, b), (b, c), …`"]
+          - ["`accumulate(it)`", "Running totals"]
+        takeaway: "`groupby` only groups consecutive keys, so sort first. Pair infinite streams with `islice` or `zip`."
+        source: notes/02-generators-and-iteration.md
+        notes: collections adds Counter, defaultdict, deque with maxlen for a sliding window, and namedtuple.
+
+      - layout: compare
+        title: What do closures capture?
+        kicker: Closures
+        left:
+          title: The trap
+          code: |-
+            fs = [lambda: i for i in range(3)]
+            [f() for f in fs]    # [2, 2, 2]
+          tag: Captures the variable
+        right:
+          title: Bind early
+          code: |-
+            fs = [lambda i=i: i for i in range(3)]
+            [f() for f in fs]    # [0, 1, 2]
+          tag: A default is evaluated at def time
+        takeaway: Closures capture variables, not values. Bind early with a default, and use `nonlocal` to rebind an outer name.
+        source: notes/03-functions-deeper.md
+        notes: "Signatures: parameters before / are positional-only, parameters after * are keyword-only, a good default for flags."
+
+      - layout: code
+        title: What is a decorator?
+        kicker: Decorators
+        lang: python
+        code: |-
+          def timed(fn):
+              @functools.wraps(fn)              # keep fn's name and docstring
+              def wrapper(*args, **kwargs):
+                  start = time.perf_counter()
+                  try:
+                      return fn(*args, **kwargs)
+                  finally:
+                      print(f"{fn.__name__} took {time.perf_counter() - start:.3f}s")
+              return wrapper
+
+          @timed                                # same as: load = timed(load)
+          def load(path): ...
+        takeaway: A decorator is a function that wraps a function. `@timed` means `load = timed(load)`, and arguments add one more level.
+        source: notes/03-functions-deeper.md
+        notes: "`@retry(times=3)` is a function returning a decorator. Also useful: functools.cache, partial, operator.itemgetter."
+
+  - title: Code that holds up
+    summary: Exceptions · Context managers · Type hints · Dataclasses and Pydantic · uv, ruff and pytest
+    slides:
+      - layout: statement
+        title: What separates a script from code others depend on?
+        kicker: The problem
+        statement: Failures that surface clearly, cleanup that always happens, signatures a checker can read, and an environment anyone can rebuild.
+        attribution: Each one is a small habit, and the tools do most of the work.
+        takeaway: Catch only what you can handle, let the rest crash loudly, and put cleanup in `with` or `finally`.
+        source: notes/04-errors-and-context-managers.md
+        notes: The next slides take these one at a time.
+
+      - layout: flow
+        title: What does each clause of try do?
+        kicker: Exceptions
+        steps:
+          - {label: "`try`", sub: only the line that can fail}
+          - {label: "`except`", sub: "the narrowest exception you can handle"}
+          - {label: "`else`", sub: runs only if nothing was raised}
+          - {label: "`finally`", sub: "always runs, even after `return`"}
+        bullets:
+          - "`raise ValueError(...) from err` keeps the original as the cause, and a bare `raise` re-raises unchanged"
+          - "One base exception per package lets callers write `except PipelineError`"
+          - "A bare `except:` hides bugs like `NameError`, and even `KeyboardInterrupt`"
+        takeaway: Catch the narrowest exception, keep the `try` small, and use `raise ... from err` to keep the cause.
+        source: notes/04-errors-and-context-managers.md
+        notes: Add fields to custom exceptions for anything a caller might branch on. Use log.exception inside except, not print.
+
+      - layout: code
+        title: How do you write your own context manager?
+        kicker: Context managers
+        lang: python
+        code: |-
+          from contextlib import contextmanager
+
+          @contextmanager
+          def timer(label: str):
+              start = time.perf_counter()      # setup
+              try:
+                  yield
+              finally:                         # teardown runs on error too
+                  print(f"{label}: {time.perf_counter() - start:.2f}s")
+        takeaway: With `@contextmanager`, code before `yield` is setup and code after is teardown. Use `try/finally` so teardown runs on error.
+        source: notes/04-errors-and-context-managers.md
+        notes: As a class, implement __enter__ and __exit__. Returning True from __exit__ swallows the exception, which is rarely what you want.
+
+      - layout: bullets
+        title: Who checks Python's type hints?
+        kicker: Type hints
+        bullets:
+          - "Tools do, not Python: run `mypy` or `pyright`"
+          - "Accept the loosest type that works (`Iterable`, `Mapping`) and return the most specific (`list`, `dict`)"
+          - "`X | None` makes callers handle `None`, which is most of the value"
+          - "`Any` turns checking off, so prefer `object` and narrow with `isinstance`"
+          - "A `Protocol` is duck typing the checker understands: no inheritance needed"
+        takeaway: Python ignores hints at runtime, so run a checker. `X | None` forces callers to handle the missing case.
+        source: notes/05-types-and-dataclasses.md
+        notes: The TypeScript track teaches the same ideas with a stricter checker.
+
+      - layout: compare
+        title: When do you use a dataclass, and when Pydantic?
+        kicker: Inside and at the edge
+        left:
+          title: Dataclass
+          code: |-
+            @dataclass(frozen=True, slots=True)
+            class Chunk:
+                doc_id: str
+                text: str
+                score: float = 0.0
+          tag: Inside the program. Trusts its inputs
+        right:
+          title: Pydantic
+          code: |-
+            class Review(BaseModel):
+                rating: int = Field(ge=1, le=5)
+                summary: str
+
+            Review.model_validate_json(raw)
+          tag: At a boundary. Validates and converts
+        takeaway: Use dataclasses inside the program and a validator at every edge, such as API JSON, config and LLM output.
+        source: notes/05-types-and-dataclasses.md
+        notes: "frozen=True makes instances immutable and hashable. Mutable defaults need field(default_factory=list). Pydantic coerces \"4\" to 4 for an int field."
+
+      - layout: cards
+        title: What are the parts of a modern Python project?
+        kicker: Tooling
+        cards:
+          - {title: Layout, body: "`pyproject.toml`, `src/my_tool/`, `tests/`. Install the project and don't edit `sys.path`."}
+          - {title: uv, body: "`uv add httpx`, `uv run pytest`. Commit `uv.lock`, because it pins every transitive version."}
+          - {title: ruff, body: "`ruff check --fix` lints and `ruff format` formats, replacing flake8, isort and black."}
+          - {title: pytest, body: "Plain `assert`, `parametrize`, `raises`, and fixtures such as `tmp_path` injected by name."}
+        takeaway: A project is a `pyproject.toml`, `src/` and `tests/`, with uv for environments, ruff for lint and format, and pytest for tests.
+        source: notes/06-modules-packaging-tooling.md
+        notes: Three tools cover what used to take many.
+
+      - layout: bullets
+        title: Why does a file named json.py break your imports?
+        kicker: Modules
+        bullets:
+          - "Python searches `sys.path`, which starts with the script's directory, so your file shadows the real module"
+          - "`import` runs a module once and caches it in `sys.modules`"
+          - "`if __name__ == \"__main__\":` guards code that should only run when the file is executed"
+          - "Avoid `from x import *`"
+        takeaway: "`sys.path` starts with the script's directory, so never name a file after a standard-library module."
+        source: notes/06-modules-packaging-tooling.md
+        notes: "\"Works when I run it from here\" bugs come from the same place. uv sync installs the project so imports stop depending on the working directory."
+
+  - title: Many things at once
+    summary: Picking a tool · The GIL · The event loop · Never block · Retries
+    slides:
+      - layout: statement
+        title: What decides which concurrency tool you use?
+        kicker: The problem
+        statement: Fifty HTTP calls and fifty pure-Python number crunches need different tools, because one spends its time waiting and the other spends it computing.
+        takeaway: Pick by what you are waiting on. I/O-bound work uses threads or `asyncio`, and CPU-bound Python uses processes.
+        source: notes/07-concurrency.md
+        notes: NumPy releases the GIL, so array work is a separate case.
+
+      - layout: table
+        title: Threads, asyncio or processes?
+        kicker: Which tool
+        header: [Work, Tool, Why]
+        widths: [3.4, 2.4, 3.2]
+        rows:
+          - ["A few dozen blocking HTTP calls, existing sync code", "`ThreadPoolExecutor`", Threads release the GIL while waiting on I/O]
+          - ["Hundreds+ requests, an async SDK, a web server", "`asyncio`", "One thread, cheap tasks, explicit `await` points"]
+          - [CPU-heavy pure Python, "`ProcessPoolExecutor`", "Separate interpreters, so no GIL contention"]
+        takeaway: The GIL lets one thread run Python bytecode at a time, so threads help with waiting and processes help with computing.
+        source: notes/07-concurrency.md
+        notes: Free-threaded builds (3.13t+) remove the GIL, but most code and libraries still assume it.
+
+      - layout: flow
+        title: How does the event loop run two tasks on one thread?
+        kicker: The event loop
+        steps:
+          - {label: Run, sub: "a ready task runs until an `await` on something unfinished"}
+          - {label: Suspend, sub: it hands control back to the loop}
+          - {label: Next, sub: "the loop runs the next ready task, or sleeps if none"}
+          - {label: Resume, sub: "a timer or socket fires, and the task is ready again"}
+        loop: until every task is done
+        caption: "`sleep(0.2)` and `sleep(0.1)` as two tasks take about 0.2 s in total, not 0.3 s."
+        takeaway: One thread runs ready tasks until each hits an `await`. Nothing preempts a task, so switching happens only at `await`.
+        source: notes/07-concurrency.md
+        notes: The same model as JavaScript promises. Promise.all corresponds to gather and TaskGroup.
+
+      - layout: code
+        title: How do you limit concurrency in asyncio?
+        kicker: TaskGroup and Semaphore
+        lang: python
+        code: |-
+          async def main(urls: list[str]) -> list[str]:
+              sem = asyncio.Semaphore(10)                  # at most 10 in flight
+              async with httpx.AsyncClient() as client:
+                  async def limited(url):
+                      async with sem:
+                          return await fetch(client, url)
+                  async with asyncio.TaskGroup() as tg:    # cancels the rest if one fails
+                      tasks = [tg.create_task(limited(u)) for u in urls]
+              return [t.result() for t in tasks]
+        takeaway: Use a `Semaphore` to cap requests in flight and a `TaskGroup` to cancel the rest when one fails.
+        source: notes/07-concurrency.md
+        notes: "`gather(*coros, return_exceptions=True)` collects errors without cancelling. `asyncio.timeout(5)` adds a deadline."
+
+      - layout: compare
+        title: What must you never do inside async def?
+        kicker: Never block the loop
+        left:
+          title: Freezes every task
+          bullets:
+            - "`time.sleep(1)`"
+            - "`requests.get(url)`"
+            - Heavy CPU work
+          tag: Nothing else can run
+        right:
+          title: Use instead
+          bullets:
+            - "`await asyncio.sleep(1)`"
+            - "An async client such as `httpx.AsyncClient`"
+            - "`await asyncio.to_thread(blocking_fn)`"
+          tag: Control returns to the loop
+        takeaway: Blocking calls inside `async def` freeze every task. Await an async client, or push the work to `asyncio.to_thread`.
+        source: notes/07-concurrency.md
+        notes: Calling an async def does nothing until it is awaited or scheduled as a task.
+
+      - layout: code
+        title: How should you retry a failed call?
+        kicker: Retries with backoff
+        lang: python
+        code: |-
+          async def with_retry(make_call, attempts=4, base=0.5):
+              for i in range(attempts):
+                  try:
+                      return await make_call()
+                  except (TimeoutError, ConnectionError):
+                      if i == attempts - 1:
+                          raise
+                      await asyncio.sleep(base * 2**i + random.random() * base)
+        takeaway: Back off exponentially with jitter, and retry only errors that can succeed next time, such as timeouts, 429 and 5xx.
+        source: notes/07-concurrency.md
+        notes: Never retry 4xx validation errors. LLM SDKs already retry for you, so check before you wrap them.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What are the engineering rules?
+        cards:
+          - {title: Model, body: "Names are labels. `None` as a default. `is` only for singletons."}
+          - {title: Errors, body: "Narrow `except`, small `try`, `with` for cleanup, logging over print."}
+          - {title: Types, body: "Hints on every signature. Dataclasses inside, a validator at the edge."}
+          - {title: Concurrency, body: "Pick by what you wait on. Never block the loop. Always a limit and a timeout."}
+        takeaway: Treat names as labels, fail narrowly, validate at edges, and choose concurrency by what you are waiting on.
+        source: notes/01-data-model-and-idioms.md
+        notes: These condense the module's seven notes.
+
+      - layout: bullets
+        title: Where do you go after this module?
+        bullets:
+          - "**Data work**: phase 4 moved to the `data-analytics` pillar, starting with `01-python-for-data-analysis`"
+          - "**TypeScript**: the same type and async ideas with a stricter checker"
+          - "**Practice**: `bash check.sh exercises 03`, including the `uv` tooling package"
+        takeaway: Next is pandas in the data-analytics pillar, and TypeScript for the same type and async ideas.
+        source: notes/06-modules-packaging-tooling.md
+        notes: See programming/CURRICULUM.md for the order of the tracks.

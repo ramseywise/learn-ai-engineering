@@ -18,7 +18,22 @@ npx tsx test.ts    # the assertions
 Real output with the stub:
 
 ```text
-RUN_OUTPUT
+model: stub, 12 cases
+
+variant          pass   95% CI       json  known  correct  tokens
+v1-bare            0%  [  0%, 24%]    0%    0%      0%     407
+v2-format         83%  [ 55%, 95%]  100%  100%     83%     556
+v3-rule+shots    100%  [ 76%,100%]  100%  100%    100%    1694
+
+v1-bare -> v2-format
+  fixed:  refund-1, refund-2, login-1, login-2, bug-1, bug-2, how-1, how-2, edge-2, edge-3
+  broken: none
+
+v2-format -> v3-rule+shots
+  fixed:  edge-1, edge-4
+  broken: none
+
+still failing in v3-rule+shots: 0
 ```
 
 Read the confidence intervals before the point estimates. At 12 cases, 100% has a 95% lower bound

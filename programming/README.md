@@ -7,7 +7,7 @@
 > [interview guide Pillar 0 — Programming](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
 > Position in the path: the entry point, no prerequisites; next are
 > [data-analytics](../data-analytics/README.md) and [ai-engineering](../ai-engineering/README.md).
-> Jump to: [Tracks](#tracks) · [Layout](#layout) · [How the pieces fit](#how-the-pieces-fit) · [Running the code](#running-the-code) · [References](references.md)
+> Jump to: [Tracks](#tracks) · [Study decks](#study-decks) · [Layout](#layout) · [How the pieces fit](#how-the-pieces-fit) · [Running the code](#running-the-code) · [References](references.md)
 
 ---
 
@@ -18,8 +18,10 @@ goes from first principles to the idioms you need in production code. Each modul
 notes followed by exercises you can run offline.
 
 This repo started as a Python learning repo built from *Python for Informatics* (now *Python for
-Everybody*) and McKinney's *Python for Data Analysis*. The Python track keeps that spine and adds a
-module on the language features that engineering code relies on.
+Everybody*) and McKinney's *Python for Data Analysis*. The Python track keeps the first of those as
+its spine and adds a module on the language features that engineering code relies on. The pandas
+half now has its own home: when Python 03 is done, the path hands off to
+[data-analytics 01, Python for data analysis](../data-analytics/01-python-for-data-analysis/README.md).
 
 The ordering is in [CURRICULUM.md](CURRICULUM.md); sources and licences are in [references.md](references.md).
 
@@ -29,9 +31,25 @@ The ordering is in [CURRICULUM.md](CURRICULUM.md); sources and licences are in [
 
 | Track | Modules | Built from | Start here |
 |---|---|---|---|
-| **Python** | 01 foundations · 02 informatics · 03 language for engineers · 04 Python for data | Severance, *Python for Everybody* (paraphrased); VanderPlas, *A Whirlwind Tour of Python*; McKinney, *Python for Data Analysis*; Michigan *Applied Data Science* and Wesleyan coursework | [python/README.md](python/README.md) |
+| **Python** | 01 foundations · 02 informatics · 03 language for engineers, then a hand-off to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) | Severance, *Python for Everybody* (paraphrased); VanderPlas, *A Whirlwind Tour of Python*; Python documentation | [python/README.md](python/README.md) |
 | **SQL** | 01–09, from `SELECT` to query plans, plus a capstone | Software Carpentry *Databases and SQL*; PGExercises; Knight Lab *SQL Murder Mystery* | [sql/README.md](sql/README.md) |
 | **TypeScript** | 01–09, from JavaScript for Python developers to TS for AI apps | TypeScript Handbook; *typescript-exercises*; *type-challenges* | [typescript/README.md](typescript/README.md) |
+
+---
+
+## Study decks
+
+One deck per Python module and one per other track. Each slide is a flashcard in librarian: the
+title is the question and the takeaway is the rule that answers it. Rebuild one with
+`make slides PILLAR=programming/sql`.
+
+| Deck | Source |
+|---|---|
+| [Python foundations](python/01-foundations/slides/python-foundations.pptx) | [deck.yaml](python/01-foundations/slides/deck.yaml) |
+| [Python informatics](python/02-informatics/slides/python-informatics.pptx) | [deck.yaml](python/02-informatics/slides/deck.yaml) |
+| [Python for engineers](python/03-language-for-engineers/slides/python-for-engineers.pptx) | [deck.yaml](python/03-language-for-engineers/slides/deck.yaml) |
+| [SQL](sql/slides/sql.pptx) | [deck.yaml](sql/slides/deck.yaml) |
+| [TypeScript](typescript/slides/typescript.pptx) | [deck.yaml](typescript/slides/deck.yaml) |
 
 ---
 
@@ -42,9 +60,9 @@ programming/
 ├── README.md            this file
 ├── CURRICULUM.md        order, hand-offs and prerequisites
 ├── references.md        every source, with licence and how it is used
-├── python/              README + check.sh; 01–03 are NN-module/{notes, practice/{exercises, solutions}}; 04 is notebooks + mckinney/ + courses/ + fetch_data.sh
-├── sql/                 README + notes/ + practice/{exercises, solutions, data, setup.sh, check.sh}
-└── typescript/          README + notes/ + practice/ (one npm project: exercises, solutions, tests, examples, typescript-exercises/, type-challenges/, check.ts)
+├── python/              README + check.sh; 01–03 are NN-module/{notes, slides, practice/{exercises, solutions}}
+├── sql/                 README + notes/ + slides/ + practice/{exercises, solutions, data, setup.sh, check.sh}
+└── typescript/          README + notes/ + slides/ + practice/ (one npm project: exercises, solutions, tests, examples, typescript-exercises/, type-challenges/, check.ts)
 ```
 
 Each track README has its own tree.
@@ -73,8 +91,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 | Python 01–03 exercise and solution files | Offline: Python 3.12+, standard library | `python3 practice/exercises/<file>.py` (each file runs its own `assert`s) |
 | Python 03 · 06 package (`06_tooling/`) | Needs `uv`; the first run downloads pytest and ruff into a local `.venv/` | `uv run pytest` inside the package |
 | [`python/check.sh`](python/check.sh) | Offline after that first `uv` run: it runs every exercise file, then `uv run pytest` for 06 | `bash check.sh`, `bash check.sh solutions`, `bash check.sh exercises 03` |
-| Python 04 notebooks and McKinney chapters | Needs download: [`fetch_data.sh`](../data-analytics/01-python-for-data-analysis/practice/fetch_data.sh) clones ~240 MB from wesm/pydata-book (gitignored); needs `pandas`, `numpy`, `matplotlib`, `seaborn`, `scipy`, Jupyter | `bash fetch_data.sh` once, then open the notebooks |
-| Python 04 `courses/` scripts | Legacy, read next to a REPL: `wrangle_pandas.py` needs network (reads its CSVs from GitHub); the two Michigan scripts need course data that is not redistributed | — |
+| Python for data (hand-off) | Moved to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md), which owns the notebooks, the McKinney chapters, `courses/` and [`fetch_data.sh`](../data-analytics/01-python-for-data-analysis/practice/fetch_data.sh) (clones ~240 MB from wesm/pydata-book) | See that pillar's README |
 | SQL 01–09 exercise and solution files | Offline: `sqlite3` CLI (bundled with macOS); `survey.db` is committed, `clubdata.db` is built locally by `setup.sh` | `sqlite3 data/survey.db < exercises/<file>.sql`; `python3 exercises/09_sql_from_python.py` |
 | [`sql/practice/setup.sh`](sql/practice/setup.sh) | Needs download on first run: fetches `sql-murder-mystery.db` (3.6 MB) with `curl`; building `clubdata.db` is offline | `bash setup.sh` |
 | [`sql/practice/check.sh`](sql/practice/check.sh) | Offline once `setup.sh` has run (it calls `setup.sh` itself if `clubdata.db` is missing) | `bash check.sh`, `bash check.sh exercises` |

@@ -1,19 +1,23 @@
 ---
-origin: vendored snapshot: Intro to Machine Learning in Python (kept as practice) + own coursework (Ng ML ex1–ex4, ex6)
+origin: vendored snapshot, Intro to Machine Learning in Python (kept as practice), plus own coursework (Ng ML ex1 to ex4, ex6)
 sources:
   - https://github.com/amueller/introduction_to_ml_with_python
-  - ../practice/Intro to Machine Learning in Python/02-supervised-learning.ipynb
-  - https://www.coursera.org/learn/machine-learning
-  - ../Ng's Machine Learning Nbks/ex1/ex1.ipynb
-  - ../Ng's Machine Learning Nbks/ex2/ex2.ipynb
-  - ../Ng's Machine Learning Nbks/ex3/ex3.ipynb
-  - ../Ng's Machine Learning Nbks/ex6/ex6.ipynb
+  - ../practice/intro-to-ml-in-python/02-supervised-learning.ipynb
+  - https://www.coursera.org/specializations/machine-learning-introduction
+  - ../practice/ng-machine-learning/ex1/ex1.ipynb
+  - ../practice/ng-machine-learning/ex2/ex2.ipynb
+  - ../practice/ng-machine-learning/ex3/ex3.ipynb
+  - ../practice/ng-machine-learning/ex6/ex6.ipynb
+  - ../../sources/cortes-1995-support-vector-networks.pdf
+  - ../../sources/pedregosa-2012-scikit-learn.pdf
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
-# 2 — Supervised Learning
+# Supervised Learning
 
-> The classical model families — nearest neighbours, linear models, naive Bayes, trees, kernel SVMs, small neural networks — each with the one knob that controls its complexity, what it is good at, and how it fails; plus the from-scratch versions from Ng's exercises.
+> You have a table and a target. Which model do you try first, and how do you know whether it is too simple or too flexible? This note walks the classical families (nearest neighbours, linear models, naive Bayes, trees, kernel SVMs, small neural networks), each with the one knob that controls its complexity, what it is good at and how it fails, plus the from-scratch versions from Ng's exercises.
+
+Blocks run top to bottom from this `notes/` folder, on the breast-cancer data that ships with scikit-learn, so the numbers below are this split's. Figures attributed to M&G come from the book's own examples.
 
 ---
 
@@ -22,7 +26,7 @@ cleaned: 2026-10-31
 | | Classification | Regression |
 |---|---|---|
 | Target | A class label from a fixed set | A continuous number |
-| Example (M&G ch. 2) | Breast-cancer benign/malignant; `make_forge` two-class toy | Boston-style house prices; `make_wave` 1-D toy |
+| Example (M&G ch. 2) | Breast-cancer benign/malignant; `make_forge` two-class toy | House prices (M&G's Boston data, removed from scikit-learn 1.2); `make_wave` 1-D toy |
 | Default `score` | Accuracy | $R^2$ |
 | Loss in training | Log-loss (logistic), hinge (SVM), Gini/entropy (trees) | Squared error |
 
@@ -48,9 +52,10 @@ X_train, X_test, y_train, y_test = train_test_split(
 # Sweep the complexity knob: small k = complex (jagged boundary), large k = simple
 for k in range(1, 11):
     clf = KNeighborsClassifier(n_neighbors=k).fit(X_train, y_train)
-    print(k, clf.score(X_train, y_train), clf.score(X_test, y_test))
-# k=1: train 1.00, test ~0.90; best test near k=6; large k: both fall (underfit)
+    print(k, round(clf.score(X_train, y_train), 3), round(clf.score(X_test, y_test), 3))
 ```
+
+@@KNN@@
 
 The single-neighbour model gets every training point right and is the worst on test. That is overfitting made visible.
 
@@ -76,14 +81,32 @@ Predict with a weighted sum: $\hat y = w \cdot x + b$. For classification, thres
 | `Lasso` | $+\ \alpha \lVert w \rVert_1$ | Sets some weights exactly to 0: built-in feature selection | `alpha`; raise `max_iter` when small |
 | `ElasticNet` | Both penalties | Lasso's sparsity with ridge's stability | `alpha`, `l1_ratio` |
 
-On the extended Boston data (104 features, M&G ch. 2), OLS scores 0.95 on train and 0.61 on test: it overfits. Ridge at `alpha=1` gets 0.89 / 0.75. Lasso at `alpha=0.01` uses 33 of the 104 features and generalises about as well.
+M&G show the effect on their extended Boston data (104 features): OLS scores 0.95 on train and 0.61 on test; ridge at `alpha=1` gets 0.89 / 0.75; lasso at `alpha=0.01` uses 33 of the 104 features and generalises about as well. That dataset has since been removed from scikit-learn, so here is the same experiment on the diabetes data, expanded to squares and products of its features so that OLS has room to overfit:
 
 ```python
-from sklearn.linear_model import Ridge, Lasso
-ridge = Ridge(alpha=1.0).fit(X_train, y_train)
-lasso = Lasso(alpha=0.01, max_iter=100_000).fit(X_train, y_train)  # small alpha needs more iterations
-print((lasso.coef_ != 0).sum(), "features used")
+import numpy as np
+from sklearn.datasets import load_diabetes
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
+from sklearn.preprocessing import PolynomialFeatures
+
+d = load_diabetes()
+Xd = PolynomialFeatures(degree=3, include_bias=False).fit_transform(d.data)
+Xd_train, Xd_test, yd_train, yd_test = train_test_split(Xd, d.target, random_state=0)
+print("features:", Xd.shape[1], "rows in train:", Xd_train.shape[0])
+
+for name, model in [("OLS", LinearRegression()),
+                    ("Ridge a=0.1", Ridge(alpha=0.1)),
+                    ("Lasso a=0.1", Lasso(alpha=0.1, max_iter=100_000))]:
+    model.fit(Xd_train, yd_train)
+    print(f"{name:12} train {model.score(Xd_train, yd_train):.2f}  test {model.score(Xd_test, yd_test):.2f}"
+          f"  nonzero {(np.abs(model.coef_) > 1e-8).sum()}")
 ```
+
+@@LIN@@
+
+@@LINPROSE@@
+
+The penalties have a pedigree worth citing: the L1 penalty and its property of setting weights exactly to zero come from the lasso paper ([doi:10.1111/j.2517-6161.1996.tb02080.x](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x), Tibshirani, JRSS-B 1996).
 
 **Ridge vs lasso.** Default to ridge. Use lasso when you expect only a few features to matter, or need a model you can read.
 
@@ -98,9 +121,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
 # sklearn >= 1.4: lbfgs needs more iterations on unscaled data (fix applied in this repo's copy)
-logreg = LogisticRegression(C=1, max_iter=1000).fit(X_train, y_train)
-svm = LinearSVC(C=1).fit(X_train, y_train)
+logreg = LogisticRegression(C=1, max_iter=10000).fit(X_train, y_train)
+svm = LinearSVC(C=1, max_iter=20000).fit(X_train, y_train)
+print("logreg", round(logreg.score(X_test, y_test), 3), "linear svm", round(svm.score(X_test, y_test), 3))
 ```
+
+@@LOG@@
 
 The knob is **`C`, the inverse of regularisation strength**: high `C` fits each training point harder (complex); low `C` keeps weights small (simple). Note the inversion against `alpha` above. `penalty="l1"` gives sparse coefficients, as lasso does.
 
@@ -109,7 +135,7 @@ The knob is **`C`, the inverse of regularisation strength**: high `C` fits each 
 | | |
 |---|---|
 | Knob | `alpha` (regression), `C` (classification) |
-| Good at | Very many features; sparse data (text, [09](../../03-nlp/notes/02-text-classification.md)); huge datasets (`SGDClassifier`, `solver="sag"`); fast to train and predict; coefficients readable |
+| Good at | Very many features; sparse data (text, [NLP text classification](../../03-nlp/notes/02-text-classification.md)); huge datasets (`SGDClassifier`, `solver="sag"`); fast to train and predict; coefficients readable |
 | Fails on | Low-dimensional data with non-linear boundaries, unless you add features ([03](03-feature-engineering-and-pipelines.md)) |
 | Caution | Coefficients of correlated features can flip sign; don't over-read them |
 
@@ -125,7 +151,7 @@ Fit per-class statistics of each feature independently and apply Bayes' rule. Tr
 | `BernoulliNB` | Binary | Count of non-zero per feature |
 | `MultinomialNB` | Counts (word counts) | Mean count per feature |
 
-Knob: `alpha` (additive smoothing: pretends every feature was seen `alpha` extra times in every class). Naive Bayes is the classic fast text baseline ([09](../../03-nlp/notes/02-text-classification.md)); usually slightly worse than a linear model, trained much faster.
+Knob: `alpha` (additive smoothing: pretends every feature was seen `alpha` extra times in every class). Naive Bayes is the classic fast text baseline ([NLP text classification](../../03-nlp/notes/02-text-classification.md)); usually slightly worse than a linear model, trained much faster.
 
 ---
 
@@ -134,11 +160,16 @@ Knob: `alpha` (additive smoothing: pretends every feature was seen `alpha` extra
 A tree asks a sequence of if/else questions ("is feature 3 ≤ 0.8?"), each chosen to make the resulting groups as pure as possible. A leaf predicts the majority class (or mean value) of its training points.
 
 ```python
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.tree import DecisionTreeClassifier
+
+full = DecisionTreeClassifier(random_state=0).fit(X_train, y_train)
 tree = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X_train, y_train)
-# Unpruned: train 1.000, test 0.937.  max_depth=4: train 0.988, test 0.951
-print(tree.feature_importances_)   # sums to 1; zero means unused, not "unimportant"
+print("unpruned ", round(full.score(X_train, y_train), 3), round(full.score(X_test, y_test), 3))
+print("max_depth", round(tree.score(X_train, y_train), 3), round(tree.score(X_test, y_test), 3))
+print("features used:", (tree.feature_importances_ > 0).sum(), "of", X_train.shape[1])  # zero means unused, not "unimportant"
 ```
+
+@@TREE@@
 
 A tree grown until every leaf is pure memorises the training set. Control it with **pre-pruning**: `max_depth`, `max_leaf_nodes`, or `min_samples_leaf`. scikit-learn also has cost-complexity post-pruning (`ccp_alpha`).
 
@@ -160,7 +191,7 @@ A linear model in a richer feature space. Adding $x_1^2$ as a feature turns a cu
 | Polynomial | All products of features up to a degree |
 | RBF (Gaussian) | Infinite-dimensional; similarity decays with distance: $k(x, x') = \exp(-\gamma \lVert x - x' \rVert^2)$ |
 
-Only the training points on the margin, the **support vectors**, define the boundary.
+Only the training points on the margin, the **support vectors**, define the boundary. The soft-margin formulation, where `C` prices each margin violation so that non-separable data still has a solution, is the contribution of the original paper, which combined ten degree-4 polynomial classifiers to reach 1.1% test error on the NIST digit benchmark ([doi:10.1007/bf00994018](https://doi.org/10.1007/bf00994018), Cortes and Vapnik, Machine Learning 1995).
 
 ```python
 from sklearn.svm import SVC
@@ -168,8 +199,12 @@ from sklearn.preprocessing import MinMaxScaler
 
 scaler = MinMaxScaler().fit(X_train)           # fit on train only (see 03)
 svc = SVC(kernel="rbf", C=1000, gamma="scale").fit(scaler.transform(X_train), y_train)
-# Unscaled breast-cancer data: test 0.63. Scaled to [0,1], C=1000: test 0.97
+raw = SVC(kernel="rbf", C=1000, gamma=1.0).fit(X_train, y_train)   # gamma on raw pixel-scale distances
+print("unscaled", round(raw.score(X_test, y_test), 3))
+print("scaled  ", round(svc.score(scaler.transform(X_test), y_test), 3))
 ```
+
+@@SVC@@
 
 | Knob | Small value | Large value |
 |---|---|---|
@@ -183,13 +218,17 @@ Tune them **together** ([04 — grid search](04-model-evaluation.md#grid-search)
 | Good at | Small and medium data (up to ~10k samples) with features on similar scales; complex boundaries in few dimensions |
 | Fails on | 100k+ samples (memory and time); unscaled features; interpretation |
 
-Ng's ex6 implements the Gaussian kernel by hand and uses `sklearn.svm.SVC` on three 2-D datasets, then builds a **spam classifier**: email preprocessing (lower-case, strip HTML, normalise URLs, numbers and addresses, Porter stemming), a 1,899-word vocabulary, binary word-presence features, a linear SVM. That is the bag-of-words pipeline of [08](../../03-nlp/notes/01-text-representation.md) written out by hand.
+Ng's ex6 implements the Gaussian kernel by hand and uses `sklearn.svm.SVC` on three 2-D datasets, then builds a **spam classifier**: email preprocessing (lower-case, strip HTML, normalise URLs, numbers and addresses, Porter stemming), a 1,899-word vocabulary, binary word-presence features, a linear SVM. That is the bag-of-words pipeline of [NLP text representation](../../03-nlp/notes/01-text-representation.md) written out by hand.
 
 ```python
 # Ng ex6: the Gaussian kernel, from scratch
 def gauss_kernel(x1, x2, sigma):
     return np.exp(-np.sum((x1 - x2) ** 2) / (2.0 * sigma ** 2))   # gamma = 1 / (2 sigma^2)
+
+print(round(gauss_kernel(np.array([1., 2, 1]), np.array([0., 4, -1]), 2.0), 6))
 ```
+
+@@GK@@
 
 ---
 
@@ -204,7 +243,10 @@ from sklearn.preprocessing import StandardScaler
 Xs_train = StandardScaler().fit(X_train).transform(X_train)
 mlp = MLPClassifier(hidden_layer_sizes=[10, 10], alpha=1.0,
                     max_iter=1000, random_state=0).fit(Xs_train, y_train)
+print(round(mlp.score(StandardScaler().fit(X_train).transform(X_test), y_test), 3))
 ```
+
+@@MLP@@
 
 | Knob | Effect |
 |---|---|
@@ -213,7 +255,7 @@ mlp = MLPClassifier(hidden_layer_sizes=[10, 10], alpha=1.0,
 | `activation` | `relu` (default) or `tanh` |
 | `random_state` | Different seeds give visibly different boundaries on small data |
 
-The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) builds them from scratch.
+The tuning recipe from M&G: first build a network big enough to overfit, then shrink it or raise `alpha` until test performance is best. Scaling to mean 0 and variance 1 is required. Neural networks need more data, more tuning and more care than the other models here; for tabular data, gradient-boosted trees usually win ([06](06-ensembles.md)). [neural network basics](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) builds them from scratch.
 
 ---
 
@@ -227,13 +269,20 @@ Most classifiers can say *how sure* they are, not only which class:
 | `predict_proba(X)` | [0, 1], rows sum to 1 | Estimated class probabilities |
 
 ```python
+from sklearn.ensemble import GradientBoostingClassifier
+
+y_train_named = cancer.target_names[y_train]         # labels as strings, to show classes_
 gbrt = GradientBoostingClassifier(random_state=0).fit(X_train, y_train_named)
-gbrt.decision_function(X_test)[:6]   # e.g. [ 4.14 -1.68 -3.95 -3.62  4.29  3.66]
-gbrt.predict_proba(X_test)[:6]       # probability of each class in classes_ order
-gbrt.classes_[(gbrt.decision_function(X_test) > 0).astype(int)]  # == gbrt.predict(X_test)
+print(gbrt.classes_)
+print(gbrt.decision_function(X_test)[:4].round(2))   # signed margin; positive means classes_[1]
+print(gbrt.predict_proba(X_test)[:4].round(3))       # probability of each class in classes_ order
+agree = gbrt.classes_[(gbrt.decision_function(X_test) > 0).astype(int)] == gbrt.predict(X_test)
+print(agree.all())
 ```
 
-A probability is only as good as the model's **calibration**: an overfit model reports 1.0 on points it gets wrong. You need these scores to move the decision threshold, which [04](04-model-evaluation.md#threshold-precision-recall-and-roc) does.
+@@UNC@@
+
+A probability is only as good as the model's **calibration**: an overfit model reports 1.0 on points it gets wrong. You need these scores to move the decision threshold, which [04](04-model-evaluation.md#threshold-precision-recall-and-roc) does, and [04](04-model-evaluation.md#calibration-is-a-08-really-80) shows how to check them. Niculescu-Mizil and Caruana compared ten learners' probabilities and found boosted trees and SVMs distort them in a sigmoid shape while logistic regression does not ([doi:10.1145/1102351.1102430](https://doi.org/10.1145/1102351.1102430), ICML 2005).
 
 ---
 
@@ -249,11 +298,11 @@ A probability is only as good as the model's **calibration**: an overfit model r
 | Naive Bayes | `alpha` | No | Very fast text baselines | When accuracy matters most |
 | Decision tree | `max_depth` | No | Explaining a model to people | Accuracy (use an ensemble) |
 | Random forest | `max_features` | No | Strong default for tabular | Very sparse high-dim data |
-| Gradient boosting | `learning_rate`, `n_estimators`, `max_depth` | No | Best tabular accuracy | You can't afford tuning |
+| Gradient boosting | `learning_rate`, `n_estimators`, `max_depth` | No | Best tabular accuracy ([07](07-boosting-in-practice.md)) | You can't afford tuning |
 | Kernel SVM | `C`, `gamma` | Yes | Medium data, similar-scale features | Large n |
 | MLP | layers, `alpha` | Yes | Large data, time to tune | Small tabular data |
 
-M&G's advice when faced with a new dataset: start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks.
+M&G's advice when faced with a new dataset: start with a simple model (linear, naive Bayes or kNN) to learn what the data is like, then move to random forests, gradient boosting, SVMs or neural networks. All of them sit behind the same API, which is the reason a sweep across families costs a few lines ([arXiv:1201.0490](https://arxiv.org/abs/1201.0490), Pedregosa et al., JMLR 2011).
 
 ---
 
@@ -266,7 +315,7 @@ Your own Coursera work implements the maths that scikit-learn hides. Each is the
 | ex1 | Linear regression, one and many variables; batch gradient descent; feature normalisation; the normal equation | `computeCost`, `descendGradient`, `normEqtn` |
 | ex2 | Logistic regression; regularised logistic regression on polynomial features (`mapFeature` to degree 6); decision boundary | `computeCost`, `optimizeTheta` (via `scipy.optimize`) |
 | ex3 | Vectorised one-vs-all logistic regression on 5,000 handwritten digits; feed-forward with given NN weights | `predictOneVsAll`, `propagateForward` |
-| ex4 | NN training: backpropagation, gradient checking, random initialisation | Taken up in [07](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) |
+| ex4 | NN training: backpropagation, gradient checking, random initialisation | Taken up in [neural network basics](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) |
 | ex6 | Gaussian-kernel SVM; spam classifier | See [above](#kernelized-support-vector-machines) |
 
 The core of ex1 and ex2, vectorised:
@@ -296,9 +345,19 @@ def cost_logistic(theta, X, y, lam=0.0):
     h = expit(X @ theta)
     reg = lam / (2 * m) * (theta[1:] ** 2).sum()                       # never penalise the bias
     return -(y @ np.log(h) + (1 - y) @ np.log(1 - h)) / m + reg
+
+# Ng ex1: profit of a food truck against city population
+data = np.loadtxt("../practice/ng-machine-learning/ex1/data/ex1data1.txt", delimiter=",")
+X1 = np.c_[np.ones(len(data)), data[:, 0]]
+y1 = data[:, 1]
+print("cost at zero   ", round(cost_linear(np.zeros(2), X1, y1), 2))
+print("grad descent   ", gradient_descent(X1, y1, np.zeros(2)).round(3))
+print("normal equation", normal_equation(X1, y1).round(3))
 ```
 
-Three things these make concrete that the library hides: gradient descent diverges if the learning rate is too high (plot $J$ per iteration, ex1); features on different scales slow it badly (normalise first); and the regularisation term skips the bias weight.
+@@NG@@
+
+After 1,500 iterations gradient descent has not quite reached the closed-form answer, so running longer closes the gap. Three things these make concrete that the library hides: gradient descent diverges if the learning rate is too high (plot $J$ per iteration, ex1); features on different scales slow it badly (normalise first); and the regularisation term skips the bias weight.
 
 ---
 
@@ -311,4 +370,48 @@ Three things these make concrete that the library hides: gradient descent diverg
 
 ---
 
-→ Next: [03-feature-engineering-and-pipelines.md](03-feature-engineering-and-pipelines.md) — the features matter more than the model, and pipelines keep preprocessing honest.
+## Pitfalls
+
+| Pitfall | Symptom | Fix |
+|---|---|---|
+| Unscaled features for a distance or margin model | kNN or SVC scores near the dummy rate, and scaling jumps it | Put a scaler in a pipeline ([03](03-feature-engineering-and-pipelines.md)) |
+| Confusing `C` and `alpha` | Raising `C` makes the fit tighter, raising `alpha` makes it looser | Remember `C` is the inverse of regularisation strength |
+| Reading coefficients as causes | A correlated feature flips sign between fits | Check stability across resamples; see [interpretability](08-model-interpretability.md) |
+| A convergence warning ignored | Coefficients differ with solver or seed | Scale first, or raise `max_iter` until the warning goes |
+| Trees on trending time data | Forecast flatlines at the last training value | Model the trend with a linear part, or difference the target |
+| Trusting `predict_proba` from an overfit model | Probabilities of 1.0 on wrong answers | Check calibration ([04](04-model-evaluation.md#calibration-is-a-08-really-80)) |
+
+## Try it
+
+1. Sweep `C` over `[0.001, 0.01, 0.1, 1, 10, 100]` for `LogisticRegression` on the scaled breast-cancer split. Find where train and test scores part.
+2. Fit `DecisionTreeClassifier` with `max_depth` from 1 to 10. Which depth does the test score peak at on this split?
+3. Run `gradient_descent` on `X1, y1` with `alpha=0.03`. What happens to the cost, and why?
+4. Extend `cost_logistic` to return its gradient and fit it on ex2's `data/ex2data1.txt` with `scipy.optimize.minimize`. Solutions are in [`ex2.ipynb`](../practice/ng-machine-learning/ex2/ex2.ipynb).
+
+<details>
+<summary>Answers</summary>
+
+1. Very small `C` underfits, with both scores lower. From about `C=1` the train score reaches its ceiling while the test score flattens or drops, which is where more flexibility stops paying.
+2. Print the sweep. The peak is usually at a small depth, and the unpruned tree is not the best one; the exact depth depends on the split, so rerun with a different `random_state` to see how unstable a single tree's choice is.
+3. It diverges to infinity: the feature (city population in tens of thousands) has a large range, so a step of 0.03 overshoots and the cost grows every iteration. Normalising the feature first fixes it, which is the point ex1 makes.
+
+</details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What controls complexity in kNN, linear models, trees, RBF SVMs? | `n_neighbors`; `alpha` or `C`; `max_depth`; `C` with `gamma` |
+| Ridge vs lasso? | Ridge shrinks all weights. Lasso sets some to exactly zero, so it selects features |
+| Logistic regression vs linear SVM? | The same hyperplane shape with different losses: log-loss vs hinge. Logistic gives probabilities directly |
+| Why do trees not need scaling? | Each split compares one feature to a threshold, so only the order of its values matters |
+| Why can't trees or forests extrapolate? | Predictions are means of training leaves, so they never leave the training range |
+| What is the kernel trick? | Computing inner products in an expanded feature space without building that space |
+| What are support vectors? | The training points on or inside the margin, the only ones that define the boundary |
+| Why is naive Bayes fast and often fine? | One pass of per-class statistics. Its independence assumption is wrong but the ranking is often good |
+| Which model first on a new table? | A linear model or kNN to learn the data, then a forest or boosting |
+| Gradient descent vs normal equation? | Iterative with a learning rate, vs closed form at about cubic cost in features |
+
+## Next
+
+[Feature engineering and pipelines](03-feature-engineering-and-pipelines.md): the features matter more than the model, and pipelines keep preprocessing honest.

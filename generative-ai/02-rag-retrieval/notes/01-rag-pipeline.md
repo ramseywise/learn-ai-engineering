@@ -14,17 +14,21 @@ sources:
   - Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 4, ch. 9
   - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025), ch. 2, ch. 3
   - Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025), ch. 3
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 1 — The RAG pipeline
 
-Retrieval-augmented generation fetches relevant documents at inference time, puts them in the prompt, and lets the model answer from them. This note covers the **mechanics**: architectures, the pipeline stages, chunking, hybrid search, worked production pipelines, index-time structures, agentic and conversational RAG, and what to measure.
+A support assistant for an invoicing product gets the question "can I get my money back?" The refund page exists, but the retriever returns an archived version with the old 14-day window, and the model repeats it with full confidence. Nothing crashed. The logs look clean, and a customer now has the wrong answer. Most RAG failures have this shape: one quiet stage upstream decides what the model can say.
+
+Retrieval-augmented generation fetches relevant documents at inference time, puts them in the prompt, and lets the model answer from them. This note is the map. It covers the **mechanics**: architectures, the pipeline stages, chunking, hybrid search, worked production pipelines, index-time structures, agentic and conversational RAG, and what to measure. Later chapters take each stage apart.
+
+**The running example.** Every chapter in this pillar uses the same corpus: 18 synthetic help-centre pages and 20 labelled questions for Tallybook, a fictional invoicing product. It lives in [`practice/ragkit.py`](../practice/ragkit.py) with BM25, a toy embedder and the metrics. Blocks that start `from ragkit import ...` run from the `practice/` folder with `uv run --with numpy python your_file.py`, with no API key. The toy embedder is hand-built so it needs no download. It shows mechanics, and its scores are not evidence about real models; [03](03-keyword-semantic-and-hybrid-search.md#a-real-embedder-on-the-same-questions) runs a real one.
 
 The context-engineering view, where retrieval is one lever among several (when to retrieve rather than cache or load everything, how much, where results land in the window), is in [02-context 04 — retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md). Read that first if you're deciding *whether* to build a pipeline.
 
 ![The RAG process: documents are chunked and embedded at index time; at query time relevant chunks are retrieved and combined with the question in the prompt](../sources/images/gao-rag-survey-fig2.png)
-*Image Source: Gao et al. (2024), [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997), Figure 2 ([PDF](../sources/2312.10997v5.pdf))*
+*Image Source: Gao et al. (2024), [Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997), Figure 2*
 
 ---
 
@@ -130,6 +134,40 @@ Iusztin and Labonne sort the same operations into three stages (*LLM Engineer's 
 ![The LLM Twin RAG layout: an ingestion pipeline (clean, chunk, embed) marked as pre-retrieval, a vector DB holding embedded chunks with metadata, a query embedded the same way for retrieval, and the K retrieved chunks passing a post-retrieval step into the prompt with the template and user input](../sources/images/llm-engineers-handbook-fig4-5.png)
 *Image Source: Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), Fig. 4.5*
 
+The order is easier to trust once you have run it. Here are the first stages over Tallybook. Filtering removes the internal runbook `kb-18` before search can find it, and the dedupe step lets the current refund page beat its 2024 archive (`kb-05`):
+
+```python
+from ragkit import DOCS, Retriever
+
+def build_context(query: str, audience: str = "public", k: int = 3) -> str:
+    # 1. Metadata filter first: the cheapest stage, and the access-control one.
+    allowed = [d for d in DOCS if d.audience == audience]
+    # 2. Search what survived, wider than we plan to send.
+    candidates = Retriever(allowed).hybrid(query, k=k * 3)
+    # 3. Dedupe: an archived page loses to the current page on the same topic.
+    by_id = {d.id: d for d in allowed}
+    seen, kept = set(), []
+    for doc_id in candidates:
+        doc = by_id[doc_id]
+        topic = doc.title.split(" (")[0]
+        if topic not in seen:
+            seen.add(topic)
+            kept.append(doc)
+    # 4. Format with tags, so the model can cite and instructions stay separate.
+    return "\n".join(f'<doc id="{d.id}" updated="{d.updated}">{d.title}: {d.text[:40]}...</doc>'
+                     for d in kept[:k])
+
+print(build_context("what is the refund policy"))
+```
+
+```text
+<doc id="kb-04" updated="2026-10-01">Refund policy: Annual plans can be refunded in full wit...</doc>
+<doc id="kb-06" updated="2026-07-30">Cancelling your subscription: The workspace owner can cancel under Set...</doc>
+<doc id="kb-08" updated="2026-03-19">Invoice numbering: Invoice numbers must run in an unbroken ...</doc>
+```
+
+This dedupe is deliberately crude: it works because the first-ranked page here is the current one. If the archive ranked first, it would win. The sturdier fix is a `status` or `superseded_by` field set at ingestion, so the stale page never competes. That is an example of the pipeline's general rule: repair a problem at the earliest stage that can see it.
+
 One rule from the same chapter sits under all three stages. Preprocess the query exactly as you preprocessed the documents: the same cleaning and the same embedding model. Any mismatch is *training–serving skew*, and retrieval degrades without raising an error.
 
 ---
@@ -142,6 +180,29 @@ Retrieval can only return what parsing extracted. Parser capability comes in tie
 *Image Source: AWS Bedrock Knowledge Bases, parsing options (console screenshot)*
 
 A tier-one parser over a PDF-heavy corpus silently turns every chart, diagram and table into nothing or garbled text. The retrieval layer then looks broken (low recall, irrelevant chunks) when the failure happened at ingestion. Check what the parser produced before tuning k, rerankers or chunk size.
+
+The ceiling is literal. Suppose Tallybook's refund page was a scanned PDF and the parser kept only a filename. No retriever can recover it, however well tuned:
+
+```python
+from dataclasses import replace
+from ragkit import DOCS, QUERIES, Retriever, evaluate
+
+refund_queries = [q for q in QUERIES if q[1] == {"kb-04"}]
+# The parser kept a filename and a stub: the policy text never reached the index.
+parsed = [replace(d, title="scan_0042.pdf", text="See attached.") if d.id == "kb-04" else d
+          for d in DOCS]
+for name, docs in [("clean parse", DOCS), ("failed parse", parsed)]:
+    r = Retriever(docs)
+    print(f"{name:13}", {m: evaluate(s, refund_queries)["recall@3"]
+                         for m, s in [("bm25", r.sparse), ("dense", r.dense), ("hybrid", r.hybrid)]})
+```
+
+```text
+clean parse   {'bm25': 0.0, 'dense': 1.0, 'hybrid': 1.0}
+failed parse  {'bm25': 0.0, 'dense': 0.0, 'hybrid': 0.0}
+```
+
+Dense and hybrid search drop from 1.0 to 0.0, and no rerank stage can bring the page back. BM25 scores 0.0 in both rows for a different reason: "money back" shares no word with the page, the paraphrase gap of [03](03-keyword-semantic-and-hybrid-search.md).
 
 **Multimodal ingestion.** Non-text content (charts, PDF layout, audio) enters here, and the path sets the ceiling. **Native multimodal** keeps layout and charts but costs the most. **Extract-to-text** (OCR, transcription) is cheap and cacheable, but anything visual is lost. **Extract plus an analysis tool** (`analyze_image`, `analyze_pdf`) answers most questions from the text and goes back to the original only when needed (Li, ch. 3; lab: upstream [multimodal-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter4/multimodal-agent)).
 
@@ -158,9 +219,45 @@ The source changes after the first load. If re-ingestion is naive, the index eit
 | Trigger | Database triggers write changes to an audit table | Adds write overhead to the source |
 | Log-based | Read the database's transaction log | Best fidelity and no source load, but vendor-specific and needs a queue |
 
-**Make writes idempotent.** The Handbook uses the MD5 of a chunk's content as its ID, so re-running the pipeline overwrites rather than duplicates. LangChain's indexing API goes further. A `RecordManager` stores a hash of each document's content and metadata, its write time and its source ID. On re-run it skips unchanged documents and, depending on `cleanup`, deletes stale ones (*Learning LangChain*, ch. 2):
+**Make writes idempotent.** The Handbook uses the MD5 of a chunk's content as its ID, so re-running the pipeline overwrites rather than duplicates. Content-derived IDs also make deletes possible: whatever this source no longer produces must be stale. The whole idea fits in a few lines:
 
 ```python
+import hashlib
+
+def chunk_id(source: str, text: str) -> str:
+    return hashlib.md5(f"{source}|{text}".encode()).hexdigest()[:8]
+
+def sync(index: dict, source: str, chunks: list[str]) -> dict:
+    """Make the index match the source. Safe to re-run. index: {chunk_id: (source, text)}"""
+    wanted = {chunk_id(source, c): c for c in chunks}
+    existing = {i for i, (s, _) in index.items() if s == source}
+    for i in wanted.keys() - existing:
+        index[i] = (source, wanted[i])            # new or changed text gets a new id
+    for i in existing - wanted.keys():
+        del index[i]                              # stale chunk of this source
+    return {"added": len(wanted.keys() - existing), "deleted": len(existing - wanted.keys()),
+            "unchanged": len(wanted.keys() & existing)}
+
+index = {}
+print(sync(index, "kb-05", ["Refunds within 14 days.", "Kept for old customers."]))
+print(sync(index, "kb-05", ["Refunds within 14 days.", "Kept for old customers."]))   # re-run
+print(sync(index, "kb-05", ["Refunds within 30 days.", "Kept for old customers."]))   # edit
+print(sync(index, "kb-05", []))                                                       # page removed
+print("chunks left:", len(index))
+```
+
+```text
+{'added': 2, 'deleted': 0, 'unchanged': 0}
+{'added': 0, 'deleted': 0, 'unchanged': 2}
+{'added': 1, 'deleted': 1, 'unchanged': 1}
+{'added': 0, 'deleted': 2, 'unchanged': 0}
+chunks left: 0
+```
+
+LangChain's indexing API is the production form. A `RecordManager` stores a hash of each document's content and metadata, its write time and its source ID. On re-run it skips unchanged documents and, depending on `cleanup`, deletes stale ones (*Learning LangChain*, ch. 2):
+
+```python
+# illustrative: needs a Postgres database for the record manager and a vector store
 from langchain.indexes import SQLRecordManager, index
 
 record_manager = SQLRecordManager("pgvector/my_docs", db_url=DB_URL)
@@ -176,6 +273,7 @@ The book uses the 2025 `langchain` / `langchain_community` import paths. Check c
 **Bulk deletes can be asynchronous.** Rothman's dual-RAG build clears a Pinecone namespace with `delete_all` and upserts straight after. Pinecone performs the delete in the background, so it can sweep away vectors written after the call returned. The fix is to poll the index stats until the namespace is empty before writing (*Context Engineering for MAS*, ch. 3):
 
 ```python
+# illustrative: needs a Pinecone account and an existing index
 index.delete(delete_all=True, namespace=ns)
 while index.describe_index_stats().namespaces.get(ns, {"vector_count": 0})["vector_count"] > 0:
     time.sleep(2)      # the delete is async: wait, or later upserts may be wiped
@@ -196,39 +294,7 @@ The Handbook also stores two snapshots of each document in its feature store: on
 
 Chunk size is a recall/precision dial: small chunks match precisely but arrive without context; large chunks carry context but dilute the embedding. The hierarchical "retrieve small, return big" pattern sidesteps most of the trade-off. **Contextual retrieval** (an LLM-written prefix per chunk at index time) repairs the context a chunk loses; it's covered in [02-context 04](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#contextual-retrieval).
 
-Fixed-size with overlap is a few lines over token ids. The stride is `size - overlap`, so a sentence cut at one boundary appears whole in the next chunk:
-
-```python
-import tiktoken
-
-def text_to_chunks(text, size=512, overlap=64, enc=tiktoken.get_encoding("cl100k_base")):
-    ids = enc.encode(text)
-    chunks = []
-    for start in range(0, len(ids), size - overlap):   # stride = size - overlap
-        window = ids[start:start + size]
-        if window:
-            chunks.append(enc.decode(window))
-    return chunks
-```
-
-Adapted from the DAIR prompt-engineering course's `04_rag_recipes.py`, which defaults to 1,000 tokens with 200 overlap and to `gpt-3.5-turbo` and `text-embedding-ada-002`. **Both models are legacy**; swap in a current embedding model.
-
-Token windows ignore structure. The Handbook's version splits on paragraphs first, then caps each piece at the embedder's own input limit, using the embedder's tokenizer (*LLM Engineer's Handbook*, ch. 4):
-
-```python
-from langchain.text_splitter import (RecursiveCharacterTextSplitter,
-                                     SentenceTransformersTokenTextSplitter)
-
-def chunk_text(text, model_id, max_tokens, chunk_overlap=50):
-    paragraphs = RecursiveCharacterTextSplitter(separators=["\n\n"], chunk_size=500,
-                                                chunk_overlap=0).split_text(text)
-    by_tokens = SentenceTransformersTokenTextSplitter(       # the embedder's tokenizer,
-        model_name=model_id, tokens_per_chunk=max_tokens,    # so no chunk is truncated
-        chunk_overlap=chunk_overlap)
-    return [c for p in paragraphs for c in by_tokens.split_text(p)]
-```
-
-Counting in the embedder's tokens has a cost: switch embedders and the chunks must be rebuilt, not just re-embedded (*AI Engineering*, ch. 6). Per-chunk sizes and overlaps from the books are compared in [05 § strategies](05-chunking-query-parsing-and-reranking.md#strategies).
+The chunking code, a comparison on a Tallybook page, and the sizes and overlaps from each book are in [05](05-chunking-query-parsing-and-reranking.md#chunking-code).
 
 ---
 
@@ -243,14 +309,16 @@ Huyen names the two ways to combine retrievers (*AI Engineering*, ch. 6). **In s
 
 Each stage has its own job:
 
-- **Sparse.** BM25's `k1` saturates term frequency, so the 20th mention adds little. `b` normalises for document length. Rare terms dominate through IDF. *Learned sparse* models (SPLADE, BGE-M3's sparse head) learn the term weights and can add related terms that aren't in the text, while staying sparse and inspectable. Worked example below: [BM25 from scratch](#bm25-from-scratch).
+- **Sparse.** BM25's `k1` saturates term frequency, so the 20th mention adds little. `b` normalises for document length. Rare terms dominate through IDF. *Learned sparse* models (SPLADE, BGE-M3's sparse head) learn the term weights and can add related terms that aren't in the text, while staying sparse and inspectable. Worked example: [BM25 from scratch](03-keyword-semantic-and-hybrid-search.md#bm25-from-scratch).
 - **Dense.** Cosine similarity compares direction, not magnitude, so length doesn't count. Contextual encoders (BERT, BGE-M3) give "bank" a different vector in each sentence; Word2Vec gave it one. The ANN index choice (HNSW for live corpora, ANNOY for static ones) is in [09 — vector database comparison](09-vector-database-comparison.md#ann-index-types-hnsw-vs-annoy). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding).
 - **Fusion.** Dense scores (roughly 0–1) and BM25 scores (0 to tens) aren't on the same scale. RRF (`Σ 1/(60 + rank)`) ignores scores and fuses ranks: robust, but it throws signal away. Normalise-and-weight keeps the scores but is hard to tune.
 - **Rerank.** A cross-encoder reads the query and the candidate *together* (the interviewer), where the bi-encoder compares two independent vectors (the résumé screen). It's too slow to run over the corpus, so it reranks the fused top 50 or so. It refines fusion; it doesn't replace it. Lab: upstream [3-6 retrieval-pipeline](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/retrieval-pipeline) reports each document's rank before and after reranking.
 
-Both fusions fit in a few lines. The weighted version is PRINCE's 0.7/0.3 split; it needs each score list normalised first, or BM25's larger range swamps the dense half:
+Both fusions fit in a few lines. The weighted version is PRINCE's 0.7/0.3 split; it needs each score list normalised first, or BM25's larger range swamps the dense half. The first printed line shows why: the raw scores are not on one scale.
 
 ```python
+from ragkit import BM25, DOCS, embed
+
 def rrf(rankings, k=60):                       # rankings: list of ranked doc-id lists
     scores = {}
     for ranked in rankings:
@@ -267,85 +335,32 @@ def weighted(dense, sparse, w_dense=0.7):      # each: {doc: raw score}
     fused = {doc: w_dense * d.get(doc, 0) + (1 - w_dense) * s.get(doc, 0)
              for doc in d.keys() | s.keys()}
     return sorted(fused, key=fused.get, reverse=True)
+
+ids = [d.id for d in DOCS]
+query = "HTTP-403 access denied"
+sparse = dict(zip(ids, BM25([d.full for d in DOCS]).scores(query).round(3)))
+dense = dict(zip(ids, (embed([d.full for d in DOCS]) @ embed([query])[0]).round(3)))
+print("best raw sparse:", max(sparse.values()), " best raw dense:", max(dense.values()))
+print("sparse  ", sorted(sparse, key=sparse.get, reverse=True)[:3])
+print("dense   ", sorted(dense, key=dense.get, reverse=True)[:3])
+print("rrf     ", rrf([sorted(sparse, key=sparse.get, reverse=True),
+                       sorted(dense, key=dense.get, reverse=True)])[:3])
+print("weighted", weighted(dense, sparse)[:3])
+```
+
+```text
+best raw sparse: 2.514  best raw dense: 0.592
+sparse   ['kb-01', 'kb-07', 'kb-13']
+dense    ['kb-01', 'kb-07', 'kb-02']
+rrf      ['kb-01', 'kb-07', 'kb-02']
+weighted ['kb-01', 'kb-07', 'kb-13']
 ```
 
 The DAIR course's `HybridRAG` (keyword weight 0.3, keyword score = query-term overlap) breaks off mid-method, so the combination step above was written for this note rather than copied.
 
 ### BM25 from scratch
 
-The sparse half fits in about 40 lines of standard-library Python. For query term *t* in document *d*:
-
-```
-score(t, d) = IDF(t) · tf · (k1 + 1) / (tf + k1 · (1 − b + b · |d| / avgdl))
-IDF(t)      = ln((N − df + 0.5) / (df + 0.5) + 1)
-```
-
-- **`k1` saturates term frequency.** The 20th mention adds far less than the 2nd, so a long document can't win by repetition. Typical values are 1.2–2.0.
-- **`b` normalises for length.** `b=0` ignores length; `b=1` normalises fully. The usual default is 0.75.
-- **The `+ 1` inside the log** is the Lucene variant. It keeps IDF positive for terms that appear in more than half the documents. Li's worked example uses the classic form without it, so his numbers come out slightly lower.
-
-```python
-import math, re
-from collections import Counter
-
-STOP = {"the", "is", "a", "an", "of", "to", "in", "and", "for", "on", "how", "what"}
-
-def tokenize(text):
-    # Keep codes like HTTP-403 whole; lowercase ordinary words; drop stop words.
-    tokens = re.findall(r"[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*", text)
-    return [t if any(c.isdigit() for c in t) else t.lower()
-            for t in tokens if t.lower() not in STOP]
-
-class BM25:
-    def __init__(self, docs, k1=1.5, b=0.75):
-        self.k1, self.b = k1, b
-        self.tf = [Counter(tokenize(d)) for d in docs]         # term counts per doc
-        self.len = [sum(c.values()) for c in self.tf]          # |d|
-        self.avgdl = sum(self.len) / len(docs)
-        self.df = Counter(t for c in self.tf for t in c)       # docs containing t
-        self.N = len(docs)
-
-    def idf(self, t):
-        # Lucene variant: the +1 keeps IDF positive for very common terms.
-        df = self.df[t]
-        return math.log((self.N - df + 0.5) / (df + 0.5) + 1)
-
-    def term_score(self, t, i):
-        tf = self.tf[i][t]
-        if tf == 0:
-            return 0.0
-        norm = 1 - self.b + self.b * self.len[i] / self.avgdl   # length normalisation
-        return self.idf(t) * tf * (self.k1 + 1) / (tf + self.k1 * norm)  # saturates in tf
-
-    def search(self, query, k=3):
-        q = tokenize(query)
-        scores = [(sum(self.term_score(t, i) for t in q), i) for i in range(self.N)]
-        return sorted((s for s in scores if s[0] > 0), reverse=True)[:k]
-
-docs = [
-    "Model distillation trains a small student model from a large teacher model.",
-    "The model returned HTTP-403 when the API key had expired.",
-    "A model card describes the model, its data and the model's limits.",
-    "Forbidden errors usually mean the credentials lack permission.",
-]
-bm25 = BM25(docs)
-for q in ["model distillation", "HTTP-403", "forbidden error"]:
-    print(f"{q!r:22} ->", [(i, round(s, 2)) for s, i in bm25.search(q)])
-```
-
-```
-'model distillation'   -> [(0, 1.68), (2, 0.59), (1, 0.37)]
-'HTTP-403'             -> [(1, 1.24)]
-'forbidden error'      -> [(3, 1.31)]
-```
-
-Three things to read off the output:
-
-- **Rare beats frequent.** Doc 2 says "model" four times but ranks well below doc 0. "model" is in three of the four documents, so its IDF is low, and `k1` caps what repetition can add. "distillation" is in one document and carries the score.
-- **Codes survive tokenisation.** `HTTP-403` stays one token and hits doc 1 exactly, which is what dense search tends to blur.
-- **The blind spot.** "forbidden error" never reaches doc 1, the actual 403 incident, and it matches doc 3 on "forbidden" alone: "error" ≠ "errors", with no stemming and no synonyms. That gap is what the dense half and the reranker fill.
-
-To build intuition, sweep `k1 ∈ {0.5, 1.2, 2.0}` and `b ∈ {0, 0.75, 1}` on a corpus with one very long document and watch its rank move. To see the sparse half of [contextual retrieval](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#contextual-retrieval), prefix a chunk with "ACME Corp 2025 Q2 financial report:" and query "ACME revenue". The fuller engine, with an inverted index, debug logging and tests, is upstream: Li, *AI Agents in Depth*, [Experiment 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (Apache-2.0).
+The sparse half fits in about 40 lines of standard-library Python. The formula, the code, its output and what to read off it are now in [03 § BM25 from scratch](03-keyword-semantic-and-hybrid-search.md#bm25-from-scratch).
 
 ### Measure each stage
 
@@ -366,7 +381,7 @@ A first production pipeline: ingestion and indexing on the left, query and retri
 
 Two things to note against the abstract pipeline. **Hybrid search** runs semantic and keyword retrieval together rather than choosing: vectors catch paraphrase, keywords catch exact identifiers, and each covers the other's failure mode. **Query transformation** sits before retrieval: the user's phrasing is rewritten into tool parameters, because the text a human types is rarely the text that retrieves best.
 
-What the diagram omits is as informative: there's no reranking and no deduplication, typical of a first cut. Those are the stages teams add after retrieval quality plateaus. Configuration details: [12 — Bedrock knowledge bases](12-bedrock-knowledge-bases.md).
+What the diagram omits is as informative: there's no reranking and no deduplication, typical of a first cut. Those are the stages teams add after retrieval quality plateaus. Configuration details: [12 — managed RAG](12-managed-rag.md#bedrock-knowledge-bases).
 
 ---
 
@@ -389,114 +404,9 @@ Three things generalise past the numbers:
 
 The funnel: **millions → hundreds (filter) → ~20 (hybrid + aggregate) → 7 (rerank)**. Retrieve wide, rerank hard, send narrow, with each narrowing done by a mechanism more accurate and more expensive than the last.
 
-### The same funnel at small scale: the LLM Twin
-
-The Handbook's retrieval module is PRINCE's shape, built over a Qdrant collection of one person's articles, posts and code (*LLM Engineer's Handbook*, ch. 9):
-
-![LLM Twin retrieval module: the query goes to self-query (extract metadata) and query expansion (N queries); each expanded query runs a filtered vector search returning K results; the N×K results are reranked; the top K ranked chunks form the context in the prompt sent to a SageMaker LLM endpoint](../sources/images/llm-engineers-handbook-fig9-1.png)
-*Image Source: Iusztin & Labonne, *LLM Engineer's Handbook* (Packt, 2024), Fig. 9.1*
-
-1. **Self-query.** An LLM pulls the author's name out of the question; it becomes a metadata filter (`FieldCondition(key="author_id", match=MatchValue(value=...))`).
-2. **Query expansion.** `gpt-4o-mini` at temperature 0 writes N=3 variants, separated by a `#next-question#` token so the output splits cleanly.
-3. **Filtered vector search** per variant and per collection, in a thread pool.
-4. **Merge and dedupe** the N×K results with a set.
-5. **Rerank** with a small cross-encoder (`ms-marco-MiniLM-L-4-v2`) against the *original* query and keep the top K.
-
-```python
-def search(query: str, k: int = 3, expand_to_n: int = 3) -> list[Chunk]:
-    author = self_query(query)                          # metadata filter, or None
-    queries = expand(query, n=expand_to_n)              # includes the original
-    with ThreadPoolExecutor() as pool:                  # searches are I/O-bound
-        hits = pool.map(lambda q: vector_search(q, author, k), queries)
-    unique = list({c.id: c for batch in hits for c in batch}.values())   # dedupe
-    return rerank(query, unique, keep=k)                # score against the ORIGINAL query
-```
-
-Two details are worth copying, and one is a trap. The rerank target is the original question, the same rule PRINCE follows. Every chunk keeps its source link in metadata, so the answer can cite it. The trap: the book splits `k` across its three collections as `k // 3` and asserts `k >= 3`. With the default k=3, that is one chunk per collection, whatever the question needs.
-
-The chapter's improvement list:
-
-- Add chat memory: the last K messages, or a running summary plus the last K.
-- Put a router in front of the collections, so most questions search one or two of the three.
-- Add BM25 for hybrid search.
-- Use a multi-index library (Superlinked) to weight several embeddings per item.
-
-All four appear elsewhere in this note.
-
 ### Text-to-SQL is a retrieval strategy
 
-Vector search over chunks is the wrong tool for questions that need precise filtering, aggregation or comparison: "give me 50 studies done on rat", or any numerical rollup. Embedding similarity doesn't count, sum or compare. PRINCE routes these to a Text-to-SQL tool, and the decisions inside it mirror the RAG path:
-
-- **Schema subsetting.** Only the schema components relevant to the query are injected, not the full schema: pre-filtering applied to the prompt instead of the corpus.
-- **Dynamic few-shot from a semantic layer.** Hand-picked (natural language → SQL) pairs live in their own vector collection. The user's query retrieves the most similar examples, which go into the prompt as in-context examples. This is retrieval used to *condition generation* rather than to supply answer content. New examples get added as failure patterns surface, and quality improves without retraining or prompt rewrites.
-- **Validation over review.** Generated SQL is checked mechanically (SELECT-only; DELETE/INSERT/UPDATE blocked). An earlier LLM-review step was *removed*: it flagged valid queries as broken often enough to cost more than it saved. Deterministic validation beat model judgment on a task with a checkable answer.
-
-Two more pieces from the books:
-
-- **Show the model the schema and a few rows.** For each table, put its `CREATE TABLE` statement and three sample rows in the prompt; Rajkumar et al. (2022) found that format worked best (*Learning LangChain*, ch. 3). The rows show what values actually look like, such as `'NY'` vs `'New York'`.
-- **Pick the table before writing SQL.** With many tables, Huyen adds a step in which the model chooses which tables are relevant. Only their schemas go into the Text-to-SQL prompt, and the query result goes to the generator alongside the question (*AI Engineering*, ch. 6).
-
-![Tabular RAG: the question "How many units of Fruity Fedora were sold in the last 7 days?" goes to a Text-to-SQL step over a sales table; the SQL is executed, and the SQL result plus the original question go to the generative model, which writes the response](../sources/images/huyen-ai-engineering-fig6-7.png)
-*Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 6-7*
-
-**Lock the database down as well as validating the SQL** (*Learning LangChain*, ch. 3). Connect as a read-only user, expose only the tables the app needs, and set a query timeout so a generated cross-join can't stall the database. A SELECT-only check stops writes, but it doesn't stop a SELECT that reads a salary table or runs for an hour.
-
-The same move works without SQL. The DAIR `pe-rag` notebook retrieves similar paper titles and uses them as style examples for generating new ones:
-
-```python
-import chromadb
-from chromadb.utils import embedding_functions
-
-ef = embedding_functions.SentenceTransformerEmbeddingFunction("all-MiniLM-L6-v2")
-titles = chromadb.PersistentClient(path="./chromadb").get_or_create_collection(
-    "ml_titles", embedding_function=ef)
-
-# Index in batches; keep the URL and abstract as metadata for citing later.
-for i in range(0, len(papers), 50):                 # papers: [{"Title", "PaperURL", "Abstract"}]
-    batch = papers[i:i + 50]
-    titles.upsert(
-        ids=[str(i + j) for j in range(len(batch))],  # stable ids, so re-runs update, not duplicate
-        documents=[p["Title"] or "No Title" for p in batch],
-        metadatas=[{"url": p["PaperURL"], "abstract": p["Abstract"]} for p in batch])
-
-hits = titles.query(query_texts=[user_topic], n_results=10)["documents"][0]
-prompt = f"""Generate 5 titles for a paper on: {user_topic}
-Mimic the style of these titles. Do not copy any of them.
-<examples>
-{chr(10).join(hits)}
-</examples>"""
-```
-
-The examples are chosen per request, so the prompt stays short and on-topic. The notebook ran on Fireworks-hosted Llama 2 7B and Mistral 7B Instruct with Mistral's `[INST]` template. **Those models are legacy**; any current chat model works with the plain prompt above. The corpus was DAIR's ML Papers of the Week list. The original builds ids from a random hash of the title, so re-running it adds duplicates; the stable ids above fix that. Runnable original: DAIR [Prompt-Engineering-Guide `notebooks/pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb).
-
-The general shape: a retrieval layer that spans structured and unstructured data needs a **router**, not a single index. Choosing *which* retrieval mechanism to use is a decision made before any retrieval happens.
-
-### Routing
-
-Raieli and Iuculano list five kinds of router (*Building AI Agents*, ch. 6):
-
-| Router | Decides by | Trade-off |
-|---|---|---|
-| Logical | Hand-written rules on the query or user | Predictable; brittle as queries vary |
-| Keyword | Matching terms to sources | Cheap; misses paraphrase |
-| Zero-shot classifier | A classifier over source labels | No training data; fixed label set |
-| Function calling | The LLM picks a tool or source | Flexible; one LLM call per query |
-| Semantic | Cosine similarity between the query and a description of each route | Fast after setup; needs good route descriptions |
-
-Their banking and insurance example shows routing doing a second job. Sending a customer's question only to the indexes that customer may see is an access-control decision as well as a relevance one.
-
-LangChain implements the last two (*Learning LangChain*, ch. 3). The *logical* version uses structured output: the model must return one of a `Literal["python_docs", "js_docs"]` set, and code maps that label to a retriever. The *semantic* version embeds one prompt template per route and picks the template closest to the query:
-
-```python
-routes = {"physics": PHYSICS_PROMPT, "math": MATH_PROMPT}
-route_vecs = {name: embed(prompt) for name, prompt in routes.items()}   # once, at startup
-
-def route(query: str) -> str:
-    q = embed(query)
-    return max(route_vecs, key=lambda name: cosine(q, route_vecs[name]))  # argmax similarity
-```
-
-The book's logical router matches the returned label by lowercase substring (`"python_docs" in result.datasource.lower()`). That's fine for two labels; validate against the exact set once routes multiply. The book's code imports `langchain_core.pydantic_v1`, a shim deprecated since LangChain 0.3; use plain Pydantic v2 models.
+Vector search over chunks is the wrong tool for questions that need precise filtering, aggregation or comparison: "give me 50 studies done on rat", or any numerical rollup. Embedding similarity doesn't count, sum or compare. PRINCE routes these to a Text-to-SQL tool, so a retrieval layer that spans structured and unstructured data needs a **router**, not a single index. The details, with a runnable SELECT-only validator, the retrieved few-shot pattern and the five kinds of router, are in [08 § Text-to-SQL](08-agentic-rag-prince.md#text-to-sql). The same funnel at small scale (the LLM Twin) is in [08 § the LLM Twin](08-agentic-rag-prince.md#the-same-funnel-at-small-scale-the-llm-twin).
 
 ---
 
@@ -544,21 +454,7 @@ Agentic RAG's loop is ReAct applied to retrieval: *assess what's missing → pla
 
 Li runs the two side by side on legal Q&A. A simple question ("rules on self-defense") gives the same quality either way, and the single pass is faster. A compound question (sentencing for negligent serious injury while intoxicated, with a prior theft conviction) separates them. Single-pass retrieval with the wrong first keywords misses the link. The agent searches the three sub-questions in parallel, sees that what joins them is missing (how an unrelated prior conviction affects sentencing), and runs a second, targeted round on recidivism. Use agentic RAG when questions decompose; keep the single pass for narrow ones. Lab: upstream [3-9 agentic-rag](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/agentic-rag).
 
-### When it pays
-
-| Use agentic RAG when | Avoid it when |
-|---|---|
-| Questions need multi-step reasoning | One-shot retrieval works fine |
-| Several sources must be compared | Latency is critical |
-| Accuracy matters more than speed | You can't afford complex operations |
-| Provenance is non-negotiable | Your data quality is poor |
-| Human-level analysis is expected | |
-
-**Before shipping**, check: multiple retrieval strategies are implemented; the planner is separate from the generator; a validation step exists; every claim has traceable evidence; tool use is rate-limited; human override paths exist; metrics go beyond answer quality. Skip one and pause.
-
-**What to measure** beyond answer quality: retrieval precision, evidence coverage per answer, self-correction rate, human override frequency, and *time-to-trust* (how quickly reviewers approve). These predict real-world reliability.
-
-The direction of travel is multi-agent collaboration, better self-verification, and personalisation with guardrails. The catch: agentic RAG doesn't make a system smarter; it makes good systems better and bad ones dangerous. *Retrieval without judgment is noise; judgment without evidence is hallucination.*
+When it pays, and the checks to run before shipping it, are in [08 § when agentic RAG pays](08-agentic-rag-prince.md#when-agentic-rag-pays).
 
 ---
 
@@ -570,74 +466,71 @@ In multi-turn settings three things change (memory-side treatment in [02-context
 2. **The challenge is continuity and intent resolution, not only relevance.** Follow-ups contain pronouns, ellipsis, references ("what about the second one?") and topic drift. Query rewriting and memory selection often matter more than the retrieval model.
 3. **The agent decides when and where to retrieve.** Retrieving every turn can be wasteful or harmful. Policies like "reuse previous evidence", "retrieve only if needed" or "ask a clarifying question first" become part of the system.
 
-### Query rewriting
-
-Turn the context-dependent utterance into a standalone query that drives retrieval reliably. **CONQRR** trains the rewriter with reinforcement learning against a retrieval reward, so rewriting is optimised for what the retriever returns, and it works with any off-the-shelf retriever. **CANARD** and **QReCC** are the standard rewrite datasets. The limitation, emphasised since 2023–2024: a single rewritten question loses context in long dialogues, which is why systems move toward summaries and structured memory objects.
-
-NVIDIA's [RAG blueprint](https://docs.nvidia.com/rag/latest/multiturn.html) offers two modes: **query rewriting**, recommended for accuracy, and **history concatenation** (paste the last few turns into the query), which is cheap and low-latency but drags irrelevant history into retrieval as conversations grow. That it still ships the simple mode shows how common it is.
-
-### History-aware retrieval
-
-Use the chat history plus the current turn to build a retrieval *plan*. Two lines of work:
-
-- **IR pipeline** (CAsT, ORConvQA, CORAL, mtRAG). ORConvQA shows that modelling history across *all* components (retriever, reranker, reader) improves open-retrieval conversational QA: history is a retrieval and ranking signal, not just a prompt trick.
-- **Agentic retrieval** (industrial). In [Azure AI Search agentic retrieval](https://learn.microsoft.com/en-us/azure/search/agentic-retrieval-overview), an LLM reads the whole thread, decomposes it into focused subqueries (which can include chat history), runs them in parallel with semantic reranking, and returns grounding data plus a query plan the downstream agent can use.
-
-### Dual retrieval data flow
-
-1. The query reaches the orchestration layer.
-2. **Dual retrieval**: the retrieval module (static knowledge) and the memory module (history, user context) are queried together.
-3. A reasoning step merges the two into one context.
-4. Generation is guided by both documents and memory.
-5. **Memory update**: the session summary, feedback and new facts are written back.
-6. The answer goes to the user.
-
-The memory loop diagram and the production memory designs are in [02-context 06](../../../ai-engineering/02-context-engineering/notes/06-memory.md#the-memory-loop).
-
-### Benchmarks
-
-Evaluation shifts from single-turn QA to later-turn performance, non-standalone questions, topic switching, unanswerable queries and clarification.
-
-- **CAsT** (TREC Conversational Assistance Track): conversational query understanding and retrieval/reranking. Reports large headroom between automatic systems and manually resolved "oracle" rewrites, which quantifies how much context resolution matters.
-- **QReCC**: open-domain conversational QA over a large web corpus; supports training and evaluating rewriting, retrieval and reading separately.
-- **TopiOCQA**: open-domain conversational QA with topic switching.
-- **CORAL**: conversational RAG with passage retrieval, response generation and citation labelling under topic shifts.
-- **mtRAG**: human-generated multi-turn RAG across domains, weighted toward later turns, non-standalone and unanswerable questions.
-- **InSCIt, OR-ShARC**: mixed-initiative; test the decision to ask a clarifying question instead of answering.
+The mechanics (rewriting with CONQRR, history-aware retrieval, the dual retrieval data flow and the benchmarks) are in [05 § conversational retrieval](05-chunking-query-parsing-and-reranking.md#conversational-retrieval).
 
 ---
 
 ## Monitoring and production
 
-**Metrics:**
-
-- **Hallucination rate**: share of answers with at least one false claim (manual + automated).
-- **Precision@k / recall@k**: retrieval quality ([above](#measure-each-stage)).
-- **Latency (p95)**: critical for UX.
-- **Cost per query**: tokens plus API charges.
-- **User trust**: human-review pass rate or NPS.
-- **Claim-level accuracy**: for CRAG systems.
-
-**Production checklist:**
-
-- Semantic chunking with overlap; chunk sizes within prompt-window limits.
-- Cross-encoder reranker over the top-N results.
-- Incremental embedding refresh for frequently updated sources.
-- Caching for high-frequency and repeat queries ([10 — semantic cache](10-semantic-cache.md)).
-- Token-budget enforcement, with summarisation for long contexts.
-- Snapshot, backup and rebuild plan for the vector database.
-- PII redaction and strict access controls for private data (permissions belong at the retrieval layer: [02-context 04](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#context-validation)).
-- Human review of flagged outputs, feeding back into re-indexing or retraining.
+Retrieval quality is only one number to watch. The metric list and the production checklist are in [07 § monitoring](07-rag-in-production.md#monitoring-metrics-and-checklist).
 
 ---
 
 ## Labs
 
-- BM25 from scratch: [worked example above](#bm25-from-scratch); full engine upstream at [Li 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (offline, standard library).
-- Retrieved few-shot examples with ChromaDB: [snippet above](#text-to-sql-is-a-retrieval-strategy); notebook upstream at DAIR [`pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb) (legacy models).
+- BM25 from scratch: [worked example in 03](03-keyword-semantic-and-hybrid-search.md#bm25-from-scratch); full engine upstream at [Li 3-5 sparse-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/sparse-embedding) (offline, standard library).
+- Tallybook running example: [`practice/`](../practice/README.md) (offline, `uv run --with numpy`).
+- Retrieved few-shot examples with ChromaDB: [snippet in 08](08-agentic-rag-prince.md#retrieved-few-shot-examples); notebook upstream at DAIR [`pe-rag.ipynb`](https://github.com/dair-ai/Prompt-Engineering-Guide/blob/main/notebooks/pe-rag.ipynb) (legacy models).
 - Upstream *AI Agents in Depth* ch. 3 labs (need models or API keys): [ANNOY vs. HNSW, hybrid + rerank, agentic RAG, RAPTOR vs. GraphRAG](https://github.com/bojieli/ai-agent-book/tree/main/chapter3).
 - DeepLearning.AI *Retrieval Augmented Generation* course: condensed into [02](02-why-rag-and-the-augmented-prompt.md)–[07](07-rag-in-production.md); the graded labs are linked upstream from each note (need the course's Weaviate/Together/Phoenix environment).
 
 ---
 
-→ Next: [02-why-rag-and-the-augmented-prompt.md](02-why-rag-and-the-augmented-prompt.md) — the course's first-principles walk through the same pipeline, starting from why retrieval beats retraining.
+## Pitfalls
+
+- **Tuning the wrong stage.** Symptom: recall stays low after swapping embedders and rerankers. Check the parsed text first. If the answer never reached the index, nothing downstream can find it.
+- **Filtering after search.** Symptom: top-k comes back short, or an internal page appears in a trace. Push permission and date filters into the query, so they run before similarity.
+- **Stale pages competing with current ones.** Symptom: the answer is confident and out of date, like the 14-day refund window. Mark superseded pages at ingestion instead of trusting rank order.
+- **Comparing raw scores across retrievers.** Symptom: one retriever always wins a weighted sum. BM25 runs from 0 to tens and cosine from 0 to 1 here. Normalise first or fuse ranks with RRF.
+- **Naive re-ingestion.** Symptom: duplicate chunks fill the top-k after each run, or deleted pages keep answering. Use content-derived ids and delete what a source no longer produces.
+- **Adding a pattern before naming the failure.** Symptom: latency climbs and quality does not move. Locate the failure in the table under [where naive RAG fails](#where-naive-rag-fails), then add the one module that addresses it.
+
+---
+
+## Try it
+
+1. In `build_context`, set `audience="internal"`. Which documents become visible, and what does that tell you about where access control has to live?
+2. Run `build_context("refund window for old customers")`. Which refund page should win, and does the crude dedupe pick it?
+3. Extend `sync` so a page that has not changed since the last run is not re-embedded. What do content-derived ids already give you for free?
+
+<details>
+<summary>Answers</summary>
+
+1. Only `kb-18` is visible, because the filter is an equality test on `audience`. A real rule would be "public plus anything this user's group may read". Access control belongs in the retrieval filter, where the model never sees the forbidden text. A prompt instruction cannot enforce it.
+2. `kb-05` ranks first here and survives the dedupe, which happens to be right, since those customers are on the old terms. The rule has no idea why: whichever page ranks first wins. Dedupe by topic is a policy decision, and a `valid_for` field would let the query choose.
+3. They already give it. An unchanged chunk hashes to an existing id, so it lands in `unchanged` and you embed only the `added` set.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Name the three RAG paradigms in Gao et al. | Naive (index, retrieve, read). Advanced (adds pre- and post-retrieval). Modular (swappable stages composed into patterns). |
+| Why does ingestion set the ceiling? | Retrieval can only return what parsing extracted, and no later stage can recover missing text. |
+| What order do the query-time stages run in, and why? | Filter, search, rerank, dedupe, compress, inject memory, format. Each stage narrows the set, so cheap stages go first and expensive ones see fewer items. |
+| Why not sum BM25 and cosine scores? | They are on different scales, so the larger range swamps the other. Normalise and weight, or fuse ranks with RRF. |
+| How does RRF work? | Each list contributes `1/(k + rank)` per document, usually with k=60, and documents are sorted by the sum. It needs no score calibration, and it discards score magnitude. |
+| Why rerank against the original query after expansion? | Expansion is a recall device. The user's question remains the relevance target, and reranking against a rewrite would compound its drift. |
+| Why is Text-to-SQL a retrieval strategy? | Embedding similarity cannot count, sum or compare, so aggregation questions go to a query against structured data. Choosing that path is a routing decision. |
+| When is agentic RAG worth the cost? | When questions decompose into sub-questions or need several sources compared. For narrow questions a single pass matches it at lower latency. |
+| What is the difference between Self-RAG and FLARE? | Self-RAG is a fine-tuned model emitting reflection tokens that decide when to retrieve. FLARE needs no training: it retrieves when a drafted token falls below a confidence threshold. |
+| How do you keep an index in sync? | Start with scheduled batches and a change-detection method, and make writes idempotent with content-derived ids and source-scoped deletes. |
+
+---
+
+## Next
+
+[02 — Why RAG and the augmented prompt](02-why-rag-and-the-augmented-prompt.md) is a first-principles walk through the same pipeline, starting from why retrieval beats retraining.

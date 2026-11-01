@@ -66,6 +66,8 @@ sources/images/              figures used in notes and slides
 slides/                      lecture deck (deck.yaml → .pptx + .pdf)
 ```
 
+Lecture deck: [`slides/inference-engineering.pptx`](slides/inference-engineering.pptx), a 4-part talk following one Llama-7B on an A100 from its first bandwidth sum to 244.7 tokens/s. Build with `make slides PILLAR=07-inference-engineering`.
+
 ## References
 
 See [references.md](references.md).

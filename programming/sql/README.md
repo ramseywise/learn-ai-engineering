@@ -2,6 +2,7 @@
 
 > From `SELECT` to query plans, in nine modules and a capstone. Every module is a short note plus
 > exercises you can run offline against SQLite.
+> Study deck: [sql.pptx](slides/sql.pptx), which librarian turns into flashcards (source: [deck.yaml](slides/deck.yaml)).
 > Jump to: [Syllabus](#syllabus) · [Layout](#layout) · [Setup](#setup) · [The databases](#the-databases) · [Rules of thumb](#rules-of-thumb) · [Sources](#sources)
 
 ---
@@ -31,6 +32,7 @@ Worked answers are in [`practice/solutions/`](practice/solutions/). Try each exe
 sql/
 ├── README.md
 ├── notes/                        01–10
+├── slides/                       deck.yaml and the built study deck; `make slides PILLAR=programming/sql`
 └── practice/
     ├── setup.sh                  builds data/clubdata.db from clubdata.sql; downloads sql-murder-mystery.db
     ├── check.sh                  runs every solution (or exercise) file; calls setup.sh if clubdata.db is missing
