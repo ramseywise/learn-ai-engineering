@@ -15,6 +15,9 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
   - https://arxiv.org/abs/2305.01210
+  - https://arxiv.org/abs/1606.01541
+  - https://arxiv.org/abs/1804.08771
+  - https://arxiv.org/abs/1602.06023
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -85,6 +88,12 @@ BLEU, ROUGE and embedding similarity compare an output to a reference string. Th
 - **They can be wrong.** The WMT 2023 Metrics shared task found many bad reference translations in its own data.
 - **They can be incomplete.** Adept's Fuyu wrote correct image captions that scored low because no reference phrased them that way.
 - **Overlap isn't correctness.** On HumanEval, OpenAI found correct and incorrect code solutions got similar BLEU scores.
+- **Overlap can rank systems backwards.** Li et al.'s RL chatbot scored lower single-reference BLEU than the model it started from (1.28 against 1.44 on 2,500 pairs), yet human judges preferred its multi-turn conversations 72% of the time ([arXiv:1606.01541](https://arxiv.org/abs/1606.01541) (Li et al., EMNLP 2016)).
+
+The metric itself has settings, and they change the number:
+
+- **BLEU is not one number.** For the same WMT'17 system outputs, switching how the reference is tokenized and cased moved BLEU by up to 1.8 points on one language pair and about 1.0 on average. A second reference raised one English–Finnish score from 22.04 to 25.25. The fix is SacreBLEU: score detokenized output with the metric's own tokenization and report its version string ([arXiv:1804.08771](https://arxiv.org/abs/1804.08771) (Post, WMT 2018)).
+- **ROUGE recall rewards length.** Nallapati et al. switched to full-length ROUGE F1 because recall "favors longer summaries". They also noted that their model's summaries were often meaningful and relevant when they differed from the reference, which word-overlap ROUGE does not capture ([arXiv:1602.06023](https://arxiv.org/abs/1602.06023) (Nallapati et al., CoNLL 2016)).
 
 > **Contradiction.** Albada describes "modern practice" for agents as relying increasingly on embedding distance, BERTScore, BLEU and ROUGE to judge whether outputs meet the intent of a task (*Building Applications with AI Agents*, ch. 9). The correlation numbers above say otherwise for open-ended text: BERTScore at 0.23 against human ratings is a weak gate. The same chapter later warns that optimizing a single score such as BLEU leads to "formulaic or unnatural outputs". Follow the warning, not the recommendation.
 

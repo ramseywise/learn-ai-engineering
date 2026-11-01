@@ -16,6 +16,11 @@ sources:
   - Huyen, AI Engineering (O'Reilly, 2025), ch. 7
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 5–6
   - Raschka, Build a Large Language Model (From Scratch) (Manning, 2024), ch. 6–7
+  - https://arxiv.org/abs/2112.00861 (Askell et al., HHH assistant)
+  - https://arxiv.org/abs/1606.01541 (Li et al., deep RL for dialogue)
+  - https://doi.org/10.18653/v1/2022.acl-demo.9 (PromptSource)
+  - https://doi.org/10.18653/v1/w17-4508 (Webis-TLDR-17)
+  - https://arxiv.org/abs/2201.08239 (LaMDA)
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -40,6 +45,14 @@ The core insight: human preferences over model outputs are a richer training sig
 any label schema you could design. Rather than specifying *what* good behavior looks like,
 you collect *comparisons* of model behavior and train a reward model to generalize that
 preference, then optimize the policy against it.
+
+The alternative was tried first. Li et al. ran policy-gradient RL on a seq2seq chatbot with a
+hand-written reward: ease of answering, information flow and semantic coherence, weighted
+0.25/0.25/0.5. In simulated conversations the RL model lasted 4.48 turns against 2.68 for plain
+seq2seq, and on multi-turn quality human judges preferred it to a mutual-information baseline in
+72% of comparisons (12% lost, 16% tied). The authors said such a
+reward "can't possibly cover" everything that makes a good conversation, and that it should ideally
+come from humans ([arXiv:1606.01541](https://arxiv.org/abs/1606.01541) (Li et al., EMNLP 2016)).
 
 ---
 
@@ -93,6 +106,11 @@ on task types held out of training:
   datasets at about 1/16 the size, and the gain held at 3B. The authors put the gap with
   FLAN's 8B result down to architecture and pretraining objective. Training on more prompt
   wordings per dataset also made T0 less sensitive to how a prompt was phrased.
+  Those wordings came from PromptSource, a tool for writing prompts as Jinja templates. Its
+  collection, P3, holds over 2,000 prompts for about 170 datasets, and T0 trained on a subset.
+  Contributors were asked for 5–10 prompts per dataset, and in early experiments prompts that
+  listed the valid answers did better ([doi:10.18653/v1/2022.acl-demo.9](https://doi.org/10.18653/v1/2022.acl-demo.9)
+  (Bach et al., ACL 2022)).
 
 Later papers scaled the recipe and found where it stops paying:
 
@@ -189,8 +207,13 @@ masks the loss to the response. Huyen describes a *prompt loss weight* that fram
 typically default to 10%, so the model learns a little from prompts. Raschka leaves the
 instruction unmasked and cites Shi et al. ([arXiv:2405.14394](https://arxiv.org/abs/2405.14394),
 2024), who found that loss over instructions *helped*. Their gains were largest with
-long instructions and short outputs and with few training examples. Treat masking as a
-hyperparameter to test. The loss itself is also open to change, when your data comes in
+long instructions and short outputs and with few training examples. Earlier results point the
+other way. Askell et al. found that masking to the response "improved performance significantly"
+for imitation learning, though they scored it on picking the better of two responses, not on
+generation ([arXiv:2112.00861](https://arxiv.org/abs/2112.00861) (Askell et al., 2021, preprint)).
+LaMDA applied its generative fine-tuning loss to the response only
+([arXiv:2201.08239](https://arxiv.org/abs/2201.08239) (Thoppilan et al., 2022, preprint)). Treat
+masking as a hyperparameter to test. The loss itself is also open to change, when your data comes in
 pairs of views of the same thing (a regex description and the regex, a question and its
 SQL). LLM-JEPA ([arXiv:2509.14252](https://arxiv.org/abs/2509.14252) (Huang et al.,
 2025-09, preprint)) keeps next-token prediction and adds a term that predicts one view's
@@ -338,7 +361,10 @@ summarizers became "smart copiers" that lifted whole sentences, and labelers rew
 since copying is an easy way to look accurate. Stiennon et al. scaled the recipe to 6.7B on Reddit
 TL;DR with 64k pairwise comparisons, and labelers preferred its summaries to the human-written
 references ([arXiv:2009.01325](https://arxiv.org/abs/2009.01325) (Stiennon et al., NeurIPS 2020)).
-InstructGPT then carried it from one task to general instructions. Training maximizes
+The TL;DR data is Webis-TLDR-17: 4M post–summary pairs mined from Reddit posts in which the author
+added a "tl;dr" line. In a hand check of 1,000 random pairs, 95% were correct, but only 966k of the 4M passed the authors' noun-phrase-overlap test for a real summary
+([doi:10.18653/v1/w17-4508](https://doi.org/10.18653/v1/w17-4508) (Völske et al., NFiS @ EMNLP
+2017)). InstructGPT then carried it from one task to general instructions. Training maximizes
 log-likelihood of human choices:
 
 ```
@@ -358,6 +384,17 @@ accuracy and doubling the model about 1.8**, and the 6.7B model approached a sin
 RM showed a length bias: it preferred edits that shortened a summary 62.6% of the time, against
 76.4% for humans.
 
+Anthropic's HH data shows the same ceiling. On its 44k helpfulness and 42k red-team comparisons,
+researchers agreed with crowdworkers only about 63% of the time. A PM trained mostly on one of the
+two scored "much worse than chance" on the other, a tension that shrank with scale. PM accuracy
+grew log-linearly with both model size and data ([arXiv:2204.05862](https://arxiv.org/abs/2204.05862)
+(Bai et al., 2022, preprint)). Their earlier paper showed why a reward model beats plain imitation.
+On ranked tasks, preference modelling outscored imitation learning and scaled better, but on binary
+good/bad tasks the gain was small. Pretraining the PM on 5.8M StackExchange, 1.1M Reddit and 1.4M
+Wikipedia-edit pairs made fine-tuning more sample-efficient above about 1B parameters, mostly at
+around 500 pairs ([arXiv:2112.00861](https://arxiv.org/abs/2112.00861) (Askell et al., 2021,
+preprint)).
+
 **Raters miss errors, so the labels carry them.** OpenAI trained CriticGPT, a GPT-4-family
 critic, with RLHF on code into which contractors had deliberately inserted subtle bugs. On real
 bugs from ChatGPT training data, raters preferred its critiques to human-written ones 63% of the
@@ -375,7 +412,13 @@ SFT models the way InstructGPT's did, and the authors name that data choice as a
 ([arXiv:2304.07327](https://arxiv.org/abs/2304.07327) (Köpf et al., NeurIPS 2023 Datasets &
 Benchmarks)). Ziegler et al. saw the same on TL;DR summarization: labelers preferred a policy whose
 reward model was retrained on fresh policy samples 71% of the time over one trained on offline data
-alone. Style continuation, a much easier task, did not need the refresh.
+alone. Style continuation, a much easier task, did not need the refresh. Anthropic made the refresh
+a loop, which they call "iterated online" RLHF: deploy the best policy, collect new comparisons on
+its outputs, retrain the PM and the policy, and repeat. In a controlled run at equal data size
+(about 44k comparisons), the policy trained on a mix of base, rejection-sampled and online data
+earned higher crowdworker Elo than one trained on base data alone. The online data was harder to
+rank: the final PM scored 74%, 70% and 67% on base, rejection-sampled and online test sets
+([arXiv:2204.05862](https://arxiv.org/abs/2204.05862) (Bai et al., 2022, preprint)).
 
 **Reward-model benchmarks predict best-of-N better than PPO.** RewardBench 2 scores a reward model
 on picking one correct answer out of four, on mostly unseen human prompts. Leading models score
@@ -544,8 +587,12 @@ one reward model at a range of KL penalties and asked labelers to compare each t
 summaries. **Up to a KL of about 10 nats, real preference rose with the RM's prediction. Past it the
 RM kept predicting near-total wins, real preference fell, and by KL 250 the RM was
 anti-correlated with humans** ([arXiv:2009.01325](https://arxiv.org/abs/2009.01325) (Stiennon et
-al., NeurIPS 2020)). Anthropic (2022) reported the same inverse-U: initial optimization improves
-true quality; past the peak, reward score continues rising while actual quality degrades. OpenAI
+al., NeurIPS 2020)). Anthropic's HH paper is often cited for the same inverse-U, but it measured
+something narrower. It split its comparisons in half, trained the policy against one PM and scored
+it with the other. The two PMs agreed up to about 150k RL samples, then diverged with the held-out
+PM lower; larger PMs held up longer, and crowdworker Elo did not track the PMs' predictions
+([arXiv:2204.05862](https://arxiv.org/abs/2204.05862) (Bai et al., 2022, preprint)). That is
+proxy-vs-proxy divergence, not a human-judged peak. OpenAI
 measured the shape as a scaling law in a synthetic setup, with a large "gold" RM standing in for
 humans ([arXiv:2210.10760](https://arxiv.org/abs/2210.10760) (Gao, Schulman & Hilton, ICML 2023)):
 proxy reward climbs monotonically while gold reward rises, then falls. This is Goodhart's law,
@@ -591,6 +638,14 @@ improving alignment metrics. InstructGPT saw regressions on SQuAD, DROP, HellaSw
 French→English after PPO. Its fix was **PPO-ptx**: mix pretraining-gradient updates into
 PPO. That removed most of the regression without hurting labeler preference, and "InstructGPT" in
 the paper means the PPO-ptx model.
+
+The tax depends on scale. In Anthropic's HH RLHF, models under about 10B lost ground on zero-shot
+NLP evaluations, while the 13B and 52B RLHF models scored better than their base models zero-shot
+and about the same few-shot. Two caveats: the feedback data was collected with 52B models, and the
+evaluations are mostly multiple-choice ([arXiv:2204.05862](https://arxiv.org/abs/2204.05862) (Bai
+et al., 2022, preprint)). The same holds for prompting. Anthropic's earlier 14-conversation HHH
+prompt cost small models accuracy, but gave a small gain at 13B and 52B
+([arXiv:2112.00861](https://arxiv.org/abs/2112.00861) (Askell et al., 2021, preprint)).
 
 The tax appears outside text too. Lee et al. trained a reward model on 27k binary human labels of
 Stable Diffusion images for prompts about color, count and background, then fine-tuned with

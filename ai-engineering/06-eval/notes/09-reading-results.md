@@ -8,6 +8,7 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - "Dmitriev et al., A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments (KDD 2017)"
+  - https://arxiv.org/abs/1810.03993
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -134,6 +135,8 @@ A flat headline can hide a win and a loss that cancel out:
 | **Overall** | 310 | 84% | 85% | +1 |
 
 "+1 overall" would ship a change that breaks non-English users. Always break results down by the slices you labeled ([03](03-eval-datasets.md#coverage-and-balance)), and show *n* per slice so nobody over-reads a 12-task slice.
+
+Model cards made this the reporting standard for released models. Mitchell et al. ask for results broken down by each relevant factor (groups of people, capture instruments, environments) and by their intersections, with confidence intervals. The card also states intended and out-of-scope uses and the decision threshold the numbers assume. Their toxicity example put two versions of the same Perspective API classifier side by side on synthetic identity-term templates. Version 1 scored poorly on sentences containing "lesbian", "gay" and "homosexual". Version 5, retrained with bias mitigations, scored more evenly across the terms. A single headline score would have shown neither problem nor fix ([arXiv:1810.03993](https://arxiv.org/abs/1810.03993) (Mitchell et al., FAT* 2019)). The paper proposes a format and shows two examples. The authors say themselves that a card is only as honest as the people who write it.
 
 Slicing by difficulty does the same job for capability claims. Yang et al. (2026) fixed four difficulty strata over 322 terminal-agent tasks, then tracked each stratum across training stages. The headline mean rose steadily. The strata did not: Easy climbed from 32% to 73%, while Extreme went 0 → 4.9 → 11.0 → **6.1** → 11.0%. That dip at the fourth stage is invisible in the aggregate.
 

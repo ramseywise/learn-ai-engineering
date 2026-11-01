@@ -12,6 +12,8 @@ sources:
   - https://nlp.stanford.edu/projects/glove/
   - "Raieli & Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 1"
   - https://aclanthology.org/Q18-1034/
+  - https://doi.org/10.1162/tacl_a_00051
+  - https://arxiv.org/abs/1310.4546
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -46,7 +48,7 @@ Mikolov et al. (2013) proposed two shallow architectures. Sarkar's Ch04b builds 
 
 The original paper ([arXiv:1301.3781](https://arxiv.org/abs/1301.3781)) measured the two on its analogy test set (8,869 semantic and 10,675 syntactic questions). With 300-d vectors trained on 783M words, **skip-gram scored 50.0% on semantic questions against CBOW's 15.5%**, and 55.9% against 53.1% on syntactic ones. CBOW trained in about a day and skip-gram in about three. The "rare words, small corpora" rule of thumb in the table comes from the later word2vec documentation, not from this paper. The paper also shows that more data and wider vectors both help, and that each must grow with the other.
 
-The 2013 paper made the output layer cheap with a hierarchical softmax over a Huffman tree. **Negative sampling** came in the follow-up paper (Mikolov et al., 2013-10, [arXiv:1310.4546](https://arxiv.org/abs/1310.4546)). It turns the expensive softmax over the vocabulary into binary classification: is this (word, context) pair real, or a random pair?
+The 2013 paper made the output layer cheap with a hierarchical softmax over a Huffman tree. **Negative sampling** came in the follow-up paper ([arXiv:1310.4546](https://arxiv.org/abs/1310.4546) (Mikolov et al., NIPS 2013)). It turns the expensive softmax over the vocabulary into binary classification: is this (word, context) pair real, or one of *k* random pairs? The noise words are drawn from the unigram distribution raised to the 3/4 power, and the paper suggests k = 5–20 for small corpora and 2–5 for large ones. The same paper also discards each frequent word with probability 1 − √(t/f), with t ≈ 10⁻⁵. On about 1B words of Google News (300-d skip-gram, same analogy test), negative sampling with 5 noise words scored 59% in 38 minutes, against 47% in 41 minutes for the hierarchical softmax. With subsampling added, it scored 60% in 14 minutes. The vectors also add: the nearest tokens to *Russian* + *river* are *Moscow* and *Volga River*. Phrase vectors (frequent word pairs merged into single tokens) reached 72% on a phrase-analogy set, but only with 33B training words. These are single runs on Google-internal data, with no error bars.
 
 ```python
 # Sarkar Ch04b: skip-gram with negative sampling, from scratch in Keras (sketch)
@@ -82,6 +84,8 @@ The condensed NLP course notebooks trained the same model on NLTK's Project Gute
 |---|---|---|
 | GloVe (Pennington et al., 2014) | Factorise the log word co-occurrence matrix: $w_i \cdot \tilde w_j + b_i + \tilde b_j \approx \log X_{ij}$ | Pretrained 50–300d on Wikipedia, Common Crawl (840B tokens); spaCy `en_core_web_md`/`lg` ship them |
 | FastText (Bojanowski et al., 2017) | word2vec over character n-grams: a word's vector is the sum of its n-gram vectors | `gensim.models.FastText`; handles misspellings and unseen words |
+
+The subword gain shows up where words are rare or heavily inflected. FastText sums character 3- to 6-grams, hashed into 2M buckets. On the English Rare Words similarity set it scored 47 (Spearman ×100) against 43 for skip-gram and CBOW, and trained on just 1% of Wikipedia it scored 45, still beating CBOW trained on all of it. Czech syntactic analogies rose from 52.8% to 77.8%. Semantic analogies did not improve (German fell from 66.5% to 62.3%), and English WS353 stayed flat at 71 vs 72 ([doi:10.1162/tacl_a_00051](https://doi.org/10.1162/tacl_a_00051) (Bojanowski et al., TACL 2017)).
 
 ### Embedding geometry: analogies and bias
 

@@ -12,6 +12,9 @@ sources:
   - https://www.andriushchenko.me/gpt4adv.pdf
   - https://arxiv.org/abs/2412.16720
   - https://arxiv.org/abs/2501.18841
+  - https://arxiv.org/abs/2012.07805
+  - https://doi.org/10.18653/v1/2022.acl-long.577
+  - https://arxiv.org/abs/2406.10209
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -87,7 +90,7 @@ Huyen splits delivery into **passive phishing** and **active injection**. In pas
 
 The third goal, after taking over the instructions and leaking the prompt, is getting the model to reveal what it was **trained on**: private data, copyrighted text, or data a competitor wants.
 
-- **Context-dependent probing.** Fill-in-the-blank prompts like LAMA's "Winston Churchill is a _ citizen" (Petroni et al., 2019) test what a model knows, and the same trick extracts memorized strings ("X's email address is _"). Carlini et al. (2020) and Huang et al. (2022) extracted training data from GPT-2 and GPT-3, but judged the risk low because the attacker has to know the context the string appeared in.
+- **Context-dependent probing.** Fill-in-the-blank prompts like LAMA's "Winston Churchill is a _ citizen" (Petroni et al., 2019) test what a model knows, and the same trick extracts memorized strings ("X's email address is _"). Carlini et al. (2020) and Huang et al. (2022) extracted training data from GPT-2 and GPT-3, but judged the risk low because the attacker has to know the context the string appeared in. That caveat does not fit Carlini's attack. It started GPT-2 XL from an empty prompt or a random Common Crawl snippet, then ranked 600,000 samples by how much more likely the model found them than zlib compression did. 604 of the 1,800 top candidates were verbatim training text, including names with phone numbers and email addresses ([arXiv:2012.07805](https://arxiv.org/abs/2012.07805) (Carlini et al., USENIX Security 2021)). Training-side fixes help without closing the gap. Deduplicating C4 cut memorized output about 10× ([doi:10.18653/v1/2022.acl-long.577](https://doi.org/10.18653/v1/2022.acl-long.577) (Lee et al., ACL 2022)). Goldfish loss, which leaves a hashed 1 in k tokens out of the loss, stopped verbatim reproduction in a 100-epoch stress test, but a zlib membership-inference attack still detected 88.5% of training documents ([arXiv:2406.10209](https://arxiv.org/abs/2406.10209) (Hans et al., NeurIPS 2024)). Details in [LLM fundamentals 02](../../../generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md#pretraining).
 - **Divergence.** Nasr et al. (2023) needed no context. They asked ChatGPT (gpt-3.5-turbo) to repeat "poem" forever. After a few hundred repetitions it diverged, and a small share of the text that followed was copied **verbatim** from training data, meaning at least 50 tokens matched exactly. They estimated memorization rates near 1% on their test corpus, rising with model size in every family they studied. Dropbox documents the repeated-token variants.
 - **Other modalities.** Carlini et al. (2023) pulled more than a thousand near-duplicates of training images, many with trademarked logos, out of Stable Diffusion.
 - **Regurgitation without an attacker.** HELM (2022) found verbatim regurgitation of long copyrighted passages "somewhat uncommon" but noticeable for popular books. It can't measure paraphrased copying, such as "Randalf" the wizard and the bracelet thrown into "Vordor", and that is the harder legal risk.

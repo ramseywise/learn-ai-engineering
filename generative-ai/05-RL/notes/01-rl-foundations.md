@@ -17,6 +17,7 @@ sources:
   - https://arxiv.org/abs/1508.03326
   - https://arxiv.org/abs/2512.16144 (INTELLECT-3)
   - https://arxiv.org/abs/2602.15763 (GLM-5)
+  - https://arxiv.org/abs/2112.09332 (WebGPT)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -831,10 +832,15 @@ The model interacts with a retrieval or browsing environment via discrete action
 trained with behavior cloning (imitation from demonstrations) then optimized against a
 reward model built from human preferences.
 
-**WebGPT** (OpenAI, 2021) is the canonical example: a model trained to use a web browser
-via search, click, and quote actions. Reward model trained on human comparisons of
-web-browsing-augmented vs. direct LLM answers. The RL loop: generate action sequence →
-execute in browser → collect human preference over final answer → update policy.
+**WebGPT** (OpenAI, 2021) is the canonical example: GPT-3 trained to use a text-based web
+browser through search, click, scroll and quote actions. Humans compared two model-generated
+answers to the same question, both written with browsing, and a reward model learned from about
+16k of those comparisons. The RL loop: generate action sequence → execute in browser → the reward
+model scores the final answer → PPO update, with a per-token KL penalty toward the
+behavior-cloned model. Humans label offline; they are not in the loop. RL was not the best
+optimizer here. Sampling 64 answers and keeping the one the RM scored highest was preferred to
+the BC model 68% of the time, RL only 58%, and RL added nothing on top of best-of-n
+([arXiv:2112.09332](https://arxiv.org/abs/2112.09332) (Nakano et al., 2021, preprint)).
 
 This is structurally identical to RLHF except the "response" is an action sequence
 rather than text, and the environment is the web browser rather than the generation step.

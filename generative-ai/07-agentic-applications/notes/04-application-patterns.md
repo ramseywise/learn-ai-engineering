@@ -5,6 +5,7 @@ sources:
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 9"
   - https://arxiv.org/abs/2502.16810
   - https://arxiv.org/abs/2503.16527
+  - https://arxiv.org/abs/2208.03188
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -38,7 +39,9 @@ The minimum is a chat model plus conversation history, so the bot can "get past 
 - **Tools that reach the canvas**, such as "get selected text" and "insert text at end of doc". This is the step from a sidekick that talks about your work to one that changes it.
 - **Human-in-the-loop** as soon as any tool can modify the canvas. The user confirms or edits before the insert lands. In LangGraph that's an `interrupt` before the write node ([graph note 04](../../../ai-engineering/05-graph-engineering/notes/04-durable-execution-and-interrupts.md#human-in-the-loop-with-interrupt)).
 
-The authors add a prediction worth keeping in mind: streaming chat may end up as the command line of the LLM era. It would stay the most direct way to drive the model and become a niche interface, while most users meet LLMs embedded in other UIs.
+A public chatbot is also a data source, and a noisy one. Meta deployed BlenderBot 3, a 175B OPT model whose search decision, query writing, memory and reply are separate prompted modules, and asked users to rate its replies. Users liked 4% of its messages. Crowdworkers judged 31% of the *users'* utterances bad, and 42% of those rude or inappropriate. So you can't train on raw chat logs. In the authors' troll-simulation benchmark, removing data by user-level trust scores cut the post-training error rate from 31% to 12%. Feedback tied to a specific module, such as a bad search query, improved the model more than feedback on the final reply alone ([arXiv:2208.03188](https://arxiv.org/abs/2208.03188) (Shuster et al., 2022, preprint)).
+
+Oshin and Campos add a prediction worth keeping in mind: streaming chat may end up as the command line of the LLM era. It would stay the most direct way to drive the model and become a niche interface, while most users meet LLMs embedded in other UIs.
 
 ---
 

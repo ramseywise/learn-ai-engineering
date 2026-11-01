@@ -13,6 +13,11 @@ sources:
   - https://arxiv.org/abs/2207.00032
   - https://arxiv.org/abs/2310.01889
   - https://arxiv.org/abs/2512.14080
+  - https://arxiv.org/abs/1909.08053
+  - https://arxiv.org/abs/1811.06965
+  - https://arxiv.org/abs/2006.16668
+  - https://arxiv.org/abs/2407.06204
+  - https://arxiv.org/abs/2112.06905
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -112,7 +117,11 @@ When a model does not fit on one GPU, or one GPU is too slow, the model is split
 
 Fregly's guidance (*AISPE*, ch. 15): keep TP inside one NVLink/NVSwitch domain (on GB200 NVL72 that is up to 72 GPUs). Add PP only for capacity. Add EP for MoE. Then replicate with DP. His composition order is **TP → PP → EP → DP**. Huyen's summary is that TP both reduces latency and fits larger models, while PP is "typically avoided" for strict-latency serving in favour of replica parallelism (*AI Engineering*, ch. 9).
 
+Both splits come from training, and the costs in the table come with them. Megatron-LM's tensor parallelism splits the first MLP matrix by columns and the second by rows, and splits attention by heads. Each layer then needs only two all-reduces in the forward pass and two in the backward pass. An 8.3B GPT-2 trained on 512 V100s (8-way tensor × 64-way data parallel) at 15.1 PFLOP/s, 76% scaling efficiency against a 1.2B model on one GPU. Strong scaling was weaker: the 1.2B model ran 1.64× faster on 2 GPUs and 2.98× on 8. The authors kept tensor parallelism inside one 16-GPU DGX-2H server, where NVSwitch gives 300 GB/s between GPUs against 100 GB/s between servers ([arXiv:1909.08053](https://arxiv.org/abs/1909.08053) (Shoeybi et al., 2019, preprint)). GPipe's pipeline parallelism splits each batch into M micro-batches flowing through K stages. The idle "bubble" is (K − 1)/(M + K − 1) of the time and becomes negligible once M ≥ 4K. A Transformer split over 8 TPU stages trained 6.3× faster at M = 32 than a 2-stage split with no micro-batching, but only 1.3× faster at M = 1, where one stage works at a time. Only activations cross stage boundaries, so going from 2 to 8 GPUs without NVLink still gave 3.3× ([arXiv:1811.06965](https://arxiv.org/abs/1811.06965) (Huang et al., NeurIPS 2019)). At inference, a single latency-bound request is the M = 1 case, which is why PP buys capacity but not speed.
+
 DeepSpeed-Inference was the first system to combine these for inference, with fused kernels for small-batch decode plus TP, PP and EP. It reported up to **1.9×** lower latency than FasterTransformer for dense models up to 175B, and **7.2×** for MoE, serving a trillion-parameter MoE at under 25 ms per token on 256 GPUs ([arXiv:2207.00032](https://arxiv.org/abs/2207.00032) (Aminabadi et al., SC 2022)). Context parallelism goes back to **Ring Attention**. Each device holds one block of the sequence and passes its KV blocks around a ring, overlapping each transfer with blockwise attention on the block it already has. The maximum context then grows with the number of devices, with no approximation, and reached millions of tokens on a TPUv4-1024 pod. The paper's results are mostly from training ([arXiv:2310.01889](https://arxiv.org/abs/2310.01889) (Liu et al., ICLR 2024)).
+
+Expert parallelism's cost is the all-to-all that sends each token to its experts and back. In GShard, going from 128 to 2,048 experts (16×) made that dispatch and combine about 3.75× slower. The growth was sublinear, but it was still the largest part of the routing cost ([arXiv:2006.16668](https://arxiv.org/abs/2006.16668) (Lepikhin et al., ICLR 2021)). Cai et al.'s survey counts four all-to-alls per MoE layer in training (dispatch and combine, in both the forward and the backward pass) and calls them often the main limit on efficiency. For memory, it describes systems (SE-MoE, Pre-gated MoE, EdgeMoE) that keep only the active experts in HBM and offload the rest to CPU memory or SSD, predicting and prefetching experts to hide the transfer ([arXiv:2407.06204](https://arxiv.org/abs/2407.06204) (Cai et al., IEEE TKDE 2025)). GLaM's authors name the economic catch. A 1.2T-parameter MoE needs many devices just to hold its weights, which "increases the serving cost especially when the serving traffic is low" ([arXiv:2112.06905](https://arxiv.org/abs/2112.06905) (Du et al., ICML 2022)).
 
 ![Disaggregated serving: a controller sends requests to prefill instances, which transfer the KV cache to decode instances](../sources/images/ai-systems-performance-engineering-fig15-2.png)
 
