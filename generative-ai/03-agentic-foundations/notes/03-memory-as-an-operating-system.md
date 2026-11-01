@@ -17,12 +17,14 @@ sources:
   - https://arxiv.org/abs/2601.01885
   - https://arxiv.org/abs/2601.03192
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 3 — Memory as an operating system
 
 > MemGPT treats the context window as RAM and external stores as disk, and makes the agent its own memory manager: every memory edit, search and eviction is a tool call.
+
+On Monday the restock agent learns that a supplier's delivery time has doubled, and next Monday, in a new session, it knows nothing about that. A model has no state between calls: everything it appears to remember was put into the prompt by someone. So the real question is who decides what goes in, what comes out and what happens when there is no more room. MemGPT's answer is that the agent can do that work itself with tools, which turns a storage problem into a behavior you have to design and test.
 
 ---
 
@@ -139,6 +141,8 @@ The task-queue system prompt from Lab 4 makes the rules explicit: heartbeats kee
 Lab 1 builds self-editing memory with raw OpenAI calls: a dict for memory, one tool to write to it, and the memory serialized into a system message on every call. The full loop is in [02 — the raw loop](02-tool-use-and-react.md#the-raw-loop-no-framework). The memory-specific part is small:
 
 ```python
+import json
+
 agent_memory = {"human": "", "agent": ""}
 
 def core_memory_save(section: str, memory: str):
@@ -150,6 +154,67 @@ memory_message = {"role": "system", "content": "[MEMORY]\n" + json.dumps(agent_m
 
 The system prompt ends with "When you learn new information, make sure to always call the core_memory_save tool." Without that instruction the model rarely saves anything.
 
+### Two tiers for the restock agent
+
+Add a size limit and a second store and the whole design appears. The block below has no LLM in it; the calls at the bottom are the ones a model would choose to make, so you can see what each one changes:
+
+```python
+# Self-editing memory for the restock agent: a small core that is always in context,
+# and an archive that is only reached by a tool call. No LLM needed to see the mechanics.
+CORE_LIMIT = 100
+core = {"policy": "Order just in time. Keep two weeks of peak sales."}
+archive = []
+
+def core_append(label, text):
+    new = core.get(label, "") + " " + text
+    if sum(map(len, core.values())) - len(core.get(label, "")) + len(new) > CORE_LIMIT:
+        return f"Error: core is full (limit {CORE_LIMIT}). Move detail to the archive."
+    core[label] = new.strip()
+    return "ok"
+
+def archive_insert(text):
+    archive.append(text)
+    return f"ok, {len(archive)} passages in archive"
+
+def archive_search(query):
+    return [p for p in archive if query.lower() in p.lower()] or "no match"
+
+def compile_context(trajectory):
+    """Rebuilt for every model call. This is all the model will ever know."""
+    blocks = "\n".join(f"<{k}>{v}</{k}>" for k, v in core.items())
+    stats = f"[{len(archive)} passages in archive, not shown]"
+    return f"{blocks}\n{stats}\n" + "\n".join(trajectory)
+
+# What a model would choose to do across two Mondays, scripted.
+print(core_append("supplier", "Acme delivers itemB."))
+print(core_append("supplier", "On 3 March Acme said lead time rose to 4 weeks after a port strike."))
+print(archive_insert("3 March: Acme lead time for itemB rose to 4 weeks, port strike."))
+print(core_append("supplier", "See archive: lead time."))
+
+print("\n--- next Monday, new session ---")
+print(compile_context(["user: Should we reorder itemB?"]))
+print("\nsearch 'lead time' ->", archive_search("lead time"))
+print("search 'delay'     ->", archive_search("delay"))
+```
+
+```text
+ok
+Error: core is full (limit 100). Move detail to the archive.
+ok, 1 passages in archive
+ok
+
+--- next Monday, new session ---
+<policy>Order just in time. Keep two weeks of peak sales.</policy>
+<supplier>Acme delivers itemB. See archive: lead time.</supplier>
+[1 passages in archive, not shown]
+user: Should we reorder itemB?
+
+search 'lead time' -> ['3 March: Acme lead time for itemB rose to 4 weeks, port strike.']
+search 'delay'     -> no match
+```
+
+Read the output from the model's side. The second `core_append` is refused, and the error tells the model what to do next, so the size limit becomes a behavior rather than a crash. The archive's contents never appear in the compiled context, only a count, which is how the model knows there is something worth searching for. And the last line shows the weak point: the fact is stored, but the query "delay" misses it, because this search is literal. A real archive uses embeddings for that reason. Even so, the agent has to decide to search at all, and that is the failure the [stale-memory pitfall](#pitfalls) describes.
+
 ---
 
 ## The Letta API
@@ -159,6 +224,7 @@ Letta is the MemGPT authors' server. The course pins `letta==0.6.50` and runs th
 **Create an agent with memory blocks (Lab 3):**
 
 ```python
+# illustrative: needs `letta==0.6.50`, a Letta server on localhost:8283 and an OpenAI key
 from letta_client import Letta
 client = Letta(base_url="http://localhost:8283")
 
@@ -185,6 +251,7 @@ client.agents.blocks.retrieve(agent_id=agent_state.id, block_label="human").valu
 **Custom memory tools (Lab 4).** A tool that takes `agent_state: "AgentState"` gets the calling agent injected, so it can edit that agent's blocks. The lab builds a task queue in a core-memory block:
 
 ```python
+# illustrative: needs a Letta server, an OpenAI key, `client`, `pop_tool` and the lab's system prompt file
 def task_queue_push(agent_state: "AgentState", task_description: str):
     """Push to a task queue stored in core memory.
 
@@ -217,6 +284,7 @@ The docstring is the tool description: Letta builds the JSON schema from the sig
 **Agentic RAG over a document (Lab 5).** A *source* is a document collection; attaching it copies its passages into the agent's archival memory, where `archival_memory_search` finds them. The course uses an employee handbook, kept here as [packer-wooders-agent-memory-handbook.pdf](../sources/packer-wooders-agent-memory-handbook.pdf).
 
 ```python
+# illustrative: needs a Letta server, an OpenAI key, `agent_state`, and a `handbook.pdf`
 source = client.sources.create(name="employee_handbook",
                                embedding="openai/text-embedding-3-small")
 job = client.sources.files.upload(source_id=source.id, file=open("handbook.pdf", "rb"))
@@ -273,6 +341,7 @@ The LangGraph + LangMem course version, with semantic, episodic and procedural m
 LangMem's procedural memory is the one idea MemGPT does not have: a prompt optimizer that rewrites the agent's own instructions from feedback.
 
 ```python
+# illustrative: needs `langmem` and an API key for the named model; the model ID is from the course
 from langmem import create_prompt_optimizer
 
 optimizer = create_prompt_optimizer(
@@ -318,13 +387,6 @@ From the course conclusion, the four things you control:
 | Memory management | Block sizes, eviction policy, what gets summarized |
 | Memory content | Initial persona and human blocks, preloaded archival documents |
 
-| Pitfall | Fix |
-|---|---|
-| Agent never saves | Say so in the system prompt; check the tool description |
-| Core memory fills with trivia | Smaller block limits; a rule for what belongs in core vs archival |
-| Agent answers from stale core memory | Memory stats in context; instruct it to search before answering |
-| Shared block edited by two agents at once | One writer per block, or a tool that serializes writes |
-
 How much should the memory agent curate? A controlled comparison of filesystem memory stores ([arXiv:2607.26637](https://arxiv.org/abs/2607.26637), Zhou et al., 2026-07) says less than you'd think. With gpt-5.4-mini building and searching the store, a verbatim dump of the conversations or one file per session matched or beat an agent-curated store on all four conversational benchmarks; on PersonaMem at 32k tokens, curation scored 37.5% against 78.1% for the dump, because the curator left superseded preferences standing as current (the right fact was still in the store for all 13 misses). Asking the agent to reorganize a store silently condensed it unless told to keep every fact: on REALTALK, a condensing reorganization dropped correctness from 77.6% to 41.2%, while a fact-preserving one held at 77.6%. Two budget rules follow. Spend model strength on the reader, not the writer: a stronger searcher raised mean correctness from about 62% (gpt-5.4-nano) to 79% (gpt-5.4), while a stronger builder "buys a more elaborate store, not a more useful one." And match stored experience to the executor: on ALFWorld, raw episode logs helped a gpt-4.1 executor most (87.1% vs. 73.6% with no store), but a gpt-4.1-mini executor did better with distilled task guidance (76.4% vs. 66.4% with logs). The study uses single build runs and 32–158 questions per benchmark tier, so read differences of a few points as ties.
 
 The safe kind of curation edits the index, not the facts. A-MEM ([arXiv:2502.12110](https://arxiv.org/abs/2502.12110) (Xu et al., NeurIPS 2025)) stores each interaction as a Zettelkasten-style note: the raw content plus LLM-written keywords, tags and a one-line context, linked to related notes. When a new note arrives, the agent may rewrite its neighbours' keywords, tags and context, but never their content. On LoCoMo with GPT-4o-mini, scored by token F1, removing the linking and rewriting steps cut multi-hop F1 from 27.0 to 9.7. Against the whole conversation in context, the result looks like Mem0's. With GPT-4o, A-MEM won on temporal questions (39.4 vs. 9.1 F1) using about 1.2k tokens per question instead of 16.9k. It lost on single-hop questions (48.4 vs. 61.6) and on adversarial ones (36.4 vs. 52.6).
@@ -346,7 +408,46 @@ Two larger studies make the same point: tools let the agent manage memory, but t
 
 ---
 
-## Interview questions
+## Pitfalls
+
+From the course's conclusion, with the fixes that go with them:
+
+| Pitfall | Fix |
+|---|---|
+| Agent never saves | Say so in the system prompt; check the tool description |
+| Core memory fills with trivia | Smaller block limits; a rule for what belongs in core vs archival |
+| Agent answers from stale core memory | Memory stats in context; instruct it to search before answering |
+| Shared block edited by two agents at once | One writer per block, or a tool that serializes writes |
+
+Four more follow from the rest of this chapter:
+
+- **Treating memory as trusted.** Anything saved from a tool result or user message comes back later as if it were context, so an injected instruction can persist across sessions. Mark where each memory came from.
+- **Overwriting facts with summaries.** A summary loses detail for good. Keep the verbatim record and curate the index on top of it.
+- **Storing what you should look up.** A delivery time held in memory goes stale. Keep the source of truth in a tool, and store what the system of record does not hold, such as why a decision was made.
+- **Testing storage and not behavior.** A passing insert test says nothing about whether the agent saves the right things. Replay real conversations and check what it wrote and what it later retrieved.
+
+---
+
+## Try it
+
+1. Run the two-tier block with `CORE_LIMIT = 40`. What does the first `core_append` return, and what does the context look like next Monday?
+2. Change `archive_search` to match any word in the query. Does `"lead time delay"` now find the passage? What would it wrongly match in a larger archive?
+3. Add a `core_replace(label, old, new)` tool. Why might it suit a small model better than a diff-based edit?
+4. Which tier should hold each of these: the agent's ordering policy, a 40-page supplier contract, last Monday's conversation, today's stock level?
+
+<details>
+<summary>Answers</summary>
+
+1. The policy alone is 49 characters, so every `core_append` is refused and even the short pointer to the archive is lost. Next Monday, the context shows the policy and a count of one archived passage, with no hint of what it holds. A limit set too low silently costs you the index.
+2. Yes, it finds the passage through "lead" and "time". It would also match any passage containing "time", which is why keyword matching needs ranking, and why archives usually use embeddings or hybrid search.
+3. It only has to quote the old text and supply the new text. The mem-agent team reports that a diff-based tool failed for their small model and that they moved to a tool of this form.
+4. Policy: core. Contract: archival, with retrieval. Last Monday's conversation: recall. Stock level: none of them, since it should come from a tool on each run.
+
+</details>
+
+---
+
+## Interview checklist
 
 | Question | Short answer |
 |---|---|
@@ -355,5 +456,12 @@ Two larger studies make the same point: tools let the agent manage memory, but t
 | What is a heartbeat? | A flag on a tool call asking for another LLM step without user input |
 | Why is "every output a tool call" useful? | One uniform loop; replying is just another action the agent chooses |
 | What does agentic RAG change? | The agent decides when and what to retrieve, and can retrieve again |
+| Why give core memory a hard size limit? | It is always in context, so it costs tokens on every call. An error at the limit makes the agent decide what to keep |
+| Should a memory agent summarize what it stores? | Often not: curate the index and keep the facts. Zhou et al. found that verbatim stores hold up well against curated ones |
+| Why does the agent not search when it should? | Tools let it manage memory but do not teach it when. Put memory stats in context, instruct it, and test that behavior |
 
-→ Next: [04 — multi-agent design patterns](04-multi-agent-design-patterns.md) — reflection, tool use, planning and collaboration built from conversations between agents.
+---
+
+## Next
+
+→ [04 — multi-agent design patterns](04-multi-agent-design-patterns.md): reflection, tool use, planning and collaboration built from conversations between agents.

@@ -92,7 +92,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ## Where to start
 
-- **Lecture deck:** [slides/context-engineering.pptx](slides/context-engineering.pptx) — the notes as a 3-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=02-context-engineering`).
+- **Lecture deck:** [slides/context-engineering.pptx](slides/context-engineering.pptx) — a 4-part talk following one research agent through its 128K window (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=02-context-engineering`).
 - **New to this:** read [the mental model](#the-mental-model) above, then chapters 01–06 in order, running the code snippets in each note.
 - **Building an agent now:** [02](notes/02-context-anatomy.md), [05](notes/05-compression-compaction.md), [10](notes/10-tools-and-multi-agent.md), then the design order of questions in [13](notes/13-putting-it-together.md#designing-a-context-system-the-order-of-questions).
 - **Debugging one:** [11 — failure modes](notes/11-failure-modes.md), then [12 — evaluating context](notes/12-evaluating-context.md).

@@ -69,7 +69,7 @@ parts:
           - Frontier models now reliably find a planted needle at 1M+ tokens
           - They struggle at far shorter lengths when the answer depends on almost every line
           - "So rot is measured per task: a needle test tells you little about synthesis"
-          - Our agent synthesizes, so its usable window is far below the advertised one
+          - Our agent synthesizes, so expect its usable window to sit well below the advertised one
         takeaway: A model's advertised window says nothing about the length at which your task starts to fail.
         recall: Why can a model pass a needle test at 1M tokens and still fail on shorter inputs?
         source: notes/01-why-context-is-finite.md
@@ -165,9 +165,9 @@ parts:
         recall: What are the five layers for organizing agent instructions, and what test places content in each?
         source: notes/02-context-anatomy.md
         notes: >-
-          Five layers, and you sort by how often something is needed and how firmly it must hold. Our research
-          agent searched for stale news because "latest" meant last year. The fix was a runtime injection of
-          the current date, not another sentence of instruction. Where that date lands in the window turns out
+          Five layers, and you sort by how often something is needed and how firmly it must hold. In the DAIR
+          deep-research case study the agent searched for stale news because "latest" meant last year. The fix
+          was a runtime injection of the current date, not another sentence of instruction. Where that date lands in the window turns out
           to matter a great deal.
       - layout: image
         kicker: Ordering
@@ -331,12 +331,14 @@ parts:
           bullets:
             - Embed corpus and query, stuff top-k, generate
             - Relevance is guessed **before** the model reasons
+            - "Fifty files at 5k tokens each: **250k**"
           tag: Fast, deterministic, often wrong
         right:
           title: Just-in-time
           bullets:
             - "Keep **identifiers**: paths, IDs, queries"
             - The agent loads what its reasoning says it needs
+            - "Index plus the three files it reads: **about 15.5k**"
           tag: "Costs: latency, wandering, non-determinism"
         takeaway: "Pre-load only what is needed on 80% or more of turns, and leave the long tail to tools."
         recall: What single design question decides between pre-loading content and fetching it with a tool?
@@ -478,8 +480,8 @@ parts:
         recall: Which format should you use for document boundaries, for prose, and for state a program reads?
         source: notes/07-structured-context.md
         notes: >-
-          Structure saves attention rather than tokens. Our agent showed the failure directly: status values
-          drifted between pending and to-do, done and finished, across runs, until the code reading them
+          Structure saves attention rather than tokens. The DAIR deep-research case study showed the failure
+          directly: status values drifted between pending and to-do, done and finished, across runs, until the code reading them
           broke. The fix is a closed set of allowed values. And since that state gets re-injected, it has to be
           valid.
       - layout: code
@@ -564,7 +566,7 @@ parts:
         rows:
           - [No compression, Overflowed at iteration 5. Failed]
           - [Summarize each result separately, "12 iterations, 277k tokens; repeated facts across pages"]
-          - [One combined summary, See notes/05 for the truncation failure]
+          - [One combined summary, "10 iterations, 93k tokens; long inputs truncated at the tail"]
           - ["**Context-aware** (query and known state in the prompt)", "**7 iterations, 40k tokens**; a 148k-char page to 2k chars"]
           - [Context-aware plus citations, "223k tokens; lossy content, lossless index to sources"]
           - ["Adaptive: batch at 80%, `[COMPRESSED]` marker", "175k tokens; full fidelity early on"]
@@ -628,7 +630,7 @@ parts:
         bullets:
           - "**A:** all operations listed in one prompt"
           - "**B:** each operation is a tool call with its own prompt"
-          - "GPT-4.1 on AIME 2024: **26.7% to 43.3%**, with no training"
+          - "GPT-4.1 on AIME 2024: **32.0% to 53.0%** pass@1; one prompt with the same operations reached **42.0%**"
           - Only the result returns to the main trace
         takeaway: Cognitive tools apply context isolation to reasoning, because only each step's result returns to the main trace.
         recall: What is the difference between cognitive prompting and cognitive tools, and what did the change buy?
@@ -636,8 +638,9 @@ parts:
         notes: >-
           Ebouky and colleagues take four reasoning operations: understand the question, recall related
           problems, examine the answer, and backtrack. Listed in one prompt they are cognitive prompting. Run
-          as separate calls they are cognitive tools. GPT-4.1 on AIME 2024 went from 26.7 to 43.3 percent. A
-          model verdict still has blind spots, though.
+          as separate calls they are cognitive tools. GPT-4.1 on AIME 2024 went from 32 to 53 percent, and the
+          one-prompt version reached only 42, so isolation alone is worth another eleven points. A model
+          verdict still has blind spots, though.
       - layout: code
         kicker: Worked example
         title: Where you can verify with code, do
@@ -715,8 +718,8 @@ parts:
         recall: What does a sub-agent buy the orchestrator, and what does it cost in absolute spend?
         source: notes/10-tools-and-multi-agent.md
         notes: >-
-          Our agent had one window managing tasks, memory, search and the report, and it forgot steps as that
-          grew. The fix in the case study was a search worker receiving only the query text. That is cheap for
+          In the DAIR case study one agent managed tasks, memory, search and the report, and it forgot steps as
+          that grew. The fix was a search worker receiving only the query text. That is cheap for
           the orchestrator's window and expensive overall: three sub-agents at 80 thousand each is 240 thousand
           real tokens for six thousand visible. So try compression first.
       - layout: compare
@@ -761,7 +764,7 @@ parts:
       - layout: statement
         kicker: The problem
         title: A wrong answer is rarely the model's fault
-        statement: "The agent reports a founder's old job. Most teams now swap the model. Print the window first."
+        statement: "The agent reports a founder's old job. The reflex is to swap the model. Print the window first."
         attribution: "Most context bugs are assembly bugs (notes/11)"
         takeaway: Teams routinely misdiagnose context failures as a weak model, so inspect what was actually sent before changing anything.
         recall: What is the first thing to do when a context-heavy agent gives a wrong answer?
@@ -867,9 +870,9 @@ parts:
               re-run the eval set
               record change in quality and in tokens
 
-          quality ~ same,  tokens much lower   -> cut it
-          small drop,      tokens much lower   -> compress it
-          large drop,      any                 -> keep and pin it
+          no change,  big saving -> cut it
+          small drop, big saving -> compress it
+          large drop, any        -> keep and pin it
         bullets:
           - "Components: prompt section, memory block, retrieved set, tool definitions"
           - Ablation sets the budget by evidence rather than habit
@@ -990,4 +993,4 @@ parts:
         notes: >-
           Next is the harness, because everything today ran inside a loop we took for granted. Then eval, which
           generalizes today's measurements. Before you go, run the context budgeter in the practice folder on
-          one of your own prompts. You will find a timestamp somewhere.
+          one of your own prompts and see where the tokens sit.

@@ -1,0 +1,34 @@
+# A sample, not active here. Copy to .github/workflows/eval.yml and adjust the paths.
+# Without vars.EVAL_MODEL it runs the stub, which tests the pipeline and not your agent.
+name: eval
+on:
+  pull_request:
+    paths: # a README change should not trigger a model run
+      - "ai-engineering/06-eval/practice/eval-suite-ci/**"
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ai-engineering/06-eval/practice/eval-suite-ci
+        shell: bash # with an explicit bash, GitHub sets pipefail, so `tee` cannot hide a failure
+    env:
+      MODEL: ${{ vars.EVAL_MODEL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install the SDK, only for a real model
+        if: ${{ vars.EVAL_MODEL != '' }}
+        run: npm install
+      - name: Run
+        run: npx tsx run.ts v1
+      - name: Keep the results, whatever the gate says
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: ai-engineering/06-eval/practice/eval-suite-ci/results-v1.jsonl
+      - name: Assert
+        run: npx tsx assert.ts v1 | tee report.txt

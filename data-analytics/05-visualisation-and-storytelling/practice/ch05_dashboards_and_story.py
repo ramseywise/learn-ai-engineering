@@ -49,6 +49,8 @@ print(f"email revenue 2024 £{email_revenue[2024]:,}, 2025 £{email_revenue[2025
 print(f"margin on lost email revenue:  £{email_margin:,.0f}")
 print(f"budget saved by the cut:       £{RESTORE_COST:,}")
 print(f"margin lost per pound saved:   {(repeat_margin + email_margin) / RESTORE_COST:.1f}")
+lost_revenue = lost_repeaters * REPEAT_REVENUE + email_revenue[2024] - email_revenue[2025]
+print(f"break-even gross margin:       {RESTORE_COST / lost_revenue:.1%}")
 
 # %% story-chart
 import matplotlib.pyplot as plt

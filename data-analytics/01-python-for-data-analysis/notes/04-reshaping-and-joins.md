@@ -83,21 +83,14 @@ Notice two deliberate mismatches. `eli` and `fay` have orders but no customer re
 
 `pd.merge` lines up rows from two frames wherever a key column matches, the same operation as a SQL join. The `how` argument decides what to do with rows that have no partner.
 
-```mermaid
-flowchart LR
-    subgraph orders["orders customers"]
-    A["ana ben cara dev"]
-    B["eli fay: only in orders"]
-    C["gus: only in customers"]
-    end
-    A --> I["inner: ana ben cara dev"]
-    A --> L["left: adds eli fay with NaN"]
-    B --> L
-    A --> R["right: adds gus with NaN"]
-    C --> R
-    A --> O["outer: all, NaN where absent"]
-    B --> O
-    C --> O
+```text
+  keys in orders:     ana  ben  cara  dev  eli  fay
+  keys in customers:  ana  ben  cara  dev            gus
+
+  how="inner"         ana  ben  cara  dev                  only matches
+  how="left"          ana  ben  cara  dev  eli  fay        every order; NaN city for eli, fay
+  how="right"         ana  ben  cara  dev            gus   every customer; NaN order for gus
+  how="outer"         ana  ben  cara  dev  eli  fay  gus   everything; NaN where absent
 ```
 
 ```python
@@ -220,7 +213,7 @@ consumable     97.5    60.0
 tools          44.0    20.0
 ```
 
-Consumables earn less revenue than tools or brew gear might suggest, yet carry much the highest margin rate: filters cost 2.50 and sell at 6.50. The join made that visible.
+Brew gear brings in the most revenue and the most margin in absolute terms. But consumables keep about 62 of every 100 in revenue (60.0 of 97.5) against about 37 for brew gear (142.0 of 382.0), since a filter costs 2.50 and sells at 6.50. No single table could have shown that.
 
 To join on the index rather than a column, `merge` takes `left_index=True` and `right_index=True`, and `df.join` is a shorthand for that common case. The next example uses `join` on a Series of per-customer totals.
 

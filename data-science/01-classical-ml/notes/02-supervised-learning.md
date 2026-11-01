@@ -55,7 +55,18 @@ for k in range(1, 11):
     print(k, round(clf.score(X_train, y_train), 3), round(clf.score(X_test, y_test), 3))
 ```
 
-@@KNN@@
+```text
+1 1.0 0.902
+2 0.977 0.888
+3 0.958 0.923
+4 0.955 0.923
+5 0.948 0.923
+6 0.946 0.937
+7 0.944 0.93
+8 0.941 0.93
+9 0.934 0.916
+10 0.939 0.916
+```
 
 The single-neighbour model gets every training point right and is the worst on test. That is overfitting made visible.
 
@@ -102,9 +113,14 @@ for name, model in [("OLS", LinearRegression()),
           f"  nonzero {(np.abs(model.coef_) > 1e-8).sum()}")
 ```
 
-@@LIN@@
+```text
+features: 285 rows in train: 331
+OLS          train 0.90  test -9.32  nonzero 285
+Ridge a=0.1  train 0.55  test 0.37  nonzero 285
+Lasso a=0.1  train 0.55  test 0.36  nonzero 7
+```
 
-@@LINPROSE@@
+With 285 features and 331 rows OLS memorises the training set, and its test R² of -9.32 is far worse than predicting the mean. Both penalties rescue it at the cost of train score. Ridge keeps all 285 weights small; lasso matches it with 7. That is why you try lasso when you suspect only a few features matter.
 
 The penalties have a pedigree worth citing: the L1 penalty and its property of setting weights exactly to zero come from the lasso paper ([doi:10.1111/j.2517-6161.1996.tb02080.x](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x), Tibshirani, JRSS-B 1996).
 
@@ -126,7 +142,9 @@ svm = LinearSVC(C=1, max_iter=20000).fit(X_train, y_train)
 print("logreg", round(logreg.score(X_test, y_test), 3), "linear svm", round(svm.score(X_test, y_test), 3))
 ```
 
-@@LOG@@
+```text
+logreg 0.944 linear svm 0.944
+```
 
 The knob is **`C`, the inverse of regularisation strength**: high `C` fits each training point harder (complex); low `C` keeps weights small (simple). Note the inversion against `alpha` above. `penalty="l1"` gives sparse coefficients, as lasso does.
 
@@ -169,7 +187,11 @@ print("max_depth", round(tree.score(X_train, y_train), 3), round(tree.score(X_te
 print("features used:", (tree.feature_importances_ > 0).sum(), "of", X_train.shape[1])  # zero means unused, not "unimportant"
 ```
 
-@@TREE@@
+```text
+unpruned  1.0 0.895
+max_depth 0.988 0.902
+features used: 10 of 30
+```
 
 A tree grown until every leaf is pure memorises the training set. Control it with **pre-pruning**: `max_depth`, `max_leaf_nodes`, or `min_samples_leaf`. scikit-learn also has cost-complexity post-pruning (`ccp_alpha`).
 
@@ -199,12 +221,15 @@ from sklearn.preprocessing import MinMaxScaler
 
 scaler = MinMaxScaler().fit(X_train)           # fit on train only (see 03)
 svc = SVC(kernel="rbf", C=1000, gamma="scale").fit(scaler.transform(X_train), y_train)
-raw = SVC(kernel="rbf", C=1000, gamma=1.0).fit(X_train, y_train)   # gamma on raw pixel-scale distances
+raw = SVC(kernel="rbf", C=1000, gamma=1.0).fit(X_train, y_train)   # unscaled: distances are dominated by the largest-valued features
 print("unscaled", round(raw.score(X_test, y_test), 3))
 print("scaled  ", round(svc.score(scaler.transform(X_test), y_test), 3))
 ```
 
-@@SVC@@
+```text
+unscaled 0.629
+scaled   0.972
+```
 
 | Knob | Small value | Large value |
 |---|---|---|
@@ -228,7 +253,9 @@ def gauss_kernel(x1, x2, sigma):
 print(round(gauss_kernel(np.array([1., 2, 1]), np.array([0., 4, -1]), 2.0), 6))
 ```
 
-@@GK@@
+```text
+0.324652
+```
 
 ---
 
@@ -246,7 +273,9 @@ mlp = MLPClassifier(hidden_layer_sizes=[10, 10], alpha=1.0,
 print(round(mlp.score(StandardScaler().fit(X_train).transform(X_test), y_test), 3))
 ```
 
-@@MLP@@
+```text
+0.951
+```
 
 | Knob | Effect |
 |---|---|
@@ -280,7 +309,15 @@ agree = gbrt.classes_[(gbrt.decision_function(X_test) > 0).astype(int)] == gbrt.
 print(agree.all())
 ```
 
-@@UNC@@
+```text
+['benign' 'malignant']
+[-8.69 -8.75 -8.32 -8.77]
+[[1. 0.]
+ [1. 0.]
+ [1. 0.]
+ [1. 0.]]
+True
+```
 
 A probability is only as good as the model's **calibration**: an overfit model reports 1.0 on points it gets wrong. You need these scores to move the decision threshold, which [04](04-model-evaluation.md#threshold-precision-recall-and-roc) does, and [04](04-model-evaluation.md#calibration-is-a-08-really-80) shows how to check them. Niculescu-Mizil and Caruana compared ten learners' probabilities and found boosted trees and SVMs distort them in a sigmoid shape while logistic regression does not ([doi:10.1145/1102351.1102430](https://doi.org/10.1145/1102351.1102430), ICML 2005).
 
@@ -355,7 +392,11 @@ print("grad descent   ", gradient_descent(X1, y1, np.zeros(2)).round(3))
 print("normal equation", normal_equation(X1, y1).round(3))
 ```
 
-@@NG@@
+```text
+cost at zero    32.07
+grad descent    [-3.63   1.166]
+normal equation [-3.896  1.193]
+```
 
 After 1,500 iterations gradient descent has not quite reached the closed-form answer, so running longer closes the gap. Three things these make concrete that the library hides: gradient descent diverges if the learning rate is too high (plot $J$ per iteration, ex1); features on different scales slow it badly (normalise first); and the regularisation term skips the bias weight.
 

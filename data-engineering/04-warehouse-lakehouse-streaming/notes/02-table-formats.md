@@ -137,7 +137,7 @@ B commits version 4
 rows: [1, 2, 3, 4, 6, 7, 8]
 ```
 
-A real format does more at the retry step. It reads what the winner changed and decides whether the two transactions actually conflict. Two appends never do; a delete of a file the other writer also rewrote does, and that writer must redo its work. Delta defines this per isolation level, and Iceberg writers re-apply their changes against the new metadata ([Iceberg table spec](https://iceberg.apache.org/spec/)). Not every store has a put-if-absent primitive; the Delta paper notes S3 at the time needed a lightweight coordinator to allot log record IDs, while Azure and HDFS could use atomic operations directly.
+A real format does more at the retry step. It reads what the winner changed and decides whether the two transactions actually conflict. Two appends never do; a delete of a file the other writer also rewrote does, and that writer must redo its work. Delta defines this per isolation level, and Iceberg writers re-apply their changes against the new metadata ([Iceberg table spec](https://iceberg.apache.org/spec/)). Not every store had the primitive this relies on. The Delta paper reports Google Cloud Storage and Azure Blob Store offering atomic put-if-absent and HDFS an atomic rename, while S3 at the time needed a lightweight coordinator to allot log record IDs.
 
 A crash is now harmless to readers.
 
@@ -421,13 +421,13 @@ Treat the comparison as a snapshot. These projects copy each other's good ideas 
 
 1. Extend `TinyTable` with a `compact()` method that rewrites all live files into one and commits with a remove per old file. Check that time travel to earlier versions still works.
 2. Two writers both delete from the same file against the same read version. Change `_commit`'s retry so the loser detects that its removed file is gone and re-reads rather than committing a stale replacement.
-3. In the Delta block, write a 12th commit and find the checkpoint. Which file did the reader start from?
+3. Append twelve commits with `write_deltalake` and look in `_delta_log` for a checkpoint. Is there one? How would you get one, and which file would a reader then start from?
 
 <details><summary>Answers</summary>
 
 1. The commit has one `add` and many `remove` records. Earlier versions still resolve because the old Parquet files are untouched.
 2. Before committing, replay the log from `read_version + 1` and compare the winners' `remove` paths with yours. On overlap, abort and redo the delete from the new version; without this check the loser would resurrect rows.
-3. A `*.checkpoint.parquet` appears in `_delta_log` around version 10 in Delta's default configuration, with `_last_checkpoint` pointing at it. The reader starts there and replays only later JSON records. The delta-rs writer may need `create_checkpoint()` called explicitly, depending on version.
+3. With deltalake 1.6.6, twelve plain appends wrote no checkpoint: calling `DeltaTable(path).create_checkpoint()` produced `00000000000000000011.checkpoint.parquet` and `_last_checkpoint`. A reader starts there and replays only later JSON records. The every-10-commits default in the paper describes the Spark writer, so check what your writer does.
 
 </details>
 

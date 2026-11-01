@@ -46,7 +46,7 @@ class FakeLangfuse:
         if path.endswith("/api/public/dataset-items") and method == "POST":
             i = {"id": body.get("id") or str(uuid.uuid4()), "status": "ACTIVE", "input": body.get("input"),
                  "expectedOutput": body.get("expectedOutput"), "metadata": body.get("metadata"),
-                 "sourceTraceId": body.get("sourceTraceId"), "sourceObservationId": None, "datasetId": body["datasetName"],
+                 "sourceTraceId": body.get("sourceTraceId"), "sourceObservationId": None, "mediaReferences": [], "datasetId": body["datasetName"],
                  "datasetName": body["datasetName"], "createdAt": NOW, "updatedAt": NOW}
             self.items.setdefault(body["datasetName"], []).append(i)
             return 200, i

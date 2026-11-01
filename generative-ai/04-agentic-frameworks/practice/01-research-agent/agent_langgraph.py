@@ -1,10 +1,11 @@
 """Note 01: the research agent as a real LangGraph StateGraph with a stub chat model."""
+import json
 from itertools import count
 from typing import Annotated, TypedDict
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, AnyMessage, SystemMessage, ToolMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.messages import AIMessage, AIMessageChunk, AnyMessage, SystemMessage, ToolMessage
+from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 from langchain_core.tools import tool as as_tool
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
@@ -42,6 +43,16 @@ class StubChatModel(BaseChatModel):
         reply.usage_metadata = {"input_tokens": prompt, "output_tokens": completion,
                                 "total_tokens": prompt + completion}
         return ChatResult(generations=[ChatGeneration(message=reply)])
+
+    def _stream(self, messages, stop=None, run_manager=None, **kwargs):
+        """Word-sized chunks, then the tool call, the order a real model's stream arrives in."""
+        reply = self._generate(messages).generations[0].message
+        for word in str(reply.content).split(" "):
+            yield ChatGenerationChunk(message=AIMessageChunk(content=word + " "))
+        chunks = [{"name": c["name"], "args": json.dumps(c["args"]), "id": c["id"], "index": i, "type": "tool_call_chunk"}
+                  for i, c in enumerate(reply.tool_calls)]
+        yield ChatGenerationChunk(message=AIMessageChunk(content="", tool_call_chunks=chunks,
+                                                         usage_metadata=reply.usage_metadata))
 
 
 class AgentState(TypedDict):

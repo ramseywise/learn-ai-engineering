@@ -47,7 +47,7 @@ colour = alt.Color("channel:N", title=None, legend=alt.Legend(orient="top"),
                    scale=alt.Scale(domain=names, range=palette))
 chart = (alt.Chart(view.assign(rate=view.repeat_90d / view.new_customers * 100))
          .mark_line(strokeWidth=2, point=alt.OverlayMarkDef(size=30))
-         .encode(x=alt.X("month:T", title=None),
+         .encode(x=alt.X("month:T", title=None, axis=alt.Axis(format="%b", tickCount="month")),
                  y=alt.Y("rate:Q", title="90-day repeat rate (%)", scale=alt.Scale(domain=[0, 60])),
                  color=colour, tooltip=["channel", "month:T", alt.Tooltip("rate:Q", format=".1f")])
          .properties(height=300))

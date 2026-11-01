@@ -478,7 +478,7 @@ It is also a dbt target (`dbt-duckdb`) and a dlt destination ([ingest pillar](..
 | Updatable lake tables | Overwrite partitions | Delta or Iceberg `MERGE` |
 | Serverless warehouse | BigQuery | BigQuery, Snowflake, or Iceberg tables BigQuery reads |
 
-Sources: [DuckDB docs](https://duckdb.org/docs/), [Polars docs](https://docs.pola.rs/), [Delta Lake](https://delta.io/), [Apache Iceberg](https://iceberg.apache.org/docs/latest/); the awesome-list entry [*An Introduction to Modern Data Lake Storage Layers*](https://dacort.dev/posts/modern-data-lake-storage-layers/) compares Hudi, Iceberg and Delta.
+Sources: [DuckDB docs](https://duckdb.org/docs/), [Polars docs](https://docs.pola.rs/), [Delta Lake](https://delta.io/), [Apache Iceberg](https://iceberg.apache.org/docs/latest/).
 
 ---
 

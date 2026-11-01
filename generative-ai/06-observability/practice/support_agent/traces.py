@@ -169,6 +169,8 @@ def make_turn(rng, trace_no, ts):
         amount = rng.choice([120, 180, 240, 300, 450, 650, 800, 1200, 2400])
         if failure == "missed_escalation":
             amount = rng.choice([650, 800, 1200, 2400])
+        elif failure in ("hallucinated_citation", "distorted_claim"):
+            amount = rng.choice([120, 180, 240, 300, 450])  # an escalation would replace the bad answer
         question = question.format(amount=amount)
 
     b = _Builder(rng, trace_no)

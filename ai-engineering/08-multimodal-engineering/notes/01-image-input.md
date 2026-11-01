@@ -51,7 +51,7 @@ If you can change one thing about how images enter your system, change the resol
 
 Resolution costs compute, because tokens grow with the square of the side length. Model builders have three ways of paying less.
 
-- **Keep the token count and add detail.** Mini-Gemini runs a low-resolution encoder that decides what to look at and a high-resolution encoder that refines those tokens, so the token count stays at that of the low-resolution input ([arXiv:2403.18814](https://arxiv.org/abs/2403.18814) (Li et al., CVPR 2024)).
+- **Keep the token count and add detail.** Mini-Gemini runs a low-resolution encoder that decides what to look at and a high-resolution encoder that refines those tokens, so the token count stays at that of the low-resolution input ([arXiv:2403.18814](https://arxiv.org/abs/2403.18814) (Li et al., IEEE TPAMI 2026)).
 - **Tile.** DeepSeek-VL2 replaced fixed 384 and 1024 encoders with a dynamic tiling strategy that sends each local tile through a shared encoder, which handles large images and extreme aspect ratios such as infographics ([arXiv:2412.10302](https://arxiv.org/abs/2412.10302) (Wu et al., 2024-12, preprint)).
 - **Encode at native resolution with a budget.** Microsoft's Phi-4-reasoning-vision report compared the approaches directly and found that encoders handling dynamic resolution with many visual tokens did best on high-resolution tasks. A budget of 3,600 tokens, roughly native 720p, gave a substantial improvement over 2,048, especially on ScreenSpot-Pro. It notes that tiling-based S2 methods are constrained by the original image size and often use only about half the maximum tokens ([arXiv:2603.03975](https://arxiv.org/abs/2603.03975) (Aneja et al., 2026-03, preprint)).
 
@@ -141,7 +141,7 @@ The practical response is to protect the region that matters. Send a full-page i
 
 ## Orientation breaks more than you expect
 
-People hold phones in every direction, and images often carry their orientation in EXIF metadata that a decoder can ignore. Most builders assume the model will cope. Guo et al. tested that directly. On OCRBench, GPT-4o scored 83.1 on the source images, 61.9 after a 90-degree rotation, 46.6 at 180 degrees and 12.9 after a vertical flip. Gemini 2.5 Pro went from 87.1 to 39.4 under a horizontal flip. On a separate identification test of 200 images, frontier models could not reliably name the transformation that had been applied, a task their human comparison group solved every time ([arXiv:2512.03746](https://arxiv.org/abs/2512.03746) (Guo et al., 2025-12, preprint), Table 1).
+People hold phones in every direction, and images often carry their orientation in EXIF metadata that a decoder can ignore. Most builders assume the model will cope. Guo et al. tested that directly. On OCRBench, GPT-4o scored 83.1 on the source images, 61.9 after a 90-degree rotation, 46.6 at 180 degrees and 12.9 after a vertical flip. Gemini 2.5 Pro went from 87.1 to 39.4 under a horizontal flip. On a separate identification test of 200 images, frontier models could not reliably name the transformation that had been applied, a task their human comparison group solved every time ([arXiv:2512.03746](https://arxiv.org/abs/2512.03746) (Guo et al., CVPR 2026), Table 1).
 
 The cheap fix runs before the model: honor EXIF, and for scans with no EXIF, detect orientation with a dedicated tool. Here is the first part, using a synthetic image whose pixels are stored sideways:
 
@@ -174,7 +174,7 @@ Run this as the first preprocessing step, and strip the tag afterwards as the li
 
 ## Asking for evidence, not just answers
 
-A bare answer gives you nothing to check. If you ask the model to point at what it read, you get something a program can verify, and a crop a person can inspect. Kosmos-2 made this a model capability by emitting grounded Markdown in which text spans link to bounding boxes ([arXiv:2306.14824](https://arxiv.org/abs/2306.14824) (Peng et al., ICLR 2024)), and Qwen-VL trained on image-caption-box tuples for the same reason ([arXiv:2308.12966](https://arxiv.org/abs/2308.12966) (Bai et al., 2023-08, preprint)). GRIT trains the reasoning chain itself to interleave natural language with box coordinates, using only 20 image-question-answer triplets on Qwen2.5-VL and InternVL3 ([arXiv:2505.15879](https://arxiv.org/abs/2505.15879) (Fan et al., 2025-05, preprint)).
+A bare answer gives you nothing to check. If you ask the model to point at what it read, you get something a program can verify, and a crop a person can inspect. Kosmos-2 made this a model capability by emitting grounded Markdown in which text spans link to bounding boxes ([arXiv:2306.14824](https://arxiv.org/abs/2306.14824) (Peng et al., ICLR 2024)), and Qwen-VL trained on image-caption-box tuples for the same reason ([arXiv:2308.12966](https://arxiv.org/abs/2308.12966) (Bai et al., 2023-08, preprint)). GRIT trains the reasoning chain itself to interleave natural language with box coordinates, using only 20 image-question-answer triplets on Qwen2.5-VL and InternVL3 ([arXiv:2505.15879](https://arxiv.org/abs/2505.15879) (Fan et al., NeurIPS 2025)).
 
 Boxes from any model should be parsed and validated before you use them. The check is mechanical:
 

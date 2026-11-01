@@ -3,7 +3,7 @@ origin: course-synthesis
 sources:
   - "DeepLearning.AI, AI Agentic Design Patterns with AutoGen (Chi Wang, Qingyun Wu), L1–L6 — https://www.deeplearning.ai/short-courses/ai-agentic-design-patterns-with-autogen/ ; snapshot upstream https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen"
   - "DeepLearning.AI, LLMs as Operating Systems: Agent Memory, L6 multi-agent orchestration — https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory"
-  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 6 P18 Reflection, ch 7 P23 Multiagent Collaboration — ../sources/lakshmanan-hapke-genai-design-patterns-ch07-enabling-agents-to-take-action.pdf"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 5 P14 Tree of Thoughts, ch 6 P18 Reflection, ch 7 P23 Multiagent Collaboration — ../sources/lakshmanan-hapke-genai-design-patterns-ch07-enabling-agents-to-take-action.pdf"
   - "Cemri et al. 2025, Why Do Multi-Agent LLM Systems Fail? — https://arxiv.org/abs/2503.13657"
   - "Andrew Ng, Agentic Design Patterns (The Batch, 2024) — https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/"
   - https://arxiv.org/abs/2601.12307
@@ -33,12 +33,14 @@ sources:
   - https://arxiv.org/abs/2504.17192
   - https://arxiv.org/abs/2603.05294
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 4 — Multi-agent design patterns
 
 > Andrew Ng's four agentic patterns (reflection, tool use, planning, multi-agent collaboration) can all be built from one primitive: agents that send each other messages until a stop condition fires.
+
+A single restock agent both proposes an order and judges it, and a judge reviewing its own work tends to approve it. Adding a reviewer seems like the obvious fix, and sometimes it is. But two agents now have to agree on what they are doing, know when to stop and avoid repeating each other, and each message they exchange costs tokens. This chapter builds up from one conversation to group chats and shared memory, and it asks at each step whether the extra agent has earned its cost, because when Cemri et al. studied the traces of real multi-agent runs, the failures they catalogued were bad specifications, misaligned agents and weak verification.
 
 ---
 
@@ -69,6 +71,7 @@ The course is pyautogen 0.2. AutoGen has since been rewritten (0.4 is event-driv
 ## L1 — the primitive: a conversation
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key
 from autogen import ConversableAgent
 
 cathy = ConversableAgent(
@@ -109,6 +112,7 @@ Every multi-agent system needs two stop conditions: a turn cap (`max_turns`) and
 Onboarding runs three conversations in order. Each one ends with a summary, and the summaries become the context for the next conversation. That is prompt chaining where each link is a dialogue.
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key, with the agents from the lab
 chats = [
     {
         "sender": onboarding_personal_information_agent,
@@ -138,6 +142,7 @@ Asking the summary step for JSON turns a free conversation into structured state
 A writer drafts; a critic reviews. The critic does not review alone: each time the writer speaks, the critic runs a set of **nested chats** with specialist reviewers, then returns their combined feedback as its reply.
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key, with the agents from the lab
 def reflection_message(recipient, messages, sender, config):
     # pass the writer's latest draft to each reviewer
     return f"Review the following content.\n\n{recipient.chat_messages_for_summary(sender)[-1]['content']}"
@@ -164,6 +169,7 @@ This is P18 Reflection with the critic split into roles. The book's guidance for
 **The same loop as a two-node graph.** Oshin and Campos build reflection from a `generate` node and a `reflect` node (*Learning LangChain*, ch. 7). One detail is easy to miss: `reflect` swaps the roles of every message after the first, so AI messages become human messages and the reverse. The critic model then thinks it is grading a user's essay, and its critique goes back to `generate` as a `HumanMessage`, as if the user had sent it. The swap is needed because dialogue-tuned models are trained on alternating human/AI turns. The loop then runs a fixed number of rounds:
 
 ```python
+# illustrative: needs LangGraph, LangChain and a model API key, with `State` and the prompts from *Learning LangChain*
 def reflect(state: State) -> State:
     swap = {AIMessage: HumanMessage, HumanMessage: AIMessage}
     flipped = [reflection_prompt, state["messages"][0]] + [
@@ -197,6 +203,7 @@ The rule: when the task has a right answer, reflect against something checkable 
 Two player agents play chess through a board proxy that owns the `python-chess` board. Each player has the tools `get_legal_moves()` and `make_move(move)`, registered with the player as caller and the board proxy as executor (see [02 — caller and executor](02-tool-use-and-react.md#caller-and-executor-are-different-agents)).
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key and `chess`; see the lab
 board_proxy = ConversableAgent(
     name="Board Proxy",
     llm_config=False,                      # no LLM: it only executes tools
@@ -242,6 +249,7 @@ Five agents share one conversation, and a manager picks who speaks next.
 | Writer | writes the blog post in Markdown | yes |
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key, with the agents from the lab
 groupchat = autogen.GroupChat(
     agents=[user_proxy, engineer, writer, executor, planner],
     messages=[],
@@ -266,6 +274,69 @@ Without the transition table, the manager LLM picks the next speaker from each a
 
 ---
 
+### A conversation needs three kinds of stop
+
+The patterns in this chapter differ in topology but share one need: something has to end the conversation. Here is the restock agent with a reviewer, with stubs in place of the two models:
+
+```python
+# A buyer and a reviewer with the three stop conditions a conversation needs.
+# Both agents are stubs. The verifier at the end is plain code on purpose.
+PEAK = 90
+
+def buyer(feedback):
+    """Stub for an LLM: proposes an order, and raises it when the reviewer objects."""
+    return 150 if feedback is None else 300
+
+def reviewer(quantity):
+    """Stub for an LLM critic. Approves anything above a rule of thumb."""
+    return "APPROVE" if quantity >= 3 * PEAK else f"Too low: {quantity} is under three weeks of peak."
+
+def verify(quantity):
+    """Independent of both agents: does the order cover two weeks of peak sales?"""
+    return quantity >= 2 * PEAK
+
+def converse(max_turns):
+    feedback = None
+    for turn in range(1, max_turns + 1):
+        quantity = buyer(feedback)
+        feedback = reviewer(quantity)
+        print(f"turn {turn}: buyer says {quantity}; reviewer says {feedback!r}")
+        if feedback == "APPROVE":                      # semantic stop
+            return quantity
+    return None                                        # the turn cap: no agreement
+
+for cap in (3, 1):
+    quantity = converse(cap)
+    if quantity is None:
+        print(f"cap {cap}: no agreement, escalate to a human\n")
+    else:
+        print(f"cap {cap}: agreed on {quantity}; verifier says {verify(quantity)}\n")
+
+# Speaker transitions are a small state machine: the graph forbids what the prompt only discourages.
+ALLOWED = {"planner": {"buyer"}, "buyer": {"reviewer"}, "reviewer": {"buyer", "executor"}, "executor": set()}
+def legal(path):
+    return all(b in ALLOWED[a] for a, b in zip(path, path[1:]))
+
+print(legal(["planner", "buyer", "reviewer", "executor"]))
+print(legal(["planner", "buyer", "executor"]))         # the buyer cannot skip review
+```
+
+```text
+turn 1: buyer says 150; reviewer says 'Too low: 150 is under three weeks of peak.'
+turn 2: buyer says 300; reviewer says 'APPROVE'
+cap 3: agreed on 300; verifier says True
+
+turn 1: buyer says 150; reviewer says 'Too low: 150 is under three weeks of peak.'
+cap 1: no agreement, escalate to a human
+
+True
+False
+```
+
+The run shows the three stops: a semantic one (`APPROVE`), a turn cap that ends in escalation rather than in a guess, and a verifier that is not one of the two agents. The reviewer here has only a rule of thumb, and a real one can be just as easily satisfied, so "the agents agreed" is not the success signal. The transition table does in a few lines what the group-chat transitions below do: it makes skipping review impossible instead of merely discouraged.
+
+---
+
 ## Planning strategies
 
 The Planner in L6 is one way to plan. Huang et al.'s survey of LLM-agent planning ([arXiv:2402.02716](https://arxiv.org/abs/2402.02716)), as summarized by Raieli and Iuculano, sorts the options by where each one fails (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 4):
@@ -284,11 +355,51 @@ The Planner in L6 is one way to plan. Huang et al.'s survey of LLM-agent plannin
 **Tree of Thoughts** (ToT, [arXiv:2305.10601](https://arxiv.org/abs/2305.10601)) is multi-plan selection with backtracking. On the Game of 24, GPT-4 with chain-of-thought solved 4% of problems; ToT solved 74% (*Prompt Engineering for Generative AI*, ch. 6). Koenigstein's cheap version uses two models: a small model proposes three options as structured output, and a stronger judge picks one. Clamp the judge's index in code, because structured output guarantees the type, not the range (*AI Agents: The Definitive Guide*, ch. 2):
 
 ```python
+# illustrative: needs a chat model API key, plus `judge_llm`, `ChoicePayload` and `eval_prompt` from the book
 choice = judge_llm.with_structured_output(ChoicePayload).invoke(eval_prompt)
 idx = max(0, min(choice.choice_index, len(opts) - 1))
 ```
 
 She notes that this propose-and-judge pair can sometimes replace a full multi-agent design, with fewer calls to the large model.
+
+**Count the calls before you adopt it.** Lakshmanan and Hapke's pattern P14 generates thoughts, scores each from 0 to 1, keeps the top few and stops early above a threshold such as 0.95. Their supply-chain example, with depth 4, 3 thoughts per node and width 3, took 41 model calls and 93 seconds (*Generative AI Design Patterns*, ch. 5). Parallelism helps only so far, because every candidate at one level must exist before the next level can start. The arithmetic is easy to reproduce:
+
+```python
+# Tree of Thoughts as beam search, with a counter: the cost is the point.
+import random
+random.seed(7)
+
+class StubLLM:
+    calls = 0
+    def propose(self, plan, n):
+        StubLLM.calls += 1                             # one call yields n thoughts
+        return [plan + [random.choice("ABCDE")] for _ in range(n)]
+    def score(self, plan):
+        StubLLM.calls += 1                             # one call per candidate
+        return random.random()
+
+def tree_of_thoughts(depth, thoughts, width):
+    llm, beam = StubLLM(), [[]]
+    StubLLM.calls = 0
+    for _ in range(depth):
+        candidates = [c for plan in beam for c in llm.propose(plan, thoughts)]
+        ranked = sorted(candidates, key=llm.score, reverse=True)
+        beam = ranked[:width]
+    return beam[0], StubLLM.calls
+
+for depth, thoughts, width in [(1, 3, 1), (2, 3, 2), (4, 3, 3), (4, 3, 5)]:
+    _, calls = tree_of_thoughts(depth, thoughts, width)
+    print(f"depth {depth}, {thoughts} thoughts, width {width}: {calls:3d} LLM calls")
+```
+
+```text
+depth 1, 3 thoughts, width 1:   4 LLM calls
+depth 2, 3 thoughts, width 2:  12 LLM calls
+depth 4, 3 thoughts, width 3:  40 LLM calls
+depth 4, 3 thoughts, width 5:  56 LLM calls
+```
+
+With those settings the counter reads 40, so the book's 41 is consistent with one more call for a final summary, although the book does not itemize them. The book's advice is to try the cheaper alternatives first: a reasoning model, least-to-most prompting, [reflection](#when-self-critique-helps-and-when-it-doesnt) or wait-injection, which appends "Wait" to make the model keep reasoning (budget forcing, Muennighoff et al. 2025). ToT has also become easier to skip since it was introduced, because reasoning models now do much of this search internally.
 
 Graph of Thoughts ([arXiv:2308.09687](https://arxiv.org/abs/2308.09687) (Besta et al., AAAI 2024)) adds the move a tree lacks: merging. Thoughts become graph vertices, so partial solutions can be combined, as in merge sort. Sorting 128 numbers with GPT-3.5, it cut median error by about 62% against ToT at over 31% lower cost. But the user writes the graph of operations for each task before the run, so GoT is a workflow in Anthropic's sense, not a planner: the model fills in the nodes, the engineer chose the shape.
 
@@ -311,6 +422,7 @@ The Letta course (L6) takes a different approach. Each agent is a persistent ser
 | Groups | `client.groups.create(agent_ids=[...])`: round-robin turn-taking |
 
 ```python
+# illustrative: needs a Letta server on localhost:8283 and an OpenAI key
 company_block = client.blocks.create(label="company", value="The company is called AgentOS ...", limit=10000)
 
 eval_agent = client.agents.create(
@@ -421,7 +533,39 @@ The book adds that coordination overhead grows faster than the number of agents,
 
 ---
 
-## Interview questions
+## Pitfalls
+
+- **Adding agents before fixing the prompt.** A second agent multiplies cost and failure modes. Try one agent with better tools or a workflow first, and add another only when you can state what it does that the first cannot.
+- **Treating agreement as success.** Two models can approve a wrong answer together. Keep an independent check, in code where possible.
+- **Termination by polite phrase alone.** Agents that say "thanks" can loop indefinitely. Use a turn cap and an explicit stop signal, and escalate at the cap.
+- **Self-critique with the same context.** A critic that shares the writer's assumptions can repeat its errors. See [when self-critique helps](#when-self-critique-helps-and-when-it-doesnt).
+- **Passing the full history on every handoff.** Tokens grow with every agent. Filter what crosses a handoff, and summarize between stages.
+- **Leaving roles vague.** Overlapping roles repeat work and ignore each other's output. Write the spec first; specification problems are one of Cemri's three failure categories.
+- **Unbounded search over plans.** Tree width and depth multiply. Count the calls, and clamp model-chosen indices in code.
+- **Concurrent writes to shared memory.** Give each block one writer or serialize writes.
+
+---
+
+## Try it
+
+1. Change `reviewer` so that it always objects. What does `converse(3)` do, and what do you want the system to do next?
+2. Add `"executor"` to the buyer's allowed transitions in `ALLOWED`. Which check now passes that should not, and how would you catch this in a test?
+3. Using the counter, find a width and thought count at depth 3 that stays under 20 calls. What are you giving up?
+4. Your team proposes five agents for a pipeline whose steps always run in the same order. What do you propose instead?
+
+<details>
+<summary>Answers</summary>
+
+1. It runs three turns and returns `None`, and the caller escalates to a human. Without that branch, the likely bug is treating the last proposal as the answer.
+2. `legal(["planner", "buyer", "executor"])` returns `True`, so an order can skip review. Keep a test asserting that this path is illegal, so the policy cannot change unnoticed.
+3. Two thoughts and width 2 cost 1+2, then 2+4, then 2+4, which is 15 calls. You give up alternatives the narrower beam discards, and a poor early score can then remove the best path.
+4. A workflow: sequential steps in code, with a model call inside each. Use agents only where a step must choose what to do next.
+
+</details>
+
+---
+
+## Interview checklist
 
 | Question | Short answer |
 |---|---|
@@ -434,5 +578,11 @@ The book adds that coordination overhead grows faster than the number of agents,
 | Supervisor, hierarchical or swarm? | Supervisor for small teams (bottleneck, but no deadlocks); hierarchical for many teams (harder to debug); swarm for peer back-and-forth (needs careful handoffs) |
 | Does a role-play software team beat one model? | Not cleanly. MetaGPT's HumanEval gain over a well-parsed single GPT-4 call is under a point before its test-and-debug loop, and on Paper2Code both MetaGPT and ChatDev lost to one call given the full paper |
 | Decomposition-first vs interleaved planning? | Up-front plans can't correct mid-run errors; interleaved plans adapt but can run long and costly on hard problems |
+| What stops a two-agent conversation? | A semantic signal, a turn cap that escalates, and ideally a verifier that is neither agent |
+| What does Tree of Thoughts cost? | Calls per level grow with width × thoughts: 41 calls and 93 seconds in Lakshmanan and Hapke's depth-4 example. Try a reasoning model first |
 
-→ Next: [05 — framework survey](05-framework-survey.md) — the same patterns in AutoGen, CrewAI, LangGraph, ADK, the OpenAI Agents SDK, smolagents and Letta, plus MCP and A2A.
+---
+
+## Next
+
+→ [05 — framework survey](05-framework-survey.md): the same patterns in AutoGen, CrewAI, LangGraph, ADK, the OpenAI Agents SDK, smolagents and Letta, plus MCP and A2A.

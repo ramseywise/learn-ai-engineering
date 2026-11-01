@@ -4,11 +4,13 @@ sources:
   - https://github.com/omidreza-amrollahi/internet-search-agent (Omidreza Amrollahi, 2025; MIT)
   - https://docs.langchain.com/langgraph (StateGraph, MessagesState, checkpointers)
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 1 — An internet search agent in LangGraph
 
 > Two small LangGraph graphs behind one FastAPI service. A router decides whether to search. A quick agent answers from three snippets; a workflow agent plans an outline and loops search → draft over its sections, then compiles a cited report.
+
+An agent that searches the web is the simplest application worth studying, because every later design in this pillar answers a question this one raises. Should the model decide when to search? Who writes the query? What bounds the cost, and what happens when a link is dead? This project gives firm, slightly old-fashioned answers: a fixed graph with one router and a counted loop, so a run can never exceed a known number of calls. We read that design, run its control flow offline with stubs, review what breaks, and carry its central trade (control against flexibility) into the free-running agent in the next note.
 
 ---
 
@@ -47,12 +49,13 @@ Pick the router when you want a fixed, auditable path. Pick tools when the numbe
 
 ## The simple agent
 
-```
+```text
 START → decide_search ──should_search──▶ run_search ─▶ generate_answer → END
                      └──────── else ────────────────▶ generate_answer
 ```
 
 ```python
+# illustrative: upstream excerpt. Needs Azure OpenAI and a search API (Bing was retired), so it does not run here.
 from langgraph.graph import MessagesState, StateGraph, START, END
 from pydantic import BaseModel, Field
 
@@ -108,7 +111,7 @@ with [href] at the end of the claim. For example:
 
 ## The workflow agent: plan, then loop over sections
 
-```
+```text
 START → decide_search ─▶ plan_outline ─▶ search_section ─▶ draft_section ─┬─ more? ─▶ advance_index ─┐
               │                              ▲                            │                         │
               │                              └────────────────────────────┼─────────────────────────┘
@@ -117,6 +120,7 @@ START → decide_search ─▶ plan_outline ─▶ search_section ─▶ draft_s
 ```
 
 ```python
+# illustrative: upstream excerpt. Needs Azure OpenAI, a search API and a crawl4ai server.
 class WorkflowState(MessagesState):
     outline: list[str]          # section titles from plan_outline
     current_idx: int = 0        # loop counter
@@ -168,6 +172,107 @@ builder.add_edge("advance_index", "search_section")    # the loop edge
 | `advance_index` | none (pure function) | `current_idx + 1`, clear `search_results` |
 | `compile_report` | "Write a 2-3 sentence introduction… then append the compiled sections unchanged" | the report as one AI message; all work fields reset |
 
+The cost claim below is worth checking rather than trusting, and the control flow needs no API key to check. Here is the workflow as a real LangGraph graph with the model and search replaced by stubs that count their calls. The empty result on the first search of one section forces the retry path.
+
+```python
+from typing import TypedDict
+
+from langgraph.graph import END, START, StateGraph
+
+calls = {"llm": 0, "search": 0}
+EMPTY_FOR = {"Policy"}  # the first search for this section finds nothing
+
+
+def llm(_prompt, reply):
+    calls["llm"] += 1
+    return reply
+
+
+def search(query):
+    calls["search"] += 1
+    if query in EMPTY_FOR:
+        EMPTY_FOR.discard(query)
+        return []
+    return [{"href": f"https://example.com/{query.lower()}", "snippet": f"Facts on {query}"}]
+
+
+class State(TypedDict, total=False):
+    question: str
+    should_search: bool
+    outline: list[str]
+    current_idx: int
+    search_results: list[dict]
+    section_drafts: list[str]
+    answer: str
+
+
+def decide_search(state):
+    return {"should_search": llm("classify", "emissions" in state["question"])}
+
+
+def plan_outline(state):
+    return {"outline": llm("plan", ["Scope", "Policy", "Outlook"]), "current_idx": 0, "section_drafts": []}
+
+
+def search_section(state):
+    title = state["outline"][state["current_idx"]]
+    results, retries = search(llm("write query", title)), 0
+    while retries < 2 and not results:  # query reformulation, capped so one section cannot run away
+        results, retries = search(llm("rewrite query", title)), retries + 1
+    return {"search_results": results}
+
+
+def draft_section(state):
+    source = state["search_results"][0]
+    text = llm("draft", f"{source['snippet']} [{source['href']}]")
+    return {"section_drafts": state["section_drafts"] + [text]}
+
+
+def advance_index(state):
+    return {"current_idx": state["current_idx"] + 1, "search_results": []}
+
+
+def compile_report(state):
+    return {"answer": llm("compile", "\n".join(state["section_drafts"]))}
+
+
+def direct_answer(state):
+    return {"answer": llm("answer", "I can help with sustainability questions.")}
+
+
+builder = StateGraph(State)
+for node in (decide_search, plan_outline, search_section, draft_section, advance_index, compile_report, direct_answer):
+    builder.add_node(node.__name__, node)
+builder.add_edge(START, "decide_search")
+builder.add_conditional_edges("decide_search", lambda s: "plan_outline" if s["should_search"] else "direct_answer")
+builder.add_edge("plan_outline", "search_section")
+builder.add_edge("search_section", "draft_section")
+builder.add_conditional_edges("draft_section",
+                              lambda s: "advance_index" if s["current_idx"] + 1 < len(s["outline"]) else "compile_report")
+builder.add_edge("advance_index", "search_section")
+builder.add_edge("compile_report", END)
+builder.add_edge("direct_answer", END)
+graph = builder.compile()
+
+report = graph.invoke({"question": "How are shipping emissions regulated?"})
+print(report["answer"])
+print("calls with one retry:", calls)
+calls.update(llm=0, search=0)
+print(graph.invoke({"question": "What is your favourite film?"})["answer"], calls)
+```
+
+Output:
+
+```text
+Facts on Scope [https://example.com/scope]
+Facts on Policy [https://example.com/policy]
+Facts on Outlook [https://example.com/outlook]
+calls with one retry: {'llm': 10, 'search': 4}
+I can help with sustainability questions. {'llm': 2, 'search': 0}
+```
+
+Ten model calls for three sections and one retry, against a bound worked out below, and a question the router turns away costs two.
+
 **Crawling.** `_crawl_single_url` POSTs `{"url": url, "f": "fit"}` to a crawl4ai server's `/md` endpoint and returns the page as markdown. Errors come back as a string ("Failed to crawl content: …") instead of an exception, so one dead link can't kill the section. The cost is that the error text lands in the drafting prompt.
 
 **Fixed topology, bounded cost.** The run always costs 1 router + 1 planner + 3 × (1 query + ≤2 retries + 1 draft) + 1 compile LLM calls, i.e. 9–15. Nothing in the graph can make it run longer. That is the main thing a hand-built loop buys over a free-running research agent like the one in [02](02-deep-research-bot.md).
@@ -184,6 +289,7 @@ builder.add_edge("advance_index", "search_section")    # the loop edge
 | `POST /api/v1/state_history` | `aget_state_history` → per-step node name, outline, index, drafts (for a UI timeline) |
 
 ```python
+# illustrative: upstream excerpt. Needs the upstream FastAPI app and its config.
 @asynccontextmanager
 async def lifespan(app):
     async with get_checkpointer() as saver:      # AsyncSqliteSaver.from_conn_string(path)
@@ -228,10 +334,56 @@ The unit tests (`tests/test_graphs.py`, `test_models.py`, `test_routes.py`) mock
 
 ---
 
+## Pitfalls
+
+- **Parsing repr strings as JSON.** `json.loads(text.replace("'", '"'))` works in the demo and breaks on the first apostrophe. Ask the client for structured results.
+- **Silent degradation.** The no-results fallback tells the drafter to use general knowledge, although the prompt says to use only sources. A reader cannot tell which sections are unsourced unless the report says so.
+- **Scratch state that outlives its turn.** On a checkpointed thread, an uncleared `search_results` feeds yesterday's pages into today's answer.
+- **Treating a fixed cost as a good answer.** The graph bounds spend, but three sections and three results per section is the same effort for a trivial question and a hard one.
+- **Depending on one search vendor's response format.** The retired Bing API is the example here. Normalize at the client boundary so a swap touches one file.
+- **Pasting whole crawled pages into a prompt.** A single long page can crowd out the instructions. Truncate or rank passages, and treat the text as untrusted, since a web page can contain instructions aimed at your agent.
+
+## Try it
+
+1. **Make the retry path run out.** In the stub graph, set `search` to always return `[]` for `"Policy"`. What does the graph do, and how should it behave?
+
+   <details><summary>Answer</summary>
+
+   After two reformulations `search_results` is empty, and `draft_section` raises `IndexError` on `state["search_results"][0]`. Upstream avoids this with a placeholder result saying no content was found. A better fix is to mark the section as unsourced so that the compile step can show it. Note the calls used before the failure: one query plus two rewrites for that section.
+   </details>
+
+2. **Compute the bound.** Using the upstream formula, what are the minimum and maximum model calls for an outline of `k` sections? How would you verify it in the stub?
+
+   <details><summary>Answer</summary>
+
+   Router 1, planner 1 and compile 1 give 3. Each section has one query and one draft, plus at most two retries, so between `2k` and `4k`. Total: `3 + 2k` to `3 + 4k`, which is 9 to 15 for `k = 3`. The run above printed 10: the minimum of 9 plus its one retry. To check the top of the range, make every first and second search empty and confirm that `calls["llm"]` reads 15.
+   </details>
+
+3. **Replace the router with a tool.** Sketch the same simple agent with a `search` tool in a ReAct loop. What do you gain and what do you need to add?
+
+   <details><summary>Answer</summary>
+
+   You gain a model that can search twice, or refine after reading results, without new nodes. You lose the guarantee on the number of calls, so add a recursion limit or a search budget, and put the query-writing guidance in the tool description. [Note 02](02-deep-research-bot.md) is that design.
+   </details>
+
+## Interview checklist
+
+| Question | Strong answer |
+|---|---|
+| Router node or search tool? | A router gives a fixed, auditable path and a separate prompt for the query. A tool lets the number of searches depend on results. Choose by whether you need bounded behaviour or adaptive behaviour. |
+| Why write the query in its own node? | Query-writing instructions stay out of the answer prompt, and the query can be logged and improved separately. |
+| What bounds this agent's cost? | The topology: fixed outline length and capped retries give `3 + 2k` to `3 + 4k` model calls. Nothing in the graph can extend a run. |
+| Why clear `search_results`? | With a checkpointer, state persists across turns on a thread, so stale results would leak into the next answer. |
+| How should a crawler report failure? | Return the error as data so one dead link does not end the run, and keep it out of the prose by marking the section. |
+| What would you fix first when reusing it? | The retired search API, the brittle parsing, and the fallback that contradicts the "only sources" prompt. Then add evaluation, because `tests/qna.md` is prose only. |
+| How do you test this offline? | Stub the model and the search client behind the same interfaces and assert on paths and call counts, as the block above does and as the upstream tests do with mocks. |
+
 ## Labs
 
 | Project | Label |
 |---|---|
 | [internet-search-agent](https://github.com/omidreza-amrollahi/internet-search-agent) (upstream, MIT; not copied) | needs API key (Azure OpenAI) + needs Bing Search (retired, so swap the client) + optionally needs crawl4ai server on :11235; Python 3.11, `uv sync`, `langgraph dev`. Unit tests run offline with mocks |
 
-→ Next: [02-deep-research-bot.md](02-deep-research-bot.md) — the same job without a fixed graph: one agent loop with search tools, traced with Weave and scored on a benchmark.
+## Next
+
+[The deep research bot](02-deep-research-bot.md) does the same job without a fixed graph: one agent loop with search tools, traced with Weave and scored on a benchmark.

@@ -35,7 +35,7 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 9. [The repo as system of record](notes/09-repo-as-system-of-record.md) — the fresh-session test, `AGENTS.md` as a router (and how long it should be), Karpathy's environment layer, making the map enforceable.
 10. [Scope and done](notes/10-scope-and-done.md) — the spec first, WIP = 1, the feature list as a primitive, the behavior/verification/state triple, pass-state gating.
 
-Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=03-harness-engineering`.
+Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx), a 5-part talk that grows one refund agent from demo to production harness, built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=03-harness-engineering`.
 
 ## Layout
 

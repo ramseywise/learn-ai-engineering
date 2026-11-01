@@ -2,6 +2,7 @@
 origin: course-synthesis
 sources:
   - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 7: P21 Tool Calling, P22 Code Execution — ../sources/lakshmanan-hapke-genai-design-patterns-ch07-enabling-agents-to-take-action.pdf"
+  - "Lakshmanan & Hapke, Generative AI Design Patterns (O'Reilly 2025), ch 5: P13 Chain of Thought; ch 9: P32 Guardrails"
   - "DeepLearning.AI, LLMs as Operating Systems: Agent Memory, Lab 1 (self-editing memory from scratch) — https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory"
   - "DeepLearning.AI, AI Agentic Design Patterns with AutoGen, L4 tool use and L5 coding — https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen"
   - "adv-11/AgenticAIFrameworks: AutoGen/react_prompting.py, AutoGen/tool_use_calculator.py, MCP/server.py, MCP/chatbot.py — https://github.com/adv-11/AgenticAIFrameworks"
@@ -32,12 +33,14 @@ sources:
   - https://arxiv.org/abs/2205.12255
   - https://arxiv.org/abs/2209.07753
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 
 # 2 — Tool use and the ReAct loop
 
 > The model never runs a tool: it emits a name and arguments, your code runs it and feeds the result back, and a loop of those turns is an agent.
+
+The restock agent from [01](01-agent-fundamentals.md) can only recommend an order until it can see stock and place one. Giving it that reach looks like the model gaining new powers, but the model gains nothing: it still only produces text, some of which your code agrees to treat as a request. Almost everything that matters about tools follows from that split, including who can approve a call, what happens when the arguments are wrong, and why text from a web page can end up steering what runs on your machine.
 
 ---
 
@@ -71,6 +74,7 @@ ChemCrow ([arXiv:2304.05376](https://arxiv.org/abs/2304.05376) (Bran et al., 202
 Lab 1 of the Letta course builds a memory-editing agent in about thirty lines of OpenAI calls. Strip the memory part and what is left is the loop every SDK hides:
 
 ```python
+# illustrative: needs an OpenAI API key plus `client`, `system_prompt`, `agent_memory` and `core_memory_save` from the Letta lab
 # One tool, described by a JSON schema; the enum constrains the section argument.
 core_memory_save_metadata = {
     "type": "function",
@@ -113,18 +117,84 @@ Two details carry over to every real system:
 - **The tool call goes back into history before the result.** Most APIs reject a tool result whose call ID they have not seen.
 - **The system prompt states the policy.** The lab appends "You must either call a tool (core_memory_save) or write a response to the user. Do not take the same actions multiple times!" Without the second sentence the model can loop on the same call.
 
-The Anthropic Messages API has the same shape with different field names (`MCP/chatbot.py` in AgenticAIFrameworks):
+The Anthropic Messages API has the same shape with different field names: the model returns content blocks, a `tool_use` block carries `id`, `name` and `input`, and results go back in a user message (`MCP/chatbot.py` in AgenticAIFrameworks does this with an older model). Here it is for the restock agent's first tool, with a stub client that replays what the API would return:
 
 ```python
-# Anthropic: the model returns content blocks; a tool_use block carries id, name, input.
-for block in response.content:
-    if block.type == "tool_use":
-        result = execute_tool(block.name, block.input)
-        messages.append({"role": "assistant", "content": response.content})
-        messages.append({"role": "user", "content": [
-            {"type": "tool_result", "tool_use_id": block.id, "content": result}
-        ]})
+# The Messages API loop, with a stub client so it runs offline.
+# Replace StubClient() with anthropic.Anthropic() and this loop stays the same.
+from types import SimpleNamespace as NS
+
+STOCK = {"itemB": {"on_hand": 100, "peak_weekly": 90, "weeks_to_deliver": 2}}
+
+TOOLS = [{
+    "name": "get_stock",
+    "description": "Stock on hand, peak weekly sales and delivery time for one item. "
+                   "Use before any reorder decision. Unknown items return an error.",
+    "strict": True,
+    "input_schema": {
+        "type": "object",
+        "properties": {"item": {"type": "string", "description": "Item ID, such as itemB"}},
+        "required": ["item"],
+        "additionalProperties": False,
+    },
+}]
+
+def execute_tool(name, args):
+    if name != "get_stock":
+        return f"Error: unknown tool {name}"
+    if args["item"] not in STOCK:                     # an error the model can act on
+        return f"Error: no item {args['item']!r}. Known items: {sorted(STOCK)}"
+    return str(STOCK[args["item"]])
+
+def tool_use(id_, item):
+    return NS(type="tool_use", id=id_, name="get_stock", input={"item": item})
+
+SCRIPT = [
+    NS(stop_reason="tool_use", content=[tool_use("t1", "item-B")]),   # a wrong ID, as models do
+    NS(stop_reason="tool_use", content=[tool_use("t2", "itemB")]),    # corrected from the error
+    NS(stop_reason="end_turn", content=[NS(type="text", text="itemB runs out before delivery. Reorder.")]),
+]
+
+class StubClient:
+    def __init__(self):
+        self.messages = self
+        self.sizes = []
+
+    def create(self, **kwargs):
+        self.sizes.append(len(kwargs["messages"]))    # what each call re-sends
+        return SCRIPT[len(self.sizes) - 1]
+
+client = StubClient()
+messages = [{"role": "user", "content": "Should we reorder itemB?"}]
+
+while True:
+    response = client.messages.create(
+        model="claude-opus-5-5", max_tokens=16000, tools=TOOLS, messages=messages)
+    if response.stop_reason != "tool_use":
+        break
+    messages.append({"role": "assistant", "content": response.content})
+    results = []
+    for block in response.content:                    # one turn can hold several calls
+        if block.type == "tool_use":
+            output = execute_tool(block.name, block.input)
+            print(f"{block.name}({block.input}) -> {output}")
+            results.append({"type": "tool_result", "tool_use_id": block.id, "content": output})
+    messages.append({"role": "user", "content": results})
+
+print("stop_reason:", response.stop_reason)
+print("answer:", next(b.text for b in response.content if b.type == "text"))
+print("messages sent per call:", client.sizes)
 ```
+
+```text
+get_stock({'item': 'item-B'}) -> Error: no item 'item-B'. Known items: ['itemB']
+get_stock({'item': 'itemB'}) -> {'on_hand': 100, 'peak_weekly': 90, 'weeks_to_deliver': 2}
+stop_reason: end_turn
+answer: itemB runs out before delivery. Reorder.
+messages sent per call: [1, 3, 5]
+```
+
+Three lines in this output are the lesson. The first call fails on a wrong ID, and because the error names the valid items, the model can fix it without help. The message count grows by two per round, which is the quadratic cost from [01](01-agent-fundamentals.md#the-react-loop) in miniature. And the loop tests `stop_reason`, not the presence of text, because a response can stop for other reasons, such as hitting `max_tokens`, that a real system must handle separately. All the tool results from one turn go back in a single user message; sending one message per result, as many older examples do, breaks when the model makes parallel calls.
 
 ---
 
@@ -156,7 +226,36 @@ Question: {input}
 | Works on any completion model | Needs a model trained for tool calls |
 | Thought is visible text | Thought is optional (reasoning field or omitted) |
 
-Use native calls. Keep the ReAct prompt as a reading of what the loop is doing.
+Use native calls. Keep the ReAct prompt as a reading of what the loop is doing. A few lines of parsing show what the left column costs:
+
+```python
+# Why text-parsed ReAct is fragile: the client has to find the action in free text.
+import re
+
+ACTION = re.compile(r"(?i)action\s*:\s*([^\n]+)")
+INPUT = re.compile(r"(?i)action input\s*:\s*([^\n]+)")
+
+def parse(text):
+    actions, inputs = ACTION.findall(text), INPUT.findall(text)
+    if not actions or not inputs:
+        return "parse failure: retry or repair"
+    return actions[-1].strip(), inputs[-1].strip()    # the last match, as Phoenix & Taylor advise
+
+good = "Thought: I need the stock.\nAction: get_stock\nAction Input: itemB"
+reworded = "Thought: I need the stock, so I'll call get_stock on itemB."
+invented = good + "\nObservation: on_hand=100\nThought: done\nAction: place_order\nAction Input: itemB, 300"
+
+for label, text in [("good", good), ("reworded", reworded), ("invented", invented)]:
+    print(f"{label:9}", parse(text))
+```
+
+```text
+good      ('get_stock', 'itemB')
+reworded  parse failure: retry or repair
+invented  ('place_order', 'itemB, 300')
+```
+
+The reworded reply says the right thing and still fails to parse. The third reply is worse: the model invented its own observation and went on to an order, and a last-match parser would run it. The stop sequence described below exists to prevent exactly this.
 
 The switch is measurable. In OpenHands on SWE-bench Verified, o1 at high reasoning effort resolved 29.1% of issues with a text-parsed action format and **47.7% with native function calling**, and its overthinking score fell from 2.43 to 1.05 ([arXiv:2502.08235](https://arxiv.org/abs/2502.08235) (Cuadron et al., 2025-02, preprint)). Overthinking here is a Claude 3.5 Sonnet judge's 0–10 rating of how much the agent reasoned about actions instead of taking them and reading the result. Across about 4,000 trajectories, a higher score went with fewer resolved issues, and reasoning models scored higher than non-reasoning ones (3.5 against 2.2 on average). The format is not the whole story: on BFCL's multi-turn set the same switch moved o1 only from 36% to 41%. The judge was checked against four experts on just 20 traces.
 
@@ -172,11 +271,32 @@ Their comparison table (Table 6-2) is dated. It credits OpenAI function calling 
 
 ---
 
+## What reasoning steps fix, and what they do not
+
+ReAct is "CoT + Tool Calling", so it inherits the strengths and limits of chain of thought. Lakshmanan and Hapke's pattern P13 is the clearest statement of both (*Generative AI Design Patterns*, ch. 5).
+
+CoT helps when a model knows the rule but does not apply it, and it comes in three strengths. **Zero-shot** just asks for step-by-step reasoning. **Few-shot** shows worked examples, and it fixes what zero-shot misses: on a baggage question for a Singapore–Dallas–Toronto trip under a 50 kg/40 kg rule, zero-shot Gemini answered 50 kg, while few-shot examples got the correct 40 kg. **Auto-CoT** retrieves the closest examples from a store. Their image for the difference from RAG is that RAG gives the model a few fish, while few-shot CoT shows it how to fish.
+
+Three failure modes matter more for agents than the technique itself:
+
+| CoT fails on | Their example | The fix |
+|---|---|---|
+| **Gaps in knowledge** | "300 km west of Hyderabad" produces confident steps ending in the wrong city; the answer is Solapur | Supply the fact. Given a map, the model gets it right. For an agent this means a tool, not more reasoning |
+| **Exact computation** | 84 m² × 10.7639 written out as 903.20; the true product is 904.1676 | A calculator or code tool |
+| **Non-sequential expertise** | Bridge play, where experts weigh the whole hand instead of stepping through it | Examples from an expert, or a specialist model |
+
+The reasoning a model shows can also be a story told after the fact, so asking "why" does not audit it. The book's own success case makes this point by accident. Asked for the flow of crude oil through a 25 cm pipe, zero-shot Claude applied the laminar-flow formula and reported 84 m³/s, while itself remarking that the figure seemed very high and the flow would be turbulent. Dividing by the pipe's area gives a speed of about 1,700 m/s, so the formula does not apply and the number is meaningless. The book still counts this as the prompt triggering the right behavior. Well-formed steps are not evidence of a correct answer, so check the result independently, as with the restock arithmetic.
+
+Providers now apply much of this inside their models, so zero-shot CoT helps small models more than reasoning models, and thinking modes replace the hand-written instruction. The authors' practical advice is to use a thinking model as a teacher that writes examples for a smaller one, and to set a reminder to retest any CoT prompt every six months, since a hotfix or new model may make it unnecessary.
+
+---
+
 ## Caller and executor are different agents
 
 AutoGen makes the split explicit: one agent proposes the call, another runs it. That separation is where a human approval step or a sandbox goes.
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key; `calculator` and the two agents come from the lab
 from typing import Annotated, Literal
 from autogen import register_function
 
@@ -206,6 +326,7 @@ The chess lesson (AutoGen L4) uses the same pattern with `make_move(move: Annota
 The Model Context Protocol moves the tool list out of the client process. A server declares tools, resources and prompts; any MCP client can list and call them.
 
 ```python
+# illustrative: needs `mcp` and a client to connect to it; `mcp.run` blocks waiting on stdio
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("research", port=8001)
@@ -244,6 +365,7 @@ For when MCP beats an in-process function, and the tool-contract rules, see [har
 Pattern **P22 Code Execution**: when the task is easier to express as a program than as a sequence of calls, let the model write code and run it in a sandbox. AutoGen L5 gives the model a code executor and a set of pre-written functions it may import:
 
 ```python
+# illustrative: needs `autogen-agentchat` 0.2 and an LLM API key, and it runs generated code, so use a sandbox
 from autogen.coding import LocalCommandLineCodeExecutor
 
 executor = LocalCommandLineCodeExecutor(
@@ -303,6 +425,7 @@ Oshin and Campos add two structural fixes for when the model's choice of tool is
 **Always call a tool first.** If every query should start with a search, don't spend an LLM call deciding that. Make the entry node build the tool call itself:
 
 ```python
+# illustrative: needs LangChain, a model API key, and `State` and the tool retriever from *Learning LangChain*
 def first_model(state: State) -> State:
     query = state["messages"][-1].content
     call = ToolCall(name="duckduckgo_search", args={"query": query}, id=uuid4().hex)
@@ -344,7 +467,40 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 
 ---
 
-## Interview questions
+## Pitfalls
+
+- **Vague tool descriptions.** The description is the model's only documentation. Say when to use the tool and what it returns, and include an example ID.
+- **Raising on bad arguments.** A stack trace ends the run or teaches the model nothing. Return an error it can act on, naming the valid values.
+- **One result message per tool call.** It works until the model makes parallel calls. Collect the results of a turn into one message.
+- **Letting the model write its own observation.** In text-parsed ReAct, without a stop sequence, it will. Use native tool calls.
+- **Loading every tool on every call.** Selection accuracy and cost both suffer as the list grows. Retrieve the few relevant tools per query.
+- **Using more reasoning when a fact is missing.** A longer chain gives a more convincing wrong answer. Add a tool or data.
+- **Reading CoT steps as an audit trail.** They can be written after the fact. Verify the result independently.
+- **Treating tool output as trusted.** A web page or an email is attacker-writable data. Separate it from instructions, as in the [six defenses](#prompt-injection-six-defenses), and check parameters at the [execution gate](07-guardrails-and-autonomy.md#permissions-and-people).
+- **Running generated code outside a sandbox.** Filesystem and network limits belong to the executor, not the prompt.
+
+---
+
+## Try it
+
+1. In the stub loop, add a `place_order` tool and script a turn that calls `get_stock` for two items in parallel. How many entries go in the user message that follows, and what links each to its call?
+2. Change the error message in `execute_tool` to just `"Error"`. In a real run, what would the model likely do next, and what would it cost?
+3. Extend `parse` so that the `invented` reply is rejected. What is the simplest rule that does it, and which API feature makes the rule unnecessary?
+4. The agent keeps saying itemB's delivery time is 2 weeks after the supplier changed it to 4. Would "think step by step" help? What would?
+
+<details>
+<summary>Answers</summary>
+
+1. Two `tool_result` entries in one user message, each with the `tool_use_id` of its call.
+2. It has nothing to act on, so it would probably retry the same ID or guess. Each retry re-sends the whole conversation, so a vague error costs tokens and may use up the step cap.
+3. Reject any reply that contains `Observation:`, since only your code may write one. A stop sequence prevents the text from being generated, and native tool calls remove the need to parse at all.
+4. No. This is a knowledge gap, and reasoning over a stale figure gives a tidy wrong answer. Read the delivery time from a tool on each run instead of holding it in the prompt or in memory.
+
+</details>
+
+---
+
+## Interview checklist
 
 | Question | Short answer |
 |---|---|
@@ -355,5 +511,12 @@ Each trades capability for safety. Pick the weakest one that blocks the attack p
 | What does MCP add over function calling? | A protocol: tools live in a separate server any client can use |
 | Does MCP let the model use context without a tool round trip? | No. MCP tools are still `tools/call` round trips; resources and prompts are separate primitives the client chooses to load |
 | You have 40 tools and selection accuracy drops. What do you do? | Retrieve the few relevant tools per query and bind only those; measure that the extra latency pays off |
+| Why does CoT not fix a knowledge gap? | Reasoning cannot supply a missing fact: the steps stay plausible and the answer stays wrong. Give the agent a tool or the data |
+| Why group tool results in one message? | A single turn can carry several parallel calls, and each result must answer its `tool_use_id`. Results for one turn belong together |
+| Why return errors as tool results? | So the model can correct itself, which it can do only if the error says what was wrong and what is valid |
 
-→ Next: [03 — memory as an operating system](03-memory-as-an-operating-system.md) — what the loop remembers between turns, and how the agent edits it with the same tool calls.
+---
+
+## Next
+
+→ [03 — memory as an operating system](03-memory-as-an-operating-system.md): what the loop remembers between turns, and how the agent edits it with the same tool calls.

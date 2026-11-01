@@ -1,0 +1,426 @@
+# Warehouse, lakehouse and streaming lecture deck. Covers notes 01-05.
+# Build: make slides PILLAR=data-engineering/04-warehouse-lakehouse-streaming STRICT=1 PREVIEW=1
+# Running example: one year of New York taxi trips, synthetic for the local runs.
+deck:
+  title: Warehouse, Lakehouse, Streaming
+  subtitle: Where data rests, how it moves, what it costs
+  tagline: |-
+    Layout decides · A log makes a table · Exactly once from where · The bill
+  reference: "Notes: data-engineering/04-warehouse-lakehouse-streaming"
+  output: warehouse-lakehouse-streaming.pptx
+  notes: >-
+    Today we follow a year of taxi trips from the bucket to the bill. A stage silently trusts the one before it,
+    and the store is where that trust gets expensive. We will see a layout that costs fifteen times more, a rewrite
+    that corrupts a dashboard, a crash that counts a fare twice, and a dashboard nobody knew cost thirty-six thousand dollars a month.
+
+parts:
+  - title: Layout decides the bill
+    summary: Columns · Partitions · Clusters · Shuffles
+    notes: >-
+      We start with one question over one year of trips, and discover that the answer is the same and the cost is not.
+    slides:
+      - layout: statement
+        title: The same question reads 1.6 GB or 106 MB
+        kicker: The problem
+        statement: "Same query, same answer, 15 times fewer bytes. The only difference was how the data was laid out before anyone asked."
+        attribution: DataTalks DE zoomcamp, module 03, on the NYC taxi table
+        takeaway: Scan cost is decided when the table is laid out, long before the query is written.
+        source: notes/01-warehouse-and-store.md
+        notes: >-
+          This is a real measurement from the course's BigQuery module. Partitioning by pickup date let the engine skip every other day. So what is it about the storage that makes skipping possible?
+      - layout: compare
+        title: OLTP and OLAP want opposite layouts
+        recall: Why does a column store make SELECT star expensive?
+        left:
+          title: OLTP, by row
+          bullets:
+            - Many small reads and writes by key
+            - Normalised schema
+            - Cost driver is rows touched
+        right:
+          title: OLAP, by column
+          bullets:
+            - Few large scans and aggregates
+            - Star schema, wide fact tables
+            - Cost driver is bytes in named columns
+        emphasis: right
+        takeaway: A column store reads only the columns you name, so your column list is your first cost control.
+        source: notes/01-warehouse-and-store.md
+        notes: >-
+          On our synthetic year, half the file is one unused text column. Naming two columns reads 33 MB instead of 103 MB, before any partitioning at all.
+      - layout: code
+        title: Sorting lets min and max statistics skip row groups
+        lang: python
+        code: |-
+          for f in ['unsorted', 'sorted']:
+              path = f'lake/{f}.parquet'
+              s, t = skipped(path, 'pu_zone', 132)
+              print(f, 'can skip', s, 'of', t, 'row groups')
+
+          # unsorted  can skip  0 of 30 row groups
+          # sorted    can skip 29 of 30 row groups
+        bullets:
+          - "**Partition:** known before the query runs."
+          - "**Cluster:** a saving seen only after the run."
+          - "Run on 3 million synthetic trips with DuckDB."
+        takeaway: Clustering works through block statistics, which is why sorted data skips 29 of 30 row groups and unsorted skips none.
+        source: notes/01-warehouse-and-store.md
+        notes: >-
+          In an unsorted file each row group spans nearly every zone, so its range rules nothing out. Sort, and each group holds a narrow slice. Partitioning does the same by directory, and that is why the estimator can see it in advance.
+      - layout: flow
+        title: A groupBy pays for the shuffle, so aggregate first
+        steps:
+          - label: Partial sum
+            sub: per executor
+          - label: Shuffle
+            sub: partial results by key
+            accent: D4621A
+          - label: Final sum
+            sub: per key
+          - label: Write
+            sub: Parquet out
+        caption: "Counting rows for 1M trips on 4 executors: 749,066 rows without partial aggregation, 795 partial sums with it."
+        takeaway: Partial aggregation shrinks what crosses the network from every row to one result per key per executor.
+        source: notes/01-warehouse-and-store.md
+        notes: >-
+          Spark's physical plan does this for you. A join on two large tables shuffles both; broadcast a small one to avoid it. And if your data fits on one machine, DuckDB has no shuffle to pay for at all.
+
+  - title: A log makes a table
+    summary: The crash · Sixty lines · Delta · Iceberg · Hudi
+    notes: >-
+      Our nightly job rewrites June and the spot instance dies. Half of June is new, half is gone, and no error appears.
+    slides:
+      - layout: statement
+        title: Nothing in a bucket says which files belong together
+        kicker: The problem
+        statement: "A job dies halfway through rewriting June. Dashboards keep reading the directory and report a wrong number with no error."
+        attribution: Object stores have no cross-key transactions and no cheap rename
+        takeaway: A directory of files has no commit, so readers see partial writes as truth.
+        source: notes/02-table-formats.md
+        notes: >-
+          Armbrust and colleagues report that about half of Databricks' support escalations between 2014 and 2016 came from these cloud storage strategies. It is the vendor's own, anecdotal figure, but the mechanism is easy to reproduce.
+      - layout: flow
+        title: Write files first, then claim the next version
+        recall: Which single step makes a commit atomic?
+        steps:
+          - label: Read log
+            sub: current version
+          - label: Write Parquet
+            sub: invisible so far
+          - label: Create next record
+            sub: fails if it exists
+            accent: D4621A
+          - label: Readers see it
+            sub: all or nothing
+        caption: "A crash before the record leaves an orphan file and no visible change. The race loser re-reads and retries."
+        takeaway: One atomic create is the whole commit, so anything not named in the log does not exist.
+        source: notes/02-table-formats.md
+        notes: >-
+          The chapter builds this in sixty lines of pyarrow, and it gives you time travel, conflict detection and crash safety almost by accident. Then we find the same thing in Delta's log on disk.
+      - layout: code
+        title: Delta's log on disk after a delete and a merge
+        lang: text
+        code: |-
+          00..00.json  commitInfo, protocol, metaData, add
+          00..01.json  commitInfo, add
+          00..02.json  commitInfo, add, remove      DELETE
+          00..03.json  commitInfo, add, add, remove MERGE
+
+          5 Parquet files on disk, 3 live
+          vacuum would remove 2
+          version 1 after vacuum: FileNotFoundError
+        bullets:
+          - "**Add and remove** swap files in one commit."
+          - "**Stats** on each add let readers skip files."
+          - "**Vacuum** sets how far time travel reaches."
+        takeaway: Time travel lasts only until vacuum removes the files, so retention is a design decision.
+        source: notes/02-table-formats.md
+        notes: >-
+          This is real output from deltalake 1.6.6 on a laptop. Copy-on-write means old files stay until cleanup. Forcing retention to zero makes the log list a version whose files are gone.
+      - layout: table
+        title: Three formats, one idea, different structures
+        header: ["", "Delta Lake", "Iceberg", "Hudi"]
+        widths: [2, 3, 3, 3]
+        bold_first: true
+        rows:
+          - ["Metadata", "Ordered JSON log, checkpoints", "Tree of manifests", "Timeline on file groups"]
+          - ["Commit by", "Put-if-absent or coordinator", "Catalog pointer swap", "Timeline, concurrency control"]
+          - ["Signature", "Spark integration", "Hidden partitions, evolution", "Upserts, CoW or MoR"]
+        takeaway: All three name live files in atomic metadata, so choose by engines and catalog, then check current docs.
+        source: notes/02-table-formats.md
+        notes: >-
+          These projects copy each other every release. Statements in the 2020 and 2021 papers about Hudi's single writer describe those releases, so do not repeat them as current fact.
+      - layout: compare
+        title: Copy-on-write pays at write, merge-on-read pays at read
+        left:
+          title: Copy-on-write
+          bullets:
+            - Update rewrites the file
+            - Reads stay simple and fast
+            - 1 TB rewritten per random-update commit
+        right:
+          title: Merge-on-read
+          bullets:
+            - Update appends a delta
+            - Readers merge until compaction
+            - 0.01 TB written per commit
+        takeaway: Know your update distribution first, because random updates touch every file and clustered ones hardly any.
+        source: notes/02-table-formats.md
+        notes: >-
+          The arithmetic assumes a 1 TB table of 1 GB files with 1% of rows updated uniformly at random. If updates cluster in 2% of files, copy-on-write rewrites just 0.02 TB and the gap nearly vanishes.
+
+  - title: Does the lake replace the warehouse?
+    summary: Two tiers · One copy · The trap · A decision
+    notes: >-
+      With transactions on the lake, one claim follows: why keep a warehouse at all? We test what can be tested.
+    slides:
+      - layout: statement
+        title: Two copies of everything, one always behind
+        kicker: The problem
+        statement: "The lake holds everything, a warehouse holds a copy for BI, and every ETL step between them is a chance to diverge."
+        attribution: Armbrust, Ghodsi, Xin and Zaharia, CIDR 2021
+        takeaway: The lakehouse argument is an attack on the two-tier design, whose cost is duplication, staleness and lock-in.
+        source: notes/03-lakehouse-vs-warehouse.md
+        notes: >-
+          The paper's staleness survey, 86 percent of analysts on out-of-date data, was sponsored by an ETL vendor and quoted by a lakehouse vendor. Note that, then look at the mechanism.
+      - layout: code
+        title: One copy gives three engines, and one trap
+        lang: text
+        code: |-
+          delta-rs : 2000000
+          pyarrow  : 2000000
+          duckdb   : 2000000
+
+          after a committed delete of 500,000 rows
+          glob over the directory : 2,500,000
+          through the log         : 1,500,000
+        bullets:
+          - "**The gain:** no export step, no second copy."
+          - "**The trap:** a glob ignores the log."
+          - "Whoever reads the bucket bypasses engine policy."
+        takeaway: Open files let every engine read one copy, and let any reader get it wrong with no error.
+        source: notes/03-lakehouse-vs-warehouse.md
+        notes: >-
+          The glob resurrected a million rows, with old file versions still on disk. A warehouse could never make this mistake since it hides its files. That is the data independence the paper admits it gives up.
+      - layout: compare
+        title: Where the warehouse still wins
+        recall: What did the crash do to each system?
+        left:
+          title: Warehouse transaction
+          bullets:
+            - Spans several tables
+            - After a crash, fact 0 rows, summary 0 rows
+            - Native format, about 4x faster here
+        right:
+          title: Lakehouse, one log per table
+          bullets:
+            - Commits one table at a time
+            - After a crash, fact 1 row, no summary
+            - Rebuild derived tables idempotently
+        takeaway: Log-per-table formats commit tables separately, so anything that must always agree needs a design around it.
+        source: notes/03-lakehouse-vs-warehouse.md
+        notes: >-
+          Timings are on one laptop, so read only the ratio. The paper's TPC-DS figure, 3,302 seconds for Delta Engine against 2,996 to 37,283 for four anonymised warehouses, is vendor-run. It shows open formats can be fast enough, not that they are faster for you.
+      - layout: flow
+        title: Medallion layers organise fixes, not detection
+        steps:
+          - label: Bronze
+            sub: 5 rows, raw
+          - label: Silver
+            sub: 2 rows, cleaned
+            accent: D4621A
+          - label: Gold
+            sub: 1 row, one question
+        caption: "WHERE fare > 0 dropped a negative and a missing fare, and removing duplicates dropped one more. Nobody was told."
+        takeaway: Layers say where a problem gets fixed, and only a test says that one happened.
+        source: notes/03-lakehouse-vs-warehouse.md
+        notes: >-
+          This is the convention lakehouse teams use. Keep raw data so you can reprocess, and let each layer depend only on the one before. But a stage silently trusts the one before it unless a test checks, which is the next pillar.
+      - layout: table
+        title: Choose by workload, not by camp
+        header: ["Your situation", "Lean", "Why"]
+        widths: [5, 2, 5]
+        rows:
+          - ["SQL and BI, one team", "Warehouse", "Less to operate"]
+          - ["ML and SQL on the same data", "Lakehouse", "Direct file reads, one copy"]
+          - ["Several engines, avoid lock-in", "Lakehouse", "Open format as the interface"]
+          - ["Tables must always agree", "Warehouse", "Multi-table transactions"]
+          - ["Fits on one machine", "DuckDB", "Neither yet"]
+        takeaway: The real decision is where the system of record lives and who owns the format.
+        source: notes/03-lakehouse-vs-warehouse.md
+        notes: >-
+          The paper predicted replacement. What has happened looks more like convergence, since warehouses read open formats and lakehouse engines add BI features.
+
+  - title: Data that never stops arriving
+    summary: The log · Three guarantees · Exactly once · Watermarks
+    notes: >-
+      Now the trips arrive one by one. A crash can lose or double a fare, and a tunnel makes an event two minutes late.
+    slides:
+      - layout: statement
+        title: One fare, counted zero, one or two times
+        kicker: The problem
+        statement: "A consumer crashes between saving its output and saving its position. What you counted depends on a choice made months ago."
+        attribution: The Kafka docs warn that exactly-once claims need the fine print read
+        takeaway: Delivery guarantees reduce to one ordering question, and getting it wrong miscounts silently.
+        source: notes/04-kafka-and-stream-semantics.md
+        notes: >-
+          First, the log itself. Kafka keeps records and each consumer group keeps a position, so reading removes nothing. Order holds within a partition only. That gives replay, and it gives us this choice.
+      - layout: code
+        title: Nine rides at $10, one crash
+        recall: Which order loses money and which invents it?
+        lang: text
+        code: |-
+          at_most   rows= 6  revenue=  60  (truth 90)
+          at_least  rows=12  revenue= 120  (truth 90)
+          atomic    rows= 9  revenue=  90  (truth 90)
+          at_least + keyed upsert
+                    rows= 9  revenue=  90
+        bullets:
+          - "**Offset first:** lose on a crash."
+          - "**Output first:** duplicate on a crash."
+          - "**Keyed upsert:** the cheap route out."
+        takeaway: Commit output and offset together or make the sink idempotent, because neither order alone is safe.
+        source: notes/04-kafka-and-stream-semantics.md
+        notes: >-
+          Plain Python simulation, so you can see each failure. The practice consumer uses enable_auto_commit true, which commits on a timer and can give either failure. A DuckDB version commits totals and offset in one transaction.
+      - layout: cards
+        title: Exactly-once holds inside a boundary
+        cards:
+          - title: Idempotent producer
+            body: A producer ID and sequence number let the broker reject a retry.
+          - title: Transactions
+            body: Writes to several partitions and the offsets commit together.
+            accent: 0F7490
+          - title: read_committed
+            body: Consumers see only committed transactional messages.
+          - title: The boundary
+            body: A payment API or an outside store can still happen twice.
+            accent: D4621A
+        takeaway: Exactly-once means the final effect is as if no fault occurred, and it stops at the transaction boundary.
+        source: notes/04-kafka-and-stream-semantics.md
+        notes: >-
+          Kleppmann's framing: effectively-once would be the better name. Ask of any such claim, from where to where?
+      - layout: flow
+        title: A watermark decides when a window closes
+        steps:
+          - label: Highest event time seen
+            sub: from the stream
+          - label: Subtract lateness
+            sub: this is the watermark
+          - label: Window fires
+            sub: watermark past its end
+            accent: D4621A
+          - label: Late event
+            sub: drop, count, or correct
+        caption: "Window on event time. By arrival time a restart creates a spike that never happened in the world."
+        takeaway: A watermark is a heuristic claim about completeness, and late data still needs a policy.
+        source: notes/04-kafka-and-stream-semantics.md
+        notes: >-
+          Delivery says whether a record arrives. It does not say when. By processing time, the first minute in our simulation shows 53 rides against a true 60.
+      - layout: table
+        title: Allowed lateness trades loss against delay
+        header: ["Allowed lateness", "Rides dropped of 600", "Lost"]
+        widths: [4, 4, 2]
+        highlight: [2]
+        rows:
+          - ["0 s", "46", "7.7%"]
+          - ["5 s", "22", "3.7%"]
+          - ["30 s", "11", "1.8%"]
+          - ["120 s", "7", "1.2%"]
+          - ["300 s", "1", "0.2%"]
+          - ["600 s", "0", "0.0%"]
+        takeaway: A stream never says a window is complete, so a watermark trades lost events against stale numbers.
+        source: notes/04-kafka-and-stream-semantics.md
+        notes: >-
+          A simulation with 2 percent of rides delayed by a tunnel. With retractions at 30 seconds all 600 rides count, at the price of 11 corrections downstream. Akidau's Dataflow paper frames this as choosing among correctness, latency and cost.
+
+  - title: The bill
+    summary: Bytes · Slots · Storage · Egress · Guardrails
+    notes: >-
+      Everything has a price. Now we find out what the dashboard has been costing.
+    slides:
+      - layout: statement
+        title: A dashboard nobody chose to pay $36,000 a month for
+        kicker: The problem
+        statement: "SELECT star on a 2 TiB table, 96 times a day, at $6.25 per TiB. A column list and a date filter take it to $571."
+        attribution: BigQuery on-demand list price read 2026-11-01; ratios measured on synthetic Parquet
+        takeaway: A small query decision repeated thousands of times is what makes a data bill surprising.
+        source: notes/05-cost.md
+        notes: >-
+          The ratios come from compressed Parquet, and BigQuery bills logical bytes. So direction and scale carry over, and the exact factor needs a dry run on your table.
+      - layout: cards
+        title: Four meters, and only two usually matter
+        cards:
+          - title: Bytes
+            body: "$6.25 per TiB on demand, first TiB free each month."
+            accent: D4621A
+          - title: Slots
+            body: "$0.04 to $0.10 per slot-hour, by edition."
+            accent: D4621A
+          - title: Storage
+            body: "About $47 a month for 2 TiB of active logical data."
+          - title: Egress
+            body: "15 TiB a month to the internet costs about $1,517."
+        takeaway: Storage is the small number, so start with what queries read and where data travels.
+        source: notes/05-cost.md
+        notes: >-
+          Listing used: logical active storage at us-central1 and Premium Tier internet to North America, read on the first of November 2026. A hundred Enterprise slots for eight hours a day cost the same as 231 TiB on demand.
+      - layout: code
+        title: Make cost a test that fails at review
+        lang: text
+        code: |-
+          def dry_run(columns, month=None, limit_usd=1.00):
+              usd = scanned(columns, month) / all_b * 2 * 6.25
+              return usd, usd <= limit_usd
+
+          SELECT *                  $12.50  FAIL budget $1.00
+          two columns               $ 2.45  FAIL budget $1.00
+          two columns, June         $ 0.20  pass
+        bullets:
+          - "**In BigQuery:** dry run or `maximum_bytes_billed`."
+          - "**The check** states an expectation in code."
+        takeaway: A byte limit in CI finds the expensive query at review, so the invoice stops being the alarm.
+        source: notes/05-cost.md
+        notes: >-
+          A two terabyte table scaled by the measured ratio. The first query is stopped before merge with the fix on the screen.
+      - layout: flow
+        title: Fix the top twenty in this order
+        steps:
+          - label: Query
+            sub: columns and filters
+          - label: Layout
+            sub: partition and cluster
+          - label: Aggregate
+            sub: if read often
+          - label: Pricing model
+            sub: after the rest
+            accent: D4621A
+        bullets:
+          - "**Job labels** tell you who to ask."
+          - "**`INFORMATION_SCHEMA.JOBS`** lists the top spenders."
+        takeaway: Each fix changes what the next should be, so tune the query before you buy capacity.
+        source: notes/05-cost.md
+        notes: >-
+          At fewer than one read a day a daily aggregate costs more than the queries it replaces, and at five it wins. Run the arithmetic per table. And on a non-clustered BigQuery table, LIMIT does not reduce the bill.
+
+  - title: What to carry out
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - title: Layout
+            body: Name columns, filter partitions, cluster the next filter.
+          - title: Tables
+            body: A table is a list of files. Read through the log.
+          - title: Streams
+            body: Commit output and offset together, and ask from where to where.
+          - title: Cost
+            body: Run the arithmetic first, and put a byte limit in CI.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Next pillar:** quality and observability. Everything here assumed the data was right."
+          - "**Practice:** the BigQuery, Spark and Kafka modules in `practice/datatalks-de`."
+          - "**Read:** Delta Lake (PVLDB 2020), Lakehouse (CIDR 2021), Dataflow (PVLDB 2015)."

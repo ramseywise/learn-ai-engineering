@@ -186,6 +186,16 @@ syntax error       REFUSED: Edit discarded, the file would not parse: '(' was ne
 good edit          edited
 stale read         REFUSED: The file changed since you read it. Read it again, then retry.
 a = 2 | b = 1 | # a formatter ran |
+```
+
+Read the refusal messages as part of the tool. "Try again" gives the model nothing, whereas "read the file again, then retry" is a next action. Bui makes the same point about error messages, and in a real run the message is the only thing standing between a refusal and the same call repeated.
+
+## Sandbox limits: what each layer stops
+
+The tools above act on files the agent chooses, and running tests executes code the agent wrote. Those two facts need different limits, and confusing them is the most common mistake in this area. A file-tool check is a promise about the tool. A process limit is a promise about what code can do.
+
+The first layer is confinement of the file tools. Resolve the path, including symlinks, and refuse anything outside the workspace. A string check for `..` is not enough, because a link inside the repo can point anywhere.
+
 ```python
 import tempfile
 from pathlib import Path
@@ -213,6 +223,10 @@ with tempfile.TemporaryDirectory() as tmp:
 Output:
 
 ```text
+ok.py            allowed: ok.py
+../secrets.txt   refused: '../secrets.txt' is outside the workspace
+/etc/passwd      refused: '/etc/passwd' is outside the workspace
+link.py          refused: 'link.py' is outside the workspace
 ```
 
 The second layer is process limits on the test run: a fixed command rather than a free-form shell, a clean environment so API keys do not leak into code under test, a wall clock, and output truncated at both ends so that the failure at the bottom survives. A patch containing an infinite loop is a normal event in this work, so the runner has to kill the whole process group and then tell the model what happened.
@@ -248,7 +262,7 @@ os.environ["ANTHROPIC_API_KEY"] = "not-for-the-tests"
 print(run("print('ok')"))
 print(run("while True: pass"))
 print(run("import os; print(os.environ.get('ANTHROPIC_API_KEY'))"))
-print(run("print('x' * 500); raise SystemExit('the failure is at the end')"))
+print(run("print('x' * 500, flush=True); raise SystemExit('the failure is at the end')"))
 ```
 
 Output:
@@ -257,8 +271,23 @@ Output:
 exit=0 ok
 killed after 1 s, look for an infinite loop
 exit=0 None
-exit=1 the failure is at the end
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx[... 406 characters omitted ...]xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+exit=1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx[... 406 characters omitted ...]xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+the failure is at the end
+```
+
+The third layer is the schema. A tool the model does not have cannot be misused, so a shell that is never offered is stronger than a shell behind a blocklist. Bui's report argues this from experience with five stacked safety layers: prompt guardrails, schema-level tool restrictions, runtime approval, tool-level validation and lifecycle hooks. It finds schema-level restriction more reliable than the runtime checks, for instance by removing write tools entirely from a planning subagent. Our lab offers four tools and marks `tests/` read-only, because otherwise the cheapest way to make a test pass is to change the test.
+
+| Layer | In the lab | Stops | Does not stop |
+|---|---|---|---|
+| Tool schema | `read_file`, `edit_file`, `run_tests`, `finish`; no shell | Arbitrary commands from the model | Code the tests execute |
+| Path confinement | `resolve()` plus `is_relative_to` | `../`, absolute paths, symlink escapes through tools | Same |
+| Write scope | Only `tipkit/` is writable | Editing tests to pass them | Reading anything in the repo |
+| Edit guards | Must read, unique match, no stale read, must parse | Blind, ambiguous, clobbering and broken edits | Wrong logic |
+| Process limits | Fixed command, clean env, wall clock, CPU and file-size rlimits, throwaway copy | Hangs, key leakage, disk filling, damage to the source repo | Network, reads and writes elsewhere |
+| Real isolation | **Not in the lab.** Container or VM, no network, unprivileged user | Everything above, at the operating-system level | Whatever you mount into it |
+
+That table's last two rows are the honest part. The `escape` scenario in the lab edits `tipkit/stats.py` so that importing it writes a file outside the repo, and running the tests carries it out. Every tool check passes, because no tool touched that file:
+
 ```text
 === escape: The honest limit. File tools are confined; code run by the tests is not.
  1  read_file  ok:    1  """Summary statistics over tip records. The agent's job is to fix a bug here."""
@@ -321,6 +350,14 @@ run_tests  tree=v1  run
 run_tests  tree=v1  run
 run_tests  tree=v1  warn: change approach
 run_tests  tree=v1  HALT
+```
+
+## Visible tests can be gamed by accident
+
+A green suite is necessary and not sufficient. SWE-bench handles this by construction: each instance comes from a real GitHub issue, the agent sees the issue, and its patch is scored on tests from the fix that it never saw (Jimenez et al., [SWE-bench](https://arxiv.org/abs/2310.06770), ICLR 2024). SWE-agent's failure analysis of 248 Lite failures, labelled by GPT-4o and checked at 87% agreement against hand labels, shows why that matters. Incorrect implementations (39.9%) and overly specific ones (12.1%) together make up 52.0% of failures, ahead of failing to recover from an edit (23.4%) and failing to find the place to edit (12.9%). Most failures, in other words, are patches that exist and are wrong.
+
+The lab reproduces the overly specific case. The `overfit` script special-cases the visible test's one input. The visible suite goes green, `finish` accepts it, and only the held-out tests catch it:
+
 ```bash
 cd practice/coding-agent && uv run python run.py fix overfit
 ```
@@ -378,7 +415,7 @@ To use Claude, replace the scripted model with a class that has the same method.
 
 ```python
 # illustrative: needs ANTHROPIC_API_KEY and the anthropic package, and costs money to run.
-# The tested version is practice/coding-agent/claude_model.py.
+# Same class in practice/coding-agent/claude_model.py; not run here, the loop around it is tested with the script.
 import anthropic
 
 SYSTEM = (

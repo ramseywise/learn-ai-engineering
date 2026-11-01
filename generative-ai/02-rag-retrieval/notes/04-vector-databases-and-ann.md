@@ -55,6 +55,9 @@ for n in [10_000, 100_000, 400_000]:
 ```
 
 ```text
+  10000 vectors     0.71 ms per query      15 MB
+ 100000 vectors     6.96 ms per query     154 MB
+ 400000 vectors    29.00 ms per query     614 MB
 ```
 
 Times are from one laptop and will differ on yours. The shape is the point: ten times the vectors costs roughly ten times the time. One query is survivable, but a RAG request can fan out into several queries, and a server handles many requests at once.
@@ -116,6 +119,9 @@ print(f"found the true nearest neighbour {hits / 200:.0%} of the time")
 ```
 
 ```text
+exact scan cost: 2000 distances
+greedy walk:     34 distances on average
+found the true nearest neighbour 17% of the time
 ```
 
 The walk computes a small fraction of the distances and misses the true best match often, because it stops at local optima. That is the bargain ANN offers, in its crudest form. Everything below is engineering to get the savings and most of the recall back.
@@ -149,6 +155,7 @@ import time
 import faiss
 import numpy as np
 
+faiss.omp_set_num_threads(1)                         # one core, so the timings compare
 rng = np.random.default_rng(0)
 # Clustered vectors: random ones are harder than real embeddings.
 centres = rng.normal(size=(200, 128))
@@ -161,7 +168,7 @@ exact = faiss.IndexFlatL2(128)
 exact.add(vectors)
 start = time.perf_counter()
 _, truth = exact.search(queries, 10)
-print(f"exact         {(time.perf_counter() - start) / 200 * 1000:7.2f} ms/query  recall@10=1.000")
+print(f"exact         {(time.perf_counter() - start) / 200 * 1000:7.3f} ms/query  recall@10=1.000")
 
 index = faiss.IndexHNSWFlat(128, 16)                 # M = 16 links per node
 index.hnsw.efConstruction = 100
@@ -175,10 +182,15 @@ for ef in [10, 40, 160]:
     _, found = index.search(queries, 10)
     ms = (time.perf_counter() - start) / 200 * 1000
     recall = np.mean([len(set(f) & set(t)) / 10 for f, t in zip(found, truth)])
-    print(f"HNSW ef={ef:<4}   {ms:7.2f} ms/query  recall@10={recall:.3f}")
+    print(f"HNSW ef={ef:<4}   {ms:7.3f} ms/query  recall@10={recall:.3f}")
 ```
 
 ```text
+exact           0.810 ms/query  recall@10=1.000
+HNSW build        6.1 s
+HNSW ef=10       0.018 ms/query  recall@10=0.736
+HNSW ef=40       0.038 ms/query  recall@10=0.972
+HNSW ef=160      0.102 ms/query  recall@10=1.000
 ```
 
 These are synthetic vectors and one machine's clock, so don't quote the numbers. Do copy the method: compute exact results on a sample, then sweep `ef` until recall is good enough for your latency budget. Build time is the cost you pay once.
@@ -231,6 +243,9 @@ print("total after merge:", index.ntotal)
 ```
 
 ```text
+positions: [ 3  4 17] squared L2: [0.    0.149 0.448]
+doc ids:   ['kb-04', 'kb-05', 'kb-18']
+total after merge: 20
 ```
 
 Two traps. FAISS returns row positions, and merging renumbers them, so keep your own position → document-ID map. And `reconstruct_n` works directly only on flat indexes. The book says IVF indexes can't be reconstructed and must be rebuilt; FAISS can do it after `index.make_direct_map()`, but keeping the source vectors and rebuilding is simpler.
@@ -254,14 +269,14 @@ A library such as FAISS is only the index. Iusztin and Labonne list what a datab
 
 **Filter before or after the vector search?** Filtering after the ANN search is simple, but can leave fewer than k results when the filter is selective. Filtering first, inside the index, keeps k results but needs index support (*LLM Engineer's Handbook*, ch. 4). PRINCE filters first ([01](01-rag-pipeline.md#a-tuned-pipeline-bayers-prince)).
 
-The failure is easy to reproduce. Say only a few Tallybook articles are about billing, and a question about refunds asks for the top 3 of them:
+The failure is easy to reproduce. A signed-in screen for account settings restricts search to `area="account"`, and the user wants 3 results:
 
 ```python
 from ragkit import DOC_BY_ID, Retriever
 
 retriever = Retriever()
-query = "webhook signature verification"
-allowed = {d.id for d in DOC_BY_ID.values() if d.area == DOC_BY_ID["kb-04"].area}
+query = "invite an accountant to the team"
+allowed = {d.id for d in DOC_BY_ID.values() if d.area == "account"}
 
 def post_filter(q, k=3):
     return [i for i in retriever.dense(q, k=k) if i in allowed]
@@ -269,13 +284,18 @@ def post_filter(q, k=3):
 def pre_filter(q, k=3):
     return [i for i in retriever.dense(q, k=len(retriever.ids)) if i in allowed][:k]
 
-print("area:", DOC_BY_ID["kb-04"].area, "| documents in it:", len(allowed))
+print("documents in the area:", len(allowed))
 print("post-filter:", post_filter(query))
 print("pre-filter: ", pre_filter(query))
 ```
 
 ```text
+documents in the area: 3
+post-filter: ['kb-16']
+pre-filter:  ['kb-16', 'kb-14', 'kb-15']
 ```
+
+Post-filtering asked for 3, threw away the two from other areas, and returned 1. The other two weren't missing from the corpus. They ranked below the cut before the filter ran.
 
 `pre_filter` is written here as "rank everything, then filter", which is correct and slow. Real engines get the same answer by searching inside the allowed subset, which is why filter support is a property of the index and not an afterthought.
 
@@ -455,7 +475,7 @@ Pinecone stores metadata numbers as 64-bit floats; the book's output shows `'bat
 <details>
 <summary>Answers</summary>
 
-1. Cost grows about five times and recall rises substantially. HNSW's layers and beam search spend that budget more cleverly than blind restarts do.
+1. On the same seed, cost goes from 34 to about 173 distances and recall from 17% to about 56%. That is five times the work for a large gain and still a miss almost half the time. HNSW's layers and beam search spend that budget more cleverly than blind restarts do.
 2. Recall can only get close to 1.0, and latency keeps climbing. Stop when recall meets the target you measured against answer quality, or when latency hits the budget.
 3. pgvector with an HNSW index and the filter in SQL: vectors sit next to their rows, and one transaction updates both (Oshin and Campos). Measure recall against exact search on a sample, p95 latency under filter, and index build time, then compare with a dedicated store only if those miss the target.
 
