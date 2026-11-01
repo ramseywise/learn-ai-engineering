@@ -74,6 +74,15 @@ The rules from the topic notes on one page. Each group links to the note that ex
 
 ---
 
+## Lab
+
+A prompt eval harness: three prompt variants over twelve labelled tickets, three checks, and what each change fixed and broke. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/prompt-eval-harness/](practice/prompt-eval-harness/README.md) | `cd practice/prompt-eval-harness && npx tsx run.ts` |
+| Python | [practice/prompt-eval-harness-py/](practice/prompt-eval-harness-py/README.md) | `cd practice/prompt-eval-harness-py && uv run run.py` |
+
 ## Layout
 
 ```
@@ -81,6 +90,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 ├── README.md               ← you are here: summary, rules of thumb, all references
 ├── notes/                  ← the topic notes (read in order)
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → prompt-engineering.pptx)
+├── practice/               ← the lab, in TypeScript and Python
 └── sources/
     ├── prompt-eng-for-llms/  ← book chapter PDFs (reading/), absorbed into notes/
     └── images/               ← figures used by notes and deck, flat: <author>-<slug>-fig<N>.<ext>

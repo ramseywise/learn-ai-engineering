@@ -55,6 +55,15 @@ Notes are written from the sources by the `/chapter` skill, one source chapter a
 
 ---
 
+## Lab
+
+An inference simulator: batching policies under load, KV cache preemption and prefix cache hit rates. Its numbers are assumptions, kept in one parameter file. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/inference-lab-ts/](practice/inference-lab-ts/README.md) | `cd practice/inference-lab-ts && npx tsx run.ts` |
+| Python | [practice/inference-lab/](practice/inference-lab/README.md) | `cd practice/inference-lab && uv run run.py` |
+
 ## Layout
 
 ```
@@ -64,6 +73,7 @@ sources/<book-slug>/chNN-*.pdf   book chapters
 sources/<author-year-slug>.pdf   papers
 sources/images/              figures used in notes and slides
 slides/                      lecture deck (deck.yaml → .pptx + .pdf)
+practice/                    the lab, in TypeScript and Python
 ```
 
 Lecture deck: [`slides/inference-engineering.pptx`](slides/inference-engineering.pptx), a 4-part talk following one Llama-7B on an A100 from its first bandwidth sum to 244.7 tokens/s. Build with `make slides PILLAR=07-inference-engineering`.

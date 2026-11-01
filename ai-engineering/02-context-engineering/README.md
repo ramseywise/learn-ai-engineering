@@ -99,6 +99,15 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ---
 
+## Lab
+
+A context budgeter: fits an agent's context to a token budget layer by layer, and shows what it drops. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/context-budgeter/](practice/context-budgeter/README.md) | `cd practice/context-budgeter && npx tsx run.ts` |
+| Python | [practice/context-budgeter-py/](practice/context-budgeter-py/README.md) | `cd practice/context-budgeter-py && uv run run.py` |
+
 ## Layout
 
 ```
@@ -106,6 +115,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ├── README.md               ← you are here: summary, rules of thumb, chapter index
 ├── notes/                  ← the chapters (read in order), plus the 99 appendix; figures and code inline
 ├── slides/                 ← lecture deck built from the notes (deck.yaml → context-engineering.pptx)
+├── practice/               ← the lab, in TypeScript and Python
 ├── sources/                ← PDFs of the papers the chapters cite; images/ holds every figure the notes use
 └── references.md           ← papers and further reading, mapped to chapters
 ```

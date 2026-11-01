@@ -1,6 +1,6 @@
 # Lab: a prompt eval harness
 
-Language: TypeScript. Supports [Evaluating prompts](../../notes/09-evaluating-prompts.md) and
+Language: TypeScript. The [Python version](../prompt-eval-harness-py/README.md) does the same job on the same inputs. Supports [Evaluating prompts](../../notes/09-evaluating-prompts.md) and
 [Controlling output](../../notes/04-controlling-output.md).
 
 Prompt changes feel like improvements until a number says otherwise. This harness runs three prompt

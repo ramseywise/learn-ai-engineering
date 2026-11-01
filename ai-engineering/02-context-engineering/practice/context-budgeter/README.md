@@ -1,6 +1,6 @@
 # Lab: a context budgeter
 
-Language: TypeScript. Supports [Budgeting the window](../../notes/03-budgeting-the-window.md) and
+Language: TypeScript. The [Python version](../context-budgeter-py/README.md) does the same job on the same inputs. Supports [Budgeting the window](../../notes/03-budgeting-the-window.md) and
 [Failure modes](../../notes/11-failure-modes.md).
 
 A context window is a budget, and something has to decide what loses when it runs out. This budgeter

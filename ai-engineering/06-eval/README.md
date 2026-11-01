@@ -87,6 +87,15 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ---
 
+## Lab
+
+An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired regression testing and an exit code. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/eval-suite-ci/](practice/eval-suite-ci/README.md) | `cd practice/eval-suite-ci && npx tsx demo.ts` |
+| Python | [practice/eval-suite-ci-py/](practice/eval-suite-ci-py/README.md) | `cd practice/eval-suite-ci-py && uv run demo.py` |
+
 ## Layout
 
 ```
@@ -94,6 +103,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
 ├── notes/                        ← chapters 01–13, read in order; figures and code inline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)
+├── practice/                     ← the lab, in TypeScript and Python
 ├── sources/                      ← papers filed for this pillar
 │   └── images/                   ← every figure the notes and deck use (unreferenced/ holds unused course images)
 └── references.md                 ← papers and further reading, mapped to chapters

@@ -170,6 +170,8 @@ def serve():
         def _handle(self, method):
             length = int(self.headers.get("content-length") or 0)
             raw = self.rfile.read(length) if length else b""
+            if self.headers.get("Content-Encoding") == "gzip" or "otel" in self.path:
+                return self._reply(200, {})  # OTLP span export: accepted and dropped
             body = json.loads(raw) if raw else None
             path = self.path.split("?")[0]
             if path == "/v1/messages":

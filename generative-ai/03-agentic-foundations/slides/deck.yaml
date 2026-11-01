@@ -1,0 +1,653 @@
+# Agentic Foundations lecture deck. Covers notes 01-07.
+# Build: make slides PILLAR=generative-ai/03-agentic-foundations STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: a restock agent, from the inventory manager in Generative AI Design Patterns ch. 1.
+# Stock figures come from the book. Toy numbers in the code slides are our own runs, and say so.
+deck:
+  title: Agentic Foundations
+  subtitle: From one model call to an agent you can trust
+  tagline: |-
+    It answers · It acts · It remembers · It collaborates · It runs · It is limited
+  reference: "Notes: generative-ai/03-agentic-foundations"
+  output: agentic-foundations.pptx
+  notes: >-
+    Today we build one thing: a restock agent for a small warehouse. It starts as a single model call that orders
+    300 units of itemB. Each part of the lecture finds out what is wrong with the version before it, and fixes it.
+    It cannot check itself, it cannot touch anything, it forgets last Monday, a second opinion costs more than expected,
+    it has to run somewhere, and eventually it can spend money.
+
+parts:
+  - title: A model is not yet an agent
+    summary: The restock example · Model, context, tools · The ablation · When not to build an agent
+    notes: >-
+      We begin with the smallest useful version and ask what it lacks. The answer gives us the definition of an agent,
+      and also the rule for when not to build one.
+    slides:
+      - layout: statement
+        title: The model ordered 300 units. Was that right?
+        kicker: The problem
+        statement: "Asked to order just in time, a model orders 300 of itemB and explains why. The explanation sounds fine. Nothing in the system can tell you whether it is."
+        attribution: The inventory example from Lakshmanan & Hapke, Generative AI Design Patterns, ch. 1
+        takeaway: A plausible explanation is not a check, so anything that can be computed should be computed and compared with the model's answer.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          The system prompt says you are an inventory manager who orders just in time, and gives stock and four weeks of sales
+          for three items. The answer is to order 300 of itemB. The book warns that truly agentic behaviour is still aspirational,
+          because the same input can yield a different plan on another run.
+
+      - layout: code
+        title: Check the order with arithmetic the model cannot argue with
+        recall: What does a plain-code check of the restock order reveal?
+        lang: text
+        code: |
+          # weeks of cover = on hand / peak weekly sales
+          itemA: 3.0 weeks of cover, 2 to deliver -> ok
+          itemB: 1.1 weeks of cover, 2 to deliver -> ORDER NOW
+          itemC: 2.2 weeks of cover, 1 to deliver -> ok
+
+          proposed 300 of itemB:
+            on arrival, stock is -80 at peak sales
+            after delivery: 300 units, 3.3 weeks of cover
+
+          95% per step over  10 steps ->  59.9% end to end
+          95% per step over 100 steps ->   0.6% end to end
+        bullets:
+          - "**The model picked the right item.** The check agrees."
+          - "**It missed a stockout.** At peak sales, 80 units short before delivery."
+          - "**Long runs compound.** Assuming independent steps, 95% each is 60% over ten."
+        takeaway: Code confirmed the item and found a stockout the model never mentioned, and per-step errors compound quickly over a long run.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          This is the real output of the first code block in note 01, run on the book's data. The last two lines are arithmetic under
+          an independence assumption, which is a simplification. Huyen makes the same compound-error point in AI Engineering, chapter 6.
+
+      - layout: image
+        title: "Agent = Model + Context + Tools, run in a loop"
+        recall: What are the parts of an agent?
+        image: ../sources/images/li-ai-agents-in-depth-fig1-1.svg
+        caption: The agent-environment loop and the model-harness structure (Bojie Li, AI Agents in Depth, 2026, Fig. 1)
+        bullets:
+          - "**Model:** decides what to do next."
+          - "**Context:** everything it can see when it decides."
+          - "**Tools:** the only way it affects anything."
+        takeaway: An agent is a model that chooses actions from its context and uses tools in a loop, and memory or multi-agent designs are ways to manage those parts.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          The rest of the lecture is about managing these three things across many steps. Memory manages context over time.
+          Multi-agent splits context across roles. A harness is the code around the model.
+
+      - layout: table
+        title: Remove a part and watch what breaks
+        recall: What happens to an agent if you remove its tool results?
+        header: [Removed, Observed failure]
+        widths: [3, 7]
+        rows:
+          - [Tool definitions, "Cannot act at all: it does not know any tools exist"]
+          - [Tool results, "No feedback, so it repeats the same call forever"]
+          - [Reasoning in assistant messages, Consecutive decisions contradict each other]
+          - [Message history, "Loses continuity, restarts and repeats finished steps"]
+        highlight: [1]
+        bold_first: true
+        takeaway: An agent can only decide on what is in its context, so every part of the context is load-bearing.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          This is Experiment 1-1 in Li's book, which removes one part at a time. The tool-results row had been seen on robots before ReAct:
+          Inner Monologue showed that writing success feedback back into the prompt is what closes the loop.
+
+      - layout: compare
+        title: Climb the ladder only as far as you need
+        recall: When should you use a workflow rather than an autonomous agent?
+        emphasis: left
+        left:
+          title: Workflow
+          tag: Fixed path
+          accent: 0F7490
+          bullets:
+            - Steps cannot be skipped or reordered
+            - Injection is confined to one node
+            - Follows only preset exception branches
+            - "**Fits:** compliance-critical, decomposable work"
+        right:
+          title: Autonomous agent
+          tag: Path chosen at runtime
+          accent: D4621A
+          bullets:
+            - Handles what you did not foresee
+            - Costs more, and errors compound
+            - Needs explicit stop conditions
+            - "**Fits:** tasks with unpredictable step counts"
+        takeaway: Prefer plain code, then a workflow, and use an autonomous agent only when the path depends on what it finds along the way.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          Albada adds a rung below the LLM: plain code, chosen when inputs are predictable or certification demands deterministic logic.
+          Our restock calculation is plain code. The judgment around suppliers is what might justify a model.
+
+  - title: A model cannot touch anything
+    summary: The tool-call mechanism · The raw loop · Limits of reasoning · Reliable tools · Injection
+    notes: >-
+      Our agent needs current stock, not a pasted table. Yet a model only writes text. So how does anything get done?
+    slides:
+      - layout: statement
+        title: How does a text generator place an order?
+        kicker: The problem
+        statement: "It does not. The model proposes a call as text. Your code decides whether and how to run it."
+        attribution: The mechanism under every agent framework
+        takeaway: The model only proposes tool calls, and your code runs them, which is what makes the boundary enforceable.
+        source: notes/02-tool-use-and-react.md
+        notes: >-
+          Everything in this part follows from that sentence. Because your code is the executor, your code can validate, refuse or ask a person.
+          Toolformer called this tool use; OpenAI and Gemini call it function calling. The mechanism is the same.
+
+      - layout: flow
+        title: Four steps under every framework
+        recall: What are the four steps of a tool call?
+        steps:
+          - {label: Advertise, sub: "client: name, description, schema"}
+          - {label: Decide, sub: "model: text or a tool call"}
+          - {label: Execute, sub: "client: your code runs it"}
+          - {label: Observe, sub: "client: result goes back to the model"}
+        loop: Repeat from Decide until the model answers without a call, or a budget runs out
+        takeaway: Advertise, decide, execute and observe repeat until the model answers without a call or a step budget ends the run.
+        source: notes/02-tool-use-and-react.md
+        notes: >-
+          Client, model, client, client. Only one of the four steps is the model. ReAct is this loop with the reasoning written out
+          between calls, and it is why the loop has a name in the literature.
+
+      - layout: code
+        title: The whole agent in one screen
+        recall: What must a minimal agent loop contain besides the model call?
+        lang: python
+        code: |
+          for step in range(max_steps):
+              reply = model(messages, tools=TOOLS)
+              messages.append(reply)
+              if not reply.tool_calls:
+                  return reply.text
+              for call in reply.tool_calls:
+                  result = TOOLS[call.name](**call.args)
+                  messages.append(tool_result(call, result))
+          # out of budget: ask for a wrap-up, no tools
+          return model(messages, tools=[]).text
+        bullets:
+          - "**Results go back in:** that is the feedback."
+          - "**The cap is not optional:** agents rarely stop on their own."
+          - "**Make the last step a wrap-up,** not a silent cutoff."
+        takeaway: A minimal agent is a capped loop that runs tool calls and feeds back the results, ending in a wrap-up rather than a silent cutoff.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          This is a condensed form of the runnable block in note 01, which uses a scripted model so that it runs offline.
+          Note 02 shows the same loop against the Messages API with a stub client. No framework is needed to understand any of this.
+
+      - layout: table
+        title: What reasoning steps cannot fix
+        recall: Which failures does chain of thought not fix?
+        header: [CoT fails on, Their example, The fix]
+        widths: [3, 5, 3]
+        rows:
+          - [Gaps in knowledge, "300 km west of Hyderabad: confident steps, wrong city", "Supply the fact: a tool"]
+          - [Exact computation, "84 m² × 10.7639 written as 903.20; true product 904.1676", A calculator or code tool]
+          - [Non-sequential expertise, "Bridge play: experts weigh the whole hand", Expert examples or a specialist model]
+        bold_first: true
+        takeaway: Reasoning helps a model apply a rule it knows, but missing facts and exact arithmetic need tools, so more thinking will not fix them.
+        source: notes/02-tool-use-and-react.md
+        notes: >-
+          These are from pattern P13 in Generative AI Design Patterns, chapter 5. Shown reasoning can also be a story told afterwards.
+          The book's own success case applies a laminar-flow formula to give 84 cubic metres per second through a 25 cm pipe, about 1,700 metres per second,
+          which is meaningless. So well-formed steps are not evidence of a correct answer.
+
+      - layout: cards
+        title: What makes tool calls reliable
+        recall: Name four rules for reliable tool calls.
+        cards:
+          - title: One job per tool
+            body: The description is the only documentation the model reads.
+          - title: Constrain arguments
+            body: Enums and a schema reject whole classes of bad calls at the boundary.
+          - title: Inject what you know
+            body: IDs, dates and user context come from code, never from the model.
+          - title: Return readable errors
+            body: A message the model can act on lets it retry. A stack trace does not.
+        takeaway: Keep each tool to one job, validate arguments at the boundary, inject known values in code and return errors the model can act on.
+        source: notes/02-tool-use-and-react.md
+        notes: >-
+          The book's June 2025 guide is 3 to 10 tools. Past roughly ten, Oshin and Campos preselect the relevant few by retrieval.
+          And if every query should start with a search, build that tool call in code and do not spend a model call deciding it.
+
+      - layout: table
+        title: Tool output is untrusted input
+        recall: What are the six prompt-injection design patterns?
+        header: [Pattern, Idea]
+        widths: [3, 8]
+        rows:
+          - [Action-Selector, "The model picks fixed actions; tool output never returns to it"]
+          - [Plan-Then-Execute, Fix the plan before reading untrusted data]
+          - [Map-Reduce, Process each untrusted item in an isolated call]
+          - [Dual-LLM, A quarantined model reads the text and returns symbols]
+          - [Code-Then-Execute, "A program, not the model, handles the data"]
+          - [Context-Minimization, Drop untrusted spans before later steps]
+        bold_first: true
+        takeaway: A tool result can carry an attacker's instructions, so choose the weakest design pattern that blocks the attack paths your tools open.
+        source: notes/02-tool-use-and-react.md
+        notes: >-
+          From Beurer-Kellner et al., 2025. Each pattern trades capability for safety. Our restock agent reading a supplier's email is exposed:
+          that email lands in the context next to our instructions.
+
+  - title: It forgets last Monday
+    summary: The OS analogy · Self-editing memory · How much to curate
+    notes: >-
+      The supplier told us last week that delivery time had doubled. On Monday the agent starts from nothing and orders on the old figure.
+      Long context is expensive and finite, so what should it keep?
+    slides:
+      - layout: image
+        title: The supplier changed delivery times. It forgot.
+        kicker: The problem
+        recall: How does MemGPT treat the context window?
+        image: ../sources/images/packer-wooders-agent-memory-fig5.png
+        caption: Memory tiers in MemGPT (Packer & Wooders, Letta course, L2)
+        bullets:
+          - "**The context window is RAM:** small and always visible."
+          - "**Databases are disk:** large, and reached by a tool."
+          - "**The agent does its own paging.**"
+        takeaway: MemGPT treats the context window like an OS treats RAM, so the agent pages facts in and out of larger stores with its own tool calls.
+        source: notes/03-memory-as-an-operating-system.md
+        notes: >-
+          Agent state lives in a database, and each step compiles it into a prompt. Heartbeats let one user message drive a search, an edit and a reply.
+          Memory theory itself is in context engineering note 06. This note covers what MemGPT and Letta add.
+
+      - layout: code
+        title: A core that fills up, an archive that must be searched
+        recall: What does a self-editing memory do when core memory is full?
+        lang: text
+        code: |
+          ok
+          Error: core is full (limit 100). Move detail to the archive.
+          ok, 1 passages in archive
+          ok
+
+          --- next Monday, new session ---
+          <policy>Order just in time. Keep two weeks...</policy>
+          <supplier>Acme delivers itemB. See archive: ...</supplier>
+          [1 passages in archive, not shown]
+
+          search 'lead time' -> ['3 March: Acme lead time ...']
+          search 'delay'     -> no match
+        bullets:
+          - "**A readable error teaches:** the agent moves detail to the archive."
+          - "**Stats in context** show what it is not seeing."
+          - "**Search can miss:** `delay` finds nothing here."
+        takeaway: A small core plus a searchable archive works only if the agent knows the archive exists, is told when to search, and can phrase the search well.
+        source: notes/03-memory-as-an-operating-system.md
+        notes: >-
+          This is our own run of the block in note 03, with a scripted model and substring search, shortened to fit. A vector index would help with the delay query, but the design lesson stands.
+          Agents do not save or search by default, so the system prompt has to say when.
+
+      - layout: compare
+        title: Does curating memory pay? Often not
+        recall: Does agent-curated memory beat a verbatim store?
+        emphasis: left
+        left:
+          title: Keep it verbatim
+          tag: 78.1% on PersonaMem at 32k tokens
+          accent: 0F7490
+          bullets:
+            - A dump or one file per session matched or beat curation on all four benchmarks
+            - The record survives, so later readers can correct errors
+        right:
+          title: Let the agent curate
+          tag: 37.5% in the same setup
+          accent: D4621A
+          bullets:
+            - Left superseded preferences standing as current
+            - Condensing dropped REALTALK from 77.6% to 41.2%
+            - A fact-preserving reorganization held at 77.6%
+        takeaway: Keep the verbatim record and curate only the index on top, because in Zhou et al. summarizing lost facts that a plain store kept.
+        source: notes/03-memory-as-an-operating-system.md
+        notes: >-
+          Zhou et al., July 2026, with gpt-5.4-mini building and searching filesystem stores. On PersonaMem, the right fact was still in the store for all 13 misses.
+          A-MEM takes the safe route: it evolves links and index fields and never rewrites content. Video and audio have no verbatim record, so there the writer has to extract something.
+
+      - layout: bullets
+        title: Tools let it manage memory, not know when to
+        recall: What four things do you control in a memory agent?
+        bullets:
+          - "**Prompts:** say when to save and when to search."
+          - "**Tools:** which memory tools exist, and what side effects they have."
+          - "**Management:** block sizes, eviction, what gets summarized."
+          - "**Content:** the starting persona and preloaded documents."
+          - "**Keep the source of truth in a tool.** A stored delivery time goes stale. Store why a decision was made."
+        aside:
+          title: Memory is an attack surface
+          body: An injected instruction saved today comes back next session looking like context. Record where each memory came from.
+        takeaway: You control a memory agent through its prompts, tools, management policy and starting content, and any saved memory needs a recorded origin.
+        source: notes/03-memory-as-an-operating-system.md
+        notes: >-
+          The four levers are from the DeepLearning.AI course's conclusion. AgeMem found that with the same memory tools, prompted small models rarely update what they stored.
+          So test behaviour by replaying conversations, not just by checking that inserts succeed.
+
+  - title: A second opinion has a price
+    summary: Three kinds of stop · Planning search · Why multi-agent systems fail · The single-agent baseline
+    notes: >-
+      A reviewer would catch a bad order. So we add one. Now we have a conversation that may not end, and costs that grow faster than agents.
+    slides:
+      - layout: statement
+        title: Should we just add a reviewer agent?
+        kicker: The problem
+        statement: "Cemri et al. found 40–80% of tasks failing in the multi-agent systems they studied. No single cause dominated."
+        attribution: Cemri et al., 2025, from expert annotation of about 150 conversation traces
+        takeaway: A second agent adds a coordination problem as well as a check, so state what it does that one agent cannot before adding it.
+        source: notes/04-multi-agent-design-patterns.md
+        notes: >-
+          The 40 to 80 percent is across the systems that paper studied, not a universal rate. Ng's four patterns give the vocabulary: reflection, tool use, planning, multi-agent collaboration.
+          The AutoGen course teaches each with one lesson, and that is the source of the conversation primitives in note 04.
+
+      - layout: code
+        title: A conversation needs three kinds of stop
+        recall: What three stops does a multi-agent conversation need?
+        lang: text
+        code: |
+          turn 1: buyer says 150;
+                  reviewer: Too low, under three weeks of peak
+          turn 2: buyer says 300; reviewer: APPROVE
+          cap 3: agreed on 300; verifier says True
+
+          turn 1: buyer says 150; reviewer: Too low
+          cap 1: no agreement, escalate to a human
+
+          legal(planner, buyer, reviewer, executor)  True
+          legal(planner, buyer, executor)            False
+        bullets:
+          - "**Semantic stop:** an explicit approval."
+          - "**Turn cap:** escalate, do not guess."
+          - "**Verifier:** plain code, independent of both."
+          - "**Transition graph:** the buyer cannot skip review."
+        takeaway: End a multi-agent conversation with a semantic stop, a turn cap that escalates and an independent verifier, and restrict who may speak after whom.
+        source: notes/04-multi-agent-design-patterns.md
+        notes: >-
+          This is the output of our stubbed block in note 04, reflowed to fit. Two models can agree on a wrong answer, which is why the verifier is code.
+          The transition check is the group-chat lesson: a graph forbids what a prompt can only discourage.
+
+      - layout: table
+        title: Count the calls before you search over plans
+        recall: How does Tree of Thoughts cost scale?
+        header: [Depth, Thoughts, Width, LLM calls]
+        widths: [2, 2, 2, 3]
+        rows:
+          - ["1", "3", "1", "4"]
+          - ["2", "3", "2", "12"]
+          - ["4", "3", "3", "40"]
+          - ["4", "3", "5", "56"]
+        highlight: [2]
+        takeaway: Tree of Thoughts lifted Game of 24 from 4% to 74% with GPT-4, but its calls multiply with depth and width, so try cheaper options first.
+        source: notes/04-multi-agent-design-patterns.md
+        notes: >-
+          The counts are from our stub in note 04. Lakshmanan and Hapke report 41 calls for the depth 4, width 3 setup, consistent with one extra call for a summary, though the book does not itemize them.
+          A search is only as good as its scorer. Graph of Thoughts adds merging, and repairing a failed plan node often beats replanning.
+
+      - layout: image
+        title: Pick the topology by who needs to talk
+        recall: Which multi-agent topologies are common?
+        image: ../sources/images/learning-langchain-fig7-3.png
+        caption: Single agent, network, supervisor, agents as tools, hierarchical, custom (Oshin & Campos, Learning LangChain, 2025, Fig. 7-3)
+        bullets:
+          - "**Supervisor:** one router, easy to reason about."
+          - "**Network:** free movement, derails easily."
+          - "**Filter each handoff.** Full history grows with every agent."
+        takeaway: Fewer speakers and restricted edges make a multi-agent system easier to reason about, and handoffs should pass a filtered summary rather than full history.
+        source: notes/04-multi-agent-design-patterns.md
+        notes: >-
+          Koenigstein's table compares supervisor, hierarchical and swarm. The running rule from the note is to prefer shared state to messages for facts, since one block edit beats N messages.
+
+      - layout: compare
+        title: Same model in every role? Try one agent first
+        recall: When does a single agent match a multi-agent workflow?
+        emphasis: left
+        left:
+          title: One agent, role-playing each step
+          tag: Xu et al., 2026, GPT-4o-mini
+          accent: 0F7490
+          bullets:
+            - "HumanEval 92.1%; MBPP 81.4%"
+            - "HotpotQA 68.4%, a real drop"
+            - "AFlow on HotpotQA: $0.53 (simulated cache cost)"
+        right:
+          title: The multi-agent workflow
+          tag: Same tasks
+          accent: 94A3B8
+          bullets:
+            - "HumanEval 91.6%; MBPP 81.1%"
+            - "HotpotQA 72.1%"
+            - "AFlow on HotpotQA: $1.44"
+        takeaway: When every role uses one model, a single agent role-playing the steps can keep accuracy at lower cost, so make it the baseline to beat.
+        source: notes/04-multi-agent-design-patterns.md
+        notes: >-
+          The savings on closed models are a simulated KV-cache cost, not a billed one, and the trick cannot reproduce workflows that mix models.
+          Read the software-company papers such as MetaGPT and ChatDev against this baseline. Each reports beating the other on its own benchmark.
+
+  - title: It has to run somewhere
+    summary: Pick by control flow · Resume safely · Protocols · The harness · Skills · Evals
+    notes: >-
+      The agent works on a laptop. Now the order has to wait for a person, restart cleanly, talk to a supplier's system, and carry a growing policy.
+    slides:
+      - layout: statement
+        title: Which framework, and what around it?
+        kicker: The problem
+        statement: "Most agent failures are configuration failures, the course argues: tools, prompts and guardrails, not the model."
+        attribution: "Google × Kaggle, 5-Day AI Agents Intensive, Day 1. A framing, not a measurement"
+        takeaway: The engineering leverage sits mostly around the model, so choose a framework for its control flow and invest in what surrounds the loop.
+        source: notes/06-google-adk-intensive.md
+        notes: >-
+          Agent equals model plus harness. Treat the claim as the course's framing. It does match the pattern in this pillar: the demo is the easy part.
+
+      - layout: table
+        title: Pick a framework by what you program
+        recall: How do agent frameworks differ?
+        header: [Framework, You program, Lean toward it for]
+        widths: [3, 4, 5]
+        rows:
+          - [LangGraph, Nodes and edges over typed state, "Explicit control, checkpoints, human approval"]
+          - [CrewAI, Roles plus tasks, A role-based pipeline with little code]
+          - [Google ADK, Agent with sub-agents, Gemini and Vertex deployment]
+          - [AutoGen 0.2, Conversable agents, "Dialogue prototypes; now succeeded"]
+          - [Letta, A persistent agent server, Long-lived memory]
+          - [smolagents, CodeAgent, "Code as action, open models"]
+        bold_first: true
+        takeaway: Frameworks differ in their unit of programming, so write down your control flow first and pick the one that matches, or none if it is a straight line.
+        source: notes/05-framework-survey.md
+        notes: >-
+          AutoGen's maintainers now point new work to Microsoft Agent Framework. The patterns still apply. Albada's mid-2025 rule is CrewAI or OpenAI Agents SDK for fast prototypes,
+          LangGraph or AutoGen for production control. Many teams build directly on provider APIs.
+
+      - layout: code
+        title: One approval, two orders
+        recall: Why must a side effect not share a node with an interrupt?
+        lang: python
+        code: |
+          def unsafe_node(state):
+              ORDERS.append(state["quantity"])  # side effect
+              answer = interrupt("Send the email?")
+              ...
+          # resume re-runs the node from its first line
+
+          # unsafe: orders placed: [300, 300]
+
+          def approve_node(state):              # pause only
+              return {"approved": interrupt("Order?") == "yes"}
+          def order_node(state):                # act only
+              ...
+          # safe:   orders placed: [300]
+        bullets:
+          - "**Resume re-runs the node.** It does not continue mid-function."
+          - "**Pause in one node, act in the next.**"
+        takeaway: On resume an interrupted node runs again from its first line, so put the pause and the side effect in separate nodes.
+        source: notes/05-framework-survey.md
+        notes: >-
+          Note 05 models this rule in plain Python so that it runs without LangGraph, and these outputs are from that run. Koenigstein states the side-effect rule in chapter 2 of the Definitive Guide.
+
+      - layout: flow
+        title: The harness across the lifecycle
+        recall: Where does the harness sit across the lifecycle?
+        steps:
+          - {label: Configure, sub: "planning: AGENTS.md, rules, tools"}
+          - {label: Run, sub: "implementation: sandboxes, execution"}
+          - {label: Feed back, sub: "testing: errors go back to the model"}
+          - {label: Observe, sub: "production: hooks, cost, latency, drift"}
+        loop: What production shows feeds the next round of configuration
+        bullets:
+          - "**Tests** check deterministic parts. **Evals** check the rest."
+          - "**The 80% problem:** edge cases and integration take the expertise. The figure is the course's rule of thumb."
+          - "**Total cost:** generating is cheap. Running, fixing and maintaining remain."
+        takeaway: The harness is configured in planning, runs during implementation, feeds errors back during testing and is observed in production.
+        source: notes/06-google-adk-intensive.md
+        notes: >-
+          From the Day 1 whitepaper. Depth is in the harness engineering pillar. Agents reduce capital expenditure, the upfront cost of building something, but operational expenditure remains.
+
+      - layout: code
+        title: Load a skill only when the task matches
+        recall: What is progressive disclosure?
+        lang: text
+        code: |
+          level 1:    25 tokens  always loaded
+          level 2:    66 tokens  when the task matches
+          level 3:  6500 tokens  only if the body points there
+
+          50 skills, all loaded up front: 329,550 tokens
+          50 skills, one activated:         1,316 tokens
+        bullets:
+          - "**Metadata always,** body on activation, references on demand."
+          - "**The description decides.** A vague one fails silently."
+          - "**Rough numbers:** four characters per token, identical sizes."
+        takeaway: Progressive disclosure keeps a skill's cost to one line of metadata until a task matches, so the description must carry the whole decision to activate.
+        source: notes/06-google-adk-intensive.md
+        notes: >-
+          Toy numbers from our block in note 06. Treat them as orders of magnitude. The course's claim that skills replace multi-agent systems holds where agents differ only in instructions.
+          It does not provide parallelism, context isolation, reviewer independence or separate permissions, which note 04 still needs.
+
+      - layout: table
+        title: A correct answer can hide a bad process
+        recall: Why evaluate the trajectory as well as the output?
+        header: [Run, Output correct, Trajectory correct]
+        widths: [3, 3, 3]
+        rows:
+          - [careful, "True", "True"]
+          - [lucky, "True", "False"]
+          - [wrong, "False", "True"]
+        highlight: [1]
+        bold_first: true
+        takeaway: Output evaluation passes a run that ordered without checking stock, so also evaluate the trajectory, including the order of the steps.
+        source: notes/06-google-adk-intensive.md
+        notes: >-
+          The lucky run ordered without looking at the stock and will fail the first time the stock matters. Its final words are not evidence of how it got there, which also explains
+          Huyen's reflection error: asked to place 50 people in 30 rooms, an agent placed 40 and reported success.
+
+  - title: Now it can spend money
+    summary: Where the controls sit · Lower the risk · Gate the action · How much autonomy
+    notes: >-
+      Sooner or later the agent places a real order. A line in the system prompt saying do not exceed 500 is a request, not a limit. So what actually enforces one?
+    slides:
+      - layout: statement
+        title: Does telling it the limit enforce the limit?
+        kicker: The problem
+        statement: "A prompt restriction is not a permission. Swap the prompt, and the same SQL agent runs the writes it refused before."
+        attribution: "Phoenix & Taylor, Prompt Engineering for Generative AI, ch. 6"
+        takeaway: A system prompt asks the model to behave, so enforce every real limit in credentials and code.
+        source: notes/07-guardrails-and-autonomy.md
+        notes: >-
+          LangChain's default SQL-agent prompt stops it from running INSERT, UPDATE or DELETE. With a custom prefix and an unrestricted connection the same agent runs them. The limit has to live in the credentials.
+
+      - layout: steps
+        title: Lower the risk before you filter it
+        recall: What are the four patterns for lowering output risk, from least to most risk?
+        steps:
+          - title: P29 Template Generation
+            text: "Model writes templates offline; a person reviews; code fills the slots."
+          - title: P30 Assembled Reformat
+            text: "Model only rephrases facts gathered by low-risk means."
+          - title: P31 Self-Check
+            text: "Model answers and token probabilities flag low confidence."
+          - title: P32 Guardrails
+            text: "Code layers around inputs, outputs, retrieval and tool parameters."
+        takeaway: Ask how much the model needs to write at all, using reviewed templates and assembled facts first, with guardrails as the outer layer.
+        source: notes/07-guardrails-and-autonomy.md
+        notes: >-
+          From Generative AI Design Patterns, chapter 9. The restock email can be a template, the justification assembled from figures, and only the decision needs the model's freedom.
+          Low token probability marks where a model had alternatives, so it routes to review rather than rejecting. The book's Vectara numbers show hallucination falling but not vanishing, even on summarization.
+
+      - layout: code
+        title: The gate is ordinary code
+        recall: Where should a high-risk tool call be gated?
+        lang: python
+        code: |
+          def gate(tool, args, approved_by=None):
+              if RISK.get(tool) is None:
+                  return "deny: unknown tool"
+              if tool == "place_order" and args["quantity"] > 500:
+                  return "deny: over the hard limit"
+              if RISK[tool] == "high" and approved_by is None:
+                  return "ask human"
+              return "allow"
+        bullets:
+          - "`get_stock` → allow"
+          - "`place_order` 300 → ask human"
+          - "`place_order` 300, approved → allow"
+          - "`place_order` 9000, approved → deny"
+          - "`delete_supplier` → deny"
+        takeaway: Rate each tool by what it can undo, default to deny, ask a person for risky calls and keep hard limits that no approval can override.
+        source: notes/07-guardrails-and-autonomy.md
+        notes: >-
+          These results are from the runnable block in note 07, with the limit inlined. People clicking through a queue are not a control on a typo of 9,000, which is why the hard limit applies even with approval.
+          Keep approval for the irreversible, or approval fatigue sets in.
+
+      - layout: flow
+        title: Controls sit on three positions
+        recall: Where do guardrails sit around an agent?
+        steps:
+          - {label: Input, sub: "relevance, safety, injection screens"}
+          - {label: Execution, sub: "risk rating, limits, approval"}
+          - {label: Output, sub: "PII and content checks"}
+        caption: Retrieved data enters at the same point as user input, so injection is a design problem as well as a filtering one
+        takeaway: Layer guardrails on inputs including retrieved data, on tool execution and on outputs, because no single check is enough.
+        source: notes/07-guardrails-and-autonomy.md
+        notes: >-
+          Guardrails running in parallel via asyncio.gather do not cancel the model call, so you still pay. Keep a dataset of attacks and benign look-alikes, and track misses and false blocks.
+          Raieli and Iuculano judge that no agent is beyond level one, a research assistant, on Gao et al.'s scale, and Mitchell et al. argue fully autonomous agents should not be developed. Design for orchestrated autonomy.
+
+  - title: Wrapping up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        recall: What rules of thumb summarize agentic foundations?
+        cards:
+          - title: Compute what you can
+            body: Check the model against arithmetic and plain code.
+          - title: Cap every loop
+            body: "Budget steps, and make the last one a wrap-up."
+          - title: Treat tool output as untrusted
+            body: Pick an injection pattern before you ship.
+          - title: Small core, verbatim archive
+            body: Curate the index, not the facts.
+          - title: Start with one agent
+            body: Split for parallelism, isolation or permissions.
+          - title: Enforce limits in code
+            body: A prompt restriction is not a permission.
+        takeaway: Compute what you can, bound the loop, distrust tool output, keep the record, start with one agent and enforce limits outside the model.
+        source: notes/01-agent-fundamentals.md
+        notes: >-
+          Each of these undoes a failure of the restock agent from earlier in the lecture. The full table is in the pillar README.
+
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillar follows agentic foundations?
+        bullets:
+          - "**Frameworks in depth:** LangGraph and Google ADK, in `04-agentic-frameworks`."
+          - "**Watching it run:** tracing and scoring, in `06-observability`."
+          - "**Deployed systems:** `07-agentic-applications`."
+          - "**The engineering discipline:** `ai-engineering`, on harness, loop and graph."
+        aside:
+          title: Try it
+          body: Run the code in each note. The runnable blocks work offline with stubs, and the A2A one needs only Pydantic.
+        takeaway: Next, study LangGraph and ADK in depth, then tracing and scoring, then deployed systems, with the harness discipline in ai-engineering.
+        source: notes/07-guardrails-and-autonomy.md
+        notes: >-
+          The labs for the two courses are upstream, linked in the README, and they need API keys.

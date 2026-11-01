@@ -44,9 +44,27 @@ after the six, in either order.
 | loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
 | graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
 | eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](06-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
-| inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#planned-notes) (notes not yet written) |
+| inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#reading-order), [notes/](07-inference-engineering/notes/) |
 | multimodal | [08-multimodal-engineering/](08-multimodal-engineering/README.md) | — (closest: 2-llm-fundamentals) | [README](08-multimodal-engineering/README.md#planned-notes) (notes not yet written) |
 | safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
+
+---
+
+## Labs
+
+Decision (2026-11-01): **labs in both TypeScript and Python.** Each pillar from 01 to 07 has one lab in
+`practice/`, in both languages side by side on the same inputs, so you can compare them. Every lab
+runs offline with a stub model by default, and each README says how to swap in a real model.
+
+| Pillar | Lab | TypeScript | Python |
+|---|---|---|---|
+| 01 prompt | Prompt eval harness | [prompt-eval-harness](01-prompt-engineering/practice/prompt-eval-harness/README.md) | [prompt-eval-harness-py](01-prompt-engineering/practice/prompt-eval-harness-py/README.md) |
+| 02 context | Context budgeter | [context-budgeter](02-context-engineering/practice/context-budgeter/README.md) | [context-budgeter-py](02-context-engineering/practice/context-budgeter-py/README.md) |
+| 03 harness | Tool server with sandboxing | [tool-server-sandbox](03-harness-engineering/practice/tool-server-sandbox/README.md) | [tool-server-sandbox-py](03-harness-engineering/practice/tool-server-sandbox-py/README.md) |
+| 04 loop | Loop with a scorekeeper | [loop-scorekeeper](04-loop-engineering/practice/loop-scorekeeper/README.md) | [loop-scorekeeper-py](04-loop-engineering/practice/loop-scorekeeper-py/README.md) |
+| 05 graph | LangGraph graph | [langgraph-graph-ts](05-graph-engineering/practice/langgraph-graph-ts/README.md) | [langgraph-graph](05-graph-engineering/practice/langgraph-graph/README.md) |
+| 06 eval | Eval suite in CI | [eval-suite-ci](06-eval/practice/eval-suite-ci/README.md) | [eval-suite-ci-py](06-eval/practice/eval-suite-ci-py/README.md) |
+| 07 inference | Inference simulator | [inference-lab-ts](07-inference-engineering/practice/inference-lab-ts/README.md) | [inference-lab](07-inference-engineering/practice/inference-lab/README.md) |
 
 ---
 

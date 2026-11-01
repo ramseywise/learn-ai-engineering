@@ -1,6 +1,6 @@
 # Lab: a tool server with sandboxing
 
-Language: TypeScript. Supports [Tool design](../../notes/03-tool-design.md) and
+Language: TypeScript. The [Python version](../tool-server-sandbox-py/README.md) does the same job on the same inputs. Supports [Tool design](../../notes/03-tool-design.md) and
 [Execution boundaries](../../notes/04-execution-boundaries.md).
 
 A model's tool call is untrusted input, because retrieved text can talk the model into almost

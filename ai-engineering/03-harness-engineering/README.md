@@ -37,6 +37,15 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 
 Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx), a 5-part talk that grows one refund agent from demo to production harness, built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=03-harness-engineering`.
 
+## Lab
+
+A tool server with sandboxing: file tools behind a sandbox boundary, with the attempts it refuses in the output. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/tool-server-sandbox/](practice/tool-server-sandbox/README.md) | `cd practice/tool-server-sandbox && npx tsx run.ts` |
+| Python | [practice/tool-server-sandbox-py/](practice/tool-server-sandbox-py/README.md) | `cd practice/tool-server-sandbox-py && uv run run.py` |
+
 ## Layout
 
 ```
@@ -44,6 +53,7 @@ README.md         this file
 references.md     primary sources, upstream course, what was kept and dropped
 notes/            01–10, the course; figures and code inline
 slides/           deck.yaml + harness-engineering.pptx
+practice/         the lab, in TypeScript and Python
 sources/          paper PDFs + images/ (figures used by notes and deck)
 ```
 

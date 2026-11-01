@@ -40,6 +40,15 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 4-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
 3. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
+## Lab
+
+A LangGraph support graph: routing, a fan-out with a reducer, a retry cycle, an approval interrupt and a checkpoint. TypeScript uses LangGraph.js. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/langgraph-graph-ts/](practice/langgraph-graph-ts/README.md) | `cd practice/langgraph-graph-ts && npm install && npx tsx run.ts` |
+| Python | [practice/langgraph-graph/](practice/langgraph-graph/README.md) | `cd practice/langgraph-graph && uv run run.py` |
+
 ## Layout
 
 ```
@@ -47,6 +56,7 @@ README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
 notes/         01–13, the course; figures and code inline
 slides/        deck.yaml + graph-engineering.pptx
+practice/      the lab, in TypeScript and Python
 sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
   images/      every figure the notes and deck use (<author>-<slug>-fig<N>)
   images/unreferenced/   course images not used anywhere yet, kept for review

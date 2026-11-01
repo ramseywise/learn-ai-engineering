@@ -160,7 +160,7 @@ for change, item_id, reason in sorted(worst):
 -1  ref-2   states the fact
 ```
 
-This works, and for a first pass it's the right size. Its weakness is that nothing connects the numbers to the traces. A fortnight later you have an output file and no way to see why `ref-2` got a 1. The design choices also carry risks worth naming:
+This works, and for a first pass it's the right size. Its weakness is that nothing connects the numbers to the traces. A fortnight later you have an output file and no way to see why `rfs-2` got a 1. The design choices also carry risks worth naming:
 
 | Judge design choice upstream | Risk | Fix |
 |---|---|---|
@@ -311,13 +311,13 @@ means = rng.choice(delta, size=(10_000, len(delta)), replace=True).mean(axis=1)
 low, high = np.percentile(means, [2.5, 97.5])
 print(f"mean change {delta.mean():+.3f}, 95% bootstrap interval {low:+.3f} to {high:+.3f}")
 
-is_refusal = wide.index.str.startswith("ref")
+is_refusal = wide.index.str.startswith("rfs")
 print("items in the refusal category:", int(is_refusal.sum()), " mean change", round(delta[is_refusal].mean(), 2))
 ```
 
 ```text
 mean change +0.208, 95% bootstrap interval -0.668 to +1.043
-items in the refusal category: 4  mean change -1.0
+items in the refusal category: 4  mean change -2.75
 ```
 
 The average change has an interval that spans zero, so it isn't evidence of anything. The refusal change rests on only a few items, so its size isn't well measured either, and you should not need it to be. A safety rule is pass or fail, and one item that grants a refund the agent must not grant is reason enough to stop and read it. So the gate should work differently for averages and for rules.
@@ -354,7 +354,7 @@ Floors on rule categories block. Drops elsewhere send someone to read the items.
 
 ### What a golden set can't see
 
-Run the same code against the fortnight's production failures and something humbling appears. The golden set is a fixed list, and a retriever change that distorts billing answers shows up only if a golden question hits the same document in the same way. Anthropic's guidance on agent evals frames this as layers of defence ([Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents), Anthropic, 2026-01, engineering blog): automated evals, production monitoring and periodic human review each catch what the others miss, a Swiss cheese model. They also insist that you read the transcripts and grades, not only the numbers. Golden sets are for known questions before release, and [chapter 3](03-judge-pipelines-over-trace-exports.md) does the rest over production.
+Notice what the gate did not flag. Billing improved by a full point on the golden set, and yet [chapter 3](03-judge-pipelines-over-trace-exports.md) will show billing answers getting worse in production once `v2.0` shipped. The golden set is a fixed list, and a retriever change that distorts answers shows up only if a golden question reaches the same document in the same way. `refund_policy` happens to, which is why it appears under "read by hand". Billing doesn't. Anthropic's guidance on agent evals frames this as layers of defence ([Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents), Anthropic, 2026-01, engineering blog): automated evals, production monitoring and periodic human review each catch what the others miss, a Swiss cheese model. They also insist that you read the transcripts and grades, not only the numbers. Golden sets are for known questions before release, and [chapter 3](03-judge-pipelines-over-trace-exports.md) does the rest over production.
 
 ---
 
@@ -517,7 +517,7 @@ With that hierarchy you can score the **router** separately (was triage right?) 
 
    <details><summary>Answer</summary>
 
-   The mean change rises, because the refusal losses are gone, and the interval moves up with it. So the honest summary is two statements, an improvement on knowledge and a failure on a rule, and one average can't carry both.
+   The mean change rises to +0.80, with an interval of about +0.05 to +1.55, because the refusal losses are gone. So the honest summary is two statements, an improvement on knowledge and a failure on a rule, and one average can't carry both.
 
    </details>
 

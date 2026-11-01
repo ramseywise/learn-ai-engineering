@@ -6,33 +6,16 @@ Run from any folder (it writes only to a temporary directory):
 import os, tempfile
 os.chdir(tempfile.mkdtemp())
 
-# --- hash_mod ---
-import zlib, random, itertools, sqlite3, os, statistics, time
+# --- setup ---
+import zlib, random, itertools, sqlite3, os, time, numpy as np
 from collections import Counter
 
 def h(key):
+    """A hash that is stable across processes."""
     return zlib.crc32(str(key).encode())
-
-keys = range(1_000_000)
-moved_mod = sum(h(k) % 10 != h(k) % 11 for k in keys) / len(keys)
-print(f"hash mod N, 10 -> 11 nodes: {moved_mod:.1%} of keys move")
-
-# Fixed partitions: 1,024 partitions never change; only ownership of some moves.
-PARTITIONS = 1024
-owners = {p: p % 10 for p in range(PARTITIONS)}
-new_owners = dict(owners)
-for node in range(10):                         # the new node takes a fair share from each node
-    take = [p for p, o in owners.items() if o == node][: PARTITIONS // 11 // 10 + 1]
-    for p in take:
-        new_owners[p] = 10
-moved_fixed = sum(new_owners[h(k) % PARTITIONS] != owners[h(k) % PARTITIONS] for k in keys) / len(keys)
-print(f"fixed partitions, 10 -> 11 nodes: {moved_fixed:.1%} of keys move")
-print("load after rebalance:", sorted(Counter(new_owners.values()).values()))
-print("--- hash_mod done")
+print("--- setup done")
 
 # --- range_vs_hash ---
-import numpy as np
-
 rng = np.random.default_rng(7)
 days = np.sort(rng.integers(0, 31, 1_000_000))
 ids = np.arange(len(days))
@@ -89,6 +72,24 @@ for n in [1, 4, 16, 64]:
     sample = sorted(scatter_gather(n) for _ in range(20_000))
     print(f"{n:3d} shards: median {sample[10_000]:6.1f} ms   p99 {sample[19_800]:6.1f} ms")
 print("--- scatter done")
+
+# --- hash_mod ---
+keys = range(1_000_000)
+moved_mod = sum(h(k) % 10 != h(k) % 11 for k in keys) / len(keys)
+print(f"hash mod N, 10 -> 11 nodes: {moved_mod:.1%} of keys move")
+
+# Fixed partitions: 1,024 partitions never change; only ownership of some moves.
+PARTITIONS = 1024
+owners = {p: p % 10 for p in range(PARTITIONS)}
+new_owners = dict(owners)
+for node in range(10):                         # the new node takes a fair share from each node
+    take = [p for p, o in owners.items() if o == node][: PARTITIONS // 11 // 10 + 1]
+    for p in take:
+        new_owners[p] = 10
+moved_fixed = sum(new_owners[h(k) % PARTITIONS] != owners[h(k) % PARTITIONS] for k in keys) / len(keys)
+print(f"fixed partitions, 10 -> 11 nodes: {moved_fixed:.1%} of keys move")
+print("load after rebalance:", sorted(Counter(new_owners.values()).values()))
+print("--- hash_mod done")
 
 # --- hive ---
 import duckdb

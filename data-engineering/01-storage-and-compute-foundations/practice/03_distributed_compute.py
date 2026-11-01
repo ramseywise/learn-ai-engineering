@@ -1,4 +1,4 @@
-"""Code from notes/03-distributed-compute.md. The last two sections need a Java runtime (17 was tested).
+"""Code from notes/03-distributed-compute.md. The Spark sections need a Java runtime (Java 17 was tested).
 
 Run from any folder (it writes only to a temporary directory):
     uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 03_distributed_compute.py
@@ -128,6 +128,26 @@ for name, l in [("plain", plain), ("salted", salted)]:
     print(f"{name:7s} max {max(l):7d} mean {sum(l) // len(l):7d} max/mean {max(l) / (sum(l) / len(l)):.2f}")
 print("--- skew done")
 
+# --- lineage ---
+from pyspark.sql import SparkSession, functions as F
+
+spark = SparkSession.builder.master("local[4]").appName("trips").getOrCreate()
+spark.sparkContext.setLogLevel("ERROR")
+rdd = spark.sparkContext.parallelize(zones, 8).map(lambda z: (z, 1)).reduceByKey(lambda a, b: a + b, 4)
+print(rdd.toDebugString().decode())
+print("--- lineage done")
+
+# --- spark ---
+df = spark.read.parquet("trips.parquet")
+per_zone = (df.filter(F.col("payment_type") == "card")
+              .groupBy("pickup_zone")
+              .agg(F.count("*").alias("trips"), F.round(F.avg("fare_usd"), 2).alias("avg_fare"))
+              .orderBy(F.desc("trips")).limit(3))
+per_zone.show()
+per_zone.explain()
+spark.stop()
+print("--- spark done")
+
 # --- one_machine ---
 query = """
     SELECT pickup_zone, count(*) AS trips, round(avg(fare_usd), 2) AS avg_fare
@@ -158,23 +178,3 @@ print(con.sql("""SELECT count(*) AS riders, round(avg(spend), 2) AS avg_spend
                  FROM (SELECT rider_id, sum(fare_usd) AS spend FROM 'big.parquet' GROUP BY rider_id)"""))
 print(f"group by 3,000,000 keys under a 200 MB limit: {time.perf_counter() - t0:.1f} s")
 print("--- larger_than_memory done")
-
-# --- spark ---
-from pyspark.sql import SparkSession, functions as F
-
-spark = SparkSession.builder.master("local[4]").appName("trips").getOrCreate()
-spark.sparkContext.setLogLevel("ERROR")
-df = spark.read.parquet("trips.parquet")
-per_zone = (df.filter(F.col("payment_type") == "card")
-              .groupBy("pickup_zone")
-              .agg(F.count("*").alias("trips"), F.round(F.avg("fare_usd"), 2).alias("avg_fare"))
-              .orderBy(F.desc("trips")).limit(3))
-per_zone.show()
-per_zone.explain()
-print("--- spark done")
-
-# --- lineage ---
-rdd = spark.sparkContext.parallelize(zones, 8).map(lambda z: (z, 1)).reduceByKey(lambda a, b: a + b, 4)
-print(rdd.toDebugString().decode())
-spark.stop()
-print("--- lineage done")

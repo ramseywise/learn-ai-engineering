@@ -227,7 +227,7 @@ Labeling turns fill-in-the-blank into multiple choice. All three routes still st
 
 **Screenshot-only models.** Two papers show the coordinate route working without a DOM. CogAgent ([arXiv:2312.08914](https://arxiv.org/abs/2312.08914) (Hong et al., 2023-12)) adds a 0.30B high-resolution cross-attention branch to CogVLM-17B. That lets it read 1120×1120 screenshots, where tiny icons and text survive, at under half the FLOPs of CogVLM at 490×490. On Mind2Web, from screenshots alone, it scored 58.2 against 54.4 for LLaMA2-70B reading the HTML and 30.9 for few-shot GPT-4. On Android-in-the-Wild it scored 76.88 against 74.27. The authors re-checked the "errors" and judged over 40% of them to be valid alternative paths, so the benchmark undercounts. UI-TARS ([arXiv:2501.12326](https://arxiv.org/abs/2501.12326) (Qin et al., 2025-01)) trains a native agent on Qwen2-VL that does perception, grounding, reasoning and action in one model. Its training includes DPO on corrected mistakes collected online. On ScreenSpot-Pro, a grounding test on high-resolution professional apps, the 72B model scored 38.1 against 31.1 for UGround-7B and 17.1 for Claude Computer Use. CogAgent scored 7.7 there. On OSWorld (screenshot-only, averaged over 3 runs), it scored 22.7 at a 15-step budget against Claude's 14.9, and 24.6 at 50 steps against 22.0. DPO alone moved the 72B model from 18.8 to 22.7. Thinking before each action was slightly worse with one sample, and helped only at 16–64 samples or out of domain. The team that built the model also ran almost all of these evaluations.
 
-**From apps to whole desktops.** The GUI-agent literature moved fast, and a survey is the best way in. Zhang et al. organize it around an LLM "brain" and GUI automation "hands", across web, mobile and desktop ([LLM-Brained GUI Agents](https://arxiv.org/abs/2411.18279), TMLR 2025). Read in order, these papers trace how the problem shifted:
+**From apps to whole desktops.** The GUI-agent literature moved fast, and a survey is the best way in. Zhang et al. cover the frameworks, the data collection, the large action models built for GUI tasks and the benchmarks ([LLM-Brained GUI Agents](https://arxiv.org/abs/2411.18279), TMLR 2025). Read in order, these papers trace how the problem shifted:
 
 | Paper | Move | Evidence |
 |---|---|---|
@@ -393,7 +393,7 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 | DOM indexing or pure vision for Computer Use? | Index when structure exists, fall back to SoM or coordinates on canvas, and keep both paths. Pick the route per model. |
 | Action chunking versus sudden change? | Use shorter chunks near contact, re-plan on visual anomaly triggers, and blend overlapping chunks. |
 | What did SeeAct show about GUI agents? | With oracle grounding GPT-4V completed 51.1% of live-site tasks, with a large gap to real grounding. Finding the element, rather than choosing the action, was the bottleneck at that time. |
-| Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used multiple rollouts at a 100-step budget. Agents still take many more steps and much longer than people, and efficiency is now the bottleneck. |
+| Is human-level OSWorld performance the end of the story? | No. Agent S3's 72.6% used multiple rollouts at a 100-step budget, so it says little about cost or wall-clock time. Measure time per task and steps per task alongside the success rate. |
 
 ---
 

@@ -12,31 +12,50 @@ This pillar is where an LLM call becomes an agent: a model in a loop that choose
 
 > **Agent = Model + Context + Tools, run in a loop.** Everything else (memory, multi-agent, frameworks) is a way to manage one of those three across many steps.
 
-Three questions organise the notes:
+Four questions organise the notes:
 
 | Question | Answer in this pillar |
 |---|---|
 | How does a model act? | It emits a tool call; your code runs it and returns the result (02) |
 | How does it remember? | It edits its own memory with tool calls, and pages old context out to databases (03) |
 | How do agents work together? | Conversations with stop conditions, nested chats, group chats, shared memory (04) |
+| How do you keep it safe? | Lower the risk first, then filter, gate actions in code and keep people at the irreversible points (07) |
 
 The two frameworks this course builds with, LangGraph and Google ADK, get full treatment in [04-agentic-frameworks](../04-agentic-frameworks/README.md); here they appear in the survey only (05). The engineering discipline on top (harness, loop, graph, eval) is in [ai-engineering](../../ai-engineering/).
 
 ---
 
+## Why it matters
+
+Agents fail in ways that a single model call does not. Errors compound across steps, an action can't be taken back, and a confident explanation is not evidence that the step was right. The value of this pillar is the set of mechanics that stay true whichever framework you pick, so that you can read a framework's abstraction and see what it does, and what it leaves to you.
+
+## The story
+
+One example runs through every note: a restock agent, from the inventory manager that opens *Generative AI Design Patterns*. It starts as one model call that orders 300 units of itemB, and arithmetic shows that it missed a stockout ([01](notes/01-agent-fundamentals.md)). It gets tools, and with them the rule that the model proposes while your code executes ([02](notes/02-tool-use-and-react.md)). It forgets last Monday's delivery-time change, so it gets a small core and a searchable archive ([03](notes/03-memory-as-an-operating-system.md)). A reviewer would catch bad orders, but that brings stop conditions and coordination failures ([04](notes/04-multi-agent-design-patterns.md)). A framework can then pause it for human approval, as long as resuming doesn't place the order twice ([05](notes/05-framework-survey.md)). Its growing policy moves into a skill, and evals check the path as well as the answer ([06](notes/06-google-adk-intensive.md)). Once it can spend money, the limits move out of the prompt and into code ([07](notes/07-guardrails-and-autonomy.md)).
+
 ## Start here
 
 1. Read [01 — agent fundamentals](notes/01-agent-fundamentals.md) for the formula and the ReAct loop.
-2. Read notes 02–04 in order; each one is built from a course whose labs are linked upstream.
+2. Read notes 02–04 in order. Each draws on a course whose labs are linked upstream.
 3. Skim [05 — framework survey](notes/05-framework-survey.md), then go to [04-agentic-frameworks](../04-agentic-frameworks/README.md) for the frameworks you will use.
-4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+4. Read [06 — Google ADK intensive](notes/06-google-adk-intensive.md) for the engineering around the loop, and [07 — guardrails and autonomy](notes/07-guardrails-and-autonomy.md) before anything you build can act on the world.
+5. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+
+## Deck
+
+[slides/agentic-foundations.pptx](slides/agentic-foundations.pptx) is the lecture for this pillar, in six parts plus a wrap-up, built from [slides/deck.yaml](slides/deck.yaml). Rebuild it with `make slides PILLAR=generative-ai/03-agentic-foundations`.
+
+## Run the code
+
+Every block in the notes without an `# illustrative` comment runs offline with the standard library, using stubs for the model, so you can paste it into a file and run `python3 file.py`. The one exception is the A2A status block in [05](notes/05-framework-survey.md), which needs Pydantic: `uv run --with pydantic python file.py`. Blocks marked `# illustrative` say on their first line what they need, usually a framework and an API key. This pillar has no `practice/` folder; the labs live upstream and are listed under [Coursework and practice](#coursework-and-practice).
 
 ## Layout
 
 ```
 README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
-notes/         01–06, the course; figures and code inline
+notes/         01–07, the course; figures and code inline
+slides/        deck.yaml and the built agentic-foundations.pptx
 sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Definitive Guide,
                Building Applications with AI Agents, Building AI Agents with LLMs, RAG, and KGs),
                the Letta lab handbook
@@ -49,12 +68,13 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 
 | # | Note | Covers |
 |---|---|---|
-| 1 | [Agent fundamentals](notes/01-agent-fundamentals.md) | Agent = LLM + context + tools, the context ablation, ReAct trajectory, model-as-agent, agents as state machines, choosing and staffing models, workflow vs autonomous, guardrails, autonomy levels, how agents learn |
-| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, caller/executor split, MCP servers, code execution, reliability rules, always call a tool first, tool preselection, six prompt-injection defenses |
+| 1 | [Agent fundamentals](notes/01-agent-fundamentals.md) | The restock agent, Agent = LLM + context + tools, the context ablation, ReAct trajectory, a loop in one screen, model-as-agent, agents as state machines, choosing and staffing models, workflow vs autonomous, how agents learn |
+| 2 | [Tool use and the ReAct loop](notes/02-tool-use-and-react.md) | The four-step tool-call mechanism, the raw loop, ReAct as a prompt, what reasoning steps fix and what they do not, caller/executor split, MCP servers, code execution, reliability rules, always call a tool first, tool preselection, six prompt-injection defenses |
 | 3 | [Memory as an operating system](notes/03-memory-as-an-operating-system.md) | MemGPT's OS analogy, context compilation, core/recall/archival tiers, heartbeats, the Letta API, agentic RAG, P28 memory types, LangMem, shared blocks |
 | 4 | [Multi-agent design patterns](notes/04-multi-agent-design-patterns.md) | Ng's four patterns, AutoGen L1–L6 (conversation, sequential chats, reflection, tool use, coding, planning), planning strategies (plan-and-execute, ToT), Letta multi-agent, P23 architectures, supervisor/hierarchical/swarm, why multi-agent systems fail |
 | 5 | [Framework survey](notes/05-framework-survey.md) | AutoGen, CrewAI, LangGraph deep research, Google ADK, OpenAI Agents SDK, smolagents, LangGraph subgraphs and `interrupt`, MCP vs A2A, MLflow eval, choosing a framework |
-| 6 | [Google ADK intensive](notes/06-google-adk-intensive.md) | Kaggle five-day course notes, Days 1–3: agentic engineering, context types, the new SDLC, harness, protocols, agent skills |
+| 6 | [Google ADK intensive](notes/06-google-adk-intensive.md) | Kaggle five-day course notes, Days 1–3: agentic engineering, tests vs evals, trajectory evaluation, context types, the new SDLC, harness, protocols, agent skills |
+| 7 | [Guardrails and autonomy](notes/07-guardrails-and-autonomy.md) | Where controls sit, lowering risk before filtering (P29–P32), self-check limits, execution gates, what the user must see, autonomy levels |
 
 ## Rules of thumb
 
@@ -75,10 +95,17 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 | Pick the framework by its unit of programming: conversation, crew, graph or agent object | [05](notes/05-framework-survey.md) |
 | Use plain code or a fixed workflow when the steps are known; reach for an agent only when the path depends on what it finds | [01](notes/01-agent-fundamentals.md) |
 | Cap the loop and make the last step a wrap-up, not a silent cutoff | [01](notes/01-agent-fundamentals.md) |
-| A prompt restriction is not a permission: enforce limits in credentials and code | [01](notes/01-agent-fundamentals.md) |
+| A prompt restriction is not a permission: enforce limits in credentials and code | [07](notes/07-guardrails-and-autonomy.md) |
 | Staff models by role: a cheap fast model for routine steps, a reasoning budget only where it pays | [01](notes/01-agent-fundamentals.md) |
 | Past roughly ten tools, retrieve the relevant few per turn instead of sending all of them | [02](notes/02-tool-use-and-react.md) |
 | Plan with the model, execute arithmetic and lookups in code | [02](notes/02-tool-use-and-react.md) |
+| Count the calls before you search over plans: width and depth multiply | [04](notes/04-multi-agent-design-patterns.md) |
+| Keep the verbatim record and curate the index on top of it | [03](notes/03-memory-as-an-operating-system.md) |
+| Never put a side effect in the same node as an `interrupt` | [05](notes/05-framework-survey.md) |
+| Evaluate the trajectory as well as the output: a lucky run passes an output check | [06](notes/06-google-adk-intensive.md) |
+| Keep task-specific rules in skills, and test that their descriptions trigger | [06](notes/06-google-adk-intensive.md) |
+| Ask how much the model needs to write before adding filters: templates, then assembled facts, then guardrails | [07](notes/07-guardrails-and-autonomy.md) |
+| Rate tools by what they can undo, deny by default, and keep hard limits no approval can override | [07](notes/07-guardrails-and-autonomy.md) |
 
 ---
 
@@ -95,15 +122,16 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 
 ### Books and courses
 - Bojie Li, *AI Agents in Depth* (2026, [upstream](https://github.com/bojieli/ai-agent-book), Apache-2.0): ch. 1 → note 01.
-- Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025): chapter PDFs in [sources/](sources/); ch. 6–8 and 10 → notes 02–05.
+- Lakshmanan & Hapke, *Generative AI Design Patterns* (O'Reilly, 2025): chapter PDFs in [sources/](sources/); ch. 1, 5–10 → notes 01–05, 07.
 - DeepLearning.AI, *LLMs as Operating Systems: Agent Memory* → notes 02–04.
 - DeepLearning.AI, *AI Agentic Design Patterns with AutoGen* → notes 02, 04.
 - Google × Kaggle, *5-Day AI Agents Intensive* → note 06.
+- More courses and videos, with platform and cost: [references.md](references.md#courses-and-videos).
 - Koenigstein, *AI Agents: The Definitive Guide* (O'Reilly, 2026; Early Release): ch. 1, 2, 4 → notes 01, 02, 04, 05 (agents as state machines, staffing models by role, cheap ToT, handoffs, `interrupt`).
 - Oshin & Campos, *Learning LangChain* (O'Reilly, 2025): ch. 6–7 → notes 02, 04, 05 (always call a tool first, tool preselection, reflection graph, supervisor, subgraphs).
 - Phoenix & Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024): ch. 6 → notes 01–04 (ReAct parsing, step caps, legacy memory classes, plan-and-execute, ToT).
 - Albada, *Building Applications with AI Agents* (O'Reilly, 2025): ch. 1–2 → notes 01, 02, 04, 05 (when an agent is warranted, scoping the first agent, model choice).
-- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025): ch. 4, 11 → notes 01, 02, 04 (planning taxonomy, autonomy levels, CoT limits, single vs multi-agent).
+- Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025): ch. 4, 11 → notes 02, 04, 05, 07 (planning taxonomy, autonomy levels, CoT limits, single vs multi-agent).
 
 ### Coursework and practice
 The labs are not copied into this repo. Run them from upstream:

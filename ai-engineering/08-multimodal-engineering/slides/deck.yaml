@@ -1,0 +1,505 @@
+# Multimodal Engineering lecture deck. Covers notes 01-07.
+# Build: make slides PILLAR=ai-engineering/08-multimodal-engineering STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: an invoice assistant that meets photos, PDFs, charts, phone calls and generated
+# images. It is a teaching thread; every number on the slides comes from a study or a run in the notes.
+deck:
+  title: Multimodal Engineering
+  subtitle: Building systems whose inputs are not text
+  tagline: |-
+    It misreads · It drops a row · It can't find the chart · It has a deadline · It can't reproduce · It guesses
+  reference: "Notes: ai-engineering/08-multimodal-engineering"
+  output: multimodal-engineering.pptx
+  notes: >-
+    Today we follow one system, an invoice assistant that works well on text, as it meets everything that
+    is not text. Photos, PDFs, charts, phone calls and generated pictures each break it in a different way,
+    and almost none of those failures raise an error. For each one we want the mechanism, a check that
+    catches it, and the evidence for what to do about it.
+
+parts:
+  - title: The photo with the wrong digit
+    summary: Patches and tokens · Resolution · Orientation · Evidence
+    notes: >-
+      The first failure looks like no failure at all. The request succeeds, the sentence is fluent, and one
+      digit is wrong. To see how, we follow the image from pixels to tokens.
+    slides:
+      - layout: statement
+        title: Why did a fluent answer get the amount wrong?
+        kicker: The problem
+        statement: "The language model never sees pixels. Whatever preprocessing and the encoder dropped is gone, and the model fills the gap with something plausible."
+        attribution: Most image bugs happen before the model runs
+        source: notes/01-image-input.md
+      - layout: flow
+        title: An image reaches the model as patch tokens
+        kicker: The path
+        lead: A vision transformer cuts the image into squares, and a small connector projects them into the language model.
+        steps:
+          - {label: Pixels, sub: "phone photo", accent: "94A3B8"}
+          - {label: Resize or tile, sub: "SDK or provider rule", accent: "D4621A"}
+          - {label: Patch encoder, sub: "ViT, as in CLIP", accent: "1E3A5F"}
+          - {label: Connector, sub: "linear or MLP", accent: "1E3A5F"}
+          - {label: Language model, sub: "tokens among words", accent: "0F7490"}
+        caption: "LLaVA-1.5 at 336x336 uses 576 image tokens. An A4 scan at 300 dpi would need more than seventy times as many patches."
+        takeaway: Images cost context as text does, and cost grows with area.
+        source: notes/01-image-input.md
+        notes: >-
+          The orange box is the one to watch. A client library or provider can resize silently. So log the
+          dimensions that actually reach the model.
+      - layout: table
+        title: Resolution moved the score more than encoder size
+        kicker: Evidence
+        lead: "MM1 varied encoders, connectors and data systematically on its own zero-shot and few-shot benchmarks."
+        header: [Lever, Change, Effect]
+        widths: [3, 4, 3]
+        rows:
+          - [Resolution, "224 to 336 pixels", "about +3% across architectures"]
+          - [Encoder size, "ViT-L to ViT-H, double the parameters", "usually under +1%"]
+          - [Connector, "design, with visual tokens fixed", "comparatively little"]
+        highlight: [0]
+        takeaway: "Read this as a ranking of levers for research models, not a forecast for your task."
+        source: notes/01-image-input.md
+      - layout: code
+        title: A downscale erases the difference between digits
+        kicker: Worked example
+        lang: text
+        code: |
+          page width   digit height   3-vs-8 gap   1-vs-7 gap
+           2480 px        12.0 px       0.016        0.014
+           1240 px         6.0 px       0.008        0.008
+            672 px         3.3 px       0.006        0.004
+            336 px         1.6 px       0.005        0.002
+        bullets:
+          - "One font and a crude pixel measure, with no model involved"
+          - "Most of the signal is gone before any encoder runs"
+          - "Send the full page for layout and a crop of the totals for reading"
+        takeaway: Log the pixel height of the smallest text you need, and monitor it like token count.
+        source: notes/01-image-input.md
+      - layout: compare
+        title: Orientation and evidence are the cheap fixes
+        kicker: What to do
+        left:
+          title: Fix the input
+          tag: Orientation
+          bullets:
+            - "OCRBench, GPT-4o: 83.1 upright, 61.9 at 90 degrees, 12.9 flipped vertically"
+            - "Honor EXIF as the first preprocessing step"
+            - "Detect orientation for scans with no EXIF"
+        right:
+          title: Ask for proof
+          tag: Evidence
+          bullets:
+            - "Ask for a bounding box along with the value"
+            - "A box outside the image shows invented evidence"
+            - "Crop, reread at full resolution, compare the readings"
+        takeaway: Disagreement between the page reading and the crop is a cheap signal to route to a person.
+        source: notes/01-image-input.md
+
+  - title: The PDF that lost a row
+    summary: Three routes · Tail latency · Arithmetic checks · Field scores
+    notes: >-
+      Now the assistant gets whole PDFs. Copying the text gives you drawing order. Sending the page to a
+      vision model gives a fluent transcript that may have skipped a row.
+    slides:
+      - layout: statement
+        title: How do you know the extraction is right?
+        kicker: The problem
+        statement: "A PDF is a set of drawing instructions, not a document. Every route through it can fail silently, and valid JSON proves nothing."
+        attribution: The best checks use facts the document must satisfy on its own terms
+        source: notes/02-document-understanding.md
+      - layout: cards
+        title: Three routes through a document
+        kicker: The options
+        cards:
+          - title: Specialised pipeline
+            body: "Layout, table and OCR models in sequence, as in Docling. Inspectable, but a wrong region stays wrong."
+            accent: "1E3A5F"
+          - title: End-to-end document model
+            body: "Page image to structured tokens, as in Donut and Nougat. No error cascade, but it can loop: 1.5% of Nougat's test pages."
+            accent: "D4621A"
+          - title: General vision model
+            body: "Page image plus a schema. Fast to demo and good on odd layouts, but its errors look exactly like correct output."
+            accent: "5B21B6"
+        takeaway: Route per page and log the route, so a shift in accuracy points at a route and a document family.
+        source: notes/02-document-understanding.md
+      - layout: flow
+        title: Route each page to the cheapest thing that works
+        kicker: The pattern
+        lead: "In Docling, disabling OCR saved around 60% of the runtime on CPU and M3, and about 50% on the L4."
+        steps:
+          - {label: Page, sub: "from any PDF", accent: "94A3B8"}
+          - {label: "Text layer?", sub: "skip OCR if so", accent: "1E3A5F"}
+          - {label: "Hard region?", sub: "tables, formulas", accent: "D4621A"}
+          - {label: Validate, sub: "arithmetic and second route", accent: "0F7490"}
+        caption: "OCR on a born-digital page costs time and can add errors the text layer did not have."
+        takeaway: Send only the hard pages to the expensive route.
+        source: notes/02-document-understanding.md
+      - layout: table
+        title: The slow page sets your worker size
+        kicker: Evidence
+        lead: "Docling's per-page timings on 89 PDFs, 4,008 pages and 1,842 tables."
+        header: [Hardware, 5th percentile, Median, 95th percentile]
+        widths: [4, 3, 3, 3]
+        rows:
+          - ["x86 CPU", "0.6 s", "0.79 s", "16.3 s"]
+          - ["M3 Max SoC", "0.26 s", "0.32 s", "6.48 s"]
+          - ["Nvidia L4 GPU", "57 ms", "114 ms", "2081 ms"]
+        highlight: [0]
+        takeaway: "At the 95th percentile a CPU page takes about twenty times the median, so set per-page timeouts."
+        source: notes/02-document-understanding.md
+      - layout: code
+        title: Arithmetic catches what a schema cannot
+        kicker: Worked example
+        lang: python
+        code: |
+          def reconcile(doc, tolerance=D("0.01")):
+              problems = []
+              lines = sum(D(i["qty"]) * D(i["unit"])
+                          for i in doc["items"])
+              if abs(lines - D(doc["subtotal"])) > tolerance:
+                  problems.append("line items != subtotal")
+              total = D(doc["subtotal"]) + D(doc["tax"])
+              if abs(total - D(doc["total"])) > tolerance:
+                  problems.append("subtotal + tax != total")
+              return problems
+        bullets:
+          - "**Misread digit** fails the total check"
+          - "**Dropped row** fails the line item check"
+          - "Both outputs were valid JSON"
+        takeaway: A failed check says something is wrong, then you retry with a crop, try a second route, or ask a person.
+        source: notes/02-document-understanding.md
+      - layout: compare
+        title: Two scores, for two decisions
+        kicker: Scoring
+        left:
+          title: Edit distance
+          tag: Choose an engine
+          bullets:
+            - "Measures transcript quality"
+            - "Good for comparing OCR engines"
+            - "A wrong digit looks almost perfect"
+        right:
+          title: Field F1
+          tag: Decide to ship
+          bullets:
+            - "One wrong character fails the field"
+            - "Measures what the business cares about"
+            - "Matches the cost of a wrong payment"
+        takeaway: Use edit distance to pick an engine, and field F1 to decide whether you can ship.
+        source: notes/02-document-understanding.md
+
+  - title: The answer inside a chart
+    summary: What to index · ColPali evidence · Late interaction · Cost
+    notes: >-
+      A user asks which supplier's prices rose most. The answer is a bar chart with no sentence describing
+      it. The text pipeline threw it away before retrieval began.
+    slides:
+      - layout: statement
+        title: What if the answer is in no sentence?
+        kicker: The problem
+        statement: "The retriever isn't weak. The pipeline threw the answer away before retrieval began, so multimodal RAG is mostly a decision about what to index."
+        attribution: Captions of the visuals, or the pages themselves
+        source: notes/03-multimodal-rag.md
+      - layout: table
+        title: Keeping the patches beat every other page design
+        kicker: Evidence
+        lead: "ColPali's own ViDoRe benchmark of visually rich documents, average nDCG@5."
+        header: [System, Avg nDCG@5]
+        widths: [7, 2]
+        rows:
+          - ["Jina CLIP", "17.7"]
+          - ["SigLIP, off the shelf", "51.4"]
+          - ["BiPali, one vector per page", "58.8"]
+          - ["Parser + OCR, BM25 / BGE-M3", "65.5 / 66.1"]
+          - ["Parser + captioning, BM25 / BGE-M3", "65.1 / 67.0"]
+          - ["ColPali, late interaction", "81.3"]
+        highlight: [5]
+        takeaway: Swapping BM25 for a neural embedder barely moved the text routes, so ingestion was the bottleneck here.
+        source: notes/03-multimodal-rag.md
+      - layout: code
+        title: One vector averages the chart away
+        kicker: Worked example
+        lang: python
+        code: |
+          def maxsim(q, p):
+              return float((q @ p.T).max(axis=1).sum())
+
+          def single_vector(q, p):
+              q_v, p_v = q.mean(axis=0), p.mean(axis=0)
+              return float(unit(q_v) @ unit(p_v))
+
+          # A: two sharp regions among 1,028 background patches
+          # B: mildly similar to both topics everywhere
+          # A (answer page)  MaxSim 1.96   single-vector 0.09
+          # B (vague page)   MaxSim 0.88   single-vector 0.99
+        bullets:
+          - "Synthetic data, with real output"
+          - "MaxSim asks whether each query token matches somewhere"
+          - "The winning patch doubles as evidence"
+        takeaway: Late interaction finds a small region on a dense page, where a single vector finds the vague page.
+        source: notes/03-multimodal-rag.md
+      - layout: flow
+        title: Narrow cheaply, then rerank with patches
+        kicker: The design
+        lead: "ColPali reports 257.5 KB per page at the naive setting, so few systems scan every patch of every page."
+        steps:
+          - {label: Query, sub: "text", accent: "94A3B8"}
+          - {label: First stage, sub: "text or single vector", accent: "1E3A5F"}
+          - {label: Late interaction, sub: "a few hundred pages", accent: "D4621A"}
+          - {label: Page image, sub: "to the reader", accent: "0F7490"}
+        caption: "Pooling at factor 3 cut vectors by 66.7% and kept 97.8% of performance on average, with the text-dense set a clear outlier."
+        takeaway: Recall at a few hundred is a much easier job than precision at five.
+        source: notes/03-multimodal-rag.md
+
+  - title: The customer who phones
+    summary: Audio as tokens · Two architectures · Latency budget · Barge-in · WER
+    notes: >-
+      The assistant gets a phone line, and it now has a clock. Words that arrive three seconds late sound
+      broken no matter how good they are.
+    slides:
+      - layout: statement
+        title: What changes when the reply has a deadline?
+        kicker: The problem
+        statement: "People expect a reply in a few hundred milliseconds and expect to interrupt it, so a voice agent's design starts from a latency budget."
+        attribution: And from what happens when the transcript is wrong
+        source: notes/04-speech-and-voice-agents.md
+      - layout: compare
+        title: Cascade or speech-to-speech
+        kicker: The decision
+        left:
+          title: Cascade
+          tag: VAD, ASR, LLM, TTS
+          bullets:
+            - "Transcript at every step, so you can audit"
+            - "Tool calls and text guardrails work unchanged"
+            - "Latency accumulates, and tone is lost"
+        right:
+          title: Speech-to-speech
+          tag: One model
+          bullets:
+            - "Moshi: about 200 ms in practice, on its authors' hardware"
+            - "Keeps tone and can be full-duplex"
+            - "Audit trail and guards need a parallel transcript"
+        takeaway: For a regulated use such as disputing a charge, audit and tool calling usually decide for the cascade.
+        source: notes/04-speech-and-voice-agents.md
+      - layout: flow
+        title: Streaming saves more than a faster model
+        kicker: The budget
+        lead: "Planning placeholders against an 800 ms target, not measurements of any product."
+        steps:
+          - {label: "Batch cascade", sub: "2680 ms, over", accent: "94A3B8"}
+          - {label: "Streaming cascade", sub: "940 ms, over", accent: "D4621A"}
+          - {label: "Speech-to-speech", sub: "280 ms, within", accent: "0F7490"}
+        caption: "The listener needs the first syllable, not the full reply. VAD's end-of-speech wait is a large line that is no model speed problem."
+        takeaway: Write the budget per stage at the 95th percentile, then test the VAD window on real callers.
+        source: notes/04-speech-and-voice-agents.md
+      - layout: code
+        title: History holds only what the caller heard
+        kicker: Worked example
+        lang: python
+        code: |
+          t = Turn()
+          t.reply(["I can see two charges on April.",
+                   "The second is a refund hold.",
+                   "It clears in five days."])
+          t.tick()
+          t.barge_in()   # caller talks over sentence two
+          print(t.history)
+          # [{'role': 'assistant',
+          #   'text': 'I can see two charges on April.',
+          #   'interrupted': True}]
+        bullets:
+          - "Stop playback and discard unspoken text"
+          - "Flag the interruption so the model can see it"
+          - "A small state machine can be regression tested"
+        takeaway: Otherwise the agent believes it read out a policy that the caller never heard.
+        source: notes/04-speech-and-voice-agents.md
+      - layout: bullets
+        title: WER can pass the worst possible error
+        kicker: Measuring
+        bullets:
+          - "**Name the normaliser.** Whisper's authors saw it drop WER by up to 50% on some datasets"
+          - "**Wrong amount, about 10% WER.** It may pass a threshold, and it is the worst error here"
+          - "**Add critical-term recall** for amounts, dates, names and account numbers"
+          - "**Report per group** across accents, handsets and noise"
+        aside:
+          title: Clean audio flatters
+          body: "Conformer reached 2.1% WER on clean LibriSpeech, and Whisper an unremarkable 2.5. Whisper held up far better on CHiME-6 and TED talks. Your callers aren't reading books."
+        takeaway: Read back any value you will act on, and confirm it before calling the tool.
+        source: notes/04-speech-and-voice-agents.md
+
+  - title: The picture nobody can reproduce
+    summary: Undoing noise · Samplers · Other families · Controls · Provenance
+    notes: >-
+      Marketing wants illustrations for the help pages. The same prompt gives a different image each time,
+      and nobody can make the one they liked with a small change.
+    slides:
+      - layout: statement
+        title: Why can't we make the same picture twice?
+        kicker: The problem
+        statement: "An image model is a sampler you steer with a handful of numbers. Nobody recorded the numbers, and the model version moved."
+        attribution: Pin the seed, the sampler and the guidance scale, or you can't reproduce an image
+        source: notes/06-generating-images-and-video.md
+      - layout: table
+        title: The sampler sets how few steps you can use
+        kicker: Evidence
+        lead: "Same trained CIFAR-10 model, DDIM paper Table 1. Lower FID is better."
+        header: [Sampler, Steps, FID]
+        widths: [5, 2, 2]
+        rows:
+          - ["DDPM sampler", "50", "32.72"]
+          - ["DDIM", "10", "13.36"]
+          - ["DDIM", "50", "4.67"]
+          - ["DDIM", "1,000", "4.04"]
+        highlight: [2]
+        takeaway: Error stays low across a wide range of steps, then rises sharply at very few.
+        source: notes/05-how-image-generators-work.md
+      - layout: image
+        title: Not every generator is a diffusion model
+        kicker: The families
+        image: ../sources/images/wu-janus-fig2.png
+        caption: "Janus: separate understanding and generation encoders feed one transformer. Wu et al. (2024), Fig. 2."
+        bullets:
+          - "Sharing one tokenizer dropped POPE from 87.0 to 60.1"
+          - "GANs and consistency models trade quality for speed"
+        takeaway: A change aimed at generation can harm understanding, so test both.
+        source: notes/05-how-image-generators-work.md
+      - layout: cards
+        title: Controls to set and to record
+        kicker: In production
+        cards:
+          - title: Seed
+            body: "Fixes the starting noise. Same seed, settings and model give the same image."
+            accent: "1E3A5F"
+          - title: Steps and sampler
+            body: "20 to 30 steps for most samplers. Ancestral samplers never converge on one image."
+            accent: "0F7490"
+          - title: Guidance scale
+            body: "About 7 is balanced. Higher adheres more, with less variety and harsher colour."
+            accent: "D4621A"
+          - title: Denoising strength
+            body: "0.2 to 0.4 for small fixes, and up to 0.8 to replace an element."
+            accent: "5B21B6"
+        takeaway: Log every control with every image, because a hosted model can be withdrawn.
+        source: notes/06-generating-images-and-video.md
+
+      - layout: code
+        title: No record, no reproducible image
+        kicker: Worked example
+        lang: python
+        code: |
+          def reproducibility_problems(rec):
+              problems = [f"missing {k}" for k in PIXEL_FIELDS
+                          if rec.get(k) in (None, "")]
+              if rec.get("sampler", "").lower() in ANCESTRAL:
+                  problems.append("ancestral sampler")
+              rewrite = rec.get("rewritten_prompt")
+              if rewrite and rewrite != rec.get("prompt"):
+                  problems.append("hosted API rewrote it")
+              return problems
+          # no seed stored: ['missing seed']
+        bullets:
+          - "Store a sidecar next to every image"
+          - "Hash the fields that affect pixels"
+          - "Check at store time, not at request time"
+        takeaway: When someone later asks for a variation, it is too late to find out the record is incomplete.
+        source: notes/06-generating-images-and-video.md
+
+  - title: The score that rewarded guessing
+    summary: Shortcuts · Paired images · CircularEval · POPE · Scorecard
+    notes: >-
+      The assistant passes at 90% and users still complain. Some correct answers never needed the image.
+      All of the failures here are the same failure: the test rewarded something other than seeing.
+    slides:
+      - layout: statement
+        title: Why does a 90% score still fail users?
+        kicker: The problem
+        statement: "A vision model can score well without looking at the image. Multimodal evaluation is the craft of building tests in which the shortcut fails."
+        attribution: "On balanced VQA pairs, yes/no accuracy dropped about 10.8% for MCB and 12.4% for HieCoAtt"
+        source: notes/07-evaluating-multimodal-systems.md
+      - layout: flow
+        title: Three tests against three shortcuts
+        kicker: The designs
+        lead: Each design removes one way of scoring without looking.
+        steps:
+          - {label: Paired images, sub: "catches language priors", accent: "1E3A5F"}
+          - {label: Rotated options, sub: "catches position bias", accent: "D4621A"}
+          - {label: Absent objects, sub: "catches yes-bias", accent: "5B21B6"}
+        caption: "For invoices: edit one field, rotate the choices, and ask about a plausible stamp or VAT number that isn't there."
+        takeaway: A random negative tests very little, so choose absent objects that a real invoice could have.
+        source: notes/07-evaluating-multimodal-systems.md
+      - layout: code
+        title: CircularEval exposes a biased model
+        kicker: Worked example
+        lang: python
+        code: |
+          def plain_and_circular(items, model):
+              plain = circular = 0
+              for question, options, answer in items:
+                  results = []
+                  for shift in range(len(options)):
+                      shown = rotate(options, shift)
+                      pick = model(question, shown)
+                      results.append(shown[pick] == answer)
+                  plain += results[0]
+                  circular += all(results)
+              return plain / len(items), circular / len(items)
+          # 90% competent     plain 0.91   circular 0.73
+          # prefers option A  plain 0.44   circular 0.02
+        bullets:
+          - "Synthetic models over 400 items"
+          - "OpenFlamingo v2 fell from 36.7% to 2.6% in MMBench"
+          - "Never compare circular with plain"
+        takeaway: Report both scores, since even a competent model loses some under rotation.
+        source: notes/07-evaluating-multimodal-systems.md
+      - layout: table
+        title: One scorecard, split by stage
+        kicker: Pulling it together
+        header: [Stage, Measure, Test that keeps it honest]
+        widths: [2, 4, 4]
+        rows:
+          - ["Image input", "Accuracy by orientation and resolution", "Rotated and downscaled copies"]
+          - ["Documents", "Field F1, arithmetic pass rate", "Edited-field pairs"]
+          - ["Retrieval", "nDCG@5 on visual and text questions", "Answers only in a chart"]
+          - ["Reading", "Accuracy with the gold page", "Gold-page gap to full system"]
+          - ["Speech", "WER, critical-term recall", "Per accent and channel"]
+        takeaway: Separate scores let a regression point at the stage that caused it.
+        source: notes/07-evaluating-multimodal-systems.md
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: To keep
+        cards:
+          - title: Fix the input first
+            body: "Honor EXIF, crop small text, and log the pixels that reach the model."
+            accent: "1E3A5F"
+          - title: Check against the document
+            body: "Valid JSON proves nothing. Use arithmetic and a second route."
+            accent: "D4621A"
+          - title: Index what holds the answer
+            body: "Improve ingestion before embedders, and rerank with late interaction."
+            accent: "0F7490"
+          - title: Budget the milliseconds
+            body: "Write latency per stage at p95, and commit only what was heard."
+            accent: "5B21B6"
+          - title: Record every control
+            body: "Seed, sampler, steps, guidance and model version, with each image."
+            accent: "1E3A5F"
+          - title: Make the shortcut fail
+            body: "Paired images, rotated options, and plausible absent objects."
+            accent: "D4621A"
+        takeaway: Almost nothing here raises an error, so every chapter ends with a check you must add.
+        source: notes/07-evaluating-multimodal-systems.md
+      - layout: bullets
+        title: Where next
+        kicker: Next
+        bullets:
+          - "**Safety and security:** images, documents and voices as attack channels, in pillar 09"
+          - "**Evaluation:** the general methods, in pillar 06"
+          - "**RAG:** chunking, fusion and reranking for text, in generative-ai/02"
+          - "**Real-time agents:** voice and computer-use architecture, in generative-ai/07"
+        takeaway: Next we treat every one of these inputs as something an attacker can write.
+        source: notes/07-evaluating-multimodal-systems.md

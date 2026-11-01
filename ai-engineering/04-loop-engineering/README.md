@@ -29,6 +29,15 @@ The binding constraint moves from generation to **verification**. That's why the
 2. Read the rest of the notes in order; each is earned by the one before.
 3. The [lecture deck](slides/loop-engineering.pptx) is the notes as a 4-part talk. Everything on a slide is in the note named in its footer.
 
+## Lab
+
+A loop with a scorekeeper: scripted makers, an independent checker with held-out tests, and a stop reason for each run. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.
+
+| Language | Folder | Run |
+|---|---|---|
+| TypeScript | [practice/loop-scorekeeper/](practice/loop-scorekeeper/README.md) | `cd practice/loop-scorekeeper && npx tsx run.ts` |
+| Python | [practice/loop-scorekeeper-py/](practice/loop-scorekeeper-py/README.md) | `cd practice/loop-scorekeeper-py && uv run run.py` |
+
 ## Layout
 
 ```
@@ -36,6 +45,7 @@ README.md      this file: overview, syllabus, rules of thumb, sources
 notes/         01–10, the course. Copy-ready artefacts live inline: maker/checker
                prompts (03), loop-state.md and ralph.sh (05), loop-contract.md (09)
 slides/        deck.yaml → loop-engineering.pptx (make slides PILLAR=04-loop-engineering)
+practice/      the lab, in TypeScript and Python
 sources/       the papers (Chen, Zhong, Zhu 2026) and images/ with every figure the notes use
 ```
 

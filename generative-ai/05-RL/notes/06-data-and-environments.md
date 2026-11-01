@@ -74,8 +74,8 @@ The asynchronous trainers behind both are in
 
 ### Data engineering for post-training
 
-Huyen's chapter on dataset engineering and LLMEH's curation pipeline turn the three checks
-above into practice (*AI Engineering*, ch. 8; *LLM Engineer's Handbook*, ch. 5).
+Huyen's chapter on dataset engineering and LLMEH's curation pipeline turn the validation checks in [05](05-post-training-for-agents.md#practical-pitfalls)
+into practice (*AI Engineering*, ch. 8; *LLM Engineer's Handbook*, ch. 5).
 
 **Quality and diversity both count.** In LIMA's ablation ([arXiv:2305.11206](https://arxiv.org/abs/2305.11206) (Zhou et al., NeurIPS 2023)), Zhou et al. fine-tuned a 7B LLaMA on three
 2,000-example sets. The set that was both high-quality and diverse won:

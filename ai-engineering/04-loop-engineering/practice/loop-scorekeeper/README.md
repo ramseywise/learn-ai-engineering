@@ -1,6 +1,6 @@
 # Lab: a loop with a scorekeeper
 
-Language: TypeScript. Supports [The scorekeeper](../../notes/03-the-scorekeeper.md) and
+Language: TypeScript. The [Python version](../loop-scorekeeper-py/README.md) does the same job on the same inputs. Supports [The scorekeeper](../../notes/03-the-scorekeeper.md) and
 [Failure modes and guardrails](../../notes/09-failure-modes-and-guardrails.md).
 
 A loop that asks its maker whether it is done will hear yes. Here a maker keeps writing a `slugify`

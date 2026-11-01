@@ -248,29 +248,6 @@ print(plan)
 ╰───────────────────────────────────╯
 ```
 
-## The write path
-
-Column stores pay for all this on writes. A compressed, sorted column cannot accept an insert in the middle, because doing so would mean rewriting the column files, with every column shifted to keep the row positions aligned. Kleppmann describes the usual answer, borrowed from log-structured storage: keep recent writes in an in-memory store and periodically merge them into the columns in bulk. Queries read both and combine the results, as Vertica does. Bulk loads fit this very well, and most warehouse ingestion is bulk. Here is what happens if you try to use one as a transactional store, one committed row at a time.
-
-```python
-def insert_loop(execute, commit, n=2_000, first=2_000_000):
-    t0 = time.perf_counter()
-    for i in range(first, first + n):
-        execute("INSERT INTO trips VALUES (?, '2026-02-01 00:00:00', 1, 'card', 1, 1.0, 5.0)", (i,))
-        commit()
-    return (time.perf_counter() - t0) / n * 1000
-
-print(f"SQLite one row per transaction: {insert_loop(lite.execute, lite.commit):6.3f} ms per row")
-print(f"DuckDB one row per transaction: {insert_loop(duck.execute, lambda: None):6.3f} ms per row")
-```
-
-```text
-SQLite one row per transaction:  0.250 ms per row
-DuckDB one row per transaction:  0.277 ms per row
-```
-
-The textbook account would lead you to expect DuckDB to lose by a wide margin, and in this test it does not: both spend about a quarter of a millisecond per commit. My guess at the reason, which this test does not establish, is that both costs are dominated by the commit itself, and appended rows have not reached a compressed block yet. The difference a column store really pays is elsewhere, in concurrent writers and in changes to data that is already compressed, and the DuckDB paper describes a system embedded in one process and not a shared transactional service. A measurement like this one is a good habit anyway. It tells you which cost you actually have, and it stops you repeating a rule of thumb past the point where you have checked it.
-
 ## Rollups and cubes
 
 If the same aggregate is computed all day, it can be stored. A materialised view is the result of a query saved as data, and a data cube is the grid of such aggregates across several dimensions with totals along each edge. SQL expresses the cube directly.
@@ -325,6 +302,29 @@ but share of fare from trips over 10 miles is not answerable: trip_miles is not 
 ```
 
 Reading the rollup is about four times faster here, and the gap widens as the fact table grows, since the rollup's size depends on the number of zone-days and not on the number of trips. The final line is the catch, and Kleppmann's example makes the same point: a cube of sales cannot answer what share of sales came from items over $100, because price is not one of its dimensions. Rollups trade flexibility for speed. Keep the detailed data too and use rollups as an acceleration layer, the same recommendation Kimball makes when he insists on storing the atomic grain ([dimensional modelling](../../02-ingest-and-modelling/notes/02-dimensional-modelling.md)).
+
+## The write path
+
+Column stores pay for all this on writes. A compressed, sorted column cannot accept an insert in the middle, because doing so would mean rewriting the column files, with every column shifted to keep the row positions aligned. Kleppmann describes the usual answer, borrowed from log-structured storage: keep recent writes in an in-memory store and periodically merge them into the columns in bulk. Queries read both and combine the results, as Vertica does. Bulk loads fit this very well, and most warehouse ingestion is bulk. Here is what happens if you try to use one as a transactional store, one committed row at a time.
+
+```python
+def insert_loop(execute, commit, n=2_000, first=2_000_000):
+    t0 = time.perf_counter()
+    for i in range(first, first + n):
+        execute("INSERT INTO trips VALUES (?, '2026-02-01 00:00:00', 1, 'card', 1, 1.0, 5.0)", (i,))
+        commit()
+    return (time.perf_counter() - t0) / n * 1000
+
+print(f"SQLite one row per transaction: {insert_loop(lite.execute, lite.commit):6.3f} ms per row")
+print(f"DuckDB one row per transaction: {insert_loop(duck.execute, lambda: None):6.3f} ms per row")
+```
+
+```text
+SQLite one row per transaction:  0.250 ms per row
+DuckDB one row per transaction:  0.277 ms per row
+```
+
+The textbook account would lead you to expect DuckDB to lose by a wide margin, and in this test it does not: both spend about a quarter of a millisecond per commit. My guess at the reason, which this test does not establish, is that both costs are dominated by the commit itself, and appended rows have not reached a compressed block yet. The difference a column store really pays is elsewhere, in concurrent writers and in changes to data that is already compressed, and the DuckDB paper describes a system embedded in one process and not a shared transactional service. A measurement like this one is a good habit anyway. It tells you which cost you actually have, and it stops you repeating a rule of thumb past the point where you have checked it.
 
 ## Pitfalls
 

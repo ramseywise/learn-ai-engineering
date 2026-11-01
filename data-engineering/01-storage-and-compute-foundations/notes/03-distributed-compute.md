@@ -16,7 +16,35 @@ Distributed compute exists because some jobs do not fit on one machine, and it c
 
 ## Start with one machine
 
-Kleppmann opens his batch processing chapter ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 10) with something unfashionable, a chain of Unix tools analysing a log file. It is worth starting there because the shape carries over.
+Kleppmann opens his batch processing chapter ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 10) with something unfashionable, a chain of Unix tools analysing a log file. It is worth starting there because the shape carries over. First the trips again, this time written to Parquet and held as a list of zones.
+
+```python
+import numpy as np, pyarrow as pa, pyarrow.parquet as pq, duckdb, polars as pl, subprocess, zlib, os, time, random
+from collections import Counter, defaultdict
+
+def make_trips(n=1_000_000, seed=7):
+    rng = np.random.default_rng(seed)
+    start = np.datetime64("2026-01-01T00:00:00", "s")
+    seconds = np.sort(rng.integers(0, 31 * 86_400, n))
+    weights = 1 / np.arange(1, 261)
+    zones = rng.choice(260, n, p=weights / weights.sum()) + 1
+    miles = np.round(rng.gamma(2.0, 1.6, n), 2)
+    return pa.table({
+        "trip_id": np.arange(n, dtype="int64"),
+        "pickup_at": pa.array(start + seconds.astype("timedelta64[s]")),
+        "pickup_zone": zones.astype("int32"),
+        "payment_type": pa.array(rng.choice(["card", "cash", "app"], n, p=[.7, .2, .1])),
+        "passengers": rng.choice([1, 2, 3, 4], n, p=[.7, .18, .07, .05]).astype("int8"),
+        "trip_miles": miles,
+        "fare_usd": np.round(np.maximum(3.0, 3.0 + 2.5 * miles + rng.normal(0, 1.0, n)), 2),
+    })
+
+trips = make_trips()
+pq.write_table(trips, "trips.parquet", compression="zstd")
+zones = trips["pickup_zone"].to_pylist()
+```
+
+Then a count of pickups by zone, as a shell pipeline.
 
 ```python
 with open("zones.txt", "w") as f:
@@ -200,18 +228,21 @@ MapReduce's weakness is that each job's output goes to replicated storage before
 Giving up that durable intermediate state raises the fault-tolerance question again. Zaharia et al. answered it with resilient distributed datasets ([*Resilient Distributed Datasets*](https://www.usenix.org/conference/nsdi12/technical-sessions/presentation/zaharia), NSDI 2012): rather than replicate data, log the coarse-grained transformations that built each partition, called the **lineage**, and recompute a lost partition from it. The motivation was iterative and interactive work that reuses data between computations, and the paper reports Spark up to 20 times faster than Hadoop on iterative applications. Here is the lineage from a real run.
 
 ```python
+from pyspark.sql import SparkSession, functions as F
+
+spark = SparkSession.builder.master("local[4]").appName("trips").getOrCreate()
+spark.sparkContext.setLogLevel("ERROR")
 rdd = spark.sparkContext.parallelize(zones, 8).map(lambda z: (z, 1)).reduceByKey(lambda a, b: a + b, 4)
 print(rdd.toDebugString().decode())
-spark.stop()
 ```
 
 ```text
-(4) PythonRDD[15] at RDD at PythonRDD.scala:59 []
- |  MapPartitionsRDD[14] at mapPartitions at PythonRDD.scala:197 []
- |  ShuffledRDD[13] at partitionBy at NativeMethodAccessorImpl.java:0 []
- +-(8) PairwiseRDD[12] at reduceByKey at lineage:1 []
-    |  PythonRDD[11] at reduceByKey at lineage:1 []
-    |  ParallelCollectionRDD[10] at readRDDFromFile at PythonRDD.scala:326 []
+(4) PythonRDD[5] at RDD at PythonRDD.scala:59 []
+ |  MapPartitionsRDD[4] at mapPartitions at PythonRDD.scala:197 []
+ |  ShuffledRDD[3] at partitionBy at NativeMethodAccessorImpl.java:0 []
+ +-(8) PairwiseRDD[2] at reduceByKey at lineage:5 []
+    |  PythonRDD[1] at reduceByKey at lineage:5 []
+    |  ParallelCollectionRDD[0] at readRDDFromFile at PythonRDD.scala:326 []
 ```
 
 The `ShuffledRDD` line marks the boundary between stages. If a partition after it is lost, Spark re-reads shuffle files from the parents, or re-runs them if those are gone. Kleppmann adds an important condition: recomputation is only safe if the operators are deterministic, so a task that consumed random numbers or iterated a hash in unstable order can yield different data the second time. Downstream tasks then have to be killed and re-run too.
@@ -219,10 +250,6 @@ The `ShuffledRDD` line marks the boundary between stages. If a partition after i
 Spark SQL then lifted this from RDDs to relations (Armbrust et al., [*Spark SQL*](https://doi.org/10.1145/2723372.2742797), SIGMOD 2015): a declarative DataFrame API and an extensible optimiser, Catalyst. Declaring what you want rather than which function to call lets the engine rearrange your query. You can see the rearrangement in a local run on our Parquet file.
 
 ```python
-from pyspark.sql import SparkSession, functions as F
-
-spark = SparkSession.builder.master("local[4]").appName("trips").getOrCreate()
-spark.sparkContext.setLogLevel("ERROR")
 df = spark.read.parquet("trips.parquet")
 per_zone = (df.filter(F.col("payment_type") == "card")
               .groupBy("pickup_zone")
@@ -230,6 +257,7 @@ per_zone = (df.filter(F.col("payment_type") == "card")
               .orderBy(F.desc("trips")).limit(3))
 per_zone.show()
 per_zone.explain()
+spark.stop()
 ```
 
 ```text
@@ -296,7 +324,7 @@ shape: (3, 3)
 │ 2           ┆ 56982  ┆ 10.97    │
 │ 3           ┆ 37979  ┆ 10.96    │
 └─────────────┴────────┴──────────┘
-SORT BY [slice: (0, 3, dynamic_pred: 48ce3631-c067-48a2-ab80-37a206df7ed0), descending: [true]] [col("trips")]
+SORT BY [slice: (0, 3, dynamic_pred: bef072fe-25c9-4515-9b20-ed135cacb2c6), descending: [true]] [col("trips")]
   FILTER col("trips").dynamic_predicate()
   FROM
     AGGREGATE[maintain_order: false]
@@ -332,13 +360,13 @@ big.parquet 640 MB on disk
 │ riders  │ avg_spend │
 │  int64  │  double   │
 ├─────────┼───────────┤
-│ 3000000 │    266.66 │
+│ 3000000 │    266.69 │
 └─────────┴───────────┘
 
 group by 3,000,000 keys under a 200 MB limit: 3.6 s
 ```
 
-That is a 640 MB compressed file of 40 million rows, grouped by three million distinct keys, under a limit far below what a hash table of that size needs, finishing in a few seconds on a laptop.
+That is a 640 MB compressed file of 40 million rows, grouped by three million distinct keys, under a memory limit smaller than the file, finishing in a few seconds on a laptop.
 
 Two pieces of evidence push the argument past anecdote. McSherry, Isard and Murray ([*Scalability! But at what COST?*](https://www.usenix.org/conference/hotos15/workshop-program/presentation/mcsherry), HotOS 2015) defined COST as the configuration that outperforms a competent single thread. They reimplemented graph computations from systems papers on a 2014 laptop. For 20 PageRank iterations on the 1.47-billion-edge `twitter_rv` graph, their single thread took 300 s reading from SSD; published figures were 857 s for Spark and 419 s for GraphX on 128 cores, and 249 s for GraphLab on 128 cores. Graph problems are a hard case for partitioning, and these were 2014 versions, so this says little about Spark on a modern scan. It does show that scaling curves can hide large overheads, which is the part to remember.
 
@@ -404,7 +432,7 @@ Salting more hot keys brings the ratio closer to 1 at 8 reducers. At 32, salting
 
 <details><summary>Answer</summary>
 
-Lower it in steps from 200 MB, using a fresh connection each time, and record whether the query completes and how long it takes. The time grows gradually with more spilling, and the query eventually raises an out-of-memory error, because operators need some minimum working memory even when spilling. Record the limit you reach: it depends on the version and on thread count, and reducing `threads` lets a query run at a lower limit.
+On the 12-core laptop used here the query finished at 200 MB and raised `OutOfMemoryException` at 100 MB. Then `SET threads = 1` let it finish at 25 MB in about the same time, because each thread keeps its own working blocks. So the limit depends on parallelism as well as data size, and the numbers will differ on your machine. Try `threads` before you buy memory.
 
 </details>
 

@@ -379,7 +379,7 @@ Run the lab: `cd practice/data-analysis-agent && uv run --with pandas --with mat
 
    <details><summary>Answer</summary>
 
-   Compute `tips.groupby("smoker")["share"].agg(["mean", "size"])` and bootstrap the difference, smokers minus non-smokers. Means are 0.1633 for smokers (n=93) and 0.1593 for non-smokers (n=151), and with seed 7 the interval on the difference is [-0.0128, 0.0230]. It includes zero, so the agent may report the means and must say the groups are not distinguishable.
+   Compute `tips.groupby("smoker")["share"].agg(["mean", "size"])` and bootstrap the difference, smokers minus non-smokers. Means are 0.1632 for smokers (n=93) and 0.1593 for non-smokers (n=151), and with seed 7 the interval on the difference is [-0.0128, 0.0230]. It includes zero, so the agent may report the means and must say the groups are not distinguishable.
    </details>
 
 3. **Fool the provenance check.** Write an answer that passes `traced()` and is still wrong. What catches it, if anything?

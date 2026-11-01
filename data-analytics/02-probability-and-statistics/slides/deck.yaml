@@ -1,0 +1,470 @@
+# Probability and Statistics lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=data-analytics/02-probability-and-statistics STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Larkspur, a fictional online plant shop. All Larkspur numbers come from
+# synthetic data with fixed seeds in the notes.
+deck:
+  title: Probability and Statistics
+  subtitle: Saying true things about data you have not seen
+  tagline: |-
+    Look · Reason · Sample · Estimate · Test · Model
+  reference: "Notes: data-analytics/02-probability-and-statistics"
+  output: probability-and-statistics.pptx
+  notes: >-
+    Larkspur is a fictional online plant shop with twenty thousand users and a new checkout it wants to judge. We will
+    take its data from a messy extract to a regression that holds up. At each step the question is the same: what are
+    we entitled to claim about the users we have not seen?
+
+parts:
+  - title: Look before you summarise
+    summary: Types and units · Impossible values · Shape picks the summary · Whose average
+    notes: >-
+      The first job is to find out what the data are. Most errors that reach a decision start here rather than in the statistics.
+    slides:
+      - layout: statement
+        title: Finance asks for the average customer
+        kicker: The problem
+        statement: "Mean spend is 3.30. The median is zero, 95% of users spent nothing, and that was after two rows at 48,000 were removed."
+        attribution: Larkspur synthetic extract, 20,000 users
+        takeaway: Before quoting any summary, establish what one row is and what shape the column has.
+        source: notes/01-descriptive-statistics-and-eda.md
+        notes: >-
+          With those two bad rows left in, the raw mean is 8.10. Neither number describes anyone. By the end of this part we will know which number answers which question.
+
+      - layout: flow
+        title: EDA is a loop that ends in a written finding
+        recall: What are the stages of the EDA loop and how does it end?
+        steps:
+          - {label: Type-check, sub: "what is one row?"}
+          - {label: Impossible values, sub: "missing, negative, duplicate"}
+          - {label: Shape, sub: "one column at a time"}
+          - {label: Summaries, sub: "what the shape allows"}
+          - {label: Write it down, sub: "findings and questions", accent: "D4621A"}
+        bullets:
+          - "**Count every exclusion:** 6 refunds and 2 test rows, with a named owner to confirm."
+          - "**Missing is data:** compare missing and non-missing groups before dropping."
+          - "A new question sends you back to the start."
+        takeaway: An EDA is finished when someone else can act on the written findings, including every row you removed.
+        source: notes/01-descriptive-statistics-and-eda.md
+        notes: >-
+          Tukey's point was that inference answers a framed question, and exploration tells you whether you framed the right one. Each exclusion is an analyst's choice, so write it down.
+
+      - layout: code
+        title: Two rows in twenty thousand ran the summary
+        recall: What do two 48,000 rows do to the buyers' mean, standard deviation and median?
+        lang: Text output
+        code: |-
+          buyers, cleaned
+            mean 65.86   median 37.38
+            std  93.65   IQR     60.75
+
+          with the two 48,000 rows left in
+            mean 161.25  median 37.45
+            std  2139.32
+        bullets:
+          - "**Mean and SD** chase the tail."
+          - "**Median, IQR, MAD** ignore it."
+          - "A big gap between them is your outlier alarm."
+        takeaway: When mean and median disagree by a lot, the tail is running the summary, so look at the tail.
+        source: notes/01-descriptive-statistics-and-eda.md
+        notes: >-
+          The right summary depends on the question. Finance forecasting a total needs the mean. A product manager describing a typical buyer wants the median. Neither is more true.
+
+      - layout: table
+        title: Traps a table will not warn you about
+        recall: Name three descriptive traps and what each one fools you into thinking.
+        header: [Trap, Larkspur example, Do this]
+        widths: [3, 5, 3.4]
+        rows:
+          - [Small groups look extreme, "200 random groups range 0 to 15.46 around 3.30", Show N or shrink]
+          - [One bad row, "Pearson +0.44 to -0.31; Spearman +0.42 to +0.41", Compute both and plot]
+          - [Whose average?, "68 sessions per user; 373 as seen by a random session", State the denominator]
+        takeaway: Report N with every rate, compute both correlations, and always state the denominator of a mean.
+        source: notes/01-descriptive-statistics-and-eda.md
+        notes: >-
+          The last row is Downey's class size paradox. Sampling by person weights each class by its size, and exactly the same thing happens to per-session and per-user metrics.
+
+  - title: The rules of reasoning
+    summary: Conditionals · Bayes and base rates · Independence · Expectation and variance
+    notes: >-
+      Now we want to reason about data we have not seen. There are only a few rules, and each one guards against a mistake intuition makes reliably.
+    slides:
+      - layout: statement
+        title: A 99% accurate fraud filter flags an order
+        kicker: The problem
+        statement: "If 1 order in 1,000 is fraud, that flag is wrong about nine times in ten."
+        attribution: "0.99 × 0.001 / (0.99 × 0.001 + 0.01 × 0.999) = 9%"
+        takeaway: P(flag given fraud) and P(fraud given flag) can be a hundred times apart, and the base rate sets the gap.
+        source: notes/02-probability-foundations.md
+        notes: >-
+          Nobody miscalculated. They answered the wrong conditional. Let us see where the 9% comes from.
+
+      - layout: flow
+        title: Count a million orders and Bayes does itself
+        recall: Of 10,980 flagged orders out of a million, how many are fraud, and why?
+        steps:
+          - {label: "1M orders", sub: "1,000 fraud"}
+          - {label: "Fraud flagged", sub: "990 at 99%"}
+          - {label: "Legit flagged", sub: "9,990 at 1% error", accent: "D4621A"}
+          - {label: "Flagged total", sub: "10,980, 9% fraud"}
+        bullets:
+          - "**Base rate 1 in 100** lifts it to 50%; so does **99.9% accuracy**."
+          - "**Two independent flags** reach 91%, if they are truly independent."
+        takeaway: With a rare event, false positives from the huge negative group swamp the true hits.
+        source: notes/02-probability-foundations.md
+        notes: >-
+          The same arithmetic applies to testing. A p-value is P of data given no effect. Reinhart's hundred drugs example, with ten that work, gives about 8 real and 4.5 false discoveries, so 64% of the significant ones are real.
+
+      - layout: compare
+        title: Expectations always add; variances need permission
+        recall: Which needs independence, linearity of expectation or additivity of variance?
+        emphasis: right
+        left:
+          title: Expectation
+          bullets:
+            - "E[X + Y] = E[X] + E[Y], related or not"
+            - "Hat-check, 52 cards: expected matches exactly 1"
+            - "Indicators turn counts into sums"
+          tag: No conditions
+        right:
+          title: Variance
+          bullets:
+            - "Var(X + Y) adds 2 Cov(X, Y)"
+            - "Zero covariance gives σ²/n, the standard error"
+            - "5 sessions per user at ρ = 0.5: naive SE 1.75x too small"
+          tag: Independence required
+        takeaway: The formula σ/√n assumes independent rows, so sessions within users make naive standard errors too small.
+        source: notes/02-probability-foundations.md
+        notes: >-
+          Reinhart calls this pseudoreplication. The law of total variance is the other tool here, since it splits variance into within-group and between-group parts, and that is where stratification and CUPED later get their power.
+
+  - title: Shapes and samples
+    summary: Six distributions · Law of large numbers · CLT coverage · The small-N trap
+    notes: >-
+      A handful of shapes describe most analytics data. Means of those shapes behave well, until they do not.
+    slides:
+      - layout: statement
+        title: A foundation funds small schools
+        kicker: The problem
+        statement: "The best-scoring schools were small. So were the worst."
+        attribution: Wainer, The Most Dangerous Equation, as discussed in Bayesian Methods for Hackers, ch. 4
+        takeaway: Small groups have noisy averages, so they crowd both ends of any ranking with no real difference.
+        source: notes/03-distributions-and-sampling.md
+        notes: >-
+          We simulate it with 5,000 counties drawn from one height distribution. All ten tallest and all ten shortest have fewer than 300 people, while the median county has 808.
+
+      - layout: table
+        title: Name the distribution and you can usually name the test
+        recall: Which distribution fits conversions, errors per hour, waiting time, order value and an unknown rate?
+        header: [Data, Distribution, Typical question]
+        widths: [5, 2.4, 4]
+        rows:
+          - [Conversions out of n users, Binomial, Is p higher in B?]
+          - ["Errors per hour", Poisson, Did the rate change?]
+          - [Gap between events, Exponential, How long until the next?]
+          - [Order value, Lognormal, "Typical order, and how heavy a tail?"]
+          - [A rate you are unsure of, Beta, What do I believe p is?]
+        takeaway: Every test and every Bayesian model starts from a distribution, so naming it usually names the method.
+        source: notes/03-distributions-and-sampling.md
+        notes: >-
+          Poisson and Exponential are two views of the same process. Every scipy distribution has the same methods. Watch for the off-by-one: sf of 9 gives P of 10 or more.
+
+      - layout: table
+        title: On revenue, the CLT takes its time
+        recall: How often does a nominal 95% Normal interval cover Larkspur's revenue mean at n = 30, 300, 3,000 and 30,000?
+        lead: Coverage of a nominal 95% Normal interval on zero-inflated lognormal spend, 3,000 repeats.
+        header: [Users per sample, Skew of the mean, Coverage]
+        widths: [3.5, 3.5, 3.5]
+        highlight: [0, 1]
+        rows:
+          - ["30", "4.68", "**56%**"]
+          - ["300", "1.34", "**83%**"]
+          - ["3,000", "0.46", "93%"]
+          - ["30,000", "0.22", "95%"]
+        takeaway: N of 30 is not a law, because a skewed zero-inflated metric can need tens of thousands of users for a 95% interval to mean 95%.
+        source: notes/03-distributions-and-sampling.md
+        notes: >-
+          Small samples mostly contain few whales, so they understate both the mean and the spread. The formula cannot warn you, because the standard error comes from the same sample.
+
+      - layout: compare
+        title: Bias does not shrink, and raw rates mislead
+        recall: What beat a 57,000-row survey, and how does a shrunken rate rank a 2-of-2 kicker?
+        left:
+          title: More rows, same bias
+          bullets:
+            - "Buyers reply 4x as often to a survey"
+            - "57,152 rows: mean 11.06"
+            - "5,000 random rows: 3.00; truth 3.12"
+          tag: Selection is not sampling error
+        right:
+          title: Shrink small groups
+          bullets:
+            - "2/2 raw 1.000, shrunk 0.905"
+            - "92/100 raw 0.920, shrunk 0.914"
+            - "905/1000 barely moves"
+          tag: Add pseudo-observations
+        takeaway: A bigger biased sample gives a more precise wrong answer, and shrinkage moves an estimate only when N is too small to speak for itself.
+        source: notes/03-distributions-and-sampling.md
+        notes: >-
+          The pseudo-observation formula is the Beta-Binomial posterior mean, which we meet in the Bayesian pillar. Efron and Hastie treat this as empirical Bayes.
+
+  - title: From a sample to a number
+    summary: Bias and variance · Maximum likelihood · Intervals · Bootstrap · Sample size
+    notes: >-
+      A number without a range cannot support a decision. Let us build the range.
+    slides:
+      - layout: statement
+        title: Can next quarter's plan assume 3.20?
+        kicker: The problem
+        statement: "Revenue per user is 2.68. The interval [2.09, 3.27] is the part a planner can use."
+        attribution: 4,000 sampled Larkspur users
+        takeaway: A single number cannot support a decision, so report the estimate together with how far it could be from the truth.
+        source: notes/04-estimation.md
+        notes: >-
+          A plan at 2.50 looks fine and 3.20 is optimistic but not ruled out. The 95% describes the procedure's hit rate over repeated sampling, and our simulation found 94.8%. For a statement of probability about this one interval you need a credible interval and a prior.
+
+      - layout: code
+        title: Near zero, swap Wald for Wilson
+        recall: What does Wald give for 0 of 50, and how do Wald and Wilson coverage compare at p = 0.02 and n = 50?
+        lang: Text output
+        code: |-
+          0/50  Wald [0.0000, 0.0000]
+                Wilson [0.0000, 0.0714]
+
+          p=0.02 n=50
+            Wald cover 0.633
+            Wilson cover 0.920
+        bullets:
+          - "**Wald** claims certainty from 50 users."
+          - "**Wilson** inverts the score test."
+          - "Test any procedure by simulating coverage."
+        takeaway: Use Wilson for rates in small segments, because Wald collapses near zero and can cover far below its label.
+        source: notes/04-estimation.md
+        notes: >-
+          At n of 4,000 the two are indistinguishable. Simulating coverage is the general way to test any interval you do not trust.
+
+      - layout: flow
+        title: The bootstrap replaces algebra with resampling
+        recall: How does the bootstrap get a standard error, and which unit do you resample for a ratio metric?
+        steps:
+          - {label: Sample, sub: "n independent users"}
+          - {label: Resample, sub: "with replacement"}
+          - {label: Recompute, sub: "any statistic"}
+          - {label: Read spread, sub: "SE and interval", accent: "D4621A"}
+        loop: Repeat thousands of times
+        bullets:
+          - "Revenue per session: **delta SE 0.193, bootstrap 0.195, naive by session 0.116**."
+          - "**Fails** at the sample maximum, on rows that are not independent, and on tails the sample missed."
+        takeaway: Resample the independent unit, because bootstrapping sessions gave 0.027 where the true standard error was 0.049.
+        source: notes/04-estimation.md
+        notes: >-
+          The delta method needed a page of algebra. Efron's bootstrap needs three lines and works for medians and percentiles. Use BCa on skewed statistics.
+
+      - layout: compare
+        title: "Sample size: revenue costs more than conversion"
+        recall: How many users per arm does Kohavi's example need for a 5% change in revenue and in conversion?
+        lead: "n per arm ≈ 16σ²/δ² (5% significance, 80% power). Example from Kohavi et al., DMKD 2009."
+        emphasis: left
+        left:
+          title: Revenue, mean 3.75, sd 30
+          bullets:
+            - "5% change: about 409,000 per arm"
+            - "Variance comes from the tail"
+          tag: Costly
+        right:
+          title: Conversion, 5% base
+          bullets:
+            - "5% relative change: about 122,000 per arm"
+            - "Halving the effect takes 4x the users"
+          tag: 3.3x cheaper
+        takeaway: Sample size grows with variance and the inverse square of the effect, so metric choice can change the cost of a test by 3x.
+        source: notes/04-estimation.md
+        notes: >-
+          The paper rounds the multiplier to 16; exact z-values give 15.7, or about 402,000 and 119,000. The next pillar turns this into a real plan.
+
+  - title: From a number to a decision
+    summary: The recipe · Choosing a test · What p is not · Multiple comparisons · Winner's curse
+    notes: >-
+      Now we ask whether a pattern could plausibly be noise. Hypothesis tests answer that one narrow question very well.
+    slides:
+      - layout: statement
+        title: One segment of twenty reached p = 0.04
+        kicker: The problem
+        statement: "Twenty tests of nothing produce at least one false positive 64% of the time."
+        attribution: "1 − 0.95²⁰; simulated at 62% with 30 users per arm"
+        takeaway: Treat a win found by slicing as a hypothesis to confirm, since noise alone usually produces one somewhere among twenty.
+        source: notes/05-hypothesis-testing.md
+        notes: >-
+          A hypothesis test is a narrow tool: could this be noise? We start by seeing how it works without any formula.
+
+      - layout: code
+        title: Shuffling the labels shows what a test does
+        recall: How does a permutation test build its null distribution, and how close was it to Welch here?
+        lang: Python
+        code: |-
+          pool = np.concatenate([a, b])
+          for i in range(10_000):
+              rng.shuffle(pool)
+              diffs[i] = pool[400:].mean() - pool[:400].mean()
+          np.mean(np.abs(diffs) >= abs(obs))
+          # permutation p = 0.007, Welch p = 0.009
+        bullets:
+          - "No effect means labels are arbitrary."
+          - "Classical tests approximate this."
+          - "Unsure of a formula? Shuffle."
+        takeaway: A p-value is how often chance alone gives a result this extreme, which you can compute directly by shuffling labels.
+        source: notes/05-hypothesis-testing.md
+        notes: >-
+          This uses 400 skewed order values in each arm. Under a true null, p-values are uniform, and that uniformity is what alpha of 0.05 means.
+
+      - layout: table
+        title: What a p-value is not
+        recall: Give three common misreadings of a p-value, and the correct reading of each.
+        header: [Wrong reading, Why]
+        widths: [5.2, 6.2]
+        rows:
+          - ["p = 0.03: 3% chance the null is true", "p assumes the null. The other direction needs a prior"]
+          - ["p = 0.2: no effect", "The test may be underpowered"]
+          - ["p = 0.003: a big effect", "5M per arm makes a 0.9% lift significant"]
+          - ["0.049 vs 0.051: they disagree", "The difference between them is not itself significant"]
+        takeaway: A p-value measures surprise under the null, not the chance the null is true, the size of an effect, or its importance.
+        source: notes/05-hypothesis-testing.md
+        notes: >-
+          The American Statistical Association's 2016 statement says these same things formally. Reinhart's book walks through them with examples.
+
+      - layout: steps
+        title: Choosing the test
+        recall: What is the default two-group test, and when do you use Fisher or Mann-Whitney?
+        steps:
+          - {title: Two groups, body: "**Welch** by default; it costs almost nothing when variances match."}
+          - {title: Same units twice, body: "**Paired t.** Here p = 0.0004 paired, 0.33 unpaired, on the same numbers."}
+          - {title: Three or more, body: "**ANOVA**, then Tukey to find which pairs differ."}
+          - {title: Categories, body: "**Chi-square**, or **Fisher** if an expected count is under 5."}
+          - {title: Skew and whales, body: "**Mann-Whitney** tests a tendency; **bootstrap** the mean if you care about the mean."}
+        takeaway: Pick by outcome type and design, and remember that a rank test answers a different question from a test on revenue.
+        source: notes/05-hypothesis-testing.md
+        notes: >-
+          One whale moved Welch's p from 0.165 to 0.506 and Mann-Whitney's only from 0.125 to 0.163. But a change that only moves whales is still real revenue.
+
+      - layout: compare
+        title: Many tests, and exaggerated winners
+        recall: What did BH find against Bonferroni in the example, and what is the winner's curse at 17% power?
+        left:
+          title: Correct for multiplicity
+          bullets:
+            - "100 tests, 10 real"
+            - "Raw: 11 hits, 3 false"
+            - "Holm: 5 hits, 0 false"
+            - "BH: 7 hits, 0 false"
+          tag: FWER for launches, FDR for screens
+        right:
+          title: Expect a smaller effect later
+          bullets:
+            - "True lift 1%, power 17%"
+            - "Significant estimates average 2.45%"
+            - "2.5x the truth"
+          tag: Winner's curse
+        takeaway: Control error across the tests you run, and never forecast from a significant estimate at low power.
+        source: notes/05-hypothesis-testing.md
+        notes: >-
+          Reinhart calls the second effect truth inflation. It is why a replication often shows a smaller effect than the launch analysis, without anything having gone wrong except selection.
+
+  - title: Models that hold other things fixed
+    summary: The t-test as OLS · Covariates · Diagnostics · Clustering · Logistic · Poisson
+    notes: >-
+      Everything so far compared groups. Regression does that and lets you hold other things fixed.
+    slides:
+      - layout: statement
+        title: Free precision is one line away
+        kicker: The problem
+        statement: "Adding last month's spend cut the standard error from 0.343 to 0.287, with no extra traffic."
+        attribution: Larkspur simulated experiment, 20,000 users, true effect 1.5
+        takeaway: A t-test is a regression on a 0/1 column, so you can add pre-period covariates and shrink the error for free.
+        source: notes/06-regression-and-glms.md
+        notes: >-
+          The difference in means of 1.350 and t of 3.942 match OLS exactly. The covariate removed 30% of the variance, which equals its R squared. Randomisation already made the estimate unbiased, so what it buys is precision. Only use variables measured before assignment.
+
+      - layout: flow
+        title: Choose the model from the outcome, then check it
+        recall: Which model fits a continuous outcome, a yes/no outcome and a count, and what do you check afterwards?
+        steps:
+          - {label: Continuous, sub: "OLS"}
+          - {label: Yes or no, sub: "logistic, log-odds link"}
+          - {label: Count, sub: "Poisson with offset"}
+          - {label: Diagnostics, sub: "residuals, leverage, clusters", accent: "D4621A"}
+        bullets:
+          - "**One family:** linear predictor, a distribution, a link function."
+          - "**Offset** turns a count into a rate per day."
+          - "**Overdispersed?** Robust SEs or negative binomial."
+        takeaway: Pick the GLM from the outcome's type, then check residuals, leverage, dispersion and clustering before trusting any standard error.
+        source: notes/06-regression-and-glms.md
+        notes: >-
+          Overdispersion example: dispersion 8.3, Poisson SE 0.0155 against robust 0.0509. A test using the first would have called the effect highly significant.
+
+      - layout: table
+        title: The fixes change the uncertainty, not the estimate
+        recall: How large was the false-positive rate without clustering, and what did robust SEs change?
+        header: [Problem, Symptom in the example, Fix]
+        widths: [3, 5.2, 3.2]
+        highlight: [1]
+        rows:
+          - [Funnel residuals, "pre SE 0.0067 classical, 0.0112 robust", "HC3 robust SEs"]
+          - [Rows repeat in a user, "**27.8% false positives at nominal 5%**", Cluster on user]
+          - [Collinear predictors, "VIF 391, SE 0.81 vs 0.041, same RMSE", Combine or drop]
+          - [One far-out point, "slope 2.02 to -0.18, Cook's D 107", Find out what it is]
+        takeaway: Cluster at the level of randomisation and use robust errors on money, since coefficient estimates hide both problems.
+        source: notes/06-regression-and-glms.md
+        notes: >-
+          Clustering on user brought that 27.8% down to 3.5%. Collinearity damages explanation rather than prediction.
+
+      - layout: table
+        title: "A logistic coefficient of 0.4 is not one number"
+        recall: What does a logistic coefficient of 0.4 do to the odds, and to probability at baselines of 2% and 50%?
+        lead: "Odds multiply by e^0.4 = 1.49 at every baseline. The probability change does not stay fixed."
+        header: [Baseline, Becomes, Change in points]
+        widths: [3.5, 3.5, 3.5]
+        rows:
+          - ["2%", "3.0%", "+1.0"]
+          - ["20%", "27.2%", "+7.2"]
+          - ["50%", "59.9%", "+9.9"]
+          - ["80%", "85.6%", "+5.6"]
+        takeaway: Report average marginal effects to stakeholders, since an odds ratio implies a different point change at each baseline.
+        source: notes/06-regression-and-glms.md
+        notes: >-
+          A coefficient of 28 with a standard error of 171,000 is separation, not a strong effect. Gelman and colleagues showed a Cauchy prior with scale 2.5 on standardised inputs gives stable fits. That leads into the Bayesian pillar.
+
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        recall: Give one rule of thumb for each stage, from looking at data through to regression.
+        cards:
+          - {title: Look, body: "What is one row? Count exclusions. Show N. Mean and median together."}
+          - {title: Reason, body: "P(A|B) is not P(B|A). Expectations add; variances need independence."}
+          - {title: Sample, body: "N of 30 is no law. Bias does not shrink. Small groups fill the extremes."}
+          - {title: Estimate, body: "Report intervals. Wilson for small counts. Bootstrap the independent unit."}
+          - {title: Test, body: "Welch by default. One primary question. Distrust winners at low power."}
+          - {title: Model, accent: "D4621A", body: "Pre-period covariates. Cluster at randomisation. Marginal effects. Check dispersion."}
+        takeaway: Most statistical errors that reach a decision are one-line mistakes, and each stage here has a check that catches them.
+        source: notes/06-regression-and-glms.md
+        notes: >-
+          If you keep one sentence: always ask what the independent unit is, because that single question fixes more real analyses than any fancy method.
+
+      - layout: bullets
+        title: Where to go next
+        recall: What comes after this pillar, and how do you practise it?
+        bullets:
+          - "**03 Experimentation and causality:** the checkout goes to a real A/B test, with metrics and peeking."
+          - "**04 Bayesian analysis:** priors, posteriors and P(B beats A) directly."
+          - "**Run the code:** every chapter is a notebook on synthetic data; coursework in `practice/`."
+          - "**Read:** Bruce & Bruce; Reinhart, *Statistics Done Wrong*; Stat 110 lectures."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: Ask what the independent unit is, and how the rows got into the table.
+        takeaway: The next pillar takes these tools to an experiment, where randomisation finally lets us talk about causes.
+        source: notes/01-descriptive-statistics-and-eda.md
+        notes: >-
+          We can now say what is true of the users we saw and what is likely of those we did not. What we still cannot say is what caused what. For that, we randomise.

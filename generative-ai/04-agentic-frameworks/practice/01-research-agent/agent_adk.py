@@ -70,7 +70,8 @@ def show(events) -> None:
             if part.function_call:
                 print(f"model  -> {part.function_call.name}({dict(part.function_call.args)})")
             elif part.function_response:
-                print(f"tool   <- {part.function_response.response['result'][:70].replace(chr(10), ' ; ')}")
+                result = str(part.function_response.response.get("result", part.function_response.response))
+                print(f"tool   <- {result[:70].replace(chr(10), ' ; ')}")
             elif part.text and event.is_final_response():
                 print(f"model  => {part.text}")
 

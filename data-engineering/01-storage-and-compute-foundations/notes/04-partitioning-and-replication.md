@@ -31,11 +31,18 @@ The goal of partitioning is to spread data and load evenly. An uneven split is c
 
 ## Range and hash partitioning
 
-Partitioning by key range assigns each partition a contiguous range, like the volumes of an encyclopedia, as in Bigtable, HBase and RethinkDB. Keeping keys sorted makes range queries cheap. Partitioning by hash of the key gives up the order in exchange for an even spread. Using trips by date, here is the trade in numbers.
+Partitioning by key range assigns each partition a contiguous range, like the volumes of an encyclopedia, as in Bigtable, HBase and RethinkDB. Keeping keys sorted makes range queries cheap. Partitioning by hash of the key gives up the order in exchange for an even spread. Using trips by date, here is the trade in numbers. A stable hash helper comes first.
 
 ```python
-import numpy as np
+import zlib, random, itertools, sqlite3, os, time, numpy as np
+from collections import Counter
 
+def h(key):
+    """A hash that is stable across processes."""
+    return zlib.crc32(str(key).encode())
+```
+
+```python
 rng = np.random.default_rng(7)
 days = np.sort(rng.integers(0, 31, 1_000_000))
 ids = np.arange(len(days))
@@ -145,12 +152,6 @@ With 64 shards, the median request takes three times the median for one shard, a
 Nodes get added and fail, so partitions have to move, and rebalancing should leave the load fair, keep serving during the move, and move no more than necessary. The obvious scheme, `hash(key) mod N`, fails the third requirement. Kleppmann's example is hash 123456, which goes to node 6 with 10 nodes, 3 with 11 and 0 with 12. Measured over a million keys, here it is against the fixed-partition approach.
 
 ```python
-import zlib, random, itertools, sqlite3, os, statistics, time
-from collections import Counter
-
-def h(key):
-    return zlib.crc32(str(key).encode())
-
 keys = range(1_000_000)
 moved_mod = sum(h(k) % 10 != h(k) % 11 for k in keys) / len(keys)
 print(f"hash mod N, 10 -> 11 nodes: {moved_mod:.1%} of keys move")
@@ -206,7 +207,7 @@ print(con.sql(q).fetchall())
 31 files, e.g. lake/day=2026-01-01/data_0.parquet
 average file 438 KB
 ["File Filters: day = '2026-01-15'::DATE", 'Scanning Files: 1/31', 'Total Files Read: 1']
-[(736035.5200000015,)]
+[(742153.250000002,)]
 ```
 
 `Scanning Files: 1/31` is partition pruning: the engine read the folder names and opened a single file. It is the same mechanism as the footer pruning from [chapter 1](01-encoding-and-files.md), one level higher. So the partition key should be the column most queries filter on, usually a date, and hive-style `key=value` folders make it readable to any engine. Now go too far with the same idea and partition by day and zone.
@@ -227,7 +228,7 @@ print(f"full scan by day {min(t('lake/*/*.parquet') for _ in range(3)):.1f} ms, 
 ```text
 8060 files, average 2.6 KB
 footer overhead reading all: 21.0 MB vs 13.6 MB by day
-full scan by day 2.5 ms, by day and zone 593.9 ms
+full scan by day 3.0 ms, by day and zone 705.5 ms
 ```
 
 The dataset has gained metadata overhead, with the same rows taking half as much space again, and a full scan runs hundreds of times slower, since the engine must now open thousands of tiny files and read a footer for each one. This is the **small files problem**, and it is common with streaming sinks or over-eager partition keys. Each folder also costs a list call on object storage. Rough guidance is to keep the partition key low in cardinality and leave finer selectivity to sorted row groups inside each file. A rule that holds up well: partition by what you delete or backfill by, and sort by what you filter on. Backfills are covered in [idempotency and backfills](../../03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md).
