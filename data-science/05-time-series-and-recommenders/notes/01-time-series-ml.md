@@ -46,6 +46,14 @@ y = df["cnt"]
 print(y.groupby(y.index.year).agg(["mean", "max"]).round(1))
 ```
 
+```text
+(17379, 18) 2011-01-01 00:00:00 2012-12-31 23:00:00
+hours on the calendar: 17544  rows in the file: 17379
+       mean    max
+2011  141.9  651.0
+2012  233.3  977.0
+```
+
 Two facts in that output shape everything after it. The file has fewer rows than the calendar has hours, so `shift(24)` on the raw file would silently mean "24 rows ago", which is not always yesterday. Reindexing onto a complete hourly grid makes a lag mean what it says. We fill the missing counts with zero on the assumption that a missing hour had no rentals. That is a judgement about this dataset, and it is worth writing down when you make it on your own data.
 
 The second fact is that mean demand rose by about 64% from 2011 to 2012. Every test hour in 2012 sits at a level the early training data never reached, and that matters as soon as trees enter the picture.
@@ -93,6 +101,13 @@ results = [backtest(same_hour_yesterday, "same hour yesterday"),
            backtest(same_hour_last_week, "same hour last week")]
 summary = lambda rs: pd.concat(rs).groupby("model", sort=False)[["mae", "mase"]].mean().round(3)
 print(summary(results))
+```
+
+```text
+                        mae   mase
+model
+same hour yesterday  80.445  1.317
+same hour last week  66.042  1.074
 ```
 
 Copying last week wins, because a weekday forecast from yesterday is wrong every Saturday and Monday. Both have a MASE above 1 because the second half of 2012 is harder and busier than the training history that sets the scale. Keep that in mind when you read a MASE: it is a ratio against an in-sample yardstick, and it can move with the level of the series as well as with your model.
@@ -167,6 +182,22 @@ print(summary(results))
 print(results[-1].round(3).to_string(index=False))
 ```
 
+```text
+                        mae   mase
+model
+same hour yesterday  80.445  1.317
+same hour last week  66.042  1.074
+gbm absolute         55.375  0.906
+gbm relative         48.172  0.786
+       model   month    mae  mase
+gbm relative 2012-07 47.475 0.816
+gbm relative 2012-08 35.948 0.602
+gbm relative 2012-09 49.596 0.820
+gbm relative 2012-10 67.503 1.091
+gbm relative 2012-11 46.724 0.734
+gbm relative 2012-12 41.787 0.653
+```
+
 Dividing by the level takes MASE from 0.906 to 0.786, a bigger gain than most hyperparameter tuning could hope for, and it costs one line. The monthly rows show why you report folds: October is the only month above 1, and a single average would not tell you that. It is also the point to ask what happened that month. Hurricane Sandy shut the D.C. system down at the end of October 2012, and Fanaee-T and Gama use this dataset's anomalies as their subject, so this is not a model detail you could fix with more trees.
 
 This is the method that won the M5 forecasting competition by a wide margin. Makridakis, Spiliotis and Assimakopoulos ([*International Journal of Forecasting*, 2022](https://ideas.repec.org/a/eee/intfor/v38y2022i4p1346-1364.html)) report on 42,840 hierarchical Walmart sales series with a 28-day horizon. It was the first competition in that series where all the top methods were pure machine learning and clearly better than statistical benchmarks. The winner, an equal-weighted mean of six LightGBM models, improved on the top benchmark by 22.4%, and most leading methods used LightGBM. Even so, only 7.5% of teams beat that benchmark and 35.8% beat the seasonal naive, so most entrants lost to a method they could have written in a line. Essentially all of the top 50 trained one "global" model across many series, which they call cross-learning. That is where machine learning earns its keep, since a global model can borrow patterns from thousands of related series. Januschowski and colleagues give a fuller account of why trees do so well here in ["Forecasting with trees"](https://doi.org/10.1016/j.ijforecast.2021.10.004) (*IJF*, 2022).
@@ -195,6 +226,14 @@ print("shuffled 5-fold    mae %.1f  mase %.3f" % (
     np.mean(np.abs(y[mask][in_win].to_numpy() - pred[in_win])),
     mase(y[mask][in_win].to_numpy(), pred[in_win], tr_arr)))
 print(summary(results_leak))
+```
+
+```text
+shuffled 5-fold    mae 43.4  mase 0.747
+                             mae   mase
+model
+lag_1 inside the horizon  25.597  0.419
+actual weather            37.653  0.615
 ```
 
 Each result looks like a breakthrough against the honest 0.786. The previous-hour feature cuts the error nearly in half, and nobody would have that value when planning a day ahead. Weather is the more interesting case. Actual temperature takes MASE to 0.615, and the temptation is to keep it. In production you would only have a weather forecast, whose errors the model never saw in training, so this number is an upper bound for what a weather feed could add. To measure it properly you need archived forecasts as issued at the time, trained and tested as they were. The shuffled folds flatter us less, because every feature here is at least a day old, so a neighbouring hour in training gives away less than you would fear. A 5% optimistic bias still changes a decision when two candidates are that close.
@@ -286,6 +325,21 @@ for name, mk in [("dlinear", lambda: DLinear(L, H)), ("lstm", lambda: LSTMForeca
 print(summary(results))
 ```
 
+```text
+dlinear    2 s
+lstm      56 s
+tcn      123 s
+                        mae   mase
+model
+same hour yesterday  80.445  1.317
+same hour last week  66.042  1.074
+gbm absolute         55.375  0.906
+gbm relative         48.172  0.786
+dlinear              64.710  1.056
+lstm                 63.632  1.039
+tcn                  60.188  0.981
+```
+
 Read this table with the setup in mind. It is one series with about 550 midnight windows of training at most, no calendar input, no tuning beyond making them train stably, and a window-level normalisation. Under those conditions all three neural models beat the naive baselines, and the two-line DLinear gives up little to the LSTM. None of them beats the gradient boosted trees, which were handed holiday flags and a calendar. That does not prove trees beat networks. Neural forecasters such as DeepAR were designed for global training across many related series, and a single short series starves them. The conclusion that does hold is narrower and more useful: on a small tabular-style problem, start with features and trees, and require any deep model to beat that number in the same backtest.
 
 ## Forecasts with error bars
@@ -306,6 +360,16 @@ actual = y.reindex(qpred[0.1].index)
 inside = (actual >= qpred[0.1]) & (actual <= qpred[0.9])
 print("nominal 80%% interval, covered %.1f%%, mean width %.0f bikes" % (100 * inside.mean(), (qpred[0.9] - qpred[0.1]).mean()))
 print(inside.groupby(inside.index.strftime("%Y-%m")).mean().round(3).to_string())
+```
+
+```text
+nominal 80% interval, covered 78.9%, mean width 158 bikes
+2012-07    0.747
+2012-08    0.891
+2012-09    0.812
+2012-10    0.755
+2012-11    0.756
+2012-12    0.772
 ```
 
 An interval that claims 80% and covers less is overconfident, and it is usually overconfident for the same reason in every fold: the future contains shocks that the training period did not. Report coverage by fold, as with point error. DeepAR's probabilistic output is the deep learning analogue, and the same check applies to it.

@@ -87,11 +87,11 @@ for n, dim in [(10_000, 384), (50_000, 384), (200_000, 384), (50_000, 1024), (50
 
 ```text
   vectors   dim     GB  ms/query
-   10,000   384   0.02       0.2
+   10,000   384   0.02       0.1
    50,000   384   0.08       0.9
-  200,000   384   0.31       3.5
-   50,000  1024   0.20       1.5
-   50,000  3072   0.61       4.0
+  200,000   384   0.31       3.9
+   50,000  1024   0.20       2.0
+   50,000  3072   0.61       3.7
 ```
 
 These are laptop timings on random vectors with NumPy's default threading, so read the shape and not the digits. Time grows with both axes. A corpus under about 100k chunks at a few hundred dimensions answers in single-digit or low double-digit milliseconds, which is small next to a model call that takes seconds. That is why our project's DuckDB backend stays on exact search below 50k chunks. Concurrency is what this table hides: a scan holds a core for its whole duration, so ten simultaneous queries are ten scans.
@@ -208,6 +208,8 @@ can I get my money back
   hybrid  ['kb-03', 'kb-04', 'kb-05']
 ```
 
+Two things to read in the output. On the error code, BM25 returns the one document that holds it and nothing else, which is why you keep a keyword path. On the refund question, BM25 has only the word "back" to go on, so it returns kb-03 for "Back off for that long". RRF then scores kb-03 and kb-04 equally, because each is first in one list and absent or lower in the other, and the tie falls the wrong way. Fusion is not magic: a weak keyword match with one hit counts as much as a strong semantic one. A reranker or a stricter keyword query fixes this.
+
 Keep the permissions predicate in both queries, as [note 07](07-rag-in-production.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
 
 ### ChromaDB
@@ -261,63 +263,47 @@ The approximate-nearest-neighbour index decides how the store behaves when the c
 
 The insert behaviour is also a governance point: expiring a superseded document in an ANNOY index means rebuilding it, so stale content lingers until the next rebuild ([02-context 04 — context validation](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#context-validation)). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding) benchmarks both.
 
-The insert row is easy to verify, and the failure is quieter than you might expect. In the run below, Annoy accepts an item added after the build without complaint, and the item is never found. A second build raises an error, so the only route is a new index from scratch.
+The insert row is what bites in production, so here is what it costs. A graph takes new points where they are; a forest of trees built over a fixed set has to be built again. The code times both routes on 50,000 synthetic vectors, using the full HNSW rebuild as the price of any index that cannot take inserts.
 
 ```python
 import time
 
-import annoy
 import faiss
 import numpy as np
 
 faiss.omp_set_num_threads(1)
 rng = np.random.default_rng(0)
 centres = rng.normal(size=(100, 128))
-docs = centres[rng.integers(100, size=50_000)] + 0.7 * rng.normal(size=(50_000, 128))
-docs = (docs / np.linalg.norm(docs, axis=1, keepdims=True)).astype("float32")
-queries = centres[rng.integers(100, size=200)] + 0.7 * rng.normal(size=(200, 128))
-queries = (queries / np.linalg.norm(queries, axis=1, keepdims=True)).astype("float32")
-truth = [set(np.argpartition(-(docs @ q), 10)[:10].tolist()) for q in queries]
-recall = lambda found: np.mean([len(set(f) & t) / 10 for f, t in zip(found, truth)])
+vectors = centres[rng.integers(100, size=51_000)] + 0.7 * rng.normal(size=(51_000, 128))
+vectors = (vectors / np.linalg.norm(vectors, axis=1, keepdims=True)).astype("float32")
+docs, fresh = vectors[:50_000], vectors[50_000:]
+
+index = faiss.IndexHNSWFlat(128, 16, faiss.METRIC_INNER_PRODUCT)
+start = time.perf_counter()
+index.add(docs)
+print(f"build 50,000:           {time.perf_counter() - start:6.2f}s")
 
 start = time.perf_counter()
-hnsw = faiss.IndexHNSWFlat(128, 16, faiss.METRIC_INNER_PRODUCT)
-hnsw.add(docs)
-print(f"HNSW  build {time.perf_counter() - start:4.1f}s", end="  ")
-hnsw.hnsw.efSearch = 40
-print(f"recall@10 {recall(hnsw.search(queries, 10)[1].tolist()):.3f}")
+index.add(fresh)
+print(f"insert 1,000 more:      {time.perf_counter() - start:6.2f}s")
 
 start = time.perf_counter()
-trees = annoy.AnnoyIndex(128, "angular")
-for i, v in enumerate(docs):
-    trees.add_item(i, v.tolist())
-trees.build(10, n_jobs=1)
-print(f"Annoy build {time.perf_counter() - start:4.1f}s", end="  ")
-print(f"recall@10 {recall([trees.get_nns_by_vector(q.tolist(), 10) for q in queries]):.3f}")
+rebuilt = faiss.IndexHNSWFlat(128, 16, faiss.METRIC_INNER_PRODUCT)
+rebuilt.add(vectors)
+print(f"rebuild 51,000 instead: {time.perf_counter() - start:6.2f}s")
 
-new = rng.normal(size=128).astype("float32")
-new /= np.linalg.norm(new)
-
-hnsw.add(new[None, :])
-print("HNSW  finds the new item: ", hnsw.search(new[None, :], 1)[1][0, 0] == 50_000)
-
-trees.add_item(50_000, new.tolist())
-print("Annoy finds the new item: ", 50_000 in trees.get_nns_by_vector(new.tolist(), 5))
-try:
-    trees.build(10)
-except Exception as err:
-    print("Annoy second build:       ", err)
+ids = index.search(fresh[:100], 1)[1][:, 0]
+print("new items found as their own nearest neighbour:", int((ids == np.arange(50_000, 50_100)).sum()), "of 100")
 ```
 
 ```text
-HNSW  build  1.1s  recall@10 0.954
-Annoy build  0.7s  recall@10 0.000
-HNSW  finds the new item:  True
-Annoy finds the new item:  False
-Annoy second build:        You can't build a built index
+build 50,000:             1.01s
+insert 1,000 more:        0.03s
+rebuild 51,000 instead:   1.03s
+new items found as their own nearest neighbour: 98 of 100
 ```
 
-Annoy's recall depends on its tree count and search budget, and this comparison uses a single setting of each index, so it is not a benchmark. The behaviour at the end is the lesson: a corpus that changes needs an index that takes inserts, or a rebuild schedule you are willing to own.
+The gap grows with the corpus, and the rebuild is the mild case: it also means holding two indexes during the swap. I tried to measure Annoy directly and could not. The wheels installed by `uv` on this Apple Silicon machine, under Python 3.11 and 3.13, returned a single wrong neighbour for every query, so the comparison above leaves it out and the table rests on Li's account. If you plan to use Annoy, sanity-check nearest neighbours on your own platform first; the upstream lab above is the place to start.
 
 ---
 
@@ -349,7 +335,7 @@ Annoy's recall depends on its tree count and search budget, and this comparison 
 - **Discovering the dimension limit at index build.** Symptom: `CREATE INDEX` fails on Postgres after you have embedded everything. Check the embedder's dimension against the store before the first ingest.
 - **Reading "dense only" as a dead end.** Symptom: a migration to get hybrid search that two queries and RRF would have given you. Fuse in the application first.
 - **Mixing embedders in one index.** Symptom: quality drops after a model upgrade, with no errors. Vectors from two models are not comparable, so keep a model version on each record and re-embed.
-- **Annoy on a changing corpus.** Symptom: new documents never appear and superseded ones stay. Added items are silently unsearchable, so plan a rebuild or use HNSW.
+- **Annoy on a changing corpus.** Symptom: new documents never appear and superseded ones stay. Plan a rebuild or use HNSW.
 - **Comparing raw scores across stores.** Symptom: a threshold that worked on one store passes everything on another. Bedrock KB does not expose its raw `_score` at all, so plan around ranks.
 - **Trusting a comparison table.** Symptom: a decision based on a vendor limit that has moved, as two rows here had. Read the current documentation for the two or three stores you shortlist.
 
@@ -358,13 +344,15 @@ Annoy's recall depends on its tree count and search budget, and this comparison 
 ## Try it
 
 1. Add `(1_000_000, 384)` to the exact-scan loop and compute the memory by hand first. Is this still a good plan on an 8 GB laptop?
-2. In the DuckDB block, remove `audience = 'public'` from both queries and rerun. Which results change?
+2. In the DuckDB block, remove the `audience` predicate from `dense` and rerun. Which results change?
 3. Your embedder outputs 1,536 dimensions, you run Postgres, and you want ANN. What column type do you use, and what changes if you upgrade to a 3,072-dimension model?
 
 <details>
 <summary>Answers</summary>
 
-ANSWERS_09
+1. 1,000,000 × 384 × 4 bytes is 1.54 GB, so it fits, and the scan should take about five times the 200,000 row, around 17 ms. It is a fine plan for one user and a poor one under load, because each query holds a core for that long.
+2. The refund question now returns kb-18 in second place, the internal runbook, ahead of kb-05. That is the leak from [note 07](07-rag-in-production.md), and it takes one missing clause.
+3. `vector` with HNSW, since 1,536 is under the 2,000 limit. At 3,072 you must move to `halfvec`, shorten the embedding if the model supports it, or search exactly, and you re-embed the corpus in any case.
 
 </details>
 

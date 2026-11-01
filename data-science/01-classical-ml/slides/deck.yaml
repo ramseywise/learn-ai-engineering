@@ -1,0 +1,548 @@
+# Classical ML lecture deck. Covers notes 01-08.
+# Build: make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: predict who earns over $50k on the adult census, from a dummy at 0.759 accuracy
+# to boosting at AUC 0.93. Numbers on the slides are from runs in the notes, or attributed papers.
+deck:
+  title: Classical Machine Learning
+  subtitle: Fit a model on a table, measure it honestly, explain it
+  tagline: |-
+    Will it hold · Is it cheating · No labels · Many trees · Why this answer
+  reference: "Notes: data-science/01-classical-ml"
+  output: classical-ml.pptx
+  notes: >-
+    Today we take one question, will this person earn over 50 thousand dollars, and we follow it from a first
+    model to one we can defend to a reviewer. An analyst can describe last year's census. A data scientist has to
+    predict people the model never saw, and has to know whether the prediction holds. Each part of this lecture
+    answers one doubt about the number we report.
+
+parts:
+  - title: Will it hold on new people?
+    summary: Bias and variance · The estimator API · Model families
+    notes: >-
+      We start with the first doubt. A model that does well on the people it trained on tells us little. Why does a
+      model fail on new data, and how can we tell before it does?
+    slides:
+      - layout: statement
+        title: A perfect training score tells you nothing. Why?
+        kicker: The problem
+        statement: "A forest scores 1.000 on the data it trained on, every time. The only score that counts is on people it has never seen."
+        attribution: Own run on breast cancer, where the same forest scores 0.972 on held-out data
+        takeaway: Generalisation is the goal, so every score needs held-out data before it means anything.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          Memorising is easy. A deep tree or a forest can get every training row right. So the question this course keeps
+          asking is about people the model did not see. What makes a model fail on them?
+
+      - layout: image
+        title: Too simple misses signal, too flexible fits noise
+        recall: Which error falls as a model gets more complex, and which turns back up?
+        image: ../../sources/images/mueller-guido-overfitting-underfitting-cartoon.png
+        caption: Müller and Guido, Introduction to Machine Learning with Python, ch. 2
+        bullets:
+          - "**Underfit:** low train score and low test score."
+          - "**Overfit:** high train score, much lower test score."
+          - "**Every family has a knob** that moves along this curve."
+        takeaway: Read train and test together, because the gap between them tells you which side of the curve you are on.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          This is the bias and variance picture. Too simple a family misses real structure, and too flexible a family
+          follows the sample's noise. What we want is the middle, and each family gives us a knob for finding it.
+
+      - layout: code
+        title: Every scikit-learn model is the same four lines
+        recall: Which four calls make up the estimator loop?
+        lang: python
+        code: |
+          from sklearn.datasets import load_iris
+          from sklearn.model_selection import train_test_split
+          from sklearn.neighbors import KNeighborsClassifier
+
+          iris = load_iris()
+          X_train, X_test, y_train, y_test = train_test_split(
+              iris.data, iris.target, random_state=0)
+
+          knn = KNeighborsClassifier(n_neighbors=1)  # 1. choose
+          knn.fit(X_train, y_train)                  # 2. fit
+          y_pred = knn.predict(X_test)               # 3. predict
+          print(knn.score(X_test, y_test))           # 4. score: 0.974
+        takeaway: The API is uniform by design, so estimators chain in pipelines and plug into search.
+        source: notes/01-statistical-foundations.md
+        notes: >-
+          The scikit-learn paper names this consistency as a goal of the library. Because the interface is the same, we can
+          swap a family by changing one line. That is what makes the next slide practical.
+
+      - layout: table
+        title: Each family has one knob that sets its complexity
+        recall: What is the complexity knob for kNN, ridge, a tree, and an RBF SVM?
+        header: [Family, Knob, Good at, Fails when]
+        widths: [2, 2, 3, 3]
+        rows:
+          - [kNN, "`n_neighbors`", A quick first baseline, Many features or rows]
+          - [Linear, "`alpha` or `C`", "Many features, fast", Non-linear signal without features]
+          - [Naive Bayes, "`alpha`", Sparse counts in one pass, You need probabilities]
+          - [Decision tree, "`max_depth`", Readable rules, High variance on its own]
+          - [Kernel SVM, "`C` and `gamma`", Small dense data, Large data; needs scaling]
+          - [Small MLP, "Layers and `alpha`", Dense signal given time, Needs scaling and tuning]
+        takeaway: Learn one knob per family, and start with a linear model or kNN to learn the data.
+        source: notes/02-supervised-learning.md
+        notes: >-
+          You don't need every parameter. For each family, know the one that controls complexity and how the family fails.
+          Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance.
+
+      - layout: image
+        title: Families draw different boundaries on the same data
+        recall: Why do trees draw boxes and linear models one straight line?
+        image: ../../sources/images/mueller-guido-classifier-comparison.png
+        caption: Ten classifiers on three toy datasets, from Müller and Guido's notebooks
+        bullets:
+          - "**Linear:** one hyperplane, so it depends on the features you give it."
+          - "**Trees:** axis-aligned boxes."
+          - "**Kernels and kNN:** smooth, local boundaries."
+        takeaway: A model's shape of boundary is its assumption, so check that it can express your problem.
+        source: notes/02-supervised-learning.md
+        notes: >-
+          Look at the same data with different models. Each family has its own shape of boundary, which is its assumption
+          about the world. No family wins everywhere. Now, what does the model actually get to see?
+
+  - title: Is it cheating?
+    summary: Domain features · Leakage · Pipelines · Metrics and thresholds
+    notes: >-
+      We now have a model and a test score. The second doubt is whether that score can be believed, and whether we gave
+      the model the right input in the first place.
+    slides:
+      - layout: statement
+        title: The same forest goes from -0.04 to 0.84. What changed?
+        kicker: The problem
+        statement: "A random forest on a raw timestamp predicts Citi Bike rentals at R² -0.04. Give it hour and weekday, and it reaches 0.84."
+        attribution: Own run, reproducing the ladder in Müller and Guido, ch. 4
+        takeaway: Representation sets what any model can see, so try a domain feature before a bigger model.
+        source: notes/03-feature-engineering-and-pipelines.md
+        notes: >-
+          Trees cannot extrapolate, so a timestamp past the training range gives them nothing to split on. No model finds
+          the commute pattern from the raw number. Someone who rides a bike writes it in one line.
+
+      - layout: table
+        title: Features can beat models on Citi Bike
+        recall: Which feature set let a linear model catch up with the forest?
+        lead: Rentals per 3-hour slot for one station, August 2015. The first 184 slots train and the rest test, in time order.
+        header: [Features, Model, Test R²]
+        widths: [5, 3, 2]
+        rows:
+          - [POSIX timestamp, Forest, "-0.04"]
+          - [Hour, Forest, "0.60"]
+          - [Hour and weekday, Forest, "0.84"]
+          - [Hour and weekday as numbers, Linear, "0.13"]
+          - [One-hot hour and weekday, Ridge, "0.62"]
+          - [One-hot pairs, Ridge, "0.85"]
+        highlight: 5
+        takeaway: With the right encoding a linear model matches the forest, and each coefficient stays readable.
+        source: notes/03-feature-engineering-and-pipelines.md
+        notes: >-
+          Linear on weekday as a number is poor, because Monday isn't numerically related to Sunday. One-hot encoding fixes
+          that, and pairs of hour and weekday let it express the commute. It then edges the forest on this split.
+
+      - layout: compare
+        title: On pure noise, a leaky selection step reports R² 0.89
+        recall: Why did selecting features before cross-validation give a strong score on random numbers?
+        lead: Keep the top 5% of 10,000 noise columns against a random target, then cross-validate ridge.
+        emphasis: right
+        left:
+          title: Select, then cross-validate
+          bullets:
+            - Selection saw every fold's target
+            - CV reports **0.89**
+            - A strong model on random numbers
+          tag: Wrong
+        right:
+          title: Cross-validate the pipeline
+          bullets:
+            - Selection is refit inside each fold
+            - CV reports **-0.03**
+            - Correct, because there is no signal
+          tag: Right
+        takeaway: Any step with a fit must be refit inside each fold, or the score includes the answer.
+        source: notes/03-feature-engineering-and-pipelines.md
+        notes: >-
+          This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With
+          scaling the bias is small, and with selection it is enormous. The book's own run gets 0.91 and -0.25.
+
+      - layout: image
+        title: A pipeline fits on train and only transforms on test
+        recall: What does Pipeline do during cross-validation that manual preprocessing does not?
+        image: ../../sources/images/mueller-guido-pipeline.png
+        caption: Training and prediction in a pipeline (Müller and Guido, ch. 6)
+        bullets:
+          - "**fit** runs `fit_transform` on each step, then fits the model."
+          - "**predict** runs only `transform`, then the model."
+          - "The fitted chain is also the artefact you deploy."
+        takeaway: A pipeline removes the leakage bug by construction, and it ships as one object.
+        source: notes/03-feature-engineering-and-pipelines.md
+        notes: >-
+          Pipelines exist for this reason. The chain does the right thing in each fold, you can tune preprocessing jointly
+          with the model, and the same object goes to production.
+
+      - layout: code
+        title: On adult census the dummy is already 0.759
+        recall: What does accuracy of 0.847 mean next to a dummy at 0.759?
+        lang: python
+        code: |
+          prep = make_column_transformer(
+              (StandardScaler(), make_column_selector(dtype_include="number")),
+              (OneHotEncoder(handle_unknown="ignore"),
+               make_column_selector(dtype_exclude="number")))
+          clf = make_pipeline(prep, LogisticRegression(max_iter=2000))
+          clf.fit(X_train, y_train)
+          scores = clf.predict_proba(X_test)[:, 1]
+
+          # dummy accuracy 0.759 | model accuracy 0.847
+          # AUC 0.901 | AP 0.754 (a random ranker's AP is 0.241)
+        takeaway: Always beat a dummy, and report a ranking metric alongside accuracy on imbalanced data.
+        source: notes/04-model-evaluation.md
+        notes: >-
+          Three quarters of the people earn under the line, so always answering no gets 0.759. The model is about nine
+          points better. AUC and average precision say the ranking is strong. That does not yet tell us what to do with it.
+
+      - layout: table
+        title: The threshold turns a score into a decision
+        recall: What did holding precision near 80% cost in recall?
+        lead: Same model. The threshold was picked on validation to reach 80% precision, then reported once on test.
+        header: [Threshold, Precision, Recall]
+        widths: [4, 3, 3]
+        rows:
+          - ["Default, 0.50", "0.725", "0.584"]
+          - ["Tuned on validation, 0.61", "0.783", "0.484"]
+        highlight: 1
+        takeaway: Choose the threshold from the cost of each error on validation data, and report test once.
+        source: notes/04-model-evaluation.md
+        notes: >-
+          Holding the flagged group to about 80 percent precision costs a tenth of recall. Note the test precision of 0.783
+          misses the 0.80 validation target, which is what validation being optimistic looks like at small scale.
+
+  - title: What if there are no labels?
+    summary: Transform or group · k-means and DBSCAN · Anomalies
+    notes: >-
+      Sometimes no one has labelled anything. There is then no score to tell us whether we are right. What can we still do?
+    slides:
+      - layout: statement
+        title: No labels means no score. What now?
+        kicker: The problem
+        statement: "Unsupervised learning has no ground truth, so no number tells you the structure you found is the one you wanted."
+        attribution: Judge by stability, by looking at the result, and by whether it helps a later task
+        takeaway: Treat clusters and components as hypotheses to check, not results to report.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          Two kinds of work live here. Transforming the data, with PCA, NMF or t-SNE, and grouping it, with k-means,
+          hierarchical clustering or DBSCAN. Both end with a person looking at the output.
+
+      - layout: image
+        title: Agglomerative clustering keeps every level of the tree
+        recall: How do you read a chosen number of clusters from a dendrogram?
+        image: ../../sources/images/mueller-guido-dendrogram.png
+        caption: Dendrogram with lines at two and three clusters (Müller and Guido, ch. 3)
+        bullets:
+          - "**Long branches** show clusters that stay far apart."
+          - "Cut the tree at any height to choose the number of clusters."
+          - "No `predict` for new points."
+        takeaway: A dendrogram lets you see the choice of cluster count, instead of assuming it.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          k-means makes you commit to k first. A hierarchy shows all of the choices at once. The trade-off is that it scales
+          poorly and has no way to assign a new point.
+
+      - layout: compare
+        title: k-means misses the moons and DBSCAN finds them
+        recall: What shape of cluster does k-means assume, and which parameter is hard in DBSCAN?
+        lead: Two interleaved half-moons, 200 points, scaled first. ARI of 1.0 means perfect agreement with the true groups.
+        emphasis: right
+        left:
+          title: k-means
+          bullets:
+            - You choose `k`
+            - Assumes round clusters of similar size
+            - ARI **0.50** on moons
+            - Can assign new points
+          tag: Round clusters
+        right:
+          title: DBSCAN
+          bullets:
+            - Finds the number of clusters
+            - Any shape, and flags noise
+            - ARI **1.00** on moons
+            - "`eps` is hard to set"
+          tag: Dense regions
+        takeaway: Pick clustering by the cluster shape you expect, and scale first, because each one uses distance.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          Neither is better in general. DBSCAN handles any shape, but too small an epsilon makes everything noise and too
+          large makes one cluster. HDBSCAN removes most of that sensitivity.
+
+      - layout: code
+        title: Anomaly detection fits normal and flags the rest
+        recall: Why choose epsilon by F1 and not accuracy?
+        lang: python
+        code: |
+          def density(X, mu, var):
+              return np.prod(np.exp(-(X - mu) ** 2 / (2 * var))
+                             / np.sqrt(2 * np.pi * var), axis=1)
+
+          ex8 = loadmat("ex8/data/ex8data1.mat")   # server metrics
+          mu, var = ex8["X"].mean(0), ex8["X"].var(0)
+          eps, f1 = select_threshold(ex8["yval"].ravel(),
+                                     density(ex8["Xval"], mu, var))
+          # epsilon 9.00e-05  F1 0.875  flagged 6 of 307
+        takeaway: Fit on unlabelled normal data, choose the cut on a small labelled set, and score with F1.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          Ng's exercise uses server latency and throughput. Anomalies are rare, so accuracy would say nothing. Use density
+          when positives are few or may look new. Use a classifier when you have many stable positives.
+
+  - title: Why do many trees win?
+    summary: Bagging and boosting · Four libraries · Ordered encoding · Tuning
+    notes: >-
+      Back to the census. A logistic regression gave AUC 0.901. How far can trees take it, and does the library you pick matter?
+    slides:
+      - layout: statement
+        title: One tree overfits. Many trees win. Why?
+        kicker: The problem
+        statement: "Bagging averages deep trees to cut variance. Boosting adds shallow trees to cut bias. Together they are the default for tables."
+        attribution: Breiman 2001 for forests, Friedman 2001 for gradient boosting
+        takeaway: Both ensembles fix a single tree's weakness, in opposite ways, so more forest trees never hurt and too many boosting rounds do.
+        source: notes/06-ensembles.md
+        notes: >-
+          Averaged trees have lower variance, but only so far: correlated errors don't average away. That's why forests also
+          subset features. Boosting works the other way round, starting from weak trees and fitting the remaining error.
+
+      - layout: flow
+        title: Each boosting round fits what the last rounds missed
+        recall: What does each new tree in gradient boosting fit?
+        steps:
+          - title: Predict
+            body: Current ensemble scores every row
+          - title: Gradient
+            body: Residuals, or y minus p for log-loss
+          - title: Fit
+            body: A shallow tree to the gradient
+          - title: Add
+            body: Scaled by the learning rate
+        loop: Repeat until validation stops improving
+        caption: Gradient boosting is gradient descent in function space.
+        takeaway: Boosting is gradient descent on the loss with trees as the steps, so early stopping is the main regulariser.
+        source: notes/06-ensembles.md
+        notes: >-
+          On adult census with no tuning beyond a lower learning rate, sklearn's histogram booster reaches 0.927 against
+          0.896 for a 300-tree forest on one-hot features. Now which library?
+
+      - layout: table
+        title: Four libraries tie, within the noise of one seed
+        recall: How big is the gap between libraries compared with the variation between seeds?
+        lead: Adult census, five seeds, shared learning rate 0.05, early stopping, otherwise defaults.
+        header: [Model, AUC, sd, Seconds]
+        widths: [5, 2, 2, 2]
+        rows:
+          - [Random forest, "0.8969", "0.0028", "0.8"]
+          - [sklearn GradientBoosting, "0.9294", "0.0030", "15.7"]
+          - [sklearn HistGradientBoosting, "0.9291", "0.0025", "3.3"]
+          - [XGBoost, "0.9292", "0.0025", "0.5"]
+          - [LightGBM, "0.9295", "0.0024", "0.6"]
+          - [CatBoost, "0.9297", "0.0030", "5.9"]
+        takeaway: The gap between libraries is 0.0006 and the seed moves it by 0.003, so choose by speed and fit to your stack.
+        source: notes/07-boosting-in-practice.md
+        notes: >-
+          No library won every seed. LightGBM led seed 0, CatBoost seed 1, XGBoost seed 3, and the classic booster seeds 2 and
+          4. Speed differs by a factor of 30, measured on a busy laptop, so treat that as rough. The script is in practice.
+
+      - layout: compare
+        title: A leaky encoding drops test AUC from 0.927 to 0.811
+        recall: Why does a mean-of-target encoding leak, and how does ordering stop it?
+        lead: A meaningless ID of about 3,000 levels is added to adult census and encoded two ways.
+        emphasis: right
+        left:
+          title: Greedy target mean
+          bullets:
+            - Each row's own label is in its feature
+            - Train AUC **0.967**
+            - Test AUC **0.811**
+          tag: Leak
+        right:
+          title: Ordered target mean
+          bullets:
+            - Each row uses only earlier rows
+            - Train AUC **0.953**
+            - Test AUC **0.925**
+          tag: CatBoost's fix
+        takeaway: Any encoding that reads the target has to be fitted out of fold, whichever library you use.
+        source: notes/07-boosting-in-practice.md
+        notes: >-
+          With no ID column the test AUC is 0.927. The greedy encoding lets the model memorise. CatBoost's paper quantifies
+          this: greedy statistics are 1.1 percent worse in log-loss on Adult and 40 percent worse on Amazon.
+
+      - layout: code
+        title: A boosting leaf is one Newton step, as you can check
+        recall: What are g and h, and what is the best leaf weight?
+        lang: python
+        code: |
+          # w* = -sum(g) / (sum(h) + lambda)   (Chen and Guestrin, 2016)
+          p = 0.5                           # prediction before the tree
+          g, h = p - y0, np.full(1000, p * (1 - p))
+          leaf_ids = booster.predict(xgb.DMatrix(x), pred_leaf=True)
+          for side in np.unique(leaf_ids):
+              I = leaf_ids == side
+              print(side, -g[I].sum() / (h[I].sum() + 1.0))
+
+          # by hand -1.1513, in the model -1.1513
+          # by hand  1.1729, in the model  1.1729
+        takeaway: Every library shares this second-order core, and differs in how it finds splits fast.
+        source: notes/07-boosting-in-practice.md
+        notes: >-
+          We fit a one-tree XGBoost model and recompute its leaves by hand. They match. LightGBM adds gradient-based sampling
+          and feature bundling, and grows leaf-wise. CatBoost uses symmetric trees and ordered statistics.
+
+      - layout: steps
+        title: Tune in this order, and expect modest gains
+        recall: Why not grid-search rounds and learning rate together?
+        steps:
+          - title: Learning rate
+            body: 0.1 to search, 0.02 to 0.05 to finish
+          - title: Rounds
+            body: Early stopping, patience 50
+          - title: Tree size
+            body: 8 to 64 leaves
+          - title: Leaf size
+            body: "`min_child_samples`, 5 to 200"
+          - title: Sampling
+            body: Rows and columns, 0.5 to 1.0
+          - title: L1 and L2
+            body: Usually the smallest effect
+        takeaway: On adult census this whole search moves AUC by under 0.003, so spend your time on features and leakage first.
+        source: notes/07-boosting-in-practice.md
+        notes: >-
+          Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927. Rounds change by a factor
+          of 17. Harder problems reward tuning more, but expect a good default to be close.
+
+  - title: Why this answer?
+    summary: Permutation importance · Partial dependence · SHAP · Do explanations help?
+    notes: >-
+      We have a good model with hundreds of trees, and a reviewer asks why it rejected this applicant. You cannot read it.
+      What can you say, and how can you avoid fooling yourself?
+    slides:
+      - layout: statement
+        title: Why did the model reject this applicant?
+        kicker: The problem
+        statement: "Interpretability is not one property. Post-hoc explanations describe the model without being the model."
+        attribution: After Lipton, The Mythos of Model Interpretability
+        takeaway: First name the question you are asking, because each tool answers a different one.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          Lipton separates transparency, which means you can step through the model, from post-hoc explanation, which is
+          everything we do here. Linear on heavily engineered features is not obviously transparent either.
+
+      - layout: flow
+        title: Three questions, three tools
+        recall: Which tool would you use for how a feature moves the prediction?
+        steps:
+          - title: What does it rely on?
+            body: Permutation importance on held-out data
+          - title: How does a feature act?
+            body: Partial dependence, with ICE
+          - title: Why this row?
+            body: SHAP values for the row
+        caption: Add a contrastive comparison when a person has to act on the answer.
+        takeaway: Permutation is global, partial dependence shows shape, and SHAP explains one row, so match the tool to the question.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          These three cover most real questions. All three depend on the data's correlations, as we'll see. LIME sits with
+          SHAP as a local method, fitting a small surrogate around one row.
+
+      - layout: table
+        title: Built-in importance credits random columns
+        recall: Why does a random column get impurity credit but not permutation credit?
+        lead: LightGBM on adult census, with two random columns added on purpose.
+        header: [Column, Gain share, Permutation AUC drop]
+        widths: [4, 3, 4]
+        rows:
+          - [relationship, "0.278", "0.0231"]
+          - [capital-gain, "0.180", "0.0574"]
+          - [age, "0.086", "0.0564"]
+          - [noisy_id (random), "0.028", "0.0002"]
+          - [noise (random), "0.023", "0.0003"]
+          - [workclass, "0.009", "0.0027"]
+        takeaway: Gain is measured on training data and credits overfit noise, so use permutation on held-out data.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          The random columns rank above workclass, gender and race on gain. By permutation they fall to the bottom. But
+          permutation has its own trap: add a noisy copy of age and age falls by a factor of nine, from 0.056 to 0.006.
+
+      - layout: code
+        title: SHAP values add up to the model's score
+        recall: What is local accuracy, and how do you check it?
+        lang: python
+        code: |
+          explainer = shap.TreeExplainer(model)
+          values = explainer.shap_values(X)
+          base = np.ravel(explainer.expected_value)[-1]
+          raw = model.predict_proba(X, raw_score=True)
+          # local accuracy gap: 0.0 across 2,000 rows
+
+          # base -2.387 + sum of SHAP 2.559 = 0.172
+          # education-num 13                 +0.828
+          # relationship Husband             +0.753
+          # marital-status Married-civ-spouse +0.653
+          # capital-gain 0                   -0.253
+        takeaway: Shapley values are the unique additive attribution with local accuracy, missingness and consistency.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          This is a false positive, a 66-year-old married professional predicted at 0.543. Lundberg and Lee's theorem gives
+          the three properties. TreeExplainer makes it exact and fast for trees. It does not make the numbers causal.
+
+      - layout: table
+        title: Explanations do not reliably help the reader
+        recall: Which explanation styles did Wang and Yin find help on low-expertise tasks?
+        header: [Study, Setup, Finding]
+        widths: [3, 4, 6]
+        rows:
+          - ["Miller, 2019", Survey of social science on explanation, "People want contrastive, selected, causal answers"]
+          - ["Dodge et al., 2019", "160+ MTurk workers, four styles", "Global and local reveal different fairness issues"]
+          - ["Wang and Yin, 2021", "Four types, recidivism and forest cover", "On low expertise, none reliably met all three goals"]
+        takeaway: Test an explanation on the person it is for, by the decisions they make with it.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          A SHAP bar chart answers none of what Miller lists by default. So when someone has to act on it, offer the contrast:
+          you would have been approved if. Evaluate with them, and not just your satisfaction with the chart.
+
+  - title: Take it with you
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb for classical ML
+        cards:
+          - title: Baseline first
+            body: Dummy, then linear, then boosting. Each sets a bar.
+          - title: Test once
+            body: Choose on validation or CV, and report test a single time.
+          - title: Fit inside the fold
+            body: Any step with a fit goes in the pipeline.
+          - title: Cost sets the metric
+            body: Choose metric and threshold from what each error costs.
+          - title: Compare across seeds
+            body: A 0.001 lead is noise when the seed moves it by 0.003.
+          - title: Explain with care
+            body: Permutation and SHAP describe the model, not the world.
+        takeaway: Most of classical ML's failures are in the measurement, not in the model.
+        source: notes/04-model-evaluation.md
+        notes: >-
+          If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
+          choosing a cleverer algorithm.
+
+      - layout: bullets
+        title: Where to next
+        bullets:
+          - "**Deep learning:** the MLP grows into backprop, CNNs and sequence models."
+          - "**NLP:** tree and linear models meet text, with bag-of-words and TF-IDF."
+          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then try the Try-it exercises."
+        takeaway: Pipelines, metrics and calibration carry over unchanged to every neural model that follows.
+        source: notes/08-model-interpretability.md
+        notes: >-
+          The classical families are done. Everything we did about splits, leakage and metrics comes along with us. The next
+          pillar starts from the small MLP and builds up from backprop by hand.

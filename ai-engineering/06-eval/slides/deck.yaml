@@ -1,579 +1,534 @@
-# Eval Engineering — lecture deck. Built from notes/01–13 and the README rules of thumb.
-# Build:  make slides PILLAR=06-eval [PREVIEW=1] [PDF=1] [STRICT=1]
-# Spec:   .claude/skills/slides/references/deck-spec.md
-
+# Lecture deck for ai-engineering/06-eval, notes 01-13.
+# Build: make slides PILLAR=06-eval STRICT=1 PREVIEW=1
+# Running example: a customer-support agent that answers from help-centre articles and can issue
+# refunds. Version B scores 85% against version A's 84%. The talk earns the answer: do not ship.
 deck:
   title: Eval Engineering
-  subtitle: Measuring a non-deterministic system
-  tagline: |-
-    Criteria · Datasets · Graders · Judges
-    Agents · RAG · Traces · Error bars · Gates · Production
-  reference: "Notes: ai-engineering/06-eval"
+  subtitle: "Version B scores one point higher. Do you ship it?"
+  tagline: "Define correct, trust no grader you have not checked, and put an error bar on every number"
+  reference: "Notes: ai-engineering/06-eval/notes/01-13"
   output: eval-engineering.pptx
   notes: >-
-    Pillar 6 of the AI-engineering course. It measures every layer below it: prompts, context,
-    harness, loop. Four parts: what an eval is and what "correct" means, how to grade, how to apply
-    it to agents and RAG, and how to decide from the numbers.
-
+    This talk follows one decision from start to finish. A support agent has two versions, B scores
+    one point above A, and someone asks whether to ship. By the end we will have the machinery to
+    answer, and the answer will be no. Every chapter of the pillar is one piece of that machinery.
 parts:
-  # ───────────────────────────────────────────────────────────── Part 1
-  - title: Foundations
-    summary: What an eval is · Defining correct · Datasets
+  - title: What does better mean?
+    summary: "What an eval is · Defining correct · Datasets"
+    divider: true
+    agenda: true
     notes: >-
-      Chapters 01–03. Vocabulary first, then the specification problem, then the dataset.
-      Most eval problems are specification problems, not grader problems.
+      Before we can compare two versions we need a definition of better that a machine can check.
+      That takes a vocabulary, written success criteria, and a dataset of real tasks. Nothing in this
+      part involves a grader yet, and that order is deliberate.
     slides:
       - layout: statement
-        title: The thesis
-        kicker: Why evals are their own discipline
-        statement: An eval is the definition of "better" for your system, written down so a machine can check it.
-        attribution: Without it, every change to a prompt, model, tool or retrieval config is a guess.
+        kicker: The problem
+        title: "B scores 85%, A scores 84%. Do you ship B?"
+        statement: "Version B scores 85%. Version A scores 84%. Do you ship B?"
+        attribution: "You cannot answer until better is written down so a machine can check it."
+        takeaway: "An eval is the definition of better for your system, written down so a machine can check it."
+        recall: "What does an eval give you that reading ten good outputs does not?"
         source: notes/01-what-an-eval-is.md
         notes: >-
-          Every layer below has its own eval chapter on what to measure. This pillar owns how: the
-          shared machinery. GitHub Copilot built its eval framework before the prompts and the UI.
-
+          Here is the running example for the whole talk. Our support agent answers from help-centre
+          articles and can issue refunds. Someone changed the prompt and the score moved from 84 to 85.
+          Without an eval, every change to a prompt, model, tool or retrieval config is a guess. So first
+          we have to say what that number is made of.
+      - layout: flow
+        kicker: The shape of every eval
+        title: Every eval runs the same five steps
+        steps:
+          - {label: Task, sub: from the suite}
+          - {label: Run the system, sub: k trials}
+          - {label: Capture, sub: trajectory and outcome}
+          - {label: Graders, sub: one per dimension}
+          - {label: Aggregate, sub: "rate, error bar, decision"}
+        caption: "The rest of this talk is about doing one of these arrows well. Our 85% is the far right box, and we have not yet asked what fed it."
+        takeaway: "An eval runs tasks through k trials, captures what happened, grades each dimension and aggregates with an error bar."
+        recall: "Name the five steps of the core eval flow in order."
+        source: notes/01-what-an-eval-is.md
+        notes: >-
+          Read this left to right. We take a task, run the system several times because outputs vary,
+          record what it did and where it ended up, grade that, and aggregate. Notice the last box says
+          error bar. Keep that in mind, because it is where our one-point gain will fall apart later.
       - layout: table
+        kicker: One vocabulary
         title: Six parts, many names
-        kicker: The vocabulary
-        lead: Anthropic, LangSmith, OpenAI and Inspect use different words for the same parts.
+        lead: "Anthropic, LangSmith, OpenAI and Inspect use different words for the same parts."
         header: [Term, What it is, Also called]
-        widths: [1.6, 5, 3]
+        widths: [2, 6, 3]
         rows:
           - [Task, "One test: an input plus success criteria", "case, example, row"]
           - [Trial, "One attempt at a task. Outputs vary, so several per task", "run, epoch"]
           - [Trajectory, "The full record: messages, tool calls, intermediate results", "trace, transcript"]
           - [Outcome, "The end state: the answer, the file system, the DB row", "final response"]
           - [Grader, "Code, a model or a person scoring one aspect of a trial", "evaluator, judge, metric"]
-          - [Suite, Tasks run together for a system-level picture, "eval set, benchmark"]
-        takeaway: "Inspect's split: a Task = dataset + solver (the system) + scorer. Keep the three swappable."
+          - [Suite, "Tasks run together for a system-level picture", "eval set, benchmark"]
+        takeaway: "Task, trial, trajectory, outcome, grader and suite are the six parts; Inspect keeps dataset, solver and scorer swappable."
+        recall: "What is the difference between a trajectory and an outcome?"
         source: notes/01-what-an-eval-is.md
         notes: >-
-          The system under test is the whole harness: model, prompts, tools, routing, memory, loop.
-          The eval harness runs the suite and treats the SUT as a black box with an entry point.
-
-      - layout: flow
-        title: The core flow
-        kicker: Every chapter is one arrow
-        steps:
-          - {label: Task, sub: from the suite}
-          - {label: Run SUT, sub: k trials}
-          - {label: Trajectory + outcome, sub: captured per trial}
-          - {label: Graders, sub: one per dimension}
-          - {label: Aggregate, sub: "± error bar → decision"}
-        caption: "Chapters 02–12 are each about doing one of these arrows well."
-        source: notes/01-what-an-eval-is.md
-        notes: >-
-          The mental model from the README: task × k trials → trajectory + outcome → graders → scores
-          → aggregate ± error bar → decision. Four questions in order: what is correct, which tasks,
-          can the grader be trusted, is the difference real.
-
+          Every framework renames these, which makes the literature look more varied than it is. For our
+          agent, the trajectory is the tool calls it made, and the outcome is whether a refund row exists.
+          Inspect splits a task into dataset, solver and scorer, and that split is worth copying because
+          you can swap each one alone.
       - layout: compare
+        kicker: Where evals begin
         title: Tests gate merges, evals measure rates
-        kicker: The test / eval seam
-        lead: Draw the line by determinism.
+        lead: "Draw the line by determinism."
         emphasis: right
         left:
           title: Unit test
           bullets:
-            - "Deterministic behavior: rendering, schemas, retries, routing tables"
-            - Asserts exact values. Pass or fail
-            - Mock the model here
-          tag: "\"retry fires 3 times on 429\""
+            - "Deterministic behaviour: rendering, schemas, retries, routing tables"
+            - "Asserts exact values. Pass or fail"
+            - "Mock the model here"
+          tag: "retry fires 3 times on 429"
         right:
           title: Eval
           bullets:
-            - "Non-deterministic behavior: quality, grounding, task success"
-            - Many tasks, many trials. A rate with an error bar
-            - "**Never** mock the model: you'd measure the mock"
-          tag: "\"grounded answer rate ≥ 0.90 on the golden set\""
-        takeaway: Never assert an exact LLM string in a unit test. It flakes, then gets loosened until it checks nothing.
+            - "Non-deterministic behaviour: quality, grounding, task success"
+            - "Many tasks, many trials. A rate with an error bar"
+            - "**Never** mock the model: you would measure the mock"
+          tag: "grounded answer rate at least 0.90 on the golden set"
+        takeaway: "Never assert an exact LLM string in a unit test: it flakes, then gets loosened until it checks nothing."
+        recall: "Which behaviour belongs in a unit test and which in an eval, and why?"
         source: notes/01-what-an-eval-is.md
         notes: >-
-          In between sit deterministic graders inside an eval: given an output, is it valid JSON with a
-          citations array. Deterministic check, non-deterministic input.
-
-      - layout: table
-        title: Capability vs. regression suites
-        kicker: Two questions, two pass rates
-        header: ["", Capability eval, Regression eval]
-        widths: [2.2, 4, 4]
-        rows:
-          - [Question, "What can it do?", "Does it still do what it used to?"]
-          - [Expected pass rate, Low to medium. Room to climb, Near **100%**]
-          - [Tasks come from, "The frontier: hard and new cases", "Mastered tasks + every fixed bug"]
-          - [A drop means, Little on its own, Something broke. Block the release]
-          - [Runs, On demand, "Every change, in CI"]
-        takeaway: Tasks graduate. Once a capability task passes reliably, it moves to the regression suite.
+          A common first mistake is to write an eval as a unit test with an exact string. It fails at
+          random, someone relaxes it, and soon it checks nothing. Test the deterministic parts, like the
+          retry on a 429. Measure the rest as a rate, over many tasks, against the real model.
+      - layout: bullets
+        kicker: Two suites, two questions
+        title: A capability suite climbs, a regression suite holds
+        bullets:
+          - "**Capability:** what can it do? Tasks from the frontier, low to medium pass rate, run on demand"
+          - "**Regression:** does it still do what it did? Mastered tasks and every fixed bug, near 100%, every change"
+          - "**A drop means different things:** little on a capability suite, a blocked release on a regression suite"
+          - "**Offline and online:** curated tasks before release catch what you imagined; sampled traffic catches what you did not"
+          - "**An eval is not** a benchmark score, a vibe check or a one-off, and it is not only about quality"
+        aside:
+          title: Tasks graduate
+          accent: 0EA5C9
+          body: "Once a capability task passes reliably, it moves to the regression suite."
+        takeaway: "Capability suites measure the frontier and regression suites protect what works, and passing tasks graduate from one to the other."
+        recall: "What should a drop mean on each of the two suites?"
         source: notes/01-what-an-eval-is.md
         notes: >-
-          Keep the frontier moving by adding harder cases as old ones saturate (chapter 12). Also:
-          offline evals are the lab, online evals the field. You need both.
-
-      - layout: table
-        title: Write success down before any code
-        kicker: Defining correct
-        header: [Question, Bad answer, Good answer]
-        widths: [2.4, 2.2, 5.4]
-        rows:
-          - ["What does the user need?", A helpful answer, "The steps to change their payout account, in their language, citing the article"]
-          - ["What must never happen?", Nothing bad, "Inventing a menu path. Leaking another customer's data"]
-          - ["Unit of success?", It went well, "Per turn: grounded + complete. Per conversation: resolved in ≤ 6 turns"]
-          - ["Cost of being wrong?", "—", "Wrong menu path = a ticket. Wrong tax answer = a fine"]
-        takeaway: "The two-expert test: if two experts wouldn't reach the same verdict, fix the criteria, not the grader."
+          So which suite does our 85% come from? It matters. Fifteen percent failure on a regression suite
+          is an emergency, and on a capability suite it is room to climb. A public benchmark cannot stand
+          in for either one, since a leaderboard rank predicts little about your support bot.
+      - layout: compare
+        kicker: Before any code
+        title: Write success down before you write a grader
+        emphasis: right
+        left:
+          title: Too vague to grade
+          bullets:
+            - "User needs: a helpful answer"
+            - "Must never happen: nothing bad"
+            - "Unit of success: it went well"
+          tag: Two experts would disagree
+        right:
+          title: Checkable
+          bullets:
+            - "The steps to change their payout account, in their language, citing the article"
+            - "Never invent a menu path or leak another customer's data"
+            - "Per turn grounded and complete; per conversation resolved in at most 6 turns"
+          tag: "Wrong menu path is a ticket; wrong tax answer is a fine"
+        takeaway: "If two experts would not reach the same verdict on an output, fix the criteria rather than the grader."
+        recall: "What is the two-expert test, and what do you fix when it fails?"
         source: notes/02-defining-correct.md
         notes: >-
-          The fourth answer sets thresholds. Cheap errors can ship at 90%; expensive ones need a lower
-          error rate plus a fallback. Run the two-expert test literally: 20 outputs, two people, the
-          written criteria. One named person (the "benevolent dictator") owns the final definition.
-
+          Asking a model to judge helpfulness simply moves the vagueness somewhere you cannot see it. Take
+          our payout question and answer four things: what the user needs, what must never happen, the
+          unit of success, and the cost of being wrong. That last one tells you how hard to gate.
       - layout: steps
-        title: Find failure modes by reading
-        kicker: Error analysis (Husain & Shankar)
+        kicker: Find failures by reading
+        title: Read a hundred traces before you build a grader
         steps:
-          - {title: Collect ~100 traces, text: "Real if you have them, synthetic if you don't yet."}
+          - {title: Collect ~100 traces, text: "Real if you have them, synthetic if you do not yet."}
           - {title: Open coding, text: "A free-text note on the **first** thing that went wrong. No categories yet."}
           - {title: Axial coding, text: "Group the notes into categories. Expect **5–15**."}
-          - {title: Count, text: "Rank by frequency × cost. That ranking is your eval roadmap."}
-          - {title: Repeat to saturation, text: "Until new traces stop producing new categories, usually 50–100.", accent: "D4621A"}
-        takeaway: Don't build a grader for a failure mode you haven't seen.
+          - {title: Count, text: "Rank by frequency times cost. That ranking is your eval roadmap."}
+          - {title: Repeat to saturation, text: "Until new traces stop producing new categories, usually 50–100.", accent: D4621A}
+        takeaway: "Do not build a grader for a failure mode you have not seen; reading traces produces the ranked list of what to measure."
+        recall: "Why note only the first thing that went wrong in each trace?"
         source: notes/02-defining-correct.md
         notes: >-
-          Note the first failure only: later ones are often caused by it and inflate the wrong category.
-          Shankar et al. (2024) found criteria drift as people grade. That's how you discover the spec,
-          so version the criteria.
-
-      - layout: table
-        title: The failure taxonomy, ordered by stage
-        kicker: A RAG support agent
-        lead: Stable names, one label per fix, earliest failure wins.
-        header: [Stage, Labels]
-        widths: [2.4, 7.6]
-        rows:
-          - [Corpus, "`source_missing` · `url_unmapped` · `topic_proxy`"]
-          - [Index, "`index_lag` · `chunk_fragmented`"]
-          - [Retrieval, "`rank_miss` · `query_rewrite_miss` · `reranker_regression`"]
-          - [Eval infrastructure, "`context_missing`"]
-          - [Generation, "`citation_hallucination` · `unsupported_claim` · `incomplete_answer`"]
-          - [Behavior, "`wrong_escalation` · `refusal` · `schema_violation`"]
-        highlight: [3]
-        takeaway: Give the eval's own failures a label, so eval bugs aren't counted as system bugs.
-        source: notes/02-defining-correct.md
-        notes: >-
-          Dashboards aggregate by label, so renaming one breaks history. If a label could be fixed by
-          retrieval or the prompt, split it. Include negative, boundary, out-of-scope and adversarial
-          cases too: without negatives, "calls the tool more often" looks like an improvement.
-
-      - layout: table
-        title: Start small and real, grow by stage
-        kicker: Eval datasets
-        header: [Stage, Size, Purpose]
-        widths: [2.6, 1.6, 5.8]
-        rows:
-          - [Example suite, 5–20, Eyeball diffs while iterating on a prompt]
-          - [First golden set, "**20–50**", "Real failures, hand-reviewed. Catches big regressions"]
-          - [Working set, 100–300, "±5–8 point error bars on a pass rate"]
-          - [LLM-graded sample, 50–200, Cost-capped subset for expensive judges]
-          - [Large harness, "1,000+", "Small effects. Needs synthetic or logged data"]
-        highlight: [1]
-        takeaway: Grow to the next stage when the current one can't separate two versions you need to tell apart.
-        source: notes/03-eval-datasets.md
-        notes: >-
-          Synthetic data: generate along dimensions (persona × intent × complexity), tuples first, then
-          queries in a separate call, with a different model family from the one under test. Every
-          production failure becomes a row: discovery set first, regression set once fixed.
-
-      - layout: steps
-        title: Is this row fair for this gate?
-        kicker: Row eligibility
-        lead: Each pool is a subset of the one above it.
-        axis: narrower, fairer for later gates
-        steps:
-          - {title: all_gt, text: "Every golden row. Fair for demand analysis."}
-          - {title: source_mapped_gt, text: "Expected source maps to a known doc. Fair for corpus coverage."}
-          - {title: retrieval_eligible_gt, text: "That source is actually indexed. Fair for retrieval metrics."}
-          - {title: generation_eligible_gt, text: "Retrieval found it. Fair for answer quality."}
-          - {title: quality_sample, text: "Deterministic, cost-capped sample. Fair for LLM judges.", accent: "D4621A"}
-        takeaway: A downstream gate never silently scores rows an upstream gate marked ineligible.
-        source: notes/03-eval-datasets.md
-        notes: >-
-          If the expected source isn't in the index, scoring that row on retrieval measures your corpus,
-          not your retriever. Ineligible rows appear only as a separate diagnostic slice.
-
+          This is the least glamorous slide and the one with the best return. You read traces and write
+          down the first failure in each, because later errors usually cascade from it. Then you group the
+          notes into stable labels, one per fix. Those labels become the failure taxonomy we use for the rest
+          of the talk.
       - layout: cards
-        title: What public benchmarks teach private suites
-        kicker: Li, AI Agents in Depth, ch. 6
+        kicker: Reward restraint too
+        title: A suite of only positive cases rewards overreach
+        lead: "An agent that always calls `issue_refund` would ace a suite that only asks for refunds."
         cards:
-          - title: Budget for rejection
-            body: "SWE-bench Verified: 93 developers reviewed tasks. Only **500 of 2,294** survived."
-          - title: Fixed it, broke nothing
-            body: "FAIL_TO_PASS tests prove the fix. PASS_TO_PASS tests prove no regression."
-          - title: Difficulty as diagnosis
-            body: "GAIA L1: humans 93.9%, GPT-4 30.3%. L3: 87.3% vs **0%**."
-          - title: Fresh parameters
-            body: "τ²-bench and AndroidWorld fill templates with new values every run. Memorized paths won't replay."
-          - title: Canaries
-            body: "Terminal-Bench embeds a unique GUID. If a model can produce it, the set leaked."
-          - title: So…
-            accent: "0EA5C9"
-            body: Split dev and held-out, version the dataset, record the version with every result.
+          - {title: Positive, body: "Refund my order: calls `issue_refund`."}
+          - {title: Negative, body: "What is your refund policy? Answers, and does **not** call `issue_refund`."}
+          - {title: Boundary, body: "I might want a refund, what are my options?"}
+          - {title: Out of scope, body: "Can you file my taxes? Declines or escalates."}
+          - {title: Adversarial, body: "Prompt injection, social engineering, policy loopholes."}
+          - {title: Why pair them, accent: D4621A, body: "TrustLLM: Llama2-7b refused **94.5%** of jailbreaks and also **49%** of benign prompts."}
+        takeaway: "Without negative cases, a change that calls tools more often looks like better recall while precision quietly breaks."
+        recall: "What failure does a suite of only positive cases hide?"
+        source: notes/02-defining-correct.md
+        notes: >-
+          Imagine a change that makes our agent eager to refund. A positive-only suite calls that a win.
+          Safety has the same trap. TrustLLM scored models on jailbreaks they should refuse and on prompts
+          that only sound harmful, and Llama2-7b looked strong on the first while refusing 49 percent of
+          the second.
+      - layout: code
+        kicker: Worked example
+        title: One row of the golden set, in full
+        lang: json
+        code: |-
+          {"id": "billing-refund-014",
+           "input": {"messages": [{"role": "user",
+             "content":
+               "I was charged twice for order 8812"}]},
+           "reference": {"expected_tool_calls": [
+             {"name": "lookup_order",
+              "args": {"order_id": "8812"}},
+             {"name": "issue_refund",
+              "match": "ANY_ARGS"}],
+            "expected_sources":
+              ["help/billing/duplicate-charges"]},
+           "labels": {"intent": "billing",
+             "case_type": "positive", "language": "en"},
+           "eligibility": {"retrieval": true},
+           "provenance": {"source": "ticket"},
+           "graders": ["tool_trajectory", "grounding"]}
+        bullets:
+          - "**Start at 20–50** real failures, hand-reviewed"
+          - "**100–300** tasks give ±5–8 point error bars"
+          - "**Labels** make slices possible later"
+          - "**Eligibility:** a downstream gate never scores rows an upstream gate ruled unfair"
+          - "**Split and version:** a v3 score and a v4 score are not comparable"
+        takeaway: "A golden row carries a reference, labels for slicing, eligibility per gate, provenance and the graders that apply to it."
+        recall: "Why does a row carry labels and eligibility as well as a reference?"
         source: notes/03-eval-datasets.md
         notes: >-
-          Contamination tactics: unique answers (GAIA), parameterized templates, temporal freshness
-          (SWE-bench-Live), canaries. Each works for a private set. Never paste eval rows into few-shot
-          examples or fine-tuning data.
-
-  # ───────────────────────────────────────────────────────────── Part 2
-  - title: Grading
-    summary: Graders · LLM-as-judge and calibration
+          Here is a real shape. Order 8812 charged twice, with the tool calls we expect and the article it
+          should cite. The language label looks like a detail now, but it is what will save us in part four.
+          If the expected article is not in the index, the row is unfair for retrieval, and eligibility says so.
+      - layout: cards
+        kicker: Evidence
+        title: Public benchmarks learned these lessons the hard way
+        cards:
+          - {title: Budget for rejection, body: "SWE-bench Verified: 93 developers reviewed tasks and only **500 of 2,294** survived."}
+          - {title: Fixed it, broke nothing, body: "FAIL_TO_PASS tests prove the fix. PASS_TO_PASS tests prove no regression."}
+          - {title: Difficulty as diagnosis, body: "GAIA L1: humans 93.9%, GPT-4 30.3%. L3: 87.3% against **0%**."}
+          - {title: Fresh parameters, body: "τ²-bench and AndroidWorld fill templates with new values each run, so memorized paths fail."}
+          - {title: Canaries, body: "Terminal-Bench embeds a unique GUID. If a model can produce it, the set leaked."}
+          - {title: Monday morning, accent: 0EA5C9, body: "Split dev and held-out, version the dataset, record the version with every result."}
+        takeaway: "Budget for rejecting bad tasks, split dev from held-out, version the dataset and record that version with every result."
+        recall: "What share of SWE-bench tasks survived review for SWE-bench Verified, and what is the lesson?"
+        source: notes/03-eval-datasets.md
+        notes: >-
+          Well-funded teams still threw out most of their tasks. Reviewers kept 500 of 2,294 for SWE-bench
+          Verified, so expect to reject rows in your own set. That closes part one: we can now say what
+          better means and have rows that test it. Next question: who is allowed to grade them?
+  - title: Who can you trust to grade?
+    summary: "Graders · LLM as judge · Calibration"
+    divider: true
+    agenda: true
     notes: >-
-      Chapters 04–05. Use the simplest grader you can trust. Code first, a judge above that floor,
-      people to calibrate both.
+      We have rows, so something has to score them. Code cannot judge everything and a model judge has
+      biases of its own. This part builds a grader stack, and then asks what evidence a judge must show
+      before it is allowed to block a release.
     slides:
-      - layout: image
-        title: Code first, judge above it, humans calibrate
-        kicker: Three kinds of grader
-        image: ../sources/images/li-ai-agents-in-depth-fig7-4.svg
-        caption: "Verification modes, deterministic to model judgment (Li, AI Agents in Depth, Fig. 7-4)"
-        bullets:
-          - "**Code:** deterministic, free, hard to argue with"
-          - "**Separated evaluator:** runs the output, doesn't just read it"
-          - "**LLM judge:** semantic quality at volume. Biased, needs calibration"
-          - "**Humans:** 5–10% of graded rows, to **calibrate** the judge"
-        takeaway: Layers, not alternatives. Run code first and stop early, so judge budget goes where judgment is needed.
+      - layout: statement
+        kicker: The problem
+        title: A grader is a measuring instrument that can be wrong
+        statement: "Your 85% is only as good as the grader that produced it. Who checked the grader?"
+        attribution: "A fluent answer with a made-up fact can still score well."
+        takeaway: "A grader is a measuring instrument, so a score means nothing until you know how that instrument errs."
+        recall: "What must be true of a grader before you trust the rate it produces?"
         source: notes/04-graders.md
         notes: >-
-          Teams reach for a judge too early. Most systems have more checkable properties than they use:
-          schema, tool names and arguments, citation IDs in the retrieved set, final DB state, language
-          ID, forbidden tools, efficiency from the trace. BLEU and ROUGE correlate poorly with quality
-          for open-ended answers.
-
+          Back to our decision. We said B scored 85, but what scored it? If a model judge is more impressed
+          by longer answers and B writes longer answers, that one point may measure nothing about quality.
+          So treat the grader as an instrument and ask how it errs.
+      - layout: image
+        kicker: The stack
+        title: Code first, judge above it, humans to calibrate
+        image: ../sources/images/li-ai-agents-in-depth-fig7-4.svg
+        caption: "A spectrum of verification modes (Li, AI Agents in Depth, 2026, Fig. 7-4, Apache-2.0)"
+        bullets:
+          - "**Code:** deterministic, free, hard to argue with"
+          - "**Separated evaluator:** runs the output, does not just read it"
+          - "**LLM judge:** semantic quality at volume. Biased, needs calibration"
+          - "**Humans:** 5–10% of graded rows, to **calibrate** the judge"
+        takeaway: "Graders are layers rather than alternatives: run code first and stop early, so judge budget goes where judgment is needed."
+        recall: "In what order do you stack the grader kinds, and what is each one for?"
+        source: notes/04-graders.md
+        notes: >-
+          Read the figure from deterministic to model judgment. For our agent, whether the refund row exists
+          is a code check, and whether the tone is kind needs a judge. Humans do not grade everything. They
+          label a small share so we can tell whether the judge can be trusted.
       - layout: code
+        kicker: Worked example
         title: One contract for every grader
-        kicker: The grader interface
         lang: python
         code: |-
           class Grader(Protocol):
               name: str
               version: str
-              # e.g. {"retrieved_context"}: skip if missing
+              # e.g. {"retrieved_context"}
+              # skip if missing
               requires: set[str]
 
               def grade(self, task, output,
                         trajectory=None,
-                        context=None) -> GraderResult: ...
+                        context=None) -> GraderResult:
+                  ...
 
           # GraderResult: score, passed, reasoning,
           #   dimensions, labels, grader_version
         bullets:
-          - "**`requires`:** skip with `context_missing`, don't guess"
-          - "**`reasoning`:** the judge's explanation, or the failing check"
+          - "**`requires`:** skip with `context_missing`, do not guess"
+          - "**`reasoning`:** the explanation, or the failing check"
           - "**`labels`:** taxonomy labels this trial earned"
           - "**`grader_version`:** every score traceable"
-        takeaway: Same input, same output shape. Graders become swappable, composable and reportable the same way.
+        takeaway: "Give every grader the same input and output shape so graders become swappable, composable and reportable the same way."
+        recall: "Why does a grader declare what it requires?"
         source: notes/04-graders.md
         notes: >-
-          A grounding grader handed URLs instead of passage text should return "can't grade", not a
-          made-up score. That single field prevents the most common grounding eval bug.
-
-      - layout: table
-        title: Which graders may block a release
-        kicker: Grader states
-        header: [State, Meaning, "Can gate?"]
-        widths: [2, 5.6, 2.4]
-        rows:
-          - [Heuristic, Deterministic code check, "**Yes**"]
-          - [Calibrated, LLM judge with evidence it agrees with humans, "Yes, at the calibrated threshold"]
-          - [Experimental, New or uncalibrated judge, "**No.** Tracking only"]
-        highlight: [2]
-        takeaway: A threshold change without fresh calibration evidence moves a grader back to experimental.
-        source: notes/04-graders.md
-        notes: >-
-          Release decisions must name which state each cited metric is in. Combining graders: binary
-          all-pass for never-events, weighted where dimensions trade off, hybrid in most production
-          systems, and always report the dimensions separately too.
-
+          The field to notice is requires. A grounding grader needs passage text. If it gets none, it should
+          report context_missing and skip, not invent a verdict. We will see at the end of the talk that a
+          real team lost time to exactly this bug. Versions make any score traceable afterwards.
       - layout: compare
-        title: Don't let a composite hide a regression
-        kicker: Combining graders
+        kicker: Combining scores
+        title: A composite can hide a regression
         emphasis: right
         left:
           title: Weighted composite alone
           bullets:
-            - "+5 relevance, −5 grounding = flat score"
-            - Worse for users who need correct answers
-            - A fluent answer with a made-up fact still scores well
+            - "+5 relevance and −5 grounding makes a flat score"
+            - "Worse for users who need correct answers"
+            - "A fluent answer with a made-up fact still scores well"
         right:
           title: Hybrid with a veto
           bullets:
-            - "Must-pass gates: schema valid, **no** citation hallucination"
-            - "Then 0.5 grounding + 0.3 completeness + 0.2 relevance ≥ 0.75"
-            - "Hallucination is a **veto**: fires → total is 0"
+            - "Must-pass: schema valid, **no** citation hallucination"
+            - "Then 0.5 grounding + 0.3 completeness + 0.2 relevance at least 0.75"
+            - "A hallucination fires a **veto**: the total is 0"
           code: |-
             - id: hallucination
               criterion: Every fact appears in a tool output
               weight: veto
-        takeaway: Prefer binary pass/fail per dimension over 1–5 scales. "Is this a 3 or a 4?" has no stable answer.
+        takeaway: "Prefer binary pass or fail per dimension with vetoes for never-events, because a weighted average can trade grounding for relevance."
+        recall: "How can a composite score stay flat while users get a worse system?"
         source: notes/04-graders.md
         notes: >-
-          Li, following Scale AI's Rubrics as Rewards: rubric items are expert-grounded, cover pitfalls,
-          are weighted Essential / Important / Optional / Pitfall, and are self-contained so they can be
-          checked without the grader's own expertise.
-
+          Suppose B gained five points on relevance and lost five on grounding. A weighted score reports no
+          change, and yet users now get wrong answers politely. So vetoes come first and weights second. And
+          prefer binary verdicts per dimension, because whether something is a 3 or a 4 has no stable answer.
       - layout: code
+        kicker: Worked example
         title: One judge, one criterion, reason before verdict
-        kicker: Writing the judge prompt
         lang: text
         code: |-
-          You are evaluating whether an answer to a query
-          is clear.
+          You are evaluating whether an answer
+          to a query is clear.
           [BEGIN DATA]
           Query: {query}
           Answer: {response}
           [END DATA]
           "clear": easy to follow, answers the query.
-          "unclear": confusing, off-topic, hard to act on.
+          "unclear": confusing, off-topic,
+          hard to act on.
 
           EXPLANATION: <step-by-step reasoning>
           LABEL: "clear" or "unclear"
         bullets:
-          - Grade a third party's work, never "your own"
-          - Precise PASS and FAIL definitions
-          - 2–4 few-shot cases near the boundary
-          - Delimited inputs; critique, then a fixed-format label
+          - "Grade a third party's work, never your own"
+          - "Precise PASS and FAIL definitions"
+          - "2–4 few-shot cases near the boundary"
+          - "Delimited inputs; critique, then fixed-format label"
           - "A `CANNOT_GRADE` escape, or the judge guesses"
-        takeaway: Parse strictly. An unparseable verdict is a grader error, not a FAIL.
+        takeaway: "Parse judge verdicts strictly and treat an unparseable verdict as a grader error, not a FAIL."
+        recall: "What goes in a judge prompt besides the criterion, and why does the reason come before the label?"
         source: notes/05-llm-as-judge.md
         notes: >-
-          The prompt is a compact version of the DeepLearning.AI Evaluating AI Agents course's
-          analysis-clarity judge (Lab 3). Phoenix's llm_classify with rails snaps output to the allowed
-          labels. Decompose hard criteria: grounding claim by claim, completeness question by question.
-
+          This is a judge you can copy. It tests one thing, with defined labels and delimited inputs, and it
+          writes its reason before its verdict. It also needs a way out. Without CANNOT_GRADE the judge will
+          guess on impossible cases, and those guesses land in your pass rate.
       - layout: table
-        title: Known judge biases and their fixes
-        kicker: Zheng et al. 2023 (MT-Bench)
-        header: [Bias, What happens, Mitigation]
-        widths: [1.9, 3.8, 4.3]
+        kicker: What goes wrong
+        title: Judges have known biases, and each has a fix
+        header: [Bias, What happens, Fix]
+        widths: [3, 5, 5]
         rows:
-          - [Position, Pairwise judges favor one slot, Run both orders. A win must hold in both]
-          - [Verbosity, Longer answers score higher, "Rubric says length isn't quality. Track score vs. length"]
-          - [Self-preference, Favors its own model family, Judge with a different family]
-          - [Leniency, Borderline cases pass, Explicit FAIL conditions. Tricky-FAIL few-shots]
-          - [Format / authority, "Confident tone, markdown, citations look right", Check citations in code]
-          - [Limited capability, "Can't verify what it can't do", "A reference, a code check, or a stronger judge"]
-        takeaway: Once these are controlled, strong judges agree with humans about as often as humans agree with each other (over 80%).
+          - [Position, Pairwise judges favour one slot, "Run both orders. A win must hold in both"]
+          - [Verbosity, Longer answers score higher, "Rubric says length is not quality. Track score against length"]
+          - [Self-preference, Favours its own model family, Judge with a different family]
+          - [Leniency, Borderline cases pass, "Explicit FAIL conditions. Tricky-FAIL few-shots"]
+          - ["Format, authority", "Confident tone and citations look right", Check citations in code]
+          - [Limited capability, Cannot verify what it cannot do, "A reference, a code check or a stronger judge"]
+        takeaway: "Once biases are controlled, strong judges agree with humans about as often as humans agree with each other, over 80%."
+        recall: "Name three judge biases and the fix for each."
         source: notes/05-llm-as-judge.md
         notes: >-
-          Self-preference gets worse when the agent is optimized against the judge: it learns that
-          judge's blind spots. Multi-family judging is the mitigation.
-
+          Look at verbosity. If B got wordier, this judge prefers it regardless of quality, and our one point
+          could live entirely in that row. These biases are not exotic. The same ones appear in human
+          feedback, as we will see. The fixes are mostly cheap, like running both orders.
       - layout: steps
-        title: Calibrate before you gate
-        kicker: The procedure
+        kicker: The gate to the gate
+        title: Calibrate a judge before it gates anything
+        lead: "A heuristic can gate. A calibrated judge can gate at its threshold. An experimental judge only tracks."
         steps:
-          - {title: Get human labels, text: "**100–200** outputs labeled PASS/FAIL by your domain expert."}
-          - {title: Split, text: "Train (few-shots), dev (iterate), test (measure once)."}
+          - {title: Get human labels, text: "**100–200** outputs labelled PASS or FAIL by your domain expert."}
+          - {title: Split, text: "Train for few-shots, dev to iterate, test to measure once."}
           - {title: Run on dev, text: "Build the confusion matrix against the human labels."}
-          - {title: Read disagreements, text: "Each is a prompt problem, a criteria problem, or a hard case."}
-          - {title: Measure on test once, text: "That's the reported number. Record judge model and prompt version.", accent: "D4621A"}
-        takeaway: An uncalibrated judge never gates a release.
+          - {title: Read disagreements, text: "Each is a prompt problem, a criteria problem or a hard case."}
+          - {title: Measure on test once, text: "That is the reported number. Record judge model and prompt version.", accent: D4621A}
+        takeaway: "An uncalibrated judge never gates a release, and a threshold change without fresh evidence moves it back to experimental."
+        recall: "What are the three grader states, and which ones may block a release?"
         source: notes/05-llm-as-judge.md
         notes: >-
-          If you tune against the test split, it's a dev set. Re-calibrate when the judge model, judge
-          prompt, system under test or user population changes. Pin the judge version.
-
-      - layout: table
-        title: Report the two error rates separately
-        kicker: What to measure
-        header: [Metric, Meaning, Matters for]
-        widths: [2.2, 4.6, 3.2]
-        rows:
-          - [TPR, "Of human PASSes, how many the judge passed", Not blocking good releases]
-          - [TNR, "Of human FAILs, how many the judge failed", "**Catching bad outputs**"]
-          - [Precision on PASS, "Of judge PASSes, how many humans passed", Building golden labels]
-          - ["Cohen's κ", Agreement corrected for chance, Comparing to human–human]
-          - [Score separation, Mean on human-PASS minus mean on human-FAIL, "Does it discriminate at all?"]
-        highlight: [1]
-        takeaway: "Correct the pass rate: true ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)."
-        source: notes/05-llm-as-judge.md
-        notes: >-
-          A release gate needs high TNR; a golden-label builder needs high precision on PASS. If one
-          judge can't do both, use two. Separation under 0.05 means the threshold is doing the work.
-          The case study found off-the-shelf judges scoring disliked answers higher: inverted separation.
-          Worked correction: judge passes 80%, TPR 0.95, TNR 0.70 gives 0.50 / 0.65 = 0.77.
-
+          This is the same discipline as training a model. Tune on dev, report on test, and look at test only
+          once. Then report two error rates separately: true positive rate, so you do not block good releases,
+          and true negative rate, so you catch bad outputs. For a release gate, the second usually matters most.
       - layout: image
-        title: Pairwise votes become a ranking
-        kicker: Elo and Bradley–Terry
+        kicker: Evidence
+        title: Agreement looks better than it is
+        image: ../sources/images/norman-2026-reliability-without-validity-fig1.png
+        caption: "Norman et al., Reliability without Validity (2026), Fig. 1"
+        bullets:
+          - "21 judges on MT-Bench: raw agreement exceeds Cohen's κ by **33.8–41.3** points"
+          - "85% agreement corresponds to κ near **0.48**"
+          - "Qwen 3 8B repeats itself (α **0.992**) with the strongest position bias (**0.192**)"
+          - "Correct the rate: true ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)"
+        takeaway: "Lead with kappa rather than raw agreement, because a judge can be perfectly repeatable and still be reliably biased."
+        recall: "Why is high test-retest reliability not evidence that a judge is valid?"
+        source: notes/05-llm-as-judge.md
+        notes: >-
+          The left panel is agreement near 0.8 next to kappa near 0.4 to 0.5, the same judges measured two
+          ways. On the right, a judge that gives the same verdict nearly every time also has the strongest
+          position bias. A deterministic judge just reproduces its bias exactly. So run the swap check, even
+          on a judge that never changes its mind.
+      - layout: image
+        kicker: When there is no absolute scale
+        title: Pairwise votes can become a ranking
         image: ../sources/images/li-ai-agents-in-depth-fig7-6.svg
-        caption: "Elo rating from pairwise comparisons (Li, AI Agents in Depth, Fig. 7-6)"
+        caption: "Elo rating and pairwise comparison ranking (Li, AI Agents in Depth, 2026, Fig. 7-6, Apache-2.0)"
         bullets:
           - "Expected: E = 1 / (1 + 10^((R_B − R_A)/400))"
           - "Update: R ← R + K·(S − E)"
-          - "1200 vs 1000 → expected win **76%**"
+          - "1200 against 1000 expects a win **76%** of the time"
           - "LLM voter: **swap the order**, count a win only if it holds both ways"
-          - Check for cycles; Bradley–Terry assumes transitivity
-        takeaway: Pairwise is easier for the judge than absolute scoring, but you can't monitor production with it.
+          - "Check for cycles; Bradley–Terry assumes transitivity"
+        takeaway: "Pairwise comparison is easier for a judge than absolute scoring, but it cannot monitor production because it only ranks."
+        recall: "What check do you add when an LLM casts pairwise votes, and what can pairwise ranking not do?"
         source: notes/05-llm-as-judge.md
         notes: >-
-          Chatbot Arena ranks models this way from millions of blind votes, but the ranking reflects
-          what users happened to ask. Worked Elo vs. Bradley–Terry example in note 05; full lab upstream in ai-agent-book chapter7/elo-leaderboard.
-
-  # ───────────────────────────────────────────────────────────── Part 3
-  - title: Applying it
-    summary: Agents · RAG and grounding · Tracing
+          Sometimes asking which of these two is better works where a score does not. Elo turns those votes
+          into a ranking, the same arithmetic as chess. Swap the order because of the position bias we just
+          saw. That closes part two: we trust our graders. Next, what should they look at in an agent?
+  - title: What do you actually measure?
+    summary: "Evaluating agents · RAG and grounding · Tracing"
+    divider: true
+    agenda: true
     notes: >-
-      Chapters 06–08. Agents produce a path, RAG fails in stages, and traces are the raw material
-      every grader reads.
+      A single answer is easy to grade, but our agent takes actions over several steps and retrieves
+      evidence. This part covers how to grade the path as well as the result, how to take grounding apart
+      claim by claim, and why traces come before all of it.
     slides:
+      - layout: statement
+        kicker: The problem
+        title: The agent says the refund went through
+        statement: "\"I've issued your refund.\" There is no refund row. Which of your evals catches that?"
+        attribution: "Grade the end state, not what the agent says."
+        takeaway: "Grade the end state rather than the agent's words, because a false claim of success is the most important failure to catch."
+        recall: "Which kind of check catches an agent that claims an action it never took?"
+        source: notes/06-evaluating-agents.md
+        notes: >-
+          A judge reading that sentence would call it polite, clear and complete. Only a state check looks in
+          the database and sees nothing there. For a coding agent the state is the test suite, and for a SQL
+          agent it is the query result rather than the query text.
       - layout: table
+        kicker: Two dimensions
         title: Outcome and trajectory fail independently
-        kicker: Evaluating agents
         header: [Outcome, Trajectory, What happened, Outcome-only eval says]
-        widths: [1.3, 1.5, 4.8, 2.4]
+        widths: [2, 2, 6, 3]
         rows:
           - [Pass, Pass, Worked, Pass]
           - [Pass, Fail, "Right answer by an unsafe or wasteful path: 40 paid API calls", "**Pass (wrong)**"]
           - [Fail, Pass, "Reasonable process, external failure: tool timeout", "Fail (not the agent)"]
           - [Fail, Fail, Broken, Fail]
-        highlight: [1]
-        bold_first: false
-        takeaway: "Grade the end state, not what the agent says. \"I've issued your refund\" with no refund row is the failure to catch."
+        takeaway: "Score outcome and trajectory separately, because an outcome-only eval passes a wasteful path and blames the agent for a timeout."
+        recall: "Which two cells does an outcome-only eval get wrong?"
         source: notes/06-evaluating-agents.md
         notes: >-
-          Anthropic recommends grading both the final environment state and the transcript. The reverse
-          also happens: a flight agent found a cheaper fare via a policy loophole and failed a strict
-          path check. Let trajectory checks enforce invariants, not one golden path.
-
-      - layout: table
-        title: Three strictness levels for tool calls
-        kicker: Scoring trajectories
-        header: [Match mode, Passes when, Use for]
-        widths: [2.2, 4.4, 3.4]
-        rows:
-          - [Exact, "Same tools, order and arguments", Strict protocols (auth before action)]
-          - [In order, "Expected calls in order, extras allowed", Required sequence with some freedom]
-          - [Any order, "All expected calls appear", Independent lookups]
-          - [Subset / superset, "Calls ⊆ or ⊇ an allowed set", "\"Never call outside this set\""]
-        takeaway: No single correct path? Use invariants ("never issue_refund before lookup_order") or a trajectory judge.
+          Two of these four rows mislead you if you only look at the end. The agent that got there with 40
+          paid calls looks fine until the invoice comes, and the one defeated by a tool timeout gets blamed
+          for someone else's outage. Grading both tells you which fix to make.
+      - layout: cards
+        kicker: Scoring the path
+        title: Choose how strictly to match tool calls
+        cards:
+          - {title: Exact, body: "Same tools, order and arguments. For strict protocols, like auth before action."}
+          - {title: In order, body: "Expected calls in order, extras allowed. A required sequence with some freedom."}
+          - {title: Any order, body: "All expected calls appear. For independent lookups."}
+          - {title: Subset or superset, body: "Calls within or covering an allowed set. Never call outside this set."}
+        takeaway: "When no single path is correct, grade invariants such as never issue_refund before lookup_order, or use a trajectory judge."
+        recall: "Which match mode fits independent lookups, and which fits auth before action?"
         source: notes/06-evaluating-agents.md
         notes: >-
-          Check arguments separately from tool names, with per-argument rules: exact, normalized,
-          numeric tolerance, any value, or a judge. Label expected calls from human-confirmed good
-          traces, or bootstrap from routing metadata the system already logs.
-
-      - layout: image
-        title: One grader per component
-        kicker: DeepLearning.AI, Evaluating AI Agents
-        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab3-router-skill-eval.png
-        caption: "Router and skill evaluators (DeepLearning.AI & Arize, Lab 3)"
-        bullets:
-          - "**Router:** right tool, right parameters (LLM judge)"
-          - "**SQL skill:** does the query answer the question (judge)"
-          - "**Analysis skill:** clear? entities correct? (two judges)"
-          - "**Visualization:** does the code run (code)"
-          - "**Path:** converged in few steps (code)"
-        takeaway: An end-to-end failure doesn't say which part broke. Component evals do.
-        source: notes/06-evaluating-agents.md
-        notes: >-
-          The course agent is a GPT-4o-mini router with function calling and three tools over a sales
-          dataset. In multi-agent systems split routing evals (right sub-agent?) from domain evals (given
-          correct routing, right tools and output?). Neither replaces the other.
-
+          Exact matching breaks whenever the agent finds a sensible different route, and you then spend your
+          time updating expected paths. So match only as strictly as the requirement. For a refund, the rule
+          that matters is an invariant: never issue_refund before lookup_order. And grade each component too,
+          because an end-to-end failure does not say which part broke.
       - layout: code
-        title: The router judge, in code
-        kicker: Phoenix, course Lab 3
+        kicker: Worked example
+        title: "One task, k = 3: pass@k rises, pass^k falls"
         lang: python
         code: |-
-          q = SpanQuery().where("span_kind == 'LLM'").select(
-              question="input.value", tool_call="llm.tools")
-          df = px.Client().query_spans(q, project_name=P)
-          df = df.dropna(subset=["tool_call"])
+          p, k = 0.75, 3
 
-          with suppress_tracing():
-              ev = llm_classify(
-                  dataframe=df,
-                  template=TOOL_CALLING_PROMPT_TEMPLATE,
-                  rails=["correct", "incorrect"],
-                  model=OpenAIModel(model="gpt-4o"),
-                  provide_explanation=True)
+          # at least one of k succeeds
+          pass_at_k = 1 - (1 - p) ** k    # 0.98
 
-          px.Client().log_evaluations(SpanEvaluations(
-              eval_name="Tool Calling Eval", dataframe=ev))
+          # all k succeed
+          pass_hat_k = p ** k             # 0.42
         bullets:
-          - Spans in, labels back onto the same spans
-          - "`rails` snap the output to allowed labels"
-          - "**Moved since:** `phoenix.client.Client`, span annotations"
-          - "phoenix.evals 2.x: `create_classifier`, `LLM(provider=…)`"
-        takeaway: Grade the trace you already recorded. The score lives one click from the context.
+          - "Run each task **3–10** times and report rates"
+          - "**pass@k** fits systems that can retry and pick"
+          - "**pass^k** fits a user who gets one try"
+          - "**HealthBench:** o3 averages 0.60, worst-of-16 is a third lower"
+          - "Log per attempt: summaries cannot be reconstructed"
+        takeaway: "Report pass^k for customer-facing agents: a 75% agent passes 98% with three retries, but all three times only 42% of the time."
+        recall: "At p = 0.75 and k = 3, what are pass@k and pass^k, and which suits a support agent?"
         source: notes/06-evaluating-agents.md
         notes: >-
-          px.Client, SpanEvaluations and log_evaluations are legacy Phoenix APIs. The course fills the
-          template's tool_definitions slot with string replace calls that turn JSON braces into quotes;
-          pass the definitions as a template variable instead. The visualization check exec()s generated
-          code: sandbox it, and note that "runs without raising" passes an empty chart.
-
-      - layout: table
-        title: "pass@k rises, pass^k falls"
-        kicker: Non-determinism
-        lead: Run each task k times (3–10 is typical) and report rates.
-        header: [Metric, Definition, Question, "p = 0.75, k = 3"]
-        widths: [1.6, 3.2, 3.4, 1.8]
-        rows:
-          - ["pass@k", At least one of k succeeds, "Can it do this at all, with retries?", "**0.98**"]
-          - ["pass^k", All k succeed, "Does it do this every time?", "**0.42**"]
-          - ["Best@k", Best score of k, "What's the quality ceiling?", "—"]
-        highlight: [1]
-        takeaway: Customer-facing agents get one try per user. Report pass^k for them.
-        source: notes/06-evaluating-agents.md
-        notes: >-
-          pass@k = 1 − (1 − p)^k, pass^k = p^k. Unbiased pass@k from n samples, c correct:
-          1 − C(n−c, k) / C(n, k) (Chen et al. 2021). τ-bench (Yao et al. 2024) introduced pass^k and
-          showed agents fine at pass@1 falling sharply at pass^8. Also report the per-task pass-rate
-          distribution: 70% flaky everywhere and 70% of tasks always passing need different fixes.
-
+          Same agent, same three trials, and the two numbers are 0.98 and 0.42. Which do you put on the slide
+          for your boss? Every user of our support agent gets one try, so pass^k is the honest one. Also check
+          the distribution, since 70 percent can mean flaky everywhere or a fixed set of impossible tasks.
       - layout: image
-        title: Convergence is relative to what you observed
-        kicker: Course Lab 4
-        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab4-convergence-experiment.png
-        caption: "Convergence experiment (DeepLearning.AI & Arize, Lab 4)"
+        kicker: Evidence
+        title: Measure accuracy against cost, with a simple baseline
+        image: ../sources/images/kapoor-2024-ai-agents-that-matter-fig1.png
+        caption: "Kapoor et al., AI Agents That Matter (2024), Fig. 1"
         bullets:
-          - "**17** paraphrases of one question"
-          - "Score = shortest run seen ÷ this run's length"
-          - "\"Optimal\" is the shortest **observed**, so a thrashing batch still scores near 1.0"
-          - Counts messages, not tool calls
-          - Fix the reference length before gating on it
-        takeaway: Log steps, tokens, latency and cost per success on every trial. Pass rates miss efficiency regressions.
+          - "HumanEval, 164 problems, five runs each, April 2024 prices"
+          - "Warming baseline: **93.2%** for **$2.45**"
+          - "LDB with GPT-4: 93.3% for $6.36"
+          - "LATS with GPT-4: 88.0% for **$134.50**"
+          - "Refund agent, three turns: 9,500 input tokens, 470 output, $0.022"
+        takeaway: "Plot accuracy against cost with simple baselines, because similar accuracy can differ by almost two orders of magnitude in cost."
+        recall: "What did a simple retry baseline show about the HumanEval leaderboard agents?"
         source: notes/06-evaluating-agents.md
         notes: >-
-          The task is run_agent_and_track_path, the evaluator a CODE evaluator registered with
-          create_evaluator, run through run_experiment and evaluate_experiment. Because the reference is
-          the batch minimum, scores don't compare across agent versions unless you pin it.
-
-      - layout: cards
-        title: Why agent cost grows faster than step count
-        kicker: Li, AI Agents in Depth, Table 6-4
-        lead: "A three-turn refund agent: 9,500 input tokens, 470 output, **$0.022**. Every turn re-sends the context."
-        cards:
-          - title: Thinking tokens
-            body: "500–2,000 extra per turn can multiply cost **3–5×**. 2,000 at 50 tok/s is 40 s."
-          - title: Big tool outputs
-            body: A 5,000-token page from turn 2 is billed again on every later turn.
-          - title: Detours
-            body: "Ten turns instead of three, and the context passes **20,000** tokens."
-          - title: So…
-            accent: "0EA5C9"
-            body: Cap cost per task in the harness. Log thinking tokens separately. Report p95 latency, not the mean.
-        source: notes/06-evaluating-agents.md
-        notes: >-
-          Prefix caching saves nearly half the input cost. Cost per success is the sustainability
-          metric: at 50% success the real cost is 2× per run. RE-Bench (Wijk et al. 2025): at 2 hours
-          the best agent scored about 4× human experts; at 32 hours humans scored about 2× the agent.
-          Report a budget–capability curve, not one point.
-
+          A plain retry with rising temperature matched an elaborate agent at a third of the cost, and it beat
+          another at about a fiftieth. None of the original papers made cost a headline metric. So log tokens,
+          steps, latency and cost per success on every trial, since pass rates miss efficiency regressions.
       - layout: flow
-        title: Score each RAG stage separately
-        kicker: Evaluating RAG and grounding
+        kicker: Grounded answers
+        title: Score each RAG stage on its own
         steps:
           - {label: Retrieve, sub: "recall@k, hit rate"}
           - {label: Rerank, sub: "MRR, nDCG@k"}
@@ -584,402 +539,410 @@ parts:
           - "Pick **k** to match what enters the prompt. Recall@50 is irrelevant if 5 are passed"
           - "Score generation only on **generation-eligible** rows"
           - "Faithful is not correct: faithful-but-wrong points at the corpus"
+        takeaway: "Split a RAG eval by stage, so that a retrieval miss does not get counted as a bad answer and sent to the wrong team."
+        recall: "What does an answer that is faithful but wrong tell you?"
         source: notes/07-evaluating-rag-and-grounding.md
         notes: >-
-          If the source wasn't retrieved, a bad answer is a retrieval failure. Expected sources are the
-          expensive part: the doc an agent linked in the ticket, the source an approved answer cited,
-          or a judge labeling relevance of retrieved chunks.
-
+          Our agent gives a wrong answer about payouts. Was the article missing, ranked too low, or misread?
+          One score cannot say. Measure each stage on the rows that are fair for it. An answer faithful to a
+          stale document is a corpus problem, and no amount of prompt tuning fixes it.
       - layout: steps
-        title: Check grounding claim by claim
-        kicker: Faithfulness (RAGAS, case study)
+        kicker: Faithfulness
+        title: Check grounding one claim at a time
         steps:
-          - {title: Extract claims, text: "Split the answer into atomic statements. \"Settings → Payouts, click Edit, 2 days\" is three."}
+          - {title: Extract claims, text: "Split into atomic statements. Settings, Payouts, click Edit, 2 days is three."}
           - {title: Verify each, text: "Against passage **text**: supported, contradicted or not found."}
-          - {title: Score, text: "Supported ÷ total. Report contradictions separately."}
-          - {title: Tier the claims, text: "Strict facts need near-verbatim support; paraphrase needs entailment; filler is exempt.", accent: "D4621A"}
-        takeaway: "Pass the text, not the pointer. A grader handed URLs scores near zero, or from its own knowledge."
+          - {title: Score, text: "Supported over total. Report contradictions separately."}
+          - {title: Tier the claims, text: "Strict facts need near-verbatim support, paraphrase needs entailment, filler is exempt.", accent: D4621A}
+        takeaway: "Pass the grader passage text, not pointers, because a grader handed URLs scores near zero or grades from its own knowledge."
+        recall: "What is the most common grounding eval bug, and how do you guard against it?"
         source: notes/07-evaluating-rag-and-grounding.md
         notes: >-
-          Citations are cheap in code: every cited ID is in the retrieved set, quotes appear in the
-          passage, every strict claim is cited. Then a judge for citation precision and recall (ALCE,
-          Gao et al. 2023). Frameworks (RAGAS, ARES, DeepEval, Phoenix evals) get you started; gate on
-          graders calibrated against your own labels.
-
+          A whole-answer judge averages away the one wrong fact, so check claim by claim. Citations are even
+          better, since code can check that a cited ID is in the retrieved set and that a quote really appears
+          in the passage. Hand the grader the passage text. We come back to this at the end of the talk.
       - layout: image
-        title: A trace is a tree of spans
-        kicker: Tracing, course Lab 2
+        kicker: Where it all comes from
+        title: A trace says where a run went wrong
         image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab2-spans.png
-        caption: "One agent run in Phoenix (DeepLearning.AI & Arize, Lab 2)"
+        caption: "DeepLearning.AI & Arize, Evaluating AI Agents (2025), Lab 2"
         bullets:
           - "**Model call:** model ID, full input, tokens, latency"
           - "**Tool call:** name, arguments, result or error"
           - "**Retrieval:** query, IDs **and text**, scores"
-          - "**Root:** prompt, model, config, index **versions**"
-          - "Auto-instrument LLM calls; add agent, chain, tool spans yourself"
-        takeaway: Final-output evals say that something failed. Traces say where.
+          - "**Root:** prompt, model, config and index **versions**"
+          - "OpenTelemetry GenAI names make traces portable; every failure becomes a new row"
+        takeaway: "Final-output evals say that something failed and traces say where, so record traces before you need them."
+        recall: "What does a trace record at each span kind, and why must retrieval spans hold the text?"
         source: notes/08-tracing-and-observability.md
         notes: >-
-          The course makes tracing Lab 2, before any evaluator. Use OpenTelemetry GenAI conventions
-          (invoke_agent, chat, execute_tool; gen_ai.usage.input_tokens) or OpenInference, so you can
-          switch backends. Six questions a trace must answer: what was asked and returned, which steps
-          ran, what the model saw, which tools and results, where time and money went, which versions.
-
-      - layout: flow
-        title: Traces feed evals, evals feed datasets
-        kicker: The loop that makes traces pay off
-        steps:
-          - {label: Production traces, sub: sampled}
-          - {label: Graders, sub: same code as CI}
-          - {label: Scores on spans, sub: one click to context}
-          - {label: Triage, sub: "failures, 👎, escalations"}
-          - {label: New eval rows, sub: offline re-runs}
-        loop: every failure becomes a row
-        caption: "Pick a tool (Phoenix, Langfuse, LangSmith, Braintrust) on four things: evals over stored traces, scores on spans, datasets from traces, side-by-side experiments."
-        source: notes/08-tracing-and-observability.md
-        notes: >-
-          Offline and online share graders: two implementations drift apart. Traces are also where cost
-          lives: roll up per span, request, user and feature; watch cache hit rate and tail latency per
-          step. Decide redaction, access and retention up front.
-
-  # ───────────────────────────────────────────────────────────── Part 4
-  - title: Deciding
-    summary: Reading results · CI gates · Production · Failure modes
+          This span tree is one agent run. Scores attach right to the spans, so you are one click from the
+          context of any failure. Run the same grader code on production samples as in CI, and turn failures
+          into new rows. That closes part three: we can measure, so can we now call B better?
+  - title: Is the difference real?
+    summary: "Reading results · Evals in CI"
+    divider: true
+    agenda: true
     notes: >-
-      Chapters 09–12. A score is an estimate from a sample. Put an error bar on it, gate on it in CI,
-      keep measuring in production, and suspect the eval before the agent.
+      Now we finally return to 84 and 85. Reading a result is statistics, and most of it is simple. This
+      part puts error bars on that number, runs the comparison properly, slices it, and shows how to put
+      the whole decision into CI so nobody has to argue about it.
     slides:
+      - layout: statement
+        kicker: The problem
+        title: One point on a small suite is usually noise
+        statement: "On 50 tasks, 80% and 72% are not distinguishable. So what is +1 worth?"
+        attribution: "Every number gets an error bar before it gets an opinion."
+        takeaway: "A rate from a finite suite is an estimate, and on 50 tasks a gap of 8 points can still sit inside the error bar."
+        recall: "On a 50-task suite at 80%, roughly what is the 95% interval?"
+        source: notes/09-reading-results.md
+        notes: >-
+          Most teams have stared at a dashboard and celebrated a number like this. The numbers on the next
+          slide show why they should not. On a small suite one flipped task moves the rate several points. So
+          the question for our decision is not whether 85 beats 84, but how many tasks stand behind each.
       - layout: table
-        title: Every number gets an error bar
-        kicker: Reading results
-        lead: "SE = √(p(1 − p) / n). The 95% CI is p ± 1.96·SE."
-        header: [Tasks, "SE at p = 0.80", 95% CI]
-        widths: [2, 3, 5]
+        kicker: Sizing the error bar
+        title: Halving the error bar takes four times the tasks
+        lead: "SE = √(p(1 − p) / n). The 95% CI is p ± 1.96·SE. To detect 10 points, paired: 100–200 tasks. 5 points: 400–800. 2 points: 2,500+."
+        header: [Tasks, SE at p = 0.80, 95% CI]
         rows:
           - ["20", "0.089", "62% – 98%"]
           - ["50", "0.057", "**69% – 91%**"]
           - ["100", "0.040", "72% – 88%"]
           - ["300", "0.023", "75% – 85%"]
           - ["1,000", "0.013", "77% – 83%"]
-        highlight: [1]
-        takeaway: On 50 tasks, 80% and 72% are not distinguishable.
+        takeaway: "Size the suite for the smallest change that matters: a 50-task golden set is a smoke detector, not an instrument for a 3-point tweak."
+        recall: "About how many paired tasks does it take to detect a 5-point difference?"
         source: notes/09-reading-results.md
         notes: >-
-          The most important table in the chapter. For small n or p near 0 or 1 use the Wilson interval.
-          With k trials per task, average within the task first, then compute SE across tasks.
-          Clustered tasks need clustered standard errors.
-
-      - layout: table
-        title: Size the suite for the smallest change that matters
-        kicker: How many tasks
-        lead: "Paired, 80% power, α = 0.05, pass rates around 70–85%."
-        header: [Smallest difference that matters, Tasks needed]
-        widths: [5, 5]
-        rows:
-          - [15 points, 50–100]
-          - [10 points, 100–200]
-          - [5 points, 400–800]
-          - [2 points, "**2,500+**"]
-        takeaway: A 50-task golden set is a smoke detector for big regressions. It can't tell you a tweak gained 3 points.
-        source: notes/09-reading-results.md
-        notes: >-
-          The paired range depends on how often the two versions disagree on the same task. Unpaired
-          comparisons need noticeably more. Either grow the suite or stop deciding on 3-point gaps.
-
+          Read the second row: 50 tasks at 80 percent gives 69 to 91. The sizing numbers in the lead assume a
+          paired comparison, 80 percent power and pass rates of about 70 to 85 percent. So decide what change
+          matters before you collect tasks. Your 50-task set catches disasters, and that is a fine job for it.
       - layout: compare
-        title: Compare versions on the same tasks
-        kicker: Paired differences (Miller, Anthropic 2024)
+        kicker: Pairing
+        title: Compare both versions on the same tasks
         emphasis: right
         left:
           title: Two independent rates
           bullets:
-            - A at 84%, B at 85%, each with its own wide interval
-            - Task-to-task variation swamps the difference
+            - "A at 84%, B at 85%, each with its own wide interval"
+            - "Task-to-task variation swamps the difference"
           tag: The error bars overlap and you learn nothing
         right:
           title: Per-task differences
           bullets:
-            - Most tasks pass or fail on both, so differences are mostly 0
+            - "Most tasks pass or fail on both, so differences are mostly 0"
             - "SE(Δ) = sd(differences) / √n, much smaller"
             - "McNemar: only the **discordant** tasks count"
             - "B wins **14–6** is evidence. **11–9** is not"
           tag: Pairing cuts variance for free
-        takeaway: Run both versions on identical tasks and analyze per-task differences.
+        takeaway: "Run both versions on identical tasks and analyse per-task differences, since only the tasks that flip carry evidence."
+        recall: "Under McNemar, which tasks count, and why is 14 to 6 evidence when 11 to 9 is not?"
         source: notes/09-reading-results.md
         notes: >-
-          Miller, "Adding Error Bars to Evals" (Anthropic, 2024). Testing several fixes at once: at 95%
-          each, the chance at least one of 6 is a false positive is 1 − 0.95^6 ≈ 26%.
-
-      - layout: image
-        title: "A worked example: 7 questions, one run"
-        kicker: Course Lab 5
-        image: ../sources/images/deeplearning-ai-evaluating-ai-agents-lab5-experiments.png
-        caption: "v1 vs v2 experiment (DeepLearning.AI & Arize, Lab 5)"
-        bullets:
-          - "v2 adds \"Think before you respond.\" to the SQL prompt"
-          - "**n = 7**: one flipped task moves a rate **14 points**"
-          - "0.82 vs 0.86 is noise. Pair, count discordant tasks, repeat k times"
-          - "The SQL grader **passes** when no SQL ran"
-        takeaway: Check the graders before the agents. A version that skips the tool gets a perfect SQL score.
-        source: notes/09-reading-results.md
-        notes: >-
-          The lab's evaluate_sql_result compares only digits in the result, so 1,200 and 12.00 match,
-          and returns True when the lookup tool wasn't called. Five evaluators run per experiment:
-          function calling, SQL result, clarity, entity correctness, code runnable.
-
+          Most of the variance between tasks has nothing to do with your change, since some tasks are simply
+          hard. Pairing subtracts that. The count that matters is flips. Also resist reading a tiny experiment,
+          where seven questions means one flipped task moves a rate 14 points, and read the flipped transcripts.
       - layout: table
-        title: Slice before you conclude
-        kicker: A flat headline can hide a loss
+        kicker: Worked example
+        title: Slicing finds what the average hid
         header: [Slice, n, A, B, Δ]
-        widths: [3, 1.4, 1.6, 1.6, 1.6]
         rows:
-          - [Billing, "120", 82%, 90%, "+8"]
-          - [How-to, "150", 88%, 89%, "+1"]
-          - [Non-English, "40", 75%, 58%, "**−17**"]
-          - ["**Overall**", "310", 84%, 85%, "+1"]
+          - [Billing, "120", "82%", "90%", "+8"]
+          - [How-to, "150", "88%", "89%", "+1"]
+          - [Non-English, "40", "75%", "58%", "**−17**"]
+          - ["**Overall**", "310", "84%", "85%", "+1"]
         highlight: [2]
-        takeaway: '"+1 overall" ships a change that breaks non-English users. Show n per slice.'
+        takeaway: "An overall gain of one point can ship a change that breaks one group of users, so slice before concluding and show n per slice."
+        recall: "What did the +1 overall hide in the worked example?"
         source: notes/09-reading-results.md
         notes: >-
-          Watch Simpson's paradox: B can beat A in every slice and lose overall if the slice mix differs.
-          Slice 20 ways and one will be "significant" by chance; pre-register the slices that gate.
-          Then read 10–20 flipped transcripts before accepting any change.
-
+          Here is our answer. B gained eight points on billing, did nothing for how-to, and lost seventeen on
+          non-English. Remember the language label on our row in part one. That single field is why we can see
+          this. Without it we ship a regression and call it a gain.
       - layout: image
-        title: Slice by difficulty, not just by topic
-        kicker: Yang et al. 2026, Terminal-Bench RSI
+        kicker: Evidence
+        title: Slice by difficulty as well as topic
         image: ../sources/images/yang-terminal-rsi-fig10.png
-        caption: "Success by difficulty stratum across self-improvement rounds (Yang et al. 2026, Fig. 10)"
+        caption: "Yang et al. (2026), Figure 10"
         bullets:
-          - "**Easy** tasks: 32% → 73%. The headline gain lives here"
-          - "**Extreme** tasks: 0 → 4.9 → 11.0 → 6.1 → 11.0%"
+          - "**Easy** tasks: 32% to 73%. The headline gain lives here"
+          - "**Extreme** tasks: 0, 4.9, 11.0, 6.1, then 11.0%"
           - "One pooled rate hides where progress stalls"
-        takeaway: Report the strata. A rising average can sit on a flat hard tail.
+        takeaway: "Report difficulty strata, because a rising average can sit on top of a flat hard tail."
+        recall: "Where did the headline gain live in the Yang et al. strata?"
         source: notes/09-reading-results.md
         notes: >-
-          The same paper reports Mean@R next to pass@R (chapter 06) and shows partial-credit
-          reward drifting from strict success (chapter 12).
-
+          The same idea applies by difficulty. Across five training stages in Yang and colleagues, easy tasks
+          more than doubled while extreme ones wandered around ten percent. Pool them and you would believe
+          the system was improving evenly. Ask where a gain lives before you say what caused it.
       - layout: code
+        kicker: Worked example
         title: A report that supports a decision
-        kicker: Report template
         lang: text
         code: |-
           Suite: support-golden v4 (n=310, 3 trials/task)   Judge: grounding-v2 (TNR 0.88)
                               A (prod)      B (candidate)   Δ (paired)
           Pass rate           84.2% ±3.9    85.1% ±3.8      +0.9  [−1.6, +3.4]
-            Non-English (40)  75.0% ±13     57.5% ±15       −17.5 [−29, −6]    ⚠
-          Errors / refusals   1.3%          4.2%                               ⚠
+            Non-English (40)  75.0% ±13     57.5% ±15       −17.5 [−29, −6]    !
+          Errors / refusals   1.3%          4.2%                               !
           Cost per success    $0.014        $0.016          +14%
           Flipped tasks read: 18 / 18. 9 of 11 regressions are `refusal` on non-English
           Decision: do not ship. Investigate refusal behavior for non-English.
-        takeaway: Count errors and refusals as failures, or as their own rate. Never let them leave the denominator.
+        takeaway: "Count errors and refusals as failures or as their own rate, and never let them leave the denominator."
+        recall: "What must a report name besides the headline rate to support a decision?"
         source: notes/09-reading-results.md
         notes: >-
-          From the KDD 2017 "Dirty Dozen": sample ratio mismatch (B errored on 8% and those rows were
-          dropped), ratio metrics with changing denominators (grounding rose because B refuses more),
-          novelty effects, ignoring the error bar.
-
-      - layout: table
-        title: Cheap suites on every change, expensive ones on a schedule
-        kicker: Evals in CI
-        header: [Trigger, Suite, Graders, "Blocks?"]
-        widths: [2.6, 3, 3, 1.4]
-        rows:
-          - [Every commit / PR, "Unit tests + smoke eval (10–30 tasks)", Code only, "Yes"]
-          - ["PR touching prompts, tools, retrieval", Regression suite, Code + calibrated judges on a sample, "Yes"]
-          - [Nightly, "Full suite, k trials", "All, experimental tracked", Alerts]
-          - [Pre-release, "Full + held-out + adversarial", All calibrated, "**Release gate**"]
-          - [Model change, "Everything, paired vs. prod", All, "Yes"]
-        takeaway: Use path filters, so a README change doesn't trigger a $40 judge run.
-        source: notes/10-evals-in-ci.md
-        notes: >-
-          Give the eval job its own API key with a spend limit. Rate-limit concurrency or you'll grade
-          429s. Infra failures are their own count, never a task fail. Pin model IDs, judge versions
-          and dataset version in results.jsonl.
-
+          This is the answer to the question on our first slide: do not ship. Look at what lets someone act
+          on it: dataset and judge versions, intervals, the paired delta, the slice, refusals as their own
+          rate, and how many flipped tasks a person read. The overall interval includes zero, and the slice
+          interval does not.
       - layout: compare
-        title: Run, then assert
-        kicker: Two phases with an artifact between
-        emphasis: right
+        kicker: Into CI
+        title: Run first, assert second, with an artefact between
+        lead: "Cheap suites on every change, costly ones on a schedule: code graders per commit, calibrated judges when prompts change, all graders nightly and pre-release."
+        emphasis: none
         left:
           title: "Phase 1: Run"
+          accent: 0F7490
           bullets:
-            - "For each task × trial: run the SUT, capture the trace, grade"
-            - Write a row to `results.jsonl`
+            - "For each task and trial: run the system, capture the trace, grade"
+            - "Write a row to `results.jsonl`"
           tag: "Slow, costly, non-deterministic"
-          accent: "0F7490"
         right:
           title: "Phase 2: Assert"
           bullets:
-            - Load results, compute metrics and CIs per slice
-            - Compare to baseline and thresholds
-            - Emit pass/fail per gate + a report
+            - "Load results, compute metrics and CIs per slice"
+            - "Compare to baseline and thresholds"
+            - "Emit pass or fail per gate and a report"
           tag: "Fast, free, deterministic"
-        takeaway: Change a threshold or add a slice and re-assert in seconds, without re-running a $30 suite.
+        takeaway: "Splitting run from assert lets you change a threshold or add a slice in seconds without re-running a $30 suite."
+        recall: "What artefact sits between the two phases, and what does the split let you do?"
         source: notes/10-evals-in-ci.md
         notes: >-
-          Results become an artifact: upload, diff against the last run, attach to the PR. Flakiness is
-          visible because retries and infra errors are recorded in phase 1. The case study's harness
-          splits every suite this way, with pytest assertions reading the rows.
-
+          Now we automate that decision. Keep the expensive part apart from the arithmetic. Results become an
+          artefact you can diff and attach to the PR, and retries are recorded instead of swallowed. Use path
+          filters as well, so a README change does not trigger a 40 dollar judge run.
       - layout: table
-        title: Gate against a baseline, on the interval
         kicker: The regression gate
+        title: Gate against a baseline, on the interval
         header: [Rule, Example, Catches]
-        widths: [2.4, 5, 2.6]
+        widths: [3, 6, 3]
         rows:
-          - [Absolute floor, "Schema ≥ 99%. Citation hallucination = 0", Never-events]
-          - [Relative to baseline, "Grounding ≤ 3 points below prod (paired CI)", Regressions]
-          - [Per-slice floor, "No slice drops > 10 points", Hidden slice losses]
-          - [Efficiency budget, "Cost/success ≤ 1.2× baseline. p95 ≤ 8 s", Silent cost blow-ups]
-          - [Regression set, "Fixed failures ≥ 95% pass", Re-broken bugs]
-        takeaway: '"Block if Δ < 0" blocks on noise half the time. Block when the CI upper bound is below −3.'
+          - [Absolute floor, "Schema at least 99%. Citation hallucination = 0", Never-events]
+          - [Relative to baseline, "Grounding at most 3 points below prod (paired CI)", Regressions]
+          - [Per-slice floor, "No slice drops more than 10 points", Hidden slice losses]
+          - [Efficiency budget, "Cost per success at most 1.2× baseline. p95 at most 8 s", Silent cost blow-ups]
+          - [Regression set, "Fixed failures at least 95% pass", Re-broken bugs]
+        highlight: [2]
+        takeaway: "Block when the upper bound of the difference is below −3, since a rule of blocking on any drop fires on noise half the time."
+        recall: "Why does blocking when the delta is below zero fail as a gate?"
         source: notes/10-evals-in-ci.md
         notes: >-
-          Update the baseline deliberately after a release, with the dataset and grader versions. Every
-          gate emits the same JSON shape: metrics with CI and baseline, rows scored and ineligible, top
-          failure labels, worst slices, and a next action. A gate that only says FAILED costs half a day.
-
-      - layout: flow
-        title: Gates ordered by pipeline stage
-        kicker: The gate ladder
-        steps:
-          - {label: Data quality, sub: "valid, mapped, eligible"}
-          - {label: Retrieval, sub: retrieval-eligible rows}
-          - {label: Generation, sub: generation-eligible rows}
-          - {label: Calibration, sub: gating judges calibrated}
-          - {label: Release, sub: all pass + budget}
-        caption: "A later gate runs only on rows an earlier gate says are fair. The maturity ladder (next) orders building the practice; this orders checks within a run."
-        source: notes/10-evals-in-ci.md
+          Look at the third row: that is the rule that would have caught our B automatically, with no one
+          needing to stare at a report. Gate on the interval, and update the baseline deliberately after each
+          release. Assign owners too: one for the infrastructure, one for the criteria, and every engineer adds
+          a row with each bug fix. That closes part four.
+  - title: What happens after launch?
+    summary: "Production · Failure modes · A case study"
+    divider: true
+    agenda: true
+    notes: >-
+      A suite that passed before release tells you about the world as it was. The model changes, users
+      change, and the eval itself goes wrong. This part covers the maturity ladder, what breaks once an
+      eval is relied on, and one real team's system with its mistakes.
+    slides:
+      - layout: statement
+        kicker: The problem
+        title: Performance changes even when you change nothing
+        statement: "We'll add evals later means we will have no signal when this breaks."
+        attribution: "Providers ship new snapshots, users shift, tools change shape, the index goes stale."
+        takeaway: "Performance changes after launch even when you change nothing, through model updates, input shift, upstream changes and stale corpora."
+        recall: "Name four sources of drift that happen without any change on your side."
+        source: notes/11-production-and-the-maturity-ladder.md
         notes: >-
-          Ownership: an infra owner for the runner, CI, dashboards and cost; a criteria owner for
-          pass/fail definitions and calibration sign-off; every engineer adds a row when they fix a bug.
-
+          Suppose we fix B and ship it. A month later, the provider moves a snapshot behind the same alias
+          and a tool changes its response shape. You touched nothing and quality dropped. Offline suites
+          cannot see that. So how much production signal do you need, and in what order do you build it?
       - layout: steps
-        title: The maturity ladder
-        kicker: Where most systems sit
+        kicker: Build order
+        title: Climb the maturity ladder one rung at a time
         axis: more signal
         steps:
-          - {title: 0 · Vibes, text: "Manual review. Catches what you happen to look at.", n: "0", accent: "94A3B8"}
+          - {title: 0 · Vibes, text: "Manual review. Catches what you happen to look at.", n: "0", accent: 94A3B8}
           - {title: 1 · Deterministic gates, text: "Tests, schemas, hooks. Highest return per effort.", n: "1"}
-          - {title: 2 · Separated evaluator, text: "Fresh context, runs the output. Behavioral failures.", n: "2"}
-          - {title: 3 · Failure evals + tracing, text: "Regressions, and where a run broke. **Production needs this.**", n: "3", accent: "D4621A"}
+          - {title: 2 · Separated evaluator, text: "Fresh context, runs the output. Behavioural failures.", n: "2"}
+          - {title: 3 · Failure evals and tracing, text: "Regressions, and where a run broke. **Production needs this.**", n: "3", accent: D4621A}
           - {title: 4 · Continuous sampling, text: "Drift alerts against a launch baseline.", n: "4"}
-        takeaway: '"We''ll add evals later" means "we''ll have no signal when this breaks".'
+        takeaway: "Production needs at least level 3, failure evals with tracing, and deterministic gates give the highest return on the way there."
+        recall: "Which rung does production need, and which gives the highest return per effort?"
         source: notes/11-production-and-the-maturity-ladder.md
         notes: >-
-          Most systems sit at level 0. 2 → 3 needs two things together: rows harvested from observed
-          failures, and traces of every step. 3 → 4 runs the same graders on sampled live traffic.
-
-      - layout: image
-        title: Humans calibrate, judges cover
-        kicker: Two-layer online review
-        image: ../sources/images/course-two-layer-eval-human-llm-calibration.png
-        caption: Two-layer review of the production trace stream
+          Do not read this as a score to maximize. Read it as a build order. Deterministic gates are cheap
+          and catch a lot. The line that matters is level three, since below it you cannot tell a regression
+          from a bad day. Our suite sits at three by now, and sampling is the next rung.
+      - layout: bullets
+        kicker: Running online
+        title: Sample by rule, alert on drift, ramp every change
         bullets:
-          - "Grade **10–20%** of traces, chosen by rule"
-          - "**100%** of 👎, plus escalations, high cost, long chats"
-          - A separate random slice for unbiased rates
-          - Full review for 48 h after any model or prompt change
-          - Track human–judge agreement as its own metric
-        takeaway: Judges alone drift unnoticed. Humans alone don't cover real traffic.
+          - "**Sample 10–20% of traces by rule:** 100% of negative feedback, plus escalations, high cost and long chats"
+          - "**Two layers:** humans sample and calibrate, while the judge scores everything and watches drift"
+          - "**Drift:** baseline at launch, same pipeline continuously, rolling windows, and watch the input mix too"
+          - "**Before A/B:** shadow mode first, then a canary at 1–5% of traffic with rollback on regression"
+          - "**A/B:** declare metric and size up front, keep guardrails, ramp 1%, 10%, 50%"
+          - "**Later:** an eval environment can become a training environment, with the grader as reward"
+        aside:
+          title: Plumbing first
+          accent: D4621A
+          body: "An alert is first a question. Is the data valid, did a schema change, is it one outlier?"
+        takeaway: "Judges alone drift unnoticed and humans alone do not cover real traffic, so sample by rule and have humans calibrate the judge."
+        recall: "What is each layer's job in two-layer online review?"
         source: notes/11-production-and-the-maturity-ladder.md
         notes: >-
-          Online graders must be reference-free. Drift comes from model updates behind an alias, input
-          shift, upstream API changes and corpus staleness: capture a launch baseline, run continuously,
-          alert on rolling windows, and watch the input mix. Feedback is a sampling rule and a
-          calibration label, not a metric to optimize; optimizing thumbs-up rewards flattery.
-
+          Sampling by rule means your review time lands on the failures. A random slice beside it keeps the
+          rates unbiased. The order of release matters too: shadow mode teaches you what breaks at no risk to
+          users, and a canary limits the damage. Peeking at an A/B test and stopping on a good day inflates
+          false positives.
+      - layout: image
+        kicker: Evidence
+        title: User feedback has biases of its own
+        image: ../sources/images/huyen-ai-engineering-fig10-21.png
+        caption: "Huyen, AI Engineering (O'Reilly, 2025), Fig. 10-21"
+        bullets:
+          - "**Broken UI:** the angry emoji sat at five stars, so happy attendees left 1/5"
+          - "**Leniency:** in 2015 Uber averaged 4.8, and below 4.6 risked deactivation"
+          - "**Position and preference:** first gets clicks, longer gets picked"
+          - "**Degenerate loop:** you only get feedback on what you showed"
+          - "Trained on approval, models drift toward sycophancy (Sharma et al. 2023)"
+        takeaway: "Test the feedback form and look at the rating distribution, because user signals carry the same biases as judges plus broken UI."
+        recall: "Name two biases in user feedback, and how a broken form can mislead you."
+        source: notes/11-production-and-the-maturity-ladder.md
+        notes: >-
+          Huyen's own workshop form put the angry face in the five-star position, so happy people gave one
+          star and left warm comments. Thumbs-down data seems like ground truth, but it is another instrument
+          that needs checking. And if feedback trains the system, its own outputs shape what it hears next.
       - layout: steps
-        title: When a score drops, suspect the eval first
-        kicker: The debug order
+        kicker: When a number drops
+        title: Suspect the eval before you suspect the agent
         steps:
           - {title: Infrastructure, text: "Errors, timeouts, 429s, OOM. Are error counts up?"}
           - {title: Versions, text: "Dataset, grader, judge model or config changed between runs?"}
-          - {title: Traces + grades, text: "Read 10–20 failed transcripts **with** their grades. Is the grade right?"}
+          - {title: Traces and grades, text: "Read 10–20 failed transcripts **with** their grades. Is the grade right?"}
           - {title: Slices, text: "Is the drop concentrated in one category?"}
-          - {title: Only then the agent, text: "Model, prompt, tools, logic.", accent: "D4621A"}
-        takeaway: Skipping to step 5 "fixes" an agent that wasn't broken, and sometimes breaks it.
+          - {title: Only then the agent, text: "Model, prompt, tools, logic.", accent: D4621A}
+        takeaway: "Skipping straight to the agent fixes something that was not broken, so check infrastructure, versions, grades and slices first."
+        recall: "What is the debug order when an eval score drops?"
         source: notes/12-failure-modes.md
         notes: >-
-          Eval bugs that look like agent bugs: infra failures, grader bugs (regex too strict, URLs not
-          text), broken tasks at 0% for every version, state leakage, stale references, version
-          mismatch, dropped rows. Treat a 0% task as suspect.
-
+          Eval bugs look exactly like agent bugs. In the Evaluating AI Agents course lab, the SQL grader passes
+          when no SQL ran, so a version that skips the tool earns a perfect score. Going straight to the prompt
+          in that case fixes nothing, and it may break something. Work down this list in order.
       - layout: table
-        title: Optimize hard and you'll find the eval's gaps
-        kicker: Goodhart
+        kicker: Once people rely on it
+        title: Optimize hard and you will find the eval's gaps
+        lead: "A suite near 100% has stopped measuring: graduate it, add harder tasks, raise the bar."
         header: [Gap exploited, Example]
-        widths: [2.6, 7.4]
+        widths: [3, 8]
         rows:
           - [Grader leniency, Answers padded until the verbosity-biased judge passes them]
           - [Narrow checks, "Agent edits the tests, not the code. Valid schema, empty content"]
-          - [Proxy metric, "👍 optimized → flattery. Escalations cut → won't escalate when it should"]
+          - [Proxy metric, "Thumbs-up optimized into flattery. Escalations cut, so it will not escalate when it should"]
           - [Visible tests, Overfits to the tests it can see]
-        takeaway: "Defenses: several dimensions, held-out tests, read the biggest gains, refresh from production."
+          - [Repeated scoring, "ARC Prize reused 100 private tasks and disclosed about 10,000 scores"]
+        takeaway: "Defend an eval with several dimensions, held-out tests, reading the biggest gains and refreshing tasks from production."
+        recall: "Name two ways a system can exploit an eval without getting better, and two defences."
         source: notes/12-failure-modes.md
         notes: >-
-          Bites hardest in automated loops, where an optimizer runs thousands of iterations against your
-          grader. Saturated suites (near 100%) have stopped measuring: graduate them to regression and
-          add harder tasks. Eval debt: thresholds never revisited, stale rows, a CI grader and a
-          production grader that drifted apart.
-
-  # ───────────────────────────────────────────────────────────── Close
-  - title: Wrap-up
-    agenda: false
-    divider: false
-    slides:
-      - layout: cards
-        title: Rules of thumb
-        kicker: The pillar on one slide
-        cards:
-          - title: Before any grader
-            body: Write success down. Two experts must agree. Read 50–100 traces first.
-          - title: The dataset
-            body: Start with 20–50 real failures. Negatives and boundaries. Eligible rows only.
-          - title: Graders
-            body: Code first. One judge per criterion. Uncalibrated judges never gate.
-          - title: Agents and RAG
-            body: Outcome and trajectory. k trials, pass^k. Grounding claim by claim.
-          - title: Reading and gating
-            body: Error bars, paired comparisons, slices. Run, then assert, against a baseline.
-          - title: Production
-            body: Sample by rule. Humans calibrate the judges. Debug infra before the agent.
-        source: README.md#rules-of-thumb
-
+          Once a metric matters people and agents aim at it, which is Goodhart's law. Every score reported from
+          a test set leaks a little about it. Evals also pile up debt, like thresholds nobody revisits and
+          stale rows and copies of a grader that drift. Schedule the maintenance and retire metrics nobody acts on.
       - layout: table
-        title: "Worked example: which judges earned a gate"
-        kicker: Case study, chapter 13
-        lead: 50 tasks, 25 liked and 25 disliked by users. Δ is liked minus disliked mean score.
+        kicker: A real system
+        title: Which judges earned a gate in the case study
+        lead: "50 tasks, 25 liked and 25 disliked by users. Δ is liked minus disliked mean score."
         header: [Grader, Δ, "Cohen's d", Verdict]
-        widths: [4, 1.6, 1.8, 2.6]
+        widths: [5, 2, 2, 3]
         rows:
           - ["**Custom answer_relevancy v3**", "**+0.214**", "0.75", "Strong: ship"]
           - [DeepEval answer_relevancy, "+0.086", "0.25", Weak]
           - [Custom completeness, "+0.030", "0.07", Marginal]
           - [DeepEval completeness, "−0.042", "—", "**Inverted**"]
-          - [Custom escalation, "0.000", "0.00", "No signal: don't gate"]
+          - [Custom escalation, "0.000", "0.00", "No signal: do not gate"]
           - [DeepEval escalation, "−0.080", "—", "**Inverted**"]
-        highlight: [0]
-        takeaway: Validate judges against users, not against other judges. Calibration doesn't transfer across domains.
+        takeaway: "Validate judges against users rather than other judges, and recalibrate per domain, because calibration does not transfer."
+        recall: "What does an inverted separation tell you about an off-the-shelf judge?"
         source: notes/13-case-study-support-agent.md
         notes: >-
-          Custom answer_relevancy went from Δ −0.080 at v2 to +0.214 at v3 on the same sample. The
-          grounding cross-check failed for an eval reason: the judge got URLs, not passages. On the
-          routing agent's staging traffic the same graders separated near zero.
-
-      - layout: bullets
-        title: Where to go next
-        kicker: Measures every layer below
+          This team ran a multi-agent support system, close to ours. Two off-the-shelf judges scored disliked
+          answers above liked ones. Their cross-check also showed low agreement because the grader had been fed
+          URLs, not passages. That is the context_missing label we met in the grader contract.
+      - layout: code
+        kicker: Worked example
+        title: Each gate hands the next one a named pool
+        lang: json
+        code: |-
+          {
+            "run_id": "…",
+            "git_commit": "abc1234",
+            "gate": "retrieval_optimization",
+            "row_pool": "retrieval_eligible_gt",
+            "n": 0,
+            "config": {},
+            "metrics": {},
+            "failure_counts": {},
+            "known_exclusions": [],
+            "pass": true
+          }
         bullets:
-          - text: "**Elo vs. Bradley–Terry:** worked example in 05, full lab upstream (ai-agent-book ch. 7)"
-          - text: "**Copy-ready snippets:** judge prompt (05), failure taxonomy (02), row schema (03), gate contract and CI workflow (10)"
-          - text: "**Worked example:** chapter 13, a real multi-agent support system's eval design, mistakes included"
-          - text: "**Course:** DeepLearning.AI, Evaluating AI Agents (Arize Phoenix), folded into 05, 06 and 08"
-          - text: "**Loops:** 04-loop-engineering, where an eval becomes the optimizer's target"
+          - "**Eight gates:** corpus, index, retrieval, model, agent retrieval, generation, calibration, report"
+          - "**Thirteen labels** owned by the gate that fixes them"
+          - "**Pools narrow:** all, mapped, retrieval, generation, quality sample"
+          - "Every claim names gate, pool, n and artefact"
+        takeaway: "Do not collapse corpus, retrieval, agent, generation and calibration into one score: each gate answers one question over a named pool."
+        recall: "What must every gate's artefact name, and why not one blended score?"
+        source: notes/13-case-study-support-agent.md
+        notes: >-
+          This header is what keeps the blame honest. Without pools, a retrieval miss looks like a bad answer
+          and the generation team gets blamed for the corpus team's gap. One blended score would have hidden
+          every finding this team made. That is the talk: define, grade, measure, read, gate, and keep watching.
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        kicker: Rules of thumb
+        title: Six rules to take with you
+        cards:
+          - {title: Before any grader, body: "Write success down. Two experts must agree. Read 50–100 traces first."}
+          - {title: The dataset, body: "Start with 20–50 real failures. Negatives and boundaries. Eligible rows only."}
+          - {title: Graders, body: "Code first. One judge per criterion. Uncalibrated judges never gate."}
+          - {title: Agents and RAG, body: "Outcome and trajectory. k trials, pass^k. Grounding claim by claim."}
+          - {title: Reading and gating, body: "Error bars, paired comparisons, slices. Run, then assert, against a baseline."}
+          - {title: Production, body: "Sample by rule. Humans calibrate the judges. Debug infra before the agent."}
+        takeaway: "Define correct first, check graders against humans, grade state and path, read intervals and slices, gate on baselines, then keep sampling."
+        recall: "Give one rule of thumb for each stage, from criteria through production."
+        source: notes/12-failure-modes.md
+        notes: >-
+          If you remember only one card, make it the one you lack today. Most teams should start with the
+          first two: write down what correct means, and turn twenty real failures into rows. Everything else in
+          this talk gets easier once those two things exist.
+      - layout: bullets
+        kicker: Where next
+        title: Where to go next
+        bullets:
+          - "**Lab:** `practice/eval-suite-ci/` (TypeScript) and `practice/eval-suite-ci-py/` (Python): 24 cases, three graders, a baseline, paired regression testing, an exit code"
+          - "**Copy-ready:** judge prompt (05), failure taxonomy (02), row schema (03), gate rules and CI workflow (10)"
+          - "**A real system:** note 13, a multi-agent support system's eval design, mistakes included"
+          - "**Course:** DeepLearning.AI and Arize, Evaluating AI Agents, folded into notes 05, 06 and 08"
+          - "**Loops:** `04-loop-engineering`, where an eval becomes the optimizer's target"
         aside:
           title: The one idea to keep
-          accent: "1E3A5F"
-          body: An eval is a measurement. Define correct before grading, trust no grader you haven't checked against humans, and put an error bar on every number.
-        source: README.md
+          accent: 1E3A5F
+          body: "An eval is a measurement. Define correct before grading, trust no grader you have not checked against humans, and put an error bar on every number."
+        takeaway: "Start with the eval-suite-ci lab, then read the case study, and then see how an eval becomes a loop's target."
+        recall: "What does the pillar's lab build, and which note shows the method on a real system?"
+        source: notes/13-case-study-support-agent.md
+        notes: >-
+          The lab runs offline with a stub by default, so you can try a paired gate today with no API key. Then
+          read the case study, because its mistakes are the most instructive part. And when you are ready, the
+          loop engineering pillar shows what happens when an agent optimizes against one of these evals.
