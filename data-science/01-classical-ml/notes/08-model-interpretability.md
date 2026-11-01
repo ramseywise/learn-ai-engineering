@@ -50,7 +50,7 @@ flowchart TD
 
 ## Setup: the model to explain
 
-We use LightGBM on the same adult split as the last note, with a pure-noise column and a near-duplicate of `age` added on purpose so we can see each tool's blind spots.
+We use LightGBM on the same adult split as the last note, with a pure-noise column and a random high-cardinality column added on purpose, so we can see which tools credit them.
 
 ```python
 import numpy as np
@@ -75,7 +75,7 @@ X_dev, X_test, y_dev, y_test = train_test_split(adult, y, stratify=y, test_size=
 X_tr, X_val, y_tr, y_val = train_test_split(X_dev, y_dev, stratify=y_dev, test_size=0.2, random_state=0)
 
 model = LGBMClassifier(learning_rate=0.05, n_estimators=2000, verbose=-1, n_jobs=4, random_state=0)
-model.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], callbacks=[early_stopping(50, verbose=False)])
+model.fit(X_tr, y_tr, eval_X=X_val, eval_y=y_val, callbacks=[early_stopping(50, verbose=False)])
 print("rounds", model.best_iteration_, "test AUC", round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 4))
 ```
 
@@ -127,7 +127,7 @@ print("age without a copy", round(imp.loc["age", "drop"], 4))
 
 @@D@@
 
-@@DP@@ Hooker and Mentch argue that permuting also forces the model to extrapolate into impossible rows, a 20-year-old who has worked for 40 years, and they recommend methods that condition or refit ([arXiv:1905.03151](https://arxiv.org/abs/1905.03151), preprint).
+@@DP@@ Hooker et al. argue that permuting also forces the model to extrapolate into impossible rows, a 20-year-old who has worked for 40 years, and they recommend methods that condition on the other features or refit ([arXiv:1905.03151](https://arxiv.org/abs/1905.03151), preprint, later in Statistics and Computing).
 
 ## Partial dependence and ICE
 
@@ -136,7 +136,7 @@ Partial dependence fixes one column at a value for every row, predicts, and aver
 ```python
 from sklearn.inspection import partial_dependence
 
-Xp = X_test.sample(1000, random_state=0)
+Xp = X_test.sample(1000, random_state=0).astype({"age": float})    # the API refuses integer columns
 pd_age = partial_dependence(model, Xp, ["age"], kind="both", grid_resolution=8, percentiles=(0.05, 0.95))
 grid = pd_age["grid_values"][0].round(0)
 ice = pd_age["individual"][0]
@@ -155,7 +155,7 @@ Two limits. **It is not causal**: the curve shows what the model does, and a mod
 
 ## SHAP
 
-Permutation and PDP describe the model as a whole. The rejected applicant wants an account of one row. Lundberg and Lee show that LIME, DeepLIFT, layer-wise relevance propagation, and three earlier Shapley-based methods are all *additive feature attributions*, explaining a prediction as a baseline plus one number per feature. Among those, the Shapley values of cooperative game theory are the unique solution with local accuracy (the numbers sum to the prediction), missingness (an absent feature gets zero) and consistency (if a feature matters more to the model, its number does not fall) ([arXiv:1705.07874](https://arxiv.org/abs/1705.07874), NIPS 2017). In user studies of 30 and 52 people on Mechanical Turk, SHAP agreed with human explanations more than LIME and DeepLIFT did.
+Permutation and PDP describe the model as a whole. The rejected applicant wants an account of one row. Lundberg and Lee show that LIME, DeepLIFT, layer-wise relevance propagation, and three earlier Shapley-based methods are all *additive feature attributions*, explaining a prediction as a baseline plus one number per feature. Among those, the Shapley values of cooperative game theory are the unique solution with local accuracy (the numbers sum to the prediction), missingness (an absent feature gets zero) and consistency (if a feature matters more to the model, its number does not fall) ([arXiv:1705.07874](https://arxiv.org/abs/1705.07874), NIPS 2017). In their Mechanical Turk studies of two small problems, with 30 and 52 people, SHAP agreed with human explanations more strongly than LIME and DeepLIFT did.
 
 Plain Shapley needs every subset of features, which is exponential. `TreeExplainer` computes exact values for tree ensembles in polynomial time ([doi:10.1038/s42256-019-0138-9](https://doi.org/10.1038/s42256-019-0138-9), Lundberg et al., Nature Machine Intelligence 2020). Other model types use the slower Kernel SHAP.
 
@@ -180,7 +180,7 @@ print((pd.Series(np.abs(values).mean(0), index=Xe.columns)).sort_values(ascendin
 Now one row. The numbers are in log-odds, and they add up:
 
 ```python
-i = int(np.argmax(model.predict_proba(Xe)[:, 1] < 0.10) if False else np.flatnonzero((raw > 0) & (y_test.iloc[:2000].values == 0))[0])
+i = int(np.flatnonzero((raw > 0) & (y_test.iloc[:2000].values == 0))[0])   # first false positive
 row = pd.Series(values[i], index=Xe.columns).sort_values(key=np.abs, ascending=False)
 print("actual income >50K:", y_test.iloc[i], "| P(>50K) =", round(float(model.predict_proba(Xe.iloc[[i]])[0, 1]), 3))
 print("base value", round(float(base), 3), "+ sum of SHAP", round(float(values[i].sum()), 3), "=", round(float(raw[i]), 3))
@@ -195,9 +195,9 @@ print(pd.DataFrame({"value": Xe.iloc[i][row.index[:6]].astype(str), "shap": row.
 
 ## LIME, and explanations for LLMs
 
-LIME fits a small linear model around one prediction by sampling perturbed copies of the row. Its best-known demonstration is a logistic regression on image features deliberately trained on 20 images so that wolves always have snow in the background: the classifier then said "wolf" whenever there was snow, and the explanation let subjects detect it ([arXiv:1602.04938](https://arxiv.org/abs/1602.04938), Ribeiro et al., KDD 2016). The [NLP sentiment note](../../03-nlp/notes/06-sentiment-analysis.md) applies it to text.
+LIME fits a small linear model around one prediction by sampling perturbed copies of the row. Its best-known demonstration is a logistic regression on image features deliberately trained on 20 images so that wolves always have snow in the background: the classifier then said "wolf" whenever there was snow, and the experiment tests whether subjects can detect that from the explanations ([arXiv:1602.04938](https://arxiv.org/abs/1602.04938), Ribeiro et al., KDD 2016). The [NLP sentiment note](../../03-nlp/notes/06-sentiment-analysis.md) applies it to text.
 
-The same questions recur for language models. Huang et al. find ChatGPT's self-explanations for sentiment are about as faithful as occlusion and LIME on their measures, cheaper to produce, and that they disagree with those methods; they also question the measures ([arXiv:2310.11207](https://arxiv.org/abs/2310.11207), preprint). Grosse et al. attribute behaviour to training examples rather than features, scaling influence functions to a 52-billion-parameter model, and find that influence falls to near zero when the order of key phrases is flipped ([arXiv:2308.03296](https://arxiv.org/abs/2308.03296), preprint).
+The same questions recur for language models. Huang et al. find ChatGPT's self-explanations for sentiment are about as faithful as occlusion and LIME on their metrics, much cheaper to produce, and quite different on agreement metrics, which they take as a reason to rethink how such explanations are evaluated ([arXiv:2310.11207](https://arxiv.org/abs/2310.11207), preprint). Grosse et al. attribute behaviour to training examples rather than features, scaling influence functions to a 52-billion-parameter model, and find that influence falls to near zero when the order of key phrases is flipped ([arXiv:2308.03296](https://arxiv.org/abs/2308.03296), preprint).
 
 ## Does explaining help anyone?
 
@@ -258,4 +258,4 @@ So: test your explanation on the person it is for. Answer the contrastive questi
 
 ## Next
 
-The classical families are done. The [deep learning pillar](../../02-deep-learning/README.md) starts from the `MLPClassifier` of [supervised learning](02-supervised-learning.md#neural-networks-mlps) and builds up from backprop by hand.
+The classical families are done. The [deep learning pillar](../../02-deep-learning/README.md) starts from the `MLPClassifier` of [supervised learning](02-supervised-learning.md#neural-networks-multilayer-perceptrons) and builds up from backprop by hand.

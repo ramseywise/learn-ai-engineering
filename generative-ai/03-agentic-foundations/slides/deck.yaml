@@ -41,9 +41,9 @@ parts:
         lang: text
         code: |
           # weeks of cover = on hand / peak weekly sales
-          itemA: 3.0 weeks of cover, 2 to deliver -> ok
-          itemB: 1.1 weeks of cover, 2 to deliver -> ORDER NOW
-          itemC: 2.2 weeks of cover, 1 to deliver -> ok
+          itemA: 3.0 cover, 2 to deliver -> ok
+          itemB: 1.1 cover, 2 to deliver -> ORDER NOW
+          itemC: 2.2 cover, 1 to deliver -> ok
 
           proposed 300 of itemB:
             on arrival, stock is -80 at peak sales
@@ -260,13 +260,13 @@ parts:
         lang: text
         code: |
           ok
-          Error: core is full (limit 100). Move detail to the archive.
+          Error: core is full (limit 100). Move detail...
           ok, 1 passages in archive
           ok
 
           --- next Monday, new session ---
           <policy>Order just in time. Keep two weeks...</policy>
-          <supplier>Acme delivers itemB. See archive: ...</supplier>
+          <supplier>Acme delivers itemB. See...</supplier>
           [1 passages in archive, not shown]
 
           search 'lead time' -> ['3 March: Acme lead time ...']
@@ -508,7 +508,7 @@ parts:
         code: |
           level 1:    25 tokens  always loaded
           level 2:    66 tokens  when the task matches
-          level 3:  6500 tokens  only if the body points there
+          level 3:  6500 tokens  only if the body says
 
           50 skills, all loaded up front: 329,550 tokens
           50 skills, one activated:         1,316 tokens
@@ -580,7 +580,8 @@ parts:
           def gate(tool, args, approved_by=None):
               if RISK.get(tool) is None:
                   return "deny: unknown tool"
-              if tool == "place_order" and args["quantity"] > 500:
+              if (tool == "place_order"
+                  and args["quantity"] > 500):
                   return "deny: over the hard limit"
               if RISK[tool] == "high" and approved_by is None:
                   return "ask human"

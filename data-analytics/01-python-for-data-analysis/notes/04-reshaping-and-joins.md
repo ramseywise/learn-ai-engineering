@@ -174,14 +174,12 @@ print(len(orders.merge(customers, on="customer", how="left", validate="many_to_o
 try:
     orders.merge(promos, on="customer", how="left", validate="many_to_one")
 except pd.errors.MergeError as e:
-    print("MergeError:", str(e)[:70])
+    print("MergeError:", str(e)[:63])
 ```
 
 ```text
 11
-MergeError: Merge keys are not unique in right dataset; not a many-to-one merge
-
-D
+MergeError: Merge keys are not unique in right dataset; not a many-to-one m
 ```
 
 Make it a habit: state `validate`, compare the row count before and after, and compare one total. Then the join is checked. The same idea scales to any SQL you write in pillar 06.

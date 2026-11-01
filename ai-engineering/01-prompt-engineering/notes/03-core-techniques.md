@@ -14,7 +14,7 @@ sources:
   - https://arxiv.org/abs/2509.10414
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — Core Techniques
 
@@ -337,4 +337,36 @@ The same table has the counterexample. On MBPP Python, Reflexion scored **77.1% 
 
 ---
 
-→ Next: [04-controlling-output.md](04-controlling-output.md) — sampling, stop sequences, structured output, and getting exactly the shape you want.
+## Pitfalls
+
+- **Adding CoT everywhere.** Symptom: more tokens and no gain. Sprague et al. found 56.8 with CoT against 56.1 without across categories other than math, symbolic and logical reasoning, and Kojima saw CommonsenseQA fall from 68.8% to 64.6%. Fix: spend CoT on multi-step math and logic, and make it earn its cost elsewhere on your eval.
+- **Trusting a chain because it reads well.** Symptom: a sound-looking chain with a wrong answer, or the reverse, as Zhao et al. saw under distribution shift. Fix: put off-distribution cases in the eval.
+- **Happy path first, edge cases last.** Symptom: the book's apple-counting prompt answers a solvable question with "NA" because the examples ended in NA. Fix: shuffle, evaluate subsets and orders, or let DSPy choose against a metric.
+- **Examples that anchor the distribution.** Symptom: on uninformative input the model guesses the middle, 3, because you showed one example per rating, when the real answer is the common 5. Fix: sample from the true outcome distribution, and keep a few edge cases without overweighting them.
+- **Reflexion with self-written tests.** Symptom: worse than not reflecting. On MBPP Python it scored 77.1% against GPT-4's 80.1%, since 16.3% of solutions passing the agent's own tests were wrong. Fix: use an objective evaluator, and never use it for irreversible actions.
+- **`exec` on model output outside a sandbox.** Symptom: arbitrary code runs with your app's permissions. Fix: PAL's approach needs a sandbox, and today usually a code-execution tool.
+
+## Try it
+
+1. A task's per-sample accuracy is 60%. Assuming samples are independent, what does self-consistency with 3 and 5 votes give? What if per-sample accuracy is 40%?
+   <details><summary>Answer</summary>At 60%: 64.8% with 3 votes, 68.3% with 5. At 40%: 35.2% and 31.7%, so voting makes it worse. Voting amplifies whichever answer is already most likely, and real samples are correlated, so treat these as upper bounds on the gain.</details>
+2. Sort these into a technique from the "which technique when" table, and name the cost: (a) computing compound interest on invoices, (b) picking a support category with a house-specific label set, (c) answering about yesterday's outage.
+   <details><summary>Answer</summary>(a) PAL: generate code and run it, which needs a sandbox. (b) Few-shot: a longer prompt, and anchoring. (c) ReAct or tool use, because the model lacks fresh information. It costs a loop and tools. Generated knowledge wouldn't help, since it adds no facts the model lacks.</details>
+3. With three hand-written examples, how often do they land in accidentally ascending order, and how often is ten examples perfectly ordered in one given direction or the other? What should you still do at ten?
+   <details><summary>Answer</summary>Ascending is 1 in 3! = 1 in 6. Ascending or descending at ten is 2 in 10!, or 1 in 1,814,400, the note's 1 in 1.8 million. Still check: patterns that only mostly hold still sway the model, and hand-written lists tend to be systematically ordered rather than random.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Zero-shot or few-shot first? | Zero-shot, then add examples only when it fails in a way you can name. Few-shot still earns its place for non-obvious format, or a domain the model rarely saw, like Huyen's Ibis example. |
+| Do labels in few-shot examples have to be correct? | Less than you'd think. Min et al. found random labels still beat no examples, since label space, input distribution and format matter more. Don't take that as licence, though: correct labels aren't what's being tested there. |
+| How big are chain-of-thought's gains? | Large on math: Wei et al. took GSM8K from 17.9% to 56.9% with PaLM 540B. Near zero on commonsense: 74.8% to 75.7% in Sprague's runs, and small models scored below standard prompting. |
+| Why does "Let's think step by step" use two calls? | The first generates the reasoning, and the second appends an extraction prompt such as "Therefore, the answer (arabic numerals) is" to get a parseable answer. |
+| Why did Tree of Thoughts reach 74% on Game of 24 when 100 CoT samples got only 9%? | Most CoT failures come at the first step. Evaluating and backtracking fixes that, while sampling more chains doesn't. It needs a controller loop in code, so it is orchestration more than a prompt. |
+| You have invoice math failing under CoT. CoT, self-consistency or PAL? | PAL, in a sandbox. On GSM8K-Hard, plan plus Python reached 68.0% against 47.8% for CoT with Llama 3.1 70B, and code is exact where voting only reduces noise. |
+| When does Reflexion fail? | With a weak evaluator or irreversible actions. On MBPP Python, its self-written tests passed wrong solutions, so it stopped early and scored below no reflection. |
+
+## Next
+
+[Controlling output](04-controlling-output.md): sampling, stop sequences and structured output, to get the answer in exactly the shape your code expects.

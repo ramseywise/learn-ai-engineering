@@ -4,7 +4,7 @@ sources:
   - "Matplotlib documentation, Quick start guide"
   - "seaborn documentation, Overview of plotting functions"
   - "Knaflic, Storytelling with Data, Wiley, 2015"
-  - "VanderPlas, Python Data Science Handbook, O'Reilly, 2016"
+  - "VanderPlas, Python Data Science Handbook, O'Reilly, 2017"
   - "McKinney, Python for Data Analysis, O'Reilly"
   - "Wilke, Fundamentals of Data Visualization, O'Reilly, 2019"
 confidence: high
@@ -89,11 +89,12 @@ Spines go, except the baseline. The grid survives only as a horizontal hairline 
 ```python
 cs.apply()
 fig, ax = plt.subplots(figsize=(8, 4))
+nudge = {"email": 5, "referral": -6}                # two line ends land close together
 for channel in fernhill.CHANNELS:
     ax.plot(wide.index, wide[channel], color=cs.CHANNEL_COLOUR[channel],
             label=fernhill.LABELS[channel])
     ax.annotate(fernhill.LABELS[channel], (wide.index[-1], wide[channel].iloc[-1]),
-                xytext=(6, 0), textcoords="offset points", va="center",
+                xytext=(6, nudge.get(channel, 0)), textcoords="offset points", va="center",
                 color=cs.SECONDARY)                 # text wears ink, not the series colour
 ax.set_ylim(0)
 ax.margins(x=0)
@@ -216,7 +217,9 @@ fig, ax = plt.subplots(figsize=(8, 3.6))
 sns.boxplot(data=orders, x="value", y="category", hue="device", order=sorted_categories,
             hue_order=["mobile", "desktop"], palette=[cs.BLUE, cs.ORANGE], fliersize=1.5,
             log_scale=True, linewidth=1, gap=.15, ax=ax)
-ax.set_xlabel("Order value (£, log scale)")
+ax.set_xticks([10, 30, 100, 300, 1000], labels=["£10", "£30", "£100", "£300", "£1,000"])
+ax.minorticks_off()
+ax.set_xlabel("Order value (log scale)")
 ax.set_ylabel(None)
 ax.grid(axis="x")
 ax.grid(axis="y", visible=False)
@@ -233,7 +236,7 @@ Lighting    660.0   71.0   86.4  398.4
 Garden      557.0   59.8   69.5  337.7
 Textiles   1018.0   48.4   56.1  309.7
 Kitchen    1346.0   41.6   47.5  300.8
-saved viz-seaborn-order-value-distribution.png (36 KB)
+saved viz-seaborn-order-value-distribution.png (38 KB)
 ```
 
 ![Box plots of order value by category and device on a log scale](../../sources/images/viz-seaborn-order-value-distribution.png)

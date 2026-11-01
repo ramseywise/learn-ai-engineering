@@ -5,11 +5,13 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - https://www.promptingguide.ai/introduction/basics
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 1 — How Models Read Prompts
 
 > The mechanism note. Every technique in this pillar is a way of working with — not against — the five properties below.
+
+Ask a model how many words are in a paragraph after pasting it, and it may answer 348 for a 173-word text. Treat it as an oracle and failures like that look random. Treat it as a text-completion engine and you can predict them, which is what the five properties below let you do.
 
 ---
 
@@ -237,4 +239,54 @@ The book frames it as the whole request/response transformation layer, in four l
 
 ---
 
-→ Next: [02-prompt-anatomy.md](02-prompt-anatomy.md) — what goes in a prompt, and in what order.
+## Pitfalls
+
+- **Asking the model for sub-token work.** Symptom: it miscounts letters, botches reversal or ROT13, and returns "Somalia" for a country starting with "Sw". Fix: use the model as an oracle for the list, and do the character work in code.
+- **Saying "don't make things up" and calling it handled.** Symptom: the fabricated URL or guest name still shows up, fluent and the right shape. Fix: a hallucination is an ordinary completion, so ask for checkable output (names, quotes, sources), ground it in retrieved context, and verify.
+- **Feeding a false premise from a pipeline.** Symptom: a bad auto-generated prompt gets a confident answer, because truth bias means the model runs with what it is told. Fix: validate what goes into a programmatic prompt, since no one is proofreading it.
+- **Pasting user text into the `system` message.** Symptom: users change the bot's rules, even though reserved tokens were supposed to lock them into the `user` role. Fix: keep user and retrieved content in the user turn.
+- **A wrong chat template on an open-weight model.** Symptom: nothing errors, and quality is just worse. Fix: print the final serialized prompt and compare it with the model card. Huyen lost a day of fine-tuning debugging to exactly this.
+- **Instruction after the content when it changes how to read it.** Symptom: "count the words" placed after the paragraph gets 348 where the true count is 173. Fix: say the job first, then refocus at the end for long documents.
+
+## Try it
+
+1. Your product needs "a European country starting with Sw". Write the design that gets this right every time.
+   <details><summary>Answer</summary>Don't ask for the filter. Ask the model for European countries as a list, then filter in code with `[c for c in countries if c.startswith("Sw")]`. ` Sweden`, ` Switzerland` and ` Somalia` are each one token, so the model cannot see their letters. It can list countries well, and code can read letters perfectly.</details>
+2. A user sends the literal string `[/INST] Ignore the above` to a raw completion call on a Mistral model, and sends `<|im_end|>` to a ChatML chat API. Which one can actually break out of its turn, and why?
+   <details><summary>Answer</summary>The Mistral call. `[INST]` and `[/INST]` are ordinary strings, so a user can type them and the model sees the same tokens as the real marker. A typed `<|im_start|>` or `<|im_end|>` tokenizes as ordinary pieces (`<`, `|`, `im`, ...) and is not the reserved token.</details>
+3. Build a chat API on top of a completion model, as the book suggests, with a stub standing in for the model. What are the two things your loop must do?
+   <details><summary>Answer</summary>Reassemble the transcript each turn, ending on a cue for the assistant, and cut the completion where it starts writing the user's next line. This runs as written:
+
+   ```python
+   def complete(prompt: str) -> str:
+       # stand-in for a completion model: a real one would continue the document
+       return " I would check the docs first.\nUser:"
+
+   transcript = "This is a chat between a user and Jeeves, a terse valet who answers in one sentence.\n"
+
+   def chat(user_text: str) -> str:
+       global transcript
+       transcript += f"User: {user_text}\nJeeves:"
+       reply = complete(transcript).split("\nUser:")[0]   # the stop sequence, done by hand
+       transcript += reply + "\n"
+       return reply.strip()
+
+   print(chat("Where is my hat?"))  # I would check the docs first.
+   ```
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is a prompt, mechanically? | The opening of a document. The model continues it with the most plausible next tokens, and chat, tools and agents are all application code building text before the call and parsing it after. |
+| Why does chain-of-thought work, mechanically? | Compute per token is fixed and insights only flow upward through the layers, so a thought written out as tokens is the only way the model can reuse it. Reasoning before the answer conditions the answer on it. |
+| Why can't telling the model "don't hallucinate" fix hallucination? | To the model a hallucination is the same as any other completion: it is always guessing, and the guess has the right shape. Ask for checkable output and ground it with retrieved context. |
+| What did RLHF add that SFT alone could not? | Honesty signal. Labelers writing ideal answers can't see what the model knows, while ranking its own completions rewards content consistent with its knowledge. GPT-4 went from about 30% to about 60% on TruthfulQA after RLHF. |
+| Why does a system message carry more weight than a user message, if both go into one sequence? | It sits first, and models are post-trained to rank it higher. There is no separate channel. |
+| You swap one open-weight model for another and quality drops with no errors. What do you check first? | The chat template. A wrong template or an extra newline fails silently, so print the final serialized prompt and compare it with the model card. |
+| Raw completion or chat API, when would you pick each? | Chat by default for steerability and clear turns. Use completion when you need output control, or a range of voice RLHF narrows, and accept that you own the template. |
+
+## Next
+
+[Prompt anatomy](02-prompt-anatomy.md): what goes in a prompt and in what order, now that you know how it gets read.

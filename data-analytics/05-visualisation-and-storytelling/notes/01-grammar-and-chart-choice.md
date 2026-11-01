@@ -4,6 +4,8 @@ sources:
   - "Anscombe, Graphs in Statistical Analysis, The American Statistician, 1973"
   - "Cleveland & McGill, Graphical Perception, JASA, 1984"
   - "Wilkinson, The Grammar of Graphics, Springer, 1999"
+  - "Healy, Data Visualization: A Practical Introduction, Princeton University Press, 2018"
+  - "Wickham, Navarro & Pedersen, ggplot2: Elegant Graphics for Data Analysis, 3rd ed."
   - "Wickham, A Layered Grammar of Graphics, JCGS, 2010"
   - "Satyanarayan et al., Vega-Lite, IEEE TVCG, 2017"
   - "Heer & Bostock, Crowdsourcing Graphical Perception, CHI, 2010"
@@ -121,7 +123,7 @@ Set I is the picture the summary implies. Set II is a clean curve that a line sh
 
 ## A chart is a set of independent decisions
 
-The instinct is to think in chart types: a line chart, a stacked area, a pie. Chart types are a menu, and a menu limits you to what is on it. Leland Wilkinson's *The Grammar of Graphics* ([Springer, 1999](https://link.springer.com/book/10.1007/0-387-28695-0)) replaced the menu with a grammar: a statistical graphic is a composition of independent parts, the way a sentence is a composition of parts of speech. Hadley Wickham turned this into a practical system for ggplot2, built around layers ([Wickham, JCGS 2010](https://vita.had.co.nz/papers/layered-grammar.html)). Vega-Lite brought the same idea to JSON and added interaction ([Satyanarayan et al., IEEE TVCG 2017](https://idl.uw.edu/papers/vega-lite)), and Altair is that grammar with a Python API.
+The instinct is to think in chart types: a line chart, a stacked area, a pie. Chart types are a menu, and a menu limits you to what is on it. Leland Wilkinson's *The Grammar of Graphics* ([Springer, 1999; 2nd ed. 2005](https://link.springer.com/book/10.1007/0-387-28695-0)) replaced the menu with a grammar: a statistical graphic is a composition of independent parts, the way a sentence is a composition of parts of speech. Hadley Wickham turned this into a practical system for ggplot2, built around layers ([Wickham, JCGS 2010](https://vita.had.co.nz/papers/layered-grammar.html)). Vega-Lite brought the same idea to JSON and added interaction ([Satyanarayan et al., IEEE TVCG 2017](https://idl.uw.edu/papers/vega-lite)), and Altair is that grammar with a Python API. To see the layers built up by hand, Healy teaches them step by step in R ([Healy, Princeton UP 2018](https://socviz.co/)), and the [ggplot2 book](https://ggplot2-book.org/) is the full reference.
 
 The parts are these.
 

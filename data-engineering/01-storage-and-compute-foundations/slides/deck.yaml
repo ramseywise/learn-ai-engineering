@@ -96,7 +96,7 @@ parts:
         rows:
           - [Arrival order, "7.7 MB", "1,033 KB", "2,111 KB"]
           - ["Zone, then payment", "9.0 MB", "4.8 KB", "3,575 KB"]
-        highlight: 1
+        highlight: [1]
         takeaway: Only one sort order can be physical, so choose it from your common filters and compare the whole file, not one column.
         source: notes/01-encoding-and-files.md
         notes: >-
@@ -175,13 +175,13 @@ parts:
         recall: Which of these does a row store with narrow tables fail to get?
         cards:
           - title: Read less
-            text: "A query names 4 or 5 of a fact table's 100 columns."
+            body: "A query names 4 or 5 of a fact table's 100 columns."
           - title: Compress runs
-            text: "Sorted, zone falls from 956,362 runs to 260."
+            body: "Sorted, zone falls from 956,362 runs to 260."
           - title: Bitmaps
-            text: "IN becomes OR and AND works bit by bit."
+            body: "IN becomes OR and AND works bit by bit."
           - title: Vectors
-            text: "Loops over 1,024 values fit in cache and use SIMD."
+            body: "Loops over 1,024 values fit in cache and use SIMD."
         takeaway: Column stores read only named columns, compress similar values, filter with bitmaps, and process batches in tight loops.
         source: notes/02-row-and-column-stores.md
         notes: >-
@@ -320,7 +320,7 @@ parts:
           - [GraphX, "128", "419 s"]
           - [GraphLab, "128", "249 s"]
           - ["Single thread, SSD", "1", "300 s"]
-        highlight: 3
+        highlight: [3]
         takeaway: Good scaling can hide large overhead, so measure absolute time against a single thread before trusting a scaling curve.
         source: notes/03-distributed-compute.md
         notes: >-
@@ -367,7 +367,7 @@ parts:
         rows:
           - ["hash mod N", "91.0%"]
           - ["1,024 fixed partitions", "9.8%"]
-        highlight: 1
+        highlight: [1]
         takeaway: Hash mod N moves most keys on any resize, so systems keep many fixed partitions and move only whole ones to the new node.
         source: notes/04-partitioning-and-replication.md
         notes: >-
@@ -408,11 +408,11 @@ parts:
         recall: What fixes monotonic read violations?
         cards:
           - title: Read your writes
-            text: "You save something, then read a replica that lacks it."
+            body: "You save something, then read a replica that lacks it."
           - title: Monotonic reads
-            text: "Nine comments, then seven: replicas with different lag. Pin users by hash."
+            body: "Nine comments, then seven: replicas with different lag. Pin users by hash."
           - title: Consistent prefix
-            text: "Answers before questions: partitions have no global order."
+            body: "Answers before questions: partitions have no global order."
         takeaway: Read-your-writes, monotonic reads and consistent prefix each fail under replica lag, and they appear as flickering dashboards.
         source: notes/04-partitioning-and-replication.md
         notes: >-
@@ -440,20 +440,35 @@ parts:
         title: What to remember
         cards:
           - title: State the schema
-            text: "On first read of any CSV, then convert."
+            body: "On first read of any CSV, then convert."
           - title: Sort for your filter
-            text: "Pushdown needs physical order."
+            body: "Pushdown needs physical order."
           - title: Measure one machine
-            text: "What a query reads after pruning decides."
+            body: "What a query reads after pruning decides."
           - title: Partition for backfills
-            text: "Sort for filters, and avoid small files."
+            body: "Sort for filters, and avoid small files."
           - title: Assume replicas lag
-            text: "Extract to a watermark, not to now."
+            body: "Extract to a watermark, not to now."
           - title: Read the plan
-            text: "Find the shuffle and the pruning first."
-        bullets:
-          - "**Next:** [02, ingest and modelling](../02-ingest-and-modelling/README.md)"
+            body: "Find the shuffle and the pruning first."
         takeaway: Most data engineering debates reduce to layout, pruning, shuffles and lag, so learn these mechanisms and measure before you decide.
         source: notes/04-partitioning-and-replication.md
         notes: >-
           From here, pillar 2 takes data out of sources and shapes it for questions, relying on everything we learned about files and lag.
+
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillar builds on these mechanisms first?
+        bullets:
+          - "**02 Ingest and modelling:** take data out of sources and shape it for questions."
+          - "**03 Transform and orchestrate:** idempotent builds use the partitions chosen here."
+          - "**Run the code:** one script per chapter in `practice/`."
+          - "**Read:** Kleppmann, DDIA, ch. 3 to 6 and 10; Abadi 2008; COST 2015."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: Each layer here fails silently, so later stages must not trust it blindly.
+        takeaway: Later pillars rely on these mechanisms, starting with how to extract from a lagging source and model what arrives.
+        source: notes/04-partitioning-and-replication.md
+        notes: >-
+          Pillar two starts at the source system, where replica lag and log positions become your problem.

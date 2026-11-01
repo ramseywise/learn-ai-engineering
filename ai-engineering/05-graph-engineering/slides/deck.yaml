@@ -1,147 +1,197 @@
-# Graph Engineering — lecture deck. Built from notes/01–13 and the rules of thumb in README.md.
-# Build:  make slides PILLAR=05-graph-engineering [PREVIEW=1]
-# Spec:   .claude/skills/slides/references/deck-spec.md
-
+# Lecture deck for ai-engineering/05-graph-engineering, notes 01-13.
+# Build: make slides PILLAR=05-graph-engineering STRICT=1 PREVIEW=1
+# Running examples: one review graph (thread review-42) for parts 1-3, the SEC filings graph
+# from the Neo4j course for part 4, and a swarm writing to a shared graph for part 5.
 deck:
   title: Graph Engineering
-  subtitle: Designing the topology of multi-agent systems, and the graphs they remember with
+  subtitle: Which nodes exist, which transitions are permitted, what state they carry
   tagline: |-
-    Agent graphs · Production · Knowledge graphs · Shared memory
+    One review loop that outgrows itself: when to add a node, how to run the graph, and how it fails.
+    Then the other kind of graph, and the point where the two meet.
   reference: "Notes: ai-engineering/05-graph-engineering"
   output: graph-engineering.pptx
   notes: >-
-    Two senses of "graph" run through this talk. Parts 1–2 are agent graphs: nodes are units of
-    computation and edges are permitted transitions. Part 3 is knowledge graphs: nodes are entities
-    and edges are typed relationships. Part 4 is where they meet, when a knowledge graph becomes the
-    shared memory a swarm of agents coordinates through.
-
+    Pillar five. The loop from last time is good at one job. Today we take a review loop, ask when it has
+    truly outgrown itself, build the graph it needs, and then watch that graph fail in production. The second half
+    turns to knowledge graphs, a different thing with the same name, and ends where the two join.
 parts:
-# ─── Part 1 ──────────────────────────────────────────────────────────────
-  - title: "Agent graphs: foundations"
-    summary: Graph vs. loop · Primitives · State and reducers · Durable execution
+  - title: Do you need a graph at all
+    summary: Loop or graph · Signals that justify a node · What fan-out costs
+    divider: true
+    agenda: true
     notes: >-
-      Notes 01–04. When a loop becomes a graph, what a graph is made of, how nodes share state, and
-      how a graph pauses and resumes.
+      We begin with the decision, because the most expensive mistake in this pillar is building a graph you did
+      not need. By the end of this part you should be able to say no to one, with numbers.
     slides:
       - layout: statement
-        title: The definition
+        kicker: The problem
+        title: Our review loop keeps failing. Is it time for a graph?
         statement: Graph engineering is designing which nodes exist, which transitions are permitted, and what state they carry.
         attribution: "\"A loop is just a directed, cyclic graph.\" (LangChain, 3 years of LangGraph)"
+        takeaway: A loop is already a directed cyclic graph, so moving to a graph means adding nodes and edges, each with a price.
+        recall: Why is graph versus loop a difference of degree and not of kind?
         source: notes/01-graph-vs-loop.md
         notes: >-
-          Loop engineering asks what cycle re-prompts this agent and when it quits. Graph engineering
-          asks who may hand work to whom, under what condition, carrying what state. A loop is a graph
-          with one node and an edge back to itself, so this layer contains loop engineering rather
-          than replacing it. TrueFoundry calls them complementary layers.
-
+          Picture a review loop. It drafts a change summary, checks it, and tries again. It keeps passing bad work,
+          and someone on the team says we need a multi-agent graph. Before agreeing, notice what they are proposing.
+          The loop is already a graph with one cycle. The real question is which extra nodes earn their cost.
       - layout: image
-        title: Workflows are graphs; agents are loops inside them
-        kicker: Anthropic, Building Effective Agents (2024)
+        kicker: Two shapes
+        title: Workflows are graphs, and agents are loops inside them
         image: ../sources/images/langchain-langgraph-docs-workflows-vs-agent.png
-        caption: "LangGraph docs, \"Workflows and agents\", after Anthropic (2024)"
+        caption: LangGraph docs, "Workflows and agents", after Anthropic (2024)
         bullets:
           - "**Workflow:** predefined code paths"
           - "**Agent:** the model directs its own process"
-          - A graph writes the workflow down
-          - "Most production graphs: fixed shapes with **one or two agent nodes** inside"
+          - Production graphs are mostly fixed shapes with **one or two agent nodes**
+          - Production agents retry and revise, so they **need cycles**, which a DAG forbids
+        takeaway: Graph engineering for agents means cyclic graphs, because retrying and revising need a way back.
+        recall: Why does the Airflow-style DAG model break when you apply it to agents?
         source: notes/01-graph-vs-loop.md
         notes: >-
-          Every box on the left is a graph you write down in advance: prompt chaining,
-          parallelisation, orchestrator-worker, evaluator-optimizer, routing. The box on the right is
-          a loop. A graph is also how you mix the two: fixed paths where you know the route, an agent
-          node where you don't.
-
-      - layout: compare
-        title: Each layer fails differently
-        left:
-          title: Loop
-          bullets:
-            - Doesn't converge
-            - Spins or quits early
-            - Games the scorekeeper
-          tag: Fix the loop first
-        right:
-          title: Graph
-          bullets:
-            - Mis-routes
-            - Deadlocks at a join
-            - Double-writes shared state
-            - Loses accountability for a decision
-          tag: "Production agents need cycles: not DAGs"
-        takeaway: A graph of unreliable loops inherits every loop failure, then adds coordination failures.
-        source: notes/01-graph-vs-loop.md
-        notes: >-
-          LangChain's most load-bearing lesson: production agents need cycles, for retrying failed
-          tool calls, asking for missing information, revising after validation. An Airflow-style DAG
-          is acyclic by definition, so it is a workflow engine, not an agent framework. Static edges
-          are not enough either: the set of nodes is often only known at runtime, which is what Send
-          is for.
-
+          On the left are the workflow shapes you have seen, on the right the agent loop. Most real systems put a
+          couple of those loops inside a fixed shape. One lesson from LangChain matters here: an agent must go from A to B,
+          find B failed, and come back. A DAG cannot say that. Anything that forbids cycles is a workflow engine, not an agent framework.
       - layout: table
+        kicker: The test
         title: Five signals that justify a node
         lead: Start with a loop. Add a node only when one of these forces it.
         header: [Signal, Why the loop fails]
-        widths: [3, 5]
         rows:
           - [Distinct specialties, One agent carries each role's baggage into the next]
-          - ["Parallel fan-out + join", A loop is sequential; wall-clock cost is unnecessary]
+          - [Parallel fan-out and join, "A loop is sequential, so wall-clock cost is unnecessary"]
           - [Per-step model or tool, One agent enforces one model and one tool policy]
           - [Auditable control flow, Emergent loop paths are hard to reconstruct]
           - [Overloaded verifier, A dedicated reviewer removes criteria confusion]
-        highlight: [4]
-        takeaway: Escalation is a cost you justify, not a maturity level you graduate to.
+        bold_first: true
+        takeaway: Escalating to a graph is a cost you justify with a specific signal, and not a maturity level you graduate to.
+        recall: Which five signals can justify adding a node to a loop?
         source: notes/01-graph-vs-loop.md
         notes: >-
-          Each signal names something a single loop structurally cannot do. The last one is
-          highlighted because it is the one most often misdiagnosed as needing a whole graph.
+          Run our review loop against this list. Does it need parallel work? Different models? If nothing applies, stop.
+          And beware the name. Raieli and Iuculano's travel planner has four agents, but a controller calls them in a fixed order
+          and no edge is conditional. That is a pipeline, and it is better for being one.
+      - layout: code
+        kicker: Worked example
+        title: Split the verifier before you split the system
+        lang: python
+        code: |-
+          # sketch: before, one call judges everything
+          ok = llm_judge(draft, "correct, safe, complete?")
 
+          # after: one check per criterion, in the same loop
+          checks = {
+              "tests":  run_tests(),            # code
+              "schema": valid_schema(draft),    # code
+              "safety": llm_judge(draft, RULE), # model
+          }
+          failing = [k for k, ok in checks.items()
+                     if not ok]
+        bullets:
+          - One check judging four things **does all four badly**
+          - Turn what you can into code
+          - Measure again; if the pass rate recovers, **ship the loop**
+          - If one criterion still fails, it has earned its own node
+        takeaway: The most common "we need a graph" is really an overloaded verifier, which you can split inside the existing loop.
+        recall: What should you try before adding nodes when a loop keeps passing bad work?
+        source: notes/06-when-not-to-build-a-graph.md
+        notes: >-
+          This is what I would do with our review loop first. One judge is being asked about correctness, style, safety
+          and completeness at once. Split it, make the mechanical parts code, and measure. The sketch is a shape and not a
+          library. Either the loop recovers, or you now know exactly which node to add.
+      - layout: image
+        kicker: The evidence
+        title: Adding agents averaged out to nothing
+        image: ../sources/images/kim-2025-scaling-agent-systems-fig2.png
+        caption: Kim et al., Towards a Science of Scaling Agent Systems (2025), Fig. 2
+        bullets:
+          - "260 configurations, six benchmarks, compute matched"
+          - "Finance Agent: centralized team **+80.8%**; PlanCraft: every variant lost **39–70%**"
+          - "Mean change **−0.3%**, 95% CI −58.7% to +77.2%"
+          - "Above about **45%** single-agent score, more agents had negative returns"
+        takeaway: Across 260 controlled configurations the mean multi-agent gain was −0.3%, so the task shape decides.
+        recall: In Kim et al., what separated the benchmark that gained from the one that lost?
+        source: notes/06-when-not-to-build-a-graph.md
+        notes: >-
+          Kim and colleagues matched compute and ran 260 configurations. Finance Agent splits into parallel subtasks, and a centralized
+          team scored 80.8 percent higher. In PlanCraft each step constrains the next, and every variant lost. The mean is close to zero
+          with an enormous interval. So check how your task decomposes, and whether a single agent already does well.
+      - layout: cards
+        kicker: The bill
+        title: Fan-out costs tokens whether it helps or not
+        cards:
+          - title: Anthropic's research system
+            body: Agents use about **4×** a chat's tokens; multi-agent systems about **15×**
+          - title: Controlled runs
+            body: Kim et al. saw **1.6–6.2×** a single agent's tokens at matched performance
+          - title: Vendor estimate
+            body: About **3×** tokens per cycle, break-even near a **50%** pass rate (flowtivity); test it
+          - title: Poor fit
+            accent: D4621A
+            body: Every agent needs the same context, or the agents depend on each other
+        takeaway: Fan-out pays only for high-value work whose branches are truly independent, so measure your own break-even.
+        recall: When does a fan-out graph fail to pay for its extra tokens?
+        source: notes/06-when-not-to-build-a-graph.md
+        notes: >-
+          Three sources and one shape. The first figure is first party, the second controlled, the third a vendor estimate, so treat
+          that one as something to test. The logic is sound: when most cycles fail and get redone, you pay fan-out for work you throw away.
+          Run the same tasks both ways and record tokens, wall-clock time and pass rate.
       - layout: steps
-        title: The 30-second decision tree
-        axis: ask in order
+        kicker: Monday morning
+        title: If you do need one, grow it in this order
+        axis: adopt incrementally
         steps:
-          - {title: "Specialties?", text: "Does the work split into distinct specialties with different needs?"}
-          - {title: "Parallelism?", text: "Do you need true parallelism: fan out, then join?"}
-          - {title: "Variation?", text: "Do steps need different models or tools, or auditable branching?"}
-          - {title: "Verifier?", text: "Is one verifier failing because it judges too many criteria at once?"}
-          - {title: "No to all", text: "**Strengthen the verifier and ship the loop.**", n: "★", accent: "D4621A"}
-        takeaway: The most common "we need a graph" is really an overloaded verifier.
-        source: notes/01-graph-vs-loop.md
+          - {title: Bottleneck, text: "Write down the workflow and where it stalls"}
+          - {title: Real edges, text: "Mark each step: reads the previous output, or incidental"}
+          - {title: 3–5 nodes, text: "Sketch a few. Not twelve"}
+          - {title: Baseline, text: "Loop against graph: tokens, wall-clock, pass rate"}
+          - {title: One at a time, text: "Each node justified by a signal", accent: D4621A}
+        takeaway: Adopt a graph by finding real edges, sketching 3 to 5 nodes, and adding nodes one at a time against a baseline.
+        recall: What is the adoption order for moving a loop to a graph?
+        source: notes/06-when-not-to-build-a-graph.md
         notes: >-
-          Yes to any question means add a node. The last clause is the one people skip. Splitting the
-          verifier is far cheaper than splitting the system; note 06 develops the negative case.
+          Say our review loop did earn a graph, because it needs one reviewer per changed file. This order keeps you honest. Every node
+          brings a prompt to maintain, state to synchronise and another place a wrong answer could come from. Next we build the
+          smallest version, and see what each primitive buys.
 
-      - layout: table
-        title: Two things called "graph"
-        header: ["", Agent graph (Parts 1–2), Knowledge graph (Part 3)]
-        widths: [2.2, 4, 4]
-        rows:
-          - [Nodes are, Units of computation, Entities]
-          - [Edges are, Permitted transitions, Typed relationships]
-          - [The graph is, Execution topology, Data structure for retrieval]
-          - [Runtime concern, "Routing, state, cost", "Traversal, entity resolution"]
-        takeaway: They meet in Part 4, where the knowledge graph is the shared state agents coordinate through.
-        source: notes/01-graph-vs-loop.md
-        notes: Keep these apart for the next hour. The word means different things in each half.
-
-      - layout: table
-        title: Spend agency per node
-        header: [Node kind, Purpose, Determinism, Cost]
-        widths: [2.6, 4, 2.4, 2.4]
-        rows:
-          - [Deterministic function, "Parsing, validation, API calls", Total, Compute only]
-          - [Router, Classify and dispatch, Medium, One call at most]
-          - [Single LLM call, "Summarise, extract, draft", Medium, One call]
-          - [Agent, Open-ended reasoning with a tool loop, Low, "Many, variable"]
-          - [Human checkpoint, Approval before a consequential act, External, Latency]
-        highlight: [3]
-        takeaway: Code where you can, one LLM call where you must, an agent only where the path is unknown.
+  - title: Building the first graph
+    summary: Nodes and edges · State and reducers · Pausing for a human
+    divider: true
+    agenda: true
+    notes: >-
+      Now we build it. Three problems drive this part. The checker must stay independent. Many reviewers must write
+      at once without losing work. And the run must be able to stop, wait for a person and come back.
+    slides:
+      - layout: statement
+        kicker: The problem
+        title: A loop can't do what our reviewer now needs
+        statement: We need an independent checker, one reviewer per changed file, and a human before publish. A single loop expresses none of them cleanly.
+        takeaway: A graph earns its place when work needs independent checking, parallel workers or a pause, which one loop can't express.
+        recall: Which three needs push the review example from a loop to a graph?
         source: notes/02-graph-primitives.md
         notes: >-
-          Every node is a choice of how much judgement to buy. Agent nodes are the most expensive and
-          least predictable, so they go only where the route really can't be written down.
-
+          These three needs set the agenda. The checker gives us nodes and edges. The per-file reviewers give us state and reducers.
+          The human before publish gives us checkpoints. We will add them one at a time, to the same review graph.
+      - layout: image
+        kicker: Nodes
+        title: Spend agency per node, as if it costs money
+        image: ../sources/images/learning-langchain-fig5-1.png
+        caption: Oshin & Campos, Learning LangChain (O'Reilly, 2025), Fig. 5-1
+        bullets:
+          - "**Code:** parsing, validation, API calls"
+          - "**Router or one LLM call:** classify, summarise, draft"
+          - "**Agent:** open-ended reasoning, many variable calls"
+          - "**Human checkpoint:** approval, paid for in latency"
+        takeaway: Use code where you can, one LLM call where you must, and an agent only where the path is unknown.
+        recall: How do you decide the kind of each node in a graph?
+        source: notes/02-graph-primitives.md
+        notes: >-
+          The figure orders architectures by who decides: the output, the next step, the available steps. Moving down gives the model
+          more freedom and costs you predictability. In our review graph, parsing the diff is code, summarising a file
+          is one call, and almost nothing needs to be a full agent.
       - layout: code
-        title: The minimal graph program
+        kicker: Edges
+        title: The whole program fits on a slide
         lang: python
         code: |-
           builder = StateGraph(MessagesState)
@@ -149,376 +199,443 @@ parts:
           builder.add_node("node_b", node_b)
           builder.add_edge(START, "node_a")
           builder.add_conditional_edges("node_a", router)
-          builder.add_edge("node_b", "node_a")  # the cycle
+          builder.add_edge("node_b", "node_a")  # cycle
           graph = builder.compile()
 
           def router(state) -> str:
               # ordinary code over state
-              return "node_b" if needs_more(state) else END
+              if needs_more(state):
+                  return "node_b"
+              return END
         bullets:
-          - "**Nodes:** read state, return only changed keys"
-          - "**Router:** plain code returning the next node's name"
-          - "**Conditional edges** give branching, error paths, gates, early exit, cycles"
-          - Compile, then invoke with initial state
+          - "**Nodes** read state and return only changed keys"
+          - "**The router** is plain code naming the next node"
+          - "**Conditional edges** give branches, gates, cycles and early exit"
+        takeaway: A graph program is nodes that return changed keys, plus routers that are ordinary code choosing the next node.
+        recall: What does a router return, and what do nodes return?
         source: notes/02-graph-primitives.md
         notes: >-
-          This is LangGraph, the reference implementation. Google ADK offers workflow agents
-          (sequential, parallel, loop) as composable topology; Claude Code offers subagents as nodes
-          and hooks as deterministic edges.
-
+          Nothing here is an LLM until you put one in a node. The router is a plain function. That matters, since routing you can read is
+          routing you can test. The last edge makes the cycle, and the rest of this part fills in what state carries.
       - layout: flow
-        title: "The highest-yield first graph: generate-then-verify"
+        kicker: The first shape
+        title: The highest-yield first graph is generate, then verify
         steps:
           - {label: Generate, sub: produces a draft}
-          - {label: Verify, sub: "independent check: tests, schema, rubric"}
+          - {label: Verify, sub: "tests, schema, rubric"}
           - {label: Done, sub: passes or attempts exhausted}
         loop: back-edge with the critique, bounded by an attempt counter
         bullets:
           - The verifier sees the task and the output, **never the generator's reasoning**
           - The back-edge carries the critique into the next attempt
+        takeaway: A verifier that sees only the task and the output stays independent, and an attempt counter bounds the back-edge.
+        recall: What must the verifier not see, and what limits the cycle?
         source: notes/02-graph-primitives.md
         notes: >-
-          Two nodes and a bounded back-edge. It is the evaluator-optimizer workflow from Anthropic's
-          catalogue, and it is where the lab series starts. A verifier that reads the generator's
-          reasoning tends to agree with it.
-
+          This is where our review graph starts: two nodes and a bounded back-edge. Keep two things straight. The critique travels
+          back to the generator, but the reasoning never travels forward to the verifier. If it did, the verifier would inherit the
+          framing and find the argument convincing.
       - layout: code
-        title: Typed state with a reducer
+        kicker: State
+        title: Every key has one writer or a reducer
         lang: python
         code: |-
           class ReviewState(TypedDict):
-              task: str          # set once, read by all
-              draft: str         # one writer: generator
-              findings: Annotated[list[str], operator.add]
-                                 # many writers: reducer
-              attempts: int      # the bound on the cycle
+              task: str     # set once, read by all
+              draft: str    # one writer: generator
+              findings: Annotated[list[str],
+                                  operator.add]
+                            # many writers: reducer
+              attempts: int # the bound on the cycle
         bullets:
-          - Every key has **one writer or a reducer**
           - "`operator.add` concatenates parallel writes"
           - Custom reducers can dedupe
           - "`attempts` lives in state so the router can bound the cycle"
+        takeaway: Decide up front who writes each state key, and give any key with several writers a reducer.
+        recall: What two options make a shared state key safe?
         source: notes/03-state-and-reducers.md
         notes: >-
-          State is the contract between nodes. A reducer is the merge function the framework applies
-          when several nodes write the same key in one step. Without one, the second write either
-          raises or silently wins.
-
+          State is what the nodes coordinate through, so the type is the design. Read this class as a writing policy. The task is set once.
+          The draft belongs to the generator. Findings have many writers, so they need a reducer. And the counter is here
+          because a router can only read what is in state.
       - layout: image
+        kicker: What breaks
         title: Parallel writes without a reducer fail
         image: ../sources/images/langchain-langgraph-docs-parallel-super-step.png
         caption: LangGraph docs (LangChain), via sources/langgraph_extended.pptx
         bullets:
-          - "Branches A and B run in **one super-step**"
-          - No checkpoint between them
-          - Both write one key with no reducer → **`InvalidUpdateError`**
+          - Branches A and B run in **one super-step**
+          - No checkpoint falls between them
+          - Same key, no reducer gives **`InvalidUpdateError`**
           - Outside LangGraph the same race silently loses work
-        takeaway: Every shared key has one writer or a reducer.
+        takeaway: Branches in one super-step that write one key with no reducer raise an error in LangGraph and lose work elsewhere.
+        recall: What happens when two parallel branches write one key with no reducer?
         source: notes/03-state-and-reducers.md
         notes: >-
-          Super-steps are the unit of execution: every node scheduled together runs, then the
-          checkpoint is written. Because there is no checkpoint between parallel branches, the
-          framework has to merge their writes, and that merge is the reducer.
-
+          With a reducer, the checkpoint in the figure holds both writes merged before C runs. Without one, LangGraph raises an error and
+          you are lucky, because you find out. A hand-rolled system has the same race and no error. You just lose a reviewer's findings
+          on the occasional run, and nobody notices.
       - layout: code
-        title: "Dynamic fan-out: the Send API"
+        kicker: Fan-out
+        title: One reviewer per changed file, decided at runtime
         lang: python
         code: |-
           def fan_out(state) -> list[Send]:
               return [Send("review_file",
-                           {"path": p, "task": state["task"]})
+                           {"path": p,
+                            "task": state["task"]})
                       for p in state["changed_files"]]
 
           builder.add_conditional_edges(
               "plan", fan_out, ["review_file"])
           builder.add_edge("review_file", "synthesize")
         bullets:
-          - One worker per item, decided **at runtime**
           - Each `Send` carries its own private input
           - Results merge through the reducer
           - "**Cap N**: unbounded fan-out is a cost bug"
-        takeaway: Does the next step read the previous step's output? If not, fan out.
+        takeaway: To tell a real edge from an incidental one, ask whether the next step reads the previous output. If not, fan out.
+        recall: What is the true-dependency test for deciding whether steps can run in parallel?
         source: notes/03-state-and-reducers.md
         notes: >-
-          Static edges can't express "one reviewer per changed file". Send can. The cap matters: Send
-          over an input with no bound is the unbounded fan-out failure from note 07.
-          Note 03 has the runnable program with a MAX_FANOUT constant and the reducer-removal experiment.
-
+          We do not know how many files changed until the run begins, so static edges cannot express this. Send decides at runtime. Files do
+          not read each other's reviews, so those edges were incidental and can fan out. The synthesis does read them, so that edge is real.
+      - layout: image
+        kicker: Pausing
+        title: Checkpoints give you pause, resume and time travel
+        image: ../sources/images/langchain-langgraph-docs-checkpoints-and-threads.png
+        caption: LangGraph docs, persistence (LangChain), via sources/langgraph_extended.pptx
+        bullets:
+          - A **checkpoint** after every super-step
+          - A **thread** collects them under one `thread_id`
+          - Human-in-the-loop, crash resume and time travel share one mechanism
+        takeaway: Saving state after every super-step gives one mechanism for human approval, crash recovery and time travel.
+        recall: What single mechanism underlies human-in-the-loop, resume and time travel?
+        source: notes/04-durable-execution-and-interrupts.md
+        notes: >-
+          A loop lives in a call stack, so when the process dies, the state dies with it. Writing state out after each super-step solves
+          three problems at once. Choose the thread ID deliberately, because it decides what counts as the same conversation. Ours is review-42.
       - layout: code
-        title: Checkpoints make a graph pausable
+        kicker: Worked example
+        title: Publishing waits for a person
         lang: python
         code: |-
           graph = builder.compile(checkpointer=saver)
-          config = {"configurable": {"thread_id": "review-42"}}
+          config = {"configurable":
+                    {"thread_id": "review-42"}}
 
           def publish(state):
-              decision = interrupt({"draft": state["draft"]})
+              decision = interrupt(
+                  {"draft": state["draft"]})
               if decision != "approve":
                   return {"status": "rejected"}
-              send_to_cms(state["draft"])   # after the interrupt
+              send_to_cms(state["draft"])  # after
               return {"status": "published"}
 
-          graph.invoke({"task": "..."}, config)       # pauses
+          graph.invoke({"task": "..."}, config)  # pauses
           graph.invoke(Command(resume="approve"), config)
         bullets:
-          - "**Checkpoint** after every super-step"
-          - "**Thread** = `thread_id`; pick it deliberately"
-          - Human-in-the-loop, crash resume, time travel
+          - "`interrupt()` passes the human what they need"
           - "Gotcha: the node **reruns from line 1** on resume"
-        takeaway: If a run can outlive its process, compile with a persistent checkpointer.
+          - So keep side effects **after** the interrupt
+          - "`interrupt_before/after` are for debugging"
+        takeaway: On resume a node reruns from its first line, so any side effect belongs after the interrupt.
+        recall: Where must a side effect sit relative to interrupt(), and why?
         source: notes/04-durable-execution-and-interrupts.md
         notes: >-
-          A loop keeps progress on the call stack, so it has nowhere to put itself while it waits.
-          A checkpointer saves the full state after every step. While paused, get_state reads it and
-          update_state edits it, so the human can correct the work, not just approve it. Anything
-          before interrupt() runs twice, so keep side effects after it or make them idempotent.
-          InMemorySaver is for tests only.
-
-      - layout: image
-        title: Static breakpoints vs. interrupt()
-        image: ../sources/images/langchain-langgraph-docs-interrupt-before-after.png
-        caption: LangGraph docs, human-in-the-loop (LangChain)
-        bullets:
-          - "`interrupt_before/after`: node boundaries, for **debugging**"
-          - "`interrupt()`: anywhere inside a node, for **production**"
-          - The node passes the human exactly what they need
-          - Put it inside a **tool** and the gate travels with the tool
-        source: notes/04-durable-execution-and-interrupts.md
-        notes: >-
-          Time travel uses the same checkpoints: get_state_history lists them newest first; invoke
-          with a checkpoint_id to replay, or update_state on an old one to fork. Find the step where
-          the run went wrong, change state there, and rerun from that point.
-
+          This is the last piece of our review graph. The first invoke pauses inside publish. The second one, perhaps a day later, resumes it.
+          The trap is that resume does not continue from the interrupt line. It runs the node again, so a send placed
+          above the interrupt would send twice. Put the interrupt inside a tool and the gate travels with the tool.
       - layout: table
+        kicker: Monday morning
         title: Gate the edges where consequence concentrates
         lead: "\"Human approval checkpoints ... at exactly the edges where consequence concentrates.\" (TrueFoundry)"
         header: [Gate before, Why]
-        widths: [4, 4]
         rows:
           - ["Irreversible actions: send, pay, delete, deploy", "Can't be undone, so check first"]
           - ["Crossing a trust boundary: external API, other tenant", Someone else bears the cost]
           - [Low-confidence router decisions, "Cheap for a human, expensive to mis-route"]
           - ["After the plan, before the build (n8n)", The plan is the cheapest thing to correct]
-        takeaway: A gate on every node trains people to click approve without reading.
+        takeaway: A gate on every node trains people to approve without reading, so gate only where consequence concentrates.
+        recall: Which four places in a graph deserve a human approval gate?
         source: notes/04-durable-execution-and-interrupts.md
         notes: >-
-          Consequence is not spread evenly across a graph. Gate everywhere and the gate stops working.
-          n8n's workflow builder has a single gate, after the Planner, before any build work starts.
+          The first graph is now complete: generate, verify, one reviewer per file, a gate before publish. It has one gate, because of what too
+          many gates do to the humans behind them. Look through your own graph on Monday, and find the single edge you could not take back.
 
-# ─── Part 2 ──────────────────────────────────────────────────────────────
-  - title: Agent graphs in production
-    summary: Topology patterns · When not to build · Failure modes · Governance
+  - title: Running it in production
+    summary: Topologies · Who adds information · Failures · Who pays
+    divider: true
+    agenda: true
     notes: >-
-      Notes 05–08. The shapes that recur, the case against building a graph at all, how graphs fail
-      at scale, and what it takes to operate one.
+      Our graph now works in a demo. This part is about what happens next: more shapes to choose from, a harder test for
+      adding agents, the failures only graphs have, and how to find out what a run actually did.
     slides:
+      - layout: statement
+        kicker: The problem
+        title: Fifty nodes ran and one broke production. Which?
+        statement: A graph run can spawn fifty nodes, each calling models and tools. Without attribution you can't say which one spent the money or made the decision.
+        takeaway: Graphs spread cost and decisions across many nodes, so every model and tool call has to carry its node's identity.
+        recall: What basic questions become unanswerable in a graph without attribution?
+        source: notes/08-governance-and-production.md
+        notes: >-
+          A single loop has one identity and one bill. A graph has neither. With Send and conditional edges, the graph that ran is not even
+          the graph you drew. We will come back to attribution at the end of this part, once we have seen the failures that make it matter.
       - layout: table
-        title: Five topologies that recur
+        kicker: The catalogue
+        title: Five topologies recur
         header: [Pattern, Shape, Use when, Fails by]
-        widths: [2.4, 3, 3.6, 3.6]
+        widths: [2, 3, 3, 3]
         rows:
-          - [Generate-then-verify, produce → check → back-edge, Produce and check split cleanly, Checker sees producer's reasoning]
-          - [Supervisor, router → specialists → router, Work arrives in several kinds, "Mis-routing; bottleneck"]
-          - [Fan-out / fan-in, split → N workers → merge, Many independent items, "Missing reducer; correlated errors"]
+          - [Generate-then-verify, "produce, check, back-edge", Produce and check split cleanly, "Checker sees producer's reasoning"]
+          - [Supervisor, "router, specialists, router", Work arrives in several kinds, "Mis-routing, bottleneck"]
+          - [Fan-out and fan-in, "split, N workers, merge", Many independent items, "Missing reducer, correlated errors"]
           - [Hierarchical, subgraph as one node, Reused or team-owned sub-topology, Failures hidden inside]
-          - [Handoff, status key → edge reads it, Agents shouldn't know each other, Status values drift]
+          - [Handoff, status key read by an edge, "Agents shouldn't know each other", Status values drift]
+        bold_first: true
+        takeaway: Five shapes cover most graphs, and each has a named failure, so choosing a shape also chooses what to watch.
+        recall: Name the five recurring topologies and how the supervisor pattern fails.
         source: notes/05-topology-patterns.md
         notes: >-
-          Each pattern has a cost: an extra node per cycle, a routing call per turn, tokens that scale
-          with N, state mapping at the boundary, a status key in the schema. In Claude Code, a
-          subagent is a node, the main session's spawn decision is an edge, return values are state,
-          and a hook is a deterministic edge.
-
+          Our review graph already combines two of these, generate-then-verify and fan-out. Read the last column most carefully. You can also
+          search for a topology: Meta Agent Search in ADAS writes agents as code and scores them, but its evaluator runs model-written code in your process, so sandbox it.
       - layout: image
-        title: "Subgraphs: share keys, or map at the boundary"
-        image: ../sources/images/langchain-langgraph-docs-subgraph-state-patterns.png
-        caption: LangGraph docs, subgraphs (LangChain)
-        bullets:
-          - "**Shared keys:** add the compiled subgraph directly"
-          - "**Different schemas:** call it inside a wrapper node"
-          - The wrapper maps parent → child input and child output → parent update
-        source: notes/05-topology-patterns.md
-        notes: >-
-          A subgraph is the hierarchical pattern. The mapping at the boundary is also where its cost
-          hides: failures inside it are hard to see from the parent graph.
-
-      - layout: image
-        title: Shared vs. isolated context
-        kicker: "Li, AI Agents in Depth, ch. 10"
+        kicker: A design dimension
+        title: Should the agents share a context?
         image: ../sources/images/li-ai-agents-in-depth-fig10-1.svg
-        caption: "Li, AI Agents in Depth, ch. 10, Fig. 10-1 (Apache-2.0)"
+        caption: Li, AI Agents in Depth, ch. 10, Fig. 10-1 (Apache-2.0)
         bullets:
           - "**Shared:** one trajectory, like threads; nothing lost, everything accumulates"
-          - "**Isolated:** own window, like processes; only what is passed explicitly"
+          - "**Isolated:** own window, like processes; only what is passed"
           - Isolation keeps a verifier independent
+          - Pass file paths, **not file contents**
+        takeaway: Isolate contexts if the cumulative trajectory would pass about half the window; share if no information can be lost.
+        recall: What rule of thumb chooses between shared and isolated context?
         source: notes/05-topology-patterns.md
         notes: >-
-          Li separates two questions the pattern catalogue blurs: does context get shared, and who
-          decides what happens next. What each node can see is a topology decision as much as the
-          edges are. Isolation is what makes a second opinion a second opinion.
-
-      - layout: table
+          Li's analogy is threads against processes. Our verifier must be isolated by design. Our per-file reviewers can be too, since each needs only
+          a brief. Agents pass meaning and not bytes, and a message can be misread, so every interface needs a contract the receiver can check.
+      - layout: compare
+        kicker: A harder test
         title: A second agent helps only if it adds information
-        header: [Extra agent brings, "Helps?", Evidence]
-        widths: [3.6, 1.4, 5]
-        rows:
-          - [Debate among copies of one model, "No", Matches a single agent given the same compute (Tran & Kiela)]
-          - ["Execution, tool or visual feedback", "**Yes**", "WebGen-Agent screenshots: Claude 3.5 Sonnet **26.4% → 51.9%**"]
-        highlight: [1]
-        takeaway: Recombining the same information can't add any. New signals can.
+        emphasis: right
+        left:
+          title: Same information
+          bullets:
+            - Self-review with no tools is often neutral or harmful
+            - "Debate among copies: a single agent was best or tied above 100 thinking tokens (Tran & Kiela)"
+          tag: Recombining adds nothing
+        right:
+          title: New information
+          bullets:
+            - Execution, tool or visual feedback
+            - "WebGen-Agent screenshots took Claude 3.5 Sonnet from **26.4% to 51.9%**"
+            - A reviewer earns its node when it can **run something**
+          tag: Tests, browser, search
+        takeaway: A reviewer that only rereads text is the same model a second time; it earns a node when it can run something.
+        recall: What did screenshot feedback do in WebGen-Agent, and why did debate not do the same?
         source: notes/05-topology-patterns.md
         notes: >-
-          By the data-processing inequality, a node that sees only what another node saw can't add
-          information. Nodes that run code, call tools or look at a rendered page bring something new.
-          RLEF trains on execution feedback for the same reason.
-
-      - layout: cards
-        title: Fan-out is expensive
-        kicker: Anthropic multi-agent research system
-        cards:
-          - {title: Tokens, body: "Agents use **~4×** a chat's tokens; multi-agent systems **~15×**"}
-          - {title: Why it works, body: Token usage alone explained most of the performance variance}
-          - {title: Break-even, body: "Fan-out ~**3×** tokens per cycle; break-even near a **50%** pass rate (flowtivity)"}
-          - {title: Poor fit, accent: "D4621A", body: "Shared context everywhere, many inter-agent dependencies, or work you can't name in advance"}
-        takeaway: Fan-out pays only for high-value work that parallelises well. Measure break-even.
-        source: notes/06-when-not-to-build-a-graph.md
-        notes: >-
-          The first-party anchor is Anthropic's engineering post. The flowtivity numbers are a
-          secondary source; Lab 5 measures break-even on your own task. Open-ended research with
-          unknowable steps is harness plus loop, not a graph: you can't draw nodes for work you can't
-          name.
-
+          This is the data-processing argument: recombining the same information cannot add any. It has a boundary. With 70 percent of the context
+          masked, a sequential pipeline beat the single agent, which is a context problem and not new information. So give our reviewer the test runner.
       - layout: table
-        title: Loop or graph?
-        header: [Situation, Use]
-        widths: [5, 4]
-        rows:
-          - ["Single agent, tool-augmented reasoning", Loop]
-          - [Open-ended research with unknowable steps, "Harness + loop, **not** a graph"]
-          - ["Simple task, low per-cycle pass rate", "Loop: fan-out cost isn't recovered"]
-          - [Verifier failing on several criteria, Split the verifier first]
-          - [Several agents with conditional handoffs, Graph]
-          - [3+ independent verification steps, Graph (parallel review)]
-          - [Resume or human approval mid-run, Graph (checkpointer + interrupts)]
-        source: notes/06-when-not-to-build-a-graph.md
-        notes: >-
-          When a graph is justified, adopt it incrementally: find the bottleneck; mark which edges
-          really read the previous output; sketch 3–5 nodes, not twelve; measure a baseline with the
-          loop, then the graph (tokens, wall-clock, pass rate); add nodes one at a time, each
-          justified by a signal from note 01.
-
-      - layout: table
+        kicker: What breaks first
         title: Mechanical failures come from the wiring
         header: [Failure, Detect, Fix]
-        widths: [2.8, 3.8, 4.2]
+        widths: [2, 4, 4]
         rows:
-          - [Infinite cycle, "`GraphRecursionError` (`recursion_limit`, default **25**)", Attempt counter in state; per-node bound]
+          - [Infinite cycle, "`GraphRecursionError` (`recursion_limit`, default **25**)", "Attempt counter in state, bound per node"]
           - [Deadlock, Run idle at a join, Explicit join inputs; error nodes still write the key]
           - [Race on shared state, "`InvalidUpdateError`, or silent loss", A reducer or one writer per key]
-          - [Unbounded fan-out, Token spend spikes; rate limits, "Cap N; budget per run and per node"]
+          - [Unbounded fan-out, "Token spend spikes, rate limits", Cap N; budget per run and per node]
           - [Mis-routing, Route distribution in traces, Test the router as a classifier]
           - [File-space collision, Diffs match no single worker, One worktree per worker]
+        bold_first: true
+        takeaway: Wiring failures such as cycles, deadlocks and races have mechanical detectors and fixes, if you let the framework report them.
+        recall: How do you detect and fix a deadlock in a graph?
         source: notes/07-failure-modes-at-scale.md
         notes: >-
-          These are the failures you can find with a debugger. The router deserves its own labelled
-          test set, because a confident wrong route looks like a right answer from the wrong
-          specialist.
+          These are the friendly failures, since something visibly goes wrong. Our review graph could hit several. A reviewer that errors without
+          writing its key leaves the join waiting forever, so route errors to a node that still writes. The harder ones are coming.
+      - layout: code
+        kicker: Worked example
+        title: Bounds belong in the wiring
+        lang: python
+        code: |-
+          # sketch: three bounds on the review graph
+          MAX_ATTEMPTS, MAX_FILES = 3, 20
 
+          def route_after_verify(state) -> str:
+              if state["passed"]:
+                  return "publish"
+              if state["attempts"] >= MAX_ATTEMPTS:
+                  return "escalate"
+              return "generate"
+
+          def fan_out(state) -> list[Send]:
+              files = state["changed_files"][:MAX_FILES]
+              return [Send("review_file", {"path": p})
+                      for p in files]
+
+          graph.invoke(inputs, {"recursion_limit": 40})
+        bullets:
+          - Every back-edge has a counter
+          - Every `Send` has a cap on N
+          - "`recursion_limit` is set deliberately"
+          - The limits here are illustrative
+        takeaway: Before running unattended, give every back-edge a counter, every Send a cap, and recursion_limit a chosen value.
+        recall: Which three bounds does the pre-flight check require on a graph's wiring?
+        source: notes/07-failure-modes-at-scale.md
+        notes: >-
+          This is the pre-flight check as code. The numbers are mine, chosen for illustration, so pick yours from your traces. Notice the escalate route.
+          When attempts run out, the honest outcome is to say so and not to publish the last draft.
       - layout: cards
+        kicker: What breaks at scale
         title: Swarms fail in ways single agents don't
         cards:
-          - {title: Correlated errors, body: "Shared model, prompt and index: N agreeing workers ≠ N independent ones"}
-          - {title: Verifier isolation, body: A checker that sees the reasoning agrees with it}
-          - {title: Byzantine, body: Agents fail by being confidently wrong, not by crashing}
-          - {title: Cascading amplification, body: One bad output becomes every downstream input}
-          - {title: MAST, body: "**14** failure modes in 3 groups, κ = **0.88**"}
-          - {title: Structure beats wording, accent: "D4621A", body: "Better prompts and roles fixed ChatDev by only **+15.6%**"}
-        takeaway: Most multi-agent failures are structural. Fix topology and verification, not wording.
+          - title: Correlated errors
+            body: Shared model, prompt and index, so N agreeing workers are not N independent ones
+          - title: Byzantine faults
+            body: Agents fail by being confidently wrong; timeouts can't catch that
+          - title: Semantic conflicts
+            body: Both writes succeed and the result is still wrong; reducers don't help
+          - title: Cascading amplification
+            body: "Merged unchecked, errors grew **17.2×**; an orchestrator held them to **4.4×** (Kim et al.)"
+          - title: MAST
+            body: "**14** failure modes in three groups, κ = **0.88**"
+          - title: Structure beats wording
+            accent: D4621A
+            body: Better prompts and roles improved ChatDev by only **+15.6%**
+        takeaway: Most multi-agent failures are structural, so fix topology and verification before you reword prompts.
+        recall: Why don't timeouts and retries catch most agent failures?
         source: notes/07-failure-modes-at-scale.md
         notes: >-
-          MAST classifies failures from annotated traces into system design, inter-agent
-          misalignment and missing verification. The ChatDev result is the one to remember: wording
-          fixes buy little, because the failures live in the structure.
-
-      - layout: table
-        title: Control failures and the four principles
-        lead: Many feedback loops interacting fail like coupled controllers.
-        header: [Failure, Principle, How]
-        widths: [2.8, 2.8, 5]
-        rows:
-          - [Goodhart, Paired metrics, Every optimised metric gets a counter-metric and an anchor]
-          - [Upward blindness, Owned references, Targets are owned by slower loops]
-          - [Inter-loop conflict, Separated cadences, Fast loops escalate to slow ones instead of overriding]
-          - [Measurement decay, Frozen nodes, Some measurements are deliberately not tunable]
-        takeaway: Keep at least one anchor the graph can't edit.
+          In the book's translation lab the glossary agent mistranslated reasoning. The translator applied it faithfully, and the proofreader,
+          checking against the glossary, saw perfect consistency. Every stage did its job and the error survived all of them. Hence the fix: a reviewer who reads the output against the source.
+      - layout: compare
+        kicker: What breaks last
+        title: Coupled loops drift together, so keep an anchor
+        emphasis: right
+        left:
+          title: Control failures
+          bullets:
+            - "**Goodhart:** the metric detaches from its meaning"
+            - "**Upward blindness:** a loop can't question its target"
+            - "**Inter-loop conflict:** loops fight each other"
+            - "**Measurement decay:** the gauge gets tuned"
+        right:
+          title: The answer to each
+          bullets:
+            - Paired metrics, with a counter-metric
+            - Owned references, held by slower loops
+            - Separated cadences, where fast loops escalate
+            - "**Frozen nodes:** anchors the graph can't edit"
+          tag: Held-out tests, banked revenue
+        takeaway: Without an anchor the graph can't edit, it stays perfectly self-consistent while drifting far from reality.
+        recall: What is an anchor, and what happens to a graph that has none?
         source: notes/07-failure-modes-at-scale.md
         notes: >-
-          Goodhart: when a measure becomes a target it ceases to be a good measure. Upward blindness:
-          a controller can't see its own setpoint. These are older control-theory names for failures
-          that show up once a graph wires many loops together.
-
+          This reading comes from Eigent, a vendor blog, though each failure has an older name in control theory. The danger is that nothing looks wrong:
+          every loop agrees with every other loop, and they are all wrong. An anchor made tunable is an anchor that will eventually be tuned.
       - layout: cards
+        kicker: Back to attribution
         title: Operate the graph, don't just demo it
         cards:
           - title: Identity
-            bullets: ["`graph_id`: topology + version", "`run_id` / `thread_id`: one execution", "`node_id`: per-node cost and errors"]
+            bullets:
+              - "`graph_id`: topology and version"
+              - "`run_id` / `thread_id`: one execution"
+              - "`node_id`: cost and errors per node"
           - title: Budgets
-            bullets: ["**Per node:** one node looping", "**Per run:** a whole run going wrong", "**Per tenant:** one customer draining the pool"]
-          - title: Checklist
-            accent: "0EA5C9"
-            bullets: [Resolved caller identity, Record the actual runtime graph, Join traces with cost and policy, Model changes behind a rollback alias]
+            bullets:
+              - "**Per node:** one node looping"
+              - "**Per run:** a whole run going wrong"
+              - "**Per tenant:** one customer draining the pool"
+          - title: Records
+            accent: 0EA5C9
+            bullets:
+              - The actual runtime graph, not the declared one
+              - "Model calls through a named alias, so rollback is a config change"
+        takeaway: Carry graph, run and node IDs on every call, and budget per node, per run and per tenant.
+        recall: At which three levels do you budget a graph, and which ID makes the first possible?
         source: notes/08-governance-and-production.md
         notes: >-
-          The full checklist has seven questions: resolved identity for every caller; stable graph,
-          run and node IDs on every call; the actual runtime work graph recorded, not just the
-          declared one; traces joinable with cost, policy, latency and tool records; budgets per node
-          and per tenant; approval checkpoints on sensitive tools; model changes isolated behind an
-          alias you can roll back.
-
+          This answers the opening question. With node_id on every call you learn why a run was expensive, and not just that it was. The tenant
+          level is the one a run-scoped framework can't enforce alone, since the limit has to hold across concurrent runs, so it usually lives in a gateway.
       - layout: table
-        title: "Case study: n8n's AI workflow builder"
-        kicker: Supervisor + 5 subgraphs
+        kicker: Case study
+        title: "n8n's workflow builder: every loop has a bound"
+        lead: "From a third-party teardown (Rathod), not n8n itself. Check the repository before relying on the constants."
         header: [Node, Role, Bound]
-        widths: [2.6, 5, 3]
+        widths: [2, 5, 2]
         rows:
-          - [Supervisor, Routes each message to a subgraph, —]
+          - [Supervisor, Routes each message to a subgraph, "-"]
           - [Discovery, Explores the node registry, "**50** iterations"]
-          - [Planner, Builds a structured plan; **pauses for approval**, —]
+          - [Planner, "Builds a plan, then **pauses for approval**", "-"]
           - [Builder, Executes tool calls, "**100** per session"]
-          - [Responder, Renders the user-facing reply, —]
-          - [Parameter Updater, Surgical edits to node parameters, —]
-        highlight: [2]
-        takeaway: "Published budgets: 200K window, compact at 150K, 30K max workflow JSON."
+          - [Responder, Renders the user-facing reply, "-"]
+          - [Parameter Updater, Surgical edits to node parameters, "-"]
+        bold_first: true
+        takeaway: "n8n's reported design: per-node bounds, one gate after planning, and a 30K cap on the artifact under construction."
+        recall: Where does n8n's builder place its single approval gate, and why there?
         source: notes/08-governance-and-production.md
         notes: >-
-          A real production graph with every bound written down. One approval gate, placed after the
-          plan. Other published constants: 5,000-character prompts, a 400 KB frontend payload cap,
-          a 180-second request timeout.
+          Everything we covered appears here. Specialisation is prompt-only, on the same model. Compaction triggers at 150K in a 200K window, and the workflow itself is capped
+          at 30K tokens, so the agent can't fill its context with the thing it is editing. That closes the execution graph. Now, the other graph.
 
-# ─── Part 3 ──────────────────────────────────────────────────────────────
-  - title: Knowledge graphs
-    summary: Fundamentals and Cypher · Building KGs with LLMs · KG-RAG and text-to-Cypher
+  - title: The other kind of graph
+    summary: Knowledge graphs · Building one with LLMs · Retrieval and text-to-Cypher
+    divider: true
+    agenda: true
     notes: >-
-      Notes 09–11, with the code from the DeepLearning.AI × Neo4j course Knowledge Graphs for RAG
-      folded in. Now nodes are entities and edges are typed relationships.
+      New problem, new example. We leave the review graph and turn to SEC filings from the Neo4j course. Here a graph is
+      data and not execution. We will see why vector search needs it, how to build one you can trust, and how to query it.
     slides:
+      - layout: statement
+        kicker: The problem
+        title: The top vector hits didn't mention the entity
+        statement: "\"How is Lauritsen related to cyclotron research?\" The top three chunks scored 0.906, 0.903 and 0.902. Only the first mentioned Lauritsen."
+        attribution: KG & LLMs in Action, ch. 13
+        takeaway: Embeddings encode overall meaning and don't guarantee a named entity is present, so high scores can miss the entity.
+        recall: What does the Lauritsen example show about cosine similarity and named entities?
+        source: notes/11-kg-rag-and-text-to-cypher.md
+        notes: >-
+          Three near-identical scores, and two of those chunks never name the person we asked about. Vector retrieval is doing its job. It finds
+          text with similar overall meaning. Facts split across chunks, aggregate questions and exact entities all need something else.
+      - layout: table
+        kicker: A warning about the word
+        title: Two things are called "graph"
+        header: ["", "Agent graph", "Knowledge graph"]
+        rows:
+          - [Nodes are, Units of computation, Entities]
+          - [Edges are, Permitted transitions, Typed relationships]
+          - [The graph is, Execution topology, Data structure for retrieval]
+          - [Runtime concern, "Routing, state, cost", "Traversal, entity resolution"]
+        bold_first: true
+        takeaway: An agent graph is execution topology and a knowledge graph is a data structure; they share only a name until agents share memory.
+        recall: What are nodes and edges in an agent graph, and in a knowledge graph?
+        source: notes/01-graph-vs-loop.md
+        notes: >-
+          Everything so far was the left column. From here on we are in the right column, so a node is an entity like a company or a fund manager.
+          The two meet in the final part of the talk, where a knowledge graph becomes the state that agents coordinate through.
       - layout: image
-        title: "A knowledge graph: entities and typed relationships"
-        kicker: Knowledge Graphs for RAG (2024)
+        kicker: The data model
+        title: Entities, and relationships that carry facts
         image: ../sources/images/kollegger-knowledge-graphs-for-rag-relationship-properties.png
-        caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
+        caption: Knowledge Graphs for RAG, DeepLearning.AI and Neo4j (Kollegger, 2024)
         bullets:
           - "**Nodes** carry labels and properties"
-          - "**Relationships** are typed, directed and carry properties too"
+          - "**Relationships** are typed and directed, and carry properties too"
           - "**LPG** (Neo4j): properties on edges, Cypher"
           - "**RDF:** triples, SPARQL, ontologies"
+        takeaway: A graph whose edges are all RELATED_TO says that things connect but not how, so the edge type holds the knowledge.
+        recall: Why does naming edges by meaning matter more than having edges?
         source: notes/09-kg-fundamentals-and-cypher.md
         notes: >-
-          This track uses the labelled property graph and Neo4j. RDF is the standards-based
-          alternative, stronger on shared ontologies and reasoning. A KG complements an LLM: it holds
-          exact, current, traceable facts that a model's weights hold only fuzzily.
-
+          Evidence often belongs on the edge. In the book's rare-disease graph, each disease and phenotype link carries its reference and frequency as properties,
+          and that single fact is why the chapter picks a property graph over RDF. Type 1 diabetes keeps two IDs, disease and phenotype, because its role depends on context.
       - layout: code
-        title: Cypher draws patterns
+        kicker: The query language
+        title: Cypher lets you draw the pattern you want
         lang: cypher
         code: |-
           // co-actors of a person
@@ -534,53 +651,36 @@ parts:
             ON CREATE SET c.text = $text
         bullets:
           - "`()` nodes, `-[]->` relationships"
-          - "**MERGE** = match or create"
+          - "**MERGE** matches or creates"
           - A uniqueness constraint makes reloads safe
-          - "Python: `Neo4jGraph.query(cypher, params=...)` from `langchain-neo4j`"
+        takeaway: Cypher draws graph patterns in ASCII, and MERGE with a uniqueness constraint makes data loads idempotent.
+        recall: What makes a Cypher load safe to run twice?
         source: notes/09-kg-fundamentals-and-cypher.md
         notes: >-
-          The pattern in MATCH reads like the picture you'd draw on a whiteboard. Always pass values
-          as parameters. The course imports Neo4jGraph from langchain_community; that import is
-          deprecated, use the langchain-neo4j package.
-
-      - layout: table
-        title: Errors compound per hop
-        lead: "If each hop is right with probability p, an n-hop answer is right with pⁿ."
-        header: [Per-hop accuracy, 2 hops, 3 hops, 5 hops]
-        widths: [3, 2, 2, 2]
-        rows:
-          - ["95%", "90%", "86%", "77%"]
-          - ["85%", "72%", "61%", "**44%**"]
-          - ["70%", "49%", "34%", "17%"]
-        highlight: [1]
-        takeaway: Entity resolution is the load-bearing step. One false merge corrupts every path through it.
-        source: notes/10-building-kgs-with-llms.md
-        notes: >-
-          An 85%-accurate extractor sounds good until a five-hop question is right less than half
-          the time. That is why the pipeline spends its strongest model and its evaluation on
-          resolution.
-
+          Read the first query aloud and you have read the picture: a person, acted in, a movie, acted in by someone else. The second half matters more for
+          us, because the pipeline we build next will reload data many times, and it must not create duplicates when it does.
       - layout: flow
+        kicker: Building one
         title: From text to a graph you can trust
         steps:
-          - {label: Chunk, sub: keep doc / page / offset}
-          - {label: Extract, sub: "small model → **mentions**"}
-          - {label: Resolve, sub: "stronger model + graph signals"}
+          - {label: Chunk, sub: "keep doc, page, offset"}
+          - {label: Extract, sub: small model gives mentions}
+          - {label: Resolve, sub: stronger model and graph signals}
           - {label: Assemble, sub: MERGE with provenance}
-          - {label: Evaluate, sub: "P/R, false-merge rate; blocks the load"}
+          - {label: Evaluate, sub: "false-merge rate blocks the load", accent: D4621A}
         bullets:
-          - Normalise (deterministic) sits between extract and resolve
-          - "Same shape as Anthropic's KG cookbook: Haiku extracts, Sonnet resolves"
+          - "An n-hop answer is right with probability pⁿ: **85%** per hop is **44%** over five hops"
+          - That is arithmetic and not a measurement, but errors compound with depth
           - Use the model only where judgement is needed
+        takeaway: Errors compound per hop, so 85% per hop gives 44% over five, which makes entity resolution the load-bearing step.
+        recall: Why is entity resolution the load-bearing step in building a knowledge graph?
         source: notes/10-building-kgs-with-llms.md
         notes: >-
-          The cookbook extracts with a Haiku-class model into Pydantic models, resolves and queries
-          with a Sonnet-class model, assembles a NetworkX MultiDiGraph that keeps source docs on
-          nodes and edges, and scores entity precision and recall against a gold set. It's the spend
-          agency per node rule from note 02 again.
-
+          Do the arithmetic first, and the pipeline explains itself. If each hop can be wrong, deep traversal multiplies the risk. Most per-hop errors are resolution errors: two entities merged,
+          or one split. Hence the separate stage, the stronger model, and an evaluation that can block the load.
       - layout: code
-        title: Keep mentions; never merge at extraction time
+        kicker: Worked example
+        title: Keep mentions, and never merge at extraction time
         lang: cypher
         code: |-
           // raw mentions
@@ -591,354 +691,235 @@ parts:
           // the KG proper
           (:Entity)-[:RESOLVES_TO]->(:Canonical)
 
-          // graph-based ER: weakly connected components
-          // over META_SIMILAR → one canonical each
+          // graph-based resolution: weakly connected
+          // components over META_SIMILAR, one canonical
         bullets:
           - The metagraph keeps resolution **reversible**
           - Weight **false merges** above missed merges
           - A high compression ratio rewards over-merging
+        takeaway: Storing mentions and resolution evidence separately keeps merges reversible, and a false merge corrupts every path through it.
+        recall: Why is a high compression ratio a misleading resolution metric?
         source: notes/10-building-kgs-with-llms.md
         notes: >-
-          Ch6 of the Manning book: write META_SIMILAR edges where evidence is strong, run weakly
-          connected components, name each canonical after its longest name. The alternative is
-          LLM-based resolution or linking to an ontology (NED). Whatever you use, measure what
-          normalisation did.
-
+          This schema has three layers. Mentions record what the text said, evidence records why two mentions might be the same, and canonicals are the current
+          belief. If a merge turns out wrong, you undo the last layer and lose nothing. A merge in place has no such exit.
       - layout: image
-        title: "Extract, enhance, expand"
-        kicker: Knowledge Graphs for RAG, L3–L6
+        kicker: The course's graph
+        title: Extract, enhance, expand
         image: ../sources/images/kollegger-knowledge-graphs-for-rag-extract-enhance-expand.png
-        caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
+        caption: Knowledge Graphs for RAG, DeepLearning.AI and Neo4j (Kollegger, 2024)
         bullets:
-          - "**Extract:** 10-K text → `Chunk` nodes with embeddings"
-          - "**Enhance:** `NEXT` and `PART_OF` give chunks a document structure"
-          - "**Expand:** fuse structured Form 13 data: managers and holdings"
-          - Start with a minimum viable graph
+          - "**Extract:** 10-K text into `Chunk` nodes with embeddings"
+          - "**Enhance:** `NEXT` and `PART_OF` add document structure"
+          - "**Expand:** fuse Form 13 managers and holdings"
+          - One `OWNS_STOCK_IN` edge **per quarter**
+        takeaway: Start with a minimum viable graph, add document structure, then fuse structured data onto the same entities.
+        recall: What does each of the extract, enhance and expand stages add to the SEC graph?
         source: notes/10-building-kgs-with-llms.md
         notes: >-
-          The course builds the SEC filings graph in three moves. The embedding step uses
-          genai.vector.encode, which has since been renamed; check the current Neo4j GenAI docs. The
-          course's L4 notebook also has a slicing bug in item1_text_chunks[:20].
-
-      - layout: code
-        title: "Expand: fuse structured data with MERGE"
-        kicker: Course L6
-        lang: cypher
-        code: |-
-          CREATE CONSTRAINT unique_manager IF NOT EXISTS
-            FOR (m:Manager) REQUIRE m.managerCik IS UNIQUE;
-
-          MERGE (com:Company {cusip6: $cusip6})
-          MERGE (mgr:Manager {managerCik: $managerCik})
-          MERGE (mgr)-[o:OWNS_STOCK_IN {
-              reportCalendarOrQuarter: $quarter}]->(com)
-            ON CREATE SET o.value = $value,
-                          o.shares = $shares
-        bullets:
-          - "One edge **per quarter**: the key is on the relationship"
-          - Constraints make the load idempotent
-          - A full-text index on manager names handles fuzzy lookup
-        source: notes/10-building-kgs-with-llms.md
-        notes: >-
-          Structured sources are the cheapest facts a KG can get: no extraction, no resolution
-          beyond the keys. Putting the quarter in the MERGE key keeps one holding edge per filing
-          period instead of overwriting.
-
-      - layout: table
-        title: Where vector RAG breaks
-        header: [Failure, What happens]
-        widths: [3, 7]
-        rows:
-          - [Context fragmentation, A fact split across chunks needs every piece retrieved near the top]
-          - [Embedding compression, One vector per chunk loses entity-level detail]
-          - [Noise, Loosely related chunks dilute the answer]
-          - [Misses, "Aggregate questions (\"main themes?\") get partial answers"]
-        takeaway: "\"Lauritsen and cyclotrons\": top 3 scored 0.906 / 0.903 / 0.902, and only one mentioned Lauritsen."
-        source: notes/11-kg-rag-and-text-to-cypher.md
-        notes: >-
-          Embeddings encode overall meaning; they don't guarantee a named entity is present. A graph
-          adds multi-hop traversal, entity-exact retrieval, aggregation over the whole graph,
-          metadata routing, traceable answers and composed retrieval.
-
+          This is our SEC graph. Notice the order. Text first, because it is what you can search. Then structure, so chunks know their neighbours. Then a second source joined by key,
+          where a manager owns stock in a company. The quarter sits on the relationship key, so each quarter gets its own edge.
       - layout: cards
+        kicker: The evidence
         title: What GraphRAG actually showed
-        kicker: Edge et al., arXiv 2404.16130 (2024)
         cards:
-          - {title: Comprehensiveness, body: "Win rates **72–83%** (podcasts), **72–80%** (news)"}
-          - {title: Diversity, body: "Win rates **75–82%** and **62–71%**"}
-          - {title: Directness, accent: "D4621A", body: "**Vector RAG wins**: more concise answers"}
-          - {title: The caveat, accent: "0EA5C9", body: "LLM judge, global sensemaking questions over ~1M tokens"}
-        takeaway: Community summaries help whole-corpus questions. That is not "graphs beat vectors".
+          - title: Comprehensiveness
+            body: Win rates **72–83%** (podcasts), **72–80%** (news)
+          - title: Diversity
+            body: Win rates **75–82%** and **62–71%**
+          - title: Directness
+            accent: D4621A
+            body: "**Vector RAG wins**, with more concise answers"
+          - title: The caveat
+            accent: 0EA5C9
+            body: LLM judge, global sensemaking questions, corpora of about 1M tokens
+        takeaway: GraphRAG's community summaries help whole-corpus questions, which falls short of showing that graphs beat vectors.
+        recall: What did the GraphRAG paper's evaluation measure, and who judged it?
         source: notes/11-kg-rag-and-text-to-cypher.md
         notes: >-
-          GraphRAG builds an entity graph, detects communities, pre-summarises them, and map-reduces
-          over the summaries. The judge was an LLM in head-to-head comparisons, not a ground-truth
-          accuracy measure. The often-quoted 53.4% vs 42.9% multi-hop figures come from a vendor blog
-          with no method and are dropped.
-
+          Edge and colleagues at Microsoft Research pre-summarise communities in an entity graph. The judge was an LLM, with no ground truth accuracy. You may also meet a 53.4 versus 42.9 figure
+          for multi-hop accuracy. That is a vendor post with no dataset or method, so do not quote it. Write your own test set.
       - layout: table
-        title: Five retrieval modes
+        kicker: Choosing
+        title: Five ways to retrieve, tried in order
         header: [Mode, Use when, Fails when]
-        widths: [3, 4.5, 4.5]
+        widths: [2, 4, 4]
         rows:
-          - [Vector, "Local lookups: \"the passage about X\"", "Multi-hop, aggregates, exact entities"]
-          - [Canned traversal, Known question shapes; production paths, A shape you didn't template]
-          - [Text-to-Cypher, Open-ended questions over a well-named schema, Large or badly named schema; no validator]
-          - [Hybrid, Vector entry points + graph expansion, Wrong entry points make expansion worse]
-          - [Global (communities), Themes across everything, Specific lookups; high indexing cost]
-        takeaway: "Default order: vector, then canned traversals, then text-to-Cypher for the long tail, with a validator."
+          - [Vector, "Local lookups: the passage about X", "Multi-hop, aggregates, exact entities"]
+          - [Canned traversal, Known question shapes in production, A shape you didn't template]
+          - [Text-to-Cypher, Open-ended questions over a well-named schema, "Large or badly named schema, no validator"]
+          - [Hybrid, Vector entry points and graph expansion, Wrong entry points make expansion worse]
+          - [Global, Themes across a whole corpus, "Specific lookups, high indexing cost"]
+        bold_first: true
+        takeaway: Default to vector, then canned traversals, then text-to-Cypher with a validator for the long tail.
+        recall: What is the default order for adding retrieval modes over a knowledge graph?
         source: notes/11-kg-rag-and-text-to-cypher.md
         notes: >-
-          The book's ReAct agent uses precanned Cypher tools because free-form generation fails too
-          often, with vector search as a fallback. The agency rule from note 02 again.
-
-      - layout: code
-        title: "Hybrid in practice: a retrieval_query"
-        kicker: Course L5
-        lang: cypher
-        code: |-
-          // node and score come from the vector index
-          MATCH window = (:Chunk)-[:NEXT*0..1]->(node)
-                         -[:NEXT*0..1]->(:Chunk)
-          WITH node, score, window
-            ORDER BY length(window) DESC LIMIT 1
-          WITH nodes(window) AS chunks, node, score
-          UNWIND chunks AS c
-          WITH collect(c.text) AS texts, node, score
-          RETURN apoc.text.join(texts, " \n ") AS text,
-                 score, node {.source} AS metadata
-        bullets:
-          - "`Neo4jVector` runs the search, then this Cypher"
-          - Widens each hit to its `NEXT` neighbours
-          - L6 walks on to company and managers
-          - The windowed answer also named **ONTAP**
-        source: notes/11-kg-rag-and-text-to-cypher.md
-        notes: >-
-          The vector search finds the entry chunk; the Cypher fragment adds the graph's context.
-          The course wires this into RetrievalQAWithSourcesChain and calls chain({...}); both are
-          deprecated, use create_retrieval_chain or LCEL with .invoke. And from L4: the plain chain
-          invented an answer about Apple until the prompt said "If you are unsure, say you don't
-          know."
-
-      - layout: steps
-        title: "Text-to-Cypher: think like the expert"
-        steps:
-          - {title: Parse, text: "Entities, relationships and constraints in the question"}
-          - {title: Map, text: Onto schema labels and relationship types}
-          - {title: Annotate the schema, text: "Skip list, `/* comments */` on encodings, units, direction"}
-          - {title: Order the output, text: "JSON with `relationships` → `reasoning` → `query`", accent: "D4621A"}
-          - {title: Validate, text: "`EXPLAIN` before execution; check labels against the schema"}
-        takeaway: Listing relationships first reduces invented relationship types.
-        source: notes/11-kg-rag-and-text-to-cypher.md
-        notes: >-
-          An expert doesn't read paragraphs; they know the schema and build a constrained traversal.
-          Raw apoc.meta.schema output is the wrong input. Ordering the fields so the reasoning comes
-          before the query is chain-of-thought ordering from the prompt engineering pillar, and the
-          few-shot examples have to follow the same format. A model can't use a relationship called
-          REL_7.
-
+          The order is about risk. A canned traversal can't invent a relationship. Text-to-Cypher can, so it comes last and with a validator. In the course, widening each vector hit with its NEXT neighbours
+          also surfaced NetApp's ONTAP software, which the plain retriever's answer left out. That is hybrid at its smallest.
       - layout: image
-        title: The failure to expect, and its one-example fix
-        kicker: Course L7
-        image: ../sources/images/kollegger-knowledge-graphs-for-rag-sec-graph-schema.png
-        caption: "Knowledge Graphs for RAG, DeepLearning.AI × Neo4j (Kollegger, 2024)"
+        kicker: Monday morning
+        title: The QA agent is generate-then-verify again
+        image: ../sources/images/negro-kg-and-llms-in-action-fig15-3.png
+        caption: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 15.3 (2025)
         bullets:
-          - "`value` lives on `OWNS_STOCK_IN`, not on `Company`"
-          - The model guesses wrong without help
-          - "**One few-shot example** fixes it"
-          - "`GraphCypherQAChain` needs `allow_dangerous_requests=True`"
-        source: notes/11-kg-rag-and-text-to-cypher.md
-        notes: >-
-          The course's few-shot example is a point.distance query for investment firms within 10 km
-          of Santa Clara; a full-text query for Palo Alto matches the "Palo Aalto" misspelling in the
-          data. Use .invoke, not the deprecated .run. The flag name is honest: generated Cypher runs
-          against your database with your credentials.
-
-      - layout: flow
-        title: The QA agent as a LangGraph graph
-        steps:
-          - {label: Intent, sub: "what output type?"}
-          - {label: Schema, sub: annotated subset}
-          - {label: Text-to-Cypher, sub: relationships → reasoning → query}
-          - {label: Execute, sub: the database is the verifier}
-          - {label: Summarise, sub: for map or graph output}
-        loop: "on error, back to Text-to-Cypher with the message, at most 3 times"
-        bullets:
-          - Generate-then-verify with a **bounded back-edge**
-          - Typed state is the audit trail, and a free dataset of failures
+          - Ask for `relationships`, then `reasoning`, then `query`
+          - Annotate the schema; **one few-shot** fixes `value` on `OWNS_STOCK_IN`
+          - The database is the verifier; retry on error is bounded
           - "Missing: an **`EXPLAIN` validator** before execution"
+        takeaway: Text-to-Cypher is a bounded generate-then-verify loop, and listing relationships first reduces invented relationship types.
+        recall: What verifies the generated Cypher in the QA agent, and what's still missing?
         source: notes/11-kg-rag-and-text-to-cypher.md
         notes: >-
-          Ch15 of the book. Every Part 1 pattern shows up: generate-then-verify, a bounded cycle,
-          typed state that keeps the reasoning and errors, a checkpointer. Adding the validator is
-          the missing piece.
+          And here the two graphs touch for the first time: a knowledge graph queried by an execution graph. The back-edge carries the database error to the next attempt. The typed state doubles as an audit trail, and a free
+          dataset of failures. If you try one thing Monday, put EXPLAIN in front of execution.
 
-# ─── Part 4 ──────────────────────────────────────────────────────────────
   - title: Where the graphs meet
-    summary: KG as shared agent memory · Learning on graphs
+    summary: Shared memory · The write path · Learning on graphs
+    divider: true
+    agenda: true
     notes: >-
-      Notes 12–13. The knowledge graph as the memory a swarm writes to, and models that learn from
-      the graph's structure.
+      Last part. Parallel agents repeat each other's work because each run starts fresh. What if the knowledge graph were
+      their shared state? It works, and it makes mistakes permanent, so most of this part is about the write path.
     slides:
-      - layout: table
-        title: Execution state vs. a knowledge graph
-        header: ["", Execution-graph state, Knowledge graph]
-        widths: [2.6, 4, 4.4]
-        rows:
-          - [Lifetime, One run (`thread_id`), Across runs and sessions]
-          - [Readers and writers, Nodes in this graph, "Any agent, any run, people too"]
-          - [Shape, Typed dict with reducers, "Entities, claims, relations, provenance"]
-          - [Concurrency, Reducers; one writer per key, Validated versioned upserts]
-          - [Mistakes, Die with the run, "**Persist and spread**"]
-        highlight: [4]
-        takeaway: The agent forgets; the graph does not. That cuts both ways.
+      - layout: statement
+        kicker: The problem
+        title: A swarm keeps rediscovering what it already found
+        statement: A swarm alone re-derives findings. A swarm writing to a shared graph accumulates them. The agent forgets; the graph does not, and that cuts both ways.
+        takeaway: Execution-state mistakes die with the run, while knowledge-graph mistakes persist and spread to every later reader.
+        recall: How does a mistake in a knowledge graph differ from one in execution state?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
-          In memory-tier terms, execution state is short-term working memory; the KG is semantic
-          memory plus an episodic lineage of runs. The last row is the one that drives the design
-          rules on the next slides.
-
+          Execution state lives for one thread, and only the graph's own nodes read it. A knowledge graph lives across runs, for any agent and for people too. That lifetime is the appeal. It is also the risk, since nothing throws the mistakes away for you.
       - layout: flow
-        title: "Loop → swarm → graph"
+        kicker: The progression
+        title: Each step moves something out of the agent
         steps:
-          - {label: Loop, sub: moves iteration and evaluation out of the agent}
-          - {label: Swarm, sub: "moves parallel search out; creates **redundancy**"}
-          - {label: Graph, sub: "moves shared facts, provenance and memory out"}
+          - {label: Loop, sub: iteration and evaluation}
+          - {label: Swarm, sub: "parallel search, with redundancy"}
+          - {label: Graph, sub: "shared facts, provenance, memory", accent: D4621A}
         bullets:
-          - "Loop: Karpathy's autoresearch: keep a change only if val bits-per-byte improves"
-          - A swarm alone **re-derives** findings
-          - A swarm writing to a shared graph **accumulates** them
+          - "Loop: Karpathy's autoresearch keeps a change only if the metric improves"
+          - "The swarm costs real money: Anthropic reports about **15×** chat tokens"
+          - Topology makes spend **tractable**, not cheap
+        takeaway: Loops externalise evaluation, swarms externalise search, and a shared graph externalises facts and provenance.
+        recall: What does each of loop, swarm and graph move out of the agent?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
-          The progression comes from a community synthesis, a secondary source. autoresearch lets
-          the agent edit train.py but not prepare.py, runs about five minutes of training per
-          experiment, and git-resets otherwise. In the graph stage, the synthesiser traverses the
-          graph instead of reading every transcript.
-
+          The same move, three times. Autoresearch moves judgement into a fixed metric. A swarm moves search into parallel workers, and it creates redundancy. A graph moves shared facts into something
+          that outlives them. Shared-graph workers can also spread a correlated error further, which is why the write path comes next.
       - layout: code
-        title: "All the safety lives in the write path"
+        kicker: Worked example
+        title: All the safety lives in the write path
         lang: python
         code: |-
           @dataclass
           class GraphUpdate:
-              nodes: list[dict]   # id, type, props, spans
-              edges: list[dict]   # src, type, dst, conf
+              nodes: list[dict]  # id, type, props, spans
+              edges: list[dict]  # src, type, dst, conf
               run_id: str
               agent_id: str
 
           def publish(update, graph, validator):
-              validator.check_schema(update.nodes, update.edges)
-              validator.check_provenance(update.nodes, update.edges)
+              validator.check_schema(update.nodes,
+                                     update.edges)
+              validator.check_provenance(update.nodes,
+                                         update.edges)
               with graph.transaction() as tx:
                   tx.upsert_versioned_nodes(update.nodes)
                   tx.add_edges(update.edges)
-                  tx.link_run(update.run_id, update.agent_id, ...)
                   tx.commit()
         bullets:
           - Workers **submit**, never write directly
-          - Note 03's reducer at database scale
-          - "Contract: the `GraphUpdate` JSON Schema in note 12"
+          - The reducer idea, at database scale
+          - Validation runs before the transaction
+        takeaway: Workers submit updates to a validator instead of writing directly, which is the reducer idea at database scale.
+        recall: Why do workers submit a GraphUpdate and not write to the graph directly?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
-          Many writers are allowed, but they all go through one serialising, validating merge
-          function, so no write happens unchecked. Versioned upserts mean nothing is overwritten.
-
+          Remember the reducer from our review graph: many writers, one rule for merging. This is the same idea with a longer lifetime. No worker gets a database connection. Each hands over
+          a typed update, and the publisher checks schema and provenance before anything is stored.
       - layout: cards
-        title: Three non-negotiables
+        kicker: The non-negotiables
+        title: Whoever owns the schema owns the errors
         cards:
-          - {title: Complete provenance, body: "Every node and edge records `run_id`, `agent_id` and a source span"}
-          - {title: Reversible resolution, body: "`ALIAS_OF` / `RESOLVES_TO` with evidence; never merge destructively"}
-          - {title: Claims are not truths, accent: "D4621A", body: "\"Agent A claims X, citing S\". Contradictions live side by side"}
-        takeaway: Whoever owns the schema owns the errors.
+          - title: Complete provenance
+            body: Every node and edge records `run_id`, `agent_id` and a source span
+          - title: Reversible resolution
+            body: "`ALIAS_OF` or `RESOLVES_TO` with evidence; never merge destructively"
+          - title: Claims are not truths
+            accent: D4621A
+            body: "Agent A claims X, citing S. Contradictions live side by side"
+        takeaway: A shared graph stores claims with provenance and keeps contradictions, because no agent's write counts as truth.
+        recall: What three properties must a shared agent graph never give up?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
-          A bad loop iteration gets reverted and is gone. A false merge in a shared graph persists,
-          and every later reader inherits it: merge two people and every query mixes their employers
-          and dates. A graph amplifies its builder's ontology the way a loop amplifies its builder's
-          objective. The reference architecture keeps five planes apart: control, execution,
-          artifact, graph and evaluation.
-
+          The anti-pattern is the chat transcript becoming the database. If a run's only durable record is its conversation log, you can't query it, can't roll it back, and the next agent can't read it without reading everything.
+          These three properties are what make a graph more than a bigger transcript.
+      - layout: image
+        kicker: Learning on the graph
+        title: Know the pattern? Hand-written features can win
+        image: ../sources/images/negro-kg-and-llms-in-action-fig11-5.png
+        caption: Negro et al., Knowledge Graphs and LLMs in Action, Fig. 11.5 (2025)
+        bullets:
+          - "Degree only: F1 **0.43**; Node2Vec: **0.64**"
+          - "Degree and neighbours per faction: **0.93**, stable"
+          - "Elliptic: SAGE caught **82.7%** of illicit nodes; GCN missed **32%**"
+          - Predicted links are **claims**, out of default traversals
+        takeaway: Features are the graph ML bottleneck, and a false predicted link does what a false merge does to every later traversal.
+        recall: Why should predicted edges stay out of default traversals?
+        source: notes/13-graph-ml-and-gnns.md
+        notes: >-
+          Connected nodes tend to be alike, so encoding that by hand beat an untuned embedding on the book's small example, where the test set is 14 members, so read the numbers small. Compute it from training labels only, or the test nodes leak answers. The figure shows message passing, where
+          a GNN learns the same kind of thing. If such a model writes to the shared graph, it goes through the write path like any other agent.
       - layout: steps
-        title: Build path for a shared-memory swarm
+        kicker: Monday morning
+        title: Build a shared-memory swarm in four gates
+        axis: each step earns the next
         steps:
-          - {title: One measured loop, text: A fixed metric and reversible actions}
-          - {title: A role split, text: Generator and verifier with isolated contexts}
+          - {title: One measured loop, text: "A fixed metric and reversible actions"}
+          - {title: A role split, text: "Generator and verifier with isolated contexts"}
           - {title: A persistent graph, text: "Gate: do queries across sessions work?"}
-          - {title: A swarm writing to it, text: "Gate: wall-clock gain with **no loss of quality**", accent: "D4621A"}
-        takeaway: "Evaluate by layer: extraction F1, false-merge rate, path validity, redundant findings."
+          - {title: A swarm writing to it, text: "Gate: wall-clock gain with **no loss of quality**", accent: D4621A}
+        takeaway: Build one measured loop first and add the swarm last, evaluating each layer by its own metric.
+        recall: What is the gate before adding a swarm to a persistent graph?
         source: notes/12-kg-as-shared-agent-memory.md
         notes: >-
-          Cost reality: Anthropic's multi-agent research system used about 15× the tokens of a chat.
-          Claude Code's reported workflow limits (16 concurrent, 1,000 per run) come from third-party
-          write-ups; check the docs. A right answer reached through a wrong path is luck, so the
-          query layer checks path validity, not just correctness.
+          This is the whole pillar in four steps. Evaluate by layer: extraction F1, false-merge rate, path validity and redundant findings. Each has a misreading, and a right answer through a wrong path is luck. We began by asking if you need a graph. This is the same question, asked four more times.
 
-      - layout: table
-        title: Hand-written features can beat embeddings
-        kicker: Zachary's karate club
-        lead: Graph nodes aren't i.i.d.; connected nodes tend to be alike (homophily).
-        header: [Features, F1]
-        widths: [7, 3]
-        rows:
-          - [Degree only, "0.43"]
-          - ["Node2Vec, 64-dim, untuned", "0.65, unstable between runs"]
-          - [Degree + neighbours in faction A + in faction B, "**0.93**, stable"]
-        highlight: [2]
-        takeaway: Features are the bottleneck. Encode the pattern you know is there.
-        source: notes/13-graph-ml-and-gnns.md
-        notes: >-
-          The task map: node classification, link prediction, community detection (no training:
-          WCC, Louvain), graph classification. Manual features are interpretable; ReFeX is
-          semiautomated; Node2Vec and GNN embeddings are learned and opaque. DWPC discounts hubs when
-          counting metapaths.
-
-      - layout: cards
-        title: GNNs in practice, and predictions as claims
-        kicker: PyTorch Geometric (ch12)
-        cards:
-          - {title: Message passing, body: "Each layer aggregates neighbours; k layers = k-hop view. Watch **over-smoothing**"}
-          - {title: "AML (Elliptic)", body: "SAGE best: caught **82.7%** of illicit nodes; GCN missed **32%**"}
-          - {title: GNN + LLM, body: "LLM as predictor, as encoder of node text, or as aligner"}
-          - {title: Predictions are claims, accent: "D4621A", body: "Write via `GraphUpdate` with `confidence`; keep out of default traversals"}
-        takeaway: A false predicted link does what a false merge does. Watch the false-positive rate.
-        source: notes/13-graph-ml-and-gnns.md
-        notes: >-
-          For link prediction on MovieLens, keep message-passing edges apart from supervision edges
-          to avoid leakage. Graphs that grow need inductive methods. A predicted edge enters the
-          shared graph tagged predicted, with the training run's ID, and queries opt in to it.
-
-# ─── Wrap-up ─────────────────────────────────────────────────────────────
   - title: Wrap-up
     agenda: false
     divider: false
     slides:
       - layout: cards
+        kicker: Keep these
         title: Rules of thumb
         cards:
-          - {title: First graph, body: Generate-then-verify is the highest-yield first graph}
+          - {title: First graph, body: "Generate-then-verify is the highest-yield first graph"}
           - {title: Agency, body: "Code where you can, one LLM call where you must, an agent only where the path is unknown"}
-          - {title: State, body: Every shared key has one writer or a reducer}
-          - {title: Gates, body: "Gate the edges where consequences concentrate, not every node"}
+          - {title: State, body: "Every shared key has one writer or a reducer"}
+          - {title: Gates, body: "Gate the edges where consequence concentrates, not every node"}
           - {title: Verifiers, body: "See the task and the output, never the generator's reasoning"}
-          - {title: Anchors, accent: "D4621A", body: "Keep at least one anchor the graph can't edit"}
-        source: README.md#rules-of-thumb
+          - {title: Anchors, accent: D4621A, body: "Keep at least one anchor the graph can't edit"}
+        takeaway: Start with a loop, and add a node only when a specific signal forces it.
+        recall: What single rule decides when a loop becomes a graph?
+        source: notes/01-graph-vs-loop.md
         notes: >-
-          The full table in the README adds: fan out only when the next step doesn't read
-          the previous step's output; "we need a graph" is often an overloaded verifier; fan-out
-          costs about 15× a chat turn, so measure break-even.
-
+          If you remember six things, make them these. Each came from a failure we walked through today, from the verifier that ratified a draft to the graph that agreed with itself while drifting away from reality.
       - layout: bullets
+        kicker: Keep going
         title: Where to go next
         bullets:
-          - "**Part A labs (A1–A7):** grow one graph through Parts 1–2 of this talk"
-          - "**Part B labs (B1–B9):** the Neo4j course, your own domain, a shared-memory swarm"
+          - "**The lab:** `practice/langgraph-graph`, in Python or TypeScript"
+          - "**Your own domain:** build a small graph, then a shared-memory swarm"
           - "**The notes:** every slide here has its code and figures in notes 01–13"
-          - "**Knowledge Graphs for RAG:** the hosted DeepLearning.AI × Neo4j course"
+          - "**Knowledge Graphs for RAG:** the hosted DeepLearning.AI and Neo4j course"
           - "**06-eval:** measure whether the whole system is correct"
         aside:
-          title: The one idea to keep
-          body: "Start with a loop. Add a node only when a specific signal forces it."
-        source: README.md
+          title: Try this first
+          body: Take a loop you already run, and split its verifier by criterion. Measure before you draw a single node.
+        takeaway: The cheapest graph experiment is splitting one verifier by criterion and measuring before drawing any node.
+        recall: What is the first experiment to run on an existing loop?
+        source: notes/06-when-not-to-build-a-graph.md
         notes: >-
-          prompt → context → harness → loop → graph. Each layer presumes the one below; you can't
-          graph-engineer well without loop-engineering fluency.
+          The lab walks you through a graph with real code. Next pillar is evaluation, which asks the question we kept postponing today: how do you know the whole system is right? Thank you.

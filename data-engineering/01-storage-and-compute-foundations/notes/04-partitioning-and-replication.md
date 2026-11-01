@@ -3,7 +3,7 @@ origin: book-condensed
 sources:
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 5 and 6"
   - https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
-  - https://doi.org/10.5555/1298455.1298475
+  - https://research.google.com/archive/bigtable-osdi06.pdf
 confidence: high
 cleaned: 2026-11-01
 ---

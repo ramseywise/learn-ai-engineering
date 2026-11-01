@@ -37,7 +37,7 @@ They meet in [note 12](notes/12-kg-as-shared-agent-memory.md): in a multi-agent 
 ## Start here
 
 1. Read the notes in order (table below). They are the course: every slide's claim, table, code and figure is in the note it comes from.
-2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 4-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
+2. Use the deck for review or teaching: [slides/graph-engineering.pptx](slides/graph-engineering.pptx), a 5-part talk built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=05-graph-engineering`.
 3. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Lab

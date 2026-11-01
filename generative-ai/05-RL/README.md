@@ -79,8 +79,8 @@ Short route for a working engineer: 02, 03, 05, 07, then run the [Q-learning lab
 | SFT memorizes the demonstrations; RL generalizes to held-out scenarios. Use SFT for format, RL for behaviour under distribution shift | 05 |
 | Reward the outcome and penalize verifiable process violations (RLVP). Do not reward a lucky path that broke a constraint | 07 |
 | Mask tool outputs out of the loss when training tool-calling agents. The model should learn to call tools, not to predict their output | 07 |
-| Before training, ask whether search can buy the score at test time. Search spends compute per query; training spends it once | 09 |
-| RL fails more often from the setup than the algorithm. Fix the reward, the environment and the evaluation before you tune the learner | 10 |
+| Try search before training when pass@k already covers the task and a verifier exists. Train when you need the answer fast at one sample | 09 |
+| Check a random policy and a simple baseline before training, and compare runs across many seeds: three seeds can put two identical agents far apart | 10 |
 
 ---
 

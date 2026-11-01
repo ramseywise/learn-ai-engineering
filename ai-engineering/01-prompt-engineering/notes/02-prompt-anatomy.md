@@ -10,7 +10,7 @@ sources:
   - https://arxiv.org/abs/2307.03172
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 2 — Prompt Anatomy
 
@@ -329,4 +329,36 @@ A template is the unit you version, test and optimize — see [08-prompt-optimiz
 
 ---
 
-→ Next: [03-core-techniques.md](03-core-techniques.md) — examples, reasoning, and the named techniques.
+## Pitfalls
+
+- **Stuffing retrieved context in "just in case".** Symptom: answers work in an irrelevant snippet, because Chekhov's gun says anything included must matter. Fix: score everything, include only what earns its place, and treat the search string as a miniprompt.
+- **Burying the key document in the middle.** Symptom: accuracy below having no documents at all: in Liu et al., GPT-3.5-Turbo with 20 documents got about 54% with the answer in the middle against a 56.1% closed-book score. Fix: put the best material at the start or end, filter hard, and use the sandwich. A bigger window did not fix it.
+- **Flattening a procedure into a rule list.** Symptom: "verify identity before refund" gets skipped. In Li's Tau-Bench ablation, the same rules without order lost more than 30% of success. Fix: write numbered stages with exception branches, and ablate one component before rewriting.
+- **No transition at the end.** Symptom: the model continues your input, as in Huyen's list that ends on a bare `chicken` and comes back `chicken tacos --> edible`. Fix: end where the answer starts, with a marker that can't occur in the inputs, or write its first words.
+- **Too many clashing constraints.** Symptom: outputs that ignore some requirements, because no training document satisfies them all. Fix: keep the constraint that matters most and drop those that clash, per Phoenix & Taylor.
+- **Assembling in priority order.** Symptom: an instruction lands after the context it should frame. Fix: score by priority, but emit in document order. The two are separate fields.
+
+## Try it
+
+1. Run the `assemble` sketch on these snippets with a budget of 700: intro (priority 9, 100 tokens), refocus (8, 50), review (7, 200, requires book), book (6, elastic: 500 or 150), history (5, 300). What comes out, and what is wrong with it?
+   <details><summary>Answer</summary>`intro, book-full, refocus`, 650 tokens. The review is skipped even though it fits a tighter packing, because it outranks the book it requires, so at its turn the requirement isn't in yet. This is the failure the note names for additive greedy: high-value elements that need low-value ones. The elastic book then takes its largest version, leaving no room for history. A subtractive engine starting from everything handles this case better.</details>
+2. The Bible example: at 50 words per chapter summary, how many words is one flat pass over 1,189 chapters, and how many after grouping into 66 books at 50 words each? Why does the hierarchical version not cost much more to produce?
+   <details><summary>Answer</summary>59,450 words, then 3,300. Cost stays flat as long as each summary is under about a tenth of its input, because the total is dominated by the tokens in the original text, whatever the depth.</details>
+3. Build a needle-in-a-haystack test for the model you use: insert one private fact at 10%, 50% and 90% depth of a long prompt from your own data, and ask for it back over several runs. What makes a fact private, and what pattern should you expect?
+   <details><summary>Answer</summary>The model must not be able to answer it from training data, such as a patient's blood type in a visit transcript. Expect recall worse in the early middle (the Valley of Meh), with depth and position varying by model. That variation is why you test yours.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the four criteria every prompt has to meet? | Resemble training data, carry all relevant and only relevant information, lead to a solution, and have a natural stopping point. Chat models give you 1, 3 and 4 largely through fine-tuning, and 2 is never automatic. |
+| What is the Valley of Meh, and what is the evidence? | Early-middle content gets used less than the start or the second half. Liu et al. moved the answer document through 10 to 30 documents and accuracy was U-shaped in every model, with mid-position accuracy below closed-book for GPT-3.5-Turbo. |
+| What is the sandwich technique? | An introduction that frames the task, the long context, then a refocus restating the question near the end, followed by a transition into the answer. It covers both models that do better with the task first and those that do better with it last. |
+| How would you decide what to fetch for a prompt? | Ask about latency, preparability and comparability for each source, sort by proximity and stability, gather more than fits, then score it. All context is optional, and you quantify how optional. |
+| Should you default to embedding retrieval? | No. Lexical search is cheap and debuggable, and Copilot uses plain Jaccard over open files. Neural retrieval earns its place by matching ideas: synonyms, typos, other languages. |
+| Your support agent skips "verify identity" about a third of the time. The prompt lists all the rules. What do you try? | Rewrite it as an SOP with ordered stages. Flattening a procedure to a list cost over 30% success in Li's ablation, while tone changes hardly mattered. Ablate before rewriting. |
+| General or task-specific summary? | Specific keeps what the task needs but must be redone if the question changes. General can be shared across questions, apps and models, but may drop the offhand detail you needed. |
+
+## Next
+
+[Core techniques](03-core-techniques.md): examples, reasoning and the named techniques that fill in this structure.

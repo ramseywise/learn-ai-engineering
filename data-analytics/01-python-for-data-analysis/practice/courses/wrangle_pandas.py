@@ -60,7 +60,7 @@ transactions.sort_values(['Quantity', 'TransactionDate'], ascending=[True, False
 transactions[['ProductID', 'Quantity', 'TransactionDate', 'TransactionID', 'UserID']]
 
 # Make UserID the first column of transactions
-transactions[pd.unique(['UserID'] + transactions.columns.values.tolist()).tolist()]
+transactions[list(dict.fromkeys(['UserID'] + transactions.columns.values.tolist()))]
 
 #======================================================================================================
 # Extracting arrays from a DataFrame

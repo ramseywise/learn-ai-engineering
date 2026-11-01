@@ -188,7 +188,7 @@ Rows must be sorted as whole rows, or the positional link between columns breaks
 
 C-Store carries this a step further: since the system keeps several copies for fault tolerance anyway, each copy can have a different sort order (Stonebraker et al., [*C-Store*](https://doi.org/10.1145/3226595.3226638), VLDB 2005, here in the 2018 reprint collection). The authors describe a collection of overlapping column-oriented projections instead of the usual tables and indexes, along with bitmap indexes that complement B-trees, and the design was commercialised as Vertica. Warehouses that offer clustering keys or multiple materialised projections are making the same trade: more storage and slower loads in exchange for more queries that can skip data.
 
-There is a naming trap worth knowing. The "column families" of Cassandra and HBase, inherited from Bigtable (Chang et al., [*Bigtable*](https://doi.org/10.5555/1298455.1298475), OSDI 2006), are not column-oriented in this sense. They store all of a row's columns in a family together, so the access pattern is still mostly rows.
+There is a naming trap worth knowing. The "column families" of Cassandra and HBase, inherited from Bigtable (Chang et al., [*Bigtable*](https://research.google.com/archive/bigtable-osdi06.pdf), OSDI 2006), are not column-oriented in this sense. They store all of a row's columns in a family together, so the access pattern is still mostly rows.
 
 ## Indexes and scans
 

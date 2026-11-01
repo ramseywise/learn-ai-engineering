@@ -42,10 +42,10 @@ uv run --python 3.12 --with scikit-learn --with xgboost --with lightgbm --with c
 Read it in this order:
 
 1. **The libraries are tied.** The AUC gap from best to worst is 0.0006, while the same model moves by about 0.003 between seeds. No conclusion about which library is better is available from this table, and a blog post claiming one from a single split is reading noise. Across the seeds no library wins every time: CatBoost wins seeds 1 and 4 for AUC, XGBoost seed 3, LightGBM seed 0, and sklearn's classic booster seed 2.
-2. **Boosting beats the untuned forest by 0.03 AUC.** The forest is the fast bar to clear. Its log-loss of 0.40 is much worse than its AUC suggests: unpruned trees give overconfident probabilities on some rows, which is a [calibration](04-model-evaluation.md#calibration-is-a-08-really-80) issue and not a ranking one.
+2. **Boosting beats the untuned forest by 0.03 AUC.** The forest is the fast bar to clear. Its log-loss of 0.40 is much further behind than its AUC, and log-loss punishes confident mistakes, so check [calibration](04-model-evaluation.md#calibration-is-a-08-really-80) before using its probabilities.
 3. **Speed varies by 30x.** The classic booster sorts every feature at every node, while the histogram libraries bin once. On a table this small it hardly matters. On 10M rows it decides what you can afford.
 
-The original benchmarks agree in shape. CatBoost's authors report their library ahead by 1 to 2% in log-loss on Adult against LightGBM and XGBoost (0.270 against +2.4% and +2.2%), but they tune each on their own split and preprocess all with ordered target statistics, and it is their own benchmark ([arXiv:1706.09516](https://arxiv.org/abs/1706.09516), Prokhorenkova et al., NeurIPS 2018). That lead is much smaller than the gap in our table between tuned and default models usually is, and our run has none of it.
+The original benchmarks agree in shape. CatBoost's authors report their library ahead by 1 to 2% in log-loss on Adult against LightGBM and XGBoost (0.270 against +2.4% and +2.2%), but they tune each on their own split and preprocess all with ordered target statistics, and it is their own benchmark ([arXiv:1706.09516](https://arxiv.org/abs/1706.09516), Prokhorenkova et al., NeurIPS 2018). Our untuned run, which gives each library its own default handling of categories, does not show that lead: the gap is inside the noise.
 
 The choice between trees and neural networks is a separate question. Grinsztajn et al. benchmark both across 45 tabular datasets and find tree-based models remain state of the art on medium-sized data of about 10K samples, with a 20,000 compute-hour search for each learner ([arXiv:2207.08815](https://arxiv.org/abs/2207.08815), NeurIPS 2022).
 
@@ -72,11 +72,9 @@ y0 = (rng.uniform(size=1000) < np.where(x[:, 0] > 0.5, 0.8, 0.2)).astype(int)
 booster = xgb.train({"max_depth": 1, "eta": 1.0, "lambda": 1.0, "base_score": 0.5,
                      "objective": "binary:logistic", "min_child_weight": 0},
                     xgb.DMatrix(x, label=y0), num_boost_round=1)
-leaf_values = booster.get_dump(dump_format="json")[0]
 
 p = 0.5                                # the prediction before the first tree
 g, h = p - y0, np.full(1000, p * (1 - p))     # log-loss derivatives at p
-right = x[:, 0] > 0.5                 # the split the tree found is close to the true one
 leaf_ids = booster.predict(xgb.DMatrix(x), pred_leaf=True).astype(int)
 for side in np.unique(leaf_ids):
     I = leaf_ids == side
@@ -84,7 +82,10 @@ for side in np.unique(leaf_ids):
           "in the model", round(float(booster.predict(xgb.DMatrix(x[I][:1]), output_margin=True)[0]), 4))
 ```
 
-@@A@@
+```text
+leaf 1 rows 472 by hand -1.1513 in the model -1.1513
+leaf 2 rows 528 by hand 1.1729 in the model 1.1729
+```
 
 The same paper shows two other things worth knowing. Its sparsity-aware algorithm learns a default direction for missing values at each split, and runs more than 50 times faster than a naive version on the Allstate-10K dataset, because it only visits non-missing entries. And it gives a benchmark of one era's libraries: on 1M Higgs rows, 500 trees of depth 8, XGBoost took 0.68 seconds per tree where scikit-learn took 28.5, for AUCs of 0.8304 and 0.8302. Neither of those is a modern sklearn: that is the gap `HistGradientBoosting` closed.
 
@@ -126,7 +127,7 @@ Trees want numbers. If a category has too many levels to one-hot, the obvious tr
 This is easy to see. The block adds a useless ID column to adult, encodes it both ways and fits the same booster:
 
 ```python
-from lightgbm import LGBMClassifier
+from lightgbm import LGBMClassifier, early_stopping
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 
@@ -175,9 +176,13 @@ score_with(greedy(ids_tr, y_tr), "greedy")
 score_with(ordered(ids_tr, y_tr), "ordered")
 ```
 
-@@B@@
+```text
+no ID      train AUC 0.950  test AUC 0.927
+greedy     train AUC 0.967  test AUC 0.811
+ordered    train AUC 0.953  test AUC 0.925
+```
 
-@@BP@@
+The greedy encoding has learned the leak. Training AUC rises, because the column now carries each row's own label, and test AUC falls from 0.927 to 0.811, because the model leans on a column that means nothing on new rows. The ordered version keeps test AUC near the no-ID baseline at 0.925.
 
 Their paper quantifies the same effect across libraries: with greedy target statistics, log-loss on Adult is 1.1% worse than with ordered ones, on Amazon it is 40% worse, and leave-one-out on Adult is 5.5% worse. Ordered statistics are the safe default. The same argument extends to the boosting itself: a model's residuals on its own training rows are biased ("prediction shift"), so CatBoost's ordered mode computes each row's gradient from a model that has not seen it. That is most useful on small data, where the plain mode on Adult loses 1.1% log-loss and on Internet 3.9%, and it costs about 1.7 times the training time of plain mode on Epsilon.
 
@@ -190,20 +195,29 @@ The important knobs are few, and they interact. Fix the learning rate, let early
 ```python
 for lr in [0.3, 0.1, 0.05, 0.02]:
     m = LGBMClassifier(learning_rate=lr, n_estimators=5000, verbose=-1, n_jobs=4, random_state=0)
-    m.fit(X_tr, y_tr, eval_set=[(X_val, y_val)],
-          callbacks=[__import__("lightgbm").early_stopping(50, verbose=False)])
+    m.fit(X_tr, y_tr, eval_X=X_val, eval_y=y_val, callbacks=[early_stopping(50, verbose=False)])
     print(f"lr {lr:<5} rounds {m.best_iteration_:<5} test AUC {roc_auc_score(y_test, m.predict_proba(X_test)[:, 1]):.4f}")
 
 for leaves in [4, 8, 16, 31, 64, 128]:
     m = LGBMClassifier(learning_rate=0.05, n_estimators=5000, num_leaves=leaves, verbose=-1, n_jobs=4, random_state=0)
-    m.fit(X_tr, y_tr, eval_set=[(X_val, y_val)],
-          callbacks=[__import__("lightgbm").early_stopping(50, verbose=False)])
+    m.fit(X_tr, y_tr, eval_X=X_val, eval_y=y_val, callbacks=[early_stopping(50, verbose=False)])
     print(f"leaves {leaves:<4} rounds {m.best_iteration_:<5} test AUC {roc_auc_score(y_test, m.predict_proba(X_test)[:, 1]):.4f}")
 ```
 
-@@C@@
+```text
+lr 0.3   rounds 21    test AUC 0.9252
+lr 0.1   rounds 100   test AUC 0.9258
+lr 0.05  rounds 215   test AUC 0.9270
+lr 0.02  rounds 509   test AUC 0.9264
+leaves 4    rounds 1417  test AUC 0.9260
+leaves 8    rounds 606   test AUC 0.9259
+leaves 16   rounds 339   test AUC 0.9261
+leaves 31   rounds 215   test AUC 0.9270
+leaves 64   rounds 115   test AUC 0.9267
+leaves 128  rounds 84    test AUC 0.9243
+```
 
-@@CP@@
+On this table the whole search moves AUC by under 0.003, about the size of the seed noise in the first table, while rounds change by a factor of 17. Halving the learning rate about doubles the rounds. Tree size trades against rounds too: small trees need many more of them. Tuning matters more on harder problems, but expect modest gains from a well-behaved default, and spend your time on features and leakage first.
 
 | Step | Knob | Range to try | Why |
 |---|---|---|---|
@@ -225,7 +239,7 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 | Target-encoding on the full training set | Train AUC near perfect, test no better or worse | Out-of-fold or ordered encoding |
 | High `num_leaves` on small data | Train far above validation after few rounds | Cap leaves, raise `min_child_samples` |
 | Trusting the out-of-the-box probabilities | Good AUC, poor log-loss or reliability | Recalibrate on held-out data ([evaluation](04-model-evaluation.md#calibration-is-a-08-really-80)) |
-| Column dtypes that differ between train and serving | LightGBM errors, or silently uses other categories | Fix categories explicitly and save them with the model |
+| Column dtypes that differ between train and serving | LightGBM errors, or category codes that no longer line up | Fix categories explicitly and save them with the model |
 | Grid over `n_estimators` and learning rate | Long search with a flat result | Early stopping picks the rounds |
 | `random_state` fixed once, and comparison made | A chosen seed flatters one candidate | Report mean and spread across seeds |
 

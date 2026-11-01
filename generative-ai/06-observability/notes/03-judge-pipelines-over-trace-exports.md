@@ -55,7 +55,7 @@ from support_agent.judges import raw_export
 
 traces = generate_traces()
 for release in ["v1", "v2.0"]:
-    row = raw_export(next(t for t in traces if t.release == release))
+    row = raw_export(next(t for t in traces if t.release == release and t.seeded_failure is None))
     print(release, "input :", row["input"][:90])
     print(release, "output:", row["output"][:120], "...")
 ```
@@ -63,8 +63,8 @@ for release in ["v1", "v2.0"]:
 ```text
 v1 input : {"user_question": "What is the default payment term?"}
 v1 output: {"lastMessage": "The default payment term is 14 days. Change it under Invoice settings.", "sources": ["https://help.acme ...
-v2.0 input : {"structured_response": {"advisor_query": "How long after paying can I get a refund?"}}
-v2.0 output: {"structured_response": {"answer": "Danish invoices carry VAT at 25 percent unless the customer is VAT exempt.", "source ...
+v2.0 input : {"structured_response": {"advisor_query": "Hvor mange brugere er der på Standard planen?"}
+v2.0 output: {"structured_response": {"answer": "Standard planen har 5 users. Du tilføjer brugere under Indstillinger og Team.", "sou ...
 ```
 
 A parser written for the first shape returns nothing for the second, and doesn't complain. So the ETL tries several paths per field. The pattern comes from the upstream extractor.
@@ -270,7 +270,7 @@ verifier ran on 42 of 1400 turns
 {'fast_usd': 0.76, 'strong_usd': 0.72, 'total_usd': 1.48}
 ```
 
-The rule-based first pass is already decent on this data, so the verifier doesn't improve the numbers here. A real fast model is noisier than a number check, and that's the case verification exists for. The next section shows it. Notice the cost too: the prices are the dated rates in [`pricing.py`](../practice/support_agent/pricing.py), with token counts that are assumptions (900 in and 180 out per fast call, 1,800 and 500 per strong call), so the figures show relative size only.
+The rule-based first pass is already decent on this data, so the verifier doesn't improve the numbers here. Its three false alarms are refund escalations on turns where retrieval went wrong, whose citation points at a policy page that was never retrieved, and a human reviewer might well side with the judge. A real fast model is noisier than a number check, and that's the case verification exists for. The next section shows it. Notice the cost too: the prices are the dated rates in [`pricing.py`](../practice/support_agent/pricing.py), with token counts that are assumptions (900 in and 180 out per fast call, 1,800 and 500 per strong call), so the figures show relative size only.
 
 The turns the pipeline misses deserve as much attention as the ones it finds. This is a number that does appear in the retrieved documents, only not in the cited one.
 
@@ -530,7 +530,7 @@ from support_agent.judges import raw_export, run_pipeline, to_conversation
 lf, capture = offline_langfuse()
 queue = lf.api.annotation_queues.create_queue(name="grounding-disagreements", score_config_ids=[])
 queued = 0
-for t in generate_traces()[:400]:
+for t in generate_traces():
     r = run_pipeline(to_conversation(raw_export(t)))
     trace_id = Langfuse.create_trace_id(seed=t.trace_id)
     lf.create_score(trace_id=trace_id, name="retrieval_relevance", value=r["relevance"]["relevance_score"], data_type="NUMERIC")
@@ -538,7 +538,8 @@ for t in generate_traces()[:400]:
         verdict = r["verification"]
         lf.create_score(trace_id=trace_id, name="hallucination", value=int(verdict["verified"]), data_type="BOOLEAN",
                         comment=f"{verdict['type']}, {verdict['severity']}")
-        if not verdict["verified"]:  # the two judges disagree: a person decides
+        # A person confirms critical findings, and decides when the two judges disagree.
+        if verdict["severity"] == "critical" or not verdict["verified"]:
             lf.api.annotation_queues.create_queue_item(queue.id, object_id=trace_id, object_type="TRACE")
             queued += 1
 lf.flush()
@@ -547,11 +548,11 @@ print("sent to a person:", queued)
 ```
 
 ```text
-scores written: 406
-sent to a person: 0
+scores written: 1442
+sent to a person: 42
 ```
 
-That closes the circle from chapter 1: a person's label on a disagreement becomes a regression fixture, and the golden set gets a question it was missing. Include the judge's version in the score `comment` or metadata, so a later change of judge isn't mistaken for a change in the product.
+That closes the circle from chapter 1: a person's label on a flagged turn becomes a regression fixture, and the golden set gets a question it was missing. Include the judge's version in the score `comment` or metadata, so a later change of judge isn't mistaken for a change in the product.
 
 ---
 
@@ -587,7 +588,7 @@ That closes the circle from chapter 1: a person's label on a disagreement become
 
    <details><summary>Answer</summary>
 
-   It fires on `retrieval_miss` and `wrong_route`, where the agent gives a vague reply, and rarely on distortions, since those answers do contain numbers. It adds little beyond the relevance judge in this data, which is a useful finding in itself: a new judge should earn its cost by catching something the others don't.
+   With that rule it fires on 38 turns, of which 35 have no planted failure and 3 are `retrieval_miss` or `wrong_route`. So in this data it mostly finds answers that are merely short, and you'd have to read a sample to find out whether any are real omissions. That's a useful finding in itself: a new judge should earn its cost by catching something the others don't.
 
    </details>
 
@@ -595,7 +596,7 @@ That closes the circle from chapter 1: a person's label on a disagreement become
 
    <details><summary>Answer</summary>
 
-   Yes, for those it sees: `verify_hallucination` reads only the cited documents, so the number that appears in another document no longer rescues the answer. A 5% sample of about 1,300 negatives costs 65 strong calls and expects to surface less than one of the three missed turns. So one sample tells you little, and you need to accumulate them across weeks to size a rare miss.
+   Yes, for those it sees: `verify_hallucination` reads only the cited documents, so the number that appears in another document no longer rescues the answer. A 5% sample of about 1,360 negatives costs 68 strong calls and on average surfaces far less than one of the three missed turns. So one sample tells you little, and you need to accumulate them across weeks to size a rare miss.
 
    </details>
 
@@ -603,7 +604,7 @@ That closes the circle from chapter 1: a person's label on a disagreement become
 
    <details><summary>Answer</summary>
 
-   The strict run costs about $1.48 for 1,400 turns, so about $0.53 per 1,000 after halving. But the token counts here are assumptions, the upstream run used different models and longer documents, and it ran its strong model on every turn. The comparison shows only that the design choices can move the bill several times over.
+   The strict run costs about $1.48 for 1,400 turns, so about $0.53 per 1,000 after halving. But the token counts here are assumptions, the upstream run used different models, and it ran its strong model on every turn. The comparison shows only that the design choices can move the bill several times over.
 
    </details>
 
