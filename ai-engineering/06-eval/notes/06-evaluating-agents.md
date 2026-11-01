@@ -4,6 +4,7 @@ sources:
   - https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
   - https://docs.langchain.com/langsmith/trajectory-evals
   - https://arxiv.org/abs/2107.03374
+  - https://arxiv.org/abs/2108.07732
   - https://arxiv.org/abs/2406.12045
   - "Bojie Li, AI Agents in Depth (2026), ch. 6 — https://github.com/bojieli/ai-agent-book"
   - https://arxiv.org/abs/2411.15114
@@ -198,7 +199,7 @@ Two metrics answer different questions:
 
 If per-trial success is *p* and trials are independent: pass@k = 1 − (1 − p)^k, and pass^k = p^k. At p = 0.75 and k = 3: pass@3 = 0.98, pass^3 = **0.42**.
 
-- **pass@k** fits tools where a user or system can retry and pick a good result: code generation with tests, candidate generation. From *n* samples with *c* correct, the unbiased estimator is pass@k = 1 − C(n−c, k) / C(n, k) (Chen et al. 2021, the Codex paper).
+- **pass@k** fits tools where a user or system can retry and pick a good result: code generation with tests, candidate generation. From *n* samples with *c* correct, the unbiased estimator is pass@k = 1 − C(n−c, k) / C(n, k) (Chen et al. 2021, the Codex paper). Codex drew n = 200 samples per HumanEval problem to report k ≤ 100. Plugging the observed pass rate into 1 − (1 − p̂)^k underestimates pass@k by a wide margin, and the gap doesn't fully close even at n > 5k. The best sampling temperature also rises with k: 0.2 for pass@1 and 0.8 for pass@100 on a 679M model. Codex-12B scores 28.8% pass@1 and 72.3% pass@100 ([arXiv:2107.03374](https://arxiv.org/abs/2107.03374) (Chen et al., 2021 ⚑), Appendix A). Choosing a candidate needs a grader: from 100 Codex-S samples, taking the one with the highest mean log-probability solves 44.5% of problems, while an oracle that picks a sample passing the tests solves 77.5%. MBPP's 137B model shows the same temperature pattern (low temperature is best with one try, higher wins within 10 samples), and beam search did worst of all because it looped ([arXiv:2108.07732](https://arxiv.org/abs/2108.07732) (Austin et al., 2021 ⚑)).
 - **pass^k** fits customer-facing agents, where every user gets one try. τ-bench (Yao et al. 2024) introduced it and showed agents that look fine on pass@1 falling sharply at pass^8.
 
 The two can rank models in opposite orders. On math benchmarks, RLVR-trained models beat their base models at k=1 but lose at large k: base Qwen2.5-32B solves about 9% more Minerva problems than its RL-trained version at k=128 ([arXiv:2504.13837](https://arxiv.org/abs/2504.13837) (Yue et al., 2025-04)). Pick the k that matches how the system is used before comparing.

@@ -14,6 +14,7 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf
   - https://arxiv.org/abs/2312.11805
+  - https://doi.org/10.18653/v1/2023.findings-acl.824
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -74,6 +75,8 @@ What to do:
 - **Raise the bar**: pass^k instead of pass@1 ([06](06-evaluating-agents.md#non-determinism-run-every-task-k-times)), stricter grounding tier, tighter efficiency budget.
 
 Public benchmarks saturate the same way. A benchmark everyone scores 90%+ on can't separate models. GLUE (2018) saturated within a year and was replaced by SuperGLUE (2019); MMLU (2020) was largely replaced by MMLU-Pro (2024). In June 2024, less than a year after its previous revamp, Hugging Face replaced its leaderboard's whole benchmark set: GSM-8K gave way to MATH level 5, MMLU to MMLU-Pro, and GPQA, MuSR, BBH and IFEval were added (*AI Engineering*, ch. 3, 4). Expect those to saturate too (a 2024–25 snapshot).
+
+BBH was itself built from a benchmark that was saturating, and it shows that weak prompting can make a benchmark look harder than it is. In the BIG-Bench paper the best model already beat the average human rater on 65% of tasks. Suzgun et al. kept 23 tasks where no model had: 6,511 examples, with the average rater at 67.7% and the best prior result at 50.9%. BIG-Bench had scored models with answer-only prompting. Writing chain-of-thought exemplars took Codex from 56.6% to 73.9%, which put it above the average rater on 17 of the 23 tasks instead of 5. PaLM 540B went from 52.3% to 65.2% (10 of 23). Before a benchmark is declared too hard, check that the prompt lets models show what they can do ([doi:10.18653/v1/2023.findings-acl.824](https://doi.org/10.18653/v1/2023.findings-acl.824) (Suzgun et al., Findings of ACL 2023)).
 
 The replacements are built to start near the floor. On ARC-AGI-2, o3 (Medium) scores 3.0%, against 53.0% on ARC-AGI-1, and o3-mini (High) drops from 34.5% to 3.0% ([arXiv:2505.11831](https://arxiv.org/abs/2505.11831) (Chollet et al., 2025-05)). On Humanity's Last Exam, frontier models scored 3.3–9.4% at release, with RMS calibration errors of 82–93%: they answer confidently when they're wrong ([arXiv:2501.14249](https://arxiv.org/abs/2501.14249) (Phan et al., 2025-01)). The floor has a noise band of its own. The ARC authors treat any score under 5% as not meaningful, and the HLE authors say much the same about small moves near zero. A change from 3% to 4% isn't progress. HLE's authors also predicted models could pass 50% by the end of 2025, so a new benchmark's headroom can disappear quickly.
 

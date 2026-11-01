@@ -18,6 +18,7 @@ sources:
   - https://arxiv.org/abs/2309.02427
   - https://arxiv.org/abs/2312.06585
   - https://arxiv.org/abs/2406.04151
+  - https://arxiv.org/abs/2207.05608 (Inner Monologue)
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -101,6 +102,8 @@ Experiment 1-1 removes one part at a time (the system prompt is kept, since with
 | Message history | Loses continuity, restarts the task and repeats finished steps |
 
 The lesson: *an agent can only decide on what is in its context.* Every component is load-bearing. Lab: [chapter1/context](https://github.com/bojieli/ai-agent-book/tree/main/chapter1/context) (needs an API key; configurable ablation modes).
+
+The tool-results row was measured on robots before ReAct. SayCan (Ahn et al., 2022) had PaLM-540B pick a kitchen robot's next skill without ever being told whether the last one had worked. Inner Monologue ([arXiv:2207.05608](https://arxiv.org/abs/2207.05608) (Huang et al., CoRL 2023)) wrote that feedback back into the prompt as text after each step: whether the step succeeded, which objects were visible, and answers from a human when the model asked. Over 120 kitchen runs, success rose from 30.8% for SayCan to 60.4% with success and object feedback. When a person forced a skill to fail mid-task, SayCan had no reason to retry, and its mobile-manipulation success fell to 0% while Inner Monologue's held at 75%. In those runs a human supplied the object list, and a learned classifier judged success. The model still sometimes ignored the feedback, and a false "success" report misled it.
 
 ---
 

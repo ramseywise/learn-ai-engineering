@@ -9,6 +9,8 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - "Dmitriev et al., A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments (KDD 2017)"
   - https://arxiv.org/abs/1810.03993
+  - https://arxiv.org/abs/1804.09301
+  - https://arxiv.org/abs/2101.11718
 confidence: high
 cleaned: 2026-10-28
 ---
@@ -137,6 +139,8 @@ A flat headline can hide a win and a loss that cancel out:
 "+1 overall" would ship a change that breaks non-English users. Always break results down by the slices you labeled ([03](03-eval-datasets.md#coverage-and-balance)), and show *n* per slice so nobody over-reads a 12-task slice.
 
 Model cards made this the reporting standard for released models. Mitchell et al. ask for results broken down by each relevant factor (groups of people, capture instruments, environments) and by their intersections, with confidence intervals. The card also states intended and out-of-scope uses and the decision threshold the numbers assume. Their toxicity example put two versions of the same Perspective API classifier side by side on synthetic identity-term templates. Version 1 scored poorly on sentences containing "lesbian", "gay" and "homosexual". Version 5, retrained with bias mitigations, scored more evenly across the terms. A single headline score would have shown neither problem nor fix ([arXiv:1810.03993](https://arxiv.org/abs/1810.03993) (Mitchell et al., FAT* 2019)). The paper proposes a format and shows two examples. The authors say themselves that a card is only as honest as the people who write it.
+
+Bias slices are usually built as minimal pairs: the same input with only the group term changed. Winogender wrote 720 coreference sentences (60 occupations, with male, female and neutral pronouns) where the right answer does not depend on the pronoun's gender, which crowdworkers checked. Even so, three coreference systems resolved the male and female versions differently on 68% (rule-based), 28% (statistical) and 13% (neural) of the pairs. The bias compounds through the pipeline. "Manager" is 38.5% female in US labour statistics and 5.18% female in a text corpus, and none of the three systems predicted a female manager. The authors give the test "high positive predictive value and low negative predictive value": it can show bias but cannot prove it is absent ([arXiv:1804.09301](https://arxiv.org/abs/1804.09301) (Rudinger et al., NAACL 2018)). Open-ended generation needs a classifier to score each slice, and that classifier has error bars of its own. BOLD prompted GPT-2, BERT and CTRL with 23,679 Wikipedia sentence openings across 43 groups in 5 domains, and most models produced more biased text than the Wikipedia originals. Checked against human labels, its toxicity classifier caught only 67.24% of the toxic texts and reached a Spearman correlation of 0.58 ([arXiv:2101.11718](https://arxiv.org/abs/2101.11718) (Dhamala et al., FAccT 2021)). A per-group gap smaller than the classifier's own error is not evidence of anything.
 
 Slicing by difficulty does the same job for capability claims. Yang et al. (2026) fixed four difficulty strata over 322 terminal-agent tasks, then tracked each stratum across training stages. The headline mean rose steadily. The strata did not: Easy climbed from 32% to 73%, while Extreme went 0 → 4.9 → 11.0 → **6.1** → 11.0%. That dip at the fourth stage is invisible in the aggregate.
 

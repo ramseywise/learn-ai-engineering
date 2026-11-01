@@ -18,6 +18,9 @@ sources:
   - https://arxiv.org/abs/1606.01541
   - https://arxiv.org/abs/1804.08771
   - https://arxiv.org/abs/1602.06023
+  - https://arxiv.org/abs/2107.03374
+  - https://arxiv.org/abs/2108.07732
+  - https://arxiv.org/abs/2212.10481
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -73,7 +76,7 @@ Teams reach for a judge too early. Most systems have more checkable properties t
 | Efficiency | Steps, tokens, latency, cost from the trace |
 | Exact facts | Number within tolerance, date matches, entity in an allowed set |
 
-"Passes the tests" is only as strict as the tests. EvalPlus added about 80× more tests to HumanEval (LLM-written seed inputs, then type-aware mutation): **pass@k fell by up to 19.3–28.9% across 26 models** (GPT-4 greedy 88.4% → 76.2%), the ranking of several models flipped, and 11% of HumanEval's own reference solutions were wrong ([arXiv:2305.01210](https://arxiv.org/abs/2305.01210) (Liu et al., NeurIPS 2023)). Before trusting a test-suite grader, measure its false-positive rate by hand on a sample of passing outputs.
+"Passes the tests" is only as strict as the tests. MBPP showed this first, with three asserts per problem. On 50 of its 500 test problems the authors hand-wrote adversarial tests, and the 137B model's solve rate fell from 66% to 58%, so about 12% of counted solutions were wrong. One of them was `is_woodall`, where only one assert used a true Woodall number, so the model returned `n == 383` ([arXiv:2108.07732](https://arxiv.org/abs/2108.07732) (Austin et al., 2021 ⚑)). EvalPlus added about 80× more tests to HumanEval (LLM-written seed inputs, then type-aware mutation): **pass@k fell by up to 19.3–28.9% across 26 models** (GPT-4 greedy 88.4% → 76.2%), the ranking of several models flipped, and 11% of HumanEval's own reference solutions were wrong ([arXiv:2305.01210](https://arxiv.org/abs/2305.01210) (Liu et al., NeurIPS 2023)). Before trusting a test-suite grader, measure its false-positive rate by hand on a sample of passing outputs. Code that calls libraries needs tests written differently. ODEX (945 StackOverflow intents, 79 libraries) mocks HTTP calls, makes bounding assertions on random output (every element an integer in [3, 5]) and compares with library equality such as `np.array_equal`, because `a == b` on arrays raises an error. With Codex, one randomly chosen test gave about the same pass@1 as the full suite ([arXiv:2212.10481](https://arxiv.org/abs/2212.10481) (Wang et al., Findings of EMNLP 2023)).
 
 For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless. Check values with a tolerance or a range, not equality: a thermostat call at 76°F when the reference says 77°F is probably fine, while no call or the wrong tool is not ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
 
@@ -87,7 +90,7 @@ BLEU, ROUGE and embedding similarity compare an output to a reference string. Th
 
 - **They can be wrong.** The WMT 2023 Metrics shared task found many bad reference translations in its own data.
 - **They can be incomplete.** Adept's Fuyu wrote correct image captions that scored low because no reference phrased them that way.
-- **Overlap isn't correctness.** On HumanEval, OpenAI found correct and incorrect code solutions got similar BLEU scores.
+- **Overlap isn't correctness.** On HumanEval, OpenAI found correct and incorrect code solutions got similar BLEU scores. Codex-12B's BLEU distributions for correct and incorrect solutions overlap heavily on 4 random tasks ([arXiv:2107.03374](https://arxiv.org/abs/2107.03374) (Chen et al., 2021 ⚑), Fig. 8). The same holds for MBPP and for ODEX's library code across four languages ([arXiv:2212.10481](https://arxiv.org/abs/2212.10481) (Wang et al., Findings of EMNLP 2023)).
 - **Overlap can rank systems backwards.** Li et al.'s RL chatbot scored lower single-reference BLEU than the model it started from (1.28 against 1.44 on 2,500 pairs), yet human judges preferred its multi-turn conversations 72% of the time ([arXiv:1606.01541](https://arxiv.org/abs/1606.01541) (Li et al., EMNLP 2016)).
 
 The metric itself has settings, and they change the number:
