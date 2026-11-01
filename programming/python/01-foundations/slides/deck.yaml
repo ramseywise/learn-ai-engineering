@@ -1,0 +1,359 @@
+# Python 01 Foundations: study deck (flashcards). Covers notes/01-05.
+# Build:  make slides PILLAR=programming/python/01-foundations [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Python Foundations
+  subtitle: Values, functions, loops, text and collections
+  tagline: |-
+    Types · Conditionals · Functions
+    Loop patterns · Strings · Files · Lists · Dicts · Tuples
+  reference: "Notes: programming/python/01-foundations"
+  output: python-foundations.pptx
+  notes: >-
+    The study deck for Python 01. Every slide is a flashcard: the title is the question and the
+    takeaway is the rule that answers it. Three parts, then the rules to keep.
+
+parts:
+  - title: Values and functions
+    summary: Types and operators · Truthiness · Bad input · Return, don't print
+    slides:
+      - layout: statement
+        title: Why learn a value's type first?
+        kicker: The problem
+        statement: "`\"1\" + 1` crashes, `7 / 2` is `3.5`, and `-7 // 2` is `-4`. Each surprise comes from a type you didn't check."
+        attribution: A program reads values, computes new ones and decides what to do next.
+        takeaway: Know each value's type and the rest follows. Convert explicitly with `int()`, `float()` and `str()`.
+        source: notes/01-values-and-conditionals.md
+        notes: >-
+          `type(x)` tells you. `int("3.5")` raises ValueError, so `int(float("3.5"))` is the
+          two-step version, and it truncates.
+
+      - layout: table
+        title: What do Python's arithmetic operators return?
+        kicker: Operators
+        header: [Operator, Meaning, Remember]
+        widths: [1.4, 3, 5]
+        rows:
+          - ["`/`", True division, "Always a `float`: `7 / 2 == 3.5`"]
+          - ["`//`", Floor division, "Rounds toward −∞: `-7 // 2 == -4`"]
+          - ["`%`", Remainder, "`x % 2 == 0` tests even, `n % 10` is the last digit"]
+          - ["`**`", Power, "`2 ** 10`"]
+          - ["`+`, `*` on strings", "Concatenate, repeat", "`\"ab\" * 3 == \"ababab\"`, and `\"1\" + 1` is a `TypeError`"]
+        takeaway: "`/` always returns a float, and `//` floors toward negative infinity rather than zero."
+        source: notes/01-values-and-conditionals.md
+        notes: Precedence follows PEMDAS. When in doubt add parentheses, which cost nothing.
+
+      - layout: compare
+        title: What counts as false in an if?
+        kicker: Truthiness and short-circuit
+        emphasis: none
+        left:
+          title: Falsy
+          bullets:
+            - "`0`, `0.0`, `\"\"`"
+            - "`[]`, `{}`"
+            - "`None`, `False`"
+          tag: "Write `if items:`, not `if len(items) > 0:`"
+        right:
+          title: Short-circuit
+          bullets:
+            - "`and` / `or` stop as soon as the answer is known"
+            - "`x != 0 and 10 / x > 2` never divides by zero"
+            - "Comparisons chain: `0 <= score <= 1`"
+          tag: Put the guard first
+        takeaway: Zero, empty containers and `None` are falsy. `and` and `or` short-circuit, so the guard goes first.
+        source: notes/01-values-and-conditionals.md
+        notes: Indentation is the block structure. Four spaces, never tabs.
+
+      - layout: code
+        title: How do you catch bad input?
+        kicker: try / except
+        lang: python
+        code: |-
+          raw = input("Hours: ")
+          try:
+              hours = float(raw)    # only what can fail
+          except ValueError:        # only what you expect
+              print("Please enter a number")
+              hours = None
+        bullets:
+          - "A bare `except:` also swallows typos and `Ctrl-C`"
+          - "Read a traceback **bottom up**: the last line names the exception"
+          - "Wrong answer, no crash? Print intermediates or `assert` small cases"
+        takeaway: Wrap only the line that can fail and name the exception you expect.
+        source: notes/01-values-and-conditionals.md
+        notes: Syntax errors point at or just after the problem. Semantic errors need print or assert.
+
+      - layout: flow
+        title: What does def do, and what does a call do?
+        kicker: Functions
+        steps:
+          - {label: "`def`", sub: creates a function object and binds its name}
+          - {label: Call, sub: binds arguments to parameters}
+          - {label: Body, sub: runs now and only now}
+          - {label: "`return`", sub: "hands a value back, or `None` if there's no `return`"}
+        bullets:
+          - "**Parameters** are the names in the definition, **arguments** are the values you pass"
+          - "`x = print(...)` leaves `x` as `None`"
+        takeaway: "`def` only binds a name. The body runs per call, and a function with no `return` returns `None`."
+        source: notes/02-functions.md
+        notes: The docstring is what help() shows. Type hints document intent and Python does not enforce them.
+
+      - layout: compare
+        title: Why should a function return rather than print?
+        kicker: Return, don't print
+        left:
+          title: Prints
+          code: |-
+            def show_average(xs):
+                print(sum(xs) / len(xs))
+          tag: Only good for the terminal
+        right:
+          title: Returns
+          code: |-
+            def average(xs):
+                return sum(xs) / len(xs)
+
+            assert average([1, 2, 3]) == 2
+          tag: Usable from tests, functions and handlers
+        takeaway: Functions return values, so they can be tested and reused. Printing is for the edge of the program.
+        source: notes/02-functions.md
+        notes: Most bugs in beginners' code come from functions that print where they should return.
+
+      - layout: code
+        title: Why is def f(xs=[]) a bug?
+        kicker: Mutable defaults
+        lang: python
+        code: |-
+          def add(item, bucket=[]):       # created ONCE, when def runs
+              bucket.append(item)
+              return bucket
+
+          def add(item, bucket=None):     # the fix: a new list per call
+              bucket = [] if bucket is None else bucket
+              bucket.append(item)
+              return bucket
+        takeaway: A default is created once, at definition time, and shared by every call. Use `None` and build inside.
+        source: notes/02-functions.md
+        notes: Keyword arguments are clearer for optional settings. Note 03 of the engineers module returns to this.
+
+      - layout: bullets
+        title: Can a function change a global variable?
+        kicker: Scope
+        bullets:
+          - "Names assigned inside a function are **local** and vanish when it returns"
+          - "A function can **read** a global name"
+          - "Assigning to that name creates a new local one, unless you declare `global`"
+          - "You almost never should: pass values in as arguments and return results"
+        takeaway: Assignment inside a function creates a local name. Pass values in and return results instead of using `global`.
+        source: notes/02-functions.md
+        notes: "Built-ins to know on day one: len, min, max, sum, abs, round, sorted, range, enumerate, zip, isinstance."
+
+  - title: Loops and text
+    summary: The six patterns · Slicing · String methods · Reading files
+    slides:
+      - layout: statement
+        title: Why do most loops look the same?
+        kicker: The problem
+        statement: Most loops are one of six patterns. A hand-written copy of a built-in is more code and more off-by-one errors.
+        attribution: Learn to recognise the pattern, then learn the built-in that already does it.
+        takeaway: Count, total, largest, search, filter and transform are the six patterns, and each has a built-in.
+        source: notes/03-loops.md
+        notes: Write each loop once to understand it, then use the built-in.
+
+      - layout: flow
+        title: What shape does every loop pattern share?
+        kicker: Loop patterns
+        steps:
+          - {label: Set up, sub: "`total = 0` before the loop"}
+          - {label: Update, sub: "`total += x` inside, for each item"}
+          - {label: Use, sub: "`total` is the answer after the loop"}
+        bullets:
+          - "Largest starts at `None`, not `0`: a `0` start is wrong for all-negative data"
+          - "Prefer `for` to walk a collection: a `while` counter is where off-by-one errors live"
+        takeaway: Set up a variable before the loop, update it inside, use it after. Start "largest" from `None`, not `0`.
+        source: notes/03-loops.md
+        notes: "`for ... else` runs else only if the loop did not break. A helper with early return usually reads better."
+
+      - layout: table
+        title: Which built-in replaces each loop pattern?
+        kicker: Idiomatic replacements
+        header: [Pattern, Built-in]
+        widths: [1.5, 6]
+        rows:
+          - [Count, "`len(xs)`, `sum(1 for x in xs if cond)`"]
+          - [Total, "`sum(xs)`"]
+          - [Largest, "`max(xs, default=None)`"]
+          - [Search, "`target in xs`, `any(cond(x) for x in xs)`"]
+          - [Filter, "`[x for x in xs if cond(x)]`"]
+          - [Transform, "`[f(x) for x in xs]`"]
+        takeaway: "Reach for `sum`, `max`, `in`, `any` and comprehensions before you write the loop by hand."
+        source: notes/03-loops.md
+        notes: The exercise file makes you write each pattern by hand and compares with the built-ins.
+
+      - layout: bullets
+        title: How do you loop with an index, or over two lists?
+        kicker: enumerate and zip
+        bullets:
+          - "`enumerate` gives position and item, without a counter"
+          - "`zip` walks two sequences together"
+          - "`for i in range(len(xs))` almost always means you wanted `enumerate`"
+        aside:
+          lang: python
+          code: |-
+            for i, w in enumerate(ws):
+                print(i, w)
+
+            for n, s in zip(ns, ss):
+                print(n, s)
+        takeaway: Use `enumerate` for an index and `zip` for parallel sequences, never `range(len(xs))`.
+        source: notes/03-loops.md
+        notes: "`range(start, stop, step)` excludes stop."
+
+      - layout: code
+        title: What does s[1:4] return?
+        kicker: Strings are sequences
+        lang: python
+        code: |-
+          s = "banana"
+          s[0], s[-1]        # 'b', 'a'
+          s[1:4]             # 'ana': start included, end excluded
+          s[:3], s[3:]       # 'ban', 'ana'. s[:i] + s[i:] == s for every i
+          s[::-1]            # 'ananab'
+          s = s.upper()      # strings are immutable, so methods return new ones
+        takeaway: A slice includes the start and excludes the end. Strings are immutable, so every method returns a new one.
+        source: notes/04-strings-and-files.md
+        notes: "`s[0] = 'B'` is an error. `s.upper()` on its own line changes nothing."
+
+      - layout: table
+        title: Which string methods do you use constantly?
+        kicker: String methods
+        header: [Method, Example, Result]
+        widths: [2.2, 3.2, 3]
+        rows:
+          - ["`strip()`", "`\"  hi\\n\".strip()`", "`'hi'`"]
+          - ["`find()`", "`\"a@b.org\".find(\"@\")`", "`1`, or `-1` if absent"]
+          - ["`split()`", "`\"a b  c\".split()`", "`['a', 'b', 'c']`"]
+          - ["`split(sep)`", "`\"a,,b\".split(\",\")`", "`['a', '', 'b']`"]
+          - ["`join()`", "`\", \".join([\"a\", \"b\"])`", "`'a, b'`"]
+          - ["`replace()`", "`\"a-b\".replace(\"-\", \"_\")`", "`'a_b'`"]
+        takeaway: "`split()` with no argument splits on any run of whitespace. `split(sep)` keeps empty fields."
+        source: notes/04-strings-and-files.md
+        notes: "f-strings: `f\"{amount:,.2f}\"`, `f\"{ratio:.1%}\"`, `f\"{value=}\"` for debugging."
+
+      - layout: code
+        title: How do you read a file safely, line by line?
+        kicker: Reading files
+        lang: python
+        code: |-
+          with open("mbox.txt", encoding="utf-8") as fh:   # closes the file for you
+              for line in fh:                              # one line at a time
+                  line = line.rstrip()                     # drop the newline
+                  if not line.startswith("From "):
+                      continue                             # skip what you don't need
+                  print(line.split()[1])
+        takeaway: Use `with open(path, encoding="utf-8")` and iterate over lines, so memory stays constant and the file closes.
+        source: notes/04-strings-and-files.md
+        notes: "`fh.read()` is for small files only. The default encoding depends on the OS. `\"w\"` truncates, `\"a\"` appends, and `write()` adds no newline."
+
+  - title: Collections
+    summary: Aliasing · The counting idiom · Hashable keys · Sorting by key
+    slides:
+      - layout: statement
+        title: Why learn just three collections first?
+        kicker: The problem
+        statement: A list is an ordered sequence, a dict maps keys to values, and a tuple is a fixed record. Combined, they count, group and sort almost anything.
+        takeaway: List for order and change, dict for lookup by key, tuple for a fixed immutable record.
+        source: notes/05-collections.md
+        notes: Most scripting problems are one of those three operations on those three shapes.
+
+      - layout: compare
+        title: Does b = a copy a list?
+        kicker: Aliasing
+        left:
+          title: Second name
+          code: |-
+            a = [1, 2]
+            b = a
+            b.append(3)
+            a            # [1, 2, 3]
+          tag: One list, two names
+        right:
+          title: Real copy
+          code: |-
+            a = [1, 2]
+            b = a.copy()     # or a[:], list(a)
+            b.append(3)
+            a            # [1, 2]
+          tag: Two lists
+        takeaway: "`b = a` makes a second name for the same list. Copy with `a.copy()`, and remember functions can mutate arguments."
+        source: notes/05-collections.md
+        notes: "`xs.sort()` sorts in place and returns None. `sorted(xs)` returns a new list."
+
+      - layout: code
+        title: What is the counting idiom?
+        kicker: Dictionaries
+        lang: python
+        code: |-
+          counts = {}
+          for word in words:
+              counts[word] = counts.get(word, 0) + 1
+
+          from collections import Counter, defaultdict
+          Counter(words).most_common(10)          # the standard-library version
+          by_domain = defaultdict(list)           # the grouping version
+          for email in emails:
+              by_domain[email.split("@")[1]].append(email)
+        takeaway: "`counts[k] = counts.get(k, 0) + 1` counts anything. `Counter` and `defaultdict` are the library versions."
+        source: notes/05-collections.md
+        notes: "`d[k]` raises KeyError when the key is missing and `d.get(k, default)` does not."
+
+      - layout: cards
+        title: Which collection should you pick?
+        kicker: Choosing
+        cards:
+          - {title: List, body: "Ordered and mutable. `append`, `pop`, `sort`. Searching with `in` walks the list."}
+          - {title: Dict, body: "Lookup, insert and `in` are **O(1)** on average. Keeps insertion order. Keys must be hashable."}
+          - {title: Tuple, body: "Immutable and hashable, so it can be a key: `{(lat, lon): city}`. Unpack with `x, y = point`."}
+        takeaway: Only hashable values can be dict keys, so a tuple can be one and a list cannot.
+        source: notes/05-collections.md
+        notes: For named fields, use NamedTuple or a dataclass.
+
+      - layout: flow
+        title: How do you sort by count, breaking ties by name?
+        kicker: Sorting with a key
+        steps:
+          - {label: "`counts.items()`", sub: "`(word, n)` tuples"}
+          - {label: "`key=`", sub: "`lambda kv: (-kv[1], kv[0])`"}
+          - {label: Compare, sub: tuples compare element by element}
+          - {label: "`[:10]`", sub: the top ten}
+        caption: "`sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:10]`"
+        takeaway: Have `key=` return a tuple such as `(-count, word)`, because tuples compare element by element.
+        source: notes/05-collections.md
+        notes: The old decorate, sort, undecorate pattern is what key= does for you.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What are the foundation rules?
+        cards:
+          - {title: Functions, body: "Return values. Print at the edge. `None` as a default, never `[]`."}
+          - {title: Errors, body: "`try` only the line that can fail. Name the exception. Read tracebacks from the bottom."}
+          - {title: Loops, body: "Know the pattern, use the built-in. `enumerate` and `zip`, not `range(len(xs))`."}
+          - {title: Files, body: "`with open(path, encoding=\"utf-8\")`, one line at a time."}
+        takeaway: Return values, name exceptions, use built-ins, and open files with `with` and an explicit encoding.
+        source: notes/02-functions.md
+        notes: These come from the Python track README's rules of thumb.
+
+      - layout: steps
+        title: Where do you go after foundations?
+        steps:
+          - {title: Python 02, text: "Regex, HTTP, JSON, objects and SQLite: talking to the world"}
+          - {title: SQL 01, text: "Starts alongside Python 02, once this module is done"}
+          - {title: Practice, text: "`bash check.sh exercises 01`, and each file also runs alone"}
+        takeaway: Next is Python 02 informatics, with SQL 01 alongside. If an exercise file passes first try, move on.
+        source: notes/05-collections.md
+        notes: See programming/CURRICULUM.md for the order of the tracks.

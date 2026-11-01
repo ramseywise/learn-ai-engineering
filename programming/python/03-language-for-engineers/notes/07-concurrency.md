@@ -4,7 +4,7 @@ sources:
   - "Python docs, asyncio — https://docs.python.org/3/library/asyncio.html"
   - "Python docs, concurrent.futures — https://docs.python.org/3/library/concurrent.futures.html"
 concepts: [python-asyncio, python-threads, python-multiprocessing, python-gil, python-concurrency]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 7 — Concurrency
 
@@ -40,6 +40,47 @@ with ThreadPoolExecutor(max_workers=8) as pool:
 `pool.map(fn, items)` is simpler when you want results in input order and any exception should stop you. Shared mutable state between threads needs a `threading.Lock`. Better: have each task return its result and combine them in the main thread.
 
 ## asyncio
+
+One thread runs an **event loop**. It keeps a queue of tasks that are ready, and a list of what the others are waiting for. A task runs until it reaches an `await` on something not yet finished, then hands control back. Nothing preempts it, which is why switching can only happen at an `await`:
+
+```python
+import asyncio
+
+async def worker(name: str, delay: float) -> None:
+    print(f"{name} start")
+    await asyncio.sleep(delay)   # hands control back to the loop
+    print(f"{name} done")
+
+async def main() -> None:
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(worker("a", 0.2))
+        tg.create_task(worker("b", 0.1))
+
+asyncio.run(main())
+# a start
+# b start
+# b done
+# a done
+```
+
+```mermaid
+sequenceDiagram
+    participant L as event loop
+    participant A as task a
+    participant B as task b
+    participant T as timers and sockets
+    L->>A: run until the first await
+    A-->>T: await sleep(0.2), suspend
+    L->>B: run until the first await
+    B-->>T: await sleep(0.1), suspend
+    Note over L: nothing is ready, so the loop sleeps until a timer is due
+    T-->>L: b's timer fires
+    L->>B: resume, b finishes
+    T-->>L: a's timer fires
+    L->>A: resume, a finishes
+```
+
+The total is about 0.2 s, not 0.3 s, because neither task holds the thread while it waits. A real fetcher has the same shape, with a concurrency limit added:
 
 ```python
 import asyncio

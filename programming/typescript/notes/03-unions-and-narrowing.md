@@ -4,7 +4,7 @@ sources:
   - "TypeScript Handbook, Narrowing — https://www.typescriptlang.org/docs/handbook/2/narrowing.html (CC-BY 4.0; paraphrased)"
   - "typescript-exercises — https://github.com/typescript-exercises/typescript-exercises (MIT; vendored in practice/)"
 concepts: [ts-unions, ts-narrowing, ts-discriminated-unions, ts-type-predicates, ts-exhaustiveness]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 3 — Unions and Narrowing
 
@@ -36,6 +36,28 @@ The checker follows your control flow and narrows the type inside each branch:
 | `x === null`, `x == null`, `if (x)` | Nullability | `if (!user) return;` then `user` is non-null |
 | `x.kind === 'circle'` | Discriminated unions | see below |
 | `Array.isArray(x)` | Arrays | |
+
+Follow one value through a function. Each branch removes members of the union, so what is left at the bottom is the only type it can be:
+
+```ts
+function label(x: string | number | null): string {
+  if (x === null) return 'none';                     // x: null
+  if (typeof x === 'string') return x.toUpperCase(); // x: string
+  return x.toFixed(2);                               // x: number
+}
+
+console.log(label(null), label('ada'), label(3));    // none ADA 3.00
+```
+
+```mermaid
+flowchart TD
+    A["x: string | number | null"] --> B{"x === null?"}
+    B -- yes --> C["x: null, return 'none'"]
+    B -- no --> D["x: string | number"]
+    D --> E{"typeof x === 'string'?"}
+    E -- yes --> F["x: string, safe to call toUpperCase"]
+    E -- no --> G["x: number, safe to call toFixed"]
+```
 
 Narrowing also happens after an early `return` or `throw`. Guard clauses at the top of a function are the idiomatic way to do it.
 

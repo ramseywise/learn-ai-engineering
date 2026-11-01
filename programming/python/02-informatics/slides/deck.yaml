@@ -1,0 +1,312 @@
+# Python 02 Informatics: study deck (flashcards). Covers notes/01-05.
+# Build:  make slides PILLAR=programming/python/02-informatics [PREVIEW=1]
+# Spec:   .claude/skills/slides/references/deck-spec.md
+
+deck:
+  title: Python Informatics
+  subtitle: Programs that talk to the world
+  tagline: |-
+    Regex · HTTP · JSON and XML · APIs
+    Classes · SQLite
+  reference: "Notes: programming/python/02-informatics"
+  output: python-informatics.pptx
+  notes: >-
+    The study deck for Python 02. Every slide is a flashcard: the title is the question and the
+    takeaway is the rule that answers it. Text and the wire, then structured data, then objects
+    and databases.
+
+parts:
+  - title: Text and the wire
+    summary: Regular expressions · HTTP · Status codes · Timeouts
+    slides:
+      - layout: statement
+        title: What does a program get from the outside world?
+        kicker: The problem
+        statement: Mostly text. HTTP/1.1 is text over a socket, and what comes back has to be picked apart before you can use it.
+        attribution: Extract with a pattern when the text is messy, and use a parser when it has a format.
+        takeaway: An HTTP/1.1 exchange is text over a socket. Regex extracts from messy text, and parsers handle formats.
+        source: notes/02-network-and-http.md
+        notes: py4e starts with a raw socket to show that nothing is magic. In practice use a client library.
+
+      - layout: table
+        title: Which regex syntax covers most needs?
+        kicker: Regular expressions
+        header: [Pattern, Matches]
+        widths: [2.5, 6]
+        rows:
+          - ['`\d` `\w` `\s`', "A digit, a word character, whitespace (`\\D` `\\W` `\\S` are the opposites)"]
+          - ['`[aeiou]`, `[^,]`', "A character class, a negated class"]
+          - ['`*` `+` `?` `{2,4}`', "0+, 1+, 0 or 1, between 2 and 4 repeats"]
+          - ['`*?` `+?`', "**Non-greedy**: as little as possible"]
+          - ['`^` `$`', "Start and end of the string"]
+          - ['`( … )`, `(?: … )`', "Capture group, and grouping without capture"]
+        takeaway: Learn classes, repeats, anchors and groups, and always write patterns as raw strings like `r"\d+"`.
+        source: notes/01-regular-expressions.md
+        notes: Raw strings make sure the backslash reaches the regex engine instead of being a Python escape.
+
+      - layout: code
+        title: What does re.findall return if the pattern has a group?
+        kicker: The core calls
+        lang: python
+        code: |-
+          re.search(r"^From: ", line)              # a Match or None
+          re.findall(r"\S+@\S+", line)             # list of every match
+          re.findall(r"^From .* (\d\d):", line)    # with a group: the group only
+          m = re.search(r"(?P<user>[\w.]+)@(?P<host>[\w.]+)", line)
+          m.group("host") if m else None           # check for None first
+          re.sub(r"\s+", " ", text)                # replace
+        takeaway: With a group, `findall` returns the group and not the full match. `search` returns a Match or `None`.
+        source: notes/01-regular-expressions.md
+        notes: Use named groups once there is more than one.
+
+      - layout: compare
+        title: What is the difference between .+ and .+?
+        kicker: Greedy vs non-greedy
+        recall: What is the difference between greedy and non-greedy matching?
+        emphasis: none
+        left:
+          title: Greedy
+          code: |-
+            re.findall(r"<.+>", "<b>hi</b>")
+            # ['<b>hi</b>']
+          tag: Takes as much as it can
+        right:
+          title: Non-greedy
+          code: |-
+            re.findall(r"<.+?>", "<b>hi</b>")
+            # ['<b>', '</b>']
+          tag: Takes as little as it can
+        takeaway: Quantifiers are greedy by default. Add `?` to match as little as possible.
+        source: notes/01-regular-expressions.md
+        notes: "When not to use regex: fixed delimiters (split), HTML or XML (a parser), email validation (a library)."
+
+      - layout: flow
+        title: What actually goes over the wire in HTTP?
+        kicker: Request and response
+        steps:
+          - {label: Request line, sub: "`GET /page1.htm HTTP/1.1`"}
+          - {label: Headers, sub: "`Host: data.example.org`, then a blank line"}
+          - {label: Status line, sub: "`HTTP/1.1 200 OK`"}
+          - {label: Headers + body, sub: a blank line separates them}
+        caption: One request goes out, and one response comes back on the same connection.
+        takeaway: A request line and headers go out. A status line, headers, a blank line and a body come back.
+        source: notes/02-network-and-http.md
+        notes: You can type this into a raw socket. Every web API is built on it.
+
+      - layout: table
+        title: What does each status class mean, and which do you retry?
+        kicker: Status codes
+        header: [Status, Meaning, You do]
+        widths: [1, 3.8, 3.6]
+        rows:
+          - [2xx, "Success: `200`, `201`, `204`", Read the body]
+          - [3xx, Redirect, "Follow the `Location` header"]
+          - [4xx, "Your mistake: `400`, `401`/`403`, `404`, `429`", "Fix the request. Slow down on `429`"]
+          - [5xx, Their mistake, Retry with backoff]
+        takeaway: 4xx means your request is wrong, 5xx means the server failed. Retry 5xx with backoff, and slow down on `429`.
+        source: notes/02-network-and-http.md
+        notes: urllib raises HTTPError for 4xx and 5xx.
+
+      - layout: code
+        title: What must every network call set?
+        kicker: urllib
+        lang: python
+        code: |-
+          url = "https://api.example.org/search?" + urlencode({"q": "ann arbor", "limit": 5})
+          req = Request(url, headers={"User-Agent": "learn-python/1.0"})
+          with urlopen(req, timeout=10) as resp:       # raises HTTPError for 4xx/5xx
+              body = resp.read().decode("utf-8")       # bytes -> str
+        takeaway: Always set a timeout, because a stalled server otherwise hangs forever. Escape query values with `urlencode`.
+        source: notes/02-network-and-http.md
+        notes: In real projects use httpx or requests. Scrape politely, and use an API when one exists.
+
+  - title: Structured data
+    summary: JSON · XML · Calling an API · Keeping keys safe
+    slides:
+      - layout: statement
+        title: What does parsing JSON guarantee you?
+        kicker: The problem
+        statement: Nothing about the shape. `json.loads` gives you dicts of anything, and the bug shows up three functions later.
+        takeaway: Parsing JSON only proves the syntax is valid. Validate the shape before you trust the data.
+        source: notes/03-web-data-json-xml.md
+        notes: Pydantic does that validation, in Python 03 note 05.
+
+      - layout: flow
+        title: How does text become data you can trust?
+        kicker: Parse, then validate
+        steps:
+          - {label: Text, sub: from the network or a file}
+          - {label: "`json.loads`", sub: "raises `JSONDecodeError` when malformed"}
+          - {label: Dicts and lists, sub: of anything}
+          - {label: Validate, sub: check the shape}
+        caption: "`object` → `dict`, `array` → `list`, `true`/`false`/`null` → `True`/`False`/`None`"
+        takeaway: Parse into Python objects, check the shape, then work with plain dicts and lists.
+        source: notes/03-web-data-json-xml.md
+        notes: "`json.dumps(data, indent=2)` goes back to text and `json.dump` writes to a file."
+
+      - layout: compare
+        title: What do find and findall return in ElementTree?
+        kicker: XML
+        emphasis: none
+        left:
+          title: The code
+          code: |-
+            root = ET.fromstring(xml_text)
+            for user in root.findall("users/user"):
+                print(user.find("name").text,
+                      user.get("x"))
+          tag: Both take a simple path
+        right:
+          title: The rule
+          bullets:
+            - "`find`: the first match or `None`"
+            - "`findall`: a list"
+            - "`.text` is the content, `.get(name)` is an attribute"
+            - "For untrusted XML, use `defusedxml`"
+          tag: XML survives in feeds and office files
+        takeaway: "`find` returns the first match or `None`, `findall` returns a list. Use `defusedxml` on untrusted input."
+        source: notes/03-web-data-json-xml.md
+        notes: JSON won for APIs. XML is still around in feeds, office files and enterprise systems.
+
+      - layout: steps
+        title: What are the steps of calling an API?
+        kicker: Calling an API
+        steps:
+          - {title: Read the docs, text: "Base URL, authentication, rate limits, pagination"}
+          - {title: Build the URL, text: "`urlencode`, with the key in a header or parameter"}
+          - {title: Check and parse, text: "Check the status, then parse the JSON"}
+          - {title: Paginate, text: Follow the `next` link or cursor until it runs out}
+          - {title: Cache, text: Cache during development so you don't spend your quota}
+        takeaway: Read the docs, build the URL safely, check status before parsing, follow pagination, and cache while developing.
+        source: notes/03-web-data-json-xml.md
+        notes: The exercise follows pagination over fake pages so it runs offline.
+
+      - layout: bullets
+        title: Where should an API key live?
+        kicker: Secrets
+        bullets:
+          - "Read it from the environment: `os.environ[\"API_KEY\"]`"
+          - "Send it in a header: `Authorization: Bearer …`"
+          - "Keep `.env` files out of git"
+        takeaway: Never put keys in code. Read them from the environment and keep `.env` files out of git.
+        source: notes/03-web-data-json-xml.md
+        notes: A key committed to git stays in the history, even if you delete the line later.
+
+  - title: Objects and databases
+    summary: Classes and self · Dunder methods · Normalising · Get-or-create · Batched commits
+    slides:
+      - layout: statement
+        title: When is a dict in memory no longer enough?
+        kicker: The problem
+        statement: Several functions passing the same state around want a class. Data that has to outlive the run wants a database.
+        takeaway: Write a class when functions share state. Use SQLite when data must survive between runs.
+        source: notes/04-objects.md
+        notes: A module of plain functions is fine otherwise. Not everything has to be an object.
+
+      - layout: code
+        title: What is self?
+        kicker: Classes
+        lang: python
+        code: |-
+          class PartyAnimal:
+              def __init__(self, name: str):    # runs on PartyAnimal("Sally")
+                  self.name = name              # attributes live on self
+                  self.x = 0
+
+              def party(self) -> int:
+                  self.x += 1
+                  return self.x
+
+          s = PartyAnimal("Sally")
+          s.party()                             # same as PartyAnimal.party(s)
+        takeaway: "`self` is the instance. `s.party()` is shorthand for `PartyAnimal.party(s)`, so attributes are per instance."
+        source: notes/04-objects.md
+        notes: In a subclass, call super().__init__ so the parent sets up its part. Keep hierarchies shallow.
+
+      - layout: table
+        title: Which dunder method enables which syntax?
+        kicker: Dunder methods
+        header: [Method, Enables]
+        widths: [3, 5]
+        rows:
+          - ["`__repr__`", "Useful display in the REPL and logs. Always define it"]
+          - ["`__eq__`", "`a == b`. The default is identity"]
+          - ["`__lt__`", "`sorted()` and `<`"]
+          - ["`__len__`, `__iter__`, `__getitem__`", "`len()`, `for`, `obj[i]`"]
+          - ["`__enter__` / `__exit__`", "`with obj:`"]
+        takeaway: Dunder methods hook a class into Python's syntax. Without `__eq__`, `==` compares identity.
+        source: notes/04-objects.md
+        notes: For classes that mostly hold data, @dataclass writes __init__, __repr__ and __eq__ for you.
+
+      - layout: flow
+        title: What are the steps of a re-runnable load?
+        kicker: The ingest pattern
+        steps:
+          - {label: Schema, sub: "`CREATE TABLE IF NOT EXISTS`, with `UNIQUE`"}
+          - {label: Get or create, sub: "`INSERT OR IGNORE`, then `SELECT id`"}
+          - {label: Insert facts, sub: reference the parent by id}
+          - {label: Commit, sub: once for the batch}
+        bullets:
+          - "**Normalise**: store each artist once and join them back when you query"
+          - "**Many-to-many** needs a join table: `member(user_id, course_id, role)`"
+        takeaway: Normalise into tables, get-or-create parents with a `UNIQUE` key, and store progress so a crash can resume.
+        source: notes/05-databases.md
+        notes: A crawler or geocoder should keep progress in the database, so it resumes after a crash or a rate limit.
+
+      - layout: code
+        title: How do you make get-or-create safe to re-run?
+        kicker: Get or create
+        lang: python
+        code: |-
+          def get_or_create(conn, table, name):
+              # table comes from code, never from user input
+              conn.execute(f"INSERT OR IGNORE INTO {table} (name) VALUES (?)", (name,))
+              return conn.execute(
+                  f"SELECT id FROM {table} WHERE name = ?", (name,)
+              ).fetchone()[0]
+        takeaway: "`INSERT OR IGNORE` plus `SELECT id` on a `UNIQUE` column is safe to run twice. Values go in as `?` parameters."
+        source: notes/05-databases.md
+        notes: The UNIQUE constraint is what makes the ignore work. SQL 09 covers parameters in depth.
+
+      - layout: bullets
+        title: How often should you commit during a load?
+        kicker: Batched commits
+        lead: 2,000 inserts into a one-column SQLite file, on a laptop SSD.
+        bullets:
+          - "Commit per row: about **0.5 s**"
+          - "One transaction: about **0.001 s**"
+          - "Each commit waits for the disk, so the exact ratio depends on the hardware"
+        aside:
+          lang: python
+          code: |-
+            with conn:    # one transaction
+                for row in rows:
+                    conn.execute(sql, row)
+        takeaway: Commit once per batch, not per row, because every commit waits for the disk.
+        source: notes/05-databases.md
+        notes: Measured for this course with a small script, three runs, a ratio of several hundred. Setup is in the note.
+
+  - title: Rules to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What are the informatics rules?
+        cards:
+          - {title: Regex, body: "Raw strings. Use `split` for delimiters and a parser for HTML or XML."}
+          - {title: HTTP, body: "Always a timeout. Retry 5xx with backoff, and fix 4xx."}
+          - {title: Data, body: "Parse, then validate the shape. Keep keys in the environment."}
+          - {title: SQLite, body: "Normalise, use `?` parameters, and commit per batch."}
+        takeaway: Timeouts on every call, shape checks on every parse, parameters in every query, commits per batch.
+        source: notes/02-network-and-http.md
+        notes: The same rules return in Python 03 and in the SQL track.
+
+      - layout: bullets
+        title: Where do you go after informatics?
+        bullets:
+          - "**SQL 01**: the Python side of databases ends here, and SQL itself starts"
+          - "**Python 03**: closures, types, tooling and concurrency"
+          - "**Practice**: `bash check.sh exercises 02` runs offline, with a local HTTP server"
+        takeaway: Next is SQL 01 for queries and Python 03 for the language features that engineering code relies on.
+        source: notes/05-databases.md
+        notes: See programming/CURRICULUM.md for the order of the tracks.

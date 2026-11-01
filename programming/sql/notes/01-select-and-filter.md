@@ -4,7 +4,7 @@ sources:
   - "Software Carpentry, Databases and SQL, episodes 01–03 — https://swcarpentry.github.io/sql-novice-survey/ (CC-BY 4.0)"
   - "PGExercises, Simple SQL Queries — https://pgexercises.com/questions/basic/ (CC BY-SA 3.0)"
 concepts: [sql-select, sql-where, sql-order-by, sql-distinct, sql-limit]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 1 — Selecting, Sorting and Filtering
 
@@ -58,7 +58,7 @@ SELECT * FROM Survey  WHERE reading BETWEEN 0 AND 1;                    -- inclu
 
 - `AND` binds tighter than `OR`. **Always parenthesise mixed `AND`/`OR`.** Leaving out the brackets in the third query returns every reading by `roe`, salinity or not.
 - Dates in ISO-8601 text (`YYYY-MM-DD`) compare correctly as strings. That is why SQLite gets away with storing them as `TEXT`.
-- `WHERE` runs **before** `SELECT`, so it can't see column aliases defined in the `SELECT` list (see [order of evaluation](#order-of-evaluation)).
+- `WHERE` runs **before** `SELECT`, so in standard SQL it can't see column aliases defined in the `SELECT` list (see [order of evaluation](#order-of-evaluation)). Postgres rejects such a query. SQLite accepts it as an extension, so don't rely on it if the query may move.
 
 ## Calculated columns
 

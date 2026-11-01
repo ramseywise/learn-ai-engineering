@@ -123,7 +123,7 @@ under `practice/`, reversing the flat shape chosen 2026-10-31. Their PDFs stay i
 `sources/` per subject, since books span pillars. `programming/python/04-python-for-data` returns to
 `data-analytics/01-python-for-data-analysis` with chapters written over the notebooks, reversing part
 of the 2026-10-29 decision. Python is the language of the data areas and generative-ai. ai-engineering
-labs are TypeScript first with a Python twin where a framework needs it. See
+labs come in both TypeScript and Python, side by side, so the two can be compared. See
 [CONTENT-PLAN.md](CONTENT-PLAN.md), [PILLAR-LAYOUT](ai-engineering/PILLAR-LAYOUT.md) and the
 [deck spec](.claude/skills/slides/references/deck-spec.md).
 

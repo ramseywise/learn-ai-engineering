@@ -4,7 +4,7 @@ sources:
   - "Markus Winand, Use The Index, Luke — https://use-the-index-luke.com/ (read online; not copied)"
   - "SQLite, EXPLAIN QUERY PLAN — https://www.sqlite.org/eqp.html"
 concepts: [sql-indexes, sql-explain, sql-sargable, sql-query-performance]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 8 — Indexes and Query Plans
 
@@ -34,6 +34,41 @@ SELECT * FROM bookings WHERE memid = 5 AND starttime >= '2012-09-01';
 | `SEARCH table USING INDEX idx (col=?)` | An index lookup |
 | `USING COVERING INDEX` | The index contains every needed column, so the table itself is never read |
 | `USE TEMP B-TREE FOR ORDER BY` | An extra sort step that no index could provide |
+
+`clubdata.db` ships with this index (under the name `bookings.memid_starttime`, as `.schema bookings` shows), which is why the plan above needs no `CREATE`. A plan is a recipe, and it reads as a pipeline. Here is one member's bookings per facility, since September:
+
+```sql
+EXPLAIN QUERY PLAN
+SELECT f.name, count(*) AS n
+FROM bookings b JOIN facilities f ON f.facid = b.facid
+WHERE b.memid = 5 AND b.starttime >= '2012-09-01'
+GROUP BY f.name
+ORDER BY n DESC;
+-- |--SEARCH b USING INDEX bookings.memid_starttime (memid=? AND starttime>?)
+-- |--SEARCH f USING INTEGER PRIMARY KEY (rowid=?)
+-- |--USE TEMP B-TREE FOR GROUP BY
+-- `--USE TEMP B-TREE FOR ORDER BY
+```
+
+```text
+  bookings                                     outer loop: index range, not a scan
+  SEARCH b USING INDEX (memid=? AND starttime>?)
+        │  one row per matching booking
+        ▼
+  facilities                                   inner loop: one lookup per row
+  SEARCH f USING INTEGER PRIMARY KEY
+        │  (booking, facility name)
+        ▼
+  TEMP B-TREE FOR GROUP BY                     no index is sorted by f.name, so build one
+        │  one row per name, with count(*)
+        ▼
+  TEMP B-TREE FOR ORDER BY                     n exists only after grouping, so sort again
+        │
+        ▼
+  result: 7 rows
+```
+
+The first line of the plan is the outer table of a nested-loop join, and each line after it runs for the rows above it. Two questions find most problems: is the first step a `SEARCH` or a `SCAN`, and how many rows does it feed the rest? A temp b-tree is not a bug. Sorting 50 rows is cheap, and sorting 50 million is not. A query filtered only by `date(starttime) = '2012-09-14'` plans as `SCAN bookings`, because the function hides the column from the index ([below](#sargable-predicates)).
 
 Postgres and DuckDB use `EXPLAIN ANALYZE`, which actually runs the query and reports real row counts and timings per node. Compare *estimated* with *actual* rows. A big gap means stale statistics (`ANALYZE`) or a predicate the planner can't estimate.
 

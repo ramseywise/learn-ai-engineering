@@ -4,7 +4,7 @@ sources:
   - "Jake VanderPlas, A Whirlwind Tour of Python — https://github.com/jakevdp/WhirlwindTourOfPython (CC0)"
   - "Python docs, Data model — https://docs.python.org/3/reference/datamodel.html"
 concepts: [python-data-model, python-dunder-methods, python-mutability, python-idioms, python-unpacking]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 1 — The data model and idioms
 
@@ -23,9 +23,36 @@ a is b           # True: same object
 a == [1, 2, 3, 4]  # True: equal value, different object
 ```
 
+```text
+a = [1, 2, 3]     a ───► [1, 2, 3]
+
+b = a             a ───┐
+                       ├──► [1, 2, 3]         one object, two names
+                  b ───┘
+
+b.append(4)       a ───┐
+                       ├──► [1, 2, 3, 4]      mutate: both names see the change
+                  b ───┘
+
+b = [9]           a ───► [1, 2, 3, 4]
+                  b ───► [9]                  rebind: only b moves
+```
+
 - `==` compares values (calls `__eq__`). `is` compares identity. Use `is` only for `None`, `True`, `False` and sentinels.
 - **Mutable**: `list`, `dict`, `set`, most objects. **Immutable**: `int`, `float`, `str`, `tuple`, `frozenset`, `bytes`.
-- Arguments are passed by assignment: the function gets another label on the caller's object. Mutating it is visible to the caller; rebinding it is not.
+- Arguments are passed by assignment: the function gets another label on the caller's object. Mutating it is visible to the caller; rebinding it is not:
+
+```python
+def mutate(xs):
+    xs.append(4)        # same object: the caller sees it
+
+def rebind(xs):
+    xs = [9]            # moves the local label only
+
+a = [1, 2, 3]
+mutate(a); print(a)     # [1, 2, 3, 4]
+rebind(a); print(a)     # [1, 2, 3, 4]
+```
 
 ### The mutable default trap
 

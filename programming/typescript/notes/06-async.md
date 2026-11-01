@@ -5,7 +5,7 @@ sources:
   - "Node.js docs, Event loop / timers — https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick"
   - "typescript-exercises — https://github.com/typescript-exercises/typescript-exercises (MIT; vendored in practice/)"
 concepts: [js-event-loop, promises, async-await, promise-combinators, concurrency-limits, abort-signal]
-cleaned: 2026-10-29
+cleaned: 2026-11-01
 ---
 # 6 — Async: Promises and `async`/`await`
 
@@ -26,6 +26,34 @@ cleaned: 2026-10-29
 | `asyncio.run(main())` | Top-level `await` in an ES module | |
 
 The event loop is always running in Node. There is no `run()` call to make.
+
+## The event loop
+
+JavaScript finishes whatever it is running before it looks at anything else. Then it empties the **microtask** queue (promise callbacks and the code after an `await`), and only then takes the next **task** (a timer or an I/O callback):
+
+```ts
+console.log('1 sync');
+setTimeout(() => console.log('4 timer'), 0);
+Promise.resolve().then(() => console.log('3 microtask'));
+console.log('2 sync');
+// 1 sync
+// 2 sync
+// 3 microtask
+// 4 timer
+```
+
+```mermaid
+flowchart TD
+    S["Run the current task until the call stack is empty"] --> M{"Any microtasks queued?"}
+    M -- yes --> R["Run one: a promise callback, or the code after an await"]
+    R --> M
+    M -- no --> T{"Is a timer or I/O callback ready?"}
+    T -- yes --> S
+    T -- no --> W["Wait for the operating system"]
+    W --> T
+```
+
+Two consequences. A timer of `0` still waits for all the synchronous code and every microtask. And a long synchronous loop freezes everything, the same as blocking asyncio's event loop in [Python 03 · note 07](../../python/03-language-for-engineers/notes/07-concurrency.md).
 
 ## Writing async code
 

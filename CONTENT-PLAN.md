@@ -105,11 +105,8 @@ to `.claude/skills/slides/references/deck-spec.md`:
 - **Python is the course language** for generative-ai, data-analytics, data-science and
   data-engineering. The frameworks taught (LangGraph, ADK, PyMC, pandas, dbt, Spark) are
   Python-first, and the practice folders already are.
-- **ai-engineering labs are TypeScript first, Python second.** The six foundations are about
-  harnesses, tools and loops, where the Claude Agent SDK, MCP SDK and Vercel AI SDK are
-  TypeScript-native, and `programming/typescript/09-typescript-for-ai-apps` already points there.
-  Where a framework is Python-only (LangGraph graph notes, PyTorch in inference), the lab is Python
-  and says so. Notes stay language-neutral in prose.
+- **ai-engineering labs come in both TypeScript and Python**, side by side, so the two can be
+  compared. Existing lab code stays in place. Notes stay language-neutral in prose.
 - The generative-ai TypeScript SDK lab in 01-llm-fundamentals stays as the bridge, and its model
   id is updated.
 
@@ -215,7 +212,7 @@ Decks: seven, one per pillar, the same spine as ai-engineering.
 | Decks 07–09 | 07 inference has nine notes and is ready for a deck now. 08 and 09 wait on their notes |
 | Notes 08 and 09 | 08 multimodal: six planned chapters (image input, document understanding, multimodal RAG, speech and voice agents, generation (exists), evaluation of multimodal). 09 safety and security: six planned chapters (threat model, prompt injection and jailbreaks, guardrail models, tool and execution sandboxing, red-teaming tools, incident response). Both READMEs already list the planned notes; write them with `/papers multimodal` and `/papers safety` once those homes route |
 | Chapter checklist | Add "Try it" exercises and a "Next" link where missing. Most notes already have the rest |
-| TypeScript labs | Per §2.4, each pillar's README names one lab in `practice/` (TS, with a Python twin where needed): a prompt eval harness (01), a context budgeter (02), a tool server with sandboxing (03), a loop with a scorekeeper (04), a LangGraph graph (05, Python), an eval suite in CI (06) |
+| TypeScript labs | Per §2.4, each pillar's README names one lab in `practice/` (TypeScript and Python, side by side): a prompt eval harness (01), a context budgeter (02), a tool server with sandboxing (03), a loop with a scorekeeper (04), a LangGraph graph (05, Python), an eval suite in CI (06) |
 
 ### 3.6 programming
 
