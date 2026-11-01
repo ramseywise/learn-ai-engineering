@@ -14,6 +14,7 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
+  - https://arxiv.org/abs/2305.01210
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -68,6 +69,8 @@ Teams reach for a judge too early. Most systems have more checkable properties t
 | Boundaries | Didn't call a forbidden tool, didn't exceed N turns, didn't leak a regex-detectable secret |
 | Efficiency | Steps, tokens, latency, cost from the trace |
 | Exact facts | Number within tolerance, date matches, entity in an allowed set |
+
+"Passes the tests" is only as strict as the tests. EvalPlus added about 80× more tests to HumanEval (LLM-written seed inputs, then type-aware mutation): **pass@k fell by up to 19.3–28.9% across 26 models** (GPT-4 greedy 88.4% → 76.2%), the ranking of several models flipped, and 11% of HumanEval's own reference solutions were wrong ([arXiv:2305.01210](https://arxiv.org/abs/2305.01210) (Liu et al., NeurIPS 2023)). Before trusting a test-suite grader, measure its false-positive rate by hand on a sample of passing outputs.
 
 For tool calls, check **in order** and stop at the first failure: *called a tool? → right tool? → valid arguments? → right values?* An early failure makes the later checks meaningless. Check values with a tolerance or a range, not equality: a thermostat call at 76°F when the reference says 77°F is probably fine, while no call or the wrong tool is not ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#scoring-outputs)).
 

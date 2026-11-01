@@ -6,6 +6,7 @@ sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - https://arxiv.org/abs/2408.02442
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3"
+  - https://arxiv.org/abs/2104.08691
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -171,7 +172,7 @@ Fine-tuning is prompt engineering by other means — moving what's in the prompt
 - **LoRA** freezes the base weights and trains small low-rank "diff" matrices. They're cheap to store, so one deployment can serve many LoRAs, one per customer or task. LoRA doesn't teach new tricks; it teaches *which* existing ones to use. It's good at shifting *priors*. In the book's example, a European travel app can bake "the customer is European" into the weights instead of stating it in every prompt. Trained on outcome data, it also picks up priors nobody wrote down: budget-conscious users reject "Monaco" but book after "Prague" suggestions.
 - **Data.** Training documents should show successful interactions: factually correct, using only the background you want learned, in the target format. Sources: write them, hire contractors, synthesize them ([11](11-applications.md#synthetic-data-generation)), or mine telemetry for successes (accepted suggestions, likes) or logs of humans doing the task you're automating. Whether you can get them decides whether fine-tuning is worth it. **Loss masking**, where the framework supports it, trains only on the answer part of each document, not on the prompt part.
 - **Trade-off.** Fine-tuning usually weakens the model on generic documents while sharpening it on yours.
-- **Soft prompting** uses gradient descent over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it.
+- **Soft prompting** uses gradient descent over a few dozen example outputs to find an input *embedding* that reliably puts the model in the right "state of mind": a prompt made of vectors instead of words. It's the cheapest and fastest option, but many frameworks don't offer it. It is also weak on smaller models: Lester et al. ([arXiv:2104.08691](https://arxiv.org/abs/2104.08691) (Lester et al., EMNLP 2021)) found that **prompt tuning matched full model tuning on SuperGLUE only at T5-XXL (11B)** and lagged well behind it at smaller sizes ([PEFT lineage](../../../generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md#parameter-efficient-fine-tuning)).
 
 ![Should you fine-tune? A decision flow](../sources/images/berryman-prompt-engineering-for-llms-fig7-8.png)
 *Image Source: Berryman & Ziegler (2024), Fig. 7-8*

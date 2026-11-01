@@ -15,6 +15,23 @@ sources:
   - "Huang et al. 2024, Understanding the planning of LLM agents: A survey — https://arxiv.org/abs/2402.02716"
   - "Yao et al. 2023, Tree of Thoughts — https://arxiv.org/abs/2305.10601"
   - "Koh et al. 2024, Tree Search for Language Model Agents — https://arxiv.org/abs/2407.01476 (also https://jykoh.com/search-agents/paper.pdf)"
+  - https://arxiv.org/abs/2201.07207
+  - https://arxiv.org/abs/2302.01560
+  - https://arxiv.org/abs/2303.17491
+  - https://arxiv.org/abs/2303.17580
+  - https://arxiv.org/abs/2303.17651
+  - https://arxiv.org/abs/2305.14992
+  - https://arxiv.org/abs/2307.02485
+  - https://arxiv.org/abs/2307.07924
+  - https://arxiv.org/abs/2308.00352
+  - https://arxiv.org/abs/2308.09687
+  - https://arxiv.org/abs/2310.01798
+  - https://arxiv.org/abs/2402.01680
+  - https://arxiv.org/abs/2408.06195
+  - https://arxiv.org/abs/2410.08115
+  - https://arxiv.org/abs/2502.16111
+  - https://arxiv.org/abs/2504.17192
+  - https://arxiv.org/abs/2603.05294
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -165,6 +182,14 @@ builder.add_edge("reflect", "generate")
 
 There are two variants: let `reflect` decide when the draft is good enough, or add reflection as the last node of a tool-calling agent, at the price of more latency. The authors "strongly recommend" grounding the critique wherever possible. For code, run a linter or compiler before `reflect` and pass it the errors. That matches the P22 rule of sending execution errors back to the model ([02](02-tool-use-and-react.md#code-execution-instead-of-a-tool-list)).
 
+### When self-critique helps, and when it doesn't
+
+Self-Refine ([arXiv:2303.17651](https://arxiv.org/abs/2303.17651) (Madaan et al., NeurIPS 2023)) is the origin of the single-model loop: the same LLM drafts, critiques and rewrites, with no training and no outside signal. Across seven tasks with GPT-3.5, ChatGPT and GPT-4 it improved outputs by about 20 points absolute on average, and it backs both rules above. Rubric: swapping its specific, actionable critique for generic "improve this" feedback dropped ChatGPT's Sentiment Reversal score from 43.2 to 31.2, and in a manual review of failed refinements, 94% traced to bad feedback (wrong location or wrong fix) and only 6% to the rewrite. Rounds: on Code Optimization the score went 22.0 → 27.0 → 27.9 → 28.8 over three rounds, so most of the gain came in the first.
+
+**On math, the same loop did nothing.** GSM8K solve rates moved 64.1 → 64.1 (GPT-3.5), 74.8 → 75.0 (ChatGPT) and 92.9 → 93.1 (GPT-4), because the critic can't tell a wrong chain from a right one: ChatGPT's feedback was "everything looks good" on 94% of problems. Telling the loop only *whether* the answer was wrong lifted GPT-3.5 to 68.9. RCI ([arXiv:2303.17491](https://arxiv.org/abs/2303.17491) (Kim et al., NeurIPS 2023)) shows the same dependence: its GSM8K gain with gpt-3.5-turbo (78.0% → 85.4%) used the correct label to decide when to stop, and the authors report that without it, false-negative critiques pull accuracy down. Huang et al. made this the general finding ([arXiv:2310.01798](https://arxiv.org/abs/2310.01798) (Huang et al., ICLR 2024)): without an oracle, intrinsic self-correction on reasoning tasks tends to turn right answers wrong. In planning it can be worse. In PlanGEN's baseline ([arXiv:2502.16111](https://arxiv.org/abs/2502.16111) (Parmar et al., EMNLP 2025)), a self-reflection loop on Gemini-1.5-Pro scored 14.9% exact match on NATURAL PLAN trip planning, against 34.8% for a single pass.
+
+The rule: when the task has a right answer, reflect against something checkable (tests, a compiler, the problem's constraints, a second model's answer). Self-critique alone earns its keep on open-ended quality: tone, readability, coverage of a long list of requirements.
+
 ---
 
 ## L4 — tool use inside a conversation
@@ -265,7 +290,13 @@ idx = max(0, min(choice.choice_index, len(opts) - 1))
 
 She notes that this propose-and-judge pair can sometimes replace a full multi-agent design, with fewer calls to the large model.
 
+Graph of Thoughts ([arXiv:2308.09687](https://arxiv.org/abs/2308.09687) (Besta et al., AAAI 2024)) adds the move a tree lacks: merging. Thoughts become graph vertices, so partial solutions can be combined, as in merge sort. Sorting 128 numbers with GPT-3.5, it cut median error by about 62% against ToT at over 31% lower cost. But the user writes the graph of operations for each task before the run, so GoT is a workflow in Anthropic's sense, not a planner: the model fills in the nodes, the engineer chose the shape.
+
 Koh et al. carry multi-plan selection from puzzles into a live environment ([arXiv:2407.01476](https://arxiv.org/abs/2407.01476) (Koh et al., 2024-07)). They run best-first search over web-page states: the agent proposes b candidate actions, executes each one, and GPT-4o scores the resulting screenshots as a value function. The search stops at a score threshold or after c state expansions. On VisualWebArena it lifted a GPT-4o agent from 18.9% to 26.4% success (+39.7% relative) and Llama-3-70B from 7.6% to 16.7%. On WebArena it lifted GPT-4o from 15.0% to 19.2%. On a 200-task subset, success rose with budget: 24.5% with no search, 32.0% at c=5, 37.0% at c=20. The paper names three costs. A budget of c=20 can use up to 20× more LM calls. Backtracking means resetting the environment and replaying the action sequence. And search is only safe over actions that can be undone, such as browsing, not placing an order. (The text quotes an 18.6% baseline once; the tables say 18.9%.)
+
+**A search is only as good as its scorer.** RAP ([arXiv:2305.14992](https://arxiv.org/abs/2305.14992) (Hao et al., EMNLP 2023)) runs Monte Carlo tree search over reasoning steps with one LLM in two roles: as agent it proposes the next action, and as world model it predicts the state that action leads to, so a plan is checked against an imagined state before anything runs. On Blocksworld with LLaMA-33B, chain-of-thought solved 17% of 2-step and 0% of 6-step problems; RAP with 20 iterations solved 100% and 42%, ahead of GPT-4 with chain-of-thought (50% and 40%). On GSM8K the margin was thin: 48.6% against 46.8% for 10-sample self-consistency. rStar ([arXiv:2408.06195](https://arxiv.org/abs/2408.06195) (Qi et al., ICLR 2025)) found why at small scale: a 7–8B model's rewards for its own steps are close to random, so with LLaMA2-7B on GSM8K, RAP (24.3%) barely beat 128-sample majority voting (23.1%). rStar replaces the self-grade with a second small model: Phi-3-mini is given the first part of a trajectory, completes it, and the trajectory counts only if both reach the same answer. Majority voting over rStar's own search tree scored 27.2%; that check lifted it to 63.9%. The bill is about 166 model calls and 367k generated tokens per question. PlanGEN ([arXiv:2502.16111](https://arxiv.org/abs/2502.16111) (Parmar et al., EMNLP 2025)) makes the scorer explicit for natural-language plans: one agent extracts the instance's constraints (each person's busy hours, the meeting length), a verifier scores candidates against them, and a selector picks Best-of-N, ToT or REBASE per instance. With Gemini-1.5-Pro on NATURAL PLAN calendar scheduling, exact match rose from 48.9% for a single pass to 60.7% with constraint-verified Best-of-N, and plain Best-of-N beat ToT on all three NATURAL PLAN tasks. Spend on the verifier before the search.
+
+**Decomposition-first plans break at execution, so repair them instead of starting over.** An early zero-shot planning study found the gap ([arXiv:2201.07207](https://arxiv.org/abs/2201.07207) (Huang et al., ICML 2022)). In VirtualHome, human judges rated 78% of GPT-3 175B's plans correct (human-written plans: 70%), but only 8% could be executed, because the steps didn't map to actions the environment supports. Mapping each step to the nearest admissible action by embedding similarity took Codex 12B from 18% to 79% executable, and correctness fell from 65% to 55%. DEPS ([arXiv:2302.01560](https://arxiv.org/abs/2302.01560) (Wang et al., NeurIPS 2023)) closes the loop in Minecraft. When a subgoal fails, a descriptor reports what happened, the LLM explains why the plan failed and rewrites it, and a trained selector orders parallel subgoals by predicted steps to completion. Across 71 tasks, average success went from 25.8% for the best prior LLM planner (Code-as-Policies) to 39.4% with describe-explain-plan and 48.6% with the selector. StructuredAgent ([arXiv:2603.05294](https://arxiv.org/abs/2603.05294) (Lobo et al., 2026-03, preprint)) makes repair local. The plan is an AND/OR tree; a failed node is repaired in place, and OR nodes hold alternatives. With Claude 3.5 Sonnet on WebArena's 630 tasks it reached 53% success, against 46% for AgentOccam on the same backbone. In ablation, repair restored 37–44% of failed nodes while leaving 88–99% of the tree intact, and OR alternatives without repair added nothing. The gain vanished with a weaker backbone (Kimi-k2): the tree is only as good as the decompositions the model writes.
 
 ---
 
@@ -302,6 +333,8 @@ eval_agent = client.agents.create(
 
 When the outreach agent is told "the company has rebranded to Letta", it edits the shared block, and the evaluator sees the new name on its next step. Shared memory replaces a whole round of messages. The memory mechanics are in [03](03-memory-as-an-operating-system.md#shared-memory-across-agents).
 
+The idea is older than Letta: it is the blackboard of classic multi-agent systems (Hearsay-II: Erman et al., *ACM Computing Surveys* 1980). MetaGPT rebuilt it for LLM teams as a **shared message pool** ([arXiv:2308.00352](https://arxiv.org/abs/2308.00352) (Hong et al., ICLR 2024)). Each role publishes a structured document (requirements, system design, interface spec) instead of chatting, subscribes to the documents its role needs, and acts only once its inputs exist. Guo et al.'s survey lists the pool as a fourth communication structure next to layered, centralized and decentralized ([arXiv:2402.01680](https://arxiv.org/abs/2402.01680) (Guo et al., IJCAI 2024)). CoELA measured how much the messages themselves are worth ([arXiv:2307.02485](https://arxiv.org/abs/2307.02485) (Zhang et al., ICLR 2024)). Two GPT-4 agents shared a household task in the C-WAH simulator. **Turning off messages between them caused no significant slowdown, while removing the memory module nearly doubled the steps to finish.** Messages mattered with a human partner: 8 subjects rated the talking agent's trustworthiness 6.3 against 4.7 for the silent one, on a 7-point scale. (The CoELA runs are single-seed, for cost.)
+
 ---
 
 ## Architectures (P23)
@@ -327,6 +360,8 @@ The LangGraph view of the same space names topologies by who decides what runs n
 
 The supervisor is a structured-output call: `next: Literal["researcher", "coder", "FINISH"]`, read by a conditional edge. The router sees only the agents' names unless you add descriptions, so `agent_1` and `agent_2` give it nothing to decide with. Two design choices follow. The first is whether subagents share one `messages` list, so each sees the others' work, or are subgraphs that keep their own state and return only a summary. The second is whether each subagent returns to the supervisor or decides for itself to answer the user. The authors' own caveat: reflection and multi-agent "shouldn't be the first thing you reach for". Start with the single agent of [02](02-tool-use-and-react.md). (Their Python listing has bugs. `AgentState` declares only `next`, yet the nodes return `messages`, and `"FINISH"` is never mapped to `END`. The JavaScript version maps it.)
 
+The subagents-as-tools case is older than LangGraph. In HuggingGPT, ChatGPT plans the task, picks Hugging Face models by their descriptions, runs them and writes up the results ([arXiv:2303.17580](https://arxiv.org/abs/2303.17580) (Shen et al., NeurIPS 2023)). Its numbers show where the weight sits: **the supervisor's plan bounds everything the workers can do.** On the authors' human-annotated requests, GPT-3.5 planned 18.2% of multi-step sequences and 20.8% of task graphs correctly, and GPT-4 41.4% and 58.3%. In a human evaluation of 130 requests, 63.1% were resolved end to end with GPT-3.5 as controller and 15.6% with Vicuna-13B.
+
 Koenigstein builds three of these in LangGraph and compares them (*AI Agents: The Definitive Guide*, ch. 2):
 
 | Architecture | Use when | Benefits | Trade-offs |
@@ -350,6 +385,8 @@ Raieli and Iuculano's single- vs multi-agent comparison (*Building AI Agents wit
 | Interpretability | One decision chain | Distributed reasoning is harder to follow |
 
 Albada adds the cost driver: agents spend tokens sharing context and coordinating, so a multi-agent system often uses more tokens for the same task (*Building Applications with AI Agents*, ch. 2).
+
+Part of that overhead is learned verbosity, and it can be trained out. Optima trains one Llama 3 8B model to play both agents, with a reward that weighs task score, token count and readable messages ([arXiv:2410.08115](https://arxiv.org/abs/2410.08115) (Chen et al., Findings of ACL 2025)). On 2WikiMultiHopQA, with the evidence split so that neither agent can answer alone, F1 rose from 25.9 with plain multi-agent debate to 74.2, on 55 tokens per task instead of 544. Its untrained baseline is the more useful number for design. **Plain debate between two Llama 3 8B agents lost to one agent with self-consistency (n=8) on all four reasoning benchmarks** (MATH 29.8% vs. 35.7%, GSM8K 72.5% vs. 80.3%). Even after training, Optima stayed below self-consistency on MATH. Talking pays when the context is split across agents, not as a way to reason better.
 
 Use cases from the book, roughly from least to most complex: parallel breadth-first work (the most common), multistep pipelines, collaborative content, complex reasoning, adversarial verification (red team / blue team), domain integration, self-improving systems.
 
@@ -380,6 +417,8 @@ The book adds that coordination overhead grows faster than the number of agents,
 
 "Start with one agent" holds even for a workflow you have already designed as multi-agent, provided every role runs on the same model. Xu et al. ([arXiv:2601.12307](https://arxiv.org/abs/2601.12307), 2026-01) executed such homogeneous workflows as one agent role-playing each step over successive turns, so the shared prefix stays in the KV cache. With GPT-4o-mini as executor, accuracy held (HumanEval 92.1% vs. 91.6% multi-agent; MBPP 81.4% vs. 81.1%) and cost fell (an AFlow workflow on HotpotQA: $0.53 vs. $1.44), though HotpotQA accuracy did drop, 68.4% vs. 72.1%. The closed-model savings are a simulated KV-cache cost, not a billed one, and the trick can't reproduce a workflow that mixes models; in their tests a GPT-4o-mini + Haiku mix was largely bounded by the best single-model workflow anyway.
 
+**Read the software-company papers against that baseline.** MetaGPT runs a software team's standard operating procedure as a pipeline: product manager, architect, project manager, engineer, QA. The handoffs are documents, not chat ([arXiv:2308.00352](https://arxiv.org/abs/2308.00352) (Hong et al., ICLR 2024)). It reports 85.9% pass@1 on HumanEval with GPT-4, against 67% for GPT-4 alone. But that 67% is the GPT-4 technical report's figure. The paper's own appendix re-runs gpt-4-0613 alone and gets 81.2% just by pulling the code out of the reply with a regex. MetaGPT without its run-the-tests-and-debug loop scores 81.7%. **So the roles add about half a point; the other 4.2 come from executing the code**, the single-agent move of [02](02-tool-use-and-react.md#code-execution-instead-of-a-tool-list). ChatDev chains CEO, CTO, programmer, reviewer and tester agents through dialogue ([arXiv:2307.07924](https://arxiv.org/abs/2307.07924) (Qian et al., ACL 2024)). Each paper beats the other on a benchmark and metric it built itself. With GPT-3.5 on ChatDev's 1,200-task SRDD, 88% of ChatDev's programs ran against 41% of MetaGPT's. On MetaGPT's SoftwareDev (7 tasks, a 1–4 executability scale), MetaGPT scored 3.75 and ChatDev 2.25. A third-party benchmark sides with neither. On Paper2Code's 90 recent ML papers, both scored below a single LLM call given the full paper: 2.70 (ChatDev) and 2.48 (MetaGPT) against 3.08, judged 1–5 against the authors' code on the ICLR papers ([arXiv:2504.17192](https://arxiv.org/abs/2504.17192) (Seo et al., ICLR 2026)). What won there (3.68) was a pipeline built for the task: plan, analyze each file, then write the code. Its ablation holds a lesson about handoff documents. On the ICML papers, adding an architecture design after the overall plan dropped the score from 3.40 to 3.13, below the bare paper's 3.28. The design did not say which file to write first. It took a logic design that fixed the file order to lift the score to 3.60.
+
 ---
 
 ## Interview questions
@@ -393,6 +432,7 @@ The book adds that coordination overhead grows faster than the number of agents,
 | Messages vs shared memory? | Messages for requests; shared blocks for facts every agent needs |
 | Why does a reflection node swap human and AI roles? | Dialogue-tuned models expect alternating turns; the critic must see the draft as user input, and the generator must see the critique as user feedback |
 | Supervisor, hierarchical or swarm? | Supervisor for small teams (bottleneck, but no deadlocks); hierarchical for many teams (harder to debug); swarm for peer back-and-forth (needs careful handoffs) |
+| Does a role-play software team beat one model? | Not cleanly. MetaGPT's HumanEval gain over a well-parsed single GPT-4 call is under a point before its test-and-debug loop, and on Paper2Code both MetaGPT and ChatDev lost to one call given the full paper |
 | Decomposition-first vs interleaved planning? | Up-front plans can't correct mid-run errors; interleaved plans adapt but can run long and costly on hard problems |
 
 → Next: [05 — framework survey](05-framework-survey.md) — the same patterns in AutoGen, CrewAI, LangGraph, ADK, the OpenAI Agents SDK, smolagents and Letta, plus MCP and A2A.

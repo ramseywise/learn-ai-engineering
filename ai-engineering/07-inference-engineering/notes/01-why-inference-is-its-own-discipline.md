@@ -5,6 +5,8 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 1"
   - https://arxiv.org/abs/2401.09670
   - https://arxiv.org/abs/2204.02311
+  - https://arxiv.org/abs/2211.05102
+  - https://arxiv.org/abs/1606.07947
 confidence: high
 cleaned: 2026-10-31
 ---
@@ -24,7 +26,7 @@ Huyen splits inference optimization into three levels (*AI Engineering*, ch. 9):
 | **Hardware** | Where and how it runs | GPU choice, memory hierarchy, kernels, compilers | 02–04 (planned), [05](05-compilers-and-frameworks.md) |
 | **Service** | How requests meet the model | Batching, routing, disaggregation, prompt caching, parallelism | [06](06-serving-at-scale.md), [07](07-prefill-decode-kv-cache.md) |
 
-Model-level changes can alter behaviour. Quantization or a different attention scheme may change outputs, so they need an eval. Service-level changes usually do not change outputs, but they move latency and cost a lot. Huyen's analogy is archery: the model is the arrow, the hardware is the bow, and the service is how the archer shoots.
+Model-level changes can alter behaviour. Quantization or a different attention scheme may change outputs, so they need an eval. Service-level changes usually do not change outputs, but they move latency and cost a lot. Distillation is the most drastic model-level change, because it replaces the model. Training a small student on a big model's generated outputs, rather than its per-token probabilities, goes back to sequence-level knowledge distillation. In WMT14 English–German translation, an 84M-parameter LSTM student trained on its 221M teacher's beam-search outputs rose from 14.7 to 18.9 BLEU with greedy decoding (word-level distillation gave +0.7). It ran 10× faster than the teacher with beam search, with comparable BLEU ([arXiv:1606.07947](https://arxiv.org/abs/1606.07947) (Kim & Rush, EMNLP 2016)). Training a small model on a frontier model's outputs follows the same recipe, and it changes outputs more than any other lever here. Huyen's analogy is archery: the model is the arrow, the hardware is the bow, and the service is how the archer shoots.
 
 Huyen cites Desislavov et al. (2023): inference can be **up to 90% of the ML cost** of a deployed system. Training is paid once. Inference is paid for every request, for the whole life of the product.
 
@@ -110,7 +112,7 @@ The better metrics:
 - **MFU** (model FLOP/s utilization): observed FLOP/s divided by peak FLOP/s. Training MFU above 50% is good (as of 2024). For reference, PaLM 540B on 6,144 TPU v4 reached 46.2% and GPT-3 175B on V100 reached 21.3% (Chowdhery et al., 2022, Table 9-1 in *AI Engineering*).
 - **MBU** (model bandwidth utilization): bytes moved per second divided by peak bandwidth. Huyen's worked example: a 7B model in FP16 at 100 tokens/s reads 7B × 2 bytes × 100 = **700 GB/s**. On an A100 rated at 2 TB/s, that is **70% MBU**.
 
-Prefill shows high MFU and low MBU. Decode shows the opposite.
+Prefill shows high MFU and low MBU. Decode shows the opposite. Pope et al. measured both phases of PaLM 540B on 64 TPU v4 chips with a 2,048-token context. Prefill reached 43% MFU at batch 1 and 76% at batch 512. Decode reached only 14% at batch 64 and 33% at batch 512 ([arXiv:2211.05102](https://arxiv.org/abs/2211.05102) (Pope et al., MLSys 2023)).
 
 ![MBU falls as concurrency rises: Llama 2-70B FP16 on 8× A100-80GB, 8× H100-80GB, 8× Gaudi2-96GB](../sources/images/huyen-ai-engineering-fig9-5.png)
 

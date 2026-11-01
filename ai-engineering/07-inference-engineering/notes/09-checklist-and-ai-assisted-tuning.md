@@ -3,6 +3,7 @@ origin: book-condensed
 sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 20 and appendix"
   - https://arxiv.org/abs/2502.10517
+  - https://arxiv.org/abs/2607.20466
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -94,6 +95,8 @@ Running for about **15 minutes on an H100**, the loop produced attention kernels
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 20-1*
 
 **Predibase** went further and trained the generator itself. Qwen2.5-Coder-32B was fine-tuned with GRPO: the model proposes kernels, a sandbox compiles and tests them, and correctness plus speed become the reward. After about **5,000 steps**, about **40%** of its kernels were correct, and some ran up to **3×** faster than the PyTorch reference (*AISPE*, ch. 20). The book expands GRPO as "Group Relative *Preference* Optimization". It is Group Relative **Policy** Optimization (DeepSeekMath, 2024).
+
+Off NVIDIA hardware, the bottleneck is documentation more than search. JAXBench has 50 Pallas tasks for TPU v6e: 17 production operators from MaxText models such as Llama-3.1, DeepSeek-V3 and Mamba-2, plus 33 KernelBench operators at sizes that fill the matrix unit. With Gemini 3 Flash, adding curated TPU documentation to the prompt raised per-sample correctness from **5.8% to 37.3%**; the authors conclude that target-specific context matters more than model scale on a sparsely documented DSL. With that context, 48 of 50 tasks were solved, at a geometric-mean **1.28×** over XLA, or 1.36× with Autocomp beam search. On the eight operators that already had expert Pallas kernels, Autocomp reached 1.60× over XLA, against 2.08× for the hand-tuned Tokamax kernels, and trailed most on paged and ragged attention ([arXiv:2607.20466](https://arxiv.org/abs/2607.20466) (Tschand et al., 2026-07, preprint)). The baseline lesson from FlexAttention applies here too: compare against the expert library, not the compiler default.
 
 ### What the verifier must do
 

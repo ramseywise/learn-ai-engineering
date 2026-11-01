@@ -11,6 +11,17 @@ sources:
   - https://arxiv.org/abs/2407.00079
   - https://arxiv.org/abs/2405.04434
   - https://arxiv.org/abs/2502.13189
+  - https://arxiv.org/abs/2211.05102
+  - https://arxiv.org/abs/1911.02150
+  - https://arxiv.org/abs/2305.13245
+  - https://arxiv.org/abs/2508.15884
+  - https://arxiv.org/abs/2309.17453
+  - https://arxiv.org/abs/2502.11089
+  - https://arxiv.org/abs/2303.06865
+  - https://arxiv.org/abs/2207.00032
+  - https://arxiv.org/abs/2607.29678
+  - https://arxiv.org/abs/2608.15127
+  - https://arxiv.org/abs/2305.13048
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -105,10 +116,10 @@ Worked numbers, all FP16 unless stated:
 
 - **Llama 2 13B** (40 layers, 40 heads × 128, MHA). Fregly gets **0.82 MB/token**, so a 4,096-token context is **3.36 GB** (1.68 GB in FP8). Huyen's batch of 32 × 2,048 tokens is **54 GB**. These agree, because 13B is MHA. With GQA-8 the same 4,096 tokens would be **0.67 GB**; with MQA, **0.084 GB** (*AISPE*, ch. 17).
 - **"7B exceeds 2 GB above 2,048 tokens"** (*LLM Engineer's Handbook*, ch. 8). For Llama 2 7B (32 layers, d = 4,096, MHA) a single sequence is 0.5 MB/token: 1.07 GB at 2,048 tokens, crossing 2 GB around 4,096. Loose, but the right order of magnitude.
-- **Pope et al. (2022), via Huyen:** a 500B+ MHA model at batch 512 and context 2,048 needs **~3 TB** of KV, **3× the weights**. This is why MQA and GQA exist.
+- **Pope et al. (2022), via Huyen:** a 500B+ MHA model at batch 512 and context 2,048 needs **~3 TB** of KV, **3× the weights**. This is why MQA and GQA exist. In the paper, PaLM 540B's multi-query attention, with the attention computation split across chips by batch, allows up to 32× longer context on 64 TPU v4 chips ([arXiv:2211.05102](https://arxiv.org/abs/2211.05102) (Pope et al., MLSys 2023)).
 - **Fregly's 250,000-token example** (*AISPE*, ch. 18) assumes a 70B model with 80 layers and 32 MHA heads × 128 and gets **1.31 MB/token, 328 GB**. Real 70B Llama models use **8 KV heads** (GQA), which gives **0.33 MB/token, ~82 GB**. The conclusion that it won't fit beside the weights on one GPU survives. The number is 4× too high.
 
-Capacity budget: free memory after weights is the KV budget. Fregly's example is 70 GB of weights on a 180 GB-usable B200, leaving about 110 GB. The book prints 122 GB, an arithmetic slip, and the true figure is lower still once activations and CUDA graph buffers are counted. Divide the budget by bytes per token to get the total tokens in flight across all sequences. That number, not FLOP/s, usually caps batch size in decode.
+Capacity budget: free memory after weights is the KV budget. Fregly's example is 70 GB of weights on a 180 GB-usable B200, leaving about 110 GB. The book prints 122 GB, an arithmetic slip, and the true figure is lower still once activations and CUDA graph buffers are counted. Divide the budget by bytes per token to get the total tokens in flight across all sequences. That number, not FLOP/s, usually caps batch size in decode. Jet-Nemotron's architecture search found the same thing from the other side. At a fixed KV-cache size, models with different parameter counts had similar long-context generation throughput on H100, so KV size, not parameter count, was the variable to cut. Its 2B hybrid, which keeps only a few full-attention layers and uses linear attention elsewhere, decodes 53.6× faster than Qwen3-1.7B at 256K context, with comparable accuracy ([arXiv:2508.15884](https://arxiv.org/abs/2508.15884) (Gu et al., NeurIPS 2025)).
 
 ### Shrinking the cache
 
@@ -119,12 +130,16 @@ Capacity budget: free memory after weights is the KV budget. Fregly's example is
 | **Local / sliding-window attention** | Attend to the last W tokens only | Huyen: 10k context with a 1k window ≈ 10× smaller | Huyen ch. 9 |
 | **Cross-layer attention** | Share KV across adjacent layers | Character.AI: >20× KV reduction, with conversations averaging 180 messages | Huyen ch. 9 |
 | **KV quantization** | FP8 (or INT8/INT4) K/V | 2× (FP8) to 4× (INT4); vLLM and TensorRT-LLM support FP8 KV | Fregly ch. 18–19 ([08](08-adaptive-inference.md#kv-cache-quantization)) |
-| **Eviction / compression** | Drop or merge low-importance entries | Workload-dependent; only safe with restricted-attention layers | Fregly ch. 18 |
-| **Offload / tiering** | Spill cold KV to CPU DRAM or NVMe; fetch on reuse | Capacity; costs PCIe/NVLink-C2C bandwidth | Fregly ch. 17–18 |
+| **Eviction / compression** | Drop or merge low-importance entries | Workload-dependent; only safe with restricted-attention layers. A plain sliding window collapses once text outruns the cache, because models dump attention on the first tokens. Keeping 4 of these "attention sink" tokens plus the window holds perplexity stable to 4M tokens on Llama-2, MPT, Falcon and Pythia, with no fine-tuning. Evicted tokens are gone, so this gives streaming, not long-context recall ([arXiv:2309.17453](https://arxiv.org/abs/2309.17453) (Xiao et al., ICLR 2024)) | Fregly ch. 18 |
+| **Offload / tiering** | Spill cold KV to CPU DRAM or NVMe; fetch on reuse | Capacity; costs PCIe/NVLink-C2C bandwidth. Offloading buys throughput, not latency. FlexGen runs OPT-175B on one 16 GB T4 at 1 token/s with an effective batch of 144, 100× the throughput of DeepSpeed ZeRO-Inference, at about 4,000 s per batch ([arXiv:2303.06865](https://arxiv.org/abs/2303.06865) (Sheng et al., ICML 2023); [arXiv:2207.00032](https://arxiv.org/abs/2207.00032) (Aminabadi et al., SC 2022)) | Fregly ch. 17–18 |
 
 The MLA trade is real but its headline numbers are stacked. DeepSeek-V2's 93.3% KV cut and 5.76× generation throughput (8×H800) are measured against the dense DeepSeek 67B, with FP8 weights, ~6-bit KV quantization and MoE sparsity on top of MLA, so they are not MLA's effect alone. Its own 7B dense ablation shows why plain sharing is not free: MMLU falls from 45.2 (MHA) to 41.2 (GQA-8) and 37.9 (MQA) ([arXiv:2405.04434](https://arxiv.org/abs/2405.04434) (DeepSeek-AI, 2024-05)).
 
+The original papers measured smaller losses, in narrower settings. Shazeer introduced MQA on a WMT14 en-de Transformer on TPUv2. Incremental decoder time fell from 46 to 3.8 µs per token, and BLEU moved by only 0.2 either way ([arXiv:1911.02150](https://arxiv.org/abs/1911.02150) (Shazeer, 2019-11, preprint)). GQA was mainly a conversion recipe: mean-pool an MHA checkpoint's K/V heads into groups, then uptrain with 5% of the original pretraining compute. On T5-XXL, GQA-8 scored 47.1 against MHA's 47.2 and MQA's 46.6, at close to MQA's speed (0.28 vs 1.51 s per sample for MHA) ([arXiv:2305.13245](https://arxiv.org/abs/2305.13245) (Ainslie et al., EMNLP 2023)). Both results are on encoder–decoder models scored with BLEU or ROUGE. DeepSeek's decoder-only MMLU ablation is the harsher test, and the closer match to how GQA is used today.
+
 Block-sparse attention cuts prefill compute, not cache size. MoBA scores key blocks by their mean-pooled key and lets each query attend to its top-k blocks plus its own. On Llama-3.1-8B extended to 1M tokens (4,096-token blocks, top-12, last 3 layers kept dense) it matched full attention on RULER (0.782 vs 0.785) and ran the attention layers 6.5× faster at 1M-token prefill. Decode switches back to full attention, so the KV cache stays the same size ([arXiv:2502.13189](https://arxiv.org/abs/2502.13189) (Lu et al., 2025-02)). It is a vendor report on one model, and the speedup is for attention alone, not end to end.
+
+DeepSeek's NSA makes the sparsity trainable and keeps it at decode, where MoBA does not. It combines compressed-block, selected-block and sliding-window branches over a GQA cache. A 27B MoE pretrained with it on 260B tokens matched or beat full attention on general, LongBench and reasoning evals. At 64K context it measured 9.0× faster forward and 6.0× faster backward passes. Its 11.6× decode figure is an *expected* speedup, computed from the KV tokens loaded per step (5,632 vs 65,536), not a timed run ([arXiv:2502.11089](https://arxiv.org/abs/2502.11089) (Yuan et al., ACL 2025)). The far end of the spectrum has no growing cache at all. RWKV runs as an RNN at inference, with constant memory per token, and matched transformers of similar size up to 14B. The cost is that everything must pass through one fixed-size state, so the model cannot look back at the prompt, and its results depend more on how the prompt is ordered ([arXiv:2305.13048](https://arxiv.org/abs/2305.13048) (Peng et al., Findings of EMNLP 2023)).
 
 ---
 
@@ -150,6 +165,8 @@ Sharing blocks *within* a request generalizes to sharing *across* requests. If a
 The hit rate depends on **prompt layout**. Put stable content first (system prompt, tool definitions, few-shot examples, documents) and variable content last. Changing one token early in the prompt invalidates everything after it. This is the same rule that drives API prompt-cache pricing ([02/04](../../02-context-engineering/notes/04-retrieval.md#caching)). Fregly's "10× faster" prefix-cache example (*AISPE*, ch. 16) is the ideal case of a long shared document and a short question. Real gains scale with the cached fraction of each prompt.
 
 At fleet scale the router has to send a request to **the replica that holds its prefix** (cache-aware routing in llm-d, Dynamo, SGLang router). Otherwise every replica recomputes and caches the same prefixes ([06](06-serving-at-scale.md#routing)).
+
+Agent sessions push prefix caching to its limits, and the costs move elsewhere. In one production agent session in AgentSysBench, accumulated tool calls and observations grew to 84.3% of the input. The final step emitted 151 tokens after a 166,721-token input. Sessions also sit idle for minutes to hours between steps, which outlasts cache lifetimes, so the same long prefix is prefilled again ([arXiv:2608.15127](https://arxiv.org/abs/2608.15127) (Chang et al., 2026-08, preprint)). When the cache does hit, the next bottleneck is the CPU front end. Across 153,951 agent calls the median call appended only ~1.4K characters, yet most front ends re-tokenize the whole transcript. As the prefix-cache hit rate rises toward 0.99, tokenization grows from 10% to 64% of TTFT. Splicing a re-tokenized window onto the session's previous token IDs, checked for exact equality with full tokenization, cut median TTFT 16–34% under load in vLLM ([arXiv:2607.29678](https://arxiv.org/abs/2607.29678) (Zhang et al., 2026-07, preprint)).
 
 ### Prompt caching in provider APIs
 

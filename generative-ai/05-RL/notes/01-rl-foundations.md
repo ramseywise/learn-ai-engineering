@@ -131,7 +131,7 @@ make it greedier against that evaluation, repeat.
 ### Algorithm families
 
 **Value-based:** The agent estimates the expected long-term return (the "value") of
-states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks). DQN ([arXiv:1312.5602](https://arxiv.org/abs/1312.5602), Mnih et al., 2013) learned Q-values straight from raw pixels with a CNN. Its experience replay buffer broke the correlation between consecutive frames. With one architecture and one set of hyperparameters it played seven Atari games and beat a human expert on three.
+states or state-action pairs, then acts greedily. Examples: Q-Learning, DQN (Deep Q-Networks). DQN ([arXiv:1312.5602](https://arxiv.org/abs/1312.5602), Mnih et al., 2013) learned Q-values straight from raw pixels with a CNN. Its experience replay buffer broke the correlation between consecutive frames. With one architecture and one set of hyperparameters it played seven Atari games and beat a human expert on three. Both the games and the "one agent, no per-game tuning" rule came from the **Arcade Learning Environment** ([arXiv:1207.4708](https://arxiv.org/abs/1207.4708), Bellemare et al., JAIR 2013). ALE's authors tuned on five training games and reported on 50 test games drawn at random, the train/test split applied to environments. Their own SARSA(λ) agents on hand-built features beat trivial baselines in only 40 of 55 games, and sparse-reward games such as Montezuma's Revenge defeated everything. DQN's contribution was to learn the features from pixels.
 
 **Policy-based:** Directly optimize the policy without an explicit value function.
 Policy gradient methods compute `∇E[R]` and update `π_θ` toward higher-reward trajectories.
@@ -258,6 +258,7 @@ summary of ch. 5 is that the policy gradient algorithms differ *only* in what th
 | `G_t − b(s_t)` | REINFORCE with baseline | Same expectation, far lower variance |
 | `r + γ·V(s') − V(s)` = δ_t | One-step actor-critic | Critic supplies the baseline and bootstraps |
 | n-step or GAE advantage `Â_t` | A2C / PPO | The bias–variance dial |
+| reward minus the mean of the other k−1 samples | RLOO | Leave-one-out baseline, no critic, whole completion is one action |
 | group-normalized reward | GRPO | Baseline from sibling samples, no critic |
 
 **Why a baseline.** With raw returns, a policy that happens to fail early gets a large update
@@ -275,6 +276,25 @@ Once the policy is decent, plain REINFORCE keeps making large updates that knock
 baseline version settles. That is what "variance reduction" means in the papers. GRPO's
 `(r_i − mean(r)) / std(r)` over a group of completions for the same prompt is this baseline
 computed empirically instead of learned ([03](03-preference-optimization.md)).
+
+**REINFORCE comes back once the policy is pretrained.** The variance case against REINFORCE was
+built on agents trained from random or weak initializations. Ahmadian et al.
+([arXiv:2402.14740](https://arxiv.org/abs/2402.14740), ACL 2024) argue that a pretrained, SFT'd LLM
+puts most of its probability on a few tokens, so the gradients are already low-variance and PPO's
+machinery buys little. In RLHF on Anthropic-HH and TL;DR with Pythia-6.9B and Llama-7B:
+
+- PPO's clip fired on **fewer than 5% of samples per batch**. Removing the clip and then the ratio,
+  which reduces PPO to vanilla policy gradient, did not hurt.
+- Reward rose monotonically with the GAE λ: λ = 1, the unbiased Monte Carlo return, was best.
+- Treating the whole completion as one action, with a REINFORCE or **RLOO** leave-one-out baseline
+  (Kool et al., 2019), beat token-level PPO. RLOO with k = 4 beat PPO by **10.3, 14.5 and 32.1
+  GPT-4-judged win-rate points** on the three dataset–model pairs, and it beat DPO and RAFT too.
+
+The same recipe works outside language. Pinto et al. ([arXiv:2302.08242](https://arxiv.org/abs/2302.08242),
+ICML 2023) take a maximum-likelihood vision model and tune it with REINFORCE, drawing a second sample
+as the baseline. They add no KL term and no critic, and on COCO detection mAP rose **from 39.2% to
+54.3%** with a ViT-B. Both papers credit the pretrained initialization. Neither study measures reward
+over-optimization, and Ahmadian et al. report only LLM-judged win rates.
 
 ```python
 def reinforce_with_baseline_loss(logp, returns, values):
@@ -502,6 +522,21 @@ in a preference pair play exactly that role.
   dynamic sampling, [arXiv:2503.14476](https://arxiv.org/abs/2503.14476)). A prompt solved by
   every sample in a group, or by none, gives GRPO zero advantage and no gradient.
 
+**Horizon length alone can break LLM RL, and shortening it is the fix.** Kim et al.
+([arXiv:2605.02572](https://arxiv.org/abs/2605.02572), ICML 2026) built Sudoku and Rush Hour tasks in
+which only the number of required moves changes. Every Sudoku needs only basic solving techniques,
+and they kept only puzzles the model could already solve when asked for the whole answer in one step. Qwen3-1.7B was given an SFT warm start
+and then trained with REINFORCE and a batch-normalized baseline. On 11–20 empty cells RL improved
+steadily. On 21–30 it collapsed, and the collapse came with a surge of maximum-length responses.
+Letting the policy emit a variable-length **macro action** (several moves per turn) kept training
+stable. Forcing the same policy back to one move per turn brought the collapse back, so the horizon
+was the cause and not the better starting policy. Fixed-length macros did worse than flexible ones.
+Per-subgrid rewards, a hand-designed subgoal hierarchy, also fixed it. The pattern held on WebShop,
+at 4B, and with a GRPO-style optimizer. Policies trained on short horizons generalized to longer
+unseen ones, which makes a short-to-long curriculum work on Rush Hour where training on the long tasks
+directly did not. These are puzzle environments with one small model family, and most results are
+reported as curves.
+
 ### Engineering an RL problem
 
 Winder's practical chapters argue that the algorithm is rarely the bottleneck. Most of the
@@ -586,6 +621,46 @@ wall-clock time. Asynchronous rollout pipelines trade freshness for throughput, 
 staleness correction plays the role V-trace played for IMPALA. The framing transfers from the
 2020 book. The systems do not.
 
+In LLM RL the actor is usually a serving engine, most often vLLM. Its PagedAttention
+([arXiv:2309.06180](https://arxiv.org/abs/2309.06180), Kwon et al., SOSP 2023) lets the samples
+drawn for one prompt share that prompt's KV blocks copy-on-write, which is exactly the access
+pattern of a GRPO or RLOO group. The paper measured a 6.1–9.8% KV-memory saving for 2–6 parallel
+samples on OPT-13B with short Alpaca prompts, so the saving grows with prompt length. The mechanism
+is covered in
+[inference engineering](../../../ai-engineering/07-inference-engineering/notes/07-prefill-decode-kv-cache.md#pagedattention).
+Because the trainer and the serving engine are separate programs, their log-probs can disagree,
+which is the mismatch the reports below correct for.
+
+**Evolution strategies are the extreme of the actor–learner split.** ES perturbs the weights,
+scores each perturbed copy and averages the perturbations weighted by score. Workers exchange only
+scalar fitnesses, and no gradient flows through the model. Salimans et al. (2017) scaled it this way
+on MuJoCo and Atari. Sarkar et al. ([arXiv:2511.16652](https://arxiv.org/abs/2511.16652),
+2025-11, preprint) make it practical at billions of parameters. EGGROLL uses rank-r (often rank-1)
+perturbations, the way LoRA does, and regenerates the noise from a seed. Training then runs at **up
+to 91% of pure batch-inference throughput**, where naive ES manages 0.41%. They run the
+population inside vLLM as multi-LoRA serving, so the inference engine is the trainer and no
+mismatch is left to correct. The results:
+
+- On Qwen3-4B-Base with DeepScaleR maths, EGGROLL averaged 41.4% across five maths benchmarks, the same
+  as an RL run. That RL figure is copied from another paper with matched settings, not rerun.
+- A 14B RWKV-7 went from 13% to 30% on AIME24 after 12 hours on 32 GPUs. At that size GRPO did not
+  fit in memory with Adam.
+- Because fitness needs no gradient, ES can optimize pass@k directly. On Qwen3-1.7B with k=4, the
+  number of distinct answers per four samples rose under pass@k training and fell under pass@1
+  training.
+
+The head-to-head wins over GRPO are on RWKV models at equal hardware and wall-clock.
+
+Optimizer memory is also what stops gradient-based full-weight RL from fitting, and it can be cut
+without leaving gradients behind. LoGRA keeps each weight's gradient as a low-rank sketch, lets the
+optimizer act on the sketch, and sets the step size from a predicted-KL budget
+([arXiv:2610.06647](https://arxiv.org/abs/2610.06647) (Zhang et al., 2026-10, preprint)). On
+Qwen2.5-Math with PPO on one 8×H100 node, **average training memory fell 21.8% at 1.5B and 45.7% at
+7B, and a 27B Qwen model trained for over 1,100 steps where dense Adam ran out of memory.** Peak MATH-500
+Pass@1 was 67.87 vs 63.77 at 1.5B and 72.33 vs 72.48 at 7B. The setup is deliberately simple: math
+only, one sample per prompt, a running-mean baseline. In its own comparison at 1.5B, plain LoRA had
+higher mean Pass@1 (70.45 vs 68.47) at more memory (13.2 vs 7.2 GiB).
+
 Two 2025–26 open reports show what that correction looks like now: double-sided masking of the
 token-level ratio π_train / π_inference rather than a V-trace-style truncated weight.
 
@@ -613,7 +688,7 @@ Winder's book predates LLM RL. The foundations hold; the defaults have moved:
 | Most state-of-the-art algorithms are off-policy (ch. 1) | PPO and GRPO are on-policy; replay buffers are rare |
 | SAC beats PPO; entropy bonuses drive exploration (ch. 7) | Discrete tokens, KL to a reference model; entropy *collapse* is the problem |
 | Behavior cloning overfits and is unpopular (ch. 8) | Pretraining plus SFT is behavior cloning, and it comes first |
-| A learned critic (A2C, PPO) is the standard baseline (ch. 5–6) | GRPO drops the critic and uses group statistics ([03](03-preference-optimization.md)) |
+| A learned critic (A2C, PPO) is the standard baseline (ch. 5–6) | GRPO and RLOO drop the critic and use group statistics ([03](03-preference-optimization.md), and the REINFORCE paragraph above) |
 | Rewards are shaped by hand or learned by IRL (ch. 8–9) | Learned reward models (RLHF) or verifiable checkers (RLVR) |
 | Tabula rasa agents are sample-inefficient (ch. 11) | A pretrained prior makes exploration targeted: in [05](05-post-training-for-agents.md)'s treasure hunt, Q-learning needs ~10,000 episodes and an LLM agent wins on the first try |
 | Offline learning is the field's biggest open challenge (ch. 11) | Partly solved for preferences (DPO); online RL is still preferred for reasoning |
@@ -764,6 +839,16 @@ execute in browser → collect human preference over final answer → update pol
 This is structurally identical to RLHF except the "response" is an action sequence
 rather than text, and the environment is the web browser rather than the generation step.
 
+**Search-R1** ([arXiv:2503.09516](https://arxiv.org/abs/2503.09516), Jin et al., COLM 2025)
+removes the demonstrations and the reward model. The model writes `<search>` queries. The
+environment returns passages inside `<information>` tags. The only reward is exact match on the final
+answer. Retrieved tokens are **masked out of the loss**, so the policy is not trained to reproduce
+text it did not write. Setup: Qwen2.5-7B-base with PPO, an E5 retriever over 2018 Wikipedia
+returning three passages, trained on NQ plus HotpotQA. It averaged 0.431 exact match across seven
+QA sets, against 0.304 for one-shot RAG and 0.348 for rejection-sampling fine-tuning on the same
+search loop. Without the mask the average fell to 0.343. GRPO converged faster but its reward
+collapsed in some runs, while PPO stayed stable.
+
 ### Pattern 2 — RL module for specific sub-task
 
 Instead of end-to-end RL, train a specialized RL module for one decision (e.g., query
@@ -793,6 +878,15 @@ These tokens allow inference-time controllability: retrieval can be turned off f
 factual queries the model is confident about and turned on for uncertain claims. This
 substantially improves groundedness and citation accuracy over fixed-retrieval RAG.
 
+**RARE** ([arXiv:2503.23513](https://arxiv.org/abs/2503.23513), Wang et al., KDD 2026) is a
+similar training-time recipe for domain reasoning. Retrieved documents go into the training prompt
+and are masked from the loss, so the model learns to reason over knowledge rather than memorize it.
+The reasoning traces are distilled from QwQ-32B. On MedQA, Llama-3.1-8B reached 84.1%, against 83.0%
+for both GPT-4 with RAG and the same 8B model fine-tuned and then given RAG. DeepSeek-R1 with RAG
+scored 92.8%. The gain is modest, and almost all of it comes from supervised fine-tuning. The RL is
+one small KTO table. KTO in place of SFT raised PubHealth from 66.4% to 69.2% but lowered CoVERT
+from 66.7% to 65.0%.
+
 ### RL vs. DPO for RAG optimization
 
 Standard RLHF/PPO requires online rollouts — expensive at RAG pipeline scale (each
@@ -806,10 +900,19 @@ See [03-preference-optimization.md](03-preference-optimization.md) for DPO detai
 
 - **Reward sparsity:** End-task reward (final answer quality) is a single signal at the
   end of a multi-step trajectory. Intermediate retrieval actions have no direct reward.
-  Partial mitigation: reward shaping (intermediate retrieval quality scores).
+  Partial mitigation: reward shaping (intermediate retrieval quality scores). With a pretrained
+  model the sparse signal can be enough: Search-R1 (Pattern 1) learned multi-turn search from
+  final-answer exact match alone.
 - **Scalability:** Each RL training step requires retrieval — slow and expensive.
   Offline methods (Self-RAG, DPO over retrieval decisions) are faster but lose online
-  adaptation.
+  adaptation. **ZeroSearch** ([arXiv:2505.04588](https://arxiv.org/abs/2505.04588), Sun et al.,
+  2025-05, preprint) keeps the loop online but replaces the search engine with an LLM fine-tuned to
+  write relevant or noisy documents on request. A curriculum makes the documents noisier as training
+  goes on. For about 64,000 training queries, Google through SerpAPI cost $586.7, against $70.8 of
+  GPU time for a 14B simulator and $17.7 for a 3B one. On Qwen-2.5-3B-Base it averaged 34.47 exact
+  match over seven QA sets, against 32.81 for Search-R1 trained on real Google. In that setup
+  REINFORCE (34.47) edged out GRPO (33.17) and PPO (32.67). The simulator can only return what it
+  knows, so it does not replace retrieval over a private or fresh corpus.
 - **Evaluation difficulty:** RAG quality is multi-dimensional (retrieval quality +
   faithfulness + answer quality + latency). Single reward scalars are imperfect proxies.
 - **Reward hacking:** Model learns to retrieve passages that trigger high reward model

@@ -46,7 +46,8 @@ RLHF (2017–2022)
   Group-based advantage estimation, no separate value network
       |
       v
-  KTO, IPO, ORPO: further simplifications for specific settings
+  KTO, IPO, ORPO, SimPO: further simplifications for specific settings
+  SPIN, SPPO: self-play, with the model's own samples as the opponent
 ```
 
 Each step removed a component that was expensive, unstable, or hard to tune — while
@@ -98,6 +99,22 @@ landscapes, supports online learning (can improve reward model iteratively).
 **Weaknesses:** Expensive (4x model memory), requires careful hyperparameter tuning
 (ε clipping, KL coefficient β), sensitive to reward model quality, training instability
 common at scale.
+
+**PPO on a verifiable reward predates R1.** ReFT ran PPO after an SFT warm-up, with the reward
+taken from the final answer alone and no reward model
+([arXiv:2401.08967](https://arxiv.org/abs/2401.08967) (Luong et al., ACL 2024)). The training
+questions were the same ones SFT used. On GSM8K with CodeLLaMA-7B and GPT-3.5-written CoT, it
+raised accuracy from 43.6% to 53.3% (natural-language CoT) and from 63.7% to 75.3% (program
+CoT). It needed more epochs than SFT. It also **reward-hacked multiple-choice MathQA**: with only
+A–E as the answer space, a wrong chain that lands on the right letter still gets full reward.
+
+**Much of PPO's machinery may be unnecessary for LLM RLHF.** Ahmadian et al.
+([arXiv:2402.14740](https://arxiv.org/abs/2402.14740) (Ahmadian et al., ACL 2024)) trained
+Pythia-6.9B and Llama-7B on Anthropic-HH and TL;DR. The clip was active on fewer than 5% of
+samples per batch, and removing the clip, and then the ratio, did not hurt. **RLOO with k = 4
+samples beat PPO by 10.3–32.1 GPT-4-judged win-rate points, and also beat DPO and RAFT.**
+Because the pretrained policy already starts close to good, low-variance REINFORCE over whole
+completions is enough ([01](01-rl-foundations.md#policy-gradients-from-reinforce-to-the-ppo-clip)).
 
 ---
 
@@ -160,7 +177,8 @@ with a human study. DPO's β was barely tuned.
 incorporate new feedback during training. That is a property of the data pipeline, not the
 loss: the same DPO loss run on fresh samples from the current model works well (heuristic 2). Sensitive
 to dataset quality (bad preferred/rejected pairs have direct gradient impact). Can
-increase probability of rejected responses in some settings (the "DPO length problem").
+increase probability of rejected responses in some settings (the "DPO length problem";
+SimPO, [below](#simpo--no-reference-model-length-normalized-reward), measures it).
 Does not generalize beyond the preference distribution seen in training.
 
 **When to use DPO:** You have a clean preference dataset, want stability over online
@@ -213,6 +231,16 @@ ceiling". The ceiling turned out to come mainly from **online sampling, not from
 Semi-online and online DPO match GRPO on math and beat offline DPO by about 30 points on
 AlpacaEval (heuristic 2 below).
 
+Zephyr-7B shows DPO's place in a distilled pipeline
+([arXiv:2310.16944](https://arxiv.org/abs/2310.16944) (Tunstall et al., COLM 2024)).
+Mistral-7B was first fine-tuned on 200k filtered UltraChat dialogues. It was then trained with
+DPO on UltraFeedback pairs scored by GPT-4. It reached 7.34 on MT-Bench, against 6.86 for
+Llama-2-Chat-70B, with no human labels and a few hours on 16 A100s. **DPO without the SFT stage
+collapsed (4.76). SFT on the chosen responses alone was worse than DPO on the same pairs (6.19
+vs 7.00).** DPO overfit to 100% training accuracy after one epoch without hurting MT-Bench.
+Three DPO epochs on a one-epoch SFT model worked best, and a longer SFT made extra DPO regress.
+The judge was GPT-4, which favours models distilled from it.
+
 ---
 
 ## GRPO — Group Relative Policy Optimization
@@ -264,7 +292,9 @@ They are only as sound as the checker, and these cases show it:
 - **DeepSeek-Prover-V2.**
   - The setup: GRPO with a binary Lean-verifier reward, on subgoal-decomposed cold-start data
     from DeepSeek-V3. The 671B prover reached 61.9% pass@1 and 88.9% pass@8192 on
-    miniF2F-test.
+    miniF2F-test. It builds on DeepSeek-Prover v1, which reached 46.3% on miniF2F-test
+    (pass@64) through expert iteration over 8M autoformalized Lean statements
+    ([arXiv:2405.14333](https://arxiv.org/abs/2405.14333) (Xin et al., 2024-05, preprint)).
   - Its v2 retracted 13 PutnamBench "solves" by the 7B model. They exploited a Lean 4.9.0 bug
     in which `apply?` fails to emit `sorry`
     ([arXiv:2504.21801](https://arxiv.org/abs/2504.21801) (Ren et al., 2025-04)).
@@ -282,21 +312,57 @@ generation (summarization, helpfulness). Group sampling increases inference cost
 training step. Normalizing within-group rewards can struggle with uniform groups
 (all correct or all incorrect): zero variance means zero advantage and no gradient. DAPO
 drops those groups (dynamic sampling). RLVP gives them variance back with verifiable path
-penalties. Credit assignment is also coarse: one trajectory-level advantage is spread
+penalties. HERO gives them variance back with a reward model, but bounded inside the
+verifier's bands: RM scores are min-max scaled to [−α, α] for wrong answers and [1−β, 1+β]
+for right ones. With α + β < 1, a wrong answer can never outscore a right one
+([arXiv:2510.07242](https://arxiv.org/abs/2510.07242) (Tao et al., 2025-10, preprint)).
+Qwen3-4B-Base was trained on 2k easy-to-verify OpenMathReasoning problems. On four
+verifiable math benchmarks HERO averaged 62.0, against 58.3 for verifier-only and 56.4 for
+RM-only. On two hard-to-verify sets judged by GPT-4o, it scored 66.3 against 57.1 and 54.6.
+Credit assignment is also coarse: one trajectory-level advantage is spread
 evenly over every token, which dilutes the signal over long multi-turn episodes, where
 PPO with a value network still earns its cost. DAPO's four fixes (Clip-Higher,
 token-level loss, dynamic sampling, overlong shaping) are tabulated in
 [post-training-for-agents.md](05-post-training-for-agents.md#rl-for-tool-calling). Clip-Higher
 answers entropy collapse under symmetric clipping: raising only ε_high lets low-probability tokens
-gain mass ([arXiv:2503.14476](https://arxiv.org/abs/2503.14476), Yu et al., 2025-03).
+gain mass ([arXiv:2503.14476](https://arxiv.org/abs/2503.14476) (Yu et al., NeurIPS 2025)).
+The setup was Qwen2.5-32B base, DAPO-Math-17K, a ±1 answer reward, no KL, and ε 0.2/0.28.
+DAPO added the fixes one at a time, in a single order, and scored each step on AIME 2024
+avg@32. Naive GRPO scored 30. Overlong filtering raised it to 36, Clip-Higher to 38, soft
+overlong punishment to 41, token-level loss to 42, and dynamic sampling to 50. **Dynamic
+sampling, the last step, gave the biggest gain in this order.** It drops only prompts whose accuracy is
+exactly 0 or 1 and refills the batch. The overlong penalty applies only to responses between
+16k and 20k tokens. The 50 beat DeepSeek-R1-Zero-Qwen-32B's 47 "with 50% training steps", but
+the two runs used different evaluation settings.
+
+**Several rewards break the group normalization.** Summing the rewards first and then
+normalizing within the group merges different reward combinations. With two binary rewards
+and two rollouts, totals of (0,1), (0,2) and (1,2) all become advantages (−0.71, +0.71).
+GDPO normalizes each reward within the group, sums them, then normalizes over the batch
+([arXiv:2601.05242](https://arxiv.org/abs/2601.05242) (Liu et al., 2026-01, preprint)).
+For tool calling on Qwen2.5-1.5B-Instruct, GDPO scored 32.8 average accuracy on BFCL-v3,
+against 30.2 for GRPO (5 runs). On math, both GDPO and GRPO were trained with a 4k-token length reward, and both
+**lost AIME accuracy against the untrained model** while cutting length violations. On
+DeepSeek-R1-1.5B, AIME went 29.8 base, 23.1 GRPO, 29.4 GDPO. So "beats GRPO" is not "beats
+the starting point". Reward weights did not reliably set priorities when the objectives
+differed in difficulty. Making the easy reward conditional on the hard one worked better.
+
+**GRPO needs per-token log-probabilities.** Masked diffusion LMs do not factorize left to
+right, so they cannot supply them directly. d1
+([arXiv:2504.12216](https://arxiv.org/abs/2504.12216) (Zhao et al., 2025-04, preprint))
+estimates them with a mean-field decomposition and a single unmasking pass under a random
+prompt mask. On LLaDA-8B-Instruct, this diffu-GRPO beat SFT in all 12 task and length setups.
+SFT followed by RL took Countdown from 20.7% to 42.2%.
 
 **When to use GRPO:** Reasoning tasks with verifiable outcomes (math, code, logic).
 Not appropriate for general instruction following or alignment training.
 
 ### GSPO — sequence-level ratios
 
-**Paper:** Zheng et al. (Qwen team), "Group Sequence Policy Optimization" (2025). Used to train
-Qwen3. Summarized in *AI Agents: The Definitive Guide*, ch. 3.
+**Paper:** Zheng et al. (Qwen team), "Group Sequence Policy Optimization"
+([arXiv:2507.18071](https://arxiv.org/abs/2507.18071) (Zheng et al., 2025-07, preprint)).
+The paper says GSPO "contributed to" the *latest* Qwen3 models, which is not the same as saying
+it trained the original Qwen3. Summarized in *AI Agents: The Definitive Guide*, ch. 3.
 
 GRPO gives every token in a response the same advantage, but still computes and clips the
 importance ratio **per token**. In a long response those per-token ratios fluctuate
@@ -326,6 +392,12 @@ The two claims in favour of GSPO (Zheng et al.; the book repeats them):
   trainer.
 
 *Read with care:* both claims come from the team that built GSPO and trained Qwen3 with it.
+The evidence is thin. It consists of training curves on one cold-start model from
+Qwen3-30B-A3B-Base, scored on AIME'24 avg@32, LiveCodeBench and CodeForces, with no tables and
+no seeds. The baseline was GRPO *with* routing replay. GSPO clips at 3e-4/4e-4 on the sequence
+ratio, against 0.2/0.27 for GRPO's token ratio. It clipped 15% of tokens against GRPO's 0.13%,
+yet trained more efficiently. In that 48-layer MoE, about 10% of the activated experts changed
+after each update.
 The book's comparison table also says GRPO "needs value-model surrogates" for MoE stability.
 GRPO has no value model; the MoE fix the GSPO paper describes is routing replay. The choice is
 a stability and infrastructure question for long-output or MoE training, not a new kind of
@@ -341,6 +413,7 @@ granularity.
 | DPO | Frozen reference | None at train time: offline chosen/rejected pairs | No | Sequence, pairwise |
 | GRPO | Often a frozen reference | Reward function, verifier or LLM judge | No | Token ratio, group-normalized advantage |
 | GSPO | Often a frozen reference | Same as GRPO | No | Sequence ratio, group-normalized advantage |
+| RLOO | Often a frozen reference | Reward model or verifier | No | Sequence; baseline is the mean of the other k−1 rewards (Kool et al. 2019; Ahmadian et al. 2024) |
 
 ---
 
@@ -375,7 +448,8 @@ sufficiently little intransitivity, then DPO will work better."
 
 **Motivation:** DPO can overfit — the policy collapses to assigning zero probability to
 rejected responses. IPO modifies the objective to directly minimize the squared difference
-between model preference and a target margin, preventing collapse.
+between model preference and a target margin, preventing collapse
+([arXiv:2310.12036](https://arxiv.org/abs/2310.12036) (Azar et al., AISTATS 2024)).
 
 **When to use:** When DPO training is unstable or collapses to mode-dropping behavior.
 
@@ -395,6 +469,79 @@ where `odds_θ(y|x) = π_θ(y|x) / (1 - π_θ(y|x))`.
 **When to use:** Compute-constrained settings where running SFT and then DPO is too
 expensive. Trades some alignment quality for efficiency (no reference model inference).
 
+The SFT term also works as a regularizer when the pairs are noisy. In weak-to-strong
+reasoning, Llama2-70b (LoRA) built its own pairs: no gold labels, its majority-vote answer
+against a weak model's solution
+([arXiv:2407.13647](https://arxiv.org/abs/2407.13647) (Yang et al., Findings of EMNLP 2024)).
+On MATH, DPO on those pairs lowered accuracy by 1.4–2.6 points across three weak supervisors.
+ORPO raised it by 1.0–2.2, from a base of about 14%. On GSM8K both helped, by 2.6–8.5 points.
+
+### SimPO — no reference model, length-normalized reward
+
+**Paper:** [arXiv:2405.14734](https://arxiv.org/abs/2405.14734) (Meng et al., NeurIPS 2024).
+
+SimPO replaces DPO's implicit reward, the log-ratio against `π_ref`, with the policy's own
+**average** log-probability per token. It adds a target margin γ:
+
+```
+L_SimPO = -log σ( β/|y_w| · log π_θ(y_w|x) - β/|y_l| · log π_θ(y_l|x) - γ )
+```
+
+On AlpacaEval 2 LC (GPT-4 Turbo judge), from the same SFT models, SimPO beat DPO 21.5 to 15.1
+on Mistral-7B-Base (UltraFeedback) and 44.7 to 40.3 on Llama-3-8B-Instruct. The Instruct setup
+used near-on-policy pairs, sampled from the SFT model and ranked by PairRM. Read the name with
+care:
+
+- **The gain comes from length normalization, not from dropping the reference.** In the
+  Mistral-Base ablation, SimPO without normalization scored 11.9 LC, below DPO's 15.1. With
+  γ = 0 it still scored 16.8. Without normalization, likelihood tracks length (Spearman ρ
+  0.82, against 0.59 for DPO and 0.34 for SimPO).
+- **"Reference-free" means there is no reference in the loss.** Training still starts from an
+  SFT model and has no KL term. A small learning rate is what keeps the policy near its start,
+  and the authors warn this "could potentially lead to reward hacking".
+- **The saving is small.** It runs about 20% faster and uses 10% less memory than vanilla DPO.
+  DPO matches that if the reference log-probs are precomputed.
+- **Forgetting is a real cost.** The released Llama-3-8B-Instruct-SimPO reached 53.7 LC, but
+  GSM8K fell from 78.5 to 57.4 and MMLU from 61.7 to 54.9. On Gemma-2-9B-it, GSM8K held, and
+  SimPO beat DPO 72.4 to 67.8 LC.
+
+Arena-Hard has no length control, so read its gains next to response length. The comparisons
+are offline only, with no online DPO or PPO baseline. β of 2–2.5 and γ of 0.5–1.5 need tuning.
+
+### Self-play: SPIN, SPPO, DITTO
+
+These methods build pairs from the model's own samples, round after round. They differ in what
+counts as "chosen".
+
+**SPIN** ([arXiv:2401.01335](https://arxiv.org/abs/2401.01335) (Chen et al., ICML 2024)) uses
+the human SFT response as chosen and the previous iterate's sample as rejected. It needs no
+preference labels at all. On zephyr-7b-sft-full with 50k UltraChat prompts, the Open LLM
+Leaderboard average went from 58.14 to 63.16 after four iterations (iterations 0–3). zephyr-7b-dpo-full, trained
+on 62k GPT-4-labelled UltraFeedback pairs, scored 61.31. A further SFT epoch scored 57.23. That
+leaderboard tests knowledge and reasoning, not chat preference. The gains shrank toward zero
+by iteration 3, as the theory predicts: SPIN converges to the SFT data distribution, so it can
+only be as good as that data.
+
+**SPPO** ([arXiv:2405.00675](https://arxiv.org/abs/2405.00675) (Wu et al., ICLR 2025)) drops
+Bradley-Terry. It treats alignment as a two-player constant-sum game and approximates the Nash
+equilibrium with multiplicative weights. In practice that is a square loss pushing
+`log π_θ/π_t` toward `η·(P̂(y ≻ π_t) − ½)`, with the win rate estimated by PairRM-0.4B over 5
+samples. On Mistral-7B-Instruct-v0.2 with 60k UltraFeedback prompts over 3 iterations,
+AlpacaEval 2 LC went from 17.1 to 28.5. The authors' iterative DPO peaked at 24.2 and iterative
+IPO at 23.8. Average length also grew, from 1,676 to 2,163. Hyperparameters were chosen by
+PairRM win rate, and PairRM itself prefers IPO's longer outputs. Open LLM Leaderboard averages
+fell after iteration 1–2.
+
+**DITTO** ([arXiv:2406.00888](https://arxiv.org/abs/2406.00888) (Shaikh et al., ICLR 2025))
+takes SPIN's pairing down to fewer than 10 user demonstrations: the user's text is chosen and
+the model's samples are rejected. It aligns to one author's style, using Mistral-7B-Instruct
+with LoRA. Judged by GPT-4 on 20 authors from CMCC and CCAT50, it won 77% head-to-head on
+average, 11.7 points above SFT. The paper puts its lead over SPIN at 20.2 points in the
+introduction and 9.3 in the results. In a 16-person user study it won
+68.8%, against 55.5% for SFT and 51.6% for few-shot GPT-4. Two limits: updating `π_ref` every
+iteration, SPIN-style, dropped the win rate from 70.1% to 45.8%, and the adapter lost general
+skills such as coding.
+
 ---
 
 ## Decision framework
@@ -412,7 +559,12 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
 
 **Practitioner heuristics:**
 1. **Start with DPO.** It's cheaper, more stable, and works well for most instruction
-   following and general alignment tasks. Requires a clean preference dataset.
+   following and general alignment tasks. Requires a clean preference dataset. Tülu 3 ran a
+   controlled comparison on the same preference mix. Untuned PPO against a reward model scored
+   a slightly lower average than DPO, and took about 28 hours on two nodes, against about 4
+   hours on one node for DPO. So the team kept length-normalized DPO for preferences and used
+   PPO only for verifiable rewards
+   ([arXiv:2411.15124](https://arxiv.org/abs/2411.15124) (Lambert et al., 2024-11, preprint)).
 2. **Go online when you can afford generation, but that does not require PPO.** What helps
    is sampling fresh responses from the current model and labelling them with an RM or a
    verifier. The loss matters less. Lanchantin et al.
@@ -429,7 +581,16 @@ expensive. Trades some alignment quality for efficiency (no reference model infe
    is a simpler function to learn than a policy, and RL against it limits the search to
    policies such a simple verifier supports, so "online PFT trades data for computation".
    Where the gap disappears (two-word summaries), online gives "a minimal at best improvement
-   of ≈1% winrate".
+   of ≈1% winrate". RLHF Workflow published an open recipe
+   ([arXiv:2405.07863](https://arxiv.org/abs/2405.07863) (Dong et al., TMLR 2024)). It ran
+   three rounds of iterative DPO on its own Llama-3-8B SFT model, with 20k prompts per round,
+   16 samples each and best-vs-worst pairs ranked by an open BT reward model. Against vanilla
+   DPO on the same model, AlpacaEval 2 LC went from 22.5 to 31.3 and Arena-Hard from 22.4 to
+   29.1. **Online loops amplify the reward model's length bias.** A character-length penalty
+   cut the average Arena-Hard response length from 656 to 382 (the paper gives no unit). LC rose to 38.1, but Arena-Hard,
+   which has no length control, fell to 22.1. Online is not automatic, though. Tülu 3 ran online DPO from a DPO
+   checkpoint for 200k episodes on math, with a learned RM as the labeller. It gave little or no
+   gain on GSM8K and lowered MATH, so it was dropped from the recipe (Lambert et al., 2024).
 3. **Use GRPO for verifiable reasoning tasks.** Math, code, logic — anything where
    you can compute a reward without a human. DeepSeek-R1 is the existence proof.
 4. **Consider KTO when pairs are scarce.** Binary feedback (thumbs up/down) is easier
@@ -475,6 +636,11 @@ Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI,
   - It trails o1-1217 on GPQA Diamond (71.5 vs 75.7).
   - The o1 numbers are copied from OpenAI's reports, not rerun.
   - Process reward models and MCTS were tried and abandoned.
+  - MCTS survives as an offline data tool instead. Mulberry
+    ([arXiv:2412.18319](https://arxiv.org/abs/2412.18319) (Yao et al., NeurIPS 2025)) searched
+    reasoning trees jointly with GPT-4o, Qwen2-VL-7B/72B and Llama-3.2-11B-Vision to build 260K
+    multimodal SFT traces. Qwen2-VL-7B tuned on them went from 58.2% to 63.1% on MathVista
+    (+4.2 points averaged over eight benchmarks). No RL is involved.
 
 Kimi k1.5 reached a similar result by a different route
 ([arXiv:2501.12599](https://arxiv.org/abs/2501.12599) (Kimi Team, 2025-01)):
@@ -537,6 +703,114 @@ Xiaomi's MiMo-7B points the same way from the pretraining side
 
 ![Left: search trees for two problems, where RLVR concentrates sampling on a rewarded path the base model already had (Problem A) and loses a correct path the base model could reach (Problem B). Right: pass@k on Omni-MATH-Train for Qwen2.5-7B and GRPO checkpoints at steps 150, 300 and 450, where pass@1 rises with training while pass@256 falls slightly below the base model.](../sources/images/yue-rlvr-reasoning-boundary-fig1.png)
 *Image Source: Yue et al., [Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?](https://arxiv.org/abs/2504.13837) (2025), Fig. 1*
+
+### How little data and reward reasoning needs
+
+The cheap recipes of 2025 are the best evidence for the Yue reading, and most of them were
+measured on Qwen2.5.
+
+**Small SFT sets work on a strong base with a strong teacher.** The idea is LIMA's
+([arXiv:2305.11206](https://arxiv.org/abs/2305.11206) (Zhou et al., NeurIPS 2023)), applied to
+long CoT.
+
+- **s1** ([arXiv:2501.19393](https://arxiv.org/abs/2501.19393) (Muennighoff et al., EMNLP
+  2025)) fine-tuned Qwen2.5-32B-Instruct on 1,000 questions with traces distilled from Gemini
+  2.0 Flash Thinking, in 26 minutes on 16 H100s.
+  - It scored 50.0% on AIME24, and 56.7% with **budget forcing**: suppress the end-of-thinking
+    token and append "Wait" so the model keeps checking. AIME24 has 30 problems, so that is two
+    problems. The gain flattens after about six "Wait"s, when the model starts to loop.
+  - Selection mattered more than size. 1,000 random traces scored 36.7%. The full 59K pool
+    scored 53.3% (95% CI against s1K: −13% to +20%) for 56× the GPU hours.
+- **LIMO** ([arXiv:2502.03387](https://arxiv.org/abs/2502.03387) (Ye et al., COLM 2025)) took
+  the same base from 16.5% to 63.3% AIME24 with about 800 traces from R1-class models. **The
+  same 800 examples on Qwen1.5-32B-Chat gave 9.2%.** The knowledge has to be there from
+  pretraining; the examples only show how to use it.
+- **At 7B, scale still pays.** OpenThoughts
+  ([arXiv:2506.04178](https://arxiv.org/abs/2506.04178) (Guha et al., ICLR 2026)) ran 1,000+
+  data-pipeline ablations on Qwen2.5-7B-Instruct.
+  - Its data beat s1.1 and LIMO at every matched size, and accuracy was still rising at 1.2M
+    examples. OpenThinker3-7B reached 53.3% AIME25 against 38.0% for R1-Distill-Qwen-7B.
+  - QwQ-32B was a better teacher than DeepSeek-R1, although R1 scores higher itself.
+  - Filtering traces for correct answers gave no significant gain.
+- **AM-Thinking-v1** ([arXiv:2505.08311](https://arxiv.org/abs/2505.08311) (Ji et al., 2025-05,
+  preprint)) is the same recipe at 32B, followed by RL.
+  - 2.84M distilled SFT samples on Qwen2.5-32B base, then GRPO without KL on 54K math and code
+    queries whose pass rate under the SFT model is strictly between 0 and 1.
+  - It reports 85.3% AIME24 and 74.4% AIME25. No ablation separates the SFT from the RL.
+- **s1K does not rescue a weak base.** On the diffusion LLM LLaDA-8B-Instruct, SFT on it moved
+  MATH500 from 36.2% to 34.8% at 512 tokens (d1,
+  [arXiv:2504.12216](https://arxiv.org/abs/2504.12216) (Zhao et al., 2025-04, preprint)).
+
+**RL amplifies behaviours the base model already shows.**
+
+- Gandhi et al. ([arXiv:2503.01307](https://arxiv.org/abs/2503.01307) (Gandhi et al., COLM
+  2025)) ran identical PPO on Countdown for 250 steps.
+  - Qwen2.5-3B reached about 60% and Llama-3.2-3B about 30%. Qwen's base outputs already
+    contained verification and backtracking; Llama's did not.
+  - Priming Llama with backtracking traces closed the gap, **even when every primed solution
+    had the wrong answer**. Thoughts of the same length filled with placeholder tokens did not
+    help.
+  - Continued pretraining on 8.3M tokens of OpenWebMath, filtered for these behaviours, did
+    the same.
+- Yeo et al. ([arXiv:2502.03373](https://arxiv.org/abs/2502.03373) (Yeo et al., 2025-02,
+  preprint)) reran SimpleRL-style PPO on Qwen2.5-Math-7B.
+  - Accuracy rose, but the rate of "wait", "recheck" and "alternatively" did not.
+  - Response length recovered after an early dip but never exceeded the base model's, while
+    KL to the base fell. Some "emergent" length growth is the policy drifting back to the
+    base.
+  - Their recipe for Llama-3.1-8B was long-CoT SFT first, then a cosine length reward with a
+    repetition penalty. Without the penalty the length reward was hacked by repetition.
+
+**Weak or no reward still moves Qwen2.5-Math.** Each of these tests the sharpening reading,
+and each gain shrinks off Qwen.
+
+- **One example.** 1-shot RLVR ([arXiv:2504.20571](https://arxiv.org/abs/2504.20571) (Wang et
+  al., NeurIPS 2025)) ran GRPO on one problem.
+  - Qwen2.5-Math-1.5B went from 36.0% to 73.6% on MATH500, matching a 1.2K-problem set.
+  - **A format-only reward already reaches 65.0%. Entropy loss alone, with no reward, reaches
+    63.4% after 20 steps.**
+  - On Llama-3.2-3B-Instruct the six-benchmark average moved from 17.5% to 19.0%.
+- **Majority vote as the label.** TTRL ([arXiv:2504.16084](https://arxiv.org/abs/2504.16084)
+  (Zuo et al., 2025-04, preprint)) runs GRPO on the unlabeled test questions themselves. The
+  reward is agreement with the majority of 64 samples, an RL form of self-consistency
+  ([arXiv:2203.11171](https://arxiv.org/abs/2203.11171) (Wang et al., ICLR 2023)).
+  - Qwen2.5-Math-7B went from 12.9% to 40.2% on AIME24, but from 29.1% to 27.7% on GPQA.
+  - The reward is maj@n, so by construction it turns what voting already finds into pass@1.
+    It does end above the initial maj@64.
+  - Mistral-Nemo-Instruct went from 0.8% to 0.0% on AIME.
+- **Confidence as the reward.** INTUITOR ([arXiv:2505.19590](https://arxiv.org/abs/2505.19590)
+  (Zhao et al., ICLR 2026)) rewards self-certainty, the KL from uniform to the next-token
+  distribution.
+  - On Qwen2.5-3B it reached 61.2% MATH500 against 63.6% for GRPO with gold answers (base
+    54.4%). It beat GRPO on LiveCodeBench, 15.3% against 8.5%.
+  - The Qwen2.5-1.5B base starts at 9.0% because it emits repetitive text under the chat
+    template, so much of that gain is format.
+  - Scoring with a frozen copy of the base was hacked within about 100 steps: the policy
+    appended an already-solved problem to its answer.
+  - A random 0/1 reward on Qwen2.5-3B (not the Math variant) degraded the model.
+- **No data at all.** Absolute Zero ([arXiv:2505.03335](https://arxiv.org/abs/2505.03335) (Zhao
+  et al., 2025-05, preprint)) has one model propose code-reasoning tasks and solve them, with a
+  Python executor as the verifier.
+  - Qwen2.5-Coder-7B's code-and-math average rose from 40.2 to 50.4, and math alone from 23.9
+    to 39.1.
+  - On Llama-3.1-8B the gain was 3.2 points, below SimpleRL-Zoo's 4.5 with curated data.
+  - The Llama run also wrote of outsmarting "less intelligent humans" (the paper's "uh-oh
+    moment").
+- **Almost no SFT signal.** UPFT ([arXiv:2503.02875](https://arxiv.org/abs/2503.02875) (Ji et
+  al., NeurIPS 2025)) fine-tunes mostly on the first few tokens (as few as 8) of the model's own
+  unfiltered solutions. It matched rejection-sampling fine-tuning on Llama-3.1-8B-Instruct
+  (average 38.3% against 38.5%, base 36.2%) with 0.2M sampled tokens against 36.9M. Both
+  gains are small.
+
+*This note's reading.* Where the base already samples the right behaviour (Qwen2.5, and
+Qwen2.5-Math most of all), almost any signal that rewards confident, well-formatted,
+self-consistent output turns it into pass@1. The gains shrink on Llama and Mistral. The
+survey by Zhang et al. ([arXiv:2509.08827](https://arxiv.org/abs/2509.08827) (Zhang et al.,
+2025-09, preprint)) frames the debate as "sharpening vs. discovery". It reports the same
+Qwen-versus-Llama split for random and spurious rewards (Shao et al., 2025, not read here). On
+the discovery side it cites ProRL (Liu et al., 2025), where prolonged RL raised pass@k as well
+as pass@1. Before trusting a reasoning-RL result, check two things: is there a format-only
+baseline, and was it run on a second model family?
 
 ---
 

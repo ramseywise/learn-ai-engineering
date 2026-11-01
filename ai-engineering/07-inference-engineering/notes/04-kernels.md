@@ -6,6 +6,11 @@ sources:
   - https://docs.nvidia.com/nsight-compute/ProfilingGuide/
   - https://arxiv.org/abs/2407.08608
   - https://arxiv.org/abs/2601.16175
+  - https://arxiv.org/abs/2205.14135
+  - https://arxiv.org/abs/2307.08691
+  - https://arxiv.org/abs/2603.05451
+  - https://arxiv.org/abs/2405.02803
+  - https://arxiv.org/abs/2409.04431
 confidence: medium
 cleaned: 2026-10-31
 ---
@@ -177,6 +182,10 @@ Fusion is also what an automated search finds first. TTT-Discover runs RL on gpt
 
 Related levers from ch. 9: **recompute** cheap values instead of storing them; **2:4 structured sparsity** for up to ~2× on large GEMMs on sparse tensor cores (inference-focused, needs fine-tuning after pruning, and the metadata costs bytes too); and PyTorch's SDPA, which dispatches to FlashAttention or cuDNN attention.
 
+FlashAttention is the canonical case of tiling, fusion and recompute together. It computes exact attention tile by tile in SMEM with an online softmax and never writes the N × N score matrix to HBM, and in the backward pass it recomputes the scores instead of storing them. On GPT-2 medium (sequence 1,024, A100, forward plus backward) it does **more** FLOPs than standard attention (66.6 → 75.2 GFLOPs) but moves **9× fewer HBM bytes** (40.3 → 4.4 GB), so runtime drops from 41.7 to 7.3 ms ([arXiv:2205.14135](https://arxiv.org/abs/2205.14135) (Dao et al., NeurIPS 2022)). The price is a new hand-written CUDA kernel for every attention variant. "Exact" means mathematically equal, not bitwise equal. In BF16 an isolated FlashAttention forward pass deviates about 10× more from an FP64 reference than standard attention does. Measured on the weights over a training run, that deviation is still 2–5× smaller than the effect of training in BF16 instead of FP32 ([arXiv:2405.02803](https://arxiv.org/abs/2405.02803) (Golden et al., 2024-05, preprint)).
+
+The first version still reached only 25–40% of A100 peak in the forward pass, and FlashAttention-2 showed why. Non-matmul work such as the softmax exponent, rescaling and masking runs on CUDA cores at 19.5 TFLOPs/s against 312 for FP16 matmul, so **each non-matmul FLOP costs about 16× a matmul FLOP**. FA2 cut those FLOPs, parallelized over sequence length to fill the SMs at small batch, and split Q rather than K/V across warps to remove SMEM round trips. That gave about 2× FA1, 50–73% of peak forward and 225 TFLOPs/s per A100 (72% MFU) in GPT training ([arXiv:2307.08691](https://arxiv.org/abs/2307.08691) (Dao, ICLR 2024)). The same cost is why removing the softmax pays. Sigmoid attention needs no row-wise max or sum, and its FlashSigmoid kernel is up to 17% faster than FA2 on H100, or about 8% in end-to-end inference. It matches softmax quality only with a bias of −log n and stabilized initial attention norms ([arXiv:2409.04431](https://arxiv.org/abs/2409.04431) (Ramapuram et al., ICLR 2025)).
+
 ### Precision
 
 Fewer bytes per value raises arithmetic intensity directly, and tensor-core throughput doubles at each step down:
@@ -224,6 +233,8 @@ Instead of every warp loading then computing, dedicate warps to roles.
 *Image Source: Fregly, *AI Systems Performance Engineering* (O'Reilly, 2025), Fig. 10-4*
 
 In the figure, warps 1–4 only load tiles of A and B; after each barrier, a separate group of compute warps (5–8, then 9–12) runs the matrix multiply on the data just loaded, while the loaders start on the next tile. Loads and tensor-core math overlap without any warp doing both. CUTLASS's "ping-pong" kernels go further: two consumer warpgroups alternate between MMA and epilogue. FlashAttention-3 uses the same idea, overlapping GEMM, softmax and TMA. Its headline 740 TFLOPs/s (75% of H100 SXM5 FP16 peak) is the best case: forward pass, head dim 256, no causal mask, 16k tokens. At the common head dim 128 it peaks near 648 TFLOPs/s (~65%), or ~616 with a causal mask, still 1.5–2.0× FlashAttention-2; in its ablation (head dim 128, 8,448 tokens) dropping warp specialization costs 661 → 570 TFLOPs/s ([arXiv:2407.08608](https://arxiv.org/abs/2407.08608) (Shah et al., 2024-07)). It is Hopper-only and tuned for training and prefill, not decode. Table 10-3 (illustrative) puts warp specialization ~10% ahead of double buffering.
+
+On Blackwell the bottleneck moves again. B200 BF16 tensor cores do 2.25× the work of H100's per clock, but the exponential unit (MUFU) and SMEM bandwidth per SM are unchanged, so the softmax exponent and SMEM traffic now limit attention rather than the matmuls. FlashAttention-4 answers with fully asynchronous MMAs into TMEM, larger tiles, an exponent computed partly in software as a polynomial on the FMA units, and softmax rescaling only when the running max changes enough to matter. The forward pass (head dim 128, BF16, B200) reaches up to 1,613 TFLOPs/s (71% of peak), 1.1–1.3× cuDNN 9.13 and 2.1–2.7× Triton. Later cuDNN releases absorbed the same techniques and closed most of the gap. It is written in Python CuTe-DSL, which compiles 20–30× faster than the C++ template version ([arXiv:2603.05451](https://arxiv.org/abs/2603.05451) (Zadouri et al., 2026-03, preprint)). FA1 → FA4 is one lesson repeated: each GPU generation speeds up the matmul faster than everything around it, so the kernel has to be redesigned around whichever unit now limits it.
 
 Do not copy the book's warp-specialized listing. The compute warp releases the buffer before computing on it, which races with the loader. The block-collective `memcpy_async` is called by one warp only. And per-warp tile loops give warps different trip counts, so the shared pipeline stages fall out of step. The book also says "each warp has its own scheduler". An SM has four schedulers shared by all its warps.
 
