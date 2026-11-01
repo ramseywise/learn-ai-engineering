@@ -41,7 +41,7 @@ uv run --python 3.12 --with scikit-learn --with xgboost --with lightgbm --with c
 
 Read it in this order:
 
-1. **The libraries are tied.** The AUC gap from best to worst is 0.0006, while the same model moves by about 0.003 between seeds. No conclusion about which library is better is available from this table, and a blog post claiming one from a single split is reading noise. Across the seeds no library wins every time: CatBoost wins seeds 1 and 4 for AUC, XGBoost seed 3, LightGBM seed 0, and sklearn's classic booster seed 2.
+1. **The libraries are tied.** The AUC gap from best to worst is 0.0006, while the same model moves by about 0.003 between seeds. No conclusion about which library is better is available from this table, and a blog post claiming one from a single split is reading noise. Across the seeds no library wins every time: LightGBM has the best AUC on seed 0, CatBoost on seed 1, XGBoost on seed 3, and sklearn's classic booster on seeds 2 and 4.
 2. **Boosting beats the untuned forest by 0.03 AUC.** The forest is the fast bar to clear. Its log-loss of 0.40 is much further behind than its AUC, and log-loss punishes confident mistakes, so check [calibration](04-model-evaluation.md#calibration-is-a-08-really-80) before using its probabilities.
 3. **Speed varies by 30x.** The classic booster sorts every feature at every node, while the histogram libraries bin once. On a table this small it hardly matters. On 10M rows it decides what you can afford.
 
@@ -245,7 +245,7 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 
 ## Try it
 
-1. Run `compare_boosters.py` with `LR = 0.1`. Does the ranking change, and what happens to the rounds and the seconds?
+1. Run `compare_boosters.py` with `LR` set to 0.1. Does the ranking change, and what happens to the rounds and the seconds?
 2. Add `class_weight="balanced"` (LightGBM) and compare AUC, log-loss and accuracy. Explain why they don't move together.
 3. Train LightGBM with `max_depth=3` and `num_leaves=8` against the default. Which overfits first?
 4. Implement a depth-1 XGBoost on regression with `objective="reg:squarederror"` and confirm the leaf weight by hand. What are $g$ and $h$ now?
@@ -253,9 +253,9 @@ Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don
 <details>
 <summary>Answers</summary>
 
-1. Rounds shrink by about half or more, seconds with them, and the libraries remain tied within noise.
-2. AUC is close to unchanged because reweighting hardly changes the ranking. Log-loss and calibration get worse because the weights push predicted probabilities up, and accuracy falls at a 0.5 threshold because the model now flags more rows.
-3. The default. It has about four times the leaves per tree, so it fits the training set faster and early stopping fires sooner.
+1. On a three-seed run, LightGBM goes from about 230 rounds to 122 and XGBoost from 255 to 130. AUC falls by about 0.001 for each library, to between 0.9278 and 0.9284, and they stay tied within a spread of 0.002 to 0.004.
+2. On the split in this note AUC moves only from 0.9270 to 0.9256, because reweighting hardly changes the ranking. Log-loss worsens from 0.280 to 0.328 because the weights push predicted probabilities up (the mean rises from 0.24 to 0.33). Accuracy falls from 0.874 to 0.838 at a 0.5 threshold because the model now flags more rows.
+3. The default stops at 215 rounds with train AUC 0.951 and test 0.927. The small trees run to 843 rounds with train 0.944 and test 0.927. The default overfits sooner and shows a wider train-test gap, for no gain in test score.
 4. With $L = \frac{1}{2}(y - \hat{y})^2$, $g_i = \hat{y}_i - y_i$ and $h_i = 1$, so the leaf weight is the sum of residuals over $(n + \lambda)$: a shrunken mean of residuals.
 
 </details>

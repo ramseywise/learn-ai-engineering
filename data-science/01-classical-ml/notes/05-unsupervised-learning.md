@@ -172,7 +172,7 @@ print(kmeans.predict([[0.0, 4.0]]))       # new points go to the nearest centre
 [0]
 ```
 
-scikit-learn's default start, `init="k-means++"`, spreads the first centres apart instead of taking them at random. Its authors prove the seeding alone is $O(\log k)$-competitive with the optimal clustering ([doi:10.5555/1283383.1283494](https://doi.org/10.5555/1283383.1283494), Arthur and Vassilvitskii, SODA 2007).
+scikit-learn's default start, `init="k-means++"`, spreads the first centres apart instead of taking them at random. Its authors prove the seeding alone is $O(\log k)$-competitive with the optimal clustering ([ACM DL](https://dl.acm.org/doi/10.5555/1283383.1283494), Arthur and Vassilvitskii, SODA 2007).
 
 Ng's ex7 version shows there is nothing more to it:
 

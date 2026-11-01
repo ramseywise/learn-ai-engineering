@@ -1,0 +1,486 @@
+# Visualisation and Storytelling lecture deck. Covers notes 01-05.
+# Build: make slides PILLAR=data-analytics/05-visualisation-and-storytelling STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Fernhill Home, a fictional retailer. All numbers come from the seeded generator
+# in practice/fernhill.py, and the assumptions in the sizing are named as assumptions.
+deck:
+  title: Visualisation and Storytelling
+  subtitle: From a chart that is correct to a decision that gets made
+  tagline: |-
+    Choose it · Draw it · Explore it · Build it · Argue from it
+  reference: "Notes: data-analytics/05-visualisation-and-storytelling"
+  output: visualisation-and-storytelling.pptx
+  notes: >-
+    Fernhill Home is a fictional online homewares retailer. In January 2025 it cut its email budget. Revenue kept
+    growing and the dashboard stayed green, while repeat buying fell by nearly a third. We follow that one dataset:
+    choose the right form, draw it in Python, make it explorable, rebuild it in JavaScript, and then get a decision made.
+
+parts:
+  - title: Choosing the form
+    summary: Why plot · The grammar · Encoding accuracy · Two honest lies
+    notes: >-
+      Before any library, we need a way to think about what a chart is and which one fits the question.
+    slides:
+      - layout: image
+        title: Summary statistics agree. The data does not.
+        kicker: The problem
+        image: ../../sources/images/viz-anscombe-quartet.png
+        caption: "Anscombe's quartet, 1973: same means, variances, correlation and fit."
+        bullets:
+          - "Four datasets with the same summaries and **four different stories**."
+          - "A table of statistics could not have told you."
+        takeaway: Plot before you summarise, because identical statistics can hide completely different data.
+        source: notes/01-grammar-and-chart-choice.md
+        recall: What does Anscombe's quartet show about summary statistics?
+        notes: >-
+          This is the oldest argument for plotting. So if we must plot, how do we decide what to draw?
+
+      - layout: flow
+        title: A chart is a set of independent decisions
+        kicker: The grammar of graphics
+        steps:
+          - {label: Data, sub: "tidy rows"}
+          - {label: Encoding, sub: "field to channel"}
+          - {label: Scale, sub: "value to position or colour"}
+          - {label: Mark, sub: "line, bar, point"}
+          - {label: Facet, sub: "repeat per group"}
+        bullets:
+          - "Wilkinson's grammar replaced a menu of chart types with composable parts."
+          - "Wickham's layers made it practical; **Vega-Lite and Altair** carry it into JSON and Python."
+        takeaway: The grammar treats a chart as data, encodings, scales and marks, so you can change one part at a time.
+        source: notes/01-grammar-and-chart-choice.md
+        recall: What are the independent parts of a chart in the grammar of graphics?
+        notes: >-
+          Swap the mark and keep everything else, and you have a different chart with the same mapping.
+
+      - layout: code
+        title: Change one word and it is a different chart
+        lang: python
+        code: |-
+          base = alt.Chart(total).encode(
+              x="month:T", y="repeat_rate:Q")
+          line = base.mark_line()
+          bars = base.mark_bar()
+          dots = base.mark_circle()
+        bullets:
+          - "Same data and encodings, **three marks**."
+          - "Altair compiles this to Vega-Lite JSON."
+        takeaway: In a grammar-based library the mark is one independent choice, so comparing forms costs a single word.
+        source: notes/01-grammar-and-chart-choice.md
+        recall: In Altair, what do you change to compare a line with bars on the same encodings?
+        notes: >-
+          This is a compressed form of the code in practice/ch01_grammar_and_choice.py, which adds styling and titles.
+
+      - layout: table
+        title: Choose the chart by the question
+        kicker: Then check the encoding
+        header: ["The question", "Reach for", "Why"]
+        widths: [3, 3, 4]
+        rows:
+          - ["How does it change over time?", "Line", "Position on a common scale"]
+          - ["Which category is biggest?", "Sorted bars", "Length from a zero baseline"]
+          - ["What share is this?", "Sorted bars, stacked bar", "Length beats angle"]
+          - ["How is it distributed?", "Histogram, box plot", "Shape and outliers"]
+          - ["Do two measures move together?", "Scatter", "Two positions"]
+        takeaway: Name the question first, then choose the form whose encoding answers it most accurately.
+        source: notes/01-grammar-and-chart-choice.md
+        recall: Which encoding did Cleveland and McGill find most accurate?
+        notes: >-
+          Cleveland and McGill's experiments order the encodings: position on a common scale first, then length, angle
+          and slope, then area, then shading. That ranking is why bars usually beat pies.
+
+      - layout: compare
+        title: Two ways an honest dataset gets misrepresented
+        kicker: Honest data, misleading chart
+        emphasis: none
+        left:
+          title: Two y-axes
+          bullets:
+            - Crossing points come from two arbitrary scales
+            - Change one range and the story changes
+            - Use two panels or index to a common base
+        right:
+          title: Truncated bars
+          bullets:
+            - A bar's length is its message
+            - "Knaflic's tax-rate example: about **13%** looks like about **460%**"
+            - Bars start at zero; lines may zoom if the axis says so
+        takeaway: Dual axes and truncated bars both let a scale choice manufacture the message, so use panels and zero baselines.
+        source: notes/01-grammar-and-chart-choice.md
+        recall: How do dual-axis charts and truncated bars each mislead, and what is the fix?
+        notes: >-
+          Neither chart contains a false number. The distortion comes entirely from the scale.
+
+  - title: Static charts in Python
+    summary: Object model · Declutter · Small multiples · Seaborn
+    notes: >-
+      Now we draw it. A static chart is still what most decisions see, in a memo or a slide.
+    slides:
+      - layout: image
+        title: The default chart is correct and tells you nothing
+        kicker: The problem
+        image: ../../sources/images/viz-matplotlib-default-chart.png
+        caption: "Fernhill's revenue by channel with matplotlib's defaults."
+        bullets:
+          - "Box, ticks and legend compete with the data."
+          - "The event that matters is **not marked**."
+        takeaway: Default styling draws the data correctly but leaves every decision about emphasis to the reader.
+        source: notes/02-matplotlib-and-seaborn.md
+        recall: What is wrong with a default matplotlib chart even though the data is right?
+        notes: >-
+          Nothing here is false. It simply does not help you see anything.
+
+      - layout: steps
+        title: Remove first, then direct attention
+        kicker: Declutter in order
+        steps:
+          - {title: Use the object API, text: "A Figure holds Axes; call methods on ax."}
+          - {title: Remove, text: "Top and right spines, heavy gridlines, tick marks."}
+          - {title: Label directly, text: "Name each line at its end, keep a legend for two or more series."}
+          - {title: Mark the event, text: "A thin rule and a short label."}
+          - {title: Set it once, text: "rcParams and a fixed colour per entity."}
+        takeaway: Every element must earn its place, and one shared style module keeps those choices from drifting.
+        source: notes/02-matplotlib-and-seaborn.md
+        recall: What is the order of decluttering a matplotlib chart, and how do you keep it consistent?
+        notes: >-
+          Make the choices once in practice/chartstyle.py, not chart by chart.
+
+      - layout: image
+        title: Small multiples show what four tangled lines hid
+        kicker: Same data, one panel per channel
+        image: ../../sources/images/viz-small-multiples-repeat-rate.png
+        caption: "Each channel against the others in grey."
+        bullets:
+          - "Every channel drops at the same moment."
+          - "**So it is not only mix.** Hold that thought."
+        takeaway: Small multiples separate tangled series while keeping one shared scale, so you can compare across panels.
+        source: notes/02-matplotlib-and-seaborn.md
+        recall: What did small multiples reveal about Fernhill's repeat rate that a single chart hid?
+        notes: >-
+          The whole of chapter five depends on this view: the fall is within every channel as well as in the mix.
+
+      - layout: code
+        title: Put the choices in one place so they cannot drift
+        lang: python
+        code: |-
+          plt.rcParams.update({
+              "axes.spines.top": False,
+              "axes.spines.right": False,
+              "axes.grid": True,
+              "axes.grid.axis": "y",
+          })
+          fig, ax = plt.subplots(figsize=(8, 4))
+          ax.axvline(CUT, color=MUTED, linewidth=1)
+        bullets:
+          - "Most of `chartstyle.py` is one `rcParams` call."
+          - "Call methods on **ax**, not on `plt`."
+        takeaway: Set matplotlib's rcParams once in a shared module and draw through ax, so styling stays consistent across charts.
+        source: notes/02-matplotlib-and-seaborn.md
+        recall: How do you apply one consistent style across all your matplotlib charts?
+        notes: >-
+          A compressed form of practice/chartstyle.py, which has more settings.
+
+      - layout: compare
+        title: Matplotlib draws. Seaborn does the statistics.
+        emphasis: none
+        left:
+          title: Matplotlib
+          bullets:
+            - You place every element
+            - Full control for final figures
+            - Rich styling through `rcParams`
+        right:
+          title: Seaborn
+          bullets:
+            - Takes tidy data and column names
+            - Adds grouping, intervals and facets
+            - Returns matplotlib objects to adjust
+        takeaway: Use seaborn for statistical views from tidy data, then adjust the matplotlib objects it returns.
+        source: notes/02-matplotlib-and-seaborn.md
+        recall: How do seaborn and matplotlib relate?
+        notes: >-
+          Seaborn is built on matplotlib, so the two are not rivals. Heatmaps need care with colour too: use a diverging
+          scale only where a midpoint means something.
+
+  - title: Interactive charts
+    summary: When it earns its cost · Plotly · Export · Linked views
+    notes: >-
+      Hover and zoom feel powerful. They also hand work to the reader, so the first question is whether they will do it.
+    slides:
+      - layout: statement
+        title: Who will actually drag that slider?
+        kicker: The problem
+        statement: "Overview first, zoom and filter, then details on demand."
+        attribution: "Shneiderman, The Eyes Have It, 1996"
+        takeaway: Interaction should follow the reader's sequence of overview, filter, then detail, and only when they will use it.
+        source: notes/03-plotly-and-interactive.md
+        recall: What is Shneiderman's visual information-seeking mantra?
+        notes: >-
+          The people who asked for the analysis will not brush a time range to find the January fall. A manager exploring
+          her own channel next week might.
+
+      - layout: table
+        title: Match the medium to the reader
+        header: ["Your reader", "Their question", "Medium"]
+        widths: [3, 4, 3]
+        rows:
+          - ["Executive reading a memo", "What should we do?", "Static, answer in title"]
+          - ["Analyst checking your work", "Does it hold in my segment?", "Interactive chart"]
+          - ["Manager every week", "Is my number okay?", "Dashboard"]
+          - ["Curious public", "Where am I in this?", "Interactive piece"]
+        takeaway: If you can state the finding, state it. Use interaction for readers with their own questions.
+        source: notes/03-plotly-and-interactive.md
+        recall: When is an interactive chart the wrong choice?
+        notes: >-
+          Notice what is missing: using interaction simply because it is available.
+
+      - layout: code
+        title: A plotly figure is a dictionary until the browser reads it
+        lang: python
+        code: |-
+          fig = px.line(monthly, x="month", y="revenue",
+                        color="channel",
+                        custom_data=["sessions", "orders"])
+          fig.update_traces(hovertemplate=
+              "%{x|%b %Y}<br><b>£%{y:,.0f}</b><br>"
+              "%{customdata[0]:,} sessions"
+              "<extra>%{fullData.name}</extra>")
+        bullets:
+          - "Python writes JSON; **plotly.js** renders it."
+          - "Default hover leaks column names, so write a template."
+        takeaway: Plotly figures are JSON rendered by plotly.js, so any tooltip field must ship in the page and be templated.
+        source: notes/03-plotly-and-interactive.md
+        recall: What is a plotly figure under the hood, and why does custom_data matter?
+        notes: >-
+          The default hover text is what every unconfigured plotly chart shows. Fixing it is most of the work.
+
+      - layout: image
+        title: Export a static copy every time
+        kicker: Hover cannot be printed
+        image: ../../sources/images/viz-plotly-revenue-by-channel.png
+        caption: "The same figure as a PNG. Inline HTML 4.7 MB, CDN 10 KB in this run."
+        bullets:
+          - "**Inline** for email, **CDN** for hosted pages."
+          - "Hover fails on phones and in print, so keep a table."
+        takeaway: Ship inline HTML for email, CDN HTML for hosted pages, and always a static copy because hover cannot print.
+        source: notes/03-plotly-and-interactive.md
+        recall: What does include_plotlyjs control, and what were the two file sizes here?
+        notes: >-
+          The data ships in the page either way, which is why a static plotly file cannot filter ten million rows.
+
+      - layout: compare
+        title: One rich chart, or several linked views?
+        emphasis: none
+        left:
+          title: Plotly
+          bullets:
+            - Rich single charts with hover
+            - Dropdowns flip trace visibility
+            - All data ships in the HTML
+        right:
+          title: Altair
+          bullets:
+            - A selection is a declared parameter
+            - "`scale=alt.Scale(domain=brush)` links views"
+            - Raises `MaxRowsError` above 5,000 rows
+        takeaway: Use plotly for one rich chart and Altair for linked views, since its selections are part of the grammar.
+        source: notes/03-plotly-and-interactive.md
+        recall: How does Altair link two charts without an event handler?
+        notes: >-
+          When the user's choice must trigger a new query, you have outgrown a static file and need a server.
+
+  - title: JavaScript underneath
+    summary: Three levels · The data join · One chart three ways
+    notes: >-
+      Everything interactive so far ran as JavaScript. Now we meet that layer and see what writing it directly buys.
+    slides:
+      - layout: statement
+        title: What happens when no library has your chart?
+        kicker: The problem
+        statement: "D3 has no barChart(). It binds data to document elements and gives you the geometry."
+        attribution: "Bostock, Ogievetsky and Heer, IEEE TVCG 2011"
+        takeaway: D3 is a toolkit for binding data to the document, so the chart is yours to assemble rather than a function to call.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        recall: Is D3 a charting library? What is it instead?
+        notes: >-
+          Sooner or later someone asks for a chart no library offers, or one that has to live inside a web product.
+
+      - layout: flow
+        title: Three levels, and each one decides more for you
+        steps:
+          - {label: D3, sub: "scales, joins, shapes"}
+          - {label: Vega-Lite, sub: "a JSON grammar"}
+          - {label: Observable Plot, sub: "marks and options"}
+        caption: "All three render to SVG or Canvas in the browser. Altair generates Vega-Lite."
+        takeaway: D3, Vega-Lite and Plot sit at different levels of abstraction, and Altair is a Python route to Vega-Lite.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        recall: What is the relationship between Altair and Vega-Lite?
+        notes: >-
+          We draw the same Fernhill chart at each level to feel the difference.
+
+      - layout: code
+        title: The data join is the idea that makes D3 D3
+        lang: javascript
+        code: |-
+          svg.selectAll("path")
+            .data(series)
+            .join("path")
+            .attr("stroke", (d) => colour(d.key))
+            .attr("d", (d) => line(d.values));
+        bullets:
+          - "Make the elements **match the list**."
+          - "Needed ones are created, extras removed."
+        takeaway: The D3 data join makes page elements match a list of data, creating and removing them as the data changes.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        recall: What does the D3 data join do?
+        notes: >-
+          A simplified form of step 3 in practice/js/repeat_chart.mjs. Once you see charts as a list of data and a matching
+          list of elements, the rest of D3 stops looking like a pile of method chains.
+
+      - layout: image
+        title: The same chart, written by hand in D3
+        kicker: 67 lines of chart code
+        image: ../../sources/images/viz-js-d3-repeat-rate.png
+        caption: "Rendered in Node with jsdom and resvg. The same module runs in a browser."
+        bullets:
+          - "Scales, axes, labels and legend are all your code."
+          - "Hover uses **large invisible targets**."
+        takeaway: With D3 every element is your code, including large invisible hover targets that thin lines cannot provide.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        recall: Why does the D3 chart draw invisible circles?
+        notes: >-
+          You can test the hover without a browser by firing events under jsdom, but jsdom has no layout, so text measuring needs a real browser.
+
+      - layout: table
+        title: Climb down the ladder only when you must
+        header: ["", "D3", "Vega-Lite", "Plot"]
+        widths: [2, 3, 3, 3]
+        rows:
+          - ["This chart", "67 lines", "33 lines", "24 lines"]
+          - ["You describe", "Elements", "A JSON spec", "Marks"]
+          - ["Good at", "New forms", "Portable specs", "Fast exploration"]
+          - ["Fights you on", "Time", "Pixel placement", "Bespoke interaction"]
+        takeaway: Use Altair or plotly while you can, Vega-Lite for embedded specs, Plot for speed, and D3 when design justifies it.
+        source: notes/04-javascript-d3-vega-lite-observable-plot.md
+        recall: When would you pick D3 over Vega-Lite?
+        notes: >-
+          The line counts are this one chart as written, including styling, and are an illustration rather than a benchmark.
+
+  - title: Dashboards and the decision
+    summary: Monitoring · Streamlit and BI tools · The Big Idea · Sizing · Story
+    notes: >-
+      Two different jobs: something people monitor, and telling someone what you found so that they act.
+    slides:
+      - layout: image
+        title: Fernhill's revenue tile was green the whole time
+        kicker: The problem
+        image: ../../sources/images/viz-streamlit-dashboard.png
+        caption: "The rebuilt dashboard, with revenue beside repeat rate."
+        bullets:
+          - "Revenue **+6.5%**; repeat rate **-11.3 pts**."
+          - "Anything you can push by spending needs a partner metric."
+        takeaway: Pair a growth metric with a health metric, because anything you can raise by spending looks fine alone.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: Why did Fernhill's dashboard not catch the fall in repeat buying?
+        notes: >-
+          The dashboard did not lie. It answered the question it was built to answer.
+
+      - layout: code
+        title: A Streamlit dashboard is a script that reruns
+        lang: python
+        code: |-
+          @st.cache_data
+          def load(): ...
+
+          data = load()
+          chosen = st.multiselect("Channel", names, default=names)
+          view = data[data.channel.isin(chosen)]
+          st.metric("Revenue", f"£{view.revenue.sum() / 1e6:.2f}m")
+        bullets:
+          - "Each click reruns the script **top to bottom**."
+          - "Cache the expensive work."
+          - "`AppTest` tests it with no browser."
+        takeaway: Streamlit reruns the whole script on every widget change, so widgets are plain values and caching is essential.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: How does Streamlit's execution model work?
+        notes: >-
+          A compressed form of practice/dashboard_app.py. No callbacks to wire up.
+
+      - layout: cards
+        title: Ask who will change it in six months
+        cards:
+          - {title: Streamlit, body: "Python in git, with code review and tests. For bespoke tools maintained by people who write Python."}
+          - {title: Metabase, body: "Open source or cloud. SQL with parameters and point-and-click questions, for standard reporting."}
+          - {title: Looker Studio, body: "Free and hosted by Google. A browser canvas for quick reports on Google data; not the same as Looker."}
+        takeaway: Pick the dashboard tool by who maintains it, because a Streamlit app owned by non-coders becomes a ticket queue.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: When would you choose a BI tool over Streamlit?
+        notes: >-
+          Six months from now, if the marketing team wants to edit it, you want them able to.
+
+      - layout: statement
+        title: Write the sentence before you open a slide tool
+        kicker: Who, what, how, then the Big Idea
+        statement: "Cutting the email budget saved £120k a year and has cost us several times that in margin, so we should restore it and test the effect with a holdout."
+        attribution: "A Big Idea: point of view, what is at stake, one complete sentence (Duarte, via Knaflic)"
+        takeaway: The Big Idea is one complete sentence with your point of view and the stakes, and writing it exposes what you do not know.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: What three things must a Big Idea contain?
+        notes: >-
+          Before any chart: who is the audience, what must they know or do, and only then how data supports it. Priya, the CMO, is the audience.
+
+      - layout: image
+        title: One line, one event, and the answer as the title
+        kicker: The explanatory version
+        image: ../../sources/images/viz-story-explanatory-repeat-rate.png
+        caption: "From four channels to the single message."
+        bullets:
+          - "Mix explains **4.3 pts**; within channels **7.1 pts**."
+          - "The title states the finding as a sentence."
+        takeaway: An explanatory chart keeps one series, marks the event, and states the finding in the title.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: How does the fall in Fernhill's repeat rate split between mix and within-channel effects?
+        notes: >-
+          Hold channel rates at 2024 levels and apply the 2025 mix, which gives the mix effect. The remainder is within-channel.
+
+      - layout: flow
+        title: Say the size, the assumptions, and what you do not know
+        kicker: Worked sizing
+        steps:
+          - {label: "£120k saved", sub: "budget, per year"}
+          - {label: "about £547k lost", sub: "margin at 40%, assumed"}
+          - {label: "8.8%", sub: "break-even margin"}
+          - {label: Holdout, sub: "before and after is not cause"}
+        bullets:
+          - "Conclusion survives any plausible margin, so the assumption is safe to state."
+          - "**Paid social is a separate question** and this data does not settle it."
+        takeaway: Report the break-even as well as the estimate, so the reader can see the decision survives its assumptions.
+        source: notes/05-dashboards-and-storytelling.md
+        recall: What was the break-even margin, and why does the recommendation still need a holdout?
+        notes: >-
+          The margin and revenue-per-repeat figures are assumptions in the code, and Fernhill is synthetic with this effect built in.
+
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb for visualisation and story
+        recall: What are the rules of thumb for visualisation and storytelling?
+        cards:
+          - {title: Form, body: "Name the question, then pick the encoding. Position beats length, which beats angle and area."}
+          - {title: Honesty, body: "Bars start at zero. Never use two y-axes. Show the window you have."}
+          - {title: Style, body: "Remove, then emphasise. Label directly. Colour by job, and validate the palette."}
+          - {title: Interaction, body: "Essential things stay visible without hover. Export a static copy."}
+          - {title: Dashboards, body: "Name the decision. Give numbers a comparison and growth a partner metric."}
+          - {title: Story, accent: "D4621A", body: "Write the sentence first. Titles state findings. Propose the test."}
+        takeaway: Name the question, show it honestly, remove the clutter, and state the decision you want in one sentence.
+        source: notes/05-dashboards-and-storytelling.md
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Applied analyses:** six worked business questions using these charts."
+          - "**Practice:** rebuild the Fernhill charts in `practice/`, then change the question."
+          - "**Read next:** Knaflic for explanatory work, Wilke for chart choice, Munzner for the theory."
+        takeaway: Next, use these charts on six worked analyses in the applied-analyses pillar.
+        source: notes/05-dashboards-and-storytelling.md

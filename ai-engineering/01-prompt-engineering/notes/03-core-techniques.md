@@ -20,6 +20,8 @@ cleaned: 2026-11-01
 
 > The named techniques, grouped by what they buy you: **examples** teach the task, **reasoning** buys compute, **search** explores alternatives, **tools** reach outside the model. Each one is a way of shaping the document the model completes ([01](01-how-models-read-prompts.md)).
 
+Teams copy a technique because a paper reported a big gain, then pay for it on tasks where it does nothing: chain-of-thought lifted GSM8K from 17.9% to 56.9% and barely moved commonsense questions. This chapter sets out what each named technique costs and which failure it fixes, so you can start zero-shot and escalate deliberately.
+
 ---
 
 ## Which technique when

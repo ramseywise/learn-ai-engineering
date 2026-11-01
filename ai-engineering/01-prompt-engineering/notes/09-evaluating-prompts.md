@@ -6,11 +6,13 @@ sources:
   - https://arxiv.org/abs/2303.07142
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 10"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 9 — Evaluating Prompts
 
 > How you know a prompt change helped. This is the prompt-level view; eval systems for whole agents and harnesses are in [06-eval](../../06-eval/README.md).
+
+Without an eval, every prompt change is a guess: Clavié et al. moved F1 by 26 points through wording alone, and a strict output template that lifted adherence to 98% quietly lowered accuracy. You can't see effects like these by reading a few outputs, so this chapter builds up from a diffable example suite to scored harnesses and live tests.
 
 ---
 
@@ -189,4 +191,40 @@ Lessons:
 
 ---
 
-→ Next: [10-adversarial-prompting.md](10-adversarial-prompting.md) — prompts that attack your prompts.
+## Pitfalls
+
+- **Using an exact match on free text.** Symptom: the score falls as answers grow, and it rewards phrasing over correctness. Fix: partial match on the aspect separating breaking from benign divergence: "did it adjust the heating at all?" rather than "was it exactly 77°F?"
+- **Asking one composite question of the judge.** Symptom: scores drift because the judge silently switches criteria. Fix: use SOMA: specific questions, an ordinal scale with each level described, and multiple aspects scored separately.
+- **Letting the model grade itself.** Symptom: inflated or easily swayed scores. Fix: frame the work as a third party's. The book ranks this framing most accurate and self-grading much worse.
+- **Goldilocks questions.** Symptom: "is the length right?" yields a score you can't act on. Fix: split it into "complete?" and "concise?".
+- **Picking a winner from a small blind A/B.** Symptom: you ship a prompt on five samples per arm. It's a bug finder, and one rater who also wrote the prompts can't separate two decent prompts. Fix: use it to find deviations, then decide with a harness.
+- **Reading a table of averages as a result.** Symptom: acting on Phoenix & Taylor's 0.043 against 0.052 with no run count or spread, on three cases where the winner changes by case. Fix: report runs and error bars, and check whether the metric measures what you're testing.
+- **Comparing "already updated" with "not yet" users.** Symptom: an effect that is really self-selection, since quick updaters behave differently. Fix: randomize among users who have the update, and leave the rest out.
+- **Generating eval data with a candidate model.** Symptom: that model wins. Fix: use a different generator, or record the bias.
+
+## Try it
+
+1. Your blind A/B gives prompt A 4 of 5 thumbs up and prompt B 3 of 5. What's the standard error on the difference, and what may you conclude?
+   <details><summary>Answer</summary>sqrt(0.8 x 0.2 / 5 + 0.6 x 0.4 / 5) = 0.283, against a difference of 0.2, so less than one standard error. You may not conclude A is better. You can still note any format deviation you saw, since that's what the method is for. See [how many tasks](../../06-eval/notes/09-reading-results.md#how-many-tasks).</details>
+2. Write the tool-call scorer for "I'm chilly" with gold `set_room_temp(77)`. Grade these: no tool, `set_oven(77)`, `set_room_temp(temp="warm")`, `set_room_temp(76)`, `set_room_temp(0)`.
+   <details><summary>Answer</summary>Score the first decision with a real chance of going wrong, and void the rest: called a tool? right tool? valid syntax? So the first three fail at those stages, and 76 passes as a sane miss. The note stops before exact values, so 0°F passes this scorer: add an out-of-range check if that matters, since Fig. 10-3 treats an out-of-range value as useless.</details>
+3. Write one SOMA aspect for a meeting summarizer, in the Example 10-1 form. What goes first, and where does the score go?
+   <details><summary>Answer</summary>Task and aspect first, for example "Coverage: does the summary include every decision made?", with each of levels 1 to 5 described, then the transcript and summary framed as someone else's work, then "Give a thorough analysis, then end with 'Coverage: X'". The rubric comes before the content since the judge reads forward only, and analysis comes before the score. Run a separate prompt for conciseness.</details>
+4. Add a level-2 check to the [prompt eval harness](../practice/prompt-eval-harness/README.md). Which scorer type would you use for a classifier and for a helpfulness rating, and how would you validate the second against people?
+   <details><summary>Answer</summary>A gold match (or the label's logprob, for more power) for the classifier, and an LLM judge for helpfulness. Calibrate against several human annotators. The bar is that adding the model at temperature 0 to the pool doesn't increase disagreement, measured for example by Kendall's τ.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| You can only build one eval. Which? | End-to-end, then unit tests on the critical path. Composition has no unit-level substitute. |
+| Offline or online? | Offline first, because it needs no users. Online is the only fully valid data, but live traffic is scarce, so whittle candidates offline first. |
+| Where can eval samples come from, and what's the trap in each? | Existing records (ubiquity against similarity), telemetry (doesn't exist before launch, and outcomes are biased by your own suggestions), and synthetic (tropes, plus bias toward the generating model). |
+| What is SOMA? | A judge rubric: Specific questions, an Ordinal scale with described levels, and Multi-Aspect scoring such as Copilot's relevance, truth and completeness. |
+| What can you claim from "81% correct" from an LLM judge? | Little alone. Scores are relative, so "B is judged correct more often than A" is the valid claim. |
+| Which online metric would you start with for a coding assistant? | User acceptance. For Copilot it correlated with self-reported productivity gains more strongly than fancier impact measures. Set guardrails like latency and errors before the test starts. |
+| What did Clavié et al. show? | With `gpt-3.5-turbo`, F1 rose from 65.6 to 91.7 by wording alone, zero-shot CoT beat few-shot, and a strict template raised adherence to 98% while cutting F1 from 89.3 to 86.3. Change one thing, re-score. |
+
+## Next
+
+[Adversarial prompting](10-adversarial-prompting.md): your evals have assumed honest inputs, and this chapter covers prompts written to break yours.

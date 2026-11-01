@@ -1,0 +1,562 @@
+# Python for Data Analysis lecture deck. Covers notes 01-07.
+# Build: make slides PILLAR=data-analytics/01-python-for-data-analysis STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: a small online shop, with 11 clean orders and a synthetic year of daily revenue.
+# Every number on the slides is real output from the code in the notes, on pandas 3.1.0.
+deck:
+  title: Python for Data Analysis
+  subtitle: From a messy export to a chart you can trust
+  tagline: |-
+    Load it · Select and join it · Summarise it · Respect time · See it
+  reference: "Notes: data-analytics/01-python-for-data-analysis"
+  output: python-for-data-analysis.pptx
+  notes: >-
+    Today we meet pandas from the start. We follow one small online shop that sells kettles, grinders, filters and
+    scales. Its data arrives as a messy export, and by the end we can load it, clean it, join it, summarise it and
+    plot it. The theme is that the dangerous errors here do not raise exceptions. They produce a clean number that is wrong.
+
+parts:
+  - title: Getting a table you can trust
+    summary: Why a DataFrame · Alignment · Dtypes · Copy-on-Write · Cleaning in one function
+    notes: >-
+      We start with the data structure, and then with the file we actually receive. By the end of this part we have
+      11 clean orders, and we can account for every row we removed.
+    slides:
+      - layout: statement
+        title: Why not just use a list of dictionaries?
+        kicker: The problem
+        statement: "A DataFrame is a table whose rows and columns carry labels, and whose operations match on those labels."
+        attribution: McKinney built pandas for labelled statistical data (SciPy 2010)
+        takeaway: A DataFrame replaces loops over row dictionaries with named column operations that align on labels.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          The shop's first orders fit in a list of dictionaries, and computing revenue means writing a loop for every question.
+          With a frame, the same question is one line that says what it means. That saving is why pandas exists. But the
+          deeper idea is the one on this slide: labels are not decoration. Let's see what they do.
+
+      - layout: code
+        title: Pandas matches on labels, not on positions
+        recall: What does adding two Series with different labels produce?
+        lang: python
+        code: |-
+          week1 = pd.Series(
+              {"kettle": 4, "filter": 30, "grinder": 2})
+          week2 = pd.Series(
+              {"filter": 25, "scale": 6, "kettle": 5})
+          print(week1 + week2)
+          # filter     55.0
+          # grinder     NaN
+          # kettle      9.0
+          # scale       NaN
+        bullets:
+          - "**Same label, same row,** whatever the order."
+          - "**Result:** the union of labels."
+          - "**One side missing:** `NaN`, not a guess."
+          - "**Bare NumPy** would add by position and give `[29 36 7]`."
+        takeaway: Arithmetic between Series aligns on labels and gives NaN where a label exists on only one side.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          Two weeks of units sold, with products in different orders and not quite the same products. Filter meets filter,
+          kettle meets kettle. Grinder has no partner, so the result is NaN, because pandas will not pretend it knows what two
+          plus nothing is. The same numbers as bare arrays give 29, 36 and 7, which is meaningless, and nothing warns you.
+
+      - layout: cards
+        title: Four checks on every new frame
+        recall: Which four things do you look at first on a new DataFrame, and what does each catch?
+        cards:
+          - title: shape
+            body: "Rows and columns. Did you get what the source says it holds?"
+          - title: dtypes
+            body: "A number stored as `str` will concatenate rather than add."
+          - title: head
+            body: "See real values: stray capitals, symbols, odd formats."
+          - title: isna().sum()
+            body: "Gaps per column. A whole-number column printing `.0` is hiding one."
+        takeaway: Run shape, dtypes, head and isna().sum() on every new frame, since most problems show up there first.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          This is the habit that pays for the whole chapter. Dtypes deserve special care because they decide what an operation
+          means. And a column of whole numbers printing as floats is the classic sign of a missing value, because NaN is a float.
+
+      - layout: code
+        title: "Pandas 3: a selection behaves like a copy"
+        recall: Why does chained assignment no longer change a frame in pandas 3, and what do you write instead?
+        lang: python
+        code: |-
+          fixed = orders.copy()
+          fixed["qty"][fixed["customer"] == "ana"] = 0
+          # ChainedAssignmentError warning; nothing changes
+          fixed.loc[fixed["customer"] == "ana", "qty"] = 0
+          # one .loc call: this works
+        bullets:
+          - "**Copy-on-Write** is the only mode in pandas 3."
+          - "**Old books** warn about views and `SettingWithCopyWarning`, which is gone."
+          - "**One rule:** to change part of a frame, use a single `.loc`."
+        takeaway: Under Copy-on-Write any selection acts as a copy, so change part of a frame with a single .loc call.
+        source: notes/01-series-and-dataframe.md
+        notes: >-
+          This is where older material will actively mislead you. The first form selects, then assigns onto a temporary that is
+          thrown away, and pandas warns about it. The second makes the selection and the assignment in one call, so it reaches the frame.
+
+      - layout: flow
+        title: The export becomes a clean frame in one rerunnable function
+        recall: What are the steps from raw CSV to clean frame, and why put them in a function?
+        lead: 13 raw rows go in, 11 orders come out, and every removal is accounted for.
+        steps:
+          - label: Read the raw text
+            sub: "Find the comment line, the `$`, the `n/a`."
+          - label: Parse with options
+            sub: "`comment`, `na_values`, dates"
+          - label: Fix text and types
+            sub: "Strip and lower text, then `to_numeric`."
+          - label: Drop with reasons
+            sub: "One duplicate, one return."
+          - label: Assert
+            sub: "Unique ids, no missing prices."
+        caption: Keep the raw file unchanged. Next month's export runs through the same steps.
+        takeaway: Do every cleaning step in one function over an unchanged raw file, so the work can be rerun and audited.
+        source: notes/02-loading-and-cleaning.md
+        notes: >-
+          The export has a comment line, Ana and ana, a filter with a trailing space, a dollar sign in the price, a duplicated order
+          and a negative quantity. None of this is exotic. Each fix goes into one function that prints how many rows it loaded and
+          kept. If you edit the file by hand, nobody can rerun your work, including you next month.
+
+      - layout: table
+        title: A gap is a question, not a value to fill
+        recall: How do you decide what to do with a missing value?
+        header: [In the shop's export, What it means, What we did]
+        widths: [3, 4, 3]
+        rows:
+          - ["`region` blank or `-`", "Not recorded", "Label it `unknown`, and keep the row"]
+          - ["`qty` is `n/a` on order 1006", "A value that exists but got lost", "Confirm with the owner, set it to 1"]
+          - ["`qty` is -1 on order 1008", "A return, not a sale", "Remove it, and say so"]
+          - ["Order 1006 appears twice", "Duplicate export row", "Drop on `order_id`"]
+        takeaway: Decide what to do with a missing value by asking why it is missing, because filling with the mean by reflex can invent data.
+        source: notes/02-loading-and-cleaning.md
+        notes: >-
+          Filling with the mean shrinks the variance and can invent values that are impossible. So ask why each gap exists. And
+          when you coerce, count: errors equal to coerce turns every failure into NaN without a word.
+
+  - title: Asking for the right rows and tables
+    summary: loc and iloc · Boolean masks · Merge with checks · Long and wide
+    notes: >-
+      Now we have a clean frame. This part is about asking for exactly the rows you mean, and bringing in other tables
+      without changing the answer by accident.
+    slides:
+      - layout: statement
+        title: Which row is "row 1" after you filter?
+        kicker: The problem
+        statement: "Filtering keeps the original labels, so label 3 can sit at position 1. loc and iloc then give different answers, and neither complains."
+        attribution: Say which you mean, every time
+        takeaway: After a filter, labels and positions differ, so use loc for labels and iloc for positions.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          With a fresh default index, labels and positions happen to match, which teaches a bad habit. The first filter breaks it.
+          Everything in this chapter follows from keeping those two ideas apart.
+
+      - layout: code
+        title: The same frame, two meanings of a number
+        recall: Why does filters.loc[0] raise a KeyError on the filtered frame?
+        lang: python
+        code: |-
+          filters = orders[orders["product"] == "filter"]
+          #    order_id customer
+          # 1      1002      ben
+          # 3      1004     cara
+          # 6      1007      eli
+          # 9      1011      dev
+          filters.iloc[1]["order_id"]   # 1004: second row
+          filters.loc[3]["order_id"]    # 1004: label 3
+          filters.loc[0]                # KeyError: 0
+        bullets:
+          - "**`iloc`** counts positions from zero."
+          - "**`loc`** looks up labels, and label 0 was a kettle."
+          - "**`reset_index(drop=True)`** renumbers after a filter."
+        takeaway: A filtered frame keeps its labels with gaps, so position 1 can be label 3 and label 0 may no longer exist.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Position 1 is the second row, whose label happens to be 3. Label 0 no longer exists, since order 1001 was a kettle.
+          One more trap: a slice with loc includes its end, so loc zero to two has three rows, while iloc zero to two has two.
+
+      - layout: compare
+        title: loc and iloc differ in more than labels
+        recall: How do loc and iloc differ on slices, and which one works with a boolean mask and a column name?
+        left:
+          title: loc
+          tag: labels
+          bullets:
+            - "`df.loc[0:2]` includes the end: three rows"
+            - "Takes masks and column names"
+            - "`df.loc[mask, \"qty\"] = 0` is the way to set values"
+        right:
+          title: iloc
+          tag: positions
+          bullets:
+            - "`df.iloc[0:2]` excludes the end: two rows"
+            - "Integers only, like a Python list"
+            - "The way to say \"the first row\""
+        takeaway: loc slices include the end and accept masks and names, while iloc slices exclude the end and accept only integers.
+        source: notes/03-indexing-and-selection.md
+        notes: >-
+          Masks combine with an ampersand and a pipe, with parentheses around each condition, because the words and and or do not
+          work element by element. The sum of a mask counts the matching rows, and its mean is the share.
+
+      - layout: code
+        title: A careless join took revenue from 523.5 to 756.0
+        recall: What happens to a total when you merge on a key that repeats on both sides, and how do you catch it?
+        lang: python
+        code: |-
+          blown = orders.merge(promos, on="customer",
+                               how="left")
+          # rows:    11 -> 16
+          # revenue: 523.5 -> 756.0, and no error
+          orders.merge(promos, on="customer", how="left",
+                       validate="many_to_one")
+          # MergeError: Merge keys are not unique in right
+        bullets:
+          - "**Repeats on both sides** multiply rows."
+          - "**`validate`** turns a silent error into a loud one."
+        takeaway: A merge on a key that repeats on both sides multiplies rows and inflates totals without error, so state validate.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          This is the most expensive mistake in the chapter. Ana has two orders and two promotions, so four rows. Ben has three orders
+          and two promotions, so six. Revenue goes up because rows were duplicated, and nothing raised an error.
+
+      - layout: flow
+        title: Four checks make any join safe
+        recall: What four things do you do on every merge?
+        steps:
+          - label: State how
+            sub: "The default inner join drops unmatched rows."
+          - label: State validate
+            sub: "`many_to_one` checks the key really is unique on the right."
+          - label: Compare row counts
+            sub: "Before and after: 11 and 11."
+          - label: Compare one total
+            sub: "Revenue stays 523.5."
+        caption: Audit unmatched keys with indicator=True, and clean keys first, since "Ana" and "ana " will not join.
+        takeaway: On every merge state how and validate, then compare the row count and one total before and after.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          The same checks apply to any SQL you write later. With them in place, joining orders to customers and products answers
+          a question no single table could. Brew gear brings the most margin at 142.0, but consumables keep about 62 of every 100 in revenue.
+
+      - layout: compare
+        title: Long for analysis, wide for reading
+        recall: Which shape do groupby and seaborn want, and what do melt and pivot_table do?
+        left:
+          title: Long (tidy)
+          tag: one row per observation
+          bullets:
+            - "Each variable is a column"
+            - "What `groupby` and seaborn expect"
+            - "Get there with `melt`"
+        right:
+          title: Wide
+          tag: one column per category
+          bullets:
+            - "Easy for people to scan"
+            - "Good for reports"
+            - "Get there with `pivot_table`, and state `aggfunc`"
+        takeaway: Tidy long data has one variable per column and one observation per row, which is what groupby and seaborn expect.
+        source: notes/04-reshaping-and-joins.md
+        notes: >-
+          Wickham's tidy data gives us the vocabulary. Before any aggregation, ask what one row means. Use plain pivot only when keys are
+          unique, since it raises an error on repeats, and pivot_table otherwise.
+
+  - title: Summarising without fooling yourself
+    summary: Split-apply-combine · agg and transform · The mean-of-rates trap · Lost keys
+    notes: >-
+      Groupby answers most analyst questions. It is also where a confident wrong number most often enters a report.
+    slides:
+      - layout: statement
+        title: What is the margin rate in each region?
+        kicker: The problem
+        statement: "The obvious answer, averaging a rate per order, gives the wrong number for every region in the shop."
+        attribution: The fix is one line, once you see it
+        takeaway: Averaging per-order rates weights small and large orders alike, so it gives the wrong group rate.
+        source: notes/05-groupby-and-aggregation.md
+        notes: >-
+          It looks like a simple question, and it has a tempting wrong answer. We get to it after the model that makes groupby simple.
+
+      - layout: flow
+        title: Every groupby is split, apply, combine
+        recall: What are the three stages of a groupby?
+        steps:
+          - label: Split
+            sub: "Divide rows by key."
+          - label: Apply
+            sub: "Compute on each piece, on its own."
+          - label: Combine
+            sub: "Put results into one object."
+        caption: Wickham's name for the pattern (JSS 2011). Overlapping windows fall outside it and need rolling.
+        takeaway: A groupby splits rows by key, applies a function to each piece independently, and combines the results.
+        source: notes/05-groupby-and-aggregation.md
+        notes: >-
+          Wickham gave this pattern its name. Think about what comes out of each piece, because that picks the method.
+
+      - layout: table
+        title: The method depends on what each group should return
+        recall: How do agg, transform, filter and apply differ in what they return?
+        header: [Method, Returns, Example]
+        widths: [2, 3, 5]
+        rows:
+          - ["`agg`", "One row per group", "Revenue and count by region"]
+          - ["`transform`", "One value per original row", "Each order's share of its region's revenue"]
+          - ["`filter`", "Some rows, kept or dropped by group", "Customers with at least two orders"]
+          - ["`apply`", "Anything, rebuilt from each piece", "Top order per region; slowest, so try the others first"]
+        takeaway: agg returns one row per group, transform one value per original row, filter a subset of rows, and apply anything.
+        source: notes/05-groupby-and-aggregation.md
+        notes: >-
+          Agg shrinks. Transform keeps the shape, which is why it's the tool for adding a group statistic as a new column. Reach for
+          apply last. It is the most flexible and the slowest.
+
+      - layout: table
+        title: Averaging rates overstates every region
+        recall: How should you calculate a group's rate, and why is the mean of per-order rates wrong?
+        lead: "Margin rate by region, on the shop's 11 orders."
+        header: [Region, Revenue, Margin, Mean of rates, True rate]
+        widths: [2, 2, 2, 2, 2]
+        highlight: [0]
+        rows:
+          - [east, "108.0", "43.0", "0.492", "0.398"]
+          - [north, "169.0", "69.0", "0.453", "0.408"]
+          - [south, "128.5", "64.0", "0.515", "0.498"]
+          - [unknown, "118.0", "46.0", "0.415", "0.390"]
+        takeaway: To get a group's rate, sum the numerator and the denominator and then divide, because a mean of rates ignores size.
+        source: notes/05-groupby-and-aggregation.md
+        notes: >-
+          East has a small filter order at about 62 percent and a large grinder order at about 37. Averaging gives 0.492, while the shop
+          kept 43 of 108, or 0.398. The ranking changes too: east beats north on the mean of rates and loses on the true rate.
+          The same trap applies to conversion rate and to cost per click.
+
+      - layout: code
+        title: Name your aggregates, and always keep a count
+        recall: Why should every group mean come with a count, and what happens to rows with a missing key?
+        lang: python
+        code: |-
+          by_region = orders.groupby("region").agg(
+              revenue=("revenue", "sum"),
+              margin=("margin", "sum"),
+              orders=("order_id", "count"),
+          )
+          by_region["rate"] = (
+              by_region["margin"] / by_region["revenue"])
+        bullets:
+          - "**A mean of one order** prints as confidently as a mean of ten thousand."
+          - "**Missing keys vanish** unless you pass `dropna=False`."
+          - "**Check** that the groups add up to the total."
+        takeaway: Report a count beside every group statistic, and check that groups add up, because missing keys vanish by default.
+        source: notes/05-groupby-and-aggregation.md
+        notes: >-
+          Named aggregation gives you readable columns. Missing keys are the other silent loss here: a row with no region drops out of
+          a groupby, so the groups no longer add up to the total. Size and count also differ when a column has gaps.
+
+  - title: Respecting time
+    summary: Parsing · Frequencies · Resampling · Shift and rolling · Leakage
+    notes: >-
+      The shop now has a full synthetic year of daily revenue. Time looks like one more grouping key, but it has its own rules.
+    slides:
+      - layout: image
+        title: The whole year in one line
+        kicker: The problem
+        recall: What can a line chart show about a time series that describe() cannot?
+        image: ../../sources/images/da01-plotting-line.png
+        caption: Synthetic daily revenue for 2024, with trend, weekly pattern, outages and a December jump. Generated in the chapter's code.
+        bullets:
+          - "**Rows have an order,** so a previous value exists."
+          - "**Months differ in length,** so monthly totals are not directly comparable."
+          - "**A missing day** is often an absent row, invisible in a table."
+        takeaway: Time series have ordered rows, unequal months and silently absent days, so they need more care than an ordinary grouping key.
+        source: notes/06-time-series.md
+        notes: >-
+          How did we do last month sounds like a groupby, and it nearly is. But rows have order, months differ, a label can sit at either
+          end of a period, and an outage leaves no row at all. Here the line breaks in March for two lost days, because we made gaps visible.
+
+      - layout: table
+        title: Old frequency names now raise an error
+        recall: What did pandas 3 change about frequency aliases, and why?
+        header: [Meaning, Current, Removed]
+        widths: [4, 3, 3]
+        rows:
+          - ["Month end / month start", "`ME` / `MS`", "`M`"]
+          - ["Quarter end", "`QE`", "`Q`"]
+          - ["Year end", "`YE`", "`A`, `Y`"]
+          - ["Hour", "`h`", "`H`"]
+          - ["Minute", "`min`", "`T`"]
+          - ["Second", "`s`", "`S`"]
+        takeaway: Pandas 3 removed the frequency aliases M, Q, Y, H and T, so write ME, QE, YE, h and min instead.
+        source: notes/06-time-series.md
+        notes: >-
+          This is where code from older books breaks most often. The reason is a real ambiguity: ME says month end, as distinct from MS for month start.
+          Datetimes also now default to microsecond resolution, so an integer conversion gives numbers a thousand times smaller than old code expected.
+
+      - layout: code
+        title: resample is a groupby on time bins
+        recall: What do closed and label control in a resample, and why check count?
+        lang: python
+        code: |-
+          # asfreq shows absent days as NaN
+          regular = daily.asfreq("D")
+          regular.resample("ME").agg(
+              ["sum", "mean", "count"])
+          #                 sum   mean  count
+          # 2024-01-31  11992.8  386.9     31
+          # 2024-02-29  12266.4  423.0     29
+          # 2024-03-31  12775.1  440.5     29
+        bullets:
+          - "**`count`** shows March lost two days."
+          - "**`mean`** is fair across month lengths."
+          - "**`closed`, `label`** set which edge belongs and which names the bin."
+        takeaway: Resample into bins with sum, mean and count together, since months differ in length and absent days hide in the sum.
+        source: notes/06-time-series.md
+        notes: >-
+          Asfreq makes the outage visible. Then resample gives a table per month, and count exposes that March has only 29 observations.
+          A bin is an interval. For month-end bins, pandas defaults to closing and labelling on the right. For five-minute bins, on the left. Choose on purpose where it matters.
+
+      - layout: compare
+        title: A window that peeks ahead is cheating
+        recall: What is leakage in a time series, and which two pandas options cause it?
+        emphasis: left
+        left:
+          title: Backward-looking
+          tag: safe in a model
+          bullets:
+            - "`shift(1)`: yesterday's value"
+            - "`rolling(7).mean()` is trailing by default"
+            - "Reacts after the December jump"
+        right:
+          title: Forward-looking
+          tag: leakage
+          bullets:
+            - "`shift(-1)`: tomorrow's value"
+            - "`center=True` reads future days"
+            - "Rises on November 29, before the jump"
+        takeaway: A negative shift and center=True both read the future, which is acceptable on a chart and cheating in a model.
+        source: notes/06-time-series.md
+        notes: >-
+          The centred average starts rising on November 29, days before anything happened, because it reads from the future. That is fine for a
+          chart. For a forecast it looks brilliant in testing and can't exist in production.
+
+      - layout: bullets
+        title: Three smaller rules that save real errors
+        recall: How do rolling(7) and rolling("7D") differ, and where should you store timestamps?
+        bullets:
+          - "**Compare like with like:** `shift(7)` compares the same weekday. The typical change drops from 13% to about 9%."
+          - "**Rows or calendar:** `rolling(7)` counts rows, and `rolling(\"7D\")` counts days. They differ when rows are absent."
+          - "**Store in UTC:** convert for display, and pick the reporting zone before daily totals. A local day can last 23 hours."
+        aside: {title: "Which day?", body: "22:00 UTC on March 31 is already April 1 in Oslo."}
+        takeaway: Compare seasonal data with a seasonal shift, use time-based windows on irregular data, and store timestamps in UTC.
+        source: notes/06-time-series.md
+        notes: >-
+          Daily change on this data mostly measures the weekly pattern, since Saturday beats Tuesday every week. Shift by seven and what remains is mostly noise.
+          And the zone changes the answer to which day a sale happened on, even which month.
+
+  - title: Seeing the data
+    summary: Figure and Axes · pandas plot · seaborn · Choosing a chart
+    notes: >-
+      Plots are how you find out what's wrong with your data and what's interesting. Here the reader is you. Persuading others is pillar 05.
+    slides:
+      - layout: image
+        title: The same column, three stories
+        kicker: The problem
+        recall: Why should you try several bin counts on a histogram?
+        image: ../../sources/images/da01-plotting-hist.png
+        lead: "At 5 bins a staircase, at 150 static, and at 25 a main body with a long right tail."
+        caption: Daily revenue with 5, 25 and 150 bins. Generated in the chapter's code from synthetic data.
+        takeaway: A histogram's shape depends on its bin count, so try several before you trust what you see.
+        source: notes/07-plotting.md
+        notes: >-
+          The mean sits above the median at 507 against 477, the same fact in numbers. Charts have choices in them, and the first skill is noticing that you made one.
+
+      - layout: code
+        title: Ask for the Figure and the Axes by name
+        recall: What are a Figure and an Axes, and why prefer the explicit interface to plt.plot?
+        lang: python
+        code: |-
+          fig, axes = plt.subplots(1, 2, figsize=(9, 3))
+          by_month.plot.bar(ax=axes[0])
+          axes[0].set(title="Mean daily revenue by month")
+          by_product.sort_values().plot.barh(ax=axes[1])
+          fig.tight_layout()
+          fig.savefig("bars.png")
+        bullets:
+          - "**Figure:** the canvas you save."
+          - "**Axes:** one plot on it."
+          - "**`plt.plot`** draws on whichever is current."
+        takeaway: A Figure is the canvas and an Axes is one plot on it, so name them with plt.subplots rather than rely on a current Axes.
+        source: notes/07-plotting.md
+        notes: >-
+          Nearly every Python plot is matplotlib underneath, so these two objects explain most plotting confusion. Pandas plot methods take ax, so you can
+          place them. Implicit plotting stops being obvious as soon as you have two plots.
+
+      - layout: image
+        title: Small multiples show the shape and the level at once
+        recall: When do you reach for small multiples, and what kind of seaborn function draws them?
+        image: ../../sources/images/da01-plotting-facets.png
+        lead: "On one scale, the weekly shape holds while the level rises. Figure-level `catplot` draws this with `col=`."
+        caption: Mean revenue by weekday per quarter, on a shared y axis. Generated in the chapter's code from synthetic data.
+        takeaway: Small multiples on a shared scale compare a pattern across groups, and seaborn's figure-level functions draw them from tidy data.
+        source: notes/07-plotting.md
+        notes: >-
+          Rather than four lines on one plot, draw one plot four times. Axes-level functions such as boxplot draw on an Axes you give them. Figure-level functions such
+          as catplot build their own figure so they can lay out facets. This is the chart for when a single plot has turned into spaghetti.
+
+      - layout: table
+        title: Pick the chart from the question
+        recall: Which chart answers change over time, comparison, distribution and relationship?
+        header: [Question, Chart, Call]
+        widths: [4, 3, 3]
+        rows:
+          - ["How does it change over time?", "Line", "`ax.plot`"]
+          - ["How do categories compare?", "Sorted bars from zero", "`plot.barh`"]
+          - ["What shape does one column have?", "Histogram", "`ax.hist`"]
+          - ["How do groups' distributions differ?", "Box", "`sns.boxplot`"]
+          - ["How do two numbers relate?", "Scatter", "`sns.scatterplot`"]
+          - ["Same pattern across groups?", "Small multiples", "`sns.catplot(col=...)`"]
+        takeaway: Choose a line for time, sorted bars for comparison, a histogram for shape, a box for groups and a scatter for relationships.
+        source: notes/07-plotting.md
+        notes: >-
+          Two omissions are on purpose. Pie charts use angle, and Cleveland and McGill found people judge position and length more accurately. And two y axes imply a relationship set
+          by whichever scales you chose, so draw two panels instead. Pillar 05 returns to both.
+
+  - title: What to remember
+    agenda: false
+    divider: false
+    notes: >-
+      We end with the habits, and where to go from here.
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        recall: Name the checks you run when loading, joining, grouping and plotting.
+        cards:
+          - title: Load
+            body: "Keep the raw file. Put every fix in one rerunnable function."
+          - title: Select
+            body: "`loc` for labels, `iloc` for positions, a single `.loc` to set."
+          - title: Join
+            body: "State `how` and `validate`. Compare rows and one total."
+          - title: Group
+            body: "Print counts. Sum then divide for ratios. Check groups add up."
+          - title: Time
+            body: "Show gaps with `asfreq`. Keep model features looking backward."
+          - title: Plot
+            body: "Question first. Bars from zero. One y axis."
+        takeaway: The dangerous errors in pandas raise no exception, so build the checks into every load, join, group and chart.
+        source: notes/07-plotting.md
+        notes: >-
+          If you remember one thing, it's that none of today's worst errors raise an exception. The row counts and totals are how you catch them.
+
+      - layout: bullets
+        title: Where next
+        recall: What can't this toolkit tell you yet?
+        bullets:
+          - "**Practice:** the notebooks in `practice/`, after `bash fetch_data.sh`."
+          - "**Pillar 02:** is a difference real, or luck? Probability and statistics."
+          - "**Pillar 03:** did the change cause it? Experiments and causality."
+          - "**Pillar 05:** make charts that convince other people."
+          - "**Pillar 06:** forecasting, cohorts, funnels and SQL on real analyses."
+        takeaway: With data in a frame, the next question is whether a difference is real, which takes probability and statistics.
+        source: notes/07-plotting.md
+        notes: >-
+          You can now get data into a frame, clean it, reshape it, summarise it and see it. What it can't yet tell you is whether a difference is real or luck. That's next.

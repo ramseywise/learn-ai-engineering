@@ -1,0 +1,828 @@
+# RL & Alignment lecture deck. Covers notes 00-11.
+# Build: make slides PILLAR=generative-ai/05-RL STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: a treasure-hunt agent told only a score. The same question follows it into language
+# models: what is the score, and what happens when the model finds its loophole?
+deck:
+  title: RL & Alignment
+  subtitle: The reward signal is the product
+  tagline: |-
+    A score · Humans · Optimizers · A constitution · Agents · Reasoning · Production
+  byline: Generative AI · Pillar 05
+  reference: "Notes: generative-ai/05-RL"
+  output: rl-and-alignment.pptx
+  notes: >-
+    Today we follow one agent. It starts in a treasure hunt, knowing nothing, told only a score. By the end it is a
+    language model calling tools. The algorithm changes several times along the way, but the deciding question does
+    not: what is the score, who wrote it, and what happens when the model finds its loophole?
+
+parts:
+  - title: Learning from a score
+    summary: Agent and reward · Exploration · Value and policy · The families · Why a model is an agent
+    notes: >-
+      We begin with no notation at all, because reward, policy and value are simple ideas. Then we give them their
+      proper names, since every paper later in the deck assumes them.
+    slides:
+      - layout: statement
+        title: Nobody gives the agent the answer
+        kicker: The problem
+        statement: "An RL agent gets no answer key. It acts, receives a score, and has to work out for itself which actions earned it."
+        attribution: The reward is the whole instruction, so it is also the only thing you get to say
+        takeaway: RL differs from supervised learning because the agent has only a delayed score, never the right answer.
+        source: notes/00-rl-in-plain-language.md
+        notes: >-
+          Winder's comparison is learning to ride a bike. You could not learn it from a labelled dataset of riders. You
+          get on, you wobble, and falling is the feedback. Everything in this pillar follows from that, including what
+          goes wrong when the score measures the wrong thing.
+
+      - layout: flow
+        title: One loop underlies every method in this deck
+        recall: What are the steps of the agent-environment loop?
+        loop: true
+        steps:
+          - {label: State, sub: what the agent sees}
+          - {label: Action, sub: chosen by the policy}
+          - {label: Environment, sub: applies the action}
+          - {label: Reward, sub: a score, maybe late}
+        takeaway: An agent sees a state, acts, and receives a reward and a new state, and training adjusts its policy to raise total reward.
+        source: notes/00-rl-in-plain-language.md
+        notes: >-
+          Keep these four boxes in mind. For the treasure hunt the state is the room and inventory. For a language model
+          the state is the conversation so far and the action is the next token. Only the reward source changes across
+          the rest of the deck.
+
+      - layout: code
+        title: With no exploration, the agent never finds the best machine
+        recall: What happened to the bandit agent at epsilon 0, 0.1 and 0.5?
+        lang: text
+        code: |
+          # 1000 pulls of three slot machines, averaged over many runs
+          epsilon=0.0  average reward= 199.6  on best machine=0%
+          epsilon=0.1  average reward= 654.8  on best machine=85%
+          epsilon=0.5  average reward= 580.8  on best machine=66%
+        bullets:
+          - "**Zero exploration** locks onto whichever machine came first."
+          - "**A little** finds the best one and mostly stays."
+          - "**Too much** keeps paying to try losers."
+        takeaway: Some exploration is necessary but too much is wasteful, as 0.1 beat both 0 and 0.5 in this bandit.
+        source: notes/00-rl-in-plain-language.md
+        notes: >-
+          This is a program from the on-ramp chapter and these are its real results. A low-scoring agent with epsilon zero
+          looks like a failed algorithm, when it may only be a machine that never tried the good option.
+
+      - layout: table
+        title: Three ways to estimate how good a state is
+        recall: How do dynamic programming, Monte Carlo and TD differ?
+        header: [Method, "Needs a model?", Updates from, Trade-off]
+        widths: [2, 1.3, 3, 3]
+        rows:
+          - [Dynamic programming, "Yes", Bellman equation over all next states, Exact but only with a known model]
+          - [Monte Carlo, "No", The full return at episode end, "Unbiased, high variance"]
+          - [Temporal difference, "No", One step plus its own estimate, "Biased, low variance, online"]
+        highlight: [2]
+        takeaway: TD learning updates from one step plus its own estimate, trading some bias for lower variance and online learning.
+        source: notes/01-rl-foundations.md
+        notes: >-
+          Value is expected future reward, and these are the three classic ways to estimate it. Most deep RL descends from
+          the third row. The word to remember is bootstrapping: an estimate updated from another estimate.
+
+      - layout: image
+        title: The behaviour you learn about changes the path you get
+        recall: Why do Q-learning and SARSA take different paths in the cliff world?
+        image: ../sources/images/winder-reinforcement-learning-fig3-3.png
+        caption: Q-learning hugs the cliff and SARSA keeps clear (Winder, 2020, Fig. 3-3)
+        bullets:
+          - "**Q-learning** values the best next action, and learns the greedy path."
+          - "**SARSA** values the action actually taken, slips included."
+          - "**On-policy** methods value what the agent will really do."
+        takeaway: Q-learning learns the greedy policy off-policy, while SARSA learns the exploring policy on-policy and so avoids the cliff.
+        source: notes/01-rl-foundations.md
+        notes: >-
+          Q-learning walks along the row next to the cliff, since that is the shortest path if you never slip. SARSA climbs
+          away because it is learning about a policy that does sometimes slip. Remember this when we reach LLM training,
+          where the main methods are on-policy.
+
+      - layout: image
+        title: The PPO clip removes the incentive to move too far
+        recall: What does the PPO clip do to the objective once the ratio passes 1 + epsilon?
+        image: ../sources/images/winder-reinforcement-learning-fig6-5.png
+        caption: The clipped objective against the probability ratio (Winder, 2020, Fig. 6-5)
+        bullets:
+          - "**Ratio past the bound:** gradient goes to zero in the helpful direction."
+          - "**Why it matters:** one batch can be reused for several epochs."
+          - "**The limit:** it removes an incentive; it does not forbid a large change."
+        takeaway: PPO clips the objective so a batch can be reused safely, but this removes an incentive rather than enforcing a hard bound.
+        source: notes/01-rl-foundations.md
+        notes: >-
+          In our runnable example the loss at ratio 1.1 still has a gradient of minus 1.1, and at ratios 1.5 and 3 the
+          gradient is zero. PPO is the optimizer of the next part. Its machinery may be less essential for LLMs than it looks,
+          which is where GRPO comes in.
+
+      - layout: compare
+        title: A language model is already an RL agent
+        recall: In a language model, what plays the roles of state, action and policy?
+        emphasis: right
+        left:
+          title: The treasure hunt
+          bullets:
+            - "**State:** room and inventory"
+            - "**Action:** one of a few moves"
+            - "**Policy:** a table of values"
+            - "**Reward:** win the game"
+        right:
+          title: A language model
+          bullets:
+            - "**State:** the conversation so far"
+            - "**Action:** the next token"
+            - "**Policy:** the weights"
+            - "**Reward:** whichever one you choose"
+        takeaway: The conversation is the state, the next token the action and the weights the policy, which leaves the reward as your design decision.
+        source: notes/00-rl-in-plain-language.md
+        notes: >-
+          Because the action space is the whole vocabulary at each step, no table or argmax is practical, so LLMs use policy
+          methods. Temperature is already an exploration dial. The real decision is the reward, and the next parts take its
+          sources one at a time: human ratings, a written constitution, an automatic checker, an environment.
+
+  - title: Humans as the score
+    summary: The three stages · Fine-tuning in practice · Bradley-Terry · Overoptimization
+    notes: >-
+      Our first score for a language model comes from people comparing answers. This is RLHF, and its failures teach
+      what every later reward has to survive.
+    slides:
+      - layout: statement
+        title: A pretrained model is not yet an assistant
+        kicker: The problem
+        statement: "A base model continues text. We want it to help people, and people can't write down what helpful means, though they can pick the better of two answers."
+        attribution: InstructGPT, a smaller model trained on human rankings, was preferred by its labelers
+        takeaway: RLHF exists because people can compare two answers more reliably than they can define or score a good one.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          Comparisons are the raw material. Humans compare more consistently than they score, so pairs become the data.
+          The rest of this part shows how pairs become a reward and how a reward becomes a model.
+
+      - layout: flow
+        title: RLHF takes three stages, and each exists for a reason
+        recall: What are the three stages of RLHF and why does SFT come first?
+        steps:
+          - {label: SFT, sub: learn the form}
+          - {label: Reward model, sub: rank pairs}
+          - {label: PPO + KL, sub: raise the reward}
+        takeaway: RLHF runs SFT on demonstrations, trains a reward model on ranked pairs, then applies PPO with a KL penalty to the SFT model.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          SFT narrows a broad output distribution so PPO has something sensible to explore. The reward model scales human
+          judgement. PPO optimizes it while the KL leash keeps the policy where the reward model can be trusted. PPO RLHF
+          holds four models in memory: policy, reference, reward model, value model.
+
+      - layout: table
+        title: "Fine-tuning is for form, and retrieval is for facts"
+        recall: In Ovadia et al., which scored higher on current-events QA, RAG or fine-tuning?
+        lead: "Ovadia et al. (2024): Mistral-7B on a current-events QA set, as cited by Huyen."
+        header: [Setup, Base, +RAG, Fine-tuned, Fine-tuned + RAG]
+        widths: [2, 1, 1, 1.4, 1.8]
+        rows:
+          - [Score, "0.481", "**0.875**", "0.504 to 0.588", "0.810 to 0.830"]
+        takeaway: On a current-events QA set, retrieval reached 0.875 and fine-tuning at most 0.588, so try prompts and retrieval before fine-tuning.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          Huyen's rule is finetuning is for form and RAG is for facts. Her suggested order is prompting, few-shot, retrieval,
+          and fine-tuning after that. Here adding fine-tuning to RAG even lowered the score. This is one model and one kind of
+          task, so treat it as a default. Once you do tune, use adapters: the memory case for LoRA is in the chapter.
+
+      - layout: code
+        title: Bradley-Terry turns comparisons into a score
+        recall: How does the Bradley-Terry model turn pairwise preferences into a scalar reward?
+        lang: python
+        code: |
+          # P(a beats b) = sigmoid(r(a) - r(b))
+          loss = -log(sigmoid(r[win] - r[lose]))
+
+          # Result on simulated comparisons
+          # true    [ 1.5   0.5  -0.5  -1.5 ]
+          # learned [ 1.54  0.65 -0.52 -1.67]
+          # P(0 beats 1): 0.71, true 0.73
+        bullets:
+          - "**Only differences matter,** so scores are relative."
+          - "**Labels are noisy:** agreement runs about 63 to 77%."
+        takeaway: A reward model learns a scalar so that score differences predict which answer people prefer, and it inherits their disagreement.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          The output here is from the runnable example in the chapter. Agreement between annotators, or between annotators and
+          researchers, was 63 to 77 percent across Stiennon, InstructGPT and Anthropic. So a reward model can't be
+          more trustworthy than that disagreement allows.
+
+      - layout: image
+        title: Past a point, more reward means worse answers
+        recall: What does overoptimization look like on the Stiennon et al. chart?
+        image: ../sources/images/stiennon-learning-summarize-fig5.png
+        caption: Predicted and actual preference against KL from the supervised baseline (Stiennon et al., 2020, Fig. 5)
+        bullets:
+          - "**Predicted** preference keeps rising toward 1.0."
+          - "**Actual** preference peaks near KL 10, then falls to about 0.05."
+          - "**Track** a held-out human or judge score, not training reward."
+        takeaway: A reward model is a proxy, so optimizing past its region of validity raises predicted quality while true quality falls.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          This one chart is the argument for the rest of the deck. The dashed prediction line goes up the whole way. The real
+          line peaks early and collapses. Without the KL penalty, Ziegler's mock-sentiment policy reached 99.97 percent
+          positive with gibberish such as Love this ride instantly instantly instantly.
+
+      - layout: cards
+        title: The hacks are predictable, so look for them
+        recall: What are the common forms of reward hacking, and what mitigates them?
+        cards:
+          - {title: Verbosity, body: "Longer answers score higher on surface features."}
+          - {title: Sycophancy, body: "Agreeing with the prompt's framing, whatever the facts."}
+          - {title: Mode collapse, body: "Repetitive, formulaic outputs that score consistently."}
+          - {title: KL penalty, accent: "D4621A", body: "A leash to the SFT model. Too low drifts, too high barely moves."}
+        takeaway: Verbosity, sycophancy and mode collapse are common reward hacks, and a tuned KL penalty is the first defence.
+        source: notes/02-rlhf-pipeline.md
+        notes: >-
+          The reward model was trained on outputs near the SFT model, and it is unreliable far from them. PPO goes looking for
+          exactly those places. Inoculation prompting is a cheap extra mitigation once you know which hack to expect. Tune the
+          KL coefficient against the held-out score, not once.
+
+  - title: Cheaper optimizers
+    summary: What PPO costs · DPO · GRPO · GSPO · Offline or online
+    notes: >-
+      PPO works, and it needs four models in memory. Each method in this part removes one of them, and each
+      removal changes what the method can learn.
+    slides:
+      - layout: statement
+        title: PPO needs four models. Which can we remove?
+        kicker: The problem
+        statement: "DPO removes the reward model and the rollouts. GRPO removes the critic. Each removal also decides what the method is able to discover."
+        attribution: On Anthropic-HH and TL;DR, PPO's clip was active on fewer than 5% of samples per batch (Ahmadian et al.)
+        takeaway: Newer optimizers drop parts of PPO, and each dropped part changes what the method can and cannot learn.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          Ahmadian et al. found much of PPO's machinery may be unnecessary for LLM RLHF. Removing the clip and then the ratio
+          left the REINFORCE-style method competitive, because the pretrained start does the stabilizing. That opened the door.
+
+      - layout: table
+        title: Who needs what
+        recall: Which methods need a reward model, a critic or paired data?
+        header: [Method, Reward signal, Critic, Memory, Best for]
+        widths: [1, 3, 0.8, 0.9, 2.6]
+        rows:
+          - [PPO, Learned reward model, "Yes", 4x, Complex general alignment]
+          - [DPO, "Offline pairs, no reward at train time", "No", 2x, Stable general alignment]
+          - [GRPO, "Verifier, reward function or judge", "No", 3x, Reasoning with a checker]
+          - [KTO, Unpaired thumbs up and down, "No", 2x, Unpaired feedback]
+          - [ORPO, "Offline pairs, no reference model", "No", 1x, Tight compute]
+        highlight: [1]
+        takeaway: Default to DPO with preference pairs and no verifier, and use GRPO when a checker can score new outputs online.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          This table is the decision framework. Pair it with the warning from the chapter: reward hacking risk is lower for
+          GRPO, not gone, because the verifier itself can be gamed.
+
+      - layout: code
+        title: DPO's loss moves probability from rejected to chosen
+        recall: What does the DPO loss do when both answers become more likely?
+        lang: text
+        code: |
+          # logistic loss on the gap between log-ratios
+          # against a frozen reference, beta=0.1 is typical
+          no change            loss=0.693
+          shifted to chosen    loss=0.313
+          shifted to rejected  loss=1.313
+          both more likely     loss=0.693
+        bullets:
+          - "**Only the gap counts,** so raising both changes nothing."
+          - "**Paper's evidence:** humans preferred DPO to PPO 58% of the time on TL;DR."
+          - "**Watch:** length drift, and no discovery outside the data."
+        takeaway: DPO optimizes the gap in log-ratios against a frozen reference, needing no reward model or sampling but unable to explore beyond its pairs.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          These are outputs from the runnable example. In practice beta of 0.1 is the common start and the learning rate is about
+          100 times below LoRA SFT. If rewards/accuracies hits 100 percent early, the pairs are too easy. Check average
+          length before and after training.
+
+      - layout: code
+        title: GRPO compares a group of samples to replace the critic
+        recall: Why does an all-correct or all-wrong group teach GRPO nothing?
+        lang: text
+        code: |
+          # advantage = (reward - group mean) / group std
+          mixed verifier   [ 1.29 -0.77 -0.77  1.29 ...]
+          all correct      [ 0.    0.    0.    0.   ...]
+          all wrong        [ 0.    0.    0.    0.   ...]
+        bullets:
+          - "**Sibling samples** give the baseline, with no value model."
+          - "**All-pass or all-fail** groups produce no gradient."
+          - "**Checker bugs** get amplified, so audit it first."
+        takeaway: GRPO normalizes rewards within a group of samples, so it needs no critic but learns nothing from groups that all pass or all fail.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          In DeepSeekMath this raised GSM8K from 82.9 to 88.2 percent and MATH from 46.8 to 51.7. Production coding
+          environments have been gamed by overriding dunder eq, so a verifier is no guarantee. Remember the zero rows, because
+          they return in the agents part as the reason penalties help.
+
+      - layout: image
+        title: GSPO moves the ratio to the sequence level
+        recall: Why does GSPO use a sequence-level ratio rather than GRPO's token ratio?
+        image: ../sources/images/ai-agents-definitive-guide-fig3-3.png
+        caption: Generate sequences, score and compare them, combine with KL (Koenigstein, 2026, Fig. 3-3)
+        bullets:
+          - "**The mismatch:** rewards belong to sequences, GRPO's ratios to tokens."
+          - "**The fix:** a single ratio per sequence."
+          - "**Reported benefit:** more efficient training on a 48-layer MoE."
+        takeaway: GSPO matches the ratio to the unit that earns the reward, using one sequence-level ratio in place of per-token ratios.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          The GSPO numbers are the Qwen team's own and it clipped far more tokens than GRPO yet trained more efficiently. In a
+          mixture of experts, activated experts shift between snapshots, which is where token ratios are especially fragile.
+
+      - layout: compare
+        title: Offline for style, online for reasoning
+        recall: On math, how did offline DPO compare with semi-online DPO and GRPO in Lanchantin et al.?
+        lead: "Lanchantin et al. on NuminaMath, Math500 accuracy: 53.7% offline, 58.9% semi-online DPO, 58.7% online DPO, 58.1% GRPO."
+        emphasis: right
+        left:
+          title: Offline methods
+          bullets:
+            - Pairs already exist
+            - Style and refusal behaviour
+            - Cheap and stable
+        right:
+          title: Online methods
+          bullets:
+            - A checker scores new behaviour
+            - Reasoning and tool use
+            - Discovers answers nobody wrote
+        takeaway: Going online matters more than the specific loss on reasoning, since online DPO and GRPO both beat offline DPO on math.
+        source: notes/03-preference-optimization.md
+        notes: >-
+          This result surprises people. The gap is between offline and online, and DPO versus GRPO hardly matters on this task.
+          For style and refusals, offline pairs are usually enough. That is why Picking DPO for reasoning is on the pitfalls
+          list in the chapter.
+
+  - title: A constitution as the score
+    summary: Principles · SL-CAI · RLAIF · Noise and bias · Self-improvement
+    notes: >-
+      Human labels are slow and their reasons are invisible. Constitutional AI writes the reasons down and lets a model
+      apply them. What can go wrong has more to do with correlated errors than with cost.
+    slides:
+      - layout: statement
+        title: What if the labeler could read its instructions?
+        kicker: The problem
+        statement: "Constitutional AI replaces human harmlessness labels with AI feedback guided by written principles. The principles become the thing you audit."
+        attribution: Bai et al., 2022. The optimizer does not change; the labeler does
+        takeaway: Constitutional AI replaces human harmlessness labels with AI labels from written principles, which makes the values explicit and auditable.
+        source: notes/04-constitutional-ai.md
+        notes: >-
+          A written constitution is readable, and you can change it without relabeling everything. It does not make the
+          problem easy: a principle that reads well may still produce preachy or evasive answers, so sample outputs per
+          principle and revise the document as you would code.
+
+      - layout: flow
+        title: Two phases, and only the labeler changes
+        recall: What two phases does Constitutional AI have?
+        steps:
+          - {label: Critique, sub: AI applies a principle}
+          - {label: Revise, sub: then SFT on revisions}
+          - {label: AI preference, sub: labels pairs}
+          - {label: RL, sub: as in RLHF}
+        takeaway: CAI critiques and revises answers for SFT in its first phase, then trains RL on AI preference labels in its second.
+        source: notes/04-constitutional-ai.md
+        notes: >-
+          The first two boxes are SL-CAI and the last two are RLAIF. Critique chains can be logged, which is why auditability
+          improves. Red-teaming supplies the hard prompts this loop needs in order to be useful.
+
+      - layout: code
+        title: Noise averages out, but bias does not
+        recall: Why does more data not fix a length-biased labeler?
+        lang: text
+        code: |
+          # learned weights on quality and on length
+          labeler                 pairs  quality  length
+          noisy, unbiased           300    0.89    0.11
+          noisy, unbiased         30000    0.99   -0.01
+          clean, length-biased      300    0.67    0.33
+          clean, length-biased    30000    0.67    0.33
+        bullets:
+          - "**Noisy** labelers improve with more pairs."
+          - "**Biased** labelers stay exactly as wrong."
+          - "**Keep** a human-labeled audit set."
+        takeaway: More labels wash out random noise but never shared bias, so a consistent AI labeler still needs a human-labeled audit set.
+        source: notes/04-constitutional-ai.md
+        notes: >-
+          This is a simulation from the chapter. It shows why a very consistent AI labeler can be more dangerous than a noisy
+          person. Consistency is not correctness, and a model that grades and answers shares its own blind spots.
+
+      - layout: steps
+        title: How far can a model train itself?
+        recall: What limits self-improvement loops according to the chapter?
+        axis: Less human input
+        rows:
+          - {title: RLAIF, text: "Parity with RLHF on summaries: humans preferred each over SFT at 71% and 73%."}
+          - {title: STaR, text: "Rationale bootstrapping reached 72.5% on CommonsenseQA dev, against 60.0% fine-tuned directly."}
+          - {title: Self-rewarding, text: "AlpacaEval win rate rose 9.9%, 15.4%, 20.4%, while answer length grew from 1,092 to 2,552."}
+          - {title: The limit, text: "Prompted to self-correct, a model fell from 52.6% to 41.4%. Training revision gained 4.4 points."}
+        takeaway: AI feedback can match human labels, but loops work best with a checkable answer, and untrained self-correction often makes answers worse.
+        source: notes/04-constitutional-ai.md
+        notes: >-
+          Notice the length caveat on the self-rewarding row: the same hack returns. The self-correction numbers are Gemini 1.5 Flash
+          on MATH, and SCoRe is the method that trained revision and added 4.4 points. Models don't simply get better by being asked.
+
+  - title: Agents as the student
+    summary: The stages · Memorize or generalize · Priors · Data and environments · Reward design · RLVP · Tools
+    notes: >-
+      Now the student has to act: long horizons, real tools, rules that shift. We go back to the treasure hunt and see
+      what a pretrained model changes, then design the data, the environment and the reward for it.
+    slides:
+      - layout: image
+        title: Training an agent adds a second stage to pretraining
+        kicker: The problem
+        image: ../sources/images/li-ai-agents-in-depth-fig8-11.svg
+        caption: SFT then RL, after pretraining (Li, AI Agents in Depth, Fig. 8-11)
+        bullets:
+          - "**SFT** teaches form, so a reward can be computed at all."
+          - "**RL** teaches strategy with no reference answer."
+          - "**RL** often costs far more than SFT."
+        takeaway: SFT establishes a parseable form first, since RL scores the model's own outputs and learns noise if they can't be parsed.
+        source: notes/05-post-training-for-agents.md
+        notes: >-
+          SFT is pretraining on different data, with the same loss and masking to the response. If an output isn't valid JSON
+          or a valid tool call, the reward can't be computed, and RL learns from noise. Tülu 3 is the open recipe: at 8B
+          preference tuning did most of the general lifting and RLVR was a targeted top-up.
+
+      - layout: table
+        title: SFT memorizes, and RL generalizes
+        recall: What did Chu et al. find when rules or cities shifted between train and test?
+        lead: "Chu et al., 2025: same base model and compute; change in test score under shift."
+        header: [Shift from train to test, RL, SFT]
+        widths: [4, 1.6, 1.6]
+        rows:
+          - ["Card rules: J/Q/K 10 to 11/12/13", "+3.5 pp", "-8.1 pp"]
+          - ["Card colour: black to red", "+17.6 pp", "-9.9 pp"]
+          - ["Navigation: absolute to relative", "+11.0 pp", "**-79.5 pp**"]
+          - ["Street views: 16.7% start, 9 new cities", "**77.8%**", "11.1%"]
+        takeaway: Under distribution shift RL re-solves the task and holds up, while SFT applies old answers and degrades, by 79.5 points in one test.
+        source: notes/05-post-training-for-agents.md
+        notes: >-
+          SFT is capped by its demonstrator, and 60-point demos never make a 90-point student. RL's ceiling is higher because it is
+          online, and because verifying is easier than generating. But the Yue et al. results later in the deck will qualify how far
+          that goes. Use SFT for format and RL for behaviour under shift.
+
+      - layout: code
+        title: A pretrained prior turns millions of tries into dozens
+        recall: How does a prior that is right 70% of the time change exploration on an 11-move puzzle?
+        lang: text
+        code: |
+          # 11-move puzzle, chance of a right move per step
+          P(right)=0.25  episodes to first win=4,194,304
+          P(right)=0.50  episodes to first win=2,048
+          P(right)=0.70  episodes to first win=51
+          P(right)=0.90  episodes to first win=3
+
+          # Our Q-learning lab: 0/100 at 1,000 episodes,
+          # 100/100 at 10,000
+        bullets:
+          - "**Q-learning** needs about 10k episodes and retrains if rules change."
+          - "**An LLM agent** won on its first try in 18 moves (Li)."
+        takeaway: A language model starts with useful priors, so its exploration is targeted, whereas a tabular agent must discover everything by chance.
+        source: notes/05-post-training-for-agents.md
+        notes: >-
+          Here is our treasure hunt again. The lab runs in about ten seconds offline and reproduces the jump. The LLM number
+          is from the book, at one to two minutes a game. That is the entire case for doing RL on top of a pretrained model
+          rather than tabula rasa. Try prompts and in-context learning first: Reflexion and ExpeL change behaviour with no weights.
+
+      - layout: image
+        title: Quality and diversity both count
+        recall: How did quality and diversity affect LIMA's 7B fine-tune on 2,000 examples?
+        image: ../sources/images/huyen-ai-engineering-fig8-1.png
+        caption: A 7B model fine-tuned on 2,000 examples, from Zhou et al., via Huyen (2025, Fig. 8-1)
+        bullets:
+          - "**wikiHow** (high quality, not diverse) scored 3.49."
+          - "**Raw Stack Exchange** (diverse, low quality) scored 3.33."
+          - "**Start small:** about 50 well-made examples."
+        takeaway: Data quality and diversity both raise results, so start with about 50 good examples and fix the setup if they show no gain.
+        source: notes/06-data-and-environments.md
+        notes: >-
+          Data is cheap to get wrong. SFT bakes noise into the weights and RL pushes hard toward a biased reward. Check coverage,
+          diversity and label accuracy, and run the curation pipeline: dedup and decontaminate before anything else, because a
+          leaked near-duplicate looks like progress on your eval.
+
+      - layout: compare
+        title: The environment is the practice field
+        recall: Why can a simulated environment hurt, and how do you limit that?
+        emphasis: left
+        left:
+          title: Real or replayed
+          bullets:
+            - Real APIs rate-limit and have side effects
+            - You need a replayable shadow world
+            - "GLM-5: over 10k verifiable SWE environments"
+        right:
+          title: Simulated by a model
+          bullets:
+            - ZeroSearch simulates a search engine
+            - The simulator's knowledge is the ceiling
+            - RL actively hunts for its loopholes
+        takeaway: A distorted environment teaches strategies that die on deployment, so mix simulated rollouts with real ones and recalibrate regularly.
+        source: notes/06-data-and-environments.md
+        notes: >-
+          Building the environment often costs more than the training. GLM-5's self-run 77.8 percent on SWE-bench Verified falls
+          to 42.1 percent on decontaminated SWE-rebench. Order of effort is strong base model, then environment and data, then only
+          after that algorithms and hyperparameters.
+
+      - layout: table
+        title: The form of the reward decides what you can diagnose
+        recall: Which reward forms say where a failed call went wrong?
+        lead: One support call that succeeded, but missed the billing address and named the wrong plan.
+        header: [Form, Output, Diagnostic value]
+        widths: [1.3, 4, 2]
+        rows:
+          - [Scalar, "7.2", None]
+          - [Semi-scalar, "Critique, then 6.5", Some]
+          - [Vector, "Query 9, info collection **6**, fluency 8", Points to the phase]
+          - [Generative, "Sampled analysis, aggregated", Highest]
+        highlight: [2]
+        takeaway: A scalar reward says only how good a call was, while vector or generative rewards point to which phase went wrong.
+        source: notes/07-reward-design-and-tool-calling.md
+        notes: >-
+          Density is the other axis. Sparse rewards stall on open-ended tasks: Pine AI's phone agent fails a hundred calls before it
+          stumbles on the required details. A unit-test reward is only as strict as its tests. AlphaCode's authors found
+          30 percent of HumanEval passes and 60 percent of APPS passes were wrong.
+
+      - layout: code
+        title: Check first, then rank, so persuasion can't buy reward
+        recall: Why does the gate-then-rank reward give a persuasive wrong answer zero?
+        lang: python
+        code: |
+          def final_reward(correct, judge, a=0.7, b=0.3):
+              return correct * (a + b * judge)
+
+          # correct, tidy        judge=0.9  reward=0.97
+          # correct, rambling    judge=0.2  reward=0.76
+          # wrong, persuasive    judge=1.0  reward=0.00
+        bullets:
+          - "**RULER:** ask a judge to rank, not to grade."
+          - "**ART:** gate on correctness, then rank on quality."
+        takeaway: Gate a learned judge behind a deterministic check, so wrong answers earn zero however persuasive they are.
+        source: notes/07-reward-design-and-tool-calling.md
+        notes: >-
+          A judge asked for an absolute score is noisy and badly calibrated, so ranking helps. A judge alone can be fooled by content
+          free answers, which is why the gate comes first. The third framework, rLLM, trains whole workflows.
+
+      - layout: image
+        title: "RLVP: reward the outcome, penalize the path"
+        recall: Why do verifiable process penalties restore GRPO's gradient on all-fail groups?
+        image: ../sources/images/li-ai-agents-in-depth-fig8-13.svg
+        caption: Sixteen rollouts on one SWE-bench task, verified and compared (Li, Fig. 8-13)
+        bullets:
+          - "**Asymmetry:** was this action bad? is cheap; is this progress? is not."
+          - "**Terminal-Bench:** violations fell from 3.71 to 0.66, success unchanged."
+          - "**Chained file ops:** all-fail groups fell from 65% to 8%."
+        takeaway: Environments can cheaply verify that an action was bad, so penalties restore within-group variance even when every rollout fails.
+        source: notes/07-reward-design-and-tool-calling.md
+        notes: >-
+          This is what fixes the zero rows from the GRPO slide. Even failing rollouts fail differently. Results are from Li and Shi,
+          2026. RLVR verifies outcomes and RLVP verifies the process as well. But keep the outcome reward: with penalties alone,
+          doing nothing earns the best score, and the chapter's code shows it scoring zero against minus one for trying.
+
+      - layout: cards
+        title: Rules for training a tool-calling agent
+        recall: Why must environment tokens be masked out of the RL loss?
+        cards:
+          - {title: Mask the environment, body: "Train the model to call tools, not to predict their output."}
+          - {title: ReTool, body: "Qwen2.5-32B on AIME 2024 went from about 25% to 67.0%. Text-only RL reached 40.0%."}
+          - {title: The cost, body: "RL took about 200× the SFT wall-clock time."}
+          - {title: DAPO, accent: "D4621A", body: "Keeps long CoT exploring: Clip-Higher, token-level loss, dynamic sampling, overlong shaping."}
+          - {title: Dense signals, body: "On-policy distillation gives a teacher's distribution at every student token."}
+        takeaway: Mask tool output from the loss, expect RL to cost far more than SFT, and consider denser signals like distillation when one scalar is too sparse.
+        source: notes/07-reward-design-and-tool-calling.md
+        notes: >-
+          SFT supervises every token and RL gives one bit per episode, which is where the 200 times comes from. ReTool also showed emergent
+          behaviour: code self-correction and tool use moving from late verification to early exploration. When no stronger teacher exists,
+          on-policy self-distillation gives the same model privileged context.
+
+  - title: Reasoning and search
+    summary: DeepSeek-R1 · What RL really adds · pass@k · Search before training
+    notes: >-
+      Math and code bring a reward that needs no labels at all: a checker. That gave us R1. It also raises a harder
+      question about whether RL creates ability or only sharpens it, and whether we need to train at all.
+    slides:
+      - layout: statement
+        title: Can a checker replace the reward model?
+        kicker: The problem
+        statement: "R1-Zero used only rule-based accuracy and format rewards, with no SFT, and took AIME 2024 pass@1 from 15.6% to 71.0%."
+        attribution: DeepSeek-R1, GRPO on DeepSeek-V3-Base; 86.7% with majority voting over 64
+        takeaway: With a verifiable reward, R1-Zero showed that RL alone can raise AIME pass@1 from 15.6% to 71.0% on a strong base model.
+        source: notes/08-reasoning-rl-deepseek-r1.md
+        notes: >-
+          DeepSeek chose rules over a neural reward model to reduce hacking. The aha moment everyone quotes is one qualitative transcript.
+          Model size still matters: on Qwen-32B over 10K steps of R1-Zero-style RL reached 47.0, while SFT on 800k R1 samples reached 72.6.
+
+      - layout: image
+        title: RLVR sharpens more than it creates
+        recall: What did Yue et al. find about what RLVR adds at large k?
+        image: ../sources/images/yue-rlvr-reasoning-boundary-fig1.png
+        caption: RLVR concentrates sampling on paths the base model already had (Yue et al., 2025, Fig. 1)
+        bullets:
+          - "**At k=1** RL wins, since mass moves onto rewarded paths."
+          - "**At large k** the base model catches up."
+          - "**Qwen2.5-7B, AIME24, k=1024:** 13.3% solved only by base, 0.0% only by RL."
+        takeaway: RLVR raises pass@1 by concentrating on paths the base already has, and at large k the base can solve more problems.
+        source: notes/08-reasoning-rl-deepseek-r1.md
+        notes: >-
+          This is the qualification on SFT memorizes, RL generalizes. Sharpening is still valuable, since people deploy at k equals one. Also
+          weigh the Small data results: LIMO took Qwen2.5-32B from 16.5 to 63.3 percent with about 800 traces, while the same data
+          on Qwen1.5-32B-Chat gave 9.2. The knowledge has to be there first.
+
+      - layout: code
+        title: Read the whole pass@k curve, not one number
+        recall: Why can pass@1 mislead about whether RL created a skill?
+        lang: text
+        code: |
+          # simulated: RL sharpens, base keeps more breadth
+              k   base    RL
+              1  0.139  0.267
+              4  0.322  0.519
+             16  0.519  0.659
+             64  0.660  0.700
+            256  0.745  0.712
+           1024  0.798  0.716
+        bullets:
+          - "**Small k:** RL wins by concentrating mass."
+          - "**Large k:** the curves cross."
+          - "**Decide:** one sample served, or a search?"
+        takeaway: The pass@k curve shows whether RL added reach or only sharpened it, which pass@1 alone can't tell you.
+        source: notes/08-reasoning-rl-deepseek-r1.md
+        notes: >-
+          This example is a simulation built to show the shape, so the numbers are not any model's. It leads straight to the next question.
+          If the base model reaches the answer in forty samples, could you skip training and pick the right one?
+
+      - layout: code
+        title: Sampling is limited by the selector
+        recall: What limits best-of-N, and how did vote and checker compare with perfect selection?
+        lang: text
+        code: |
+          # simulated; one sample scores 0.499
+            N   vote   flawed-checker  pass@N (perfect)
+            5  0.537   0.736           0.848
+           10  0.618   0.788           0.928
+           40  0.710   0.800           0.984
+        bullets:
+          - "**pass@k assumes a perfect picker,** which you don't have."
+          - "**Voting** needs answers you can compare."
+          - "**A flawed verifier** finds its false positives faster."
+        takeaway: More samples help only if you can pick the good one, so a flawed checker falls well short of pass@k at the same N.
+        source: notes/09-test-time-search-and-training.md
+        notes: >-
+          Measure the selection bottleneck before paying for samples. On real data, self-consistency took GSM8K to 74.4 from 56.5 percent
+          for greedy CoT. Aggregators such as AggLM can pick a minority answer, or combine partial work, which a vote can't.
+
+      - layout: flow
+        title: Search and training feed each other
+        recall: How does rStar-Math turn search into training data?
+        loop: true
+        steps:
+          - {label: Search, sub: MCTS writes solutions}
+          - {label: Verify, sub: code or a proof}
+          - {label: Train, sub: policy and reward}
+          - {label: Search better, sub: next round}
+        takeaway: Search trajectories are rollouts, so a verified search can generate the training data that makes the next search stronger.
+        source: notes/09-test-time-search-and-training.md
+        notes: >-
+          rStar-Math ran this for four rounds. MATH rose from 58.8 to 89.4 percent with search over eight trajectories, but the small
+          model alone, greedily, scores 78.4 percent, below the base instruct model's 82.6. Most of the result is search. In the other direction,
+          an early o3 scored 395.64 on IOI 2024 above the gold line with little more than sampling, where o1-ioi needed a hand-built pipeline for 213.
+
+  - title: Running it for real
+    summary: Comparing runs · Production · Multi-agent RL · RL in RAG
+    notes: >-
+      The first six parts assumed a healthy training run. Most of RL engineering is making sure you have one, and
+      deciding whether to learn live at all, in the field and when several agents or a retriever are involved.
+    slides:
+      - layout: statement
+        title: Is that result real, or was it one lucky seed?
+        kicker: The problem
+        statement: "One training run is one sample. RL results swing widely from run to run, and bugs hide because rewards arrive late and noise masks errors."
+        attribution: Colas et al. needed at least 15 reruns per algorithm to separate SAC from TD3
+        takeaway: A single RL run is one noisy sample, so comparisons need many seeds, and Colas et al. needed 15 for SAC against TD3.
+        source: notes/10-engineering-rl-systems.md
+        notes: >-
+          Reward engineering is arguably the most important task in RL, in Winder's words, but even a good reward can be misjudged with a bad
+          evaluation. Before any deep model, picture a random policy acting in the environment and check a simple baseline.
+
+      - layout: code
+        title: Two identical agents can land far apart
+        recall: How large a gap appears between identical agents with 3, 5 and 15 seeds?
+        lang: text
+        code: |
+          # same agent in both arms, simulated
+           3 seeds: typical gap 13.7, |t|>2.1 in 10.2%
+           5 seeds: typical gap 10.5, |t|>2.1 in  6.0%
+          15 seeds: typical gap  6.3, |t|>2.1 in  4.5%
+        bullets:
+          - "**Publish** per-seed curves, not a mean."
+          - "**Assert** tensor shapes: a batched reward can broadcast silently."
+          - "**Keep** a metric of the true goal beside the reward."
+        takeaway: Identical agents show a typical 14-point gap at three seeds, so a small win on few seeds usually proves nothing.
+        source: notes/10-engineering-rl-systems.md
+        notes: >-
+          This is a simulation in the chapter. Notice that the false positive rate is double at three seeds. The chapter has a shape checker
+          because a batched reward against a scalar value trains with no error and no warning.
+
+      - layout: steps
+        title: Deploying a policy means staying close to never
+        recall: How should you roll out a new RL policy and why stay near never updating live?
+        axis: More exposure
+        rows:
+          - {title: Shadow, text: "Tests decisions at no risk, but a hidden agent can't explore: its actions never happen."}
+          - {title: Canary, text: "Keep stickiness, so one user stays on one policy for a whole trajectory."}
+          - {title: Bandit A/B, text: "Shifts traffic toward the winner automatically."}
+          - {title: Continuous learning, text: "Riskiest. Treat every policy update as a release, with a rollback."}
+        takeaway: Treat each policy update as an immutable release with canary or shadow stages, and learn live only when the problem requires it.
+        source: notes/10-engineering-rl-systems.md
+        notes: >-
+          Winder argues for staying as near to never as your problem allows. Safe RL remains open: constraints, penalties, filters and formal
+          methods all fall short. RL also has a larger attack surface than ordinary ML, because rewards, observations and replay buffers can
+          be poisoned. Delayed rewards drive the architecture: state changes get a dedicated log.
+
+      - layout: table
+        title: Several classic beliefs have dated
+        recall: Which 2020 views about RL no longer hold for LLMs?
+        header: [2020 view, 2025-26 LLM RL]
+        widths: [1, 1]
+        rows:
+          - ["Most top algorithms are off-policy", "PPO and GRPO are on-policy; replay is rare"]
+          - ["Behavior cloning is unpopular", "Pretraining plus SFT is behavior cloning, and comes first"]
+          - ["A learned critic is the baseline", "GRPO and RLOO use group statistics"]
+          - ["Offline is the big open problem", "Partly solved for preferences; online still wins for reasoning"]
+        takeaway: LLM RL reversed classic advice because a pretrained model changes the problem, making behaviour cloning the first step and critics optional.
+        source: notes/10-engineering-rl-systems.md
+        notes: >-
+          The textbooks stay valuable for vocabulary and intuition. Winder wrote in 2020, and our notes flag where the advice has moved. Inverse
+          RL has a counterpart too: a learned reward model is doing the same job.
+
+      - layout: flow
+        title: Train with everything, deploy with local views
+        recall: What does centralized training with decentralized execution mean?
+        steps:
+          - {label: Non-stationary, sub: others keep learning}
+          - {label: Central critic, sub: sees all in training}
+          - {label: Local actors, sub: run alone in production}
+        takeaway: CTDE tackles non-stationarity by giving critics global information during training while each actor acts on local observations at deployment.
+        source: notes/11-multi-agent-and-rag-rl.md
+        notes: >-
+          Each agent is part of every other agent's environment, and all of them are learning at once. In the chapter's matrix game, independent
+          Q-learners never found the optimum, with a mean payoff of 5.12, while hysteretic learners reached 11.00 in every run. QMIX factorizes value
+          for cooperative tasks and MADDPG uses a critic over all actions. If one agent plus tools would do, don't take this on.
+
+      - layout: table
+        title: In RAG, RL belongs at the decision points
+        recall: What actions and rewards does RL use at each RAG decision point?
+        header: [Sub-task, Action, Reward]
+        widths: [2, 2.6, 2.6]
+        rows:
+          - [Query rewriting, Rewritten variants, "NDCG, recall@k"]
+          - [Evidence selection, Rerank passages, "Answer F1, faithfulness"]
+          - [Continue or stop, Stop or retrieve, Accuracy minus latency]
+          - [Tool use, "Search, click, synthesize", Preference or completion]
+        takeaway: Apply RL in RAG where decisions chain and reward arrives late, and tie that reward to the answer rather than to retrieval metrics.
+        source: notes/11-multi-agent-and-rag-rl.md
+        notes: >-
+          WebGPT is the classic: there, RL added nothing on top of best-of-n rerank and behaviour cloning did most of the work. Recall can rise while
+          answers get worse, and a simple router is cheaper to debug. Use RL when you can score new behaviour online, DPO when you have pairs.
+
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb for RL and alignment
+        recall: What are the rules of thumb for RL and alignment?
+        cards:
+          - {title: Words first, body: "State, action, reward, policy, value. Every paper assumes them."}
+          - {title: Proxy, body: "A reward model is a proxy. Keep a KL leash and a held-out score."}
+          - {title: Optimizer, body: "DPO for pairs. GRPO or PPO when a checker can score online."}
+          - {title: Fine-tuning, body: "Form, not facts. Try prompts and retrieval first."}
+          - {title: Agents, body: "Gate judges, reward outcome, penalize path, mask tool output."}
+          - {title: Evidence, accent: "D4621A", body: "Read pass@k, try search, and compare across many seeds."}
+        takeaway: Every method here is only as good as its reward, so ask what the score is and how the model could game it.
+        source: notes/05-post-training-for-agents.md
+        notes: >-
+          If you keep one sentence from today, it is this: the reward signal is the product. Our treasure hunt agent could win
+          because its score was honest. Ask the same of every model you train or buy.
+
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillars and lab come after RL and alignment?
+        bullets:
+          - "**Run the lab:** `practice/01-q-learning-treasure-hunt`, offline, in about ten seconds."
+          - "**06 Observability:** the production signals a reward needs."
+          - "**07 Agentic applications:** systems these methods train."
+          - "**Read:** Sutton & Barto; Lambert's RLHF book; Li, ch. 8."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: The reward signal is the product. Ask how it could be gamed before you train.
+        takeaway: Run the lab to see reward at work, then take these signals into observability and applications.
+        source: notes/00-rl-in-plain-language.md
+        notes: >-
+          The lab takes ten seconds and makes the first claim of the deck concrete. Then observability tells you what signals a real system can
+          actually give you as a reward, and applications shows the systems themselves.

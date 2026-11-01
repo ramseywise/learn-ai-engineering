@@ -16,6 +16,8 @@ cleaned: 2026-11-01
 
 > What goes in a prompt, in what order, and in what kind of document. The structural note — techniques that build on this are in [03-core-techniques](03-core-techniques.md).
 
+A prompt is a document with a budget, and most bad prompts fail on what was put in it and where, not on wording. Without a structure, the key fact lands in the middle where models use it least, irrelevant context steers the answer, and the model has no clear place to begin or stop.
+
 ---
 
 ## The application loop

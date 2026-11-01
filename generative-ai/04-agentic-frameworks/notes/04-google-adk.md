@@ -132,7 +132,7 @@ LlmCallsLimitExceededError -> Max number of llm calls limit of `5` exceeded
 
 ## State: three scopes and a template
 
-A tool that declares a `tool_context` parameter gets access to session state. ADK hides that parameter from the model's schema, so it cannot be spoofed by a tool argument. State keys use prefixes for scope, and an agent's instruction can interpolate state with `{key}`, which is how pipelines pass data without touching the transcript. `output_key` saves the agent's final text to state.
+A tool that declares a `tool_context` parameter gets access to session state. ADK leaves that parameter out of the schema the model sees: for a tool `read_source(source_id, tool_context)`, the generated declaration lists only `source_id`. State keys use prefixes for scope, and an agent's instruction can interpolate state with `{key}`, which is how pipelines pass data without touching the transcript. `output_key` saves the agent's text from the turn to state, and the printout below shows a catch in the word "text".
 
 ```python
 from google.adk.sessions import InMemorySessionService
@@ -177,7 +177,9 @@ two {'last_answer': 'I need sources before I can ', 'sources_read': ['furgale-20
 | `app:` | Every user of this app | A shared feature flag |
 | `temp:` | This invocation only, never stored | `temp:last_id` above, absent from both printouts |
 
-The `{audience?}` trailing `?` makes the variable optional. Without it, a missing key raises at run time, which is usually what you want for required context.
+Look at `last_answer`. It starts `I need sources before I can`, which is the model's narration before its first tool call and not its answer. At 2.13.0 `output_key` concatenated every piece of model text from the turn, thoughts included. The full value in this run was `I need sources before I can answer.furgale-2026 looks relevant.wang-2025 looks relevant.Requiring a validated...`. A later step that interpolates `{last_answer}` inherits all of that, so either tell the model not to narrate or read the final response from the events. A `Workflow` node behaves differently, as the exercise at the end of this chapter shows.
+
+The `{audience?}` trailing `?` makes the variable optional. Without it, a missing key raises `KeyError: Context variable not found`, which is usually what you want for required context.
 
 ---
 
@@ -389,7 +391,7 @@ trajectory matched
 wrong expectation fails: Following are all the test failures. If you looking to get more detail
 ```
 
-`AgentEvaluator.evaluate` is an async call that takes the module path and a file or folder. It raises `AssertionError` on failure, so it fits directly into a pytest test. `adk test` runs such files under pytest, `adk eval` runs eval sets from the command line, and `adk web` adds a browser UI for building cases from a live session. Those three were checked to exist on the CLI (`adk --help`), and the UI was not exercised here. [Dibia et al. (EMNLP 2024 System Demonstrations)](https://aclanthology.org/2024.emnlp-demo.8/) describe why that kind of tool earns its keep: AutoGen Studio drew over 200K installs in five months, and its authors found the debugging view and profiler central to how people worked. They also say plainly that such a tool is not production-ready, and list offline evaluation as future work, the part ADK ships.
+`AgentEvaluator.evaluate` is an async call that takes the module path and a file or folder. It raises `AssertionError` on failure, so it fits directly into a pytest test. `adk test` runs such files under pytest, `adk eval` runs eval sets from the command line, and `adk web` adds a browser UI for building cases from a live session. Those three were checked to exist on the CLI (`adk --help`), and the UI was not exercised here. [Dibia et al. (EMNLP 2024 System Demonstrations)](https://aclanthology.org/2024.emnlp-demo.8/) describe why that kind of tool earns its keep: AutoGen Studio drew over 200K installs in five months, its authors name debugging and sensemaking among their four design patterns, and they built a profiler that reports messages, tokens and cost, and tool success. They also say plainly that such a tool is not production-ready, and list offline evaluation as future work, the part ADK ships.
 
 ### Metrics at 2.13.0
 
@@ -420,7 +422,7 @@ The criteria file can weight several together:
 }
 ```
 
-That second config was not run, because it needs a judge model. The trajectory check is what to reach for first, for the reason the Wang loop study in [note 06](06-framework-selection.md#what-the-evidence-says) makes clear: a looping agent shows up in the trajectory long before it shows up in a score on its final answer. The earlier version of this note also listed Vertex pointwise, pairwise and AutoSxS managed evaluation as reachable through ADK. I could not confirm that from the 2.13.0 package beyond its Vertex facade for the metrics above, so check [adk.dev](https://adk.dev/evaluate/) before relying on it.
+That second config was not run, because it needs a judge model. The trajectory check is what to reach for first, for the reason the Wang loop study in [note 06](06-framework-selection.md#what-the-evidence-says) makes clear: a looping agent shows up in the trajectory long before it shows up in a score on its final answer. The earlier version of this note also listed Vertex pointwise, pairwise and AutoSxS managed evaluation as reachable through ADK. That could not be confirmed from the 2.13.0 package beyond its Vertex facade for the metrics above, so check [adk.dev](https://adk.dev/evaluate/) before relying on it.
 
 ---
 
@@ -459,9 +461,11 @@ The ADK wrapper uses the plain Messages API, so the refusal fallback beta from [
 |---|---|---|
 | Following a tutorial that uses `LoopAgent` | It runs, with a deprecation warning, and will break later | Use `Workflow` unless you need the pipeline as a sub-agent |
 | `Runner(callbacks=[...])` from old snippets | `TypeError` | `Runner(plugins=[...])`, or callbacks on the `LlmAgent` |
-| `AgentEvaluator(agent=..., eval_config=...)` from old snippets | It is a static helper, not an object you construct | `await AgentEvaluator.evaluate(module, path)` |
+| `AgentEvaluator(agent=..., eval_config=...)` from old snippets | `TypeError: AgentEvaluator() takes no arguments`. It is a static helper | `await AgentEvaluator.evaluate(module, path)` |
 | Missing the eval extra | Import errors on the evaluator | Install `google-adk[eval]` |
-| Forgetting `?` in `{key?}` | A missing optional key raises during the run | Use `?` for optional, keep it off for required keys |
+| Forgetting `?` in `{key?}` | A missing optional key raises `KeyError: Context variable not found` during the run | Use `?` for optional, keep it off for required keys |
+| Reading `output_key` as the final answer | Pre-tool narration is stuck to the front of the value | Read the final response event, or use a `Workflow` node, whose next node receives only the final response |
+| `output_schema` on `AnthropicLlm` with no tools | The wrapper's source asks for one schema tool with a forced `tool_choice` unless thinking is on, and forced choice returns 400 on Opus 5.5, Sonnet 5.5 and Fable 5.1 | Turn thinking on, or test this path at your version before relying on it. This path was read in the source and not run against the API |
 | Writing `temp:` state and expecting it next turn | The key is gone | Use a plain key for the session, or `user:` across sessions |
 | Treating `require_confirmation` as a UI | Nothing happens until your code answers the function call | Build the resume path and test both answers, as above |
 | Assuming `InMemoryMemoryService` is semantic | A synonym finds nothing | It matches keywords. Use a retrieval-backed service in production |
@@ -470,15 +474,15 @@ The ADK wrapper uses the plain Messages API, so the refusal fallback beta from [
 
 ## Try it
 
-1. Add a second `output_key` agent to a `Workflow` by making one node an `LlmAgent`. What does the next node receive as `node_input`?
+1. Make one node of the `Workflow` an `LlmAgent` with an `output_key`. What type does the next node receive as `node_input`, and how does it differ from the state value?
 2. Change `tool_trajectory_avg_score` in `eval/test_config.json` to `0.5` and rerun the wrong expectation. Does it pass?
 3. Add `after_tool_callback` to the plugin above so it records each tool's elapsed time. Where would you store that value so it survives the invocation but not the session?
 
 <details>
 <summary>Answers</summary>
 
-1. It receives the previous node's output, for an agent its final response. Print `node_input` to see the exact shape at your version. That habit is the point here, since this API is new.
-2. Run it and read the score. The evaluator compares this run's score to your threshold, so you need the number from the detailed results (`print_detailed_results=True`) before you can pick a threshold on purpose.
+1. At 2.13.0 it receives a `str`, the agent's final response only (`Requiring a validated ...`), while the `output_key` state value also holds the narration from before the tool calls. Print `node_input` at your version, since this API is new.
+2. No. It fails with `Expected 0.5, but got 0.0`. This metric compares the tool sequence as an exact match, so a single missing tool scores 0.0 for the invocation. Lowering the threshold to 0.5 buys nothing here.
 3. On the plugin instance or in `temp:` state for the invocation only. If you need it after the run, put it in the trace ([note 05](05-langsmith.md)) and not in session state, because session state is for the agent.
 
 </details>

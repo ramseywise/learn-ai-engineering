@@ -5,11 +5,13 @@ sources:
   - https://www.promptingguide.ai/agents/function-calling
   - https://www.promptingguide.ai/applications/function_calling
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — Tools and Function Calling
 
 > The prompt-side view of tools: how a tool definition becomes part of the prompt, and how to write one the model uses correctly. Designing the tool surface of a whole agent belongs to [03-harness-engineering/03-tool-design](../../03-harness-engineering/notes/03-tool-design.md).
+
+A chat model cannot look up today's weather or change a thermostat, so without tools it invents the answer or restates your plan. Giving it tools changes what it can do, but each definition is still prompt text, so a vague name, a missing enum or an overlapping pair sends it to the wrong call.
 
 ---
 
@@ -155,4 +157,37 @@ UX that helps (the book's recommendations):
 
 ---
 
-→ Next: [06-chaining-and-workflows.md](06-chaining-and-workflows.md) — composing many prompts into a pipeline.
+## Pitfalls
+
+- **Trusting the prompt to gate actions.** Symptom: "always confirm before booking" works in testing and gets skipped in production. Fix: intercept side-effecting calls in code, and show the exact arguments on an authorization card.
+- **Exposing an argument the app already knows.** Symptom: calls carrying invented placeholders like `"my-org"` and `"my-repo"`. Fix: remove the argument, or give it a default your code can detect and fill.
+- **Answering one of several parallel calls.** Symptom: the API rejects the next request or the model loses track. Fix: return a `tool` message for every `tool_call_id` before calling again.
+- **Relying on schema constraints the model never sees.** Symptom: arguments that break `minimum`, `pattern` or `format`. On OpenAI's 1106 models those fields didn't reach the internal prompt, and only `enum` and `default` were rendered. Fix: validate in code and return an error that teaches.
+- **Long free-text arguments, especially code.** Symptom: missed escapes and failed JSON parsing that grow with argument length. Fix: keep arguments short, and redesign the tool so it doesn't carry a whole document.
+- **Treating tool results as trusted.** Symptom: a fetched page's instructions get followed. Fix: treat results as untrusted input ([adversarial prompting](10-adversarial-prompting.md#indirect-prompt-injection)).
+- **Pasting a whole web API as tools.** Symptom: wrong tool choice and burned tokens, since every tool definition is prompt text. Fix: a few tools that partition the domain, with a simplified surface.
+
+## Try it
+
+1. Rewrite this definition using the note's rules: `retrieveemail(account_id, folder, query, limit, format, include_html)`, description "Retrieves email". The app already knows the account.
+   <details><summary>Answer</summary>Something like `search_email(query, folder="inbox")`, described as "Search the user's email. Use when the user asks about messages they received. Returns subject, sender and date for up to 20 matches." `account_id` goes, because the app knows it. `limit`, `format` and `include_html` become fixed choices in your code. `folder` gets an `enum`, and the description says when to use it and what comes back.</details>
+2. Add a side-effecting tool to the [tool server lab](../../03-harness-engineering/practice/tool-server-sandbox/README.md), or sketch the change. Where does the approval check go, and what should the model get back if the user declines?
+   <details><summary>Answer</summary>Between parsing the call and running it, in application code, so no prompt wording can skip it. Return a normal tool result saying the user declined, in the tool's own terms. Every call needs a result, and that text lets the model respond sensibly.</details>
+3. Sort each symptom into the note's debugging table and name the fix: (a) `get_weather` is never called for "is it raining?", (b) `search_docs` and `search_kb` get picked at random, (c) `date` arrives as "next Tuesday".
+   <details><summary>Answer</summary>(a) Not called: say when in the description, and check the tool is actually being passed. (b) Wrong tool: remove the overlap, or add a routing rule to the system prompt. (c) Bad argument: add the format and an example to the parameter description, and return "`date` must be YYYY-MM-DD" so it can retry.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Does the model execute tools? | No. It proposes a call as tokens, your code executes it and appends the result, and the loop stops when a reply has no tool calls. |
+| How do tool definitions reach the model on OpenAI, per the book's reconstruction? | As TypeScript-style declarations in a `namespace functions` block appended to the system message. They count against your budget, and a call is just more tokens. |
+| Why TypeScript rather than raw JSON Schema there? | Richer types, natural doc comments, and named arguments, which put each argument's name right before its value and cut mis-assignment. |
+| How would you force structured output with tools? | Define a tool whose parameters are your schema and set `tool_choice` to that tool. The call is the output, and no tool needs to exist. |
+| Should the system prompt or the code enforce confirmation before a booking? | Code. A prompt instruction will eventually be skipped, so let the model request freely and intercept side effects with approval that shows the exact arguments. |
+| Your agent has 40 tools and often picks the wrong one. What do you try first? | Expose only the tools relevant to the conversation's state, merge overlapping ones, sharpen when-to-use descriptions and add a routing rule. Every extra tool is a distractor. |
+| What's a good tool error? | One phrased in the tool's own terms, such as "`date` must be YYYY-MM-DD", so the model can retry correctly. A raw stack trace doesn't help it. |
+
+## Next
+
+[Chaining and workflows](06-chaining-and-workflows.md): one tool loop runs out of strength on multi-step work, so split it into many prompts.

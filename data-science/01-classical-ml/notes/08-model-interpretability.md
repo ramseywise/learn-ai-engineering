@@ -79,7 +79,9 @@ model.fit(X_tr, y_tr, eval_X=X_val, eval_y=y_val, callbacks=[early_stopping(50, 
 print("rounds", model.best_iteration_, "test AUC", round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 4))
 ```
 
-@@A@@
+```text
+rounds 180 test AUC 0.9248
+```
 
 ## Built-in importances, and why not to stop there
 
@@ -90,9 +92,24 @@ gain = pd.Series(model.booster_.feature_importance("gain"), index=X_tr.columns)
 print((gain / gain.sum()).sort_values(ascending=False).round(3).to_string())
 ```
 
-@@B@@
+```text
+relationship      0.278
+capital-gain      0.180
+education-num     0.133
+marital-status    0.087
+age               0.086
+occupation        0.072
+capital-loss      0.052
+hours-per-week    0.038
+noisy_id          0.028
+noise             0.023
+workclass         0.009
+gender            0.007
+native-country    0.005
+race              0.001
+```
 
-@@BP@@
+The two random columns take about 5% of the gain between them and rank above `workclass`, `gender`, `native-country` and `race`. They have no relation to income, so that credit is the model fitting noise in the training set. The ordering of the real columns is also unsafe to quote: `age` is only fifth.
 
 Bias towards columns with many values is a documented property of impurity importance: [doi:10.1186/1471-2105-8-25](https://doi.org/10.1186/1471-2105-8-25) (Strobl et al., BMC Bioinformatics 2007).
 
@@ -109,9 +126,25 @@ imp = pd.DataFrame({"drop": perm.importances_mean, "sd": perm.importances_std}, 
 print(imp.sort_values("drop", ascending=False).round(4).to_string())
 ```
 
-@@C@@
+```text
+drop      sd
+capital-gain    0.0574  0.0020
+age             0.0564  0.0036
+marital-status  0.0276  0.0031
+education-num   0.0241  0.0008
+relationship    0.0231  0.0023
+occupation      0.0155  0.0011
+capital-loss    0.0142  0.0014
+hours-per-week  0.0127  0.0024
+workclass       0.0027  0.0005
+gender          0.0024  0.0004
+native-country  0.0009  0.0004
+race            0.0005  0.0005
+noise           0.0003  0.0002
+noisy_id        0.0002  0.0002
+```
 
-@@CP@@
+The noise columns are now at the bottom, within about one standard deviation of zero. `age` moves from fifth to second and `relationship` from first to fifth. `relationship` and `marital-status` overlap heavily (nearly every `Husband` is `Married-civ-spouse`), so each covers for the other when shuffled, which pulls both down here.
 
 **The correlated-column trap.** If two columns carry the same information, shuffling one does little, since the model reads the other:
 
@@ -125,9 +158,13 @@ print(pd.Series(p2.importances_mean, index=a.columns)[["age", "age_copy"]].round
 print("age without a copy", round(imp.loc["age", "drop"], 4))
 ```
 
-@@D@@
+```text
+age         0.0061
+age_copy    0.0294
+age without a copy 0.0564
+```
 
-@@DP@@ Hooker et al. argue that permuting also forces the model to extrapolate into impossible rows, a 20-year-old who has worked for 40 years, and they recommend methods that condition on the other features or refit ([arXiv:1905.03151](https://arxiv.org/abs/1905.03151), preprint, later in Statistics and Computing).
+Adding a noisy copy cut the importance of `age` by a factor of nine, and the two together now sum to about 0.036, well under the 0.056 it had alone. A reader of this table would conclude age hardly matters. The fix is to group correlated columns and permute them together, or to drop one and refit. Hooker et al. argue that permuting also forces the model to extrapolate into impossible rows, a 20-year-old who has worked for 40 years, and they recommend methods that condition on the other features or refit ([arXiv:1905.03151](https://arxiv.org/abs/1905.03151), preprint, later in Statistics and Computing).
 
 ## Partial dependence and ICE
 
@@ -144,12 +181,18 @@ print("age            ", grid)
 print("average P(high)", pd_age["average"][0].round(3))
 print("ICE 10th pct   ", np.percentile(ice, 10, axis=0).round(3))
 print("ICE 90th pct   ", np.percentile(ice, 90, axis=0).round(3))
-print("observed rate  ", [round(y_test[X_test.age.between(g - 3, g + 3)].mean(), 3) for g in grid])
+print("observed rate  ", np.array([y_test[X_test.age.between(g - 3, g + 3)].mean() for g in grid]).round(3))
 ```
 
-@@E@@
+```text
+age             [19. 26. 32. 38. 44. 51. 57. 63.]
+average P(high) [0.031 0.147 0.202 0.239 0.26  0.281 0.271 0.248]
+ICE 10th pct    [0.001 0.004 0.005 0.007 0.009 0.013 0.011 0.011]
+ICE 90th pct    [0.044 0.493 0.694 0.76  0.77  0.781 0.778 0.746]
+observed rate   [0.005 0.098 0.211 0.318 0.363 0.394 0.351 0.267]
+```
 
-@@EP@@
+The average rises steeply to about 0.28 at age 51 and then eases. ICE shows what that hides: at age 51 one row in ten is still under 0.013 and one row in ten is at 0.78, so age matters only to rows whose other features make them plausible earners. The final line is not the same thing as the curve: observed rates climb higher (0.394 at 51) because older people in the data also differ in other ways, while the partial dependence holds the others fixed.
 
 Two limits. **It is not causal**: the curve shows what the model does, and a model trained on observational data has not learned what happens if you age someone. **It ignores correlation**: setting `age=20` on a row with `education-num=16` and `marital-status=Widowed` asks the model about a person who hardly exists. Where this matters, plot only over observed combinations or use accumulated local effects.
 
@@ -173,9 +216,21 @@ print("local accuracy gap:", round(float(np.abs(values.sum(1) + base - raw).max(
 print((pd.Series(np.abs(values).mean(0), index=Xe.columns)).sort_values(ascending=False).round(3).head(10).to_string())
 ```
 
-@@F@@
+```text
+local accuracy gap: 0.0
+age               0.827
+marital-status    0.724
+relationship      0.641
+capital-gain      0.537
+education-num     0.440
+occupation        0.368
+hours-per-week    0.269
+capital-loss      0.135
+gender            0.097
+noisy_id          0.065
+```
 
-@@FP@@
+A gap of zero is local accuracy in action: for every one of the 2,000 rows, the base value plus the SHAP numbers equals the model's raw score. The global ranking is mean absolute SHAP, and it is a different statistic from permutation importance. `capital-gain` is first by permutation but only fourth here, because it is zero for most people: SHAP measures typical movement per row, permutation measures what breaks in the ranking. The noise column `noisy_id` gets 0.065 here, small but not zero, since SHAP describes the model as fitted and the model did fit some noise.
 
 Now one row. The numbers are in log-odds, and they add up:
 
@@ -187,9 +242,19 @@ print("base value", round(float(base), 3), "+ sum of SHAP", round(float(values[i
 print(pd.DataFrame({"value": Xe.iloc[i][row.index[:6]].astype(str), "shap": row.values[:6].round(3)}).to_string())
 ```
 
-@@G@@
+```text
+actual income >50K: 0 | P(>50K) = 0.543
+base value -2.387 + sum of SHAP 2.559 = 0.172
+                             value   shap
+education-num                   13  0.828
+relationship               Husband  0.753
+marital-status  Married-civ-spouse  0.653
+occupation          Prof-specialty  0.452
+age                             66  0.347
+capital-gain                     0 -0.253
+```
 
-@@GP@@
+This is the first false positive in the sample: a 66-year-old married professional with a degree, predicted as a high earner at 0.543, who in fact is not. The average person starts at -2.387 log-odds (about 8% after the sigmoid, and that is an average of log-odds, not the base rate). The degree, the marriage and the occupation each push up, and the lack of capital gains pushes down. Now the reviewer has something to argue with: whether a 66-year-old is plausibly working full time is a question the features do not ask.
 
 **Caveats.** With correlated features, Shapley values split credit in ways that depend on the algorithm. Lundberg and Lee's Kernel SHAP assumes feature independence when it fills in missing features. SHAP's additive numbers look causal and aren't: a large value for `marital-status` says the model uses it, not that a wedding raises income. Compare global SHAP with permutation importance as a sanity check, since they answer different questions but should not wildly disagree.
 
@@ -233,8 +298,8 @@ So: test your explanation on the person it is for. Answer the contrastive questi
 <details>
 <summary>Answers</summary>
 
-1. Permutation importance of each copy falls, because the model can read the other. SHAP splits the credit between them, so each gets a share and the sum stays about the same as before.
-2. Yes, mildly: hours help more in mid-career than at the extremes of age. One-way curves average that away.
+1. With 300 trees and noise of sd 1, the model barely uses the copy. Permutation moves from 0.0627 to 0.0687 for the original and 0.0019 for the copy. Mean |SHAP| moves from 0.661 to 0.627 and 0.103. Compare `age`, where the copy took most of the credit: how trees divide credit depends on which column the splitter happens to prefer, so neither tool promises an even split.
+2. Yes. Going from 15 to 60 hours adds about 0.016 at age 20 (0.014 to 0.030) and about 0.158 at age 52 (0.144 to 0.302), on a 600-row sample with `age` and `hours-per-week` cast to float. Pass `features=("age", "hours-per-week")` to `partial_dependence`.
 3. Features must be on a comparable scale, so standardise numeric columns first. Even then a coefficient is conditional on all the others and doesn't include non-linear effects.
 4. Contrastive: people ask why this outcome and not another. A counterfactual answers exactly that, at the cost of choosing among many possible changes.
 

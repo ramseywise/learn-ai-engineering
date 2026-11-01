@@ -382,7 +382,7 @@ def triage_router(state: State) -> Command[Literal["response_agent", "__end__"]]
 
 `Command(goto=..., update=...)` lets a node choose its successor and write state in one return, instead of a separate conditional-edge function. The gate in [note 02](02-agentic-search-persistence-streaming.md#l5--human-in-the-loop) uses the same return shape, offline.
 
-On Claude, `with_structured_output` needs care: langchain's tool-calling mode can force a tool, and a forced `tool_choice` returns a 400 on Opus 5.5, Sonnet 5.5 and Fable 5.1. See [note 07](07-lcel-composition-in-practice.md) for what to do instead.
+On Claude, `with_structured_output` needs care, because a forced `tool_choice` returns a 400 on Opus 5.5, Sonnet 5.5 and Fable 5.1. See [note 07](07-lcel-composition-in-practice.md#three-routes-to-structured-output) for how langchain-anthropic handles that and which method to choose.
 
 ### Namespace map
 

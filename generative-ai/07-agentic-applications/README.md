@@ -7,24 +7,57 @@
 
 ## What it is
 
-Agentic applications are what the earlier pillars build toward: a model, tools, a loop and a deployment that complete a real task without step-by-step human direction. This pillar is deliberately small. It holds built or studied projects, not course material:
+Agentic applications are what the earlier pillars build toward: a model, tools, a loop and a deployment that complete a real task without step-by-step human direction. This pillar holds built and studied projects, not framework reference:
 
 - **A bounded search agent.** Two LangGraph graphs behind FastAPI: a router that decides whether to search, and a plan → search → draft loop that writes a sectioned report.
 - **An open-ended deep-research agent.** A from-scratch tool-calling loop with context compaction, scored on DeepResearch Bench with an LLM judge, then trained with RL.
 - **Real-time multimodal agents.** Voice, computer use and robotics, where latency and perception change the architecture.
+- **A coding agent.** A read, edit, test loop in a sandbox with limits, built here and run end to end against a toy repo.
+- **A data-analysis agent.** Read-only SQL and pandas tools over real datasets, a validator that recomputes each claim, and charts, also built here.
 - **Application patterns.** Where the agent sits in the user's work (chatbot, collaborative editor, ambient background agent), and one engine re-tasked to a new domain by changing only its corpus.
 
-The pillar's question is the same throughout: how much autonomy does the task need, and what does that cost in calls, latency and failure modes?
+## Why it matters
+
+Models get swapped out every few months, and the application decisions stay: how much autonomy to grant, what limits to enforce, what counts as done and who checks it. Most production incidents with agents are failures in those decisions. They are not model failures, and you can only learn to spot them by building and breaking a few agents.
+
+## The story in one paragraph
+
+Start with an agent whose cost is bounded because the graph is fixed. Open the loop to get a research agent that handles open-ended work, and learn the price: context fills up, runs wander, and a report needs a judge that is itself fallible. Add a clock with voice and screens, where every stage eats into a budget people can feel. Then take two applications with a stricter judge. A coding agent has tests, but tests can be gamed, so hold some back. A data agent has numbers that can be recomputed, but a correct number can answer the wrong question, so agree the metric first. Across all of them the question is the same: **what would prove this answer wrong, and who checks?** Finally, place the agent next to a person, because a confirmation they cannot evaluate protects nothing.
 
 ---
 
-## Start here
+## Reading order
 
-1. Read [01 — Internet search agent](notes/01-internet-search-agent.md). It shows a fixed graph with a bounded cost.
-2. Read [02 — Deep research bot](notes/02-deep-research-bot.md), then open [practice/deep-research-bot/notebooks/01_simple_agent.ipynb](practice/deep-research-bot/notebooks/01_simple_agent.ipynb). This is the open loop, and how to evaluate it.
-3. Read [03 — Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) for agents whose inputs are audio, screens and sensors.
-4. Read [04 — Application patterns](notes/04-application-patterns.md) before designing the UI around any of these: chatbot, collaborative or ambient.
-5. Look up papers and upstream repos in [references.md](references.md).
+| # | Note | Covers | Source |
+|---|---|---|---|
+| 01 | [Internet search agent](notes/01-internet-search-agent.md) | Router node vs search tool, structured decisions, the plan → section loop, checkpointers, FastAPI serving, code review, a stubbed graph you can run | internet-search-agent (MIT) |
+| 02 | [Deep research bot](notes/02-deep-research-bot.md) | A minimal agent loop, Exa tools, think/plan tools, context compaction, RACE scoring, RL with ART + RULER, how the design has spread into research and science agents | W&B workshop; DeepResearch Bench; 15 papers |
+| 03 | [Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) | Cascaded vs omni vs full-duplex voice, the latency budget, fast/slow thinking, computer use, the GUI-agent literature, VLA robotics, Sim2Real | Li, *AI Agents in Depth* ch. 6; GUI-agent papers |
+| 04 | [A coding agent](notes/04-coding-agent.md) | Reproduce, localize, patch, verify; the agent-computer interface; edits that fail safely; what each sandbox layer stops; held-out tests; supervision | SWE-agent; OpenDev; Shen & Tamkin; [practice/coding-agent](practice/coding-agent/) |
+| 05 | [A data-analysis agent](notes/05-data-analysis-agent.md) | Profiling, read-only access below the level of the text, agreeing the metric, a validator that recomputes, charts, guards | Biswal et al.; Liu et al.; [practice/data-analysis-agent](practice/data-analysis-agent/) |
+| 06 | [Application patterns](notes/06-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); NLU routers; explanations and trust; one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman ch. 9; dialogue and HAI papers |
+
+Note 06 is the synthesis, so read it last, or read it first if you are designing the UI around one of these agents. Papers and upstream repos are in [references.md](references.md).
+
+## Run the labs
+
+Both of the labs built for this pillar run offline, with a scripted stub model in place of an API. Neither needs a key.
+
+```bash
+cd generative-ai/07-agentic-applications/practice/coding-agent
+uv run python run.py                 # all scenarios: fix, overfit, guards, timeout, loop, budget, giveup, escape
+uv run python -m unittest test_agent
+
+cd ../data-analysis-agent
+uv run --with pandas --with matplotlib python run.py
+uv run --with pandas --with matplotlib python -m unittest test_agent
+```
+
+Details are in the [coding-agent](practice/coding-agent/README.md) and [data-analysis-agent](practice/data-analysis-agent/README.md) READMEs. To drive either with Claude, see its `claude_model.py`, which needs `ANTHROPIC_API_KEY` and is marked illustrative.
+
+## The deck
+
+[slides/agentic-applications.pptx](slides/agentic-applications.pptx), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=generative-ai/07-agentic-applications`. It follows the same order as the notes.
 
 ---
 
@@ -38,26 +71,20 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 │   ├── 01-internet-search-agent.md
 │   ├── 02-deep-research-bot.md
 │   ├── 03-real-time-multimodal-agents.md
-│   └── 04-application-patterns.md
+│   ├── 04-coding-agent.md
+│   ├── 05-data-analysis-agent.md
+│   └── 06-application-patterns.md
 ├── practice/
+│   ├── coding-agent/             # built here: read/edit/test agent, toy repo, stub model, offline
+│   ├── data-analysis-agent/      # built here: SQL + pandas agent over tips and Titanic, offline
 │   ├── deep-research-bot/        # W&B workshop agent (Apache-2.0), notebooks 01–03, RACE eval
 │   └── deep_research_bench/      # DeepResearch Bench RACE scorer (Apache-2.0), vendored
+├── slides/                       # deck.yaml, agentic-applications.pptx
 └── sources/
-    ├── images/                   # li-ai-agents-in-depth-fig6-*.svg, context-engineering-multi-agent-systems-fig9-1.png
+    ├── images/                   # li-ai-agents-in-depth-fig6-*.svg, context-engineering-multi-agent-systems-fig9-1.png, lab chart
     ├── context-engineering-multi-agent-systems/   # ch. 9 PDF
-    └── *.pdf                     # dialogue-systems and human-AI interaction papers (queued)
+    └── *.pdf                     # research-agent, GUI-agent, dialogue and human-AI interaction papers
 ```
-
----
-
-## Syllabus
-
-| # | Note | Covers | Source |
-|---|---|---|---|
-| 01 | [Internet search agent](notes/01-internet-search-agent.md) | Router node vs search tool, structured decisions, the plan → section loop, checkpointers, FastAPI serving, code review | internet-search-agent (MIT) |
-| 02 | [Deep research bot](notes/02-deep-research-bot.md) | A minimal agent loop, Exa tools, think/plan tools, context compaction, RACE scoring, RL with ART + RULER, code review | W&B workshop; DeepResearch Bench |
-| 03 | [Real-time multimodal agents](notes/03-real-time-multimodal-agents.md) | Cascaded vs omni vs full-duplex voice, fast/slow thinking, computer use, VLA robotics, Sim2Real | Li, *AI Agents in Depth* ch. 6 |
-| 04 | [Application patterns](notes/04-application-patterns.md) | Chatbot, collaborative editing (merge levels, CRDT/OT, concurrency, undo) and ambient agents (triggers, memory, reflection); one engine re-tasked to marketing, and its grounding failure | Oshin & Campos, *Learning LangChain* ch. 11; Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 |
 
 ---
 
@@ -76,6 +103,11 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 | The agent edits an artifact the user is also editing | Decide the merge level (branch + diff, or real-time CRDT/OT) before building the agent; emit targeted edits, never whole rewrites |
 | A run takes tens of seconds | Make it ambient or batch and deliver a summary; don't put it behind a chat turn |
 | The goal asks for something the corpus doesn't contain | Say so, and label inferred claims separately from cited ones |
+| A coding agent says it is done | Believe the test run and not the sentence. Keep some tests out of its sight, and enforce limits in the tools, since a prompt is only advice |
+| Sandbox limits | Say what each layer stops and what it does not. A path check does not contain a subprocess that can write anywhere |
+| A data agent reports a number | Recompute it from the query, separately from the model's sentence. Agree the metric before the query runs |
+| Data access for an agent | Enforce read-only at the connection and not by inspecting the SQL text |
+| A person must approve an action | Show evidence they can check, such as the diff or the recomputed number. Explanations also persuade when the AI is wrong |
 | Third-party search APIs | Wrap them behind one client interface. Bing Search was retired in 2025 and broke agents that called it directly |
 
 ---
@@ -93,11 +125,11 @@ The pillar's question is the same throughout: how much autonomy does the task ne
 
 ### Books and courses
 
-- W&B *Building Agents from Scratch* workshop → 02. Li, *AI Agents in Depth* ch. 6 → 03. Oshin & Campos, *Learning LangChain* ch. 11 → 04. Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 → 04. Details and upstream links are in [references.md](references.md#books-and-courses).
+- W&B *Building Agents from Scratch* workshop → 02. Li, *AI Agents in Depth* ch. 6 → 03. Oshin & Campos, *Learning LangChain* ch. 11 → 06. Rothman, *Context Engineering for Multi-Agent Systems* ch. 9 → 06. Details and upstream links are in [references.md](references.md#books), and courses are in [Courses and videos](references.md#courses-and-videos).
 
 ### Coursework
 
-Not executed during consolidation. Labels describe what each needs.
+The two labs built here run offline and are covered above. The items below were not executed for these notes, and the labels describe what each one needs.
 
 | Item | Label | Needs |
 |---|---|---|
@@ -110,9 +142,9 @@ Not executed during consolidation. Labels describe what each needs.
 | Li ch. 6 labs ([upstream](https://github.com/bojieli/ai-agent-book)) | needs API key / GPU | Voice labs need ASR/TTS keys; robotics labs need a simulator and GPU |
 | Li ch. 1 and ch. 5 application labs ([ch. 1](https://github.com/bojieli/ai-agent-book/tree/main/chapter1), [ch. 5](https://github.com/bojieli/ai-agent-book/tree/main/chapter5)) | needs API key | LLM and search keys |
 
-### Readings
+### Datasets used by the data-analysis lab
 
-- Queued PDFs in [sources/](sources/): dialogue systems (DIET, Dialogue Transformers, joint intent/slot BERT, slot-filling survey, conversational AI survey) and human-AI interaction design (Amershi guidelines, Bansal, Yang). They are listed in [references.md](references.md#papers) and not yet folded into a note.
+Read in place and not copied: [tips.csv](../../data-analytics/01-python-for-data-analysis/practice/data/tips.csv) and [titanic/train.csv](../../data-analytics/01-python-for-data-analysis/practice/mckinney/datasets/titanic/train.csv).
 
 ### Interview guide
 

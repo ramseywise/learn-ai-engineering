@@ -2,14 +2,33 @@
 origin: notion-export
 sources:
   - own work notes (support-agent RAG project)
+  - https://github.com/pgvector/pgvector
+  - https://docs.pinecone.io/guides/search/hybrid-search
+  - "Li, AI Agents in Depth, ch. 3"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 9 — Vector databases: reference and trade-offs
 
 > Which vector store to use (OpenSearch, DuckDB, Chroma, pgvector, Pinecone, Discovery Engine), what each costs in features, and HNSW vs ANNOY for the index.
 
-Landscape of vector stores relevant to our RAG architecture. Scoped to what appears in our codebase or is a realistic migration target.
+Tallybook has 18 help articles and a Postgres database. A vendor comparison tells the team to buy a dedicated vector database with a distributed HNSW cluster, and they spend a month running it for a corpus that a `for` loop could scan in under a millisecond. A year later another team makes the opposite mistake: their corpus has grown to 30 million chunks, their embedder has moved to 3,072 dimensions, and the Postgres index they relied on will not build at all. Both teams chose a store by reputation, before they had asked three questions: how many vectors, how many dimensions, and does the query need keywords.
+
+This note is the reference for answering them. It compares the stores that appear in our support-agent codebase or are realistic migration targets, then tests the claims that matter on the running example. The comparison is a snapshot and vendors move fast. While writing this note, two entries in our old project table turned out to be out of date, and they are corrected below. Check a vendor's current documentation before you commit.
+
+```mermaid
+flowchart TD
+  A[Start: how many chunks?] -->|under about 100k| B{Already run Postgres?}
+  A -->|millions| E{Need keyword + dense in one query?}
+  B -->|yes| C[pgvector, exact or HNSW]
+  B -->|no| D[DuckDB or Chroma embedded]
+  E -->|yes| F{On a managed cloud RAG stack?}
+  E -->|no, purely semantic| G[Pinecone or any HNSW store]
+  F -->|AWS| H[Bedrock KB over OpenSearch]
+  F -->|GCP| I[Discovery Engine]
+  F -->|no| J[OpenSearch or Elasticsearch]
+```
+*Image Source: Author. The 100k line is a rule of thumb from the scan timings below, not a limit in any product.*
 
 ---
 
@@ -31,14 +50,51 @@ Landscape of vector stores relevant to our RAG architecture. Scoped to what appe
 |---|---|---|---|---|---|---|---|
 | **Type** | Embedded / in-process | Embedded / client-server | PostgreSQL extension | Dedicated search engine | Dedicated search engine | Managed vector DB | Managed RAG service |
 | **Hosting** | Embedded / file | Embedded or cloud | Self-hosted or RDS/Supabase | Self-hosted or AWS AOSS | Self-hosted or Elastic Cloud | SaaS only | AWS managed |
-| **Hybrid search** | Dense only | Dense only | Manual (dense + BM25 plugin) | Native HNSW + BM25 | Native HNSW + BM25 | Dense only (no sparse) | Native hybrid (Bedrock default) |
-| **Max index dim** | No limit (exact) | No limit | 2000 (HNSW) / unlimited exact | 16k (HNSW) | 4096 (ANN) | 20k | Managed |
+| **Hybrid search** | Dense via `vss`; BM25 via `fts`, fused by you | Dense only | Manual (dense + BM25 plugin) | Native HNSW + BM25 | Native HNSW + BM25 | Dense + sparse vectors you supply, or client-side fusion | Native hybrid (Bedrock default) |
+| **Max index dim** | No limit (exact) | No limit | 2,000 `vector`, 4,000 `halfvec` (HNSW and IVFFlat); 16,000 unindexed | 16k (HNSW) | 4096 (ANN) | 20k | Managed |
 | **ANN algorithm** | Flat (exact) or HNSW | HNSW (cosine) | HNSW / IVFFlat | HNSW | HNSW | HNSW + proprietary | Managed |
 | **Reranking** | Manual | Manual | Manual (cross-encoder) | Manual | Manual | Via Cohere plugin | `amazon.rerank-v1:0` built-in |
 | **Metadata filtering** | SQL WHERE | `where={}` dict | SQL WHERE | Query DSL | Query DSL | Filter expressions | Inline filter |
 | **Operational overhead** | Zero | Zero | Low (rides your DB) | High | High | Zero | Zero |
 | **Cost model** | Free | Free / Chroma Cloud | Storage + compute (shared) | Cluster cost | Cluster cost | Per-vector + per-query | Per-query + storage |
 | **Streaming ingest** | COPY or INSERT | `upsert()` | psycopg batch insert | Bulk API | Bulk API | upsert API | Data source sync |
+
+The "Hybrid search" row means what you get from one query with no extra work. Reading it as "cannot do hybrid" is a mistake: you can always run two searches and fuse them with RRF, as in the DuckDB example below. Pinecone's row is a correction to our earlier note: its [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) describes dense and sparse vectors in one index, separate indexes, and client-side fusion.
+
+---
+
+## How far exact search goes
+
+Before picking an index, find out whether you need one. An exact scan has perfect recall, no build step and no parameters. It costs time proportional to the number of vectors times the number of dimensions, and the memory is easy to compute: 4 bytes per float.
+
+```python
+import time
+
+import numpy as np
+
+rng = np.random.default_rng(0)
+print(f"{'vectors':>9} {'dim':>5} {'GB':>6} {'ms/query':>9}")
+for n, dim in [(10_000, 384), (50_000, 384), (200_000, 384), (50_000, 1024), (50_000, 3072)]:
+    docs = rng.normal(size=(n, dim)).astype("float32")
+    docs /= np.linalg.norm(docs, axis=1, keepdims=True)
+    query = docs[0]
+    start = time.perf_counter()
+    for _ in range(5):
+        np.argpartition(-(docs @ query), 5)[:5]
+    ms = (time.perf_counter() - start) / 5 * 1000
+    print(f"{n:>9,} {dim:>5} {n * dim * 4 / 1e9:>6.2f} {ms:>9.1f}")
+```
+
+```text
+  vectors   dim     GB  ms/query
+   10,000   384   0.02       0.2
+   50,000   384   0.08       0.9
+  200,000   384   0.31       3.5
+   50,000  1024   0.20       1.5
+   50,000  3072   0.61       4.0
+```
+
+These are laptop timings on random vectors with NumPy's default threading, so read the shape and not the digits. Time grows with both axes. A corpus under about 100k chunks at a few hundred dimensions answers in single-digit or low double-digit milliseconds, which is small next to a model call that takes seconds. That is why our project's DuckDB backend stays on exact search below 50k chunks. Concurrency is what this table hides: a scan holds a core for its whole duration, so ten simultaneous queries are ten scans.
 
 ---
 
@@ -48,12 +104,12 @@ Landscape of vector stores relevant to our RAG architecture. Scoped to what appe
 Best for: dev environments, prototypes, teams already running Postgres.
 
 Constraints in chat-agent:
-- Gemini `gemini-embedding-2-preview` outputs 3072 dims → exceeds pgvector's 2000-dim HNSW index limit → **exact search only** (no ANN index). This is fine at our dataset size but won't scale to millions of docs.
+- Gemini `gemini-embedding-2-preview` outputs 3072 dims → exceeds the 2,000-dim index limit of pgvector's `vector` type → **exact search only** with the column type we use. This is fine at our dataset size but won't scale to millions of docs. The [pgvector README](https://github.com/pgvector/pgvector) lists `halfvec` at up to 4,000 indexed dimensions, so a half-precision column is the way out if we ever need an index at 3072.
 - Cosine similarity via `<=>` operator.
 - No sparse/BM25 hybrid without a separate plugin (pg_bm25 / ParadeDB).
 
-```python
-# chat-agent pattern: cosine similarity query
+```sql
+-- chat-agent pattern: cosine similarity query
 SELECT text, metadata, 1 - (embedding <=> %s::vector) AS score
 FROM documents
 ORDER BY embedding <=> %s::vector
@@ -70,7 +126,7 @@ How Bedrock uses it:
 - Vector field: `bedrock-knowledge-base-default-vector`.
 - Raw `_score` is NOT exposed by the Bedrock KB API (always returns 0.0 via API; only visible in OpenSearch dashboard).
 
-See [12 — Bedrock knowledge bases](12-bedrock-knowledge-bases.md) for full field mapping, retrieval modes, and env vars.
+See [12 — Managed RAG](12-managed-rag.md#bedrock-knowledge-bases) for full field mapping, retrieval modes, and env vars.
 
 ### Elasticsearch
 Comparable to OpenSearch (shared lineage). Prefer when:
@@ -81,7 +137,7 @@ Comparable to OpenSearch (shared lineage). Prefer when:
 Diverges from OpenSearch post-v7.10 (license split). API-compatible for basic queries; Elastic-specific features (ELSER, Elastic Learned Sparse EncodeR) don't port directly.
 
 ### Pinecone
-Best for: pure-play vector similarity with no operational burden. Weakness: no native BM25 hybrid — dense only. Not a good fit for our multilingual support KB where keyword precision matters (product names, billing codes).
+Best for: vector similarity with no operational burden. Our project ruled it out when we read it as dense only, because keyword precision matters in a multilingual support KB (product names, billing codes). That reading is out of date: the [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) covers dense and sparse vectors in one index, or separate indexes merged on the client. The sparse vectors and the balance between the two signals are yours to produce and tune, which BM25 in OpenSearch does not ask of you. The remaining reasons not to choose it are SaaS-only hosting and per-vector pricing.
 
 ### DuckDB
 Two roles in our codebase:
@@ -102,7 +158,57 @@ CREATE INDEX ON docs USING HNSW (embedding);
 SELECT * FROM docs ORDER BY array_distance(embedding, ?::FLOAT[3072]) LIMIT 5;
 ```
 
-Limitation: no hybrid search (dense only). For keyword-heavy queries (Danish product names, billing codes) retrieval quality is lower than OpenSearch hybrid.
+Limitation: the `vss` extension is dense only. For keyword-heavy queries (Danish product names, billing codes) our retrieval quality was lower than OpenSearch hybrid, which is what you get if you stop there. DuckDB's separate `fts` extension adds BM25, and the two lists fuse in a few lines, so the gap is one of effort and not capability.
+
+Here is the whole thing on Tallybook: exact cosine with a SQL `WHERE`, BM25 from `fts`, and RRF. It needs network access once, for `INSTALL fts`.
+
+```python
+import duckdb
+from ragkit import DOCS, embed, rrf
+
+con = duckdb.connect()
+con.execute("CREATE TABLE docs (id TEXT, area TEXT, audience TEXT, text TEXT, embedding FLOAT[128])")
+vectors = embed([d.full for d in DOCS]).tolist()
+con.executemany("INSERT INTO docs VALUES (?, ?, ?, ?, ?)",
+                [(d.id, d.area, d.audience, d.full, v) for d, v in zip(DOCS, vectors)])
+con.execute("INSTALL fts; LOAD fts;")
+con.execute("PRAGMA create_fts_index('docs', 'id', 'text')")
+
+
+def dense(query: str, k: int = 5) -> list[str]:
+    vec = embed([query])[0].tolist()
+    return [row[0] for row in con.execute(
+        """SELECT id FROM docs WHERE audience = 'public'
+           ORDER BY array_cosine_similarity(embedding, ?::FLOAT[128]) DESC LIMIT ?""",
+        [vec, k]).fetchall()]
+
+
+def keyword(query: str, k: int = 5) -> list[str]:
+    return [row[0] for row in con.execute(
+        """SELECT id FROM (SELECT id, audience, fts_main_docs.match_bm25(id, ?) AS score FROM docs)
+           WHERE score IS NOT NULL AND audience = 'public' ORDER BY score DESC LIMIT ?""",
+        [query, k]).fetchall()]
+
+
+for q in ["what does BANK-112 mean", "can I get my money back"]:
+    print(q)
+    print("  dense  ", dense(q, 3))
+    print("  keyword", keyword(q, 3))
+    print("  hybrid ", rrf([dense(q), keyword(q)])[:3])
+```
+
+```text
+what does BANK-112 mean
+  dense   ['kb-13', 'kb-11', 'kb-06']
+  keyword ['kb-13']
+  hybrid  ['kb-13', 'kb-11', 'kb-06']
+can I get my money back
+  dense   ['kb-04', 'kb-05', 'kb-06']
+  keyword ['kb-03']
+  hybrid  ['kb-03', 'kb-04', 'kb-05']
+```
+
+Keep the permissions predicate in both queries, as [note 07](07-rag-in-production.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
 
 ### ChromaDB
 Optional backend in kb_rag (`pip install chromadb` or `uv sync --extra chroma`). `ChromaVectorIndex` in `rag/datastore/local.py` uses `PersistentClient` with HNSW cosine distance.
@@ -125,7 +231,7 @@ Two modes we use in chat-agent:
 | Agentic RAG | `GcpAgentSearchClient` | Gemini ADK agentic loop (grade + rewrite) |
 | Built-in answer | `GcpAnswerSearchClient` | GCP Discovery Engine (black box) |
 
-See [13 — GCP vs Bedrock](13-gcp-vertex-vs-bedrock.md) for a detailed head-to-head comparison.
+See [12 — Managed RAG](12-managed-rag.md#vertex-vs-bedrock) for a detailed head-to-head comparison.
 
 ---
 
@@ -133,12 +239,14 @@ See [13 — GCP vs Bedrock](13-gcp-vertex-vs-bedrock.md) for a detailed head-to-
 
 | Embedding model | Dim | pgvector HNSW? | Notes |
 |---|---|---|---|
-| `gemini-embedding-2-preview` | 3072 | ❌ (>2000 limit) | Exact search only in pgvector |
-| `amazon.titan-embed-text-v2:0` | 1024 | ✅ | Used by Bedrock KB |
-| `text-embedding-3-large` (OpenAI) | 3072 / 256 (MRL) | ✅ at 256 | Matryoshka allows dimension reduction |
-| `text-embedding-004` (Google) | 768 | ✅ | Cheaper, fits HNSW |
+| `gemini-embedding-2-preview` | 3072 | No with `vector` (over 2,000); yes with `halfvec` | Exact search only in our `vector` setup |
+| `amazon.titan-embed-text-v2:0` | 1024 | Yes | Used by Bedrock KB |
+| `text-embedding-3-large` (OpenAI) | 3072 / 256 (MRL) | Yes at 256 | Matryoshka allows dimension reduction |
+| `text-embedding-004` (Google) | 768 | Yes | Cheaper, fits HNSW |
 
-**The 2000-dim pgvector limit is for HNSW.** IVFFlat has no hard limit but requires `lists` tuning. Exact search (no index) works at any dimension — only trade-off is O(n) scan cost.
+**The dimension limit applies to the index and not to the column.** The [pgvector README](https://github.com/pgvector/pgvector) gives HNSW and IVFFlat the same ceilings: 2,000 for `vector` and 4,000 for `halfvec`. A column can hold 16,000. Our old note said IVFFlat had no hard limit, which was wrong. Exact search (no index) works at any dimension, and the only trade-off is the O(n) scan cost measured above.
+
+The choice has a storage side as well. `halfvec` stores 2 bytes per dimension instead of 4, at a cost in precision, which is the same trade as the int8 quantization in [note 07](07-rag-in-production.md). Changing the embedder means re-embedding the corpus, so this table is worth reading before the first ingest and not after.
 
 ---
 
@@ -153,13 +261,71 @@ The approximate-nearest-neighbour index decides how the store behaves when the c
 
 The insert behaviour is also a governance point: expiring a superseded document in an ANNOY index means rebuilding it, so stale content lingers until the next rebuild ([02-context 04 — context validation](../../../ai-engineering/02-context-engineering/notes/04-retrieval.md#context-validation)). Lab: upstream [3-4 dense-embedding](https://github.com/bojieli/ai-agent-book/tree/main/chapter3/dense-embedding) benchmarks both.
 
+The insert row is easy to verify, and the failure is quieter than you might expect. In the run below, Annoy accepts an item added after the build without complaint, and the item is never found. A second build raises an error, so the only route is a new index from scratch.
+
+```python
+import time
+
+import annoy
+import faiss
+import numpy as np
+
+faiss.omp_set_num_threads(1)
+rng = np.random.default_rng(0)
+centres = rng.normal(size=(100, 128))
+docs = centres[rng.integers(100, size=50_000)] + 0.7 * rng.normal(size=(50_000, 128))
+docs = (docs / np.linalg.norm(docs, axis=1, keepdims=True)).astype("float32")
+queries = centres[rng.integers(100, size=200)] + 0.7 * rng.normal(size=(200, 128))
+queries = (queries / np.linalg.norm(queries, axis=1, keepdims=True)).astype("float32")
+truth = [set(np.argpartition(-(docs @ q), 10)[:10].tolist()) for q in queries]
+recall = lambda found: np.mean([len(set(f) & t) / 10 for f, t in zip(found, truth)])
+
+start = time.perf_counter()
+hnsw = faiss.IndexHNSWFlat(128, 16, faiss.METRIC_INNER_PRODUCT)
+hnsw.add(docs)
+print(f"HNSW  build {time.perf_counter() - start:4.1f}s", end="  ")
+hnsw.hnsw.efSearch = 40
+print(f"recall@10 {recall(hnsw.search(queries, 10)[1].tolist()):.3f}")
+
+start = time.perf_counter()
+trees = annoy.AnnoyIndex(128, "angular")
+for i, v in enumerate(docs):
+    trees.add_item(i, v.tolist())
+trees.build(10, n_jobs=1)
+print(f"Annoy build {time.perf_counter() - start:4.1f}s", end="  ")
+print(f"recall@10 {recall([trees.get_nns_by_vector(q.tolist(), 10) for q in queries]):.3f}")
+
+new = rng.normal(size=128).astype("float32")
+new /= np.linalg.norm(new)
+
+hnsw.add(new[None, :])
+print("HNSW  finds the new item: ", hnsw.search(new[None, :], 1)[1][0, 0] == 50_000)
+
+trees.add_item(50_000, new.tolist())
+print("Annoy finds the new item: ", 50_000 in trees.get_nns_by_vector(new.tolist(), 5))
+try:
+    trees.build(10)
+except Exception as err:
+    print("Annoy second build:       ", err)
+```
+
+```text
+HNSW  build  1.1s  recall@10 0.954
+Annoy build  0.7s  recall@10 0.000
+HNSW  finds the new item:  True
+Annoy finds the new item:  False
+Annoy second build:        You can't build a built index
+```
+
+Annoy's recall depends on its tree count and search budget, and this comparison uses a single setting of each index, so it is not a benchmark. The behaviour at the end is the lesson: a corpus that changes needs an index that takes inserts, or a rebuild schedule you are willing to own.
+
 ---
 
 ## Retrieval quality levers (apply to any store)
 
 1. **Hybrid search** — combine dense (semantic) + sparse (BM25/ELSER) scores. Bedrock does this automatically; pgvector requires ParadeDB or a separate BM25 index.
 2. **Reranking** — cross-encoder as a second pass over top-k candidates. Bedrock: `amazon.rerank-v1:0`. Elsewhere: Cohere Rerank, Jina Reranker, BGE-Reranker.
-3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in the eval platform kb_lg and chat-agent.
+3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in the eval platform kb_lg and chat-agent. See [12](12-managed-rag.md).
 4. **Parent-child chunking** — retrieve at leaf granularity, send parent context to LLM. Bedrock's native hierarchy maps to our `level=0` / `level=1` in `ChunkRecord`.
 5. **CRAG (Corrective RAG)** — grade retrieved docs, rewrite query if below threshold, retry. Used in kb_lg and chat-agent agentic pipeline.
 
@@ -171,10 +337,55 @@ The insert behaviour is also a governance point: expiring a superseded document 
 
 **OpenSearch (Bedrock) → pgvector**: lose hybrid search and managed reranking. Not recommended for production unless you add ParadeDB + a cross-encoder.
 
-**pgvector → Pinecone**: lose keyword/hybrid, gain SaaS zero-ops. Only viable if your queries are purely semantic and corpus is English.
+**pgvector → Pinecone**: gain SaaS zero-ops. Keyword search moves from a Postgres plugin to sparse vectors you generate, or to client-side fusion with a separate keyword index. The old rule here said "only if queries are purely semantic and the corpus is English", which was written when we read Pinecone as dense only. Evaluate the sparse path on your multilingual queries before moving.
 
 **Any → GCP Discovery Engine**: only viable if your stack is already GCP-native. Retrieval is a black box — you lose visibility into score calibration, chunk boundaries, and reranker behaviour. Suitable when you want GCP to own the full RAG loop (as in chat-agent's `:answer` backend).
 
 ---
 
-→ Next: [10-semantic-cache.md](10-semantic-cache.md) — skipping retrieval altogether when a query has been answered before.
+## Pitfalls
+
+- **Choosing by reputation.** Symptom: a cluster to operate for a corpus that fits in memory. Time an exact scan first.
+- **Discovering the dimension limit at index build.** Symptom: `CREATE INDEX` fails on Postgres after you have embedded everything. Check the embedder's dimension against the store before the first ingest.
+- **Reading "dense only" as a dead end.** Symptom: a migration to get hybrid search that two queries and RRF would have given you. Fuse in the application first.
+- **Mixing embedders in one index.** Symptom: quality drops after a model upgrade, with no errors. Vectors from two models are not comparable, so keep a model version on each record and re-embed.
+- **Annoy on a changing corpus.** Symptom: new documents never appear and superseded ones stay. Added items are silently unsearchable, so plan a rebuild or use HNSW.
+- **Comparing raw scores across stores.** Symptom: a threshold that worked on one store passes everything on another. Bedrock KB does not expose its raw `_score` at all, so plan around ranks.
+- **Trusting a comparison table.** Symptom: a decision based on a vendor limit that has moved, as two rows here had. Read the current documentation for the two or three stores you shortlist.
+
+---
+
+## Try it
+
+1. Add `(1_000_000, 384)` to the exact-scan loop and compute the memory by hand first. Is this still a good plan on an 8 GB laptop?
+2. In the DuckDB block, remove `audience = 'public'` from both queries and rerun. Which results change?
+3. Your embedder outputs 1,536 dimensions, you run Postgres, and you want ANN. What column type do you use, and what changes if you upgrade to a 3,072-dimension model?
+
+<details>
+<summary>Answers</summary>
+
+ANSWERS_09
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What three questions pick a store? | How many vectors, how many dimensions, and does a query need keyword and dense together. |
+| When is exact search enough? | When the scan is small next to the model call and concurrency is modest: on this machine, around 100k vectors at a few hundred dimensions. It also has perfect recall and no parameters. |
+| What is pgvector's dimension limit? | HNSW and IVFFlat index up to 2,000 dimensions for `vector` and 4,000 for `halfvec`. A column can hold 16,000, searched exactly. |
+| How do you get hybrid search on a dense-only store? | Run a separate keyword search and fuse the ranked lists with RRF in the application. |
+| HNSW or Annoy for a live corpus? | HNSW, because it takes incremental inserts. Annoy needs a full rebuild, so stale content lingers until the next one. |
+| When is OpenSearch or Elasticsearch worth the operations? | At scale, when one query must combine BM25, dense and metadata, or if you already run a cluster. |
+| What does a managed service cost you? | Visibility: Discovery Engine is a black box, and Bedrock KB hides the raw score. You trade calibration and chunk control for zero operations. |
+| What breaks when you change embedders? | Every vector. Old and new are not comparable, so the corpus must be re-embedded and the index rebuilt. |
+| Name retrieval levers that apply to any store. | Hybrid search, reranking, multi-query, parent-child chunking, CRAG. |
+
+---
+
+## Next
+
+[10 — Semantic cache](10-semantic-cache.md): skipping retrieval altogether when a query has been answered before.

@@ -1,0 +1,539 @@
+# Agentic Applications lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=generative-ai/07-agentic-applications STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running question: what would prove this answer wrong, and who checks?
+deck:
+  title: Agentic Applications
+  subtitle: Models, tools and a loop, doing a real task
+  tagline: |-
+    Open the loop · Add a clock · Add a judge · Check the numbers · Meet the user
+  reference: "Notes: generative-ai/07-agentic-applications"
+  output: agentic-applications.pptx
+  notes: >-
+    This is the payoff of the generative AI layer. We take the loop and the tools and we build things that finish real
+    work. Along the way one question keeps coming back: what would prove this answer wrong, and who checks? We start with
+    an agent whose cost is bounded and end with where the agent sits beside a person.
+
+parts:
+  - title: Open the loop
+    summary: Fixed graph · Router node · Open loop · Compaction · Judging a report
+    notes: >-
+      We start with the choice every application makes first: how much of the path do you fix in advance? A fixed graph
+      has bounded cost. An open loop can handle work you could not outline, and you pay for that in context, in wandering
+      and in having to judge the output.
+    slides:
+      - layout: statement
+        title: How much of the path should the model choose?
+        kicker: The problem
+        statement: "Every step the model chooses is a step you cannot budget, test or replay in advance."
+        attribution: Autonomy is a cost, so buy only as much as the task needs.
+        takeaway: Autonomy is paid for in calls, latency and failure modes, so grant only as much as the task needs.
+        source: notes/01-internet-search-agent.md
+        notes: >-
+          An agent that may do anything is hard to reason about. So the first design decision is not which model but who
+          owns the path. We will see a fixed graph first, and then what we get and what we pay by opening it.
+
+      - layout: flow
+        title: A fixed graph decides first, then works section by section
+        recall: In the internet search agent, what does the workflow graph do, in order, and what bounds its cost?
+        steps:
+          - {label: Router, sub: "one-field decision: search or not"}
+          - {label: Outline, sub: "plan the sections"}
+          - {label: Search and draft, sub: "per section, at most 2 retries"}
+          - {label: Compile, sub: "assemble the report"}
+        bullets:
+          - "**A router node** answers a one-field question, so it can be tested alone."
+          - "**A dedicated call writes the query,** with its own system prompt."
+          - "**The cost is bounded:** one extra classifier call, and failures stay local to a node."
+        takeaway: A router node and a fixed plan keep search bounded and debuggable, for one extra classifier call.
+        source: notes/01-internet-search-agent.md
+        notes: >-
+          The usual design binds a search tool and lets the model call it mid-turn. This project splits that into nodes on
+          purpose. You give up flexibility and get one trace per step, plus state you can inspect per node.
+
+      - layout: code
+        title: The open loop is one while statement
+        recall: What ends the minimal agent loop in the deep-research bot, and what must you add to it for long runs?
+        lang: python
+        code: |-
+          for step in range(MAX_STEPS):
+              reply = model(messages, tools)
+              messages.append(reply)
+              if not reply.tool_calls:
+                  return reply.text
+              for call in reply.tool_calls:
+                  result = run_tool(call)
+                  messages.append(result)
+              compact_if_needed(messages)
+          return force_answer(messages)
+        bullets:
+          - "**It stops** when the model answers in plain text."
+          - "**A step cap** bounds the run."
+          - "**Compaction** starts at 80% of the context."
+        takeaway: An open research agent is a capped loop with compaction, so the code is small and the risks are in the run.
+        source: notes/02-deep-research-bot.md
+        notes: >-
+          The W&B workshop agent is built with no framework at all. Model, tools, append the results, stop on plain text.
+          Then add the two things long runs need: a cap so it ends, and compaction so it fits. The notes run a stubbed version
+          of this with real output.
+
+      - layout: table
+        title: Read each new research agent by asking which part it changed
+        recall: What did TTD-DR, Open Deep Search and SFR-DeepResearch each change about the loop, and how far do you trust the numbers?
+        header: [Part changed, Paper, "Reported, in the authors' own setup"]
+        widths: [2.2, 3, 6.2]
+        rows:
+          - [Plan shape, "TTD-DR (2025)", "Draft first and revise; 69.1% and 74.5% win rates against OpenAI Deep Research"]
+          - [Retrieval, "Open Deep Search (2025)", "DeepSeek-R1 on FRAMES: 30.1% alone, 75.3% with the tool"]
+          - [Interleaving, "WebThinker (NeurIPS 2025)", "Think, search and draft mixed, not in fixed phases"]
+          - [Training, "SFR-DeepResearch (2025)", "RL on synthetic data; up to 28.7% on Humanity's Last Exam"]
+          - [Whole span, "CodeScientist (Findings of ACL 2025)", "19 candidate discoveries; 6 judged sound and incrementally novel"]
+        takeaway: New research agents mostly change one part of the same loop, and CodeScientist shows how far raw output is from verified results.
+        source: notes/02-deep-research-bot.md
+        notes: >-
+          Huang et al.'s survey gives the map: workflow, planning, retrieval and tuning. CodeScientist is the one to remember
+          because its figures survived code review and replication, and they are small.
+
+      - layout: compare
+        title: A research report has no test suite, so you need a judge
+        recall: How does RACE score a report, and why is an LLM judge in the training loop risky?
+        emphasis: right
+        left:
+          title: One judge, one read
+          bullets:
+            - Scores vary from run to run
+            - No reference to compare against
+            - Easy to prefer length
+          tag: Noise that looks like a score
+        right:
+          title: RACE, relative to a reference
+          bullets:
+            - Task-specific weighted criteria
+            - Scored against a reference report
+            - Sample the judge several times
+          tag: Still fallible, so hold the training target apart
+        takeaway: Judge a report relative to a reference on weighted criteria, and remember that a judge you train against becomes a target.
+        source: notes/02-deep-research-bot.md
+        notes: >-
+          DeepResearch Bench has 100 PhD-level tasks with reference reports. DR Tulu's highest-reward run did worse downstream,
+          which is the warning: a rubric you optimize against stops measuring what it measured. That closes the open loop,
+          and the next constraint is time.
+
+  - title: Add a clock
+    summary: The latency budget · Queueing · Fast and slow · Computer use · GUI agents
+    notes: >-
+      Research agents can take minutes. A voice agent has about two seconds. Time changes the architecture, and screens add
+      a perception problem. This part is about what a hard budget does to the loop.
+    slides:
+      - layout: image
+        title: A voice turn is a serial sum, and people can feel it
+        kicker: The problem
+        recall: Which stages make up the latency of a cascaded voice response, and which is usually largest?
+        image: ../sources/images/li-ai-agents-in-depth-fig6-7.svg
+        caption: Latency waterfall for a serial response (Li, AI Agents in Depth, 2026, ch. 6)
+        bullets:
+          - "**VAD** waits 500 to 800 ms on silence."
+          - "**Then** ASR, first token, first segment and TTS."
+          - "**Together:** about 1 to 2 s when idle."
+        takeaway: Voice latency is a serial sum led by the silence wait, so a faster LLM alone will not fix it.
+        source: notes/03-real-time-multimodal-agents.md
+        notes: >-
+          Each stage looks reasonable by itself. The sum is what the caller feels. So what happens when the server gets busy?
+
+      - layout: table
+        title: Load multiplies everything except the silence wait
+        recall: Why can a voice server not run hot, and what does the latency formula leave out for VAD?
+        lead: Latency budget from the note's runnable block. Model stages scale by 1/(1 − utilization); VAD does not.
+        header: [Load, Factor, "Fast end", "Slow end"]
+        widths: [2, 2, 3, 3]
+        highlight: [3]
+        rows:
+          - ["0%", "x1.0", "950 ms", "2,300 ms"]
+          - ["50%", "x2.0", "1,400 ms", "3,800 ms"]
+          - ["70%", "x3.3", "2,000 ms", "5,800 ms"]
+          - ["80%", "x5.0", "2,750 ms", "8,300 ms"]
+        takeaway: With queueing a fast voice stack hits two seconds at 70% load, so capacity planning is a latency decision.
+        source: notes/03-real-time-multimodal-agents.md
+        notes: >-
+          These figures are arithmetic on typical stage ranges, not a measurement of any system. Note the slow end is over
+          budget even when idle, which means it needs a design change and not a utilization limit.
+
+      - layout: code
+        title: The fast model reads a status and never claims it is done
+        recall: In a fast/slow architecture, what rule protects the user, and where must it live?
+        lang: python
+        code: |-
+          def fast_reply(user_said, state, status):
+              if "done" in user_said and state != "done":
+                  return f"Not yet: {status}."
+              if state == "needs_user":
+                  return f"One question: {status}."
+              if state == "done":
+                  return f"All set: {status}."
+              return f"Still on it, {status}."
+        bullets:
+          - "**The slow agent** updates a status line."
+          - "**The rule lives in code,** not in a prompt."
+          - "**Test the output** with an assertion over a transcript."
+        takeaway: Keep a voice responsive with a fast foreground and a slow worker, and enforce the no-false-done rule in code.
+        source: notes/03-real-time-multimodal-agents.md
+        notes: >-
+          A confident done while the slow agent is still working is the worst failure of this design. The same split appears
+          in computer use: responses got about 15 times faster when a fast model handled the talking.
+
+      - layout: table
+        title: GUI agents moved from finding the button to whole desktops
+        recall: What did SeeAct show about grounding, and what did Agent S3 trade for its OSWorld score?
+        header: [Paper, Move, Evidence]
+        widths: [2.6, 4.4, 4.4]
+        highlight: [1]
+        rows:
+          - ["AppAgent (2023)", "Taps and swipes, knowledge from exploration", "50 tasks in 10 apps"]
+          - ["SeeAct (2024)", "Separate the action from grounding it", "GPT-4V 51.1% on live sites with oracle grounding"]
+          - ["OpenCUA (NeurIPS 2025)", "Open dataset with reasoning traces", "3 operating systems, 200+ apps"]
+          - ["Agent S3 (2025)", "Several rollouts, then select a winner", "72.6% on OSWorld at 100 steps, human 72.36%"]
+        takeaway: Grounding was the early bottleneck for GUI agents, and later scores come from spending more tries and more time.
+        source: notes/03-real-time-multimodal-agents.md
+        notes: >-
+          Agent S3 spends compute and time to buy reliability, the reverse of voice. An agent with no one waiting can take more
+          tries and a voice agent cannot. Report time per task alongside the score. Now let us give an agent a stricter judge.
+
+  - title: Add a judge
+    summary: The loop · Interface design · Sandbox layers · Held-out tests · Supervision
+    notes: >-
+      A coding agent's work can be run. That gives us a machine that can say no. This part builds one, and then attacks it
+      with a lab you can run with no key.
+    slides:
+      - layout: statement
+        title: Tests can say no. Can you trust a yes?
+        kicker: The problem
+        statement: "A coding agent acts on a real machine and its tests are its judge, so both the machine and the judge need protecting from it."
+        attribution: The lab's overfit run ends with every visible test green and a wrong fix.
+        takeaway: A coding agent needs limits on what it can do and a verdict it cannot influence.
+        source: notes/04-coding-agent.md
+        notes: >-
+          A research report is judged later and with effort. A patch is judged in seconds. That is a real gift, as long as
+          the agent cannot rewrite the tests or do damage while running them.
+
+      - layout: flow
+        title: The loop is reproduce, localize, patch, verify
+        recall: What arc did SWE-agent's trajectories show, and why is reproducing first valuable?
+        steps:
+          - {label: Reproduce, sub: "turn prose into a failing test"}
+          - {label: Localize, sub: "search and read"}
+          - {label: Patch, sub: "a targeted edit"}
+          - {label: Verify, sub: "run the tests", accent: "D4621A"}
+        loop: edit and execute until the tests pass or a limit stops it
+        bullets:
+          - "SWE-agent's default solved **18.0%** of SWE-bench Lite with GPT-4 Turbo."
+          - "With **no edit tool**, 10.3%. With the **full file shown**, 12.7%."
+          - "Removing the demonstration cost less, at 16.3%, than removing the edit tool."
+        takeaway: Reproducing first gives the agent a verdict, and interface choices move results a lot on the same model.
+        source: notes/04-coding-agent.md
+        notes: >-
+          The SWE-agent ablations are one model and one benchmark, changing one thing at a time. Showing more of a file made
+          it worse. A good interface is a limit on what the model has to deal with.
+
+      - layout: table
+        title: Say what each sandbox layer stops, and what it does not
+        recall: Which lab layer stops an agent from editing tests to pass them, and what does no file-tool check stop?
+        header: [Layer, Stops, "Does not stop"]
+        widths: [2.6, 4.6, 4.2]
+        highlight: [2]
+        rows:
+          - ["Tool schema", "Arbitrary commands from the model", "Code the tests execute"]
+          - ["Path confinement", "`../`, absolute paths, symlink escapes", "The same, through a subprocess"]
+          - ["Write scope", "Editing tests to pass them", "Reading anything in the repo"]
+          - ["Edit guards", "Blind, ambiguous, clobbering, broken edits", "Wrong logic"]
+          - ["Process limits", "Hangs, key leakage, disk filling", "Network, writes elsewhere"]
+        takeaway: A file-tool check is a promise about the tool and a process limit a promise about the code, so state what each misses.
+        source: notes/04-coding-agent.md
+        notes: >-
+          The lab's escape scenario writes a file outside the repo through code it runs. That is an honest limit of the lab.
+          Real containment takes an operating system sandbox.
+
+      - layout: code
+        title: The lab runs every attack with a stub model and no key
+        recall: In the coding-agent lab, what does the guards scenario show, and which scenario shows the limit of the sandbox?
+        lang: bash
+        code: |-
+          cd practice/coding-agent
+          uv run python run.py   # every scenario; summary below
+
+          fix      5 steps, finished, held-out tests pass
+          overfit  finished, held-out tests FAIL
+          guards   15 steps, 9 calls refused
+          timeout  killed after 2 s, then recovered
+          loop     refused 3rd repeat, halted on the 4th
+          escape   wrote escaped.txt outside the repo
+        bullets:
+          - "**Offline:** a scripted model, so results repeat."
+          - "**`overfit`** passes the visible suite and fails held-out."
+          - "**`escape`** is a limit we show on purpose."
+        takeaway: You can test a harness with no model at all, by scripting the bad behaviour and checking that limits hold.
+        source: notes/04-coding-agent.md
+        notes: >-
+          This is the part to copy. Harness behaviour does not depend on the model being clever. Script the attack, then assert
+          what happened. Swapping in Claude is one file, which is marked illustrative because it needs a key.
+
+      - layout: compare
+        title: Green visible tests are necessary, and not sufficient
+        recall: Why did the overfit scenario pass visible tests, and what did the Shen and Tamkin trial add to the supervision question?
+        emphasis: right
+        left:
+          title: Tests the agent can see
+          bullets:
+            - Can be special-cased by accident
+            - Finish accepts them
+            - SWE-agent failures include overly specific fixes
+          tag: A necessary gate
+        right:
+          title: Tests held out, and a person who can read it
+          bullets:
+            - SWE-bench scores on tests the agent never saw
+            - "Shen & Tamkin: assisted learners scored 4.15 of 27 points lower"
+            - The gap was largest on debugging, in an exploratory cut
+          tag: A small preprint with a chat assistant, so hold it loosely
+        takeaway: Hold tests back from the agent, and keep the debugging skill that human review depends on.
+        source: notes/04-coding-agent.md
+        notes: >-
+          Every limit so far assumes a person can review the result. Debugging is the skill that review draws on. So what happens
+          when there is no test at all, only a number?
+
+  - title: Check the numbers
+    summary: Wrong question · Read-only access · Agree the metric · The validator · Charts
+    notes: >-
+      A wrong patch usually breaks a test. A wrong analysis returns a number that looks like a right one. We run this part on
+      real data from the analytics pillar: restaurant tips and the Titanic.
+    slides:
+      - layout: statement
+        title: The query ran. Is the answer right?
+        kicker: The problem
+        statement: "Which day do customers tip the most? On the same 244 rows, Sunday wins in dollars and Friday wins as a share of the bill."
+        attribution: The SQL executes either way, and execution catches none of this.
+        takeaway: A data agent can run a correct query and still answer the wrong question, so execution is not validation.
+        source: notes/05-data-analysis-agent.md
+        notes: >-
+          Wrong question, wrong population, weak evidence, and a sentence the numbers do not support. None of those throw an
+          error. Text-to-SQL research measures mostly the first one, and Biswal et al. show many real questions need reasoning
+          past the query: baselines never passed 20% exact match in their set, and hand-written TAG pipelines reached 55%.
+
+      - layout: flow
+        title: The run profiles, agrees a metric, queries, and then is checked
+        recall: Why does the data agent agree a metric before querying, and why doesn't the validator ask the model?
+        steps:
+          - {label: Profile, sub: "rows, nulls, distinct values"}
+          - {label: Agree metric, sub: "from a named list"}
+          - {label: Read-only SQL, sub: "enforced at the connection"}
+          - {label: Recompute, sub: "pandas, without its SQL", accent: "D4621A"}
+          - {label: Answer, sub: "with n and an interval"}
+        bullets:
+          - "**Read-only below the text:** an SQLite authorizer refuses writes, whatever the SQL looks like."
+          - "**The validator** takes a structured claim and recomputes it separately."
+        takeaway: Put the metric before the query and the recomputation after it, so that a check never shares the agent's reasoning.
+        source: notes/05-data-analysis-agent.md
+        notes: >-
+          Asking the model if it is right shares its errors. So the validator sees metric, grouping, group and value, and
+          recomputes from source data. Then it applies the rules a statistician would apply by reflex.
+
+      - layout: code
+        title: A lead needs a sense of noise, and four lines give you one
+        recall: How does the validator decide whether a claimed lead between two groups is real?
+        lang: python
+        code: |-
+          def bootstrap(a, b, draws=2000, seed=7):
+              rng = np.random.default_rng(seed)
+              gaps = [
+                  rng.choice(a, a.size).mean()
+                  - rng.choice(b, b.size).mean()
+                  for _ in range(draws)
+              ]
+              return np.percentile(gaps, [2.5, 97.5])
+        bullets:
+          - "**No distribution assumption:** resample each group."
+          - "**Interval includes zero:** the answer must say the groups are not distinguishable."
+          - "Titanic: women 74.2%, men 18.9%, interval **[.49, .61]**."
+        takeaway: Bootstrap the difference between groups, and refuse an unhedged lead when the interval includes zero.
+        source: notes/05-data-analysis-agent.md
+        notes: >-
+          The Titanic gap is a real lead, and the interval says so clearly. For tips by day it is not. The next slide shows
+          what the agent ends up allowed to say.
+
+      - layout: image
+        title: The chart shows the answer and its weakness at once
+        recall: What does the narrow chart tool enforce, and what does the chart still fail to show?
+        image: ../sources/images/data-analysis-agent-tip-share-by-day.png
+        caption: Mean tip share by day, generated by the lab from tips.csv
+        bullets:
+          - "**The tool enforces** a zero baseline and one accent."
+          - "**No free plotting code,** so no second sandbox."
+          - "**Friday has 19 bills** and Saturday 87, so the sentence must carry n."
+        takeaway: Give the agent one narrow chart tool with enforced defaults, and still state the sample size in words.
+        source: notes/05-data-analysis-agent.md
+        notes: >-
+          Near-equal bars tell the truth about the lead. The chart cannot show that Friday rests on 19 bills. In the lab, the
+          agent's first two submissions on this question were refused before it was allowed to answer.
+
+      - layout: cards
+        title: What this design does not do
+        recall: Name three limits of the data agent's validator.
+        cards:
+          - {title: Open questions, body: "It checks one metric, one grouping and one group. A question like why sales dropped has no such shape."}
+          - {title: Multiple comparisons, body: "An agent that explores twenty cuts and reports the best has a false-positive problem. Log the queries."}
+          - {title: Thresholds, accent: "D4621A", body: "The validator is code to maintain, and its thresholds are defaults and not laws."}
+        takeaway: A validator checks only the claims it has a shape for, so log the search and keep a person on open questions.
+        source: notes/05-data-analysis-agent.md
+        notes: >-
+          Say these limits out loud when you present such a system. Now one question is left, and it applies to all of them.
+          Where does the agent sit next to the person who has to trust it?
+
+  - title: Meet the user
+    summary: Chatbot, editor, ambient · The router's history · Trust · One engine, new domain
+    notes: >-
+      An agent can pass every test and still fail, if the person cannot see or undo what it did. The final part is about
+      position: who is working when, and what that makes hard.
+    slides:
+      - layout: statement
+        title: Where should the agent sit?
+        kicker: The problem
+        statement: "An agent that is right every time still fails if it fires while nobody is looking, or edits what someone else is editing."
+        attribution: The interface usually gets picked by accident, because chat boxes are easy.
+        takeaway: Where the agent sits decides your hardest engineering problem, so choose the position on purpose.
+        source: notes/06-application-patterns.md
+        notes: >-
+          Oshin and Campos give three answers, and they differ in concurrency: who is working when.
+
+      - layout: table
+        title: Three positions, by who works when
+        recall: What differs between chatbot, collaborative and ambient patterns, and what is hardest in each?
+        header: [Pattern, Who works when, Hardest part]
+        widths: [2.6, 4.4, 4.4]
+        highlight: [2]
+        bold_first: true
+        rows:
+          - ["Chatbot", "Turn-taking: the user asks and the agent answers", "Safe write access to the canvas"]
+          - ["Collaborative", "Both at once, on the same artifact", "Merging the agent's edits with the user's"]
+          - ["Ambient", "The agent works while the user does something else", "Defining interesting, and keeping reflection from drifting"]
+        takeaway: The patterns differ in concurrency and get harder in that order, and each has one problem to solve first.
+        source: notes/06-application-patterns.md
+        notes: >-
+          These run from easiest to add to hardest. A coding agent on a branch is the version-control level of collaboration.
+          A voice agent's fast and slow pair is a kind of concurrency too.
+
+      - layout: steps
+        title: The router is older than the LLM, and still earns its place
+        recall: What did DIET find about large pretrained models, and when is a small intent model still sensible?
+        steps:
+          - {title: "2016: Joint models", text: "Liu and Lane learn intent and slots together."}
+          - {title: "2018: Slot gate", text: "Goo et al.: 4.2% and 1.9% relative frame gains on ATIS and Snips."}
+          - {title: "2019: BERT", text: "Chen et al. apply BERT to the joint task."}
+          - {title: "2020: DIET", accent: "D4621A", text: "No clear benefit from large pretrained models; beats fine-tuned BERT, about six times faster to train."}
+          - {title: "2025: Workflow graphs", text: "Park et al.: state machine for the plan, LLMs inside each state; 52% better task accuracy than their baseline."}
+        takeaway: With few known intents, a small router or workflow graph can beat an LLM on cost and testability.
+        source: notes/06-application-patterns.md
+        notes: >-
+          Louvan and Magnini warn that the datasets are solved, not language understanding. Separately, Blending showed three small
+          models beating ChatGPT on retention on one platform, so measure the outcome your product is for.
+
+      - layout: compare
+        title: A confirmation helps only if the person can disagree with it
+        recall: What did Bansal et al. find about explanations, and what should a confirmation show instead?
+        lead: Bansal et al., CHI 2021, more than 1,500 participants, with AI and people about equally accurate.
+        emphasis: right
+        left:
+          title: Showing an explanation
+          bullets:
+            - Raised team accuracy when the AI was right
+            - Lowered it when the AI was wrong
+            - None beat simply showing confidence
+          tag: Can work as persuasion
+        right:
+          title: Showing the evidence
+          bullets:
+            - The diff and the test run
+            - The query, n and the recomputed number
+            - The agent's edit before it lands
+          tag: Something the person can check
+        takeaway: Explanations also persuade when the AI is wrong, so show checkable evidence at the point of approval.
+        source: notes/06-application-patterns.md
+        notes: >-
+          The right column is our inference from the study, applied to the labs. Amershi et al.'s guidelines point the same way:
+          support efficient correction and dismissal, and update cautiously.
+
+      - layout: code
+        title: Reflection needs anchors it cannot edit
+        recall: Why does an ambient agent need a must-surface list and a change log?
+        lang: python
+        code: |-
+          ANCHORS = {"outage"}  # reflection cannot edit
+          rules = {"outage", "price_drop"}
+
+          def should_alert(kind):
+              return kind in ANCHORS or kind in rules
+
+          # the user ignores one of each; reflection drops both
+          # price_drop  sent, then never again
+          # outage      sent, and sent again
+          # log: stopped treating price_drop as interesting
+          # log: stopped treating outage as interesting
+        bullets:
+          - "**Nobody sees** the alerts that were not sent."
+          - "**Anchors** keep what must always surface."
+          - "**The log** is the only trace of a rule change."
+        takeaway: An ambient agent can silence itself unnoticed, so keep events it must surface and log each rule change.
+        source: notes/06-application-patterns.md
+        notes: >-
+          Removing the anchor is one of the exercises. No error is raised and only the log shows it.
+
+      - layout: image
+        title: One engine, a new domain, and a pitch that outran its sources
+        recall: What did moving the Context Engine to marketing take, and what is wrong with the chapter's key success?
+        image: ../sources/images/context-engineering-multi-agent-systems-fig9-1.png
+        caption: Context Engine end to end (Rothman, Context Engineering for Multi-Agent Systems, 2025, Fig. 9.1)
+        bullets:
+          - "**New corpus and goals:** `engine.py` did not change."
+          - "**A 69.63 s run** pushes the interface toward batch."
+          - "**The pitch** made claims that no source stated."
+        takeaway: A good engine moves to a new domain with a new corpus, but check grounding claim by claim, since a fluent pitch is no proof.
+        source: notes/06-application-patterns.md
+        notes: >-
+          Rothman's approach to re-tasking is useful. His evidence is single runs, and the persuasive pitch is a grounding failure,
+          which is the question we started with again: what would prove this answer wrong?
+
+  - title: Closing
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb for agentic applications
+        recall: What are the rules of thumb for agentic applications?
+        cards:
+          - {title: Autonomy, body: "Known shape: fixed graph. Open-ended work: a capped loop with compaction."}
+          - {title: Time, body: "Budget by stage. Load multiplies model stages. Enforce no false done in code."}
+          - {title: Code, body: "Enforce limits in tools. Say what each layer misses. Hold tests back."}
+          - {title: Data, body: "Agree the metric first. Recompute. Read-only at the connection."}
+          - {title: People, body: "Pick the position on purpose. Show evidence, since explanations also persuade."}
+          - {title: Always, accent: "D4621A", body: "Ask what would prove this answer wrong, and who checks."}
+        takeaway: For every agent, decide who owns the path and what limits are enforced, and name the check that could prove it wrong.
+        source: notes/06-application-patterns.md
+        notes: >-
+          If you keep one thing, keep the last card. Tests, recomputation, a reference report and a person are all answers
+          to the same question.
+
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillars and labs come after agentic applications?
+        bullets:
+          - "**Run the labs:** `practice/coding-agent` and `practice/data-analysis-agent`, offline."
+          - "**Then with keys:** `practice/deep-research-bot` notebooks."
+          - "**ai-engineering:** the harness, loop and graph engineering under these applications."
+          - "**Read:** SWE-agent; Biswal et al.; Bansal et al."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: An agent is only as trustworthy as the check that could prove it wrong.
+        takeaway: You have seen what an agent can do, so next learn the engineering layer that makes it reliable.
+        source: notes/06-application-patterns.md
+        notes: >-
+          The engineering layer takes each decision we made by hand here and turns it into something you can build on: context,
+          harness, loop and graph engineering.

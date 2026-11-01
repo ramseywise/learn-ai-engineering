@@ -118,7 +118,7 @@ Scripts kept from earlier coursework, in [`courses/`](practice/courses). They ar
 
 | Script | From | Does it run? |
 |---|---|---|
-| [`wrangle_pandas.py`](practice/courses/wrangle_pandas.py) | Ben Gorman's *Data Wrangling* (pandas half) | WRANGLE_STATUS It reads its CSVs from GitHub. |
+| [`wrangle_pandas.py`](practice/courses/wrangle_pandas.py) | Ben Gorman's *Data Wrangling* (pandas half) | Partly. It reads its CSVs from GitHub, then stops at `transactions[[1]]`, a lookup by position that raises `KeyError` on pandas 3.1. |
 | [`umich_pandas_basics.py`](practice/courses/umich_pandas_basics.py) | Michigan, *Applied Data Science with Python* | No. It reads `cars.csv` and `census.csv` from an old Desktop path, and the course data isn't redistributable. |
 | [`umich_visualization.py`](practice/courses/umich_visualization.py) | Michigan visualisation and Wesleyan *Data Analysis and Interpretation* | Partly. `iris.csv` is `sns.load_dataset("iris")`, and the NESARC survey file (`nesarc_pds.csv`) isn't included. |
 

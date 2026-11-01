@@ -10,11 +10,13 @@ sources:
   - https://arxiv.org/abs/2507.19457
   - https://arxiv.org/abs/2509.10414
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 8 — Prompt Optimization
 
 > Treating the prompt as an artifact you can search over, version and regression-test, and letting models do part of the writing. Everything here assumes you have an eval ([09](09-evaluating-prompts.md)). An optimizer without a metric is just a rewriter.
+
+Tuning a prompt by feel stops working once a one-word edit can move your scores and nobody remembers which version shipped. Without versions and a metric, you re-try ideas that already failed and can't tell a real gain from noise. This chapter treats the prompt as an artifact you can search over, version and regression-test.
 
 ---
 
@@ -157,4 +159,37 @@ Before reaching for a framework:
 
 ---
 
-→ Next: [09-evaluating-prompts.md](09-evaluating-prompts.md) — the metric everything above depends on.
+## Pitfalls
+
+- **Running an optimizer with no real metric.** Symptom: prompts that change every run and scores that don't improve, because an optimizer without a metric is just a rewriter. Fix: fix the eval set and metric first, and keep only versions that beat the current one.
+- **Copying a magic phrase.** Symptom: "Take a deep breath" gives no lift on your model. OPRO's scorers each converged on a different best prompt. Fix: copy the search, not the string, and re-run it when the model changes.
+- **Overfitting the eval set.** Symptom: scores rise offline and production doesn't move. de Wynter measured accuracy falling as test inputs moved away from training, for optimized prompts too. Fix: hold out test cases that differ from what the optimizer saw.
+- **Counting prompts instead of API calls.** Symptom: a surprising bill. Huyen's 10 variants on 30 examples is 300 calls, or 900 with a validation and a scoring call each. Fix: count before you run, and cap what a tool may chain.
+- **Trusting a tool's default prompts.** Symptom: quality that shifts between versions or is oddly low, from a wrong chat template or a typo (LangChain's default critique prompt had several). Fix: write the first version by hand, then read every prompt a tool generates.
+- **A score-only metric for GEPA.** Symptom: the reflection step has nothing to diagnose. Fix: return text feedback as well, such as which constraint failed or which document was missing.
+- **One shared prompt across apps in a single repo.** Symptom: an edit forces every consumer onto the new version together. Fix: use a catalog that versions each prompt, so one team can stay on v3 while another moves to v4.
+
+## Try it
+
+1. A tool scores 5 prompt variants on 50 examples, with one validation call and one scoring call per output. How many API calls is that? Which tool setting would most worry you?
+   <details><summary>Answer</summary>5 x 50 x 3 = 750 calls. The worry is any setting letting the tool design its own chains, because that removes the upper bound on calls. Cap it and count before running.</details>
+2. Use the [prompt eval harness](../practice/prompt-eval-harness/README.md) to run two prompt versions on its cases, and write the record you would store for the winner. What fields does the record need beyond the text?
+   <details><summary>Answer</summary>Those in the note's `Prompt` model: the model it was tuned on (pinned), application, creator, date and sampling parameters, plus the output schema, an ID and version, and its eval score. Keep the loser too, so nobody re-tries it.</details>
+3. A classifier's eval shows most failures are "instruction ignored". You could add few-shot examples, split the task, or buy a stronger model. Using the checklist, what's your order, and what do you change at once?
+   <details><summary>Answer</summary>Clarity of the instruction first, then missing context, ordering, examples, CoT, splitting, a stronger model and fine-tuning. Change one thing at a time and re-score, because that is the only way to attribute a gain.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| How does APE work? | An LLM generates candidate instructions from demonstrations, each is scored on a target model, and the best are kept and resampled. It found a trigger scoring 82.0 on MultiArith against 78.7 for "Let's think step by step". |
+| What's the lasting lesson of OPRO's "Take a deep breath"? | Not the phrase, which is model-specific: 80.2% against 71.8% on GSM8K with PaLM 2-L, with a different winner per scorer. Search against a metric beats intuition once you have one. |
+| What are the two meanings of meta-prompting? | Structure-oriented templates for a class of problems (Zhang et al.), and using a model to write or critique prompts. Generated prompts are a first draft that must still win on your eval. |
+| How does GEPA differ from keeping the best prompt? | An LLM reads full traces to diagnose failures, and it keeps a Pareto front of candidates best on at least one example. The front gained 12.44 points where mutating the current best gained 6.05. |
+| When is DSPy worth it? | With a multi-step pipeline, a scorable metric, and dozens to hundreds of labeled examples. Skip it for one-off prompts or tasks you can't score automatically. |
+| Prompts in git or a catalog? | Same-repo git is simple, but moves all consumers together. A catalog versions each prompt on its own and can tell owners when a new version lands, which pays off when apps share prompts. |
+| Your team wants a stronger model because quality is short. What do you check first? | The cheaper layers: instruction clarity, context, ordering, examples, CoT, splitting. A stronger model costs money and latency, which is why early Copilot chose the small, fast Codex. |
+
+## Next
+
+[Evaluating prompts](09-evaluating-prompts.md): every method here depends on the metric, so that comes next.

@@ -9,11 +9,13 @@ sources:
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 5"
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 3, 10"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 6 — Chaining and Workflows
 
 > When one prompt can't do the job, split it. This note covers the patterns at the prompt level. Running them as long-lived loops is [04-loop](../../04-loop-engineering/README.md), and orchestrating agents is [03-harness-engineering/07-orchestration](../../03-harness-engineering/notes/07-orchestration.md).
+
+Ask one agent to scrape stores, invent a plug-in for each and email the owners, and you get form letters that still contain `[your_name]`. A single prompt trades strength for generality and has no way to correct a failed step. Splitting the job gives each step one task, a short context and an output you can check.
 
 ---
 
@@ -236,4 +238,39 @@ Orchestration at scale is covered in [03-harness](../../03-harness-engineering/n
 
 ---
 
-→ Next: [07-prompting-reasoning-models.md](07-prompting-reasoning-models.md) — what changes when the model thinks for itself.
+## Pitfalls
+
+- **Keeping chain state only in chat history.** Symptom: a weak early answer starves later steps, and the first outputs fall out of the window on a long run. Fix: pass explicit outputs, and check each before building on it.
+- **Changing a step's schema casually.** Symptom: neighbouring steps break after a small change. Fix: fix the I/O contract early and iterate on the internals, which is free.
+- **An LLM for every box.** Symptom: slow, costly, nondeterministic scraping or classification. Fix: ask first whether the task needs one. Use code for scraping and writes, and a small classifier for pure classification.
+- **A pipeline when a DAG fits.** Symptom: the concept generator has to pass store details through to the email step, just to get them there. Fix: use a DAG edge straight to the consumer, as in the Shopify example.
+- **A retry loop that drops work.** Symptom: a post missing a section with no error, as in Phoenix & Taylor's printed code, where the fallback runs after the loop and never writes the section. Fix: each step produces its output or fails loudly, and check the result against the plan.
+- **Logging the template, not the rendered prompt.** Symptom: every image looks alike, because a plain string sent the literal `"+prompt+"` to the API. Fix: log the final rendered prompt for each call.
+- **Reaching for agents first.** Symptom: unpredictable routing and cost on a repeatable job. Fix: start with a workflow and move only when fixed topologies can't express the problem.
+
+## Try it
+
+1. Draw the DAG for "summarize a support ticket, classify its urgency, draft a reply using both". For each node, say whether it needs an LLM and which size of model.
+   <details><summary>Answer</summary>The ticket feeds both summarize and classify, and both feed draft. Classification can be a small classifier or small model, and summarizing a small-to-mid model. Drafting gets the stronger model, and the send step is plain code behind human approval. Summarize and classify are independent, so they can run in parallel.</details>
+2. This Phoenix & Taylor-style loop tries retrieval with `k` = 5, 4, ..., catching any exception, and then sets `relevant_documents = ""` after the loop. Name the two bugs and the fix.
+   <details><summary>Answer</summary>The fallback runs after the loop has ended and never writes the section, so the section vanishes. The `except` also catches generation errors, which get misreported as retrieval problems. Catch only retrieval errors, generate after the loop with whatever came back, let generation failures raise, and assert one section per subheading at the end.</details>
+3. Build the book's UserProxy and CodeAssistant pair described in [Workflows vs. agents](#workflows-vs-agents) with no framework, using stubbed turns first. What must you add to stop it spiralling into pleasantries?
+   <details><summary>Answer</summary>An explicit end: a `finish` tool that submits a definite output, plus an attempt cap in code. The proxy holds the goal and declares success, and the note's question (converge, drift or spiral) is what you log. The result depends on your model, so it has no single right answer.</details>
+4. GoDaddy's 1,500-token prompt was split and got cheaper. Why doesn't more calls mean a bigger bill, and what cost remains?
+   <details><summary>Answer</summary>Each prompt is shorter, and simple steps can run on a cheaper model. What remains is a longer wait before the first token of the final step, which users feel when they can't see intermediate output. Parallelize independent steps where you can.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why split one prompt into several? | Strength over generality: one job, short context, a checkable output, and a failure that traces to one step. GoDaddy's split of a 1,500+ token prompt performed better and cost fewer tokens. |
+| What's the default topology, and why? | A DAG. Each task gets what it needs directly and dependencies stay simple, where a pipeline loses what isn't passed along and a cycle must carry failure context and an attempt cap. |
+| Where should retry logic live? | Inside a task when possible. A cycle across tasks forces every task to handle retried items. |
+| How do you get an LLM to extract structured data reliably? | A forced tool call whose parameters are the schema, with strict outputs. If it still fails, check whether the source is hard for a human too and split a big schema across calls. |
+| Workflow or agent? | Workflow when steps are known: control flow in code, with high predictability and cost control. Agent for open-ended tasks. Most production systems are hybrids, with a workflow routing to agents. |
+| What are Anthropic's five workflow patterns? | Prompt chaining, routing, parallelization (sectioning or voting), orchestrator-workers, and evaluator-optimizer. |
+| Output quality on a task is short. In what order do you try fixes? | Tighten the prompt, force a planning pass with `tool_choice: "none"`, then task-level Reflexion, and then sub-agents, which are heavier and costlier. Add a human for irreversible actions. |
+
+## Next
+
+[Prompting reasoning models](07-prompting-reasoning-models.md): what changes in each step when the model reasons on its own.

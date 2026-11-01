@@ -8,11 +8,13 @@ sources:
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 3"
   - https://arxiv.org/abs/2104.08691
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 4 — Controlling Output
 
 > Getting a completion your code can use: the right shape, the right length, a clean place to stop, and a signal of how confident the model was.
+
+Your code has to do something with the completion, and a reply that is 90% right can still crash the parser. Without control you get a preamble of fluff, a JSON object cut off at `max_tokens`, or a model that keeps writing past the answer, and no signal telling you which outputs to trust.
 
 ---
 
@@ -193,4 +195,39 @@ Reach for it when the static part of your prompt is long, stable, and still not 
 
 ---
 
-→ Next: [05-tools-and-function-calling.md](05-tools-and-function-calling.md) — giving the model actions.
+## Pitfalls
+
+- **Treating `max_tokens` as a stop.** Symptom: truncated JSON or a clipped summary downstream with no error. Fix: check the finish reason (`length` means cut off), and discard or retry those.
+- **A plain `"` or `}` as the stop.** Symptom: output ends at an escaped `\"` or at the first nested brace. Fix: use stops only for the rows in the table that allow one. For matching braces, stream and count, or parse.
+- **`#` as a stop without the newline.** Symptom: generation dies on a comment or a phone number. Fix: lead with a newline, `\n#`.
+- **Labels that share a first token.** Symptom: the classifier says "Northeast Asia" when Europe is the most likely single label, because `North` pooled 55% against `Europe` 44%, as in the book's example. Fix: give every label a distinct first token.
+- **An answer field before a reason field.** Symptom: valid JSON and much lower accuracy. Tam et al. found every GPT-3.5 Turbo JSON-mode response put `answer` first, which removes the chain of thought. Claude 3 Haiku dropped from 86.99% to 23.44% on GSM8K when the prompt spelled out a schema. Fix: put reasoning first, or answer in prose and convert in a second call.
+- **Trusting the schema for the content.** Symptom: perfectly shaped, hallucinated values. Fix: a schema guarantees shape only, so validate the values too.
+- **Tests that assume temperature 0 is deterministic.** Symptom: flaky tests, as probabilities move by several points between reruns and can flip the top token. Fix: tolerate variation or mock the model.
+
+## Try it
+
+1. Design start and end markers for: (a) one markdown section, (b) a Java method, (c) the first item of a numbered list. Which of them can be ended with a plain stop sequence?
+   <details><summary>Answer</summary>(a) Push the header into the prompt and stop on `\n#`. (c) Start at `1.` and stop on `\n2.`. Both work as plain stops. (b) needs a matching closing brace, which is not a fixed string, so stream and count braces, cancelling at depth 0. Add `\n}`-style stops only if you know the indentation.</details>
+2. The book's region classifier gives `North` 55% and `Europe` 44% for the first token, then `-East` 76% and `America` 23% after `North`. Compute each label's probability and the label greedy decoding emits. What is the one-line fix?
+   <details><summary>Answer</summary>Northeast Asia 0.55 x 0.76 = 41.8%, North America 0.55 x 0.23 = 12.7%, Europe 44%. Europe is the most likely label, but greedy decoding takes `North` then `-East` and emits Northeast Asia. Give each label a distinct first token, for example by renaming or numbering them.</details>
+3. A completion's first three tokens have logprobs of -0.1, -0.5 and -2.0. What are the mean logprob and Ziegler's first-token quality score? By the book's rule of thumb, what temperature suits n = 16 in best-of-n?
+   <details><summary>Answer</summary>The mean logprob is -0.867, and the mean of probabilities is (0.905 + 0.607 + 0.135) / 3 = 0.549. `sqrt(16) / 10` gives 0.4, which the book itself calls completely unscientific. At temperature 0 the 16 completions would be identical, so the n would be wasted.</details>
+4. Add a parser to your [prompt eval harness](../practice/prompt-eval-harness/README.md) that handles what really comes back: a fenced JSON block, 8 items when you asked for 10, and a `No Items` sentinel. Which of these should trigger a retry, and which should pass?
+   <details><summary>Answer</summary>Strip the fence and parse it, since it is not a failure. A failed `json.loads` is the retry trigger. Eight items passes if the code accepts any length, otherwise it fails your count check. `No Items` is a valid empty answer that your code branches on, not a retry.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Stop sequence or stream-and-cancel? | Prefer a stop, since it wastes nothing server-side. A stop is a fixed string though, so endings like a matching brace or a dedent need streaming and cancelling. Combine them for the common cases. |
+| Rank the ways to get structured output, and how far should you climb? | Ask, show, fence, prefill, constrain, tool schema. Climb only as far as you need, and note some newer models reject a prefilled assistant turn. None guarantees truth. |
+| Can JSON output hurt accuracy, even when it parses? | Yes. Tam et al. saw LLaMA 3 8B lose 38.15 points on Last Letter with only 0.148% parse failures. It can also help: Gemini 1.5 Flash rose from 41.6% to 60.3% on DDXPlus. The tests were on small 2024 models and simple schemas. |
+| What do logprobs give you, and how would you use them for quality? | The log probability of each token and its alternatives, at no extra compute. Average rather than sum, gate on the score, and don't interrupt users on low confidence: the book's "don't be like Clippy". |
+| Your moderation model blocks too many emails. There's no budget to retrain. What do you do? | Calibrate: 50% isn't your threshold. Shift the logprob per label by a constant (the book adds 0.3 to "Yes" before comparing with "No"), found by experiment or cross-entropy on labeled data. |
+| Prompting, soft prompting, LoRA or full fine-tune? | LoRA for formats and priors, with hundreds to thousands of examples and days of work. Full fine-tuning for new facts, with tens of thousands and weeks to months. Soft prompting is fastest, but Lester et al. only matched full tuning at T5-XXL (11B). |
+| Does Phoenix & Taylor's Fig 1-13 show fine-tuning beating prompting after a few thousand examples? | No. Both curves are fine-tuned RoBERTa, one with a prompt and one with a classifier head. Scao & Rush's result is that the prompt's advantage is worth hundreds of labelled points and runs out with more data. |
+
+## Next
+
+[Tools and function calling](05-tools-and-function-calling.md): the top rung of structured output is a tool schema, and the same mechanism lets the model take actions.

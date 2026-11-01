@@ -15,7 +15,7 @@ cleaned: 2026-11-01
 
 A Tallybook customer asks the support bot, "how many invoices are overdue this month?" The hybrid retriever from [note 03](03-keyword-semantic-and-hybrid-search.md) does its job and returns the help article on payment reminders. The model reads it and writes a confident paragraph about reminder schedules, with a citation, and no number. Nothing failed: retrieval found the closest text. The closest text does not hold the answer, because the answer lives in a table, and similarity search cannot count.
 
-The same bot fails differently on "my client never got it". There is too little in that sentence for one search: the hybrid retriever ranks the email-delivery article second, behind an internal runbook that shares only the word "client". And it fails a third way when the question is "it doesn't work": any retrieval run on those words is wasted, because nobody knows what "it" is.
+The same bot fails differently on "my client never got it". There is too little in that sentence for one search: the hybrid retriever ranks the email-delivery article second, behind an internal runbook on refund overrides that has nothing to do with the problem. And it fails a third way when the question is "it doesn't work": any retrieval run on those words is wasted, because nobody knows what "it" is.
 
 A production system deals with all three before it writes a sentence. It asks when the question is too vague. It sends counting questions to SQL. It widens narrow questions into several searches and pools the results. This note walks through one published system that does all of that.
 
@@ -190,6 +190,10 @@ print("expanded, filtered:    ", funnel(EXPANSIONS, "invoicing"))
 ```
 
 ```text
+one query, no filter:   [('kb-18', 0.782), ('kb-10', 0.7), ('kb-12', 0.687)]
+expanded, no filter:    [('kb-12', 1.0), ('kb-18', 0.782), ('kb-10', 0.7)]
+one query, filtered:    [('kb-12', 0.714), ('kb-10', 0.7), ('kb-09', 0.359)]
+expanded, filtered:     [('kb-12', 1.0), ('kb-10', 0.7), ('kb-08', 0.51)]
 ```
 
 Read the four lines as two independent repairs. On its own, the bare question ranks the internal runbook kb-18 first. Either expansion or the filter puts the right article, kb-12, on top, and each does it for a different reason: expansion adds words that match, and the filter removes the document that should not compete. Both together give the widest margin over second place.
@@ -730,12 +734,15 @@ Related: the context-engineering pillar covers the retrieval pipeline as context
 1. In the max-score block, run `funnel(EXPANSIONS, "billing")`. What comes back, and which stage would you blame in a trace?
 2. In the max-score block, replace `runs.max(axis=0)` with `runs.sum(axis=0)` and rerun the no-filter expanded line. What changes? Explain when a sum would mislead.
 3. In the guarded query block, what does `SELECT * FROM invoices; ` return (note the trailing semicolon and space), and is the row cap applied?
-4. Add the route query `"how many refunds did we pay last year"` to the router block. Which route does it take, and why is that a hazard for the word "refund"?
+4. Add the query `"how many refunds did we pay last year"` to the router block. Which route does it take, given that "refund" appears only in the description of the docs route?
 
 <details>
 <summary>Answers</summary>
 
-ANSWERS_PLACEHOLDER
+1. `[('kb-18', 1.0), ('kb-05', 0.7), ('kb-06', 0.7)]`. The right article is not in the pool, so nothing downstream can find it, and the internal runbook now ranks first. Blame the filter extractor; the retriever did what it was told. Log the filter in the trace, or the failure looks like a search problem.
+2. kb-12 stays first and second place moves from kb-18 to kb-14, a document none of the phrasings ranked first. Here the sum is harmless at the top, but it rewards a document for being mildly close to everything, and with more paraphrases that can bury a chunk that only one phrasing found strongly.
+3. It passes the regex, because the pattern allows one optional semicolon and trailing space. It matches 240 rows and returns 50, so the cap holds.
+4. `sql`, at 0.54 against 0.12 for `docs`. "How many" and "pay" are in the SQL description, and that outweighs "refund". That is the right call for this question, but the numbers come from the toy embedder. Test your own router on labelled queries.
 
 </details>
 

@@ -11,11 +11,13 @@ sources:
   - https://arxiv.org/abs/2506.09250
   - https://arxiv.org/abs/2412.16720
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 7 — Prompting Reasoning Models
 
 > Reasoning models are trained to produce chain-of-thought natively before they answer. Much of [03](03-core-techniques.md) is built into them, so the prompting advice shifts from *how to think* to *what to achieve*. Model behavior here changes quickly; treat the specifics as dated, and check the vendor guides in [references.md](../README.md#vendor-guides).
+
+Paste your carefully engineered chain-of-thought prompt into a reasoning model and you may pay more for a worse result: adding CoT lowered constraint accuracy for 13 of 14 models on IFEval. These models bring their own reasoning, so your job moves from telling them how to think to stating what to achieve and how much effort to spend.
 
 ---
 
@@ -59,6 +61,31 @@ For models where thinking is a switch:
 *Evaluate after each step and stop at the first satisfactory one. DAIR, Reasoning LLMs Guide.*
 
 Thinking off can be stronger than it looks, especially if you sample several answers. Ma et al. switched off thinking in DeepSeek-R1-Distill-Qwen-32B by prefilling the thinking block with "Okay, I think I have finished thinking." and closing it. On math, coding and theorem-proving benchmarks, this NoThinking mode used 2.0–5.1× fewer tokens. It trailed full thinking at pass@1 on most benchmarks, but matched it once enough samples were drawn (pass@k at large k). On theorem proving it matched thinking at every k while using 3.3–3.7× fewer tokens. At an equal, small token budget it often won outright: "51.3 vs. 28.9 on AMC23 with 700 tokens." Drawing several NoThinking answers in parallel and keeping the best one beat sequential thinking on tasks with a verifier, at "7× lower latency and even 4× less total token usage." The authors tested only open-weight models, because prefilling the thinking block needs access closed APIs don't give: "we lack access for making interventions to closed-source models" ([arXiv:2504.09858](https://arxiv.org/abs/2504.09858) (Ma et al., 2025-04)). Where you can check answers automatically, try several thinking-off samples before you pay for long thinking.
+
+The arithmetic behind both results is short. It shows why a "write out every move" score hits an output limit, and why independent samples pay off once a verifier can pick the right one. The 10 tokens per move and the values of p are assumptions for illustration, not numbers from the papers:
+
+```python
+# Hanoi: how long is the answer the scoring asked for?
+for n in (5, 10, 12, 15, 20):
+    moves = 2**n - 1
+    print(f"N={n:>2}: {moves:>9,} moves, {moves * 10:>10,} tokens at an assumed 10 tokens per move")
+
+# pass@k: the chance that at least one of k independent samples is right
+for p in (0.3, 0.5):
+    print(f"p={p}:", {k: round(1 - (1 - p) ** k, 3) for k in (1, 3, 5, 10)})
+```
+
+```text
+N= 5:        31 moves,        310 tokens at an assumed 10 tokens per move
+N=10:     1,023 moves,     10,230 tokens at an assumed 10 tokens per move
+N=12:     4,095 moves,     40,950 tokens at an assumed 10 tokens per move
+N=15:    32,767 moves,    327,670 tokens at an assumed 10 tokens per move
+N=20: 1,048,575 moves, 10,485,750 tokens at an assumed 10 tokens per move
+p=0.3: {1: 0.3, 3: 0.657, 5: 0.832, 10: 0.972}
+p=0.5: {1: 0.5, 3: 0.875, 5: 0.969, 10: 0.999}
+```
+
+Real samples are correlated, so pass@k rises more slowly than this. And none of it helps without a verifier, because you can't take the best of k answers if you can't tell which one is right.
 
 **Optimize for accuracy first, then latency and cost.**
 
@@ -151,4 +178,35 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 
 ---
 
-→ Next: [08-prompt-optimization.md](08-prompt-optimization.md) — letting models write and tune prompts.
+## Pitfalls
+
+- **Keeping your old CoT scaffolding.** Symptom: dropped constraints and added content. Llama-3-8B-Instruct fell from 75.2% to 59.0% on IFEval with CoT added. Fix: remove the step-by-step instructions, state goals and constraints, and decide per instruction whether to reason at all.
+- **Thinking on for everything.** Symptom: cost and latency up with no gain on easy tasks, where no-thinking runs matched or beat thinking in Shojaee et al. Fix: start with thinking off, and raise effort only while your eval improves.
+- **Auditing through the visible chain of thought.** Symptom: the chain looks fine and the behaviour isn't, because the chain doesn't always reflect what drove the answer. Fix: evaluate outputs, and don't make the chain your only safety monitor.
+- **Reading the Hanoi collapse without its critique.** Symptom: concluding that reasoning fails at scale, when 2^N-1 moves overrun the output limit and some River Crossing cases had no solution (Lawsen). Fix: check what the scoring demands, and rely on the low-complexity result that survives the critique.
+- **Sending `temperature` to a reasoning endpoint.** Symptom: a rejected or ignored parameter. Fix: control it with effort, and check what each model accepts.
+- **A vague deep-research prompt.** Symptom: an expensive run on the wrong scope, sometimes after answering clarifying questions with "both / no preference". Fix: give scope, period, trusted sources, keywords and format, then verify the sources yourself.
+
+## Try it
+
+1. Rewrite for a reasoning model: "Think step by step. First list the invoice lines, then add them, then check the total against the footer, and output your reasoning then the answer."
+   <details><summary>Answer</summary>"Find whether the invoice total matches the sum of its lines. Check your result against the footer before finishing. Output `<match>true|false</match>` and the two amounts." This keeps the goal, a verification request and a precise format, and drops the prescribed steps and manual CoT.</details>
+2. Using the code above, if one thinking-off sample is right 30% of the time and answers can be verified, how many independent samples pass 80%? Why doesn't that apply to a task with no verifier?
+   <details><summary>Answer</summary>Five samples give 83.2%, while three give 65.7%. Without a verifier you can't pick the right sample. You can only vote, which is a different method and fails on any task where the most common answer is wrong. Correlation between samples also lowers the real number.</details>
+3. You own a document assistant with a classifier step, an extraction step and a multi-document synthesis step. Which get a reasoning model, and what do you measure as you escalate?
+   <details><summary>Answer</summary>Only synthesis at first, because classification and extraction rarely need one. Start with thinking off and escalate to low, medium, then high, running your eval each time and stopping at the first satisfactory result. Get accuracy right first, then latency and cost.</details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What changes in prompting for a reasoning model? | From how to think to what to achieve: high-level goals, constraints and format, with effort set by a parameter. Few-shot is only for style or format it gets wrong. |
+| Does explicit CoT help a reasoning-capable model? | Often not. Li et al. saw it lower constraint accuracy for 13 of 14 models on IFEval and all on ComplexBench. Reasoning helped formatting and exact wording but dropped simple constraints. |
+| What does "NoThinking" show? | Ma et al. prefilled the thinking block in an open-weight model and used 2.0 to 5.1 times fewer tokens. It trailed at pass@1 but matched at large k, so with a verifier, try several thinking-off samples first. It couldn't be tested on closed models. |
+| Do Shojaee et al.'s Hanoi results show reasoning collapses at scale? | Be careful. Scoring required every move, and 2^N-1 moves overrun output limits, and Lawsen found unsolvable River Crossing cases. The overthinking result on easy tasks is the part that survives. |
+| Can you trust the visible chain of thought as a monitor? | Not on its own, since it catches only what the chain states and chains are not always faithful. OpenAI's GPT-4o monitor flagged 0.17% of 102,443 o1-preview chains as deceptive. |
+| How do you add reasoning to a hybrid model in production? | Thinking off first, optionally manual CoT, then low, medium and high effort while eval scores keep rising. Use it for the reasoning-heavy module only, such as planning or synthesis. |
+
+## Next
+
+[Prompt optimization](08-prompt-optimization.md): reasoning models are good at writing prompts, so let them tune yours against a metric.
