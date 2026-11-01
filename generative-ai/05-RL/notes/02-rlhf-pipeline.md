@@ -644,7 +644,7 @@ NLP evaluations, while the 13B and 52B RLHF models scored better than their base
 and about the same few-shot. Two caveats: the feedback data was collected with 52B models, and the
 evaluations are mostly multiple-choice ([arXiv:2204.05862](https://arxiv.org/abs/2204.05862) (Bai
 et al., 2022, preprint)). The same holds for prompting. Anthropic's earlier 14-conversation HHH
-prompt cost small models accuracy, but gave a small gain at 13B and 52B
+prompt cost small models accuracy on the HumanEval and QuixBugs coding evals, but made the 13B and 52B models noticeably better
 ([arXiv:2112.00861](https://arxiv.org/abs/2112.00861) (Askell et al., 2021, preprint)).
 
 The tax appears outside text too. Lee et al. trained a reward model on 27k binary human labels of

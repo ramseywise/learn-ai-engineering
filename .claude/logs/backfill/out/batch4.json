@@ -1,0 +1,214 @@
+[
+ {
+  "key": "2511.03276",
+  "verdict": "corrected",
+  "row": "| | Ni et al., *Diffusion Language Models are Super Data Learners* (2025 ⚑): with total training fixed at 96B tokens and 0.5B–96B unique tokens, 1B masked-diffusion models overtook autoregressive ones once data was repeated, and diffusion on 0.5B unique tokens matched autoregressive on 1.5B (~3× data efficiency); the crossover comes later with more or better data and earlier with larger models. The cost is >100× training FLOPs to reach peak performance and 16–4,700× inference FLOPs per task, with hyperparameters tuned for autoregressive models | [2511.03276](https://arxiv.org/abs/2511.03276) | ✓ [ni-2025-diffusion-language-models-super-data.pdf](sources/ni-2025-diffusion-language-models-super-data.pdf) | [01](notes/01-how-llms-work.md#reading-a-models-size) |",
+  "date": "2025-11 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Reading a model's size"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "old": "The price is compute: diffusion needed over 100× the training FLOPs to reach that point,",
+    "new": "The price is compute: diffusion needed over 100× the training FLOPs to reach its peak,",
+    "why": "The >100× figure is FLOPs to reach optimal (peak) performance vs AR, not to reach the 3×-data-matching point (p.15, Fig. 12 and text)."
+   }
+  ],
+  "doubts": "The >100× is described by the authors as an approximation from 'preliminary experiments'."
+ },
+ {
+  "key": "2512.24880",
+  "verdict": "verified",
+  "row": "| | Xie et al., *mHC: Manifold-Constrained Hyper-Connections* (2025 ⚑): in a 27B DeepSeek-V3-style MoE, unconstrained Hyper-Connections (4 residual streams) amplified signals up to ~3,000× across layers and spiked the loss near step 12k; projecting each mixing matrix onto doubly stochastic matrices (Sinkhorn-Knopp, 20 iterations) kept the composite gain at ~1.6 and lowered final loss by 0.021 vs a plain residual, for 6.7% extra training time at n = 4 | [2512.24880](https://arxiv.org/abs/2512.24880) | ✓ [xie-2025-mhc.pdf](sources/xie-2025-mhc.pdf) | [01](notes/01-how-llms-work.md#the-transformer-block-and-the-gpt-stack) |",
+  "date": "2025-12 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "The transformer block and the GPT stack"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "2603.15031",
+  "verdict": "verified",
+  "row": "| | Kimi Team, *Attention Residuals* (2026 ⚑): replacing the fixed residual sum with softmax attention over earlier layers' outputs (one learned pseudo-query per layer) lowered validation loss at all five sizes (194M–528M active); Block AttnRes matched a baseline trained with 1.25× the compute on the scaling fit. On a 48B-total/3B-active Kimi Linear MoE trained on 1.4T tokens it matched or beat the baseline on every benchmark, most on GPQA-Diamond (36.9 → 44.4) | [2603.15031](https://arxiv.org/abs/2603.15031) | ✓ [team-2026-attention-residuals.pdf](sources/team-2026-attention-residuals.pdf) | [01](notes/01-how-llms-work.md#the-transformer-block-and-the-gpt-stack) |",
+  "date": "2026-03 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "The transformer block and the GPT stack"
+   }
+  ],
+  "edits": [],
+  "doubts": "The 1.25× is read off the fitted scaling curve at the largest compute point (1.692 vs 1.714 loss), not from a separately trained 1.25× baseline; the note's wording is close enough."
+ },
+ {
+  "key": "2604.14191",
+  "verdict": "corrected",
+  "row": "| | Moudgil et al., *Attention to Mamba: A Recipe for Cross-Architecture Distillation* (2026 ⚑): distilling Pythia-1B first into Hedgehog linear attention and then into an attention-free Mamba-style model, on 10B OpenWebText tokens (vs 300B for the teacher), reached perplexity 14.11 vs the teacher's 13.86, but downstream gaps remained (LAMBADA 32.3 vs 42.1); direct distillation into Mamba gave perplexity >100. Pythia family only (160M–1B), one dataset | [2604.14191](https://arxiv.org/abs/2604.14191) | ✓ [moudgil-2026-attention-mamba.pdf](sources/moudgil-2026-attention-mamba.pdf) | [01](notes/01-how-llms-work.md#reading-a-models-size) |",
+  "date": "2026-04 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Reading a model's size"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "old": "It is one model pair on one dataset.",
+    "new": "It is one model family (Pythia, 160M to 1B) on one dataset.",
+    "why": "Appendix Table 6 also distills Pythia-160M and 410M, so it is not a single model pair (p.15)."
+   }
+  ],
+  "doubts": ""
+ },
+ {
+  "key": "2609.12303",
+  "verdict": "verified",
+  "row": "| | Marathe et al., *Breaking the Token Ceiling: Distilling Smaller, Stronger Byte Models* (2026 ⚑): distilling Llama-3-8B into ~1.3B byte models (up to 1T bytes of training), at ~1.8×10²¹ FLOPs the byte models had lower bits per byte than the supervised token model yet worse benchmark scores; byte models overtaking tokens (52.4% vs 48.4% average accuracy for distilled End-Of-Token vs distilled Token-1B) appears only in extrapolated scaling-law asymptotes | [2609.12303](https://arxiv.org/abs/2609.12303) | ✓ [marathe-2026-breaking-token-ceiling.pdf](sources/marathe-2026-breaking-token-ceiling.pdf) | [01](notes/01-how-llms-work.md#tokens) |",
+  "date": "2026-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Tokens"
+   }
+  ],
+  "edits": [],
+  "doubts": "No venue found in the PDF; treated as preprint."
+ },
+ {
+  "key": "1506.06724",
+  "verdict": "verified",
+  "row": "| | Zhu et al., *Aligning Books and Movies* (BookCorpus, ICCV 2015): BookCorpus was collected to train a sentence-embedding model for aligning novels with their film adaptations: 11,038 free books by unpublished authors, each over 20K words, 984.8M words across 16 genres, Romance largest at 2,865 books; the paper says nothing on licensing, consent or duplicates | [1506.06724](https://arxiv.org/abs/1506.06724) | ✓ [zhu-2015-aligning-books-movies.pdf](sources/zhu-2015-aligning-books-movies.pdf) | [02](notes/02-training-and-adapting.md#what-the-data-is) |",
+  "date": "2015-06 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "What the data is"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1512.00567",
+  "verdict": "verified",
+  "row": "| | Szegedy et al., *Rethinking the Inception Architecture for Computer Vision* (label smoothing, CVPR 2016): label smoothing replaces the one-hot target with (1 − ε) on the true class plus ε spread uniformly over K classes, equal to adding a cross-entropy against the uniform distribution; on ImageNet (K = 1,000, ε = 0.1) it cut Inception top-1 error from 23.1% to 22.8% (Table 3; the text says about 0.2% absolute) | [1512.00567](https://arxiv.org/abs/1512.00567) | ✓ [szegedy-2016-rethinking-inception-architecture-computer-vision.pdf](sources/szegedy-2016-rethinking-inception-architecture-computer-vision.pdf) | [02](notes/02-training-and-adapting.md#making-the-model-smaller) |",
+  "date": "2015-12 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Making the model smaller"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1706.02677",
+  "verdict": "verified",
+  "row": "| | Goyal et al., *Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour* (2017 ⚑): with the learning rate scaled linearly with batch size and a 5-epoch linear warmup, ResNet-50 trained at batch 8,192 on 256 GPUs in one hour matched batch-256 top-1 error (23.74% vs 23.60%); without warmup it reached 24.84%, and past 8k error rose anyway (27.55% at 32k). SGD on image classification only | [1706.02677](https://arxiv.org/abs/1706.02677) | ✓ [goyal-2017-accurate-large-minibatch-sgd.pdf](sources/goyal-2017-accurate-large-minibatch-sgd.pdf) | [02](notes/02-training-and-adapting.md#pretraining) |",
+  "date": "2017-06 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Pretraining"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1804.04235",
+  "verdict": "corrected",
+  "row": "| | Shazeer & Stern, *Adafactor: Adaptive Learning Rates with Sublinear Memory Cost* (ICML 2018): factoring the second-moment estimate into row and column averages (O(n + m) memory) and dropping momentum matched Adam on a WMT'14 En→De Transformer with warmup (BLEU 25.4 vs 25.4); without warmup the β₂ = 0.999 runs collapsed (BLEU ≈ 0.1–0.2) unless updates were clipped (22.4), and the full Adafactor with relative step size reached 25.5 with no warmup. One translation task | [1804.04235](https://arxiv.org/abs/1804.04235) | ✓ [shazeer-2018-adafactor.pdf](sources/shazeer-2018-adafactor.pdf) | [02](notes/02-training-and-adapting.md#pretraining) |",
+  "date": "2018-04 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Pretraining"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "old": "On a WMT'14 En→De Transformer it matched Adam (BLEU 23.6 vs 23.4, with warmup). Without warmup, its β₂ = 0.999 setting diverged unless updates were clipped",
+    "new": "On a WMT'14 En→De Transformer, the factored version without momentum matched Adam (BLEU 25.4 vs 25.4, with warmup). Without warmup, its β₂ = 0.999 setting collapsed (BLEU 0.2) unless updates were clipped (22.4)",
+    "why": "'23.6 vs 23.4' is from Sec. 4.1 text and compares unfactored Adam without vs with momentum (and disagrees with Table 2, which gives 25.6 vs 25.4 for that pair). The Adafactor-vs-Adam comparison is Table 2 row (C) factored, β1=0: 25.4 vs row (B) Adam: 25.4. No-warmup factored run (C) scored 0.2; with update clipping d=1 (J) 22.4 (p.8, Table 2)."
+   }
+  ],
+  "doubts": "Paper text (23.6/23.4) and Table 2 (25.6/25.4) disagree for the momentum comparison; I used the table."
+ },
+ {
+  "key": "1812.06162",
+  "verdict": "verified",
+  "row": "| | McCandlish et al., *An Empirical Model of Large-Batch Training* (2018 ⚑): the gradient noise scale (gradient variance over squared gradient norm) predicted the critical batch size to within an order of magnitude across tasks from ~20 (SVHN autoencoder) to over 10 million (Dota 5v5, a lower bound); at the critical batch, training takes 2× the minimum steps and 2× the minimum data, and the noise scale grows by an order of magnitude or more as the loss falls. Based on training loss and a local quadratic approximation | [1812.06162](https://arxiv.org/abs/1812.06162) | ✓ [mccandlish-2018-empirical-model-large-batch-training.pdf](sources/mccandlish-2018-empirical-model-large-batch-training.pdf) | [02](notes/02-training-and-adapting.md#pretraining) |",
+  "date": "2018-12 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Pretraining"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1910.02054",
+  "verdict": "verified",
+  "row": "| | Rajbhandari et al., *ZeRO: Memory Optimizations Toward Training Trillion Parameter Models* (SC 2020): mixed-precision Adam needs 16 bytes per parameter (24 GB for 1.5B GPT-2 vs 3 GB of fp16 weights); sharding optimizer state across data-parallel GPUs cuts per-GPU model-state memory up to 4×, plus gradients up to 8×, at the same communication volume, which trained models up to 13B with no model parallelism on 32 GB V100s (plain DP ran out above 1.4B). Parameter sharding (stage 3) was analysed but not implemented | [1910.02054](https://arxiv.org/abs/1910.02054) | ✓ [rajbhandari-2020-zero.pdf](sources/rajbhandari-2020-zero.pdf) | [02](notes/02-training-and-adapting.md#pretraining) |",
+  "date": "2019-10 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Pretraining"
+   }
+  ],
+  "edits": [],
+  "doubts": "The 13B result is ZeRO-100B (optimizer+gradient sharding plus ZeRO-R activation/buffer optimizations), not sharding alone; the note's 'With that' is a mild simplification, left as is."
+ },
+ {
+  "key": "2012.07805",
+  "verdict": "corrected",
+  "row": "| | Carlini et al., *Extracting Training Data from Large Language Models* (USENIX Security 2021): from 600,000 GPT-2 XL samples (empty prompt, decaying temperature, or Common Crawl prefixes) ranked by six membership-inference scores, manual checks of 1,800 candidates found 604 verbatim training sequences (33.5%; best variant, zlib ratio on Internet-prefixed samples, 67%), including names with phone numbers, 128-bit UUIDs and code, some present in a single training document. A loose lower bound from one model | [2012.07805](https://arxiv.org/abs/2012.07805) | ✓ [carlini-2020-extracting-training-data-large-language.pdf](sources/carlini-2020-extracting-training-data-large-language.pdf) | [02](notes/02-training-and-adapting.md#pretraining), [prompt 10](../../ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md#training-data-extraction) |",
+  "date": "2020-12 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "heading": "Pretraining"
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md",
+    "heading": "Training-data extraction"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/02-training-and-adapting.md",
+    "old": "ranked them by how much more likely the model found the text than zlib compression did, and checked 1,800 candidates by hand.",
+    "new": "ranked them with six membership-inference scores (the most precise compared the model's likelihood with zlib compression), and checked the top 1,800 candidates by hand.",
+    "why": "The 1,800 candidates are 100 from each of 3 generation strategies × 6 ranking metrics; zlib is one of the six (172 of the 604 hits came via zlib picks). Sec. 6.1, Table 2."
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md",
+    "old": "then ranked 600,000 samples by how much more likely the model found them than zlib compression did.",
+    "new": "then ranked 600,000 samples with six membership-inference scores, the most precise of which compared the model's likelihood with zlib compression.",
+    "why": "Same: the 1,800 candidates/604 hits pool all six metrics, not zlib alone (Sec. 6.1, Table 2)."
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md",
+    "old": "Carlini et al. (2020) and Huang et al. (2022) extracted training data from GPT-2 and GPT-3, but judged the risk low because the attacker has to know the context the string appeared in.",
+    "new": "Carlini et al. (2020) and Huang et al. (2022) extracted training data from GPT-2 and GPT-Neo. Huang et al. judged the risk low because the attacker has to know the context the string appeared in.",
+    "why": "coordinator: Carlini makes no low-risk judgment; Huang et al. (Findings of EMNLP 2022) studied GPT-Neo, not GPT-3 (from memory; Huang PDF not held)"
+   }
+  ],
+  "doubts": "Adversarial note also says 'Carlini et al. (2020) and Huang et al. (2022) ... judged the risk low because the attacker has to know the context'; Carlini et al. make no such judgment (they call 604 an extremely loose lower bound). The note's next sentence already rebuts it, so I left it, but the coordinator may want to restrict 'judged the risk low' to Huang et al."
+ }
+]

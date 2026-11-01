@@ -1,0 +1,238 @@
+[
+ {
+  "key": "2302.00923",
+  "verdict": "sharpens",
+  "row": "| Zhang et al., [*Multimodal Chain-of-Thought Reasoning in Language Models*](https://arxiv.org/abs/2302.00923) (TMLR 2024) | Two-stage fine-tuning (rationale from text + ViT image features, then answer) took a 738M T5 to 90.45% on ScienceQA, against 75.17% for few-shot GPT-3.5 with CoT and 83.99% for GPT-4. In a 200M text-only model, writing the rationale before the answer cut accuracy from 81.63% to 69.32% because the rationales hallucinated image content; captions recovered only 0.8 points. Fine-tuned small models, not a prompting result | [2302.00923](sources/zhang-2023-multimodal-chain-thought-reasoning-language.pdf) | [03](notes/03-core-techniques.md#chain-of-thought) |",
+  "date": "2023-02 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "heading": "Chain-of-thought"
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/11-applications.md",
+    "heading": "Images and multimodal prompts"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "old": "![Multimodal CoT: the rationale combines what the text says and what the image shows before the answer](../sources/images/zhang-multimodal-cot-fig1.png)\n*Image Source: Zhang et al. (2023)*",
+    "new": "![Multimodal CoT: the rationale combines what the text says and what the image shows before the answer](../sources/images/zhang-multimodal-cot-fig1.png)\n*Image Source: Zhang et al. (2023)*\n\nThe two-stage split exists because a one-stage chain hurt the small model. **A 200M text-only T5 fine-tuned on ScienceQA scored 81.63% answering directly and 69.32% writing the rationale first**: in 56% of 50 sampled errors the rationale hallucinated what the image showed. Adding image captions gained 0.8 points; fusing ViT image features into the encoder took the two-stage model from 78.57% to 85.31% ([arXiv:2302.00923](https://arxiv.org/abs/2302.00923) (Zhang et al., TMLR 2024)). The setup is fine-tuning, not prompting. Our extrapolation: when a chain has to reason about an image, give the reasoning step the image, not a caption of it.",
+    "why": "Paper is already described in the CoT variants bullet (method + 90.5% vs ~76%, both match Table 4: 90.45 / 75.17-76.47) but never cited by arXiv ID. Adds the citation plus the paper's central finding (Table 2: 81.63 -> 69.32; Table 3: captions 79.37 vs 78.57, vision 85.31; Fig. 3: 56% hallucination). 11-applications.md line 176 already points here for Multimodal CoT."
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "old": "  - https://arxiv.org/abs/2302.12246\n",
+    "new": "  - https://arxiv.org/abs/2302.12246\n  - https://arxiv.org/abs/2302.00923\n",
+    "why": "frontmatter source"
+   }
+  ],
+  "doubts": "Verdict borderline sharpens/extends: method and headline are in the note; the hallucination/rationale-first finding is new. Frontmatter sources of 03-core-techniques.md needs https://arxiv.org/abs/2302.00923. Origin trace (methodology intents) returns only FLAN-T5 (Chung et al., JMLR 2024, in repo under generative-ai/05-RL) -- backbone, not the idea; the CoT origin (Wei et al. 2022) is already cited in the section. Linked 11-applications in Maps-to because it cross-references this passage; drop if you only want citing notes."
+ },
+ {
+  "key": "2302.12246",
+  "verdict": "verified",
+  "row": "| Diao et al., [*Active Prompting with Chain-of-Thought for Large Language Models*](https://arxiv.org/abs/2302.12246) (ACL 2024) | Annotating CoT for the training questions with the most disagreement across k sampled answers lifted code-davinci-002 on GSM8K to 82.2%, against 63.1% for hand-picked CoT exemplars. Most of that is self-consistency voting (78.0% alone); random selection with the same annotation got 78.6%, so the uncertainty selection adds about 4 points | [2302.12246](sources/diao-2023-active-prompting-chain-thought-large.pdf) | [03](notes/03-core-techniques.md#active-prompt) |",
+  "date": "2023-02 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "heading": "Active-Prompt"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "old": "(Diao et al., 2023)",
+    "new": "(Diao et al., ACL 2024)",
+    "why": "Venue: published ACL 2024 (ledger). All numbers match Table 1 (code-davinci-002: CoT 63.1, SC 78.0, Active-Prompt (D) 82.2)."
+   }
+  ],
+  "doubts": ""
+ },
+ {
+  "key": "2309.03409",
+  "verdict": "verified",
+  "row": "| Yang et al., [*Large Language Models as Optimizers*](https://arxiv.org/abs/2309.03409) (ICLR 2024) | OPRO shows the LLM past prompts with their scores and asks for better ones. With PaLM 2-L as scorer, the best instruction found (\"Take a deep breath and work on this problem step-by-step.\") scored 80.2% zero-shot on GSM8K against 71.8% for \"Let's think step by step\"; optimized prompts beat human-written ones by up to 8% on GSM8K and up to 50% on Big-Bench Hard tasks, and the best instruction differed by scorer model | [2309.03409](sources/yang-2023-large-language-models-as-optimizers.pdf) | [08](notes/08-prompt-optimization.md#ape--automatic-prompt-engineer) |",
+  "date": "2023-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "heading": "APE — automatic prompt engineer"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "old": "Yang et al., 2023-09",
+    "new": "Yang et al., ICLR 2024",
+    "why": "Venue: published ICLR 2024 (ledger). Numbers match abstract and Table 1/4 (80.2 vs 71.8, PaLM 2-L scorer, PaLM 2-L-IT optimizer; up to 8% GSM8K / 50% BBH; text-bison's best instruction differs)."
+   }
+  ],
+  "doubts": "'Take a deep breath' was generated by the PaLM 2-L-IT optimizer and scored with PaLM 2-L; the note's 'with PaLM 2-L' refers to the scorer, which is correct. Anchor slug assumes GitHub drops the em dash leaving a double hyphen (ape--automatic-prompt-engineer)."
+ },
+ {
+  "key": "2406.07496",
+  "verdict": "corrected",
+  "row": "| Yuksekgonul et al., [*TextGrad: Automatic \"Differentiation\" via Text*](https://arxiv.org/abs/2406.07496) (Nature 2025) | Backpropagates LLM-written critiques through a pipeline as \"textual gradients\". Optimizing a system prompt for gpt-3.5-turbo with GPT-4o as the critic, on 36 training examples, lifted GSM8K from 72.9% to 81.1% with instructions alone, matching DSPy's 8-shot bootstrapped prompt. Its headline 51% to 55% on GPQA for GPT-4o is test-time refinement of each answer (3 rounds plus majority vote), not prompt optimization | [2406.07496](sources/yuksekgonul-2024-textgrad.pdf) | [08](notes/08-prompt-optimization.md#dspy-and-programmatic-optimization) |",
+  "date": "2024-06 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "heading": "DSPy and programmatic optimization"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "old": "It took GPT-4o's zero-shot accuracy on GPQA from 51% to 55%",
+    "new": "Optimizing a system prompt for gpt-3.5-turbo, with GPT-4o writing the critiques on 36 training examples, lifted GSM8K from 72.9% to 81.1% with instructions alone, matching DSPy's 8-shot bootstrapped prompt; its headline GPQA gain for GPT-4o (51% to 55%) came from refining each answer at test time, not from a better prompt",
+    "why": "Misattribution: the passage presents TextGrad as revising prompts, then credits it with GPQA 51->55, but that result is 'solution optimization' (§3.2, Table 2: 3 test-time update iterations + majority voting over answers). The prompt-optimization result is §3.3, Table 3: gpt-3.5-turbo-0125 GSM8K 72.9 -> 81.1 (DSPy BFSR 8 demos also 81.1); batch 3 x 12 iterations = 36 examples."
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "old": "Yuksekgonul et al., 2024-06",
+    "new": "Yuksekgonul et al., Nature 2025",
+    "why": "coordinator: published in Nature 639 (2025); from memory, ledger says preprint"
+   }
+  ],
+  "doubts": "TextGrad was later published in Nature (2025) as far as I recall; the PDF here is arXiv v1 and the ledger says preprint, so I kept ⚑. Check and update venue if the ledger is wrong."
+ },
+ {
+  "key": "2408.02442",
+  "verdict": "verified",
+  "row": "| Tam et al., [*Let Me Speak Freely? A Study on the Impact of Format Restrictions on Performance of LLMs*](https://arxiv.org/abs/2408.02442) (EMNLP 2024 Industry) | In JSON mode, 100% of GPT-3.5 Turbo responses put \"answer\" before \"reason\", turning CoT into direct answering; on GSM8K, Claude 3 Haiku scored 86.99% told to \"reply in JSON\" and 23.44% with an explicit schema, and the losses were not parse failures. On classification JSON helped (Gemini 1.5 Flash on DDXPlus 41.6% to 60.3%). Only small and mid-size 2024 models on simple schemas | [2408.02442](sources/tam-2024-let-me-speak-freely.pdf) | [04](notes/04-controlling-output.md#structured-output) |",
+  "date": "2024-08 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/04-controlling-output.md",
+    "heading": "Structured output"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/04-controlling-output.md",
+    "old": "(Tam et al., 2024-08)",
+    "new": "(Tam et al., EMNLP 2024 Industry Track)",
+    "why": "coordinator: published at EMNLP 2024 Industry Track; from memory, ledger says preprint"
+   }
+  ],
+  "doubts": "All numbers match (§4 quote, Table 1, §5 parsing 0.148%/38.15%, Table 10 DDXPlus, Limitations). I believe this appeared in EMNLP 2024 Industry Track; ledger says preprint, so I kept ⚑ -- verify."
+ },
+ {
+  "key": "2504.09858",
+  "verdict": "verified",
+  "row": "| Ma et al., [*Reasoning Models Can Be Effective Without Thinking*](https://arxiv.org/abs/2504.09858) (Apr 2025 ⚑) | Prefilling a dummy thinking block (\"NoThinking\") in DeepSeek-R1-Distill-Qwen-32B used 2.0–5.1× fewer tokens and matched full thinking at large pass@k (at every k on theorem proving, with 3.3–3.7× fewer tokens); at a 700-token budget it scored 51.3 vs 28.9 on AMC23, and parallel NoThinking with a verifier beat thinking at 7× lower latency. Open-weight models only | [2504.09858](sources/ma-2025-reasoning-models-can-be-effective.pdf) | [07](notes/07-prompting-reasoning-models.md#hybrid-models-escalate-gradually) |",
+  "date": "2025-04 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md",
+    "heading": "Hybrid models: escalate gradually"
+   }
+  ],
+  "edits": [],
+  "doubts": "The paper's abstract literally says 'ACM 23' (typo); the note's quoted 'AMC23' silently fixes it. Harmless."
+ },
+ {
+  "key": "2505.11423",
+  "verdict": "corrected",
+  "row": "| Li et al., [*When Thinking Fails: The Pitfalls of Reasoning for Instruction-Following in LLMs*](https://arxiv.org/abs/2505.11423) (NeurIPS 2025) | CoT prompting lowered instruction-following accuracy for 13 of 14 models on IFEval and all of them on ComplexBench (Llama-3-8B-Instruct 75.2% to 59.0% on IFEval); thinking-enabled pairs (Claude 3.7 Sonnet, DeepSeek-R1 vs V3) dropped by under 2 points. A trained classifier that decides whether to reason recovered most of the loss | [2505.11423](sources/li-2025-when-thinking-fails.pdf) | [07](notes/07-prompting-reasoning-models.md#whats-different) |",
+  "date": "2025-05 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md",
+    "heading": "What's different"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md",
+    "old": "Across 15 models on IFEval and ComplexBench, adding CoT lowered constraint accuracy. The paired comparisons (Claude 3.7 Sonnet with and without thinking, DeepSeek-V3 vs. R1) show the same drop.",
+    "new": "Adding CoT lowered constraint accuracy for 13 of 14 models on IFEval and for every model on ComplexBench; Llama-3-8B-Instruct fell from 75.2% to 59.0% on IFEval. The paired comparisons (Claude 3.7 Sonnet with and without thinking, DeepSeek-V3 vs. R1) point the same way, by under 2 points.",
+    "why": "Overstated: §3.4 says 13 of 14 models dropped on IFEval (Mixtral rose 53.0 -> 56.4, Table 1), all on ComplexBench. Table 2 paired drops are small: Claude 90.6->90.2 / 69.8->69.0, DeepSeek 85.2->83.3 / 71.2->71.1; 'the same drop' implied comparable size. Added the paper's own headline number."
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/07-prompting-reasoning-models.md",
+    "old": "Li et al., 2025-05",
+    "new": "Li et al., NeurIPS 2025",
+    "why": "Venue per ledger (NeurIPS 2025)."
+   }
+  ],
+  "doubts": "The arXiv v3 PDF still says 'Preprint. Under review.'; NeurIPS 2025 comes from the ledger only. Abstract says 15 models, Table 1 lists 13 rows; §3.4 says 13 of 14 -- I used the paper's prose."
+ },
+ {
+  "key": "2507.19457",
+  "verdict": "verified",
+  "row": "| Agrawal et al., [*GEPA: Reflective Prompt Evolution Can Outperform Reinforcement Learning*](https://arxiv.org/abs/2507.19457) (ICLR 2026) | An LLM reads full traces, diagnoses failures and rewrites one module's prompt, mutating from a Pareto front of candidates. With Qwen3 8B on six benchmarks it raised the aggregate 9.62 points, against 3.68 for GRPO with 24,000 rollouts and 2.61 for MIPROv2 (beating GRPO everywhere but AIME); with GPT-4.1 Mini, +12.19 vs +6.11 for TextGrad and +5.64 for MIPROv2, with prompts up to 9.2× shorter than MIPROv2's. Needs a metric that returns text feedback | [2507.19457](sources/agrawal-2025-gepa.pdf) | [08](notes/08-prompt-optimization.md#dspy-and-programmatic-optimization) |",
+  "date": "2025-07 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "heading": "DSPy and programmatic optimization"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "old": "(Agrawal et al., 2025-07)",
+    "new": "(Agrawal et al., ICLR 2026)",
+    "why": "Venue: PDF header 'Accepted at ICLR 2026 (Oral)'. All numbers match Tables 1-3 and §on prompt length (9.2x)."
+   }
+  ],
+  "doubts": "Pareto 12.44 vs 6.05 (Table 3) is on 4 benchmarks, not 6; the note doesn't claim 6 for it, so left alone."
+ },
+ {
+  "key": "2508.01191",
+  "verdict": "verified",
+  "row": "| Zhao et al., [*Is Chain-of-Thought Reasoning of LLMs a Mirage? A Data Distribution Lens*](https://arxiv.org/abs/2508.01191) (ACL Findings 2026) | Models trained from scratch (62K to 3B parameters) on synthetic letter transformations scored 100% full-chain exact match in distribution, 0.01% on new compositions of known transformations and 0% on unseen ones or on input lengths one letter off training; fine-tuned LLaMA3-8B and Qwen3-14B reached at most 8.52%. CoT trained into models on a toy domain, not CoT prompted from a general model | [2508.01191](sources/zhao-2025-chain-thought-reasoning-llms-mirage.pdf) | [03](notes/03-core-techniques.md#chain-of-thought) · [eval 03](../06-eval/notes/03-eval-datasets.md#coverage-and-balance) |",
+  "date": "2025-08 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "heading": "Chain-of-thought"
+   },
+   {
+    "file": "ai-engineering/06-eval/notes/03-eval-datasets.md",
+    "heading": "Coverage and balance"
+   }
+  ],
+  "edits": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "old": "(Zhao et al., 2025-08)",
+    "new": "(Zhao et al., Findings of ACL 2026)",
+    "why": "Venue per ledger (ACL Findings 2026). Numbers match Table 1/2/7 and §6.1."
+   },
+   {
+    "file": "ai-engineering/06-eval/notes/03-eval-datasets.md",
+    "old": "(Zhao et al., 2025-08)",
+    "new": "(Zhao et al., Findings of ACL 2026)",
+    "why": "Same venue fix in the eval note."
+   }
+  ],
+  "doubts": "PDF carries no venue; ACL Findings 2026 is from the ledger only."
+ },
+ {
+  "key": "2509.10414",
+  "verdict": "verified",
+  "row": "| de Wynter, [*Is In-Context Learning Learning?*](https://arxiv.org/abs/2509.10414) (Sep 2025 ⚑) | GPT-4 Turbo, GPT-4o, Mixtral 8x7B and Phi-3.5 MoE on nine synthetic formal-language tasks (0 to 100 exemplars, temperature 0) peaked at 50–100 exemplars. Accuracy fell as test inputs drifted from the exemplars, fastest for CoT (slope −1.4, against −0.5 for an APO prompt and −0.4 for modus ponens); related tasks differed by up to 31 points, and decision trees or kNN beat ICL in half the tasks | [2509.10414](sources/wynter-2025-context-learning-learning.pdf) | [03](notes/03-core-techniques.md#few-shot) · [08](notes/08-prompt-optimization.md#dspy-and-programmatic-optimization) · [eval 03](../06-eval/notes/03-eval-datasets.md#coverage-and-balance) |",
+  "date": "2025-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/03-core-techniques.md",
+    "heading": "Few-shot"
+   },
+   {
+    "file": "ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md",
+    "heading": "DSPy and programmatic optimization"
+   },
+   {
+    "file": "ai-engineering/06-eval/notes/03-eval-datasets.md",
+    "heading": "Coverage and balance"
+   }
+  ],
+  "edits": [],
+  "doubts": "03-core-techniques says 'the strongest prompts fell fastest' for CoT/APO/modus ponens; the paper doesn't rank APO as strong (CoT was best prompt in 4 tasks, 2-shot modus ponens worst in 5), so it's a loose gloss but not wrong for CoT. review_status null: preprint (no venue in PDF)."
+ }
+]

@@ -1,0 +1,66 @@
+# references.md backfill — per-batch agent instructions
+
+Repo: /Users/ramsey-wise/workspace/learn-ai-engineering (run commands from there).
+Skill spec: .claude/skills/papers/SKILL.md (read Steps 2–4 once).
+
+Context: an earlier /papers run marked these papers `integrated` and cited them in notes, but
+hit a usage limit before writing their references.md rows. Your batch file lists each paper:
+key, arxiv, title, home, pdf (repo-relative), cited_in (notes that cite it; may be another home),
+venue, review_status (null = you decide: arXiv-only → preprint).
+
+**Do NOT edit any repo file.** Write a single JSON file of proposals to the output path given
+to you. The coordinator applies everything (rows, note fixes, frontmatter sources).
+
+For EACH paper:
+1. `grep -n '<arxiv-id>'` each cited_in note; read the citing passage with enough surrounding
+   context (and the heading it sits under).
+2. Extract the PDF text with
+   `uv run -q --with pypdf python -c "import sys,pypdf; r=pypdf.PdfReader(sys.argv[1]); print(len(r.pages),'pages'); print('\n'.join(p.extract_text() for p in r.pages[:int(sys.argv[2])]))" <pdf> 8`
+   (more pages, or grep the full text, when the number you need is deeper in). Confirm every
+   number, model size, benchmark, and setup the note attributes to the paper, and the
+   attribution itself (authors, year, venue, what the paper actually introduced/claimed).
+3. If the note is wrong or overstated (wrong number, wrong setup, wrong year/venue,
+   attributes an idea the paper doesn't contain), propose a correction as an exact
+   old→new string replacement. `old` must be copied verbatim from the file and unique in
+   it; keep the note's voice; minimal change. Add a number+setup only if the passage states
+   a finding with no number and the fix is one short clause — don't rewrite passages.
+   Also propose fixing the citation's venue if it's given wrongly (preprint → "preprint" or date only).
+4. Write the references.md row (one sentence finding WITH its number and the setup it holds
+   under; add what it doesn't show if short). Exact shapes below.
+5. If cited_in is EMPTY: read the paper in full (all pages incl. limitations), decide
+   extends / sharpens / skip per the skill, trace origin via
+   `sqlite3 scripts/papers/citations.db "SELECT d.title,d.year,d.venue,d.in_repo FROM cites c JOIN work s ON s.id=c.src JOIN work d ON d.id=c.dst WHERE s.arxiv='<id>' AND c.intents LIKE '%methodology%'"`,
+   pick the best note+section in the home (read the note in full), and propose the insertion
+   as an old→new edit (old = an existing verbatim anchor sentence/paragraph, new = it plus your
+   1–3 sentence addition, inline cite style
+   `[arXiv:ID](https://arxiv.org/abs/ID) (Author et al., Venue YYYY | YYYY-MM, preprint)`, finding in **bold**).
+   If it doesn't hold up, verdict "skip" with a reason.
+
+## Row shapes
+
+### llm-fundamentals home (generative-ai/01-llm-fundamentals/references.md), 5 columns:
+`| | Author et al., *Short Title* (Venue YYYY): finding with number and setup | [ID](https://arxiv.org/abs/ID) | ✓ [file.pdf](sources/file.pdf) | [01](notes/01-how-llms-work.md#anchor) |`
+- Preprint: `(YYYY ⚑)` instead of `(Venue YYYY)`. A parenthetical alias is fine: `*Adafactor: …* (ICML 2018)`.
+- Maps-to links are relative to generative-ai/01-llm-fundamentals/. Other homes, e.g.
+  `[mm 06](../../ai-engineering/08-multimodal-engineering/notes/06-generating-images-and-video.md#video)`,
+  `[prompt 10](../../ai-engineering/01-prompt-engineering/notes/10-adversarial-prompting.md#anchor)`,
+  `[RL 02](../05-RL/notes/02-rlhf-pipeline.md#anchor)`, `[ds 16](../../data-science/notes/16-makemore.md#anchor)`,
+  `[eval 04](../../ai-engineering/06-eval/notes/04-graders.md#anchor)`. Link every cited_in note; separate with `, `.
+- Anchor = GitHub slug of the heading the citation sits under (lowercase, drop punctuation except `-` and `_`, spaces → `-`; e.g. "The transformer block and the GPT stack" → `the-transformer-block-and-the-gpt-stack`; "Reading a model's size" → `reading-a-models-size`). Copy the heading text into `heading` too so the coordinator can verify.
+
+### 02-style homes (prompt, loop, context), 4 columns:
+`| Author et al., [*Title*](https://arxiv.org/abs/ID) (Venue YYYY) | finding with number and setup, one or two sentences | [ID](sources/file.pdf) | [08](notes/08-x.md#anchor) |`
+- Preprint: `(Mon YYYY ⚑)`. Links relative to the home folder; other-home links like `[loop 08](../04-loop-engineering/notes/08-self-improving-loops.md#anchor)`, `[eval 03](../06-eval/notes/03-eval-datasets.md#anchor)`.
+- Prefix `★ ` to the paper cell only if it changes a claim (contradicts / strong extends).
+
+## Output JSON (a list, one object per paper)
+```
+{"key": "...", "verdict": "verified|sharpens|corrected|extends|skip",
+ "row": "<full markdown row>", "date": "YYYY-MM (arXiv v1)",
+ "headings": [{"file": "...", "heading": "..."}],
+ "edits": [{"file": "repo-relative path", "old": "...", "new": "...", "why": "what was wrong, per the PDF (page/table)"}],
+ "doubts": "anything uncertain, or empty"}
+```
+verdict: "verified" = note correct as is; "corrected" = you proposed a correction to a wrong claim;
+"sharpens"/"extends"/"skip" for empty-cited_in papers. Validate the JSON with
+`python3 -c "import json;json.load(open('<out>'))"` before finishing. Reply with a 3-line summary only.

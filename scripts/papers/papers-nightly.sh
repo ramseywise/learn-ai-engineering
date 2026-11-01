@@ -57,7 +57,7 @@ print(n)
 EOF
 }
 
-PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. Do not commit or push; stage with git add only if the repo rules say so."
+PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. Do not commit or push; stage with git add only if the repo rules say so."
 
 for home in "${HOMES[@]}"; do
     while :; do
@@ -77,7 +77,7 @@ $PROMPT_TAIL" \
         echo "$out" | tail -40
         left="$(ready "$home")"
         echo "$(date '+%F %T') /papers $home exit $status; $left still ready"
-        if [ $status -ne 0 ] && echo "$out" | grep -qiE "usage limit|rate limit|limit reached|resets at"; then
+        if [ $status -ne 0 ] && echo "$out" | grep -qiE "usage limit|session limit|rate limit|limit reached|resets [0-9a]"; then
             echo "$(date '+%F %T') usage limit hit; stopping"
             break 2
         fi

@@ -1,0 +1,184 @@
+[
+ {
+  "key": "1308.0850",
+  "verdict": "corrected",
+  "row": "| | Graves, *Generating Sequences With Recurrent Neural Networks* (2013 ⚑): a soft attention window, a mixture of 10 Gaussians over the character string whose location can only move forward, lets a 3-layer, 400-cell LSTM write handwriting for given text on IAM-OnDB; the same paper's character-level LSTM reaches 1.33 bits/char (dynamic evaluation) on Hutter Prize Wikipedia | [1308.0850](https://arxiv.org/abs/1308.0850) | ✓ [graves-2013-generating-sequences-recurrent-neural-networks.pdf](sources/graves-2013-generating-sequences-recurrent-neural-networks.pdf) | [01](notes/01-how-llms-work.md#attention) |",
+  "date": "2013-08 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Attention"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "old": "Both papers point to Graves's handwriting model as the first differentiable attention: a soft window, a mixture of Gaussians that moves forward along the text as the pen writes",
+    "new": "Both papers point back to Graves's handwriting model, which Sutskever et al. credit with introducing differentiable attention: a soft window, a mixture of Gaussians that moves forward along the text as the pen writes. Bahdanau et al. name that forward-only movement as the limit their model removes, since translation needs reordering",
+    "why": "Only Sutskever et al. (sec. 2, p.2) call Graves's window a 'novel differentiable attention mechanism'; Bahdanau et al. (sec. 6.1) cite it as 'a similar approach of aligning' whose one-directional modes are a 'severe limitation' for MT. Neither paper calls it the first. Graves eq. 51: kappa_t = kappa_{t-1} + exp(.) confirms forward-only."
+   }
+  ],
+  "doubts": ""
+ },
+ {
+  "key": "1409.0473",
+  "verdict": "verified",
+  "row": "| | Bahdanau et al., *Neural Machine Translation by Jointly Learning to Align and Translate* (ICLR 2015): a decoder that takes a softmax-weighted sum over all encoder states (additive scoring) reached 26.75 BLEU on WMT'14 En→Fr against 17.82 for a same-size fixed-vector RNN encoder–decoder, with no drop on sentences of 50+ words; it still trailed Moses (33.30) on the full test set, matching it only on sentences with no unknown words | [1409.0473](https://arxiv.org/abs/1409.0473) | ✓ [bahdanau-2014-neural-machine-translation-jointly-learning.pdf](sources/bahdanau-2014-neural-machine-translation-jointly-learning.pdf) | [01](notes/01-how-llms-work.md#attention) |",
+  "date": "2014-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Attention"
+   }
+  ],
+  "edits": [],
+  "doubts": "Note's 'single model still trailed 33.30' is right for the full test set (Table 1: 26.75; the longer-trained RNNsearch-50* got 28.45), but on no-UNK sentences RNNsearch-50* scored 36.15 vs Moses 35.63. Not wrong, just one-sided; left as is."
+ },
+ {
+  "key": "1409.3215",
+  "verdict": "verified",
+  "row": "| | Sutskever et al., *Sequence to Sequence Learning with Neural Networks* (NIPS 2014): a 4-layer LSTM encodes the source into one fixed vector and another decodes from it; on WMT'14 En→Fr an ensemble of 5 reached 34.81 BLEU against 33.30 for a phrase-based baseline (still below the best WMT'14 system's 37.0), and reversing the source words raised a single model from 25.9 to 30.6 BLEU | [1409.3215](https://arxiv.org/abs/1409.3215) | ✓ [sutskever-2014-sequence-sequence-learning-neural-networks.pdf](sources/sutskever-2014-sequence-sequence-learning-neural-networks.pdf) | [01](notes/01-how-llms-work.md#attention) |",
+  "date": "2014-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Attention"
+   }
+  ],
+  "edits": [],
+  "doubts": "25.9->30.6 is from sec. 3.3 text; Table 1 gives single forward 26.17 vs single reversed 30.59 (beam 12). Note's figures match the text."
+ },
+ {
+  "key": "1512.03385",
+  "verdict": "corrected",
+  "row": "| | He et al., *Deep Residual Learning for Image Recognition* (CVPR 2016): adding a parameter-free identity shortcut (`y = F(x) + x`) around every two layers fixed the degradation where a 34-layer plain net trained worse than an 18-layer one despite batch norm; on ImageNet the 34-layer ResNet reached 25.03% top-1 validation error (10-crop) against 28.54% for the plain net, and on CIFAR-10 deeper ResNets had smaller residual responses | [1512.03385](https://arxiv.org/abs/1512.03385) | ✓ [he-2016-deep-residual-learning-image-recognition.pdf](sources/he-2016-deep-residual-learning-image-recognition.pdf) | [01](notes/01-how-llms-work.md#the-transformer-block-and-the-gpt-stack) |",
+  "date": "2015-12 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "The transformer block and the GPT stack"
+   }
+  ],
+  "edits": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "old": "The deeper the ResNet, the smaller its residual outputs, so each layer adjusts the signal rather than rewriting it",
+    "new": "On CIFAR-10, the deeper the ResNet, the smaller its residual outputs, so each layer adjusts the signal rather than rewriting it",
+    "why": "The layer-response analysis (sec. 4.2, Fig. 7) is on CIFAR-10 ResNet-20/56/110, not ImageNet; as written it reads as following from the preceding ImageNet sentence. Other numbers (25.03 vs 28.54, Table 2, 10-crop; 'unlikely' vanishing gradients with BN, sec. 4.1) check out."
+   }
+  ],
+  "doubts": ""
+ },
+ {
+  "key": "1601.06759",
+  "verdict": "verified",
+  "row": "| | van den Oord et al., *Pixel Recurrent Neural Networks* (ICML 2016): an image as a product of next-pixel 256-way softmaxes in raster order; the Diagonal BiLSTM reached 3.00 bits/dim on CIFAR-10 and the masked-convolution PixelCNN 3.14, with PixelCNN's parallelism limited to training since 'the image generation process is sequential for both' | [1601.06759](https://arxiv.org/abs/1601.06759) | ✓ [oord-2016-pixel-recurrent-neural-networks.pdf](sources/oord-2016-pixel-recurrent-neural-networks.pdf) | [01](notes/01-how-llms-work.md#prefill-decode-and-the-kv-cache) |",
+  "date": "2016-01 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Prefill, decode and the KV cache"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1606.05328",
+  "verdict": "verified",
+  "row": "| | van den Oord et al., *Conditional Image Generation with PixelCNN Decoders* (NIPS 2016): gated, two-stack PixelCNN matched PixelRNN on CIFAR-10 (3.03 vs 3.00 bits/dim) and beat it on ImageNet 32/64, reaching PixelRNN's quality in under half the training time (60 h on 32 GPUs); sampling stays sequential, each pixel fed back into the network | [1606.05328](https://arxiv.org/abs/1606.05328) | ✓ [oord-2016-conditional-image-generation-pixelcnn-decoders.pdf](sources/oord-2016-conditional-image-generation-pixelcnn-decoders.pdf) | [01](notes/01-how-llms-work.md#prefill-decode-and-the-kv-cache) |",
+  "date": "2016-06 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Prefill, decode and the KV cache"
+   }
+  ],
+  "edits": [],
+  "doubts": "'Under half the training time' is stated for both CIFAR and ImageNet in the intro, but the only timed figure (60 h, 32 GPUs) is the ImageNet run (sec. 3.1). Note pairs it with CIFAR-10; acceptable per the intro."
+ },
+ {
+  "key": "1606.08415",
+  "verdict": "verified",
+  "row": "| | Hendrycks & Gimpel, *Gaussian Error Linear Units (GELUs)* (2016 ⚑): GELU = xΦ(x), the expectation of a mask that zeroes inputs with probability 1−Φ(x); it beat ReLU and ELU on small benchmarks only (e.g. 7.89% vs 8.16% and 8.41% error on CIFAR-10 with a 9-layer CNN, median of 3 runs), and the paper's SiLU xσ(x), later renamed Swish, did worse than GELU | [1606.08415](https://arxiv.org/abs/1606.08415) | ✓ [hendrycks-2016-bridging-nonlinearities-stochastic-regularizers-gaussian.pdf](sources/hendrycks-2016-bridging-nonlinearities-stochastic-regularizers-gaussian.pdf) | [01](notes/01-how-llms-work.md#the-transformer-block-and-the-gpt-stack) |",
+  "date": "2016-06 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "The transformer block and the GPT stack"
+   }
+  ],
+  "edits": [],
+  "doubts": "Local PDF is a later revision (has Appendix B on the SiLU/Swish history), not v1."
+ },
+ {
+  "key": "1609.07843",
+  "verdict": "verified",
+  "row": "| | Merity et al., *Pointer Sentinel Mixture Models* (ICLR 2017): introduces WikiText-103, 103M training tokens from 28,475 Wikipedia Good and Featured articles kept in order with case and punctuation (vocab 267K vs PTB's 10K), because PTB is lower-cased with 10K words and the 1B Word benchmark shuffles sentences; its pointer sentinel-LSTM reached 70.9 test perplexity on PTB | [1609.07843](https://arxiv.org/abs/1609.07843) | ✓ [merity-2016-pointer-sentinel-mixture-models.pdf](sources/merity-2016-pointer-sentinel-mixture-models.pdf) | [01](notes/01-how-llms-work.md#embeddings-and-position) |",
+  "date": "2016-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Embeddings and position"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1609.08144",
+  "verdict": "verified",
+  "row": "| | Wu et al., *Google's Neural Machine Translation System* (2016 ⚑): a shared 32K-wordpiece vocabulary scored 38.95 BLEU on WMT'14 En→Fr (mean of 8 single models), against 37.90 for words and 38.01 for characters, and characters decoded about 5× slower on CPU (1.05 vs 0.21 s per sentence) | [1609.08144](https://arxiv.org/abs/1609.08144) | ✓ [wu-2016-google-s-neural-machine-translation.pdf](sources/wu-2016-google-s-neural-machine-translation.pdf) | [01](notes/01-how-llms-work.md#tokens) |",
+  "date": "2016-09 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Tokens"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1701.06538",
+  "verdict": "verified",
+  "row": "| | Shazeer et al., *Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer* (ICLR 2017): a noisy top-k router over up to 131,072 experts between LSTM layers; on a 100B-word news corpus at matched compute per token, 65,536 experts (68B parameters) cut test perplexity 39% below the baseline, and 131,072 made it worse | [1701.06538](https://arxiv.org/abs/1701.06538) | ✓ [shazeer-2017-outrageously-large-neural-networks.pdf](sources/shazeer-2017-outrageously-large-neural-networks.pdf) | [01](notes/01-how-llms-work.md#reading-a-models-size) |",
+  "date": "2017-01 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Reading a model's size"
+   }
+  ],
+  "edits": [],
+  "doubts": ""
+ },
+ {
+  "key": "1705.00108",
+  "verdict": "verified",
+  "row": "| | Peters et al., *Semi-supervised Sequence Tagging with Bidirectional Language Models* (ACL 2017): TagLM concatenates top-layer forward and backward LM states (trained on the 1B Word Benchmark) into a tagger, raising CoNLL-2003 NER F1 from 90.87 to 91.93; an LM trained only on the CoNLL data gave no gain (90.79) | [1705.00108](https://arxiv.org/abs/1705.00108) | ✓ [peters-2017-semi-supervised-sequence-tagging-bidirectional.pdf](sources/peters-2017-semi-supervised-sequence-tagging-bidirectional.pdf) | [01](notes/01-how-llms-work.md#embeddings-and-position) |",
+  "date": "2017-05 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Embeddings and position"
+   }
+  ],
+  "edits": [],
+  "doubts": "Note says 'frozen language model'. The paper says 'the LM weights are fixed' only for one ablation (p.5) and otherwise just pre-trains the LMs separately and removes the softmax; it never says outright that the main system keeps them fixed. Probably right (ELMo describes it the same way), so left unchanged."
+ },
+ {
+  "key": "1801.10198",
+  "verdict": "verified",
+  "row": "| | Liu et al., *Generating Wikipedia by Summarizing Long Sequences* (ICLR 2018): a decoder-only transformer over [input; separator; output] almost halves parameters; on WikiSum the encoder–decoder could not learn at 2,000 input tokens, the decoder kept improving to 4,000 (16 GB P100 limit), and local + memory-compressed attention reached 11,000, with test log-perplexity 2.47 → 2.22 → 2.05; ROUGE-L did not follow at 4,000 (33.6 vs 34.2) | [1801.10198](https://arxiv.org/abs/1801.10198) | ✓ [liu-2018-generating-wikipedia-summarizing-long-sequences.pdf](sources/liu-2018-generating-wikipedia-summarizing-long-sequences.pdf) | [01](notes/01-how-llms-work.md#prefill-decode-and-the-kv-cache) |",
+  "date": "2018-01 (arXiv v1)",
+  "headings": [
+   {
+    "file": "generative-ai/01-llm-fundamentals/notes/01-how-llms-work.md",
+    "heading": "Prefill, decode and the KV cache"
+   }
+  ],
+  "edits": [],
+  "doubts": "The paper says T-ED peaked around L=500-1000 and 'is unable to learn at L=2000'; the note's 'stopped learning at 2,000' is a fair paraphrase. The citation sits under the 'Prefill, decode and the KV cache' heading (it is in the decoder-only paragraph after the architecture table); the coordinator may prefer a different anchor if that paragraph moves."
+ }
+]

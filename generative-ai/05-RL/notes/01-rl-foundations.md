@@ -18,6 +18,7 @@ sources:
   - https://arxiv.org/abs/2512.16144 (INTELLECT-3)
   - https://arxiv.org/abs/2602.15763 (GLM-5)
   - https://arxiv.org/abs/2112.09332 (WebGPT)
+  - https://arxiv.org/abs/2106.01345 (Decision Transformer)
 ---
 
 # 1 — RL Foundations for LLMs
@@ -238,6 +239,19 @@ Learning*, ch. 4). The lesson carries over directly to LLMs. Offline preference 
 DPO ([03](03-preference-optimization.md)) are batch RL on a fixed preference set, and they
 share its limit: the policy improves only where the data has coverage. Online and on-policy
 methods keep the advantage of being able to check their own guesses.
+
+Decision Transformer removes the `max` instead of constraining it
+([arXiv:2106.01345](https://arxiv.org/abs/2106.01345) (Chen et al., NeurIPS 2021)). A small
+GPT is trained on the log as interleaved (return-to-go, state, action) tokens with a plain
+action-prediction loss, then prompted at test time with the return you want. With no learned
+value function to optimize, there is nothing for unseen actions to exploit. On nine D4RL
+locomotion logs it **averaged 74.7 against 63.9 for CQL**, the strongest pessimistic
+Q-learning baseline. When rewards were withheld until the end of the episode, CQL collapsed
+(Hopper medium-replay: 2.0) while Decision Transformer barely moved (78.5). The limits are in
+the same paper. Behavior cloning on only the top 10% of trajectories matched it on average
+(56.7 against 56.1), although picking that percentile needs environment rollouts. And it
+exceeded the best return in its data only sometimes (Seaquest). Offline RL here becomes the
+same conditional next-token problem an LLM solves.
 
 ### Policy gradients: from REINFORCE to the PPO clip
 

@@ -15,6 +15,8 @@ sources:
   - https://arxiv.org/abs/2505.22954
   - https://arxiv.org/abs/2607.13104
   - https://arxiv.org/abs/2607.12227
+  - https://arxiv.org/abs/2610.23839
+  - https://arxiv.org/abs/2610.25858
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 11"
 confidence: medium
 cleaned: 2026-10-28
@@ -379,12 +381,12 @@ The book's bandit illustration: one of three reasoning chains scores 15% better 
 
 Then fix the task model and change the updater model, to compare updaters directly.
 
-**Plasticity costs stability.** Chen et al. (2026) ran three self-evolving methods (ReasoningBank memory retrieval, GEPA prompt evolution, Meta-Harness) on four task streams that drift in topic, workflow or domain. Self-evolution raised aggregate scores on most streams, but across all twelve runs the more a method learned on new tasks, the more it forgot on old ones (**r = −0.72**):
+**Plasticity costs stability.** Chen et al. ([arXiv:2610.25858](https://arxiv.org/abs/2610.25858), 2026-10, preprint) ran three self-evolving methods (ReasoningBank memory retrieval, GEPA prompt evolution, Meta-Harness) with Gemini 3.6 Flash on four task streams, built from BIRD, BFCL and ScienceWorld, that drift in topic, workflow, domain or all three. Self-evolution raised aggregate scores on most streams, but across all twelve method–stream pairs the more a method gained on the task group it was training on, the more it lost on the others, both earlier groups (forgetting) and groups not yet seen (interference) (**r = −0.72**):
 
 ![Plasticity against stability across four drift scenarios: methods that gain more on new tasks lose more on old ones](../sources/images/chen-self-evolving-agents-continual-learners-fig2.png)
-*Image Source: Chen et al. (2026), Are Self-Evolving Agents Continual Learners?, Fig. 2*
+*Image Source: Chen et al., [Are Self-Evolving Agents Continual Learners?](https://arxiv.org/abs/2610.25858) (2026), Fig. 2*
 
-The mechanisms are the ones this note warns about. Self-modifying methods make **global edits to one shared prompt**, so new rules crowd out old ones: in one stream, a task family's share of GEPA's strategy prompt fell from 100% to 14.7%, and when two streams needed opposite workflows the agent rewrote its policy into its opposite. Similarity-based memory localizes updates better but retrieves **foreign memories** on unseen tasks, and collides when similar queries need conflicting workflows. Hence the retention set in every gate, and the preference for scoped Skills over one ever-growing prompt. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
+The mechanisms are the ones this note warns about. Self-modifying methods make **global edits to one shared prompt**, so new rules crowd out old ones: in one stream, a task family's share of GEPA's strategy prompt fell from 100% to 14.7%, and when consecutive task groups in a stream needed opposite workflows the agent rewrote its policy into its opposite. Similarity-based memory localizes updates better but retrieves **foreign memories** on unseen tasks, and collides when similar queries need conflicting workflows. Hence the retention set in every gate, and the preference for scoped Skills over one ever-growing prompt. Over the long run, track five things: regression, generalization, token efficiency, safety drift and **long-term engineering quality**, meaning maintainability, ownership and migration cost. Passing tests says nothing about that last one.
 
 **Beat a matched-budget baseline, on tasks the loop never saw.** Wang et al. ([arXiv:2607.12227](https://arxiv.org/abs/2607.12227) (Wang et al., 2026-07)) re-ran harness evolution (Agentic Harness Engineering, with its step that fetches outside harnesses turned off) on Terminal-Bench 2.1. They compared it with spending the same budget, five attempts per task, on plain retries. Without unit tests, harness evolution averaged 67.4% pass@1 across three models. That is below a single attempt with the starting harness (68.2%) and below five parallel samples with the model picking its own best answer (72.3%). On a split into 45 search, 10 validation and 34 held-out tasks, the evolved harness changed held-out pass@1 by +1.2, 0.0 and −1.4 points across the three models: flat on average. The edits were sensible, but "most edits memorize fixes rather than distilling strategies". Evolution did pay off where the starting harness left room and feedback was rich. On ARC-AGI-3 games with Claude Opus 4.8 and a 2,000-action budget, evolving the full harness during each game scored 77.5, against 43.3 for retries with the same starting harness. So an evolve-loop report needs two rows that published results often leave out: the same compute spent on more attempts, and a held-out split.
 
@@ -457,12 +459,12 @@ Measurements worth quoting when arguing about loop horizons:
 - CORE-Bench (research reproduction): ~20% in 2024 → saturated within 15 months.
 - On open-ended research problems, models chose a better next step than humans **64%** of the time (Apr 2026), up from 51% (Nov 2025).
 
-DiscoveryRSI (Zhong et al., 2026) is a research-scale version of the same loop, aimed at hypothesis generation in the life sciences. A multi-agent evolutionary search grows hypothesis trees; selected investigations are compiled into executable tasks; and the system learns from three signals: credit assigned to the hypotheses that drove an assessment, **harness replay** to find productive strategies and recurring failures, and re-discovery that applies accepted improvements to new investigations. Over two rounds of self-improvement a 27B model's hypothesis quality rose from **4.86 to 5.39**, and the share of evolve/repair moves rose from 77.5% to 91.7%:
+DiscoveryRSI ([arXiv:2610.23839](https://arxiv.org/abs/2610.23839) (Zhong et al., 2026-10, preprint)) is a research-scale version of the same loop, aimed at hypothesis generation in the life sciences. A multi-agent evolutionary search grows hypothesis trees; selected investigations are compiled into executable tasks; and the system learns from three signals: credit assigned to the hypotheses that drove an assessment, **harness replay** to find productive strategies and recurring failures, and re-discovery that applies accepted improvements to new investigations. Over two rounds of self-improvement a 27B model's hypothesis quality rose from **4.86 to 5.39**, and the share of evolve/repair moves rose from 77.5% to 91.7%:
 
 ![DiscoveryRSI: hypothesis hits in later published research, quality rising over two RSI rounds, and human-rated gain per revision](../sources/images/zhong-discoveryrsi-fig1.png)
-*Image Source: Zhong et al. (2026), DiscoveryRSI, Fig. 1*
+*Image Source: Zhong et al., [DiscoveryRSI: Recursively Learning to Discover Valuable Hypotheses](https://arxiv.org/abs/2610.23839) (2026), Fig. 1*
 
-Read the headline numbers with the next section in mind. "Quality" is an automated rubric score, the human review is described as preliminary, and the best hit rate against later publications is **6.3%**. The loop improves on what it can measure, and the measurement is still the weak part.
+Read the headline numbers with the next section in mind. "Quality" is an automated rubric score, with GPT-5.6 Sol as the judge. The gain is in how testable the hypotheses are (falsifiability 4.00 → 6.20), while the same grader's importance and novelty scores fell (6.48 → 6.04 and 4.87 → 4.58). The human review is described as preliminary, and the best hit rate against later publications is **6.3%**. The loop improves on what it can measure, and the measurement is still the weak part.
 
 ### When "done" is not progress
 
