@@ -117,7 +117,7 @@ atlas-small
 ['system', 'assistant', 'user']
 ```
 
-Depth is an argument against a lot of "just wrap it" code. It's also a judgement, not a measure: Martin answers in the debate that a shallow-looking extraction can still give a useful name, and that decompositions can always be inlined. Depth is most useful for a public interface, where you're stuck with the decision. It matters less for private helpers you can redo in a minute.
+Depth is an argument against a lot of "just wrap it" code. It's also a judgement, not a measure: Martin's side of the debate is the old One Thing rule: if he can meaningfully extract one method from another, the original did more than one thing. He adds that he'd rather err towards decomposing, since decompositions can always be inlined later. Depth is most useful for a public interface, where you're stuck with the decision. It matters less for private helpers you can redo in a minute.
 
 ## Duplication and the wrong abstraction
 
@@ -172,7 +172,7 @@ Kent Beck's [four rules of simple design](https://martinfowler.com/bliki/BeckDes
 
 ## SOLID and its critics
 
-SOLID is five principles collected by Robert Martin. They're widely taught and widely argued about, and it's a common interview topic. Here's each in Python with what it's protecting against, what it costs and who objects. Python changes some of the answers, as Martin himself concedes for one of them.
+SOLID is five principles associated with Robert Martin. They're widely taught and widely argued about, and it's a common interview topic. Here's each in Python with what it's protecting against, what it costs and who objects. Python changes some of the answers, as Martin himself concedes for one of them.
 
 ### S: single responsibility
 
@@ -340,7 +340,7 @@ The cost is one more thing to read when you try to follow what actually runs, pl
 
 ## What the indirection costs
 
-[Muratori's essay](https://www.computerenhance.com/p/clean-code-horrible-performance) measures it in C++, on shapes with an area function: about 35 cycles per shape with virtual calls, 24 with a switch (1.5x) and 3.0 to 3.5 with a table (10x), growing to nearly 15x with one more property, and 20 to 25x with AVX. He says "these aren't hard-core measurements", because the differences are so large. He finds it unacceptable to give up that much hardware for a little programmer convenience. It's a measured argument, though his "rules" are taken from examples in the literature, and it's aimed at a certain segment of the industry, as he says himself.
+[Muratori's essay](https://www.computerenhance.com/p/clean-code-horrible-performance) measures it in C++, on shapes with an area function: about 35 cycles per shape with virtual calls, 24 with a switch (1.5x) and 3.0 to 3.5 with a table (10x), growing to nearly 15x with one more property, and 20 to 25x with AVX. He says "none of these are hard-core measurements", because the differences are so large. He finds it unacceptable to give up that much hardware for a little programmer convenience. It's a measured argument, though his "rules" are taken from examples in the literature, and it's aimed at a certain segment of the industry, as he says himself.
 
 So what happens to that gap in CPython?
 
@@ -424,7 +424,7 @@ For an LLM system, where work is dominated by waiting for a model, a few hundred
 
 [Brooks (1986)](https://doi.org/10.1109/MC.1987.1663532) separates the essential difficulty of a software task, fashioning its conceptual structures, from accidental difficulty in representing them. Unless accidental work is more than 9/10 of all effort, he argues, removing all of it won't give an order-of-magnitude improvement. [Moseley and Marks (2006)](../../sources/moseley-2006-out-tar-pit.pdf) take it further: complexity causes more problems in large systems than anything else, and it can be tamed only by avoiding it where possible and separating it where not; they propose splitting a system into essential state, essential logic and accidental state and control.
 
-You won't adopt their full architecture, but a Python version of the idea is everywhere in this course: keep state in few places and logic in pure functions. The [lab](../practice/README.md)'s second call returning zero calls is a pure example of accidental state. Removing it in step 3 fixed three bugs with a small edit.
+You won't adopt their full architecture, but a Python version of the idea is everywhere in this course: keep state in few places and logic in pure functions. The [lab](../practice/README.md)'s second call returning zero calls is a pure example of accidental state. Step 3 removes it with a small edit, and that fixes two of the three pinned bugs; the third, retried calls going uncounted, was a misplaced status check.
 
 ## Pitfalls
 
