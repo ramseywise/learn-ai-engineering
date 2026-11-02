@@ -1,7 +1,7 @@
-"""Code from notes/02-row-and-column-stores.md.
+"""Code from notes/03-row-and-column-stores.md.
 
 Run from any folder (it writes only to a temporary directory):
-    uv run --with duckdb --with pyarrow --with numpy python 02_row_and_column_stores.py
+    uv run --with duckdb --with pyarrow --with numpy python 03_row_and_column_stores.py
 """
 import os, tempfile
 os.chdir(tempfile.mkdtemp())

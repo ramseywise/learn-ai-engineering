@@ -17,10 +17,10 @@ The physical facts that the rest of data engineering rests on: how data is encod
 
 | # | Chapter | Question it answers |
 |---|---|---|
-| 1 | [Encoding and files](notes/01-encoding-and-files.md) | What does a file promise its reader? CSV, Avro, Parquet, Arrow |
-| 2 | [Row and column stores](notes/02-row-and-column-stores.md) | Why do OLTP and OLAP need different layouts? |
-| 3 | [Distributed compute](notes/03-distributed-compute.md) | What does a cluster cost, and when does one machine suffice? |
-| 4 | [Partitioning and replication](notes/04-partitioning-and-replication.md) | Where does each row live, and what can a reader see? |
+| 1 | [Encoding and files](notes/02-encoding-and-files.md) | What does a file promise its reader? CSV, Avro, Parquet, Arrow |
+| 2 | [Row and column stores](notes/03-row-and-column-stores.md) | Why do OLTP and OLAP need different layouts? |
+| 3 | [Distributed compute](notes/08-distributed-compute.md) | What does a cluster cost, and when does one machine suffice? |
+| 4 | [Partitioning and replication](notes/05-partitioning-and-replication.md) | Where does each row live, and what can a reader see? |
 
 Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
 
@@ -43,10 +43,10 @@ Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The
 - **Practice:** [practice/](practice/) has one script per chapter holding that chapter's code. Each prints its output and writes only to a temporary folder. Run from `practice/`:
 
 ```bash
-uv run --with duckdb --with pyarrow --with numpy --with polars --with fastavro python 01_encoding_and_files.py
-uv run --with duckdb --with pyarrow --with numpy python 02_row_and_column_stores.py
-uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 03_distributed_compute.py   # needs Java for the Spark sections
-uv run --with duckdb --with numpy python 04_partitioning_and_replication.py
+uv run --with duckdb --with pyarrow --with numpy --with polars --with fastavro python 02_encoding_and_files.py
+uv run --with duckdb --with pyarrow --with numpy python 03_row_and_column_stores.py
+uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 08_distributed_compute.py   # needs Java for the Spark sections
+uv run --with duckdb --with numpy python 05_partitioning_and_replication.py
 ```
 
 Sources: [references.md](references.md).

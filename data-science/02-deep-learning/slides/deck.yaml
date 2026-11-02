@@ -1,0 +1,608 @@
+# Deep learning lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=data-science/02-deep-learning STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: digits on a laptop, from an MLP at 0.97 to CNNs and RNNs, then real IMDb reviews.
+# Numbers on the slides are from runs in the notes, or attributed papers.
+deck:
+  title: Deep Learning
+  subtitle: Train a network, debug it, and match the architecture to the data
+  tagline: |-
+    The loop · Why it won't train · What to try next · Images · Sequences · Text
+  reference: "Notes: data-science/02-deep-learning"
+  output: deep-learning.pptx
+  notes: >-
+    Classical models on tables gave us the discipline. Today we open up the neural network. We write the training
+    loop, see why a correct-looking network fails to learn, decide what to try next without guessing, and then match
+    the architecture to the data: images, sequences, and text. Almost every number here came from a run you can repeat
+    on a laptop, and several of them go against what you would expect.
+
+parts:
+  - title: What is a network, and what does the loop do?
+    summary: Forward and backward · The training loop · Reading Ng's code in PyTorch
+    notes: >-
+      We begin with the one piece of machinery everything else in this lecture relies on.
+    slides:
+      - layout: statement
+        title: Logistic regression hits a ceiling. How do we get past it?
+        kicker: The problem
+        statement: "On two interleaved moons, a one-layer network stops at 0.895 because its boundary is a straight line. One hidden layer of 8 units reaches 0.955."
+        attribution: Own run in the first chapter, NumPy only
+        takeaway: A hidden layer bends the boundary, and everything else is how to train it.
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          Logistic regression is a one-layer network and it can only draw a straight line. Add one hidden layer and the
+          boundary bends. So how do we find the weights? That question is the first course in Ng's specialization.
+
+      - layout: flow
+        title: One training step has four moves
+        recall: Which move does PyTorch's autograd do for you?
+        steps:
+          - {label: Forward, sub: "Weighted sums and activations, layer by layer"}
+          - {label: Loss, sub: "Cross-entropy on the logits"}
+          - {label: Backward, sub: "Chain rule from the loss back"}
+          - {label: Step, sub: "Move each weight against its gradient"}
+        loop: Repeat over mini-batches
+        bullets:
+          - "**Gradient check:** correct backprop differs from numerical by 9e-11, a planted 10% bug by 0.048."
+          - "**Autograd** matched the NumPy `dW1` to within 7e-17 in the chapter."
+        takeaway: Backprop is the chain rule with bookkeeping, and `backward()` does the bookkeeping.
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          Forward, loss, backward, step. The notebooks write every line in NumPy, which is worth doing once. A numerical
+          gradient check catches a planted bug instantly, and autograd reproduces the hand-written gradient to machine
+          precision, so from then on we let it do the work.
+
+      - layout: code
+        title: The PyTorch loop, and the bug behind each line
+        recall: Why is there no softmax in the model?
+        lang: python
+        code: |-
+          for epoch in range(epochs):
+              model.train()             # dropout, batch norm on
+              for x, y in loader:
+                  logits = model(x)     # no softmax here
+                  loss = F.cross_entropy(logits, y)
+                  optimizer.zero_grad() # or gradients add up
+                  loss.backward()
+                  optimizer.step()
+          model.eval()                  # before scoring
+          with torch.no_grad():
+              acc = (model(X_te).argmax(1) == y_te).float().mean()
+        bullets:
+          - "**Digits MLP:** train 0.985, test 0.972."
+          - "**Forget `eval()`** and batch norm quietly costs points, as part 2 shows."
+          - "Same loop for every model in this lecture."
+        takeaway: The loop never changes, and each line exists because leaving it out fails quietly.
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          Learn this loop by heart. The model outputs logits because cross-entropy applies the log-softmax itself. Zero the
+          gradients or they accumulate. Switch modes or batch norm and dropout do the wrong thing. None of these raise errors.
+
+      - layout: table
+        title: Reading Ng's NumPy and TF code in PyTorch
+        recall: What replaces `tf.Session` and placeholders?
+        header: ["Ng NumPy", "Ng TF 1.x / Keras", "PyTorch"]
+        widths: [3, 3, 3]
+        rows:
+          - ["`L_model_forward`", "`tf.layers.dense`", "`nn.Sequential`, `model(x)`"]
+          - ["`compute_cost`", "`softmax_cross_entropy`", "`F.cross_entropy`"]
+          - ["`L_model_backward`", "automatic in the graph", "`loss.backward()`"]
+          - ["`update_parameters`", "`minimize` in `sess.run`", "`optimizer.step()`"]
+          - ["Rows as columns (`X.T`)", "Channels last", "Rows are examples, channels second"]
+        takeaway: The coursework stays as it is, and the table lets you reproduce any notebook in the course framework.
+        source: notes/01-neural-networks-fundamentals.md
+        notes: >-
+          The specialization mixes NumPy, TensorFlow 1 and standalone Keras. PyTorch is the framework for this course, so the
+          chapter has a full translation table and a status table for the old TensorFlow APIs. Here is the gist.
+
+  - title: Why won't it train, or generalise?
+    summary: Initialisation · Batch norm · AdamW · The learning rate · Noisy labels
+    notes: >-
+      The loop is right, and the network still fails. Course two is about these failures. Each one here has a measured effect.
+    slides:
+      - layout: statement
+        title: Same network, same data. Why 0.102 and 0.970?
+        kicker: The problem
+        statement: "Initialised with zeros or very small weights, a deep MLP on digits scores 0.102, which is chance. With He initialisation it scores 0.970."
+        attribution: Own run. The only thing changed is the initial weights
+        takeaway: With no signal reaching the first layers, training can't start, so check activations before tuning anything.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          The code is correct and nothing raises an error. Too small, and the activations die out layer by layer. Too large,
+          and they explode. So what else fails like this, quietly?
+
+      - layout: compare
+        title: L2 inside Adam is not weight decay
+        recall: Why does `weight_decay` mean something different in Adam and AdamW?
+        emphasis: right
+        left:
+          title: "Adam, weight_decay=0.1"
+          tag: "test 0.102"
+          bullets:
+            - "Penalty goes into the gradient"
+            - "Adam rescales it per parameter"
+            - "Weight norm driven to 0.02"
+        right:
+          title: "AdamW, weight_decay=0.1"
+          tag: "test 0.972"
+          bullets:
+            - "Decay applied outside the gradient"
+            - "Same size step for every weight"
+            - "Weight norm 13.57"
+        takeaway: Use AdamW, because in Adam the setting that looks the same can destroy the run.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          This is the Loshchilov and Hutter result in one run. Same number, same network. In Adam the L2 term passes through
+          the adaptive scaling and drives the weights to nearly zero. In AdamW the same setting is harmless.
+
+      - layout: code
+        title: Batch norm left in train mode costs 9 points, silently
+        recall: What does batch norm use in place of batch statistics at inference?
+        lang: python
+        code: |-
+          model = run(bnnet())        # BatchNorm1d in each layer
+          model.eval()                # running averages
+          # batch 32: test 0.983
+
+          model.train()               # the bug: batch statistics
+          # batch 32: test 0.892
+          # batch  2: eval 0.809, train mode 0.717
+        bullets:
+          - "**Batch dependence:** each output depends on its batch."
+          - "**Small batches** make the running averages noisy."
+          - "**LayerNorm** avoids this, which is why Transformers use it."
+        takeaway: Batch norm's dependence on the batch is the cost of its speed-up, and `eval()` is not optional.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          Ioffe and Szegedy's layer speeds up training a great deal. Wu and Johnson catalogue what it costs: a dependence on the
+          batch that shows up as silent bugs like this. At batch size 2 it's bad either way.
+
+      - layout: table
+        title: Sweep the learning rate before anything else
+        recall: What does the too-high end look like?
+        header: ["Learning rate", "Test accuracy, Adam, 10 epochs"]
+        widths: [3, 4]
+        highlight: [2, 3]
+        rows:
+          - ["1e-5", "0.174"]
+          - ["1e-4", "0.647"]
+          - ["1e-3", "0.956"]
+          - ["1e-2", "0.961"]
+          - ["1e-1", "0.847"]
+          - ["1.0", "0.100"]
+        takeaway: The rate moves accuracy from chance to 0.96, far more than choosing among adaptive optimisers does.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          In the same chapter, the gaps between Adam, RMSprop and Lion were inside the noise on this short budget, but
+          the rate moves everything. Tools like D-Adaptation try to remove the search; on this task one seed in five failed.
+
+      - layout: flow
+        title: "With 30% noisy labels, when should you stop?"
+        recall: What does a training score of 1.000 on noisy labels mean?
+        steps:
+          - {label: "8 epochs", sub: "Real patterns first: train 0.698, test 0.878"}
+          - {label: "Keep going", sub: "It starts fitting the wrong labels"}
+          - {label: "Convergence", sub: "It memorised the noise: train 1.000, test 0.694"}
+        bullets:
+          - "**Weight decay 3:** train 0.857, test 0.790."
+          - "**Dropout 0.5:** train 0.988, test 0.745."
+        takeaway: Keep a clean validation set and stop early, which on this run beat every other regulariser by about 9 points.
+        source: notes/02-optimisation-and-regularisation.md
+        notes: >-
+          Labels here are 30 percent wrong in training and clean in the test set. Networks fit the real structure first, then
+          the noise. So stopping early helps more than anything else in this run, and it costs nothing.
+
+  - title: What should you try next?
+    summary: One metric · Gap diagnosis · Data mismatch · Transfer
+    notes: >-
+      Course three has no code. It teaches where to spend the next month. And it rewards measuring before building.
+    slides:
+      - layout: statement
+        title: Train 2.0%, dev 2.1%, human 0.1%. Do you need more data?
+        kicker: The problem
+        statement: "More data fixes variance, and the variance here is 0.1 points. The 1.9-point gap to human level says the model isn't fitting yet."
+        attribution: Peacetopia case study, Ng's Structuring Machine Learning Projects
+        takeaway: Find the largest gap before you act, as each gap has a different fix.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          The bird-recognition case study in Ng's third course gives this situation. Most teams' first instinct is more data, and
+          it wouldn't help. So how do we read those numbers systematically?
+
+      - layout: flow
+        title: Each gap names one problem
+        recall: Which set separates variance from data mismatch?
+        steps:
+          - {label: "Human to train", sub: "Avoidable bias: bigger model"}
+          - {label: "Train to train-dev", sub: "Variance: more data, regularise"}
+          - {label: "Train-dev to dev", sub: "Data mismatch: make training like dev"}
+          - {label: "Dev to test", sub: "Overfit to dev: bigger dev set"}
+        bullets:
+          - "**Use the best human** as the bound on Bayes error."
+          - "**Count errors by cause** first: a cause covering 5 of 24 mistakes can only win 0.93 points."
+        takeaway: Fix the largest gap first, and count what a fix could win before building it.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          Train-dev comes from the training distribution but isn't trained on, which is what lets us split the last gap in two.
+          And before building a fix for a category of errors, count how many errors it could possibly remove.
+
+      - layout: code
+        title: The diagnosis is a few lines of arithmetic
+        recall: Which problem does the hypothetical case have?
+        lang: python
+        code: |-
+          print(diagnose(human=0.1, train=2.0, dev=2.1))
+          # avoidable bias, gaps 1.9 and 0.1
+
+          print(diagnose(human=0.1, train=2.0, dev=2.1,
+                         test=7.0))
+          # overfit to dev, last gap 4.9
+
+          print(diagnose(human=0.5, train=1.0,
+                         train_dev=1.5, dev=8.0))
+          # data mismatch, last gap 6.5
+        bullets:
+          - "**Case A:** bigger model, not more data."
+          - "**Case B:** a bigger dev set."
+          - "**Hypothetical:** the training data differs from production."
+        takeaway: Writing the diagnosis down turns an argument about priorities into a subtraction.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          The function subtracts neighbouring error rates and names the biggest one. Same training error of two percent in
+          the first two cases, and entirely different next steps.
+
+      - layout: table
+        title: "Data mismatch: only train-dev reveals it"
+        recall: Without a train-dev set, what would the first row look like?
+        header: ["Trained on", "Train", "Train-dev", "Dev", "Test"]
+        widths: [4, 1, 2, 1, 1]
+        highlight: [1]
+        rows:
+          - ["Clean digits only", "1.60", "4.67", "62.96", "58.52"]
+          - ["Plus synthetic corruption", "3.70", "9.73", "14.07", "17.04"]
+        takeaway: Adding artificial data that looks like production cut dev error from 63% to 14%, at some cost to training error.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          Train on clean digits, deploy on corrupted ones. The first row looks like a great model until the last step. Without
+          train-dev you might read it as variance and go collect more of the wrong data.
+
+      - layout: compare
+        title: "Transfer can hurt: 25 labels on new digits"
+        recall: When should transfer learning help?
+        emphasis: left
+        left:
+          title: From scratch
+          tag: "11.82% error"
+          bullets:
+            - "Trains on 25 rows of digits 5 to 9"
+            - "Best of the three here"
+        right:
+          title: Pretrained on digits 0 to 4
+          tag: "39.48% frozen, 15.54% tuned"
+          bullets:
+            - "Backbone from a different task"
+            - "Low-level features didn't carry over"
+        takeaway: Transfer needs a similar task with much more data, so try scratch as the control.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          I expected transfer to win here, and across label counts from 10 to 100 it never did. The two digit groups don't share
+          enough, and an 8 by 8 image has few low-level features to reuse. Yosinski and colleagues found that transfer weakens
+          with task distance. Keep a from-scratch control.
+
+  - title: Why do images need a different architecture?
+    summary: Convolutions · Residual blocks · Detection · Embeddings
+    notes: >-
+      Now we match the architecture to the data, starting with images.
+    slides:
+      - layout: statement
+        title: Move a digit one pixel. What happens to the MLP?
+        kicker: The problem
+        statement: "Shifting the test digits by one pixel takes an MLP from 0.975 to 0.473. A CNN of about the same size falls from 0.983 only to 0.656."
+        attribution: Own run, 3 seeds. Neither model is fully shift-invariant
+        takeaway: An MLP ties each weight to one pixel, while a convolution reuses one filter at every position.
+        source: notes/04-convolutional-networks.md
+        notes: >-
+          Every weight in the MLP is tied to one pixel position, so it has nothing to say about a digit that has moved. Shifted
+          training data helps it too, but sharing a filter builds the idea into the network. For a 64 by 64 colour image, a dense
+          layer of 1000 units needs 12 million weights where 16 filters need 448.
+
+      - layout: code
+        title: A CNN on the digits
+        recall: What is the output-size formula?
+        lang: python
+        code: |-
+          cnn = nn.Sequential(
+              nn.Conv2d(1, 16, 3, padding=1), nn.ReLU(),
+              nn.MaxPool2d(2),                  # 8x8 to 4x4
+              nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(),
+              nn.MaxPool2d(2),                  # 4x4 to 2x2
+              nn.Flatten(),
+              nn.Linear(32 * 2 * 2, 10))
+          # 6,090 params; test 0.983
+        bullets:
+          - "**Output size:** floor((n + 2p - f) / s) + 1"
+          - "**Layout:** PyTorch is channels second, TF last."
+          - "**Pooling** has no parameters."
+        takeaway: The bookkeeping is one formula, and the design goes back to LeNet-5's shared weights and subsampling.
+        source: notes/04-convolutional-networks.md
+        notes: >-
+          Local filters, shared weights, subsampling: three ideas from LeCun in 1998. LeNet-5 used about 60,000 parameters for
+          345,308 connections and reached 0.95 percent error on MNIST.
+
+      - layout: table
+        title: Deeper plain networks train worse, residual ones don't
+        recall: Why is that not overfitting?
+        header: ["Layers", "Plain train / test", "Residual train / test"]
+        widths: [2, 3, 3]
+        highlight: [2]
+        rows:
+          - ["6", "0.986 / 0.969", "0.984 / 0.965"]
+          - ["22", "0.946 / 0.924", "0.982 / 0.978"]
+          - ["62", "0.379 / 0.370", "0.983 / 0.965"]
+        takeaway: Plain depth fails at optimisation rather than generalisation, and `out + x` makes the identity the easy default.
+        source: notes/04-convolutional-networks.md
+        notes: >-
+          He and colleagues called this the degradation problem. At 62 layers the training score itself is 0.38, so it can't be
+          overfitting. The block learns a residual, so doing nothing is easy. Transformers carried the idea straight over.
+
+      - layout: flow
+        title: From one forward pass to two boxes
+        recall: What does non-max suppression remove?
+        steps:
+          - {label: "Forward pass", sub: "19x19x5 grid, about 1,800 boxes"}
+          - {label: "Score filter", sub: "Drop low class scores"}
+          - {label: "IoU", sub: "Overlap between boxes"}
+          - {label: "NMS", sub: "Keep the best, drop near duplicates"}
+        bullets:
+          - "**In the chapter:** five boxes on two cars, and two survive."
+          - "**Threshold 0.95** keeps all five, since the largest overlap is 0.907."
+        takeaway: Detection's post-processing is two short functions, and the threshold sets merged cars against duplicates.
+        source: notes/04-convolutional-networks.md
+        notes: >-
+          YOLO predicts everything in one pass and most boxes are useless. Filtering by score and removing overlaps is all
+          the car detection notebook adds. The chapter writes those functions in a few lines.
+
+      - layout: cards
+        title: "Embeddings: learn a space, not a class"
+        recall: Why can't a softmax handle new faces?
+        cards:
+          - title: Triplet loss
+            body: "Mean distance on digits it saw: 0.331 within a class, 0.935 across. On new digits: 0.449 and 0.503."
+            accent: 0EA5C9
+          - title: Contrastive learning
+            body: "Two views of one image are positives. No labels. A toy on digits lost to a supervised CNN at 20, 50 and 100 labels."
+            accent: D4621A
+          - title: At scale
+            body: "CPC v2 reports 71.5% ImageNet linear probe, and 78.3% top-5 with 1% of labels against 44.1% for supervised."
+            accent: 5B21B6
+        takeaway: Embeddings need many identities and strong augmentation, so the toy shows the mechanics and the papers the payoff.
+        source: notes/04-convolutional-networks.md
+        notes: >-
+          Face verification can't retrain a classifier for each new person, so it learns a distance. Self-supervised vision takes
+          the same loss further. My small version loses to supervised training at each label count here, and that's worth
+          saying before quoting the ImageNet results, whose runs used different architectures.
+
+  - title: How does a network carry memory?
+    summary: The recurrent cell · Forget-gate bias · Attention
+    notes: >-
+      Sequences have an order and any length. The problem with recurrent networks is keeping memory alive.
+    slides:
+      - layout: statement
+        title: Can a network remember the first number?
+        kicker: The problem
+        statement: "Label a sequence of 20 numbers by the sign of its first. With PyTorch's defaults, an RNN and an LSTM both stay at chance. Change one bias and the LSTM gets 1.0."
+        attribution: Own run, 3 seeds, 500 steps
+        takeaway: The LSTM's advantage isn't automatic, as it depends on starting the forget gate near keep.
+        source: notes/05-sequence-models.md
+        notes: >-
+          The rest of the numbers are noise. So the network only has to carry one bit along. Backpropagation through time multiplies
+          one factor per step, and the signal fades away. What fixes it turns out to be a single initial value.
+
+      - layout: table
+        title: Gradient at step 0, before any training
+        recall: Why would a forget bias of 0 give the same gradient as an RNN?
+        header: ["Cell", "t=49", "t=25", "t=0", "Accuracy T=50, per seed"]
+        widths: [3, 2, 2, 2, 4]
+        highlight: [3]
+        rows:
+          - ["RNN", "4.5e-02", "5.0e-07", "1.4e-12", "0.51, 0.50, 0.50"]
+          - ["LSTM, bias 0", "1.7e-02", "1.7e-07", "1.2e-12", "0.50, 0.50, 0.50"]
+          - ["LSTM, bias 1", "1.5e-02", "1.8e-04", "9.5e-06", "0.50, 0.50, 0.50"]
+          - ["LSTM, bias 2", "1.4e-02", "6.8e-03", "2.0e-02", "0.50, 0.89, 1.00"]
+        takeaway: Ten orders of magnitude separate these rows at the first step, set entirely by initialisation.
+        source: notes/05-sequence-models.md
+        notes: >-
+          Bias 1 solves T equals 20, which Jozefowicz and colleagues recommend. T equals 50 needs more. One trap: nn.LSTM has two
+          bias vectors, and each gate adds both, so the widely copied snippet that writes 1 to both is really setting 2.
+
+      - layout: code
+        title: Setting the forget-gate bias in PyTorch
+        recall: Why does a check against the name "bias_hh" do nothing?
+        lang: python
+        code: |-
+          h = 32
+          rnn = nn.LSTM(1, h, batch_first=True)
+          for name, q in rnn.named_parameters():
+              if "bias" in name:
+                  nn.init.zeros_(q)
+              if name == "bias_hh_l0":
+                  q.data[h:2 * h] = 1.0
+          # chunks: input, forget, cell, output
+        bullets:
+          - "**The real names** end in `_l0`."
+          - "**Two bias vectors** add, so writing to both sets 2."
+          - "Measure the gradient, don't trust the assignment."
+        takeaway: Initialisation code can do nothing without any error, so measure its effect afterwards.
+        source: notes/05-sequence-models.md
+        notes: >-
+          My first attempt at this cell compared against the wrong name, and it silently changed nothing. The gradient
+          measurement is what caught it.
+
+      - layout: flow
+        title: Attention lets the decoder read every input
+        recall: Which vector is the bottleneck in seq2seq?
+        steps:
+          - {label: "Encoder", sub: "Bi-GRU states for every character"}
+          - {label: "Score", sub: "Decoder state against each one"}
+          - {label: "Softmax", sub: "Weights over input positions"}
+          - {label: "Context", sub: "Weighted sum into the next step"}
+        loop: Repeats at each output character
+        caption: Date normalisation, as in Ng's Neural machine translation notebook, with synthetic dates
+        takeaway: Attention replaces one summary vector with a learned lookup, redone at every step.
+        source: notes/05-sequence-models.md
+        notes: >-
+          Bahdanau and colleagues let the decoder look at all of the encoder's states. Remove the recurrence, let all positions
+          query each other, and you get the Transformer's self-attention.
+
+      - layout: compare
+        title: "Dates, six epochs: with and without attention"
+        recall: What does the alignment show for the month digits?
+        emphasis: right
+        left:
+          title: Bottleneck only
+          tag: "3.2% of dates right"
+          bullets:
+            - "Characters 0.774"
+            - "Gets the format, not the values"
+        right:
+          title: With attention
+          tag: "100% of dates right"
+          bullets:
+            - "Characters 1.000"
+            - "'3 may 1979' becomes 1979-05-03"
+            - "Month digits look at the 'm' of 'may'"
+        takeaway: On the same data and budget, the only change takes whole-date accuracy from 3% to 100%.
+        source: notes/05-sequence-models.md
+        notes: >-
+          The whole experiment runs in seconds. And we can read the weights: year digits look at the year, month digits at the
+          month, day digits at the day. With only 500 pairs neither one solves it, because that's only 42 updates.
+
+  - title: What does a model need to read text?
+    summary: Token ids · Four models · Frozen encoders · Fine-tuning
+    notes: >-
+      Back to real data: fifty thousand movie reviews.
+    slides:
+      - layout: statement
+        title: Five thousand reviews. LSTM or word counts?
+        kicker: The problem
+        statement: "On 5,000 reviews, TF-IDF with logistic regression scores 0.886. A learned-embedding average gets 0.847, a CNN 0.741 and a BiLSTM 0.716."
+        attribution: Own run on IMDb, 5,000 training and 5,000 test reviews, on CPU
+        takeaway: With little data, learning embeddings costs more than word order pays back.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          This is the most useful result for a practitioner. Each neural model has over 160,000 parameters for 5,000 reviews,
+          and all of it has to come from these labels. So what changed the picture?
+
+      - layout: table
+        title: Four models on the same split
+        recall: Why does the CNN's train score matter here?
+        header: ["Model", "Params", "Train", "Test", "Seconds"]
+        widths: [5, 2, 1, 1, 2]
+        highlight: [1]
+        rows:
+          - ["TF-IDF bigrams + logistic regression", "n/a", "1.000", "0.886", "n/a"]
+          - ["Embedding average", "160,034", "0.969", "0.847", "4"]
+          - ["TextCNN", "170,626", "0.998", "0.741", "52"]
+          - ["BiLSTM, 4 epochs", "202,242", "0.880", "0.716", "116"]
+        takeaway: The linear model wins here, and a notebook on 25,000 reviews saw 0.87 to 0.89 against about 0.90.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          The CNN memorises and the BiLSTM is still learning. The intro-to-nlp notebook on five times the data saw a closer race,
+          and the linear model still led it.
+
+      - layout: image
+        title: Pretrained encoders changed the picture
+        recall: What's frozen and what's trained?
+        image: ../../sources/images/sarkar-universal-embeddings-classification.png
+        caption: Sarkar, Text Analytics with Python (2nd ed.), ch. 10
+        bullets:
+          - "**Sarkar:** Universal Sentence Encoder, about 0.86 frozen, about 0.90 fine-tuned."
+          - "**Head only:** the encoder has already read far more text."
+          - "**Fine-tuning** adds a few points."
+        takeaway: Pretraining supplies the representation your labels can't pay for.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          Sarkar compares TF-Hub encoders on IMDb with the same head. Fine-tuning helps, but most of the gain comes from starting
+          with a representation learned on far more text.
+
+      - layout: code
+        title: A frozen encoder is a few lines
+        recall: Why would one encoder lose where another wins?
+        lang: python
+        code: |-
+          enc = SentenceTransformer("all-mpnet-base-v2")
+          E_train = enc.encode(train_texts)
+          E_test = enc.encode(test_texts)
+          head = LogisticRegression(max_iter=1000)
+          head.fit(E_train[:n], train_labels[:n])
+          head.score(E_test, test_labels)
+          # 100 labels: 0.769, against TF-IDF 0.719
+          # all-MiniLM-L6-v2 at 100: 0.669
+        bullets:
+          - "**The encoder matters:** MiniLM reads 256 word pieces, mpnet 384."
+          - "**No training cost** beyond encoding."
+          - "**Measure two,** with TF-IDF as the bar."
+        takeaway: A pre-trained encoder isn't one result, so measure it on your own task against the baseline.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          I expected any pre-trained encoder to beat word counts here. The small one lost at every label count, and the larger
+          one won where labels are few. The code is short, so there's no reason not to measure.
+
+      - layout: table
+        title: What finally beats word counts, by label count
+        recall: Why does fine-tuning trail at 500 labels?
+        header: ["Labels", "TF-IDF", "MiniLM frozen", "mpnet frozen", "DistilBERT fine-tuned"]
+        widths: [2, 2, 3, 3, 4]
+        highlight: [3]
+        rows:
+          - ["100", "0.719", "0.669", "0.769", "not run"]
+          - ["500", "0.800", "0.754", "0.841", "0.825"]
+          - ["2,000", "0.862", "0.786", "0.871", "0.883"]
+          - ["5,000", "0.886", "0.806", "0.882", "0.905"]
+        takeaway: A strong frozen encoder helps on few labels and fine-tuning on many, while the small encoder loses throughout.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          One split and one seed, so differences under a point are ties. Fine-tuning only clearly beats word counts at 5,000
+          reviews. The chapter also shows the pipelines one-liners, and warns that transformers 5 removed the question answering,
+          summarization and translation tasks, while the same models still run through the Auto classes.
+
+  - title: What to carry forward
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - title: Measure first
+            body: "Find the largest gap, and count what a fix could win before building it."
+            accent: 0EA5C9
+          - title: Debug the quiet failures
+            body: "Initial activations, `eval()`, the learning rate. None of them raise errors."
+            accent: D4621A
+          - title: AdamW and a rate sweep
+            body: "Sweep by factors of ten. Use AdamW rather than L2 in Adam."
+            accent: 0F7490
+          - title: Keep the control
+            body: "Baseline, from-scratch and several seeds. Transfer and contrastive learning both lost in small runs here."
+            accent: 5B21B6
+          - title: Match data to architecture
+            body: "Sharing for images, memory for sequences, attention for alignment."
+            accent: 1E3A5F
+          - title: Text starts with TF-IDF
+            body: "That's the bar. On few labels try a strong frozen encoder, and on thousands fine-tune."
+            accent: 94A3B8
+        takeaway: Most deep learning failures are silent, so each rule is a way to see one.
+        source: notes/03-structuring-ml-projects.md
+        notes: >-
+          If you remember one thing: most of what goes wrong here raises no error, so measure.
+
+      - layout: bullets
+        title: Where to go next
+        bullets:
+          - "**[Do the notebooks]** `practice/ng-deep-learning/`, using the translation table to run them in PyTorch."
+          - "**NLP:** `03-nlp`, for what a text or an embedding is to a model."
+          - "**LLMs from scratch:** `04-llms-from-scratch`, from micrograd and makemore to nanoGPT."
+          - "**Generative AI:** `generative-ai/01-llm-fundamentals`, for LLMs at the level of how they behave."
+        takeaway: Next, build the Transformer you've now seen the reasons for.
+        source: notes/06-neural-text-models.md
+        notes: >-
+          Attention was the last idea today. The LLMs from scratch pillar builds it line by line.

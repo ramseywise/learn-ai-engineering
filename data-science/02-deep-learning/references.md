@@ -15,7 +15,7 @@ cleaned: 2026-11-01
 |---|---|---|---|
 | ★ Buduma, *Fundamentals of Deep Learning* (O'Reilly) | Parallel text in TensorFlow for the whole pillar | [PDF](../sources/buduma-fundamentals-of-deep-learning.pdf) | ch. 1 to 2 → 01; ch. 3 → 01 translation table; ch. 4 → 02; ch. 5 → 04; ch. 6 → 04, 05, 06; ch. 7 → 05, 06 |
 | Raschka, *Build a Large Language Model (From Scratch)* (Manning, 2024), appendix A | A compact PyTorch introduction, including the training loop and DDP | [PDF](../../generative-ai/01-llm-fundamentals/sources/build-a-large-language-model-from-scratch/appendix-a-intro-to-pytorch.pdf) | 01 |
-| Sarkar, *Text Analytics with Python*, 2nd ed. (Apress, 2019), ch. 10 | Transfer learning with sentence encoders on IMDb, and the figure in the chapter | [PDF](../sources/sarkar-text-analytics-with-python-2e.pdf) | 06 |
+| Sarkar, *Text Analytics with Python*, 2nd ed. (Apress, 2019), ch. 10 | Transfer learning with sentence encoders on IMDb, and the figure in the chapter. The [PDF in `sources/`](../sources/sarkar-text-analytics-with-python-2e.pdf) is the seven-chapter 1st edition and doesn't have this chapter | [Companion notebooks](../03-nlp/practice/text-analytics-with-python/), `Ch10a` | 06 |
 | Raieli and Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025), ch. 1 | The same arc from one-hot to RNN, LSTM, GRU and CNN classifiers | [PDF](../sources/building-ai-agents-llms-rag-kgs/ch01-analyzing-text-data-deep-learning.pdf) | 06 |
 
 ## Core papers

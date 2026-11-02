@@ -14,7 +14,7 @@ cleaned: 2026-11-01
 | | Source | Pillars |
 |---|---|---|
 | ★ | Müller and Guido, *Introduction to Machine Learning with Python* (O'Reilly, 2016), [PDF](sources/mueller-guido-introduction-to-ml-with-python.pdf). Companion notebooks in [`intro-to-ml-in-python/`](01-classical-ml/practice/intro-to-ml-in-python), from [amueller/introduction_to_ml_with_python](https://github.com/amueller/introduction_to_ml_with_python), with `mglearn` | [01](01-classical-ml/references.md), [03](03-nlp/references.md) |
-| ★ | Sarkar, *Text Analytics with Python*, 2nd ed. (Apress, 2019), [PDF](sources/sarkar-text-analytics-with-python-2e.pdf). Companion notebooks in [`text-analytics-with-python/`](03-nlp/practice/text-analytics-with-python), from [dipanjanS/text-analytics-with-python](https://github.com/dipanjanS/text-analytics-with-python), Apache-2.0 | [03](03-nlp/references.md), [02](02-deep-learning/references.md) (ch. 10) |
+| ★ | Sarkar, *Text Analytics with Python*, 1st ed. (Apress, 2016, seven chapters), [PDF](sources/sarkar-text-analytics-with-python-2e.pdf), which is the 1st edition despite the `2e` in its file name. The companion notebooks in [`text-analytics-with-python/`](03-nlp/practice/text-analytics-with-python) follow the 2nd ed. (Apress, 2019, not in the repo), from [dipanjanS/text-analytics-with-python](https://github.com/dipanjanS/text-analytics-with-python), Apache-2.0 | [03](03-nlp/references.md), [02](02-deep-learning/references.md) (ch. 10) |
 | | James, Witten, Hastie, Tibshirani and Taylor, *An Introduction to Statistical Learning with Applications in Python* (2023). Held in [`../data-analytics/sources/`](../data-analytics/sources/). Ch. 2 to 6 pair with 01 notes 01 to 04, ch. 8 with note 06, and ch. 12 with note 05 | [01](01-classical-ml/references.md) |
 | | Bird, Klein and Loper, *Natural Language Processing with Python* (the NLTK book, online edition CC BY-NC-ND 3.0), [PDF](sources/bird-klein-loper-nlp-with-python.pdf) | [03](03-nlp/references.md) |
 | | Buduma, *Fundamentals of Deep Learning* (O'Reilly), [PDF](sources/buduma-fundamentals-of-deep-learning.pdf) | [02](02-deep-learning/references.md) |
@@ -23,7 +23,7 @@ cleaned: 2026-11-01
 
 ## Courses and videos
 
-Each one was opened to confirm it exists on 2026-11-02, and the costs are as the platform listed them.
+Each URL was checked to load on 2026-11-02, and the costs are as the platform listed them.
 
 | Course | Platform, cost | Why take it | Pillars |
 |---|---|---|---|
@@ -45,7 +45,16 @@ Each one was opened to confirm it exists on 2026-11-02, and the costs are as the
 | [scikit-learn user guide](https://scikit-learn.org/stable/user_guide.html) and [release highlights](https://scikit-learn.org/stable/whats_new.html) | 01, 03 |
 | [spaCy](https://spacy.io/), [NLTK](https://www.nltk.org/), [gensim](https://radimrehurek.com/gensim/), [sklearn-crfsuite](https://sklearn-crfsuite.readthedocs.io/) docs | 03 |
 
-@@PENDING@@
+## Papers not yet in a pillar
+
+These are the original sources for methods taught in [03 NLP](03-nlp/README.md), and that pillar's `references.md` has no row for them yet.
+
+| Source | Taught in |
+|---|---|
+| Blei, Ng and Jordan, [*Latent Dirichlet Allocation*](https://www.jmlr.org/papers/v3/blei03a.html) (JMLR, 2003) | [03 note 03](03-nlp/notes/03-topic-models-and-summarization.md) |
+| Mihalcea and Tarau, [*TextRank: Bringing Order into Text*](https://aclanthology.org/W04-3252/) (EMNLP, 2004) | [03 note 03](03-nlp/notes/03-topic-models-and-summarization.md) |
+| Hutto and Gilbert, *VADER* (ICWSM, 2014), [code and lexicon](https://github.com/cjhutto/vaderSentiment) | [03 note 06](03-nlp/notes/06-sentiment-analysis.md) |
+
 ## Dependency audits
 
 The full per-notebook fix tables live in the notes, and this is the index.

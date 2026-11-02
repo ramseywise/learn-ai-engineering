@@ -21,7 +21,7 @@ Running through all five pillars is one habit. Every run keeps a baseline and a 
 | 01 | [Classical ML](01-classical-ml/README.md) | How do you fit a model on a table, measure it honestly, and explain it? | 8 | [pptx](01-classical-ml/slides/classical-ml.pptx) |
 | 02 | [Deep learning](02-deep-learning/README.md) | How do you train a network, debug it, and match the architecture to the data? | 6 | [pptx](02-deep-learning/slides/deep-learning.pptx) |
 | 03 | [NLP](03-nlp/README.md) | How does text become numbers, and what does that choice decide? | 7 | [pptx](03-nlp/slides/nlp.pptx) |
-| 04 | [LLMs from scratch](04-llms-from-scratch/README.md) | What is inside a GPT, line by line? | 3 | See the pillar README |
+| 04 | [LLMs from scratch](04-llms-from-scratch/README.md) | What is inside a GPT, line by line? | 3 | [pptx](04-llms-from-scratch/slides/llms-from-scratch.pptx) |
 | 05 | [Time series and recommenders](05-time-series-and-recommenders/README.md) | What changes when rows aren't exchangeable? | 3 | [pptx](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) |
 
 ## Start here

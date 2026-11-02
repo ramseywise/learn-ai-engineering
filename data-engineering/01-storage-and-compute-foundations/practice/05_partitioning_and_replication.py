@@ -1,7 +1,7 @@
-"""Code from notes/04-partitioning-and-replication.md.
+"""Code from notes/05-partitioning-and-replication.md.
 
 Run from any folder (it writes only to a temporary directory):
-    uv run --with duckdb --with numpy python 04_partitioning_and_replication.py
+    uv run --with duckdb --with numpy python 05_partitioning_and_replication.py
 """
 import os, tempfile
 os.chdir(tempfile.mkdtemp())

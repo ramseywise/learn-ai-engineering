@@ -63,10 +63,10 @@ These are the chapters on disk as of 2 November 2026.
 
 ### [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md)
 
-1. [Encoding and files](01-storage-and-compute-foundations/notes/01-encoding-and-files.md)
-2. [Row and column stores](01-storage-and-compute-foundations/notes/02-row-and-column-stores.md)
-3. [Distributed compute](01-storage-and-compute-foundations/notes/03-distributed-compute.md)
-4. [Partitioning and replication](01-storage-and-compute-foundations/notes/04-partitioning-and-replication.md)
+1. [Encoding and files](01-storage-and-compute-foundations/notes/02-encoding-and-files.md)
+2. [Row and column stores](01-storage-and-compute-foundations/notes/03-row-and-column-stores.md)
+3. [Distributed compute](01-storage-and-compute-foundations/notes/08-distributed-compute.md)
+4. [Partitioning and replication](01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)
 
 ### [02 Ingest and modelling](02-ingest-and-modelling/README.md)
 
@@ -116,8 +116,8 @@ Each pillar's README has its own full list. These are the ones that cross stages
 
 | Rule | Where |
 |---|---|
-| State the schema on first read; inference destroys zip codes and big IDs silently | [01](01-storage-and-compute-foundations/notes/01-encoding-and-files.md) |
-| Reach for DuckDB or Polars before Spark when the data fits on one machine | [01](01-storage-and-compute-foundations/notes/03-distributed-compute.md), [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
+| State the schema on first read; inference destroys zip codes and big IDs silently | [01](01-storage-and-compute-foundations/notes/02-encoding-and-files.md) |
+| Reach for DuckDB or Polars before Spark when the data fits on one machine | [01](01-storage-and-compute-foundations/notes/08-distributed-compute.md), [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
 | Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [02](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
 | Put a contract at every producer and consumer boundary | [02](02-ingest-and-modelling/notes/04-data-contracts.md) |
 | Define each metric once, in one mart, with an owner | [03](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |

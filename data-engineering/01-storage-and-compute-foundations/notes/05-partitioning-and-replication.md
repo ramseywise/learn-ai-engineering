@@ -7,7 +7,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 4 — Partitioning and replication
+# 5 — Partitioning and replication
 
 Once data lives on many machines, two questions come up and they are easy to confuse. Partitioning decides which machine holds a given row, so that no node has to hold everything. Replication decides how many machines hold each copy, so that losing one loses nothing. Partitioning is a choice you make again each time you design a table or a lake layout, and replication decides what a reader sees just after a write, which is what makes a dashboard look wrong even though nothing is broken. This chapter builds small models of both, using the taxi trips, and closes with how they appear in a pipeline.
 
@@ -110,7 +110,7 @@ no salt, busiest partition: 307030
 salted,  busiest partition: 19127
 ```
 
-The busiest partition dropped by a factor of 16. The price is that any read for the celebrity must now fetch and combine 100 keys, so this should only be done for the keys that need it. It is the same salting as in the [previous chapter's shuffle](03-distributed-compute.md), for the same reason.
+The busiest partition dropped by a factor of 16. The price is that any read for the celebrity must now fetch and combine 100 keys, so this should only be done for the keys that need it. It is the same salting as in the [previous chapter's shuffle](08-distributed-compute.md), for the same reason.
 
 ## Secondary indexes and fan-out
 
@@ -210,7 +210,7 @@ average file 438 KB
 [(742153.250000002,)]
 ```
 
-`Scanning Files: 1/31` is partition pruning: the engine read the folder names and opened a single file. It is the same mechanism as the footer pruning from [chapter 1](01-encoding-and-files.md), one level higher. So the partition key should be the column most queries filter on, usually a date, and hive-style `key=value` folders make it readable to any engine. Now go too far with the same idea and partition by day and zone.
+`Scanning Files: 1/31` is partition pruning: the engine read the folder names and opened a single file. It is the same mechanism as the footer pruning from [chapter 1](02-encoding-and-files.md), one level higher. So the partition key should be the column most queries filter on, usually a date, and hive-style `key=value` folders make it readable to any engine. Now go too far with the same idea and partition by day and zone.
 
 ```python
 con.execute("""COPY (SELECT *, pickup_at::DATE AS day FROM trips)
@@ -410,7 +410,7 @@ The first four rows are cases of a stage trusting the one before it. They are wh
 
 ## Try it
 
-The code in this chapter is collected in [practice/04_partitioning_and_replication.py](../practice/04_partitioning_and_replication.py).
+The code in this chapter is collected in [practice/05_partitioning_and_replication.py](../practice/05_partitioning_and_replication.py).
 
 1. In the `Cluster` model, make one follower synchronous, so that `write` also applies the entry to it before returning. Which output lines change? What did you pay?
 

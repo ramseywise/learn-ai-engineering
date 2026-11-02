@@ -10,7 +10,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 3 — Distributed compute
+# 8 — Distributed compute
 
 Distributed compute exists because some jobs do not fit on one machine, and it costs far more than the cluster bill. Once data crosses a network, every join becomes a shuffle, every failed worker becomes a recovery plan, and the slowest task sets the finish time. The surprise of the last decade is how far the single-machine limit has moved. This chapter builds MapReduce by hand to see what it actually does, follows how Spark changed it, and then runs the same query in DuckDB, Polars and Spark to ask which you should reach for first.
 
@@ -410,7 +410,7 @@ Spark is the right answer when a job truly reads more than one machine holds, wh
 
 ## Try it
 
-The code in this chapter is collected in [practice/03_distributed_compute.py](../practice/03_distributed_compute.py).
+The code in this chapter is collected in [practice/08_distributed_compute.py](../practice/08_distributed_compute.py).
 
 1. Change the `mapreduce` code so that it computes average fare per zone. Why can't the reducer's output simply be averaged in a combiner?
 
@@ -451,4 +451,4 @@ On the 12-core laptop used here the query finished at 200 MB and raised `OutOfMe
 
 ## Next
 
-A cluster has to decide where each row lives and how many copies it keeps. [Partitioning and replication](04-partitioning-and-replication.md) covers those two decisions.
+A cluster has to decide where each row lives and how many copies it keeps. [Partitioning and replication](05-partitioning-and-replication.md) covers those two decisions.

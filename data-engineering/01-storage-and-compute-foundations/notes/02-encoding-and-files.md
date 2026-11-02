@@ -8,7 +8,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 1 — Encoding and files
+# 2 — Encoding and files
 
 A data pipeline is a chain of programs that never meet. The one that wrote a file last March has been deleted, and the one reading it today was written by someone who has never seen it. The bytes on disk are the only thing they share, so the choice of file format decides how much the reader has to guess. A CSV says nothing and leaves everything to inference, while Parquet and Avro carry a schema with the data. This chapter starts from that difference, builds a month of taxi trips in each format, and opens up the files to see why a columnar file on disk and a columnar table in memory are designed so differently.
 
@@ -305,7 +305,7 @@ trips_zstd.parquet     total   7.7 MB  pickup_zone  1032.8 KB  payment_type   16
 sorted_zone.parquet    total   9.0 MB  pickup_zone     4.8 KB  payment_type     4.9 KB  pickup_at   3575.1 KB
 ```
 
-Sorting by zone and payment type shrank those two columns from about a megabyte and 163 KB to about 5 KB each, because long runs of one value collapse to almost nothing. But `pickup_at` grew by 70%, since it is no longer in order, and the file as a whole got larger, from 7.7 to 9.0 MB. Only one sort order can be the physical one, and it should serve the query filters you actually run. The [next chapter](02-row-and-column-stores.md) explains the mechanism.
+Sorting by zone and payment type shrank those two columns from about a megabyte and 163 KB to about 5 KB each, because long runs of one value collapse to almost nothing. But `pickup_at` grew by 70%, since it is no longer in order, and the file as a whole got larger, from 7.7 to 9.0 MB. Only one sort order can be the physical one, and it should serve the query filters you actually run. The [next chapter](03-row-and-column-stores.md) explains the mechanism.
 
 Row group size is the other knob. Small groups give finer skipping and more footer metadata to read, while larger groups compress better and suit large scans. The default in pyarrow put all million rows in one group here. Library defaults differ, so check by reading the metadata as above rather than assuming.
 
@@ -438,7 +438,7 @@ flowchart TD
 
 ## Try it
 
-The code in this chapter is collected in [practice/01_encoding_and_files.py](../practice/01_encoding_and_files.py).
+The code in this chapter is collected in [practice/02_encoding_and_files.py](../practice/02_encoding_and_files.py).
 
 1. Write the trips with `row_group_size=10_000` and then `row_group_size=500_000`. Predict the effect on footer size and on how many groups a tight `trip_id` range touches, and then measure.
 
@@ -479,4 +479,4 @@ Pass the new schema as the writer's schema and the old one as the reader's. The 
 
 ## Next
 
-The footer's statistics and the sorted runs are one mechanism seen from outside. [Row and column stores](02-row-and-column-stores.md) looks at it from inside the database, using the same trips in SQLite and DuckDB.
+The footer's statistics and the sorted runs are one mechanism seen from outside. [Row and column stores](03-row-and-column-stores.md) looks at it from inside the database, using the same trips in SQLite and DuckDB.

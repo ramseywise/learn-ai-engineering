@@ -12,7 +12,7 @@ Classical models carry tabular data, but images, sequences and text need a model
 
 ## The story
 
-Logistic regression stops at 0.895 on two interleaved moons, because its boundary is a line, and one hidden layer lifts it to 0.955. Then training becomes the problem: the same network on digits scores 0.102 with zero initial weights and 0.970 with He initialisation, and the same `weight_decay=0.1` gives 0.102 in Adam and 0.972 in AdamW. With the training working, the next question is what to do with a month. A gap analysis says whether more data would help at all, and it warns when it wouldn't, as with the transfer learning that lost to training from scratch on a small digits task. The architecture then has to match the data. Moving a digit one pixel takes an MLP from 0.975 to 0.473 and a CNN only to 0.656. An LSTM stays at chance on a memory task until one bias changes, and attention takes date translation from 3% to 100% of dates correct. Finally, on 5,000 real reviews, TF-IDF beats every embedding model trained from scratch, and only a pre-trained encoder, with its representation learned on far more text, changes that picture.
+Logistic regression stops at 0.895 on two interleaved moons, because its boundary is a line, and one hidden layer lifts it to 0.955. Then training becomes the problem: the same network on digits scores 0.102 with zero initial weights and 0.970 with He initialisation, and the same `weight_decay=0.1` gives 0.102 in Adam and 0.972 in AdamW. With the training working, the next question is what to do with a month. A gap analysis says whether more data would help at all, and it warns when it wouldn't, as with the transfer learning that lost to training from scratch on a small digits task. The architecture then has to match the data. Moving a digit one pixel takes an MLP from 0.975 to 0.473 and a CNN only to 0.656. An LSTM stays at chance on a memory task until one bias changes, and attention takes date translation from 3% to 100% of dates correct. Finally, on 5,000 real reviews, TF-IDF at 0.886 beats every embedding model trained from scratch. A strong frozen encoder beats it on few labels, a small one never does, and fine-tuning DistilBERT reaches 0.905 once there are thousands of labels, because its representation was learned on far more text.
 
 ## Reading order
 
@@ -23,7 +23,7 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 | 3 | [Structuring ML projects](notes/03-structuring-ml-projects.md) | What should you try next? | Structuring Machine Learning Projects |
 | 4 | [Convolutional networks](notes/04-convolutional-networks.md) | Why do images need a different architecture? | Convolutional Neural Networks |
 | 5 | [Sequence models](notes/05-sequence-models.md) | How does a network carry memory? | Sequence Models |
-| 6 | [Neural text models](notes/06-neural-text-models.md) | What does it take for a neural model to beat word counts? | Beyond Ng: Sarkar ch. 10, intro-to-nlp |
+| 6 | [Neural text models](notes/06-neural-text-models.md) | What does it take for a neural model to beat word counts? | Beyond Ng: Sarkar `Ch10a` notebook, intro-to-nlp |
 
 ## Rules of thumb
 
@@ -36,7 +36,7 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 - Find the largest gap between human, train, train-dev, dev and test, then fix that one. Count what a fix could win before building it.
 - Use residual connections when going deep. Plain networks of 62 layers train badly on digits, with a training score of 0.379.
 - Measure what an initialisation change did. A forget-gate assignment to a wrong parameter name is silently ignored.
-- On text, run TF-IDF first, and then try a pre-trained encoder before training your own embeddings.
+- On text, run TF-IDF first. With few labels, measure a frozen encoder against it. With thousands, fine-tune one. Training your own embeddings came last here.
 
 ## Practice
 

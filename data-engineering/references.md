@@ -17,7 +17,7 @@ Pillar reference lists: [01](01-storage-and-compute-foundations/references.md) Â
 | | Joe Reis and Matt Housley, [*Fundamentals of Data Engineering*](https://www.oreilly.com/library/view/fundamentals-of-data/9781098108298/) (O'Reilly, 2022) | None | The data-engineering lifecycle: a broader frame for all seven pillars. Further reading, not cited for a claim | Proprietary |
 | | James Densmore, [*Data Pipelines Pocket Reference*](https://www.oreilly.com/library/view/data-pipelines-pocket/9781492087823/) (O'Reilly, 2021) | None | Ingestion and ELT patterns, short. Further reading for [02](02-ingest-and-modelling/references.md), [03](03-transform-and-orchestrate/references.md) | Proprietary |
 | | Linstedt and Olschimke, *Building a Scalable Data Warehouse with Data Vault 2.0*; Jones, *Driving Data Quality with Data Contracts*; Sanderson, Freeman and Schmidt, *Data Contracts* | None | Not read in full. Links and further reading in [02](02-ingest-and-modelling/references.md) | Proprietary |
-| | Markus Winand, [*Use The Index, Luke*](https://use-the-index-luke.com/) | Free online | Indexing for the OLTP side of [Row and column stores](01-storage-and-compute-foundations/notes/02-row-and-column-stores.md) and [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md). Also cited by `programming/` SQL | Read online |
+| | Markus Winand, [*Use The Index, Luke*](https://use-the-index-luke.com/) | Free online | Indexing for the OLTP side of [Row and column stores](01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) and [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md). Also cited by `programming/` SQL | Read online |
 
 ## Core papers
 

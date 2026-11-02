@@ -1,7 +1,7 @@
-"""Code from notes/01-encoding-and-files.md.
+"""Code from notes/02-encoding-and-files.md.
 
 Run from any folder (it writes only to a temporary directory):
-    uv run --with duckdb --with pyarrow --with numpy --with polars --with fastavro python 01_encoding_and_files.py
+    uv run --with duckdb --with pyarrow --with numpy --with polars --with fastavro python 02_encoding_and_files.py
 """
 import os, tempfile
 os.chdir(tempfile.mkdtemp())

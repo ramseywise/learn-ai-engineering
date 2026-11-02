@@ -21,7 +21,7 @@ Kimball's architecture separates the kitchen from the dining room ([*The Data Wa
 - A **fact table** holds measurements. Each row is one event at one grain, and the columns are foreign keys plus numbers.
 - A **dimension table** holds the words people use to filter and group: names, categories, flags. Dimensions are wide, short and read far more often than they change.
 
-Laid out, a fact in the middle with dimensions around it looks like a star, which gives the design its name. Kleppmann gives the same picture and notes that it is the standard shape of an analytic warehouse ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 3), which is why the column stores of [row and column stores](../../01-storage-and-compute-foundations/notes/02-row-and-column-stores.md) fit it so well: a query touches a handful of the fact's columns and compresses long runs of repeating keys.
+Laid out, a fact in the middle with dimensions around it looks like a star, which gives the design its name. Kleppmann gives the same picture and notes that it is the standard shape of an analytic warehouse ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 3), which is why the column stores of [row and column stores](../../01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) fit it so well: a query touches a handful of the fact's columns and compresses long runs of repeating keys.
 
 ```mermaid
 erDiagram

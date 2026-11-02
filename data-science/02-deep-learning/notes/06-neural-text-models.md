@@ -70,7 +70,11 @@ print("median length", int(np.median(lengths)), " 90th percentile", int(np.perce
 print("share of positions that are <unk>: %.3f" % (X_tr == 1).float().mean())
 ```
 
-@@SETUP@@
+```text
+reviews 50000  train batch shape (5000, 250)
+median length 174  90th percentile 454
+share of positions that are <unk>: 0.037
+```
 
 Choices that matter:
 
@@ -173,7 +177,12 @@ clf = LogisticRegression(max_iter=1000, C=10).fit(A, train_labels)
 print(f"TF-IDF bigrams + logistic regression  train {clf.score(A, train_labels):.3f}  test {clf.score(B, test_labels):.3f}")
 ```
 
-@@FOUR@@
+```text
+Average  params  160034  train 0.969  test 0.847    4 s
+TextCNN  params  170626  train 0.998  test 0.741   52 s
+BiLSTM   params  202242  train 0.880  test 0.716  116 s
+TF-IDF bigrams + logistic regression  train 1.000  test 0.886
+```
 
 Each model has more than 160,000 parameters for 5,000 examples, and the CNN memorises its training set while the BiLSTM is still learning after four epochs. Word order hasn't paid for itself yet. The notebooks saw a closer race with five times the data. The intro-to-nlp RNN classification notebook (`vocab_size=10000`, `embedding_dim=16`, `max_length=250`) trained on 25,000 reviews and had these typical outcomes:
 
@@ -215,7 +224,11 @@ history = model.fit(dataset(train_texts[:2000], train_labels[:2000]).shuffle(100
 print("Keras", keras.__version__, "val accuracy per epoch", np.round(history.history["val_accuracy"], 3))
 ```
 
-@@KERAS@@
+```text
+Keras 3.15.1 val accuracy per epoch [0.6  0.69]
+```
+
+Two epochs on 2,000 reviews is a check that the API runs, not a score to compare with the table above.
 
 | Keras, as in the notebooks | PyTorch, as in this chapter |
 |---|---|
@@ -291,7 +304,15 @@ print("t=0.7: ", generate(seed, temperature=0.7))
 print("t=1.5: ", generate(seed, temperature=1.5))
 ```
 
-@@GEN@@
+```text
+1693 lines, 2693 words, 12048 examples, longest 16
+final loss 0.59, against ln(vocabulary) 7.90 for a uniform guess; 21 s
+greedy: i too am a human being and i followed than my light was standing there ever still i cant serve you as my love prove false to me
+t=0.7:  i too am a human being and i followed my kellswater so fair love ill take sit awhile in the merry month and that eer i have been
+t=1.5:  i too am a human being and i heard khaki sleep it them deep over parted with whirring runaway still at there is neer horses rode pure children
+```
+
+A loss of 0.59 on 1,693 lines means the model has largely memorised them, and "kellswater" comes straight from the training text. Temperature sets the trade: 0.7 stays close to the phrases it knows, and 1.5 reaches for rarer words and loses the grammar.
 
 What goes wrong, and why it matters for what follows:
 
@@ -360,7 +381,12 @@ for name, criterion in [("MAE on all steps", lambda p, y, x: (p - y).abs().mean(
     print(f"{name:<21}  inspiratory MAE {insp(pred):.3f}  all-steps MAE {(pred - Yv).abs().mean():.3f}")
 ```
 
-@@VENT@@
+```text
+MAE on all steps       inspiratory MAE 0.274  all-steps MAE 0.117
+masked as the metric   inspiratory MAE 0.248  all-steps MAE 7.212
+```
+
+Matching the loss to the metric lowers the error that counts from 0.274 to 0.248. It does so by ignoring the other steps entirely, where the error grows to 7.212, which is fine here only because nobody scores them.
 
 Worth copying from the notebook: a per-step MLP before the LSTM, a masked loss that matches the metric, `GroupKFold` by `breath_id` so that no breath is in both train and validation ([model evaluation](../../01-classical-ml/notes/04-model-evaluation.md)), `seed_everything` plus deterministic cuDNN, and a linear warm-up scheduler. `Bidirectional` is legitimate here because the whole breath is known at prediction time.
 
@@ -374,7 +400,7 @@ Instead of learning embeddings from 5,000 or 25,000 reviews, start from an encod
 | Universal Sentence Encoder (`universal-sentence-encoder/2`) | 512-d, transformer/DAN trained on many tasks | Best: ~0.86 frozen, ~0.90 fine-tuned |
 
 ![Accuracy of IMDb classifiers built on different TF-Hub sentence encoders, frozen vs fine-tuned](../../sources/images/sarkar-universal-embeddings-classification.png)
-*Image source: Sarkar, Text Analytics with Python (2nd ed.), ch. 10 figure*
+*Image source: Sarkar, Text Analytics with Python (2nd ed.), ch. 10, from the companion notebooks*
 
 The modern equivalent needs no TF 1.x estimator: encode, then fit a linear head. It uses Sentence-BERT encoders ([arXiv:1908.10084](https://arxiv.org/abs/1908.10084) (Reimers and Gurevych, EMNLP 2019)). This block runs a small encoder and a larger one against the TF-IDF baseline as the labels grow. It takes a few minutes on a laptop GPU and longer on CPU:
 
@@ -393,9 +419,13 @@ for name in ["all-MiniLM-L6-v2", "all-mpnet-base-v2"]:      # 384-d and 768-d
     print(f"{name:<18}", scores, f"{time.time() - start:.0f} s")
 ```
 
-@@SBERT@@
+```text
+TF-IDF + LR        [0.719, 0.8, 0.862, 0.886]
+all-MiniLM-L6-v2   [0.669, 0.754, 0.786, 0.806] 18 s
+all-mpnet-base-v2  [0.769, 0.841, 0.871, 0.882] 152 s
+```
 
-@@SBERTPROSE@@
+The columns are 100, 500, 2,000 and 5,000 labels. "Pre-trained encoder" isn't one result. The small MiniLM model, which reads at most 256 word pieces, loses to TF-IDF at every size. The larger mpnet model, which reads 384, wins clearly on few labels (0.769 against 0.719 at 100, 0.841 against 0.800 at 500), and its lead has gone by 5,000 (0.882 against 0.886). So a frozen encoder earns its place when labels are few, as long as you measure the encoder on your own task and keep TF-IDF as the bar.
 
 The other option is to train through the encoder. Fine-tuning a pre-trained DistilBERT ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)) uses the same loop as the rest of this pillar, with a small learning rate and two epochs:
 
@@ -432,13 +462,17 @@ for n in [500, 2000, 5000]:
     print(f"{n:>5} labels: fine-tuned DistilBERT {hits / len(test_texts):.3f}  {time.time() - start:.0f} s")
 ```
 
-@@BERT@@
+```text
+  500 labels: fine-tuned DistilBERT 0.825  57 s
+ 2000 labels: fine-tuned DistilBERT 0.883  109 s
+ 5000 labels: fine-tuned DistilBERT 0.905  239 s
+```
 
-@@BERTPROSE@@ The same sentence vectors power semantic search ([NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md), [RAG and retrieval](../../../generative-ai/02-rag-retrieval/README.md)).
+Fine-tuning needs enough labels. At 500 it trails the frozen mpnet model (0.825 against 0.841), at 2,000 it leads (0.883 against 0.871), and at 5,000 its 0.905 is the first score in this chapter to clearly beat word counts, by about two points. This is one split and one seed, so differences under a point are ties. The neural models trained from scratch never got close, and the difference is that DistilBERT arrives having already read far more text than these 5,000 reviews. The same sentence vectors power semantic search ([NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md), [RAG and retrieval](../../../generative-ai/02-rag-retrieval/README.md)).
 
 ## Transformers pipelines
 
-The intro-to-nlp transformers notebook, from the [Hugging Face LLM Course](https://huggingface.co/learn/llm-course), ran its tasks with default models. Defaults change between library versions, so these pin a `model=`, smaller where a smaller one exists. Each task is one line:
+The intro-to-nlp transformers notebook, from the [Hugging Face LLM Course](https://huggingface.co/learn/llm-course), ran its tasks with default models. Defaults change between library versions, so these pin a `model=`, smaller where a smaller one exists. Most tasks are one line, and three now take a few more:
 
 ```python
 from transformers import pipeline, AutoModelForQuestionAnswering, AutoModelForSeq2SeqLM
@@ -452,7 +486,7 @@ fill = pipeline("fill-mask", model="distilroberta-base")
 print([(r["token_str"], round(r["score"], 3)) for r in fill("This course will teach you all about <mask> models.", top_k=2)])
 zero = pipeline("zero-shot-classification", model="typeform/distilbert-base-uncased-mnli")
 r = zero("This is a course about the Transformers library", candidate_labels=["education", "politics", "business"])
-print(list(zip(r["labels"], np.round(r["scores"], 3))))
+print([(label, round(s, 3)) for label, s in zip(r["labels"], r["scores"])])
 gen = pipeline("text-generation", model="gpt2")
 print(gen("In this course, we will teach you how to", max_new_tokens=15, do_sample=False)[0]["generated_text"])
 features = pipeline("feature-extraction", model="distilbert-base-uncased")
@@ -475,11 +509,21 @@ def seq2seq(name, text, **kw):
 passage = ("Attention lets a decoder read every encoder state at each step. Before it, an encoder squeezed a whole "
            "sentence into one vector, and long sentences suffered. The Transformer then removed recurrence altogether, "
            "so that training could run in parallel across positions. Most language models today descend from that design.")
-print("summary:", seq2seq("sshleifer/distilbart-cnn-12-6", passage, max_new_tokens=40))
+print("summary:", seq2seq("sshleifer/distilbart-cnn-12-6", passage, min_length=10, max_new_tokens=40))
 print("french:", seq2seq("Helsinki-NLP/opus-mt-en-fr", "How old are you?"))
 ```
 
-@@HFOUT@@
+```text
+[{'label': 'POSITIVE', 'score': 0.9598047137260437}]
+[('Sylvain', 'PER'), ('Hugging Face', 'ORG'), ('Brooklyn', 'LOC')]
+[(' mathematical', 0.196), (' computational', 0.041)]
+[('education', 0.433), ('politics', 0.351), ('business', 0.216)]
+In this course, we will teach you how to use the Java Virtual Machine (JVM) to create and manage virtual machines
+features (1, 7, 768)
+answer: Hugging Face
+summary:  Before it, an encoder squeezed a whole sentence into one vector, and long sentences suffered . The Transformer then removed recurrence altogether, so that training could run in parallel across positions .
+french: Quel âge avez-vous ?
+```
 
 | Task | Default model family in the notebook | Architecture | Related chapter |
 |---|---|---|---|
@@ -491,7 +535,7 @@ print("french:", seq2seq("Helsinki-NLP/opus-mt-en-fr", "How old are you?"))
 | text-generation | GPT-2 | Decoder (causal LM) | [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) |
 | zero-shot-classification | BART-large-MNLI | Encoder–decoder, NLI trick | [NLP text classification](../../03-nlp/notes/02-text-classification.md) |
 
-The encoders descend from BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04805) (Devlin et al., NAACL 2019)), and DistilBERT is a smaller distilled version ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)). A pipeline is tokenizer → model → post-processing, so open it up with `AutoTokenizer` and `AutoModelForSequenceClassification` when you need batching control or fine-tuning (`Trainer`). @@HFPROSE@@
+The encoders descend from BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04805) (Devlin et al., NAACL 2019)), and DistilBERT is a smaller distilled version ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)). A pipeline is tokenizer → model → post-processing, so open it up with `AutoTokenizer` and `AutoModelForSequenceClassification` when you need batching control or fine-tuning (`Trainer`). This ran on transformers 5.22.1, which removed the `question-answering`, `summarization` and `translation` pipeline tasks that the notebook used. Asking for them raises a `KeyError` that points to `text-generation` with a chat model, while the same models still run through the `Auto` classes above. Three more things show in the output. `aggregation_strategy="first"` matters, because `"simple"` split Sylvain into S, ##yl and ##va. The "summary" is two sentences copied from the passage. GPT-2 continues text about a course with the JVM, since a base model completes text and has no instruction to follow.
 
 ## TensorFlow status of the text notebooks
 
@@ -531,6 +575,7 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 | Generation repeats itself | Greedy decoding | Sample with temperature |
 | `Conv1d` dimension error | Keras has channels last, PyTorch channels second | `.transpose(1, 2)` |
 | Pipeline results change after an upgrade | Default model changed | Pin `model=` |
+| A frozen encoder loses to TF-IDF | A small encoder that truncates long text | Measure more than one encoder and keep the baseline: MiniLM lost and mpnet won at 100 labels |
 | A model scores well on a loss nobody measures | Loss differs from metric | Mask it to the metric, as `VentilatorLoss` does |
 
 ## Try it
@@ -539,7 +584,7 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 
    <details><summary>Answer</summary>
 
-   @@A1@@
+   Train 0.970 and test 0.857, against 0.969 and 0.847 for the first 250 tokens. On this split and seed the ending is worth about a point, in line with verdicts often coming at the end. Only reviews over 250 tokens change, a minority given the median of 174.
 
    </details>
 
@@ -547,7 +592,7 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 
    <details><summary>Answer</summary>
 
-   @@A2@@
+   Train 0.915 and test 0.827, against 0.969 and 0.847 with 16 dimensions. The gap shrinks from 0.122 to 0.088, so it overfits less, but the test score falls because it has lost capacity. Less overfitting isn't the goal in itself.
 
    </details>
 
@@ -555,7 +600,7 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 
    <details><summary>Answer</summary>
 
-   @@A3@@
+   `Average` falls to test 0.727 from 0.847, and TF-IDF to 0.752 from 0.886. TF-IDF loses slightly more, 0.134 against 0.120, but still leads. Both suffer far more from losing the text than from the choice of model.
 
    </details>
 
@@ -569,7 +614,8 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 | Why pre-pad for next-word training? | So the target is always the last column and the last state is always next to it. |
 | Why can't a bidirectional LSTM generate text? | It uses future tokens in training that don't exist while sampling. |
 | What's the point of `Conv1D` on text? | Filters are n-gram detectors, and global max pooling finds them anywhere, quickly. |
-| What does a frozen sentence encoder give you? | A strong baseline with a linear head, on few labels, at no training cost. |
+| What does a frozen sentence encoder give you? | A baseline with a linear head and no training cost, worth having on few labels if you measure the encoder. On 100 reviews mpnet beat TF-IDF and MiniLM lost to it. |
+| When does fine-tuning pay? | Once there are enough labels: at 5,000 reviews DistilBERT reached 0.905, against 0.886 for TF-IDF, but at 500 it trailed a frozen encoder. |
 | Greedy vs temperature sampling? | Greedy picks the top token and loops; temperature rescales logits and samples. |
 | What's inside a Hugging Face pipeline? | Tokenizer, model, post-processing. |
 | Why did attention replace RNNs? | No bottleneck, and positions run in parallel. |

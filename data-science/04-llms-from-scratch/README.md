@@ -40,7 +40,7 @@ The chapters' code blocks run in order from this folder:
 
 ```bash
 uv run --python 3.12 --with torch --with scikit-learn python practice/run_note.py notes/01-micrograd.md                    # about 1 minute
-uv run --python 3.12 --with torch python practice/run_note.py notes/02-makemore.md                                           # about 15 minutes on CPU
+uv run --python 3.12 --with torch python practice/run_note.py notes/02-makemore.md                                           # about 10 minutes on CPU
 uv run --python 3.12 --with torch --with transformers --with tiktoken python practice/run_note.py notes/03-nanogpt.md        # about 6 minutes on CPU, downloads GPT-2
 ```
 

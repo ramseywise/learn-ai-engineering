@@ -293,8 +293,8 @@ Course 3 has no programming assignments, and the two quizzes are your submission
 
 | Set | Runs |
 |---|---|
-| [Week 1: Peacetopia](../practice/ng-deep-learning/Structuring%20Machine%20Learning%20Projects/Week%201%20Quiz%20-%20Bird%20recognition%20in%20the%20city%20of%20Peacetopia%20(case%20study).md) | Read: a markdown quiz |
-| [Week 2: Autonomous driving](../practice/ng-deep-learning/Structuring%20Machine%20Learning%20Projects/Week%202%20Quiz%20-%20Autonomous%20driving%20(case%20study).md) | Read: a markdown quiz |
+| [Week 1: Peacetopia](../practice/ng-deep-learning/Structuring%20Machine%20Learning%20Projects/Week%201%20Quiz%20-%20Bird%20recognition%20in%20the%20city%20of%20Peacetopia%20%28case%20study%29.md) | Read: a markdown quiz |
+| [Week 2: Autonomous driving](../practice/ng-deep-learning/Structuring%20Machine%20Learning%20Projects/Week%202%20Quiz%20-%20Autonomous%20driving%20%28case%20study%29.md) | Read: a markdown quiz |
 
 The numbers described as Peacetopia's come from the quiz, and every digits number came from running the code shown.
 

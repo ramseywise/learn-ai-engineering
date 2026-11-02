@@ -20,7 +20,7 @@ Every number your company reports begins with someone copying rows out of a syst
 
 ## Where it sits
 
-Ingest starts the pipeline: **ingest** → model → transform → orchestrate → store → monitor → serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. Pillar 1 supplied the two background facts: files carry schemas or fail to ([encoding and files](../../01-storage-and-compute-foundations/notes/01-encoding-and-files.md), which is why the Kafka section here runs Avro with a Schema Registry), and a source you read from may lag or lose writes ([partitioning and replication](../../01-storage-and-compute-foundations/notes/04-partitioning-and-replication.md)). The stream background is Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 11. The zoomcamp material splits the job three ways:
+Ingest starts the pipeline: **ingest** → model → transform → orchestrate → store → monitor → serve. Every later stage assumes the raw layer exists, is complete for a known time window, and can be re-pulled. Pillar 1 supplied the two background facts: files carry schemas or fail to ([encoding and files](../../01-storage-and-compute-foundations/notes/02-encoding-and-files.md), which is why the Kafka section here runs Avro with a Schema Registry), and a source you read from may lag or lose writes ([partitioning and replication](../../01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)). The stream background is Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 11. The zoomcamp material splits the job three ways:
 
 | Mode | Zoomcamp material | What it teaches |
 |---|---|---|
@@ -231,7 +231,7 @@ extracted 1 rows, ids [44]
 source says: [(42, 99.0), (44, 11.0)]
 ```
 
-The loader picked up only the ordinary update. Trip 42 keeps its old fare because its `updated_at` was stamped when the transaction started, at 22:30, while the commit became visible after the extract had moved its mark to 23:00. Trip 43 is still in the warehouse because a deleted row cannot be returned by a query. Nothing in the output hints at either problem, and the warehouse is now quietly different from the source. A replica adds a third way to miss rows, since a follower can be behind the leader when you read your mark from it ([chapter 4 of pillar 1](../../01-storage-and-compute-foundations/notes/04-partitioning-and-replication.md)).
+The loader picked up only the ordinary update. Trip 42 keeps its old fare because its `updated_at` was stamped when the transaction started, at 22:30, while the commit became visible after the extract had moved its mark to 23:00. Trip 43 is still in the warehouse because a deleted row cannot be returned by a query. Nothing in the output hints at either problem, and the warehouse is now quietly different from the source. A replica adds a third way to miss rows, since a follower can be behind the leader when you read your mark from it ([chapter 4 of pillar 1](../../01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)).
 
 The standard patch for late commits is to re-read a window behind the mark and let the merge remove duplicates:
 

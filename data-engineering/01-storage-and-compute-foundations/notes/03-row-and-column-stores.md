@@ -8,7 +8,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 2 — Row and column stores
+# 3 — Row and column stores
 
 Ask a database for one customer's record and it wants its rows together on disk. Ask it for average fare by zone over a year and it wants the fares together and everything else out of the way. Those requests pull in opposite directions so strongly that a single storage layout cannot be good at both, and this is why almost every company keeps two kinds of database with a pipeline running between them. This chapter loads the same million trips into SQLite and DuckDB, measures the gap, and follows it down to the compression, sort orders and CPU loops that produce it.
 
@@ -26,7 +26,7 @@ Kleppmann's distinction ([*Designing Data-Intensive Applications*](https://datai
 
 The practical point is that an analyst's query can hold a production database's disks hostage. So companies copy data into a separate read-only **warehouse** through a pipeline, which is why this subject exists at all. Kimball's image for the split is that operational systems are where users turn the wheels of the organisation and the warehouse is where they watch them turn ([*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed., ch. 1).
 
-The size of the gap surprises people the first time. Here are both engines on the same rows, using the same `make_trips` as the [previous chapter](01-encoding-and-files.md).
+The size of the gap surprises people the first time. Here are both engines on the same rows, using the same `make_trips` as the [previous chapter](02-encoding-and-files.md).
 
 ```python
 import os, sqlite3, time, numpy as np, pyarrow as pa, duckdb
@@ -157,7 +157,7 @@ arrival order: 956362 runs
 sorted:        260 runs
 ```
 
-In arrival order, zone values almost never repeat, and there are nearly as many runs as rows. Sorted, there are exactly 260 runs, one per zone. Kleppmann describes how a sorted first key can shrink to kilobytes even over billions of rows, and how the second sort key helps less because its runs are shorter. The [previous chapter](01-encoding-and-files.md) measured the same effect in a Parquet file, where sorting took `pickup_zone` from about a megabyte to 5 KB and cost `pickup_at` its order.
+In arrival order, zone values almost never repeat, and there are nearly as many runs as rows. Sorted, there are exactly 260 runs, one per zone. Kleppmann describes how a sorted first key can shrink to kilobytes even over billions of rows, and how the second sort key helps less because its runs are shorter. The [previous chapter](02-encoding-and-files.md) measured the same effect in a Parquet file, where sorting took `pickup_zone` from about a megabyte to 5 KB and cost `pickup_at` its order.
 
 Bitmap encoding suits columns with few distinct values. Take one bit vector per value, with a 1 for each row that holds it. Then a filter becomes bitwise arithmetic over the vectors, which CPUs do fast. Kleppmann's example has 100,000 distinct products against billions of sales, where the bitmaps are mostly zeros and run-length encode down further.
 
@@ -338,7 +338,7 @@ The textbook account would lead you to expect DuckDB to lose by a wide margin, a
 
 ## Try it
 
-The code in this chapter is collected in [practice/02_row_and_column_stores.py](../practice/02_row_and_column_stores.py).
+The code in this chapter is collected in [practice/03_row_and_column_stores.py](../practice/03_row_and_column_stores.py).
 
 1. Widen the `pad` field in `layout` to `S1000`, predict how the gap between row and column sums changes, and measure.
 
@@ -379,4 +379,4 @@ Add a derived dimension, `trip_miles > 10 AS long_trip`, to `daily_zone` and reg
 
 ## Next
 
-Both engines here ran on one machine. [Distributed compute](03-distributed-compute.md) asks when one machine stops being enough, and what it costs to use many.
+Both engines here ran on one machine. [Distributed compute](08-distributed-compute.md) asks when one machine stops being enough, and what it costs to use many.

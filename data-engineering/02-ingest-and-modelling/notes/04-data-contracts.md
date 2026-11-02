@@ -15,7 +15,7 @@ On Monday a backend engineer changes `fare` from dollars to cents, because the p
 
 ## Why the trust breaks here
 
-Every previous stage in this pillar trusted the one before it. The loader trusts the source's schema, the star trusts the loader, and the dashboard trusts the star. Most of that trust is implicit, and the place it fails most often is the very first hand-off, since it crosses a team boundary. The team on the far side is measured on features, and its database schema is an implementation detail they feel free to change. That is good engineering from their side. The forward and backward compatibility rules in [encoding and files](../../01-storage-and-compute-foundations/notes/01-encoding-and-files.md) assume someone is thinking about the reader. Pulling raw tables out of an application's database, as ELT made easy, removes the moment at which anyone would.
+Every previous stage in this pillar trusted the one before it. The loader trusts the source's schema, the star trusts the loader, and the dashboard trusts the star. Most of that trust is implicit, and the place it fails most often is the very first hand-off, since it crosses a team boundary. The team on the far side is measured on features, and its database schema is an implementation detail they feel free to change. That is good engineering from their side. The forward and backward compatibility rules in [encoding and files](../../01-storage-and-compute-foundations/notes/02-encoding-and-files.md) assume someone is thinking about the reader. Pulling raw tables out of an application's database, as ELT made easy, removes the moment at which anyone would.
 
 Andrew Jones's [*Driving Data Quality with Data Contracts*](https://www.oreilly.com/library/view/-/9781837635009) (Packt, 2023) grew from his work at GoCardless and argues for moving this responsibility upstream. Sanderson, Freeman and Schmidt's [*Data Contracts*](https://www.oreilly.com/library/view/-/9781098157623/) (O'Reilly, 2025) is the longer treatment. I have read neither in full, so this chapter leans on the published standard and on code you can run, and those two are the places to go next.
 
@@ -254,7 +254,7 @@ print(breaking_changes(contract, v2))
 ['BREAKING zone_id type INTEGER -> VARCHAR', 'safe added tip_usd']
 ```
 
-A CI job runs this on each pull request that touches the contract, comparing with the version on the main branch. Changing a type is breaking, and adding an optional column is safe. Dropping a column, renaming one (a drop plus an add) or making an optional column required are all breaking as well. The rule is the same as [schema evolution](../../01-storage-and-compute-foundations/notes/01-encoding-and-files.md): old readers must keep working.
+A CI job runs this on each pull request that touches the contract, comparing with the version on the main branch. Changing a type is breaking, and adding an optional column is safe. Dropping a column, renaming one (a drop plus an add) or making an optional column required are all breaking as well. The rule is the same as [schema evolution](../../01-storage-and-compute-foundations/notes/02-encoding-and-files.md): old readers must keep working.
 
 Breaking changes are sometimes right, and the way through is **expand and contract**, the same pattern used for database migrations:
 

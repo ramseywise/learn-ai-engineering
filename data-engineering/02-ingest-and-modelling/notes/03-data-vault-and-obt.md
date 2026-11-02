@@ -184,7 +184,7 @@ That gives the honest verdict. Vault pays when you have many overlapping sources
 
 ## One Big Table
 
-One Big Table (OBT) goes the other way. Pre-join every dimension onto the fact and store the result, so each attribute becomes a column and every question a filter and a group by. It became reasonable only with columnar storage. As [row and column stores](../../01-storage-and-compute-foundations/notes/02-row-and-column-stores.md) showed, a column of `borough` with long runs of the same value compresses to nearly nothing and an unread column costs almost no I/O, so the two old objections to denormalization are both much weaker than they were.
+One Big Table (OBT) goes the other way. Pre-join every dimension onto the fact and store the result, so each attribute becomes a column and every question a filter and a group by. It became reasonable only with columnar storage. As [row and column stores](../../01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) showed, a column of `borough` with long runs of the same value compresses to nearly nothing and an unread column costs almost no I/O, so the two old objections to denormalization are both much weaker than they were.
 
 ```python
 con.execute("""

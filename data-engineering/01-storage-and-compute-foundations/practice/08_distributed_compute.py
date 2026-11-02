@@ -1,7 +1,7 @@
-"""Code from notes/03-distributed-compute.md. The Spark sections need a Java runtime (Java 17 was tested).
+"""Code from notes/08-distributed-compute.md. The Spark sections need a Java runtime (Java 17 was tested).
 
 Run from any folder (it writes only to a temporary directory):
-    uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 03_distributed_compute.py
+    uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 08_distributed_compute.py
 """
 import os, tempfile
 os.chdir(tempfile.mkdtemp())
