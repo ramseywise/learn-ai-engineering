@@ -16,7 +16,7 @@ The thread through all of them is the last clause of the framing, knowing when t
 |---|---|---|---|---|
 | [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | 7 | [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) |
 | [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | 6 | [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) |
-| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 3 | not built |
+| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 4 | not built |
 | [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | 6 | not built |
 | [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | 5 | [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) |
 | [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | 0 | not built |
@@ -61,9 +61,10 @@ These are the chapters on disk as of 2 November 2026.
 
 ### [03 Experimentation and causality](03-experimentation-and-causality/README.md)
 
-1. [A/B Testing](03-experimentation-and-causality/notes/01-ab-testing.md)
-2. [Experimentation at Scale](03-experimentation-and-causality/notes/02-experimentation-at-scale.md)
-3. [Correlation, Confounding and Causation](03-experimentation-and-causality/notes/03-correlation-and-causation.md)
+- A/B Testing
+- Experimentation at Scale
+- Metrics and KPI Design
+- Correlation, Confounding and Causation
 
 ### [04 Bayesian analysis](04-bayesian-analysis/README.md)
 
@@ -98,7 +99,7 @@ No chapters on disk yet. The planned chapters are forecasting, credit scoring, c
 | Default to Welch's t (`equal_var=False`) | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
 | Twenty independent tests at α = 0.05 give a 64% chance of at least one false positive; use Holm or BH | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
 | Do not stop a fixed-horizon test the first time p < 0.05 | [03](03-experimentation-and-causality/notes/01-ab-testing.md) |
-| Control for confounders, never for colliders | [03](03-experimentation-and-causality/notes/03-correlation-and-causation.md) |
+| Control for confounders, never for colliders | [03](03-experimentation-and-causality/README.md) |
 | R-hat at most 1.01, no divergences and ESS in the hundreds before you trust a posterior | [04](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) |
 | Never put zero prior mass where the truth could be | [04](04-bayesian-analysis/notes/03-priors-and-bandits.md) |
 | Ship B when the expected loss of choosing it is below the smallest difference you care about | [04](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
@@ -119,4 +120,4 @@ Each pillar's README says how to run its practice, and its `references.md` maps 
 
 ## Interview guide
 
-[1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation.
+[1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation, in a private repo.

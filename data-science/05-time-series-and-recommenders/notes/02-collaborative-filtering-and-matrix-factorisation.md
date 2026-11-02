@@ -146,7 +146,7 @@ print("biased MF, k=20, SGD  RMSE %.4f  (%.0fs)" % (rmse(te.rating, pred_mf), ti
 ```text
 predict the mean      RMSE 1.2290
 user + item biases    RMSE 1.0147
-biased MF, k=20, SGD  RMSE 0.9959  (10s)
+biased MF, k=20, SGD  RMSE 0.9959  (11s)
 ```
 
 The biases do most of the work: from the mean to the bias model RMSE falls by about 0.21, and the factors take off only about another 0.02. The size of that second step depends on the split. Ours is chronological, which is harder than the random holdout behind many published MovieLens numbers, so these figures will not match them.
@@ -211,6 +211,15 @@ rng = np.random.default_rng(0)
 table["random"] = evaluate(lambda us: rng.random((len(us), n_items)))
 table["MF on ratings"] = evaluate(lambda us: mu + bu_mf[us, None] + bi_mf[None, :] + P[us] @ Q.T)
 print(pd.DataFrame(table).T.round(4))
+
+def median_list_popularity(score_fn, k=10):
+    """How many training positives does the median film on these lists have?"""
+    us = np.array(sorted(truth_test)); S = np.asarray(score_fn(us), dtype=float).copy()
+    S[seen[us].nonzero()] = -np.inf; S[:, 0] = -np.inf
+    return np.median(counts[np.argpartition(-S, k, axis=1)[:, :k]])
+print("median training positives per listed film: popularity %.0f, MF on ratings %.0f" % (
+    median_list_popularity(lambda us: np.tile(counts, (len(us), 1))),
+    median_list_popularity(lambda us: mu + bu_mf[us, None] + bi_mf[None, :] + P[us] @ Q.T)))
 ```
 
 ```text
@@ -219,13 +228,14 @@ users with a test positive: 861
 popularity     0.0900  0.0752    0.0446
 random         0.0054  0.0049    0.9952
 MF on ratings  0.0428  0.0340    0.2140
+median training positives per listed film: popularity 262, MF on ratings 90
 ```
 
-This is the central result of the chapter. The matrix factorisation model that was the best of the three on RMSE recommends worse than a list of the most popular films, with less than half of popularity's NDCG. It was never asked to rank unrated films, and when it does, it promotes obscure items with a few high ratings, whose scores the data barely constrain. It is not broken. It is answering a different question from the one you are now asking.
+This is the central result of the chapter. The matrix factorisation model that was the best of the three on RMSE recommends worse than a list of the most popular films, with less than half of popularity's NDCG. It was never asked to rank unrated films, and when it does, it reaches for much less popular ones, as the last line shows, including films with few ratings whose scores the data barely constrains. It is not broken. It is answering a different question from the one you are now asking.
 
 ## Neighbourhoods: item-based filtering
 
-"People who liked this also liked that" is the oldest idea here, and it remains a serious method. Sarwar and colleagues ([WWW 2001](https://doi.org/10.1145/371920.372071)) showed that comparing items is more stable than comparing users, because an item's audience changes more slowly than a person's tastes and there are usually fewer items than users. Compute a similarity between each pair of items from their co-occurrence, keep each item's strongest neighbours, and score an unseen item by summing similarities to what the user liked. The shrink term stops two rare items with one shared fan from looking identical.
+"People who liked this also liked that" is the oldest idea here, and it remains a serious method. Sarwar and colleagues ([WWW 2001](https://doi.org/10.1145/371920.372071)) made the case for comparing items instead of users: relationships between items change slowly enough to precompute, which scales, and on their MovieLens experiments quality also beat the user-based methods of the day. Compute a similarity between each pair of items from their co-occurrence, keep each item's strongest neighbours, and score an unseen item by summing similarities to what the user liked. The shrink term stops two rare items with one shared fan from looking identical.
 
 ## A linear model with a closed form
 
@@ -417,7 +427,7 @@ Light users gain more: NDCG goes from 0.061 with popularity to 0.131 with EASE. 
 | What is iALS? | Implicit MF with confidence $c_{ui} = 1 + \alpha r_{ui}$ across all cells, solved by alternating closed forms, which stays tractable because the empty cells share one Gram matrix. |
 | What does BPR optimise? | Pairwise order: a user's seen item above an unseen one, sampled by triples, related to AUC. |
 | What is EASE, and why the zero diagonal? | A linear item-item model with a closed form via one matrix inverse. Without the zero diagonal each item would just predict itself. |
-| Item-based or user-based kNN? | Usually item-based: item neighbourhoods are more stable than people's, and there are usually fewer items than users (Sarwar et al., 2001). |
+| Item-based or user-based kNN? | Usually item-based: item relationships change slowly enough to precompute, so it scales, and Sarwar et al. (2001) also measured better quality on MovieLens. |
 | What did Dacrema et al. find? | Of 18 algorithms, 7 reproducible; 6 of those often lost to simple heuristics, and the remaining one did not consistently beat a tuned linear method. |
 | How should you split interaction data? | By time. A global cut is closest to production. A per-user chronological split is a compromise when users have short active periods. |
 

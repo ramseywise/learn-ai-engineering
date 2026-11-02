@@ -15,6 +15,9 @@ sources:
   - https://arxiv.org/abs/2503.24290 (Open-Reasoner-Zero)
   - https://arxiv.org/abs/2505.07608 (MiMo-7B)
   - https://arxiv.org/abs/2504.21801 (DeepSeek-Prover-V2)
+  - https://arxiv.org/abs/2507.20673 (GMPO, geometric-mean token ratios)
+  - https://arxiv.org/abs/2406.08414 (DiscoPOP, LLM-discovered preference loss)
+  - https://arxiv.org/abs/2501.18101 (DivPO, diversity-aware pair selection)
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
   - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
 confidence: medium
@@ -471,6 +474,19 @@ objective. DAPO's token-level loss (in [07](07-reward-design-and-tool-calling.md
 moves the other way, toward weighting each token equally, so practice has not settled on one
 granularity.
 
+GMPO sits between the two: it keeps GRPO's **per-token clipping** but takes the geometric mean
+of the token ratios, `(Π_t ρ_t)^(1/|o|)`, as the sequence weight, which is GSPO's ratio with the
+clip moved inside the product
+([arXiv:2507.20673](https://arxiv.org/abs/2507.20673) (Zhao et al., 2025-07, preprint)).
+Because one outlier token no longer dominates the weight, it can clip far wider, at
+(e^-0.4, e^0.4) ≈ (0.67, 1.49) against GRPO's (0.8, 1.2). On MATH levels 3–5 with 8 rollouts and
+greedy Pass@1 over five math benchmarks, **GMPO beat GRPO by 1.4–4.1 points** (63.4 against 59.3
+on R1-Distill-Qwen-7B), and the ablations are close to one another. Sequence-level clipping scored
+about the same (52.6 against 52.7), no clipping scored 52.3, and dropping the 1/|o| exponent scored
+52.0, from single runs with no seeds. The more useful evidence is the training curves: higher
+entropy, lower KL, a steadier gradient norm, and on a small MoE trained on CountDown GRPO
+collapsed after about 250 steps while GMPO did not. GSPO is not among its baselines.
+
 **Who needs what** (adapted from *AI Agents: The Definitive Guide*, Table 3-2):
 
 | Method | Reference policy | Reward signal | Critic | Unit of the ratio / loss |
@@ -574,6 +590,22 @@ care:
 Arena-Hard has no length control, so read its gains next to response length. The comparisons
 are offline only, with no online DPO or PPO baseline. β of 2–2.5 and γ of 0.5–1.5 need tuning.
 
+### DiscoPOP — a loss found by search
+
+Most offline variants are DPO with a different scalar loss on the same margin
+`βρ = β·(log π_θ/π_ref (y_w) − log π_θ/π_ref (y_l))`: logistic gives DPO, hinge gives SLiC,
+squared gives IPO. DiscoPOP searched that space automatically. GPT-4 wrote about 100 candidate
+losses as PyTorch code, and each one trained zephyr-7b-gemma-sft on the 7k-pair Argilla DPO Mix
+at β = 0.05 and was scored on MT-Bench
+([arXiv:2406.08414](https://arxiv.org/abs/2406.08414) (Lu et al., NeurIPS 2024)). The winner
+blends logistic and exponential losses with a sigmoid gate on the margin, and is non-convex
+around ρ = 0. The gains are small. MT-Bench went from 7.888 for DPO to 7.916, and the best
+MT-Bench loss did not transfer to held-out tasks. AlpacaEval 2 win rate against GPT-4 went from
+11.2% to 13.2% (±1.0), and on TL;DR it about tied DPO. Two cautions carry over to any loss you
+tune this way. **Validation reward accuracy did not predict MT-Bench**: DiscoPOP had the worst
+accuracy of the four losses plotted. And the loss only worked near the β it was found at: on
+GPT-2 IMDb it failed to converge at β ≤ 0.01 and collapsed to NaN at β ≥ 2.5.
+
 ### Self-play: SPIN, SPPO, DITTO
 
 These methods build pairs from the model's own samples, round after round. They differ in what
@@ -670,6 +702,7 @@ skills such as coding.
 - **Picking DPO for reasoning.** Offline preference pairs can't explore answers no one wrote down. Where a checker exists, online methods tend to win, as the comparisons in this chapter report.
 - **Picking GRPO with no sound checker.** It amplifies whatever the reward likes, including checker bugs. Audit the checker first.
 - **Ignoring length drift with DPO.** A longer chosen answer becomes the thing learned. Check average length before and after, and consider a length-normalized variant.
+- **Losing diversity to best-vs-worst pairs.** Win rate can rise while every sample says the same thing. Asked for a random persona, Llama-3.1-8B-Instruct named "Astrid" over 10% of the time, and online DPO cut the share of unique attributes from 24% to 9%. DivPO keeps the DPO loss and changes only the pair: the chosen is the *least* likely response within ρ of the top reward, and the rejected is the most likely one near the bottom. Online DivPO reached 54% unique attributes at the same reward-model score. Trained on WildChat prompts, AlpacaEval 2 LC was 44.1 at ρ = 0.2 against 41.3 for DPO, with more unique words (1,178 against 995; the seed model had 1,393). Push ρ to 0.5 and quality drops to 31.3. All runs use Llama-3.1-8B-Instruct and ArmoRM as the reward ([arXiv:2501.18101](https://arxiv.org/abs/2501.18101) (Lanchantin et al., 2025-01, preprint)).
 - **Comparing runs across different group sizes.** `G` changes the variance of the advantage, so compare at a fixed group size.
 - **All-pass or all-fail groups.** The advantage is zero, and the group teaches nothing. If most groups are like that, change the problem difficulty, not the algorithm.
 

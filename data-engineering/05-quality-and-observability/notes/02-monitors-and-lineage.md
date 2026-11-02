@@ -307,7 +307,7 @@ dt
 2024-03-24    3.96   0.2100  0.0000
 ```
 
-The separation is clean: at most 0.029 before, at least 0.182 after, and the change is detected on the first day. So why does the `D` matter when the p-value also gets it right? Because p-values get worse as the data grows. [Breck et al. (MLSys 2019)](https://mlsys.org/Conferences/2019/doc/2019/167.pdf) make the case from Google's TFX: they take 100 million points from a standard normal, replace 10 thousand with draws from a wider normal, and run a chi-squared test. A change of 0.01% that nobody would care about triggers an alert at the 1% level in 7 of 10 trials. Their remedy is a measure of distance with a threshold a team can reason about. Their choice is the L-infinity distance on categorical values, the largest change in probability for any value, which has the bonus of naming a culprit. KS `D` is the numeric counterpart of the idea. With 3,000 rows a day, the p-value still behaves here. With 3 billion it would alert daily, so threshold on the effect size.
+The separation is clean: at most 0.029 before, at least 0.182 after, and the change is detected on the first day. So why does the `D` matter when the p-value also gets it right? Because p-values get worse as the data grows. [Breck et al. (MLSys 2019)](https://mlsys.org/Conferences/2019/doc/2019/167.pdf) make the case from Google's TFX: they take 100 million points from a standard normal, replace 10 thousand with draws from a wider normal, and run a chi-squared test. A change of 0.01% that nobody would care about triggers an alert at the 1% level in 7 of 10 trials. Their remedy is a measure of distance with a threshold a team can reason about. Their choice is the L-infinity distance on categorical values, the largest change in probability for any value, which has the bonus of naming a culprit. KS `D` is the numeric counterpart of the idea. With 3,000 rows a day the p-value still behaves here. At far larger sizes it would flag differences too small to matter, so threshold on the effect size.
 
 Do not rely on a rolling reference for permanent changes. A baseline of the last 28 days will take a unit change as normal once more than half its window is after the change. Keep a fixed reference that someone has approved, roll it forward deliberately, and treat a step that never reverts as an event to investigate.
 
@@ -448,7 +448,7 @@ The reference set is the most consequential choice in monitoring. It should be d
 
 ## Computing metrics with Evidently
 
-The course's three metrics apply directly to our feed. A one-line fare model stands in for its regression, and February is the reference. `ColumnMapping` declares types. Without it Evidently guesses, and treats location IDs as numeric.
+The course's three metrics apply directly to our feed. A one-line fare model stands in for its regression, and February is the reference. The course's own mapping lists `passenger_count`, `trip_distance`, `fare_amount` and `total_amount` as numeric and `PULocationID` and `DOLocationID` as categorical. `ColumnMapping` declares types. Without it Evidently guesses, and treats location IDs as numeric.
 
 ```python
 import warnings; warnings.filterwarnings('ignore')
@@ -576,7 +576,7 @@ A **Report** describes (distributions, scores). A **TestSuite** asserts (pass/fa
 
 We know the unit change began on 24 March in `raw.trips`. What is wrong now, and what has to be rebuilt? Sculley et al. name the reason this is hard: code dependencies are found by compilers and linkers, and there is no equivalent for data dependencies, so long chains build up unseen ([NeurIPS 2015](https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html)). Lineage is that missing tool: a graph of which job read and wrote which dataset.
 
-You can parse it out of SQL, and dbt's `ref()` gives it to you inside one project. It stops at the edge of that tool. [OpenLineage](https://openlineage.io/docs/spec/object-model) is an open standard for collecting it across tools. Its model has three things: a **Dataset**, a **Job**, and a **Run**, one execution of a job. Jobs send `RunEvent`s as they change state: `START`, then a terminal `COMPLETE`, `FAIL` or `ABORT` ([OpenLineage, the run cycle](https://openlineage.io/docs/spec/run-cycle)). The backend learns about datasets mainly by receiving these events, then weaves many jobs into one graph. Extra information travels as *facets* on any of the three. Integrations exist for tools such as Airflow, Spark and dbt, and [Marquez](https://marquezproject.ai/) is the reference backend.
+You can parse it out of SQL, and dbt's `ref()` gives it to you inside one project. It stops at the edge of that tool. [OpenLineage](https://openlineage.io/docs/spec/object-model) is an open standard for collecting it across tools. Its model has three things: a **Dataset**, a **Job**, and a **Run**, one execution of a job. Jobs send `RunEvent`s as they change state: `START`, then a terminal `COMPLETE`, `FAIL` or `ABORT` ([OpenLineage, the run cycle](https://openlineage.io/docs/spec/run-cycle)). The backend learns about datasets mainly by receiving these events, then weaves many jobs into one graph. Extra information travels as *facets* on any of the three. [Integrations](https://openlineage.io/docs/integrations/about) exist for tools such as [Airflow](https://openlineage.io/docs/integrations/airflow/), [Spark](https://openlineage.io/docs/integrations/spark/) and [dbt](https://openlineage.io/docs/integrations/dbt), and [Marquez](https://marquezproject.ai/) is the reference backend.
 
 Here the pipeline emits events with the Python client and a file transport, so no server is needed. In production, you would point the transport at a backend over HTTP.
 
@@ -659,7 +659,7 @@ upstream of bi.zone_dashboard: ['marts.daily_revenue', 'ref.zones', 'staging.tri
 
 Three answers. **Blast radius**: five datasets sit downstream of `raw.trips`, including a model's predictions the dashboard owner may not know exist. **Root-cause candidates**: walking up from a broken dashboard gives a short, finite list of suspects, and `ref.zones` on the list shows what you can rule out. **Rebuild list**: joining the graph with the run history produces the exact runs to redo. That is what the [playbooks](03-incident-playbooks.md) feed into a backfill.
 
-Table-level lineage says `daily_revenue` read `staging.trips`, but not whether it used `distance`, and revenue here does not. Column lineage, available as an OpenLineage dataset facet, would remove that from the rebuild list. It is more work to collect, and most teams start with tables.
+Table-level lineage says `daily_revenue` read `staging.trips`, but not whether it used `distance`, and revenue here does not. Column lineage, available as an [OpenLineage dataset facet](https://openlineage.io/docs/spec/facets/dataset-facets/column_lineage_facet), would remove that from the rebuild list. It is more work to collect, and most teams start with tables.
 
 ## Pipeline-side monitoring, from earlier notes
 
@@ -701,14 +701,14 @@ The code uses Evidently's pre-0.7 API (`evidently.report.Report`, `evidently.met
 
 ## Try it
 
-1. Change `robust` to use a window of all weekdays rather than the same weekday. How does the 15% row in the sensitivity table change?
+1. Change `robust` to use the last six days of any weekday rather than the same weekday. Rerun the sensitivity table. What happens to the 0% row?
 2. Change the reference in the KS block to a rolling last 14 days, and compute *D* for 7 April assuming the feed continued. What happens to the alert?
 3. Add a `FAIL` run for `trip_features` on 25 March. How would you exclude it from the rebuild list, and should you?
 4. The dashboard owner asks whether `fare` nulls on 5 March affected them. Use `walk` and the run history to answer, and say what column lineage would add.
 
 <details><summary>Answers</summary>
 
-1. Sensitivity falls. Mixing weekdays with weekends raises both the median's distance and the MAD, so a 15% loss sits inside the band far more often. This is the seasonal half of the gain.
+1. The 0% row jumps from 0% to 27% of normal days, because a Monday is now compared with a window that includes a weekend. The 15% row rises to 36%, but most of that is the same noise. This is the seasonal half of the gain: without it the monitor is unusable.
 2. With 14 days of history, by 7 April every value in the window is from after the change, so *D* is small and the alert has gone although every distance is still wrong. That is why an approved fixed reference matters.
 3. The code filters on `COMPLETE`, so it would drop the failed run. You probably should include it, or at least check it. A failed run may have written partial output, and its day needs a rerun anyway.
 4. `walk(up, 'bi.zone_dashboard')` includes `raw.trips`, and `daily_revenue` ran for 5 March, so table lineage says yes, possibly. Column lineage would show whether `fare` feeds that dashboard, and so turn "possibly" into yes or no.

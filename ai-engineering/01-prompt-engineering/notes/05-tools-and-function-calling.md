@@ -153,7 +153,7 @@ UX that helps (the book's recommendations):
 
 - Book (PDF): [Ch 8](../sources/prompt-eng-for-llms/reading/08-conversational-agency.pdf) (internal format, tool guidelines, conversational agent, UX)
 - Agent-level tool design, MCP, skills: [03-harness-engineering/notes/03-tool-design.md](../../03-harness-engineering/notes/03-tool-design.md)
-- Vendor tool-use docs and benchmarks: [references.md](../README.md#vendor-guides)
+- Vendor tool-use docs and benchmarks: [references.md](../references.md#vendor-guides)
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 origin: curated
 confidence: high
-cleaned: 2026-11-02
+cleaned: 2026-11-01
 ---
 
 # References: data analytics
@@ -44,7 +44,7 @@ cleaned: 2026-11-02
 | | Kohavi et al., *Controlled experiments on the web: survey and practical guide* ([Data Mining and Knowledge Discovery](https://doi.org/10.1007/s10618-008-0114-1)) | [PDF](sources/kohavi-2008-controlled-experiments-web.pdf) | 02, 03 |
 | | Gelman et al., *A weakly informative default prior distribution for logistic and other regression models* ([Annals of Applied Statistics](https://doi.org/10.1214/08-aoas191)) | [PDF](sources/gelman-2009-weakly-informative-default-prior-distribution.pdf) | 02, 04 |
 | | Hoffman & Gelman, [*The No-U-Turn Sampler*](https://arxiv.org/abs/1111.4246) | [PDF](sources/hoffman-2011-no-u-turn-sampler.pdf) | 04 |
-| | Blei et al., *Variational Inference: A Review for Statisticians* ([JASA](https://doi.org/10.1080/01621459.2017.1285773)) | [PDF](sources/blei-2016-variational-inference.pdf) | 04 |
+| | Blei et al., [*Variational Inference: A Review for Statisticians*](https://arxiv.org/abs/1601.00670) (JASA) | [PDF](sources/blei-2016-variational-inference.pdf) | 04 |
 | | Kaufmann, Cappé & Garivier, [*On Bayesian upper confidence bounds for bandit problems*](https://proceedings.mlr.press/v22/kaufmann12.html) (AISTATS 2012) | | 04 |
 
 ## Courses and videos
@@ -89,7 +89,7 @@ The downloader can add PDFs here. Files not listed below have arrived since this
 | `intro_stats_learning.pdf` | ISLP again (613 pp, not the R edition) | **Duplicate**; candidate to delete |
 | `Python for Data Analysis.pdf` | McKinney, 1st ed. | Superseded by the 2nd ed. |
 | `bayes_for_hackers.pdf` | Davidson-Pilon, print sample (63 pp) | Partial |
-| `blei-2016-variational-inference.pdf`, `hoffman-2011-no-u-turn-sampler.pdf` | Downloaded papers | Filed; no note in this subject cites Blei yet |
+| `blei-2016-variational-inference.pdf`, `hoffman-2011-no-u-turn-sampler.pdf` | Downloaded papers | Filed; no chapter cites either yet, so the pillar shown under Core papers is where they fit |
 
 Every other PDF is listed under Books or Core papers.
 

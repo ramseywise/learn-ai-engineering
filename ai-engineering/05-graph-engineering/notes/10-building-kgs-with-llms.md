@@ -411,7 +411,7 @@ The hop table above is the reason this stage exists. Hand-label a gold set (50â€
 | **False-split rate** | Gold entities spread over more than one canonical | Under-merging (cheaper: lowers recall, doesn't corrupt) |
 | **Stability** | Same input, repeated runs | Prompt ambiguity |
 
-**Weight false merges more heavily than false splits.** A split loses a connection. A merge creates connections that don't exist, and traversal then follows them confidently. Gate the load step on these metrics the way [06-eval note 10](../../../generative-ai/08-eval/notes/10-evals-in-ci.md) gates a deploy, and see [06-eval note 03](../../../generative-ai/08-eval/notes/03-eval-datasets.md) for building the gold set.
+**Weight false merges more heavily than false splits.** A split loses a connection. A merge creates connections that don't exist, and traversal then follows them confidently. Gate the load step on these metrics the way [Eval chapter 10](../../../generative-ai/08-eval/notes/10-evals-in-ci.md) gates a deploy, and see [06-eval note 03](../../../generative-ai/08-eval/notes/03-eval-datasets.md) for building the gold set.
 
 The book's evaluation recipe for extraction: process a few dozen pages, have a QA reviewer mark each prediction correct, incorrect or missing, and report precision, recall and F1 **per entity and relation class**. A reviewer sees systematic failures that a handful of examples hide. An LLM judge can stand in for the reviewer, imperfectly. The scores also become the baseline for spotting drift when the model or prompt changes later (*KG & LLMs in Action*, ch. 5).
 

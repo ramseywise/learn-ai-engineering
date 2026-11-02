@@ -1,6 +1,6 @@
 # Recurring Sources
 
-Sources swept periodically for material that belongs in the six pillars. Update the
+Sources swept periodically for material that belongs in the five pillars, inference and the Eval pillar in generative-ai. Update the
 **Last swept** date when you do a pass, and note what landed.
 
 A source earns a row here if it publishes on a cadence *and* has produced at least one
@@ -26,7 +26,7 @@ good, prefer citing the primary source it draws on. Value is coverage and cadenc
 
 | Source | Cadence | Scope | Last swept |
 |---|---|---|---|
-| [AI Builder Club](https://www.aibuilderclub.com/blog) | weekly | all six pillars; ~86 posts as of 2026-07 | 2026-07-30 |
+| [AI Builder Club](https://www.aibuilderclub.com/blog) | weekly | all five pillars and Eval; ~86 posts as of 2026-07 | 2026-07-30 |
 | [MarkTechPost](https://www.marktechpost.com/) | daily | loop, graph, papers | 2026-07-31 |
 | [dair.ai](https://github.com/dair-ai) | weekly | prompt, papers | guide absorbed 2026-10-28 — see below |
 | [KodeKloud notes](https://notes.kodekloud.com/docs/Loop-Engineering/What-Is-a-Loop/What-is-Loop-Engineering/page.md) | course, static | loop | 2026-10-28 — summarized into 04-loop-engineering/notes, not copied |
@@ -38,14 +38,14 @@ good, prefer citing the primary source it draws on. Value is coverage and cadenc
 
 ### AI Builder Club
 
-Added 2026-07-30. Post taxonomy maps almost exactly onto the six pillars (it uses a
-five-layer stack: prompt → context → harness → loop → graph, **omitting eval as a layer** —
-our six-pillar model treats eval as a peer foundation and is the better frame).
+Added 2026-07-30. Post taxonomy maps almost exactly onto the five pillars (it uses the same
+five-layer stack: prompt → context → harness → loop → graph). It does not treat eval as a
+layer; here Eval is its own pillar in generative-ai, measuring all five.
 
 Landed in the 2026-07-30 sweep:
 - [04-loop-engineering/notes/07-autonomy-ladder.md](04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
 - [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
-- [06-eval/notes/11-production-and-the-maturity-ladder.md](../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)
+- [generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md](../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)
 - [05-graph-engineering/notes/01-graph-vs-loop.md](05-graph-engineering/notes/01-graph-vs-loop.md) — escalation framing + decision tree (was graph-engineering.md §11)
 - [03-harness-engineering/notes/04-execution-boundaries.md](03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
 
@@ -81,7 +81,7 @@ Landed in the 2026-07-31 sweep:
   the same notes (removed 2026-10-30), except the RAG and context-caching ones, which were later folded into
   [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) and 02-context note 04. To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
-  [01-prompt-engineering/README.md](01-prompt-engineering/README.md#references).
+  [01-prompt-engineering/references.md](01-prompt-engineering/references.md).
 
 ### AI Papers of the Week (DAIR)
 

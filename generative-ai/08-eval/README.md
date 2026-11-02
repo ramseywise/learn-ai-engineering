@@ -1,7 +1,7 @@
-# 06 — Eval Engineering
+# 08 — Eval Engineering
 
 > Depth layer. Summary: [interviewing/guides/6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md)
-> Position in the stack: *measures every layer below*.
+> Position in the path: eighth pillar of generative-ai, moved from ai-engineering. It *measures every layer*: the five ai-engineering foundations (prompt, context, harness, loop, graph) and the generative-ai pillars that build on them.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
 ---
@@ -99,7 +99,7 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 ## Layout
 
 ```
-06-eval/
+08-eval/
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
 ├── notes/                        ← chapters 01–13, read in order; figures and code inline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)

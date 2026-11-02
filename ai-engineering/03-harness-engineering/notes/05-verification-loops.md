@@ -270,7 +270,7 @@ The same ladder describes **runtime guardrails**, the gate between "the agent sa
 
 Two related disciplines: **Pass@k** measures capability boundaries (can it ever do this?); **Pass^k** measures deployment quality (does it do this *every* time?). Ship on Pass^k.
 
-And the meta-rule: **if the eval system is broken, fix the eval system first.** Never steer on a distorted signal. The debug order for that is in [06-eval/12](../../../generative-ai/08-eval/notes/12-failure-modes.md#the-debug-order); graders and their calibration states are in [06-eval/04](../../../generative-ai/08-eval/notes/04-graders.md#grader-states-which-ones-can-block-a-release); pass@k vs. pass^k with repeats is in [06-eval/06](../../../generative-ai/08-eval/notes/06-evaluating-agents.md#non-determinism-run-every-task-k-times); wiring evals into CI is in [06-eval/10](../../../generative-ai/08-eval/notes/10-evals-in-ci.md).
+And the meta-rule: **if the eval system is broken, fix the eval system first.** Never steer on a distorted signal. The debug order for that is in [Eval chapter 12](../../../generative-ai/08-eval/notes/12-failure-modes.md#the-debug-order); graders and their calibration states are in [Eval chapter 04](../../../generative-ai/08-eval/notes/04-graders.md#grader-states-which-ones-can-block-a-release); pass@k vs. pass^k with repeats is in [Eval chapter 06](../../../generative-ai/08-eval/notes/06-evaluating-agents.md#non-determinism-run-every-task-k-times); wiring evals into CI is in [Eval chapter 10](../../../generative-ai/08-eval/notes/10-evals-in-ci.md).
 
 ### Two eval surfaces, different triggers
 

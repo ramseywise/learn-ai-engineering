@@ -53,7 +53,9 @@ cleaned: 2026-11-01
 
 # 1 — Tokens and embeddings
 
-@@HOOK@@
+A support ticket arrives: `Refund order #A1B2, please.` You paste it into a model and it replies in fluent English. Before any of that fluency exists, the text has to become numbers, and the way that happens explains a surprising share of what goes wrong later: why the model miscounts letters, why the same sentence costs more tokens in some languages than others, why a long document can quietly fall out of the window. This chapter follows the ticket from characters to tokens to vectors with position in them, which is everything the attention layers of the next chapter receive.
+
+> An LLM is a decoder-only transformer trained to predict the next token. Tokens, embeddings, causal self-attention and scale explain most of its behaviour, including the failures.
 
 ---
 
@@ -90,11 +92,26 @@ Models do not see characters or words. A **tokenizer** splits text into subword 
 
 Tokenization explains several odd failures: counting letters in a word, reversing strings and arithmetic on long numbers are hard because the model never sees the individual characters. That is only part of the story. On the CUTE benchmark a 7.5B BPE model still spelled words out letter by letter with 91.5% exact match (97.3% for a byte-level model of the same size), but both scored below 25% on character edits such as deleting, substituting or swapping a letter ([arXiv:2506.14761](https://arxiv.org/abs/2506.14761) (Videau et al., NeurIPS 2025)). Spelling can be learned from token patterns; manipulating characters stays hard even with bytes. A separate failure comes from training the tokenizer and the model on different data. A string that was frequent in the tokenizer's corpus gets its own token, but if it hardly appears in the model's training text, that token's embedding is barely trained. Kaddour et al.'s review calls these *glitch tokens*, after Rumbelow and Watkins's 2023 "SolidGoldMagikarp" write-up, and says they cause unexpected behaviour. The review notes that the coupling also means a new tokenizer has to be trained whenever the pretraining corpus changes ([arXiv:2307.10169](https://arxiv.org/abs/2307.10169) (Kaddour et al., 2023, preprint)).
 
+`tiktoken` is OpenAI's BPE implementation; Anthropic exposes a `count_tokens` endpoint instead. Here is our ticket through GPT-2's tokenizer:
+
 ```python
-import tiktoken                      # OpenAI's BPE; Anthropic exposes a count_tokens endpoint instead
+import tiktoken
+
 enc = tiktoken.get_encoding("gpt2")
-enc.encode("Tokenization isn't free.")   # -> list of ints; decode() inverts it
+ticket = "Refund order #A1B2, please. Tokenization isn't free."
+ids = enc.encode(ticket)
+print(len(ticket), "characters ->", len(ids), "tokens")
+print([enc.decode([i]) for i in ids])
+print("round trip ok:", enc.decode(ids) == ticket)
 ```
+
+```text
+52 characters -> 17 tokens
+['Ref', 'und', ' order', ' #', 'A', '1', 'B', '2', ',', ' please', '.', ' Token', 'ization', ' isn', "'t", ' free', '.']
+round trip ok: True
+```
+
+The product code `A1B2` falls apart into pieces while common words stay whole, and a leading space belongs to the token that follows it. That is why a model that reads `A1B2` perfectly well can still trip when asked to spell it backwards.
 
 Open-weight models ship their tokenizer with the weights. Hugging Face's Transformers library defines every model as three parts: a tokenizer, a transformer body and a task head that can be swapped for fine-tuning. `AutoTokenizer.from_pretrained(name)` loads the tokenizer the model was pretrained with, because tokenizers "often differ in small details, but need to be in sync with pretraining" ([doi:10.18653/v1/2020.emnlp-demos.6](https://doi.org/10.18653/v1/2020.emnlp-demos.6) (Wolf et al., EMNLP 2020 Demos)). When the paper was written, its model hub held 2,097 community models. The paper is a system description and reports no controlled benchmarks; its one speed figure is a near-4× ONNX speedup on BERT, RoBERTa and GPT-2, with no setup given.
 
@@ -135,4 +152,174 @@ Copying, the easiest task on that list, is still not solved at frontier scale. I
 
 Position and meaning also compete while a model learns. Cui et al. solved a single attention layer exactly in the limit of large embedding dimension. The layer has tied, low-rank query and key weights, and the target mixes a fixed positional attention pattern with a content-based one ([arXiv:2402.03902](https://arxiv.org/abs/2402.03902) (Cui et al., NeurIPS 2024)). Below a critical number of training samples per dimension, the best solution attends by position. Above it, the best solution attends by content, and the switch is sharp: a phase transition. Only after that switch does attention beat a plain linear layer that can mix tokens by position alone. The setting is a toy. Sentences are two Gaussian tokens, there is one head and no value matrix, and gradient descent was started at one solution or the other. From a random start, Adam at larger dimensions reached the content-based solution less often than the positional one, and often found neither. The authors also train a small transformer on a counting task and find two solutions that both reach over 99.8% accuracy, one positional and one content-based.
 
-@@END@@
+## Worked example: from ticket to model input
+
+The pipeline has three steps, and each one can be built in a few lines. First, the shape of it:
+
+```text
+"Refund order #A1B2"
+        |  tokenizer (BPE merges)
+        v
+[int, int, int, ...]                   integers, one per token
+        |  token embedding table       vocab_size x d_model
+        v
+one d_model vector per token
+        |  add position                learned table, or RoPE inside attention
+        v
+(batch, T, d_model)                    what the first attention layer receives
+```
+
+**Step 1: where the merges come from.** BPE starts from characters and repeatedly fuses the most frequent adjacent pair. Run it on a small corpus of tickets and common strings become single tokens, while rare ones stay in pieces:
+
+```python
+from collections import Counter
+
+corpus = ["refund order", "refund my order", "refund please", "order status", "order refund"]
+words = Counter(w for line in corpus for w in line.split())
+vocab = {tuple(w) + ("</w>",): n for w, n in words.items()}
+
+def best_pair(vocab):
+    pairs = Counter()
+    for symbols, n in vocab.items():
+        for a, b in zip(symbols, symbols[1:]):
+            pairs[(a, b)] += n
+    return max(pairs, key=lambda p: (pairs[p], p))
+
+def merge(vocab, pair):
+    out = {}
+    for symbols, n in vocab.items():
+        s, i = [], 0
+        while i < len(symbols):
+            if symbols[i:i + 2] == pair:
+                s.append(pair[0] + pair[1]); i += 2
+            else:
+                s.append(symbols[i]); i += 1
+        out[tuple(s)] = n
+    return out
+
+for step in range(8):
+    pair = best_pair(vocab)
+    vocab = merge(vocab, pair)
+    print(step + 1, "merge", pair)
+print(sorted(vocab, key=len))
+```
+
+```text
+1 merge ('u', 'n')
+2 merge ('un', 'd')
+3 merge ('und', '</w>')
+4 merge ('r', 'e')
+5 merge ('re', 'f')
+6 merge ('ref', 'und</w>')
+7 merge ('r', 'd')
+8 merge ('rd', 'e')
+[('refund</w>',), ('m', 'y', '</w>'), ('o', 'rde', 'r', '</w>'), ('p', 'l', 'e', 'a', 's', 'e', '</w>'), ('s', 't', 'a', 't', 'u', 's', '</w>')]
+```
+
+Frequent words collapse to one or two symbols, and the rare `status` and `please` stay in many. Real tokenizers do this over gigabytes of text until they reach the target vocabulary, 50,257 entries for GPT-2.
+
+**Step 2: why position has to be added.** An embedding table maps each id to the same vector wherever it appears. Attention, as the next chapter shows, is a weighted average, and an average does not care about order. So without a position signal, `order refund` and `refund order` are the same bag of vectors:
+
+```python
+import torch
+
+torch.manual_seed(0)
+vocab_size, d_model, context = 50_257, 8, 16
+tok = torch.nn.Embedding(vocab_size, d_model)
+pos = torch.nn.Embedding(context, d_model)
+
+a = torch.tensor([917, 1502])   # two made-up ids, say "refund order"
+b = torch.tensor([1502, 917])   # the same tokens reversed
+positions = torch.arange(2)
+
+def as_set(vectors):
+    return sorted(tuple(round(x, 4) for x in row.tolist()) for row in vectors)
+
+print("same set of vectors, tokens only:   ", as_set(tok(a)) == as_set(tok(b)))
+print("same set of vectors, with positions:",
+      as_set(tok(a) + pos(positions)) == as_set(tok(b) + pos(positions)))
+print("token table parameters:", sum(p.numel() for p in tok.parameters()))
+print("position table parameters:", sum(p.numel() for p in pos.parameters()))
+```
+
+```text
+same set of vectors, tokens only:    True
+same set of vectors, with positions: False
+token table parameters: 402056
+position table parameters: 128
+```
+
+With tokens alone, the two orderings hand attention the same set of vectors, so nothing downstream could tell them apart. Adding a position vector changes each token's own vector, and now the sets differ. The two tables also show where parameters go: the token table is far larger than the position table, and it scales with the vocabulary.
+
+**Step 3: why RoPE works past the table.** The table above has an entry for 16 positions and nothing for the 17th. RoPE has no table. It rotates each query and key by an angle proportional to its position, so a query–key score depends only on the *offset* between them:
+
+```python
+import math
+
+def rotate(v, position, theta=0.1):
+    c, s = math.cos(position * theta), math.sin(position * theta)
+    return (c * v[0] - s * v[1], s * v[0] + c * v[1])
+
+def score(q, k, pos_q, pos_k):
+    rq, rk = rotate(q, pos_q), rotate(k, pos_k)
+    return rq[0] * rk[0] + rq[1] * rk[1]
+
+q, k = (1.0, 0.5), (0.2, 0.9)
+for pq, pk in [(0, 3), (10, 13), (1000, 1003), (0, 4)]:
+    print(f"query at {pq:>4}, key at {pk:>4}: score = {score(q, k, pq, pk):.6f}")
+```
+
+```text
+query at    0, key at    3: score = 0.384553
+query at   10, key at   13: score = 0.384553
+query at 1000, key at 1003: score = 0.384553
+query at    0, key at    4: score = 0.287155
+```
+
+The three pairs three apart score the same, wherever they sit in the document, and the pair four apart differs. Real RoPE applies this to many coordinate pairs at different frequencies. That shape is why the positional table above lists RoPE as usable beyond the training length with some loss, and why the extensions earlier in this chapter go after its frequencies.
+
+---
+
+## Pitfalls
+
+- **Estimating cost from characters.** Four characters per token is an English rule of thumb. Code, identifiers and other languages differ, so count with the model's own tokenizer, or its counting endpoint, before you promise a budget.
+- **Mixing tokenizers.** Token ids mean nothing outside the tokenizer that made them. Counting with GPT-2's and billing against another model's will be wrong, and loading weights with the wrong tokenizer produces fluent-looking garbage.
+- **Asking for character-level work and trusting the answer.** Spelling, counting letters and reversing strings ask the model about units it never sees directly. Give it a tool, or split the string into separate tokens first.
+- **Treating the context limit as a soft target.** Providers differ on what happens past the limit, and frameworks may truncate silently. Measure the assembled prompt in tokens.
+- **Assuming a position scheme extends itself.** A learned table has no entry past its length, and RoPE degrades past the training range. Check the context length a model was trained on, not just the one it accepts.
+
+---
+
+## Try it
+
+1. Tokenize `A1B2`, `a1b2` and ` A1B2` (leading space) with GPT-2's encoding. Do they share tokens? What does that say about normalising case in a retrieval key?
+2. In the BPE example, add `"refund"` ten more times to the corpus and rerun it. Which merges appear earlier?
+3. In the RoPE example, change `theta` to `0.5` and check that equal offsets still score equally. What changes?
+
+<details>
+<summary>Answers</summary>
+
+1. They produce different ids, and the leading space changes the first token, because a token's identity includes its case and its leading space. A retrieval key or cache key normalised after tokenizing will miss, so normalise the text first.
+2. Pairs inside `refund` gain count and merge first, so `refund` collapses to one symbol in fewer steps. Merge order follows frequency, which is why common words end up as single tokens.
+3. Equal offsets still match, since the score depends on the offset alone. A larger `theta` makes the score change faster with offset, so it encodes fine distance over a shorter range before the angle wraps around.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Why do LLMs use subword tokens? | Characters give too few units per unit of meaning and whole words cannot cover the open vocabulary. BPE gives a fixed vocabulary that can encode any string |
+| What is the effect of tokenization on cost and language quality? | Pricing and context limits are per token, and a language with less training data takes more tokens for the same text and tends to get worse quality |
+| Why can a model fail to reverse a string it reads correctly? | It sees tokens, not characters, so the letters inside a token are not directly available to it |
+| What does an embedding layer learn? | A trainable table with one vector per token id, fit by next-token loss so that tokens used alike end up with useful vectors |
+| Why is a position signal needed at all? | Attention is order-blind on its own, and without one a reordered sentence would produce the same set of vectors |
+| Learned positions versus RoPE? | A learned table is simple and has a hard maximum length. RoPE rotates queries and keys so scores depend on relative offset, which makes extension possible, with some loss, past the training length |
+
+---
+
+## Next
+
+[02 — Attention and the transformer block](02-attention-and-the-transformer-block.md) takes these vectors and lets each token gather context from the ones before it.

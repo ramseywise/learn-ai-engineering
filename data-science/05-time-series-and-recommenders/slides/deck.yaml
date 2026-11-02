@@ -1,0 +1,448 @@
+# Time series and recommenders lecture deck. Covers notes/01-time-series-ml.md,
+# notes/02-collaborative-filtering-and-matrix-factorisation.md, notes/03-two-tower-and-evaluation.md.
+# Build: make slides PILLAR=data-science/05-time-series-and-recommenders STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running examples: hourly bike rentals (UCI), then MovieLens 100K. Every number was measured by
+# running the code in the notes, except those attributed to a paper.
+deck:
+  title: Time Series and Recommenders
+  subtitle: When rows are not exchangeable
+  tagline: |-
+    Forecast honestly · Rank what people see · Know that it worked
+  reference: "Notes: data-science/05-time-series-and-recommenders"
+  output: time-series-and-recommenders.pptx
+  notes: >-
+    Two problems today, one lesson. First a bike operator who needs tomorrow's demand by midnight, then a film site that
+    wants a top ten list for each person. Both break the habit of shuffling rows and holding some out. In both, the usual
+    failure is an evaluation that flatters the model, so the procedure matters more than the architecture.
+
+parts:
+  - title: Forecasting without fooling yourself
+    summary: Issue time · Baselines · Backtests · Leaks · Sequence models
+    notes: >-
+      We start with an operator who plans vans at midnight. What would a forecast really have scored on the day it was issued?
+    slides:
+      - layout: statement
+        title: Our shuffled test says the forecast is great. Is it?
+        kicker: The problem
+        statement: "A forecast is a promise about a future you cannot see, so shuffled rows report an accuracy you will never get."
+        attribution: State when the forecast is issued before you fit anything
+        takeaway: Shuffled validation tests interpolation between known points, whereas a forecast has to predict a future it cannot see.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Rows here are not exchangeable. Each one is correlated with its neighbours, features must have been known at prediction
+          time, and the level drifts so the test set can sit outside anything seen in training. So how do we set this up?
+
+      - layout: cards
+        title: Four things to state before any model
+        recall: What four things define a forecasting problem?
+        cards:
+          - title: Issue time
+            body: When the forecast is made. Here, midnight.
+          - title: Horizon
+            body: How far ahead. Here, 1 to 24 hours.
+          - title: Information set
+            body: What is known at issue time. Calendar and past rentals, not tomorrow's weather.
+          - title: Loss
+            body: What an error costs. Here, absolute error in bikes.
+        takeaway: A forecasting problem is defined by its issue time, horizon, information set and loss, and these decide which features are legal.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Every later decision depends on these four. The issue time alone tells you that nothing nearer than 24 hours can be a feature
+          if you want one model for every hour of tomorrow.
+
+      - layout: flow
+        title: A backtest replays history one fold at a time
+        recall: How does an expanding-window backtest work?
+        steps:
+          - title: Cut
+            body: Pick a date in the past
+          - title: Train
+            body: Fit only on data before it
+          - title: Issue
+            body: Forecast each midnight in the next month
+          - title: Score
+            body: Record MAE and MASE for this fold
+        loop: Move the cut one month on and repeat
+        caption: Six folds from July to December 2012. Report each fold, since an average can hide one bad month.
+        takeaway: An expanding-window backtest trains only on the past at each cut, and gives you as many looks at the future as you have folds.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          This is what Hyndman and Athanasopoulos call time series cross-validation. Bergmeir, Hyndman and Koo add a nuance: plain K-fold
+          is fine for purely autoregressive models with uncorrelated residuals, but not with a drifting level and a decision made at a set moment.
+
+      - layout: table
+        title: Dividing by a known level beat the naive by a quarter
+        kicker: Worked example
+        recall: Why did dividing by the level help the trees?
+        lead: Six monthly folds, mean over folds. MASE below 1 beats the in-sample seasonal naive.
+        header: [Model, MAE (bikes), MASE]
+        widths: [3, 1, 1]
+        rows:
+          - [Same hour yesterday, "80.4", "1.317"]
+          - [Same hour last week, "66.0", "1.074"]
+          - [GBM on absolute counts, "55.4", "0.906"]
+          - [GBM relative to last week's level, "48.2", "0.786"]
+        highlight: 3
+        takeaway: A regression tree cannot predict above its training targets, so model the ratio to a known level when the series is growing.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Demand rose 64 percent from 2011 to 2012. A tree predicts averages of targets it has seen, so it is capped. Dividing by last week's
+          level takes MASE from 0.906 to 0.786 in one line. Note that October is the only month above 1, because of Hurricane Sandy.
+
+      - layout: compare
+        title: Three leaks that each look like a breakthrough
+        recall: Which three leaks did we measure, and what did each do to MASE?
+        lead: The honest model scores MASE 0.786 on these folds.
+        emphasis: left
+        left:
+          title: What the leak reports
+          bullets:
+            - "Previous-hour lag: **0.419**"
+            - "Actual weather: **0.615**"
+            - "Shuffled 5-fold: **0.747**"
+          tag: Looks like progress
+        right:
+          title: Why it is not real
+          bullets:
+            - At midnight you do not have the previous hour
+            - In production you only have a weather forecast
+            - Neighbouring hours end up in training
+          tag: Unavailable in production
+        takeaway: For each feature ask when its value becomes available, and treat any actual standing in for a forecast as an upper bound.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          The weather case is the tempting one. To measure it properly you need archived forecasts as they were issued. The shuffled folds
+          flatter us least here because every feature is at least a day old, but 5 percent can still change a close decision.
+
+      - layout: code
+        title: DLinear is two linear maps and a moving average
+        recall: What does DLinear do to a window of history?
+        lang: python
+        code: |-
+          class DLinear(nn.Module):
+              def __init__(self, L, H, kernel=25):
+                  super().__init__()
+                  self.avg = nn.AvgPool1d(kernel, stride=1,
+                      padding=kernel // 2, count_include_pad=False)
+                  self.seasonal = nn.Linear(L, H)
+                  self.trend = nn.Linear(L, H)
+              def forward(self, x):
+                  trend = self.avg(x.unsqueeze(1)).squeeze(1)
+                  return self.seasonal(x - trend) + self.trend(trend)
+        bullets:
+          - "Zeng et al. (AAAI 2023): one-layer models beat Transformers on nine datasets"
+          - "Attention is permutation invariant, which loses order"
+          - "This trains in seconds on a laptop"
+        takeaway: On nine long-horizon datasets a one-layer linear model beat Transformer forecasters, so any complex forecaster should have to beat it first.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Recurrent networks read a window step by step, temporal convolutions stack dilated filters, and this linear model just separates
+          trend from remainder. All three have the same interface: 168 hours in, 24 out.
+
+      - layout: table
+        title: Trees beat networks here, on one short series
+        recall: Why does this comparison not prove that trees beat neural networks?
+        lead: Each network saw 168 hours and predicted 24, with no calendar input. MASE, six folds.
+        header: [Model, MASE, Train time]
+        widths: [3, 1, 1]
+        rows:
+          - [GBM relative, "0.786", Seconds]
+          - [TCN, "0.981", About 2 min]
+          - [LSTM, "1.039", About 1 min]
+          - [DLinear, "1.056", 2 s]
+          - [Same hour last week, "1.074", None]
+        highlight: 0
+        takeaway: On a small single series start with features and trees, and make any deep model beat that number in the same backtest.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          This is one series with a few hundred training windows. In M5, with 42,840 related series, cross-learning and LightGBM won, and only
+          35.8 percent of teams beat the seasonal naive. DeepAR and its relatives are designed for many series, and a single short one starves them.
+
+  - title: Why the best predictor makes the worst list
+    summary: Sparse data · Biases and factors · Top-N · EASE · Implicit feedback
+    notes: >-
+      Now a film site wants a top ten list per person. We have MovieLens 100K, and we start where the Netflix Prize started, predicting stars.
+    slides:
+      - layout: statement
+        title: Our best rating model loses to a bestseller list
+        kicker: The problem
+        statement: "Nobody sees your RMSE. People see ten films chosen from the whole catalogue."
+        attribution: "MF on ratings, NDCG@10 0.034. Popularity, 0.075."
+        takeaway: A model trained to predict the stars people gave can rank worse than popularity, because it was never asked to rank anything.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          We will build the model that causes this result and then see what fixes it. The matrix has 943 users, 1,682 films and is 94 percent empty.
+          The top tenth of films hold 43 percent of the ratings.
+
+      - layout: flow
+        title: Split interaction logs by time, not at random
+        recall: Why did we split per user, and how much does random holdout inflate NDCG?
+        steps:
+          - title: Global cut first
+            body: Only 109 of 301 future raters have any history
+          - title: Per-user split
+            body: Oldest 80% train, next 10% validate, newest 10% test
+          - title: Name the compromise
+            body: Some global information still crosses the line
+        caption: "A random 90/10 split lifts EASE from NDCG 0.126 to 0.309 with no change in the model."
+        takeaway: Random holdout lets a model see the future, which on our data more than doubled NDCG for the same model.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          MovieLens users rate in one sitting, so a global time cut leaves most future raters with no history. On a real system, use the global cut.
+
+      - layout: bullets
+        title: Biased matrix factorisation, and what each part buys
+        recall: Write the biased MF prediction. Which part did most of the RMSE work?
+        lead: "**rating = mean + b_user + b_item + p_user · q_item**, fitted only on observed cells"
+        bullets:
+          - "Predict the mean: RMSE **1.229**"
+          - "Add user and item biases: **1.015**"
+          - "Add 20 latent factors: **0.996**"
+          - "Koren et al.: Netflix's own system 0.9514, grand prize target 0.8563"
+        aside: Factors find real structure with no genre input. Star Wars lands next to The Empire Strikes Back.
+        takeaway: User and item biases capture most of the rating signal, and latent factors add the interaction term on top.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          The biases alone take RMSE down by about 0.21, the factors another 0.02. These are from a chronological split, which is harder than the
+          random holdouts behind many published MovieLens numbers.
+
+      - layout: code
+        title: EASE trains with one matrix inverse
+        recall: What is the closed form for EASE, and why must the diagonal be zero?
+        lang: python
+        code: |-
+          def fit_ease(R, lam=100.0):
+              G = (R.T @ R).toarray().astype(float)
+              G[np.diag_indices_from(G)] += lam
+              P = np.linalg.inv(G)
+              B = -P / np.diag(P)
+              np.fill_diagonal(B, 0)
+              return B
+
+          scores = R[users] @ B
+        bullets:
+          - "Predict each item column from the others"
+          - "Zero diagonal: no item may predict itself"
+          - "Cubic in items, so tens of thousands at most"
+        takeaway: EASE learns an item-item matrix in closed form with one matrix inverse, and its zero diagonal stops each item predicting itself.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          Steck reports this beating deep models on most public datasets in his paper. It fits in a fraction of a second here. The inverse limits it to
+          catalogues in the tens of thousands, which is what pushes larger systems to factor models.
+
+      - layout: table
+        title: Top-10 on the full catalogue
+        kicker: Worked example
+        recall: Which model led the table, and where did MF on ratings land?
+        lead: 861 test users, full catalogue minus what they have seen. Relevant means rated 4 or 5.
+        header: [Model, Recall, NDCG, Coverage]
+        widths: [3, 1, 1, 1]
+        rows:
+          - [EASE, "0.155", "0.126", "0.22"]
+          - [Item kNN, "0.137", "0.114", "0.23"]
+          - [Implicit ALS, "0.138", "0.112", "0.25"]
+          - [BPR, "0.126", "0.099", "0.31"]
+          - [Popularity, "0.090", "0.075", "0.04"]
+          - [MF on ratings, "0.043", "0.034", "0.21"]
+        highlight: 0
+        takeaway: On full-catalogue top-10, models that target ranking beat popularity, and the simplest learned model led on our data.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          One small dataset, so treat this as a demonstration of method. Watch coverage too. A high NDCG with 4 percent coverage is a bestseller list.
+
+      - layout: compare
+        title: Implicit data has no dislikes, so model it differently
+        recall: What are the two approaches to implicit feedback, and what happened to Hu's alpha on our data?
+        lead: Not watching may mean disinterest, or never having seen it.
+        left:
+          title: iALS (Hu et al., 2008)
+          bullets:
+            - Weight every cell by confidence, 1 + alpha r
+            - Closed-form alternating solves
+            - "Their alpha = 40 ranked last on our binary data"
+          tag: Fit all cells
+        right:
+          title: BPR (Rendle et al., 2009)
+          bullets:
+            - A seen item should beat an unseen one
+            - Sample triples, take gradient steps
+            - Related to optimising AUC
+          tag: Fit the order
+        takeaway: Implicit feedback has no negative signal, so either weight all cells by confidence with iALS or optimise pairwise order with BPR.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          A published hyperparameter is a fact about somebody else's data. Hu's alpha worked on television viewing counts. Ours is binary, and the
+          validation grid put that setting last.
+
+      - layout: statement
+        title: Simple methods keep winning, so measure them first
+        statement: "Of 18 published top-n algorithms, 7 could be reproduced, 6 of those often lost to simple heuristics, and the last did not consistently beat a tuned linear method."
+        attribution: Dacrema, Cremonesi and Jannach, RecSys 2019
+        takeaway: Most published neural recommenders that could be reproduced lost to tuned simple methods, so put popularity, kNN and EASE in every table.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          Rendle and colleagues also showed in 2020 that a well-tuned dot product beat the MLP similarity from Neural Collaborative Filtering. Take from this a
+          working habit more than a verdict on deep learning.
+
+  - title: Serving millions, and knowing it works
+    summary: Two towers · logQ · Cold start · Sampled metrics · IPS · A/B tests
+    notes: >-
+      EASE won, but it cannot serve a catalogue of millions, and a new film leaves it helpless. Then the harder question: how do you know any of this works?
+    slides:
+      - layout: statement
+        title: A new film has no ratings. What does EASE recommend?
+        kicker: The problem
+        statement: "A matrix cannot rank an item it has never seen, and an item matrix stops fitting long before millions of items."
+        attribution: Two towers learn embeddings from features instead
+        takeaway: Interaction-only models cannot rank a new item and do not scale to millions, which is what motivates feature-based retrieval.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          EASE's score for a film it never saw is zero everywhere. And the matrix inverse is cubic in items. We need something that embeds from features and serves quickly.
+
+      - layout: flow
+        title: Large systems narrow the catalogue in stages
+        recall: What is each stage in the funnel judged on?
+        steps:
+          - title: Retrieval
+            body: Millions to hundreds. Judged on recall.
+          - title: Ranking
+            body: Hundreds to tens. Rich features, judged at the top.
+          - title: Re-ranking
+            body: Diversity, freshness, business rules.
+        caption: "Covington, Adams and Sargin, RecSys 2016. The towers cannot share inputs, so cross-features go to the ranker."
+        takeaway: Retrieval narrows the catalogue cheaply and is judged on recall, because anything it drops can never be recovered downstream.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Because the towers never see each other's inputs, all item vectors can be precomputed into a nearest neighbour index. Serving is one forward pass and one lookup.
+
+      - layout: code
+        title: One line stops in-batch softmax punishing popularity
+        recall: Why does in-batch softmax hurt popular items, and what is the fix?
+        lang: python
+        code: |-
+          for b in torch.randperm(len(u)).split(bs):
+              logits = m.user(u[b]) @ m.item(i[b]).T / tau
+              if logq:
+                  logits = logits - logp[i[b]]
+              same = i[b][:, None] == i[b][None, :]
+              same.fill_diagonal_(False)
+              logits = logits.masked_fill(same, -1e9)
+              loss = F.cross_entropy(logits, targets)
+        bullets:
+          - "Popular items are the most common negatives"
+          - "Subtract log frequency: **training only**"
+          - "Mask duplicates of the positive"
+        takeaway: In-batch negatives over-penalise popular items, so subtract each candidate's log sampling probability from its logit during training.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Yi and colleagues give this correction from importance sampling. On Wikipedia with 5.3 million pages they report Recall@10 going from 0.0643 to 0.1065 at tau 0.07.
+
+      - layout: table
+        title: The correction turns a losing tower into a contender
+        kicker: Worked example
+        recall: How did the corrected tower compare with EASE and with the plain tower?
+        lead: Same split and metric as the previous part.
+        header: [Model, Recall@10, NDCG@10, Coverage]
+        widths: [3, 1, 1, 1]
+        rows:
+          - [EASE, "0.155", "0.126", "0.22"]
+          - [Two-tower, logQ, "0.141", "0.110", "0.31"]
+          - [Popularity, "0.090", "0.075", "0.04"]
+          - [Two-tower, plain, "0.053", "0.038", "0.86"]
+        highlight: 1
+        takeaway: The logQ correction lifted our tower from below popularity to close to EASE, while the uncorrected model scattered over the catalogue.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          EASE still wins on this small catalogue. The tower has to earn its complexity elsewhere, and cold start is where it does: on films hidden from training it reaches
+          recall 0.22 against 0.08 for random, and EASE only matches random.
+
+      - layout: compare
+        title: A sampled metric reversed two models
+        recall: What happened to EASE and the corrected tower when we ranked against 99 negatives?
+        lead: Test HR@10 for the same models on the same users.
+        emphasis: left
+        left:
+          title: Full catalogue
+          bullets:
+            - "EASE: **0.137**"
+            - "Tower with logQ: **0.125**"
+            - EASE wins
+          tag: What users get
+        right:
+          title: 99 sampled negatives
+          bullets:
+            - "EASE: **0.591**"
+            - "Tower with logQ: **0.617**"
+            - The tower wins
+          tag: What the paper would report
+        takeaway: Sampled metrics are inconsistent with exact ones and can reverse model order, so rank the whole catalogue whenever you can.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Krichene and Rendle prove this is not noise. As the sample shrinks, all metrics collapse towards AUC. We see it directly here: numbers roughly four to nine times too high, and the order flipped.
+
+      - layout: table
+        title: Reweighting recovers the value of an unshipped policy
+        recall: What does IPS need from the logs, and what does it cost?
+        lead: Simulated bandit, 200,000 logged events, so the true value is known.
+        header: [Estimate, Value]
+        widths: [3, 1]
+        rows:
+          - [True value of the new policy, "0.2162"]
+          - [Logged CTR of the old policy, "0.0801"]
+          - [Naive CTR on matching events, "0.2955"]
+          - [IPS, "0.2190"]
+          - [Self-normalised IPS, "0.2161"]
+        highlight: 4
+        takeaway: IPS reweights logged events by inverse propensity to estimate a new policy, but it needs logged probabilities and pays for them in variance.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          200,000 events shrink to an effective sample of about 3,200. Li and colleagues built the replay version for Yahoo news on 33 million uniformly randomised events.
+          Log your propensities now, because you cannot add them later.
+
+      - layout: steps
+        title: Each stage earns the next, more expensive one
+        recall: What are the stages of the evaluation ladder, and why does the ladder exist?
+        steps:
+          - title: Full-catalogue offline
+            body: Cheap, biased by logs
+          - title: Counterfactual estimate
+            body: Needs logged propensities
+          - title: Small live ramp
+            body: Guardrails, latency, bugs
+          - title: A/B test
+            body: "1% lift on a 5% rate: about 3 million per arm"
+          - title: Long-term holdout
+            body: Catches slow effects
+        takeaway: Only a live test measures the real counterfactual, and because it needs millions of users each offline stage must remove candidates first.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Netflix describes offline experiments as assuming members would have behaved the same way under the new algorithm. YouTube reports that live results do not always correlate with offline ones.
+          Netflix also estimates that recommendations influence about 80 percent of hours streamed.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What to remember
+        cards:
+          - title: Issue time first
+            body: A feature is legal only if it existed at the issue time.
+          - title: Baselines in every table
+            body: Seasonal naive for forecasts, popularity and EASE for lists.
+          - title: Trees before networks
+            body: Divide by a level and beat them in the same backtest.
+          - title: Score what people see
+            body: Full-catalogue ranking, not RMSE or sampled negatives.
+          - title: Correct the sampler
+            body: LogQ in training, for in-batch softmax.
+          - title: Offline chooses, live decides
+            body: Log propensities and budget for an A/B test.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Text as features:** LLM embeddings fill the two-tower content slot, in the NLP pillar"
+          - "**Experiment statistics:** the A/B ladder in data analytics, experimentation and causality"
+          - "**Bandits:** the RL pillar in generative AI develops exploration and replay"
+          - "**Language models:** LLM fundamentals in generative AI"

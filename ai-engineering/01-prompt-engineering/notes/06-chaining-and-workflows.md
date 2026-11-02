@@ -234,7 +234,7 @@ Orchestration at scale is covered in [03-harness](../../03-harness-engineering/n
 ## Go deeper
 
 - Book: [Ch 9 PDF](../sources/prompt-eng-for-llms/reading/09-llm-workflows.pdf) (full Shopify build and prompts)
-- Anthropic, *Building Effective Agents*, and the chaining docs: [references.md](../README.md#vendor-guides)
+- Anthropic, *Building Effective Agents*, and the chaining docs: [references.md](../references.md#vendor-guides)
 
 ---
 

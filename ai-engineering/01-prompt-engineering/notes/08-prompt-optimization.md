@@ -154,7 +154,7 @@ Before reaching for a framework:
 
 ## Go deeper
 
-- Papers (APE, OPRO, meta-prompting, DSPy, TextGrad, soft prompts): [references.md](../README.md#prompt-optimization)
+- Papers (APE, OPRO, meta-prompting, DSPy, TextGrad, soft prompts): [references.md](../references.md#prompt-optimization)
 - Book: [Ch 9 PDF](../sources/prompt-eng-for-llms/reading/09-llm-workflows.pdf) (collecting task I/O for optimization)
 
 ---

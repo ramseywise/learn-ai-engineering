@@ -490,4 +490,4 @@ Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration
 
 ---
 
-→ Back to the start: [01-graph-vs-loop.md](01-graph-vs-loop.md). Next pillar: [06-eval](../../../generative-ai/08-eval/README.md).
+→ Back to the start: [01-graph-vs-loop.md](01-graph-vs-loop.md). Next pillar: [the Eval pillar](../../../generative-ai/08-eval/README.md).

@@ -230,7 +230,7 @@ A:
 
 ## Go deeper
 
-- Willison on prompt injection, the OWASP LLM Top 10, NIST's adversarial ML taxonomy, and injection papers: [references.md](../README.md#safety-and-adversarial)
+- Willison on prompt injection, the OWASP LLM Top 10, NIST's adversarial ML taxonomy, and injection papers: [references.md](../references.md#safety-and-adversarial)
 - Book: [Ch 3 PDF](../sources/prompt-eng-for-llms/reading/03-moving-to-chat.pdf) (ChatML) · [Ch 8 PDF](../sources/prompt-eng-for-llms/reading/08-conversational-agency.pdf) (extraction tricks, dangerous tools)
 
 ---

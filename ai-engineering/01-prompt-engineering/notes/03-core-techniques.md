@@ -334,7 +334,7 @@ The same table has the counterexample. On MBPP Python, Reflexion scored **77.1% 
 ## Go deeper
 
 - Book (PDF): [Ch 5](../sources/prompt-eng-for-llms/reading/05-prompt-content.pdf) (few-shot drawbacks) · [Ch 8](../sources/prompt-eng-for-llms/reading/08-conversational-agency.pdf) (CoT, ReAct, plan-and-solve, Reflexion, branch-solve-merge)
-- Papers for every technique on this page: [references.md](../README.md#technique-papers)
+- Papers for every technique on this page: [references.md](../references.md#technique-papers)
 - Worked prompts: [prompt-library.md](prompt-library.md)
 
 ---

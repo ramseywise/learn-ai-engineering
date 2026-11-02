@@ -3,6 +3,8 @@ origin: web-authored
 sources:
   - https://arxiv.org/abs/2212.08073 (Constitutional AI)
   - https://arxiv.org/abs/2309.00267 (RLAIF)
+  - https://arxiv.org/abs/2302.05206 (HIR, hindsight instruction relabeling)
+  - https://arxiv.org/abs/2309.07124 (RAIN, self-evaluating rewindable decoding)
   - https://arxiv.org/abs/2512.23707 (AI co-scientists, self-grading with privileged rubrics)
 confidence: medium
 cleaned: 2026-11-01
@@ -350,6 +352,16 @@ expert iteration: sample, keep what a check accepts, fine-tune, repeat.
   solutions. Most of the gain comes in the first one or two iterations, and APPS regressed
   at iteration 2 from overfitting
   ([arXiv:2312.06585](https://arxiv.org/abs/2312.06585) (Singh et al., TMLR 2024)).
+- **Hindsight Instruction Relabeling (HIR)** keeps the failures too. It borrows hindsight
+  experience replay from goal-conditioned RL: a wrong sample is relabeled with the instruction
+  "Generate a wrong answer to this problem" and trained on with plain SFT, plus a contrastive
+  loss across instructions. On 12 BigBench reasoning tasks with FLAN-T5-large and a final-answer
+  check, **HIR beat answer-filtered SFT (FARL) and PPO on most tasks**, e.g. 61.2 against 15.6
+  on 5-object Tracking Shuffled Objects. In the ablation, dropping entropy regularization
+  roughly halved the score on two of three tasks, and dropping label smoothing cut 3-object
+  Logical Deduction from 91.7 to 23.3. The PPO baseline is weak
+  (a 16-point trlx sweep tuned on one task), the models are under 1B, and the test splits are
+  small ([arXiv:2302.05206](https://arxiv.org/abs/2302.05206) (Zhang et al., ICML 2023)).
 - **Quiet-STaR** moves the loop to pretraining text. Mistral 7B learns, with REINFORCE, to
   generate a short rationale before each token, rewarded by how much it helps predict the
   next tokens. Continued pretraining on OpenWebMath raised **zero-shot GSM8K from 5.9% to
@@ -379,6 +391,15 @@ the reference plans fell to 3.4. The self-grader was gamed after about 120 steps
 rising while a held-out Claude grader's stopped following. Experts also rated the trained plans
 slightly less feasible, and on cost-efficiency the self-grader rose while Claude's score fell
 ([arXiv:2512.23707](https://arxiv.org/abs/2512.23707) (Goel et al., 2025-12, preprint)).
+
+The self-judge can also steer decoding with no training at all. RAIN runs a small tree search
+over token sets at inference time, asks the frozen model whether each partial answer is harmful,
+and rewinds away from low scores. On HH prompts, **LLaMA 30B's GPT-4-judged harmlessness went
+from 82% to 97%** with helpfulness held, about level with RLHF and RLAIF baselines it trained
+itself, at about 4× the inference time. Picking the best of 500 plain samples reached only 88%
+([arXiv:2309.07124](https://arxiv.org/abs/2309.07124) (Li et al., ICLR 2024)). It only works
+once the model's self-evaluation beats chance: harmfulness judgments were 52% accurate at 7B
+and 81–98% at 30B and up, and the gains track that.
 
 **Limits of self-improvement:**
 - The model cannot critique outputs that exceed its own understanding. This is contested.

@@ -15,7 +15,7 @@ cleaned: 2026-11-01
 ---
 # 7 — Prompting Reasoning Models
 
-> Reasoning models are trained to produce chain-of-thought natively before they answer. Much of [03](03-core-techniques.md) is built into them, so the prompting advice shifts from *how to think* to *what to achieve*. Model behavior here changes quickly; treat the specifics as dated, and check the vendor guides in [references.md](../README.md#vendor-guides).
+> Reasoning models are trained to produce chain-of-thought natively before they answer. Much of [03](03-core-techniques.md) is built into them, so the prompting advice shifts from *how to think* to *what to achieve*. Model behavior here changes quickly; treat the specifics as dated, and check the vendor guides in [references.md](../references.md#vendor-guides).
 
 Paste your carefully engineered chain-of-thought prompt into a reasoning model and you may pay more for a worse result: adding CoT lowered constraint accuracy for 13 of 14 models on IFEval. These models bring their own reasoning, so your job moves from telling them how to think to stating what to achieve and how much effort to spend.
 
@@ -173,7 +173,7 @@ The book's closing lessons hold for reasoning models too — maybe more so:
 
 ## Go deeper
 
-- DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../README.md#reasoning-models)
+- DAIR *Reasoning LLMs Guide*, Anthropic extended-thinking tips, and the reasoning papers: [references.md](../references.md#reasoning-models)
 - Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (intelligence trends, the two durable lessons)
 
 ---

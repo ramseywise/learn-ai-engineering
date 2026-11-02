@@ -11,7 +11,7 @@
 Inference engineering is the discipline of making a model answer fast enough and cheaply
 enough to ship: how requests are batched and scheduled, where the KV cache lives, how
 prefill and decode are split across hardware, and what the GPU is actually doing while it
-waits. The six layers above it decide *what* the model is asked. This layer decides what
+waits. The layers above it decide *what* the model is asked. This layer decides what
 each of those calls costs in latency, throughput and money.
 
 **Inherits the weaknesses of:** the hardware and the model. A badly sized context
@@ -20,7 +20,7 @@ each of those calls costs in latency, throughput and money.
 
 **Why a pillar, not a note.** Added 2026-10-31 (see [CURRICULUM.md](../../CURRICULUM.md#definition-of-done)).
 The readings backlog held a full book on AI systems performance plus Huyen's inference
-chapter and a steady stream of serving papers, and none of the six pillars could hold them
+chapter and a steady stream of serving papers, and none of the five pillars could hold them
 without turning into a GPU course.
 
 ---
@@ -32,7 +32,7 @@ without turning into a GPU course.
 | Serving: batching, scheduling, routing, autoscaling | How transformers work: [generative-ai/01](../../generative-ai/01-llm-fundamentals/README.md) |
 | KV cache, prefix caching, prefill/decode disaggregation | Prompt caching as a context decision: [02/04](../02-context-engineering/notes/04-retrieval.md) |
 | Quantization, speculative decoding, compilers (torch.compile, Triton, XLA) | Fine-tuning and RL: [generative-ai/05](../../generative-ai/05-RL/README.md) |
-| GPU architecture, CUDA kernels, memory hierarchy, profiling | Cost per task as an eval metric: [06](../../generative-ai/08-eval/README.md) |
+| GPU architecture, CUDA kernels, memory hierarchy, profiling | Cost per task as an eval metric: [the Eval pillar](../../generative-ai/08-eval/README.md) |
 | Multi-node networking, storage I/O, Kubernetes for GPUs | |
 
 ---

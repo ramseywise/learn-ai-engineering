@@ -135,7 +135,7 @@ Report **tokens per successful task** and **latency** next to accuracy. Context 
 ## Related
 
 - [Evaluating prompts](../../01-prompt-engineering/notes/09-evaluating-prompts.md): rubric design, LLM-as-judge, regression suites.
-- [06-eval](../../../generative-ai/08-eval/README.md): the evaluation pillar in depth, including harnesses, judges and observability. Most relevant here:
+- [the Eval pillar](../../../generative-ai/08-eval/README.md): the evaluation pillar in depth, including harnesses, judges and observability. Most relevant here:
   - [07 — Evaluating RAG and grounding](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md): retrieval metrics, claim-by-claim faithfulness, grounding tiers.
   - [03 — Eval datasets](../../../generative-ai/08-eval/notes/03-eval-datasets.md#row-eligibility-is-this-row-fair-for-this-gate): which rows are fair for a retrieval gate vs. a generation gate.
   - [09 — Reading results](../../../generative-ai/08-eval/notes/09-reading-results.md#compare-on-the-same-tasks-paired-differences): is an ablation's difference real or noise?

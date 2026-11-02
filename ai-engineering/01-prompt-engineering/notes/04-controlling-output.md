@@ -191,7 +191,7 @@ Reach for it when the static part of your prompt is long, stable, and still not 
 ## Go deeper
 
 - Book (PDF): [Ch 7](../sources/prompt-eng-for-llms/reading/07-taming-the-model.pdf) (preamble types, logprobs, calibration, model choice, fine-tuning) · [Ch 2](../sources/prompt-eng-for-llms/reading/02-understanding-llms.pdf) (sampling, beam search)
-- Vendor docs on structured outputs and sampling: [references.md](../README.md#vendor-guides)
+- Vendor docs on structured outputs and sampling: [references.md](../references.md#vendor-guides)
 
 ---
 

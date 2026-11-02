@@ -206,7 +206,7 @@ Conversational UI also keeps a human in the loop who can catch drift before it c
 
 ## Go deeper
 
-- Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../README.md#applications)
+- Papers (TinyStories, phi-1, Promptagator, Codex/HumanEval): [references.md](../references.md#applications)
 - Book: [Ch 11 PDF](../sources/prompt-eng-for-llms/reading/11-looking-ahead.pdf) (multimodality, Artifacts)
 - Worked prompts by task: [prompt-library.md](prompt-library.md)
 

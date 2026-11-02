@@ -175,7 +175,7 @@ Quick checklist:
 
 [Harness note 05: Verification loops](../../03-harness-engineering/notes/05-verification-loops.md) covers the machinery underneath this note: the three-layer termination check, asymmetric QA, grading criteria over vibes, loop detection, the retry taxonomy and eval-first development. This note covers *what* to measure; that one covers *how the harness enforces it*.
 
-For the scorekeeper as an eval artifact (building its dataset, calibrating a judge-based scorekeeper, telling a real gain from noise, and how optimizers game it), see [06-eval](../../../generative-ai/08-eval/README.md): [04 — Graders](../../../generative-ai/08-eval/notes/04-graders.md), [05 — LLM-as-judge](../../../generative-ai/08-eval/notes/05-llm-as-judge.md), [09 — Reading results](../../../generative-ai/08-eval/notes/09-reading-results.md) and [12 — When evals go wrong](../../../generative-ai/08-eval/notes/12-failure-modes.md#goodhart-the-eval-becomes-the-target).
+For the scorekeeper as an eval artifact (building its dataset, calibrating a judge-based scorekeeper, telling a real gain from noise, and how optimizers game it), see [the Eval pillar](../../../generative-ai/08-eval/README.md): [04 — Graders](../../../generative-ai/08-eval/notes/04-graders.md), [05 — LLM-as-judge](../../../generative-ai/08-eval/notes/05-llm-as-judge.md), [09 — Reading results](../../../generative-ai/08-eval/notes/09-reading-results.md) and [12 — When evals go wrong](../../../generative-ai/08-eval/notes/12-failure-modes.md#goodhart-the-eval-becomes-the-target).
 
 ---
 

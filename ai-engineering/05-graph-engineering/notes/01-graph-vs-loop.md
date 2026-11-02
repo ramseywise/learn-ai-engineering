@@ -146,7 +146,7 @@ They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system
 
 ## Where it sits
 
-prompt → context → harness → loop → **graph**. The harness ([03-harness](../../03-harness-engineering/README.md)) supplies tools, state and guardrails. The loop ([04-loop](../../04-loop-engineering/README.md)) decides how many times to use them and when to stop. The graph decides *which loop runs next and who is accountable for it*. Each layer presumes the one below: you cannot graph-engineer well without loop-engineering fluency. [06-eval](../../../generative-ai/08-eval/README.md) measures whether the whole thing is correct.
+prompt → context → harness → loop → **graph**. The harness ([03-harness](../../03-harness-engineering/README.md)) supplies tools, state and guardrails. The loop ([04-loop](../../04-loop-engineering/README.md)) decides how many times to use them and when to stop. The graph decides *which loop runs next and who is accountable for it*. Each layer presumes the one below: you cannot graph-engineer well without loop-engineering fluency. [The Eval pillar](../../../generative-ai/08-eval/README.md) measures whether the whole thing is correct.
 
 ---
 

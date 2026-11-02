@@ -10,7 +10,7 @@ cleaned: 2026-11-01
 ---
 # 9 — Evaluating Prompts
 
-> How you know a prompt change helped. This is the prompt-level view; eval systems for whole agents and harnesses are in [06-eval](../../../generative-ai/08-eval/README.md).
+> How you know a prompt change helped. This is the prompt-level view; eval systems for whole agents and harnesses are in [the Eval pillar](../../../generative-ai/08-eval/README.md).
 
 Without an eval, every prompt change is a guess: Clavié et al. moved F1 by 26 points through wording alone, and a strict output template that lifted adherence to 98% quietly lowered accuracy. You can't see effects like these by reading a few outputs, so this chapter builds up from a diffable example suite to scored harnesses and live tests.
 
@@ -45,7 +45,7 @@ There are two settings. **Offline** eval runs on example cases, needs no users a
 
 **Level 1 — the example suite.** 5–20 realistic inputs, plus a script that renders each one into your prompt, calls the model, and writes prompt + completion to files. Commit them and review with `git diff`. It isn't pass/fail — you eyeball each change. It works from your very first draft, and repeated exposure to the same examples teaches you the failure modes. GitHub's PR summarizer was tuned this way. Eyeballing a few dozen mined PRs showed outputs that were too terse ("add *detailed*"), then too verbose ("cap at 1–2 paragraphs"), plus wild guesses about why the PR was written. The fix for those was to ask for a paragraph on the functionality and a second on how it fits the project's goals, then show only the first ([04](04-controlling-output.md)). The suite stops scaling at the number of diffs you're willing to read per change.
 
-Phoenix & Taylor's version of level 1 is a blind A/B in a notebook. They run each prompt variant 5 times, shuffle the 10 outputs, and rate each one thumbs-up or thumbs-down without seeing which prompt produced it. It surfaces problems fast. In their run the zero-shot prompt returned a numbered list where they wanted a comma-separated line, and they find a deviation in fewer than 10 runs as a rule (*Prompt Engineering for Generative AI*, ch. 1). It's a bug finder, not a way to pick a winner. Five samples per arm from one rater, who also wrote the prompts, can't separate two decent prompts ([06-eval/09](../../../generative-ai/08-eval/notes/09-reading-results.md#how-many-tasks)). Their other observation is worth keeping: iterating against even a crude check often shows that much of a long prompt is superfluous or counterproductive, and the shorter prompt is cheaper and faster at the same quality.
+Phoenix & Taylor's version of level 1 is a blind A/B in a notebook. They run each prompt variant 5 times, shuffle the 10 outputs, and rate each one thumbs-up or thumbs-down without seeing which prompt produced it. It surfaces problems fast. In their run the zero-shot prompt returned a numbered list where they wanted a comma-separated line, and they find a deviation in fewer than 10 runs as a rule (*Prompt Engineering for Generative AI*, ch. 1). It's a bug finder, not a way to pick a winner. Five samples per arm from one rater, who also wrote the prompts, can't separate two decent prompts ([Eval chapter 09](../../../generative-ai/08-eval/notes/09-reading-results.md#how-many-tasks)). Their other observation is worth keeping: iterating against even a crude check often shows that much of a long prompt is superfluous or counterproductive, and the shorter prompt is cheaper and faster at the same quality.
 
 **Level 2 — the harness.** Hundreds to thousands of examples with **automatic scoring**, needed to see subtle effects. It has two independent problems: **where samples come from** and **how outputs are scored**.
 
@@ -179,10 +179,10 @@ Lessons:
 ## Go deeper
 
 - Book: [Ch 10 PDF](../sources/prompt-eng-for-llms/reading/10-evaluating-llm-applications.pdf) (the original chapter; everything above stands alone)
-- Eval systems and grounding methodology: [06-eval](../../../generative-ai/08-eval/README.md) · [maturity ladder](../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
-- Papers and tools: [references.md](../README.md#evaluation)
+- Eval systems and grounding methodology: [the Eval pillar](../../../generative-ai/08-eval/README.md) · [maturity ladder](../../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md#the-ladder)
+- Papers and tools: [references.md](../references.md#evaluation)
 
-**Continue in 06-eval.** This chapter is the prompt-level view. Chapters 01–05 of [06-eval](../../../generative-ai/08-eval/README.md) go deeper on the same ground and can be read right after this topic:
+**Continue in the Eval pillar.** This chapter is the prompt-level view. Chapters 01–05 of [the Eval pillar](../../../generative-ai/08-eval/README.md) go deeper on the same ground and can be read right after this topic:
 - Defining pass/fail from error analysis → [02-defining-correct.md](../../../generative-ai/08-eval/notes/02-defining-correct.md)
 - Building the dataset → [03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md)
 - Code graders and combining scores → [04-graders.md](../../../generative-ai/08-eval/notes/04-graders.md)

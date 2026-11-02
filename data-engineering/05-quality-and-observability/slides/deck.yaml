@@ -1,0 +1,366 @@
+# Quality and observability lecture deck. Covers notes 01-03.
+# Build: make slides PILLAR=data-engineering/05-quality-and-observability STRICT=1 PREVIEW=1
+# Running example: one quarter of synthetic taxi trips with five faults planted in March.
+deck:
+  title: Quality and Observability
+  subtitle: Finding out that the data is wrong, before anyone else does
+  tagline: |-
+    Tests judge rules · Monitors judge history · Lineage finds the damage · Playbooks repair it
+  reference: "Notes: data-engineering/05-quality-and-observability"
+  output: quality-and-observability.pptx
+  notes: >-
+    A stage silently trusts the one before it, and this pillar is where we stop trusting. One quarter of taxi trips
+    runs through the whole session, and we planted five faults in March so that we can score every check against the
+    truth. By the end we will have caught all five, and repaired them with a backfill that is safe to run twice.
+
+parts:
+  - title: Testing against rules
+    summary: Dimensions · Tests · Tolerances · Great Expectations and dbt
+    notes: >-
+      We start with what good data means, and turn each meaning into a query. Then we see how far that gets us.
+    slides:
+      - layout: statement
+        title: Green pipeline, wrong numbers
+        kicker: The problem
+        statement: "A pipeline fails when code fails. Nothing in the code reads what the data says."
+        attribution: "After Sculley et al., NeurIPS 2015: compilers find code dependencies, nothing finds data ones"
+        takeaway: Every job can finish green while the report is wrong, so data needs its own checks.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          Sculley and colleagues point out that static analysis finds code dependencies, and nothing equivalent exists
+          for data. So a broken data dependency runs without complaint. That is the gap this pillar closes.
+      - layout: table
+        title: Five faults planted in one feed
+        header: [Date, Fault, Likely real cause]
+        widths: [2, 3, 5]
+        rows:
+          - ["5 March", "20% of fare is null", "A deploy stops sending one field"]
+          - ["10 March", "The day never lands", "An export fails quietly upstream"]
+          - ["15 March", "Arrives 50 hours late", "A source system backlog"]
+          - ["18 March", "Every row twice", "The producer retried a whole batch"]
+          - ["From 24 March", "Distance in kilometres", "A vendor changes its app's locale"]
+        bold_first: true
+        takeaway: Synthetic faults let us score every check against what really happened.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          The data is synthetic on purpose. With real data you never know what you missed. With planted faults we can
+          keep score, and the scoreboard is the thread through the whole session.
+      - layout: cards
+        title: Good data has six meanings
+        recall: Which dimension can no query on the table alone ever test?
+        cards:
+          - {title: Completeness, body: "Is the value there? Null share where the field applies.", accent: 0EA5C9}
+          - {title: Uniqueness, body: "Is each thing recorded once? Duplicate keys.", accent: 0EA5C9}
+          - {title: Validity, body: "Is the value allowed? Ranges and allowed sets.", accent: 0F7490}
+          - {title: Consistency, body: "Do facts agree across columns and tables?", accent: 0F7490}
+          - {title: Timeliness, body: "Did it arrive when promised? Needs arrival time.", accent: 5B21B6}
+          - {title: Accuracy, body: "Is it true? Needs an outside account.", accent: D4621A}
+        takeaway: Each dimension needs more context than the last, and accuracy needs something outside the table.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          Schelter and colleagues name completeness, consistency and accuracy as the most common. Practitioners split
+          them further, because each split needs a different check. The names vary. The questions are what matter.
+      - layout: code
+        title: A test is a query that should return nothing
+        lang: python
+        code: |-
+          TESTS = {
+            'trip_id unique': """SELECT trip_id FROM trips
+              WHERE dt=$d GROUP BY 1 HAVING count(*) > 1""",
+            'fare mostly present': """SELECT 1 FROM trips
+              WHERE dt=$d
+              HAVING avg((fare IS NULL)::INT) > 0.01""",
+          }
+          # hard not_null(fare) fails on 86 of 87 normal days
+          # the 1% tolerance fails only on 5 March
+        bullets:
+          - The rows it returns are the evidence
+          - dbt defines its tests in the same way
+          - State the tolerance you actually mean
+        takeaway: A hard rule on a soft fact gets muted, and then it cannot catch the day that matters.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          Normal days carry about 0.2 percent null fares. A hard not-null would fail nearly every day and be silenced
+          within a week. Great Expectations has this built in, as the mostly parameter.
+      - layout: compare
+        title: Great Expectations and dbt find the same faults
+        left:
+          title: Great Expectations
+          bullets:
+            - Declarative expectations, grouped in suites
+            - "`mostly=0.99` states the tolerance"
+            - Fits files and frames before the warehouse
+        right:
+          title: dbt tests
+          bullets:
+            - "`unique`, `not_null`, `accepted_values`, `relationships`"
+            - Singular tests are SQL files returning bad rows
+            - "`dbt build` skips what is downstream of a failure"
+        takeaway: Use dbt when the model lives in dbt and keep one home per rule so rules do not drift.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          We ran both. Great Expectations 1.24 flagged the null spike and the duplicates, and passed the unit change
+          because a median of 3.8 fits inside a range that looked generous. dbt found 2,947 duplicate keys.
+      - layout: flow
+        title: Each gate covers what the last cannot
+        steps:
+          - {label: Contract, sub: Names and types, accent: 0F7490}
+          - {label: Staging, sub: Hidden from readers, accent: 0EA5C9}
+          - {label: Row tests, sub: Rules on this batch, accent: 5B21B6}
+          - {label: Publish, sub: Only if it passes, accent: 1E3A5F}
+          - {label: Monitors, sub: Against history, accent: D4621A}
+        caption: "A contract cannot see a null spike. A row test cannot see a day with no rows."
+        takeaway: Write-audit-publish stops bad data before it is read, rather than reporting it afterwards.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          Not every failure should block. Finance numbers and training sets should. A dashboard people glance at may be
+          better served by a warning, since a stale chart is a failure too. Decide per table.
+      - layout: table
+        title: Rules caught two of five
+        header: [Fault, Rule tests, Reconciliation]
+        widths: [4, 4, 4]
+        rows:
+          - ["Null spike", "Caught", "Missed: counts agree"]
+          - ["Dropped day", "Missed: no rows", "Caught"]
+          - ["Late partition", "Missed", "Missed, once landed"]
+          - ["Duplicate keys", "Caught", "Caught"]
+          - ["Unit change", "Missed", "Missed"]
+        highlight: [2, 4]
+        bold_first: true
+        takeaway: Every miss is a question about this batch against time, which no rule within a batch can answer.
+        source: notes/01-quality-dimensions-and-tests.md
+        notes: >-
+          Reconciliation against a producer manifest is the only test of accuracy, and it needs an independent count.
+          But the misses share a cause. That leads straight into monitors.
+
+  - title: Monitoring against history
+    summary: Freshness · Volume · Distribution · Lineage
+    notes: >-
+      Monitors compare today with the past, so they find failures nobody thought to write a rule for.
+    slides:
+      - layout: statement
+        title: The alert cleared and the data was still missing
+        kicker: The problem
+        statement: "On 12 March the freshness alert went quiet. The 10 March partition had never arrived."
+        takeaway: An age check tells you the feed is alive, and only a date spine tells you it is complete.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          The newest record was never the problem. There is a hole behind it. Once a newer partition lands, the max of
+          loaded_at looks healthy and the alert clears. dbt source freshness has the same blind spot.
+      - layout: code
+        title: Age alone clears too early
+        lang: text
+        code: |-
+          monitor at     age h  stale  holes
+          Mar 11 06:00      28  True   []
+          Mar 12 06:00       4  False  ['2024-03-10']
+          Mar 13 06:00       4  False  ['2024-03-10']
+          Mar 16 06:00      28  True   ['2024-03-10']
+          Mar 17 06:00       4  False  ['2024-03-15', '2024-03-10']
+          Mar 18 06:00       4  False  ['2024-03-10']
+        bullets:
+          - Age fires once, then clears
+          - The spine fires until repaired
+          - Use both, with different routes
+        takeaway: The spine keeps firing until someone repairs the hole, and the age check does not.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          Read the two columns together. The late partition shows the same pattern: the alert clears on the 17th, a
+          full day before the data appears on the 18th.
+      - layout: table
+        title: Same-weekday median sees what three sigma misses
+        header: [Rows lost that day, Mean and 3 sigma, Same-weekday median and MAD]
+        widths: [4, 4, 5]
+        rows:
+          - ["0% (false alarms)", "0%", "0%"]
+          - ["10%", "0%", "29%"]
+          - ["15%", "0%", "67%"]
+          - ["25%", "2%", "98%"]
+          - ["50%", "36%", "100%"]
+        highlight: [3]
+        bold_first: true
+        takeaway: Weekly cycles inflate a mixed window, so the naive check lets a quarter of the data vanish unseen.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          Both caught the zero-row and doubled days, which makes the naive one look fine. So we removed rows from each of
+          46 normal days and counted detections. These figures describe this synthetic feed. Run the same injection on
+          your own history before you trust a threshold.
+      - layout: compare
+        title: Threshold on effect size, not on the p-value
+        recall: Why would a chi-squared alarm get worse with more data?
+        left:
+          title: Our feed, KS test against February
+          bullets:
+            - "Largest *D* before the change: 0.029"
+            - "Smallest *D* after the change: 0.182"
+            - Detected on the first day
+        right:
+          title: Google's TFX experiment
+          bullets:
+            - 100 million points, 0.01% from a wider normal
+            - Chi-squared alarms in 7 of 10 trials
+            - L-infinity distance names a culprit too
+        emphasis: right
+        takeaway: With enough rows, trivial changes become significant, so alert on a distance you can reason about.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          The second column is Breck and colleagues at MLSys 2019. With 3,000 rows a day our p-values still behave. The
+          habit to form is a threshold on the effect, and a fixed reference, since a rolling one learns the bug.
+      - layout: flow
+        title: Monitoring is itself a pipeline
+        steps:
+          - {label: Partition lands, sub: Scheduled metric job, accent: 0F7490}
+          - {label: monitor_metrics, sub: Keyed by logical date, accent: 0EA5C9}
+          - {label: Baseline, sub: Same weekday, accent: 5B21B6}
+          - {label: Alert, sub: Twice, with an owner, accent: D4621A}
+        bullets:
+          - A backfill replaced 364 rows and changed none of them
+          - The course stores the same shape in Postgres, with Grafana on top
+          - Provision dashboards from files, so they live in version control
+        takeaway: Key metrics by the data's date rather than the clock, so that a backfill replaces instead of adds.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          The zoomcamp stack is Evidently, Postgres and Grafana. Prediction drift is the first model alarm to wire up when
+          labels arrive late, because it needs no ground truth. Ours jumped from 0.022 to 0.679 on the unit change.
+      - layout: code
+        title: Lineage answers what this touched
+        lang: python
+        code: |-
+          walk(down, 'raw.trips')
+          # staging.trips, features.trip, marts.daily_revenue,
+          # ml.fare_predictions, bi.zone_dashboard
+          walk(up, 'bi.zone_dashboard')
+          # marts.daily_revenue, ref.zones, staging.trips,
+          # raw.trips, ext.vendor_export
+          # 20 completed runs to redo since 24 March
+        bullets:
+          - OpenLineage events carry Job, Run, Dataset
+          - Read from a file here, a backend in production
+          - Down for blast radius, up for suspects
+        takeaway: Lineage plus run history turns an incident into a finite list of datasets to check and runs to redo.
+        source: notes/02-monitors-and-lineage.md
+        notes: >-
+          Each run sends a START and a COMPLETE with a shared run id, and a nominal time facet records which day of data it
+          was for. dbt's graph stops at dbt. OpenLineage's point is to work across tools.
+
+  - title: Repairing it
+    summary: Roles · Triage · Containment · Backfills · Postmortems
+    notes: >-
+      A monitor has fired. What happens in the next hour decides whether this costs a morning or a quarter's trust.
+    slides:
+      - layout: statement
+        title: Wrong data stays wrong after the cause is fixed
+        kicker: The problem
+        statement: "A service outage ends when the service returns. Wrong data keeps being read, and spreads."
+        takeaway: Data incidents need a second half that service incidents do not, which is the backfill.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          The incident practice here comes from Google's SRE book, which describes services. The adaptation to data is
+          engineering judgment, and we have marked the chapter's confidence as medium for that reason.
+      - layout: flow
+        title: Contain before you diagnose
+        steps:
+          - {label: Detect, sub: A monitor fires, accent: 0F7490}
+          - {label: Triage, sub: How bad, how far, accent: 0EA5C9}
+          - {label: Contain, sub: Stop the spread, accent: D4621A}
+          - {label: Repair, sub: Fix and backfill, accent: 5B21B6}
+          - {label: Verify, sub: The same checks, accent: 1E3A5F}
+        caption: "Stop the bleeding, restore service, preserve the evidence. In data, evidence means leaving raw alone."
+        takeaway: You do not need to know why distance jumped to stop a dashboard showing it.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          The priority order is from the SRE book, chapter 14. Preserving evidence has a specific meaning for us: if you
+          fix raw files in place, you have destroyed the only record of what the source sent.
+      - layout: cards
+        title: One group changes the tables
+        recall: What does the commander do with a role nobody took?
+        cards:
+          - {title: Commander, body: "Holds the state, assigns work, decides whether to pause publishing.", accent: D4621A}
+          - {title: Operations, body: "The only people changing the system. Runs containment and backfill.", accent: 0F7490}
+          - {title: Communications, body: "Tells dashboard and model owners what is wrong and until when.", accent: 0EA5C9}
+          - {title: Planning, body: "Tracks hand-applied changes, so that they can be reverted.", accent: 5B21B6}
+        takeaway: The common failure is capable people working uncoordinated, so make roles explicit even on a small team.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          The commander holds any role not delegated, and keeps a living incident document. The book's test for declaring:
+          a second team is needed, customers can see it, or it is unsolved after an hour's concentrated work.
+      - layout: code
+        title: A backfill must be safe to run twice
+        lang: python
+        code: |-
+          def build_day(day, source='trips_clean'):
+              con.execute("BEGIN")
+              con.execute("DELETE FROM daily_revenue "
+                          "WHERE dt = ?", [day])
+              con.execute(f"""INSERT INTO daily_revenue
+                  SELECT dt, sum(fare), count(*)
+                  FROM {source} WHERE dt = ?
+                  GROUP BY 1""", [day])
+              con.execute("COMMIT")
+        bullets:
+          - "Append twice: 34,244 becomes 68,489"
+          - "Replace twice: 2,776,463 both times"
+          - Run in a transaction, one logical day
+        takeaway: In a stressful incident jobs get run twice, so replace one logical day inside a transaction.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          An appending job turns a repair into a second incident. In a warehouse, the equivalent is a merge or partition
+          overwrite. Corrections live in a view above raw, with a dated row and a ticket number.
+      - layout: table
+        title: Five faults, five runbook pages
+        header: [Fault, Contain, Repair, Prevent]
+        widths: [3, 3, 5, 5]
+        rows:
+          - ["Null spike", "Quarantine", "Re-request, rebuild the day", "Tell the source; add a contract"]
+          - ["Dropped day", "Mark missing", "Re-export, audit, rebuild", "Date spine; producer manifest"]
+          - ["Late partition", "Tell consumers", "Rebuild marts older than input", "Trigger on arrival"]
+          - ["Duplicates", "Quarantine", "Dedupe on key in staging", "Idempotent producer; a key"]
+          - ["Unit change", "Quarantine from onset", "Dated correction, backfill", "Units in the contract; KS monitor"]
+        bold_first: true
+        takeaway: A playbook is the decision made in advance, when nobody is stressed, so keep it short.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          Two repairs cannot be finished from our side. 10 March and the fares on 5 March were never sent. You re-request
+          them or publish a labelled estimate. An imputed value presented as repaired is a new fault.
+      - layout: bullets
+        title: A postmortem pays for the incident
+        bullets:
+          - "Triggers include data loss of any kind, and a monitoring failure"
+          - "If a stakeholder found it first, the monitor is one of the things that failed"
+          - "Blameless: contributing causes, never a person"
+          - "Actions with owners and dates, including at least one new check"
+        takeaway: The only return on an incident is a check that catches the next one sooner.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          The SRE book's reasoning for blamelessness is practical. If people are punished for errors, they stop surfacing
+          them. A silent wrong number can sit for weeks if the person who noticed is afraid to say so.
+
+  - title: Rules of thumb
+    summary: What to keep
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - {title: State a tolerance, body: "A hard rule on a soft fact gets muted. Bad rows are the evidence.", accent: 0EA5C9}
+          - {title: Rules and history, body: "A test asks about a batch. A monitor asks about a batch against time.", accent: 0F7490}
+          - {title: Spine with age, body: "Pair `max(loaded_at)` with a date spine.", accent: 5B21B6}
+          - {title: Same weekday, body: "Median and MAD. Validate by injecting losses.", accent: 1E3A5F}
+          - {title: Contain first, body: "Never fix raw in place. Correct in a dated layer.", accent: D4621A}
+          - {title: Run it twice, body: "Prove the backfill is idempotent before you need it.", accent: 0F7490}
+        takeaway: Tests and monitors find it, lineage bounds it, and an idempotent backfill repairs it.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          If you keep one habit, make it the last one. Almost everything else can be improved during an incident, but a
+          job that doubles the mart on a rerun cannot.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "Read: the three chapters in `notes/`, then `references.md`"
+          - "Practice: `06-ml-platform/practice/datatalks-mlops/05-monitoring`"
+          - "Next: the ML platform, starting from features that match at training and serving"
+        takeaway: The feed is clean again, and the model downstream of it is next.
+        source: notes/03-incident-playbooks.md
+        notes: >-
+          The next pillar picks up what the model needs from the data platform: features, a registry, serving and drift.
