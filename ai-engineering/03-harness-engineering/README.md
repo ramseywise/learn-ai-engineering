@@ -1,6 +1,6 @@
 # 03 — Harness Engineering
 
-> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
 > Position in the stack: *harness implements loops*.
 > Start with [notes/01](notes/01-what-a-harness-is.md) · Sources: [references.md](references.md)
 
@@ -82,7 +82,7 @@ Related outside this pillar: PRINCE's retrieval stack (RAG, Text-to-SQL, NER) is
 ## Resource map
 
 ### Interviewing guide
-- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
+- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md) — compressed summary for interview prep.
 
 ### Coursera code
 - [AI-Agentic-Design-Patterns-with-AutoGen-main](../../generative-ai/03-agentic-foundations/notes/04-multi-agent-design-patterns.md) — agentic design patterns.

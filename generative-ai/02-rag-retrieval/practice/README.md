@@ -5,6 +5,7 @@ Everything here runs offline with no API key. The code blocks in the notes impor
 | File | What it is |
 |---|---|
 | `ragkit.py` | The Tallybook help-centre corpus (18 pages, including the stale 2024 refund page and an internal runbook), 20 labelled queries, BM25, a small dense embedder, RRF, a `Retriever` with sparse, dense and hybrid search, and the eval metrics. It needs only NumPy |
+| `ablation.py` | Compares four local embedders, BM25 and their fusion on the Tallybook queries, with paired bootstrap intervals. Note 11 quotes its output. First run downloads about 2.5 GB of ONNX weights |
 | `check_blocks.py` | Runs every Python block in `../notes/` and compares its output with the `text` block printed underneath it |
 
 ## Run the scoreboard

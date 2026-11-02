@@ -303,7 +303,7 @@ largest Ward groups of the top 100 films:
 affinity propagation on 500 films found 91 clusters, median size 5
 ```
 
-**Affinity propagation** picks the number of clusters itself from similarity "messages". As Sarkar also finds, it tends to produce many small ones: here 91 clusters over 500 films, median size 5. The lessons match [comparing and evaluating clusterings](../../01-classical-ml/notes/05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster.
+**Affinity propagation** picks the number of clusters itself from similarity "messages". As Sarkar also finds, it tends to produce many small ones: here 91 clusters over 500 films, median size 5. The lessons match [comparing and evaluating clusterings](../../01-classical-ml/notes/05-unsupervised-learning.md#comparing-and-evaluating): k-means clusters are only as good as the features, and you validate by reading the members of each cluster. [Does clustering do better?](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) adds a second test: k-means always returns the k you ask for, so score the clusters against a holdout before adopting them.
 
 ## Extractive summarisation
 

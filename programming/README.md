@@ -2,9 +2,9 @@
 
 > Depth layer for the languages everything else in this repo is written in: **Python**, **SQL**
 > and **TypeScript**. Practice reps (HackerRank, LeetCode, interview-format coding rounds) live in
-> [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md).
-> librarian shows both. The summary layer is sisyphus
-> [interview guide Pillar 0 — Programming](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
+> [`practice/drills/`](../practice/drills/README.md).
+> librarian shows both. The summary layer is the
+> [interview guide Pillar 0 — Programming](../practice/interviewing/guides/00-start-here.md).
 > Position in the path: the entry point, no prerequisites; next are
 > [data-analytics](../data-analytics/README.md) and [ai-engineering](../ai-engineering/README.md).
 > Jump to: [Tracks](#tracks) · [Study decks](#study-decks) · [Layout](#layout) · [How the pieces fit](#how-the-pieces-fit) · [Running the code](#running-the-code) · [References](references.md)
@@ -74,7 +74,7 @@ Each track README has its own tree.
 | Repo | Role | Programming content |
 |---|---|---|
 | **learn-ai-engineering** (here) | Learn the skill | Notes, worked notebooks and guided exercises with solutions |
-| **sisyphus** `drills/` | Practise the skill | HackerRank and LeetCode solutions, timed drills, interview-format coding rounds |
+| **practice** `drills/` | Practise the skill | HackerRank and LeetCode solutions, timed drills, interview-format coding rounds |
 | **librarian** | Read both | Imports this folder as the *Programming* course and sisyphus `drills/` as *Drills* (`make import-courses`) |
 
 Notes use `concepts:` slugs in their frontmatter. Drills list the same slugs, so a drill can link

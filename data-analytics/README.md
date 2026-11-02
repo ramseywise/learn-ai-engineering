@@ -128,4 +128,4 @@ Each pillar's README says how to run its practice, and its `references.md` maps 
 
 ## Interview guide
 
-[1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation, in a private repo.
+[1-foundations](../practice/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation, in the local `practice/` folder.

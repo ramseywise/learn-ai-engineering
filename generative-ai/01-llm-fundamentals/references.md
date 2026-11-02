@@ -29,7 +29,7 @@ cleaned: 2026-11-01
 | | Jurafsky & Martin, [*Speech and Language Processing*](https://web.stanford.edu/~jurafsky/slp3/) (3rd ed. draft) | Tokenization, n-grams, transformers | — | 01–05 |
 | | *Generative AI and LLMs for Dummies* (vendor e-book) | A gentle first pass before the papers | ✓ [generative-ai-and-llms-for-dummies.pdf](sources/generative-ai-and-llms-for-dummies.pdf) | — |
 
-## Courses
+## Courses and videos
 
 | | Course | Maps to |
 |---|---|---|
@@ -39,7 +39,7 @@ cleaned: 2026-11-01
 | | Labonne, [LLM Course](https://github.com/mlabonne/llm-course): running LLMs, quantization, local deployment | [14](notes/14-open-weight-models-and-local-inference.md) |
 | | [fast.ai Practical Deep Learning](https://course.fast.ai/) · [MIT 6.S191](https://introtodeeplearning.com/) · [Full Stack Deep Learning](https://fullstackdeeplearning.com/) | 01–05 |
 | | [DeepLearning.AI Neural Networks and Deep Learning](https://www.coursera.org/learn/neural-networks-deep-learning) · [DeepLearning.AI short courses](https://learn.deeplearning.ai/) | 01–05, 11 |
-| | [Google Generative AI learning path](https://www.cloudskillsboost.google/paths/118) | 01–05 |
+| | [Google Generative AI learning path](https://www.skills.google/paths/118) | 01–05 |
 | | [TensorFlow NLP Zero to Hero](https://youtube.com/playlist?list=PLQY2H8rRoyvzDbLUZkbudP-MFQZwNmU4S) | 01–05 |
 
 ## First-party docs

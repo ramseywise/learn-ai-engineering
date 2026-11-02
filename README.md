@@ -5,12 +5,12 @@ material, organized into six subjects. Each subject folder has its own README.
 
 > **Where to start:** [CURRICULUM.md](CURRICULUM.md) has the subject map, prerequisites, three
 > learning paths (AI Engineering, Data Engineering, Full-Stack Data), the definition of done, and
-> [Sources](CURRICULUM.md#sources), which lists where each piece of vendored material came from.
+> [Sources and depth](CURRICULUM.md#sources-and-depth), which says where each course keeps its source map.
 >
-> **Interview prep and coding drills** are in the private
-> [sisyphus](https://github.com/ramseywise/sisyphus) repo:
-> [interview guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md)
-> and [language drills](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md).
+> **Interview prep and coding drills** are in the
+> local [`practice/`](practice) folder, which is not published:
+> [interview guides](practice/interviewing/guides/00-start-here.md)
+> and [language drills](practice/drills/README.md).
 > Hands-on AI-engineering projects (RAG, agents, evals, MCP) are in the working repos listed in
 > [`../PORTFOLIO.md`](../PORTFOLIO.md).
 

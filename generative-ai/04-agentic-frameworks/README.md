@@ -1,6 +1,6 @@
 # 04 — Agentic Frameworks
 
-> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
 > Position: fourth generative-ai pillar, the framework layer. Builds on [03-agentic-foundations](../03-agentic-foundations/README.md); the theory it implements is [ai-engineering/05-graph-engineering](../../ai-engineering/05-graph-engineering/README.md).
 
 ---
@@ -121,7 +121,7 @@ sources/       the papers these notes cite, as PDFs
 - Framework docs and guides (Anthropic, OpenAI, 12-Factor Agents, ReAct): [references.md](references.md).
 
 ### Interviewing guide
-- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep.
+- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep.
 
 ### Previous and next layer
 ← [03-agentic-foundations](../03-agentic-foundations/README.md)

@@ -1,6 +1,6 @@
 # 07 — Inference Engineering
 
-> Depth layer. Summary: no dedicated interview guide yet; the closest is 9-system-design, from [00-start-here](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
+> Depth layer. Summary: no dedicated interview guide yet; the closest is 9-system-design, from [00-start-here](../../practice/interviewing/guides/00-start-here.md).
 > Position in the stack: *the substrate every other layer runs on*.
 > Jump to: [Scope](#scope) · [Reading order](#reading-order) · [References](#references)
 

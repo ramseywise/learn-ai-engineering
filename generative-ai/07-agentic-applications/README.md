@@ -1,6 +1,6 @@
 # 07 — Agentic Applications
 
-> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
 > Position in the path: the last of the build pillars in generative-ai, the payoff; the [Eval pillar](../08-eval/README.md) measures what it ships. It holds end-to-end applications built with the frameworks and patterns from [03-agentic-foundations](../03-agentic-foundations/README.md) and [04-agentic-frameworks](../04-agentic-frameworks/README.md).
 
 ---
@@ -168,7 +168,7 @@ Read in place and not copied: [tips.csv](../../data-analytics/01-python-for-data
 
 ### Interview guide
 
-- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep.
+- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep.
 
 ### Layers
 

@@ -105,7 +105,7 @@ Defense 5 is the load-bearing one. Every context-level defense is probabilistic.
 
 **Check a retrieval store at both ends.** Rothman's engine sanitizes each document before it is embedded, and again when it is retrieved, so that a document missed at ingestion gets a second check. It moderates the user's goal before the task is queued, and the output before it is stored. The moderation call **fails closed**: an API error counts as flagged (*Context Engineering for Multi-Agent Systems*, ch. 10, appendix A). The placement is the lesson, not the filter. His sanitizer is a regex list ("ignore previous instructions", "act as"), and a paraphrase gets past it.
 
-Full treatment: [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) and pillar [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/00-overview.md).
+Full treatment: [prompt-injection.md](../../../practice/interviewing/guides/7-security-safety/prompt-injection.md) and pillar [7-security-safety](../../../practice/interviewing/guides/7-security-safety/00-overview.md).
 
 ---
 

@@ -1,6 +1,6 @@
 # 02 — Context Engineering
 
-> Depth layer. Summary: [interviewing/guides/5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/5-context-cost](../../practice/interviewing/guides/5-context-cost/00-overview.md)
 > Position in the stack: *each loop step assembles context*.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
@@ -184,7 +184,7 @@ BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [gena
 - [03-harness — progressive disclosure: skills](../03-harness-engineering/notes/03-tool-design.md#progressive-disclosure-skills) — skills as a harness primitive; relies on the progressive disclosure covered in [04](notes/04-retrieval.md).
 
 ### Interviewing guide
-- [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
+- [5-context-cost](../../practice/interviewing/guides/5-context-cost/00-overview.md) — compressed summary for interview prep.
 
 ### Course code
 - [LLMs-as-Operating-Systems--Agent-Memory-main](../../generative-ai/03-agentic-foundations/notes/03-memory-as-an-operating-system.md) — memory as an OS primitive.

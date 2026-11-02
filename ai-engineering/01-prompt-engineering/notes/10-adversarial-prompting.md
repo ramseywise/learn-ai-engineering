@@ -20,7 +20,7 @@ cleaned: 2026-11-01
 ---
 # 10 — Adversarial Prompting and Prompt Risks
 
-> Where prompts fail under pressure: injection, leaking, jailbreaks, plus the quieter failures of bias and factuality. This is the defensive view for prompt authors. For interview depth on prompt injection, see [interviewing/7-security-safety/prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
+> Where prompts fail under pressure: injection, leaking, jailbreaks, plus the quieter failures of bias and factuality. This is the defensive view for prompt authors. For interview depth on prompt injection, see [interviewing/7-security-safety/prompt-injection.md](../../../practice/interviewing/guides/7-security-safety/prompt-injection.md).
 
 A user signs up as "Bruce Remove All Data Lee" and plants an instruction in every text-to-SQL prompt that retrieves the name, and no SQL sanitizer sees it. Instructions and data share one channel in a prompt, so anything that reaches it can steer the model. This chapter covers what can go wrong and which defenses actually hold.
 

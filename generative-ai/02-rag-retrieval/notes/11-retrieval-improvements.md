@@ -13,7 +13,7 @@ Tallybook's support bot still gets refund questions wrong, and everyone on the t
 
 This chapter works through a real ablation from our support-agent project: five retrieval configurations scored on MRR, precision at 1 and latency, the conclusions we drew, and the shortlist of improvements that came out of it. The project's names are kept because they are what the numbers refer to: `kb_rag` is the deterministic pipeline, `kb_lg` the LangGraph agent with CRAG, `kb_adk` the Google ADK ReAct agent, and `va_staging` the existing staging system used as the benchmark. Each research item then gets a small experiment on Tallybook, so that you can see the mechanism run. Metric definitions are in [03](03-keyword-semantic-and-hybrid-search.md) and the wider evaluation discipline is in the [Eval pillar](../../08-eval/README.md).
 
-Status when this was written: research, evaluating options after the first ablation run (2026-05-09). Items marked TODO or PLANNED below had not been run, and their expected gains are estimates, not results.
+Status when this was written: research, evaluating options after the first ablation run (2026-05-09). Items marked PLANNED or not measured below have not been run on the project, and their expected gains are estimates, not results.
 
 ## The baseline table
 
@@ -133,7 +133,7 @@ flowchart LR
 **Cost**: same latency profile, slightly higher per-token cost.
 **How**: `GEMINI_MODEL=gemini-3-flash-preview uv run uvicorn kb_adk.main:app --port 8011`
 **Run path**: use `evals.pipelines.run live` or `evals.pipelines.run langfuse` with `GEMINI_MODEL=gemini-3-flash-preview` set in the agent environment.
-**Status**: TODO, run the ablation.
+**Status**: Not measured. The run needs the project's agent code, Gemini API access and the gold URL set, and none of those is in this public repository, so the gain above stays an estimate. Item 4 reports a local ablation that is measured, on a different question.
 
 Why does a model change move a *retrieval* metric? Because MRR here is scored on the URLs the agent cites, and the agent chooses what to search for and what to cite. It is a reminder that this table measures the whole agent, not the index.
 
@@ -261,7 +261,39 @@ Gold here is `kb-04`. The good guess repairs BM25, and the bad guess sends it to
 **Flags**: `SUPPORT_AGENT_RETRIEVAL_MODE=rag` (kb_adk), `SUPPORT_AGENT_RETRIEVAL_BACKEND=rag` (kb_lg).
 **Baseline**: kb_rag alone scores MRR=0.42 on retrieval-only. LLM agents with local RAG are still to be measured.
 
-**Status**: TODO, add Makefile ablation targets and run the comparison.
+**Status**: Not measured, for the same reason as item 1: the agents, Bedrock KB and gold set are not in this repository. The Makefile targets don't exist here either, and LLM agents on local RAG remain an open question.
+
+What can run here is the local half of the decision: which embedding model, and whether fusing it with BM25 helps. This does not answer the project's question. It swaps embedders and not LLMs, has no agent in it, and scores Tallybook's 18 pages and 20 queries, not the project's corpus. Every number below is from this run, with no API key. The first run downloads about 2.5 GB of weights.
+
+```bash
+cd generative-ai/02-rag-retrieval/practice && uv run ablation.py
+```
+
+```text
+config                MRR    P@1    R@3  ms/query
+bm25                0.562  0.500  0.600       0.0
+toy dense           0.877  0.850  0.900       0.0
+minilm-l6           0.854  0.750  0.950       0.8
+bge-small           0.912  0.850  0.950       1.5
+bge-base            0.875  0.750  1.000       3.7
+e5-large            0.925  0.900  0.950      17.9
+toy dense + bm25    0.742  0.550  0.950       0.1
+minilm-l6 + bm25    0.835  0.750  0.900       0.7
+bge-small + bm25    0.840  0.750  0.950       1.4
+bge-base + bm25     0.840  0.750  0.950       3.6
+e5-large + bm25     0.842  0.750  0.950      18.0
+
+e5-large - bm25                +0.362  95% interval [+0.188, +0.550]  wins 9, losses 0, ties 11
+bge-small - bm25               +0.350  95% interval [+0.175, +0.537]  wins 9, losses 0, ties 11
+bge-base - bge-small           -0.037  95% interval [-0.138, +0.062]  wins 2, losses 3, ties 15
+e5-large - bge-small           +0.013  95% interval [-0.075, +0.100]  wins 2, losses 2, ties 16
+minilm-l6 - bge-small          -0.058  95% interval [-0.158, +0.042]  wins 1, losses 4, ties 15
+bge-small + bm25 - bge-small   -0.073  95% interval [-0.181, +0.029]  wins 1, losses 5, ties 14
+e5-large + bm25 - e5-large     -0.083  95% interval [-0.183, +0.000]  wins 0, losses 3, ties 17
+toy dense - bge-small          -0.036  95% interval [-0.180, +0.104]  wins 2, losses 3, ties 15
+```
+
+Dense retrieval beats BM25 on this set by a margin the interval can resolve. Among the real embedders it can't: e5-large and bge-small tie on 16 of 20 queries, and the interval on their difference spans zero, while e5-large took about twelve times as long per query on this machine. Fusing BM25 lowered MRR for all four real models, presumably because BM25's much weaker list drags the fusion down. The two intervals printed for that comparison reach zero, so this is no evidence that hybrid helps on these queries, and not proof that it hurts. The toy row is a hand-built stand-in, so don't rank it against real models. None of this moves the project's MRR of 0.42, or says what it would become.
 
 The managed side of this comparison is [12](12-managed-rag.md).
 
@@ -348,13 +380,13 @@ Every number in this chapter depends on deciding when two URLs are the same arti
 
 **Design decision:** `kb_url_map.json` is a stateless lookup table committed to the repo. Agents never contain version-aware URL logic, so KB migrations (Product to Partner) are a data operation, not a code redeploy. This keeps agents KB-agnostic and prevents grounding false positives when the underlying domain changes.
 
-Match on path only (`/da/articles/622808-...`) to avoid protocol and domain drift between `help.billy.dk` and `help.shine.co`.
+Match on path only (`/fr/articles/1001-...`) to avoid protocol and domain drift between `help.brand-a.example` and `help.brand-b.example`.
 
 **Aliasing rules:**
 
 1. SupportPlatform articles: extract the numeric ID from `/articles?/(\d+)`, which is locale-agnostic.
-2. `help.billy.dk ↔ help.shine.co`: same article ID, rewrite domain and locale prefix. `help.billy.dk/en/articles/<id>-<slug>` → `help.shine.co/da/articles/<id>-<slug>`.
-3. ProductWiki (`www.billy.dk/billypedia/<slug>/`): **no canonical Partner URL**. These are excluded from grounding and citation coverage (implemented in `url_coverage.py` as `topic_proxy`). Do NOT alias them. Tag `content_type: "glossary_term"` if they are ever ingested.
+2. `help.brand-a.example ↔ help.brand-b.example`: same article ID, rewrite domain and locale prefix. `help.brand-a.example/en/articles/<id>-<slug>` → `help.brand-b.example/fr/articles/<id>-<slug>`.
+3. ProductWiki (`www.brand-a.example/wiki/<slug>/`): **no canonical Partner URL**. These are excluded from grounding and citation coverage (implemented in `url_coverage.py` as `topic_proxy`). Do NOT alias them. Tag `content_type: "glossary_term"` if they are ever ingested.
 
 The rules fit in a few lines, and running them shows the effect on the smoke score's hit rate.
 
@@ -366,20 +398,20 @@ ARTICLE = re.compile(r"/articles?/(\d+)")
 
 def canonical(url):
     """Stable key for an article, or None if the URL has no canonical article."""
-    if "/billypedia/" in url:
+    if "/wiki/" in url:
         return None
     match = ARTICLE.search(url)
     return f"article:{match.group(1)}" if match else url
 
 
 def partner_url(url):
-    match = re.search(r"help\.billy\.dk/\w+/articles/(\d+[^/]*)", url)
-    return f"https://help.shine.co/da/articles/{match.group(1)}" if match else url
+    match = re.search(r"help\.brand-a\.example/\w+/articles/(\d+[^/]*)", url)
+    return f"https://help.brand-b.example/fr/articles/{match.group(1)}" if match else url
 
 
-a = "https://help.billy.dk/en/articles/622808-create-an-invoice"
-b = "https://help.shine.co/da/articles/622808-opret-en-faktura"
-wiki = "https://www.billy.dk/billypedia/moms/"
+a = "https://help.brand-a.example/en/articles/1001-create-an-invoice"
+b = "https://help.brand-b.example/fr/articles/1001-creer-une-facture"
+wiki = "https://www.brand-a.example/wiki/vat/"
 
 print(canonical(a), canonical(b), canonical(a) == canonical(b))
 print(partner_url(a))
@@ -391,8 +423,8 @@ print(f"hit rate as scored {hits}/{annotated} = {hits / annotated:.2f}; "
 ```
 
 ```text
-article:622808 article:622808 True
-https://help.shine.co/da/articles/622808-create-an-invoice
+article:1001 article:1001 True
+https://help.brand-b.example/fr/articles/1001-create-an-invoice
 wiki: None
 hit rate as scored 3/9 = 0.33; on ingested content 3/7 = 0.43
 ```
@@ -416,7 +448,7 @@ ProductWiki is a flat concept glossary with no numeric article IDs and no Partne
 1. In the bootstrap block, change `seed=0` to `seed=1` and `rounds` to `1000`. How much does the `dense - hybrid` interval move, and does the conclusion change?
 2. Using the worst-case bound, how many queries would you need for one standard error to equal CRAG's +0.005?
 3. In the multi-query block, delete the second rewrite from every entry so that each question has one rewrite. What happens to BM25's MRR? Predict first.
-4. What does `canonical` return for `https://help.shine.co/da/article/622808` (singular path) and for `https://www.billy.dk/pricing`? Is the second one what you want?
+4. What does `canonical` return for `https://help.brand-b.example/fr/article/1001` (singular path) and for `https://www.brand-a.example/pricing`? Is the second one what you want?
 
 <details>
 <summary>Answers</summary>
@@ -424,7 +456,7 @@ ProductWiki is a flat concept glossary with no numeric article IDs and no Partne
 1. The interval becomes about [-0.008, +0.292] against [-0.017, +0.292]. It still crosses zero, so the conclusion stands. The lower end moved by 0.009, which is the size of error you accept with fewer rounds. The width comes from the 20 queries, and more rounds will not narrow it.
 2. 0.5 / sqrt(n) = 0.005 gives n = 10,000. That is the unpaired worst case, and a paired design needs fewer, but it shows why a +0.005 can't be judged on 32 queries.
 3. BM25's MRR falls from 0.850 to 0.667, and recall@3 stays at 0.90. One rewrite finds the document, but the original question's noisy ranking now carries a larger share of the fused score, so the right document lands lower. The second rewrite was buying rank, not recall.
-4. The singular path still gives `article:622808`, which is why the pattern has `s?`. `https://www.billy.dk/pricing` has no article ID, so it comes back unchanged and only matches itself. That is safe for a comparison, but it is also a sign that this URL needs a decision in `kb_url_map.json`. A URL on the other domain would not match, so domain drift is unhandled for non-article pages.
+4. The singular path still gives `article:1001`, which is why the pattern has `s?`. `https://www.brand-a.example/pricing` has no article ID, so it comes back unchanged and only matches itself. That is safe for a comparison, but it is also a sign that this URL needs a decision in `kb_url_map.json`. A URL on the other domain would not match, so domain drift is unhandled for non-article pages.
 
 </details>
 

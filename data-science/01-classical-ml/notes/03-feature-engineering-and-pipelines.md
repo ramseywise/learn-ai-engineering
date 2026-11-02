@@ -102,7 +102,7 @@ The base rate is 0.759, so these six columns add real signal. Missing values in 
 |---|---|
 | One-hot | Few categories; linear models |
 | Ordinal (`OrdinalEncoder`) | Categories with an order; tree models |
-| Target / frequency encoding | Very many categories (IDs, zip codes); needs cross-fitting to avoid leakage |
+| Target / frequency encoding | Very many categories (IDs, zip codes); needs cross-fitting to avoid leakage; [weight of evidence](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#weight-of-evidence) is a target encoding learned on the training set only |
 | Native categorical support | `HistGradientBoostingClassifier(categorical_features=...)`, LightGBM |
 
 ---
@@ -342,7 +342,7 @@ CV the pipeline: -0.03
 
 The correct answer is that there is no signal, and a score below zero says so. Selecting outside the loop reported a strong model on random numbers. The book's run of the same recipe gets 0.91 and −0.25.
 
-**Rule:** any step with a `fit` (scaling, imputation, encoding, selection, PCA, target encoding, vectorising text) must be refit inside each fold. A `Pipeline` does that for you.
+**Rule:** any step with a `fit` (scaling, imputation, encoding, selection, PCA, target encoding, vectorising text) must be refit inside each fold. A `Pipeline` does that for you. Resampling is the same kind of step: in [note 10](10-imbalance-errors-and-drift.md#the-leak-resampling-before-you-split), SMOTE before the split reports a ROC-AUC of 0.98 for a model that truly scores 0.70.
 
 ---
 
@@ -450,7 +450,7 @@ Every step except the last must have `fit` and `transform`. The last needs `fit`
 | Numeric codes treated as numbers | A linear model learns a slope across zip codes | Convert to string or list the column in the one-hot step |
 | Stray whitespace in categories | " Private" and "Private" become two columns | Check `value_counts()`; `skipinitialspace=True` when reading |
 | Polynomials with high degree | Wild predictions at the edges of the range | Scale first, keep degree low, regularise |
-| A random split on time data | The forecast looks excellent and then fails | Split in time order, as the Citi Bike block does |
+| A random split on time data | The forecast looks excellent and then fails | Split in time order, as the Citi Bike block does; a [rolling-origin backtest](../../../data-analytics/06-applied-analyses/notes/01-forecasting.md#backtest-because-one-split-is-one-anecdote) repeats that across many dates |
 
 ## Try it
 

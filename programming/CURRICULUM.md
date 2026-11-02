@@ -25,7 +25,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | Deck review | Use the module or track deck as a recall prompt. | You can state the rule without copying code. |
 | Exercises | Implement the stubs before reading worked solutions. | You can apply the idea in a constrained problem. |
 | Checks | Run the track's test/check command. | Your code meets the executable specification. |
-| Drills | Use linked sisyphus drills after a module. | You can retrieve the skill under time pressure. |
+| Drills | Use the linked drills after a module. | You can retrieve the skill under time pressure. |
 
 ## Course map
 
@@ -146,7 +146,7 @@ After this track, you can:
 
 Complete the Python track before moving to data or AI work. Take SQL when you will query or model data; take TypeScript when you will build typed applications. A complete programming foundation includes a passing Python exercise set and package, checked SQL exercises and capstone, and passing TypeScript checks plus a validated asynchronous boundary.
 
-For timed or interview-format practice, use [sisyphus drills](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md). The [Programming interview guide](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) is a review layer, not a substitute for implementing the exercises.
+For timed or interview-format practice, use [the practice drills](../practice/drills/README.md). The [Programming interview guide](../practice/interviewing/guides/00-start-here.md) is a review layer, not a substitute for implementing the exercises.
 
 ## Complete references
 

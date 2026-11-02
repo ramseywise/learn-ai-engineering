@@ -21,6 +21,13 @@ cleaned: 2026-10-31
 | ★ | Chip Huyen, *AI Engineering* (O'Reilly, 2025), ch. 9. PDF in [sources/huyen-ai-engineering/](sources/huyen-ai-engineering/). Folded in as: ch. 9 → [01](notes/01-why-inference-is-its-own-discipline.md) (metrics, bottlenecks, goodput), [05](notes/05-compilers-and-frameworks.md#what-a-compiler-does-for-inference), [06](notes/06-serving-at-scale.md#batching), [07](notes/07-prefill-decode-kv-cache.md#prompt-caching-in-provider-apis), [08](notes/08-adaptive-inference.md#stacking-the-gains). Fig. 9-4's caption counts three requests meeting the SLO where the bars show two; its HBM bandwidth figure (up to 1.5 TB/s) and 2024 prompt-cache prices are dated. Notes cite it as `(*AI Engineering*, ch. 9)` | 01, 05, 06, 07, 08 |
 | ★ | Paul Iusztin and Maxime Labonne, *LLM Engineer's Handbook* (Packt, 2024), ch. 8 and 10. Chapter PDFs in [generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/](../../generative-ai/01-llm-fundamentals/sources/llm-engineers-handbook/). Folded in as: ch. 8 → [05](notes/05-compilers-and-frameworks.md#static-kv-cache-the-handbooks-recipe), [06](notes/06-serving-at-scale.md), [07](notes/07-prefill-decode-kv-cache.md#sizing-the-cache), [08](notes/08-adaptive-inference.md#quantization); ch. 10 → [06](notes/06-serving-at-scale.md#deployment-shapes) (SageMaker and IAM specifics dropped). Says GPTQ is 4-bit only and that LLM.int8 outliers are weights (both wrong); lists speculative decoding as TensorRT-LLM only (dated); suggests autoscaling on GPU util and WebSockets for streaming. Notes cite it as `(*LLM Engineer's Handbook*, ch. N)` | 05, 06, 07, 08 |
 
+## Courses and videos
+
+| Course | Platform, cost | Where | Use it for |
+|---|---|---|---|
+| *Efficiently Serving LLMs* (Travis Addair) | DeepLearning.AI, free to enrol during the platform's beta; graded quiz and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/efficiently-serving-llms/) | Lessons 2 to 4 (generation, batching, continuous batching) with [06](notes/06-serving-at-scale.md) and [07](notes/07-prefill-decode-kv-cache.md) |
+| *TinyML and Efficient Deep Learning Computing*, 6.5940 (Song Han, MIT, fall 2024) | MIT; the schedule links recorded lectures on YouTube, and the page lists no cost | [course page](https://hanlab.mit.edu/courses/2024-fall-65940) | Quantisation and pruning lectures with [04](notes/04-kernels.md) and [08](notes/08-adaptive-inference.md) |
+
 ## Core papers
 
 | Paper | Why read it | PDF | Maps to |

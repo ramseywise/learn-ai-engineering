@@ -1,7 +1,7 @@
 # Generative AI
 
 > **Depth domain.** This folder goes deep on the eight pillars of generative AI.
-> The [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) are the compressed
+> The [interviewing guides](../practice/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
 ---
@@ -61,14 +61,14 @@ External courses, books, papers and tools are collected in each pillar's `refere
 
 | Pillar | Depth (here) | Summary (guide) |
 |---|---|---|
-| LLM fundamentals | [01-llm-fundamentals](01-llm-fundamentals/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| RAG & retrieval | [02-rag-retrieval](02-rag-retrieval/README.md) | [3-rag](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/3-rag/00-overview.md) |
-| Agentic foundations | [03-agentic-foundations](03-agentic-foundations/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
-| Agentic frameworks | [04-agentic-frameworks](04-agentic-frameworks/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
-| RL & alignment | [05-RL](05-RL/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| Observability | [06-observability](06-observability/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) |
-| Agentic applications | [07-agentic-applications](07-agentic-applications/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) |
-| Eval | [08-eval](08-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) |
+| LLM fundamentals | [01-llm-fundamentals](01-llm-fundamentals/README.md) | [2-llm-fundamentals](../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) |
+| RAG & retrieval | [02-rag-retrieval](02-rag-retrieval/README.md) | [3-rag](../practice/interviewing/guides/3-rag/00-overview.md) |
+| Agentic foundations | [03-agentic-foundations](03-agentic-foundations/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
+| Agentic frameworks | [04-agentic-frameworks](04-agentic-frameworks/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
+| RL & alignment | [05-RL](05-RL/README.md) | [2-llm-fundamentals](../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) |
+| Observability | [06-observability](06-observability/README.md) | [6-evals-observability](../practice/interviewing/guides/6-evals-observability/00-overview.md) |
+| Agentic applications | [07-agentic-applications](07-agentic-applications/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
+| Eval | [08-eval](08-eval/README.md) | [6-evals-observability](../practice/interviewing/guides/6-evals-observability/00-overview.md) |
 
 ---
 
@@ -78,7 +78,7 @@ External courses, books, papers and tools are collected in each pillar's `refere
 
 **This folder** = depth for practitioners. Each pillar README says what the topic is, where it sits in the path, the order to read its notes in and the rules of thumb worth remembering, then links back to its guide.
 
-Notes live inside each pillar's `notes/` folder with frontmatter (`origin`, `sources`, `confidence`, `cleaned`). There is no separate pointer layer for generative-ai content; `interviewing/guides/` (in sisyphus) is the only summary layer, and it links into both `ai-engineering/` and `generative-ai/` for depth.
+Notes live inside each pillar's `notes/` folder with frontmatter (`origin`, `sources`, `confidence`, `cleaned`). There is no separate pointer layer for generative-ai content; `practice/interviewing/guides/` is the only summary layer, and it links into both `ai-engineering/` and `generative-ai/` for depth.
 
 ---
 
@@ -130,7 +130,7 @@ each project's `pyproject.toml`. Don't install them all at once.
 ### Foundations (math, Python, classical ML)
 
 - [MIT 18.06 Linear Algebra](https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/) — Strang's lectures.
-- [CS50's Introduction to Programming with Python](https://www.edx.org/learn/python/harvard-university-cs50-s-introduction-to-programming-with-python); practice on [HackerRank Python](https://www.hackerrank.com/domains/python) (see [`programming/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md)).
+- [CS50's Introduction to Programming with Python](https://www.edx.org/learn/python/harvard-university-cs50-s-introduction-to-programming-with-python); practice on [HackerRank Python](https://www.hackerrank.com/domains/python) (see [`programming/`](../practice/drills/README.md)).
 - [Machine Learning Specialization (Andrew Ng)](https://www.coursera.org/specializations/machine-learning-introduction) — the course behind [`data-science/`](../data-science/README.md)'s Ng notebooks.
 - [CS50's Introduction to AI](https://cs50.harvard.edu/ai/) and [AIMA](https://aima.cs.berkeley.edu/) — classical AI: search, reasoning, planning.
 - [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) (Huyen) and [Made With ML](https://madewithml.com/) — production ML.

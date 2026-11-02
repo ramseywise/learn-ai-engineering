@@ -363,7 +363,7 @@ flowchart LR
   D --> E["Long-term holdout<br/>catches slow effects"]
 ```
 
-Choose the outcome carefully. Clicks are easy to move and can be moved by clickbait, which is why both Netflix and YouTube aim beyond the immediate click, at retention and at watch time. Watch for interference too, since a recommender changes what the logs will hold next, and treated and control users share one catalogue and one training pipeline.
+Choose the outcome carefully. Clicks are easy to move and can be moved by clickbait, which is why both Netflix and YouTube aim beyond the immediate click, at retention and at watch time. Watch for interference too, since a recommender changes what the logs will hold next, and treated and control users share one catalogue and one training pipeline. That first effect is the feedback row in [what is drifting](../../../data-engineering/06-ml-platform/notes/04-drift.md#what-is-drifting): the model's output changes its own future data.
 
 ## Pitfalls
 

@@ -13,7 +13,9 @@ goes with it. The notes are the meat. The slides catch the idea and double as fl
 
 ## 1. Where each area stands
 
-Measured 2026-11-01 (`wc -w` on notes, `grep layout:` on decks).
+Measured 2026-11-01 (`wc -w` on notes, `grep layout:` on decks). This table is a snapshot. Since then
+ai-engineering 06 has moved to `generative-ai/08-eval`, leaving eight ai-engineering pillars (01–05,
+07–09), generative-ai has grown to nine pillars, and the four subjects have become pillars.
 
 | Area | Shape | Notes | Depth per note | Slides | Verdict |
 |---|---|---|---|---|---|
@@ -56,6 +58,9 @@ zoomcamps, Coursera Bayesian ML) move into the `practice/` of the pillar that te
   sources/           PDFs and images/
 ```
 
+The `sources/` line holds for ai-engineering and generative-ai. data-analytics, data-science,
+data-engineering and programming share one `<area>/sources/` at the area root instead.
+
 CURRICULUM.md records this as a decision under Definition of done: the 2026-10-28 freeze froze the
 six subjects, not their internal shape. Each subject's `CURRICULUM.md` stays as the sequenced path
 across its pillars.
@@ -74,6 +79,8 @@ two chapters. Every chapter has, in this order:
 5. **Try it**: two to four exercises or questions with answers folded or linked to `practice/`.
 6. **Interview checklist**: the table the subject notes already use, answers filled in.
 7. **Next**: the link to the following note.
+
+Programming is exempt by design: §3.6 keeps its shape and depth, 300–600 words and exercise-driven.
 
 This goes into PILLAR-LAYOUT as a "notes/ — the chapter" section, and the `/chapter`, `/papers`
 and `/pillar` skills check for it. ai-engineering notes already meet it, minus items 5 and 7 in
@@ -110,7 +117,7 @@ to `.claude/skills/slides/references/deck-spec.md`:
 - The generative-ai TypeScript SDK lab in 01-llm-fundamentals stays as the bridge, and its model
   id is updated.
 
-This is a recommendation to decide in CURRICULUM.md. The alternative (Python everywhere, TS only
+This was accepted under §6. The alternative (Python everywhere, TS only
 in programming) is simpler but leaves the TypeScript track with no destination.
 
 ### 2.5 References widen to courses and videos
@@ -166,7 +173,10 @@ Courses and videos: Ng ML Specialization and DL Specialization (already the prac
 ML playlist, fast.ai *Practical Deep Learning*, Karpathy *nn-zero-to-hero* (already), Stanford
 CS229 and CS224N lecture videos, Kaggle Learn (intro and intermediate ML, feature engineering).
 
-Decks: five.
+Pillar 04 has since moved to `generative-ai/09-llms-from-scratch` (§7, Wave 0), so data-science has
+four pillars: 01, 02, 03 and 05.
+
+Decks: four, one per pillar.
 
 ### 3.3 data-engineering
 
@@ -202,9 +212,14 @@ The pillars are right. The notes inside need to become chapters and the pillars 
 | 06-observability | Notes are 1.2k–1.7k. Grow with the support-agent case study threaded through 01–05; add a chapter on cost and latency dashboards |
 | 07-agentic-applications | Add two application chapters: a coding agent, and a data-analysis agent over the analytics pillars' datasets |
 
-Decks: seven, one per pillar, the same spine as ai-engineering.
+The table lists the seven pillars planned here. Two have joined since: `08-eval`, which was
+ai-engineering 06, and `09-llms-from-scratch`, which was data-science 04.
+
+Decks: nine, one per pillar, the same spine as ai-engineering.
 
 ### 3.5 ai-engineering
+
+AI engineering 06 is now `generative-ai/08-eval`, so work below that names 06 applies to that pillar.
 
 | Work | Detail |
 |---|---|
@@ -254,8 +269,8 @@ its sources, as the readings rules require.
 | 1 | Restructure: subjects into pillars by `git mv`, raw course folders into `practice/`, Python 04 to data-analytics 01, READMEs and CURRICULUM paths rewritten, link check | 2 sessions |
 | 2 | data-analytics: fill the four skeletons, write pillar 01 chapters over the notebooks, write 05 and 06, references with courses and videos, six decks | 8–10 sessions |
 | 3 | ai-engineering: deck 07, story pass on 01–06 | 3–4 sessions |
-| 4 | generative-ai: split 01, grow 04 and 06, seven decks | 6–8 sessions |
-| 5 | data-science: restructure chapters, boosting and embeddings chapters, 05 pillar, five decks | 5–6 sessions |
+| 4 | generative-ai: split 01, grow 04 and 06, nine decks | 6–8 sessions |
+| 5 | data-science: restructure chapters, boosting and embeddings chapters, 05 pillar, four decks | 5–6 sessions |
 | 6 | data-engineering: foundations and modelling chapters, quality pillar, seven decks | 5–6 sessions |
 | 7 | programming: five decks and the diagrams | 2–3 sessions |
 | 8 | ai-engineering 08 and 09 notes and decks, as their papers route | ongoing |
@@ -265,7 +280,9 @@ librarian importer change can land any time after Phase 0 fixes the deck format.
 
 ---
 
-## 6. Decisions needed
+## 6. Decisions
+
+All four were accepted on 2026-11-01.
 
 1. **§2.1** Subjects become pillars, and raw course folders move under `practice/`. Reverses the
    "flat notes" shape chosen 2026-10-31 for the four subjects.

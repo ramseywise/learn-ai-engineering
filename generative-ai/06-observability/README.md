@@ -1,6 +1,6 @@
 # 06 — Observability
 
-> Depth layer. Summary: [interviewing/guides/6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/6-evals-observability](../../practice/interviewing/guides/6-evals-observability/00-overview.md)
 > Position: sixth generative-ai pillar, the tooling layer. It sits after the agent and model pillars ([04](../04-agentic-frameworks/README.md), [05](../05-RL/README.md)) and before shipping them ([07](../07-agentic-applications/README.md)). Read it alongside the Eval pillar, [generative-ai/08-eval](../08-eval/README.md): this one is how you collect and read the evidence, that one is how you judge it.
 
 ---
@@ -134,7 +134,7 @@ The lecture deck is [slides/observability.pptx](slides/observability.pptx) ([PDF
 - Langfuse docs, Anthropic's evals post, the AgentOps paper, courses, serving and security links: [references.md](references.md).
 
 ### Interviewing guide
-- [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md): compressed summary for interview prep.
+- [6-evals-observability](../../practice/interviewing/guides/6-evals-observability/00-overview.md): compressed summary for interview prep.
 
 ### Previous and next layer
 ← [05-RL](../05-RL/README.md)

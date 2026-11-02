@@ -2,7 +2,7 @@
 
 > How data gets from where it is born to where it is used: on a schedule, correctly, and in a shape the next stage can trust.
 
-Position in the path: after [programming](../programming/README.md) (Python, SQL) and [data analytics](../data-analytics/README.md); alongside or before [data science](../data-science/README.md). It is the pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md). Interview summary: [8-data-eng-mlops](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md).
+Position in the path: after [programming](../programming/README.md) (Python, SQL) and [data analytics](../data-analytics/README.md); alongside or before [data science](../data-science/README.md). It is the pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md). Interview summary: [8-data-eng-mlops](../practice/interviewing/guides/8-data-eng-mlops/00-overview.md).
 
 ## What it is
 
@@ -192,7 +192,7 @@ Labels: **offline** = runs on a laptop with no account once data is downloaded Â
 
 ### Interviewing guide
 
-[8-data-eng-mlops/00-overview.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md). The scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice.
+[8-data-eng-mlops/00-overview.md](../practice/interviewing/guides/8-data-eng-mlops/00-overview.md). The scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice.
 
 ### Previous and next layer
 

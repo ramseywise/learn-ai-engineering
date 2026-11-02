@@ -383,12 +383,12 @@ You should take from this a working habit more than a verdict on deep learning. 
 ## Pitfalls
 
 - **Optimising RMSE and shipping a list.** The table above is the demonstration: best RMSE, worse than popularity on top-10. Score what the product shows.
-- **Random holdout on interaction data.** Shuffling lets the model see the future. Exercise 1 shows EASE more than doubling its NDCG this way. Use time.
+- **Random holdout on interaction data.** Shuffling lets the model see the future. Exercise 1 shows EASE more than doubling its NDCG this way. Use time, because [the folds must mimic how the model will meet new data](../../01-classical-ml/notes/09-training-and-tuning.md#when-to-change-the-folds).
 - **Ranking only a sample of items.** Offline metrics computed on 99 random negatives can disagree with the real ranking, and the next chapter measures it.
 - **Treating empty cells as dislikes, or ignoring them.** Both are wrong. Weight them low, sample them, or use a closed form that accounts for them.
 - **Not removing seen items at evaluation.** A model that re-recommends what you already rated looks either terrible or suspiciously good, depending on the setup.
 - **Copying hyperparameters.** Hu's $\alpha = 40$ is the case above.
-- **Tuning on the test set.** Everything here is picked on `valid`, because with a handful of candidates the test set quickly becomes a training set.
+- **Tuning on the test set.** Everything here is picked on `valid`, because with a handful of candidates the test set quickly becomes a training set. [The honest final number](../../01-classical-ml/notes/09-training-and-tuning.md#the-honest-final-number) explains why a search's winner looks better than it is.
 - **Accuracy without coverage.** A model with a high NDCG and a coverage of 4% is a bestseller list. Report both.
 - **Popularity feedback.** Logs come from the previous recommender, so popular things get shown, clicked, and shown again. The next chapter addresses this.
 

@@ -2,7 +2,7 @@
 
 > What a data scientist has to know beyond the analyst: fit, evaluate and explain a model, know the classical and neural families, and know what a text or an embedding is to a model.
 >
-> Position: [data analytics](../data-analytics/README.md) comes first, for statistics, inference and Bayes. [Generative AI](../generative-ai/README.md) builds on this subject, from [LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md) onward. The sequenced path and prerequisites are in [CURRICULUM.md](CURRICULUM.md), and the shared library is in [references.md](references.md). Interview guide: [Pillar 1, Foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md).
+> Position: [data analytics](../data-analytics/README.md) comes first, for statistics, inference and Bayes. [Generative AI](../generative-ai/README.md) builds on this subject, from [LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md) onward. The sequenced path and prerequisites are in [CURRICULUM.md](CURRICULUM.md), and the shared library is in [references.md](references.md). Interview guide: [Pillar 1, Foundations](../practice/interviewing/guides/1-foundations/00-overview.md).
 
 ## What it adds to the analyst
 
@@ -96,6 +96,6 @@ Don't run these in bulk. Each pillar README and each note's Practice section say
 ## Related
 
 - [Bayesian modelling](../data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md) lives in data analytics, and [building knowledge graphs with LLMs](../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md) succeeds the NER in NLP note 05.
-- Interview notes: sisyphus `interviewing/notes/foundations.md`, with the guide [1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md).
+- Interview notes: [`practice/interviewing/notes/foundations.md`](../practice/interviewing/notes/foundations.md), with the guide [1-foundations](../practice/interviewing/guides/1-foundations/00-overview.md).
 
 **Previous subject:** [data analytics](../data-analytics/README.md) · **Next subject:** [generative AI](../generative-ai/README.md)

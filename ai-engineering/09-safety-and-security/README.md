@@ -1,6 +1,6 @@
 # 09 — Safety and Security
 
-> Depth layer. Summary: [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) in the interviewing guides, from [00-start-here](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
+> Depth layer. Summary: [7-security-safety](../../practice/interviewing/guides/7-security-safety) in the interviewing guides, from [00-start-here](../../practice/interviewing/guides/00-start-here.md).
 > Position in the stack: *a cross-cut: every layer has an attack surface*.
 > Jump to: [Scope](#scope) · [The story](#the-story) · [Reading order](#reading-order) · [Rules of thumb](#rules-of-thumb) · [Deck and practice](#deck-and-practice) · [References](#references)
 

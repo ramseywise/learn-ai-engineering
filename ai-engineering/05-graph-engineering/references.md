@@ -16,6 +16,15 @@
 | | Oshin & Campos, *Learning LangChain* (O'Reilly, 2025). Chapter PDFs in [../../generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Folded in as: ch. 5 → [02](notes/02-graph-primitives.md) (the agency ladder with Fig. 5-1, the LLM router), [03](notes/03-state-and-reducers.md#input-and-output-schemas-the-graphs-public-interface) (input and output schemas). Written against 2025 LangGraph; keyword names have changed since | 02, 03 |
 | | *LangGraph: A Visual Guide* ([sources/langgraph_extended.pptx](sources/langgraph_extended.pptx), 26 slides): nodes, edges, state, reducers, checkpointers, interrupts, streaming, subgraphs, LangGraph vs Google ADK. Also the house style for `make slides` | 03, 04, 05 |
 
+## Courses and videos
+
+| Course | Platform, cost | Where | Use it for |
+|---|---|---|---|
+| *Knowledge Graphs for RAG* (Andreas Kollegger) | DeepLearning.AI, free to enrol during the platform's beta; graded quiz and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/knowledge-graphs-rag/) | Lessons 1 and 2 with [09](notes/09-kg-fundamentals-and-cypher.md); 3 to 7 with [10](notes/10-building-kgs-with-llms.md) for building and [11](notes/11-kg-rag-and-text-to-cypher.md) for retrieval |
+| *AI Agents in LangGraph* (Harrison Chase, Rotem Weiss) | DeepLearning.AI, free to enrol during the platform's beta; graded assignment and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/) | Lesson 3 with [02](notes/02-graph-primitives.md), lessons 5 and 6 (persistence, human in the loop) with [04](notes/04-durable-execution-and-interrupts.md) |
+| *Introduction to LangGraph* | LangChain Academy, free | [course](https://academy.langchain.com/courses/intro-to-langgraph) | Module 2 (state and memory) with [03](notes/03-state-and-reducers.md), module 3 (human in the loop) with [04](notes/04-durable-execution-and-interrupts.md) |
+| *CS224W: Machine Learning with Graphs* (Stanford) | Slides and assignments are public; lecture videos on the current page are for enrolled students | [course page](https://web.stanford.edu/class/cs224w/) | GNN and knowledge graph embedding lectures with [13](notes/13-graph-ml-and-gnns.md) and [13b](notes/13b-representation-learning-and-gnns.md) |
+
 ## First-party docs and engineering posts
 
 | | Source | Notes |

@@ -19,6 +19,14 @@ cleaned: 2026-10-31
 | ★ | Denis Rothman, *Context Engineering for Multi-Agent Systems* (Packt, 2025). Chapter PDFs in [sources/context-engineering-multi-agent-systems/](sources/context-engineering-multi-agent-systems/). Folded in as: ch. 4 → [07](notes/07-orchestration.md); ch. 5 → [05](notes/05-verification-loops.md), [07](notes/07-orchestration.md), [08](notes/08-maturity-and-failure-modes.md); ch. 8 → [04](notes/04-execution-boundaries.md), [07](notes/07-orchestration.md). The book's "MCP" is its own message envelope, not the Model Context Protocol. Notes cite it as `(*Context Engineering for Multi-Agent Systems*, ch. N)` | 04, 05, 07, 08 |
 | | Mayo Oshin and Nuno Campos, *Learning LangChain* (O'Reilly, 2025). Chapter PDFs in [generative-ai/01-llm-fundamentals/sources/learning-langchain/](../../generative-ai/01-llm-fundamentals/sources/learning-langchain/). Folded in as: ch. 8 → [07](notes/07-orchestration.md#double-texting-the-same-problem-in-a-chat-app). Ch. 8's human-control material is in [loop engineering](../04-loop-engineering/references.md#books). Notes cite it as `(*Learning LangChain*, ch. N)` | 07 |
 
+## Courses and videos
+
+| Course | Platform, cost | Where | Use it for |
+|---|---|---|---|
+| *Claude Code: A Highly Agentic Coding Assistant* (Elie Schoppik) | DeepLearning.AI, free to enrol during the platform's beta; graded assignment and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/claude-code-a-highly-agentic-coding-assistant/) | A harness in daily use: lessons 4 to 6 with [01](notes/01-what-a-harness-is.md), lesson 8 (GitHub integration and hooks) with [05](notes/05-verification-loops.md) |
+| *MCP: Build Rich-Context AI Apps with Anthropic* (Elie Schoppik) | DeepLearning.AI, free to enrol during the platform's beta; graded quiz and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/mcp-build-rich-context-ai-apps-with-anthropic/) | Lessons 3, 5 and 6 (architecture, server, client) with [03](notes/03-tool-design.md) |
+| *Learn Harness Engineering* (walkinglabs) | GitHub, free, MIT licence | [repo](https://github.com/walkinglabs/learn-harness-engineering) | Lectures and projects behind this pillar; the mapping is in [About the upstream course](#about-the-upstream-course) |
+
 ## Primary sources
 
 | Source | Why read it | Maps to |

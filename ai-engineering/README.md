@@ -3,7 +3,7 @@
 > **Depth domain.** This folder goes deep on the five foundations of AI engineering, and on the
 > disciplines beneath and across them. Eval, which measures all of them, is the
 > [Eval pillar in generative-ai](../generative-ai/08-eval/README.md).
-> The [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) are the compressed
+> The [interviewing guides](../practice/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
 ---
@@ -44,15 +44,15 @@ after the five, in either order.
 
 | Foundation | Depth (here) | Summary guide | Seed note(s) |
 |---|---|---|---|
-| prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) (security) |
-| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/5-context-cost/00-overview.md) | [README](02-context-engineering/README.md#the-mental-model), [notes/06-memory.md](02-context-engineering/notes/06-memory.md) |
-| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [notes/01-what-a-harness-is.md](03-harness-engineering/notes/01-what-a-harness-is.md), [notes/07-orchestration.md](03-harness-engineering/notes/07-orchestration.md) |
-| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
-| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
-| eval (in generative-ai) | [generative-ai/08-eval/](../generative-ai/08-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](../generative-ai/08-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
+| prompt | [01-prompt-engineering/](01-prompt-engineering/README.md) | [2-llm-fundamentals](../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) | [README](01-prompt-engineering/README.md#rules-of-thumb) (summary), [notes/](01-prompt-engineering/notes/), [prompt-injection.md](../practice/interviewing/guides/7-security-safety/prompt-injection.md) (security) |
+| context | [02-context-engineering/](02-context-engineering/README.md) | [5-context-cost](../practice/interviewing/guides/5-context-cost/00-overview.md) | [README](02-context-engineering/README.md#the-mental-model), [notes/06-memory.md](02-context-engineering/notes/06-memory.md) |
+| harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) | [notes/01-what-a-harness-is.md](03-harness-engineering/notes/01-what-a-harness-is.md), [notes/07-orchestration.md](03-harness-engineering/notes/07-orchestration.md) |
+| loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
+| graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
+| eval (in generative-ai) | [generative-ai/08-eval/](../generative-ai/08-eval/README.md) | [6-evals-observability](../practice/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](../generative-ai/08-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
 | inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#reading-order), [notes/](07-inference-engineering/notes/) |
 | multimodal | [08-multimodal-engineering/](08-multimodal-engineering/README.md) | — (closest: 2-llm-fundamentals) | [README](08-multimodal-engineering/README.md#planned-notes) (notes not yet written) |
-| safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
+| safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](../practice/interviewing/guides/7-security-safety) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
 
 ---
 
@@ -91,9 +91,9 @@ primary source underneath). Update the sweep date and landed-notes list on each 
 No content is duplicated across `ai-engineering/` and `generative-ai/`. The cleaned operational
 notes (frontmatter `origin:`/`confidence:`) live *inside* each pillar directory (e.g.
 `01-prompt-engineering/README.md`), not in a separate `interviewing/notes/` layer — the five
-files remaining in sisyphus `interviewing/notes/` (`agents-self-training.md`, `case-interview.md`,
+files remaining in `practice/interviewing/notes/` (`agents-self-training.md`, `case-interview.md`,
 `foundations.md`, `reading-list.md`, `security.md`) are the ones not yet claimed by a pillar.
-`interviewing/guides/` (in sisyphus since 2026-10-28) is the only pointer-only layer: it summarizes for exam prep and links
+`practice/interviewing/guides/` is the only pointer-only layer: it summarizes for exam prep and links
 back here for depth.
 
 **Architecture decision (absorbed, not pointer-only):** operational notes were designed as a

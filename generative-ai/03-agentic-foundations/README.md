@@ -1,6 +1,6 @@
 # 03 — Agentic Foundations
 
-> Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/4-agents](../../practice/interviewing/guides/4-agents/00-overview.md)
 > Position in the path: third generative-ai pillar, after [02-rag-retrieval](../02-rag-retrieval/README.md) and before [04-agentic-frameworks](../04-agentic-frameworks/README.md).
 > Presumes: [01-llm-fundamentals](../01-llm-fundamentals/README.md), [02-rag-retrieval](../02-rag-retrieval/README.md).
 
@@ -166,7 +166,7 @@ The labs are not copied into this repo. Run them from upstream:
 - Papers (ReAct, MemGPT, Toolformer, prompt-injection patterns, multi-agent failures, Mem0, Tree of Thoughts, the planning survey, CoT limits) and the curated guides: [references.md](references.md).
 
 ### Interviewing guide
-- [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep: agent harness, tool use, loop design, memory, multi-agent orchestration.
+- [4-agents](../../practice/interviewing/guides/4-agents/00-overview.md): compressed summary for interview prep: agent harness, tool use, loop design, memory, multi-agent orchestration.
 
 ### Previous and next layer
 ← [02-rag-retrieval](../02-rag-retrieval/README.md): retrieval, which note 03 turns into agentic RAG.

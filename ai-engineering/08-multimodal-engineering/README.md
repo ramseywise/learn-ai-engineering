@@ -1,6 +1,6 @@
 # 08 — Multimodal Engineering
 
-> Depth layer. Summary: no dedicated interview guide yet; the closest are 2-llm-fundamentals and 4-agents, from [00-start-here](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
+> Depth layer. Summary: no dedicated interview guide yet; the closest are 2-llm-fundamentals and 4-agents, from [00-start-here](../../practice/interviewing/guides/00-start-here.md).
 > Position in the stack: *the same six layers, with inputs and outputs that aren't text*.
 > Jump to: [Scope](#scope) · [Reading order](#reading-order) · [References](#references)
 

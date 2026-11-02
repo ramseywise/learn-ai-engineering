@@ -129,7 +129,7 @@ lr 0.01                   train 0.988  test 0.958
 
 **The tuning recipe:** fix `n_estimators` by time budget, then search `learning_rate` and `max_depth`; or use a low learning rate with early stopping on a validation set.
 
-Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you.
+Because `n_estimators` and `learning_rate` trade against each other, a grid over both is wasteful; early stopping picks `n_estimators` for you. [Note 09](09-training-and-tuning.md#early-stopping-is-regularisation-too) explains why stopping acts as regularisation.
 
 ### HistGradientBoosting
 

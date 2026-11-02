@@ -98,4 +98,4 @@ Node 22.18+ runs `.ts` files directly by stripping the types, so there is no bui
 | [Anthropic TypeScript SDK](https://github.com/anthropics/anthropic-sdk-typescript) | MIT | Note 09 and the live example |
 | [Total TypeScript](https://www.totaltypescript.com/) (Matt Pocock), [TypeScript Deep Dive](https://basarat.gitbook.io/typescript/) (Basarat) | Proprietary / read online | Further reading, link only |
 
-Timed and interview-style problems in TypeScript are in [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md).
+Timed and interview-style problems in TypeScript are in [`practice/drills/`](../../practice/drills/README.md).

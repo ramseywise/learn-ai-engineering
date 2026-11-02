@@ -16,6 +16,16 @@
 
 ---
 
+## Courses and videos
+
+| Course | Platform, cost | Where | Use it for |
+|---|---|---|---|
+| *Evaluating AI Agents* (John Gilhuly, Aman Khan) | DeepLearning.AI, free to enrol during the platform's beta; graded quiz and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/evaluating-ai-agents/) | Router, skill and trajectory lessons with [06](notes/06-evaluating-agents.md), tracing with [08](notes/08-tracing-and-observability.md), the judge lesson with [05](notes/05-llm-as-judge.md) |
+| *Automated Testing for LLMOps* (Rob Zuber) | DeepLearning.AI, free to enrol during the platform's beta; graded quiz and certificate need Pro | [course](https://www.deeplearning.ai/short-courses/automated-testing-llmops/) | All of it with [10](notes/10-evals-in-ci.md) |
+| *AI Evals for Engineers & PMs* (Hamel Husain, Shreya Shankar) | Maven, paid: USD 4,400, live cohort | [course](https://maven.com/parlance-labs/evals) | Worth it only with a system to evaluate. Evaluator design with [05](notes/05-llm-as-judge.md), regression testing with [10](notes/10-evals-in-ci.md) |
+
+---
+
 ## Practitioner guides
 
 | | Source | Chapters |

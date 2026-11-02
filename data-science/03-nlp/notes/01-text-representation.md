@@ -400,7 +400,7 @@ flowchart LR
 - **Fitting the vectoriser on all the data.** The vocabulary and IDF then contain the test set. Put the vectoriser in the pipeline.
 - **Calling `.toarray()`.** A matrix with a few hundred thousand features and a few percent of a percent non-zero will not fit in memory as a dense array.
 - **`max_features` before `min_df` thinking.** Keeping the most frequent features keeps the corpus-specific stop words and throws away the rare, informative ones.
-- **Different preprocessing at inference.** A model trained on lemmas and served on raw text degrades with no error. One function, or a layer inside the model.
+- **Different preprocessing at inference.** A model trained on lemmas and served on raw text degrades with no error. This is [train/serve skew](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves): the world hasn't moved, but serving computes features differently from training. One function, or a layer inside the model.
 - **Normalising text for a neural model as if it were a linear one.** Pretrained transformers expect the text their tokeniser was built for, with case and punctuation.
 
 ## Try it

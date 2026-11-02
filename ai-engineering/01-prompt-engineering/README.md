@@ -1,6 +1,6 @@
 # 01 — Prompt Engineering
 
-> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md)
+> Depth layer. Summary: [interviewing/guides/2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md)
 > Position in the stack: innermost — *context contains prompts*.
 > Jump to: [Rules of thumb](#rules-of-thumb) · [Topic notes](#topic-notes-notes) · [References](#references)
 
@@ -70,7 +70,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 - **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the code snippets in each note, then read notes 07–11.
 - **Building something now:** the [vendor guides](references.md#vendor-guides) for your model, then [09 — evaluating prompts](notes/09-evaluating-prompts.md).
 - **Need an example prompt:** the [prompt library](notes/prompt-library.md).
-- **Security:** [10](notes/10-adversarial-prompting.md) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
+- **Security:** [10](notes/10-adversarial-prompting.md) and [prompt-injection.md](../../practice/interviewing/guides/7-security-safety/prompt-injection.md).
 
 ## Builds on and feeds into
 
@@ -139,9 +139,9 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 **Reference:** [prompt-library.md](notes/prompt-library.md) — copyable example prompts by task.
 
 ### Interviewing guides
-- [2-llm-fundamentals](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
-- [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/00-overview.md) — security angle on prompt injection.
-    - [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md) — the security facet: adversarial input manipulation.
+- [2-llm-fundamentals](../../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) — compressed summary for interview prep.
+- [7-security-safety](../../practice/interviewing/guides/7-security-safety/00-overview.md) — security angle on prompt injection.
+    - [prompt-injection.md](../../practice/interviewing/guides/7-security-safety/prompt-injection.md) — the security facet: adversarial input manipulation.
 
 ### Next layer
 → [02-context-engineering/](../02-context-engineering/README.md) — context engineering assembles the window that delivers your prompts.

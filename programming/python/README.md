@@ -135,4 +135,4 @@ local server, and the concurrency exercise simulates the network with sleeps.
 | Wes McKinney, *Python for Data Analysis*, 2nd ed. | Code and data MIT | The next pillar, [data-analytics 01](../../data-analytics/01-python-for-data-analysis/README.md) |
 | Luciano Ramalho, *Fluent Python* | Proprietary | Further reading for 03, link only |
 
-Timed and interview-style Python problems are in [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md).
+Timed and interview-style Python problems are in [`practice/drills/`](../../practice/drills/README.md).
