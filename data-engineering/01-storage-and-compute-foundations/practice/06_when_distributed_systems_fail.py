@@ -148,6 +148,20 @@ print(f"worst gap between heartbeats, undisturbed   {worst_gap(0):6.3f} s")
 print(f"worst gap between heartbeats, paused 0.8 s  {worst_gap(0.8):6.3f} s")
 print("--- pause done")
 
+# --- majority ---
+def can_decide(nodes, reachable):
+    return reachable > nodes // 2
+
+print("nodes  majority  tolerates")
+for n in (1, 2, 3, 4, 5, 7):
+    print(f"{n:>5}  {n // 2 + 1:>8}  {(n - 1) // 2:>9}")
+
+# A 5-node cluster splits. Which side may act?
+for left, right in ((3, 2), (4, 1), (2, 2)):
+    total = left + right
+    print(f"split {left}|{right} of {total}: left can decide={can_decide(total, left)}, right can decide={can_decide(total, right)}")
+print("--- majority done")
+
 # --- lease ---
 class Storage:
     def __init__(self, fence):
@@ -181,20 +195,6 @@ for fence in (False, True):
     print(" ", store.write("A", a, "part-2-from-stale-worker"))   # A wakes, still believes
     print("  final rows:", store.rows)
 print("--- lease done")
-
-# --- majority ---
-def can_decide(nodes, reachable):
-    return reachable > nodes // 2
-
-print("nodes  majority  tolerates")
-for n in (1, 2, 3, 4, 5, 7):
-    print(f"{n:>5}  {n // 2 + 1:>8}  {(n - 1) // 2:>9}")
-
-# A 5-node cluster splits. Which side may act?
-for left, right in ((3, 2), (4, 1), (2, 2)):
-    total = left + right
-    print(f"split {left}|{right} of {total}: left can decide={can_decide(total, left)}, right can decide={can_decide(total, right)}")
-print("--- majority done")
 
 # --- checksum ---
 import zlib
