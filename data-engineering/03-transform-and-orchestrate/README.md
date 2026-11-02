@@ -74,4 +74,10 @@ uv run --python 3.12 --with apache-airflow --with duckdb python 05_airflow.py   
 
 - **Zoomcamp:** [practice/datatalks-de/](practice/datatalks-de/) holds the DataTalks.Club [workflow orchestration](practice/datatalks-de/02-workflow-orchestration/) and [analytics engineering](practice/datatalks-de/04-analytics-engineering/) modules. Chapters 1 and 2 say what each needs in their Run labels. It is a snapshot: its orchestration module uses Mage, while the [current course](https://github.com/DataTalksClub/data-engineering-zoomcamp) uses Kestra.
 
-Sources: [references.md](references.md).
+## Primary texts
+
+- Kleppmann, *Designing Data-Intensive Applications*, ch. 8 to 10
+- Airflow 3.0 release notes
+- dbt documentation
+
+Everything else: [references.md](references.md).

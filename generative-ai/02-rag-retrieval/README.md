@@ -123,6 +123,16 @@ sources/       paper PDFs, routed book chapters (<book-slug>/chNN-*.pdf)
 
 ---
 
+## Primary texts
+
+- Huyen, *AI Engineering*, ch. 6
+- Li, *AI Agents in Depth*, ch. 3
+- Manning, Raghavan and Schütze, *Introduction to Information Retrieval*
+- Lewis et al., *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks*
+- Hasan, DeepLearning.AI, *Retrieval Augmented Generation (RAG)*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes elsewhere

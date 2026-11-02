@@ -129,6 +129,16 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 
 ---
 
+## Primary texts
+
+- Negro et al., *Knowledge Graphs and LLMs in Action*
+- Raieli and Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs*
+- Li, *AI Agents in Depth*, ch. 10
+- LangGraph documentation
+- Anthropic, *Building effective agents*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes elsewhere

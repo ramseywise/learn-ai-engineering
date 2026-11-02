@@ -79,4 +79,10 @@ uv run --no-project --python 3.12 --with pgserver --with 'psycopg[binary]' pytho
 uv run --with duckdb --with pyarrow --with numpy --with polars --with pyspark python 08_distributed_compute.py   # needs Java for the Spark sections
 ```
 
-Sources: [references.md](references.md).
+## Primary texts
+
+- Kleppmann, *Designing Data-Intensive Applications*: chapters 1 to 10 run through this pillar
+- Kimball and Ross, *The Data Warehouse Toolkit*, ch. 1
+- Dean and Ghemawat, *MapReduce*
+
+Everything else: [references.md](references.md).

@@ -95,6 +95,14 @@ practice/                    the lab, in TypeScript and Python
 
 Lecture deck: [`slides/inference-engineering.pptx`](slides/inference-engineering.pptx), a 4-part talk following one Llama-7B on an A100 from its first bandwidth sum to 244.7 tokens/s. Build with `make slides PILLAR=07-inference-engineering`.
 
+## Primary texts
+
+- Fregly, *AI Systems Performance Engineering*
+- Huyen, *AI Engineering*, ch. 9
+- Iusztin and Labonne, *LLM Engineer's Handbook*, ch. 8 and 10
+
+Everything else: [references.md](references.md).
+
 ## References
 
 See [references.md](references.md).

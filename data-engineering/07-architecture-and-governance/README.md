@@ -47,4 +47,11 @@
 
 **Chapter code:** every block runs top to bottom on synthetic data. Each chapter gives its `uv run --with ...` line near the start, and neither needs a server or a paid service. The SQL for Postgres in chapter 02 is marked illustrative because it needs a server.
 
-[References](references.md)
+## Primary texts
+
+- Serra, *Deciphering Data Architectures*, excerpts: attribution inferred from content
+- Kleppmann, *Designing Data-Intensive Applications*, ch. 12
+- Dehghani, *Data Mesh Principles and Logical Architecture*
+- The GDPR
+
+Everything else: [references.md](references.md).

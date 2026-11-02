@@ -133,6 +133,14 @@ Details are in the [coding-agent](practice/coding-agent/README.md) and [data-ana
 
 ---
 
+## Primary texts
+
+- Weights & Biases, *Building Agents from Scratch*
+- Li, *AI Agents in Depth*, ch. 6
+- Du et al., *DeepResearch Bench*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes

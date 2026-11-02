@@ -190,6 +190,15 @@ Trimmed templates live inline in the chapter that teaches them: the failure-taxo
 
 ---
 
+## Primary texts
+
+- Huyen, *AI Engineering*
+- Anthropic, *Demystifying evals for AI agents*
+- Husain and Shankar, *A field guide to rapidly improving AI products*
+- Li, *AI Agents in Depth*, ch. 7
+
+Everything else: [references.md](references.md).
+
 ## References
 
 Papers and guides mapped to chapters: [references.md](references.md). **★** marks the ones to read first.

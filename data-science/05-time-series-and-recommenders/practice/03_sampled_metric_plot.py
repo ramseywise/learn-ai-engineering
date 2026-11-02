@@ -121,7 +121,7 @@ ax.set(xlabel="Negatives each test item is ranked against", ylabel="HR@10", ylim
 ax.grid(False, axis="x")
 a, b = res["EASE"], res["Two-tower with logQ"]
 ax.annotate(f"99 negatives: EASE {a[0][1]:.3f}, tower {b[0][1]:.3f}", (1, max(a[0][1], b[0][1])), xytext=(14, 18), textcoords="offset points")
-ax.annotate(f"Full: EASE {a[1]:.3f}, tower {b[1]:.3f}", (len(negs), max(a[1], b[1])), xytext=(0, 22), textcoords="offset points", ha="right")
+ax.annotate(f"Full: EASE {a[1]:.3f}, tower {b[1]:.3f}", (len(negs), .30), ha="right")
 ax.legend(loc="upper right")
-ax.set_title("Sampled hit rates run high and can reverse the order of two models")
+ax.set_title("Sampled hit rates run high, and the tower leads until 999 negatives. Full catalogue: EASE")
 cs.save(fig, "recsys-sampled-metric.png")

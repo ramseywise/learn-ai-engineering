@@ -97,6 +97,14 @@ sources/       the AgentOps paper and the dashboard figure
 
 ---
 
+## Primary texts
+
+- Beyer et al., *Site Reliability Engineering*, ch. 6
+- Dong et al., *A Taxonomy of AgentOps*
+- Langfuse documentation
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes elsewhere

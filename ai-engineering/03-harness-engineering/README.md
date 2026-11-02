@@ -79,6 +79,15 @@ Related outside this pillar: PRINCE's retrieval stack (RAG, Text-to-SQL, NER) is
 
 ---
 
+## Primary texts
+
+- Albada, *Building Applications with AI Agents*
+- Rothman, *Context Engineering for Multi-Agent Systems*
+- OpenAI, *Harness engineering*
+- Anthropic, *Effective harnesses for long-running agents*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Interviewing guide

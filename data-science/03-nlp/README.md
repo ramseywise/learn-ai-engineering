@@ -101,3 +101,12 @@ The notebooks read `./data/`, so start Jupyter inside `practice/intro-to-nlp/`. 
 | `yelp_ratings.csv`, `text_emotion.csv`, `all_data_new.csv` | No recorded source, so the notebooks using these will not run on a fresh clone without a substitute |
 
 Kaggle downloads need a free account and, for the competition, accepting its rules.
+
+## Primary texts
+
+- Sarkar, *Text Analytics with Python*, 2nd ed.: the spine of this pillar
+- Bird et al., *Natural Language Processing with Python*
+- Jurafsky and Martin, *Speech and Language Processing*
+- Boykis, *What are embeddings?*
+
+Everything else: [references.md](references.md).

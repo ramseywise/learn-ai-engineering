@@ -100,6 +100,15 @@ sources/       the papers these notes cite, as PDFs
 
 ---
 
+## Primary texts
+
+- Phoenix and Taylor, *Prompt Engineering for Generative AI*
+- LangGraph documentation
+- Google ADK documentation
+- Chase and Weiss, *AI Agents in LangGraph*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes elsewhere

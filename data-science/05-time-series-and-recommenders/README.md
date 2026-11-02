@@ -69,3 +69,12 @@ The [customer segments lab](practice/customer-segments-lab/README.md) backs the 
 uv run --with scikit-learn --with pandas --with torch python practice/run_note.py notes/01-time-series-ml.md
 uv run --with numpy --with pandas --with scipy python practice/02_cf_lab.py
 ```
+
+## Primary texts
+
+- Hyndman and Athanasopoulos, *Forecasting: Principles and Practice*
+- Dacrema et al., *Are We Really Making Much Progress?*
+- Rendle et al., *Neural Collaborative Filtering vs. Matrix Factorization Revisited*
+- Makridakis et al., *M5 accuracy competition*
+
+Everything else: [references.md](references.md).

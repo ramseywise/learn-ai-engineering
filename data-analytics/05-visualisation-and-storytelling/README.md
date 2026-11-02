@@ -63,3 +63,10 @@ uv run --with numpy --with pandas --with altair --with streamlit streamlit run d
 cd js && npm install && npm run all     # Node 22; rebuilds the three JavaScript charts
 python3 -m http.server                  # then open localhost:8000 for the browser D3 chart
 ```
+
+## Primary texts
+
+- Knaflic, *Storytelling with Data*
+- VanderPlas, *Python Data Science Handbook*: background for the matplotlib chapter
+
+Everything else: [references.md](references.md).

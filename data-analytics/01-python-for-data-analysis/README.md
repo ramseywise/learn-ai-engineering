@@ -138,6 +138,13 @@ Scripts kept from earlier coursework, in [`courses/`](practice/courses). They ar
 | [`umich_pandas_basics.py`](practice/courses/umich_pandas_basics.py) | Michigan, *Applied Data Science with Python* | No. It reads `cars.csv` and `census.csv` from an old Desktop path, and the course data isn't redistributable. |
 | [`umich_visualization.py`](practice/courses/umich_visualization.py) | Michigan visualisation and Wesleyan *Data Analysis and Interpretation* | Partly. `iris.csv` is `sns.load_dataset("iris")`, and the NESARC survey file (`nesarc_pds.csv`) isn't included. |
 
+## Primary texts
+
+- McKinney, *Python for Data Analysis*: the base text
+- VanderPlas, *Python Data Science Handbook*
+
+Everything else: [references.md](references.md).
+
 ## Sources
 
 See [`references.md`](references.md) for books, papers and courses mapped to chapters. For the practice material:

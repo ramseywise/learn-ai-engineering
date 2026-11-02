@@ -73,4 +73,13 @@ Each chapter's code runs by itself: `uv run --with torch --with scikit-learn --w
 make slides PILLAR=data-science/02-deep-learning STRICT=1 PREVIEW=1
 ```
 
+## Primary texts
+
+- Buduma, *Fundamentals of Deep Learning*
+- Ng, *Machine Learning Yearning*
+- Raschka, *Build a Large Language Model (From Scratch)*, appendix A
+- Ng, *Deep Learning Specialization*
+
+Everything else: [references.md](references.md).
+
 Next pillar: [NLP](../03-nlp/README.md).

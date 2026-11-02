@@ -97,4 +97,13 @@ Add `--with dowhy` for the DoWhy block in chapter 4. Chapter 5 is the exception:
 | [AB-Bayes/AB_Testing_with_Python.ipynb](practice/AB-Bayes/AB_Testing_with_Python.ipynb) | Frequentist A/B analysis on the Kaggle `ab_data.csv` | Needs `ab_data.csv`, which is not in the repo, and imports for `statsmodels.stats.api` and `ceil`, which the notebook omits. [Chapter 1](notes/01-ab-testing.md) covers the same analysis on data it generates |
 | [ch05_matching_weighting.py](practice/ch05_matching_weighting.py) | Every table and figure in [chapter 5](notes/05-matching-and-weighting.md), on the club table from the shared retail generator | `uv run practice/ch05_matching_weighting.py` from this folder; the script finds its data from any directory. Under a minute; the first run also installs DoWhy |
 
+## Primary texts
+
+- Pearl, Glymour and Jewell, *Causal Inference in Statistics: A Primer*
+- Kohavi et al., *Controlled experiments on the web: survey and practical guide*
+- Cunningham, *Causal Inference: The Mixtape*
+- Bruce and Bruce, *Practical Statistics for Data Scientists*, ch. 3
+
+Everything else: [references.md](references.md).
+
 **Next:** [04 Bayesian Analysis](../04-bayesian-analysis/README.md). **Online evaluation of LLM features** continues in [the Eval pillar](../../generative-ai/08-eval/README.md). **References:** [references.md](references.md).

@@ -67,4 +67,10 @@ uv run --with duckdb --with pyarrow --with numpy --with pyyaml --with jsonschema
 
 - **Zoomcamp:** [practice/datatalks-de/](practice/datatalks-de/) holds the DataTalks.Club course [README](practice/datatalks-de/README.md), its [Docker and Terraform module](practice/datatalks-de/01-docker-terraform/) and its [project brief](practice/datatalks-de/projects/README.md). The Docker part runs offline after a CSV download; Terraform needs a GCP account. It is a snapshot, so its module numbers differ from the [current course](https://github.com/DataTalksClub/data-engineering-zoomcamp).
 
-Sources: [references.md](references.md).
+## Primary texts
+
+- Kimball and Ross, *The Data Warehouse Toolkit*
+- Kleppmann, *Designing Data-Intensive Applications*: ch. 3, 4, 11 and 12
+- Breck et al., *Data Validation for Machine Learning*
+
+Everything else: [references.md](references.md).

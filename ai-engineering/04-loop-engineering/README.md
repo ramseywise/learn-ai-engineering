@@ -101,6 +101,13 @@ sources/       the papers (Chen, Zhong, Zhu 2026) and images/ with every figure 
 
 ---
 
+## Primary texts
+
+- Albada, *Building Applications with AI Agents*
+- Oshin and Campos, *Learning LangChain*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related

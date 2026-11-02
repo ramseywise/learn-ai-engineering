@@ -81,3 +81,12 @@ uv run ch08_states_sequences.py     # sequenzo for the distance matrix
 uv run ch09_marketing_measurement.py   # pymc-marketing and nutpie, several minutes
 uv run ch10_operations_supply_chain.py # pulp with CBC, about half a minute
 ```
+
+## Primary texts
+
+- Hyndman and Athanasopoulos, *Forecasting: Principles and Practice*
+- Hernán and Robins, *Causal Inference: What If*
+- Fader and Hardie, *How to Project Customer Retention*
+- Siddiqi, *Intelligent Credit Scoring*: further reading, not read for these notes
+
+Everything else: [references.md](references.md).

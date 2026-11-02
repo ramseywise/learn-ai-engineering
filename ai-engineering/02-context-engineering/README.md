@@ -195,6 +195,15 @@ BM25 from scratch and retrieved few-shot (`pe-rag`) are worked examples in [gena
 
 ---
 
+## Primary texts
+
+- Stratis, *AI Agents with MCP*
+- Rothman, *Context Engineering for Multi-Agent Systems*
+- Mei et al., *A Survey of Context Engineering for LLMs*
+- Chroma, *Context Rot*
+
+Everything else: [references.md](references.md).
+
 ## References
 
 Papers with local PDFs, mapped to chapters: [references.md](references.md). PDFs: [sources/](sources/). **★** marks the ones to read first.

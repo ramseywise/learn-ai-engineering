@@ -134,6 +134,15 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 
 ---
 
+## Primary texts
+
+- Alammar and Grootendorst, *Hands-On Large Language Models*
+- Raschka, *Build a Large Language Model (From Scratch)*
+- Huyen, *AI Engineering*
+- Vaswani et al., *Attention Is All You Need*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 - [ai-engineering/01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md): technique depth (anatomy, output control, tools, reasoning models, optimization, adversarial prompting).

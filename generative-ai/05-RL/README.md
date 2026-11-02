@@ -103,6 +103,16 @@ Chapters 12 and 13 sit where the table puts them; they were split out of 02 and 
 
 ---
 
+## Primary texts
+
+- Sutton and Barto, *Reinforcement Learning: An Introduction*
+- Li, *AI Agents in Depth*, ch. 8
+- Huyen, *AI Engineering*, ch. 7
+- Lattimore and Szepesvári, *Bandit Algorithms*: further reading
+- Winder, *Reinforcement Learning: Industrial Applications of Intelligent Agents*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 **Related notes**

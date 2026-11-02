@@ -70,3 +70,12 @@ uv run --python 3.12 --with torch --with transformers --with tiktoken python pra
 | [`makemore/`](practice/nn-zero-to-hero/makemore/) | Five notebooks, `names.txt` | Offline, CPU |
 | [`nanogpt/bigram.py`](practice/nn-zero-to-hero/nanogpt/bigram.py), [`gpt.py`](practice/nn-zero-to-hero/nanogpt/gpt.py) | Bigram and full character-level transformer, `input.txt` | Offline; `bigram.py` on CPU, `gpt.py` on a GPU at default size |
 | [`nanogpt/build-nanogpt/`](practice/nn-zero-to-hero/nanogpt/build-nanogpt/) | GPT-2 reproduction | GPUs and FineWeb-Edu for training; [`play.ipynb`](practice/nn-zero-to-hero/nanogpt/build-nanogpt/play.ipynb) only needs the weights |
+
+## Primary texts
+
+- Karpathy, *Neural Networks: Zero to Hero*
+- Raschka, *Build a Large Language Model (From Scratch)*
+- Prince, *Understanding Deep Learning*
+- Goodfellow et al., *Deep Learning*
+
+Everything else: [references.md](references.md).

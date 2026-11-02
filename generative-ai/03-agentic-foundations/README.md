@@ -127,6 +127,15 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 
 ---
 
+## Primary texts
+
+- Li, *AI Agents in Depth*, ch. 1
+- Lakshmanan and Hapke, *Generative AI Design Patterns*
+- Koenigstein, *AI Agents: The Definitive Guide*
+- Yao et al., *ReAct*
+
+Everything else: [references.md](references.md).
+
 ## Resource map
 
 ### Related notes elsewhere

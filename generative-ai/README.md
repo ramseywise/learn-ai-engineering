@@ -1,10 +1,6 @@
 # Generative AI
 
-> **Depth domain.** This folder goes deep on the eight pillars of generative AI.
-> The [interviewing guides](../practice/interviewing/guides/00-start-here.md) are the compressed
-> summary layer — read those for exam prep. Read here for synthesis and depth.
-
----
+> Learn what language models do, how to ground and evaluate them, and how to build agentic applications that are useful rather than merely impressive.
 
 ## What this is
 
@@ -13,8 +9,17 @@ A course in building with large language models, from what a model is to a compl
 ## Why this order
 
 Each pillar exists because the previous one left a problem behind. A model on its own knows only its training data, so we give it retrieval. Retrieval answers questions but doesn't act, so we give it tools and a loop. A hand-written loop gets repetitive, so we compare the frameworks that own it. A base model doesn't behave like an assistant, and an agent doesn't get better by itself, so we look at how training shapes both. Once something runs, we have to see inside it and say whether it's any good, which is observability and eval, read together. With those in hand we can build the complete applications.
+## Course outcomes
 
-## The eight pillars
+By the end, you can explain the lifecycle and behaviour of LLMs; build and improve a retrieval system; design tool-using agents; compare frameworks; reason about RL and post-training; observe and evaluate systems; build applications; and implement key model mechanics from scratch.
+
+## Before you begin
+
+No formal prerequisite is required for Unit 01. [Programming: Python](../programming/python/README.md) makes labs substantially easier; [Data Analytics](../data-analytics/README.md) and [Data Science](../data-science/README.md) deepen evaluation and modelling topics.
+
+**Learning model:** read chapters in order, review with the deck, complete the pillar lab where supplied, and save the stated evidence. API keys, GPUs, and optional external services are never assumed unless the relevant README explicitly says so.
+
+## The nine pillars
 
 ```text
 01 LLM fundamentals → 02 RAG & retrieval → 03 Agentic foundations → 04 Agentic frameworks
@@ -28,23 +33,79 @@ Each pillar exists because the previous one left a problem behind. A model on it
 
 The numbers are stable folder names, not a strict sequence. 08 is the Eval pillar, moved here from ai-engineering, and it belongs beside 06 and before 07 in your reading. 09 is LLMs from scratch, moved here from data science, and it reads straight after 01.
 
-| Read | Pillar | The question it answers | Notes | Deck |
+| Read | Pillar | The question it answers | Mastery evidence | Deck |
 |---|---|---|---|---|
-| 1 | [01 LLM fundamentals](01-llm-fundamentals/README.md) | What are these models, and how do you prompt, call and adapt them? | 14 | [pptx](01-llm-fundamentals/slides/llm-fundamentals.pptx) |
-| 1b | [09 LLMs from scratch](09-llms-from-scratch/README.md) | What is inside a GPT, line by line? | 3 | [pptx](09-llms-from-scratch/slides/llms-from-scratch.pptx) |
-| 2 | [02 RAG & retrieval](02-rag-retrieval/README.md) | How do you give a model knowledge at inference time? | 14 | in progress |
-| 3 | [03 Agentic foundations](03-agentic-foundations/README.md) | How do models plan, use tools and work in loops? | 7 | [pptx](03-agentic-foundations/slides/agentic-foundations.pptx), [pdf](03-agentic-foundations/slides/agentic-foundations.pdf) |
-| 4 | [04 Agentic frameworks](04-agentic-frameworks/README.md) | What do LangGraph, ADK and LangSmith do for one research agent, and which should you pick? | 7 | [pptx](04-agentic-frameworks/slides/agentic-frameworks.pptx), [pdf](04-agentic-frameworks/slides/agentic-frameworks.pdf) |
-| 5 | [05 RL & alignment](05-RL/README.md) | How does a pretrained model become an assistant, and how are agents post-trained? | 14 | [pptx](05-RL/slides/rl-and-alignment.pptx), [pdf](05-RL/slides/rl-and-alignment.pdf) |
-| 6 | [06 Observability](06-observability/README.md) | What happened inside a run, and what did it cost? | 6 | [pptx](06-observability/slides/observability.pptx), [pdf](06-observability/slides/observability.pdf) |
-| 6 | [08 Eval](08-eval/README.md) | Was it any good, and is a difference real? | 13 | [pptx](08-eval/slides/eval-engineering.pptx), [pdf](08-eval/slides/eval-engineering.pdf) |
-| 7 | [07 Agentic applications](07-agentic-applications/README.md) | What does it take to ship a search, research, voice, coding or data-analysis agent? | 6 | [pptx](07-agentic-applications/slides/agentic-applications.pptx), [pdf](07-agentic-applications/slides/agentic-applications.pdf) |
+| 1 | [01 LLM fundamentals](01-llm-fundamentals/README.md) | What are these models, and how do you prompt, call and adapt them? | Explain and call an LLM with controlled decoding | [pptx](01-llm-fundamentals/slides/llm-fundamentals.pptx) |
+| 1b | [09 LLMs from scratch](09-llms-from-scratch/README.md) | What is inside a GPT, line by line? | Built/modified micrograd or nanoGPT exercise | [pptx](09-llms-from-scratch/slides/llms-from-scratch.pptx) |
+| 2 | [02 RAG & retrieval](02-rag-retrieval/README.md) | How do you give a model knowledge at inference time? | Measured retrieval pipeline | in progress |
+| 3 | [03 Agentic foundations](03-agentic-foundations/README.md) | How do models plan, use tools and work in loops? | Bounded agent design | [pptx](03-agentic-foundations/slides/agentic-foundations.pptx), [pdf](03-agentic-foundations/slides/agentic-foundations.pdf) |
+| 4 | [04 Agentic frameworks](04-agentic-frameworks/README.md) | What do LangGraph, ADK and LangSmith do for one research agent, and which should you pick? | Same workflow implemented and compared | [pptx](04-agentic-frameworks/slides/agentic-frameworks.pptx), [pdf](04-agentic-frameworks/slides/agentic-frameworks.pdf) |
+| 5 | [05 RL & alignment](05-RL/README.md) | How does a pretrained model become an assistant, and how are agents post-trained? | Policy/value experiment and limitation analysis | [pptx](05-RL/slides/rl-and-alignment.pptx), [pdf](05-RL/slides/rl-and-alignment.pdf) |
+| 6 | [06 Observability](06-observability/README.md) | What happened inside a run, and what did it cost? | Diagnosed trace and evaluation plan | [pptx](06-observability/slides/observability.pptx), [pdf](06-observability/slides/observability.pdf) |
+| 6 | [08 Eval](08-eval/README.md) | Was it any good, and is a difference real? | Reproducible evaluation report and gate | [pptx](08-eval/slides/eval-engineering.pptx), [pdf](08-eval/slides/eval-engineering.pdf) |
+| 7 | [07 Agentic applications](07-agentic-applications/README.md) | What does it take to ship a search, research, voice, coding or data-analysis agent? | Working application with boundaries | [pptx](07-agentic-applications/slides/agentic-applications.pptx), [pdf](07-agentic-applications/slides/agentic-applications.pdf) |
 
 **Reading 06 and 08 together.** Observability is the tooling: traces, scores, judges over exports and dashboards, worked on one support agent's bad fortnight. Eval is the discipline: what correct means, which tasks represent real use, whether a grader can be trusted, and whether a difference is real. Read 06 chapters 1 and 2 first so you have data to reason about, then Eval's chapters on [graders](08-eval/notes/04-graders.md) and [reading results](08-eval/notes/09-reading-results.md), then return for the rest of 06.
 
-Every pillar has the same shape: a `README.md` with reading order and rules of thumb, `notes/` numbered in reading order, `references.md` mapping every source to the notes that use it, `sources/` for local PDFs and figures, `practice/` for runnable labs, and `slides/` for the deck, rebuilt with `make slides PILLAR=generative-ai/<pillar> STRICT=1 PREVIEW=1`. See [ai-engineering/PILLAR-LAYOUT.md](../ai-engineering/PILLAR-LAYOUT.md).
+Every pillar has the same shape: a `README.md` with reading order and rules of thumb, `notes/` numbered in reading order, `references.md` mapping every source to the notes that use it, `sources/` for local PDFs and figures, `practice/` for runnable labs, and `slides/` for the deck, rebuilt with `make slides PILLAR=generative-ai/<pillar> STRICT=1 PREVIEW=1`. See the [pillar layout](../.claude/skills/pillar/references/pillar-layout.md).
 
-External courses, books, papers and tools are collected in each pillar's `references.md`; cross-pillar links are under [General resources](#general-resources). Bojie Li's *AI Agents in Depth* (Apache-2.0) is synthesised into pillars [03](03-agentic-foundations/README.md), [05](05-RL/README.md) and [07](07-agentic-applications/README.md).
+Bojie Li's *AI Agents in Depth* (Apache-2.0) is synthesised into pillars [03](03-agentic-foundations/README.md), [05](05-RL/README.md) and [07](07-agentic-applications/README.md). `deep_research_bench` and `deep-research-bot` are in [07's practice](07-agentic-applications/practice/).
+
+## Units
+
+### [01 LLM fundamentals](01-llm-fundamentals/README.md)
+
+**Objectives:** explain tokenisation, embeddings, attention ([Vaswani et al.](https://arxiv.org/abs/1706.03762)), scale, decoding, pretraining, instruction tuning, preference optimisation, PEFT, prompting, and local/open-weight inference ([Alammar and Grootendorst](https://www.llm-book.com/)); call models from code and diagnose hallucination.
+
+**Learning:** [chapters, deck, and practice](01-llm-fundamentals/README.md). **Evidence:** a small model experiment with documented prompt, parameters, output behaviour, and limits.
+
+### [02 RAG and retrieval](02-rag-retrieval/README.md)
+
+**Objectives:** design ingestion, chunking, indexing, hybrid retrieval, reranking, generation, production, agentic, cached, and managed RAG choices ([Lewis et al. 2020](https://arxiv.org/abs/2005.11401); Huyen, ch. 6); measure the bottleneck before tuning.
+
+**Learning:** [chapters and practice](02-rag-retrieval/README.md). **Evidence:** a retrieval system with a query set, retrieval/generation measurements, and a justified improvement. The deck is in progress.
+
+### [03 Agentic foundations](03-agentic-foundations/README.md)
+
+**Objectives:** define an agent boundary ([Li, ch. 1](https://github.com/bojieli/ai-agent-book)); design tool use and ReAct loops ([Yao et al. 2022](https://arxiv.org/abs/2210.03629)); externalise memory; choose multi-agent patterns; set autonomy and guardrails.
+
+**Learning:** [chapters and deck](03-agentic-foundations/README.md). **Evidence:** a bounded agent design specifying goals, tools, state, verifier, stop conditions, and failure handling.
+
+### [04 Agentic frameworks](04-agentic-frameworks/README.md)
+
+**Objectives:** compare orchestration abstractions, state, tools, memory, tracing, and deployment trade-offs ([LangGraph docs](https://docs.langchain.com/oss/python/langgraph/overview); [ADK docs](https://adk.dev/)); avoid confusing framework choice with agent design.
+
+**Learning:** [chapters, deck, and practice](04-agentic-frameworks/README.md). **Evidence:** the same narrow workflow implemented or specified in two frameworks with a reasoned choice.
+
+### [05 RL and alignment](05-RL/README.md)
+
+**Objectives:** reason about MDPs, value functions, policy optimisation ([Sutton and Barto](http://incompleteideas.net/book/the-book-2nd.html)), reward design, RLHF, constitutional approaches, and their failure modes ([Li, ch. 8](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter8.md)).
+
+**Learning:** [chapters, deck, and practice](05-RL/README.md). **Evidence:** a policy/value exercise plus a description of reward, feedback loop, and likely reward-hacking failure.
+
+### [06 Observability](06-observability/README.md)
+
+**Objectives:** instrument traces ([Dong et al.](https://arxiv.org/abs/2411.05285)); create datasets; score and compare runs; diagnose failures ([Beyer et al., ch. 6](https://sre.google/sre-book/monitoring-distributed-systems/)); manage latency and cost; turn observations into changes.
+
+**Learning:** [chapters, deck, and practice](06-observability/README.md). **Evidence:** a trace review with a named failure, measurement, intervention, and regression check.
+
+### [07 Agentic applications](07-agentic-applications/README.md)
+
+**Objectives:** assemble retrieval, tools, memory, evaluation, and controls into scoped application patterns, including research ([Du et al.](https://arxiv.org/abs/2506.11763); [Li, ch. 6](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter6.md)) and data-analysis agents.
+
+**Learning:** [chapters, deck, and practice](07-agentic-applications/README.md). **Evidence:** a working application with explicit permissions, data boundaries, success criteria, and human handoff.
+
+### [08 Eval](08-eval/README.md)
+
+**Objectives:** design task datasets ([Anthropic, *Demystifying evals*](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)); choose metrics; use human and model judges cautiously ([Husain and Shankar](https://hamel.dev/blog/posts/field-guide/)); analyse uncertainty; test regressions; make evaluation a release gate.
+
+**Learning:** [chapters, deck, and practice](08-eval/README.md). **Evidence:** a versioned evaluation report with failure taxonomy, confidence/uncertainty, and a CI or release decision.
+
+### [09 LLMs from scratch](09-llms-from-scratch/README.md)
+
+**Objectives:** implement automatic differentiation, train a character model, and understand the path from micrograd to a compact GPT ([Karpathy](https://karpathy.ai/zero-to-hero.html); [Raschka](https://www.manning.com/books/build-a-large-language-model-from-scratch)).
+
+**Learning:** [chapters, deck, and practice](09-llms-from-scratch/README.md). **Evidence:** a modified training run with hypothesis, metric, result, and explanation.
 
 ## Rules of thumb across the pillars
 
@@ -54,33 +115,6 @@ External courses, books, papers and tools are collected in each pillar's `refere
 - Read results by category; an average can rise while a safety rule breaks.
 - A coding agent's sentence is not a verdict and neither is a data agent's. Recompute, and keep some tests out of sight.
 - Choose by the numbers your own task produces, not a leaderboard.
-
----
-
-## Pillar → interviewing-guide crosswalk
-
-| Pillar | Depth (here) | Summary (guide) |
-|---|---|---|
-| LLM fundamentals | [01-llm-fundamentals](01-llm-fundamentals/README.md) | [2-llm-fundamentals](../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| RAG & retrieval | [02-rag-retrieval](02-rag-retrieval/README.md) | [3-rag](../practice/interviewing/guides/3-rag/00-overview.md) |
-| Agentic foundations | [03-agentic-foundations](03-agentic-foundations/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
-| Agentic frameworks | [04-agentic-frameworks](04-agentic-frameworks/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
-| RL & alignment | [05-RL](05-RL/README.md) | [2-llm-fundamentals](../practice/interviewing/guides/2-llm-fundamentals/00-overview.md) |
-| Observability | [06-observability](06-observability/README.md) | [6-evals-observability](../practice/interviewing/guides/6-evals-observability/00-overview.md) |
-| Agentic applications | [07-agentic-applications](07-agentic-applications/README.md) | [4-agents](../practice/interviewing/guides/4-agents/00-overview.md) |
-| Eval | [08-eval](08-eval/README.md) | [6-evals-observability](../practice/interviewing/guides/6-evals-observability/00-overview.md) |
-
----
-
-## Summary vs. depth split
-
-**Interviewing guides** = compressed summaries for exam prep, one per topic, at the depth an interview loop needs.
-
-**This folder** = depth for practitioners. Each pillar README says what the topic is, where it sits in the path, the order to read its notes in and the rules of thumb worth remembering, then links back to its guide.
-
-Notes live inside each pillar's `notes/` folder with frontmatter (`origin`, `sources`, `confidence`, `cleaned`). There is no separate pointer layer for generative-ai content; `practice/interviewing/guides/` is the only summary layer, and it links into both `ai-engineering/` and `generative-ai/` for depth.
-
----
 
 ## Relationship to ai-engineering
 
@@ -101,61 +135,25 @@ Temporal order: learn the gen-AI pillars first; the ai-engineering foundations (
 | 07 Agentic applications | [08-multimodal-engineering](../ai-engineering/08-multimodal-engineering/README.md) (voice and vision), [09-safety-and-security](../ai-engineering/09-safety-and-security/README.md) (what an agent may do) |
 | 08 Eval | Measures all of the above: the five ai-engineering foundations and the pillars here |
 
----
-
 ## TypeScript
 
 Runnable Anthropic SDK examples (single call, streaming, structured output, tool loop, multi-turn) are in [01-llm-fundamentals/practice/](01-llm-fundamentals/practice/01-typescript-sdk/README.md).
 Labs in the other pillars are Python unless their README says otherwise.
 
----
+## Completion standard and next steps
 
-## General resources
+Complete a portfolio containing a measured RAG system, a bounded agent design or implementation, an observability/evaluation report, and one end-to-end application. Each must name its task, data boundary, success metric, failure modes, and release or stop decision.
 
-Links that belong to no single pillar. They were kept from the retired `resources.md` (2026-10-31).
-Each pillar's own courses, books and papers are in its `references.md`.
+Continue to [AI Engineering](../ai-engineering/README.md) for production engineering discipline, or revisit [Data Science](../data-science/README.md) for modelling depth.
 
-### Python and ML toolchain
+## Primary texts
 
-These are the libraries the notebooks assume. Install per project with `uv`/`pip` from
-each project's `pyproject.toml`. Don't install them all at once.
+- Alammar and Grootendorst, *Hands-On Large Language Models*: Unit 01
+- Raschka, *Build a Large Language Model (From Scratch)*: Units 01 and 09
+- Huyen, *AI Engineering*: across Units 01, 02, 05 and 08
+- Li, *AI Agents in Depth*: Units 03, 05 and 07
+- Lakshmanan and Hapke, *Generative AI Design Patterns*: Unit 03
+- Sutton and Barto, *Reinforcement Learning: An Introduction*: Unit 05
+- Phoenix and Taylor, *Prompt Engineering for Generative AI*: Unit 04
 
-| Area | Libraries |
-|---|---|
-| Data | [NumPy](https://numpy.org/doc/), [pandas](https://pandas.pydata.org/docs/), [SciPy](https://docs.scipy.org/doc/scipy/), [Matplotlib](https://matplotlib.org/stable/), [seaborn](https://seaborn.pydata.org/) |
-| Classical ML | [scikit-learn](https://scikit-learn.org/stable/), [XGBoost](https://xgboost.readthedocs.io/), [LightGBM](https://lightgbm.readthedocs.io/), [CatBoost](https://catboost.ai/docs/) |
-| Deep learning | [PyTorch](https://pytorch.org/docs/), [TensorFlow](https://www.tensorflow.org/learn) / [Keras](https://keras.io/) |
-| Vision | [OpenCV](https://docs.opencv.org/), [scikit-image](https://scikit-image.org/docs/stable/), [Pillow](https://pillow.readthedocs.io/) |
-
-### Foundations (math, Python, classical ML)
-
-- [MIT 18.06 Linear Algebra](https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/) — Strang's lectures.
-- [CS50's Introduction to Programming with Python](https://www.edx.org/learn/python/harvard-university-cs50-s-introduction-to-programming-with-python); practice on [HackerRank Python](https://www.hackerrank.com/domains/python) (see [`programming/`](../practice/drills/README.md)).
-- [Machine Learning Specialization (Andrew Ng)](https://www.coursera.org/specializations/machine-learning-introduction) — the course behind [`data-science/`](../data-science/README.md)'s Ng notebooks.
-- [CS50's Introduction to AI](https://cs50.harvard.edu/ai/) and [AIMA](https://aima.cs.berkeley.edu/) — classical AI: search, reasoning, planning.
-- [Designing Machine Learning Systems](https://www.oreilly.com/library/view/designing-machine-learning/9781098107956/) (Huyen) and [Made With ML](https://madewithml.com/) — production ML.
-
-### Prompting → [ai-engineering/01-prompt](../ai-engineering/01-prompt-engineering/README.md)
-
-- [Anthropic prompt engineering docs](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) · [OpenAI Cookbook](https://cookbook.openai.com/)
-
-### Staying current
-
-- Papers: the [AI Papers of the Week](../ai-engineering/02-context-engineering/references.md) flow (`/papers` skill) · [Distill](https://distill.pub/) (archive)
-- Newsletters: [TLDR AI](https://tldr.tech/ai) · [The Rundown AI](https://www.therundown.ai/)
-
-## Removed
-
-Earlier versions of this README described `mcp-server-template/`, `mcp/`, `chatbot/berlin/`,
-and `chatbot/BERT/`. None of these were ever committed to this repo, and none remain on disk —
-they are not recoverable from git history. Recorded here because this README is the only
-surviving description of them:
-
-- `mcp-server-template/` — a generic FastMCP server template (env-var token auth → MCP tools),
-  extracted from a personal integration against a SaaS API.
-- `mcp/` — the original vendor-tied accounting-API integration that the template came from.
-- `chatbot/BERT/` — appeared to be real production work (AWS Lambda deployment code) rather
-  than course material.
-- `chatbot/berlin/` — a reference chatbot clone.
-
-`chatbot/deep_research_bench/` and `chatbot/deep-research-bot/` now live in [07-agentic-applications/practice/](07-agentic-applications/practice/).
+Links that belong to no single pillar: [references.md](references.md). Everything else: each pillar's own `references.md`.

@@ -111,4 +111,13 @@ Three legacy blocks in chapter 6 are marked `# illustrative`, because they show 
 | [week_6](practice/BayesianML/week_6) | Gaussian processes and Bayesian optimisation | Also needs GPy, GPyOpt and xgboost, installed with pip |
 | [final_assignment](practice/BayesianML/final_assignment) | "Finding the suspect": a VAE with Bayesian optimisation | Notebook with `utils.py`, in the pinned environment |
 
+## Primary texts
+
+- Davidson-Pilon, *Bayesian Methods for Hackers*: the spine of this pillar
+- McElreath, *Statistical Rethinking*
+- Gelman and Hill, *Data Analysis Using Regression and Multilevel/Hierarchical Models*: further reading
+- Downey, *Think Bayes*
+
+Everything else: [references.md](references.md).
+
 **Next:** [05 Visualisation and Storytelling](../05-visualisation-and-storytelling/README.md), for putting these answers in front of people. **References:** [references.md](references.md).

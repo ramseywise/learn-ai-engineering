@@ -82,6 +82,15 @@ The notes point out where Postgres or DuckDB differ from SQLite, mostly for date
 
 ---
 
+## Primary texts
+
+- Software Carpentry, *Databases and SQL*
+- PGExercises
+- Knight Lab, *SQL Murder Mystery*
+- Winand, *Use The Index, Luke*
+
+Everything else: [references.md](../references.md).
+
 ## Sources
 
 | Source | License | Used for |

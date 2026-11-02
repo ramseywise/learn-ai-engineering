@@ -94,4 +94,13 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
 ```
 
+## Primary texts
+
+- Müller and Guido, *Introduction to Machine Learning with Python*
+- James et al., *An Introduction to Statistical Learning with Applications in Python*
+- Ng, *Machine Learning Yearning*
+- Chen and Guestrin, *XGBoost*
+
+Everything else: [references.md](references.md).
+
 Next pillar: [Deep learning](../02-deep-learning/README.md).

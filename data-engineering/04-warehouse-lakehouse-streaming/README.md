@@ -49,4 +49,11 @@
 - **Practice:** [practice/datatalks-de](practice/datatalks-de). `03-data-warehouse` needs a GCP account with BigQuery. `05-batch` needs Java and Spark 3.x, and runs offline after its `download_data.sh`. `06-streaming` needs Docker for the broker (`docker compose up`, then the `python/json_example` producer and consumer).
 - **Chapter code:** every block without an `# illustrative` label runs locally. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
-[References](references.md)
+## Primary texts
+
+- Kleppmann, *Designing Data-Intensive Applications*: ch. 3, 6, 7, 10 to 12
+- Reis and Housley, *Fundamentals of Data Engineering*
+- Armbrust et al., *Delta Lake* and *Lakehouse*
+- Akidau et al., *The Dataflow Model*
+
+Everything else: [references.md](references.md).

@@ -87,6 +87,15 @@ Node 22.18+ runs `.ts` files directly by stripping the types, so there is no bui
 
 ---
 
+## Primary texts
+
+- TypeScript Handbook
+- *typescript-exercises*
+- *type-challenges*
+- Zod documentation
+
+Everything else: [references.md](../references.md).
+
 ## Sources
 
 | Source | License | Used for |

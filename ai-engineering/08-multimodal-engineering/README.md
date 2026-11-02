@@ -118,6 +118,14 @@ sources/images/              figures used in notes and slides
 slides/                      lecture deck (deck.yaml → .pptx + .pdf)
 ```
 
+## Primary texts
+
+- Phoenix and Taylor, *Prompt Engineering for Generative AI*, ch. 7 and 9
+- Noyan et al., *Vision Language Models* (not yet in the repo)
+- Alammar and Grootendorst, *Hands-On Large Language Models* (not yet in the repo)
+
+Everything else: [references.md](references.md).
+
 ## References
 
 See [references.md](references.md).

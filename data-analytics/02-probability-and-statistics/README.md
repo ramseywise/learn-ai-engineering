@@ -118,4 +118,13 @@ uv run --with numpy --with pandas --with scipy --with statsmodels python
 | [courses/wesleyan_inferential_statistics.py](practice/courses/wesleyan_inferential_statistics.py) | ANOVA, chi-square and Tukey via formulas on NESARC | Same data requirement |
 | [courses/umich_statistical_analysis.py](practice/courses/umich_statistical_analysis.py) | Michigan coursework on statistical analysis | Read as a worked example; check its data paths first |
 
+## Primary texts
+
+- Bruce and Bruce, *Practical Statistics for Data Scientists*
+- Reinhart, *Statistics Done Wrong*
+- James et al., *An Introduction to Statistical Learning with Applications in Python*
+- Huntington-Klein, *The Effect*
+
+Everything else: [references.md](references.md).
+
 **Next:** [03 Experimentation and Causality](../03-experimentation-and-causality/README.md). **References:** [references.md](references.md).

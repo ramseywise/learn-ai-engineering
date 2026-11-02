@@ -148,6 +148,14 @@ A prompt eval harness: three prompt variants over twelve labelled tickets, three
 
 ---
 
+## Primary texts
+
+- Berryman and Ziegler, *Prompt Engineering for LLMs*: the backbone of this pillar
+- Huyen, *AI Engineering*, ch. 5: prompts and defences
+- Phoenix and Taylor, *Prompt Engineering for Generative AI*: the five principles, ch. 1 and 3
+
+Everything else: [references.md](references.md).
+
 ## References
 
 Every source behind the notes, mapped to chapters: [references.md](references.md).

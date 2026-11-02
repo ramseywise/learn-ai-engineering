@@ -49,4 +49,11 @@
 - **Practice:** this pillar has no folder of its own. The monitoring coursework is [06-ml-platform/practice/datatalks-mlops/05-monitoring](../06-ml-platform/practice/datatalks-mlops/05-monitoring): the baseline notebook needs Python and `evidently<0.7`; the stack needs Docker (`docker-compose up`, then `evidently_metrics_calculation.py`). dbt tests are exercised in [03-transform-and-orchestrate/practice](../03-transform-and-orchestrate/practice).
 - **Chapter code:** every block without an `# illustrative` label runs locally on synthetic data. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
-[References](references.md)
+## Primary texts
+
+- Beyer et al., *Site Reliability Engineering*
+- Schelter et al., *Automating Large-Scale Data Quality Verification*
+- Breck et al., *Data Validation for Machine Learning* and *The ML Test Score*
+- Kleppmann, *Designing Data-Intensive Applications*, ch. 12
+
+Everything else: [references.md](references.md).

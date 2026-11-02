@@ -53,4 +53,11 @@
 - **Practice:** [practice/datatalks-mlops](practice/datatalks-mlops) is the MLOps Zoomcamp coursework, modules 01 to 07. Each module has a README. Modules 01 and 02 need Python and the taxi data. Module 03 needs an orchestrator (Prefect, or the folder's own instructions). Module 04's `web-service` needs Docker; `web-service-mlflow`, `streaming` and `batch` need AWS for the real thing. Module 05 needs Docker for its Postgres and Grafana stack. Module 06's unit tests run offline with `pipenv install --dev && pytest tests/`; its integration test needs Docker but no AWS account; its Terraform needs AWS.
 - **Chapter code:** every block without an `# illustrative` label runs locally on synthetic data. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
-[References](references.md)
+## Primary texts
+
+- Wilson, *Machine Learning Engineering in Action*
+- Shankar et al., *Operationalizing Machine Learning*
+- Gama et al., *A Survey on Concept Drift Adaptation*
+- Kleppmann, *Designing Data-Intensive Applications*, ch. 11
+
+Everything else: [references.md](references.md).

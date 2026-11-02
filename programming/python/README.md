@@ -124,6 +124,15 @@ local server, and the concurrency exercise simulates the network with sleeps.
 
 ---
 
+## Primary texts
+
+- Severance, *Python for Everybody*: topic order for modules 01 and 02, paraphrased
+- VanderPlas, *A Whirlwind Tour of Python*
+- Python documentation
+- Ramalho, *Fluent Python*: further reading
+
+Everything else: [references.md](../references.md).
+
 ## Sources
 
 | Source | License | Used for |

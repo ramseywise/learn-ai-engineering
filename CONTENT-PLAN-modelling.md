@@ -58,7 +58,7 @@ Measured 2026-11-02 by reading the notes, not by word count.
 All inside existing pillars. Chapter numbers continue each pillar's sequence so that no link, deck or
 slide breaks. Each chapter follows the standard in [CONTENT-PLAN.md §2.2](CONTENT-PLAN.md): hook, concepts
 with runnable code, a figure, pitfalls, try-it, interview checklist, next. Practice is one `# %%` script
-per chapter, like pillar 06's, and Fernhill stays the running example wherever a dataset is needed.
+per chapter, like pillar 06's, and Fernhill stays the running example wherever a dataset is needed, except DA 02/07, 02/08 and 04/07, which use Larkspur or a plain simulation.
 
 ### 2.1 data-analytics 02, probability and statistics
 
@@ -73,7 +73,7 @@ Chapter 06's *Next* changes from pillar 03 to chapter 07. Chapter 08's *Next* po
 
 | # | Chapter | What it teaches | Code |
 |---|---|---|---|
-| 05 | **Matching and weighting** | One observational question answered six ways on the same Fernhill data, with the known truth from the generator: naive difference, regression adjustment, exact matching, coarsened exact matching, nearest-neighbour propensity matching with a caliper, propensity weighting (from chapter 04), entropy balancing. Balance tables and a Love plot before any outcome is looked at. Overlap and the common-support region. Sensitivity to an unobserved confounder (Rosenbaum bounds, or the E-value). The backdoor criterion stated as a rule, with Pearl's primer as the source | `statsmodels`, a 40-line CEM and nearest-neighbour matcher written in pandas (teaches more than a library call), `scipy.optimize` for entropy balancing weights, DoWhy's estimators as the cross-check |
+| 05 | **Matching and weighting** | One observational question answered six ways on the same Fernhill data, against the naive difference and with the known truth from the generator: regression adjustment, exact matching, coarsened exact matching, nearest-neighbour propensity matching with a caliper, propensity weighting (from chapter 04), entropy balancing. Balance tables and a Love plot before any outcome is looked at. Overlap and the common-support region. Sensitivity to an unobserved confounder (Rosenbaum bounds, or the E-value). The backdoor criterion stated as a rule, with Pearl's primer as the source | `statsmodels`, a 40-line CEM and nearest-neighbour matcher written in pandas (teaches more than a library call), `scipy.optimize` for entropy balancing weights, DoWhy's estimators as the cross-check |
 
 Chapter 04's matching row shrinks to a pointer. Chapter 04 gains a short section on the backdoor and
 front-door criteria citing Pearl, Glymour and Jewell. Pillar README's reading order becomes five.
@@ -92,7 +92,7 @@ where partial pooling has the most to show. Three constraints to design around:
 - **Crossed effects.** `MixedLM` handles nested groups directly, and crossed effects need the awkward
   single-group workaround its docs describe. Keep the examples nested and say so.
 - **Few groups.** With a handful of segments the between-group variance is poorly estimated. Show this
-  rather than promising that partial pooling always helps. Gelman has written publicly that he still worries
+  (few groups alone do not make pooling lose, in the chapter's run) rather than promising that partial pooling always helps. Gelman has written publicly that he still worries
   about multiple comparisons despite the 2012 paper, so cite that paper with that caveat.
 
 Pointers go in from [02/06](data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md),
@@ -104,7 +104,7 @@ Pointers go in from [02/06](data-analytics/02-probability-and-statistics/notes/0
 | # | Chapter | The question | What it teaches | Code |
 |---|---|---|---|---|
 | 07 | **Survival and event history: when will a customer leave?** | Fernhill's subscription box: who churns, when, and does the welcome call delay it? | Censoring, and why a mean lifetime from churned customers only is wrong. Kaplan-Meier curves by channel and the log-rank test. Cox proportional hazards: hazard ratios, the proportional-hazards check, time-varying covariates (a price rise mid-life). Competing risks (cancel vs downgrade) in one paragraph. How the Cox model relates to the sBG curve in chapter 03 and to the logistic regression in chapter 02 (a discrete-time hazard is a logit on person-periods) | `lifelines` (`KaplanMeierFitter`, `CoxPHFitter`, `check_assumptions`), `statsmodels` logit on person-period rows |
-| 08 | **States and sequences: Markov chains and optimal matching** | Which journeys lead to a second order, and what is a customer in each state worth? | Customer states (new, active, lapsed, churned) and the transition matrix estimated from the order log. Absorbing states and expected time to churn. Markov CLV: value of a state as discounted expected reward (Pfeifer and Carraway). Then the sociological turn: journeys as strings, edit distance and optimal matching (Abbott), clustering the dissimilarity matrix into journey types, and a typical-sequence plot. Why this is description, not prediction, and when that is the right deliverable | NumPy for the chain and its fundamental matrix, `sequenzo` (Python port of TraMineR) or a 30-line Needleman-Wunsch for optimal matching, `scipy.cluster.hierarchy` |
+| 08 | **States and sequences: Markov chains and optimal matching** | Which journeys lead to a second order, and what is a customer in each state worth? | Customer states (new, active, lapsed, churned) and the transition matrix, estimated from the generator's monthly journeys (`load_journeys`), because the order log carries no chain truth. Absorbing states and expected time to churn. Markov CLV: value of a state as discounted expected reward (Pfeifer and Carraway). Then the sociological turn: journeys as strings, edit distance and optimal matching (Abbott), clustering the dissimilarity matrix into journey types, and a typical-sequence plot. Why this is description, not prediction, and when that is the right deliverable | NumPy for the chain and its fundamental matrix, `sequenzo` (Python port of TraMineR) or a 30-line Needleman-Wunsch for optimal matching, `scipy.cluster.hierarchy` |
 | 09 | **Marketing measurement: attribution, mix models and lifetime value** | Where should next quarter's budget go, and what is a new customer worth? | Last-touch and Shapley attribution on the same paths, and why both are accounting rather than causation. Adstock and saturation. A small Bayesian marketing mix model with priors from a past geo test. BG/NBD and Gamma-Gamma fitted to Fernhill's non-contractual log, closing the pointer left in chapter 03. LTV to CAC with a posterior rather than a point. Incrementality as the thing an A/B test measures and an MMM estimates | `pymc-marketing` (`BetaGeoModel`, `GammaGammaModel`, `MMM`), with a note that Meridian and Robyn do the same job at scale |
 | 10 | **Operations and supply chain: stock, queues and a plan** | How much of each product should the warehouse hold, and how many packers on a Monday? | Newsvendor from the forecast distribution of chapter 01: critical fractile, cost of under and over. EOQ and safety stock, with service level as the decision. Little's law and an M/M/c queue for the packing line. A linear programme for the shift plan. Each model is run against the simulated truth from `retail.py` | NumPy and SciPy for the closed forms, `pulp` for the LP, a short simulation for the queue |
 
@@ -117,7 +117,7 @@ chapters.
 
 | # | Chapter | What it teaches | Code |
 |---|---|---|---|
-| 11 | **Choosing a metric: start from the target** | A short map, not a second copy of the detail, which stays in each chapter. The organising idea is Gneiting's: the loss decides what the model estimates (squared error the mean, absolute error the median, pinball a quantile), so the metric has to match the decision. Then one row per target, below. One worked example runs several models on the same rare-class data, so the reader watches accuracy mislead. A small ranking example shows MRR and NDCG disagreeing. Ranking metrics need results grouped by query, so that example uses its own small simulated query set | `sklearn.metrics` (`matthews_corrcoef`, `balanced_accuracy_score`, `ndcg_score`, `mean_poisson_deviance`), MRR in a few lines of NumPy, and the credit lab's data once that lab is finished |
+| 11 | **Choosing a metric: start from the target** | A short map, not a second copy of the detail, which stays in each chapter. The organising idea is Gneiting's: the loss decides what the model estimates (squared error the mean, absolute error the median, and an asymmetric piecewise linear loss, usually called pinball, a quantile), so the metric has to match the decision. Then one row per target, below. One worked example runs several models on the same rare-class data, so the reader watches accuracy mislead. A small ranking example shows MRR and NDCG disagreeing. Ranking metrics need results grouped by query, so that example uses its own small simulated query set | `sklearn.metrics` (`matthews_corrcoef`, `balanced_accuracy_score`, `ndcg_score`, `mean_poisson_deviance`), MRR in a few lines of NumPy, and the credit lab's data once that lab is finished |
 
 The map the chapter is built around:
 
@@ -181,7 +181,7 @@ demonstration:
   time, written down before it is scored. A rule that matches the rows you read is memorisation.
 - **Treat a slice scan as many tests.** Scan fifty slices and some look terrible by chance. Apply the correction
   from DA 02/05, confirm on the blackbox set, and use the partial pooling from [DA 04/07](data-analytics/04-bayesian-analysis/README.md) for small groups.
-- **Count the rounds.** Every look at a holdout leaks a little (Dwork et al.). After several rounds of changes,
+- **Count the rounds.** Repeated adaptive use of a holdout can overfit it (Dwork et al.). After several rounds of changes,
   refresh the blackbox set.
 - **Watch for hindsight features.** Reading a missed defaulter suggests features known only after the outcome.
   Check each new feature's timestamp against the decision.
@@ -257,7 +257,7 @@ These prompt changes are hypotheses, so each one has to win on dev before it sta
 
 **4. Test whether a critique reports what drove the verdict.** Coding critiques assumes they are honest, and
 the evidence says that often fails. Marioriyad et al. injected cues such as source and recency, and found
-strong verdict shifts with acknowledgement at or near zero. So the note adds two tests:
+strong verdict shifts with acknowledgement often at or near zero, though it reached 58 to 76% in some cells. So the note adds two tests:
 
 - **Cue test.** Add a cue that should not matter, and record both the verdict shift rate and how often the
   critique mentions the cue.
@@ -265,8 +265,7 @@ strong verdict shifts with acknowledgement at or near zero. So the note adds two
   doesn't, that critique is not a guide to what to fix.
 
 Tapwal et al.'s evidence-first prompt, *Proof-Before-Preference*, is the mitigation to try: it locks the
-evidence before scoring. Note 05's line that reasoning first "improves accuracy" has no source today, so find one
-or soften it when this note goes in. Mittal and Arike add a warning: judges
+evidence before scoring. Note 05's line that reasoning first "improves accuracy" had no source, and it now reads "test any accuracy gain". Mittal and Arike add a warning: judges
 often detect that a reasoning error exists but struggle to locate it, and they overestimate completeness.
 Don't rely on a judge alone to grade reasoning.
 
@@ -294,7 +293,7 @@ The rule to add to [ai-engineering/PILLAR-LAYOUT.md](ai-engineering/PILLAR-LAYOU
 README has a **Builds on** table (which earlier chapters in other subjects it assumes, with one line on
 why) and a **Feeds into** table (which later chapters use it). `scripts/check_chapters.py` warns when a
 pillar README has neither. Chapter-level links go inline where the concept is first used, in the form
-"see [chapter](path) in data analytics for the derivation".
+"see the linked chapter in data analytics for the derivation", with the link pointing at the note.
 
 ### 3.1 data-science points back to data-analytics
 
@@ -358,7 +357,7 @@ and AIE 01; 04 to DS 03/03 and GA 05; 05 to GA 06; 06 to DS 05 and DE 06.
 | Note | Links to | Why |
 |---|---|---|
 | [02/06 Regression](data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | DS 01/11 (new), DA 04/07 (new) | The flowchart covers the regression family, and the map covers the rest. Clustered SEs lead on to multilevel |
-| [02/02 Probability foundations](data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | DA 04/07 (new) | The intraclass correlation it introduces is a model parameter there |
+| [02/02 Probability foundations](data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | DA 04/07 (new) | Its independence section is where clustered rows first matter; the note does not name the intraclass correlation, which is a model parameter there |
 | [03/02 Metrics and KPI design](data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) | DS 01/11 (new) | Business metrics and model metrics are different questions; say which is which |
 | [03/03 Experimentation at scale](data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md), [04/04 Bayesian A/B](data-analytics/04-bayesian-analysis/notes/04-bayesian-ab-testing.md) | DA 04/07 (new) | Per-segment and per-market readouts |
 | [04/02 MCMC](data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md) | DA 04/07 (new) | Eight schools shows the sampler there, and the model is taught here |
@@ -410,8 +409,7 @@ Two points to state where the thread is taught:
 ## 4. Sources
 
 Books held in `data-analytics/sources/` stay there. Everything below is new. Free texts are linked, not
-vendored, unless the licence allows a copy (Hernán and Robins, Grinstead and Snell, the Pearl primer
-draft). Add the papers through `scripts/papers/discover/curated.jsonl` with `home: analytics` and the
+vendored, unless the licence allows a copy (Hernán and Robins, Grinstead and Snell). Add the papers through `scripts/papers/discover/curated.jsonl` with `home: analytics` and the
 note path, then `discover.py curated` and `potw.py triage`, so the ledger tracks them as it does the
 rest. Books that are not held get `link-only` rows.
 
@@ -423,12 +421,12 @@ Huntington-Klein. Both lines belong here, and the table says which chapter each 
 
 | Book | Free? | Chapters it serves | Role |
 |---|---|---|---|
-| Pearl, Glymour and Jewell, *Causal Inference in Statistics: A Primer* (Wiley, 2016). A complete draft is posted at [UCLA](https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf); check the licence before copying it to sources/ | draft free | DA 03/04, 03/05 | ★ primary for the backdoor criterion and do-calculus in plain terms |
+| Pearl, Glymour and Jewell, *Causal Inference in Statistics: A Primer* (Wiley, 2016). A complete draft is posted at [UCLA](https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf); no licence permits a copy, so link to it only | draft free | DA 03/04, 03/05 | ★ primary for the backdoor criterion and do-calculus in plain terms |
 | Pearl, *Causality: Models, Reasoning and Inference*, 2nd ed. (Cambridge, 2009) | no | DA 03/04 | further reading; the primer is enough for the chapters |
 | Pearl and Mackenzie, *The Book of Why* (Basic Books, 2018) | no | DA 03 README | the narrative version, for the pillar's story paragraph |
 | Hernán and Robins, [*Causal Inference: What If*](https://miguelhernan.org/whatifbook) (Chapman and Hall/CRC; free PDF from the authors, use the latest dated version) | yes | DA 03/04, 03/05, 06/07 | ★ primary for matching, IP weighting, and the survival chapter's causal reading (Part II has survival analysis) |
 | Huntington-Klein, [*The Effect: An Introduction to Research Design and Causality*](https://theeffectbook.net/) (CRC, 2022; free online, R, Stata and Python code) | yes | DA 02/08, 03/05 | ★ primary for fixed effects, event studies and matching, in a register close to this course's |
-| Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) | yes | DA 03/05 | already listed; add the matching chapter to its row |
+| Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) | yes | DA 03/05 | already listed; add the matching chapter to its row, citing the book's root, since chapter URLs return 404 |
 | Facure, [*Causal Inference for the Brave and True*](https://matheusfacure.github.io/python-causality-handbook/) (MIT licence, Python notebooks) | yes | DA 03/05, 02/08 | the Python companion to the two above; its matching and panel chapters are runnable |
 | Angrist and Pischke, *Mostly Harmless Econometrics* (Princeton, 2009) and *Mastering 'Metrics* (2014) | no | DA 02/07, 02/08, 03/05 | the econometrics canon; cite for the "furious five" framing and for why OLS is the workhorse |
 | Wooldridge, *Introductory Econometrics: A Modern Approach* (Cengage, 7th ed.) | no | DA 02/07, 02/08 | the undergraduate reference for specification, functional form and panel data |
@@ -437,10 +435,10 @@ Huntington-Klein. Both lines belong here, and the table says which chapter each 
 | McElreath, *Statistical Rethinking*, multilevel chapters | draft held in sources/ | DA 04/07 | the PyMC-friendly treatment of partial pooling; check the chapter numbers in the held draft |
 | Shmueli, [*To Explain or to Predict?*](https://projecteuclid.org/euclid.ss/1294167961) (Statistical Science, 2010; open access, [arXiv:1101.0891](https://arxiv.org/abs/1101.0891)) | yes | DA 02/07, DS 01/01 | ★ the paper the DGP chapter is organised around; also cited from data-science |
 | Breiman, *Statistical Modeling: The Two Cultures* (Statistical Science, 2001) | yes | DA 02/07, DS 01/01 | the other half of that argument |
-| Meng, [*Statistical Paradises and Paradoxes in Big Data (I)*](https://projecteuclid.org/euclid.aoas/1532743473) (Annals of Applied Statistics, 2018; [Harvard PDF](https://statistics.fas.harvard.edu/resource/statisticalparadisesandparadoxesinbigdatapdf)) | yes | DA 02/07, 02/03 | ★ the data-quality identity behind "big is not representative" |
+| Meng, [*Statistical Paradises and Paradoxes in Big Data (I)*](https://projecteuclid.org/euclid.aoas/1532743473) (Annals of Applied Statistics, 2018; the Harvard PDF URL now returns 403) | yes | DA 02/07, 02/03 | ★ the data-quality identity behind "big is not representative" |
 | Kleinbaum and Klein, *Survival Analysis: A Self-Learning Text*, 3rd ed. (Springer, 2012) | no | DA 06/07 | the gentlest survival text |
 | Box-Steffensmeier and Jones, *Event History Modeling: A Guide for Social Scientists* (Cambridge, 2004) | no | DA 06/07 | the social-science framing of time-to-event |
-| Grinstead and Snell, [*Introduction to Probability*](https://www.stat.berkeley.edu/users/aldous/134/grinstead.pdf) (AMS, 2nd ed.; GNU FDL, chapter 11 Markov chains) | yes | DA 06/08, DA 02/02 | ★ absorbing and ergodic chains with the fundamental matrix, free to copy into sources/ |
+| Grinstead and Snell, [*Introduction to Probability*](https://www.stat.berkeley.edu/users/aldous/134/grinstead.pdf) (AMS, 2nd ed.; GNU FDL, chapter 11 Markov chains) | yes | DA 06/08 (ch. 11), DA 02/02 (ch. 4) | ★ absorbing and ergodic chains with the fundamental matrix, free to copy into sources/ |
 | Cachon and Terwiesch, *Matching Supply with Demand*, 5th ed. (McGraw-Hill, 2024; chapter 14 is the newsvendor) | no | DA 06/10 | the MBA operations text; Terwiesch's Coursera course is the free lecture track |
 | Hillier and Lieberman, *Introduction to Operations Research* (McGraw-Hill) | no | DA 06/10 | queueing and LP reference |
 | Ng, [*Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) (free PDF) | yes | DS 01/12, DS 02/03 | ★ error analysis and the eyeball and blackbox dev sets |
@@ -456,31 +454,31 @@ Huntington-Klein. Both lines belong here, and the table says which chapter each 
 | Gelman, Hill and Yajima, [*Why We (Usually) Don't Have to Worry About Multiple Comparisons*](https://arxiv.org/abs/0907.2478) (J. Research on Educational Effectiveness, 2012) | DA 04/07 | ★ partial pooling moves estimates where corrections widen intervals; the argument for the A/B application |
 | McNeish, Stapleton and Silverman, *On the Unnecessary Ubiquity of Hierarchical Linear Modeling* (Psychological Methods, 2017) | DA 04/07 | the case for clustered SEs when the group effects are not the question; read the full text before citing, since search reached only a summary |
 | Bell and Jones, [*Explaining Fixed Effects*](https://eprints.whiterose.ac.uk/89757) (Political Science Research and Methods, 2015; open access) | DA 04/07, 02/08 | the counter-case: a well-specified random-effects model can do what fixed effects do |
-| Cameron and Miller, [*A Practitioner's Guide to Cluster-Robust Inference*](https://doi.org/10.3368/jhr.50.2.317) (J. Human Resources, 2015; paywalled) | DA 04/07, 02/06 | few clusters, multiway clustering, and fixed effects with clustering |
+| Cameron and Miller, [*A Practitioner's Guide to Cluster-Robust Inference*](https://doi.org/10.3368/jhr.50.2.317) (J. Human Resources, 2015; paywalled, with the authors' manuscript [free](https://cameron.econ.ucdavis.edu/research/Cameron_Miller_JHR_2015_February.pdf)) | DA 04/07, 02/06 | few clusters, multiway clustering, and fixed effects with clustering |
 | Gneiting, [*Making and Evaluating Point Forecasts*](https://arxiv.org/abs/0912.0902) (JASA, 2011) | DS 01/11 | ★ why the loss has to match the quantity you want reported |
 | Chicco and Jurman, [*The Advantages of the Matthews Correlation Coefficient*](https://doi.org/10.1186/s12864-019-6413-7) (BMC Genomics, 2020; open access) | DS 01/04, 01/11 | Matthews correlation against accuracy and F1; it advocates, so pair it with the cost-based view in DS 01/10 |
 | Saito and Rehmsmeier, [*The Precision-Recall Plot Is More Informative than the ROC Plot*](https://doi.org/10.1371/journal.pone.0118432) (PLOS ONE, 2015; open access) | DS 01/11 | the rare-class example |
-| Brodersen et al., *The Balanced Accuracy and Its Posterior Distribution* (ICPR, 2010; paywalled) | DS 01/04, 01/11 | balanced accuracy; only the citation and abstract were confirmed |
-| Järvelin and Kekäläinen, [*Cumulated Gain-Based Evaluation of IR Techniques*](https://doi.org/10.1145/582415.582418) (ACM TOIS, 2002; [free preprint](https://trepo.tuni.fi/handle/10024/65718)) | DS 01/11, DS 05/03 | the source of NDCG |
+| Brodersen et al., *The Balanced Accuracy and Its Posterior Distribution* (ICPR, 2010; not paywalled, with a full text at the author's site) | DS 01/04, 01/11 | balanced accuracy |
+| Järvelin and Kekäläinen, [*Cumulated Gain-Based Evaluation of IR Techniques*](https://doi.org/10.1145/582415.582418) (ACM TOIS, 2002; [free preprint](https://trepo.tuni.fi/handle/10024/65718), titled *Cumulated gain-based indicators of IR performance*) | DS 01/11, DS 05/03 | the source of NDCG |
 | Wu, Ribeiro, Heer and Weld, [*Errudite: Scalable, Reproducible, and Testable Error Analysis*](https://aclanthology.org/P19-1073/) (ACL, 2019) | DS 01/12, GA 08/02 | ★ small hand-labelled error samples can bias conclusions, so define groups precisely and test the hypothesis |
-| Chung et al., [*Slice Finder: Automated Data Slicing for Model Validation*](https://research.google/pubs/slice-finder-automated-data-slicing-for-model-validation/) (ICDE, 2019) | DS 01/12 | finding large, interpretable, problematic slices with statistical tests |
-| Dwork et al., *The Reusable Holdout: Preserving Validity in Adaptive Data Analysis* (Science, 2015) | DS 01/12 | why repeated looks at a holdout stop being clean; read the full text before citing, since search confirmed only the citation and a summary of the method |
-| Northcutt, Athalye and Mueller, [*Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks*](https://arxiv.org/abs/2103.14749) (NeurIPS Datasets and Benchmarks, 2021) | DS 01/12 | some "errors" are wrong labels; about 3.3% on average across 10 benchmarks |
+| Chung et al., [*Slice Finder: Automated Data Slicing for Model Validation*](https://research.google/pubs/slice-finder-automated-data-slicing-for-model-validation/) (ICDE, 2019) | DS 01/12 | finding large, interpretable, problematic slices with statistical tests, controlling false discoveries by alpha-investing |
+| Dwork et al., *The Reusable Holdout: Preserving Validity in Adaptive Data Analysis* (Science, 2015) | DS 01/12 | why repeated looks at a holdout stop being clean; read the full text before citing, since search confirmed only the citation and a summary of the method; the phrase "every look leaks" is not the paper's |
+| Northcutt, Athalye and Mueller, [*Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks*](https://arxiv.org/abs/2103.14749) (NeurIPS Datasets and Benchmarks, 2021) | DS 01/12 | some "errors" are wrong labels; about 3.3% of test labels on average across 10 benchmarks |
 | Ribeiro, Wu, Guestrin and Singh, [*Beyond Accuracy: Behavioral Testing of NLP Models with CheckList*](https://arxiv.org/abs/2005.04118) (ACL, 2020) | DS 01/12, AIE 01/09 | turning an error pattern into a general test instead of a patch |
-| Chouldechova, [*Fair Prediction with Disparate Impact*](https://arxiv.org/abs/1703.00056) (arXiv, 2017) | DS 01/12 | when base rates differ, a calibrated score cannot also equalise false positive and false negative rates; check the journal citation before adding |
-| Marioriyad et al., [*The Judge Who Never Admits: Hidden Shortcuts in LLM-based Evaluation*](https://arxiv.org/abs/2602.07996) (arXiv, 2026) | GA 08/05 | ★ six judges and six cue families: verdicts shift on cues while acknowledgement stays at or near zero. Source of the cue test |
-| Tapwal, Kumar and Maple, [*Faithful or Fabricated? A Causal Framework for Rationalization Bias in LLM Judges*](https://arxiv.org/abs/2605.23970) (arXiv, 2026) | GA 08/05 | ★ tests rationale anchoring on 1,000 summaries; *Proof-Before-Preference* improves cue invariance |
+| Chouldechova, [*Fair Prediction with Disparate Impact*](https://arxiv.org/abs/1703.00056) (arXiv, 2017) | DS 01/12 | when base rates differ, a score with predictive parity cannot also equalise false positive and false negative rates; check the journal citation before adding |
+| Marioriyad et al., [*The Judge Who Never Admits: Hidden Shortcuts in LLM-based Evaluation*](https://arxiv.org/abs/2602.07996) (arXiv, 2026) | GA 08/05 | ★ six judges and six cue families: verdicts shift on cues while acknowledgement often stays at or near zero, though not in every cell (58 to 76% in some). Source of the cue test |
+| Tapwal, Kumar and Maple, [*Faithful or Fabricated? A Causal Framework for Rationalization Bias in LLM Judges*](https://arxiv.org/abs/2605.23970) (arXiv, 2026) | GA 08/05 | ★ tests rationale anchoring on 1,000 summaries; *Proof-Before-Preference* cuts revision after a label reveal, and ties on 82 to 94% of near-equivalent pairs |
 | Mittal and Arike, [*C2-Faith: Benchmarking LLM Judges for Causal and Coverage Faithfulness in Chain-of-Thought Reasoning*](https://arxiv.org/abs/2603.05167) (arXiv, 2026) | GA 08/05 | judges detect reasoning errors more readily than they locate them, and overestimate completeness |
-| Lanham et al., [*Measuring Faithfulness in Chain-of-Thought Reasoning*](https://arxiv.org/abs/2307.13702) (arXiv, 2023) | GA 08/05, AIE 01/03 | the intervention method behind the edit test. Its metric is contested by *Chain-of-Thought Unfaithfulness as Disguised Accuracy*, which search confirmed only as a snippet, so read and cite that too |
+| Lanham et al., [*Measuring Faithfulness in Chain-of-Thought Reasoning*](https://arxiv.org/abs/2307.13702) (arXiv, 2023) | GA 08/05, AIE 01/03 | the intervention method that the course's edit test adapts. Its metric is contested by *Chain-of-Thought Unfaithfulness as Disguised Accuracy*, which search confirmed only as a snippet, so read and cite that too |
 | Chen et al., [*Reasoning Models Don't Always Say What They Think*](https://arxiv.org/abs/2505.05410) (arXiv, 2025) | GA 08/05 | already listed in AIE 01, but not applied to judges; models that use a hint often mention it less than 20% of the time |
 | Turpin et al., [*Unfaithful Explanations in Chain-of-Thought Prompting*](https://arxiv.org/abs/2305.04388) (2023) | GA 08/05 | already held and cited in AIE 01/03; a cross-citation, no new PDF |
-| Shankar et al., [*Who Validates the Validators?*](https://arxiv.org/abs/2404.12272) (UIST, 2024) | GA 08/05 | code and LLM graders selected by agreement with human grades. GA 08's references map it to note 05, but the search found the citation only in note 02, so add it |
+| Shankar et al., [*Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM Outputs with Human Preferences*](https://arxiv.org/abs/2404.12272) (UIST, 2024) | GA 08/05 | code and LLM graders selected by agreement with human grades. GA 08's references map it to note 05, but the search found the citation only in note 02, so add it |
 | Shankar et al., [*SPADE: Synthesizing Data Quality Assertions for LLM Pipelines*](https://arxiv.org/abs/2401.03038) (arXiv, 2024) | GA 08/04, GA 08/05 | derives code checks from a prompt's version history, so each instruction added becomes a candidate check |
 | Ratner et al., [*Snorkel: Rapid Training Data Creation with Weak Supervision*](https://arxiv.org/abs/1711.10160) (VLDB, 2017) | GA 08/05, further reading | heuristics as noisy labellers whose accuracies are estimated from their agreements, and why correlated sources skew that estimate. It is about training data, so cite the idea and not a result about judges |
 | Rosenbaum and Rubin (1983) | DA 03/05 | already in the ledger as link-only; it now gets a chapter |
 | Cox, *Regression Models and Life-Tables* (JRSS B, 1972); Kaplan and Meier (JASA, 1958) | DA 06/07 | attribution rows |
-| Abbott and Tsay, [*Sequence Analysis and Optimal Matching Methods in Sociology: Review and Prospect*](https://doi.org/10.1177/0049124100029001001) (Sociological Methods and Research, 2000), and Wu's reply in the same issue | DA 06/08 | ★ the method and the critique that it is description, not causation |
-| Pfeifer and Carraway, *Modeling Customer Relationships as Markov Chains* (Journal of Interactive Marketing, 2000) | DA 06/08, 06/09 | Markov CLV; the exact title varies between citations, check the publisher record |
+| Abbott and Tsay, [*Sequence Analysis and Optimal Matching Methods in Sociology: Review and Prospect*](https://doi.org/10.1177/0049124100029001001) (Sociological Methods and Research, 2000), and Wu's reply in the same issue | DA 06/08 | ★ the method, and a critique reported via Halpin as description, not causation; the original wording is unconfirmed |
+| Pfeifer and Carraway, *Modeling Customer Relationships as Markov Chains* (Journal of Interactive Marketing, 2000) | DA 06/08, 06/09 | Markov CLV; title as on Crossref, full text not obtained |
 | Fader, Hardie and Lee, *Counting Your Customers the Easy Way* (2005), and Fader and Hardie, *The Gamma-Gamma Model of Monetary Value* (2013 note) | DA 06/09 | already cited as pointers; now fitted |
 | Chan and Perry, *Challenges and Opportunities in Media Mix Modeling* (Google research, 2017); Jin et al., *Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects* (Google, 2017) | DA 06/09 | adstock, saturation and the priors; not confirmed by search on 2026-11-02, so verify the links before adding |
 | Gupta et al., *Modeling Customer Lifetime Value* (Journal of Service Research, 2006) | DA 06/09 | the survey of LTV model families |
@@ -506,8 +504,8 @@ GA and AIE papers go into the ledger under their own pillars, not `home: analyti
 | [linearmodels docs](https://pypi.org/project/linearmodels/) | yes | DA 02/08 | `PanelOLS.from_formula` with `EntityEffects` |
 | [statsmodels MixedLM](https://www.statsmodels.org/stable/mixed_linear.html) | yes | DA 04/07 | random intercepts and slopes with `re_formula`, and its limits on crossed effects |
 | McElreath, [*Statistical Rethinking* lectures](https://www.youtube.com/playlist?list=PLDcUM9US4XdPz-KxHM4XHt7uUVGWWVSus) (already linked from DA 04/06) | yes | DA 04/07 | the multilevel lectures |
-| Freeman, [*An Introduction to Hierarchical Modeling*](http://mfviz.com/hierarchical-models) (interactive) | yes | DA 04/07 | a scrolling visual of intercepts and slopes varying by group; secondary sources confirm it, so check it is still live |
-| [Quantitude S2E29, *Multilevel Models: The Often Unnecessary Green Monster*](https://quantitudepod.org/s2e29-multilevel-models-the-often-unnecessary-green-monster) (podcast) | yes | DA 04/07 | the McNeish argument talked through by two psychology methodologists |
+| Freeman, [*An Introduction to Hierarchical Modeling*](https://mfviz.com/hierarchical-models/) (interactive) | yes | DA 04/07 | a scrolling visual of intercepts and slopes varying by group |
+| [Quantitude S2E29, *Multilevel Models: The Often Unnecessary Green Monster*](https://quantitude.org/s2e29-multilevel-models-the-often-unnecessary-green-monster) (podcast) | yes | DA 04/07 | the McNeish argument talked through by two psychology methodologists |
 | [scikit-learn metrics guide](https://scikit-learn.org/stable/modules/model_evaluation.html) | yes | DS 01/11, 01/12 | the metric API, organised by task |
 | StatQuest, *Machine Learning Fundamentals: The Confusion Matrix* and *Sensitivity and Specificity* (YouTube) | yes | DS 01/04, 01/12, DA 02/05 | titles confirmed from a listing; find the current version of each on the channel already listed |
 
@@ -530,7 +528,7 @@ GA and AIE papers go into the ledger under their own pillars, not `home: analyti
 | 11 | DS 01/11 metric map, plus the fills in DS 01/04, DS 05/03 and DA 02/06. Reuses DS 01/10 and the credit lab, both finished | `/chapter` with Gneiting, Chicco and Jurman | one short chapter and three small edits |
 | 12 | DS 01/12 reading the errors, including the noise-fix demonstration. Starts after phase 11 so it can link back | `/chapter` with Ng, Errudite, Slice Finder | one chapter |
 | 13 | GA 08/14 (§2.7) with a pointer from 05, and one exercise each for its offline and online parts. Links to DS 01/12, so it follows phase 12 unless the link is added later | `/papers` with Marioriyad, Tapwal, Mittal and Arike, Lanham | one note and its exercises |
-| 14 | Second cross-link pass for the rows marked new, including the thread in §3.7 and the §2.7 links; READMEs, CURRICULUM.md path (new steps 4b "say what the model claims" and 8b "model an event, a state and a plan"), rules of thumb; rebuild the five decks (DA 02, 03, 04, 06 and DS 01) | `/pillar`, `/slides` | one pass |
+| 14 | Second cross-link pass for the rows marked new, including the thread in §3.7 and the §2.7 links; READMEs, data-analytics/CURRICULUM.md path (new steps 4b "say what the model claims" and 8b "model an event, a state and a plan"), rules of thumb; rebuild the six decks (DA 02, 03, 04, 06, DS 01 and GA 08) | `/pillar`, `/slides` | one pass |
 | 15 | Ledger: curated rows for every §4 paper, route the free PDFs, mark `integrated` as each chapter lands | `/readings` | runs alongside 3 to 13 |
 
 Phases 3 to 10 are independent of each other after phase 2, so they can be split across sessions in any order.

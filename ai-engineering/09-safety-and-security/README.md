@@ -117,6 +117,14 @@ sources/images/              figures used in notes and slides
 slides/                      lecture deck (deck.yaml → .pptx + .pdf)
 ```
 
+## Primary texts
+
+- Huyen, *AI Engineering*, ch. 10
+- Wilson and Yen, *The Developer's Playbook for Large Language Model Security*: recommended; not in the repo, and the notes do not rely on it
+- Debenedetti et al., *Defeating Prompt Injections by Design*
+
+Everything else: [references.md](references.md).
+
 ## References
 
 See [references.md](references.md).
