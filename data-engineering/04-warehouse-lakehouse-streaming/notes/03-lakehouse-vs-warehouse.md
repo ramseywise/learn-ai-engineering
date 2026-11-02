@@ -6,6 +6,7 @@ sources:
   - https://mytherin.github.io/papers/2019-duckdbdemo.pdf
   - https://www.databricks.com/learn/training/lakehouse-fundamentals
   - https://www.databricks.com/glossary/medallion-architecture
+  - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -227,6 +228,8 @@ Bronze kept all five rows including the duplicate, the negative fare and the mis
 ## What is the actual decision?
 
 The paper's prediction was a replacement. What has happened since looks more like convergence. Warehouses read and write open table formats, and lakehouse engines add BI features. The choice is less "which camp" than where the system of record lives and who owns the format. The practical questions are these.
+
+Kleppmann's last chapter gives this question a frame that predates the paper. Once several stores hold versions of the same data, what matters is being clear about where each piece of data is first written and which representations derive from which ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 12, pp. 490-491). The two-tier design is not wrong because it holds two copies. It goes wrong when nobody can say which is the source, and when the warehouse copy drifts with no way to rebuild it. He also separates two ways of combining stores: **federation** unifies reads, with one query interface over many engines, and **unbundling** unifies writes, with a log keeping many stores in step (p. 501). A lakehouse is a third arrangement, in my reading: one store and one commit protocol with many read engines. His caution applies to all three, which is that each extra technology has a learning curve and operational quirks, so deploy as few moving parts as possible, and if one product does everything you need, use it (p. 503).
 
 | Your situation | Lean | Why |
 |---|---|---|

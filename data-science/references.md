@@ -7,7 +7,7 @@ cleaned: 2026-11-01
 ---
 # References: data science
 
-> The shared library: books and courses that serve more than one pillar. Papers live in each pillar's own `references.md`: [01](01-classical-ml/references.md), [02](02-deep-learning/references.md), [03](03-nlp/references.md), [04](04-llms-from-scratch/references.md), [05](05-time-series-and-recommenders/references.md). **★** = read first. Local PDFs live in [sources/](sources/) and figures in [sources/images/](sources/images/). Licence and size flags are in [Source quality](#source-quality).
+> The shared library: books and courses that serve more than one pillar. Papers live in each pillar's own `references.md`: [01](01-classical-ml/references.md), [02](02-deep-learning/references.md), [03](03-nlp/references.md), [04](../generative-ai/09-llms-from-scratch/references.md), [05](05-time-series-and-recommenders/references.md). **★** = read first. Local PDFs live in [sources/](sources/) and figures in [sources/images/](sources/images/). Licence and size flags are in [Source quality](#source-quality).
 
 ## Books
 
@@ -29,7 +29,7 @@ Each URL was checked to load on 2026-11-02, and the costs are as the platform li
 |---|---|---|---|
 | ★ [Machine Learning Specialization](https://www.coursera.org/specializations/machine-learning-introduction) | Ng, Coursera. Paid certificate, audit options vary | The current edition of the course behind the own ports in [`ng-machine-learning/`](01-classical-ml/practice/ng-machine-learning), which come from the 2011 edition | 01 |
 | ★ [Deep Learning Specialization](https://www.coursera.org/specializations/deep-learning) | Ng, DeepLearning.AI on Coursera. Paid certificate, audit options vary | The course behind [`ng-deep-learning/`](02-deep-learning/practice/ng-deep-learning) and the chapter split in pillar 02 | 02 |
-| ★ [Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) | Karpathy, YouTube, free. Code at [karpathy/nn-zero-to-hero](https://github.com/karpathy/nn-zero-to-hero), MIT | Builds autograd, makemore and a GPT line by line. Kept in [`nn-zero-to-hero/`](04-llms-from-scratch/practice/nn-zero-to-hero), with [build-nanogpt](https://github.com/karpathy/build-nanogpt) | 04, 02 |
+| ★ [Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) | Karpathy, YouTube, free. Code at [karpathy/nn-zero-to-hero](https://github.com/karpathy/nn-zero-to-hero), MIT | Builds autograd, makemore and a GPT line by line. Kept in [`nn-zero-to-hero/`](../generative-ai/09-llms-from-scratch/practice/nn-zero-to-hero), with [build-nanogpt](https://github.com/karpathy/build-nanogpt) | 04, 02 |
 | [StatQuest: Machine Learning](https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF) | Starmer, YouTube, free | Short refreshers when a model family or metric won't stick | 01, 03 |
 | [Practical Deep Learning for Coders](https://course.fast.ai/) | fast.ai, free | Top-down alternative to Ng: working models first, theory afterwards | 02, 03 |
 | [CS229: Machine Learning, Autumn 2018 lectures](https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU) | Stanford, YouTube, free. [Course site](https://cs229.stanford.edu/) | The derivations behind pillar 01 | 01, 05 |

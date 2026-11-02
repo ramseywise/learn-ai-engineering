@@ -71,7 +71,7 @@ flowchart LR
   T1 --> C2
 ```
 
-Partitions are the unit of scaling. Within a consumer group each partition has one consumer at a time, so a partition count caps a group's parallelism, and changing it later moves keys to different partitions and breaks per-key ordering across the change. Retention is by time or size. A compacted topic instead keeps at least the last value per key, which suits a changelog ([Kafka log compaction](https://kafka.apache.org/42/design/design)).
+Partitions are the unit of scaling. Within a consumer group each partition has one consumer at a time, so a partition count caps a group's parallelism, and changing it later moves keys to different partitions and breaks per-key ordering across the change. Retention is by time or size. A compacted topic instead keeps at least the last value per key, which suits a changelog ([Kafka log compaction](https://kafka.apache.org/42/design/design)). The queue is still the right tool sometimes, and [*Designing Data-Intensive Applications*](https://dataintensive.net/) (ch. 11) gives the rule for choosing. A log has one drawback that a queue does not: a slow message holds up everything behind it in the partition, a form of head-of-line blocking (p. 449). So where messages are expensive and order does not matter, such as a list of jobs, use a queue. Where throughput is high, each message is fast and order matters, use a log (p. 449). A queue also hides a trap, which is that combining load balancing with redelivery reorders messages (p. 446). Consumer offsets will look familiar: an offset is a log sequence number, so a consumer is a [follower](../../01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md) of the broker, and it is cheap for the same reason, as a broker only has to remember one number per group (p. 449). And retention is more forgiving than it sounds. At the book's figures, a 6 TB disk written flat out at 150 MB/s takes 11 hours to fill, and in practice far longer, so a slow consumer has days or weeks to catch up (p. 450). Reading is also non-destructive, so you can point a new consumer at production to try something out, since the only side effect is that its own offset moves forward (p. 451).
 
 The practice folder has a working version with a real broker. `practice/datatalks-de/06-streaming/python/json_example` produces taxi rides as JSON and consumes them with `enable_auto_commit=True`, a detail that will matter in a moment.
 
@@ -140,7 +140,7 @@ at-least-once + keyed upsert: rows=9 revenue=90.0
 
 This is the first pattern to reach for. It works when records have a stable business key and the sink can overwrite. It does not work on a sum computed by adding to a running total, since repeats add again.
 
-For a running total you need the output and the position to commit together. Kleppmann describes storing the offset with the value so a replay can detect it has already been applied ([Kleppmann, *DDIA*, O'Reilly 2017, ch. 11](https://dataintensive.net/)). DuckDB can show the pattern in full, since one transaction covers the totals and the offset:
+For a running total you need the output and the position to commit together. Kleppmann describes storing the offset with the value so a replay can detect it has already been applied ([Kleppmann, *DDIA*, O'Reilly 2017, ch. 11, p. 478](https://dataintensive.net/)). DuckDB can show the pattern in full, since one transaction covers the totals and the offset:
 
 ```python
 # A duckdb sink that stores the offset with the data: the DDIA pattern, runnable.
@@ -180,9 +180,11 @@ expected: {'zone-7': 16.5, 'zone-13': 6.0, 'zone-42': 7.0}
 
 The crash rolled back both, and the retry reprocessed the same batch from the same offset. The final totals match even though the sum is not idempotent. The `txn` action in Delta from [the table format chapter](02-table-formats.md) serves the same purpose for a stream writing to a lake: the application's ID and version land atomically with the data files.
 
+This relies on assumptions that are easy to violate. A replay must see the same messages in the same order, processing must be deterministic, and nobody else may write the same value concurrently. When a task fails over, the old instance may not be dead, so that last condition needs [fencing](../../01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md) (p. 478). Kafka's transactions build this in: a new producer with the same `transactional.id` fences the old one, which then gets a [`ProducerFencedException`](https://kafka.apache.org/42/javadoc/org/apache/kafka/common/errors/ProducerFencedException.html).
+
 ## What exactly-once means in Kafka
 
-Kleppmann's framing is the right one to hold on to: exactly-once means the final effect is the same as if no fault had occurred, and "effectively-once" would be the better name, since records can certainly be processed more than once along the way (*DDIA*, chs. 11 and 12).
+Kleppmann's framing is the right one to hold on to: exactly-once means the final effect is the same as if no fault had occurred, and "effectively-once" would be the better name, since records can certainly be processed more than once along the way (*DDIA*, ch. 11, p. 476; ch. 12, pp. 516-517).
 
 Kafka gives two building blocks from KIP-98 and the 0.11 release ([KIP-98](https://cwiki.apache.org/confluence/display/KAFKA/KIP-98+-+Exactly+Once+Delivery+and+Transactional+Messaging)). The first handles the producer's half, the lost acknowledgement. Every producer gets an ID and every message gets a per-partition sequence number, so the broker can reject a resend.
 
@@ -240,7 +242,11 @@ while True:
     producer.commit_transaction()
 ```
 
-The limit is the boundary. These guarantees hold inside Kafka. As soon as the consumer calls a payment API, or writes to a store that does not join the transaction, the effect outside can still happen twice. DDIA makes the same point about microbatching and Flink's checkpoint barriers: they give exactly-once within the framework, and output that leaves it needs idempotence or a distributed transaction. When someone says "we have exactly-once," ask: from where to where?
+The limit is the boundary. These guarantees hold inside Kafka. As soon as the consumer calls a payment API, or writes to a store that does not join the transaction, the effect outside can still happen twice. DDIA makes the same point about microbatching and Flink's checkpoint barriers (p. 477): they give exactly-once within the framework, and output that leaves it needs idempotence or a distributed transaction. When someone says "we have exactly-once," ask: from where to where?
+
+The transaction inside the boundary is a real atomic commit, kept cheap by staying within one system, which avoids the [heterogeneous two-phase commit](../../01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) that keeps locks while a coordinator is down (pp. 477-478). To extend the guarantee past the boundary, the book's last chapter argues for carrying one request ID from the client all the way to the final store, so that every hop can drop duplicates. A transfer between two accounts in two partitions needs no atomic commit at all this way: log the request once, derive a debit and a credit from it, and let each side deduplicate on the ID (ch. 12, pp. 518-519, 522-523).
+
+The same chapter gives a distinction worth carrying into every design review. **Timeliness** means seeing an up-to-date state, and **integrity** means no corruption or lost or contradictory data. Stale data fixes itself by waiting, where a violation of integrity never does: "eventual consistency" against "perpetual inconsistency" (ch. 12, pp. 524-525). A stream pipeline can give up timeliness to protect integrity, because it needs no synchronous coordination to stay correct. It needs four things: state a write as a single message, derive everything else with deterministic functions, pass a client-generated request ID throughout, and keep messages immutable so that derived data can be reprocessed (ch. 12, p. 526). Exactly-once is an integrity mechanism.
 
 ## Event time and processing time
 
@@ -283,7 +289,7 @@ minute  by_event  by_processing
 12:04       60            60
 ```
 
-The first minute looks like a quiet period by processing time, with 53 against a true 60. A consumer restart makes it worse: Kleppmann's example shows a redeploy creating a spike in a rate metric that never happened in the world. So windows are defined on event time. That creates the core question of streaming, which Akidau et al. put at the centre of the Dataflow model: a stream never tells you that a window is complete ([Akidau et al., PVLDB 2015](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)). They frame the matter as a tradeoff between correctness, latency and cost, chosen per pipeline rather than imposed by the system.
+The first minute looks like a quiet period by processing time, with 53 against a true 60. A consumer restart makes it worse: Kleppmann's example shows a redeploy creating a spike in a rate metric that never happened in the world (pp. 469-470). So windows are defined on event time. That creates the core question of streaming, which Akidau et al. put at the centre of the Dataflow model: a stream never tells you that a window is complete ([Akidau et al., PVLDB 2015](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)). They frame the matter as a tradeoff between correctness, latency and cost, chosen per pipeline rather than imposed by the system.
 
 ## Watermarks
 
@@ -330,7 +336,7 @@ allowed lateness  dropped  lost
 with retractions at 30s: total 600 of 600, 11 corrections sent downstream
 ```
 
-Here is the trade in one table. A window with 30 seconds of allowed lateness closes 30 seconds after its end and loses 1.8% of rides. A 5-minute wait still loses 0.2%, and a 10-minute wait catches everything but makes every number 10 minutes old. No value is correct without knowing the business: a live dashboard tolerates loss for freshness, and an invoice does not. And the last line shows the alternative to loss: emit a result early and correct it. Kleppmann describes both ways of handling stragglers: drop them while counting the drops and alerting, or publish a correction. Corrections are only useful if downstream can apply them, so an append-only sink must become an upsert sink keyed on window.
+Here is the trade in one table. A window with 30 seconds of allowed lateness closes 30 seconds after its end and loses 1.8% of rides. A 5-minute wait still loses 0.2%, and a 10-minute wait catches everything but makes every number 10 minutes old. No value is correct without knowing the business: a live dashboard tolerates loss for freshness, and an invoice does not. And the last line shows the alternative to loss: emit a result early and correct it. Kleppmann describes both ways of handling stragglers (pp. 470-471): drop them while counting the drops and alerting, or publish a correction. Corrections are only useful if downstream can apply them, so an append-only sink must become an upsert sink keyed on window.
 
 ```text
 event time  ------------------------------------------------>
@@ -342,9 +348,54 @@ arrivals     ..x..x.x..x..x...x.x..x.x....x..x
              events for a fired window are late: drop, count, or correct
 ```
 
-Windows themselves come in the usual kinds: tumbling, fixed and non-overlapping, used above; hopping, fixed but overlapping; session, closed by a gap in activity. All of them inherit this completeness problem, and sessions make it harder, as a late event can merge two sessions.
+Windows themselves come in the usual kinds: tumbling, fixed and non-overlapping, used above; hopping, fixed but overlapping; sliding, all events within some interval of each other; session, closed by a gap in activity (p. 472). All of them inherit this completeness problem, and sessions make it harder, as a late event can merge two sessions.
 
-Timestamps need care too. Kleppmann recommends logging three: when the event happened on the device clock, when the device sent it, and when the server received it. The difference between the last two estimates clock skew, which you can subtract from the first.
+Timestamps need care too. Kleppmann recommends logging three: when the event happened on the device clock, when the device sent it, and when the server received it (p. 471). The difference between the last two estimates clock skew, which you can subtract from the first. [When distributed systems fail](../../01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md) measures what skew does when it is left in.
+
+## Joining streams
+
+Windows handle one stream. Joins add state, because now something must remember one side while waiting for the other, and Kleppmann separates three cases (pp. 473-475). A **stream-stream** join, such as matching a search to the click that followed it, keeps a window of recent events on both sides. A **stream-table** join enriches each event from a table, and rather than calling a database for every record, the processor keeps a local copy of the table and updates it from a [change stream](../../02-ingest-and-modelling/notes/01-ingest.md). A **table-table** join consumes two changelogs and maintains a materialised view.
+
+All three share a difficulty, which is that the answer depends on the order of events across streams, and nothing determines that order (p. 475). His example is a tax rate, and here it is with a replay a month later.
+
+```python
+rates = [(0, 0.08), (50, 0.10)]                 # (from this minute on, tax rate), as a changelog
+sales = [(10, 100.0), (40, 100.0), (60, 100.0)] # (minute of sale, amount)
+
+def rate_at(minute):
+    return [r for start, r in rates if start <= minute][-1]
+
+def live_join():
+    """Enrich each sale as it arrives, with the table as it stood when it was processed."""
+    current, out = None, 0.0
+    stream = sorted([(m, "rate", r) for m, r in rates] + [(m, "sale", a) for m, a in sales])
+    for minute, kind, value in stream:
+        if kind == "rate": current = value
+        else: out += value * current
+    return round(out, 2)
+
+def replay_with_latest():
+    """A reprocessing job a month later: the local table has already reached its latest value."""
+    return round(sum(a * rates[-1][1] for _, a in sales), 2)
+
+def replay_versioned():
+    """Each sale refers to the version of the rate in force at its own event time."""
+    return round(sum(a * rate_at(m) for m, a in sales), 2)
+
+print("live join:              ", live_join())
+print("replay, latest rate:    ", replay_with_latest())
+print("replay, versioned rate: ", replay_versioned())
+```
+
+Output:
+
+```text
+live join:               26.0
+replay, latest rate:     30.0
+replay, versioned rate:  26.0
+```
+
+The same sales and the same rates give a different answer on replay, because the local table has moved on. Giving each version of the rate an ID and storing it on the sale makes the join deterministic, the same answer as a [Type 2 dimension](../../02-ingest-and-modelling/notes/02-dimensional-modelling.md) in a warehouse, at the cost of keeping every version (p. 476). State like this also has to survive a crash, which is done with a remote store, a local copy replicated elsewhere, periodic snapshots as in Flink, a changelog topic as in Kafka Streams, or by replaying a short window (pp. 478-479).
 
 ## Operating a stream: lag
 
@@ -377,6 +428,8 @@ A ten-minute outage at a 20% headroom drains in 49 minutes. At 1.7% headroom it 
 
 Do you need a stream at all? Streaming costs always-on compute and on-call attention, and a micro-batch every few minutes satisfies most dashboards. The honest test is what decision changes if the number is one second old rather than five minutes old.
 
+If you do need both, resist running two systems for one result. The lambda architecture keeps a batch path for correctness alongside a stream path for speed, and Kleppmann lists what it costs: the same logic maintained in two frameworks, two outputs to merge, and an incremental batch job that reacquires the streaming problems it was meant to avoid (ch. 12, pp. 497-498). Engines that can replay history through the stream path, with event-time windows and exactly-once, remove the reason for it (p. 498). Reprocessing is also how a stream pipeline changes shape safely. Build the new view beside the old one, move readers over gradually, and keep the old one until you are sure, like the 19th-century railways that laid a third rail to run two gauges during a migration (pp. 496-497).
+
 | Tool | What it is | Pick when |
 |---|---|---|
 | Kafka or Redpanda | The durable log | Several consumers, replay, decoupling |
@@ -389,6 +442,8 @@ The zoomcamp's `python/streams-example/pyspark` and `ksqldb/commands.md` in the 
 ## Pitfalls
 
 - **Auto-commit in a pipeline that matters.** Committed offsets drift from finished work, so you lose or repeat data on a crash.
+- **Stream-table joins without versions.** A replay joins to today's table and silently changes history. Reference the version in force at event time.
+
 - **"Exactly once" claimed end to end.** Ask where the boundary is. External side effects need idempotence.
 - **Windows on arrival time.** A restart produces spikes that never happened.
 - **Silently dropping late data.** Count it, and alert on it. Without a metric you cannot tell loss from a quiet day.
@@ -420,7 +475,11 @@ The zoomcamp's `python/streams-example/pyspark` and `ksqldb/commands.md` in the 
 | What does the idempotent producer solve? | Duplicates from retries, through a producer ID and a per-partition sequence number. |
 | What does exactly-once mean? | The final effect is as if no fault happened. It holds inside the transactional system. Outside, use idempotent sinks. |
 | Event or processing time? | Event time for correct windows; processing time for operational rates. |
+| Why does a stream-table join change on replay? | The local table has moved on since the event. Store the version in force at event time, as a Type 2 dimension does. |
+
 | What is a watermark? | A heuristic claim that event time up to T has probably arrived, triggering windows and bounding state. |
+| Timeliness or integrity? | Timeliness is about how fresh the data is, and heals with waiting. Integrity is about whether it is correct, and does not heal. Streams can give up the first and keep the second. |
+
 | What happens to late data? | Dropped and counted, or emitted as a correction downstream if the sink can apply it. |
 
 ## Next

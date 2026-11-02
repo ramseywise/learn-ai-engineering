@@ -7,6 +7,8 @@ sources:
   - https://hudi.apache.org/docs/table_types
   - https://delta-io.github.io/delta-rs/
   - https://py.iceberg.apache.org/
+  - https://dataintensive.net/
+  - https://docs.delta.io/latest/concurrency-control.html
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -173,6 +175,53 @@ fare = 31: 0 of 4 files need opening, decided from the log alone
 Armbrust et al. measured what this does at scale. On a synthetic table of 33 million rows split into 1,000 to 1,000,000 partitions on S3, on 16 `i3.2xlarge` nodes, Hive took over an hour at 10,000 partitions and Presto over an hour at 100,000, while Delta took 108 seconds at one million partitions and 17 with the log cached on SSD. It is a vendor benchmark, but the cause is structural: reading a log with statistics replaces listing a directory and opening footers.
 
 Scaling needs one more trick. Replaying thousands of JSON files on every read is slow, so formats periodically write a checkpoint that summarises the state so far. Delta writes one in Parquet every 10 transactions by default, and a reader starts at the latest checkpoint and replays only what follows.
+
+## The log, in database terms
+
+Everything in those sixty lines is a transaction idea moved down to files, and naming the ideas tells you what to expect from a real format. The reference for all four is [*Designing Data-Intensive Applications*](https://dataintensive.net/), and the foundations chapters on [transactions](../../01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md) and [consensus](../../01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) run them.
+
+- **The commit point.** One durable record decides the fate of a whole set of writes. In a database that is the commit record on disk, and in two-phase commit the coordinator's decision (ch. 9, pp. 354, 356-357). The log file plays that part here, and uncommitted Parquet files are just writes no one has been told about.
+- **Snapshot isolation.** A reader pins a version and ignores anything later, like the append-only B-trees that give every write transaction a new root (ch. 7, p. 242). The unreferenced `b.parquet` in the figure above is an old row version in MVCC, and removing it later is the same garbage collection (ch. 7, p. 240), which is why cleaning up too eagerly breaks long-running readers and time travel.
+- **Optimistic concurrency.** Do the work, check at commit, abort and retry on conflict. That is the family serializable snapshot isolation belongs to, and it inherits the same weakness under contention (ch. 7, pp. 261-262): many writers competing for one table spend their time retrying.
+- **A total order through compare-and-set.** A numbered log that only one writer can extend is an agreement on one order of events, and create-if-absent is a compare-and-set. These are close relatives of total order broadcast and need something linearisable underneath (ch. 9, pp. 350-351). The format has not removed consensus from the system, only moved it into the object store or the catalog, the outcome Kleppmann predicts for any system that claims to avoid it (ch. 9, p. 375).
+
+The analogy with [log-structured storage](../../01-storage-and-compute-foundations/notes/03-row-and-column-stores.md) also holds: immutable files, small new ones, and a background job that compacts them, which is the same trade between write and read costs.
+
+What this does not give you is serializability across a read that the format never saw. The [Delta concurrency documentation](https://docs.delta.io/latest/concurrency-control.html) lists two `INSERT`s as a pair that cannot conflict, which is exactly what you want for throughput. But it means a job that reads a table, decides, and appends has built the [write skew](../../01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md) of the transactions chapter with two commits that are each fine.
+
+```python
+import pyarrow as pa
+from deltalake import DeltaTable, write_deltalake
+
+def rows(names, on_duty):
+    return pa.table({"driver": names, "on_duty": [on_duty] * len(names)})
+
+write_deltalake("rota", rows(["ann", "ben"], True))
+
+def on_duty(table):
+    data = table.to_pyarrow_table()
+    off = data["on_duty"].to_pylist().count(False)
+    return data.num_rows - 2 * off                # each row going off duty cancels one that was on
+
+# Rule: someone may go off duty only if two are on. Both jobs read the same version.
+for name in ["ann", "ben"]:
+    snapshot = DeltaTable("rota", version=0)
+    seen = on_duty(snapshot)
+    if seen >= 2:
+        write_deltalake("rota", rows([name], False), mode="append")
+        print(f"{name} read version 0, saw {seen} on duty, committed version {DeltaTable('rota').version()}")
+print("on duty now:", on_duty(DeltaTable("rota")))
+```
+
+Output:
+
+```text
+ann read version 0, saw 2 on duty, committed version 1
+ben read version 0, saw 2 on duty, committed version 2
+on duty now: 0
+```
+
+Each job checked the rule against a true snapshot and both commits succeeded. The rule is still broken, because the check was outside anything the table knows about. Delta's `UPDATE`, `DELETE` and `MERGE` do record what they read, which is why `ConcurrentAppendException` exists, so keep a rule of this kind inside one such statement or make sure one writer at a time runs the job.
 
 ## Delta Lake on disk
 
@@ -414,6 +463,8 @@ Treat the comparison as a snapshot. These projects copy each other's good ideas 
 - **Vacuuming below your time travel promise.** Retention decides how far back you can read, and it can break long-running readers still using old files.
 - **Never compacting.** A streaming writer makes many small files per commit, and merge-on-read accumulates delete files. Schedule compaction as a first-class job.
 - **Assuming multi-table transactions.** Log-per-table designs commit one table at a time.
+- **Reading the table, deciding, then appending.** Two such jobs can each pass their check and together break the rule, since appends cannot conflict. Put the rule inside a `MERGE`, or run one writer at a time.
+
 - **Treating the catalog as an afterthought.** In Iceberg the catalog holds the atomic pointer. Two jobs using two different catalogs for one table can corrupt it.
 - **Hand-editing or copying a log.** Copying a table's directory without care can break absolute paths or lose the commit order.
 
@@ -437,6 +488,8 @@ Treat the comparison as a snapshot. These projects copy each other's good ideas 
 |---|---|
 | What is a table format? | Metadata over immutable data files that names which files are the table, committed atomically. |
 | How does a commit become atomic on an object store? | One atomic step: put-if-absent of the next log record, or a catalog pointer swap. |
+| Does a table format make my pipeline serializable? | No. It serialises commits. A read done outside the commit, followed by a blind append, can still produce write skew. |
+
 | What is optimistic concurrency here? | Write files first, claim the next version last; on a lost race, check for conflict and retry. |
 | Copy-on-write or merge-on-read? | CoW pays at write and reads fast; MoR writes fast and pays at read until compaction. Pick by update distribution. |
 | What does Iceberg's hidden partitioning fix? | Queries on the source column get pruning, and partition specs can change without a rewrite. |

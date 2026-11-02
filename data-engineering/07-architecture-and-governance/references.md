@@ -16,6 +16,7 @@ cleaned: 2026-11-02
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
+| ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | Ch. 11 (deletion on immutable logs, pp. 463-464), ch. 12 (derived data, federation and unbundling, timeliness and integrity, auditing, privacy pp. 490-543) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md), [02](notes/02-access-control-pii-gdpr.md) |
 | ★ James Serra, *Deciphering Data Architectures* (O'Reilly, 2024) | Ch. 10 modern data warehouse | [PDF](../sources/serra-deciphering-data-architectures-ch10-modern-data-warehouse.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
 | ★ Same | Ch. 11 data fabric | [PDF](../sources/serra-deciphering-data-architectures-ch11-data-fabric.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |
 | ★ Same | Ch. 13 data mesh foundation | [PDF](../sources/serra-deciphering-data-architectures-ch13-data-mesh-foundation.pdf) | [01](notes/01-data-architectures-mesh-fabric-mdw.md) |

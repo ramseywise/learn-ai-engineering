@@ -4,6 +4,7 @@ sources:
   - "Fivetran, Star Schema vs OBT for Data Warehouse Performance (Michael Kaminsky, 2022), https://www.fivetran.com/blog/star-schema-vs-obt"
   - "Linstedt and Olschimke, Building a Scalable Data Warehouse with Data Vault 2.0 (Morgan Kaufmann, 2015), not read in full; https://en.wikipedia.org/wiki/Data_vault_modeling"
   - "Kimball and Ross, The Data Warehouse Toolkit, 2nd ed. (Wiley, 2002)"
+  - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-01
 ---

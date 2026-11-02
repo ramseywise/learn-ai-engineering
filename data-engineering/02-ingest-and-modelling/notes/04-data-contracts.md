@@ -6,6 +6,7 @@ sources:
   - "Breck et al., Data Validation for Machine Learning (MLSys 2019), https://proceedings.mlsys.org/paper_files/paper/2019/file/928f1160e52192e3e0017fb63ab65391-Paper.pdf"
   - "Jones, Driving Data Quality with Data Contracts (Packt, 2023), not read in full; https://www.oreilly.com/library/view/-/9781837635009"
   - "Sanderson, Freeman and Schmidt, Data Contracts (O'Reilly, 2025), not read in full; https://www.oreilly.com/library/view/-/9781098157623/"
+  - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-01
 ---

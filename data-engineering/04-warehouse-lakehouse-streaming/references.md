@@ -15,7 +15,7 @@ cleaned: 2026-11-01
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
-| ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | 3, 6, 10, 11, 12 | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-warehouse-and-store.md), [04](notes/04-kafka-and-stream-semantics.md) |
+| ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | ch. 3, 6, 10 (warehouse and store); ch. 7 (MVCC, optimistic concurrency) and ch. 9 (commit points, total order) behind the table-format log; ch. 11 (log brokers, time, joins, fault tolerance); ch. 12 (system of record, lambda, unbundling, timeliness and integrity) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-warehouse-and-store.md), [02](notes/02-table-formats.md), [03](notes/03-lakehouse-vs-warehouse.md), [04](notes/04-kafka-and-stream-semantics.md) |
 | Reis and Housley, *Fundamentals of Data Engineering* (O'Reilly, 2022) | Lifecycle chapters; the publisher page blocks automated checks | none | Background for all |
 
 ## Core papers

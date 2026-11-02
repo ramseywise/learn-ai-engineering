@@ -273,3 +273,30 @@ librarian importer change can land any time after Phase 0 fixes the deck format.
    pillar, with chapters written over the notebooks. Reverses part of the 2026-10-29 decision.
 3. **§2.4** Python for the data and generative-ai areas, TypeScript-first labs in ai-engineering.
 4. **§3.4** Fold generative-ai 02 notes 12–14 into one managed-RAG chapter.
+
+---
+
+## 7. Data-science job pass (2026-11-02)
+
+Audit finding: data-science teaches model families, but a reader never meets one chapter on how to
+train, tune and trust a model, and never sees a model taken to a real application. The material is
+scattered across data-science, data-analytics and data-engineering. This pass stitches it together.
+
+| Wave | Work | Output |
+|---|---|---|
+| 0 | Fix the second generative-ai pillar 04 and its links | `generative-ai/09-llms-from-scratch`, decision in CURRICULUM.md |
+| 1 | Chapter: training and tuning | `data-science/01-classical-ml/notes/09-training-and-tuning.md` |
+| 1 | Chapter and lab: imbalance, errors, drift; credit default case | `notes/10-imbalance-errors-and-drift.md`, `practice/credit-default-lab/` |
+| 1 | Lab: music clustering and reranking | `practice/music-clustering-lab/`, Case in `notes/05-unsupervised-learning.md` |
+| 1 | Lab: B2B customer segmentation and cash-flow forecast | `practice/customer-segments-lab/`, Case in data-analytics 06 note 05 and data-science 05 note 01 |
+| 2 | Plain-language hooks, cross-links to drift and applied analyses, READMEs | All data-science notes |
+| 2 | Decks: new slides, one measured plot per part, `recall` on every slide | Four data-science decks |
+| 2 | Interview layer: foundations guide, answered ML questions, stats and experimentation guide | sisyphus `interviewing/guides/` |
+
+Rules for the pass:
+
+- This repo is public and the source repos differ. Nothing from the private `lebanese-blonde` repo is
+  copied, quoted or linked. Its data comes from a company take-home, so the credit lab uses open data.
+- Labs fetch or generate their data. No third-party listening data is vendored.
+- Every number in a note comes from a run in that note or an attributed source that was read in full.
+- Stage only. Off limits while other sessions run: `scripts/papers/ledger.jsonl`, `data-engineering/`.

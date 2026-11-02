@@ -5,6 +5,7 @@ sources:
   - https://parquet.apache.org/docs/file-format/
   - https://arrow.apache.org/docs/format/Columnar.html
   - https://doi.org/10.1145/1953122.1953148
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

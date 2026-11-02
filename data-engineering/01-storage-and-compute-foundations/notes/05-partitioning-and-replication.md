@@ -4,6 +4,7 @@ sources:
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 5 and 6"
   - https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf
   - https://research.google.com/archive/bigtable-osdi06.pdf
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

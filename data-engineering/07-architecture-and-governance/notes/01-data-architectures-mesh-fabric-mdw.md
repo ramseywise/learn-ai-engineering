@@ -7,6 +7,7 @@ sources:
   - ../../sources/strengholt-data-mesh-topologies.pdf
   - ../../sources/data-mesh-scenario-prompts-handout.pdf
   - https://martinfowler.com/articles/data-mesh-principles.html
+  - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -151,6 +152,20 @@ The table below combines Serra's guidance with the single-machine measurement ab
 | Many autonomous business units | Data mesh on top of any of the above |
 
 The last row matters: a data mesh is *not* a fourth storage option. It's an organisational model, and each domain still picks an MDW, a fabric or a lakehouse for its own data. Serra's phrase is that mesh is a concept and not a technology.
+
+## Derived data: the frame under all of these
+
+These architectures, and the mesh in the next section, are usually compared on features. Chapter 12 of [*Designing Data-Intensive Applications*](https://dataintensive.net/) offers a more durable comparison, written before most of this vocabulary settled, so mapping it onto fabric and mesh is my reading and not the book's.
+
+Start from the observation that no single tool does everything, so organisations always end up with several representations of the same facts. The question that sorts out any such arrangement is where each fact is written first, and which representations derive from which (pp. 490-491). The lake's raw zone, or the operational source behind it, is the **system of record**. Warehouse tables, marts, search indexes, feature stores and ML models are **derived** (p. 505), which means they can be rebuilt, and that a bug in them is cheap. "No single source of truth" in the scenario prompts below is this question left unanswered.
+
+How the derived copies are kept in step has two answers. A distributed transaction uses locks and atomic commit. A log gives an order, and retries with idempotent writes get to the same place. Kleppmann argues for the log across different technologies and across teams, since a distributed transaction spreads a fault to every participant, where an asynchronous log contains it (pp. 492, 495, 502). The second benefit he names is at the level of people, because teams can work independently as long as the interface between them is well defined (p. 502). That is the argument for the data mesh of the next section, made from the bottom up. A data product with a contract is what makes it safe, and a [dual write](../../02-ingest-and-modelling/notes/01-ingest.md) across domains is what breaks it.
+
+He then asks how a whole organisation's data can behave as one database, and gives two approaches (p. 501). **Federation** unifies reads: one query interface over many stores, as with PostgreSQL's foreign data wrappers. That is what a fabric's data virtualization offers. **Unbundling** unifies writes: a log and derived views keep the stores in step. It treats `CREATE INDEX` as the model, since a snapshot followed by a backlog followed by keeping up is the same work as adding a [follower](../../01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md) or [starting CDC](../../02-ingest-and-modelling/notes/01-ingest.md) (p. 500). That is what ELT pipelines between domains do, and it is why he describes such a pipeline as index maintenance at organisation scale (pp. 500-501).
+
+There are limits. A total order needs everything to pass through one leader, and it stops being available across partitioned logs, data centres and independently owned services (p. 493). So when one domain records that a user unfriended someone and another sends that person a message, the dependency between the two can be lost, and it has to be recovered by logging what state each decision saw (p. 494). Expect some cross-domain questions to have no single right order.
+
+Finally, a distinction that decides which incidents matter most. A late dashboard is a violation of **timeliness**, and waiting fixes it. The tax bug that opens this chapter is a violation of **integrity**, and waiting will not fix it. Kleppmann's words for the two are "eventual consistency" and "perpetual inconsistency", and he asserts that in most applications integrity matters far more (pp. 524-525). Integrity is why he closes with a case for auditing. Do not assume the storage, the transforms or the pipelines are correct. Read the data back, try restoring backups, and run end-to-end checks across the whole derived pipeline, since one such check implicitly covers every disk, network and service on the way (pp. 530-532). The `check_global` test in the mesh section below is a small example, and [reconciliation](../../05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) is the usual form.
 
 ## Data mesh: the four principles
 
@@ -523,6 +538,8 @@ Use these as interview practice: name the root cause first (usually ownership or
 
 | Rule | Why |
 |---|---|
+| Name the system of record for each fact | Everything else is derived, and can be rebuilt if you know from what |
+
 | Size the architecture to the data | SMP under 1 TB, MDW up to about 10 TB, fabric or lakehouse beyond |
 | A mesh is an ownership model, not a storage choice | Each domain still runs an MDW, fabric or lakehouse |
 | Contracts before decentralisation | Ownership without contracts just moves the breakage |
@@ -560,6 +577,8 @@ Use these as interview practice: name the root cause first (usually ownership or
 | Question | Answer |
 |---|---|
 | What separates an MDW from a lakehouse? | An MDW copies at least some data from the lake into a relational warehouse. A lakehouse copies none and serves from the lake through a table format. |
+| Federation or unbundling? | Federation unifies reads, with one interface over many stores (virtualization). Unbundling unifies writes, with a log and derived views keeping stores in step (ELT, CDC). |
+
 | What makes an MDW a data fabric? | Added features: access policies, catalog, MDM, virtualization, real time, APIs, services, products. Serra's personal line is three or more, and he admits it is fuzzy. |
 | Is a data mesh an architecture? | Mainly an ownership and organisational model. Each domain still runs an MDW, fabric or lakehouse. |
 | Name the four principles. | Domain ownership, data as a product, self-serve platform, federated computational governance. |

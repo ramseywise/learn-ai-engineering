@@ -5,6 +5,7 @@ sources:
   - https://www.postgresql.org/docs/current/transaction-iso.html
   - https://www.sqlite.org/isolation.html
   - https://arxiv.org/abs/1208.4179
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

@@ -7,6 +7,7 @@ sources:
   - https://www.postgresql.org/docs/current/sql-prepare-transaction.html
   - https://iceberg.apache.org/spec/
   - https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/scheduler.html
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

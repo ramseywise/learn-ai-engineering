@@ -1,6 +1,6 @@
 # Data Science: curriculum
 
-> The order to work through the five pillars, and what each stage needs first. Contents are in [README.md](README.md), the shared library is in [references.md](references.md), and each pillar's README has its own reading order.
+> The order to work through the pillars, and what each stage needs first. Contents are in [README.md](README.md), the shared library is in [references.md](references.md), and each pillar's README has its own reading order.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ flowchart TD
     D --> T["02 Deep learning, note 06: neural text"]
     N --> T
     T --> N2["03 NLP, notes 05 to 07"]
-    D --> L["04 LLMs from scratch"]
+    D --> L["Generative AI 09: LLMs from scratch"]
     T --> L
     C --> R["05 Time series and recommenders"]
     D --> R
@@ -35,7 +35,7 @@ flowchart TD
 | 3 | [03 NLP](03-nlp/README.md): 01 to 04 | 01 notes 02 to 04 | Can run alongside stage 2. Notes 03 and 04 can swap |
 | 4 | [02 Deep learning](02-deep-learning/notes/06-neural-text-models.md): note 06 | Stage 2 and NLP note 04 | Where the two branches meet |
 | 5 | [03 NLP](03-nlp/README.md): 05 to 07 | Stage 3, and note 06 for 07 | Note 07 reruns the classical methods on LLM embeddings. Check the [pillar's reading order](03-nlp/README.md#reading-order) for the rest |
-| 6 | [04 LLMs from scratch](04-llms-from-scratch/README.md): 01 to 03 | Logistic regression, softmax | Strictly sequential, as each part reuses the previous code. Learn backprop once in 02 note 01 or here, then use the other as a check |
+| 6 | [Generative AI 09: LLMs from scratch](../generative-ai/09-llms-from-scratch/README.md): 01 to 03 | Logistic regression, softmax | Strictly sequential, as each part reuses the previous code. Learn backprop once in 02 note 01 or here, then use the other as a check |
 | 7 | [05 Time series and recommenders](05-time-series-and-recommenders/README.md): 01 to 03 | 01 throughout, 02 note 01 for the sequence and two-tower parts | Independent of stages 3 to 6, so it can come any time after stage 2 |
 
 When nanoGPT is done, continue to [generative AI, LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md).

@@ -10,6 +10,7 @@ sources:
   - https://www.cs.cornell.edu/~shmat/shmat_oak08netflix.pdf
   - https://docs.delta.io/latest/delta-utility.html
   - https://duckdb.org/docs/stable/operations_manual/securing_duckdb/overview
+  - https://dataintensive.net/
 confidence: medium
 cleaned: 2026-11-02
 ---
@@ -535,6 +536,8 @@ The roles decide who answers. Under [Article 4](https://gdpr-info.eu/art-4-gdpr/
 ## Erasure on immutable storage
 
 [Article 17](https://gdpr-info.eu/art-17-gdpr/) gives a person the right to erasure without undue delay when a listed ground applies, for example when the data is no longer needed or consent is withdrawn. It isn't absolute. Article 17(3) excludes processing needed for a legal obligation, for certain archiving and research purposes, and for legal claims, so finance's tax records can legitimately stay while her marketing profile goes. [Article 12(3)](https://gdpr-info.eu/art-12-gdpr/) sets the response time: within one month of the request, extendable by two further months for complex or numerous requests. That window has to contain your compaction and retention schedule.
+
+Engineers should approach this knowing that the architecture they have been taught pulls the other way. Immutable logs, append-only tables and reprocessing are what make pipelines safe to run, and [*Designing Data-Intensive Applications*](https://dataintensive.net/) says so directly: on systems built that way, deletion is more a matter of making data harder to retrieve than making it impossible, since copies linger in storage engines, file systems and backups (ch. 11, pp. 463-464). His closing chapter puts the tension plainly. Data should be purged once it is no longer needed, which runs against immutability, and cryptographic access control may be one way through (ch. 12, p. 543), which is the crypto-shredding below. The same passage gives the reason to minimise in the first place. Critics call data a toxic asset or a hazardous material, because holding it creates a risk that outlives the system and the company's good intentions, and that purpose-limited collection conflicts with the collect-everything habit of a lake (pp. 541-543). A retention rule is a design decision and deserves to be made like one.
 
 Parquet files can't be edited, so a delete means finding every file holding the person and rewriting it:
 

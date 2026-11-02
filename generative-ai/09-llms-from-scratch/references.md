@@ -5,7 +5,7 @@ sources:
 confidence: high
 cleaned: 2026-11-01
 ---
-# 04-llms-from-scratch references
+# 09-llms-from-scratch references
 
 ★ = changed a claim in the notes. ⚑ = preprint only. Books shared across pillars are in the [subject references](../../data-science/references.md). PDFs live in the shared [`../../data-science/sources/`](../../data-science/sources/). Notes: [01 micrograd](notes/01-micrograd.md), [02 makemore](notes/02-makemore.md), [03 nanoGPT](notes/03-nanogpt.md).
 

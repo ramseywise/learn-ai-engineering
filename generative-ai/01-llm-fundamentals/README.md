@@ -88,7 +88,7 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 |---|---|---|
 | Code in every chapter | Each Python block runs as written. `# illustrative` marks the few that need a key, a GPU or a local server | Copy a block to a file, then `uv run --with torch --with transformers python file.py`. Chapter 14's Hub blocks need network access |
 | [01-typescript-sdk](practice/01-typescript-sdk/) | The bridge for TypeScript readers: one request, streaming, structured output via a strict tool, the tool loop, multi-turn history | Needs Node, `npm install @anthropic-ai/sdk tsx typescript` and `ANTHROPIC_API_KEY`; makes paid API calls. `npx tsx 01-api-call.ts` |
-| [data-science/practice/nn-zero-to-hero](../../data-science/04-llms-from-scratch/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | Notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
+| [data-science/practice/nn-zero-to-hero](../09-llms-from-scratch/practice/nn-zero-to-hero/README.md) | micrograd → makemore → nanoGPT | Notebooks; nanoGPT's full config wants a GPU, shrink it for CPU |
 
 ---
 

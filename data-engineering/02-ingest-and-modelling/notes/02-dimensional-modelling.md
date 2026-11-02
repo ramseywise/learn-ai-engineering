@@ -5,6 +5,7 @@ sources:
   - https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 3"
   - https://docs.getdbt.com/docs/build/snapshots
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

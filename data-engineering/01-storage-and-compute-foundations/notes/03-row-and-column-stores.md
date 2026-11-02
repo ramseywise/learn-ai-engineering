@@ -5,6 +5,7 @@ sources:
   - https://doi.org/10.1145/1376616.1376712
   - https://doi.org/10.1145/3226595.3226638
   - https://doi.org/10.1145/3299869.3320212
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

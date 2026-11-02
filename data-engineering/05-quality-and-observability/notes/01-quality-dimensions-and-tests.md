@@ -6,6 +6,7 @@ sources:
   - https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
   - https://docs.getdbt.com/docs/build/data-tests
   - https://docs.greatexpectations.io/docs/core/define_expectations/create_an_expectation
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -230,7 +231,7 @@ Output:
 [('2024-03-10', 2980, 0), ('2024-03-18', 2947, 5894)]
 ```
 
-This single check catches two faults that needed different tests above. It has one blind spot worth knowing: the producer's count has to be calculated independently of the send. A count taken after a retry would have said 5,894, and agreed with the bug. When money is involved, reconcile sums as well as counts, because a null spike leaves the row count unchanged.
+This single check catches two faults that needed different tests above. It has one blind spot worth knowing: the producer's count has to be calculated independently of the send. A count taken after a retry would have said 5,894, and agreed with the bug. When money is involved, reconcile sums as well as counts, because a null spike leaves the row count unchanged. Kleppmann makes the general case in [*Designing Data-Intensive Applications*](https://dataintensive.net/) (ch. 12, pp. 530-532): do not take on trust that disks, pipelines and libraries work, read the data back and check it, and prefer a check across the whole derived pipeline, since one such check implicitly covers every step on the way.
 
 ## The same rules in Great Expectations
 

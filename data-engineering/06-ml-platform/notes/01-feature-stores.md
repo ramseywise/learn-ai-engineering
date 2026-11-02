@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2209.09125
   - https://research.google/pubs/the-ml-test-score-a-rubric-for-ml-production-readiness-and-technical-debt-reduction/
   - https://duckdb.org/docs/stable/guides/sql_features/asof_join
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -98,7 +99,7 @@ Output:
 
 ## The naive join and the as-of join
 
-The tempting join matches on the window the ride falls in. The correct one takes, for each ride, the latest feature row whose `feature_ts` is at or before the pickup. That operation is called an as-of or point-in-time join. [DuckDB has it as `ASOF JOIN`](https://duckdb.org/docs/stable/guides/sql_features/asof_join), and every feature store's training path is some version of it.
+The tempting join matches on the window the ride falls in. The correct one takes, for each ride, the latest feature row whose `feature_ts` is at or before the pickup. That operation is called an as-of or point-in-time join. [DuckDB has it as `ASOF JOIN`](https://duckdb.org/docs/stable/guides/sql_features/asof_join), and every feature store's training path is some version of it. The same problem appears in stream processing, where [*Designing Data-Intensive Applications*](https://dataintensive.net/) calls it a time-dependent join and solves it the same way, by joining to the version in force at the time of the event (ch. 11, pp. 475-476).
 
 ```mermaid
 flowchart LR

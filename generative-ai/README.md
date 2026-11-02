@@ -26,11 +26,12 @@ Each pillar exists because the previous one left a problem behind. A model on it
                                                                07 Agentic applications
 ```
 
-The numbers are stable folder names, not a strict sequence: 08 is the Eval pillar, moved here from ai-engineering, and it belongs beside 06 and before 07 in your reading.
+The numbers are stable folder names, not a strict sequence. 08 is the Eval pillar, moved here from ai-engineering, and it belongs beside 06 and before 07 in your reading. 09 is LLMs from scratch, moved here from data science, and it reads straight after 01.
 
 | Read | Pillar | The question it answers | Notes | Deck |
 |---|---|---|---|---|
 | 1 | [01 LLM fundamentals](01-llm-fundamentals/README.md) | What are these models, and how do you prompt, call and adapt them? | 14 | [pptx](01-llm-fundamentals/slides/llm-fundamentals.pptx) |
+| 1b | [09 LLMs from scratch](09-llms-from-scratch/README.md) | What is inside a GPT, line by line? | 3 | [pptx](09-llms-from-scratch/slides/llms-from-scratch.pptx) |
 | 2 | [02 RAG & retrieval](02-rag-retrieval/README.md) | How do you give a model knowledge at inference time? | 14 | in progress |
 | 3 | [03 Agentic foundations](03-agentic-foundations/README.md) | How do models plan, use tools and work in loops? | 7 | [pptx](03-agentic-foundations/slides/agentic-foundations.pptx), [pdf](03-agentic-foundations/slides/agentic-foundations.pdf) |
 | 4 | [04 Agentic frameworks](04-agentic-frameworks/README.md) | What do LangGraph, ADK and LangSmith do for one research agent, and which should you pick? | 7 | [pptx](04-agentic-frameworks/slides/agentic-frameworks.pptx), [pdf](04-agentic-frameworks/slides/agentic-frameworks.pdf) |

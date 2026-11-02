@@ -13,7 +13,7 @@ cleaned: 2026-11-01
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
-| ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | ch. 10 (workflow schedulers pp. 402-403; replacing outputs and human fault tolerance pp. 413-414; schema on read pp. 415-416), ch. 11 (idempotence p. 478) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-transform.md), [02](notes/02-orchestrate.md), [04](notes/04-idempotency-and-backfills.md) |
+| ★ Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | ch. 10 (workflow schedulers pp. 402-403; replacing outputs and human fault tolerance pp. 413-414; schema on read pp. 415-416), ch. 11 (idempotence p. 478), ch. 12 (end-to-end argument pp. 518-519). Metadata databases and zombie tasks link back to ch. 7-9 through [pillar 01](../01-storage-and-compute-foundations/README.md) | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-transform.md), [02](notes/02-orchestrate.md), [04](notes/04-idempotency-and-backfills.md), [05](notes/05-dagster-and-airflow.md) |
 
 ## Core papers
 

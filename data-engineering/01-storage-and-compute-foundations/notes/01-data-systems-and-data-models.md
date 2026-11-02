@@ -3,6 +3,7 @@ origin: book-condensed
 sources:
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 1 and 2"
   - https://doi.org/10.1145/362384.362685
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---

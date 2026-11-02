@@ -3,6 +3,7 @@ origin: book-condensed
 sources:
   - "Kleppmann, Designing Data-Intensive Applications (O'Reilly, 2017), ch. 8"
   - https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/tasks.html
+  - https://dataintensive.net/
 confidence: high
 cleaned: 2026-11-01
 ---
