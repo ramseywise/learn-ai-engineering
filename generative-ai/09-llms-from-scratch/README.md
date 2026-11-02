@@ -1,4 +1,4 @@
-# 04 — LLMs from scratch
+# 09 — LLMs from scratch
 
 > Build the whole stack of a language model by hand, from the chain rule to GPT-2, so that nothing underneath stays magic. Deck: [`slides/llms-from-scratch.pptx`](slides/llms-from-scratch.pptx) (source [`slides/deck.yaml`](slides/deck.yaml)). Practice: [`practice/`](practice/). References: [`references.md`](references.md).
 
@@ -8,7 +8,7 @@ Three chapters built on Karpathy's [*Neural Networks: Zero to Hero*](https://kar
 
 ## Why it matters
 
-Most of what breaks in training has a one-line explanation once you have built the thing: a first loss of 27 where 3.30 belongs, tanh units saturated at 70%, an accumulation loop whose gradients are four times too large, a BatchNorm over the wrong dimension that raises no error. People who have written the stack can read those failures. There is also a floor to reach before the [generative AI](../../generative-ai/README.md) material makes sense, as tokenisation, attention and pre-training all assume this one.
+Most of what breaks in training has a one-line explanation once you have built the thing: a first loss of 27 where 3.30 belongs, tanh units saturated at 70%, an accumulation loop whose gradients are four times too large, a BatchNorm over the wrong dimension that raises no error. People who have written the stack can read those failures. There is also a floor to reach before the [generative AI](../../README.md) material makes sense, as tokenisation, attention and pre-training all assume this one.
 
 ## The story
 
@@ -22,7 +22,7 @@ A network is one big expression, and backpropagation is the chain rule walked th
 | 02 | [makemore](notes/02-makemore.md) | What is a language model at its smallest, and how do you keep a deep one trainable? |
 | 03 | [nanoGPT](notes/03-nanogpt.md) | What is attention, what does each piece of a transformer buy, and how is GPT-2 trained? |
 
-Then continue with [LLM fundamentals](../../generative-ai/01-llm-fundamentals/README.md) in generative AI, which starts from tokenisation and treats LLMs as systems.
+Then continue with [LLM fundamentals](../../01-llm-fundamentals/README.md) in generative AI, which starts from tokenisation and treats LLMs as systems.
 
 ## Rules of thumb
 

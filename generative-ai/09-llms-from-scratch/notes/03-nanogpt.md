@@ -195,7 +195,7 @@ A few things to notice about the mechanism, each of which turns into a design de
 | Attention is communication on a directed graph | Nodes gather values from the nodes that point to them, and the mask defines that graph |
 | It has no notion of position | It works on a set, so **position embeddings** are added to the token embeddings |
 | Batch elements never talk | Each sequence is processed on its own |
-| Remove the mask and you have an encoder | Every token sees every other one, as in the [BERT pipelines of neural text models](../../02-deep-learning/notes/06-neural-text-models.md) |
+| Remove the mask and you have an encoder | Every token sees every other one, as in the [BERT pipelines of neural text models](../../../data-science/02-deep-learning/notes/06-neural-text-models.md) |
 | Self versus cross attention | Self: query, key and value all come from `x`. Cross: the query comes from `x`, and keys and values from another source, such as an encoder in translation |
 
 ## From one head to a transformer
@@ -659,10 +659,10 @@ In the lecture, one epoch of 10B tokens took about two hours on eight A100s. It 
 
 | Chapter | Model | Learns from | Context |
 |---|---|---|---|
-| [Supervised learning](../../01-classical-ml/notes/02-supervised-learning.md) | Logistic regression | Hand-made features | None |
-| [Text classification](../../03-nlp/notes/02-text-classification.md) | TF-IDF and logistic regression | Word counts | Bag of n-grams |
-| [Embeddings and similarity](../../03-nlp/notes/04-embeddings-and-similarity.md) | word2vec | Co-occurrence | Window of about 5 |
-| [Neural text models](../../02-deep-learning/notes/06-neural-text-models.md) | LSTM | Labels or the following word | Recurrent state |
+| [Supervised learning](../../../data-science/01-classical-ml/notes/02-supervised-learning.md) | Logistic regression | Hand-made features | None |
+| [Text classification](../../../data-science/03-nlp/notes/02-text-classification.md) | TF-IDF and logistic regression | Word counts | Bag of n-grams |
+| [Embeddings and similarity](../../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | word2vec | Co-occurrence | Window of about 5 |
+| [Neural text models](../../../data-science/02-deep-learning/notes/06-neural-text-models.md) | LSTM | Labels or the following word | Recurrent state |
 | [makemore](02-makemore.md) | MLP, WaveNet-style tree | The following character | 3 to 8 characters |
 | This chapter | Transformer | The following token, 10B of them | 1,024 tokens, full attention |
 

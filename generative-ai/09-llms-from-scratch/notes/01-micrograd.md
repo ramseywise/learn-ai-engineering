@@ -52,7 +52,7 @@ print("dd/da", round((d(a + h, b, c) - d(a, b, c)) / h, 4),
 dd/da -3.0  dd/db 2.0  dd/dc 1.0
 ```
 
-Numerical gradients are how you *check* an implementation ([gradient checking](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) in the Ng course is the same idea). They are far too slow to train with, since they need one extra forward pass per parameter, and a language model has millions of parameters. What we want is every partial derivative for about the cost of one more pass. That is what reverse-mode differentiation gives, a result old enough to have been rediscovered several times. Rumelhart, Hinton and Williams ([*Nature* 1986](https://doi.org/10.1038/323533a0)) made it the standard way to train networks, and Baydin et al. ([arXiv:1502.05767](https://arxiv.org/abs/1502.05767), *JMLR* 2018) survey the general technique.
+Numerical gradients are how you *check* an implementation ([gradient checking](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) in the Ng course is the same idea). They are far too slow to train with, since they need one extra forward pass per parameter, and a language model has millions of parameters. What we want is every partial derivative for about the cost of one more pass. That is what reverse-mode differentiation gives, a result old enough to have been rediscovered several times. Rumelhart, Hinton and Williams ([*Nature* 1986](https://doi.org/10.1038/323533a0)) made it the standard way to train networks, and Baydin et al. ([arXiv:1502.05767](https://arxiv.org/abs/1502.05767), *JMLR* 2018) survey the general technique.
 
 ## The `Value` object
 

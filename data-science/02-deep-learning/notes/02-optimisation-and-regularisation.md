@@ -118,7 +118,7 @@ large  activation std first 23 last 1.04e+10  start loss 1.09e+12  test 0.446
 he     activation std first 0.406 last 0.317  start loss 2.35  test 0.970
 ```
 
-Zeros and too-small weights land on the same 0.102, ten-class chance on this split: with no signal reaching the last layer, there is nothing to learn from. Large weights start with a loss near $10^{12}$. Only He keeps the activations at a stable scale from first layer to last, and only it trains. PyTorch's `nn.Linear` default is a scaled uniform that is close enough for shallow networks, so you notice this mainly as depth grows. [makemore](../../04-llms-from-scratch/notes/02-makemore.md#part-3-activations-gradients-and-batchnorm) revisits the idea with activation histograms.
+Zeros and too-small weights land on the same 0.102, ten-class chance on this split: with no signal reaching the last layer, there is nothing to learn from. Large weights start with a loss near $10^{12}$. Only He keeps the activations at a stable scale from first layer to last, and only it trains. PyTorch's `nn.Linear` default is a scaled uniform that is close enough for shallow networks, so you notice this mainly as depth grows. [makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md#part-3-activations-gradients-and-batchnorm) revisits the idea with activation histograms.
 
 ## Normalising inside the network
 
@@ -282,7 +282,7 @@ lr 0.1     test 0.847
 lr 1.0     test 0.100
 ```
 
-In a real training run, the rate also changes over time. [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) uses AdamW with warmup and cosine decay.
+In a real training run, the rate also changes over time. [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) uses AdamW with warmup and cosine decay.
 
 D-Adaptation tries to remove the search: it maintains a lower bound on the distance to the solution and sets the rate from it, with no extra evaluations ([arXiv:2301.07733](https://arxiv.org/abs/2301.07733) (Defazio and Mishchenko, ICML 2023)). The authors report matching hand-tuned rates across more than a dozen problems, with `lr=1.0` as the setting to leave alone. On my small MLP and these short runs, it did not:
 

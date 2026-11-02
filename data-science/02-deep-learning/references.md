@@ -72,6 +72,6 @@ cleaned: 2026-11-01
 | [Stanford CS231n](https://cs231n.stanford.edu/) | Free course site | 02, 04 | Notes on optimisation, CNN architectures and detection |
 | [Stanford CS224N, Winter 2021](https://www.youtube.com/playlist?list=PLoROMvodv4rOSH4v6133s9LFPRHjEmbmJ) | YouTube, free | 05, 06 | Word vectors, RNNs, LSTMs, seq2seq and attention lectures |
 | [fast.ai, Practical Deep Learning for Coders](https://course.fast.ai/) | Free | 03, 06 | The top-down view of training, transfer learning and NLP |
-| [Karpathy, Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) | YouTube, free | 01, 05, 06 | micrograd and makemore lectures, which [the LLMs from scratch pillar](../04-llms-from-scratch/README.md) builds on |
+| [Karpathy, Neural Networks: Zero to Hero](https://karpathy.ai/zero-to-hero.html) | YouTube, free | 01, 05, 06 | micrograd and makemore lectures, which [the LLMs from scratch pillar](../../generative-ai/09-llms-from-scratch/README.md) builds on |
 | [PyTorch tutorials, Learn the Basics](https://pytorch.org/tutorials/beginner/basics/intro.html) | Free docs | 01 | Tensors to the training loop |
 | [Hugging Face, LLM Course](https://huggingface.co/learn/llm-course) | Free | 06 | Chapter 1, the source of the pipeline examples |

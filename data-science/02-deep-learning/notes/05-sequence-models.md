@@ -22,11 +22,11 @@ cleaned: 2026-11-01
 | Notebook | Builds | Key idea |
 |---|---|---|
 | Building an RNN: Step by Step | `rnn_cell_forward`, `lstm_cell_forward` and backward passes in NumPy | $a^{\langle t\rangle} = \tanh(W_{aa} a^{\langle t-1\rangle} + W_{ax} x^{\langle t\rangle} + b_a)$; LSTM gates (forget, update, output) protect the cell state from vanishing gradients |
-| Dinosaurus Island | Character-level RNN language model on dinosaur names; gradient clipping; sampling | The same task as [makemore](../../04-llms-from-scratch/notes/02-makemore.md), with an RNN instead of an MLP |
+| Dinosaurus Island | Character-level RNN language model on dinosaur names; gradient clipping; sampling | The same task as [makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md), with an RNN instead of an MLP |
 | Jazz improvisation with LSTM | Keras LSTM that generates music values; inference loop feeding samples back in | Training vs autoregressive sampling |
 | Operations on word vectors | Cosine similarity, analogies with GloVe (`man : woman :: king : ?`), debiasing by neutralise/equalise | Embedding geometry; bias in embeddings ([NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md)) |
 | Emojify | Average of GloVe vectors → softmax; then a 2-layer LSTM over the embeddings | Pretrained embeddings let 127 training sentences generalise |
-| Neural machine translation with attention | Date normalisation ("3 May 1979" → "1979-05-03") with a Bi-LSTM encoder and attention | Attention weights $\alpha^{\langle t, t'\rangle} = \text{softmax}(e)$: the bridge to [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) |
+| Neural machine translation with attention | Date normalisation ("3 May 1979" → "1979-05-03") with a Bi-LSTM encoder and attention | Attention weights $\alpha^{\langle t, t'\rangle} = \text{softmax}(e)$: the bridge to [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) |
 | Trigger word detection | Synthesise audio training data, spectrogram → Conv1D → GRU → per-timestep sigmoid | Data synthesis; sequence labelling |
 
 ```mermaid
@@ -208,7 +208,7 @@ The opposite failure is exploding gradients. The fix is to rescale the whole gra
 
 ## Character models and sampling
 
-The **Dinosaurus Island** notebook trains on dinosaur names, one character per step, each predicting the next. The name list didn't get copied to this repo, so here is a stand-in built from syllables. [makemore](../../04-llms-from-scratch/notes/02-makemore.md) trains the same kind of model on real names.
+The **Dinosaurus Island** notebook trains on dinosaur names, one character per step, each predicting the next. The name list didn't get copied to this repo, so here is a stand-in built from syllables. [makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md) trains the same kind of model on real names.
 
 ```python
 import random
@@ -398,7 +398,7 @@ attention=True   characters right 1.000  whole date right 1.000
   output '3' looks at '3' at position 0
 ```
 
-After six epochs on the same data, attention gets every held-out date right, while the bottleneck model gets 3% of whole dates. The printout shows what the weights read. The year digits look at the year (the century at its neighbour, since only 19 and 20 occur), the month digits look at the "m" of "may", and the day digits look at the "3" and the space beside it. Now take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
+After six epochs on the same data, attention gets every held-out date right, while the bottleneck model gets 3% of whole dates. The printout shows what the weights read. The year digits look at the year (the century at its neighbour, since only 19 and 20 occur), the month digits look at the "m" of "may", and the day digits look at the "3" and the space beside it. Now take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
 
 ## Reading
 

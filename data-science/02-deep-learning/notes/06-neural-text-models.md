@@ -20,7 +20,7 @@ cleaned: 2026-11-01
 ---
 # Neural text models
 
-> You have 5,000 labelled movie reviews. Should you learn embeddings and an LSTM, or fit a linear model on word counts? This chapter runs both on the same split, and the linear model wins. That result explains why text went the way it did: the neural models needed their representations pre-trained on far more text. So the chapter moves from bags of words to models that read in order, then to next-word generation, then to pre-trained sentence encoders, and finally to pre-trained transformers behind a one-line `pipeline()`. It is the last stop before building a language model from scratch in [micrograd](../../04-llms-from-scratch/notes/01-micrograd.md) to [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md).
+> You have 5,000 labelled movie reviews. Should you learn embeddings and an LSTM, or fit a linear model on word counts? This chapter runs both on the same split, and the linear model wins. That result explains why text went the way it did: the neural models needed their representations pre-trained on far more text. So the chapter moves from bags of words to models that read in order, then to next-word generation, then to pre-trained sentence encoders, and finally to pre-trained transformers behind a one-line `pipeline()`. It is the last stop before building a language model from scratch in [micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) to [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md).
 
 ```mermaid
 flowchart LR
@@ -318,9 +318,9 @@ What goes wrong, and why it matters for what follows:
 
 | Symptom | Cause | Fix (and where it reappears) |
 |---|---|---|
-| Output loops ("the the the", repeated lines) | Greedy `argmax` | Sample from the softmax with a temperature; top-k / top-p ([nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md)) |
+| Output loops ("the the the", repeated lines) | Greedy `argmax` | Sample from the softmax with a temperature; top-k / top-p ([nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)) |
 | Grammatical for a few words, then drifts | Small corpus; context is one line | More data, longer context |
-| Huge output layer | Word-level vocabulary | Character or subword tokens ([makemore](../../04-llms-from-scratch/notes/02-makemore.md), BPE in [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md)) |
+| Huge output layer | Word-level vocabulary | Character or subword tokens ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md), BPE in [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)) |
 | Bidirectional generator | Uses the future at training time but not at sampling | Causal (left-to-right) models only |
 
 This is the same task, next-token prediction trained with cross-entropy, that makemore and nanoGPT solve with better architectures. The notebook's own settings were `Embedding(total_words, 100)`, `Bidirectional(LSTM(150))`, `to_categorical` and 10 epochs, and the translation table above covers those layers.
@@ -532,7 +532,7 @@ french: Quel âge avez-vous ?
 | question-answering | DistilBERT on SQuAD (extractive span) | Encoder | n/a |
 | fill-mask | DistilRoBERTa | Encoder (masked LM) | n/a |
 | summarization, translation | BART / T5 | Encoder–decoder | [NLP topic models](../../03-nlp/notes/03-topic-models-and-summarization.md) |
-| text-generation | GPT-2 | Decoder (causal LM) | [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) |
+| text-generation | GPT-2 | Decoder (causal LM) | [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) |
 | zero-shot-classification | BART-large-MNLI | Encoder–decoder, NLI trick | [NLP text classification](../../03-nlp/notes/02-text-classification.md) |
 
 The encoders descend from BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04805) (Devlin et al., NAACL 2019)), and DistilBERT is a smaller distilled version ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)). A pipeline is tokenizer → model → post-processing, so open it up with `AutoTokenizer` and `AutoModelForSequenceClassification` when you need batching control or fine-tuning (`Trainer`). This ran on transformers 5.22.1, which removed the `question-answering`, `summarization` and `translation` pipeline tasks that the notebook used. Asking for them raises a `KeyError` that points to `text-generation` with a chat model, while the same models still run through the `Auto` classes above. Three more things show in the output. `aggregation_strategy="first"` matters, because `"simple"` split Sylvain into S, ##yl and ##va. The "summary" is two sentences copied from the passage. GPT-2 continues text about a course with the JVM, since a base model completes text and has no instruction to follow.
@@ -550,7 +550,7 @@ The encoders descend from BERT ([arXiv:1810.04805](https://arxiv.org/abs/1810.04
 
 ## What attention fixed
 
-An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. [The date model](05-sequence-models.md#seq2seq-and-attention) showed the first problem directly. Attention lets every position look directly at every other position with learned weights, and the Transformer drops recurrence entirely ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762) (Vaswani et al., NeurIPS 2017)). Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([micrograd](../../04-llms-from-scratch/notes/01-micrograd.md)), language-model training ([makemore](../../04-llms-from-scratch/notes/02-makemore.md)), and the Transformer itself ([nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md)). The LLM-level view continues in [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
+An encoder RNN squeezes a whole sentence into one final state, and its steps cannot run in parallel. [The date model](05-sequence-models.md#seq2seq-and-attention) showed the first problem directly. Attention lets every position look directly at every other position with learned weights, and the Transformer drops recurrence entirely ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762) (Vaswani et al., NeurIPS 2017)). Building that from scratch, one piece at a time, is the job of the next three notes: autograd ([micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md)), language-model training ([makemore](../../../generative-ai/09-llms-from-scratch/notes/02-makemore.md)), and the Transformer itself ([nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md)). The LLM-level view continues in [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
 
 ## Reading
 
@@ -622,4 +622,4 @@ The intro-to-nlp TensorFlow notebooks are in [`practice/intro-to-nlp/tensorFlow/
 
 ## Next
 
-[micrograd](../../04-llms-from-scratch/notes/01-micrograd.md): a scalar autograd engine in about 100 lines, the machinery under every model above. On the text side, [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) goes deeper.
+[micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md): a scalar autograd engine in about 100 lines, the machinery under every model above. On the text side, [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) goes deeper.

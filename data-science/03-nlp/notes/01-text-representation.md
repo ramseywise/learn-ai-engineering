@@ -349,7 +349,7 @@ length percentiles (50, 90, 95, 99): [ 55  93 113 152]
 | Sequence length | Cover ~90–95% of documents | Plot the length distribution |
 | Padding / truncating | `"pre"` (default) or `"post"` | For RNNs, `pre`-padding keeps the real tokens near the final state |
 
-Word-level vocabularies cannot handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead. The [Hugging Face pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines) use one, and [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) and the [LLM fundamentals pillar](../../../generative-ai/01-llm-fundamentals/README.md) build BPE.
+Word-level vocabularies cannot handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead. The [Hugging Face pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines) use one, and [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) and the [LLM fundamentals pillar](../../../generative-ai/01-llm-fundamentals/README.md) build BPE.
 
 ## Choosing a representation
 

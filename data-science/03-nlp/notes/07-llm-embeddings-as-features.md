@@ -630,4 +630,4 @@ PCA wins, 0.469 to 0.41. The raw coordinates carry no ordering of importance, so
 
 ## Next
 
-[Neural text models](../../02-deep-learning/notes/06-neural-text-models.md) shows how CNNs, LSTMs and transformers produce such representations and how to fine-tune them. To build one from the ground up, go on to the next pillar, [LLMs from scratch](../../04-llms-from-scratch/README.md).
+[Neural text models](../../02-deep-learning/notes/06-neural-text-models.md) shows how CNNs, LSTMs and transformers produce such representations and how to fine-tune them. To build one from the ground up, go on to the next pillar, [LLMs from scratch](../../../generative-ai/09-llms-from-scratch/README.md).

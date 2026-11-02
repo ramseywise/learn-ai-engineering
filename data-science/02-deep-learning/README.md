@@ -8,7 +8,7 @@ Neural networks from the forward pass to pre-trained transformers, split along t
 
 ## Why it matters
 
-Classical models carry tabular data, but images, sequences and text need a model that learns its own representation. Networks are also harder to trust. A wrong initial weight, a forgotten `model.eval()` or `weight_decay` in the wrong optimiser raises no error and can cost anything from 9 points to the whole model. The value of this pillar is knowing what to measure when the loss looks wrong, and knowing what to try next. It is also the prerequisite for [LLMs from scratch](../04-llms-from-scratch/README.md).
+Classical models carry tabular data, but images, sequences and text need a model that learns its own representation. Networks are also harder to trust. A wrong initial weight, a forgotten `model.eval()` or `weight_decay` in the wrong optimiser raises no error and can cost anything from 9 points to the whole model. The value of this pillar is knowing what to measure when the loss looks wrong, and knowing what to try next. It is also the prerequisite for [LLMs from scratch](../../generative-ai/09-llms-from-scratch/README.md).
 
 ## The story
 

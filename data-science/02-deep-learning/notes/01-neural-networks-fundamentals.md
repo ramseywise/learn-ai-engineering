@@ -16,7 +16,7 @@ cleaned: 2026-11-01
 
 > A neural network is logistic regression stacked: forward pass, loss, backward pass by the chain rule, gradient step. Your Ng coursework builds that by hand in NumPy with a cache for every layer. PyTorch does the backward pass for you, and this chapter shows the two produce the same gradients, so you know what `loss.backward()` hides. Every later chapter in this pillar is written in PyTorch and uses one running dataset: the 1,797 8×8 handwritten digits that ship with scikit-learn.
 
-The sklearn `MLPClassifier` in [supervised learning](../../01-classical-ml/notes/02-supervised-learning.md) hides all of this. This chapter opens it up, and [micrograd](../../04-llms-from-scratch/notes/01-micrograd.md) does it again as an autograd engine in about 100 lines.
+The sklearn `MLPClassifier` in [supervised learning](../../01-classical-ml/notes/02-supervised-learning.md) hides all of this. This chapter opens it up, and [micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) does it again as an autograd engine in about 100 lines.
 
 ```mermaid
 flowchart LR
@@ -281,7 +281,7 @@ reloaded test 0.972
 - give the loader `sampler=DistributedSampler(train_ds)` and `shuffle=False`, so each rank sees a disjoint shard;
 - call `train_loader.sampler.set_epoch(epoch)` every epoch, or every epoch reuses the same order.
 
-Gradients are averaged across replicas after each backward pass, so the replicas stay identical. [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) runs the same pattern at GPT-2 scale with `torchrun`.
+Gradients are averaged across replicas after each backward pass, so the replicas stay identical. [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) runs the same pattern at GPT-2 scale with `torchrun`.
 
 ## Translating the Ng notebooks to PyTorch
 

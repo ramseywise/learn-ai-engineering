@@ -2,8 +2,8 @@
 origin: synthesis
 sources:
   - ../practice/nn-zero-to-hero/makemore/
-  - ../../sources/ioffe-2015-batch-normalization.pdf
-  - ../../sources/wu-2021-rethinking-batch-batchnorm.pdf
+  - ../../../data-science/sources/ioffe-2015-batch-normalization.pdf
+  - ../../../data-science/sources/wu-2021-rethinking-batch-batchnorm.pdf
   - https://github.com/karpathy/makemore
   - https://www.jmlr.org/papers/v3/bengio03a.html
   - https://arxiv.org/abs/2105.07576
@@ -289,7 +289,7 @@ Make the pre-activations unit Gaussian *by construction*, per minibatch, then le
 | Makes the preceding bias redundant | Use `bias=False` in the linear layer before it |
 | Small batches → noisy statistics | Hence LayerNorm (normalise across features of one example) in transformers ([nanoGPT](03-nanogpt.md)) |
 
-Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([arXiv:2105.07576](https://arxiv.org/abs/2105.07576), 2021-05) catalogues the problems that come from that batch dependence, using ImageNet ResNet-50s. The running average in the code above lags behind the weights. That is worst early in training and in large-batch runs, where the learning rate is higher and there are fewer updates. With a total batch of 8,192 the validation error swung from epoch to epoch. **Recomputing the statistics once after training on 10³–10⁴ samples** ("PreciseBN", the calibrated option in the table) stayed stable and cost about 0.5% extra compute if done every epoch. It also cut error by 3.5 points for a model normalised over batches of 2. The other caveats are that small normalisation batches widen the gap between training and test behaviour, and that mixing domains in one batch shifts the statistics. Examples in a batch can also leak information to each other through the shared mean. Ioffe & Szegedy's original ([PDF](../../sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works. Ba et al. introduced LayerNorm to remove exactly this batch dependence. It takes the mean and variance over one example's hidden units, so it runs at batch size 1 and does the same thing in training and inference. They tested it in recurrent networks. In convolutional nets they found that BatchNorm still won ([arXiv:1607.06450](https://arxiv.org/abs/1607.06450) (Ba et al., 2016, preprint)).
+Wu & Johnson's *Rethinking "Batch" in BatchNorm* ([arXiv:2105.07576](https://arxiv.org/abs/2105.07576), 2021-05) catalogues the problems that come from that batch dependence, using ImageNet ResNet-50s. The running average in the code above lags behind the weights. That is worst early in training and in large-batch runs, where the learning rate is higher and there are fewer updates. With a total batch of 8,192 the validation error swung from epoch to epoch. **Recomputing the statistics once after training on 10³–10⁴ samples** ("PreciseBN", the calibrated option in the table) stayed stable and cost about 0.5% extra compute if done every epoch. It also cut error by 3.5 points for a model normalised over batches of 2. The other caveats are that small normalisation batches widen the gap between training and test behaviour, and that mixing domains in one batch shifts the statistics. Examples in a batch can also leak information to each other through the shared mean. Ioffe & Szegedy's original ([PDF](../../../data-science/sources/ioffe-2015-batch-normalization.pdf)) motivated it as reducing "internal covariate shift", an explanation later work disputes even though the method works. Ba et al. introduced LayerNorm to remove exactly this batch dependence. It takes the mean and variance over one example's hidden units, so it runs at batch size 1 and does the same thing in training and inference. They tested it in recurrent networks. In convolutional nets they found that BatchNorm still won ([arXiv:1607.06450](https://arxiv.org/abs/1607.06450) (Ba et al., 2016, preprint)).
 
 ### PyTorch-ifying, and the diagnostics to look at
 
@@ -386,7 +386,7 @@ BatchNorm shows up here where it did not before. The plain tanh stack has been h
 | Weight-gradient to data std ratio per parameter | Roughly the same order everywhere; the last layer often stands out at init |
 | **Update-to-data ratio** `log10(std(lr * grad) / std(data))` over steps | Around **−3**: each step changes a weight by ~1/1000 of its size. Much lower: lr too small; much higher: too large |
 
-These plots are the tool for "my deep net won't train". [Neural network fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) covers the same initialisation and normalisation ideas from Ng's course.
+These plots are the tool for "my deep net won't train". [Neural network fundamentals](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) covers the same initialisation and normalisation ideas from Ng's course.
 
 ## Part 4: becoming a backprop ninja
 
