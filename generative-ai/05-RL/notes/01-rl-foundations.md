@@ -507,7 +507,8 @@ brings.
 
 **Contextual bandits** are the one-step case: observe a context, pick an action, get a
 reward, with no state carried forward. It is the right model for recommendation, routing and
-prompt or model selection. Two results anchor it:
+prompt or model selection. See [Bayesian bandits](../../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md#bayesian-bandits-thompson-sampling) in data
+analytics for the case with no context, and for Thompson sampling. Two results anchor it:
 
 - **LinUCB** ([arXiv:1003.0146](https://arxiv.org/abs/1003.0146), Li et al., 2010) fits a
   ridge regression per arm and picks the arm with the highest upper confidence bound. On over

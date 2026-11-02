@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Nightly /papers run: integrate downloaded PDFs into the notes, one home per headless
-# Claude session (fresh context each), biggest backlog first.
+# Nightly /papers run: integrate downloaded PDFs into the notes, one home and tier per headless
+# Claude session (fresh context each). Every home's tier 1 comes before any home's tier 2
+# (tiers: `potw.py tier`), and within a tier the biggest backlog goes first.
 #
 # Scheduled by launchd (com.wiseer.papers-nightly.plist, daily 01:00). Install with
 # `make papers-nightly-install`, remove with `make papers-nightly-uninstall`.
 #
 # Edits notes, references.md, sources/images/ and the ledger. Never commits (git
 # commit/push are disallowed below); review with `git status` in the morning.
-# A run rarely clears a big home, so each home repeats until its ready count stops falling.
+# A run rarely clears a big home, so each home and tier repeats until its ready count stops falling.
 # Stops starting new runs at STOP_HOUR (STOP_HOUR=24 never stops), or as soon as a run hits
 # the usage limit.
 
@@ -25,6 +26,7 @@ STOP_HOUR="${STOP_HOUR:-8}"
 HOMES=(post-training llm-fundamentals eval agents inference multimodal agentic-apps
        prompt context rag loop classical-ml safety ml-systems harness graph frameworks
        analytics data-systems)
+TIERS=(1 2 3 4 5 6)
 LOCK="$REPO/.claude/logs/papers-nightly.lock"
 
 cd "$REPO"
@@ -35,18 +37,18 @@ if ! mkdir "$LOCK" 2>/dev/null; then
 fi
 trap 'rmdir "$LOCK"' EXIT
 
-# PDFs ready for /papers in a home: downloaded rows, plus queued rows whose PDF is
+# PDFs ready for /papers in a home and tier: downloaded rows, plus queued rows whose PDF is
 # already in the repo (outside the inbox, not a /chapter book chapter).
 ready() {
-    python3 - "$1" <<'EOF'
+    python3 - "$1" "$2" <<'EOF'
 import json, re, sys
-home = sys.argv[1]
+home, tier = sys.argv[1], int(sys.argv[2])
 n = 0
 for line in open("scripts/papers/ledger.jsonl"):
     if not line.strip():
         continue
     r = json.loads(line)
-    if r.get("pillar") != home:
+    if r.get("pillar") != home or r.get("tier") != tier:
         continue
     pdf = r.get("local_pdf") or ""
     if r["status"] == "downloaded" or (
@@ -59,29 +61,33 @@ EOF
 
 PROMPT_TAIL="This is an unattended overnight run: nobody is available to answer questions, so make the sensible call and record it in your final report. Read each PDF in full, and tell any subagent to as well. Material a note already covers counts as sharpens: add the citation and the references.md row, never drop it silently. A usage limit can end this run at any moment, so write each paper's note edit and references.md row before you mark it integrated, in small batches. Do not commit or push; stage with git add only if the repo rules say so."
 
-for home in "${HOMES[@]}"; do
-    while :; do
-        if [ "$(date +%H)" -ge "$STOP_HOUR" ] && [ "$(date +%H)" -lt 23 ]; then
-            echo "$(date '+%F %T') past ${STOP_HOUR}:00; stopping before $home"
-            break 2
-        fi
-        n="$(ready "$home")"
-        [ "$n" -gt 0 ] || break
-        echo "$(date '+%F %T') /papers $home ($n ready)"
-        out="$(claude -p "/papers $home
+python3 scripts/papers/potw.py tier
+
+for tier in "${TIERS[@]}"; do
+    for home in "${HOMES[@]}"; do
+        while :; do
+            if [ "$(date +%H)" -ge "$STOP_HOUR" ] && [ "$(date +%H)" -lt 23 ]; then
+                echo "$(date '+%F %T') past ${STOP_HOUR}:00; stopping before $home tier $tier"
+                break 3
+            fi
+            n="$(ready "$home" "$tier")"
+            [ "$n" -gt 0 ] || break
+            echo "$(date '+%F %T') /papers $home tier:$tier ($n ready)"
+            out="$(claude -p "/papers $home tier:$tier
 
 $PROMPT_TAIL" \
-            --permission-mode auto \
-            --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" 2>&1)"
-        status=$?
-        echo "$out" | tail -40
-        left="$(ready "$home")"
-        echo "$(date '+%F %T') /papers $home exit $status; $left still ready"
-        if [ $status -ne 0 ] && echo "$out" | grep -qiE "usage limit|session limit|rate limit|limit reached|resets [0-9a]"; then
-            echo "$(date '+%F %T') usage limit hit; stopping"
-            break 2
-        fi
-        [ "$left" -lt "$n" ] || break  # no progress: what's left needs a person
+                --permission-mode auto \
+                --disallowedTools "Bash(git commit:*)" "Bash(git push:*)" "Bash(gh pr:*)" 2>&1)"
+            status=$?
+            echo "$out" | tail -40
+            left="$(ready "$home" "$tier")"
+            echo "$(date '+%F %T') /papers $home tier:$tier exit $status; $left still ready"
+            if [ $status -ne 0 ] && echo "$out" | grep -qiE "usage limit|session limit|rate limit|limit reached|resets [0-9a]"; then
+                echo "$(date '+%F %T') usage limit hit; stopping"
+                break 3
+            fi
+            [ "$left" -lt "$n" ] || break  # no progress: what's left needs a person
+        done
     done
 done
 python3 scripts/papers/potw.py status

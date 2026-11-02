@@ -68,6 +68,24 @@ sources/       the papers (Chen, Zhong, Zhu 2026) and images/ with every figure 
 
 - Upstream labs, worked through in [note 08](notes/08-self-improving-loops.md): [trajectory-verifier](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/trajectory-verifier) (Exp. 9-1, three-layer verification with calibration) and [self-modifying-agent](https://github.com/bojieli/ai-agent-book/tree/main/chapter9/self-modifying-agent) (Exp. 9-6, failure-triggered patch behind a canary gate). Clone `bojieli/ai-agent-book`, `cd chapter9/<lab>`, run `python demo.py` (offline, no API key).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [GA 03/01 Agent fundamentals](../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md) | The round cap and exits |
+| [GA 08/04 Graders](../../generative-ai/08-eval/notes/04-graders.md) | The scorekeeper's scoring |
+| [GA 08/12 Failure modes](../../generative-ai/08-eval/notes/12-failure-modes.md) | Goodhart: the eval becomes the target |
+| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Bayesian bandits for live traffic |
+| [GA 05 RL](../../generative-ai/05-RL/README.md) | Post-training as the end of the lesson path |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ---
 
 ## Rules of thumb

@@ -74,7 +74,7 @@ A forecasting problem needs four things stated before any model is fitted:
 
 ## Baselines and a scale-free metric
 
-The first model is one you cannot lose to by accident. For a series with a daily and weekly cycle, the seasonal naive forecast copies the same hour from an earlier period. It costs nothing, needs no training, and is what your model must beat before it has earned any complexity.
+The first model is one you cannot lose to by accident. For a series with a daily and weekly cycle, the seasonal naive forecast copies the same hour from an earlier period. It costs nothing, needs no training, and is what your model must beat before it has earned any complexity. [Forecasting](../../../data-analytics/06-applied-analyses/notes/01-forecasting.md#baselines-come-first) in data analytics makes the same case on a retailer's data.
 
 Absolute error in bikes means little on its own, and percentage errors break down here, since many hours have zero rentals. Hyndman and Koehler ([*International Journal of Forecasting*, 2006](https://doi.org/10.1016/j.ijforecast.2006.03.001)) surveyed these failures and proposed the mean absolute scaled error: divide your mean absolute error by the mean absolute error of a seasonal naive forecast on the training data. A MASE below 1 means you beat the in-sample naive; above 1 means you did not.
 

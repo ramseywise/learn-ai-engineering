@@ -97,6 +97,23 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - **Building an agent now:** [02](notes/02-context-anatomy.md), [05](notes/05-compression-compaction.md), [10](notes/10-tools-and-multi-agent.md), then the design order of questions in [13](notes/13-putting-it-together.md#designing-a-context-system-the-order-of-questions).
 - **Debugging one:** [11 — failure modes](notes/11-failure-modes.md), then [12 — evaluating context](notes/12-evaluating-context.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Retrieval mechanics |
+| [GA 03/03 Memory as an operating system](../../generative-ai/03-agentic-foundations/notes/03-memory-as-an-operating-system.md) | Memory mechanics |
+| [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Retrieval metrics |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | Recall and precision as cells of the table |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ---
 
 ## Lab

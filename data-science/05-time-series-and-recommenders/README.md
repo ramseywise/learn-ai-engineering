@@ -24,6 +24,27 @@ An operator needs tomorrow's bike demand by midnight. A copy of last week is the
 
 Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../02-deep-learning/README.md). Chapter 3 points at [LLM embeddings as features](../03-nlp/notes/07-llm-embeddings-as-features.md) for content features.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 01/06 Time series](../../data-analytics/01-python-for-data-analysis/notes/06-time-series.md) | Resampling and shifting |
+| [DA 03/01 A/B testing](../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) | Online evaluation and its arithmetic |
+| [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | Peeking and sequential methods |
+| [DA 06/01 Forecasting](../../data-analytics/06-applied-analyses/notes/01-forecasting.md) | Baselines, and a forecast taken through to a decision |
+| [DA 06/05 Segmentation and RFM](../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md) | The segments in the cash-flow case |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Ranking metrics used on chunks |
+| [GA 02/04 Vector databases and ANN](../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) | The same index machinery, for documents |
+| [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Recall and NDCG on retrieval |
+| [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | Forecast models drift in production |
+
 ## Rules of thumb
 
 - State the issue time, horizon and information set before fitting anything.

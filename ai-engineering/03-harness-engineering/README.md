@@ -37,6 +37,24 @@ Read the notes in order. 01–08 are the harness as components; 09–10 put it i
 
 Lecture deck: [slides/harness-engineering.pptx](slides/harness-engineering.pptx), a 5-part talk that grows one refund agent from demo to production harness, built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=03-harness-engineering`.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [GA 03/01 Agent fundamentals](../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md) | The loop a harness wraps |
+| [GA 02/08 Agentic RAG: PRINCE](../../generative-ai/02-rag-retrieval/notes/08-agentic-rag-prince.md) | The worked example |
+| [GA 08/06 Evaluating agents](../../generative-ai/08-eval/notes/06-evaluating-agents.md) | Measuring a harness |
+| [GA 08/10 Evals in CI](../../generative-ai/08-eval/notes/10-evals-in-ci.md) | Checks as gates |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | False positives and their cost |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ## Lab
 
 A tool server with sandboxing: file tools behind a sandbox boundary, with the attempts it refuses in the output. It comes in both languages, side by side, on the same inputs. Both run offline with a stub by default, and each README says how to swap in a real model.

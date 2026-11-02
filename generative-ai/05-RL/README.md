@@ -42,6 +42,22 @@ New to RL? Start at 00. It assumes no notation and no data-science pillar. If yo
 
 Chapters 12 and 13 sit where the table puts them; they were split out of 02 and 03 and kept those numbers so that links to the other chapters still hold. Short route for a working engineer: 02, 12, 03, 05, 07, then run the [Q-learning lab](practice/01-q-learning-treasure-hunt/).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 04/03 Priors and bandits](../../data-analytics/04-bayesian-analysis/notes/03-priors-and-bandits.md) | Optional: bandits and Thompson sampling, the case with no state |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 09 Safety and security](../../ai-engineering/09-safety-and-security/README.md) | Alignment training (RLHF, constitutional AI) sits behind its guardrails |
+| [AIE 04/08 Self-improving loops](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md) | Lessons that may go into post-training |
+| [AIE 02/06 Memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) | Parametric memory |
+
 ---
 
 ## Layout

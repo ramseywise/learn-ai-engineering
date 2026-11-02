@@ -78,7 +78,7 @@ This is the "spend agency per node" rule from [note 02](02-graph-primitives.md):
 
 ## Stage 2: extraction
 
-Extraction is two tasks: **NER** (find the mentions and assign types) and **relation extraction** (a typed edge between two mentions). The book's running example is the Rockefeller Archive Center: program officers' typewritten diaries from the 1930s, full of shorthand, mined for who talked with whom about which research (Negro et al., *Knowledge Graphs and LLMs in Action*, Manning 2025, ch. 5). Generic NER types (`Person`, `Organization`, `Location`) are not enough there: the valuable entity is the research topic, which no off-the-shelf model or dictionary recognises (*KG & LLMs in Action*, ch. 5).
+Extraction is two tasks: **NER** (find the mentions and assign types) and **relation extraction** (a typed edge between two mentions). The book's running example is the Rockefeller Archive Center: program officers' typewritten diaries from the 1930s, full of shorthand, mined for who talked with whom about which research (Negro et al., *Knowledge Graphs and LLMs in Action*, Manning 2025, ch. 5). Generic NER types (`Person`, `Organization`, `Location`) are not enough there: the valuable entity is the research topic, which no off-the-shelf model or dictionary recognises (*KG & LLMs in Action*, ch. 5). See [named entity recognition](../../../data-science/03-nlp/notes/05-semantic-analysis-and-ner.md#named-entity-recognition-sarkar-ch-8b) in data science for NER without an LLM.
 
 Lessons from ch. 5:
 

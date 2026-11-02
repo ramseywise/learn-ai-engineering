@@ -61,6 +61,22 @@ sources/       the papers these notes cite, as PDFs
 | 6 | [Framework selection](notes/06-framework-selection.md) | Do you need one; measured cost and stuck-run behaviour of the three builds; the dimensions; five frameworks compared; what the empirical studies found; running two side by side; lock-in checklist with an export test |
 | 7 | [LCEL composition in practice](notes/07-lcel-composition-in-practice.md) | Data flow (`RunnablePassthrough.assign`, `itemgetter`, `RunnableParallel`), sequential vs batch with `max_concurrency`, three routes to structured output (`tool_choice`, hallucinated arguments), a query plan as a validated DAG, map-reduce, few-shot limits, book APIs and their current form |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [GA 03](../03-agentic-foundations/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 05/02 Graph primitives](../../ai-engineering/05-graph-engineering/notes/02-graph-primitives.md) | The primitives under the frameworks |
+| [AIE 02/10 Tools and multi-agent](../../ai-engineering/02-context-engineering/notes/10-tools-and-multi-agent.md) | Context in multi-agent systems |
+| [AIE 03/07 Orchestration](../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) | Orchestration from the harness side |
+
 ## Rules of thumb
 
 | Rule | Note |

@@ -25,6 +25,26 @@ Logistic regression stops at 0.895 on two interleaved moons, because its boundar
 | 5 | [Sequence models](notes/05-sequence-models.md) | How does a network carry memory? | Sequence Models |
 | 6 | [Neural text models](notes/06-neural-text-models.md) | What does it take for a neural model to beat word counts? | Beyond Ng: Sarkar `Ch10a` notebook, intro-to-nlp |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [DS 01](../01-classical-ml/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 01/02 Attention and the transformer block](../../generative-ai/01-llm-fundamentals/notes/02-attention-and-the-transformer-block.md) | Attention began as a fix for recurrent networks |
+| [GA 01/06 Pretraining](../../generative-ai/01-llm-fundamentals/notes/06-pretraining-data-and-objectives.md) | Backprop, AdamW and the learning-rate sweep are assumed there |
+| [GA 09/01 Micrograd](../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) | Builds backprop from scratch |
+| [GA 08/02 Defining correct](../../generative-ai/08-eval/notes/02-defining-correct.md) | Error analysis, the same habit on an LLM's output |
+| [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | The dev and held-out split answers the same overfitting question |
+| [AIE 07/06 Serving at scale](../../ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md) | One decode step is one forward pass |
+| [AIE 08/01 Image input](../../ai-engineering/08-multimodal-engineering/notes/01-image-input.md) | CNNs came before the vision transformer used there |
+
 ## Rules of thumb
 
 - Keep a from-scratch or linear control. Transfer, contrastive pretraining and neural text models all lost to one in small runs here.

@@ -90,7 +90,7 @@ flowchart LR
   T -->|"re-ranking: diversity,<br/>freshness, business rules"| P["What the person sees"]
 ```
 
-Retrieval is judged on recall, since anything it drops can never be recovered downstream. Ranking is judged on precision near the top. That split explains the odd thing about two towers. The model cannot use any feature that crosses user and item, which would be a weakness in a ranker, and that restriction is what makes it fast at retrieval.
+Retrieval is judged on recall, since anything it drops can never be recovered downstream. Ranking is judged on precision near the top. That split explains the odd thing about two towers. The model cannot use any feature that crosses user and item, which would be a weakness in a ranker, and that restriction is what makes it fast at retrieval. In the cells of the [confusion matrix](../../01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1), an item retrieval drops is a false negative, which recall counts, and a poor item near the top of the list is a false positive, which precision counts.
 
 ## The two-tower model
 
@@ -351,7 +351,7 @@ Choose the outcome carefully. Clicks are easy to move and can be moved by clickb
 - **Measuring ANN and model together.** When recall falls, you need to know which one lost it. Evaluate brute force first, then the index.
 - **Bandit logs without propensities.** If the serving system did not record the probability of each action, IPS is not available later.
 - **Huge weights.** A few events with tiny propensity can dominate IPS. Clip, self-normalise, and report the effective sample size.
-- **Stopping an A/B test on a good day.** Repeatedly peeking inflates false positives. Fix the size in advance or use sequential methods.
+- **Stopping an A/B test on a good day.** Repeatedly peeking inflates false positives. Fix the size in advance or use sequential methods; see [Experimentation at scale](../../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md#looking-early-safely) in data analytics.
 - **Optimising the click.** A short-term metric can improve while retention falls. Keep a long-term holdout if you can afford one.
 
 ## Try it

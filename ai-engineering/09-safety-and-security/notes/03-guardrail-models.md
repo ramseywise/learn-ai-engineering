@@ -107,7 +107,7 @@ Also on that table: OpenAI's moderation API and Perspective scored lower on most
 
 ## Measuring a guard on your own traffic
 
-Label a few hundred real items, include the hard borderline ones, and compute the rates. Accuracy is the wrong summary. Harmful content is rare, so a guard that passes everything scores well. The next example simulates scores from a guard with the same quality at different base rates, so that you can see what the same classifier feels like in deployment.
+Label a few hundred real items, include the hard borderline ones, and compute the rates. Accuracy is the wrong summary. Harmful content is rare, so a guard that passes everything scores well. The next example simulates scores from a guard with the same quality at different base rates, so that you can see what the same classifier feels like in deployment. This is the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) with an attack or harmful item as the positive class, and [the base-rate calculation](../../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md#bayes-rule-inverts-the-conditional) in data analytics is why precision behaves as it does below.
 
 ```python
 import numpy as np

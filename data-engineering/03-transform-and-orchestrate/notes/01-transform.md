@@ -438,7 +438,7 @@ print(sql("SELECT round(sum(total_amount)) FROM main.fact_trips WHERE zone_id = 
 
 An inner join would have lost 5,680 trips and about $96,000 of revenue from our synthetic month, silently, with every test still green. Our generator draws zone IDs up to 265 and the lookup stops at 260, so about 2 percent of rows have no parent. The real TLC lookup is cleaner, but a new code appearing in the source will do the same thing to you on some later day.
 
-The zoomcamp's mart aggregates the fact for one question, monthly revenue by zone.
+The zoomcamp's mart aggregates the fact for one question, monthly revenue by zone. [SQL for analytics](../../../data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md#the-revenue-bridge) in data analytics shows the kind of question an analyst then asks of tables like this.
 
 ```sql
 -- illustrative: needs the zoomcamp warehouse

@@ -67,6 +67,24 @@ Harbour is a support agent for an online shop. It reads help articles, looks up 
 
 Read in order. Each chapter assumes the Harbour system and the paths from chapter 1. If you need only the practical minimum, read chapters 1 and 4.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Base rates and false alarms |
+| [DA 03/02 Metrics and KPI design](../../data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) | Guardrail metrics, a different sense of the word |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The guard's confusion matrix |
+| [GA 05/04 Constitutional AI](../../generative-ai/05-RL/notes/04-constitutional-ai.md) | Alignment training |
+| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Judges in safety evals |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ## Rules of thumb
 
 - **Any input the model reads is an instruction to it.** Retrieved documents, tool results and emails all count.

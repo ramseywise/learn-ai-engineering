@@ -24,6 +24,24 @@ A network is one big expression, and backpropagation is the chain rule walked th
 
 Then continue with [LLM fundamentals](../01-llm-fundamentals/README.md) in generative AI, which starts from tokenisation and treats LLMs as systems.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DS 01/02 Supervised learning](../../data-science/01-classical-ml/notes/02-supervised-learning.md) | Logistic regression, the first rung |
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Backprop and the training loop |
+| [DS 02/06 Neural text models](../../data-science/02-deep-learning/notes/06-neural-text-models.md) | LSTM and BERT pipelines, compared |
+| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | TF-IDF with a linear model, compared |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | word2vec, compared |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 07 Inference engineering](../../ai-engineering/07-inference-engineering/README.md) | Serving the model you built |
+
 ## Rules of thumb
 
 - Check the first loss against `-log(1/vocab)` before you train anything.

@@ -14,6 +14,21 @@
 | 2 | [Monitors and lineage](notes/02-monitors-and-lineage.md) | How do you catch what no rule anticipated, and what did the bad table touch? |
 | 3 | [Incident playbooks](notes/03-incident-playbooks.md) | Who does what, how do you stop the spread, and how do you repair it safely? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 01/02 Loading and cleaning](../../data-analytics/01-python-for-data-analysis/notes/02-loading-and-cleaning.md) | The assertions an analyst runs by hand |
+| [DA 02/01 Descriptive statistics and EDA](../../data-analytics/02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md) | Looking for what is impossible |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | Monitoring input mix, the same idea for LLM traffic |
+
 ## Rules of thumb
 
 - A test is a query that should return nothing. Its rows are the evidence.

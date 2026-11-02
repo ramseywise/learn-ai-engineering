@@ -85,6 +85,31 @@ The rules from the topic notes on one page. Each group links to the chapter that
 - **Shipping:** [10](notes/10-evals-in-ci.md), [11](notes/11-production-and-the-maturity-ladder.md).
 - **See it all on one real system:** [13](notes/13-case-study-support-agent.md), a multi-agent support system's eval design, including its mistakes.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Base rates under a judge's pass rate |
+| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Standard errors, Wilson intervals and the bootstrap |
+| [DA 02/05 Hypothesis testing](../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Paired tests and multiple comparisons |
+| [DA 03/01 A/B testing](../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) | Sample size and peeking |
+| [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | SRM, CUPED and looking early |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under judges and retrieval metrics |
+| [DS 02/03 Structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md) | Error analysis and dev and test sets |
+| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | Evals for prompts |
+| [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Evals for context |
+| [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | Graders and CI in the harness |
+| [AIE 04/03 The scorekeeper](../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md) | Scoring a loop's passes |
+| [AIE 09/05 Red-teaming tools](../../ai-engineering/09-safety-and-security/notes/05-red-teaming-tools.md) | Judges and CI gates for red teaming |
+
 ---
 
 ## Lab

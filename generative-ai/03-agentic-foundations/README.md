@@ -76,6 +76,23 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 | 6 | [Google ADK intensive](notes/06-google-adk-intensive.md) | Kaggle five-day course notes, Days 1–3: agentic engineering, tests vs evals, trajectory evaluation, context types, the new SDLC, harness, protocols, agent skills |
 | 7 | [Guardrails and autonomy](notes/07-guardrails-and-autonomy.md) | Where controls sit, lowering risk before filtering (P29–P32), self-check limits, execution gates, what the user must see, autonomy levels |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [GA 01](../01-llm-fundamentals/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 02/06 Memory](../../ai-engineering/02-context-engineering/notes/06-memory.md) | Memory as a context decision |
+| [AIE 03/01 What a harness is](../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md) | The harness around this loop |
+| [AIE 03/03 Tool design](../../ai-engineering/03-harness-engineering/notes/03-tool-design.md) | Designing what the agent calls |
+| [AIE 04/02 Loop shapes](../../ai-engineering/04-loop-engineering/notes/02-loop-shapes.md) | Stopping rules, starting from the round cap |
+
 ## Rules of thumb
 
 | Rule | Note |

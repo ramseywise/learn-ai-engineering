@@ -26,6 +26,26 @@ A model cannot read, so somebody decides how text becomes numbers, and that deci
 | 06 | [Sentiment analysis](notes/06-sentiment-analysis.md) | Dictionary, linear model or LSTM, and why do people feel that way? |
 | 07 | [LLM embeddings as features](notes/07-llm-embeddings-as-features.md) | When does a pretrained encoder beat TF-IDF, and what else can its vectors do? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 04/01 Bayesian inference](../../data-analytics/04-bayesian-analysis/notes/01-bayesian-inference.md) | Conjugacy and generative stories behind LDA |
+| [DA 04/02 MCMC and PyMC](../../data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md) | Samplers and variational inference |
+| [DA 06/05 Segmentation and RFM](../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md) | Scoring clusters against an outcome |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 01/01 Tokens and embeddings](../../generative-ai/01-llm-fundamentals/notes/01-tokens-and-embeddings.md) | Word counts to word2vec to a learned embedding table |
+| [GA 02/03 Keyword, semantic and hybrid search](../../generative-ai/02-rag-retrieval/notes/03-keyword-semantic-and-hybrid-search.md) | TF-IDF, BM25 and sentence embeddings are taught here first |
+| [GA 09/03 nanoGPT](../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) | Compares a GPT with these earlier text models |
+| [AIE 05/10 Building KGs with LLMs](../../ai-engineering/05-graph-engineering/notes/10-building-kgs-with-llms.md) | NER without an LLM |
+| [AIE 08/03 Multimodal RAG](../../ai-engineering/08-multimodal-engineering/notes/03-multimodal-rag.md) | Comparing vectors in one space |
+
 ## Rules of thumb
 
 - Fit TF-IDF and a linear model first. It takes seconds, and everything else has to beat it.

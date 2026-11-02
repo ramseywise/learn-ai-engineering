@@ -18,7 +18,7 @@ Models fail differently from services. A crashed service throws errors. A stale 
 
 ## What is drifting
 
-The vocabulary varies across sources, and the distinction matters more than the names. [Gama and colleagues' survey (ACM Computing Surveys, 2014)](http://eprints.bournemouth.ac.uk/22491/) defines drift as a change in the joint distribution $p(X, y)$ and separates two cases. **Real concept drift** changes $p(y \mid X)$: the same inputs now mean something else, whether or not the inputs have moved. **Virtual drift** changes $p(X)$ and leaves $p(y \mid X)$ alone. Only changes that affect the decision need any adaptation.
+The vocabulary varies across sources, and the distinction matters more than the names. [Gama and colleagues' survey (ACM Computing Surveys, 2014)](http://eprints.bournemouth.ac.uk/22491/) defines drift as a change in the joint distribution $p(X, y)$ and separates two cases. **Real concept drift** changes $p(y \mid X)$: the same inputs now mean something else, whether or not the inputs have moved. **Virtual drift** changes $p(X)$ and leaves $p(y \mid X)$ alone. Only changes that affect the decision need any adaptation. [Imbalance, errors and drift](../../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves) in data science simulates these shifts on a credit model and measures what each one does to it.
 
 [Wilson's *Machine Learning Engineering in Action* (Manning, 2022)](https://www.manning.com/books/machine-learning-engineering-in-action) gives a practitioner's table, which maps well onto what you can actually monitor:
 
@@ -70,7 +70,7 @@ Three standard tests cover most needs. The [Kolmogorov-Smirnov test](https://sci
 
 $$\mathrm{PSI} = \sum_i (c_i - r_i) \ln\frac{c_i}{r_i}$$
 
-where $r_i$ and $c_i$ are the reference and current shares in bin $i$. Run all of them on four scenarios:
+where $r_i$ and $c_i$ are the reference and current shares in bin $i$. [Credit scoring](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#keep-watching-it) in data analytics computes the same statistic on a model's scores. Run all of them on four scenarios:
 
 ```python
 def psi(ref, cur, bins=10, eps=1e-6):

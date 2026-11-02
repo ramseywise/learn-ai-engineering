@@ -39,6 +39,26 @@ Start with an agent whose cost is bounded because the graph is fixed. Open the l
 
 Note 06 is the synthesis, so read it last, or read it first if you are designing the UI around one of these agents. Papers and upstream repos are in [references.md](references.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 01/02 Loading and cleaning](../../data-analytics/01-python-for-data-analysis/notes/02-loading-and-cleaning.md) | The checks a data-analysis agent should run |
+| [DA 01/05 Group-by and aggregation](../../data-analytics/01-python-for-data-analysis/notes/05-groupby-and-aggregation.md) | Rates and group sizes |
+| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Whether a lead is within noise |
+| [DA 03/04 Correlation and causation](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | A correlation written up as a cause |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 03/04 Execution boundaries](../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md) | Where these agents may act |
+| [AIE 03/07 Orchestration](../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) | Coordinating them |
+| [AIE 05/04 Durable execution and interrupts](../../ai-engineering/05-graph-engineering/notes/04-durable-execution-and-interrupts.md) | Pausing and resuming them |
+| [AIE 08/04 Speech and voice agents](../../ai-engineering/08-multimodal-engineering/notes/04-speech-and-voice-agents.md) | Agents with a clock on them |
+
 ## Run the labs
 
 Both of the labs built for this pillar run offline, with a scripted stub model in place of an API. Neither needs a key.

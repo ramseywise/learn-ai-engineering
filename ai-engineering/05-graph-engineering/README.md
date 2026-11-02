@@ -87,6 +87,22 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | 13 | [Learning on graphs: tasks and features](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, ReFeX |
 | 13b | [Learning on graphs: embeddings and GNNs](notes/13b-representation-learning-and-gnns.md) | Embeddings and message passing, GNN + LLM patterns, LLM graph reasoning and its limits, predictions as claims |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DS 03/05 Semantic analysis and NER](../../data-science/03-nlp/notes/05-semantic-analysis-and-ner.md) | NER without an LLM |
+| [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Building the gold set for extraction |
+| [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Scoring KG-RAG |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ## Rules of thumb
 
 | Rule | Note |

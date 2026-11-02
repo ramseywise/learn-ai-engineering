@@ -55,6 +55,28 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 | 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, prioritised research items |
 | 12 | [Managed RAG: Bedrock, Vertex, and building your own](notes/12-managed-rag.md) | Bedrock KB reference spec, Vertex comparison, score semantics, when to switch, and the `kb_rag` decision record |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | TF-IDF, derived from scratch |
+| [DS 03/02 Text classification](../../data-science/03-nlp/notes/02-text-classification.md) | TF-IDF with a linear model as the baseline |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | BM25 built by hand |
+| [DS 03/07 LLM embeddings as features](../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md) | What a sentence embedding is |
+| [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under recall@k |
+| [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG computed on a ranking |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 02/04 Retrieval](../../ai-engineering/02-context-engineering/notes/04-retrieval.md) | Retrieval as a context decision |
+| [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | Checking agentic RAG's output |
+| [AIE 05/11 KG-RAG and text-to-Cypher](../../ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md) | Retrieval over a graph |
+| [AIE 08/03 Multimodal RAG](../../ai-engineering/08-multimodal-engineering/notes/03-multimodal-rag.md) | The same pipeline with images |
+
 ## Rules of thumb
 
 | Rule | Note |

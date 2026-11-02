@@ -21,6 +21,23 @@ Chapter 5 also holds a separate case, [segmenting B2B customers by behaviour](no
 
 The chapters can be read in any order, though 3 to 6 share a dataset and refer to each other. They lean on [experimentation and causality](../03-experimentation-and-causality/README.md) for test sizing and causal reasoning, and chapter 6 on the [SQL module](../../programming/sql/README.md) for the language. Then go on to [data science](../../data-science/README.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming: SQL](../../programming/sql/README.md) | The SQL chapter assumes this module, which teaches the language |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Forecasting carries the same idea through to a staffing decision |
+| [DS 01/10 Imbalance, errors and drift](../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | Picks up where the credit scorecard stops |
+| [DS 01/05 Unsupervised learning](../../data-science/01-classical-ml/notes/05-unsupervised-learning.md) | Segmentation puts k-means to work on customers |
+| [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | PSI is computed in the credit chapter |
+
 ## Rules of thumb
 
 - Write down the decision before you start the analysis. If no result could change it, stop.

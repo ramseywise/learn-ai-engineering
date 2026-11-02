@@ -67,6 +67,25 @@ Failure modes have no chapter of their own: each chapter ends with its own pitfa
 the checks into one scorecard. Attacks that arrive through an image, a document or a voice are in
 [09-safety-and-security](../09-safety-and-security/README.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DS 02/04 Convolutional networks](../../data-science/02-deep-learning/notes/04-convolutional-networks.md) | The vision models before ViT |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | Comparing vectors in one space |
+| [GA 01/09 PEFT and fine-tuning in practice](../../generative-ai/01-llm-fundamentals/notes/09-peft-and-fine-tuning-in-practice.md) | Parameter-efficient fine-tuning for image models |
+| [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | The pipeline multimodal RAG extends |
+| [GA 07/03 Real-time multimodal agents](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md) | The voice case |
+| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Judging multimodal output |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ## Rules of thumb
 
 - Fix the input first. Honor EXIF, protect small text with a crop, and log the pixel height of the smallest text you need.

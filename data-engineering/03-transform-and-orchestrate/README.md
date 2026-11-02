@@ -27,6 +27,20 @@ The plan listed four chapters. Dagster and Airflow got a chapter of their own, s
 
 Then go to [04, warehouse, lakehouse and streaming](../04-warehouse-lakehouse-streaming/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming](../../programming/README.md) | Python and SQL fluency, which the zoomcamps assume |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [DA 06/06 SQL for analytics](../../data-analytics/06-applied-analyses/notes/06-sql-for-analytics.md) | The kind of question an analyst asks of a mart |
+
 ## Rules of thumb
 
 | Situation | Rule | Why |

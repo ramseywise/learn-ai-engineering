@@ -156,7 +156,7 @@ LDA imagines how a document came to be, then inverts the story:
 2. For each document $d$, draw topic proportions $\theta_d \sim \text{Dirichlet}(\alpha)$.
 3. For each word position, draw a topic $z \sim \text{Categorical}(\theta_d)$, then a word $w \sim \text{Categorical}(\phi_z)$.
 
-Fitting inverts this to find $\theta$ and $\phi$. Small $\alpha$ means each document uses few topics. LDA is Bayesian inference with conjugate priors, so see [the Bayesian pillar of data analytics](../../../data-analytics/README.md) for the background. Because the model generates word counts, its input is counts. NMF has no such story and takes TF-IDF.
+Fitting inverts this to find $\theta$ and $\phi$. Small $\alpha$ means each document uses few topics. LDA is Bayesian inference with conjugate priors, so see [the Beta-Binomial](../../../data-analytics/04-bayesian-analysis/notes/01-bayesian-inference.md#the-coin-beta-binomial) in data analytics for conjugacy, [generative stories](../../../data-analytics/04-bayesian-analysis/notes/01-bayesian-inference.md#thinking-in-generative-stories) for this way of writing a model, and [MCMC and PyMC](../../../data-analytics/04-bayesian-analysis/notes/02-mcmc-and-pymc.md#the-samplers) for samplers and variational inference. Because the model generates word counts, its input is counts. NMF has no such story and takes TF-IDF.
 
 ```python
 from sklearn.feature_extraction.text import CountVectorizer

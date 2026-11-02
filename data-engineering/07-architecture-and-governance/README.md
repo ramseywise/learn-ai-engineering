@@ -13,6 +13,20 @@
 | 01 | [Data architectures: MDW, fabric, mesh](notes/01-data-architectures-mesh-fabric-mdw.md) | Where should the data live, and who should own each part of it? |
 | 02 | [Access control, PII and GDPR](notes/02-access-control-pii-gdpr.md) | Who may see it, what counts as anonymous, and how do you delete one person from an immutable lake? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming](../../programming/README.md) | Python and SQL fluency, which the zoomcamps assume |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Nothing outside this subject links here yet |
+
 ## Rules of thumb
 
 - Measure first. Run a representative query on one machine before buying a cluster, and remember that it tests volume and not concurrency.

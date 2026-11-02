@@ -370,6 +370,8 @@ The sparse half fits in about 40 lines of standard-library Python. The formula, 
 
 Check the definition and the k before comparing numbers across sources ([Eval pillar](../../08-eval/README.md)).
 
+Recall and precision at k are one [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) at one cut-off: a relevant document in the top k is a true positive, an irrelevant one a false positive, and a relevant one left out a false negative. MRR and nDCG weight positions, so no single matrix gives them. [Collaborative filtering](../../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md#the-metric-that-matters-top-n-ranking) in data science computes recall and NDCG on recommenders, and [two-tower and evaluation](../../../data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md#offline-evaluation-sampled-metrics) shows that scoring against a sample of negatives gives a different metric.
+
 ---
 
 ## A worked example

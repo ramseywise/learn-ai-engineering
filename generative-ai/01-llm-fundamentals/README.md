@@ -57,6 +57,26 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 |---|---|---|
 | 14 | [Open-weight models and local inference](notes/14-open-weight-models-and-local-inference.md) | Licences, choosing a model, model cards, memory, GGUF, transformers, Ollama and llama.cpp, when local beats the API |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DS 03/01 Text representation](../../data-science/03-nlp/notes/01-text-representation.md) | The word counts that came before embeddings |
+| [DS 03/04 Embeddings and similarity](../../data-science/03-nlp/notes/04-embeddings-and-similarity.md) | word2vec and similarity |
+| [DS 02/01 Neural networks fundamentals](../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md) | Backprop is assumed |
+| [DS 02/02 Optimisation and regularisation](../../data-science/02-deep-learning/notes/02-optimisation-and-regularisation.md) | AdamW and the learning-rate sweep are assumed |
+| [DS 02/05 Sequence models](../../data-science/02-deep-learning/notes/05-sequence-models.md) | The recurrent networks attention grew out of |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 01 Prompt engineering](../../ai-engineering/01-prompt-engineering/README.md) | Prompting starts from how the model reads tokens |
+| [AIE 07 Inference engineering](../../ai-engineering/07-inference-engineering/README.md) | Serving what this pillar explains |
+| [AIE 08 Multimodal engineering](../../ai-engineering/08-multimodal-engineering/README.md) | Extends the model beyond text |
+
 ---
 
 ## Rules of thumb

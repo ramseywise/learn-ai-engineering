@@ -183,7 +183,7 @@ Keep one calibration record per judge version. It holds: the label counts per sp
 
 ### What to measure
 
-Accuracy alone hides the failure you care about. Report the two error rates separately:
+This is the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) with PASS as positive. Accuracy alone hides the failure you care about. Report the two error rates separately:
 
 | Metric | Meaning | Matters for |
 |---|---|---|
@@ -212,7 +212,7 @@ Rules of thumb:
 
 ### Correcting the pass rate
 
-An uncalibrated judge's pass rate is only a relative measure. "The judge passes 81% of answers" means little alone, while "version B passes more often than version A" is a usable claim (*Prompt Engineering for LLMs*, ch. 10). Calibration is what turns it into an estimate. A judge with known error rates gives a biased estimate of the true pass rate. If the judge's observed pass rate is *p̂*, and you measured TPR and TNR on the test split, the corrected estimate is:
+An uncalibrated judge's pass rate is only a relative measure. "The judge passes 81% of answers" means little alone, while "version B passes more often than version A" is a usable claim (*Prompt Engineering for LLMs*, ch. 10). Calibration is what turns it into an estimate. A judge with known error rates gives a biased estimate of the true pass rate (see [base rates](../../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md#bayes-rule-inverts-the-conditional)). If the judge's observed pass rate is *p̂*, and you measured TPR and TNR on the test split, the corrected estimate is:
 
 ```
 true pass rate ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)

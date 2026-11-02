@@ -176,7 +176,7 @@ When offline evals can't settle a question (tone, engagement, real resolution), 
 
 - **Primary metric** tied to the outcome: resolution without escalation, task completion, retention.
 - **Guardrail metrics** that must not regress: grounding, policy violations, latency, cost per success.
-- **Pre-declare** the metric, sample size and duration ([09](09-reading-results.md#how-many-tasks)). Peeking and stopping on a good day inflates false positives.
+- **Pre-declare** the metric, sample size and duration ([09](09-reading-results.md#how-many-tasks)). Peeking and stopping on a good day inflates false positives; see [A/B testing](../../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md#running-the-test) in data analytics, and [Experimentation at scale](../../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md#looking-early-safely) for looking early safely, [sample ratio mismatch](../../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md#sample-ratio-mismatch) and [CUPED](../../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md#variance-reduction-cuped).
 - **Watch the novelty effect**: early engagement lifts often fade ([09](09-reading-results.md#pitfalls)).
 - **Ramp**: 1% → 10% → 50% with guardrail checks at each step.
 - **Separate the mechanism from the target.** If the change is "shorter plan files", plan length is the *mechanism* (what you change), not the *target* (session cost). Shorter plans can cause more edit–check–edit loops and raise total cost. Optimize the target.

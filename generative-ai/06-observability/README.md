@@ -57,6 +57,20 @@ sources/       the AgentOps paper and the dashboard figure
 | 5 | [Support agent observability](notes/05-support-agent-observability.md) | The base trace metadata contract and its validator; where human review goes; sampling for concentration; config diffs; promoting a check from log-only to blocking per segment |
 | 6 | [Cost and latency dashboards](notes/06-cost-and-latency-dashboards.md) | Cache-aware cost; the bucket table; percentiles that don't add; cost per resolved turn; replaying alerts on the fortnight; what a dashboard can't see; cost levers in order |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 05/05 Dashboards and storytelling](../../data-analytics/05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md) | What a dashboard is for and what it can hide |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 02/09 Protocols](../../ai-engineering/02-context-engineering/notes/09-protocols.md) | MCP, whose observability use is taught here |
+
 ## Rules of thumb
 
 | Rule | Note |

@@ -53,7 +53,7 @@ The next natural response is a filter. A classifier looks at retrieved content, 
 
 Those are good engineering results and they aren't a boundary. An 88% prevention rate means the attack still works one time in eight, and an attacker with a planted document gets to try it on every reader. Two further facts make it worse.
 
-**Detectors face a base rate and an ambiguity problem.** Legitimate text often looks like an instruction. Customers tell support to do things, and that's the point of a support inbox. A rule strict enough to catch paraphrases flags ordinary mail, while a lax one misses anything reworded.
+**Detectors face a base rate and an ambiguity problem.** Legitimate text often looks like an instruction. Customers tell support to do things, and that's the point of a support inbox. A rule strict enough to catch paraphrases flags ordinary mail, while a lax one misses anything reworded. See [the base-rate calculation](../../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md#bayes-rule-inverts-the-conditional) in data analytics and the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) in data science: a benign message blocked is a false positive, and an attack let through is a false negative.
 
 ```python
 import re
@@ -206,7 +206,7 @@ Cost is the honest question. CaMeL solves 77% of AgentDojo tasks with provable s
 
 ## Measuring both sides
 
-Whichever you pick, report two numbers together: attack success under attack, and utility without attack. The next example runs a toy agent on synthetic tasks, with injected text in some of them. The simulated model is deliberately gullible. The defences differ only in where they sit, and the rates are set in the code rather than measured from any real system: this shows how to tabulate the result and how the trade-off looks, not how large it is for your agent.
+Whichever you pick, report two numbers together: attack success under attack, and utility without attack. The next example runs a toy agent on synthetic tasks, with injected text in some of them. The simulated model is deliberately gullible. The defences differ only in where they sit, and the rates are set in the code rather than measured from any real system: this shows how to tabulate the result and how the trade-off looks, not how large it is for your agent. Utility here does the job of a [guardrail metric](../../../data-analytics/03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md#guardrails-need-a-test-of-their-own) in an experiment, a number that must not get worse while you improve another. That is a different sense of the word from the guard models in the [next chapter](03-guardrail-models.md).
 
 ```python
 import random

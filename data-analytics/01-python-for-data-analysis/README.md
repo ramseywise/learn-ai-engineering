@@ -34,6 +34,22 @@ A small online shop sells kettles, grinders, filters and scales. Its orders star
 
 The notebook numbers come from their original course, so notebook 5 goes with chapter 7, and notebooks 6 and 7 with chapters 5 and 6.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming: Python](../../programming/README.md) | Assumes the Python track, then teaches pandas |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 07/05 Data-analysis agent](../../generative-ai/07-agentic-applications/notes/05-data-analysis-agent.md) | Its cleaning and group-by checks are this pillar's |
+| [DE 05/01 Quality dimensions and tests](../../data-engineering/05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) | Automates the checks an analyst runs by hand here |
+| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Takes resampling and shifting as given |
+
 ## Rules of thumb
 
 - **Run `shape`, `dtypes`, `head` and `isna().sum()` on every new frame.** They catch most problems before they spread.

@@ -68,7 +68,7 @@ Raw agreement of 0.85 sounds good, but two people who pass most outputs would ag
 
 ## Find failure modes by reading: error analysis
 
-You can't list failure modes in advance. You find them by reading outputs. The method Husain and Shankar teach (borrowed from qualitative research):
+You can't list failure modes in advance. You find them by reading outputs, as [error analysis](../../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md#error-analysis-count-before-you-build) does for a neural network's mistakes in data science. The method Husain and Shankar teach (borrowed from qualitative research):
 
 1. **Collect ~100 traces.** Real ones if you have them, synthetic if you don't yet ([03](03-eval-datasets.md#synthetic-data-done-right)).
 2. **Open coding.** Read each trace and write a short free-text note on the *first* thing that went wrong. Don't use categories yet. "Cited the 2023 pricing page", "asked for the order ID it already had".

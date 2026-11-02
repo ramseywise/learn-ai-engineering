@@ -55,6 +55,7 @@ import unicodedata
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -500,7 +501,7 @@ def triage_batch(batch, inventory, claude, hint=None):
 
 
 def paper_year(r):
-    return int((r.get("week_start") or r.get("year") or str(dt.date.today().year))[:4])
+    return int(str(r.get("week_start") or r.get("year") or dt.date.today().year)[:4])
 
 
 def cites_per_year(r):
@@ -526,6 +527,35 @@ def triage_status(r, min_relevance):
     if interest >= 3 or (interest >= 2 and r.get("topic") in WATCH):
         return "parked"
     return "skipped"
+
+
+# Order in which /papers and the nightly run integrate ready PDFs, lowest first.
+TIERS = {1: "primary", 2: "landmark", 3: "solid", 4: "too new to tell", 5: "low signal", 6: "survey or benchmark"}
+SOLID_CITES_PER_YEAR = 30
+
+
+def ready_for_papers(r):
+    """A PDF waiting for /papers: downloaded, or queued and already in the repo (not a /chapter chapter)."""
+    pdf = r.get("local_pdf") or ""
+    return bool(r.get("pillar")) and (r["status"] == "downloaded" or (
+        r["status"] == "queued" and bool(r.get("have_pdf"))
+        and not pdf.startswith(INBOX) and not re.search(r"/ch\d\d-", pdf)))
+
+
+def integration_tier(r):
+    """role and review_status come from citegraph.py; rows it hasn't reached rank on citations alone."""
+    cites = cites_per_year(r) or 0
+    if r.get("role") in ("survey", "benchmark"):
+        return 6
+    if r.get("role") == "primary":
+        return 1
+    if cites >= LANDMARK_CITES_PER_YEAR:
+        return 2
+    if cites >= SOLID_CITES_PER_YEAR or r.get("review_status") == "peer-reviewed" or (r.get("interest") or 0) >= 3:
+        return 3
+    if r.get("role") == "new" or paper_year(r) >= dt.date.today().year - 1:
+        return 4
+    return 5
 
 
 def cmd_cite(args):
@@ -1049,18 +1079,29 @@ def cmd_where(args):
         print(f"... {len(hits) - args.limit} more; narrow the query")
 
 
+def cmd_tier(args):
+    rows = load_ledger()
+    for r in rows:
+        r["tier"] = integration_tier(r) if ready_for_papers(r) else None
+    save_ledger(rows)
+    counts = Counter(r["tier"] for r in rows if r.get("tier"))
+    for tier, name in TIERS.items():
+        print(f"  {tier} {name:<20} {counts[tier]}")
+
+
 def cmd_status(args):
     rows = load_ledger()
     if args.list:
-        for r in rows:
+        # best first, so a run that stops early has read the papers most worth reading
+        for r in sorted(rows, key=lambda r: (r.get("tier") or len(TIERS) + 1, -(cites_per_year(r) or 0))):
             if r["status"] == args.list:
-                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "relevance", "interest", "citations")},
+                print(json.dumps({**{k: r.get(k) for k in ("key", "title", "topic", "pillar", "note", "tier", "role", "review_status", "relevance", "interest", "citations")},
                                   "pdf": r.get("local_pdf"), **{k: r.get(k) for k in ("reason", "url")}}, ensure_ascii=False))
         return
     print(f"ledger: {LEDGER.relative_to(REPO)} ({len(rows)} papers, {sum(bool(r.get('have_pdf')) for r in rows)} with a PDF in the repo)")
     inbox = sum(1 for r in rows if (r.get("local_pdf") or "").startswith(INBOX))
     print(f"inbox: {inbox} PDFs still in {INBOX} (`route` files the triaged ones)")
-    for field in ("source", "status", "topic"):
+    for field in ("source", "status", "tier", "topic"):
         counts = {}
         for r in rows:
             counts[r.get(field) or "-"] = counts.get(r.get(field) or "-", 0) + 1
@@ -1132,6 +1173,8 @@ def main():
     p = sub.add_parser("cite")
     p.add_argument("--refresh", action="store_true", help="refetch counts already in the ledger")
     p.set_defaults(fn=cmd_cite)
+    p = sub.add_parser("tier", help="rank the PDFs ready for /papers (TIERS); rerun after citegraph.py status --write")
+    p.set_defaults(fn=cmd_tier)
     p = sub.add_parser("status")
     p.add_argument("--list", metavar="STATUS")
     p.set_defaults(fn=cmd_status)

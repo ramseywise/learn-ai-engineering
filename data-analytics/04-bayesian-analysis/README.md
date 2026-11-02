@@ -32,6 +32,22 @@ Larkspur's checkout test from the previous pillar gets a new question. [Chapter 
 
 Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [DA 02](../02-probability-and-statistics/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [DS 03/03 Topic models and summarization](../../data-science/03-nlp/notes/03-topic-models-and-summarization.md) | LDA is Bayesian inference with conjugate priors |
+| [GA 05/01 RL foundations](../../generative-ai/05-RL/notes/01-rl-foundations.md) | Bandits lead into contextual bandits and RL |
+| [AIE 04/08 Self-improving loops](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md) | A Bayesian bandit shifts live traffic between candidates |
+
 ---
 
 ## Rules of thumb

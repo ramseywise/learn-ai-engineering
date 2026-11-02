@@ -28,6 +28,24 @@ Larkspur, a fictional online plant shop, wants to know whether a new checkout wo
 | 3 | [Experimentation at Scale](notes/03-experimentation-at-scale.md) | Apply CUPED, use sequential tests, diagnose an SRM, and handle interference and overlapping tests |
 | 4 | [Correlation and Causation](notes/04-correlation-and-causation.md) | Spot confounders, mediators and colliders, and use DiD, IV, RD, weighting and synthetic control |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [DA 02](../02-probability-and-statistics/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | A/B tests of LLM features, with peeking, SRM and CUPED taught here |
+| [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | The sample-size question for two versions |
+| [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | Prompt A against prompt B online is an A/B test |
+| [AIE 09/02 Prompt injection and jailbreaks](../../ai-engineering/09-safety-and-security/notes/02-prompt-injection-and-jailbreaks.md) | Utility without attack works as a guardrail metric |
+| [DS 05/03 Two-tower and evaluation](../../data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | Online evaluation of a recommender is an A/B test |
+
 ---
 
 ## Rules of thumb

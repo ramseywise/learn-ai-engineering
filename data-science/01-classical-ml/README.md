@@ -29,6 +29,31 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 9 | [Training and tuning](notes/09-training-and-tuning.md) | How do you run the whole loop and end with a number you can defend? |
 | 10 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Conditional probability, expectation and variance |
+| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Bias, variance, maximum likelihood and the bootstrap |
+| [DA 02/05 Hypothesis testing](../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Type I and II errors and multiple comparisons |
+| [DA 02/06 Regression and GLMs](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Inference for linear models, which scikit-learn leaves out |
+| [DA 03/04 Correlation and causation](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | Why a model's explanations are not causal |
+| [DA 06/02 Credit scoring](../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | The scorecard that the imbalance chapter starts from |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 02/01 RAG pipeline](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) | Recall and precision at k are the confusion matrix at one cut-off |
+| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | A judge's matrix, with PASS as positive |
+| [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | The retrieval reading of the same table |
+| [AIE 09/03 Guardrail models](../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) | The guard's reading of the same table |
+| [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Low recall and low precision as cells of the table |
+| [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | A verifier that cries wolf is a false positive with a cost |
+| [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | Drift monitoring in production |
+
 ## Rules of thumb
 
 - Start with a dummy, then a linear model, then boosting. Each gives a bar for the next.

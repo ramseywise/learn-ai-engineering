@@ -345,7 +345,7 @@ The status line is clean: 30, 40, 61, 77. The duration line is not. A loan of 24
 
 ## Set the policy
 
-Now the policy half. Grömping's report repeats the long-standing suggestion that accepting a bad loan costs five times as much as rejecting a good one. If so, accept while the expected loss from accepting is below the expected loss from rejecting:
+Now the policy half. [Imbalance, errors and drift](../../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost) in data science prices the two errors on a much rarer outcome. Grömping's report repeats the long-standing suggestion that accepting a bad loan costs five times as much as rejecting a good one. If so, accept while the expected loss from accepting is below the expected loss from rejecting:
 
 ```text
 PD * 5 < (1 - PD) * 1     which means     PD < 1/6

@@ -63,6 +63,8 @@ flowchart LR
 
 Pick *k* to match what actually goes into the prompt. Recall@50 is irrelevant if only the top 5 are passed to the model.
 
+These are the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) again. A relevant chunk in the top k is a true positive, an irrelevant one a false positive, a relevant chunk left out a false negative, and k is the threshold. Hit rate, recall and precision read one matrix at one k. MRR and nDCG weight positions, so no single matrix gives them. [Collaborative filtering](../../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md#the-metric-that-matters-top-n-ranking) in data science computes recall and NDCG on recommenders, and [two-tower and evaluation](../../../data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md#offline-evaluation-sampled-metrics) shows that scoring against a sample of negatives gives a different metric.
+
 These metrics fit in a few lines. In the three rows below, the first finds its source at rank 1, the second finds one of two sources at rank 3, and the third misses:
 
 ```python

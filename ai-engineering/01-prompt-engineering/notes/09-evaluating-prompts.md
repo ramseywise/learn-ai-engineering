@@ -136,7 +136,7 @@ Also:
 
 Offline eval is a lab. Live traffic is the only valid test — but its bandwidth is scarce, so **whittle candidates down offline first**.
 
-**A/B testing:** define **success metrics** (e.g., acceptance rate) and **guardrail metrics** (e.g., error or complaint rate) *before* starting. Off-the-shelf tools (Optimizely, VWO, AB Tasty) handle assignment and statistics. Your app only has to run in either mode behind a flag. Client-side apps must ship the new logic to most users before the test can start. Compare randomly assigned users only. "Already updated" vs. "not yet" is a biased split, because people who update quickly behave differently. Instead, randomize among users who already have the update and leave the rest out of the analysis.
+**A/B testing:** define **success metrics** (e.g., acceptance rate) and **guardrail metrics** (e.g., error or complaint rate) *before* starting. Off-the-shelf tools (Optimizely, VWO, AB Tasty) handle assignment and statistics. Your app only has to run in either mode behind a flag. Client-side apps must ship the new logic to most users before the test can start. Compare randomly assigned users only. "Already updated" vs. "not yet" is a biased split, because people who update quickly behave differently. Instead, randomize among users who already have the update and leave the rest out of the analysis. Prompt A against prompt B online is an ordinary A/B test, so see [A/B testing](../../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md#how-many-users) in data analytics for the sample-size arithmetic.
 
 Metrics, from most direct to most incidental:
 

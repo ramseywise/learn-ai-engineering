@@ -62,6 +62,14 @@ Haiku gives every reading two scores, 0–3:
 for example after a pillar gets notes or HOMES changes. `status --list parked` shows the
 candidates for a new pillar, with each paper's `reason`.
 
+## Integration order
+
+`relevance` barely separates downloaded papers, so `potw.py tier` ranks each PDF ready for
+`/papers` from its citation-graph role, review status and citations (`TIERS` in potw.py): primary,
+landmark, solid, too new to tell, low signal, then surveys and benchmarks. The nightly run works
+through every home's tier 1 before any home's tier 2, and recomputes tiers when it starts. Run it
+yourself after `citegraph.py status --write`, which fills in the role and review status.
+
 ## Status lifecycle
 
 ```
@@ -75,6 +83,7 @@ new ──triage──▶ queued ──download (DAIR, arXiv)──▶ downloade
 
 ```bash
 make papers-status                                        # counts, and how many PDFs are left in inbox/
+python3 scripts/papers/potw.py tier                       # rank the PDFs ready for /papers
 python3 scripts/papers/potw.py where lewis retrieval-augmented   # where a paper's PDF lives (id, key or title words)
 python3 scripts/papers/potw.py route                      # dry run: where each triaged PDF would go
 python3 scripts/papers/potw.py route --apply              # move them (git mv) and drop duplicate copies

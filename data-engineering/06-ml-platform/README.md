@@ -16,6 +16,21 @@
 | 4 | [Drift](notes/04-drift.md) | How do you know the world moved, and when does that matter? |
 | 5 | [The MLOps maturity model and best practices](notes/05-mlops-maturity-and-best-practices.md) | How much should you automate, and how do you test it? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 06/02 Credit scoring](../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | PSI on a model's scores |
+| [DS 01/10 Imbalance, errors and drift](../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | Simulated shifts on a credit model |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [AIE 07/06 Serving at scale](../../ai-engineering/07-inference-engineering/notes/06-serving-at-scale.md) | Deployment shapes, rollout and the registry |
+
 ## Rules of thumb
 
 - Join features as of the prediction time. Random splits and plain joins flatter the model.

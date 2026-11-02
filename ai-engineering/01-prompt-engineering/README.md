@@ -72,6 +72,23 @@ The rules from the topic notes on one page. Each group links to the note that ex
 - **Need an example prompt:** the [prompt library](notes/prompt-library.md).
 - **Security:** [10](notes/10-adversarial-prompting.md) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [DA 03/01 A/B testing](../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md) | Prompt A against prompt B online |
+| [GA 01 LLM fundamentals](../../generative-ai/01-llm-fundamentals/README.md) | How models read text, which prompting assumes |
+| [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | Whether a prompt change is real |
+| [GA 08/04 Graders](../../generative-ai/08-eval/notes/04-graders.md) | How prompt outputs get scored |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | AI engineering is the last subject in the path |
+
 ---
 
 ## Lab

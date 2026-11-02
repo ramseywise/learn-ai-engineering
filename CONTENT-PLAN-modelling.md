@@ -1,6 +1,6 @@
 # Content plan: statistical models, social-science methods and cross-subject links
 
-Status: 2026-11-02, draft for review. Companion to [CONTENT-PLAN.md](CONTENT-PLAN.md), which set the pillar
+Status: 2026-11-02, approved and in progress. Companion to [CONTENT-PLAN.md](CONTENT-PLAN.md), which set the pillar
 shape, and [CURRICULUM.md](CURRICULUM.md), which froze the subjects. This file names five gaps and says how
 to close them inside the existing pillars, so no freeze exception is needed.
 
@@ -391,7 +391,7 @@ Two points to state where the thread is taught:
 | [DA 02/02 Probability foundations](data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | DS 01/04, AIE 09/03 | Its base-rate calculation is why precision collapses on rare events, which is the guardrail note's result |
 | [DA 06/02 Credit scoring](data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | DS 01/10, DS 01/12 (new) | Cut-off choice leads on to reading who is wrongly declined |
 | [DS 01/04 Model evaluation](data-science/01-classical-ml/notes/04-model-evaluation.md) | DA 02/05, DS 01/12 (new), GA 02/01 | Where the table is taught, say where it goes next, both back and forward |
-| [DS 01/10 Imbalance and errors](data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | DS 01/12 (new) | Note 10 prices the errors, and note 12 reads them. Add once note 10 is finished |
+| [DS 01/10 Imbalance and errors](data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | DS 01/12 (new) | Note 10 prices the errors, and note 12 reads them |
 | [DS 01/08 Interpretability](data-science/01-classical-ml/notes/08-model-interpretability.md) | DS 01/12 (new) | Its false-positive explanation is step 3 of the procedure |
 | [DS 02/03 Structuring projects](data-science/02-deep-learning/notes/03-structuring-ml-projects.md), [DS 03/02 Text classification](data-science/03-nlp/notes/02-text-classification.md) | DS 01/12 (new) | The same habit on digits and on text; note 12 is the general form |
 | [DS 05/03 Two-tower and evaluation](data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | DS 01/04, DS 01/12 (new) | Its recall-for-retrieval and precision-for-ranking split, stated as cells of the table |
@@ -526,15 +526,15 @@ GA and AIE papers go into the ledger under their own pillars, not `home: analyti
 | 8 | DA 04/07 multilevel models | `/chapter` with Gelman and Hill, Gelman, Hill and Yajima, McNeish et al. | one chapter and pointers from three notes |
 | 9 | DA 06/09 marketing measurement | `/chapter` with pymc-marketing docs, Fader and Hardie | one chapter; the MMM section is `# illustrative` if sampling is slow |
 | 10 | DA 06/10 operations | `/chapter` with Cachon and Terwiesch | one chapter |
-| 11 | DS 01/11 metric map, plus the fills in DS 01/04, DS 05/03 and DA 02/06. Starts after DS 01/10 and the credit lab are finished, since it reuses both | `/chapter` with Gneiting, Chicco and Jurman | one short chapter and three small edits |
-| 12 | DS 01/12 reading the errors, including the noise-fix demonstration. Also starts after DS 01/10 and the credit lab, and after phase 11 so it can link back | `/chapter` with Ng, Errudite, Slice Finder | one chapter |
+| 11 | DS 01/11 metric map, plus the fills in DS 01/04, DS 05/03 and DA 02/06. Reuses DS 01/10 and the credit lab, both finished | `/chapter` with Gneiting, Chicco and Jurman | one short chapter and three small edits |
+| 12 | DS 01/12 reading the errors, including the noise-fix demonstration. Starts after phase 11 so it can link back | `/chapter` with Ng, Errudite, Slice Finder | one chapter |
 | 13 | GA 08/05's new section (§2.7), and one exercise each for its offline and online parts. Links to DS 01/12, so it follows phase 12 unless the link is added later | `/papers` with Marioriyad, Tapwal, Mittal and Arike, Lanham | one section and one exercise |
 | 14 | Second cross-link pass for the rows marked new, including the thread in §3.7 and the §2.7 links; READMEs, CURRICULUM.md path (new steps 4b "say what the model claims" and 8b "model an event, a state and a plan"), rules of thumb; rebuild the five decks (DA 02, 03, 04, 06 and DS 01) | `/pillar`, `/slides` | one pass |
 | 15 | Ledger: curated rows for every §4 paper, route the free PDFs, mark `integrated` as each chapter lands | `/readings` | runs alongside 3 to 13 |
 
 Phases 3 to 10 are independent of each other after phase 2, so they can be split across sessions in any order.
-Phase 8 needs no new generator data, so it could start first. Phases 11 and 12 need no generator data either,
-but they wait on DS 01/10 and the credit lab. Phase 1 is the cheapest and the most visible to a learner, so it comes first.
+Phase 8 needs no new generator data, so it could start first. Phases 11 and 12 need no generator data either.
+Phase 1 is the cheapest and the most visible to a learner, so it comes first.
 
 ## 6. Rules of thumb these chapters add
 

@@ -111,7 +111,7 @@ slow, low cap        iteration cap: escalate  3 passes, 180 tokens, scores [0, 1
 
 Read the second row as the common case in production: a loop that got one win and then did the same thing three more times. Without a stall check it would spend all eight passes. The limits here are arbitrary numbers for the demo. Set your own from cost per pass and from how long a real fix takes. The fourth row hit its cap with a score of 1, and nothing in it should report success, because a cap isn't one.
 
-Part 4's exits are *independent* for a reason: the stall check doesn't depend on the score being correct or on the agent being honest, and the budget cap doesn't depend on either of them. If one fails, another still stops the run.
+Part 4's exits are *independent* for a reason: the stall check doesn't depend on the score being correct or on the agent being honest, and the budget cap doesn't depend on either of them. If one fails, another still stops the run. [Agent fundamentals](../../../generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md#the-react-loop) in generative AI has the plainest of these exits, a cap on rounds.
 
 Even those two lines are mostly multiple-choice questions: which tool, which arguments, reflect or not, stop or not. JevAgentHarness ([arXiv:2610.21412](https://arxiv.org/abs/2610.21412) (Zhu et al., 2026-10, preprint)) counts **eight decision points** in one step of the loop and hands each to a small decision model that scores the listed options instead of generating text (in one recorded episode, a call cost 28% of an LLM call's time and 2.6% of its price):
 

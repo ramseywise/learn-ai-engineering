@@ -42,11 +42,13 @@ On 50 tasks, 80% and 72% are not distinguishable. That's the most important tabl
 
 For small *n* or *p* near 0 or 1, use the **Wilson interval** instead of the normal approximation. It doesn't produce bounds outside [0, 1].
 
+See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#standard-errors-and-confidence-intervals) in data analytics for the derivation of the standard error, the [Wilson interval](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#when-wald-fails-wilson) and [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap).
+
 ---
 
 ## How many tasks
 
-The question isn't "how big should the suite be?" It's "**what's the smallest change I need to detect?**"
+The question isn't "how big should the suite be?" It's "**what's the smallest change I need to detect?**" [A/B testing](../../../data-analytics/03-experimentation-and-causality/notes/01-ab-testing.md#how-many-users) in data analytics works through the same sample-size question for two independent groups.
 
 Rough sizes for detecting a difference between two versions run on the *same* tasks (paired, 80% power, α = 0.05, pass rates around 70–85%):
 
@@ -69,7 +71,7 @@ Practical consequence: a 50-task golden set is a **smoke detector** for big regr
 
 ## Compare on the same tasks: paired differences
 
-When comparing version A and B, run both on the same tasks and analyze **per-task differences**, not two independent pass rates.
+When comparing version A and B, run both on the same tasks and analyze **per-task differences**, not two independent pass rates. [Hypothesis testing](../../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md#the-parametric-tests-in-code) in data analytics teaches the paired test.
 
 ```
 task   A    B    B − A
@@ -213,7 +215,7 @@ A wins both groups and loses overall, because most of A's rows are in the harder
 
 ### Too many slices
 
-Slice 20 ways and one will show a "significant" change by chance at α = 0.05. Treat surprising slice results as hypotheses to confirm on fresh data, not conclusions. Pre-register the slices that gate releases.
+Slice 20 ways and one will show a "significant" change by chance at α = 0.05. Treat surprising slice results as hypotheses to confirm on fresh data, not conclusions. Pre-register the slices that gate releases. [Hypothesis testing](../../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md#multiple-comparisons) in data analytics has the corrections (Bonferroni, Holm, Benjamini-Hochberg).
 
 The same arithmetic applies to testing several fixes at once. At 95% confidence each, the chance that at least one of 6 parallel hypotheses is a false positive is 1 − 0.95⁶ ≈ **26%**. Either tighten the per-test threshold (Bonferroni: α / number of tests) or re-run every positive result as an independent confirmation and believe it only if it replicates.
 

@@ -24,6 +24,20 @@ How data enters a platform you control, and what shape it takes once it is there
 
 Then go to [03, transform and orchestrate](../03-transform-and-orchestrate/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming](../../programming/README.md) | Python and SQL fluency, which the zoomcamps assume |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Nothing outside this subject links here yet |
+
 ## Rules of thumb
 
 | Situation | Rule | Why |

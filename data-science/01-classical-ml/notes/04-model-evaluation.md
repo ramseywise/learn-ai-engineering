@@ -140,7 +140,7 @@ print(round(scores.mean(), 3))   # an estimate of how well "grid search over SVC
 
 5 × 5 × 36 = 900 fits. It evaluates the model *selection procedure*, not one model. `n_jobs=-1` parallelises.
 
-Why bother: Varma and Simon built "null" datasets of 40 samples with no signal, so the true error of any classifier was 50%, and tuned two classifiers by minimising CV error. The minimum CV error averaged 37.8% for shrunken centroids and 41.7% for an SVM, and on more than one-fifth of datasets the optimism exceeded 20 points. Nested CV gave an almost unbiased estimate, with a slight pessimism from training on 39 samples rather than 40 ([doi:10.1186/1471-2105-7-91](https://doi.org/10.1186/1471-2105-7-91), BMC Bioinformatics 2006).
+Why bother: Varma and Simon built "null" datasets of 40 samples with no signal, so the true error of any classifier was 50%, and tuned two classifiers by minimising CV error. The minimum CV error averaged 37.8% for shrunken centroids and 41.7% for an SVM, and on more than one-fifth of datasets the optimism exceeded 20 points. Nested CV gave an almost unbiased estimate, with a slight pessimism from training on 39 samples rather than 40 ([doi:10.1186/1471-2105-7-91](https://doi.org/10.1186/1471-2105-7-91), BMC Bioinformatics 2006). Keeping the best of many tries is the [multiple comparisons](../../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md#multiple-comparisons) problem from data analytics.
 
 [Training and tuning](09-training-and-tuning.md#the-honest-final-number) measures how far a search winner's score flatters it on the adult census.
 
@@ -156,6 +156,8 @@ Accuracy treats every mistake the same. Business consequences rarely do.
 | False negative | Type II | Cancer missed (very bad) | Spam in the inbox (annoying) |
 
 [Imbalance, errors and drift](10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost) prices these two errors for a card lender, and [credit scoring](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#set-the-policy) turns the same trade-off into an approval cutoff.
+
+[Hypothesis testing](../../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md#the-recipe) in data analytics names the same two cells, with a decision rule in place of the model: rejecting a true null is the false positive, and missing a real effect is the false negative.
 
 ### Imbalanced data and the dummy baseline
 
@@ -225,6 +227,8 @@ weighted avg       0.98      0.98      0.98       450
 | $F_\beta$ | weights recall $\beta$ times | | Asymmetric preference |
 
 The dummy "always not-nine" has accuracy 0.90 and F1 0.00 on the positive class. F1 exposes it.
+
+This table comes back with new labels. In a [RAG pipeline](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), a relevant chunk in the top k is a true positive, an irrelevant one a false positive and a relevant chunk left out a false negative. The cut-off k plays the part of the threshold, and the true negatives are the rest of the corpus, so many that accuracy says nothing.
 
 ---
 
@@ -332,7 +336,7 @@ default 0.5 precision 0.725 recall 0.584
 tuned 0.61 precision 0.783 recall 0.484
 ```
 
-Accuracy says the model is about nine points better than always answering "low earner". AUC and AP say the ranking is strong. The threshold lines say what that means for a decision: holding the flagged group to about 80% precision costs about a tenth of recall, and the validation target of 0.80 came out at 0.783 on test, because a threshold picked on one sample is itself an estimate.
+Accuracy says the model is about nine points better than always answering "low earner". AUC and AP say the ranking is strong. The threshold lines say what that means for a decision: holding the flagged group to about 80% precision costs about a tenth of recall, and the validation target of 0.80 came out at 0.783 on test, because a threshold picked on one sample is itself an estimate. See [the bootstrap](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#the-bootstrap) in data analytics for putting an interval on an estimate like this one.
 
 | Curve | Axes | Use when |
 |---|---|---|

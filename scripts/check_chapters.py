@@ -5,6 +5,8 @@
 
 A path is a pillar folder or a single note. Prints one line per shortfall. --strict exits 1 on any.
 Notes marked `status: skeleton` in frontmatter are reported as skeletons, not failed.
+A pillar folder whose README has neither a Builds on nor a Feeds into table gets a warning line. A
+warning never counts as a shortfall, so it does not change the summary or the --strict exit code.
 """
 from __future__ import annotations
 
@@ -17,6 +19,8 @@ MIN_WORDS, MAX_WORDS = 1500, 7000
 SECTIONS = [("Pitfalls", r"pitfall"), ("Try it", r"try it"), ("Interview checklist", r"interview"), ("Next", r"next\b")]
 FENCE = re.compile(r"^```.*?^```", re.S | re.M)
 FIGURE = re.compile(r"!\[[^\]]*\]\(|<img\s|^```(mermaid|text|ascii)\b", re.M)
+LINK_TABLE = re.compile(r"^(?:#+ +|\*\*)(?:Builds on|Feeds into)\b[^\n]*\n+\|", re.M | re.I)
+PILLARED = {"ai-engineering", "generative-ai", "data-analytics", "data-science", "data-engineering"}
 
 
 def check(note: Path) -> list[str]:
@@ -53,6 +57,14 @@ def check(note: Path) -> list[str]:
     return problems
 
 
+def missing_link_tables(pillar: Path) -> Path | None:
+    """The pillar's README, if it is in a pillared area and has neither table."""
+    readme = pillar / "README.md"
+    if PILLARED.isdisjoint(pillar.resolve().parts) or not readme.is_file():
+        return None
+    return None if LINK_TABLE.search(readme.read_text(encoding="utf-8")) else readme
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("paths", nargs="+", type=Path)
@@ -61,6 +73,10 @@ def main() -> None:
     notes: list[Path] = []
     for path in args.paths:
         notes += [path] if path.is_file() else sorted((path / "notes").glob("*.md"))
+    for path in args.paths:
+        readme = None if path.is_file() else missing_link_tables(path)
+        if readme:
+            print(f"warning: {readme}: no Builds on or Feeds into table")
     bad = 0
     for note in notes:
         problems = check(note)

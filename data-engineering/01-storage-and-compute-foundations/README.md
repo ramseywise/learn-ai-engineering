@@ -30,6 +30,20 @@ The pillar follows [*Designing Data-Intensive Applications*](https://dataintensi
 
 Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming](../../programming/README.md) | Python and SQL fluency, which the zoomcamps assume |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Nothing outside this subject links here yet |
+
 ## Rules of thumb
 
 | Situation | Rule | Why |

@@ -163,7 +163,7 @@ The rule that survives:
 
 > **A verifier earns its place only if its false-positive rate is low enough that acting on its verdict beats ignoring it.**
 
-A gate that cries wolf gets routed around by whoever operates it, which is worse than no gate — it produces the appearance of verification plus the habit of overriding it. Where a **deterministic** check can cover the same ground, prefer it: PRINCE kept a hard allowlist (`SELECT` only; `DELETE`/`INSERT`/`UPDATE` blocked) and a result cap, both of which are exact and free. The LLM reviewer was the layer that went, not the validation.
+A gate that cries wolf gets routed around by whoever operates it, which is worse than no gate — it produces the appearance of verification plus the habit of overriding it. Where a **deterministic** check can cover the same ground, prefer it: PRINCE kept a hard allowlist (`SELECT` only; `DELETE`/`INSERT`/`UPDATE` blocked) and a result cap, both of which are exact and free. The LLM reviewer was the layer that went, not the validation. Crying wolf is a false positive in the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1), and here it carries a cost.
 
 The generalization: **verify with the cheapest mechanism that is actually decisive.** Schema check before reference comparison before LLM judge — the eval-tier ladder below, applied to gates. This is note 08's [iterative simplification](08-maturity-and-failure-modes.md#iterative-simplification) reaching verification itself; verification layers are subject to the subtraction pass like everything else.
 

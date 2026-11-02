@@ -196,7 +196,7 @@ observed rate   [0.005 0.098 0.211 0.318 0.363 0.394 0.351 0.267]
 
 The average rises steeply to about 0.28 at age 51 and then eases. ICE shows what that hides: at age 51 one row in ten is still under 0.013 and one row in ten is at 0.78, so age matters only to rows whose other features make them plausible earners. The final line is not the same thing as the curve: observed rates climb higher (0.394 at 51) because older people in the data also differ in other ways, while the partial dependence holds the others fixed.
 
-Two limits. **It is not causal**: the curve shows what the model does, and a model trained on observational data has not learned what happens if you age someone. **It ignores correlation**: setting `age=20` on a row with `education-num=16` and `marital-status=Widowed` asks the model about a person who hardly exists. Where this matters, plot only over observed combinations or use accumulated local effects.
+Two limits. **It is not causal**: the curve shows what the model does, and a model trained on observational data has not learned what happens if you age someone. **It ignores correlation**: setting `age=20` on a row with `education-num=16` and `marital-status=Widowed` asks the model about a person who hardly exists. Where this matters, plot only over observed combinations or use accumulated local effects. See [Correlation and causation](../../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md#when-you-cannot-randomise) in data analytics for what the causal question needs.
 
 ## SHAP
 

@@ -18,6 +18,21 @@ How to choose a chart, draw it well in Python and JavaScript, and use it to get 
 
 Then go on to [applied analyses](../06-applied-analyses/README.md), which use these charts on six business questions. Readers new to pandas should start with [Python for data analysis](../01-python-for-data-analysis/README.md).
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Starts from [DA 01](../01-python-for-data-analysis/README.md) in this subject |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| [GA 06/06 Cost and latency dashboards](../../generative-ai/06-observability/notes/06-cost-and-latency-dashboards.md) | What a dashboard is for, applied to LLM traces |
+| [GA 07/05 Data-analysis agent](../../generative-ai/07-agentic-applications/notes/05-data-analysis-agent.md) | An agent's charts answer to the same standards |
+
 ## Rules of thumb
 
 - Decide what the chart must say before you choose its type. Write the finding as the title.

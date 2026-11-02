@@ -39,7 +39,7 @@ The Handbook picks a deployment type from four criteria: throughput, latency, da
 | **Asynchronous** | Request goes on a queue; workers drain it; the client polls or gets a callback | Spiky load, long generations | Queue depth; result delivery |
 | **Offline batch** | Scheduled job over a dataset; results written to storage | Evals, backfills, embeddings, synthetic data | Throughput per dollar |
 
-The async shape is the Handbook's answer to spikes. In its example, traffic jumps from 10 to 100 RPS and two VMs absorb it through a queue instead of scaling out on the spot. Batch maps to the provider batch APIs at about 50% off ([01](01-why-inference-is-its-own-discipline.md#online-and-batch)).
+The async shape is the Handbook's answer to spikes. In its example, traffic jumps from 10 to 100 RPS and two VMs absorb it through a queue instead of scaling out on the spot. Batch maps to the provider batch APIs at about 50% off ([01](01-why-inference-is-its-own-discipline.md#online-and-batch)). [Batch and online serving](../../../data-engineering/06-ml-platform/notes/03-batch-and-online-serving.md#three-shapes) in data engineering sets out similar shapes for an ordinary ML model, and its [rollout section](../../../data-engineering/06-ml-platform/notes/03-batch-and-online-serving.md#rolling-out-a-new-model) and [the model registry](../../../data-engineering/06-ml-platform/notes/02-experiment-tracking-and-model-registry.md#rollback-and-why-the-registry-labels-but-does-not-deploy) cover shipping a new version.
 
 **Latency buys throughput.** The Handbook's arithmetic: a server that processes 20 requests in 100 ms delivers 200 RPS. Batching 60 requests into 200 ms delivers 300 RPS. Each request waits twice as long and the fleet serves 50% more. Google's often-quoted 2016 finding that 53% of mobile users abandon a page that takes over 3 s is the reminder that the trade has a limit.
 
@@ -69,7 +69,7 @@ One Handbook framing to update: "inference typically requires less computation" 
 
 ## Batching
 
-Decode is bandwidth-bound: each step reads all weights to produce one token per sequence. Batching amortizes that read over many sequences, which is why it is the first lever.
+Decode is bandwidth-bound: each step is one [forward pass](../../../data-science/02-deep-learning/notes/01-neural-networks-fundamentals.md#the-forward-pass) that reads all weights to produce one token per sequence. Batching amortizes that read over many sequences, which is why it is the first lever.
 
 | Kind | When the batch runs | Problem |
 |---|---|---|

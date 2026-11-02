@@ -1,6 +1,6 @@
 ---
 name: papers
-description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars and the subject homes (data-analytics, data-science, data-engineering, programming). Optional filter: /papers loop, /papers rag, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
+description: "Integrate queued or downloaded papers (DAIR AI Papers of the Week and PDFs already in the repo) into the course: read each PDF in its home's sources/, add a row to that home's references.md, write the finding into the note it maps to, and pull the key figure into sources/images/. Works for ai-engineering and generative-ai pillars and the subject homes (data-analytics, data-science, data-engineering, programming). Optional filter: /papers loop, /papers rag, /papers rag tier:1, /papers 2610.28577, /papers cited (audit papers the notes already cite), /papers filed. Run from the learn-ai-engineering repo."
 ---
 
 You are integrating research papers into the AI-engineering course notes. The weekly job
@@ -26,19 +26,29 @@ python3 scripts/papers/potw.py status --list downloaded
 python3 scripts/papers/potw.py status --list queued   # repo PDFs: already local, nothing to download
 ```
 
-Each line is JSON: `key`, `title`, `pillar` (the home key), `note` (repo-relative path, or
-null), `relevance`, `pdf` (repo-relative local PDF), `reason`, `url`. Take queued rows only
+Each line is JSON, best first: `key`, `title`, `pillar` (the home key), `note` (repo-relative
+path, or null), `tier`, `role`, `review_status`, `relevance`, `pdf` (repo-relative local PDF), `reason`, `url`. Take queued rows only
 when `pdf` is set and outside `scripts/papers/inbox/`; if a queued PDF still sits in the
 inbox, run `python3 scripts/papers/potw.py route --apply` first. Skip rows whose `pdf` is a
 book chapter (`sources/<book-slug>/chNN-…`); those belong to `/chapter`. Filter by
-`$ARGUMENTS` if given: a home key (`loop`, `rag`), one or more keys / arXiv ids, `cited`
+`$ARGUMENTS` if given: a home key (`loop`, `rag`), a tier (`tier:1`), one or more keys / arXiv ids, `cited`
 (only rows whose arXiv id already appears in a note: audit these first) or `filed` (audit
 `status --list filed` rows). If nothing is ready, say so and suggest `make papers`. Work
 one home at a time.
 
-**Primary sources first.** Rows with `"source": "citegraph"` and `"role": "primary"` are the
-works our papers cite most for their method, the papers ideas come from (see
-`scripts/papers/reports/primary.md`). Take them before DAIR rows of the same home.
+**Work in `tier` order, lowest first.** `potw.py tier` ranks every ready PDF:
+
+| Tier | Name | Rule |
+|---|---|---|
+| 1 | primary | `role` is primary: our papers cite it most for its method, so ideas likely start there (see `scripts/papers/reports/primary.md`) |
+| 2 | landmark | 300+ citations a year |
+| 3 | solid | 30+ citations a year, peer-reviewed, or `interest` 3 |
+| 4 | too new to tell | Published this year or last, without the signals above |
+| 5 | low signal | None of the above |
+| 6 | survey or benchmark | Useful context, but not where an idea originates |
+
+Citations measure attention, not fit, so within a tier take first the papers that change or
+sharpen a claim a note makes. A row with no `tier` hasn't been ranked yet: run `potw.py tier`.
 
 A whole book that isn't split into chapters (a textbook PDF, not `sources/<book-slug>/chNN-…`)
 or an exercise handout isn't a paper: run `potw.py mark filed <key>` and list it in the

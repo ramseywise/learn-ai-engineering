@@ -83,7 +83,7 @@ The single-neighbour model gets every training point right and is the worst on t
 
 ## Linear models
 
-Predict with a weighted sum: $\hat y = w \cdot x + b$. For classification, threshold it at zero.
+Predict with a weighted sum: $\hat y = w \cdot x + b$. For classification, threshold it at zero. scikit-learn fits this for prediction and reports no standard errors. See [Regression and GLMs](../../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md#ols-in-statsmodels) in data analytics for the inference side, in `statsmodels`.
 
 ### Regression: OLS, ridge, lasso
 

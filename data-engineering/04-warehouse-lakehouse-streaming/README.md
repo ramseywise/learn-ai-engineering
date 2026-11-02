@@ -16,6 +16,20 @@
 | 4 | [Kafka and stream semantics](notes/04-kafka-and-stream-semantics.md) | What do at-least-once, exactly-once and watermarks actually guarantee? |
 | 5 | [Cost](notes/05-cost.md) | How do bytes, slots and egress turn into a number before the invoice? |
 
+## Builds on and feeds into
+
+**Builds on**
+
+| Chapter | Why |
+|---|---|
+| [Programming](../../programming/README.md) | Python and SQL fluency, which the zoomcamps assume |
+
+**Feeds into**
+
+| Chapter | Why |
+|---|---|
+| None in other subjects | Nothing outside this subject links here yet |
+
 ## Rules of thumb
 
 - Select columns, filter on the partition, cluster the next filter, in that order.

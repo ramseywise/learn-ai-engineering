@@ -34,7 +34,7 @@ Production retrievers run all three. Note [01 § hybrid retrieval](01-rag-pipeli
 
 ### Bag of words to TF-IDF
 
-Each document becomes a **sparse vector**: one slot per vocabulary word, mostly zeros. The prompt becomes one too, and documents are scored by overlap.
+Each document becomes a **sparse vector**: one slot per vocabulary word, mostly zeros. The prompt becomes one too, and documents are scored by overlap. [Text representation](../../../data-science/03-nlp/notes/01-text-representation.md#tf-idf) in data science derives TF-IDF from scratch, and [text classification](../../../data-science/03-nlp/notes/02-text-classification.md#the-baseline-tf-idf-and-a-linear-model) uses it as the baseline to beat.
 
 | Score | Formula | Fixes |
 |---|---|---|
@@ -66,7 +66,7 @@ BANK-112  df= 1  idf=2.89
 
 ### BM25
 
-BM25 is TF-IDF with two tunable fixes, and it is still the default keyword scorer.
+BM25 is TF-IDF with two tunable fixes, and it is still the default keyword scorer. [Embeddings and similarity](../../../data-science/03-nlp/notes/04-embeddings-and-similarity.md#a-content-based-recommender-sarkar-ch-7b) in data science also builds it by hand, on a film catalogue.
 
 | Parameter | Typical | Effect |
 |---|---|---|
@@ -215,7 +215,7 @@ reverse a sent invoice -> ['kb-09', 'kb-08', 'kb-17']
 
 ## Semantic search
 
-An **embedding model** maps text to a dense vector so that similar meanings land close together. It learns this by **contrastive training**: pull positive pairs (question, its answer) together and push negative pairs apart, over millions of examples.
+An **embedding model** maps text to a dense vector so that similar meanings land close together. It learns this by **contrastive training**: pull positive pairs (question, its answer) together and push negative pairs apart, over millions of examples. See [LLM embeddings as features](../../../data-science/03-nlp/notes/07-llm-embeddings-as-features.md#what-a-sentence-embedding-is) in data science for what a sentence embedding is.
 
 ### Distance measures
 
