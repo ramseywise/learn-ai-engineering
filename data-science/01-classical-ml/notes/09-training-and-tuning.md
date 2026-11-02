@@ -647,7 +647,7 @@ selection rows  winner there  winner on the other rows  optimism  sd on other ro
 best of the 32 on all 6512 rows: 0.9261
 ```
 
-With 100 selection rows the winner claims 0.9308, truly scores 0.9223, and has optimism of 0.0085. That true score is below the default settings, which scored 0.9222 and 0.9244 on the two halves, so tuning on too few rows found luck and lost ground. By 1,000 rows, optimism has fallen to 0.0013.
+With 100 selection rows the winner claims 0.9308, truly scores 0.9223, and has optimism of 0.0085. That true score only matches the default settings, which scored 0.9222 and 0.9244 on the two halves, so tuning on too few rows found luck and gained nothing. By 1,000 rows, optimism has fallen to 0.0013.
 
 Now the only use of the test rows: fix the choice, refit on all development rows, score once.
 
@@ -764,7 +764,7 @@ Nested CV gives 0.9274, close to the hold-out test score of 0.9272, at a cost of
 | What is regularisation, in one line? | A cost on complexity, which removes more noise than signal because noise does not repeat |
 | L1 or L2? | L1 zeroes weights, L2 shrinks all of them. Here, equal scores with 29 weights against 83 |
 | Why is early stopping regularisation? | Weights grow with training, so time acts like penalty strength |
-| Grid or random? | Random. Few knobs matter, and random tests each at many values for the same budget |
+| Grid or random? | Random is the usual answer, since few knobs matter. They tied here, on a well-chosen grid |
 | What is nested CV for? | An honest score for a whole tuning procedure, mainly on small data |
 | Why is the search winner's score optimistic? | It was chosen partly for luck on those rows. Measured: 0.0085 at 100 rows, 0.0013 at 1,000 |
 | How much does tuning help? | Usually less than choosing the right family. Here 0.0009 on test against 0.025 from logistic to boosting |

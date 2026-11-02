@@ -32,7 +32,7 @@ parts:
         statement: "A forest scores 1.000 on the data it trained on, every time. The only score that counts is on people it has never seen."
         attribution: Own run on breast cancer, where the same forest scores 0.972 on held-out data
         takeaway: Generalisation is the goal, so every score needs held-out data before it means anything.
-        source: notes/01-statistical-foundations.md
+        source: notes/01-statistical-foundations.md, notes/06-ensembles.md
         notes: >-
           Memorising is easy. A deep tree or a forest can get every training row right. So the question this course keeps
           asking is about people the model did not see. What makes a model fail on them?
@@ -564,7 +564,7 @@ parts:
           you would have been approved if. Evaluate with them, and not just your satisfaction with the chart.
 
   - title: How do you train and tune it?
-    summary: Split and baseline · Learning curves · Folds · Regularisation · Early stopping · Search
+    summary: Splits · Learning curves · Folds · Regularisation · Early stopping · Search
     notes: >-
       You know the families and you can explain a model. Now the job itself. Think of a student and an exam: practice
       questions for learning, a mock exam for checking, one real exam that counts. A student who memorises the practice
@@ -641,7 +641,7 @@ parts:
           bullets:
             - "500 rows: the true SD is **0.0252**"
             - "The formula averages **0.0147**, about 40% too confident"
-            - "2,000 rows: 0.0066 and 0.0069 on average, yet one run's figure ranges from 0.0042 to 0.0116"
+            - "2,000 rows: true SD 0.0066, formula 0.0069 on average, yet one run's figure ranges from 0.0042 to 0.0116"
           tag: Too sure
         right:
           title: Compare fold by fold
@@ -739,16 +739,16 @@ parts:
         recall: What are the ten steps of the training loop, from split to ship?
         lang: checklist
         code: |
-          Step           What to do                                  On adult census
-           1 Split       Train, validation, test. Lock test away     19,536 / 6,512 / 6,513
-           2 Baseline    Fit a dummy, then a simple model            0.759 accuracy, AUC 0.906
-           3 Default     Fit a strong default, usually boosting      Validation AUC 0.925
-           4 Curves      Name the problem before touching a knob     Gap 0.027, healthy
-           5 CV          Compare fold by fold, against the spread    Boosting +0.0197, sd 0.0025
-           6 Regularise  Validation curve for the diagnosed knob     Learning rate 0.03
-           7 Stop early  Set patience, keep the best round           Round 16, loss 0.2918
-           8 Search      Random or TPE, fixed budget, check winner   +0.0025 to 0.0041
-           9 Final       Refit, read test once, give an interval     0.9272, 0.9209 to 0.9337
+          Step           What to do                                 On adult census
+          1  Split       Train, validation, test. Lock test away    19,536 / 6,512 / 6,513
+          2  Baseline    Fit a dummy, then a simple model           0.759 accuracy, AUC 0.906
+          3  Default     Fit a strong default, usually boosting     Validation AUC 0.925
+          4  Curves      Name the problem before touching a knob    Gap 0.027, healthy
+          5  CV          Compare fold by fold, against the spread   Boosting +0.0197, sd 0.0025
+          6  Regularise  Validation curve for the diagnosed knob    Learning rate 0.03
+          7  Stop early  Set patience, keep the best round          Round 16, loss 0.2918
+          8  Search      Random or TPE, fixed budget, check winner  +0.0025 to 0.0041
+          9  Final       Refit, read test once, give an interval    0.9272, 0.9209 to 0.9337
           10 Stop        A step moves less than the spread? Ship it
         takeaway: If a later step moves the score less than the spread, stop and ship.
         source: notes/09-training-and-tuning.md
@@ -815,7 +815,7 @@ parts:
           - [Noise in a test score, "ROC-AUC SD **0.039** with 50 defaulters, 0.018 with 200", A test set is as big as its defaulters]
           - ["All 434 defaulters, 434 good customers", "ROC-AUC 0.759, against 0.762 with all 14,018", Good customers saturate early]
           - ["All good customers, 25 defaulters", "ROC-AUC **0.676**", Defaulters do not]
-          - [No defaults among 1,000 approved, "The true rate could still be 0.3%", The rule of three]
+          - ["No defaults among 1,000 approved", "The true rate could still be 0.3%", The rule of three]
         highlight: [3]
         takeaway: Report the event count and the SD of the score, since this 4,818-row test set holds only 145 defaulters.
         source: notes/10-imbalance-errors-and-drift.md
@@ -827,7 +827,7 @@ parts:
       - layout: image
         title: The threshold matters far more than resampling
         recall: Once the threshold is tuned, how much does the choice of resampling method change the cost?
-        lead: "Cost per 1,000 applicants, 20 seeds. At 5:1, SMOTE costs **176.4** with the threshold left at 0.5 and **143.1** with it tuned."
+        lead: "Cost per 1,000 applicants. At 5:1, SMOTE costs **176.4** with the threshold at 0.5 and **143.1** with it tuned."
         image: ../../sources/images/credit-lab-method-comparison.png
         caption: "Across 10 settings, SMOTE at 0.5 lost beyond noise in 8 and never won. With its own tuned threshold, it tied in all 10."
         takeaway: Tune the threshold and leave the data alone, since tuned costs span 142.4 to 144.5 and the seed moves them by 5.9.
@@ -852,7 +852,8 @@ parts:
 
           # Right: the sampler lives in the pipeline
           pipe = Pipeline([("scale", StandardScaler()),
-                           ("smote", SMOTE()), ("clf", hgb())])
+                           ("smote", SMOTE()),
+                           ("clf", hgb())])
           cross_val_score(pipe, x, y, cv=cv)
           # pipeline CV 0.697, test 0.703
         bullets:
@@ -914,7 +915,7 @@ parts:
           - title: Keep watching
             body: SHAP describes the model, not the world. Score monitors miss most drift.
         takeaway: Most of classical ML's failures are in the measurement, not in the model.
-        source: notes/09-training-and-tuning.md
+        source: notes/09-training-and-tuning.md, notes/10-imbalance-errors-and-drift.md
         notes: >-
           If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
           choosing a cleverer algorithm.

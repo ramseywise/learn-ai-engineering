@@ -2,8 +2,8 @@
 # notes/02-collaborative-filtering-and-matrix-factorisation.md, notes/03-two-tower-and-evaluation.md.
 # Build: make slides PILLAR=data-science/05-time-series-and-recommenders STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
-# Running examples: hourly bike rentals (UCI), then MovieLens 100K. Every number was measured by
-# running the code in the notes, except those attributed to a paper.
+# Running examples: hourly bike rentals (UCI), a synthetic customer cash-flow case, then MovieLens 100K.
+# Every number was measured by running the code in the notes, except those attributed to a paper.
 deck:
   title: Time Series and Recommenders
   subtitle: When rows are not exchangeable
@@ -18,13 +18,14 @@ deck:
 
 parts:
   - title: Forecasting without fooling yourself
-    summary: Issue time · Baselines · Backtests · Leaks · Sequence models
+    summary: Issue time · Baselines · Backtests · Leaks · Sequence models · Segments
     notes: >-
       We start with an operator who plans vans at midnight. What would a forecast really have scored on the day it was issued?
     slides:
       - layout: statement
         title: Our shuffled test says the forecast is great. Is it?
         kicker: The problem
+        recall: Why does a shuffled test overstate how well a forecast will do?
         statement: "A forecast is a promise about a future you cannot see, so shuffled rows report an accuracy you will never get."
         attribution: State when the forecast is issued before you fit anything
         takeaway: Shuffled validation tests interpolation between known points, whereas a forecast has to predict a future it cannot see.
@@ -35,7 +36,7 @@ parts:
 
       - layout: cards
         title: Four things to state before any model
-        recall: What four things define a forecasting problem?
+        recall: Which four choices define a forecasting problem, and what do they decide?
         cards:
           - title: Issue time
             body: When the forecast is made. Here, midnight.
@@ -53,7 +54,7 @@ parts:
 
       - layout: flow
         title: A backtest replays history one fold at a time
-        recall: How does an expanding-window backtest work?
+        recall: What does an expanding-window backtest train on at each cut?
         steps:
           - label: Cut
             sub: Pick a date in the past
@@ -74,8 +75,8 @@ parts:
       - layout: table
         title: Dividing by a known level beat the naive by a quarter
         kicker: Worked example
-        recall: Why did dividing by the level help the trees?
-        lead: Six monthly folds, mean over folds. MASE below 1 beats the in-sample seasonal naive.
+        recall: Why model the ratio to a known level when a series is growing and you use trees?
+        lead: Six monthly folds. MASE divides the error by that of a seasonal naive on past data, so below 1 beats it.
         header: [Model, MAE (bikes), MASE]
         widths: [3, 1, 1]
         rows:
@@ -92,7 +93,7 @@ parts:
 
       - layout: compare
         title: Three leaks that each look like a breakthrough
-        recall: Which three leaks did we measure, and what did each do to MASE?
+        recall: What should you ask of every feature to catch a leak?
         lead: The honest model scores MASE 0.786 on these folds.
         emphasis: left
         left:
@@ -117,7 +118,7 @@ parts:
 
       - layout: code
         title: DLinear is two linear maps and a moving average
-        recall: What does DLinear do to a window of history?
+        recall: What should any complex forecaster have to beat first, and on what evidence?
         lang: python
         code: |-
           class DLinear(nn.Module):
@@ -144,7 +145,7 @@ parts:
 
       - layout: table
         title: Trees beat networks here, on one short series
-        recall: Why does this comparison not prove that trees beat neural networks?
+        recall: On a small single series, what do you try first, and what must a deep model do?
         lead: Each network saw 168 hours and predicted 24, with no calendar input. MASE, six folds.
         header: [Model, MASE, Train time]
         widths: [3, 1, 1]
@@ -161,6 +162,84 @@ parts:
           This is one series with a few hundred training windows. In M5, with 42,840 related series, cross-learning and LightGBM won, and only
           35.8 percent of teams beat the seasonal naive. DeepAR and its relatives are designed for many series, and a single short one starves them.
 
+      - layout: cards
+        title: "Case: forecasting each segment's cash flow, on synthetic data"
+        kicker: Case study
+        recall: In the segment case, what is a control world for?
+        cards:
+          - title: The question
+            body: Every fourth Monday, finance wants each segment's net cash for the next four weeks.
+          - title: The data
+            body: "Synthetic, not real customers: 400 businesses and 156 weeks of signed weekly cash."
+          - title: The test
+            body: "Eight issue dates, each predicting four weeks from earlier data only. Scored by MASE."
+          - title: The checks
+            body: Random groups in place of segments, and a control world with no real groups.
+        takeaway: A control world has no real groups in it, so any gain that appears there cannot come from segments.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          This data is generated by a lab, so we know the truth. Segments are four HDBSCAN clusters plus a noise group of 131 customers, frozen at the
+          first issue date. Every lag is at least four weeks. The model is a GBM with the target divided by a known level, as in the bike case, and MASE
+          is scaled by the same-week-last-year naive.
+
+      - layout: image
+        title: One synthetic world said that segments don't help
+        kicker: Case study
+        recall: Why did the seed 42 table read as "segments don't help"?
+        image: ../../sources/images/ts-segment-forecast-mase.png
+        caption: "Synthetic data, seed 42, eight walk-forward folds. Generated by the customer-segments lab."
+        bullets:
+          - "**Per segment** 0.961, against **global** 0.945"
+          - "**Random groups** 0.936, ahead of the real segments"
+          - "**Naive** 1.234: read models against this row, not against 1"
+        takeaway: On one seed per-segment models lost to both a global model and random groups, which reads as "segments don't help".
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Read the blue dots, the segment totals. The naive row sits above 1 because the test weeks are harder than the history that sets the scale, and learned
+          models improve on it by about a quarter. The per-segment model looks like a waste of effort, since groups drawn at random did better. Before you believe
+          that, ask how many worlds it rests on: one, and eight folds.
+
+      - layout: table
+        title: "Five more worlds reversed it: segments help only where real"
+        kicker: Case study
+        recall: Across five worlds, where did the gain from segments appear, and where did it vanish?
+        lead: "Synthetic data. Segment-total MASE, lower is better. Five-world columns are averages."
+        header: [Model, "Seed 42, planted", "Five worlds, planted", "Five worlds, control"]
+        widths: [3, 2, 2, 2]
+        rows:
+          - [Global, "0.945", "1.105", "0.999"]
+          - [Global + segment feature, "0.930", "1.026", "1.004"]
+          - [One per segment, "0.961", "1.024", "1.014"]
+          - [One per random group, "0.936", "1.115", "1.007"]
+        highlight: [1]
+        takeaway: Real groups cut the error with a feature or a split alike, and the gain vanishes for random groups and in the control world.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          Against the global model, the feature wins in all five planted worlds, per segment in four, and random groups in one. The feature gets as much as a split,
+          with one model to maintain. In single customers the effect is small: 1.133 global against 1.126 with the feature and 1.137 per segment.
+
+      - layout: steps
+        title: Segment a forecast only after it beats random groups
+        kicker: Case study
+        recall: What must segments beat, and on how many worlds, before you trust the gain?
+        steps:
+          - title: One global model
+            text: Start there, with the naive row beside it
+          - title: Add a feature
+            text: Use the segment as a feature before any split
+          - title: Split on evidence
+            text: Only for a segment that wins across later folds
+          - title: Compare with fakes
+            text: Random groups and a control world
+          - title: Repeat
+            text: One table of eight folds gave the wrong answer here
+        takeaway: Segments help a forecast only when they are real, so test any gain against random groups, a control and more than one seed.
+        source: notes/01-time-series-ml.md
+        notes: >-
+          All of this is synthetic, so treat it as a lesson in method and not a fact about real customers. Two more things in the chapter: one segment of 161 customers,
+          growth SaaS and seasonal retail, really does want its own model, at 0.807 against 1.123 for global, while per segment loses in the other four groups. And
+          SMAPE disagrees with MASE, ranking the four-weeks-ago naive at 105.0 above the global model at 123.7, because net cash crosses zero.
+
   - title: The best predictor, the worst list
     summary: Sparse data · Biases and factors · Top-N · EASE · Implicit feedback
     notes: >-
@@ -169,17 +248,35 @@ parts:
       - layout: statement
         title: Our best rating model loses to a bestseller list
         kicker: The problem
+        recall: Why can a model trained to predict stars rank worse than popularity?
         statement: "Nobody sees your RMSE. People see ten films chosen from the whole catalogue."
-        attribution: "MF on ratings, NDCG@10 0.034. Popularity, 0.075."
+        attribution: "Score for the top ten (NDCG@10, explained next): MF on ratings 0.034, popularity 0.075."
         takeaway: A model trained to predict the stars people gave can rank worse than popularity, because it was never asked to rank anything.
         source: notes/02-collaborative-filtering-and-matrix-factorisation.md
         notes: >-
           We will build the model that causes this result and then see what fixes it. The matrix has 943 users, 1,682 films and is 94 percent empty.
           The top tenth of films hold 43 percent of the ratings.
 
+      - layout: cards
+        title: NDCG gives more credit for hits near the top of the list
+        kicker: How we score a list
+        recall: What does NDCG reward that plain recall does not?
+        cards:
+          - title: Recall@10
+            body: The share of a user's relevant test items that reached the list, capped by how many could fit.
+          - title: NDCG@10
+            body: The same idea with more credit near the top. Each hit counts 1 / log2(rank + 1), then we divide by the best possible list.
+          - title: Coverage
+            body: The share of the catalogue that appears on anybody's list.
+        takeaway: NDCG is recall that cares about order, so a hit at the top counts for more than a hit further down, and a perfect list scores 1.
+        source: notes/02-collaborative-filtering-and-matrix-factorisation.md
+        notes: >-
+          Think of a list of ten films. Recall asks how many of the films you went on to like made the list. NDCG asks the same, and also asks where they sit, because people
+          read from the top. Dividing by the best possible list keeps the score between 0 and 1 for every user. Coverage stops a list of bestsellers looking good.
+
       - layout: flow
         title: Split interaction logs by time, not at random
-        recall: Why did we split per user, and how much does random holdout inflate NDCG?
+        recall: What does a random split of interaction logs do to NDCG, and why?
         steps:
           - label: Global cut first
             sub: Only 109 of 301 future raters have any history
@@ -195,7 +292,7 @@ parts:
 
       - layout: bullets
         title: Biased matrix factorisation, and what each part buys
-        recall: Write the biased MF prediction. Which part did most of the RMSE work?
+        recall: In biased matrix factorisation, which parts capture most of the rating signal?
         lead: "**rating = mean + b_user + b_item + p_user · q_item**, fitted only on observed cells"
         bullets:
           - "Predict the mean: RMSE **1.229**"
@@ -213,7 +310,7 @@ parts:
 
       - layout: code
         title: EASE trains with one matrix inverse
-        recall: What is the closed form for EASE, and why must the diagonal be zero?
+        recall: How does EASE learn its item-item matrix, and why is the diagonal zero?
         lang: python
         code: |-
           def fit_ease(R, lam=100.0):
@@ -236,11 +333,11 @@ parts:
           catalogues in the tens of thousands, which is what pushes larger systems to factor models.
 
       - layout: table
-        title: Top-10 on the full catalogue
+        title: Models built to rank beat a popularity list
         kicker: Worked example
-        recall: Which model led the table, and where did MF on ratings land?
+        recall: On full-catalogue top-10, which kind of model beat popularity?
         lead: 861 test users, full catalogue minus what they have seen. Relevant means rated 4 or 5.
-        header: [Model, Recall, NDCG, Coverage]
+        header: [Model, Recall@10, NDCG@10, Coverage]
         widths: [3, 1, 1, 1]
         rows:
           - [EASE, "0.155", "0.126", "0.22"]
@@ -257,7 +354,7 @@ parts:
 
       - layout: compare
         title: Implicit data has no dislikes, so model it differently
-        recall: What are the two approaches to implicit feedback, and what happened to Hu's alpha on our data?
+        recall: What are the two ways to model implicit feedback?
         lead: Not watching may mean disinterest, or never having seen it.
         left:
           title: iALS (Hu et al., 2008)
@@ -281,6 +378,7 @@ parts:
 
       - layout: statement
         title: Simple methods keep winning, so measure them first
+        recall: Which simple methods belong in every recommender table, and why?
         statement: "Of 18 published top-n algorithms, 7 could be reproduced, 6 of those often lost to simple heuristics, and the last did not consistently beat a tuned linear method."
         attribution: Dacrema, Cremonesi and Jannach, RecSys 2019
         takeaway: Most published neural recommenders that could be reproduced lost to tuned simple methods, so put popularity, kNN and EASE in every table.
@@ -297,6 +395,7 @@ parts:
       - layout: statement
         title: A new film has no ratings. What does EASE recommend?
         kicker: The problem
+        recall: Which two limits of interaction-only models motivate feature-based retrieval?
         statement: "A matrix cannot rank an item it has never seen, and an item matrix stops fitting long before millions of items."
         attribution: Two towers learn embeddings from features instead
         takeaway: Interaction-only models cannot rank a new item and do not scale to millions, which is what motivates feature-based retrieval.
@@ -306,7 +405,7 @@ parts:
 
       - layout: flow
         title: Large systems narrow the catalogue in stages
-        recall: What is each stage in the funnel judged on?
+        recall: Why is retrieval judged on recall?
         steps:
           - label: Retrieval
             sub: Millions to hundreds. Judged on recall.
@@ -345,8 +444,8 @@ parts:
       - layout: table
         title: The correction turns a losing tower into a contender
         kicker: Worked example
-        recall: How did the corrected tower compare with EASE and with the plain tower?
-        lead: Same split and metric as the previous part.
+        recall: What did the logQ correction do to the two-tower model, and what did the plain model do?
+        lead: Same split and metrics as the previous part. NDCG@10 gives more credit to hits near the top.
         header: [Model, Recall@10, NDCG@10, Coverage]
         widths: [3, 1, 1, 1]
         rows:
@@ -363,8 +462,8 @@ parts:
 
       - layout: compare
         title: A sampled metric reversed two models
-        recall: What happened to EASE and the corrected tower when we ranked against 99 negatives?
-        lead: Test HR@10 for the same models on the same users.
+        recall: What can ranking against sampled negatives do to the order of two models?
+        lead: HR@10 is the hit rate, how often a test item reaches the top ten. Same models, same users.
         emphasis: left
         left:
           title: Full catalogue
@@ -406,7 +505,7 @@ parts:
 
       - layout: steps
         title: Each stage earns the next, more expensive one
-        recall: What are the stages of the evaluation ladder, and why does the ladder exist?
+        recall: Why must offline stages remove candidates before an A/B test?
         steps:
           - title: Full-catalogue offline
             text: Cheap, biased by logs
@@ -430,6 +529,7 @@ parts:
     slides:
       - layout: cards
         title: What to remember
+        recall: Which two habits apply to both forecasts and recommenders?
         cards:
           - title: Issue time first
             body: A feature is legal only if it existed at the issue time.
@@ -443,10 +543,19 @@ parts:
             body: LogQ in training, for in-batch softmax.
           - title: Offline chooses, live decides
             body: Log propensities and budget for an A/B test.
+        takeaway: In forecasts and in lists, score what the decision will really see, and keep simple baselines in every table.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Both halves of today came down to the same two habits: an evaluation that matches the real decision, and a simple method to beat.
       - layout: bullets
         title: Where next
+        recall: Where do you go next for experiment statistics, and for exploration and replay?
         bullets:
           - "**Text as features:** LLM embeddings fill the two-tower content slot, in the NLP pillar"
           - "**Experiment statistics:** the A/B ladder in data analytics, experimentation and causality"
           - "**Bandits:** the RL pillar in generative AI develops exploration and replay"
           - "**Language models:** LLM fundamentals in generative AI"
+        takeaway: Next, carry these habits to text features, experiments and bandits.
+        source: notes/03-two-tower-and-evaluation.md
+        notes: >-
+          Each of these picks up a thread from today. The A/B ladder and the bandit replay are the two that follow most directly from the last part.

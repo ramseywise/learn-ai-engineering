@@ -150,7 +150,7 @@ ORG ['CIA', 'FBI', 'Bond', 'IMF', 'Batman', 'Sophie', 'Lincoln', 'Riley']
 ![Table of the entity types spaCy's English models tag, from PERSON to MONEY](../../sources/images/sarkar-spacy-ner.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), companion repo `Ch08/spacy_ner.png`*
 
-The notebook's text, shown above, is a news paragraph about parliaments asking Mark Zuckerberg to testify. spaCy gets most entities right and mislabels a few, such as an organisation tagged as a person, or a nationality as GPE. Run on our film descriptions, the output is usable and also instructive. PERSON dominates, GPE finds real cities, but the ORG list mixes CIA and FBI with "Bond", "Batman" and "Sophie". A news-trained model has never seen fictional characters doing what these do. Counting `ent.label_` over a corpus gives a quick profile of what a collection is about.
+The first line above is one film's description, and spaCy tags its entities sensibly. Run across a thousand film descriptions, the output is usable and also instructive. PERSON dominates, GPE finds real cities, but the ORG list mixes CIA and FBI with "Bond", "Batman" and "Sophie". A news-trained model has never seen fictional characters doing what these do. Counting `ent.label_` over a corpus gives a quick profile of what a collection is about.
 
 ### Stanford NER and CoreNLP
 
@@ -262,12 +262,6 @@ features for B-per: ['word.lower():president +5.3', 'word.lower():prime +4.8', '
 
 The transitions read like a grammar: continue a span once it is open, and never open I-geo from O. The state features show titles such as "president" and "senator" counting as B-per, which fits how GMB labels them, and that is worth knowing before you trust this tagger on your own text. Surnames like Clinton and Greenspan appear too, a memorised vocabulary from the news of its time. A tagger like that goes stale as the news moves on, which is the kind of decay [drift monitoring](../../../data-engineering/06-ml-platform/notes/04-drift.md) exists to catch.
 
-```text
-most encouraged: ['I-tim->I-tim +5.4', 'I-org->I-org +5.3', 'B-art->I-art +5.3', 'B-eve->I-eve +5.3']
-most forbidden:  ['B-per->B-per -6.5', 'O->I-geo -5.7', 'O->I-org -5.0', 'B-gpe->B-gpe -4.9']
-features for B-per: ['word.lower():president +5.3', 'word.lower():prime +4.8', 'word.lower():clinton +4.3', 'word.lower():senator +4.0', 'word.lower():cobain +4.0', 'word.lower():greenspan +4.0']
-```
-
 The notebook ends with an end-to-end pipeline: sentence-tokenise a new document, POS-tag it, build features, predict tags, and merge B/I runs into entity spans, compared with spaCy's output on the same text. Here is that pipeline, in a dozen lines.
 
 ```python
@@ -325,11 +319,6 @@ print([(e.text, e.label_) for e in nlp(text).ents])
 ```
 
 The rules add both new types without any training, and neither touches what the statistical model does: it still calls FedEx a GPE, so rules fix closed lists, not the model's errors elsewhere.
-
-```text
-[('AB-1234', 'SKU'), ('ibuprofen', 'DRUG'), ('Denver', 'GPE'), ('FedEx', 'GPE')]
-[('Denver', 'GPE'), ('FedEx', 'GPE')]
-```
 
 **Evaluate NER at the entity level** (exact span and type match, as `seqeval` does), not at token level, since token accuracy is dominated by `O`. It is the same trap as a rare-event model that looks accurate by never firing ([accuracy lies; errors cost](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost)).
 

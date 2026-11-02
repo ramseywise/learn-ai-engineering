@@ -748,7 +748,7 @@ def section_slide(prs, part, idx, number):
     acc = PART_ACCENTS[idx % len(PART_ACCENTS)]
     set_bg(s, NAVY)
     rect(s, 0, 0, 0.18, SLIDE_H, acc if acc != NAVY else TEAL)
-    text(s, 0.9, 1.6, 6, 0.5, f"PART {idx + 1}", 18, ORANGE if acc == NAVY else acc if acc not in (NAVY, PURPLE) else TEAL,
+    text(s, 0.9, 1.6, 6, 0.5, f"PART {idx + 1}", 18, ORANGE if acc == NAVY else acc if acc not in (NAVY, PURPLE, GREEN) else TEAL,
          bold=True)
     th = est_h(part["title"], 6.0, 50, bold=True)
     text(s, 0.9, 2.15, 6.0, th + 0.2, part["title"], 50, WHITE, bold=True, spacing=0.95)

@@ -457,7 +457,7 @@ BM25 finds films for a keyword query in a few milliseconds, and the recommender 
 
 ## The bridge to retrieval
 
-Everything in RAG is here in small: documents become vectors (TF-IDF, BM25 or a neural encoder), a query becomes a vector, cosine similarity ranks candidates, and hybrid systems fuse lexical (BM25) and dense scores. The jump is in the encoder: contextual sentence embeddings trained contrastively, like the triplet-loss face embeddings in [convolutional networks](../../02-deep-learning/notes/01-neural-networks-fundamentals.md#convolutional-networks-dl-course-4), instead of averaged word vectors. Continue in [RAG and retrieval](../../../generative-ai/02-rag-retrieval/README.md).
+Everything in RAG is here in small: documents become vectors (TF-IDF, BM25 or a neural encoder), a query becomes a vector, cosine similarity ranks candidates, and hybrid systems fuse lexical (BM25) and dense scores. The jump is in the encoder: contextual sentence embeddings trained contrastively, like the triplet-loss face embeddings in [convolutional networks](../../02-deep-learning/notes/04-convolutional-networks.md#embeddings-face-verification), instead of averaged word vectors. Continue in [RAG and retrieval](../../../generative-ai/02-rag-retrieval/README.md).
 
 ## Notebooks
 

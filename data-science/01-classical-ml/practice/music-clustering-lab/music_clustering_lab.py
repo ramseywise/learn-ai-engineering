@@ -66,7 +66,7 @@ SAFE_COLUMNS = AUDIO + PP + T2V + ENOA + [
 KS = list(range(2, 15))
 SEEDS = list(range(10))
 PROJECT_K = 8
-STABLE_JACCARD = 0.75  # Hennig (2007): below 0.6 a cluster is not a real pattern, above 0.75 it is stable
+STABLE_JACCARD = 0.75  # Our cut-off. Hennig (2007) offers "> 0.75, say" as a rough mark of good recovery
 
 
 def load_library(cache: Path = CACHE) -> pd.DataFrame:
