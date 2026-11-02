@@ -22,6 +22,8 @@ cleaned: 2026-11-01
 
 To a TF-IDF model, "hotel" and "motel" are exactly as far apart as "hotel" and "banana", because each word is its own axis. So a search for "cheap motel" misses a page about "budget hotels", and a classifier that has seen one never learns anything about the other. Someone has to tell the model that these words are related, and nobody has the time to write that list.
 
+**In plain words.** An embedding gives each word a position on a map, and places two words close together when they turn up in the same kinds of sentences, much as you might guess two strangers share a trade from the company they keep. That is how a search for "cheap motel" can learn to find a page about "budget hotels", the problem at the heart of search and of "more like this" suggestions at work. The map also picks up the habits of the text it learned from, prejudices included, so this chapter tests it as well as builds it.
+
 "You shall know a word by the company it keeps." Train a shallow network to predict a word from its context, or the reverse, and the hidden weights become dense vectors where similar words are close. No one labels anything. This chapter trains those vectors on a real corpus, tests them on analogies and bias, then uses distances between strings, documents and vectors to build a content-based recommender, which draws the line from word2vec to the sentence embeddings that power retrieval.
 
 ## From sparse to dense

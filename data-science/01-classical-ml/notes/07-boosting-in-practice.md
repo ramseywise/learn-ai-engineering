@@ -17,6 +17,8 @@ cleaned: 2026-11-01
 
 > You have settled on gradient boosting for a table. Now there are four libraries, each claiming to be best, each with its own knobs. Which do you pick, and does it matter? On the adult census they finish within a thousandth of AUC of each other, well inside the noise from the split. What differs is speed, how they treat categories and missing values, and what they ask you to tune. This note explains those differences and how to choose.
 
+**In plain words.** Boosting comes in four popular software packages, rather like four brands of washing machine that get clothes about equally clean. The choice between them comes down to how fast they run, how they cope with text categories and blank cells, and which settings you have to adjust. At work this chapter saves you from arguing over libraries, so you can pick one, tune it in a sensible order and get back to the problem.
+
 [Ensembles](06-ensembles.md) gave the idea: add shallow trees, each fitted to the gradient of the loss. This note is about the engineering that made that idea the default for tables. Blocks run top to bottom from this `notes/` folder with the packages in the command below; the numbers are from running them.
 
 ```bash
@@ -229,6 +231,8 @@ On this table the whole search moves AUC by under 0.003, about the size of the s
 | 6 | L1 and L2 on leaf weights | 0 to 10 on a log scale | Usually the smallest effect |
 
 Use a random or Bayesian search over steps 3 to 6 on a coarse learning rate. Don't report the score it finds as the final one: reserve a test set, or use [nested CV](04-model-evaluation.md#nested-cross-validation).
+
+[Training and tuning](09-training-and-tuning.md#hyperparameter-search) compares the search methods side by side, and [its early-stopping section](09-training-and-tuning.md#early-stopping-is-regularisation-too) shows the trap in scikit-learn's HGB, which stops training but keeps the rounds it ran while waiting.
 
 ## Pitfalls
 

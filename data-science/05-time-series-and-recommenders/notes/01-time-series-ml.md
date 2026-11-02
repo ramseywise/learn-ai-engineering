@@ -3,6 +3,9 @@ origin: synthesis
 sources:
   - ../references.md
   - "UCI Bike Sharing Dataset (Fanaee-T & Gama, 2014)"
+  - ../../sources/montero-manso-2021-locality-globality.pdf
+  - ../../sources/bandara-2020-forecasting-across-time-series.pdf
+  - ../practice/customer-segments-lab/lab.py
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -11,9 +14,13 @@ cleaned: 2026-11-01
 
 A forecast is a promise about a future you cannot see, so the standard machine learning habit of shuffling rows and holding some out will report an accuracy you will never get in production. This chapter builds forecasters for one hourly bike rental series, and the main lesson is the procedure: state when the forecast is issued, compare against a naive baseline, and test only on the future. The modelling choices come second, and the measurements below show why.
 
+**In plain words.** A bike-share operator has to decide tonight where to send its vans tomorrow, so it needs a guess at how many bikes each hour will want. Forecasting is that job: turning the past into a number someone can plan around, like a café working out how many loaves to bake. What's different from other modelling is that you can only test on days after the ones you learned from, and you have to beat the simple guess that tomorrow will look like last week.
+
 Scikit-learn gives you `fit` and `predict`, the [pandas time series chapter](../../../data-analytics/01-python-for-data-analysis/notes/06-time-series.md) gives you resampling and shifting, and [neural networks fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) gives you the training loop. What is new here is what time does to each of them. Rows are no longer exchangeable, because every row is correlated with its neighbours. Features can only use what was known at the moment of prediction, and that moment has to be stated before any modelling. The level of the series drifts, so a test set can sit outside the range of everything the model has seen.
 
 The running example is the [UCI Bike Sharing Dataset](https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset) (Fanaee-T & Gama, *Progress in Artificial Intelligence*, 2014; CC BY 4.0): two years of hourly rentals from the Capital Bikeshare system in Washington, D.C. The decision we pretend to serve is rebalancing. Each midnight an operator needs the next 24 hours of demand, hour by hour, to plan where the vans go.
+
+[Forecasting](../../../data-analytics/06-applied-analyses/notes/01-forecasting.md#from-forecast-to-decision) follows the same idea through to a business decision, a retailer's warehouse staffing plan.
 
 ## What a forecasting problem is made of
 
@@ -198,7 +205,7 @@ gbm relative 2012-11 46.724 0.734
 gbm relative 2012-12 41.787 0.653
 ```
 
-Dividing by the level takes MASE from 0.906 to 0.786, a bigger gain than most hyperparameter tuning could hope for, and it costs one line. The monthly rows show why you report folds: October is the only month above 1, and a single average would not tell you that. It is also the point to ask what happened that month. The file records 22 rentals on 29 October 2012 and 1,096 on the 30th, against more than 7,000 a day the week before. Those are the days Hurricane Sandy reached the region. Neither lags nor a calendar can see a storm coming, so more trees would not fix this. A forecast that has to survive such a day needs a weather forecast as an input and an operational override.
+Dividing by the level takes MASE from 0.906 to 0.786, a bigger gain than most hyperparameter tuning could hope for, and it costs one line. The monthly rows show why you report folds: October is the only month above 1, and a single average would not tell you that. It is also the point to ask what happened that month. The file records 22 rentals on 29 October 2012 and 1,096 on the 30th, against more than 7,000 a day the week before. Those are the days Hurricane Sandy reached the region. Neither lags nor a calendar can see a storm coming, so more trees would not fix this. A forecast that has to survive such a day needs a weather forecast as an input and an operational override. Once a model is live, someone has to catch a break like that as it happens, and the [drift note](../../../data-engineering/06-ml-platform/notes/04-drift.md) covers how to monitor for it.
 
 This is the method that won the M5 forecasting competition by a wide margin. Makridakis, Spiliotis and Assimakopoulos ([*International Journal of Forecasting*, 2022](https://ideas.repec.org/a/eee/intfor/v38y2022i4p1346-1364.html)) report on 42,840 hierarchical Walmart sales series with a 28-day horizon. It was the first competition in that series where all the top methods were pure machine learning and clearly better than statistical benchmarks. The winner, an equal-weighted mean of six LightGBM models, improved on the top benchmark by 22.4%, and most leading methods used LightGBM. Even so, only 7.5% of teams beat that benchmark and 35.8% beat the seasonal naive, so most entrants lost to a method they could have written in a line. Essentially all of the top 50 trained one "global" model across many series, which they call cross-learning. That is where machine learning earns its keep, since a global model can borrow patterns from thousands of related series. Januschowski and colleagues give a fuller account of why trees do so well here in ["Forecasting with trees"](https://doi.org/10.1016/j.ijforecast.2021.10.004) (*IJF*, 2022).
 

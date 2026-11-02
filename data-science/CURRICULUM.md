@@ -30,13 +30,13 @@ flowchart TD
 
 | Stage | Pillar and notes | Depends on | Notes on order |
 |---|---|---|---|
-| 1 | [01 Classical ML](01-classical-ml/README.md): 01 to 08 in order | Data analytics | Unsupervised learning needs only supervised learning. Read evaluation before you trust any score in the ensembles chapter |
+| 1 | [01 Classical ML](01-classical-ml/README.md): 01 to 10 in order | Data analytics | Unsupervised learning needs only supervised learning. Read evaluation before you trust any score in the ensembles chapter. Note 05 has the [music clustering lab](01-classical-ml/practice/music-clustering-lab/README.md), and notes 09 and 10 tie the earlier chapters together, with the [credit default lab](01-classical-ml/practice/credit-default-lab/README.md) behind 10 |
 | 2 | [02 Deep learning](02-deep-learning/README.md): 01 to 05 | 01 notes 02 and 04 | Note 03 needs no code. Notes 04 and 05 can swap |
 | 3 | [03 NLP](03-nlp/README.md): 01 to 04 | 01 notes 02 to 04 | Can run alongside stage 2. Notes 03 and 04 can swap |
 | 4 | [02 Deep learning](02-deep-learning/notes/06-neural-text-models.md): note 06 | Stage 2 and NLP note 04 | Where the two branches meet |
 | 5 | [03 NLP](03-nlp/README.md): 05 to 07 | Stage 3, and note 06 for 07 | Note 07 reruns the classical methods on LLM embeddings. Check the [pillar's reading order](03-nlp/README.md#reading-order) for the rest |
 | 6 | [Generative AI 09: LLMs from scratch](../generative-ai/09-llms-from-scratch/README.md): 01 to 03 | Logistic regression, softmax | Strictly sequential, as each part reuses the previous code. Learn backprop once in 02 note 01 or here, then use the other as a check |
-| 7 | [05 Time series and recommenders](05-time-series-and-recommenders/README.md): 01 to 03 | 01 throughout, 02 note 01 for the sequence and two-tower parts | Independent of stages 3 to 6, so it can come any time after stage 2 |
+| 7 | [05 Time series and recommenders](05-time-series-and-recommenders/README.md): 01 to 03 | 01 throughout, 02 note 01 for the sequence and two-tower parts | Independent of stages 3 to 6, so it can come any time after stage 2. Note 01's case uses the [customer segments lab](05-time-series-and-recommenders/practice/customer-segments-lab/README.md) |
 
 When nanoGPT is done, continue to [generative AI, LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md).
 

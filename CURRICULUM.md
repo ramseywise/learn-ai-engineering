@@ -188,7 +188,7 @@ Every pillar now has a README, `references.md`, `notes/` written as chapters, `s
 | generative-ai | 01 LLM fundamentals 14, 02 RAG 12, 03 agentic foundations 7, 04 frameworks 7, 05 RL 14, 06 observability 6, 07 applications 6, 08 eval 13, 09 LLMs from scratch 3 | Illustrative code in some chapters not run |
 | data-analytics | 01 Python for data 7, 02 probability and statistics 6, 03 experimentation 4, 04 Bayesian 6, 05 visualisation 5, 06 applied analyses 6 | Several visualisation and credit books cited but not read in full |
 | data-engineering | 01 foundations 8, 02 ingest and modelling 4, 03 transform and orchestrate 5, 04 warehouse, lakehouse and streaming 5, 05 quality 3, 06 ML platform 5, 07 architecture and governance 2 | Cloud and cluster code illustrative; zoomcamps not re-run |
-| data-science | 01 classical ML 10, 02 deep learning 6, 03 NLP 7, 05 time series and recommenders 3 | 01 note 09 still needs chapter structure |
+| data-science | 01 classical ML 10, 02 deep learning 6, 03 NLP 7, 05 time series and recommenders 3 | See its [known gaps](data-science/CURRICULUM.md#known-gaps) |
 | programming | Python, SQL and TypeScript tracks, with decks used as flashcards in librarian | None |
 
 Remaining across subjects: run every notebook offline or label it (check 3), and tag drills with `concepts` (check 5). Chapter counts drift; `make chapter-check PILLAR=<path>` is the check.

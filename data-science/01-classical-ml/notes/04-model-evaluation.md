@@ -16,6 +16,8 @@ cleaned: 2026-11-01
 
 > A model scored 90%. Is that good? This note gives the machinery to answer: cross-validation instead of one split, grid search with a held-out test set (or nested CV), a metric chosen from the business consequence of each error type, thresholds read off precision–recall and ROC curves, and learning curves to decide whether you need more data or a different model.
 
+**In plain words.** A score means little until you know what it's compared with and what each mistake costs. If hardly any emails are spam, a filter that lets everything through scores highly and catches nothing. A missed cancer and a needless follow-up scan are both "errors", yet nobody would price them the same. Evaluation is the job of testing a model fairly on data it hasn't seen, with a measure that reflects those costs, so you can tell your manager whether to trust it.
+
 This is the layer interviews probe hardest: metric interpretation, train/test discipline and leakage are the most common failure modes. Blocks run top to bottom from this `notes/` folder.
 
 ---
@@ -64,6 +66,8 @@ What it doesn't do: return a model. `cross_val_score` evaluates a *procedure*; r
 | `RepeatedStratifiedKFold` | Small data; want a tighter estimate | |
 
 **The groups rule generalises:** the split must mirror how the model meets new data in production. New users → split by user. Next month → split by time.
+
+[Training and tuning](09-training-and-tuning.md#when-to-change-the-folds) runs these splitters on real data, and shows what [a fold's spread](09-training-and-tuning.md#k-fold-and-what-a-folds-spread-tells-you) does and doesn't tell you.
 
 ---
 
@@ -138,6 +142,8 @@ print(round(scores.mean(), 3))   # an estimate of how well "grid search over SVC
 
 Why bother: Varma and Simon built "null" datasets of 40 samples with no signal, so the true error of any classifier was 50%, and tuned two classifiers by minimising CV error. The minimum CV error averaged 37.8% for shrunken centroids and 41.7% for an SVM, and on more than one-fifth of datasets the optimism exceeded 20 points. Nested CV gave an almost unbiased estimate, with a slight pessimism from training on 39 samples rather than 40 ([doi:10.1186/1471-2105-7-91](https://doi.org/10.1186/1471-2105-7-91), BMC Bioinformatics 2006).
 
+[Training and tuning](09-training-and-tuning.md#the-honest-final-number) measures how far a search winner's score flatters it on the adult census.
+
 ---
 
 ## Metrics: keep the end goal in mind
@@ -148,6 +154,8 @@ Accuracy treats every mistake the same. Business consequences rarely do.
 |---|---|---|---|
 | False positive | Type I | Healthy patient sent for more tests (cost, stress) | Real email lost in spam (bad) |
 | False negative | Type II | Cancer missed (very bad) | Spam in the inbox (annoying) |
+
+[Imbalance, errors and drift](10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost) prices these two errors for a card lender, and [credit scoring](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#set-the-policy) turns the same trade-off into an approval cutoff.
 
 ### Imbalanced data and the dummy baseline
 
@@ -179,6 +187,8 @@ logistic 0.984
 Only the last is clearly useful.
 
 Always compare against a dummy. If accuracy barely beats it, accuracy is the wrong metric.
+
+[Imbalance, errors and drift](10-imbalance-errors-and-drift.md#imbalance-what-each-remedy-does) tests what class weights, resampling and threshold moving each do when the positive class is rare.
 
 ### Confusion matrix, precision, recall, F1
 
@@ -364,6 +374,8 @@ Gaussian naive Bayes on a one-hot table is a deliberately bad case: its scores p
 
 Deep networks made calibration a live research question. Guo et al. found modern deep nets overconfident ([arXiv:1706.04599](https://arxiv.org/abs/1706.04599), ICML 2017). On CIFAR-100 a 5-layer LeNet's confidence matched its accuracy, while a 110-layer ResNet was more accurate but much more confident than it was right. Depth, width, weight decay and batch norm all moved calibration. Of the post-hoc fixes they tested, temperature scaling (a one-parameter Platt scaling) worked best on most datasets. Minderer et al. revisit this and find recent non-convolutional architectures (vision transformers, MLP-Mixer) among the best calibrated, with architecture mattering more than size ([arXiv:2106.07998](https://arxiv.org/abs/2106.07998), NeurIPS 2021).
 
+[Imbalance, errors and drift](10-imbalance-errors-and-drift.md#calibration-the-bridge-from-score-to-price) shows why it matters to a lender, who has to turn a score into a price.
+
 ---
 
 ## Multiclass and regression metrics
@@ -472,6 +484,8 @@ print(sizes, train_scores.mean(axis=1).round(2), val_scores.mean(axis=1).round(2
 ```text
 [ 70 141 211 282 353] [0.19 0.29 0.36 0.41 0.43] [0.14 0.28 0.35 0.39 0.41]
 ```
+
+[Training and tuning](09-training-and-tuning.md#reading-performance-during-training) reads these curves on the adult census, with more rows and then with more training on the x-axis.
 
 ---
 

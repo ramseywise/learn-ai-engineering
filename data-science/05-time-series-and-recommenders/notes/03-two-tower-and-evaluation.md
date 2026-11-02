@@ -11,6 +11,8 @@ cleaned: 2026-11-01
 
 Once a catalogue reaches millions of items and new ones arrive every hour, an item-item matrix no longer fits and a new item has no history to work from. A two-tower model solves both by learning embeddings from features, but the same sampling that makes it trainable quietly biases it against popular items. Then comes the harder question of how you know any recommender works at all, since an offline score can flip when you change how it is computed and a real test needs millions of users.
 
+**In plain words.** A big site can't score every item for every visitor, so it works like a shop assistant who first grabs a handful from the stockroom and then picks the best few to show you. A two-tower model is that first grab: it describes people and items from their details, which also lets it handle a brand-new film nobody has watched yet. The second half of the chapter is about proving it works, because the firm answer only comes from showing it to real customers alongside the old version and comparing what they do.
+
 The [previous chapter](02-collaborative-filtering-and-matrix-factorisation.md) ended with EASE on top of the results table. This chapter adds two towers to the same table, on the same split, then spends its second half on evaluation. We repeat the setup so that the chapter runs by itself.
 
 ```python

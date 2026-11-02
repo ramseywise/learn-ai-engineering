@@ -13,13 +13,15 @@ cleaned: 2026-11-01
 
 > A census analyst can tell you who earned over $50k last year. A data scientist is asked who will next year, and has to know whether the answer holds on people the model never saw. This note fixes the vocabulary for that question: what a model is estimating, why it fails on new data, how to split data so you can tell, and the four-line scikit-learn loop every classical model shares.
 
+**In plain words.** A model is a rule learned from past examples, like a new estate agent who has seen a few hundred house sales and now guesses prices. What matters is how well the guesses hold up on houses the agent has never seen, and that can be far worse than on the sales already studied. This chapter gives you the words for that gap and the habit of hiding some data away to measure it, which is the check behind every prediction you'll ship at work.
+
 Code blocks in this pillar run top to bottom within a note, as in a notebook, from the note's own `notes/` folder (`uv run --with scikit-learn --with pandas --with matplotlib python`). The printed output shown came from running them. Where a number comes from a book or paper instead, the sentence says so.
 
 ---
 
 ## Why a readings layer comes first
 
-Classical machine learning is applied statistics with a compute budget. Every technique in notes 02–08 answers the same question, *how do I estimate a function from samples so that it holds on samples I haven't seen?*, and every failure is a failure to answer it: overfitting, leakage, a metric that rewards the wrong thing, a test set you peeked at.
+Classical machine learning is applied statistics with a compute budget. Every technique in notes 02–10 answers the same question, *how do I estimate a function from samples so that it holds on samples I haven't seen?*, and every failure is a failure to answer it: overfitting, leakage, a metric that rewards the wrong thing, a test set you peeked at.
 
 This layer is mostly reading. The serious code starts in [02](02-supervised-learning.md). What this note does is fix the terms, demonstrate the bias-variance trade-off once, show the one API shape you will use everywhere, and say which book chapter to read alongside which later note.
 
@@ -172,6 +174,8 @@ Two ways to break this, both covered in [04](04-model-evaluation.md):
 - **Tuning on the test set**: choosing $C$ for an SVM by test score turns the test set into a validation set, and the reported score is optimistic.
 - **Leakage**: fitting a scaler or feature selector on all the data before splitting. The model has then seen statistics of the test rows ([03](03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)).
 
+[Training and tuning](09-training-and-tuning.md) runs the full loop on real data, from the split through search to the final score.
+
 ---
 
 ## The scikit-learn API in four lines
@@ -229,6 +233,7 @@ Classical ML is a tree, not a line: after supervised learning you can go to eval
  ├── 02 Supervised ── 03 Features and pipelines ── 04 Evaluation
  ├── 05 Unsupervised             (independent of 04)
  └── 06 Ensembles ── 07 Boosting in practice ── 08 Interpretability
+           09 Training and tuning ── 10 Imbalance, errors and drift  (after 04 and 07)
            then 02-deep-learning  (after 02 and 04)
 ```
 
@@ -240,6 +245,7 @@ Classical ML is a tree, not a line: after supervised learning you can go to eval
 | Unsupervised | 05 | 01 (02 helps) |
 | Ensembles | 06, 07 | 02, 03, 04 |
 | Explaining a model | 08 | 04, 07 |
+| Training and trust | 09, 10 | 04, 07 |
 | Neural networks | [02-deep-learning](../../02-deep-learning/README.md) | 02, 04 |
 | Bayesian methods | [data-analytics](../../../data-analytics/04-bayesian-analysis/README.md) | 01 |
 

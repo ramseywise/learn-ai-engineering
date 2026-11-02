@@ -42,6 +42,8 @@ Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../
 
 Each chapter's code runs top to bottom with [`practice/run_note.py`](practice/run_note.py), and each chapter has a lab holding its exercises. See [`practice/README.md`](practice/README.md). Data is downloaded on first use and cached under `~/.cache/learn-ai-engineering/`.
 
+The [customer segments lab](practice/customer-segments-lab/README.md) backs the [segment forecasting case](notes/01-time-series-ml.md#case-forecasting-each-segments-cash-flow) and needs no download, since its customers are synthetic. It takes one to four minutes on a laptop CPU.
+
 ```bash
 uv run --with scikit-learn --with pandas --with torch python practice/run_note.py notes/01-time-series-ml.md
 uv run --with numpy --with pandas --with scipy python practice/02_cf_lab.py

@@ -17,6 +17,8 @@ Six complete analyses, each going from a business question through a dataset to 
 | 5 | [Segmentation and RFM](notes/05-segmentation-and-rfm.md) | Who should a campaign target, and how will we know it worked? |
 | 6 | [SQL for analytics](notes/06-sql-for-analytics.md) | Where did the year's revenue change come from? |
 
+Chapter 5 also holds a separate case, [segmenting B2B customers by behaviour](notes/05-segmentation-and-rfm.md#case-segmenting-b2b-customers-by-behaviour), which tests whether cohorts found by clustering deserve trust on synthetic data.
+
 The chapters can be read in any order, though 3 to 6 share a dataset and refer to each other. They lean on [experimentation and causality](../03-experimentation-and-causality/README.md) for test sizing and causal reasoning, and chapter 6 on the [SQL module](../../programming/sql/README.md) for the language. Then go on to [data science](../../data-science/README.md).
 
 ## Rules of thumb

@@ -21,6 +21,8 @@ cleaned: 2026-11-01
 
 > Shift a digit one pixel to the right and the MLP from the last two chapters falls from 97% to under 50%, because each of its weights is tied to one pixel position. A convolution uses the same small filter at every position, so what it learned in one place applies everywhere. Course 4 builds this from the NumPy arithmetic up to ResNets, object detection, face verification and style transfer. This chapter does the same on the digits, and at each stage shows why the design took that form.
 
+**In plain words.** A convolutional network looks at a picture the way you scan a page for a word you know, sliding the same small check across every position, so it spots a cat wherever in the frame the cat happens to sit. Stack those checks and the early ones find edges while the later ones find eyes and wheels. At work this is the machinery behind finding objects in a photo and checking that two faces belong to one person, and this chapter builds up to both.
+
 | Notebook | Builds | Key idea |
 |---|---|---|
 | Convolution model: Step by Step | `zero_pad`, `conv_single_step`, `conv_forward`, `pool_forward` and their backward passes in NumPy | Output size $\lfloor (n + 2p - f)/s \rfloor + 1$; parameter sharing; pooling has no parameters |

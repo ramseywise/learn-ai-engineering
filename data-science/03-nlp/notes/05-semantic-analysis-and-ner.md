@@ -14,6 +14,8 @@ cleaned: 2026-11-01
 
 Vectors tell you that two documents are alike, but not who did what, where, or to whom. If a compliance team asks which companies appear in ten thousand contracts, or a product team wants every drug name in a set of case notes, a similarity score is no help. They need spans of text with types attached, and sometimes knowledge a corpus never states, such as that a lion is a kind of cat.
 
+**In plain words.** Named entity recognition is a highlighter pen for text: it marks the people, places, companies and dates in a document so they can go into a spreadsheet. Think of a paralegal going through a stack of contracts and listing every company named. This chapter trains a model to do that, shows when a plain list of names beats any model, and insists on fair marking, where a name highlighted only halfway does not count. It also looks at dictionaries of meaning, which can tell a model that a lion is a kind of cat.
+
 This chapter is about meaning from structure rather than from distance: a lexical database of senses and relations (WordNet), sequence labelling that finds people, places and organisations (NER, with spaCy or your own CRF), and the formal logic that early systems used to represent what a sentence asserts. NER and relation extraction remain the front end of every knowledge graph, and the discipline for evaluating them outlasts the models.
 
 ```mermaid
@@ -258,7 +260,7 @@ most forbidden:  ['B-per->B-per -6.5', 'O->I-geo -5.7', 'O->I-org -5.0', 'B-gpe-
 features for B-per: ['word.lower():president +5.3', 'word.lower():prime +4.8', 'word.lower():clinton +4.3', 'word.lower():senator +4.0', 'word.lower():cobain +4.0', 'word.lower():greenspan +4.0']
 ```
 
-The transitions read like a grammar: continue a span once it is open, and never open I-geo from O. The state features show titles such as "president" and "senator" counting as B-per, which fits how GMB labels them, and that is worth knowing before you trust this tagger on your own text. Surnames like Clinton and Greenspan appear too, a memorised vocabulary from the news of its time.
+The transitions read like a grammar: continue a span once it is open, and never open I-geo from O. The state features show titles such as "president" and "senator" counting as B-per, which fits how GMB labels them, and that is worth knowing before you trust this tagger on your own text. Surnames like Clinton and Greenspan appear too, a memorised vocabulary from the news of its time. A tagger like that goes stale as the news moves on, which is the kind of decay [drift monitoring](../../../data-engineering/06-ml-platform/notes/04-drift.md) exists to catch.
 
 ```text
 most encouraged: ['I-tim->I-tim +5.4', 'I-org->I-org +5.3', 'B-art->I-art +5.3', 'B-eve->I-eve +5.3']
@@ -329,7 +331,7 @@ The rules add both new types without any training, and neither touches what the 
 [('Denver', 'GPE'), ('FedEx', 'GPE')]
 ```
 
-**Evaluate NER at the entity level** (exact span and type match, as `seqeval` does), not at token level, since token accuracy is dominated by `O`.
+**Evaluate NER at the entity level** (exact span and type match, as `seqeval` does), not at token level, since token accuracy is dominated by `O`. It is the same trap as a rare-event model that looks accurate by never firing ([accuracy lies; errors cost](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost)).
 
 ## Semantic representations (Sarkar ch. 8d)
 

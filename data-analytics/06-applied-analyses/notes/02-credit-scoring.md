@@ -465,6 +465,8 @@ PSI train vs test with top status class recoded as no account 0.252
 
 Train against test sits at 0.043, as it should for a random split. Simulating a shift, where the safest status class disappears from the applicant pool, takes it past 0.25. Note that PSI needs no outcomes, so it warns you years before the defaults arrive.
 
+[Imbalance, errors and drift](../../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md#drift-when-the-world-moves) picks this up on a far larger card book, and its [credit default lab](../../../data-science/01-classical-ml/practice/credit-default-lab/README.md) has the code.
+
 ## Recommendation
 
 **Approve applications scoring above 548, which is the score at a corrected PD of 1/6, and treat the cutoff as provisional until the bank confirms the 5:1 cost ratio.** Do not put the uncorrected PDs anywhere near a decision, since they would turn away 42% of applicants at a far higher expected cost. Use the WoE logistic scorecard: it matches gradient boosting within noise on this data and can be explained to a credit committee, an applicant and a regulator.

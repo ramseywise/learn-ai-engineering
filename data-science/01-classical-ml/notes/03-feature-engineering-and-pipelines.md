@@ -12,6 +12,8 @@ cleaned: 2026-11-01
 
 > How you represent the data usually matters more than which model you pick. Encode categoricals, bin or expand numeric features for linear models, select what helps, add what a domain expert knows, and wrap every fitted transformation in a `Pipeline` so cross-validation never sees the test fold.
 
+**In plain words.** A model only sees the columns you give it, so a delivery date means nothing to it until you turn it into something like "day of the week" or "weeks until Christmas". That translating is feature engineering, and at work it's often where the biggest gains come from. The other half of this chapter is keeping the model honest, because like a student who has glimpsed the exam paper, a model that has seen any trace of the test data looks better than it is. A pipeline is the routine that stops that happening.
+
 Blocks run top to bottom from this `notes/` folder. Outputs came from running them; figures attributed to M&G are the book's own.
 
 ---

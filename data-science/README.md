@@ -18,7 +18,7 @@ Running through all the pillars is one habit. Every run keeps a baseline and a c
 
 | # | Pillar | Question it answers | Notes | Deck |
 |---|---|---|---|---|
-| 01 | [Classical ML](01-classical-ml/README.md) | How do you fit a model on a table, measure it honestly, and explain it? | 8 | [pptx](01-classical-ml/slides/classical-ml.pptx) |
+| 01 | [Classical ML](01-classical-ml/README.md) | How do you fit a model on a table, measure it honestly, and explain it? | 10 | [pptx](01-classical-ml/slides/classical-ml.pptx) |
 | 02 | [Deep learning](02-deep-learning/README.md) | How do you train a network, debug it, and match the architecture to the data? | 6 | [pptx](02-deep-learning/slides/deep-learning.pptx) |
 | 03 | [NLP](03-nlp/README.md) | How does text become numbers, and what does that choice decide? | 7 | [pptx](03-nlp/slides/nlp.pptx) |
 | 05 | [Time series and recommenders](05-time-series-and-recommenders/README.md) | What changes when rows aren't exchangeable? | 3 | [pptx](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) |
@@ -35,8 +35,9 @@ Running through all the pillars is one habit. Every run keeps a baseline and a c
 ```text
 data-science/
 ├── README.md, CURRICULUM.md, references.md
-├── 01-classical-ml/                  notes 01-08, deck
-│   └── practice/                     boosting-comparison/, intro-to-ml-in-python/,
+├── 01-classical-ml/                  notes 01-10, deck
+│   └── practice/                     boosting-comparison/, credit-default-lab/,
+│                                     music-clustering-lab/, intro-to-ml-in-python/,
 │                                     ng-machine-learning/, udacity_mlnd_python_practice.ipynb
 ├── 02-deep-learning/                 notes 01-06, deck
 │   └── practice/                     ng-deep-learning/ (five courses),
@@ -45,7 +46,8 @@ data-science/
 │   └── practice/                     intro-to-nlp/, text-analytics-with-python/,
 │                                     approaching-almost-any-nlp-problem-on-kaggle.ipynb
 ├── 05-time-series-and-recommenders/  notes 01-03, deck
-│   └── practice/                     forecast, collaborative-filtering and two-tower labs
+│   └── practice/                     forecast, collaborative-filtering and two-tower labs,
+│                                     customer-segments-lab/
 └── sources/                          book PDFs, papers, images/
 ```
 
@@ -77,6 +79,8 @@ Don't run these in bulk. Each pillar README and each note's Practice section say
 | Folder | Pillar | Runs |
 |---|---|---|
 | [`boosting-comparison/`](01-classical-ml/practice/boosting-comparison/README.md) | 01 | Offline, a few minutes |
+| [`credit-default-lab/`](01-classical-ml/practice/credit-default-lab/README.md) | 01 | Fetches its data from UCI once, about four minutes |
+| [`music-clustering-lab/`](01-classical-ml/practice/music-clustering-lab/README.md) | 01 | Fetches its feature file once, about a minute |
 | [`intro-to-ml-in-python/`](01-classical-ml/practice/intro-to-ml-in-python) | 01 | Offline. Needs scikit-learn 1.4 or later, `mglearn` (bundled) and graphviz. Notebook 07 needs the aclImdb download |
 | [`ng-machine-learning/`](01-classical-ml/practice/ng-machine-learning) | 01 | Offline, NumPy and SciPy with bundled `.mat` data |
 | [`udacity_mlnd_python_practice.ipynb`](01-classical-ml/practice/udacity_mlnd_python_practice.ipynb) | 01 | Offline, needs `data/iris.txt` (not in repo) |
@@ -87,6 +91,7 @@ Don't run these in bulk. Each pillar README and each note's Practice section say
 | [`approaching-almost-any-nlp-problem-on-kaggle.ipynb`](03-nlp/practice/approaching-almost-any-nlp-problem-on-kaggle.ipynb) | 03 | Legacy, needs Kaggle spooky-author data and GloVe |
 | [`nn-zero-to-hero/`](../generative-ai/09-llms-from-scratch/practice/nn-zero-to-hero) | 04 | micrograd is offline. makemore needs `names.txt` (not in repo). nanoGPT's `bigram.py` runs on CPU, `gpt.py` on a GPU, and `build-nanogpt` needs 8 GPUs and FineWeb-Edu |
 | [`05-time-series-and-recommenders/practice/`](05-time-series-and-recommenders/practice/README.md) | 05 | See its README |
+| [`customer-segments-lab/`](05-time-series-and-recommenders/practice/customer-segments-lab/README.md) | 05 | Offline and synthetic, one to four minutes |
 
 ## Related
 

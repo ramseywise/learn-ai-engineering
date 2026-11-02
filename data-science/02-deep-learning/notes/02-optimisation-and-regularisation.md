@@ -23,6 +23,8 @@ cleaned: 2026-11-01
 
 > A network that can fit the data is easy to write and hard to train. Set the initial weights wrong and it never starts. Set the learning rate wrong and it diverges. Train it on noisy labels and it memorises them. Course 2 of the Ng specialization works through the fixes in NumPy, and this chapter runs each one in PyTorch on the digits, including the two that are bugs in disguise: L2 inside Adam, and batch norm left in training mode.
 
+**In plain words.** Training a network is like walking downhill in fog, looking for the lowest ground you can find: where you start, how long your strides are and how you keep your balance decide whether you get there at all. Even then it can go wrong in the way a student who memorises past exam papers goes wrong, by learning the answers, mistakes included, and not the subject. This chapter covers the settings that get training moving and the habits that stop a model memorising, which is often the difference between a model a team can ship and a wasted run.
+
 Three questions run through the chapter, in order: does the signal survive through the layers (initialisation and normalisation), does the optimiser make progress (optimisers and learning rates), and does what it learned generalise (regularisation)? Check them in that order, because regularising a model that isn't training hides the real problem.
 
 ```mermaid
@@ -346,7 +348,7 @@ dropout 0.5            noisy train 0.988  clean test 0.745
 early stop, 8 epochs   noisy train 0.698  clean test 0.878
 ```
 
-A training score of 1.000 on labels that are 30% noise means the model memorised the noise, and it costs about 18 test points against stopping early. Dropout and weight decay help, and on this problem simply stopping is best. In practice you get that effect by watching a validation curve and keeping the best checkpoint, since the right epoch count isn't known in advance.
+A training score of 1.000 on labels that are 30% noise means the model memorised the noise, and it costs about 18 test points against stopping early. Dropout and weight decay help, and on this problem simply stopping is best. In practice you get that effect by watching a validation curve and keeping the best checkpoint, since the right epoch count isn't known in advance. [Training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#early-stopping-is-regularisation-too) shows why stopping early works like a penalty on the weights.
 
 ### When dropout hurts: underfitting
 

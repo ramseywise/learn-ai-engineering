@@ -19,6 +19,8 @@ cleaned: 2026-11-01
 
 > A review, a sentence or a clip of audio has an order and any length. A recurrent network reads it one step at a time and carries a memory, and everything hard about RNNs comes from that memory: it fades, and without some care it explodes. Course 5 builds the cells in NumPy, then uses them for names, music, word vectors and translation. This chapter runs those ideas in PyTorch, and ends on the mechanism that replaced them: attention.
 
+**In plain words.** Some data only makes sense in order: "the dog bit the man" and "the man bit the dog" use the same words. A sequence model reads one step at a time and carries notes forward, like someone working through a long letter and trying to remember how it began, and in the simple version those notes fade. This chapter shows why they fade, how better versions choose what to keep, and how attention lets a model look back over the whole input, the way a translator rereads a sentence. At work these models handle text, audio and anything else that arrives as a sequence.
+
 | Notebook | Builds | Key idea |
 |---|---|---|
 | Building an RNN: Step by Step | `rnn_cell_forward`, `lstm_cell_forward` and backward passes in NumPy | $a^{\langle t\rangle} = \tanh(W_{aa} a^{\langle t-1\rangle} + W_{ax} x^{\langle t\rangle} + b_a)$; LSTM gates (forget, update, output) protect the cell state from vanishing gradients |

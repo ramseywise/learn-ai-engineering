@@ -8,6 +8,7 @@ Run everything from the pillar folder, `data-science/05-time-series-and-recommen
 | [`01_forecast_lab.py`](01_forecast_lab.py) | Backtest harness and the exercises for [Time series ML](../notes/01-time-series-ml.md) | A few minutes | `scikit-learn pandas` |
 | [`02_cf_lab.py`](02_cf_lab.py) | Exercises for [Collaborative filtering](../notes/02-collaborative-filtering-and-matrix-factorisation.md): split, positives, segments | A minute or two | `numpy pandas scipy` |
 | [`03_two_tower_lab.py`](03_two_tower_lab.py) | Exercises for [Two towers and evaluation](../notes/03-two-tower-and-evaluation.md): batch size, sampled metrics, IPS | A few minutes | `numpy pandas scipy torch` |
+| [`customer-segments-lab/`](customer-segments-lab/README.md) | Synthetic business customers: sort them into cohorts, test whether to trust the cohorts, and forecast each one's cash flow, for [the case in Time series ML](../notes/01-time-series-ml.md#case-forecasting-each-segments-cash-flow) | One to four minutes | See its README, which pins versions |
 | [`movielens.py`](movielens.py) | Shared MovieLens loader, split, metric and EASE, imported by the two recommender labs | | |
 
 ```bash

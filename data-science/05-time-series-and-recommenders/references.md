@@ -7,7 +7,7 @@ cleaned: 2026-11-01
 ---
 # 05-time-series-and-recommenders references
 
-★ = changed a claim in the notes. ⚑ = preprint only. PDFs for this pillar are not vendored; each row links the public copy read when writing the note. Notes: [01 time series](notes/01-time-series-ml.md), [02 collaborative filtering](notes/02-collaborative-filtering-and-matrix-factorisation.md), [03 two towers and evaluation](notes/03-two-tower-and-evaluation.md).
+★ = changed a claim in the notes. ⚑ = preprint only. PDFs we hold live in the shared [`../sources/`](../sources/) and are linked from their row; every other row links the public copy read when writing the note. Notes: [01 time series](notes/01-time-series-ml.md), [02 collaborative filtering](notes/02-collaborative-filtering-and-matrix-factorisation.md), [03 two towers and evaluation](notes/03-two-tower-and-evaluation.md).
 
 ## Books
 

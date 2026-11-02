@@ -11,6 +11,8 @@ cleaned: 2026-11-01
 
 > A single tree overfits, and many trees combined don't. Bagging averages independent deep trees to cut variance, which gives random forests. Boosting adds shallow trees one at a time, each fixing the last one's errors, to cut bias, which gives gradient boosting. Together they are the default for tabular data, and on the adult census they lift AUC from the 0.90 of the [evaluation note](04-model-evaluation.md) to 0.93.
 
+**In plain words.** Ask one person to guess the number of sweets in a jar and they may be well off, but average a whole crowd's guesses and the errors tend to cancel out. An ensemble plays the same trick with models, usually decision trees. Bagging is the crowd, each guessing alone, and boosting is a team where each newcomer works on what the last one got wrong. At work this is the usual first serious choice for a table of data, from predicting which customers will leave to flagging risky loans.
+
 Blocks run top to bottom from this `notes/` folder.
 
 ```mermaid

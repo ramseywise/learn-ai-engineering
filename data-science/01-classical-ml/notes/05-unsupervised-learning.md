@@ -6,12 +6,19 @@ sources:
   - ../practice/ng-machine-learning/ex7/ex7.ipynb
   - ../practice/ng-machine-learning/ex8/ex8.ipynb
   - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
+  - ../practice/music-clustering-lab/music_clustering_lab.py
+  - https://doi.org/10.1214/aos/1176344136
+  - https://doi.org/10.1016/0377-0427(87)90125-7
+  - https://doi.org/10.1007/BF01908075
+  - https://doi.org/10.1016/j.csda.2006.11.025
 confidence: high
 cleaned: 2026-11-01
 ---
 # Unsupervised Learning
 
 > You have no labels and no score to tell you if you are right. Transform the data (scaling, PCA, NMF, t-SNE) or group it (k-means, agglomerative, DBSCAN), then judge the result mostly by looking at it. Plus the two Ng exercises that sit next door: Gaussian anomaly detection and collaborative filtering.
+
+**In plain words.** Imagine being handed a box of unlabelled holiday photos, or a shop's customer list, and asked to sort them into piles with nobody to tell you the right ones. That's unsupervised learning: shrink the data down to something you can look at, or group similar things, with no answer key. At work it's how you find groups of customers, spot the odd transaction and suggest the next film. Since no score says you're right, someone has to check that the piles make sense.
 
 Blocks run top to bottom from this `notes/` folder. Figures attributed to M&G are the book's own; the face examples need the `fetch_lfw_people` download, so they are reported and not rerun here.
 
@@ -205,6 +212,8 @@ print(X7.shape, C.round(2).tolist(), np.bincount(idx))
 Ex7 then compresses a 128×128 bird photo by clustering its pixels' RGB values into 16 colours: each pixel stores a 4-bit index instead of 24 bits. That is **vector quantisation**: k-means as a decomposition where each point is represented by one component (its centre). M&G show that with many clusters (more than the input dimensions), k-means can be used as a feature expansion: 10 cluster distances make `two_moons` linearly separable.
 
 **Failure cases.** k-means assumes clusters are round, of similar size and similar density, because it only uses distance to the centre. It fails on stretched clusters, clusters of different density and non-convex shapes (`two_moons`). Results depend on initialisation, hence `n_init`.
+
+[Segmentation and RFM](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) puts k-means to work on a retailer's customers and asks whether its segments beat hand-drawn rules.
 
 ### Agglomerative clustering
 
@@ -451,7 +460,7 @@ A median posterior of 0.992 sits beside seed agreement of 0.718: a posterior is 
 
 ### Naming clusters honestly
 
-Name from the features, use the taxonomy as evidence, and only name a cluster that survives reseeding: median Jaccard of at least 0.75 after matching clusters across 10 seeds ([Hennig 2007](https://doi.org/10.1016/j.csda.2006.11.025)).
+Name from the features, use the taxonomy as evidence, and only name a cluster that survives reseeding: median Jaccard of at least 0.75 after matching clusters across 10 seeds. The measure is from [Hennig 2007](https://doi.org/10.1016/j.csda.2006.11.025), who resamples the data and offers 0.75 only as a rough mark of good recovery, so the line is our choice and reseeding alone is the weaker test. He also warns that a stable cluster can still be meaningless.
 
 | Name | Tracks | Jaccard | Largest `gen_8` group |
 |---|---|---|---|

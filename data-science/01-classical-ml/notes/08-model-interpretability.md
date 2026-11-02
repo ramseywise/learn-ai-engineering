@@ -19,6 +19,8 @@ cleaned: 2026-11-01
 
 > A reviewer asks why your model rejected this applicant, and which features it relies on. The boosted model of the last note has hundreds of trees, so you cannot read it. Three tools answer the three questions people really ask: permutation importance for what the model relies on, partial dependence for how a feature moves the prediction, and SHAP for why one row got its score. Each can mislead, in ways this note shows on the adult census.
 
+**In plain words.** A big model can't explain itself, yet customers, managers and regulators will all ask why it said no. These tools answer by experiment: like a cook leaving out one ingredient at a time to see which one the dish depends on, they change an input and watch the answer move. Treat what they tell you as a description of the model and not of the world. Finding that a model leans on someone's postcode doesn't mean that the postcode caused anything.
+
 Blocks run top to bottom from this `notes/` folder with:
 
 ```bash
@@ -256,7 +258,7 @@ capital-gain                     0 -0.253
 
 This is the first false positive in the sample: a 66-year-old married professional with a degree, predicted as a high earner at 0.543, who in fact is not. The average person starts at -2.387 log-odds (about 8% after the sigmoid, and that is an average of log-odds, not the base rate). The degree, the marriage and the occupation each push up, and the lack of capital gains pushes down. Now the reviewer has something to argue with: whether a 66-year-old is plausibly working full time is a question the features do not ask.
 
-**Caveats.** With correlated features, Shapley values split credit in ways that depend on the algorithm. Lundberg and Lee's Kernel SHAP assumes feature independence when it fills in missing features. SHAP's additive numbers look causal and aren't: a large value for `marital-status` says the model uses it, not that a wedding raises income. Compare global SHAP with permutation importance as a sanity check, since they answer different questions but should not wildly disagree.
+**Caveats.** With correlated features, Shapley values split credit in ways that depend on the algorithm. Lundberg and Lee's Kernel SHAP assumes feature independence when it fills in missing features. SHAP's additive numbers look causal and aren't: a large value for `marital-status` says the model uses it, not that a wedding raises income. Compare global SHAP with permutation importance as a sanity check, since they answer different questions but should not wildly disagree. Where an applicant or a regulator can ask for the reason, a model you can read directly may be the better answer, as [credit scoring](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#recommendation) argues.
 
 ## LIME, and explanations for LLMs
 
@@ -323,4 +325,4 @@ So: test your explanation on the person it is for. Answer the contrastive questi
 
 ## Next
 
-The classical families are done. The [deep learning pillar](../../02-deep-learning/README.md) starts from the `MLPClassifier` of [supervised learning](02-supervised-learning.md#neural-networks-multilayer-perceptrons) and builds up from backprop by hand.
+The classical families are done, so next comes the discipline of fitting them: [Training and tuning](09-training-and-tuning.md) runs the whole loop, from splits and regularisation to search and a final score you can defend.

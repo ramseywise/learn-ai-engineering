@@ -18,6 +18,8 @@ cleaned: 2026-11-01
 
 A model cannot read. Before any classifier, topic model or neural network sees a film review, somebody has decided how that text becomes numbers, and those decisions quietly set what the model is able to learn. Remove "not" as a stop word and a sentiment model can no longer tell "good" from "not good". Fit the vocabulary on the test set and your accuracy is a small lie. Truncate at the wrong length and half of each document never reaches the network.
 
+**In plain words.** A computer can only do sums, so before it can sort emails or search reviews, someone has to turn the words into numbers. The simplest way is a tally of how often each word appears in each document, like a till receipt that lists what you bought but not the order you picked it up in. The choices made here decide what any later model can see, since a tally that throws away "not" can no longer tell a good review from a bad one. This chapter makes those choices on film descriptions and shows what each one costs.
+
 There are two classical routes. One cleans and normalises the text, splits it into tokens, then counts them (bag of words, n-grams) and reweights the counts (TF-IDF) into a sparse document-term matrix. The other maps tokens to integer ids, pads them to a fixed length, and lets an embedding layer learn the vectors. Both begin with the same preprocessing decisions, and this chapter makes those decisions on a real corpus: the 4,803 film descriptions of the TMDB 5000 dataset, which ships with the repo and runs through the whole pillar.
 
 ## Where text sits among data types

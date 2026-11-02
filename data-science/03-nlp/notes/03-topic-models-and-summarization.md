@@ -13,6 +13,8 @@ cleaned: 2026-11-01
 
 A colleague hands you ten thousand support tickets and asks what people are complaining about. There are no labels, and nobody will read them. You could cluster them, but a cluster number tells you nothing until you can name it. What you want is a short list of phrases that matter, a set of themes with a weight per document, groups of similar documents, and for any long document a few sentences that stand in for the whole.
 
+**In plain words.** Imagine being handed a box of customer complaints and asked what is in it, with nobody free to read them all. A topic model works like an assistant who sorts the letters into piles by the words they share and hands you a few words from each pile, but you still have to read them and decide what each pile is about. This chapter does that sorting, pulls out the phrases that matter, and picks a few sentences that can stand in for a long document, so a team can see what a mass of text says without labelling any of it.
+
 Those four jobs are this chapter, and they share a pleasing economy. Nearly all of it is either matrix factorisation or graph ranking over the [representations from chapter one](01-text-representation.md). We use the film descriptions again, plus a short article on elephants that ships with Sarkar's notebooks, and we read the output each time, because with no labels, reading the output is the evaluation.
 
 ## Keyphrase extraction

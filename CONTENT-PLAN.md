@@ -295,8 +295,8 @@ scattered across data-science, data-analytics and data-engineering. This pass st
 
 Rules for the pass:
 
-- This repo is public and the source repos differ. Nothing from the private `lebanese-blonde` repo is
-  copied, quoted or linked. Its data comes from a company take-home, so the credit lab uses open data.
+- This repo is public and the source repos differ. Nothing from a private source repo is
+  copied, quoted or linked, so the credit lab uses open data.
 - Labs fetch or generate their data. No third-party listening data is vendored.
 - Every number in a note comes from a run in that note or an attributed source that was read in full.
 - Stage only. Off limits while other sessions run: `scripts/papers/ledger.jsonl`, `data-engineering/`.

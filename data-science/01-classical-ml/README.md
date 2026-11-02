@@ -26,6 +26,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 6 | [Ensembles](notes/06-ensembles.md) | Why do many trees beat one? |
 | 7 | [Boosting in practice](notes/07-boosting-in-practice.md) | Which library, and which knobs? |
 | 8 | [Model interpretability](notes/08-model-interpretability.md) | What did the model learn, and why this answer for this row? |
+| 9 | [Training and tuning](notes/09-training-and-tuning.md) | How do you run the whole loop and end with a number you can defend? |
+| 10 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
 
 ## Rules of thumb
 
@@ -44,6 +46,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | Folder | What | How to run |
 |---|---|---|
 | [`practice/boosting-comparison/`](practice/boosting-comparison/) | Four boosting libraries on adult census across five seeds | See its [README](practice/boosting-comparison/README.md); a few minutes |
+| [`practice/credit-default-lab/`](practice/credit-default-lab/) | Credit card default at a 3% rate: what each way of handling imbalance costs, for [note 10](notes/10-imbalance-errors-and-drift.md) | See its [README](practice/credit-default-lab/README.md); about four minutes, internet needed once |
+| [`practice/music-clustering-lab/`](practice/music-clustering-lab/) | Clustering a real music library with a light reranker on top, for [note 05](notes/05-unsupervised-learning.md#case-clustering-a-music-library) | See its [README](practice/music-clustering-lab/README.md); about a minute, internet needed once |
 | [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | Müller and Guido's notebooks, with local `mglearn` and data | `uv run --with scikit-learn --with pandas --with matplotlib --with jupyter jupyter lab`, from that folder |
 | [`practice/ng-machine-learning/`](practice/ng-machine-learning/) | Own Python ports of Ng's ex1 to ex8 | Same command, from that folder |
 | [`practice/udacity_mlnd_python_practice.ipynb`](practice/udacity_mlnd_python_practice.ipynb) | Python and data-handling warm-up | Same command |

@@ -12,6 +12,8 @@ cleaned: 2026-11-01
 
 > A team can spend six months collecting data that was never the bottleneck. Course 3 of the Ng specialization has no code assignments because its subject is deciding what to do next: set one metric, measure the gaps between human, train and dev error, and let the largest gap choose the work. This chapter gives each of those decisions a measurement on the digits, including the case where the model is fine and the data it will meet is not.
 
+**In plain words.** A team's bird-spotting camera is not good enough yet, and the next few months could go on collecting more photos, buying bigger machines or rebuilding the model. A good mechanic runs a few checks before ordering parts, and this chapter is those checks for a model: agree on one score, compare the model's mistakes with a person's, and read a sample of its errors by hand. They tell you which job will help before you spend the time on one that will not.
+
 Your two quizzes are the case studies: a bird detector for the city of Peacetopia and an autonomous-driving perception system. The ideas extend [model evaluation](../../01-classical-ml/notes/04-model-evaluation.md) from choosing among classical models to running a deep-learning project.
 
 ## Orthogonalisation: one knob for one problem
@@ -89,7 +91,7 @@ h=512  dev error  2.04%  params  38410  over limit
 
 Pick the lowest error among the rows that pass. If the widest model looks better but breaks the limit, it isn't a candidate, and you don't debate how to trade the two numbers.
 
-Change the metric when it stops describing what you want. Your Peacetopia quiz has this twice. A competitor with a similar error rate but fewer false negatives, where a false negative lets a bird through, means you should rethink the metric. A new species your dev set doesn't contain means you need a new dev and test set and possibly a new metric.
+Change the metric when it stops describing what you want. Your Peacetopia quiz has this twice. A competitor with a similar error rate but fewer false negatives, where a false negative lets a bird through, means you should rethink the metric. A new species your dev set doesn't contain means you need a new dev and test set and possibly a new metric. Weighing one kind of mistake against another in money is the subject of [imbalance, errors and drift](../../01-classical-ml/notes/10-imbalance-errors-and-drift.md#accuracy-lies-errors-cost).
 
 ## Train, dev and test sets
 
@@ -97,6 +99,8 @@ Change the metric when it stops describing what you want. Your Peacetopia quiz h
 - **With big data, small percentages are enough.** Peacetopia splits 10M images as 9.5M, 250k and 250k. Dev has only to separate your candidates, and test has only to estimate the final number.
 - **New data that differs goes into training, not test.** When Peacetopia's citizens donate 1M images unlike the ones you deploy on, they join the training set. Putting them into test would change the target, and the fact that a model that learns them gets better scores doesn't imply better performance on the real task.
 - **Iteration speed is a real constraint.** Given 100M images and training that is too slow, the quiz's answer is to train on 10M so that you can try more ideas.
+
+[Training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#split-baseline-fit) walks through splits and baselines on a real dataset, if these are new to you.
 
 ## Bias, variance and the human yardstick
 
@@ -195,7 +199,7 @@ clean training only      train  1.60  train-dev  4.67  dev 62.96  test 58.52
 plus synthetic corruption train  3.70  train-dev  9.73  dev 14.07  test 17.04
 ```
 
-In the first row, train and train-dev are close while dev is 58 points worse. Without the train-dev set you could call that variance and collect more of the wrong data. Synthesising deployment-like data closes most of the gap, at a price: train-dev gets worse, since the model now spends capacity on the harder mixture. The course's lecture caution on synthesis applies: a synthetic set can cover a tiny part of real variation, such as a few car models in simulated scenes, and the model can overfit to those. Keep dev as real data. The corrupted set here is standing in for it.
+In the first row, train and train-dev are close while dev is 58 points worse. Without the train-dev set you could call that variance and collect more of the wrong data. Synthesising deployment-like data closes most of the gap, at a price: train-dev gets worse, since the model now spends capacity on the harder mixture. The course's lecture caution on synthesis applies: a synthetic set can cover a tiny part of real variation, such as a few car models in simulated scenes, and the model can overfit to those. Keep dev as real data. The corrupted set here is standing in for it. When the gap opens after launch because the world has moved, the same symptom is called [drift](../../../data-engineering/06-ml-platform/notes/04-drift.md), and it needs watching rather than a one-off fix.
 
 ## Learning from another task
 

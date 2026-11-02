@@ -16,6 +16,8 @@ cleaned: 2026-11-01
 
 > A neural network is logistic regression stacked: forward pass, loss, backward pass by the chain rule, gradient step. Your Ng coursework builds that by hand in NumPy with a cache for every layer. PyTorch does the backward pass for you, and this chapter shows the two produce the same gradients, so you know what `loss.backward()` hides. Every later chapter in this pillar is written in PyTorch and uses one running dataset: the 1,797 8×8 handwritten digits that ship with scikit-learn.
 
+**In plain words.** A neural network is a stack of simple scoring rules, each passing its answer to the next, that can learn a job like reading a handwritten digit on a form. Think of learning darts: you throw, see how far you missed, and adjust your aim a little before the next throw. A network does the same thing over and over, and that loop is all training is. This chapter writes the loop by hand and then in PyTorch, so that when a network at work misbehaves you know which part of it to check.
+
 The sklearn `MLPClassifier` in [supervised learning](../../01-classical-ml/notes/02-supervised-learning.md) hides all of this. This chapter opens it up, and [micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) does it again as an autograd engine in about 100 lines.
 
 ```mermaid
@@ -340,7 +342,7 @@ The text notebooks' TF status (Sarkar Ch10a fixed; the condensed NLP course was 
 
 A network with 4,810 parameters on 1,257 training digits has more parameters than rows, and by the counting logic of [bias and variance](../../01-classical-ml/notes/01-statistical-foundations.md) it should overfit badly. It does not, which is often offered as proof that deep learning breaks the old rules. Wilson argues it doesn't ([arXiv:2503.02113](https://arxiv.org/abs/2503.02113) (Wilson, ICML 2025)). Benign overfitting and double descent can be reproduced with plain linear models and described by long-standing frameworks such as PAC-Bayes and countable hypothesis bounds. The unifying idea is a soft inductive bias: keep a very flexible hypothesis space and prefer simpler solutions in it, rather than restrict the space. A high-order polynomial with order-dependent regularisation does the same thing, and parameter counting was always a poor proxy for complexity. What the paper does treat as distinctive is representation learning: most model classes fit weights over fixed basis functions, while a network learns the basis as well.
 
-The practical reading is that train and test curves stay your instruments, as in classical ML, and a network's parameter count alone tells you little about whether it will overfit.
+The practical reading is that train and test curves stay your instruments, as in classical ML, and a network's parameter count alone tells you little about whether it will overfit. If reading those curves is new, [training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#reading-performance-during-training) is the place to learn it.
 
 ## Reading
 

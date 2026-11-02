@@ -756,7 +756,7 @@ def figure_drift(d):
     ax.set_title("What a monitor sees")
     ax.set_yticks(y, order)
     ax.grid(axis="y", visible=False)
-    ax.legend(fontsize=9.5, loc="lower left")
+    ax.legend(fontsize=9.5, loc="center right", bbox_to_anchor=(1, 0.57))
     ax = axes[1]
     g = d.groupby("scenario").roc_auc
     ax.errorbar(g.mean().reindex(order), y, xerr=g.std().reindex(order), fmt="o", ms=7, color=BLUE, elinewidth=1.5,

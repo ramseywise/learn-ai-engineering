@@ -14,6 +14,8 @@ cleaned: 2026-11-01
 
 A pretrained sentence encoder turns any text into a few hundred numbers, and once text is numbers, everything from classical ML applies again. That sounds like the end of TF-IDF. So does it win, by how much, and at what cost? In [the classification chapter](02-text-classification.md), on film descriptions, tuned TF-IDF reached a macro-F1 of 0.423, and we promised a fair comparison on the same task.
 
+**In plain words.** A pretrained encoder is a ready-made reader: someone else trained it on huge amounts of text, and it turns any sentence into a list of numbers, like coordinates on a map where similar meanings sit close together. Once your text is numbers, the ordinary tools you already know can sort it, group it or flag the odd line out, such as an email to route when you have labelled only a handful, or a wrong field pasted into a catalogue. This chapter measures when that is worth paying for over a simple word count.
+
 This chapter keeps that promise, then uses the same vectors for the two other jobs a data scientist gets handed: finding groups without labels and finding the lines that do not belong. There is no new model to train in most of it. You call an encoder once, cache the matrix, and hand it to scikit-learn. The questions that are left are ordinary ML questions, which is the point. Chapters 4 and 5 of Alammar and Grootendorst's [*Hands-On Large Language Models*](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models) walk the same route on other data, and are the best companion reading.
 
 ```mermaid
@@ -225,7 +227,7 @@ RBF SVM vs logistic        difference +0.013, 95% interval -0.022 to +0.047
 
 Three things to read off this. The nonlinear heads do not repay their cost: the RBF SVM's extra 0.01 sits well inside the test-set noise, and gradient boosting, which suits a few meaningful columns, does worse on 384 anonymous ones and takes far longer. (Its 0.407 matching TF-IDF's is a coincidence; the two differ in the fourth decimal.) Adding TF-IDF to the vectors raises accuracy a little but not macro-F1. And the tabular columns add almost nothing here, although nothing stopped us putting them in, which is the real point: an embedding is just more columns next to the ones you already have.
 
-The bootstrap shows why single-digit differences on 960 test films should not be reported as wins. MiniLM's lead over TF-IDF has an interval clear of zero. The SVM's lead over logistic regression does not.
+The bootstrap shows why single-digit differences on 960 test films should not be reported as wins. MiniLM's lead over TF-IDF has an interval clear of zero. The SVM's lead over logistic regression does not. [Training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#k-fold-and-what-a-folds-spread-tells-you) applies the same discipline to differences between tuned models.
 
 How many of the 384 numbers do you need? Storage and search cost scale with the dimension, so it is worth a check. PCA fitted on training vectors alone shows how much each extra dimension buys on this task.
 
@@ -353,7 +355,7 @@ clusters: 35  noise share: 0.54  NMI on clustered films: 0.223
   8    79 films  powers, new, hero, heroes, world, city
 ```
 
-The top terms read as real subjects without anybody naming them: crime, animals, space, team sports, fantasy kingdoms, love stories, superheroes. That is what the method is for. The cost is the 54% of films labelled noise. That is a lot, and it depends on `min_cluster_size` and the UMAP settings, so report it next to the clusters. It is also why the NMI of 0.223 cannot be compared with k-means' 0.14: it is scored only on the films that HDBSCAN agreed to cluster, which are the easy ones. In a real project you would either accept the noise as "uncategorised" or assign those points to the nearest cluster, which BERTopic offers as an outlier-reduction step. For a report, keep the matrix, try several settings and read the clusters; the code to do so is above and runs in seconds. [The topic chapter](03-topic-models-and-summarization.md) has the classical alternatives.
+The top terms read as real subjects without anybody naming them: crime, animals, space, team sports, fantasy kingdoms, love stories, superheroes. That is what the method is for. The cost is the 54% of films labelled noise. That is a lot, and it depends on `min_cluster_size` and the UMAP settings, so report it next to the clusters. It is also why the NMI of 0.223 cannot be compared with k-means' 0.14: it is scored only on the films that HDBSCAN agreed to cluster, which are the easy ones. In a real project you would either accept the noise as "uncategorised" or assign those points to the nearest cluster, which BERTopic offers as an outlier-reduction step. For a report, keep the matrix, try several settings and read the clusters; the code to do so is above and runs in seconds. [The topic chapter](03-topic-models-and-summarization.md) has the classical alternatives. If a clustering is meant to drive a business decision, score it against an outcome first, as [segmentation and RFM](../../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md#does-clustering-do-better) does with customers.
 
 ## Anomaly detection
 

@@ -13,6 +13,8 @@ cleaned: 2026-11-01
 
 Your product has fifty thousand reviews, and a manager asks two questions: are people happy, and why not? The first is classification, and you could answer it three ways: with a dictionary and no labels, with a linear model and many labels, or with a neural network that reads in order. The surprise is how those three rank, and the second question is the one that matters, because a score of 72% positive tells nobody what to fix.
 
+**In plain words.** Sentiment analysis reads customer comments and says whether each one is happy or unhappy, the job you might give a temp with a pile of feedback cards. You could hand the temp a list of good and bad words, or show them a great many cards already marked, and this chapter measures how much each approach gets right. A count of unhappy customers only tells you there is a problem, so the chapter ends by pulling out what they are complaining about.
+
 This chapter works through three generations of answer on the same IMDb reviews: hand-built lexicons, supervised classifiers on sparse or dense features, and sequence models. Then it answers the more useful question, what drives the sentiment, with model interpretation and topic models split by class.
 
 ```mermaid
@@ -238,7 +240,7 @@ SimpleRNN  val acc per epoch [0.505 0.496 0.511 0.592]  val loss [0.69 0.75 0.87
 LSTM       val acc per epoch [0.72  0.768 0.782 0.782]  val loss [0.59 0.5  0.53 0.62]  train acc 0.941  10s
 ```
 
-Read the last column before the accuracies. Every sequence model has memorised its training set (0.94 to 0.97) while validation sits near 0.80, and the CNN and LSTM validation losses have already turned upward. The plain pooled model, a learned bag of words, ties or beats them all with the least overfitting. SimpleRNN is the casualty, barely above chance at 0.59 after four epochs, which fits the vanishing-gradient behaviour in the table. These models are starved here, since six thousand reviews is not much for tens of thousands of embedding weights. Sarkar's LSTM on 35,000 reviews reaches 0.88, and his TF-IDF model on the same reviews still beats it. Use early stopping on `val_loss` ([neural network fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md)). `predict_classes()` from the older notebooks was removed in TF 2.6, so threshold `predict` yourself.
+Read the last column before the accuracies. Every sequence model has memorised its training set (0.94 to 0.97) while validation sits near 0.80, and the CNN and LSTM validation losses have already turned upward. The plain pooled model, a learned bag of words, ties or beats them all with the least overfitting. SimpleRNN is the casualty, barely above chance at 0.59 after four epochs, which fits the vanishing-gradient behaviour in the table. These models are starved here, since six thousand reviews is not much for tens of thousands of embedding weights. Sarkar's LSTM on 35,000 reviews reaches 0.88, and his TF-IDF model on the same reviews still beats it. Use early stopping on `val_loss` ([neural network fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md)). [Training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#reading-performance-during-training) shows how to read a gap like this one. `predict_classes()` from the older notebooks was removed in TF 2.6, so threshold `predict` yourself.
 
 ### A bug worth remembering
 
@@ -263,7 +265,7 @@ bug: length 20:     [0.992 0.145 0.988 0.767]
 accuracy on held-out reviews: length 120 0.782  length 20 0.672
 ```
 
-The hand-written reviews barely move, because they fit inside twenty tokens anyway, so a quick spot check would have passed. Real reviews lose eleven points, from 0.782 to 0.672, because the model now sees only the opening of each one. No error, and no sign of it unless you measure accuracy through the serving path. Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
+The hand-written reviews barely move, because they fit inside twenty tokens anyway, so a quick spot check would have passed. Real reviews lose eleven points, from 0.782 to 0.672, because the model now sees only the opening of each one. No error, and no sign of it unless you measure accuracy through the serving path. [Monitoring error when labels arrive](../../../data-engineering/06-ml-platform/notes/04-drift.md#monitoring-error-when-labels-arrive) is how that measurement becomes routine. Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
 
 The CNN and RNN mechanics belong to [neural text models](../../02-deep-learning/notes/06-neural-text-models.md). The contextual models that replaced them are in [transformers pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines), which you can try off the shelf with `pipeline("sentiment-analysis")` and no training.
 

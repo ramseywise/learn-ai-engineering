@@ -5,6 +5,13 @@ sources:
   - "Gutierrez and Gérardy, Causal Inference and Uplift Modelling: A Review of the Literature, PMLR, 2017"
   - "Rousseeuw, Silhouettes, Journal of Computational and Applied Mathematics, 1987"
   - "Lloyd, Least squares quantization in PCM, IEEE Transactions on Information Theory, 1982"
+  - "McInnes, Healy and Astels, hdbscan, JOSS, 2017"
+  - "McInnes and Healy, ICDM Workshops, 2017"
+  - "Campello, Moulavi and Sander, PAKDD, 2013"
+  - "McInnes, Healy and Melville, UMAP, preprint, 2018"
+  - "Chari and Pachter, PLOS Computational Biology, 2023"
+  - "Ben-David, von Luxburg and Pál, COLT, 2006"
+  - ../../../data-science/05-time-series-and-recommenders/practice/customer-segments-lab/lab.py
 confidence: high
 cleaned: 2026-11-01
 ---

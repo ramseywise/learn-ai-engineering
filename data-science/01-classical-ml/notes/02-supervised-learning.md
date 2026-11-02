@@ -17,6 +17,8 @@ cleaned: 2026-11-01
 
 > You have a table and a target. Which model do you try first, and how do you know whether it is too simple or too flexible? This note walks the classical families (nearest neighbours, linear models, naive Bayes, trees, kernel SVMs, small neural networks), each with the one knob that controls its complexity, what it is good at and how it fails, plus the from-scratch versions from Ng's exercises.
 
+**In plain words.** Supervised learning means showing a computer past cases with the answers attached, such as old emails marked spam or not, so that it can label new ones. The families of model here are different ways of writing that rule: copy the most similar past case, add up weighted clues, or ask a chain of yes-or-no questions. Each has a dial that runs from rigid to flexible. Your job at work is to pick a family and set the dial so that it learns the pattern and not the quirks of the old cases.
+
 Blocks run top to bottom from this `notes/` folder, on the breast-cancer data that ships with scikit-learn, so the numbers below are this split's. Figures attributed to M&G come from the book's own examples.
 
 ---
@@ -127,6 +129,8 @@ The penalties have a pedigree worth citing: the L1 penalty and its property of s
 **Ridge vs lasso.** Default to ridge. Use lasso when you expect only a few features to matter, or need a model you can read.
 
 **Learning curves for ridge** show the data-size effect from [01](01-statistical-foundations.md): with enough data, regularisation matters less and OLS catches up.
+
+[Training and tuning](09-training-and-tuning.md#regularisation-is-one-idea) shows that this penalty, a tree's depth limit and a network's weight decay are one idea.
 
 ### Classification: logistic regression and linear SVM
 

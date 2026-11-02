@@ -49,7 +49,7 @@ always approve, accuracy 0.97
 
 ## Accuracy lies; errors cost
 
-The model below catches none of the defaulters at the default threshold and matches the always-approve dummy's accuracy, exactly the trap the [evaluation note](04-model-evaluation.md) warned about. Its ranking is fine. What's missing is a decision rule.
+The model below catches none of the defaulters at the default threshold and matches the always-approve dummy's accuracy, exactly the trap in the [evaluation note](04-model-evaluation.md#imbalanced-data-and-the-dummy-baseline). Its ranking is fine. What's missing is a decision rule.
 
 A decision needs a null hypothesis. Take H0 as "this applicant is good", the convention in note 04 where the positive class is the bad event. Then:
 
@@ -254,7 +254,7 @@ Reading it:
 
 - **Discrimination.** No method beats doing nothing. Class weights and oversampling tie it. SMOTE is the one gap beyond noise on ROC-AUC, 0.022 lower (SD 0.018) and lower on 18 of 20 seeds. SMOTE-NC, the paper's variant for coded columns, scores the same 0.738, so interpolating ordinal codes isn't the explanation.
 - **Brier.** Every balanced method is far worse, 0.122 to 0.188 against 0.028, on all 20 seeds. That's the probabilities breaking; see below.
-- **Cost.** Once the threshold is tuned, the spread at 5:1 is 142.4 to 144.5, under a third of the seed SD of 5.9. The threshold matters and the remedy mostly doesn't. Tuning isn't even necessary on the untouched model: the formula's 1/6 gives 142.9 and 1/21 gives 420.2, against 143.0 and 419.8 tuned.
+- **Cost.** Once the threshold is tuned, the spread at 5:1 is 142.4 to 144.5, well under the seed SD of 5.9. The threshold matters and the remedy mostly doesn't. Tuning isn't even necessary on the untouched model: the formula's 1/6 gives 142.9 and 1/21 gives 420.2, against 143.0 and 419.8 tuned.
 - **At 0.5.** A 1:1 training set moves the 0.5 cut-off to about the base rate: with exact undersampling, 0.5 after resampling means p ≥ 0.03 before it, which is what a 32:1 cost ratio would ask for. That explains the figure. At 20:1 it's roughly right, and balancing beats doing nothing, 433 against 599. At 5:1 it declines far too many, 298 for undersampling against 150. Resampling at 0.5 is threshold moving with an unstated cost ratio.
 - **Modest prize.** At 5:1 on a 3% book, few applicants ever reach a 1/6 risk, so the model saves only 5% against approving everyone, 143.0 against 150.5. At 20:1 it saves 30%, 419.8 against 601.9. If your ratio is low and your base rate lower, don't expect heroics.
 
@@ -264,7 +264,6 @@ We started this chapter with a claim: "SMOTE often loses to a tuned threshold". 
 
 ```python
 print(lab.smote_vs_threshold(raw).to_string(index=False))
-print("arm size for 1.0% vs 0.8%:", lab.sample_size_two_proportions(0.01, 0.008))
 t = lab.compare(raw, "tree")
 print("tree, Chawla's recipe minus plain undersampling, ROC-AUC, SD, lower on:", lab.paired(t, "SMOTE + undersample", "undersample 1:1", "roc_auc"))
 print("boosted, same:", lab.paired(c, "SMOTE + undersample", "undersample 1:1", "roc_auc"))
@@ -286,7 +285,6 @@ logistic 0.0300  20:1        601.9            433.4   +31.7 (23.6), 1/20 +13.0 (
  boosted 0.1000  20:1       1999.2            779.2  +310.9 (72.6), 0/20 +21.4 (23.5), 4/20
  boosted 0.2212   5:1       1105.8            547.9   +43.4 (13.6), 0/20   +5.2 (8.9), 4/20
  boosted 0.2212  20:1       4423.3            773.8 +1240.4 (83.1), 0/20  +5.0 (17.9), 7/20
-arm size for 1.0% vs 0.8%: 34999
 tree, Chawla's recipe minus plain undersampling, ROC-AUC, SD, lower on: (-0.0175, 0.017, 17, 20)
 boosted, same: (-0.0081, 0.0139, 15, 20)
                 pr_auc  roc_auc  cost_05_5  cost_tuned_5  cost_05_20  cost_tuned_20
@@ -307,9 +305,9 @@ neural net, SMOTE minus nothing, roc_auc (-0.0589, 0.0204, 10, 10)
 
 The papers, read in full, say this:
 
-- **[Elor and Averbuch-Elor (2022)](https://arxiv.org/abs/2201.08528)**, a preprint, ran 73 datasets and 7 classifiers: "except for very weak classifiers (MLP and SVM), balancing the data and optimizing the decision threshold yield comparable prediction performance". F1 was 0.532 against 0.529 for CatBoost and 0.504 against 0.513 for LightGBM, threshold against SMOTE. Our tie agrees. They also find that a fixed threshold is where balancing helps, and that plain oversampling does as well as SMOTE for strong learners: our 20:1 column shows the same. They recommend the threshold for simplicity, one fit serving many metrics.
-- **They differ from our neural net.** Their MLP scored F1 0.303 tuned against 0.411 with SMOTE. Ours is one small network on one dataset by a cost metric, so this is a data point, not a refutation. Their weak learners' baseline probabilities were poor; ours were usable.
-- **[van den Goorbergh et al. (2022)](https://doi.org/10.1093/jamia/ocac093)** tested logistic and ridge regression: "outcome imbalance is not a problem in itself". Corrected models never beat the uncorrected AUROC in their median and classified about as well as an uncorrected model with a moved threshold, with far worse calibration. On their ovarian cancer case an uncorrected model at a threshold of 0.192 gave sensitivity 71% and specificity 76%, against 69% and 78% for SMOTE at 0.5. Our logistic row matches. Their limit was logistic only; our boosted rows extend the same pattern to one more learner.
+- **[Elor and Averbuch-Elor (2022)](https://arxiv.org/abs/2201.08528)**, a preprint, ran 73 datasets and 7 classifiers: "except for very weak classifiers (MLP and SVM), balancing the data and optimizing the decision threshold yield comparable prediction performance". F1 was 0.532 against 0.529 for CatBoost and 0.504 against 0.513 for LightGBM, threshold against SMOTE. Our tie agrees. They also find that a fixed threshold is where balancing helps, and that plain oversampling does as well as SMOTE for strong learners: our 20:1 column shows the same. They recommend the threshold for its simplicity and lower compute cost, with one fit serving many metrics.
+- **They differ from our neural net.** Their MLP scored F1 0.303 tuned against 0.411 with SMOTE. Ours is one small network on one dataset by a cost metric, and we didn't test SVM or work out why the results part, so this is a data point, not a refutation.
+- **[van den Goorbergh et al. (2022)](https://doi.org/10.1093/jamia/ocac093)** tested logistic and ridge regression: "outcome imbalance is not a problem in itself". Corrected models never beat the uncorrected AUROC in their median and classified about as well as an uncorrected model with a moved threshold, with far worse calibration. On their ovarian cancer case, moving an uncorrected model's threshold to the 0.192 base rate and cutting corrected models at 0.5 landed in the same range: sensitivity 69% to 75%, specificity 74% to 78%. Our logistic row matches. Their limit was logistic only; our boosted rows extend the same pattern to one more learner.
 - **[Chawla et al. (2002)](https://arxiv.org/abs/1106.1813)** points the other way, and it's worth saying why. They tested SMOTE combined with undersampling against plain undersampling, ranked by ROC area, and won almost every comparison, usually narrowly (Mammography, 0.926 against 0.933). Their one comparison with moving a threshold, on Phoneme with C4.5, favoured SMOTE across the whole curve. They never looked at probabilities, and they report the best curve across SMOTE amounts. Our run of their recipe goes the other way: for the tree, ROC-AUC 0.0175 lower than plain undersampling (SD 0.017), lower on 17 of 20 seeds. Also see their own warning: on Adult, a mixed-type dataset like ours, SMOTE-NC did worse than undersampling.
 
 So the honest sentence for this chapter is narrower than the claim: **on this data, tune the threshold and leave the data alone; SMOTE with a fixed 0.5 usually loses, SMOTE with a tuned threshold ties, and neither repays its calibration damage.** That's one dataset, thinned by us. Elor's 73 datasets support the tie, not a general loss.
@@ -342,11 +340,11 @@ ros         0.964  0.001       0.735  0.014  0.748  0.017
 smote       0.984  0.001       0.697  0.016  0.703  0.013
 ```
 
-ROC-AUC is the honest comparison here since it ignores the class mix. The leaked estimate says 0.98 for a model that truly scores 0.70, while the pipeline's 0.697 tracks the test score. SMOTE scores lower here because this block fixes a large model (15 leaves, 300 rounds) with no tuning; the grid above chooses smaller ones. The mistake is easy because `fit_resample` followed by `cross_val_score` is short and raises no error.
+ROC-AUC is the honest comparison here since it ignores the class mix. The leaked estimate says 0.98 for a model that truly scores 0.70, while the pipeline's 0.697 tracks the test score. SMOTE's test score here is below the 0.738 in the table above; this block fixes one large model (15 leaves, 300 rounds) with no tuning, while the table chooses from a grid. The mistake is easy because `fit_resample` followed by `cross_val_score` is short and raises no error.
 
 ## Calibration: the bridge from score to price
 
-A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04 has [reliability diagrams and the methods](04-model-evaluation.md#threshold-precisionrecall-and-roc); here's what resampling does to them.
+A lender prices with a probability: expected loss = PD × LGD × exposure. Rank isn't enough. Note 04 has [reliability diagrams and the methods](04-model-evaluation.md#calibration-is-a-08-really-80); here's what resampling does to them.
 
 ```python
 from sklearn.calibration import CalibratedClassifierCV
@@ -419,7 +417,7 @@ The repairs, all on held-out validation data, never on train:
 
 - **Prior shift**, note 02's log-odds correction, needs no data but needs the mechanism to match. For undersampling it's right, intercept -0.036. For class weights and oversampling it leaves +0.23 and +0.27. For SMOTE it leaves +0.545, an average PD of 1.8%: SMOTE doesn't just change the prior, it moves the boundary.
 - **Intercept recalibration**, van den Goorbergh et al.'s fix, and **Platt scaling** both restore the mean, to 0.030, with the Brier back to 0.028 for every method.
-- **Isotonic** restores the mean too, but with 144 defaulters to fit on, the steps make a slope near 0.8. Note 04 warned about small calibration sets.
+- **Isotonic** restores the mean too, but with 144 defaulters to fit on, the steps make a slope near 0.8. Note 04 keeps sigmoid for when data is short, and this is that case.
 
 After repair every method has the same Brier as doing nothing, so the resampling and its repair cancel out. Their conclusion is ours: correction followed by recalibration is "only worth the effort if imbalance correction leads to better discrimination", and here it doesn't. The fix also costs validation data you could have used elsewhere.
 
@@ -487,11 +485,11 @@ This case is hypothetical; the rows are real and the rate is our doing.
 
 **What the data looked like.** 24,087 customers, 3% defaulted, 434 defaulters in training and 145 in test. Most columns are amounts, plus coded statuses whose documentation doesn't cover all the values in use. With so few test events, one split can crown the wrong method, as it did above.
 
-**Which model and why.** A shallow boosted model with no resampling. It beat logistic regression by about 0.03 of ROC-AUC on the same splits, enough here, unlike note 02's 1,000 rows where they tied. We found no remedy that beat doing nothing on any score, so the extra steps failed to justify themselves. The threshold came from the cost ratio, 1/6 or 1/21, with the validation search as a check on it.
+**Which model and why.** A shallow boosted model with no resampling. It beat logistic regression by 0.028 of ROC-AUC on the same splits (SD 0.016), unlike note 02's 1,000 rows where they tied. On tuned cost its edge, 4.9 and 13.6, stays within noise, so a lender who needs a printable scorecard gives up little. We found no remedy that beat doing nothing on any score, so the extra steps failed to justify themselves. The threshold came from the cost ratio, 1/6 or 1/21, with the validation search as a check on it.
 
 **What the score means.** Without resampling, 0.05 means about 5 in 100 such applicants default in this population: mean PD 0.029 against 0.030 observed, Brier 0.028. In a real book, correct for the true base rate as note 02 does. ROC-AUC of 0.76 means a random defaulter outranks a random good customer 76% of the time, and PR-AUC of 0.142 is nearly five times the 0.03 of random ranking, though modest in absolute terms.
 
-**What broke.** Four things. First, the assumption that a model would earn its keep: at 5:1 it saves just 5%, because few customers reach a 1/6 risk, and the conversation had to move to the true cost ratio before anything else. Second, a balanced trial model looked fine on PR-AUC and would have mispriced every loan by a factor of ten. Third, a resampled cross-validation promised 0.98. Fourth, the feature store: one month's lag dropped ROC-AUC to 0.726 while the score monitor showed 0.012, and only a by-level monitor on inputs caught it.
+**What broke.** Four things, the last from the simulated skew above. First, the assumption that a model would earn its keep: at 5:1 it saves just 5%, because few customers reach a 1/6 risk, and the conversation had to move to the true cost ratio before anything else. Second, a balanced trial model looked fine on PR-AUC and would have mispriced every loan by a factor of ten. Third, a resampled cross-validation promised 0.98. Fourth, the feature store: one month's lag dropped ROC-AUC to 0.726 while the score monitor showed 0.012, and only a by-level monitor on inputs caught it.
 
 ## Pitfalls
 
@@ -520,7 +518,7 @@ This case is hypothetical; the rows are real and the rate is our doing.
 <summary>Answers</summary>
 
 1. 1/11, about 0.091. A 0.5 cut after 1:1 undersampling means p ≥ 0.03 on the original scale, and solving 1/(1+r) = 0.03 gives r ≈ 32.
-2. 34,998 per arm by the block's formula, about 350 defaults in the control arm. Rarer events and smaller gaps get expensive quickly.
+2. 34,999 per arm, about 350 defaults in the control arm. Rarer events and smaller gaps get expensive quickly.
 3. About 0.96, from the lab's table: 0.964 leaked against 0.735 by pipeline. Exact copies of a defaulter land in both training and validation folds, and the tree can memorise them.
 4. Undersampling removes good customers at random, so P(x | class) is unchanged and only the odds move. SMOTE adds points that weren't drawn from P(x | default), so the model learns a different boundary, not only a different base rate.
 5. The rows and features are identical, only the labels differ, and PSI reads no labels. Only something using outcomes can see it: early delinquency as a proxy, then full labels when they arrive.
@@ -540,7 +538,7 @@ This case is hypothetical; the rows are real and the rate is our doing.
 | Does SMOTE help? | Here, no. At 0.5 it usually lost to a tuned threshold. With its own tuned threshold it tied. Elor's 73 datasets found the tie for strong learners |
 | When might balancing still help? | When the threshold can't be moved, and with weak learners per Elor. Random oversampling did as well for strong learners |
 | How does resampling leak? | Copies or interpolations of training rows land in validation folds. Use a pipeline, so it runs only in training folds |
-| What does resampling do to probabilities? | Inflates them, here mean PD of 0.31 on a 3% book and intercept -2.9. Ranking barely moves, Brier collapses |
+| What does resampling do to probabilities? | Inflates them, here mean PD of 0.305 on a 3% book and intercept -2.9. Ranking barely moves, Brier collapses |
 | How do you repair them? | Prior shift for undersampling; intercept or Platt on held-out data otherwise; isotonic only with plenty of data |
 | Covariate or concept shift? | P(x) moves, against P(y given x) moves. The first is visible without labels, the second is not |
 | What is train/serve skew? | Serving computes features differently from training. A stale month or a filled null, with no change in the world |

@@ -22,6 +22,8 @@ cleaned: 2026-11-01
 
 > You have 5,000 labelled movie reviews. Should you learn embeddings and an LSTM, or fit a linear model on word counts? This chapter runs both on the same split, and the linear model wins. That result explains why text went the way it did: the neural models needed their representations pre-trained on far more text. So the chapter moves from bags of words to models that read in order, then to next-word generation, then to pre-trained sentence encoders, and finally to pre-trained transformers behind a one-line `pipeline()`. It is the last stop before building a language model from scratch in [micrograd](../../../generative-ai/09-llms-from-scratch/notes/01-micrograd.md) to [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md).
 
+**In plain words.** A shop has a modest pile of labelled customer reviews and wants new ones sorted automatically. Teaching a network language from that pile alone is like teaching a newborn to read from one shelf of books, and a plain count of words does better. Hiring someone who can already read and giving them a short induction on your reviews, which is what a pretrained model amounts to, is what finally beats the count, and only once you have enough labels. This chapter runs that contest and teaches the tools for each side of it.
+
 ```mermaid
 flowchart LR
     T[Raw text] --> I[Token ids]
@@ -193,7 +195,7 @@ Each model has more than 160,000 parameters for 5,000 examples, and the CNN memo
 | Embedding + Bidirectional LSTM(64) | ~0.87–0.89 | Slowest; validation loss rises while training accuracy hits 0.99 |
 | TF-IDF bigrams + logistic regression ([NLP text classification](../../03-nlp/notes/02-text-classification.md)) | ~0.90 | No GPU, no tuning |
 
-The lesson of both tables: a model that learns its embeddings from scratch has too many parameters for the data, and overfitting dominates. Pre-training is what changed that.
+The lesson of both tables: a model that learns its embeddings from scratch has too many parameters for the data, and overfitting dominates. [Training and tuning](../../01-classical-ml/notes/09-training-and-tuning.md#reading-performance-during-training) shows how to see that on the curves. Pre-training is what changed that.
 
 ## The same pipeline in Keras
 

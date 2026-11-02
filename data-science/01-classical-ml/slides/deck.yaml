@@ -1,20 +1,22 @@
-# Classical ML lecture deck. Covers notes 01-08.
+# Classical ML lecture deck. Covers notes 01-10.
 # Build: make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: predict who earns over $50k on the adult census, from a dummy at 0.759 accuracy
-# to boosting at AUC 0.93. Numbers on the slides are from runs in the notes, or attributed papers.
+# to boosting at AUC 0.93, then the full training loop on it. A credit case at a 3% default rate covers errors and drift.
+# Numbers on the slides are from runs in the notes, or attributed papers.
 deck:
   title: Classical Machine Learning
   subtitle: Fit a model on a table, measure it honestly, explain it
   tagline: |-
-    Will it hold · Is it cheating · No labels · Many trees · Why this answer
+    Will it hold · Is it cheating · No labels · Many trees · Why this answer · Train and tune · What it hides
   reference: "Notes: data-science/01-classical-ml"
   output: classical-ml.pptx
   notes: >-
     Today we take one question, will this person earn over 50 thousand dollars, and we follow it from a first
     model to one we can defend to a reviewer. An analyst can describe last year's census. A data scientist has to
     predict people the model never saw, and has to know whether the prediction holds. Each part of this lecture
-    answers one doubt about the number we report.
+    answers one doubt about the number we report. The last two parts put it together: how to train and tune a model
+    you can trust, and what that number hides when the event you care about is rare.
 
 parts:
   - title: Will it hold on new people?
@@ -25,6 +27,7 @@ parts:
     slides:
       - layout: statement
         title: A perfect training score tells you nothing. Why?
+        recall: Why does a perfect training score tell you nothing?
         kicker: The problem
         statement: "A forest scores 1.000 on the data it trained on, every time. The only score that counts is on people it has never seen."
         attribution: Own run on breast cancer, where the same forest scores 0.972 on held-out data
@@ -96,7 +99,7 @@ parts:
         image: ../../sources/images/mueller-guido-classifier-comparison.png
         caption: Ten classifiers on three toy datasets, from Müller and Guido's notebooks
         bullets:
-          - "**Linear:** one hyperplane, so it depends on the features you give it."
+          - "**Linear:** one flat boundary, so it depends on the features you give it."
           - "**Trees:** axis-aligned boxes."
           - "**Kernels and kNN:** smooth, local boundaries."
         takeaway: A model's shape of boundary is its assumption, so check that it can express your problem.
@@ -113,9 +116,10 @@ parts:
     slides:
       - layout: statement
         title: The same forest goes from -0.04 to 0.84. What changed?
+        recall: What took the same forest from R² -0.04 to 0.84 on Citi Bike?
         kicker: The problem
         statement: "A random forest on a raw timestamp predicts Citi Bike rentals at R² -0.04. Give it hour and weekday, and it reaches 0.84."
-        attribution: Own run, reproducing the ladder in Müller and Guido, ch. 4
+        attribution: Own run, reproducing the ladder in Müller and Guido, ch. 4. An R² below zero is worse than predicting the mean
         takeaway: Representation sets what any model can see, so try a domain feature before a bigger model.
         source: notes/03-feature-engineering-and-pipelines.md
         notes: >-
@@ -185,6 +189,7 @@ parts:
       - layout: code
         title: On adult census the dummy is already 0.759
         recall: What does accuracy of 0.847 mean next to a dummy at 0.759?
+        lead: A dummy always answers under $50k. AUC and AP (average precision) score how well the model ranks people, higher is better.
         lang: python
         code: |
           prep = make_column_transformer(
@@ -206,7 +211,7 @@ parts:
       - layout: table
         title: The threshold turns a score into a decision
         recall: What did holding precision near 80% cost in recall?
-        lead: Same model. The threshold was picked on validation to reach 80% precision, then reported once on test.
+        lead: "Precision: of those flagged, how many are real. Recall: of the real ones, how many were caught. The threshold was picked on validation to reach 80% precision, then reported once on test."
         header: [Threshold, Precision, Recall]
         widths: [4, 3, 3]
         rows:
@@ -220,12 +225,13 @@ parts:
           misses the 0.80 validation target, which is what validation being optimistic looks like at small scale.
 
   - title: What if there are no labels?
-    summary: Transform or group · k-means and DBSCAN · Anomalies
+    summary: Transform or group · k-means and DBSCAN · Anomalies · A music library
     notes: >-
       Sometimes no one has labelled anything. There is then no score to tell us whether we are right. What can we still do?
     slides:
       - layout: statement
         title: No labels means no score. What now?
+        recall: With no labels and no score, how do you judge unsupervised results?
         kicker: The problem
         statement: "Unsupervised learning has no ground truth, so no number tells you the structure you found is the one you wanted."
         attribution: Judge by stability, by looking at the result, and by whether it helps a later task
@@ -280,6 +286,7 @@ parts:
       - layout: code
         title: Anomaly detection fits normal and flags the rest
         recall: Why choose epsilon by F1 and not accuracy?
+        lead: Fit a Gaussian to each feature. A row whose density falls below a cut-off, epsilon, is flagged as an anomaly.
         lang: python
         code: |
           def density(X, mu, var):
@@ -297,6 +304,47 @@ parts:
           Ng's exercise uses server latency and throughput. Anomalies are rare, so accuracy would say nothing. Use density
           when positives are few or may look new. Use a classifier when you have many stable positives.
 
+      - layout: image
+        title: Three ways to choose k gave three answers
+        kicker: "Case: clustering a music library"
+        recall: What did BIC, silhouette and seed agreement each pick for k on the music library?
+        lead: The job was to suggest tracks that belong in a saved playlist, from a library of 2,182 tracks with nine audio features.
+        image: ../../sources/images/wise-music-clustering-lab-fig1.png
+        caption: "Lowest BIC at k = 11. Best silhouette at 2 or 3. Best seed agreement at 2. The dashed line is the project's k = 8."
+        takeaway: The project's k = 8 matches its eight genre groups, which is a product reason, so state it as one.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          A real project and real data, a personal recommender: a Gaussian mixture narrows the candidates and one LightGBM
+          model per playlist ranks them. Three criteria, three answers. BIC measures fit and is lowest at 11, though 11 to 13
+          sit within seed noise and k=13 has a cluster of 11 tracks. Silhouette measures distance, so it favours k-means by
+          construction. The check worth copying is to shuffle each column separately, which destroys any real groups.
+          Silhouette falls from 0.258 to 0.107, so the library has some structure, but BIC still picks k=7. A BIC minimum
+          doesn't show that groups exist.
+
+      - layout: table
+        title: The clusters looked sure and added nothing to the ranker
+        kicker: "Case: clustering a music library"
+        recall: What did cluster posteriors add to the playlist ranker, and what does a 0.992 posterior prove?
+        lead: One LightGBM model per playlist ranks tracks, at AUC 0.870 on audio alone. Each row is one check from the case.
+        header: [Check, Measured, What it means]
+        widths: [3.6, 4, 3.8]
+        rows:
+          - [Raw or scaled columns, "Match to clusters on track length alone: 0.988 raw, 0.072 scaled", "Unscaled, milliseconds are the clustering"]
+          - [Project's 47 columns or nine audio, "Match to decade: 0.714 or 0.039", Your columns decide what clusters mean]
+          - [Median top posterior, "0.992, with seed agreement of 0.718", "Confident inside one model, not proven right"]
+          - [Add cluster posteriors to the ranker, "AUC -0.001 (95% CI -0.007 to +0.005)", Trees already carve the raw features]
+          - ["Swap audio for map position, genre group, year", "AUC +0.050 (95% CI 0.028 to 0.075)", Losing the audio features cost nothing here]
+          - [Playlist-mean columns, AUC 1.000, "A leak: one playlist, identical values"]
+        highlight: [3]
+        takeaway: With no labels, test clusters on a later task, because here that task showed the ranker did not need them.
+        source: notes/05-unsupervised-learning.md
+        notes: >-
+          The surprise is that the clusters earned no place in the ranker. Spotify cut audio features from new apps in
+          November 2024, so the lab tested whether losing them hurts, and on this task it doesn't. Two caveats. The same person
+          wrote the genre taxonomy and filed the playlists, which flatters the proxies. And the non-members are tracks saved
+          to other playlists, so this measures filing, not taste. The first row is why we scale. The last row is why you look
+          at any AUC of 1.000 twice.
+
   - title: Why do many trees win?
     summary: Bagging and boosting · Four libraries · Ordered encoding · Tuning
     notes: >-
@@ -304,6 +352,7 @@ parts:
     slides:
       - layout: statement
         title: One tree overfits. Many trees win. Why?
+        recall: How do bagging and boosting each fix a single tree's weakness?
         kicker: The problem
         statement: "Bagging averages deep trees to cut variance. Boosting adds shallow trees to cut bias. Together they are the default for tables."
         attribution: Breiman 2001 for forests, Friedman 2001 for gradient boosting
@@ -326,7 +375,7 @@ parts:
           - label: Add
             sub: Scaled by the learning rate
         loop: Repeat until validation stops improving
-        caption: Gradient boosting is gradient descent in function space.
+        caption: Each new tree is one small step downhill on the loss.
         takeaway: Boosting is gradient descent on the loss with trees as the steps, so early stopping is the main regulariser.
         source: notes/06-ensembles.md
         notes: >-
@@ -380,6 +429,7 @@ parts:
       - layout: code
         title: A boosting leaf is one Newton step, as you can check
         recall: What are g and h, and what is the best leaf weight?
+        lead: For each row, g and h are the first and second derivatives of the loss at the current prediction.
         lang: python
         code: |
           # w* = -sum(g) / (sum(h) + lambda)   (Chen and Guestrin, 2016)
@@ -405,7 +455,7 @@ parts:
           - title: Learning rate
             text: 0.1 to search, 0.02 to 0.05 to finish
           - title: Rounds
-            text: Early stopping, patience 50
+            text: Early stopping, patience 50, and keep the best round
           - title: Tree size
             text: 8 to 64 leaves
           - title: Leaf size
@@ -428,6 +478,7 @@ parts:
     slides:
       - layout: statement
         title: Why did the model reject this applicant?
+        recall: Why name your question before you pick an explanation tool?
         kicker: The problem
         statement: "Interpretability is not one property. Post-hoc explanations describe the model without being the model."
         attribution: After Lipton, The Mythos of Model Interpretability
@@ -444,7 +495,7 @@ parts:
           - label: What does it rely on?
             sub: Permutation importance on held-out data
           - label: How does a feature act?
-            sub: Partial dependence, with ICE
+            sub: Partial dependence, with one line per row (ICE)
           - label: Why this row?
             sub: SHAP values for the row
         caption: Add a contrastive comparison when a person has to act on the answer.
@@ -457,7 +508,7 @@ parts:
       - layout: table
         title: Built-in importance credits random columns
         recall: Why does a random column get impurity credit but not permutation credit?
-        lead: LightGBM on adult census, with two random columns added on purpose.
+        lead: LightGBM on adult census, with two random columns added on purpose. Gain counts how much splitting a column did. Permutation shuffles it and measures the fall in AUC.
         header: [Column, Gain share, Permutation AUC drop]
         widths: [4, 3, 4]
         rows:
@@ -476,6 +527,7 @@ parts:
       - layout: code
         title: SHAP values add up to the model's score
         recall: What is local accuracy, and how do you check it?
+        lead: SHAP gives each feature a share of one row's score. The base value plus the shares should equal the model's raw score.
         lang: python
         code: |
           explainer = shap.TreeExplainer(model)
@@ -489,11 +541,12 @@ parts:
           # relationship Husband             +0.753
           # marital-status Married-civ-spouse +0.653
           # capital-gain 0                   -0.253
-        takeaway: Shapley values are the unique additive attribution with local accuracy, missingness and consistency.
+        takeaway: Local accuracy means the base value plus a row's SHAP values equals its raw score, and you can check it.
         source: notes/08-model-interpretability.md
         notes: >-
-          This is a false positive, a 66-year-old married professional predicted at 0.543. Lundberg and Lee's theorem gives
-          the three properties. TreeExplainer makes it exact and fast for trees. It does not make the numbers causal.
+          This is a false positive, a 66-year-old married professional predicted at 0.543. Lundberg and Lee's theorem says
+          Shapley values are the unique additive attribution with local accuracy, missingness and consistency. TreeExplainer
+          makes it exact and fast for trees. It does not make the numbers causal.
 
       - layout: table
         title: Explanations do not reliably help the reader
@@ -510,39 +563,372 @@ parts:
           A SHAP bar chart answers none of what Miller lists by default. So when someone has to act on it, offer the contrast:
           you would have been approved if. Evaluate with them, and not just your satisfaction with the chart.
 
+  - title: How do you train and tune it?
+    summary: Split and baseline · Learning curves · Folds · Regularisation · Early stopping · Search
+    notes: >-
+      You know the families and you can explain a model. Now the job itself. Think of a student and an exam: practice
+      questions for learning, a mock exam for checking, one real exam that counts. A student who memorises the practice
+      answers aces the practice and fails the exam. We run that whole loop on adult census.
+    slides:
+      - layout: statement
+        title: Tuning gained 0.0009. Choosing the family gained 0.025.
+        kicker: The problem
+        recall: On adult census, how did the gain from tuning compare with the gain from choosing the family?
+        statement: "On the adult census test rows, moving from logistic regression to boosting adds 0.025 of AUC. A 32-trial search on top of boosting adds 0.0009."
+        attribution: "AUC 0.9013, then 0.9263, then 0.9272, inside a bootstrap 95% interval of 0.9209 to 0.9337"
+        takeaway: Choose the family first and tune with the time left.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          This surprises people. Accuracy did not move at all, 0.873 before and after. That fits the boosting section, where
+          tuning moved AUC by under 0.003. So tuning is not where the score comes from. Training well is mostly about knowing
+          what your number means. Let's see how to get one you can defend.
+
+      - layout: steps
+        title: Split into three piles, then climb a ladder of baselines
+        recall: What is each of the three piles for, and what are the three rungs of the baseline ladder?
+        steps:
+          - {title: Training, text: "**19,536 rows.** The model sets its weights here."}
+          - {title: Validation, text: "**6,512 rows.** You choose models and settings here."}
+          - {title: Test, text: "**6,513 rows.** Read once, at the end, for the number you report."}
+          - {title: Dummy, text: "Always says under 50K. Accuracy **0.759**, AUC **0.500**, no better than a coin.", accent: "0F7490"}
+          - {title: Logistic, text: "Validation accuracy 0.851, AUC **0.906**.", accent: "0F7490"}
+          - {title: Boosting, text: "Validation accuracy 0.868, AUC **0.925**.", accent: "D4621A"}
+        takeaway: A person who reads validation scores and changes a setting is learning too, so keep a test pile nobody touches.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          Practice rows, mock rows, exam rows. Each pile answers one question, and stops being able to answer it once you use
+          it for something else. Then the baselines. The dummy is a model with no brain, and it gets 0.759 because that is the
+          share of people under 50K. Every later number is read against it.
+
+      - layout: image
+        title: Learning curves name the problem before you touch a knob
+        recall: How do you read underfitting, overfitting and a healthy model from a learning curve?
+        lead: Train and validation AUC as rows grow. Low and together is underfitting, far apart is overfitting, high with a small gap is healthy.
+        image: ../../sources/images/training-tuning-learning-curves-adult.png
+        caption: "At 16,000 rows, train then validation: depth-2 tree 0.834, 0.833. Unlimited tree 0.999, 0.760. Boosting 0.953, 0.927."
+        takeaway: A small gap does not mean a good model, since the depth-2 tree's gap is 0.001 and it sits nearly 0.1 below boosting.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          Left panel, underfitting: more rows will not help, you need a richer model or better features. Middle panel,
+          overfitting: the unlimited tree's gap only shrinks from 0.299 to 0.239 with 64 times the rows, so regularise. Right
+          panel, healthy: move on, or add rows if they are cheap. The shaded band is the range over five fits.
+
+      - layout: table
+        title: Folds must mimic how new data will arrive
+        recall: Which splitter do you use for rare classes, for groups and for time, and what did each one change?
+        lead: "k-fold cross-validation: cut the rows into k parts, train on k-1, score on the part left out, and rotate."
+        header: [Your data, Splitter, Measured]
+        widths: [3.2, 2.6, 6]
+        rows:
+          - ["Rare classes, or few rows", "`StratifiedKFold`", "On 200 rows, plain folds run from 0.2 to 0.35 positive. Stratified holds 0.275"]
+          - ["Rows in groups, and new groups later", "`GroupKFold`", "Holding out occupations, AUC falls from 0.9279 to 0.9122, worst fold **0.8625**"]
+          - [Rows arrive over time, "`TimeSeriesSplit`", "Citi Bike: shuffled folds claim R² 0.648, forward-only folds **0.590**"]
+        takeaway: If new data brings new groups or later dates, a shuffled split flatters the model.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          Holding out occupation asks how the model would do on a job it has never seen. Occupation stands in for customers,
+          patients or stores, where the group split is usually the honest one. Spread jumps from 0.0041 to 0.0286. Adult has no
+          time column, so the last row uses Citi Bike. Shuffling trains on next Tuesday to predict this Monday.
+
+      - layout: compare
+        title: Fold spread is a rough guide, not a standard error
+        kicker: Bengio and Grandvalet, 2004
+        recall: Why can't you divide fold spread by the square root of k, and how should you compare two models?
+        lead: Folds share training rows, so their scores are correlated, and the simple formula does not hold.
+        emphasis: right
+        left:
+          title: Fold SD divided by √5
+          bullets:
+            - "500 rows: the true SD is **0.0252**"
+            - "The formula averages **0.0147**, about 40% too confident"
+            - "2,000 rows: 0.0066 and 0.0069 on average, yet one run's figure ranges from 0.0042 to 0.0116"
+          tag: Too sure
+        right:
+          title: Compare fold by fold
+          bullets:
+            - "Boosting beats logistic by **0.0197**, on all five folds"
+            - "Paired SD **0.0025**, against 0.0041 and 0.0043 for each model alone"
+            - A fold of easy rows is easy for both models
+          tag: Pairing removes the shared luck
+        takeaway: Use the spread as a rough size for noise, and use paired differences to compare two models.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          We tested the tempting formula by running 5-fold on separate, non-overlapping samples and measuring how much the CV
+          mean truly varies. These are 20 and 13 samples, so treat them as rough. Bengio and Grandvalet prove that no universal
+          unbiased estimator of this variance exists. The part a naive estimate captured was 50 to 70% of the total in their
+          experiments.
+
+      - layout: cards
+        title: "Regularisation is one idea: charge for complexity"
+        recall: What is regularisation in one line, and why does it remove more noise than signal?
+        lead: Minimise training loss + λ × complexity. Signal repeats across rows and pays its way, and noise does not. Scores are validation AUC.
+        cards:
+          - {title: "Logistic: `C`", body: "`C`=1 scores **0.902**, `C`=1000 scores 0.891. Bigger `C` is a weaker penalty."}
+          - {title: "Tree: `max_depth`", body: "Depth 6 scores **0.879**. Depth 24 scores 0.740, while train reaches 0.999."}
+          - {title: "Boosting: `learning_rate`", body: "A rate of 0.03 scores **0.908**, and a rate of 1 scores 0.853."}
+          - {title: "Network: weight decay", body: "None 0.860, decay of 10 **0.904**, and decay of 100 kills it at 0.500."}
+          - {title: "Early stopping", accent: "0EA5C9", body: "Gradient descent at step 1,000 scores 0.9013, L2 at `C`=1 scores 0.9016. Same path."}
+          - {title: "Surprise: subsampling", accent: "D4621A", body: "All rows scored **0.903** and a tenth of them 0.815. Popular advice lost here."}
+        takeaway: Set every knob with a validation curve, because a knob is only a hypothesis until the curve agrees.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          These train on 1,500 rows, because 19,536 would hide much of the overfitting. The shape repeats: too little capacity,
+          a peak, then train climbing while validation falls. Early stopping belongs here because weights start at zero and grow
+          as training runs, so stopping early keeps them small. Training time and penalty strength are two handles on one
+          thing. The subsampling result is one seed on a small sample, so it is a data point, not a law. AdamW multiplies the
+          decay by the learning rate, so don't copy a good value between setups.
+
+      - layout: code
+        title: In scikit-learn, more patience made the model worse
+        kicker: "Patience: rounds to wait for improvement"
+        recall: Why does more patience give a worse HistGradientBoosting model, and what is the fix?
+        lead: Validation log loss, lower is better. All three runs agree that the best round was 16.
+        lang: python
+        code: |
+          base = dict(learning_rate=0.3, max_leaf_nodes=63, min_samples_leaf=5)
+          for pat in (5, 25, 100):
+              m = HGB(max_iter=1000, early_stopping=True, n_iter_no_change=pat,
+                      validation_fraction=0.15, **base).fit(X_train, y_train)
+              best = int(np.argmax(m.validation_score_))
+
+          # patience  stopped at  best round  loss as fitted  loss cut back to best
+          #        5          21          16          0.2960                 0.2918
+          #       25          41          16          0.3083                 0.2918
+          #      100         116          16          0.3561                 0.2918
+          # no early stopping, 1000 rounds: 0.8426
+        takeaway: scikit-learn's HGB stops training but keeps the rounds it ran while waiting, so always cut back to the best round.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          This is a trap, because nothing warns you. Patience exists because real validation curves wobble: Prechelt shows one
+          with 16 local minima before overfitting truly starts. But here the extra rounds stay in the model. Check what your
+          library does. LightGBM gives you best_iteration_. Prechelt's advice is to always keep the best weights. The rows
+          that decide when to stop have been used, so they cannot also give your final score.
+
+      - layout: compare
+        title: Search methods tie, and the winner still flatters itself
+        kicker: Cawley and Talbot, 2010
+        recall: At equal budget how did grid, random and TPE compare, and why is the winner's score optimistic?
+        lead: Two grids, random and TPE each got 32 fits and five seeds. Half the validation rows chose the winner, and the other half reported it.
+        emphasis: right
+        left:
+          title: Grid, random and TPE at equal budget
+          bullets:
+            - Search rows, all within **0.0003**
+            - Report rows, all within **0.0016**
+            - Each beat default settings by 0.0025 to 0.0041
+            - "Search mostly avoids bad settings: worst trials average 0.8995 to 0.9118"
+          tag: A tie, on this data at this budget
+        right:
+          title: "The winner's curse"
+          bullets:
+            - "Chosen on 100 rows, it claims **0.9308** and truly scores **0.9223**"
+            - "Optimism is 0.0085 at 100 rows and 0.0013 at 1,000"
+            - You chose it partly for its luck on those rows
+          tag: Tuning on too few rows finds luck
+        takeaway: Use random or TPE on a fixed budget, and score the winner on rows the search never saw.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          Three things explain the tie. The plateau is wide, and the learning rate carries about 0.61 of the importance, a rough
+          estimate. The grid's values came from knowing what good boosting settings look like, which a new problem won't give
+          you. And TPE's first 10 trials are random by default. Random remains the baseline for an unfamiliar problem: a grid
+          tried 2 learning rates and random tried 32. Cawley and Talbot show the selection bias is often as large as the
+          differences between algorithms. Nested cross-validation is the other honest option, at 0.9274 here for 125 fits.
+
+      - layout: code
+        title: The training loop as a 10-step checklist
+        recall: What are the ten steps of the training loop, from split to ship?
+        lang: checklist
+        code: |
+          Step           What to do                                  On adult census
+           1 Split       Train, validation, test. Lock test away     19,536 / 6,512 / 6,513
+           2 Baseline    Fit a dummy, then a simple model            0.759 accuracy, AUC 0.906
+           3 Default     Fit a strong default, usually boosting      Validation AUC 0.925
+           4 Curves      Name the problem before touching a knob     Gap 0.027, healthy
+           5 CV          Compare fold by fold, against the spread    Boosting +0.0197, sd 0.0025
+           6 Regularise  Validation curve for the diagnosed knob     Learning rate 0.03
+           7 Stop early  Set patience, keep the best round           Round 16, loss 0.2918
+           8 Search      Random or TPE, fixed budget, check winner   +0.0025 to 0.0041
+           9 Final       Refit, read test once, give an interval     0.9272, 0.9209 to 0.9337
+          10 Stop        A step moves less than the spread? Ship it
+        takeaway: If a later step moves the score less than the spread, stop and ship.
+        source: notes/09-training-and-tuning.md
+        notes: >-
+          This is what you do on Monday. Step 6 was measured on 1,500 rows. Step 8's gain is on report rows. Step 9 refits on
+          train plus validation and reads the test rows once. Reading the test pile while still deciding is the pitfall that
+          makes the live score come in lower. You now have a number you can defend. Next, what it hides.
+
+  - title: What does the number hide?
+    summary: Error costs · Rare events · Threshold or SMOTE · Leaks and probabilities · Drift
+    notes: >-
+      A lender wants to spot the few borrowers who won't pay back. Think of a smoke alarm in a house that almost never has a
+      fire. One that never rings is right nearly every day and useless on the day that counts. One that rings at every slice
+      of toast gets switched off. This case is hypothetical. The rows are real, and the 3 percent default rate is our doing.
+    slides:
+      - layout: statement
+        title: "97% accurate, and it catches no defaulters. What now?"
+        kicker: The problem
+        recall: Why is 97% accuracy worthless when 3 customers in 100 default?
+        statement: "When 3 customers in 100 default, a model that approves everyone is 97% accurate and worthless."
+        attribution: Default of Credit Card Clients, 30,000 customers. We thinned the defaulters from 22.1% to 3%
+        takeaway: Accuracy hides a rare event, so price each error and count the events.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          The 3 percent is our choice. It changes the base rate and nothing else, so every absolute rate here belongs to that
+          thinned population and not to any real book. A boosted model at the default threshold of 0.5 catches none of the
+          defaulters. Its ranking is fine. What's missing is a decision rule.
+
+      - layout: compare
+        title: Type I and Type II errors are business costs
+        recall: With H0 "this applicant is good", what are Type I and Type II errors, and which threshold do their costs imply?
+        lead: Take H0 as "this applicant is good". Flip it and the names swap, so state yours. The costs below are assumptions.
+        emphasis: none
+        left:
+          title: "Type I: decline a good customer"
+          bullets:
+            - "Costs the margin, assumed at **600**"
+            - "Quiet: nobody ever sees it"
+            - "At threshold 0.05: 452 of them"
+          tag: Rate α
+        right:
+          title: "Type II: approve a defaulter"
+          bullets:
+            - "A loan of 5,000 at 60% loss costs **3,000**"
+            - "Loud: it lands in the accounts"
+            - "At threshold 0.05: 79 of them"
+          tag: Rate β
+        takeaway: Decline when P(default) reaches the lost-customer cost over both costs, 1/6 at 5:1, if the probabilities are real.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          Pushing the threshold down trades one error for the other. At 0.05 the lender catches 45 percent of defaulters, but
+          the rate of good customers declined goes from 1.5 to 9.7 percent, and it pays more at this ratio. The best alpha isn't
+          a statistical constant like 5 percent. It comes from the price list. A thin margin of 150 makes the ratio 20:1 and the
+          threshold 1/21. We carry both ratios.
+
+      - layout: table
+        title: "Rows are not events: count the defaulters"
+        recall: Why does a rare outcome make you count events and not rows?
+        lead: On a rare outcome, the defaulters set how much you can detect, how noisy your score is and how well you can train.
+        header: [Question, Measured, Lesson]
+        widths: [4, 4.2, 3.6]
+        rows:
+          - [Rows to detect a 20% cut in defaults, "**11,452** per arm at 3%, 1,284 at 22%", "Events are similar: 343 and 282"]
+          - [Noise in a test score, "ROC-AUC SD **0.039** with 50 defaulters, 0.018 with 200", A test set is as big as its defaulters]
+          - ["All 434 defaulters, 434 good customers", "ROC-AUC 0.759, against 0.762 with all 14,018", Good customers saturate early]
+          - ["All good customers, 25 defaulters", "ROC-AUC **0.676**", Defaulters do not]
+          - [No defaults among 1,000 approved, "The true rate could still be 0.3%", The rule of three]
+        highlight: [3]
+        takeaway: Report the event count and the SD of the score, since this 4,818-row test set holds only 145 defaulters.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          With 50 defaulters the noise of 0.039 is more than any gap between the methods coming next. To detect a difference you
+          need a few hundred events or several seeds. And in lending the outcome takes months to arrive, so an experiment is
+          slower than the count suggests. The table also explains why undersampling can be cheap and thinning positives costly.
+
+      - layout: image
+        title: The threshold matters far more than resampling
+        recall: Once the threshold is tuned, how much does the choice of resampling method change the cost?
+        lead: "Cost per 1,000 applicants, 20 seeds. At 5:1, SMOTE costs **176.4** with the threshold left at 0.5 and **143.1** with it tuned."
+        image: ../../sources/images/credit-lab-method-comparison.png
+        caption: "Across 10 settings, SMOTE at 0.5 lost beyond noise in 8 and never won. With its own tuned threshold, it tied in all 10."
+        takeaway: Tune the threshold and leave the data alone, since tuned costs span 142.4 to 144.5 and the seed moves them by 5.9.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          Orange is the threshold at 0.5 and blue is tuned on validation. Blue clusters, orange scatters. A 1:1 training set
+          moves the 0.5 cut-off to about the base rate, which is what a 32:1 cost ratio would ask for, so resampling at 0.5 is
+          threshold moving with an unstated cost ratio. No method beat doing nothing on ranking, and on ROC-AUC SMOTE was 0.022
+          lower. We expected SMOTE to help the neural net, and it didn't: 0.683 against 0.742. That is one small network on one
+          dataset. Elor's 73 datasets support the tie for strong learners, not a general loss. Also a modest prize: at 5:1 the
+          model saves only 5 percent against approving everyone, and at 20:1 it saves 30 percent.
+
+      - layout: code
+        title: Resampling can fool you twice
+        recall: What are the two ways resampling misleads you, and how do you fix each?
+        lang: python
+        code: |
+          # Wrong: resample, then split into folds
+          x_res, y_res = SMOTE().fit_resample(x, y)
+          cross_val_score(hgb(), x_res, y_res, cv=cv)
+          # leaked CV 0.984, test 0.703
+
+          # Right: the sampler lives in the pipeline
+          pipe = Pipeline([("scale", StandardScaler()),
+                           ("smote", SMOTE()), ("clf", hgb())])
+          cross_val_score(pipe, x, y, cv=cv)
+          # pipeline CV 0.697, test 0.703
+        bullets:
+          - "**The leak:** folds hold copies of training rows, so CV measures memory."
+          - "**The scores:** SMOTE predicts a mean default risk of **0.305** on a book at 0.030."
+          - "**The price:** cost at the 1/6 rule is **777** against 143."
+          - "**The repair:** Platt scaling on validation returns the mean to 0.030."
+        takeaway: Put the sampler in the pipeline, and if you resample, recalibrate on untouched data before you price.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          The mistake is easy because fit_resample followed by cross_val_score is short and raises no error. ROC-AUC is the
+          honest comparison here since it ignores the class mix. On probabilities, tuning the threshold hid the damage, because
+          a threshold only needs order. A lender prices with a probability: SMOTE's raw scores predict 11.3 percent default
+          among those approved, when 1.0 percent happens. After repair every method has the same Brier as doing nothing, 0.028,
+          so resampling and its repair cancel out. That's why we leave the data alone.
+
+      - layout: table
+        title: Different monitors see different kinds of drift
+        recall: Which kinds of drift can PSI see without labels, and which stay silent?
+        lead: PSI measures how far a distribution has moved from its reference window, and needs no labels. These windows are simulated on real rows.
+        header: [What happened, Worst feature PSI, Score PSI, ROC-AUC, Reading]
+        widths: [4.4, 1.5, 1.2, 1.2, 3.8]
+        rows:
+          - [No change, "0.011", "0.007", "0.764", The noise floor]
+          - ["Covariate: towards low limits", "0.319", "0.083", "0.759", "Loud, and harmless to the model"]
+          - ["Prior: default rate doubles", "0.011", "0.008", "0.757", Nearly silent]
+          - ["Concept: what predicts default changes", "0.011", "0.007", "**0.600**", "Silent, only labels show it"]
+          - ["Skew: features one month stale", "0.531", "0.012", "0.726", The score monitor misses it]
+          - ["Skew: amounts in thousands", "7.706", "3.291", "0.753", "Huge alarm, moderate harm"]
+          - ["Skew: PAY_0 filled with 0", "3.539", "0.073", "0.717", Silently stopped working]
+        highlight: [3]
+        takeaway: Monitor inputs as well as the score and get labels when you can, because concept shift looks like no change at all.
+        source: notes/10-imbalance-errors-and-drift.md
+        notes: >-
+          Concept shift is the frightening row: identical features by construction, so every PSI equals the no-change row, while
+          ROC-AUC falls. With PAY_0 filled, declines collapse from 2.4 to 0.1 percent and cost hits 150, the approve-everyone
+          line. Stale features show 0.531 only when the coded column is binned by level, and 0.049 with quantile bins, so bin
+          coded columns by level. The noise floor here was 0.011, and the 0.1 and 0.25 lines are conventions. In credit scoring
+          labels arrive a year late, so input and prediction monitors are what you have.
+
   - title: Take it with you
     agenda: false
     divider: false
     slides:
       - layout: cards
         title: Rules of thumb for classical ML
+        recall: What are the six rules of thumb for classical ML?
         cards:
           - title: Baseline first
             body: Dummy, then linear, then boosting. Each sets a bar.
           - title: Test once
             body: Choose on validation or CV, and report test a single time.
           - title: Fit inside the fold
-            body: Any step with a fit goes in the pipeline.
-          - title: Cost sets the metric
-            body: Choose metric and threshold from what each error costs.
-          - title: Compare across seeds
-            body: A 0.001 lead is noise when the seed moves it by 0.003.
-          - title: Explain with care
-            body: Permutation and SHAP describe the model, not the world.
+            body: Any step with a fit goes in the pipeline, resampling included.
+          - title: Cost sets the threshold
+            body: Tune it from what each error costs, and leave the data alone.
+          - title: Family before tuning
+            body: "Tuning gained 0.0009, the family 0.025. Compare across seeds."
+          - title: Keep watching
+            body: SHAP describes the model, not the world. Score monitors miss most drift.
         takeaway: Most of classical ML's failures are in the measurement, not in the model.
-        source: notes/04-model-evaluation.md
+        source: notes/09-training-and-tuning.md
         notes: >-
           If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
           choosing a cleverer algorithm.
 
       - layout: bullets
         title: Where to next
+        recall: Which habits from classical ML carry over to neural models?
         bullets:
           - "**Deep learning:** the MLP grows into backprop, CNNs and sequence models."
           - "**NLP:** tree and linear models meet text, with bag-of-words and TF-IDF."
-          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then try the Try-it exercises."
+          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then `practice/credit-default-lab/` and `practice/music-clustering-lab/`."
+          - "**Exercises:** try the Try-it section at the end of each note."
         takeaway: Pipelines, metrics and calibration carry over unchanged to every neural model that follows.
-        source: notes/08-model-interpretability.md
+        source: notes/10-imbalance-errors-and-drift.md
         notes: >-
           The classical families are done. Everything we did about splits, leakage and metrics comes along with us. The next
           pillar starts from the small MLP and builds up from backprop by hand.
