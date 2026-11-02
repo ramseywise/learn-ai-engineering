@@ -257,7 +257,7 @@ Audit size, with error on paid at 1.3% and a drift to 3.3%
 Normal-approximation size for 80% power, two-sided: 878 per period
 ```
 
-The interval columns are exact binomial intervals for 1.3%. `power_at_drift` is the chance a one-sided test at a 5% false-alarm rate catches a jump to 3.3%, the size of the new fraud type below. An audit of 100 misses it more often than not. An audit of 1,000 almost always catches it, for 3,000 euros per period. The rule of three is also useful: if you audit $n$ and find nothing, the 95% upper bound is about $3/n$, so a clean audit of 300 says only "under 1%". The working is in [DS 01/10](10-imbalance-errors-and-drift.md#significance-power-and-what-a-rare-event-needs).
+The interval columns are exact binomial intervals for 1.3%. `power_at_drift` is the chance a one-sided test at a 5% false-alarm rate catches a jump to 3.3%, the size of the new fraud type below. An audit of 100 misses it more often than not. An audit of 1,000 almost always catches it, for 3,000 euros per period. The rule of three is also useful: if you audit $n$ and find nothing, the 95% upper bound is about $3/n$, so a clean audit of 300 says only "under 1%". The last line of the output answers a different question from the table, which is why it asks for more: 878 audited in each of two periods, comparing them two-sided with both rates estimated, where `power_at_drift` holds 1.3% as known and tests one-sided, and reaches 78% at 300. The working is in [DS 01/10](10-imbalance-errors-and-drift.md#significance-power-and-what-a-rare-event-needs).
 
 ## The loop, over eight months
 

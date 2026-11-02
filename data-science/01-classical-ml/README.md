@@ -23,6 +23,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 3 | [Feature engineering and pipelines](notes/03-feature-engineering-and-pipelines.md) | What should the model see, and how do you keep it from cheating? |
 | 4 | [Model evaluation](notes/04-model-evaluation.md) | A model scored 90%. Is that good? |
 | 5 | [Unsupervised learning](notes/05-unsupervised-learning.md) | What can you learn with no labels? |
+| 5b | [Clustering categorical and mixed data](notes/05b-clustering-categorical-and-mixed-data.md) | How do you segment customers when the columns aren't all numbers? |
 | 6 | [Ensembles](notes/06-ensembles.md) | Why do many trees beat one? |
 | 7 | [Boosting in practice](notes/07-boosting-in-practice.md) | Which library, and which knobs? |
 | 8 | [Model interpretability](notes/08-model-interpretability.md) | What did the model learn, and why this answer for this row? |
@@ -91,6 +92,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [`practice/credit-default-lab/`](practice/credit-default-lab/) | Credit card default at a 3% rate: what each way of handling imbalance costs, for [note 10](notes/10-imbalance-errors-and-drift.md) | See its [README](practice/credit-default-lab/README.md); about four minutes, internet needed once |
 | [`practice/music-clustering-lab/`](practice/music-clustering-lab/) | Clustering a real music library with a light reranker on top, for [note 05](notes/05-unsupervised-learning.md#case-clustering-a-music-library) | See its [README](practice/music-clustering-lab/README.md); about a minute, internet needed once |
 | [`practice/isolation_forest.py`](practice/isolation_forest.py) | An isolation forest beside the Gaussian detector on ex8 and on generated tables, for [note 05](notes/05-unsupervised-learning.md#isolation-forest-on-tabular-data) | `uv run isolation_forest.py`, from `practice/`; a few seconds |
+| [`practice/mixed_clustering.py`](practice/mixed_clustering.py) | FAMD, MCA, Gower with PAM, k-prototypes and latent class on generated worlds with a control, for [note 05b](notes/05b-clustering-categorical-and-mixed-data.md) | `uv run mixed_clustering.py`, from `practice/`; a few minutes |
 | [`practice/metric_map.py`](practice/metric_map.py) | Metrics by target, thresholds by cost, and retrieval on one table, for [note 11](notes/11-choosing-a-metric.md) | `uv run metric_map.py`, from `practice/` |
 | [`practice/reading_errors.py`](practice/reading_errors.py) | Six steps of error analysis on the credit model, and a noise fix against a mechanism fix over 30 seeds, for [note 12](notes/12-reading-the-errors.md) | `uv run reading_errors.py`, from `practice/`; under a minute |
 | [`practice/review_queue.py`](practice/review_queue.py) | Two thresholds on generated invoices and real credit data: prices, capacity, calibration, drift, risk targets and conformal, for [note 13](notes/13-automate-review-or-reject.md). Shares [`invoices.py`](practice/invoices.py) | `uv run review_queue.py`, from `practice/`; about three minutes, internet needed once |

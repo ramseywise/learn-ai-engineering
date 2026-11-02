@@ -1,11 +1,12 @@
-# ML platform lecture deck. Covers notes 01-05.
+# ML platform lecture deck. Covers notes 01-06.
 # Build: make slides PILLAR=data-engineering/06-ml-platform STRICT=1 PREVIEW=1
 # Running example: one taxi trip duration model, on synthetic rides, from notebook to monitored service.
+# Note 06 then walks one invoice problem through every stage, on the course's generated data.
 deck:
   title: The ML Platform
   subtitle: Everything around the model that decides whether it keeps working
   tagline: |-
-    Features · Registry · Serving · Drift · Maturity
+    Features · Registry · Serving · Drift · Maturity · End to end
   reference: "Notes: data-engineering/06-ml-platform"
   output: ml-platform.pptx
   notes: >-
@@ -422,6 +423,102 @@ parts:
           The course's pins are from 2022. Update them on purpose, and replace long-lived keys with OIDC if you copy the
           workflows.
 
+  - title: One system, end to end
+    summary: Framing · Correct · Route choice · Rollout · The correction loop · A timed case
+    notes: >-
+      Five chapters of tools, all on one taxi model. Now a second problem, reading supplier invoices, goes through every
+      stage in order. Warn the room: the course's invoice chapters are separate experiments on generated data, never run
+      as one system. The value is the order of decisions and the shape of failures.
+    slides:
+      - layout: statement
+        title: A request with no decision in it
+        kicker: The problem
+        statement: "Can we use AI to read supplier invoices, so nobody has to type them?"
+        attribution: "A fictional finance lead at Tallybook"
+        takeaway: "Find the decision behind the request first: may this money leave without a person looking?"
+        source: notes/06-ml-system-framing-to-monitoring.md
+        notes: >-
+          The line names a task. It doesn't say what must be right, what a mistake costs, or who will know. Answer it as
+          written and you get an extractor with a good F1, and no answer on whether to pay. On generated invoices at
+          invented prices, review everything costs 4.471 per invoice, two priced thresholds 3.312, and a perfect
+          probability would add at most 0.07 more.
+      - layout: flow
+        title: Each stage hands something on
+        steps:
+          - {label: Frame, sub: "Mistake prices", accent: 1E3A5F}
+          - {label: "Correct, label", sub: "Scoring rule, test set", accent: 0F7490}
+          - {label: "Baseline, route", sub: "Number, fallback", accent: 0EA5C9}
+          - {label: "Gate, roll out", sub: "Limits, rollback", accent: D4621A}
+          - {label: "Monitor, audit", sub: "Measured error rate", accent: 5B21B6}
+        loop: wrong prices return to Frame, labels and failures to Correct
+        bullets:
+          - "PSI read 0.001 with no change and with new fraud, so keep a random audit"
+        takeaway: A stage is finished when it has produced what the next stage needs, so name that handover before you start.
+        source: notes/06-ml-system-framing-to-monitoring.md
+        notes: >-
+          The chapter's table lists nine stages, and this groups them. Sculley and colleagues guess a mature system is at
+          most 5% machine learning code, which is an estimate from experience and not a measurement. The shape holds here.
+      - layout: table
+        title: Choose the route per sub-task
+        lead: Separate experiments on generated invoices, never run as one system.
+        recall: What do you state when no LLM has been measured?
+        header: ["Sub-task", "Rules", "Trained model", "LLM or vision"]
+        widths: [2, 4, 4, 2]
+        rows:
+          - ["Read fields", "F1 0.9986, own 3 layouts", "LayoutLM F1 0.7866, on forms", "Not measured"]
+          - ["Match lines", "Closest amount, 0.5397", "LambdaMART, NDCG@5 0.9469", "Not measured"]
+          - ["Decide route", "Hard limits first", "Calibrated, AUC 0.858", "Must pass calibration"]
+          - ["Check result", "Caught 46 of 48, 0 false alarms", "Keep the checks", "Keep the checks"]
+        bold_first: true
+        takeaway: "With no LLM measured, state a break-even, 1.43 per retried document at assumed prices, not a verdict."
+        source: notes/06-ml-system-framing-to-monitoring.md
+        notes: >-
+          The invoice pipeline called no vision model, and its prices are assumed. A vision model matching the retry beats
+          review alone below about 1.43 per retried document, and that can't exceed the 1.50 review price. The join is
+          unmeasured too: a better extractor is an unstable dependency for the router, so version it and recalibrate.
+      - layout: compare
+        title: The extractor can shadow, the router only partly
+        left:
+          title: Extractor
+          bullets:
+            - "A copy of each page, only the champion's fields go on"
+            - "Differences appear with no labels"
+            - "Send disagreements to a person"
+        right:
+          title: Router
+          bullets:
+            - "Outcomes only where the champion acted"
+            - "Needs a canary, limits and a time limit"
+            - "Audit 300 of a canary: power 0.775 for error 1.3% to 3.3%"
+        takeaway: A shadow never sees its own results, so a decision model needs a canary with limits and a sized audit.
+        source: notes/06-ml-system-framing-to-monitoring.md
+        notes: >-
+          Rollout numbers in this pillar are from the taxi model. The audit numbers are DS 01/14's, on generated invoices.
+          Monitoring has the same lesson: PSI read 0.001 with no change and also 0.001 when a new fraud type took error on
+          paid from 1.4% to 3.3%. Keep a random audit. Reporting from silence reads 0.14% when the truth is 1.37%.
+      - layout: code
+        title: "Support tickets: 35% automated beats 60%"
+        lang: python
+        code: |-
+          agent, wrong = 3.00, 9.00  # invented for the case
+
+          def cost(sent, wrong_rate):
+              return (sent * wrong_rate * wrong
+                      + (1 - sent) * agent)
+
+          cost(0.00, 0.00)  # 3.000  agents on everything
+          cost(0.60, 0.25)  # 2.550  candidate A
+          cost(0.35, 0.08)  # 2.202  candidate B
+        bullets:
+          - "Send only below P(wrong) 0.333"
+          - "The 25% A adds over B are wrong 48.8% of the time"
+        takeaway: "Price an automation target before accepting it: at these invented prices, 35% automated costs less than 60%."
+        source: notes/06-ml-system-framing-to-monitoring.md
+        notes: >-
+          This is the 75-minute practice case, with a marking guide in the chapter: customer support tickets at Tallybook, all numbers invented. The head of support asks for
+          60% automated with an LLM. Marks go to framing, labels, baseline, metrics, rollout and the loop, and a zero in any
+          area fails the plan, the same logic as the ML Test Score.
+
   - title: Rules of thumb
     agenda: false
     divider: false
@@ -433,9 +530,9 @@ parts:
           - {title: Join as of then, body: "Offline scores are only true with point-in-time joins.", accent: 1E3A5F}
           - {title: Newer is not better, body: "A retrain passes a gate on current data.", accent: 0F7490}
           - {title: Default to batch, body: "Online only when someone is waiting.", accent: 0EA5C9}
-          - {title: Return the version, body: "So each answer can be traced.", accent: 0EA5C9}
           - {title: Pipeline first, body: "On any alert, check the feed before retraining.", accent: D4621A}
           - {title: Score the minimum, body: "Automate only what you can already monitor.", accent: 5B21B6}
+          - {title: Price the mistake, body: "A target is not a cost until each error has a price.", accent: 1E3A5F}
         takeaway: Each rule makes a silent failure visible or reversible, and that is the job of the platform.
         source: notes/05-mlops-maturity-and-best-practices.md
         notes: >-
@@ -446,9 +543,10 @@ parts:
         bullets:
           - "**Architecture and governance**: who owns many such pipelines, and who may read what"
           - "**Data science**: how the models served here are built and evaluated"
-          - "**AI engineering**: the same patterns for LLM systems, with evaluation in the generative AI Eval pillar"
-          - "**Practice**: the MLOps Zoomcamp coursework, in the pillar's practice folder"
-        takeaway: The next pillar lifts the view from one model to an organisation of data products.
-        source: notes/05-mlops-maturity-and-best-practices.md
+          - "**AI engineering**: the same patterns for LLM systems, evaluated in generative AI"
+          - "**Practice**: the 75-minute case, then the MLOps Zoomcamp coursework"
+          - "**On AWS**: this pillar mapped onto SageMaker, in the maturity chapter"
+        takeaway: "Next is architecture and governance: from one model to an organisation of data products."
+        source: notes/06-ml-system-framing-to-monitoring.md
         notes: >-
           Next is architecture: mesh, fabric, the modern data warehouse, then access control and GDPR.

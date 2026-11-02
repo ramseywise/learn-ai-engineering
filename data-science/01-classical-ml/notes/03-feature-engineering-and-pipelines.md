@@ -102,7 +102,8 @@ The base rate is 0.759, so these six columns add real signal. Missing values in 
 |---|---|
 | One-hot | Few categories; linear models |
 | Ordinal (`OrdinalEncoder`) | Categories with an order; tree models |
-| Target / frequency encoding | Very many categories (IDs, zip codes); needs cross-fitting to avoid leakage; [weight of evidence](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#weight-of-evidence) is a target encoding learned on the training set only |
+| Frequency encoding | Very many categories; reads no target, so it also works with no labels, though it merges levels of equal size |
+| Target encoding | Very many categories (IDs, zip codes); needs a target, and cross-fitting to avoid leakage, so it [can't be used for clustering](05b-clustering-categorical-and-mixed-data.md#encodings-which-ones-need-a-label); [weight of evidence](../../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md#weight-of-evidence) is a target encoding learned on the training set only |
 | Native categorical support | `HistGradientBoostingClassifier(categorical_features=...)`, LightGBM |
 
 ---

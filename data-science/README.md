@@ -84,7 +84,7 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 2. Select a supervised model family and control complexity for a tabular prediction problem ([Grinsztajn et al.](https://arxiv.org/abs/2207.08815) on why trees still lead there).
 3. Build leakage-safe preprocessing and feature engineering pipelines.
 4. Choose a metric and threshold that reflect the costs of false positives and false negatives, then compare against a dummy baseline.
-5. Use clustering or dimensionality reduction cautiously, validate the result, and avoid treating visual structure as proof.
+5. Use clustering or dimensionality reduction cautiously, on numeric, categorical or [mixed columns](01-classical-ml/notes/05b-clustering-categorical-and-mixed-data.md), validate the result, and avoid treating visual structure as proof.
 6. Compare ensembles and boosting libraries across seeds, tune with cross-validation and early stopping, and report uncertainty in a claimed improvement.
 7. Use permutation importance, PDPs, and SHAP appropriately while distinguishing model explanations from causal claims.
 8. Diagnose imbalance, recurring errors, and distribution shift before deploying a model.

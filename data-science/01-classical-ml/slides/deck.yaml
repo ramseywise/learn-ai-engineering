@@ -272,6 +272,27 @@ parts:
           to other playlists, so this measures filing, not taste. The first row is why we scale. The last row is why you look
           at any AUC of 1.000 twice.
 
+      - layout: image
+        title: Each clustering recipe hears different columns
+        recall: Why does one-hot plus k-means score near zero when only categories hold the groups, and what can validate a segmentation?
+        image: ../../sources/images/classical-mixed-benchmark.png
+        caption: "ARI on 1,200 generated customers, mean of 5 seeds, in three worlds. Latent class has home advantage: the generator is its model."
+        bullets:
+          - "**One-hot, k-means:** 0.879 when numbers and categories both hold the groups, 0.003 when only categories do."
+          - "**FAMD, k-means:** 0.890 and 0.542, the only distance recipe that hears both here."
+          - "**Gower, PAM:** 0.289 with equal weights, because categories move the distance about three times as much."
+          - "**CatBoost on the labels:** 0.913 accuracy with no groups present, so it explains and can't validate."
+        takeaway: Run every method against a shuffled-column control, and judge segments on an outcome that wasn't used to fit them.
+        source: notes/05b-clustering-categorical-and-mixed-data.md
+        notes: >-
+          Every method invents a distance for categories, and that choice decides whose columns get heard. FAMD z-scores the numbers
+          and divides each centred dummy by the square root of its share, so each column can contribute at most 1 to any axis.
+          MCA is the version for categories alone, and its raw percentages understate the first axis. Gower averages per-column
+          scores and needs an n by n matrix, 80 GB at 100,000 customers. Latent class assumes columns are independent within a class,
+          and it's the only one here that can answer "no groups" through BIC. All of these tables are generated, so read the shape
+          and not the ranking. Published simulations also put Gower with PAM last, and they too draw numbers from normals. On Palmer
+          penguins, numbers alone beat every mixed method, so which columns you include is itself a choice.
+
   - title: Why do many trees win?
     summary: Bagging and boosting · Four libraries · Ordered encoding
     notes: >-

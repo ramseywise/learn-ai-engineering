@@ -220,7 +220,7 @@ Read the silhouettes first. They hover around 0.3, with no clear peak beyond a s
 
 The holdout then tells you whether those cuts are useful. Cluster 1 corresponds to the frequent buyers, and cluster 2 to recent buyers. Clusters 0 and 3 are the informative pair: they differ mainly by order value, £77 against £27, and yet their future value is about the same, £5.40 against £3.55. K-means has treated monetary as seriously as the other two axes, as it treats all standardised features, whereas the outcome hardly cares. Clustering found structure in the features. It did not find structure that bears on what we want to do.
 
-That isn't a reason never to use clustering. It is a reason to score any segmentation against a holdout before you adopt it, and to prefer the version people can explain when, as here, the two do about the same job.
+That isn't a reason never to use clustering. It is a reason to score any segmentation against a holdout before you adopt it, and to prefer the version people can explain when, as here, the two do about the same job. RFM columns are all numbers. If your table also has plan, channel or industry columns, k-means needs more thought: see [clustering categorical and mixed data](../../../data-science/01-classical-ml/notes/05b-clustering-categorical-and-mixed-data.md).
 
 ## How concentrated is value?
 

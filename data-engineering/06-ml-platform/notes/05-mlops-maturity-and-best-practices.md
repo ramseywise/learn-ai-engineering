@@ -15,6 +15,17 @@ sources:
   - https://arxiv.org/abs/2005.04118
   - https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html
   - https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-availability-change.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/mlflow.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/model-deploy-feature-matrix.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails-blue-green-canary.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html
+  - https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -517,7 +528,7 @@ If your team runs on AWS, the question is which piece of [Amazon SageMaker AI](h
 | [The registry and rollback](02-experiment-tracking-and-model-registry.md#rollback-and-why-the-registry-labels-but-does-not-deploy) | [Model Registry](https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html): model groups, versions, lineage and an approval status. MLflow can register into it automatically | The gate. An approval status records a decision and doesn't make one |
 | [Batch scoring](03-batch-and-online-serving.md#batch-score-a-table) | [Batch transform](https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html): large datasets, with no persistent endpoint | Choosing batch at all, by when the answer is needed |
 | [Online serving](03-batch-and-online-serving.md#online-a-web-service) | [Inference options](https://docs.aws.amazon.com/sagemaker/latest/dg/model-deploy-feature-matrix.html): real-time endpoints, asynchronous for large inputs, serverless for idle periods between spurts | Returning the model version with each prediction |
-| [Shadow](03-batch-and-online-serving.md#rolling-out-a-new-model) | [Shadow tests](https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html): a copy of each request goes to the shadow variant in the same endpoint, and only the production variant's response returns. Real-time only: not serverless or asynchronous | The limit in feedback loops still applies, since a shadow never sees the results of its choices |
+| [Shadow](03-batch-and-online-serving.md#rolling-out-a-new-model) | [Shadow tests](https://docs.aws.amazon.com/sagemaker/latest/dg/shadow-tests.html): a copy of a share of requests you set goes to the shadow variant in the same endpoint, and only the production variant's response returns. Real-time only: not serverless or asynchronous | The limit in feedback loops still applies, since a shadow never sees the results of its choices |
 | [Canary and rollback](03-batch-and-online-serving.md#rolling-out-a-new-model) | [Deployment guardrails](https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails.html): [blue/green with a canary step](https://docs.aws.amazon.com/sagemaker/latest/dg/deployment-guardrails-blue-green-canary.html), a baking period, and CloudWatch alarms that return all traffic to the old fleet | The docs describe a share of traffic. If an entity has to stay on one side, check that, or use the [stable hash](03-batch-and-online-serving.md#rolling-out-a-new-model) yourself |
 | [Drift and label delay](04-drift.md#monitoring-error-when-labels-arrive) | [Model Monitor](https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html) covers data quality, model quality, bias drift and feature attribution drift. **AWS has [closed it to new customers](https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-availability-change.html)**: existing customers keep it, with no new features planned. AWS points to open-source monitoring solutions, including MLflow Apps with Evidently, plus QuickSight and CloudWatch | Deciding what an alert costs. A new AWS account plans around the alternatives, and [the drift chapter's](04-drift.md#drift-that-doesnt-matter-and-damage-with-no-drift) argument doesn't depend on the tool |
 | [The retraining pipeline](04-drift.md#what-to-do-about-it-retraining-policy) | [Pipelines](https://docs.aws.amazon.com/sagemaker/latest/dg/pipelines.html): workflow orchestration for ML, with versioning and lineage | When to retrain and what the gate checks |
