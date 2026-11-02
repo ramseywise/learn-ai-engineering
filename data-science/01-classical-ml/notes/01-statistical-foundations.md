@@ -140,7 +140,7 @@ The straight line is all bias. Degree 3 to 5 is the sweet spot. By degree 9 the 
 
 ## Probability as ML uses it
 
-You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur. For the basics underneath them (conditional probability, expectation, variance) see [Probability foundations](../../../data-analytics/02-probability-and-statistics/notes/01-probability-foundations.md); for maximum likelihood as an estimation method, [Estimation](../../../data-analytics/02-probability-and-statistics/notes/03-estimation.md).
+You need far less probability theory to *use* these models than the textbooks cover, but four ideas recur. For the basics underneath them (conditional probability, expectation, variance) see [Probability foundations](../../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md); for maximum likelihood as an estimation method, [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md).
 
 | Idea | Used in | One line |
 |---|---|---|

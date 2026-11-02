@@ -1,0 +1,1055 @@
+# Deck for generative-ai/02-rag-retrieval. Source of truth: notes/01-12.
+# Build: make slides PILLAR=generative-ai/02-rag-retrieval STRICT=1 PREVIEW=1
+# Spec: scripts/slides/deck-spec.md
+# Running example: Tallybook's support bot quotes a stale 14-day refund page; the policy is 30 days.
+deck:
+  title: RAG and retrieval
+  subtitle: From one wrong refund answer to a system you can measure
+  tagline: Retrieval sets the ceiling
+  reference: generative-ai/02-rag-retrieval
+  output: rag-retrieval.pptx
+  notes: This deck follows one wrong answer from Tallybook's support bot through the RAG pipeline, using
+    the twelve chapters in this pillar.
+parts:
+- title: Why retrieve, and the whole pipeline
+  summary: What RAG solves, the smallest version, and the map of stages.
+  notes: First we set up the problem and draw the map. We go from one wrong refund answer to the smallest
+    possible RAG, then to the stages a real pipeline adds.
+  slides:
+  - layout: statement
+    title: The bot said 14 days. The policy says 30.
+    kicker: The problem
+    statement: 'Retrieval sets the ceiling: the LLM can''t cite a document the retriever never returned.'
+    attribution: Nearly every RAG failure is a retrieval failure that looks like a model failure.
+    source: notes/02-why-rag-and-the-augmented-prompt.md
+    notes: 'Tallybook''s support bot tells a customer they have 14 days to get a refund. The current policy
+      says 30. The model didn''t invent this: the 14 came from a 2024 archive page that is still in the
+      index. The answer reads perfectly, and it is wrong because of what retrieval handed the model. We
+      will chase this one answer through the whole pipeline.'
+  - layout: image
+    title: RAG adds one step between the question and the model
+    recall: What three costs does RAG add?
+    image: ../sources/images/hasan-dlai-rag-overview.png
+    caption: Normal LLM use above, a RAG system below (Hasan, DeepLearning.AI RAG course, Module 1)
+    bullets:
+    - '**Solves:** private, recent, hard-to-access facts.'
+    - '**No retraining:** swap the index and the answers change.'
+    - '**Costs:** latency, index upkeep, a new failure surface.'
+    takeaway: RAG gives the model facts at inference time, in exchange for latency, an index to maintain
+      and a new way to fail.
+    source: notes/02-why-rag-and-the-augmented-prompt.md
+    notes: The top row is normal LLM use. Below it, a retriever fetches relevant documents and puts them
+      into the prompt. That solves the knowledge gap for private, recent and hard-to-access facts, with
+      no retraining. Lewis and colleagues swapped a 2016 Wikipedia index for a 2018 one and got world
+      leaders right 68% of the time, with no change to the model. The costs are latency, an index to keep
+      in sync, and a new way to fail.
+  - layout: code
+    title: The augmentation step is an f-string
+    recall: What is the smallest possible RAG?
+    lang: python
+    code: "from ragkit import DOC_BY_ID, Retriever\n\nq = \"how long do I have to get a refund\"\nhits\
+      \ = Retriever().hybrid(q, k=3)\ndocs = \"\\n\".join(\n    f\"[DOC {i}] {DOC_BY_ID[d].full}\"\n \
+      \   for i, d in enumerate(hits, 1))\nprompt = f\"\"\"Answer only from the documents.\nCite as [DOC\
+      \ n]. Say if the answer is absent.\n\n{docs}\n\nQuestion: {q}\"\"\""
+    bullets:
+    - '**Retrieve**, format, send: three steps.'
+    - Everything later improves **one** of them.
+    - '**Garbage in:** a stale page gets quoted accurately.'
+    takeaway: A working RAG is a fetch plus an f-string, and every technique after this improves the fetch
+      or the template.
+    source: notes/02-why-rag-and-the-augmented-prompt.md
+    notes: 'This is the smallest possible RAG: fetch text, format it into a template, send it. Everything
+      else in this course makes one of these steps better. Notice how the numbered documents and the instruction
+      appear in the prompt. Later checks depend on them. If the 2024 archive page comes back from retrieve,
+      the model will faithfully read it out.'
+  - layout: image
+    title: Long context can beat RAG, at a price
+    recall: How does Self-Route decide when to use the full context?
+    image: ../sources/images/li-self-route-fig1.png
+    caption: Long context against RAG on three models (Li et al., 2024, arXiv:2407.16833, Fig. 1)
+    bullets:
+    - '**Self-Route:** RAG first, full context on "unanswerable".'
+    - '**38–61%** of the tokens, in that study.'
+    - A corpus bigger than the window still **needs retrieval**.
+    takeaway: Long context can win on quality with frontier models, but retrieval stays cheaper and is
+      the only option for large corpora.
+    source: notes/02-why-rag-and-the-augmented-prompt.md
+    notes: Why not put everything in the prompt? Li and colleagues found long context beat top-5 RAG on
+      quality with frontier models, and their Self-Route answers with RAG first and falls back to the
+      full context only when RAG says it can't answer. That recovered the quality at 38 to 61% of the
+      tokens. Yu and colleagues saw quality peak and then fall as retrieved context grew. When the corpus
+      doesn't fit the window, retrieval is the only option anyway.
+  - layout: image
+    title: Three generations of the same pipeline
+    recall: Name Gao's three RAG paradigms.
+    image: ../sources/images/gao-rag-survey-fig3.png
+    caption: Naive, advanced and modular RAG (Gao et al., 2024, arXiv:2312.10997, Fig. 3)
+    bullets:
+    - '**Naive:** index, retrieve, read.'
+    - '**Advanced:** adds pre- and post-retrieval.'
+    - '**Modular:** swappable stages, composed.'
+    takeaway: Naive, advanced and modular name how much machinery surrounds retrieval, so start naive
+      and add what the eval justifies.
+    source: notes/01-rag-pipeline.md
+    notes: 'Gao''s survey gives us the vocabulary. Naive RAG is index, retrieve, read. Advanced RAG adds
+      stages before and after retrieval. Modular RAG makes the stages swappable and composes them into
+      patterns. You don''t need to start at the right-hand side: most teams should begin naive, measure,
+      and add stages where the eval shows a problem.'
+  - layout: flow
+    title: Query-time stages run cheapest first
+    recall: Why rerank against the original question after expansion?
+    steps:
+    - label: Filter
+      sub: hard constraints
+    - label: Search
+      sub: keyword and dense
+    - label: Rerank
+      sub: against the original question
+      accent: D4621A
+    - label: Compress
+      sub: dedupe, trim
+    - label: Format
+      sub: into the prompt
+    bullets:
+    - '**Cheap stages first:** expensive ones see fewer items.'
+    - '**Metadata filter on `updated`** is the first fix for the stale page.'
+    takeaway: Order stages so each narrows the set for the next, and always rerank against what the user
+      actually asked.
+    source: notes/01-rag-pipeline.md
+    notes: Each stage narrows the set, so the cheap ones go first and the expensive ones see fewer items.
+      Filters come before search because a hard constraint is cheap and exact. Reranking comes after because
+      it scores every pair. If you expand the query, rerank against the original question, since expansion
+      is only a recall device and a rewrite could drift.
+  - layout: image
+    title: Ingestion quietly decides what can ever be found
+    recall: Why does ingestion set the ceiling?
+    image: ../sources/images/aws-bedrock-kb-parser-tiers.png
+    caption: Three parser tiers (AWS Bedrock Knowledge Bases, console screenshot)
+    bullets:
+    - '**Missing text** can''t be recovered by any later stage.'
+    - '**Check parser output** before tuning retrieval.'
+    - '**Keep writes idempotent:** content-derived ids.'
+    takeaway: Inspect what the parser produced first, because no retriever or reranker can recover text
+      that ingestion lost.
+    source: notes/01-rag-pipeline.md
+    notes: 'Retrieval can return only what parsing extracted. A text-only parser over a PDF-heavy corpus
+      turns charts and tables into nothing or into garble, and then the retrieval layer looks broken:
+      low recall and irrelevant chunks. These three tiers are from the Bedrock console, but the choice
+      exists everywhere. So check what the parser produced before you tune k, rerankers or chunk size.'
+  - layout: cards
+    title: When a single retrieval pass isn't the answer
+    recall: What is the difference between Self-RAG and FLARE?
+    cards:
+    - title: Text-to-SQL
+      body: Embeddings can't count, sum or compare. Aggregates are a routing decision to a query.
+    - title: Agentic RAG
+      body: Worth it when questions decompose or need sources compared. On narrow ones a single pass ties
+        it, faster.
+      accent: D4621A
+    - title: Self-RAG and FLARE
+      body: Both decide when to retrieve. Self-RAG is fine-tuned with reflection tokens; FLARE retrieves
+        on low-confidence drafts.
+    takeaway: Route aggregates to SQL, add agent loops only for questions that decompose, and treat retrieval
+      timing as a design choice.
+    source: notes/01-rag-pipeline.md
+    notes: 'Three common extensions, each answering a different gap. Similarity search can''t count or
+      sum, so aggregates go to SQL. Agentic RAG helps when questions decompose, and costs latency on narrow
+      ones. And Self-RAG and FLARE both decide when to retrieve: one is trained with reflection tokens,
+      while the other just watches its own confidence on a draft.'
+- title: Finding the right passage
+  summary: Search, stores, chunking and reranking.
+  notes: 'This part is the heart of the pillar: how to find the right passage, how to store vectors, how
+    to cut up documents, and how to put the best chunks on top.'
+  slides:
+  - layout: statement
+    title: Why did search like the wrong page?
+    kicker: What breaks
+    statement: Keyword search finds the error code. Dense search finds the paraphrase. A filter is what
+      removes the 2024 page.
+    attribution: Three tools with different blind spots, and you usually need all of them.
+    source: notes/03-keyword-semantic-and-hybrid-search.md
+    notes: The archive page shares almost every word with the current one, so of course search finds it.
+      To reason about that, we need to know what each retrieval method can see. Keyword search sees exact
+      terms, dense search sees meaning, and filters see metadata. Each one has a blind spot, and those
+      blind spots hardly overlap.
+  - layout: table
+    title: Tallybook's scoreboard shows the blind spots
+    recall: Which query kind does BM25 miss, and which does dense miss?
+    lead: 'Recall@3 by query kind over 20 labelled queries. Run it: uv run --with numpy python ragkit.py'
+    header:
+    - Retriever
+    - Code
+    - Keyword
+    - Paraphrase
+    - All
+    - MRR
+    widths:
+    - 3
+    - 2
+    - 2
+    - 2
+    - 2
+    - 2
+    highlight:
+    - 2
+    rows:
+    - - BM25
+      - '1.0'
+      - '1.0'
+      - '0.2'
+      - '0.60'
+      - '0.56'
+    - - Dense
+      - '0.6'
+      - '1.0'
+      - '1.0'
+      - '0.90'
+      - '0.88'
+    - - Hybrid
+      - '1.0'
+      - '1.0'
+      - '0.9'
+      - '0.95'
+      - '0.74'
+    takeaway: BM25 misses paraphrases and dense misses exact codes, so hybrid raises recall even if it
+      doesn't improve every metric.
+    source: notes/03-keyword-semantic-and-hybrid-search.md
+    notes: 'These are real results from the practice kit: 18 pages, 20 labelled queries, recall at 3.
+      BM25 gets all the codes and keywords, and only 0.2 of paraphrases. The small dense embedder does
+      the reverse on codes. Hybrid repairs both. Yet look at MRR on the last column: dense ranks better
+      than hybrid here, and with 20 queries that gap isn''t proven. You can run this yourself with ragkit.py.'
+  - layout: code
+    title: Fuse ranks, because scores don't share a scale
+    recall: What does the k in RRF do?
+    lang: python
+    code: "def rrf(rankings, k=60):\n    scores = {}\n    for ranking in rankings:\n        for rank,\
+      \ doc in enumerate(ranking, 1):\n            scores[doc] = (scores.get(doc, 0)\n               \
+      \            + 1 / (k + rank))\n    return sorted(scores, key=scores.get,\n                  reverse=True)\n\
+      \nprint(rrf([[\"a\", \"b\", \"c\"], [\"c\", \"b\", \"d\"]]))\n# ['c', 'b', 'a', 'd']"
+    bullets:
+    - '**Needs no calibration** between retrievers.'
+    - '**k = 60:** first is only about 1.2 × tenth.'
+    - '**Discards** score magnitude.'
+    takeaway: RRF combines retrievers using ranks alone, so it needs no calibration and rewards documents
+      both lists agree on.
+    source: notes/03-keyword-semantic-and-hybrid-search.md
+    notes: BM25 scores are unbounded and cosine lives between minus one and one, so adding them lets the
+      larger range swamp the other. RRF ignores the scores and uses only ranks. Each list gives a document
+      one over k plus rank. At k of 60, first place is worth only about 1.2 times tenth place, so agreement
+      across lists matters more than one list's opinion. The price is that you discard score magnitude.
+  - layout: cards
+    title: Measure recall first, then the ranking
+    recall: 'MRR, MAP or nDCG: when do you use each?'
+    cards:
+    - title: Recall@k first
+      body: A document not retrieved can't be used. Low recall caps the system.
+      accent: D4621A
+    - title: MRR
+      body: When one good document is enough. Rewards the first hit's rank.
+    - title: MAP
+      body: When you want all relevant documents high, with binary labels.
+    - title: nDCG
+      body: When your labels are graded.
+    takeaway: Track recall first because it caps everything downstream, then pick MRR, MAP or nDCG according
+      to your task and labels.
+    source: notes/03-keyword-semantic-and-hybrid-search.md
+    notes: 'A document that was not retrieved can''t be used, so low recall caps the whole system. Which
+      ranking metric comes next depends on the task. And watch out for one finding: Salemi and Zamani
+      saw human relevance labels predict RAG quality only weakly, with tau around 0.18 for provenance
+      MRR on NQ, against 0.50 for eRAG, which scores each document by what the system''s LLM does with
+      it.'
+  - layout: flow
+    title: HNSW trades a little recall for logarithmic search
+    recall: What do M, efConstruction and ef control?
+    steps:
+    - label: Sparse top layer
+      sub: long jumps
+    - label: Greedy walk
+      sub: move closer to the query
+    - label: Drop a level
+      sub: denser graph
+    - label: Full bottom layer
+      sub: beam search of width ef
+      accent: D4621A
+    bullets:
+    - '**M:** links per node. **efConstruction:** beam while building. **ef:** beam at query time.'
+    - Higher values raise recall, at a cost in memory, build time or latency.
+    takeaway: HNSW walks stacked graphs to get roughly logarithmic search, giving up exact results for
+      tunable, measurable recall.
+    source: notes/04-vector-databases-and-ann.md
+    notes: 'Exact KNN compares the query with each vector, which is linear in the corpus: at a billion
+      vectors, that''s a billion distances per query. HNSW builds stacked proximity graphs. Search starts
+      in a sparse top layer and walks greedily closer at each level down to the full one. The cost is
+      roughly logarithmic, and what you give up is the guarantee of the true top k.'
+  - layout: compare
+    title: What a database adds over a library
+    recall: What goes wrong with post-filtering under a selective filter?
+    lead: IVF probes a few clusters, PQ shrinks memory, LSH builds fast. FAISS commonly combines IVF and
+      PQ.
+    emphasis: right
+    left:
+      title: Library (FAISS)
+      bullets:
+      - Fast index in your process
+      - You own persistence and updates
+      - Compare on recall, QPS, build time, size
+      tag: An index
+    right:
+      title: Vector database
+      bullets:
+      - Create, update, delete, backups
+      - '**Metadata filters:** pre-filter keeps k'
+      - Often keyword, hybrid and rerank too
+      tag: A system
+    takeaway: Choose a database when you need updates, filters and persistence, and check whether its
+      filters run before the search.
+    source: notes/04-vector-databases-and-ann.md
+    notes: 'FAISS is an index in a library. A vector database adds what an application needs around it:
+      updates, filters, persistence and usually keyword and hybrid search. The filter order matters. Post-filtering
+      can return fewer than k results when the filter is selective. Pre-filtering keeps k, but it needs
+      support in the index. For Tallybook, audience filtering must never leave you with an empty answer.'
+  - layout: image
+    title: Chunking decides what a vector can mean
+    recall: What goes wrong at each extreme of chunk size?
+    image: ../sources/images/hasan-dlai-rag-chunk-overlap.png
+    caption: Fixed-size chunks with 10% overlap (Hasan, DeepLearning.AI RAG course, Module 3)
+    bullets:
+    - '**Too large:** the vector drifts to the mean.'
+    - '**Too small:** boundaries cut the meaning.'
+    - '**Overlap:** 10–20% is a convention, so test it.'
+    takeaway: Chunk size trades meaning against precision, and the common overlap numbers are conventions
+      to test on your own corpus.
+    source: notes/05-chunking-query-parsing-and-reranking.md
+    notes: 'Why chunk at all? A whole document''s vector averages its meaning, retrieval returns too much
+      text, and embedders silently truncate past their limit. If chunks are too large, the vector drifts
+      to the mean of the space. If too small, you store more and a boundary can cut the meaning in two.
+      Overlap softens the boundary. Start at 10 to 20%, and test it, because it is a convention: book
+      examples range from 1 to 20% and none measures it.'
+  - layout: table
+    title: Clever chunking has to earn its cost
+    recall: Where did semantic chunking's big win come from?
+    lead: Results from each paper's own setup, so don't compare across rows.
+    header:
+    - Comparison
+    - Dataset
+    - Result
+    - Source
+    widths:
+    - 4
+    - 2
+    - 3
+    - 2
+    rows:
+    - - Fixed vs semantic breakpoint
+      - HotpotQA F1@5
+      - 90.59 vs 87.37
+      - Qu et al.
+    - - Element-based vs baseline
+      - FinanceBench
+      - 53.2% vs 48.2%, half the chunks
+      - Jimeno Yepes et al.
+    takeaway: Fixed-size chunking is a strong baseline, while structure-aware chunking pays on table-heavy
+      documents, so measure before you switch.
+    source: notes/05-chunking-query-parsing-and-reranking.md
+    notes: 'Here is the evidence. Qu and colleagues found fixed-size chunking beat breakpoint semantic
+      chunking on HotpotQA, 90.59 against 87.37, and semantic chunking''s big win came only on synthetic
+      stitched documents. Element-based chunking does pay on table-heavy documents: 53.2% against 48.2%
+      on FinanceBench, with about half the chunks. And contextual retrieval adds cost only at index time.'
+  - layout: image
+    title: HyDE and hypothetical questions bridge the same gap
+    recall: 'Which adds query latency: HyDE or hypothetical questions?'
+    image: ../sources/images/building-ai-agents-llms-rag-kgs-fig6-4.png
+    caption: Hypothetical questions against HyDE (Raieli & Iuculano, 2025, Fig. 6-4)
+    bullets:
+    - '**HyDE:** fake answer, query time.'
+    - '**Hypothetical questions:** index time.'
+    - '**Contextual retrieval:** LLM-written context per chunk, also at index time.'
+    takeaway: Generated text can bridge queries and documents, and doing it at index time avoids adding
+      latency to each request.
+    source: notes/05-chunking-query-parsing-and-reranking.md
+    notes: 'Queries and documents don''t look alike. Both techniques fix that with a generated text, at
+      different times. HyDE writes a fake answer at query time, and searches with it. Hypothetical questions
+      are generated at index time and matched against the user''s question, so they add no query latency.
+      Multi-query and RAG-Fusion attack the same gap with several phrasings. Contextual retrieval is the
+      other index-time option: an LLM writes 50 to 100 tokens of context per chunk, before embedding and
+      BM25. Treat all of these as experiments.'
+  - layout: flow
+    title: Over-retrieve, rerank, return few
+    recall: Why rerank if recall is already fine?
+    steps:
+    - label: Hybrid search
+      sub: over-retrieve 20–50
+    - label: Cross-encoder
+      sub: score each pair
+      accent: D4621A
+    - label: Keep 3–10
+      sub: fewer, better chunks
+    bullets:
+    - '**Bi-encoder:** one vector per text, precomputed. **ColBERT:** per-token vectors, heavy storage.'
+    - '**Longer lists** can lower answer quality even with gold present.'
+    takeaway: Over-retrieve cheaply, rerank with a cross-encoder, and pass few chunks, because a longer
+      list can hurt the answer itself.
+    source: notes/05-chunking-query-parsing-and-reranking.md
+    notes: 'A bi-encoder embeds each text alone so it can precompute. A cross-encoder reads query and
+      document together: it''s best and slowest, so it only reranks. ColBERT keeps per-token vectors and
+      gets close to cross-encoder quality, at a heavy storage cost. Why rerank if recall is fine? Zhao
+      and colleagues found answer quality falls as the list grows, even with the gold passage present.'
+  - layout: bullets
+    title: 'Monday: find out which retriever is failing'
+    recall: Why split an eval by query kind?
+    bullets:
+    - '**Label 20 real queries** with the documents that answer them, and split by kind.'
+    - '**Score BM25, dense and hybrid** on recall@k before anything else.'
+    - '**Add the filter:** exclude archived pages with metadata, not ranking.'
+    - '**Check parser output** and your embedder''s token limit.'
+    - '**Try one change at a time:** chunking, reranking, query rewriting.'
+    takeaway: Label queries, split them by kind, score each retriever, and change one thing at a time
+      so you know what helped.
+    source: notes/05-chunking-query-parsing-and-reranking.md
+    notes: Here is what to do with this part next week. None of these needs a new system. Get labels first,
+      since you can't improve what you can't score. A small handwritten query set beats none, and splitting
+      it by query kind shows you the blind spots.
+- title: From passage to production
+  summary: Generation, evaluation, tracing, cost and security.
+  notes: Now the passage is in the prompt. We look at what the model does with it, and then at what it
+    takes to run and improve the system.
+  slides:
+  - layout: statement
+    title: The right page arrived. The answer can still be wrong.
+    kicker: What breaks next
+    statement: Retrieval sets the ceiling. Generation decides how close you get, and only production data
+      tells you where you are.
+    attribution: A citation records what the model saw, not what it used.
+    source: notes/06-generation-for-rag.md
+    notes: Now suppose retrieval worked, and both pages reached the prompt. What does the model do with
+      14 days and 30 days? This part covers what happens after retrieval, and then what it takes to run
+      the system. Two findings frame it. Models can ignore good context, and high-scoring passages without
+      the answer are the most damaging ones.
+  - layout: image
+    title: Temperature reshapes the distribution; top-p trims it
+    recall: How does top-p differ from temperature?
+    image: ../sources/images/hasan-dlai-rag-temperature.png
+    caption: The same distribution at five temperatures (Hasan, DeepLearning.AI RAG course, Module 4)
+    bullets:
+    - '**Temperature** reshapes the distribution.'
+    - '**Top-p** keeps the smallest set reaching p.'
+    - '**Factual RAG:** low both, and a grounded prompt.'
+    takeaway: Low temperature and low top-p reduce variety for factual answers, while truth still has
+      to come from retrieved documents.
+    source: notes/06-generation-for-rag.md
+    notes: 'For factual RAG we want a low temperature and a low top-p. Temperature changes the shape of
+      the next-token distribution, and top-p keeps the smallest set of tokens whose cumulative probability
+      reaches p, so it adapts to the model''s confidence. These settings reduce variety. They don''t make
+      the answer true, which is why the prompt has to say: only from the documents, cite, and say if the
+      answer is absent.'
+  - layout: code
+    title: The grounded prompt is what later checks depend on
+    recall: Why include a refusal instruction and dates?
+    lang: python
+    code: "SYSTEM = (\"Answer only from the documents. \"\n          \"Cite [DOC n] after each claim.\
+      \ \"\n          \"If documents conflict, prefer the \"\n          \"newest and say so. If the answer\
+      \ is \"\n          \"absent, say so.\")\n\ndef render(docs):\n    return \"\\n\".join(\n       \
+      \ f\"[DOC {i}] ({d.updated}) {d.full}\"\n        for i, d in enumerate(docs, 1))"
+    bullets:
+    - '**Only from the documents**, plus a way out.'
+    - '**Numbered citations** make claims checkable.'
+    - '**Dates** let the model see which page is stale.'
+    takeaway: A grounded prompt limits, cites and allows refusal, which gives you something to check even
+      though it guarantees nothing.
+    source: notes/06-generation-for-rag.md
+    notes: 'This is the system message over Tallybook. Each part has a job. The instruction limits the
+      answer to the documents. The citation format lets you check each claim afterwards. The refusal gives
+      the model a way out. Date the documents and you give the model a chance to prefer the current page.
+      Don''t expect too much from the wording, though: Zhao and colleagues saw nine prompt variants make
+      no salient difference to pseudo-helpfulness.'
+  - layout: cards
+    title: Why a model can still get it wrong
+    recall: Which retrieved passages hurt most?
+    cards:
+    - title: Priors beat context
+      body: The further a context departs from the model's prior, the more it trusts itself (Wu et al.).
+    - title: Pseudo-helpfulness
+      body: It answers without the gold passage, from loose context or invention (Zhao et al.).
+    - title: Distractors
+      body: 'One high-scoring passage without the answer: up to a 25% drop (Cuconasu et al.).'
+      accent: D4621A
+    takeaway: A model can overrule good context or answer without any, and the worst passage scores highly
+      while lacking the answer.
+    source: notes/06-generation-for-rag.md
+    notes: Three measured failure modes. Wu and colleagues showed that the further a context departs from
+      the model's prior, the more it trusts itself. Zhao and colleagues' pseudo-helpfulness is the model
+      answering when the gold passage is absent. And Cuconasu and colleagues saw up to a 25% drop from
+      a single high-scoring distractor added to the gold passage. That last one is our archive page.
+  - layout: compare
+    title: RAG for knowledge, fine-tuning for behaviour
+    recall: On Balaguer et al.'s task, what were the three scores?
+    lead: 'GPT-4 on an agriculture task: 75% baseline, 81% fine-tuned, 86% with RAG on top (Balaguer et
+      al., 2024).'
+    emphasis: left
+    left:
+      title: RAG
+      bullets:
+      - Knowledge and freshness
+      - Update an index, not weights
+      - Adds latency and a new failure surface
+      tag: What it knows
+    right:
+      title: Fine-tuning
+      bullets:
+      - Behaviour, format and tone
+      - Needs data and retraining
+      - Goes stale as facts change
+      tag: How it acts
+    takeaway: Use retrieval for facts that change and fine-tuning for behaviour, and expect the two to
+      add up rather than compete.
+    source: notes/06-generation-for-rag.md
+    notes: 'Balaguer and colleagues measured both on GPT-4, on an agriculture task: 75% at baseline, 81%
+      fine-tuned, and 86% with RAG on top. So it isn''t really a choice. Reach for retrieval when the
+      problem is facts or freshness, and for fine-tuning when it''s format or behaviour. RARE goes further
+      and trains with the retrieved documents in the prompt. Tallybook''s refund policy changes, so it
+      belongs in retrieval.'
+  - layout: table
+    title: Evaluate by scope and by evaluator
+    recall: Who calibrates code checks and LLM judges?
+    lead: Code runs on everything, judges cover the rest, humans calibrate both.
+    header:
+    - Scope
+    - Code
+    - LLM judge
+    - Human
+    widths:
+    - 2
+    - 3
+    - 3
+    - 3
+    rows:
+    - - Component
+      - Recall@k, precision, router accuracy
+      - Context relevance, RAGAS faithfulness
+      - Labelled relevance judgements
+    - - System
+      - Latency, cost, error rate
+      - Response and citation quality
+      - Thumbs, annotation, A/B tests
+    takeaway: Cross scope with evaluator so that cheap code checks run everywhere, judges cover meaning
+      and humans calibrate both.
+    source: notes/07-rag-in-production.md
+    notes: 'Here is a simple way to organise evaluation. One axis asks what you are testing: a component
+      or the whole system. The other asks who scores it. Code checks are cheap and run on everything.
+      LLM judges cover what code can''t. Humans calibrate both, and ARES formalises that with about 150
+      human labels. Most teams start with the top left and add outward.'
+  - layout: flow
+    title: Traces feed a flywheel
+    recall: What does a RAG trace need to show?
+    steps:
+    - label: Traces
+      sub: every span, with scores
+    - label: Failures
+      sub: found in traffic
+      accent: D4621A
+    - label: Datasets
+      sub: labelled from failures
+    - label: Experiments
+      sub: test a fix
+    - label: Deploy
+      sub: and trace again
+    bullets:
+    - '**Log both:** the original query and the rewrite, with chunk scores.'
+    - '**Watch** hallucination rate, recall at k, p95 latency, cost per query.'
+    takeaway: Trace every span so that real failures become datasets, and let experiments on those datasets
+      decide which fix ships.
+    source: notes/07-rag-in-production.md
+    notes: A trace needs the original and rewritten query, retrieved chunks with scores, reranker output,
+      the final prompt, the response, and tokens and latency per span. For our refund answer, the trace
+      would show the archive page in the prompt within a minute. Then the failure goes into a dataset,
+      you run an experiment on the fix, and the deployed fix makes new traces.
+  - layout: table
+    title: Cost and latency live in a few places
+    recall: What do you cut first to lower cost?
+    lead: Component latencies are the course's estimates; measure your own.
+    header:
+    - Lever
+    - What it buys
+    - What it costs
+    widths:
+    - 3
+    - 4
+    - 4
+    rows:
+    - - Fewer prompt tokens, lower top k
+      - The largest cost saving
+      - Risk to recall
+    - - int8 vectors
+      - 4× less memory
+      - Some precision
+    - - 1-bit vectors
+      - 32× less memory
+      - Needs rescoring
+    - - Reranker
+      - Better order, ~50 ms
+      - Compute
+    - - Query rewriter
+      - Better recall, ~300 ms
+      - One LLM call
+    - - Router
+      - Right source, ~200 ms
+      - One more stage
+    takeaway: Cut tokens before changing models, since most of the money and latency is in the LLM, and
+      keep only stages that pay.
+    source: notes/07-rag-in-production.md
+    notes: 'Most of the money goes on LLM tokens, so cut prompt size and top k first. Vector databases
+      aren''t negligible, though: Huyen reports them at a fifth to a half of model API spend at some companies.
+      Latency is mostly the transformer. The course''s estimates for the optional stages are below, so
+      keep only those that move a metric. These are estimates, so measure your own.'
+  - layout: image
+    title: Prompt instructions are not access control
+    recall: How do you stop one customer seeing another's documents?
+    image: ../sources/images/context-engineering-multi-agent-systems-fig7-1.png
+    caption: A separate ingestion pipeline and sanitised retrieval (Rothman, 2025, Fig. 7-1)
+    bullets:
+    - '**Filter by user** at retrieval time.'
+    - '**Poisoning:** separate ingestion, sanitise chunks.'
+    - '**Regexes** are only a first filter.'
+    takeaway: Enforce permissions at retrieval and treat the corpus as an attack surface, because instructions
+      in prompts protect nothing.
+    source: notes/07-rag-in-production.md
+    notes: 'Two security rules. First, filter by user at retrieval, and separate tenants into their own
+      collections or indexes, because anything that reaches the prompt can reach the answer. Second, the
+      corpus is an attack surface: in PoisonedRAG, crafted documents get retrieved for a target question
+      and steer the answer. This figure separates ingestion from the application and sanitises chunks.
+      Regexes alone miss paraphrases, so add a model-based classifier.'
+- title: Case studies
+  summary: PRINCE, store choice and a semantic cache.
+  notes: A published production stack and two of our own project chapters, each applying the earlier stages
+    under real constraints.
+  slides:
+  - layout: statement
+    title: What does this look like at real scale?
+    kicker: The evidence
+    statement: 'A published stack and a project write-up: the same stages as before, with real constraints
+      and removed features.'
+    attribution: What a team took out is often the most useful thing it can tell you.
+    source: notes/08-agentic-rag-prince.md
+    notes: 'Time for case studies. Bayer''s PRINCE answers questions over clinical documents and structured
+      data, and its numbers are specific enough to learn from. After that, our own support-agent project:
+      which store to use and how to skip the pipeline altogether with a cache. Each one shows the earlier
+      techniques with real constraints.'
+  - layout: flow
+    title: PRINCE's query-time funnel
+    recall: Why the max across expansions, and not the sum?
+    steps:
+    - label: Parse
+      sub: keywords, filter, 5 expansions
+    - label: Hybrid × 5
+      sub: 0.7 kNN, 0.3 keyword
+    - label: Max per chunk
+      sub: k ≈ 20
+    - label: Rerank
+      sub: original question, k = 7
+      accent: D4621A
+    - label: Answer
+      sub: with citations
+    bullets:
+    - '**Pre-filter** inside the vector query: results stay valid.'
+    - '**Max, not sum:** paraphrases aren''t independent votes.'
+    takeaway: PRINCE narrows from millions of vectors to seven chunks by filtering first, taking max scores
+      and reranking on the original.
+    source: notes/08-agentic-rag-prince.md
+    notes: Here is the funnel. It extracts keywords, a metadata filter and 5 expansions, runs 5 pre-filtered
+      hybrid searches at 0.7 kNN and 0.3 keyword, takes the max score per chunk down to about 20, reranks
+      to 7 with bge-reranker-large, and answers with citations. Pre-filtering shrinks millions of vectors
+      to tens or hundreds first. It takes the max because paraphrases aren't independent votes. And the
+      rerank target is the original question.
+  - layout: image
+    title: Counting is a Text-to-SQL job
+    recall: Why did PRINCE remove the LLM SQL reviewer?
+    image: ../sources/images/huyen-ai-engineering-fig6-7.png
+    caption: 'Tabular RAG: from question to SQL to answer (Huyen, AI Engineering, 2025, Fig. 6-7)'
+    bullets:
+    - '**Dynamic few-shot:** nearest question and SQL pairs.'
+    - '**Removed:** an LLM reviewer. Mechanical checks won.'
+    - '**SELECT-only** isn''t enough: add a read-only role and timeout.'
+    takeaway: Send counting questions to SQL with retrieved examples and mechanical checks, since an LLM
+      reviewer cost more than it caught.
+    source: notes/08-agentic-rag-prince.md
+    notes: 'Similarity search finds passages. It can''t filter, count or compare, so PRINCE runs a second
+      pipeline inside the same agent. Dynamic few-shot stores question and SQL pairs in their own collection,
+      retrieves the nearest ones and adds a new pair whenever a pattern fails. And here''s what they removed:
+      an LLM SQL reviewer that flagged valid queries as broken and cost more than it caught.'
+  - layout: bullets
+    title: When agentic RAG pays, and when to avoid it
+    recall: When should you avoid agentic RAG?
+    bullets:
+    - '**Clarify first:** it fixes scope, and fails fast when nothing can be searched.'
+    - '**Tools overlap as they multiply:** domain sub-agents restore accuracy.'
+    - '**Repair metadata** with NER, sending low confidence to a human queue.'
+    - '**Evaluate daily** on live traffic, and on datasets for each significant change.'
+    - '**Avoid it** when one shot works, latency is critical, or data quality is poor.'
+    takeaway: Agentic RAG pays for broad questions over messy data, and when one pass works, its extra
+      machinery just adds latency.
+    source: notes/08-agentic-rag-prince.md
+    notes: 'As tools multiply they overlap and selection accuracy falls. PRINCE added Think and Plan,
+      and then domain sub-agents with their own tools and prompts. Clarifying intent fixes tools and scope
+      before retrieval. NER repairs metadata, with a human quarantine queue for low confidence. Yet the
+      honest conclusion is on the last bullet: avoid all this when one-shot retrieval works.'
+  - layout: table
+    title: Three questions pick a vector store
+    recall: What breaks when you change embedders?
+    lead: Whichever you choose, changing embedder means re-embedding the corpus and rebuilding the index.
+    header:
+    - If you have
+    - Then consider
+    - Watch for
+    widths:
+    - 4
+    - 3
+    - 4
+    rows:
+    - - About 100k vectors, modest load
+      - Exact search
+      - Measure it on your machine
+    - - Data already in Postgres
+      - pgvector
+      - 'Index limit: 2,000 dims for vector'
+    - - BM25, dense and metadata in one query, at scale
+      - OpenSearch, Elasticsearch
+      - Operations
+    - - A live corpus
+      - HNSW
+      - Annoy needs a full rebuild
+    - - No wish to run anything
+      - A managed service
+      - Less visibility and chunk control
+    takeaway: Vector count, dimensions and hybrid needs pick the store, and an embedder change means re-embedding
+      wherever you are.
+    source: notes/09-vector-database-comparison.md
+    notes: How many vectors, how many dimensions, and does a single query need keyword and dense together?
+      On a laptop, exact search is fine around 100k vectors at a few hundred dimensions, with perfect
+      recall and no parameters. pgvector's HNSW indexes vector columns only up to 2,000 dimensions, which
+      matters with today's larger embedders. And changing embedder breaks every vector, so plan on a full
+      re-embed.
+  - layout: code
+    title: A semantic cache in a matrix multiply
+    recall: What does a semantic cache risk that an exact cache doesn't?
+    lang: python
+    code: "import numpy as np\n\ndef lookup(query_vec, rows, vecs, t=0.9):\n    # vecs: unit vectors,\
+      \ one row per question\n    scores = vecs @ query_vec\n    best = int(np.argmax(scores))\n    if\
+      \ scores[best] >= t:\n        return rows[best][\"answer\"]\n    return None  # miss: run the full\
+      \ pipeline"
+    bullets:
+    - '**Hit:** skips retrieval and generation.'
+    - '**No ANN** needed at a few hundred rows.'
+    - '**Row:** vector, answer, sources, date, scope.'
+    takeaway: A cache lookup is a matrix multiply that skips the whole pipeline, and a wrong match goes
+      to the user unchecked.
+    source: notes/10-semantic-cache.md
+    notes: A cache skips the whole retrieval and generation path on a hit. In our project that saved about
+      3 to 6 seconds and two or more LLM calls, for the price of one embedding and a matrix multiply.
+      At a few hundred rows you don't need an ANN index. Unlike an exact cache, it can match wrongly,
+      and nothing downstream will check it. So the threshold is the design decision.
+  - layout: compare
+    title: The threshold has no clean setting
+    recall: Why not always use 0.95?
+    lead: Stress test with hand-written hard cases, so read it as a warning and not a hit rate.
+    emphasis: right
+    left:
+      title: Threshold too low
+      bullets:
+      - Catches paraphrases
+      - '**False hit:** a confident wrong answer'
+      - Nothing later checks it
+      tag: Wrong answers
+    right:
+      title: Threshold too high
+      bullets:
+      - 'At 0.95: zero false hits'
+      - Only **4 of 12** paraphrases kept
+      - Cheap, safe and little used
+      tag: A useless cache
+    takeaway: Sweep the threshold on hard near misses for your own embedder, and invalidate rows whenever
+      a source document changes.
+    source: notes/10-semantic-cache.md
+    notes: 'Near misses have the same shape and a different meaning: a refund on my annual plan against
+      my monthly plan. Our stress test had 12 hard paraphrases and 12 hard near misses. At 0.95 false
+      hits went to zero, and only 4 of 12 paraphrases survived. So sweep it on your own labelled set,
+      and choose on what each error costs. A threshold won''t transfer across embedders or languages.'
+- title: Deciding what to build
+  summary: Reading an ablation, and managed services against your own.
+  notes: Finally, how to decide. We read a real ablation, ask how much of it is noise, and then weigh
+    buying the pipeline against building it.
+  slides:
+  - layout: statement
+    title: Everyone has a favourite fix. Which one do we build?
+    kicker: The decision
+    statement: Change one thing at a time, score it on the same queries, and let the table choose.
+    attribution: Then ask how much of the table is noise.
+    source: notes/11-retrieval-improvements.md
+    notes: 'The team has a list: a newer model, multi-query, HyDE, a corrective loop, fine-tuning, or
+      simply buying the whole thing from a cloud provider. An ablation is how you stop arguing. Change
+      one thing at a time, score it on the same queries and let the table choose. And the catch is that
+      a small eval set can tell you only about big differences.'
+  - layout: table
+    title: What an ablation of five configs showed
+    recall: Why was CRAG judged marginal?
+    lead: 32 queries with gold URLs. The benchmark row comes from a ten-task smoke run.
+    header:
+    - Config
+    - MRR
+    - P@1
+    - Latency
+    widths:
+    - 5
+    - 2
+    - 2
+    - 2
+    highlight:
+    - 3
+    rows:
+    - - va_staging benchmark
+      - '0.625'
+      - '0.625'
+      - ~9.3 s
+    - - kb_adk + thinking
+      - '0.583'
+      - '0.531'
+      - 7.3 s
+    - - kb_lg + CRAG
+      - '0.547'
+      - '0.531'
+      - 7.7 s
+    - - kb_lg, no CRAG
+      - '0.542'
+      - '0.531'
+      - 4.4 s
+    - - kb_adk baseline
+      - '0.418'
+      - '0.219'
+      - 2.6 s
+    takeaway: Ablations expose costs and interactions, like a loop that buys almost nothing and a setting
+      that helps one agent only.
+    source: notes/11-retrieval-improvements.md
+    notes: 'This is our project''s real table: 44 tasks, 32 with gold URLs, so read small gaps with care.
+      Thinking gave the ADK agent plus 0.165 MRR, but hurt the LangGraph agent with CRAG, because it changed
+      citation style and broke the grader. CRAG itself gave plus 0.005 for plus 3.4 seconds, since the
+      confidence gate short-circuited most runs. Meanwhile an LLM planner lost to a regex by 0.031 and
+      added 4 seconds.'
+  - layout: code
+    title: Ask how much of the table is noise
+    recall: Why is a paired test tighter?
+    lang: python
+    code: "import numpy as np\n\ndef paired_bootstrap(a, b, rounds=10_000):\n    # per-query scores for\
+      \ two systems\n    d = np.array(a) - np.array(b)\n    rng = np.random.default_rng(0)\n    i = rng.integers(0,\
+      \ len(d),\n                     (rounds, len(d)))\n    means = d[i].mean(axis=1)\n    low, high\
+      \ = np.percentile(means, [2.5, 97.5])\n    return d.mean(), low, high"
+    bullets:
+    - '**Worst-case SE** at 32 queries: 0.088.'
+    - '**Paired:** per-query difficulty cancels.'
+    - '**Interval crosses zero?** Not proven yet.'
+    takeaway: Before you believe a gain on a small eval set, run a paired bootstrap on per-query differences
+      and read the interval.
+    source: notes/11-retrieval-improvements.md
+    notes: 'A bounded score has a standard deviation of at most 0.5, so the standard error of a mean over
+      32 queries is at most 0.088. So plus 0.03 isn''t real yet. But the same queries go through both
+      systems, so difficulty cancels. The paired bootstrap uses that: compute the per-query difference,
+      resample queries, read the interval. In Tallybook''s kit, dense beats hybrid by 0.133 MRR on 20
+      queries and the interval still crosses zero. That also sets the priority order for our shortlist:
+      cheap information first. A newer model and the kb_rag backend are flags, multi-query is a node,
+      HyDE depends on the backend, and DPO waits for 200 or more preference pairs.'
+  - layout: flow
+    title: What a managed backend takes off your hands
+    recall: What can't a managed RAG service do for you?
+    steps:
+    - label: Crawl
+      sub: service
+    - label: Chunk
+      sub: service, sizes configurable
+    - label: Hybrid search
+      sub: service
+    - label: Inject context
+      sub: yours
+    - label: Generate
+      sub: yours
+      accent: D4621A
+    bullets:
+    - '**Yours as well:** the eval, the scope, the text the LLM reads.'
+    - '**Wrong KB:** plausible scores and no error, so log the KB ID.'
+    takeaway: A managed backend takes the index off your hands, while the eval and the decision about
+      what goes in stay yours.
+    source: notes/12-managed-rag.md
+    notes: 'So do we buy it? This was our Bedrock setup. The crawl, chunking, vector database and hybrid
+      search are the service. Query transformation and generation are still ours. Crucially, the eval
+      isn''t in the flow: neither service knows whether your refund answer is right. And the service won''t
+      remove the 2024 page either. Dropping English duplicates and tiny pricing-table chunks was a decision
+      we had to make.'
+  - layout: table
+    title: Buy, buy, or build
+    recall: What differs in who owns generation?
+    lead: As observed in the project, 2026. Check current docs.
+    header:
+    - ''
+    - Bedrock KB
+    - Vertex AI Search
+    - Own (kb_rag)
+    widths:
+    - 3
+    - 3
+    - 3
+    - 3
+    rows:
+    - - Chunking
+      - Hierarchical, sizes configurable
+      - Managed, opaque
+      - Yours, 6 strategies
+    - - Hybrid search
+      - HYBRID on supported stores
+      - Internal
+      - Yours
+    - - Reranking
+      - Explicit, per query
+      - Internal to :answer
+      - Yours, 5 backends
+    - - Generation
+      - Your LLM
+      - Optional via :answer
+      - Your LLM
+    - - Sessions
+      - Caller owns
+      - Native resource
+      - Yours
+    - - Evaluation
+      - Yours
+      - Yours
+      - Yours
+    takeaway: Managed services differ in how much they hide, and the evaluation row reads the same across
+      every option.
+    source: notes/12-managed-rag.md
+    notes: 'Here are the three options our project ran. Bedrock leaves generation to you and shows you
+      scores. Vertex is more opaque, and its answer endpoint can own retrieval and generation. It maintains
+      sessions, too. And kb_rag is our own deterministic pipeline: retrieve once, rerank, generate. You
+      get everything, including all the work. These rows reflect what the project saw in 2026, so check
+      the current docs.'
+  - layout: code
+    title: One request, two retrieval modes
+    recall: Where does the score threshold get applied?
+    lang: python
+    code: "def config(rerank=False):\n    v = {\"numberOfResults\": 15 if rerank else 5,\n         \"\
+      overrideSearchType\": \"HYBRID\"}\n    if rerank:\n        v[\"rerankingConfiguration\"] = {\n \
+      \           \"type\": \"BEDROCK_RERANKING_MODEL\",\n            \"bedrockRerankingConfiguration\"\
+      : {\n                \"modelConfiguration\": {\n                    \"modelArn\": RERANK_ARN},\n\
+      \                \"numberOfRerankedResults\": 5}}\n    return {\"vectorSearchConfiguration\": v}"
+    bullets:
+    - '**Fast:** 5 results, cosine threshold 0.4.'
+    - '**Reranking:** 15 to 5, threshold 0.05.'
+    - '**Threshold:** client-side, not in the request.'
+    takeaway: Bedrock's two modes differ by one config object, and the score threshold you rely on is
+      your own client-side code.
+    source: notes/12-managed-rag.md
+    notes: 'The two Bedrock modes differ by one configuration object. Fast takes 5 results and no reranker,
+      for the agent tool. Reranking takes 15 candidates down to 5, for eval and complex queries. Note
+      that the score threshold isn''t in the request at all: it''s our client-side setting. And on an
+      unsupported store, a hybrid request uses semantic search instead, so check your vector store. The
+      chapter validates this with boto3''s Stubber, with no AWS account.'
+  - layout: table
+    title: Never compare scores across backends
+    recall: What doesn't a grounding score tell you?
+    lead: Compare systems on eval metrics, never on these numbers.
+    header:
+    - Backend
+    - Field
+    - Range
+    - Meaning
+    widths:
+    - 3
+    - 3
+    - 2
+    - 4
+    rows:
+    - - Bedrock fast
+      - score
+      - 0–1
+      - Cosine similarity
+    - - Bedrock reranker
+      - score
+      - 0.05–0.35 typical
+      - Reranker relevance
+    - - GCP Search
+      - relevance_score
+      - 0–1
+      - Internal, undocumented
+    - - GCP :answer
+      - grounding_score
+      - 0–1
+      - Citation support
+    takeaway: A score only means something within its own mode, so compare backends by running them on
+      the same eval set.
+    source: notes/12-managed-rag.md
+    notes: 'Four scores with four meanings. Cosine and reranker scores use different scales even within
+      Bedrock. Vertex''s relevance score has no documented meaning. And grounding is a different kind
+      of quantity: it says whether the answer is supported by its sources, not whether they were the right
+      ones. A well-grounded answer can still quote the stale refund page. So compare systems on MRR.'
+  - layout: compare
+    title: When to leave each option
+    recall: When would you leave Vertex's :answer endpoint?
+    emphasis: left
+    left:
+      title: Stay managed if
+      bullets:
+      - A small team, no wish to run an index
+      - Default chunking passes your eval
+      - Your cloud already decided
+      tag: Buy
+    right:
+      title: Build your own if
+      bullets:
+      - You must see or grade each stage
+      - '**You own every bug:** `\s+` broke heading detection'
+      - You can staff the upkeep
+      tag: Build
+    takeaway: Buy unless your eval shows you need control, and when you build, budget for owning each
+      line of the pipeline.
+    source: notes/12-managed-rag.md
+    notes: 'These are one team''s judgements, not measurements. Move from Bedrock to Google only if your
+      whole infrastructure moves. Leave the answer endpoint when you need correction loops or control
+      over synthesis, because you can''t intercept its retrieval step. pgvector is right for local dev
+      or a Postgres shop. And building your own means owning cleaning bugs: a single regex, slash-s-plus,
+      destroyed the line breaks the heading-aware chunker needs.'
+- title: Wrap-up
+  agenda: false
+  divider: false
+  slides:
+  - layout: cards
+    title: Rules of thumb
+    cards:
+    - title: Ingestion and recall set the ceiling
+      body: Check parser output and Recall@k before any tuning.
+      accent: D4621A
+    - title: Hybrid by default
+      body: BM25, dense and RRF, with filters for constraints.
+    - title: Over-retrieve, then rerank
+      body: 20–50 down to 3–10, against the original question.
+    - title: Ground and cite
+      body: Low temperature, only from the documents, a way to refuse.
+    - title: Trace from day one
+      body: Filter by user at retrieval. Prompts aren't access control.
+    - title: Prove it
+      body: One change at a time, a paired test, and never compare raw scores.
+    takeaway: Fix ingestion and recall first, default to hybrid plus reranking, and prove each change
+      on your own eval set.
+    source: notes/12-managed-rag.md
+    notes: 'Here''s the whole pillar on one slide. If you only remember these, you can find the fault
+      in most RAG systems. Start at the top, because the ceiling sits in ingestion and recall. And the
+      bottom row is what keeps you honest: measure on your own queries, with a test that accounts for
+      how few you have.'
+  - layout: bullets
+    title: Where next
+    bullets:
+    - '**Agentic foundations** (generative-ai/03): retrieval as a tool an agent calls.'
+    - '**Eval pillar** (generative-ai/08): the measurement discipline in depth.'
+    - '**Context engineering** (ai-engineering/02): retrieval as one context lever.'
+    - '**Graph engineering** (ai-engineering/05): knowledge graphs as a retrieval layer.'
+    - '**Practice:** `uv run --with numpy python ragkit.py` in practice/, then delete `kb-05`.'
+    source: notes/12-managed-rag.md
+    notes: Next, retrieval becomes a tool an agent chooses to call, in agentic foundations. The eval pillar
+      deepens the measurement ideas we've used. And the practice folder has the kit behind our Tallybook
+      numbers. Delete page kb-05, rerun it, and see what happens to the refund question. That's the bug
+      we started with.

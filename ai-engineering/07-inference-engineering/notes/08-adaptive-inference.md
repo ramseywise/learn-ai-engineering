@@ -37,11 +37,13 @@ sources:
   - https://arxiv.org/abs/2410.20672
   - https://arxiv.org/abs/2503.24377
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 8 — Adaptive Inference
 
 > Decode leaves the GPU's compute mostly idle while it waits on memory. Each technique here spends some of that idle compute, or cuts the bytes moved, to produce more tokens per second. Some keep the output distribution exactly; others trade a little quality.
+
+Stacked speedup tables make adaptive techniques look like free multipliers, and teams that turn them on from a blog post get a surprise: speculation that gains nothing on a small target or a saturated batch, or a 4-bit model that passes perplexity and fails the product's eval. What each technique does depends on how idle the compute is and on whether it keeps the output distribution, so this chapter sorts them on both.
 
 ---
 
@@ -267,3 +269,56 @@ Ch. 19 closes with an **RL-based runtime tuner** that adjusts batch size, precis
 - Use prompt lookup for RAG, code editing and other copy-heavy outputs.
 - Enable FP8 KV cache for long contexts, and re-test long-context tasks.
 - Treat dynamic precision, early exit and RL tuners as experiments with a kill switch.
+
+## Pitfalls
+
+- **Speculating on a small target.** Symptom: the Handbook's own demo, a Qwen1.5-1.8B target with a 0.5B draft on a T4, shows a gain it calls "not significant", because the draft isn't much cheaper. Fix: use a draft ≥ ~4× faster than the target, and plan on about 2× for a well-matched pair on a large target.
+- **Speculating on saturated batches.** Symptom: throughput falls after enabling it at high MFU, since the idle FLOPs are gone. Fix: measure MFU first, and benchmark at your real batch size. Long contexts are the exception, because KV reads keep them bandwidth-bound.
+- **Quoting a speedup without its condition.** Symptom: "3–4×" quoted from the Handbook, which assumes 90% acceptance and names no model or hardware. Fix: measure acceptance on your own domain, as it's higher for code and structured output.
+- **Treating quantization as exact.** Symptom: a format change ships on a perplexity check, and a product task regresses. Unlike exact speculation, quantization changes outputs. Fix: run the eval suite on every format change ([the Eval pillar](../../../generative-ai/08-eval/README.md)).
+- **Absmax with an outlier.** Symptom: most values collapse into a few levels, since one maximum sets the scale for the whole tensor. Fix: use a method built around outliers, such as GPTQ, AWQ, LLM.int8 or FP8 with per-tensor scales.
+- **Assuming FP4 is ready.** Symptom: a model that was fine in FP8 degrades on 4-bit floats. Fregly himself says both "prefer it" and "maturing". Fix: default to FP8, and validate FP4 per model against your evals.
+- **Quantizing KV without a long-context test.** Symptom: quality decays as sequences grow, since errors accumulate. Fix: keep a residual window at full precision (`residual_length`), and evaluate long-context tasks.
+- **An adaptive controller with no way back.** Symptom: an RL tuner or dynamic precision policy oscillating in production. Fix: bounded actions, hysteresis such as the 6.0/3.0 thresholds, and a kill switch to a known-good static configuration. Treat Table 19-2's numbers as illustrative.
+
+## Try it
+
+1. Apply absmax by hand: what does 0.1 map to in a tensor spanning [-3.0, 3.2]? Now add one outlier so the maximum is 32.
+
+   <details><summary>Answer</summary>
+
+   127 / 3.2 × 0.1 ≈ 3.97, which rounds to 4, the Handbook's answer. With a maximum of 32: 127 / 32 × 0.1 ≈ 0.40, which rounds to 0. One value erased the distinction between 0.1 and zero, which is why the serious methods all work around outliers.
+
+   </details>
+
+2. From the PyTorch stack table, what is the total gain, and what would you expect if you ran the steps at a large batch?
+
+   <details><summary>Answer</summary>
+
+   244.7 / 25.5 ≈ 9.6×, for Llama-7B on an A100-80GB at batch 1, with quality not measured. At large batch, launch overhead matters less, so compile helps less, and speculation may not help at all. The table doesn't transfer.
+
+   </details>
+
+3. You serve a large target at low batch and low MFU for a coding assistant, and also a saturated batch-summarization job. Which adaptive techniques would you try for each, in order?
+
+   <details><summary>Answer</summary>
+
+   Assistant: speculation first, since idle compute is available and acceptance is higher for code; it is also exact under the standard rule, so it doesn't change outputs. Then quantization with an eval. Summarization: skip speculation unless contexts are long; use FP8 weights and KV, evaluated, because reading fewer bytes still helps when compute is saturated.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why is speculative decoding cheap? | Verifying K tokens is one parallel pass, and decode is bandwidth-bound, so the verification FLOPs are nearly free. Fregly's "one by one" contradicts both the method and his own figure. |
+| What speedup do you promise? | About 2× for a well-matched pair on a large target, and measure it. The sources range from 3–4× at an assumed 90% acceptance to "not significant" on a small target on a T4. |
+| When does speculative decoding hurt? | When batches already saturate compute (high MFU), or when the draft isn't at least ~4× faster. It also needs the target's tokenizer and vocabulary. |
+| Speculation and quantization both speed things up. What's the difference for quality? | Speculative decoding with the standard rejection-sampling rule keeps the output distribution. Quantization changes outputs, so every format change needs an eval run, and perplexity alone isn't enough. |
+| FP8 or FP4 on Blackwell? | FP8 is the safe default, with 2× FP16's tensor-core math rate and half the bytes. The book gives FP4 an effective ~1.8× over FP8 with no model or batch size, so validate it per model. |
+| Read the PyTorch stack: 25.5 → 107.0 → 157.4 → 202.1 → 244.7 tokens/s. | At batch 1 on Llama-7B and an A100, compile gives 4.2× because launch overhead dominates, then each step gains less: 1.5×, 1.3×, 1.2×. The total is 9.6×, but quality wasn't measured and it won't hold at large batch. |
+| Is SpeCache speculative decoding? | No. Despite the name and the book's figure title, it prefetches predicted KV blocks to hide the latency of offloaded cache tiers, so it is a KV-tiering technique. |
+
+## Next
+
+[09-checklist-and-ai-assisted-tuning.md](09-checklist-and-ai-assisted-tuning.md): everything so far as an ordered checklist, plus how to let a model search for kernels safely.

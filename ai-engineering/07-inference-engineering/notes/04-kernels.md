@@ -12,11 +12,13 @@ sources:
   - https://arxiv.org/abs/2405.02803
   - https://arxiv.org/abs/2409.04431
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 4 — Kernels: Occupancy, Memory Access, Arithmetic Intensity, Pipelining
 
 > A kernel is slow for one of four reasons: too little work, too much waiting, too many bytes, or too much math. The profiler tells you which. Each has its own fixes, and fixing one exposes the next.
+
+Raising occupancy does nothing for a kernel already at peak DRAM throughput, and adding ILP does nothing for one whose math pipes are busy. Most wasted kernel tuning is the right fix applied to the wrong regime, usually from a recipe in a book whose metrics tables are, by its author's own label, illustrative. So the order here is to read the profile first, then pick the fix for what it shows.
 
 ---
 
@@ -397,3 +399,54 @@ Fregly closes with a roofline-guided decision (*AISPE*, ch. 12, Fig. 12-17), cor
 - Use streams with events, pinned memory and `cudaMallocAsync`; never the legacy default stream on a hot path.
 - Reach for warp specialization, clusters and TMA multicast through CUTLASS, FlashAttention or Triton, not by hand.
 - Do not copy the book's warp-specialized, PDL-cluster or conditional-node listings without the fixes above. Working labs are in [cfregly/ai-performance-engineering](https://github.com/cfregly/ai-performance-engineering).
+
+## Pitfalls
+
+- **Picking a fix before the regime.** Symptom: hours spent on occupancy, and the kernel stays at the same time because DRAM throughput was already ≳ 80% of peak. Fix: read Nsight Compute first and use the four-regime table; a memory-bound kernel needs fewer bytes.
+- **Adding ILP to a busy kernel.** Symptom: more accumulators and no gain. ILP fills idle issue slots, so it is useless when pipes are busy every cycle. Fix: check for Math Pipe Throttle stalls first; that regime wants tensor cores or lower precision.
+- **Too tight a `__launch_bounds__`.** Symptom: occupancy rises and the kernel gets slower, because capped registers spill to local memory, which is really HBM. Fix: raise the bound until spills stop, then measure again.
+- **Blaming the kernel for a throttled GPU.** Symptom: the same code runs slower with no code change, under a power cap. Fix: log `power.draw`, SM clocks and `clocks_event_reasons` alongside the benchmark.
+- **Expecting vector loads to reduce sectors.** Symptom: `float4` loads and unchanged bandwidth. They cut instruction count by 4×, not the sectors touched. Fix: fix alignment and layout, using SoA and contiguous indexing; coalescing is what reduces transactions.
+- **Copying the book's numbers or listings.** Symptom: expecting 41.3 → 20.5 ms from pipelining, or shipping the warp-specialized listing, which releases the buffer before computing on it and races with the loader. Fix: treat its tables as illustrative, measure your own kernel, and release after compute.
+- **Hand-writing a kernel you could call.** Symptom: weeks on a GEMM that cuBLAS, FlashAttention or a generated Triton kernel already covers. Fix: most engineers should use this vocabulary to read profiles, and write kernels only for a measured gap.
+
+## Try it
+
+1. Classify these three profiles, which I made up to fit Table 8-2: (a) DRAM throughput at 90% of peak; (b) low DRAM throughput, high Long Scoreboard stalls, occupancy at 25%; (c) Math Pipe Throttle dominates on a CUDA-core loop. What is the first fix for each?
+
+   <details><summary>Answer</summary>
+
+   (a) Memory-bound: fewer bytes through coalescing, tiling, fusion or lower precision. (b) Latency-bound: hide latency with more occupancy, ILP, prefetch or pipelining. (c) Compute-bound: move the math to tensor cores or use lower precision.
+
+   </details>
+
+2. Using Table 8-4's approximate thread counts, how many 256-thread blocks per SM do you need to saturate a Blackwell SM at ILP 1 and at ILP 4?
+
+   <details><summary>Answer</summary>
+
+   ILP 1 takes ~1,536 threads, so 6 blocks. ILP 4 takes ~512 threads, so 2 blocks. That is Little's law: in-flight work is latency × throughput, and ILP supplies in-flight work per thread.
+
+   </details>
+
+3. A float tile pads each row from 32 to 33 columns to avoid bank conflicts. What does the padding cost? And what do 1,000 launches at 0.02 ms overhead cost next to a persistent kernel?
+
+   <details><summary>Answer</summary>
+
+   33/32 is about 3% more SMEM, which is why CUTLASS's XOR swizzle, which wastes nothing, is attractive. The launches waste 1,000 × 0.02 = 20 ms of overhead that a single persistent launch avoids.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| A kernel is slow. Walk through the diagnosis. | Nsight Systems for the timeline, then Nsight Compute on the hot kernel, built with `-lineinfo`. Sort it into underutilized, latency-bound, memory-bound (DRAM ≳ 80% of peak) or compute-bound, then fix that regime and re-measure, since fixing one exposes the next. |
+| What does occupancy buy? | More resident warps give the scheduler something to issue while others wait on memory. The maximum is 64 warps per SM on Hopper and datacenter Blackwell, reached for example by `__launch_bounds__(256, 8)`: 256 × 8 = 2,048 threads. |
+| How do you avoid bank conflicts in a 32 × 32 SMEM tile? | Pad to `tile[32][33]`, which costs about 3% and shifts each row by a bank, or use an XOR swizzle as CUTLASS does, which wastes nothing. |
+| Why is structure of arrays better for coalescing? | Consecutive threads then touch consecutive addresses, so a warp's 32 float loads fit four 32-byte sectors in one 128-byte line. A shifted read straddles two lines and touches five. |
+| Your kernel is memory-bound at peak bandwidth. What are the options? | Raise arithmetic intensity: tiling, fusion so intermediates never reach HBM, recompute instead of store, or lower precision such as FP8 or NVFP4. FlashAttention combines the first three. Occupancy won't help. |
+| When is a megakernel worth it? | For small-batch decode latency, at the research frontier. Fregly cites 1.2–6.7× lower decode latency than vLLM or SGLang for a Mirage-style persistent kernel, so treat it as research, not a default. |
+
+## Next
+
+[05-compilers-and-frameworks.md](05-compilers-and-frameworks.md): how much of this work a compiler will do for you, since most teams never write the kernel by hand.

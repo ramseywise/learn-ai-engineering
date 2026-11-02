@@ -19,11 +19,17 @@ The project details are recorded as they stood in 2026, and they are one team's 
 
 ## What a managed backend does and doesn't do
 
-The figure shows the Bedrock setup end to end. Everything on the left and the hybrid search box are the service. The agent, the query transformation and the generation are still ours.
+The diagram shows the Bedrock setup end to end. The crawl, chunking, vector database and hybrid search are the service. The query transformation, context injection and generation are still ours.
 
-![AWS Bedrock knowledge base pipeline: web crawl → semantic chunking → vector database, then query transformation → hybrid search → context injection → generation](../sources/images/billydk-bedrock-kb-pipeline.png)
-
-*Image Source: Billy.dk support assistant on AWS Bedrock Knowledge Bases (author's diagram)*
+```mermaid
+flowchart LR
+    subgraph Service["Bedrock knowledge base"]
+        C[Web crawl] --> S[Semantic chunking] --> V[(Vector database)]
+        V --> H[Hybrid search]
+    end
+    Q[User query] --> T[Query transformation] --> H
+    H --> I[Context injection] --> G[Generation]
+```
 
 | Job | Bedrock KB | Vertex AI Search | Build your own (`kb_rag`) |
 |---|---|---|---|

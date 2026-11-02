@@ -1,0 +1,488 @@
+# NLP lecture deck. Covers notes/01-text-representation.md, notes/02-text-classification.md,
+# notes/03-topic-models-and-summarization.md, notes/04-embeddings-and-similarity.md,
+# notes/05-semantic-analysis-and-ner.md, notes/06-sentiment-analysis.md, notes/07-llm-embeddings-as-features.md.
+# Build: make slides PILLAR=data-science/03-nlp STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running examples: TMDB film descriptions and IMDb reviews. Every number was measured by running the
+# code in the notes, except those attributed to a paper or to Sarkar's notebooks.
+deck:
+  title: Natural Language Processing
+  subtitle: From bag of words to embeddings as features
+  tagline: |-
+    Turn text into numbers · Set a baseline · Spend only where it pays
+  reference: "Notes: data-science/03-nlp"
+  output: nlp.pptx
+  notes: >-
+    Text is the most common messy input a data scientist meets. We follow film descriptions and reviews from raw strings
+    to features, through classifiers, topics, entities and sentiment, and finish by asking when a pretrained encoder is
+    worth its cost. The habit throughout is a baseline first, then a measured comparison.
+
+parts:
+  - title: Text as numbers
+    summary: Preprocessing · Bag of words · TF-IDF · Leaks
+    notes: >-
+      A model cannot read. Somebody decides how a review becomes a row of numbers. What does that decision cost?
+    slides:
+      - layout: statement
+        title: Your preprocessing already decided the answer
+        kicker: The problem
+        statement: "Remove \"not\" as a stop word, and the model can no longer tell \"good\" from \"not good\"."
+        attribution: "Measured on IMDb: \"not good\" flipped from 0.02 to 0.99 positive"
+        takeaway: Text decisions made before any model quietly set what that model is able to learn.
+        source: notes/01-text-representation.md
+        notes: >-
+          The same logistic regression, the same data, and one standard stop word list. Accuracy barely fell, which is why nobody
+          noticed, but the model now calls "not good" positive with near certainty.
+
+      - layout: image
+        title: Bag of words throws away order and keeps counts
+        kicker: The first representation
+        image: ../../sources/images/mueller-guido-bag-of-words.png
+        caption: "Figure: Müller and Guido, Introduction to Machine Learning with Python (O'Reilly, 2016)."
+        bullets:
+          - Each word in the vocabulary is one column
+          - A document is a sparse row of counts
+        takeaway: Bag of words makes text tabular by keeping word counts and discarding their order.
+        source: notes/01-text-representation.md
+        notes: >-
+          Tokenise, build a vocabulary, count. Tens of thousands of columns, nearly all of them zero in any row. It looks too crude
+          to work, and yet the next part shows how far it goes.
+
+      - layout: code
+        title: TF-IDF in a line, fitted on training text only
+        kicker: Worked example
+        lang: python
+        code: |-
+          vec = TfidfVectorizer(
+              min_df=2, sublinear_tf=True,
+              ngram_range=(1, 2))
+          X_train = vec.fit_transform(train_text)
+          X_test  = vec.transform(test_text)
+        bullets:
+          - "**IDF** discounts words found everywhere"
+          - "**Bigrams** bring back \"not good\""
+          - "**fit** on test text is a leak"
+        takeaway: Fit the vocabulary and IDF weights on training text alone, because a vocabulary built on test text is a leak.
+        source: notes/01-text-representation.md
+        notes: >-
+          Three lines carry most of the classical toolkit. Sublinear term frequency stops a word repeated ten times counting ten
+          times as much. Bigrams recover some order at the cost of many more columns.
+
+      - layout: table
+        title: Choosing a representation
+        kicker: Decision guide
+        header: [Representation, Keeps, Use it for]
+        widths: [3, 3, 5]
+        rows:
+          - [TF-IDF, Rare and telling words, "Linear baselines, keyword search"]
+          - [Averaged word vectors, Rough meaning, "Small labelled sets, with pretrained vectors"]
+          - [Integer sequences, Word order, "RNNs and transformers, with truncation decisions"]
+          - [Sentence embeddings, Meaning in context, "Few labels, clustering, anomaly detection"]
+        takeaway: Pick the cheapest representation that keeps the signal your task depends on.
+        source: notes/01-text-representation.md
+        notes: >-
+          This table is the pillar in miniature. Each row costs more than the last, and each is worth it only when the signal the
+          cheaper row loses is the one you need.
+
+  - title: Classification and its baseline
+    summary: TF-IDF plus linear · Metrics · Reading weights
+    notes: >-
+      Someone suggests a transformer. What should you fit first, and how would you know if something beats it?
+    slides:
+      - layout: statement
+        title: Before the transformer, fit this
+        kicker: The problem
+        statement: "If you skip the baseline, you will not know whether a model costing a hundred times more is any better."
+        attribution: "Film genres: majority class accuracy 0.315, tuned TF-IDF 0.532"
+        takeaway: A TF-IDF linear model takes seconds and sets the score that every expensive model must beat.
+        source: notes/02-text-classification.md
+        notes: >-
+          The task for most of today is to predict a film's first listed genre from its description, across the six commonest genres.
+
+      - layout: code
+        title: Tune the vectoriser and the model together
+        kicker: Worked example
+        lang: python
+        code: |-
+          pipe = make_pipeline(
+              TfidfVectorizer(min_df=2, sublinear_tf=True),
+              LogisticRegression(max_iter=2000))
+          grid = GridSearchCV(pipe, {
+              "logisticregression__C": [0.1, 1, 10, 100],
+              "tfidfvectorizer__ngram_range":
+                  [(1, 1), (1, 2), (1, 3)]},
+              cv=5, scoring="f1_macro").fit(X, y)
+        bullets:
+          - "Vectoriser in the pipeline: **no leak**"
+          - "Scored by macro-F1: 0.423 on test"
+        takeaway: Keeping the vectoriser inside the pipeline lets every fold build its own vocabulary, so the score is honest.
+        source: notes/02-text-classification.md
+        notes: >-
+          Word2vec trained on this same small corpus reached only 0.35, well below this baseline.
+
+      - layout: flow
+        title: A text classifier is a pipeline with a grid on it
+        kicker: The recipe
+        steps:
+          - label: Split
+            sub: stratified, once
+          - label: Vectorise
+            sub: inside each fold
+          - label: Linear model
+            sub: tune C
+          - label: Macro-F1
+            sub: not just accuracy
+          - label: Read weights
+            sub: find the leaks
+        caption: "Tuned on the film task: accuracy 0.532, macro-F1 0.423."
+        takeaway: Tune the vectoriser and model together inside cross-validation, then read the weights to catch surprises.
+        source: notes/02-text-classification.md
+        notes: >-
+          Putting the vectoriser in the pipeline means each fold builds its own vocabulary, so the cross-validated score is honest.
+          Reading the top coefficients often exposes a word that gives the label away.
+
+      - layout: compare
+        title: Which metric, for which text problem
+        kicker: Evaluation
+        left:
+          title: Accuracy is fine when
+          bullets:
+            - Topics are balanced
+            - Errors cost about the same
+        right:
+          title: Use something else when
+          bullets:
+            - "Imbalanced classes: macro-F1"
+            - "Rare positives: PR-AUC at an operating point"
+            - "Downstream ranking: log-loss"
+        takeaway: Choose the metric from the costs of the errors, since accuracy on imbalanced text flatters a lazy model.
+        source: notes/02-text-classification.md
+        notes: >-
+          Genre has a 31.5% majority class, so accuracy alone would flatter a model that favours drama. Macro-F1 weights every genre equally.
+
+  - title: Text with no labels
+    summary: Topics · Coherence · Clusters · Summaries
+    notes: >-
+      Ten thousand support tickets, no labels, and nobody will read them. What can you honestly say?
+    slides:
+      - layout: image
+        title: What is in a corpus nobody has labelled?
+        kicker: The problem
+        image: ../../sources/images/sarkar-movie-hierarchical-clusters.png
+        caption: "Figure: Sarkar, Text Analytics with Python. Hierarchical clustering of film descriptions."
+        bullets:
+          - No held-out accuracy to lean on
+          - A cluster number means nothing until named
+        takeaway: With no labels you get candidate themes and groups, which a person still has to read and name.
+        source: notes/03-topic-models-and-summarization.md
+        notes: >-
+          We need phrases that matter, themes with a weight per document, and groups of similar documents. None of them comes with
+          a score we can trust alone.
+
+      - layout: table
+        title: Topic models, side by side
+        kicker: Which one
+        header: [Model, Input, Strength, Watch out for]
+        widths: [2, 2, 4, 4]
+        rows:
+          - [LSI, TF-IDF, Fast and deterministic, Components mix opposed themes]
+          - [LDA, Counts, Generative mixture per document, Depends on seed and pruning]
+          - [NMF, TF-IDF, Sharp and readable topics, Choose k by reading]
+        takeaway: Run LDA on counts and NMF on TF-IDF, then choose by reading the topics, because metrics rarely decide it.
+        source: notes/03-topic-models-and-summarization.md
+        notes: >-
+          On the film data NMF gave readable themes such as falling in love, and true stories. LDA's topics were muddier on such
+          short texts, which is a common result.
+
+      - layout: code
+        title: Coherence barely moves, so read the topics
+        kicker: Worked example
+        lang: text
+        code: |-
+          k=5   c_v=0.347
+          k=10  c_v=0.346
+          k=20  c_v=0.318
+          k=40  c_v=0.325
+
+          NMF topic: love, falls, falls love
+          -> Veer-Zaara, 2046, Never Again
+        bullets:
+          - No clean elbow in the curve
+          - Top documents show what words hide
+          - Refit with a second seed
+        takeaway: Coherence narrows the options, but only reading top words and top documents tells you what a topic is.
+        source: notes/03-topic-models-and-summarization.md
+        notes: >-
+          From five to forty topics coherence dips and recovers, so it does not pick k for you. A topic is a pattern the model found, not a fact.
+
+  - title: Embeddings and entities
+    summary: word2vec · Bias · NER · CRF · F1
+    notes: >-
+      Sparse columns treat hotel and motel as unrelated, and they cannot tell us who did what. Two more tools fix those two gaps.
+    slides:
+      - layout: statement
+        title: To TF-IDF, hotel is as far from motel as from banana
+        kicker: The problem
+        statement: "A word is known by the company it keeps, so learn a vector that predicts its neighbours."
+        attribution: The distributional idea behind word2vec, GloVe and FastText
+        takeaway: Embeddings learn nearness from shared contexts, so related words stop being unrelated columns.
+        source: notes/04-embeddings-and-similarity.md
+        notes: >-
+          Every word in TF-IDF is its own axis, so similar words have nothing in common. Word2vec fits small dense vectors so that
+          words appearing in similar contexts get similar vectors.
+
+      - layout: code
+        title: Train word vectors in a few lines
+        kicker: Worked example
+        lang: python
+        code: |-
+          w2v = Word2Vec(sentences=sentences,
+                         vector_size=100,
+                         epochs=5, workers=4, seed=0)
+          w2v.wv.most_similar("war", topn=6)
+        bullets:
+          - "`vector_size` was `size` in gensim 3"
+          - "Normalise before comparing vectors"
+        takeaway: gensim trains word vectors on a million tokens in seconds, so try them on your own corpus before downloading any.
+        source: notes/04-embeddings-and-similarity.md
+        notes: >-
+          The argument names changed in gensim 4, which is why old notebooks break.
+
+      - layout: compare
+        title: Twelve seconds by hand, three with gensim
+        kicker: Worked example
+        left:
+          title: Our skip-gram, by hand
+          bullets:
+            - "king: george, france, washington"
+            - "war: world, civil, treaty"
+            - "father: frank, wife, brother"
+        right:
+          title: gensim Word2Vec, 12,390 words
+          bullets:
+            - "king: prussia, hamilton, madison"
+            - "war: revolution, civil, conflict"
+            - "father: brother, sister, husband"
+        takeaway: Even a small corpus yields real structure in seconds, and the neighbours reflect what that corpus is about.
+        source: notes/04-embeddings-and-similarity.md
+        notes: >-
+          These books are heavy on history, and so "king" has presidents among its neighbours. Neighbours include antonyms too, so do not treat them as synonyms.
+
+      - layout: image
+        title: Pulling out who, where and when
+        kicker: From similarity to structure
+        image: ../../sources/images/sarkar-spacy-ner.png
+        caption: "Figure: Sarkar, Text Analytics with Python. The entity types spaCy's English models tag."
+        bullets:
+          - Spans of text with types attached
+          - Pretrained models are domain-bound
+        takeaway: NER returns typed spans of text, and a pretrained tagger must be measured on your own domain before you trust it.
+        source: notes/05-semantic-analysis-and-ner.md
+        notes: >-
+          Similarity cannot tell a compliance team which companies appear in a contract. Named entity recognition can, as long as
+          the text resembles what the tagger trained on.
+
+      - layout: bullets
+        title: Score entities, not tokens
+        kicker: A trap in the metric
+        bullets:
+          - "An always-`O` tagger scores **0.849** token accuracy and finds nothing"
+          - The CRF scores 0.969 token accuracy and **0.826** entity-level F1
+          - "Frequent types do well (gpe 0.95), and rare ones need more data"
+          - "Learned transitions read like a grammar: `O->I-geo` is forbidden"
+        aside:
+          title: Why a CRF
+          body: It scores the whole tag sequence with hand-made features, and it trains in seconds.
+        takeaway: Report entity-level F1, since token accuracy is dominated by the tag that means nothing.
+        source: notes/05-semantic-analysis-and-ner.md
+        notes: >-
+          Most tokens are outside any entity, so token accuracy is near 85% for a model that does nothing. Twelve thousand sentences of a tagged corpus were enough for 0.83.
+
+  - title: Sentiment, three ways
+    summary: Lexicons · TF-IDF · LSTMs · Why people feel it
+    notes: >-
+      Fifty thousand reviews. Are people happy, and why not? We can answer with a dictionary, a linear model, or a network.
+    slides:
+      - layout: statement
+        title: Which method wins on 50,000 reviews?
+        kicker: The problem
+        statement: "A score of 72% positive answers the easy question. The one that matters is why the rest are not."
+        attribution: "Same data, IMDb, for every method in this part"
+        takeaway: Sentiment asks two questions, how people feel and why, and only the second one tells you what to change.
+        source: notes/06-sentiment-analysis.md
+        notes: >-
+          The ranking surprises people. Before you see the table, guess the order of a dictionary, a linear model, and an LSTM.
+
+      - layout: code
+        title: The supervised baseline for reviews
+        kicker: Worked example
+        lang: python
+        code: |-
+          vec = TfidfVectorizer(ngram_range=(1, 2),
+                                min_df=2, sublinear_tf=True)
+          clf = LogisticRegression(max_iter=2000)
+          clf.fit(vec.fit_transform(train), y_train)
+          clf.score(vec.transform(test), y_test)  # 0.906
+        bullets:
+          - "Trained on 25,000 reviews, in seconds"
+          - "Bigrams keep **not good** apart"
+        takeaway: Twenty-five thousand labels and a bigram TF-IDF model set a bar that small neural networks here did not reach.
+        source: notes/06-sentiment-analysis.md
+        notes: >-
+          Check this against the next table before you reach for a sequence model.
+
+      - layout: table
+        title: The results on IMDb
+        kicker: Worked example
+        header: [Method, Labels needed, Accuracy]
+        widths: [5, 3, 2]
+        highlight: [2]
+        rows:
+          - [SentiWordNet tuned, None, "0.658"]
+          - [AFINN tuned, None, "0.735"]
+          - [TextBlob, None, "0.761"]
+          - [TF-IDF bigrams + logistic, "25,000", "0.906"]
+          - [Averaged word2vec + logistic, "25,000", "0.831"]
+          - [LSTM family on small data, "6,000", "about 0.80"]
+        takeaway: With labels, TF-IDF bigrams beat both the lexicons and small neural networks on review sentiment.
+        source: notes/06-sentiment-analysis.md
+        notes: >-
+          The sequence models trained on 6,000 reviews, so that is not an even contest, but the point stands: the network has to earn
+          its place. The lexicons remain useful when you have no labels at all.
+
+      - layout: flow
+        title: From a score to a reason
+        kicker: Debugging and explaining
+        steps:
+          - label: Check the padding
+            sub: "maxlen bug: 0.782 to 0.672"
+          - label: Read the weights
+            sub: what drives the model
+          - label: Explain one
+            sub: LIME, locally
+          - label: Model each class
+            sub: topics of complaint
+        caption: "Truncating at a wrong length raised no error. Only a comparison showed it."
+        takeaway: Explanations move from global weights to single predictions to themes, and each answers a different why.
+        source: notes/06-sentiment-analysis.md
+        notes: >-
+          Truncating at a wrong length raises no error, and only a comparison shows it. Then per-class topic models go from a score to something a product team can use.
+
+  - title: Embeddings as features
+    summary: Fair comparison · Few labels · Clusters · Anomalies
+    notes: >-
+      A pretrained encoder turns any text into 384 numbers. We promised a fair comparison on the film task, so here it is.
+    slides:
+      - layout: image
+        title: Does a pretrained encoder make TF-IDF obsolete?
+        kicker: The problem
+        image: ../../sources/images/sarkar-universal-embeddings-classification.png
+        caption: "Figure: Sarkar, Text Analytics with Python. A pretrained sentence encoder feeding a classifier."
+        bullets:
+          - Encode once and cache the matrix
+          - Then it is ordinary scikit-learn
+        takeaway: A sentence embedding is just a dense feature matrix, so all of classical ML applies to it again.
+        source: notes/07-llm-embeddings-as-features.md
+        notes: >-
+          Everything after the encoder is what you already know. The questions that are left are ordinary ML questions: how much does it help, and at what cost?
+
+      - layout: code
+        title: Encode once, then it is ordinary ML
+        kicker: Worked example
+        lang: python
+        code: |-
+          enc = SentenceTransformer(
+              "sentence-transformers/all-MiniLM-L6-v2")
+          X = enc.encode(texts, normalize_embeddings=True)
+          np.save(cache_path, X)     # key by model name
+          clf = LogisticRegression(C=10, max_iter=3000)
+          clf.fit(X[train], y[train])
+        bullets:
+          - "384 dimensions, cut off at 256 pieces"
+          - "Everything after `encode` is scikit-learn"
+        takeaway: Encoding is the only slow step, so cache the matrix under the model's name and treat it as any other feature table.
+        source: notes/07-llm-embeddings-as-features.md
+        notes: >-
+          Swap the model name and the rest of the code does not change, which makes testing an encoder on your task one line.
+
+      - layout: table
+        title: The gap depends on how many labels you have
+        kicker: Worked example
+        header: [Training films, TF-IDF macro-F1, MiniLM macro-F1, Gap]
+        widths: [3, 3, 3, 2]
+        highlight: [1]
+        rows:
+          - ["60", "0.144", "0.261", "0.117"]
+          - ["300", "0.224", "0.383", "0.159"]
+          - ["1,200", "0.335", "0.439", "0.104"]
+          - ["2,877", "0.404", "0.484", "0.080"]
+        takeaway: The encoder leads at every size, by the most below about 1,000 labels, and TF-IDF gains ground as labels grow.
+        source: notes/07-llm-embeddings-as-features.md
+        notes: >-
+          At sixty labels MiniLM nearly doubles TF-IDF's score. With all the labels the gap is 0.08, and a bootstrap interval says it is real.
+          TF-IDF tuned with a wider search reaches 0.423 here, so the lead would be 0.06.
+
+      - layout: cards
+        title: What the same matrix did next
+        kicker: Beyond classification
+        cards:
+          - title: Heads
+            body: "An RBF SVM's extra 0.01 is inside the noise. Boosting fell to 0.407."
+          - title: Clusters
+            body: "NMI with genre about 0.14, against TF-IDF's 0.04 to 0.07."
+          - title: UMAP, HDBSCAN
+            body: Readable themes, while 54% of films stay labelled noise.
+          - title: Anomalies
+            body: "kNN distance AUROC 0.94, TF-IDF's best 0.64."
+        takeaway: Embeddings help most where there are no labels at all, in clustering and in anomaly detection.
+        source: notes/07-llm-embeddings-as-features.md
+        notes: >-
+          TF-IDF with SVD and a density detector scored below chance on anomalies, because unfamiliar text has a short vector that sits near the dense origin.
+
+      - layout: compare
+        title: What you pay for it
+        kicker: The cost
+        left:
+          title: TF-IDF
+          tag: 33,000 docs a second
+          bullets:
+            - Readable weights
+            - About 744 bytes per short document
+            - Blind to synonyms
+        right:
+          title: MiniLM
+          tag: 600 docs a second on CPU
+          bullets:
+            - Anonymous coordinates
+            - 1,536 bytes per document
+            - Truncates long text silently
+        takeaway: Encoding is about fifty times slower and its coordinates cannot be read, so make it earn that price on your task.
+        source: notes/07-llm-embeddings-as-features.md
+        notes: >-
+          Storage is closer than people expect on short text. Any model change means re-embedding everything, so keep the model name beside the matrix.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What to remember
+        cards:
+          - title: Baseline first
+            body: TF-IDF and a linear model, before anything else.
+          - title: Fit inside the fold
+            body: Vocabulary, IDF, scalers and PCA all leak otherwise.
+          - title: Mind the metric
+            body: Macro-F1 for imbalance, entity F1 for NER.
+          - title: Read the output
+            body: Top words, top documents, top anomalies.
+          - title: Encoders for few labels
+            body: With no labels or few, the lead is largest.
+          - title: Report the noise
+            body: A point or two on 960 films is not a win.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Inside the encoder:** neural text models, in deep learning"
+          - "**From the ground up:** micrograd, makemore and nanoGPT, in LLMs from scratch"
+          - "**Retrieval:** chunking and reranking, in the generative AI RAG pillar"

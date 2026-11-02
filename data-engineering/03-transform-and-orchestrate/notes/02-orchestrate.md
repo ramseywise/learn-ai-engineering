@@ -326,12 +326,12 @@ cd mlops && ./scripts/start.sh        # UI on http://localhost:6789
 |---|---|---|
 | 3.0 | Why operationalise | Productivity, reliability, reproducibility, time-to-value |
 | 3.1 | Data preparation | Ingest, prepare, build the training set; data validations as blocks |
-| 3.2 | Training | sklearn and XGBoost with hyperopt; experiments to MLflow ([feature and serve](../../06-ml-platform/notes/01-feature-serve.md)) |
+| 3.2 | Training | sklearn and XGBoost with hyperopt; experiments to MLflow ([experiment tracking](../../06-ml-platform/notes/02-experiment-tracking-and-model-registry.md)) |
 | 3.3 | Observability | SHAP dashboards and alerting |
 | 3.4 | Triggers | `sensors/detect_new_data.py` fires the retraining pipeline; an inference pipeline served via API |
 | 3.5 | Deployment | AWS permissions, Terraform deploy, CI/CD with GitHub Actions |
 
-Unit 3.4 is the bridge to monitoring: a sensor polls for new data and triggers retraining, which is the "conditional retraining" the MLOps project rubric rewards ([MLOps maturity](../../06-ml-platform/notes/02-mlops-maturity-and-best-practices.md)).
+Unit 3.4 is the bridge to monitoring: a sensor polls for new data and triggers retraining, which is the "conditional retraining" the MLOps project rubric rewards ([MLOps maturity](../../06-ml-platform/notes/05-mlops-maturity-and-best-practices.md)).
 
 `03-orchestration/requirements.txt` in the MLOps snapshot pins `mlflow==3.17.2`, `prefect==3.9.0`, `pandas==3.1.0`, `scikit_learn==1.9.1`, `xgboost==3.4.1`, `hyperopt==0.3.0`.
 

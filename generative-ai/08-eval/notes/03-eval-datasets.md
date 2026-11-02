@@ -29,11 +29,13 @@ sources:
   - https://doi.org/10.18653/v1/d13-1170
   - https://doi.org/10.18653/v1/d13-1160
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — Eval Datasets
 
 > The dataset decides what your eval can see. Start small and real, grow it from failures, keep it versioned, and make sure every row is fair for the gate that scores it.
+
+A golden set of 300 questions scores grounding at 0.40, the generation team rewrites the prompt for a month, and the score barely moves, because half the rows could never have been answered from the index. A dataset decides what every later number means. This chapter covers where rows come from, how they stay representative as traffic changes, and which rows are fair for which measurement.
 
 ---
 
@@ -145,6 +147,62 @@ flowchart LR
 
 The rule: **a downstream gate never silently scores rows an upstream gate marked ineligible.** Ineligible rows appear only as a separate diagnostic slice. Otherwise a retrieval miss shows up as a "bad answer" and you fix the wrong thing.
 
+Here is that rule on a made-up set of 100 rows. The system's generator is the same in both grounding lines, and only the denominator differs:
+
+```python
+import hashlib
+
+# Each row carries what the pipeline knows about it, not just its input and reference.
+rows = (
+    [{"mapped": False, "indexed": False, "retrieved": False, "grounded": False}] * 10   # source unknown
+    + [{"mapped": True, "indexed": False, "retrieved": False, "grounded": False}] * 15  # not in the index
+    + [{"mapped": True, "indexed": True, "retrieved": False, "grounded": False}] * 25   # ranking missed it
+    + [{"mapped": True, "indexed": True, "retrieved": True, "grounded": True}] * 40
+    + [{"mapped": True, "indexed": True, "retrieved": True, "grounded": False}] * 10
+)
+
+pools = {
+    "all_gt": rows,
+    "source_mapped_gt": [r for r in rows if r["mapped"]],
+    "retrieval_eligible_gt": [r for r in rows if r["indexed"]],
+    "generation_eligible_gt": [r for r in rows if r["retrieved"]],
+}
+for name, pool in pools.items():
+    print(f"{name:24} n={len(pool):3}")
+
+def rate(pool, key):
+    return sum(r[key] for r in pool) / len(pool)
+
+print(f"grounding over every row:     {rate(rows, 'grounded'):.2f}  <- blames generation for the corpus")
+print(f"grounding, generation pool:   {rate(pools['generation_eligible_gt'], 'grounded'):.2f}")
+print(f"retrieval, retrieval pool:    {rate(pools['retrieval_eligible_gt'], 'retrieved'):.2f}")
+
+def split(row_id, test_share=0.2):         # a row keeps its split when the dataset grows
+    bucket = int(hashlib.sha256(row_id.encode()).hexdigest(), 16) % 100
+    return "test" if bucket < test_share * 100 else "dev"
+
+ids = [f"row-{i}" for i in range(1000)]
+first = {i: split(i) for i in ids[:500]}
+print("rows that changed split after doubling the set:", sum(first[i] != split(i) for i in first))
+print("test share:", sum(split(i) == "test" for i in ids) / len(ids))
+```
+
+Output:
+
+```text
+all_gt                   n=100
+source_mapped_gt         n= 90
+retrieval_eligible_gt    n= 75
+generation_eligible_gt   n= 50
+grounding over every row:     0.40  <- blames generation for the corpus
+grounding, generation pool:   0.80
+retrieval, retrieval pool:    0.67
+rows that changed split after doubling the set: 0
+test share: 0.192
+```
+
+Grounding is 0.80 on rows where the generator had the evidence, and 0.40 over every row. The corpus and retriever account for the other half. The split at the end is also worth copying: hashing the row ID keeps a row in the same split as the dataset grows, so test rows don't drift into dev.
+
 ---
 
 ## What a row contains
@@ -242,4 +300,53 @@ Li's survey of GAIA, SWE-bench Verified, τ²-bench, Terminal-Bench, AndroidWorl
 
 ---
 
-→ Next: [04-graders.md](04-graders.md) — how each row gets scored.
+## Pitfalls
+
+- **Waiting for a big dataset.** Symptom: no evals for months while someone curates 1,000 rows. Fix: start with 5 to 20 real tasks, then grow by stage: 20 to 50, then 100 to 300, which gives about ±5 to 8 points.
+- **Generating synthetic rows freely.** Symptom: every generated question sounds alike, and they all pass. Fix: generate tuples along your dimensions first, write each query in a separate call, and replace synthetic rows with real traffic as you get it.
+- **Letting the coverage drift away from production.** Symptom: the suite is green while a new product area fills the support queue. Fix: match production frequencies, slice by the dimensions you care about, and keep harvesting failures into discovery and regression pools.
+- **Scoring ineligible rows.** Symptom: grounding looks terrible and prompt work doesn't help, as the script above shows. Fix: named row pools, and ineligible rows reported only as a diagnostic slice.
+- **Reusing eval rows elsewhere.** Symptom: a score far above similar unseen tasks. Rows have leaked into few-shot examples or training data. Fix: keep the test split out of prompts, fine-tuning and the retrieval index ([12](12-failure-modes.md#contamination)).
+- **Mutable references.** Symptom: scores jump with no code change after someone "tidied" the gold answers. Fix: version the dataset, freeze references, and record the version beside each result.
+- **Trusting a public benchmark's labels.** Symptom: a flawed task quietly penalizes or rewards agents. For SWE-bench Verified, OpenAI had 93 developers review 1,699 of the original 2,294 tasks, and only 500 survived. Fix: review a sample of any dataset you adopt, and reset the environment state for every row.
+
+## Try it
+
+1. Add 20 rows to the pool script that are mapped and indexed but missed by retrieval. Before running, predict which of the three printed rates change.
+
+   <details><summary>Answer</summary>
+
+   The grounding over every row falls from 0.40 to 0.33, and the retrieval rate falls from 0.67 to 0.53. The rate on the generation pool stays 0.80, since those rows never reach it. That is the point of the pools: a retrieval regression moves only the retrieval number.
+
+   </details>
+
+2. You have 200 labelled rows and a pass rate near 80%. What is the 95% margin, and can this set detect a 3-point gain?
+
+   <details><summary>Answer</summary>
+
+   1.96 × √(0.8 × 0.2 / 200) = ±5.5 points, inside this chapter's ±5 to 8 range. It cannot detect 3 points by comparing two independent rates. [09](09-reading-results.md#how-many-tasks) puts a paired 5-point difference at 400 to 800 tasks.
+
+   </details>
+
+3. A help-centre bot has 541 rows with expected URLs. Which pool should each of these use: demand analysis, retrieval MRR, and a costly LLM grounding judge?
+
+   <details><summary>Answer</summary>
+
+   Demand analysis uses `all_gt`, retrieval MRR uses `retrieval_eligible_gt`, and the judge uses `quality_sample`, a deterministic and cost-capped sample that keeps its eligibility labels.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| How big should a first eval set be? | Start at 5 to 20 real tasks, then 20 to 50, and 100 to 300 for about ±5 to 8 points. LLM-graded sets often stop at 50 to 200 because of cost, and 1,000 or more is for fine differences. |
+| Where do good rows come from? | Production failures first, then real traffic and expert-written cases, with synthetic rows generated along chosen dimensions to fill gaps. OpenAI's practice keeps a regression pool and a discovery pool of harvested failures. |
+| What is row eligibility? | A row can be a valid task yet unfair for one measurement. If the expected source isn't in the index, scoring it on retrieval measures the corpus, so pools narrow the rows from `all_gt` to `generation_eligible_gt`. |
+| Your grounding is 0.40 overall. Is the generator bad? | Not necessarily. Score it only on rows where retrieval found the source: in this chapter's example that gives 0.80, so the rest is a corpus and retrieval problem. |
+| How do you stop a public benchmark from being memorized? | Published tactics are unique answers (GAIA), parameterized templates (AndroidWorld, τ²-bench), tasks newer than the training cutoff (SWE-bench-Live), canary GUIDs (Terminal-Bench) and closed test sets. In your own suite, keep test rows out of training data and prompts. |
+| Why not just use synthetic data? | Synthetic rows carry tropes and unrealistic phrasing, and a generating model finds its own phrasing easy, which gives it a head start if it is also a candidate. Use them to bootstrap and fill gaps, generated by a different model family, then replace them with real traffic. |
+
+## Next
+
+[04-graders.md](04-graders.md): how each row gets scored.

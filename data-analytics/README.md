@@ -16,10 +16,10 @@ The thread through all of them is the last clause of the framing, knowing when t
 |---|---|---|---|---|
 | [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | 7 | [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) |
 | [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | 6 | [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) |
-| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 4 | not built |
-| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | 6 | not built |
+| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 4 | [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) |
+| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | 6 | [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) |
 | [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | 5 | [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) |
-| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | 0 | not built |
+| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | 6 | [deck](06-applied-analyses/slides/applied-analyses.pptx) |
 
 Read them in order the first time. [CURRICULUM.md](CURRICULUM.md) gives the sequence, the practice for each step and how you know you are done. [references.md](references.md) is the shared book library, with free courses and videos.
 
@@ -61,10 +61,10 @@ These are the chapters on disk as of 2 November 2026.
 
 ### [03 Experimentation and causality](03-experimentation-and-causality/README.md)
 
-- A/B Testing
-- Experimentation at Scale
-- Metrics and KPI Design
-- Correlation, Confounding and Causation
+1. [A/B Testing](03-experimentation-and-causality/notes/01-ab-testing.md)
+2. [Metrics and KPI Design](03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md)
+3. [Experimentation at Scale](03-experimentation-and-causality/notes/03-experimentation-at-scale.md)
+4. [Correlation, Confounding and Causation](03-experimentation-and-causality/notes/04-correlation-and-causation.md)
 
 ### [04 Bayesian analysis](04-bayesian-analysis/README.md)
 
@@ -85,7 +85,12 @@ These are the chapters on disk as of 2 November 2026.
 
 ### [06 Applied analyses](06-applied-analyses/README.md)
 
-No chapters on disk yet. The planned chapters are forecasting, credit scoring, cohort and retention, funnel and conversion, segmentation and RFM, and SQL for analytics.
+1. [Forecasting: how many people does the warehouse need?](06-applied-analyses/notes/01-forecasting.md)
+2. [Credit scoring: which applications should a bank approve?](06-applied-analyses/notes/02-credit-scoring.md)
+3. [Cohort and retention: did we lose customers, or buy worse ones?](06-applied-analyses/notes/03-cohort-and-retention.md)
+4. [Funnel and conversion: why a flat headline can hide a broken page](06-applied-analyses/notes/04-funnel-and-conversion.md)
+5. [Segmentation and RFM: who to contact, and who would have bought anyway](06-applied-analyses/notes/05-segmentation-and-rfm.md)
+6. [SQL for analytics: the revenue bridge, and the patterns behind it](06-applied-analyses/notes/06-sql-for-analytics.md)
 
 ## Rules of thumb
 
@@ -98,12 +103,15 @@ No chapters on disk yet. The planned chapters are forecasting, credit scoring, c
 | The most extreme averages come from the smallest groups, so always show N | [02](02-probability-and-statistics/notes/03-distributions-and-sampling.md) |
 | Default to Welch's t (`equal_var=False`) | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
 | Twenty independent tests at α = 0.05 give a 64% chance of at least one false positive; use Holm or BH | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
+| Halving the minimum detectable effect multiplies the sample size by about four | [03](03-experimentation-and-causality/notes/01-ab-testing.md) |
 | Do not stop a fixed-horizon test the first time p < 0.05 | [03](03-experimentation-and-causality/notes/01-ab-testing.md) |
-| Control for confounders, never for colliders | [03](03-experimentation-and-causality/README.md) |
+| Control for confounders, never for colliders | [03](03-experimentation-and-causality/notes/04-correlation-and-causation.md) |
 | R-hat at most 1.01, no divergences and ESS in the hundreds before you trust a posterior | [04](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) |
 | Never put zero prior mass where the truth could be | [04](04-bayesian-analysis/notes/03-priors-and-bandits.md) |
 | Ship B when the expected loss of choosing it is below the smallest difference you care about | [04](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
 | Squared loss gives the mean, absolute loss the median, zero-one loss the MAP; any other loss needs an optimiser | [04](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) |
+| Beat a baseline first, and backtest over many origins because one split is one anecdote | [06](06-applied-analyses/README.md#rules-of-thumb) |
+| Split a change in any aggregate into rate and mix before you explain it | [06](06-applied-analyses/README.md#rules-of-thumb) |
 
 ## Layout
 

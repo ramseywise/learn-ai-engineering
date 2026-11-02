@@ -686,7 +686,6 @@ The code uses Evidently's pre-0.7 API (`evidently.report.Report`, `evidently.met
 | `debugging_nyc_taxi_data.ipynb` | Python + `evidently<0.7` |
 
 
-→ Next: [06-feature-serve.md](../../06-ml-platform/notes/01-feature-serve.md) — the model being monitored came from somewhere: tracked experiments, a registry entry, and a deployment as a web service, a stream consumer or a batch job.
 
 ## Pitfalls
 

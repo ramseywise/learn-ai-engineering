@@ -1,0 +1,447 @@
+# Architecture and governance lecture deck. Covers notes 01-02.
+# Build: make slides PILLAR=data-engineering/07-architecture-and-governance STRICT=1 PREVIEW=1
+# Running example: one company's trips and riders. A tax join across two domains, then one rider who asks to be deleted.
+deck:
+  title: Architecture and Governance
+  subtitle: Who owns the data, who may see it, and how to remove one person from it
+  tagline: |-
+    MDW · Fabric · Mesh · Access · Erasure
+  reference: "Notes: data-engineering/07-architecture-and-governance"
+  output: architecture-and-governance.pptx
+  notes: >-
+    Earlier pillars built one pipeline. This one arranges many. We follow one company's trips and riders: first a tax
+    figure that came out at half its true value with no error, then a rider who asks to be deleted from immutable files.
+
+parts:
+  - title: Size the architecture
+    summary: Modern data warehouse · Fabric · Lakehouse · One machine
+    notes: >-
+      Before the ownership argument, decide where the data physically lives. The usual mistake is buying for data you
+      imagine having.
+    slides:
+      - layout: statement
+        title: Buying for the data you imagine
+        kicker: The problem
+        statement: "MPP and a fabric cost money and skills every month, whether or not your data needs them."
+        attribution: "Serra's fictitious firm: under 1 TB, chose a single-node database"
+        takeaway: Choose an architecture by measuring your data and your questions, because the cost of a larger one never stops.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          Serra's Wilson and Gunkerk case is invented for illustration, and he says so. The lesson stands: do not buy
+          massively parallel processing for data that fits on one machine.
+      - layout: flow
+        title: A modern data warehouse has five stages
+        steps:
+          - {label: Ingest, sub: pull into the lake, accent: 1E3A5F}
+          - {label: Store, sub: raw files, accent: 0F7490}
+          - {label: Transform, sub: conformed then cleaned, accent: 0EA5C9}
+          - {label: Model, sub: star schema in the RDW, accent: D4621A}
+          - {label: Visualize, sub: reports, accent: 5B21B6}
+        bullets:
+          - "**MDW** copies at least some data from the lake to a relational warehouse"
+          - "**Lakehouse** copies none and serves from the lake through a table format"
+          - "**Fabric** adds policies, catalog, MDM, APIs: Serra's line is three of eight features"
+        takeaway: An MDW keeps a lake and a warehouse, a lakehouse drops the warehouse copy, and a fabric adds a governance layer on top.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The zoomcamp stack is an MDW: GCS, BigQuery, dbt, Looker Studio. Serra's three-feature rule is personal and he
+          admits the line is fuzzy.
+      - layout: code
+        title: Measure one machine first
+        lang: python
+        code: |-
+          rows = con.sql("""
+              SELECT state, date_trunc('month', day),
+                     sum(fare)
+              FROM 'big.parquet' GROUP BY 1, 2
+          """).fetchall()
+
+          # 50,000,000 rows, 0.37 GB on disk, 36 groups
+          # 0.13 s on one laptop, 12 cores
+        bullets:
+          - "Synthetic fares, one aggregate, no concurrency"
+          - "Says volume alone rarely justifies a cluster here"
+          - "Says nothing about 100 analysts at once"
+        takeaway: Run a representative query on one machine before buying a cluster, and remember that it tests volume and not concurrency.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The timing is from this chapter's run, on random data. Do not extrapolate it. An RDW also sells concurrency and
+          governance, so this settles the volume question only.
+      - layout: table
+        title: Starting points, not thresholds
+        header: [You have, Consider]
+        widths: [3, 3]
+        rows:
+          - ["Under about 1 TB, one team", "Single SMP database, or DuckDB"]
+          - ["Up to about 10 TB, BI-heavy", "Modern data warehouse"]
+          - ["Many sources, lineage questions", "Data fabric"]
+          - ["Large data, data science heavy", "Lakehouse"]
+          - ["Many autonomous business units", "A mesh on top of any of these"]
+        highlight: [4]
+        bold_first: true
+        takeaway: The size figures are one practitioner's judgement, and a mesh is not a fourth option because it changes owners and not storage.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The 10 TB figure is Serra's judgement from practice. The table combines his guidance with the single-machine
+          measurement. Use it to start a conversation.
+
+  - title: Own the data
+    summary: Four principles · The silent join · Global rules · Topologies
+    notes: >-
+      Now a bug that lives between two teams. Both tables are correct by their owners' lights, and no one owns the rule
+      between them.
+    slides:
+      - layout: statement
+        title: Half the tax, and no error
+        kicker: The problem
+        statement: "The tax figure was 99,957. The truth was 204,462."
+        attribution: "Synthetic trips: `CA` in one domain, `California` in the other, in an inner join"
+        takeaway: A join across domains can lose 40% of its rows with no error, because each table is valid by its own owner's rules.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          Serra's example of an inconsistency is full state names against two-letter codes. We built it. The join returned
+          120,003 of 200,000 rows and raised nothing. Each domain's own schema check passed.
+      - layout: table
+        title: Four challenges, four principles
+        header: [Challenge, Principle, Who runs it]
+        widths: [3, 3, 2]
+        rows:
+          - ["Central team doesn't know the data", "Domain ownership", "Domains"]
+          - ["Nobody downstream can fix quality", "Data as a product", "Domains"]
+          - ["Every domain rebuilds infrastructure", "Self-serve platform", "Central team"]
+          - ["Chaos without standards", "Federated computational governance", "Joint, then automated"]
+        bold_first: false
+        takeaway: A mesh decentralises ownership and products while keeping a central platform and a joint governance group.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The challenge mapping is Serra's, on Dehghani's principles. People forget that two of the four are centralised.
+      - layout: flow
+        title: The platform makes the right thing easy
+        steps:
+          - {label: Domain builds, sub: a product and a contract, accent: 1E3A5F}
+          - {label: Publish, sub: one call, accent: 0F7490}
+          - {label: Checks run, sub: owner and schema and global rules, accent: D4621A}
+          - {label: Catalog, sub: declares what it reads, accent: 0EA5C9}
+        bullets:
+          - "A product with no owner was **rejected**, and published once it had one"
+          - "`downstream(\"trips\")` finds pnl and exec_board, with their owners"
+          - "Principles 1 and 2 add work for domains, and principle 3 pays it back"
+        takeaway: One publish call that runs the mandatory checks and records dependencies is the smallest self-serve platform that governs anything.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The catalog built from contracts answers the question that opens most incidents: who gets hurt if this changes.
+          The exec_board author never told the mobility team, and a change to trips now reaches them anyway.
+      - layout: code
+        title: A global rule the platform runs
+        lang: python
+        code: |-
+          GLOBAL_RULES = {"state": r"^US-[A-Z]{2}$"}
+
+          def publish(c):
+              errors = []
+              if not c.owner:
+                  errors.append("no owner")
+              errors += check_schema(c) + check_global(c)
+              ...
+
+          # trips.state breaks ISO 3166-2:
+          #   ['CA','NY','WA'] -> mobility-data@
+          # tax_rates.state breaks ISO 3166-2:
+          #   ['California','NY','WA'] -> finance-data@
+        bullets:
+          - "Domains define the data, the platform runs the rule"
+          - "A failure reaches the owner by name"
+          - "Conformed tax figure: 204,462"
+        takeaway: A standard only takes effect when a step no domain can skip enforces it and routes each failure to a named owner.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The ISO choice is ours for this example; Serra names no standard. A regex only says the code is malformed, so a
+          shared reference table owned by someone maps California to US-CA.
+      - layout: compare
+        title: Serra's skeptic case, and what survives
+        left:
+          title: Against
+          bullets:
+            - "Poll: one or two in a hundred building, none seen in production (anecdotal)"
+            - "Gartner 2023, as he quotes it: \"obsolete before the plateau\""
+            - "Warehouses fail from people and process, not scale"
+        right:
+          title: What survives
+          bullets:
+            - "Ownership and contracts improve any architecture"
+            - "Type 1: one lake, a folder per domain, is what he sees most"
+            - "Federation alone meets only principle 1; principle 2 must hold too"
+        emphasis: right
+        takeaway: Take the mesh as principles to adopt selectively, starting with ownership on a shared platform, and decentralise technology last.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          The Gartner report is second-hand, via Serra. Strengholt reaches a similar place: a framework to pick from, with
+          six topologies and no right answer.
+      - layout: cards
+        title: Strengholt's topologies, by axis
+        cards:
+          - {title: "1 Fully federated", body: "Fine-grained and peer to peer. Cloud-born firms with many engineers.", accent: 1E3A5F}
+          - {title: "2 Fully governed", body: "Fine-grained, shared lake. Banks and governments.", accent: 0F7490}
+          - {title: "3 Hybrid", body: "Central on the source side, mesh on the consumer side. Legacy systems.", accent: 0EA5C9}
+          - {title: "4 Value chain", body: "Autonomy inside a chain, standards across chains. Supply chain.", accent: D4621A}
+          - {title: "5 Aligned", body: "A few large domains. Firms grown by acquisition; political risk.", accent: 5B21B6}
+          - {title: "6 Governed", body: "Large domains and a central marketplace. Needs a strong mandate.", accent: 94A3B8}
+        takeaway: Domain size and the way data moves separate six real mesh shapes, and each one trades agility against conformance.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          From customer design sessions at Microsoft. Topology 2 is close to Serra's Type 1 and is our suggested start.
+
+  - title: Control access
+    summary: Inventory · RBAC and ABAC · Views · Audit log
+    notes: >-
+      The riders behind those trips now enter. A contractor's query that should have returned one row returned 5,000, and
+      someone has to report it.
+    slides:
+      - layout: statement
+        title: A view is not a wall
+        kicker: The problem
+        statement: "The analyst read the base table, then changed their own region."
+        attribution: "DuckDB run in notes/02: a masked view on a connection that can read everything"
+        takeaway: A control the user can alter is no control, so enforcement has to sit below anything the user can change.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          DuckDB has no roles or GRANT; both statements are parser errors. Its security guide says it runs SQL with the
+          full privileges of the running user. This is correct behaviour for an embedded engine and a warning for us.
+      - layout: flow
+        title: Every control reads the inventory
+        steps:
+          - {label: Inventory, sub: what is personal and where, accent: 1E3A5F}
+          - {label: Access, sub: who may read, accent: 0F7490}
+          - {label: Audit, sub: who did read, accent: 0EA5C9}
+          - {label: Erasure, sub: remove from every copy, accent: D4621A}
+        bullets:
+          - "**Direct** identifiers: name, email, phone"
+          - "**Quasi**: postcode, birth date, sex, in combination"
+          - "A scan of values found an email in the free-text `notes` column"
+        takeaway: You cannot protect a column you do not know is personal, so scan values as well as names and start from that inventory.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          GDPR Article 4(1) and NIST SP 800-122 both turn on identifiable and linkable. A clean regex scan means found
+          nothing, not that nothing is there.
+      - layout: compare
+        title: RBAC grants tables, ABAC decides requests
+        left:
+          title: Role-based
+          bullets:
+            - "Permissions on roles, people in roles"
+            - "Audit by reading the grants"
+            - "Explodes at one role per region per purpose"
+        right:
+          title: Attribute-based
+          bullets:
+            - "Subject, object, environment, policy (NIST SP 800-162)"
+            - "Handles row and purpose rules"
+            - "Purpose is the attribute most systems forget"
+        emphasis: right
+        takeaway: Use roles for coarse table grants and attributes for row and purpose rules, since most real systems need both.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Warehouses give you the enforcement point. Postgres row security default-denies with no policy but the owner
+          usually bypasses it. In BigQuery, once any row policy exists, unlisted users see no rows.
+      - layout: code
+        title: Restrict the process instead
+        lang: python
+        code: |-
+          analyst = duckdb.connect()
+          analyst.sql(
+              "SET allowed_directories = ['published']")
+          analyst.sql("SET enable_external_access = false")
+          analyst.sql("SET lock_configuration = true")
+
+          # refused: FROM 'restricted/riders.parquet'
+          #   PermissionException
+          # refused: SET enable_external_access = true
+          #   InvalidInputException
+        bullets:
+          - "Publish a masked copy to a separate directory"
+          - "The lock stops the analyst undoing it"
+          - "Defence in depth, not a substitute for OS sandboxing"
+        takeaway: With an embedded engine the boundary is what the process can touch, so publish masked copies and lock the connection.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          DuckDB's guide calls these settings defence in depth. The real boundary is separate files and file permissions.
+      - layout: table
+        title: The audit log answers the breach question
+        header: [When, User, Purpose, Rows]
+        widths: [2, 3, 4, 1]
+        rows:
+          - ["09:01", "sam", "support_ticket_4411", "1"]
+          - ["09:02", "contractor_7", "unknown", "5000"]
+        highlight: [1]
+        bold_first: false
+        takeaway: Article 33 asks for categories and approximate numbers within 72 hours of awareness, which only a log kept in advance can supply.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Awareness means reasonable certainty that personal data was compromised (EDPB Guidelines 9/2022). A short
+          investigation may come first and should start promptly. Engineering guidance, not legal advice.
+
+  - title: Reduce the exposure
+    summary: Pseudonymised is not anonymised · Keyed hashes · k-anonymity
+    notes: >-
+      The most expensive misunderstanding in this area is a sentence: we hashed it, so it is anonymous.
+    slides:
+      - layout: statement
+        title: We hashed it, so it's anonymous
+        kicker: The problem
+        statement: "2,000 of 2,000 hashed phone numbers reversed in about 4 seconds."
+        attribution: "Laptop run over a 10 million number space, in notes/02"
+        takeaway: A hash of a value with few possibilities is a lookup table not yet computed, so it stays personal data and stays exposed.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Recital 26: pseudonymised data attributable with additional information is still personal data. WP29 Opinion
+          05/2014 lists confusing the two as a common mistake. Written under the earlier directive, still the reference.
+      - layout: code
+        title: A key changes the attacker's problem
+        lang: python
+        code: |-
+          key = secrets.token_bytes(32)  # held in a KMS
+          token = hmac.new(key, phone.encode(), "sha256")
+
+          # unsalted:        2000 of 2000 reversed
+          # one shared salt: 2000 of 2000 reversed
+          # HMAC, no key:    0 hits in 200,000 guesses
+
+          # one key across domains: 1000 of 1000 link
+          # one key per domain:     0 of 1000 link
+        bullets:
+          - "Salt sits beside the data, so it adds nothing"
+          - "Keep the key in a KMS"
+          - "Scope keys per domain unless a join is intended"
+        takeaway: Use a keyed hash with the key outside the lake, and treat sharing a key across domains as a deliberate decision to link people.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          The data is still pseudonymised and still in scope. Per-record salts multiply the attacker's search by record
+          count; two hours by extrapolation on this laptop, not measured.
+      - layout: flow
+        title: Three tests of anonymisation
+        steps:
+          - {label: Single out, sub: can you find one person, accent: 1E3A5F}
+          - {label: Link, sub: can you join their records, accent: 0F7490}
+          - {label: Infer, sub: can you learn a value, accent: D4621A}
+        bullets:
+          - "Postcode, birth date, sex: 99.8% unique in the synthetic riders"
+          - "Netflix Prize: 8 ratings with dates identify 99% (IEEE S&P 2008)"
+          - "k=3 with one clinic value teaches you the value: l-diversity"
+        takeaway: Removing names is not anonymising, since behaviour and demographics can single people out and be joined to public lists.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Netflix setup: 500,000 subscribers, 8 ratings of which 2 may be wrong, dates within 14 days. Two ratings with
+          dates within 3 days suffice for 68%. Our generalised k values are flattering, as all synthetic postcodes share 941.
+
+  - title: Delete one person
+    summary: Article 17 · Vacuum · Crypto-shredding · Coverage · Retention
+    notes: >-
+      Now the rider's request. The files are immutable, the backup is on tape, and a feature table nobody remembers holds
+      her too.
+    slides:
+      - layout: statement
+        title: DELETE did not delete her
+        kicker: The problem
+        statement: "After the delete: 0 rows now. Time travel to version 0: 7 rows."
+        attribution: "Delta Lake table, one rider, in notes/02"
+        takeaway: A table format's delete only hides rows from the current version, so erasure is not done until vacuum removes the old files.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Delta's docs: vacuum is not automatic and defaults to 7 days of retention. The run set retention to zero to show
+          the effect, which is dangerous for concurrent readers in production. Iceberg has the same shape.
+      - layout: flow
+        title: Erasure is a path with a deadline
+        steps:
+          - {label: Request, sub: check Article 17 grounds, accent: 1E3A5F}
+          - {label: Find, sub: inventory and lineage, accent: 0F7490}
+          - {label: Delete, sub: rewrite or table delete, accent: 0EA5C9}
+          - {label: Vacuum, sub: remove old files, accent: D4621A}
+          - {label: Verify, sub: check every store, accent: 5B21B6}
+        bullets:
+          - "Article 12(3): within one month, extendable by two for complex cases"
+          - "Not absolute: Article 17(3) keeps records under legal obligation"
+          - "Compaction and retention schedules must fit inside the window"
+        takeaway: The right to erasure has a one-month clock, so the path from request to verified deletion has to be scheduled in advance.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Finance's tax records can legitimately stay while a marketing profile goes. Whether a ground applies is a call for
+          the DPO; making the path finish in time is ours.
+      - layout: table
+        title: Each copy needs its own answer
+        header: [Where, Mechanism, Trap]
+        widths: [2, 3, 4]
+        rows:
+          - ["Parquet lake", "Find files, rewrite", "One rider in 3 of 6 files"]
+          - ["Table format", "Delete, then vacuum", "Time travel keeps her until then"]
+          - ["Backup", "Ledger replay on restore", "17 rows came back on restore"]
+          - ["Encrypted fields", "Destroy a per-person key", "Quasi-identifiers stay readable"]
+          - ["Features, models", "Lineage, then retrain policy", "The table nobody remembers"]
+        bold_first: true
+        takeaway: Erasure is a set of mechanisms over every copy, and it has to fit inside Article 12's one-month response window.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Article 17(3) excludes legal obligation among others, so tax records can stay. Crypto-shredding's legal standing
+          is not settled by our sources; take it to the DPO. Accidental key loss is a breach under the EDPB's example.
+      - layout: code
+        title: Check every store, not the ticket
+        lang: python
+        code: |-
+          for name, source in stores.items():
+              left = c7.sql(f"""SELECT count(*) FROM {source}
+                                WHERE rider_id = 42""")
+              ...
+
+          # clean  lake/trips       0 rows
+          # clean  delta_trips      0 rows
+          # OPEN   rider_features   1 rows
+          # OPEN   backup/2026_01   7 rows
+        bullets:
+          - "Lineage gives the list of stores to check"
+          - "Add a storage scan for what lineage misses"
+          - "A backup stays open until expiry or ledger cover"
+        takeaway: Automate a check across every store, because the ticket reports what was deleted and only the check shows what remains.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          This is why lineage belongs in the erasure process. Paleyes et al. discuss attacks that recover training data, so
+          decide with the DPO whether retraining is on the path.
+      - layout: cards
+        title: Records you can show
+        cards:
+          - {title: Retention, body: "Scheduled, per column, on every store. Free text goes first.", accent: 1E3A5F}
+          - {title: RoPA, body: "Article 30: purposes, categories, recipients, transfers, limits, security.", accent: 0F7490}
+          - {title: Test it, body: "Fare model failed the check: no erase limit, no lawful basis.", accent: D4621A}
+        takeaway: Keep processing records as data with a required-fields test, so a gap fails a check and does not wait for a regulator.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          Article 30 does not list lawful basis; we add it to meet accountability in Article 5(2). Retention periods in the
+          run are invented; real ones come from legal.
+
+  - title: Rules to take with you
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - {title: Measure first, body: "Size the architecture to the data and the concurrency you have.", accent: 1E3A5F}
+          - {title: Mesh is ownership, body: "Domains still run an MDW, fabric or lakehouse.", accent: 0F7490}
+          - {title: Contracts first, body: "Ownership without contracts moves the breakage around.", accent: 0EA5C9}
+          - {title: Rules run in the platform, body: "A standard nobody can fail is a suggestion.", accent: D4621A}
+          - {title: Hashed is not anonymous, body: "Use a keyed hash, and keep the data in scope.", accent: 5B21B6}
+          - {title: Check every copy, body: "Erasure ends when every store is clean.", accent: 94A3B8}
+        takeaway: Decide ownership and enforcement before you need them, because governance only exists where a step can fail.
+        source: notes/01-data-architectures-mesh-fabric-mdw.md
+        notes: >-
+          These restate the two chapters. Everything about GDPR here is engineering guidance, not legal advice.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Chapter 01:** topologies and the scenario prompts, as interview practice"
+          - "**Chapter 02:** run the attacks, then the erasure coverage check"
+          - "**Lineage:** the quality pillar's monitors and lineage chapter"
+          - "**Table formats:** the warehouse pillar's vacuum and snapshot mechanics"
+          - "**Real cases:** take them to your data protection officer"
+        takeaway: Run both chapters' code, then bring real erasure and breach cases to a data protection officer instead of deciding alone.
+        source: notes/02-access-control-pii-gdpr.md
+        notes: >-
+          The chapter code is the practice for this pillar. There is no practice folder.

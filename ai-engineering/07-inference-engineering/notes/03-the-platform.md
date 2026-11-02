@@ -5,11 +5,13 @@ sources:
   - https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html
   - https://github.com/ai-dynamo/nixl
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — The Platform: OS, Containers, Kubernetes, Storage, Networking
 
 > A GPU is only as fast as the machine around it lets it be. A wrong NUMA binding, an unpinned buffer or NCCL falling back to TCP can each cost more than any kernel optimization gains. Most of these fixes are one-line settings, and most fail silently.
+
+Kernel tuning that gains 20% is wasted on a host where NCCL has quietly fallen back to TCP or where a rank allocates across NUMA nodes. Nothing crashes: the job completes, the GPUs look busy, and the slowdown gets blamed on the model. The settings in this chapter are cheap to fix and easy to miss, because most of them fail without an error.
 
 ---
 
@@ -111,6 +113,44 @@ Each of these runs to completion and just runs slowly:
 - **Communicator churn.** Creating and destroying a process group per iteration cost **48 ms** against a **0.5 ms** all-reduce (Table 4-3). Create groups once at startup.
 - **`DataParallel` instead of `DistributedDataParallel`.** DP is single-process and bottlenecked on the GIL and GPU 0: 45 ms vs 30 ms per step on a 2-GPU toy model. Always DDP (or the serving engine's own TP runtime).
 
+These checks are simple enough to script, so run them at startup instead of waiting for someone to notice. The log lines here are ones I wrote to show the pattern. Point the function at real `NCCL_DEBUG=INFO` output.
+
+```python
+# Checks for the silent failures above. The sample log lines are written for this example;
+# run the same checks over a log from NCCL_DEBUG=INFO on your own cluster.
+def audit(log: str, env: dict) -> list[str]:
+    problems = []
+    if "NET/Socket" in log and "NET/IB" not in log:
+        problems.append("RDMA fell back to TCP: log shows NET/Socket and no NET/IB")
+    for var in ("NCCL_P2P_DISABLE", "NCCL_SHM_DISABLE"):
+        if env.get(var) == "1":
+            problems.append(f"{var}=1 left in from debugging")
+    if env.get("NCCL_SOCKET_IFNAME", "").startswith("eth"):
+        problems.append(f"NCCL_SOCKET_IFNAME={env['NCCL_SOCKET_IFNAME']} may be the management network")
+    return problems
+
+good = "NCCL INFO Channel 00/0 : 0[0] -> 1[0] via NET/IB/0/RDMA"
+bad = "NCCL INFO Channel 00/0 : 0[0] -> 1[0] via NET/Socket/0"
+print("healthy:", audit(good, {"NCCL_SOCKET_IFNAME": "ib0"}))
+for p in audit(bad, {"NCCL_P2P_DISABLE": "1", "NCCL_SOCKET_IFNAME": "eth0"}):
+    print("problem:", p)
+
+# Fregly's measurement of a 400 MB all-reduce: what the backend choice costs per layer.
+for name, gb_per_s in [("Gloo", 2), ("NCCL", 100)]:  # MB / (GB/s) = ms
+    print(f"{name}: {400 / gb_per_s:.0f} ms at {gb_per_s} GB/s")
+```
+
+Output:
+
+```text
+healthy: []
+problem: RDMA fell back to TCP: log shows NET/Socket and no NET/IB
+problem: NCCL_P2P_DISABLE=1 left in from debugging
+problem: NCCL_SOCKET_IFNAME=eth0 may be the management network
+Gloo: 200 ms at 2 GB/s
+NCCL: 4 ms at 100 GB/s
+```
+
 Bind each rank to its NUMA node and set `NCCL_IGNORE_CPU_AFFINITY=1` so NCCL does not override the binding. Set `TORCH_NCCL_ASYNC_ERROR_HANDLING=1` so a dead peer raises an error instead of hanging (the book uses the older name `NCCL_ASYNC_ERROR_HANDLING`). The book also sets `NCCL_PORT_RANGE`, which is not a documented NCCL variable; restrict ports with the OS `ip_local_port_range` instead.
 
 The book gives two opposite pieces of advice, "leave NCCL defaults alone" and "never rely on defaults". The reconcilable version: leave tuning variables at default, but set environment-specific ones (interface, topology file, HCA list) explicitly.
@@ -161,3 +201,54 @@ Meta's Llama 3 405B training run (54 days) logged **419 unexpected interruptions
 - Match container CUDA to the host driver. Use the GPU Operator and the Topology Manager on Kubernetes.
 - Treat cold start as a storage problem: local NVMe, sequential shard reads, page cache, and checkpoint/restore for warmed servers.
 - Labs and full scripts for ch. 3–5 are in the book's repository: [cfregly/ai-performance-engineering](https://github.com/cfregly/ai-performance-engineering).
+
+## Pitfalls
+
+- **Not looking at the NCCL log.** Symptom: GPU utilization drops and CPU spikes during every all-reduce, with no error. Fix: run with `NCCL_DEBUG=INFO` once on each new fabric, and fail if any channel says `NET/Socket`.
+- **Debug variables left in the environment.** Symptom: NVLink transfers that should take microseconds take tens of them, and a log line saying "unable to enable P2P, falling back to copy". Fix: remove `NCCL_P2P_DISABLE` and `NCCL_SHM_DISABLE`, and audit the environment at startup.
+- **A process group per iteration.** Symptom: a 0.5 ms all-reduce wrapped in 48 ms of communicator setup and teardown (Table 4-3). Fix: create groups once at startup.
+- **Assuming MPS isolates tenants.** Symptom: one process's fault takes down the others, because MPS shares a context with no memory isolation. Fix: keep MPS for cooperating, trusted processes, use MIG (1g.23gb to 7g.180gb on a B200) when tenants need isolation, and give one large model a whole GPU.
+- **`always` for transparent huge pages on a latency service.** Symptom: latency spikes from background compaction. Fix: `madvise` for inference, and keep `always` for training.
+- **Blaming containers for slowness.** Symptom: time spent removing Docker, when Fregly measures under 2% overhead. The real container problem is version skew between the image's CUDA toolkit and the host driver. Fix: pin both, noting CUDA 13 needs driver R580 or later.
+- **Quoting the ratio of wait times as the speedup.** Symptom: the book's "6×" for cutting GPU wait from 30% to 5%. Busy time goes from 70% to 95%, so the gain is about 1.36×. Fix: compute the ratio of busy time.
+
+## Try it
+
+1. The `audit` function above has a bug. Give it a log where one channel uses `NET/IB` and another uses `NET/Socket`. What does it return, and what is the fix?
+
+   <details><summary>Answer</summary>
+
+   It returns `[]`, because the condition also requires that `NET/IB` is absent. One channel on TCP still limits every collective that crosses it. Changing the condition to `if "NET/Socket" in log:` reports the fallback; I ran both versions on such a log. The message text then needs changing too, since `NET/IB` is present.
+
+   </details>
+
+2. How much does communicator churn multiply the cost of each all-reduce, using Table 4-3's numbers?
+
+   <details><summary>Answer</summary>
+
+   (48 + 0.5) / 0.5 = 97×, per iteration, for a cost that a single line at startup removes.
+
+   </details>
+
+3. A vendor says cutting GPU wait from 50% to 10% gives "5×". What is the real figure?
+
+   <details><summary>Answer</summary>
+
+   Busy time goes from 50% to 90%, so throughput rises 1.8×. The 5× is the ratio of the wait times, the same slip as the book's 30% to 5%. These inputs are my own example.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| A job runs to completion, but GPU utilization dips and CPU spikes on each all-reduce. What do you check? | The NCCL log for `NET/Socket` instead of `NET/IB`, then `NCCL_SOCKET_IFNAME`. RDMA falling back to TCP gives this signature and no error. |
+| What did Fregly measure for Gloo against NCCL? | On a 400 MB all-reduce with 2 ranks over 800 Gb/s InfiniBand, Gloo took 200 ms (2 GB/s, a CPU core near 100%) and NCCL took 4 ms (~100 GB/s, line rate). |
+| MIG or MPS for several small models on one B200? | MIG when they have separate SLOs or need isolation, since MPS has no memory isolation. MIG's costs: changing the layout needs an idle, reset GPU, and instances can't use NVLink peer-to-peer. |
+| Do containers slow GPU work? | Under 2% in Fregly's measurement, because the driver is shared. The risk is version skew between the image's CUDA toolkit and the host driver. |
+| What fails most at scale, and what does a fleet need for it? | Meta's Llama 3 405B run logged 419 interruptions in 54 days, 30.1% faulty GPUs and 17.2% HBM3. So you need health checks (DCGM, XID errors), timeouts on collectives, and a way to pull a degraded GPU. |
+| Your cold start takes too long. What are the options from this note? | Fast NVMe and the page cache for weights, persistence mode for the 1–2 s driver init, and `cuda-checkpoint` with CRIU to restore a warmed, compiled server instead of rebuilding it. |
+
+## Next
+
+[04-kernels.md](04-kernels.md): with the platform out of the way, what the profiler says about a kernel that is still slow.

@@ -1,0 +1,474 @@
+# Transform and orchestrate lecture deck. Covers notes 01-05.
+# Build: make slides PILLAR=data-engineering/03-transform-and-orchestrate STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: synthetic taxi trips through dbt on DuckDB, then one daily pipeline in Dagster and Airflow. Numbers come from the runs printed in the chapters.
+deck:
+  title: Transform and Orchestrate
+  subtitle: Tested models, built for the right day, safe to run twice
+  tagline: |-
+    dbt · Schedules · Idempotency · Dagster · Airflow
+  reference: "Notes: data-engineering/03-transform-and-orchestrate"
+  output: transform-and-orchestrate.pptx
+  notes: >-
+    Today we take landed tables and make them into tested models that build on schedule. Each part fixes something that fails silently, so the running question is how you would ever have found out.
+
+parts:
+  - title: Transform
+    summary: ELT · Layers · Tests · What a test protects
+    notes: >-
+      A wrong number should be traceable to one line in one file. dbt is how this course gets there, and the first surprise is what its tests do not protect.
+    slides:
+      - layout: statement
+        title: Every test passed and the revenue was gone
+        kicker: The problem
+        statement: "An inner join dropped 5,680 trips and about $96,000. Revenue read $5.00M instead of $5.10M, and no test failed."
+        attribution: Measured in chapter 1, on 300,000 synthetic trips
+        takeaway: Inner joins turn missing dimension rows into missing revenue, and tests on individual columns cannot see it happen.
+        source: notes/01-transform.md
+        notes: >-
+          Nothing in those rows was invalid. They had a zone the lookup did not know. The fix is a left join through a default row, and a count of the unknowns.
+
+      - layout: flow
+        title: Raw data becomes a mart in layers
+        recall: Which layer is allowed to hold business logic?
+        steps:
+          - Source, declared
+          - Staging, rename and cast
+          - Core, facts and dimensions
+          - Mart, one question
+        bullets:
+          - "**ELT:** the raw layer stays, so any model can be rebuilt."
+          - "**`ref()`:** model references build the dependency graph for you."
+        takeaway: Staging is mechanical, core holds the joins and rules, and marts answer questions, so every number has an obvious place to look.
+        source: notes/01-transform.md
+        notes: >-
+          Kleppmann describes the same shift as the data lake's sushi principle in DDIA chapter 10, where raw data is better. Keeping raw is what makes a full refresh a repair.
+
+      - layout: code
+        title: A dedupe key is a claim about the data
+        recall: How would a too-narrow key show up in row counts?
+        lang: sql
+        code: |-
+          select *, row_number() over (
+            partition by vendorid,
+                         lpep_pickup_datetime
+          ) as rn
+          from {{ source('staging', 'green_tripdata') }}
+          -- keep rn = 1
+          -- two-column key: 99,040 rows
+          -- source has 100,000 real trips
+        bullets:
+          - "**Too narrow:** 960 real trips deleted."
+          - "**Too wide:** duplicates survive."
+          - "**Check it:** count before and after."
+        takeaway: Test a deduplication key against the data, since the zoomcamp's two-column key removed 960 real trips on ours.
+        source: notes/01-transform.md
+        notes: >-
+          The zoomcamp block has no order by, so among duplicates that differ, which row you keep can change between runs. Adding pickup zone and amount to the key gets all 100,000 back.
+
+      - layout: compare
+        title: What a failing test protects
+        recall: Why is the tested table not protected?
+        left:
+          title: The tested model
+          tag: "Already rebuilt"
+          bullets:
+            - "`dbt build` runs the model, then its tests"
+            - The bad version is live when the test fails
+            - One failing row for 200 bad source rows, by `accepted_values`
+        right:
+          title: Everything downstream
+          tag: "Skipped"
+          bullets:
+            - The mart does not build
+            - Readers keep yesterday's mart
+            - Chapter 4 closes the gap with write-audit-publish
+        emphasis: right
+        takeaway: A failing dbt test stops the models downstream, but the table it tested has already been replaced.
+        source: notes/01-transform.md
+        notes: >-
+          The accepted_values test reports distinct failing values, so one row of output can stand for 200 rows of bad data. Read test output with that in mind.
+
+  - title: Orchestrate
+    summary: Dependencies · Retries · Logical dates
+    notes: >-
+      Tasks exist now. What decides when they run, for which day, and what stops when one fails?
+    slides:
+      - layout: statement
+        title: Cron has no idea anything failed
+        kicker: The problem
+        statement: "The extract failed at 03:00, the transform ran anyway on yesterday's file, and the dashboard showed a flat line. Nobody was told."
+        attribution: The failure chapter 2 opens with
+        takeaway: A cron line runs commands on time and decides nothing else, so dependency, retry and date decisions end up undocumented.
+        source: notes/02-orchestrate.md
+        notes: >-
+          Then someone has to work out from log files which days need re-running. An orchestrator makes each of these decisions explicit.
+
+      - layout: flow
+        title: When a task fails for good, downstream must not run
+        recall: What would a cron script have done in this case?
+        steps:
+          - extract fails 3 times
+          - transform skipped
+          - test skipped
+          - publish skipped
+        bullets:
+          - "**Retries:** for transient failures, with backoff and a small limit."
+          - "**Skipping:** `publish` cannot release yesterday's numbers as today's."
+        takeaway: Retry transient failures within a limit, then stop and skip everything downstream, so old data never goes out under a new date.
+        source: notes/02-orchestrate.md
+        notes: >-
+          The toy orchestrator in chapter 2 is fifty lines and does this. Every tool's core is this loop, plus a recorded logical date.
+
+      - layout: code
+        title: A task takes its day as a parameter
+        recall: What breaks when a task reads the clock?
+        lang: python
+        code: |-
+          def extract(day):
+              path = f"landing/{day}.parquet"
+              write_day(path, day)
+
+          # bad: day = date.today()
+          # a rerun for last Tuesday
+          # computes today instead
+          run(pipeline, day="2026-01-05")
+        bullets:
+          - "**Reads** only what upstream wrote."
+          - "**Writes** to a path built from the day."
+          - "**Hands off** through storage, not memory."
+        takeaway: Each task receives the day it is for and writes to a path derived from it, which is what makes re-running one day possible.
+        source: notes/02-orchestrate.md
+        notes: >-
+          These three habits are most of the craft, and they apply across Mage, Prefect, Kestra, Dagster and Airflow. Prefect in the chapter uses the same flow with a test harness.
+
+  - title: dbt in depth
+    summary: Grain tests · Snapshots · Incremental
+    notes: >-
+      As the project grows, three things break in a predictable order. A number goes wrong unseen, somebody asks about last quarter, and the nightly rebuild outgrows the night.
+    slides:
+      - layout: statement
+        title: One innocent row added 12.5 percent to revenue
+        kicker: The problem
+        statement: "A second row for zone 3 took the fact from 1,000 rows to 1,125, and revenue from $24,870 to $27,980."
+        attribution: Measured in chapter 3
+        takeaway: A duplicate in a dimension multiplies the fact, and only a test of the grain or a reconciliation to source will notice.
+        source: notes/03-dbt-tests-snapshots-incremental.md
+        notes: >-
+          Nothing about that row is invalid. The wrong number is small enough to be believed, which is why this test is the cheapest and most valuable you will write.
+
+      - layout: table
+        title: Data tests and unit tests answer different questions
+        recall: Which one runs before the model builds?
+        header: [Test, Checks, Catches]
+        widths: [2, 3, 5]
+        rows:
+          - [Generic, "One column or key", "Duplicates, nulls: `unique` on `dim_zones` named the cause"]
+          - [Singular, "Any SQL assertion", "Fact no longer adds up to source"]
+          - [Thresholds, "How much dirt is tolerable", "12 negative fares warn, 51 would stop the build"]
+          - [Unit, "Logic, on rows you wrote", "`<` changed to `<=` at a band boundary"]
+        highlight: [1]
+        takeaway: Data tests check today's data after a build, unit tests check logic against mocks before one, and you need both.
+        source: notes/03-dbt-tests-snapshots-incremental.md
+        notes: >-
+          Write a reason next to every threshold. One that nobody remembers setting is where drift hides. A monitor that watches the trend is the longer-term home, in pillar 5.
+
+      - layout: flow
+        title: A snapshot is a series of samples
+        recall: Why does a snapshot ignore --full-refresh?
+        steps:
+          - Source row changes
+          - Next run compares
+          - Old version closed
+          - New version opened
+        bullets:
+          - "**The gap:** Red Hook was in Queens for one day between runs, and nothing can recover that."
+          - "**`timestamp`:** trusts `updated_at`. **`check`:** misses anything outside `check_cols`."
+          - "**Unlike a model:** it cannot be rebuilt, so a missed run is an incident."
+        takeaway: A snapshot records only the states it saw when it ran, so run it as often as the source changes or capture changes at the source.
+        source: notes/03-dbt-tests-snapshots-incremental.md
+        notes: >-
+          Greenpoint's move to Brooklyn gives two contiguous versions in the chapter. Keep logic out of snapshots, so a transform bug cannot get baked into history. Hard deletes are ignored unless you set hard_deletes.
+
+      - layout: code
+        title: A watermark cannot see late rows
+        recall: Which test would have caught the missing row?
+        lang: sql
+        code: |-
+          {{ config(materialized='incremental',
+                    unique_key='trip_id') }}
+          select * from {{ ref('stg_trips') }}
+          {% if is_incremental() %}
+          where pickup_at > (
+            select max(pickup_at) - interval 3 day
+            from {{ this }})
+          {% endif %}
+          -- 2 days late: present. 4 days: lost.
+        bullets:
+          - "**`unique_key`:** absorbs overlap, without it 1,001 rows."
+          - "**Lookback:** a bet about lateness."
+          - "**Full refresh:** repairs all, if raw was kept."
+        takeaway: A lookback with a unique key handles most late rows, and a periodic full refresh from raw repairs what is later than the window.
+        source: notes/03-dbt-tests-snapshots-incremental.md
+        notes: >-
+          With a watermark and no lookback, the late row is gone and every test on the table passes. The reconciliation test is what catches it. Measure real lateness and set the window from that.
+
+      - layout: table
+        title: Incremental strategies
+        recall: Why must insert_overwrite carry the whole partition?
+        header: [Strategy, Does, Watch out for]
+        widths: [2, 4, 4]
+        rows:
+          - ["`append`", "Inserts, no matching", "Any overlap duplicates"]
+          - ["`merge`", "Matches on `unique_key`", "Scans the target"]
+          - ["`delete+insert`", "Deletes keys, inserts", "Two statements"]
+          - ["`insert_overwrite`", "Replaces partitions", "Partial batch loses rows"]
+          - ["`microbatch`", "One bounded query per period", "Needs `event_time` upstream"]
+        highlight: [4]
+        takeaway: Pick the strategy by how rows change, and prefer replacing whole periods where the data has reliable event time.
+        source: notes/03-dbt-tests-snapshots-incremental.md
+        notes: >-
+          Microbatch restated January 2nd from 5,179 to 25,879 dollars and its neighbours did not move. Available strategies differ by adapter, so check yours.
+
+  - title: Idempotency and backfills
+    summary: Replace a period · Purity · Audit · Backfill
+    notes: >-
+      Every pipeline gets run twice eventually. This part is about making that boring.
+    slides:
+      - layout: statement
+        title: The second run doubled the table
+        kicker: The problem
+        statement: "After one run: 1,100 trips. After running it again: 2,200. No error, because INSERT did exactly what it says."
+        attribution: Measured in chapter 4
+        takeaway: An orchestrator that re-runs a non-idempotent task makes the damage worse, so idempotency has to come before retries.
+        source: notes/04-idempotency-and-backfills.md
+        notes: >-
+          Kleppmann makes the larger argument in DDIA chapter 10. If a batch job replaces its output, you can roll back the code and run it again, which he calls human fault tolerance.
+
+      - layout: table
+        title: Three ways to write, one of them wrong
+        recall: Why is overwrite the default rather than merge?
+        header: [Write mode, Rerun, Rows deleted upstream]
+        widths: [3, 3, 4]
+        rows:
+          - [Append, Duplicates, Stay]
+          - [Overwrite a partition, Same result, Disappear]
+          - [Merge on a key, Same result, "**Stay**"]
+        highlight: [1]
+        takeaway: Overwriting a period is the default because a rerun is harmless and rows deleted upstream disappear, which a merge cannot do.
+        source: notes/04-idempotency-and-backfills.md
+        notes: >-
+          Use merge for slowly changing entities and CDC, where no period owns the row. Do the delete and insert in one transaction, or readers can catch the gap.
+
+      - layout: flow
+        title: Write, audit, publish
+        recall: Which gap from chapter 1 does this close?
+        steps:
+          - Write a staging copy
+          - Audit it
+          - Swap only if it passes
+        bullets:
+          - "**Measured:** a truncated Jan 13 shrank to 40 rows, was refused, and readers kept 1,130."
+          - "**On object stores:** table formats commit a snapshot atomically."
+        takeaway: Between written and visible there is a place to run tests, so bad data is refused before any reader sees it.
+        source: notes/04-idempotency-and-backfills.md
+        notes: >-
+          The whole-table copy in the chapter is for clarity. A warehouse would use a zero-copy clone or a table format branch, so the audit costs little.
+
+      - layout: compare
+        title: A backfill decides what the past should say
+        recall: When is restating history legitimate?
+        left:
+          title: Today's dimension
+          tag: "Rewrites history"
+          bullets:
+            - Rerun Jan 10 after Greenpoint moved on the 15th
+            - 137 trips change borough
+            - Queens falls from 550 to 413
+        right:
+          title: That day's dimension
+          tag: "Reproducible"
+          bullets:
+            - Join to a dated dimension
+            - Or read a per-day dimension snapshot
+            - Same answer, whenever it is rebuilt
+        emphasis: right
+        takeaway: Joining an old day to today's dimension changes old numbers, which can be a legitimate choice but must never be an accidental one.
+        source: notes/04-idempotency-and-backfills.md
+        notes: >-
+          A nightly job on a Type 1 dimension and a backfill of that job give different answers for one day. Then the table's history depends on when each partition was built.
+
+      - layout: code
+        title: Past-dependent tables have an order
+        recall: How would a window function remove the ordering problem?
+        lang: python
+        code: |-
+          for day in sorted(days):
+              build_cumulative(day)   # 12,700
+
+          for day in sorted(days, reverse=True):
+              build_cumulative(day)   # 1,200
+
+          # restate Jan 14:
+          #   daily table:      1 partition
+          #   cumulative table: 7, in order
+        bullets:
+          - "**No error:** each day starts from zero."
+          - "**Daily tables:** any order, any parallelism."
+          - "**Payoff:** one worker or four, same hash."
+        takeaway: Keep daily partitions independent and derive cumulative figures from them, so that a backfill can run in any order.
+        source: notes/04-idempotency-and-backfills.md
+        notes: >-
+          Airflow's depends_on_past and Dagster's partition mappings declare exactly this. Reconcile against source afterwards, because a green run only says that tasks finished.
+
+  - title: Dagster and Airflow
+    summary: Assets · Tasks · Timetables · Backfills
+    notes: >-
+      One pipeline, written twice, broken the same three ways. The interesting output is what each tool can tell you the morning after.
+    slides:
+      - layout: statement
+        title: Did it run, or which days are wrong?
+        kicker: The problem
+        statement: "Airflow says a pipeline is tasks that ran. Dagster says it is tables that should exist."
+        attribution: The comparison in chapter 5
+        takeaway: The core difference is that Airflow's nodes are work and Dagster's are data, and most other differences follow from that.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          After an outage, the question at 09:00 is which days of which tables are wrong. Hold that question against everything in this part.
+
+      - layout: code
+        title: "Dagster: declare the tables"
+        recall: What makes a failed check stop the report?
+        lang: python
+        code: |-
+          daily = dg.DailyPartitionsDefinition(
+              start_date="2026-01-10")
+
+          @dg.asset(partitions_def=daily,
+                    deps=[raw_trips])
+          def daily_revenue(context):
+              build_daily(context.partition_key)
+
+          @dg.asset_check(asset=daily_revenue,
+                          blocking=True)
+          def fares_positive(): ...
+        bullets:
+          - "**Partitions:** a set the tool enumerates."
+          - "**Blocking:** off by default, on here."
+          - "**Missing days:** a query on the instance."
+        takeaway: Dagster declares assets with shared partitions and attached checks, so it can list which days of each table are missing.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          In the chapter, get_materialized_partitions lists the days that exist, a loop fills the rest, and running a day again leaves 12,650 trips unchanged. A real backfill runs from the UI and the daemon.
+
+      - layout: code
+        title: "Airflow: declare the work"
+        recall: What is the state of zone_report when the check fails?
+        lang: python
+        code: |-
+          @dag(schedule=CronDataIntervalTimetable(
+                  "0 3 * * *", timezone="UTC"),
+               start_date=dt.datetime(2026, 1, 10))
+          def taxi_daily():
+              @task(retries=2)
+              def daily_revenue(ds=None):
+                  build_daily(ds)
+              @task
+              def fares_positive(): ...
+              daily_revenue() >> fares_positive()
+        bullets:
+          - "**A check is a step:** Airflow does not know it tests a table."
+          - "**Failure:** `failed`, then `upstream_failed`."
+        takeaway: Airflow describes ordered tasks, so a failing check stops what follows, and the meaning for tables is left for you to infer.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          The states are the same outcome as Dagster's, in a different vocabulary. Run on Airflow 3.3.2. Tutorials for 2.x will mislead you in several places.
+
+      - layout: table
+        title: "Cron changed meaning in Airflow 3"
+        recall: Which day does a default cron run process on Jan 14 at 03:00?
+        header: [Timetable, Fires, Logical date, "`ds` covers"]
+        widths: [4, 2, 2, 3]
+        rows:
+          - ["`CronTriggerTimetable`, default in 3.0", "Jan 14 03:00", "Jan 14 03:00", "A day still in progress"]
+          - ["`CronDataIntervalTimetable`, default in 2.x", "Jan 15 03:00", "Jan 14 03:00", "The day just ended"]
+          - ["Dagster partitioned schedule", "Jan 14 03:00", "partition Jan 13", "The day just ended"]
+        highlight: [0]
+        takeaway: A bare cron string in Airflow 3 makes the logical date equal the fire time, so name the timetable or a job reads a partial day.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          This changed through a config default in 3.0. A Dag written for 2.x keeps running after the upgrade and quietly processes the wrong day.
+
+      - layout: flow
+        title: A real backfill in Airflow 3
+        recall: Why did --max-active-runs 2 fail here?
+        steps:
+          - Plan with --dry-run
+          - Create the backfill
+          - Scheduler carries it out
+          - Reconcile the tables
+        bullets:
+          - "**Measured:** Jan 15 to 17 filled, 6,870 trips across the six days."
+          - "**Parallel broke it:** two runs hit DuckDB's single-writer lock."
+        takeaway: An Airflow backfill is a request the scheduler executes, so concurrency must respect what the warehouse can write at once.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          reprocess-behavior chooses what happens to days that already ran. A poisoned day left unrepaired also failed every backfilled run, because our check scans the whole table.
+
+      - layout: cards
+        title: Choosing, having run both
+        recall: What matters more than the choice of tool?
+        cards:
+          - title: Already on Airflow
+            body: "Stay. Be explicit about timetables and adopt assets."
+          - title: New platform, mostly dbt
+            body: "Dagster. `dagster-dbt` made 2 models assets and 2 tests checks."
+          - title: Interviews
+            body: "Learn Airflow, understand Dagster, and contrast the two."
+        takeaway: Run the one you already have, and remember that neither tool fixes a non-idempotent task or a missing logical date.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          On Airflow, Cosmos plays the role of dagster-dbt; it was not run for this chapter. Airflow's assets give scheduling on data events, but not per-partition state.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    notes: >-
+      One slide of rules, then where to go next.
+    slides:
+      - layout: cards
+        title: What to remember
+        recall: Which of these would have caught the $96,000?
+        cards:
+          - title: Test the grain
+            body: "Every model that joins, at error severity."
+          - title: Left join to Unknown
+            body: "Inner joins lose revenue silently."
+          - title: Take the date as a parameter
+            body: "Never read the clock in a task."
+          - title: Idempotent before retries
+            body: "Replace the period in one transaction."
+          - title: Snapshots cannot be rebuilt
+            body: "A missed run is an incident."
+          - title: Name your timetable
+            body: "Airflow 3's cron default reads a partial day."
+        takeaway: Each rule turns something that used to fail silently into something that fails loudly, or cannot fail at all.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          The theme of the subject: a stage silently trusts the one before it. Tests, logical dates and idempotent writes are this pillar's way of making that trust explicit.
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillar prices these runs?
+        bullets:
+          - "**04 Warehouse, lakehouse, streaming:** storage layout decides what each run costs."
+          - "**05 Quality and observability:** monitors for what tests did not foresee."
+          - "**Run the code:** scripts for each chapter in `practice/`."
+          - "**Read:** DDIA ch. 10; dbt incremental docs; Airflow backfill docs."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: Everything gets run twice, so make running twice boring.
+        takeaway: Pillar 4 covers the storage these runs write to, where layout and table formats decide the cost and atomicity of each run.
+        source: notes/05-dagster-and-airflow.md
+        notes: >-
+          Next we look at where the tables live. Partitions, clusters, file formats and table formats come back to the same ideas of replacing periods atomically.

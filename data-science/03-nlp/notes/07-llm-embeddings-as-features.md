@@ -12,9 +12,9 @@ cleaned: 2026-11-01
 ---
 # LLM embeddings as features
 
-A pretrained sentence encoder turns any text into a few hundred numbers, and once text is numbers, everything from classical ML applies again. That sounds like the end of TF-IDF. So does it win, by how much, and at what cost? Three chapters back, on film descriptions, TF-IDF reached a macro-F1 of 0.423, and we promised a fair comparison on the same task.
+A pretrained sentence encoder turns any text into a few hundred numbers, and once text is numbers, everything from classical ML applies again. That sounds like the end of TF-IDF. So does it win, by how much, and at what cost? In [the classification chapter](02-text-classification.md), on film descriptions, tuned TF-IDF reached a macro-F1 of 0.423, and we promised a fair comparison on the same task.
 
-This chapter keeps that promise, then uses the same vectors for the two other jobs a data scientist gets handed: finding groups without labels and finding the lines that do not belong. There is no new model to train in most of it. You call an encoder once, cache the matrix, and hand it to scikit-learn. The questions that are left are ordinary ML questions, which is the point.
+This chapter keeps that promise, then uses the same vectors for the two other jobs a data scientist gets handed: finding groups without labels and finding the lines that do not belong. There is no new model to train in most of it. You call an encoder once, cache the matrix, and hand it to scikit-learn. The questions that are left are ordinary ML questions, which is the point. Chapters 4 and 5 of Alammar and Grootendorst's [*Hands-On Large Language Models*](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models) walk the same route on other data, and are the best companion reading.
 
 ```mermaid
 flowchart LR
@@ -73,7 +73,7 @@ matrix: (4775, 384) float32  first row norm: 1.0
 max_seq_length: 256  median pieces: 69  share truncated: 0.0
 ```
 
-What that gives over TF-IDF is easy to show. Ask both for the film nearest a description that shares few words with any of them.
+What does that give over TF-IDF? Ask both for the films nearest the same description and read the difference.
 
 ```python
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -102,7 +102,7 @@ MiniLM
   0.51  Light Sleeper                   Drama
 ```
 
-TODO_NEAR
+Neither list is embarrassing, and the difference is in how each got there. TF-IDF's hits lean on the rare words: "hitman" for Chicago Overcoat and Bullet to the Head, the shared root of "retired" and "retirement" for The Crew, whose four mobsters are planning a heist, not revenge. MiniLM finds Exiled, which says "ex-gangster" and "hitmen", and Kill List, whose description never mentions retirement but does describe a hitman's new job. It also returns Light Sleeper, a drug dealer's story, on a loose sense of a good man in a deadly business and a lost wife. So the encoder matches on meaning, including the wrong meaning, and its similarity scores are not comparable with TF-IDF's: 0.53 and 0.20 are on different scales, and no threshold carries across.
 
 ## Classification: the fair comparison
 
@@ -159,7 +159,9 @@ print("majority class accuracy:", round(float((y[idx_test] == majority).mean()),
 majority class accuracy: 0.315
 ```
 
-TODO_CURVE
+MiniLM wins at every size, and the size of the win changes with the labels. At 60 labels, ten per genre, its score is almost twice TF-IDF's (0.261 against 0.144). The gap in points peaks at 0.15 to 0.16 between 150 and 600 labels, then falls to 0.08 on the full training set as TF-IDF collects enough words to use. TF-IDF's curve is still climbing faster at the right edge, so more data would probably narrow the gap further, though this dataset has no more to give. Neither reaches anything like high accuracy, because a film's first listed genre is partly arbitrary.
+
+One number needs a straight account. TF-IDF scores 0.404 here against 0.423 in [the classification chapter](02-text-classification.md), on the same split. That chapter also searched unigrams and trigrams, with five folds, and picked a better pipeline for its full training set. A fixed bigram range is simpler to run across this many draws. Giving TF-IDF the better 0.423 leaves it 0.06 behind MiniLM's 0.484, so the comparison's direction does not hang on that choice.
 
 ### Which head, and what else to feed it
 
@@ -193,18 +195,37 @@ tab = np.column_stack([movies.runtime.fillna(movies.runtime.median()), np.log1p(
 sc = StandardScaler().fit(tab[idx_train])
 report("MiniLM plus runtime, budget, revenue", LogisticRegression(max_iter=3000, C=10),
        np.hstack([A, sc.transform(tab[idx_train])]), np.hstack([B, sc.transform(tab[idx_test])]))
+
+def gap(name, p, q, draws=1000):
+    """Macro-F1 of p minus q, resampling the test films. Same fitted models throughout, so this is test-set noise only."""
+    rs, truth, d = np.random.RandomState(0), y[idx_test], []
+    for _ in range(draws):
+        i = rs.randint(0, len(truth), len(truth))
+        d.append(f1_score(truth[i], p[i], average="macro") - f1_score(truth[i], q[i], average="macro"))
+    lo, hi = np.percentile(d, [2.5, 97.5])
+    print(f"{name:26} difference {np.mean(d):+.3f}, 95% interval {lo:+.3f} to {hi:+.3f}")
+
+pred_lr = lr.predict(B)
+pred_tf = LogisticRegression(max_iter=3000, C=10).fit(Wa, y[idx_train]).predict(Wb)
+pred_svm = SVC(C=3).fit(A, y[idx_train]).predict(B)
+gap("MiniLM vs TF-IDF", pred_lr, pred_tf)
+gap("RBF SVM vs logistic", pred_svm, pred_lr)
 ```
 
 ```text
 MiniLM + logistic regression       macro-F1 0.484  accuracy 0.555    0.1s
 MiniLM + RBF SVM                   macro-F1 0.496  accuracy 0.578    1.3s
-MiniLM + gradient boosting         macro-F1 0.407  accuracy 0.549   16.7s
-TF-IDF + logistic regression       macro-F1 0.407  accuracy 0.549    0.6s
-TF-IDF and MiniLM together         macro-F1 0.484  accuracy 0.583    1.3s
+MiniLM + gradient boosting         macro-F1 0.407  accuracy 0.549   27.9s
+TF-IDF + logistic regression       macro-F1 0.407  accuracy 0.549    0.7s
+TF-IDF and MiniLM together         macro-F1 0.484  accuracy 0.583    1.5s
 MiniLM plus runtime, budget, revenue macro-F1 0.487  accuracy 0.559    0.1s
+MiniLM vs TF-IDF           difference +0.076, 95% interval +0.034 to +0.120
+RBF SVM vs logistic        difference +0.013, 95% interval -0.022 to +0.047
 ```
 
-TODO_HEADS
+Three things to read off this. The nonlinear heads do not repay their cost: the RBF SVM's extra 0.01 sits well inside the test-set noise, and gradient boosting, which suits a few meaningful columns, does worse on 384 anonymous ones and takes far longer. (Its 0.407 matching TF-IDF's is a coincidence; the two differ in the fourth decimal.) Adding TF-IDF to the vectors raises accuracy a little but not macro-F1. And the tabular columns add almost nothing here, although nothing stopped us putting them in, which is the real point: an embedding is just more columns next to the ones you already have.
+
+The bootstrap shows why single-digit differences on 960 test films should not be reported as wins. MiniLM's lead over TF-IDF has an interval clear of zero. The SVM's lead over logistic regression does not.
 
 How many of the 384 numbers do you need? Storage and search cost scale with the dimension, so it is worth a check. PCA fitted on training vectors alone shows how much each extra dimension buys on this task.
 
@@ -226,41 +247,43 @@ for d in [8, 16, 32, 64, 128, 384]:
  384 dims  explained variance 1.00  macro-F1 0.482
 ```
 
-TODO_PCA
+Sixteen components keep 28% of the variance and nearly all of the macro-F1, and beyond that the scores wobble within the noise we just measured. That does not mean the other dimensions are empty. Genre is a coarse target, and a finer task such as search might use them. For this task the vector could be stored at a twentieth of its size, and the PCA has to be fitted, saved and applied to every new document, so weigh that against simply storing 384 numbers.
 
 ### Few-shot: SetFit
 
 The curve above freezes the encoder and fits only the head. SetFit ([arXiv:2209.11055](https://arxiv.org/abs/2209.11055), Tunstall et al., 2022, preprint) goes one step further and fine-tunes the encoder on your few labels first. It builds pairs from them, same class as positive and different class as negative, runs contrastive training on those pairs, and then fits a logistic regression on the tuned vectors. That turns eight labels per class into many pairs. The paper reports that with eight labels per class its MPNet version beats standard fine-tuning by an average of 19.3 points over its six test datasets, narrowing to 5.6 points at 64 per class, and that it needs no prompts and only a sentence encoder.
 
-Here is the same idea on our task, eight labels per class, against a frozen encoder given the same labels.
+Here is the same idea on our task, eight labels per class, against a frozen encoder and TF-IDF given the same labels, over three draws of those labels. We use the MiniLM encoder and SetFit's default 20 iterations.
 
 ```python
 from datasets import Dataset
 from setfit import SetFitModel, Trainer, TrainingArguments
 
-few = pd.Series(idx_train).groupby(y[idx_train]).apply(lambda s: s.sample(8, random_state=0)).to_numpy()
-frozen = fit_minilm(few)
-print("frozen encoder, 48 labels: macro-F1", round(f1_score(y[idx_test], frozen.predict(X_all[idx_test]), average="macro"), 3))
-print("TF-IDF, 48 labels:         macro-F1", round(f1_score(y[idx_test], fit_tfidf(few).predict(text[idx_test]), average="macro"), 3))
+import contextlib, io
 
-setfit_model = SetFitModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
-trainer = Trainer(model=setfit_model, train_dataset=Dataset.from_dict({"text": text[few].tolist(), "label": y[few].tolist()}),
-                  args=TrainingArguments(batch_size=16, num_iterations=5, num_epochs=1, report_to="none", logging_strategy="no", save_strategy="no", seed=0))
-start = time.time()
-trainer.train()
-pred = setfit_model.predict(text[idx_test].tolist(), show_progress_bar=False)
-print("SetFit, 48 labels:         macro-F1", round(f1_score(y[idx_test], np.asarray(pred), average="macro"), 3), f" {time.time() - start:.0f}s on CPU")
+print("draw   TF-IDF   frozen encoder   SetFit")
+for draw in range(3):
+    few = pd.Series(idx_train).groupby(y[idx_train]).apply(lambda s: s.sample(8, random_state=draw)).to_numpy()
+    tf = f1_score(y[idx_test], fit_tfidf(few).predict(text[idx_test]), average="macro")
+    fr = f1_score(y[idx_test], fit_minilm(few).predict(X_all[idx_test]), average="macro")
+    model = SetFitModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
+    args = TrainingArguments(batch_size=16, num_iterations=20, num_epochs=1, report_to="none", logging_strategy="no", save_strategy="no", seed=draw)
+    trainer = Trainer(model=model, train_dataset=Dataset.from_dict({"text": text[few].tolist(), "label": y[few].tolist()}), args=args)
+    start = time.time()
+    with contextlib.redirect_stdout(io.StringIO()):         # trainer logs would drown the table
+        trainer.train()
+    pred = np.asarray(model.predict(text[idx_test].tolist(), show_progress_bar=False))
+    print(f"{draw:4}    {tf:.3f}      {fr:.3f}          {f1_score(y[idx_test], pred, average='macro'):.3f}   {time.time() - start:.0f}s on CPU")
 ```
 
 ```text
-frozen encoder, 48 labels: macro-F1 0.272
-TF-IDF, 48 labels:         macro-F1 0.201
-{'embedding_loss': '0.1064', 'grad_norm': '0.9495', 'learning_rate': '0', 'epoch': '0.03333'}
-{'train_runtime': '5.524', 'train_samples_per_second': '86.9', 'train_steps_per_second': '5.431', 'train_loss': '0.2288', 'epoch': '1'}
-SetFit, 48 labels:         macro-F1 0.29  6s on CPU
+draw   TF-IDF   frozen encoder   SetFit
+   0    0.201      0.272          0.309   14s on CPU
+   1    0.244      0.371          0.430   15s on CPU
+   2    0.240      0.341          0.373   16s on CPU
 ```
 
-TODO_SETFIT
+SetFit beats the frozen encoder in all three draws, by 0.03 to 0.06, and both beat TF-IDF comfortably. That is a real but modest gain, and well short of the paper's 19.3 points, because the paper was measuring against fine-tuning a whole transformer on few labels, which overfits. A frozen encoder with a logistic head already does most of what SetFit does. Note too that the choice of which 48 films got labelled moved the score by 0.1, more than the method did. With few labels, what you label matters as much as how you train.
 
 ## Clustering
 
@@ -288,7 +311,7 @@ MiniLM           k= 6  NMI with genre 0.141  largest cluster 22%
 MiniLM           k=20  NMI with genre 0.143  largest cluster 9%
 ```
 
-TODO_KMEANS
+MiniLM's clusters share far more with genre than TF-IDF's, at about 0.14 against 0.04 to 0.07, and they are more even: TF-IDF at k=6 throws 40% of the films into one catch-all cluster, the usual symptom of documents that share no vocabulary being equidistant. Reducing TF-IDF with SVD first did not rescue it. Raising k from 6 to 20 gives MiniLM no more agreement with genre, as the additional clusters split by subject, which genre does not record.
 
 The route BERTopic ([arXiv:2203.05794](https://arxiv.org/abs/2203.05794), Grootendorst, 2022, preprint) takes has three steps, and each answers a problem with the last. Distances lose contrast in high dimensions, so reduce with UMAP ([arXiv:1802.03426](https://arxiv.org/abs/1802.03426), McInnes et al., 2018, preprint). K-means forces every film into a cluster, including those that belong nowhere, so cluster with HDBSCAN ([Campello et al., PAKDD 2013](https://doi.org/10.1007/978-3-642-37456-2_14)), which finds clusters of varying density and leaves the rest as noise. A cluster of vectors means nothing to a reader, so describe each one with class-based TF-IDF, treating all of a cluster's text as one document and asking which words distinguish it from the other clusters.
 
@@ -330,7 +353,7 @@ clusters: 35  noise share: 0.54  NMI on clustered films: 0.223
   8    79 films  powers, new, hero, heroes, world, city
 ```
 
-TODO_HDB
+The top terms read as real subjects without anybody naming them: crime, animals, space, team sports, fantasy kingdoms, love stories, superheroes. That is what the method is for. The cost is the 54% of films labelled noise. That is a lot, and it depends on `min_cluster_size` and the UMAP settings, so report it next to the clusters. It is also why the NMI of 0.223 cannot be compared with k-means' 0.14: it is scored only on the films that HDBSCAN agreed to cluster, which are the easy ones. In a real project you would either accept the noise as "uncategorised" or assign those points to the nearest cluster, which BERTopic offers as an outlier-reduction step. For a report, keep the matrix, try several settings and read the clusters; the code to do so is above and runs in seconds. [The topic chapter](03-topic-models-and-summarization.md) has the classical alternatives.
 
 ## Anomaly detection
 
@@ -403,7 +426,9 @@ MiniLM, LOF                AUROC 0.944  (lyrics 0.919, prose 0.968)  precision i
 MiniLM, isolation forest   AUROC 0.799  (lyrics 0.712, prose 0.885)  precision in top 80: 0.30
 ```
 
-TODO_ANOM
+MiniLM with kNN distance or LOF ranks a random intruder above a random real film about 94% of the time, and in the top 80 of 1,055 lines 59 to 60% are intruders, when the base rate is under 8%. The lyrics are harder than the prose, which seems odd until you remember lyrics are stories about people. LOF barely beats plain kNN here. Isolation forest is much weaker: it splits on single coordinates, and a single dimension of an embedding means little alone.
+
+The TF-IDF rows are the striking ones, because an AUROC of 0.25 is worse than chance. Intruders are ranked as *more* normal than films, and the reason is instructive. Medical prose and Irish lyrics hit few of the film vocabulary's words, so after SVD their vectors are short: the prose chunks have a mean norm of 0.18 against 0.35 for films. Short vectors sit near the origin, which is the densest place in the space, so density methods call them typical. A detector needs a representation in which "unlike anything I know" looks unusual, and a vocabulary-bound one cannot express this.
 
 ```python
 score = knn_scores(X_ref, X_new)
@@ -431,7 +456,7 @@ lowest scoring intruders:
   0.55  powers of his mind were more active and clearer than ever, but they acted apart from his will.
 ```
 
-TODO_ANOMREAD
+Reading the top of the list is the check that no metric replaces, and here it earns its keep. The real films with the highest scores are themselves odd: a French description in an English catalogue, a marketing line in question form, a one-line pitch, a documentary about electric cars. A reviewer would want to see the French one, so several of the "false alarms" are worth finding. The intruders that scored lowest are the narrative ones, a song about a colonel and the slaughter and a sentence from a novel, which do read like plot summaries. Treat these as ranked candidates for review. Note also that our intruders are unlike the catalogue in subject, while a subtly wrong description for a real film would score as perfectly normal.
 
 ## Choosing an encoder and paying for it
 
@@ -448,15 +473,18 @@ for short, repo in candidates.items():
     start = time.time(); m.encode(sample, batch_size=32, normalize_embeddings=True, show_progress_bar=False); took = time.time() - start
     pred = LogisticRegression(max_iter=3000, C=10).fit(V[idx_train], y[idx_train]).predict(V[idx_test])
     print(f"{short:18} {V.shape[1]:4} dims  macro-F1 {f1_score(y[idx_test], pred, average='macro'):.3f}  {len(sample) / took:6.0f} docs/s on CPU")
+    if short == "all-mpnet-base-v2":
+        gap("MPNet vs MiniLM", pred, pred_lr)
 ```
 
 ```text
-all-MiniLM-L6-v2    384 dims  macro-F1 0.484     640 docs/s on CPU
-bge-small-en-v1.5   384 dims  macro-F1 0.471     331 docs/s on CPU
-all-mpnet-base-v2   768 dims  macro-F1 0.507     105 docs/s on CPU
+all-MiniLM-L6-v2    384 dims  macro-F1 0.484     391 docs/s on CPU
+bge-small-en-v1.5   384 dims  macro-F1 0.471     275 docs/s on CPU
+all-mpnet-base-v2   768 dims  macro-F1 0.507      79 docs/s on CPU
+MPNet vs MiniLM            difference +0.024, 95% interval -0.012 to +0.061
 ```
 
-TODO_ENC
+MPNet is the best here, several times slower than MiniLM, at twice the storage, and even its lead on this task has an interval that includes zero. BGE small, which sits higher than MiniLM on some retrieval benchmarks, comes in lower here. That is MTEB's message played out on one small task: test on yours, and let the cheapest model that does the job stand until something beats it by more than the noise.
 
 The other half of the decision is what the vectors cost next to the sparse route. This is the same data, on the same machine, while other jobs were running, so read the orders of magnitude and not the digits.
 
@@ -470,11 +498,11 @@ print(f"MiniLM   {len(docs) / t_dense:8.0f} docs/s   {Vs.nbytes / len(Vs):6.0f} 
 ```
 
 ```text
-TF-IDF      33318 docs/s      744 bytes per doc    24287 columns   62 non-zero
-MiniLM        595 docs/s     1536 bytes per doc      384 columns
+TF-IDF      35425 docs/s      744 bytes per doc    24287 columns   62 non-zero
+MiniLM        616 docs/s     1536 bytes per doc      384 columns
 ```
 
-TODO_COST
+Encoding is roughly 50 times slower than TF-IDF's transform on a CPU, and it is the only slow step. Storage is closer than people expect, since a short description has only about 62 non-zero TF-IDF entries, and each one needs an index as well as a value, giving 744 bytes against 1,536. On long documents the sparse row grows with its vocabulary and the dense row stays at 1,536 bytes. Sparse matrices also keep their columns meaningful, so you can read a linear model's weights, as we did in the classification chapter. A dense vector's coordinates cannot be read that way.
 
 ### Embeddings from an API
 
@@ -504,9 +532,9 @@ Two consequences follow from a hosted model. Texts leave your machine, which may
 | Rule | Why |
 |---|---|
 | Start with TF-IDF and a linear model anyway | It costs almost nothing and tells you what the embedding has to beat |
-| Reach for embeddings when labels are few or there are none | That is where this chapter's gap is widest |
+| Reach for embeddings when labels are few or there are none | The lead here was largest below about 1,000 labels, and on clustering and anomaly detection it was larger still |
 | Cache the matrix, keyed by model name | Encoding is the one slow step, and a model change invalidates every vector |
-| Use a linear head first | Nonlinear heads did not repay their cost here |
+| Use a linear head first | The SVM's gain was inside test noise, and boosting did worse |
 | Fit PCA or a scaler on training vectors only | Same leakage rule as any feature pipeline |
 | Keep a clean reference for anomaly detection | Intruders in the reference become their own neighbours |
 
@@ -536,7 +564,7 @@ k = 5  clean AUROC 0.939  dirty AUROC 0.186
 k = 20  clean AUROC 0.927  dirty AUROC 0.677
 ```
 
-TODO_A1
+Clean results are unremarkable at all three k. In the dirty case k=1 collapses to an AUROC of 0.0, because each intruder is now its own nearest neighbour at distance zero, which ranks it below every real film. k=5 is still poor, at 0.186, since the 40 chunks of each kind are near each other. k=20 recovers to 0.677 by reaching past them to real films. A larger k tolerates some contamination, up to around the number of contaminating points. The realistic version is milder, as the intruders would not be exact copies, but the direction is the same.
 
 </details>
 
@@ -559,7 +587,7 @@ for k in [5, 10, 15, 20, 30, 40]:
 40 0.0271
 ```
 
-TODO_A2
+No. The silhouette is around 0.03 to 0.04 at every k, with a slight maximum at 5 and a slow fall, so there is no elbow to find. On embeddings of unconstrained text this is the common case: the data is a continuum, and k is a choice about how fine a summary you want, made by reading the clusters and not by a metric.
 
 </details>
 
@@ -580,7 +608,7 @@ first 64 0.41
 PCA 64 0.469
 ```
 
-TODO_A3
+PCA wins, 0.469 to 0.41. The raw coordinates carry no ordering of importance, so the first 64 are an arbitrary slice of the information. PCA picks the 64 directions of highest variance on your own training data. Some recent embedding models are trained so that their prefixes work on their own, which lets you truncate them directly. This model was not.
 
 </details>
 
@@ -588,7 +616,7 @@ TODO_A3
 
 | Question | Short answer |
 |---|---|
-| When do sentence embeddings beat TF-IDF on classification? | When labels are few, or words differ between training and use. With enough labels, measure it, since the gap can close. |
+| When do sentence embeddings beat TF-IDF on classification? | When labels are few, or words differ between training and use. The gap here shrank from 0.15 to 0.08 as labels grew, so with enough labels, measure it. |
 | Why cache the matrix? | Encoding is the slow step, and everything downstream is ordinary scikit-learn. |
 | What does mean pooling do? | Averages context-aware token vectors, weighted by the attention mask, into one vector. |
 | What is the downside of pretrained encoders on long text? | Truncation at the model's limit, with no warning. |

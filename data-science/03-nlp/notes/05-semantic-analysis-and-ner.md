@@ -145,7 +145,7 @@ PERSON ['Peter', 'Harry', 'Andy', 'John', 'Jack', 'Max', 'Snow White', 'Jim']
 ORG ['CIA', 'FBI', 'Bond', 'IMF', 'Batman', 'Sophie', 'Lincoln', 'Riley']
 ```
 
-![spaCy NER output with entities highlighted in a news paragraph](../../sources/images/sarkar-spacy-ner.png)
+![Table of the entity types spaCy's English models tag, from PERSON to MONEY](../../sources/images/sarkar-spacy-ner.png)
 *Image source: Sarkar, Text Analytics with Python (2nd ed.), companion repo `Ch08/spacy_ner.png`*
 
 The notebook's text, shown above, is a news paragraph about parliaments asking Mark Zuckerberg to testify. spaCy gets most entities right and mislabels a few, such as an organisation tagged as a person, or a nationality as GPE. Run on our film descriptions, the output is usable and also instructive. PERSON dominates, GPE finds real cities, but the ORG list mixes CIA and FBI with "Bond", "Batman" and "Sophie". A news-trained model has never seen fictional characters doing what these do. Counting `ent.label_` over a corpus gives a quick profile of what a collection is about.

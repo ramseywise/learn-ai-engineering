@@ -23,11 +23,13 @@ sources:
   - https://arxiv.org/abs/2608.15127
   - https://arxiv.org/abs/2305.13048
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 7 — Prefill, Decode and the KV Cache
 
 > Prefill is a compute problem. Decode is a memory problem. The KV cache is the state that links them. Most modern serving architecture is about where that cache lives, how it is shared, and which GPU computes it.
+
+A long prompt stalls every decode sharing its GPU, and a busy server can run out of KV memory long before the weights are the problem. The sizing is easy to get wrong as well: Fregly's 250,000-token example plans for 328 GB when real 70B models need ~82 GB. Most serving-architecture decisions, from chunked prefill to disaggregation and prompt layout, trace back to handling this one piece of state.
 
 ---
 
@@ -194,3 +196,58 @@ The trend holds in 2026; the prices don't. Check current pricing and minimum cac
 - **Lay out prompts stable-first** and route on prefix affinity.
 - **Don't ship KV for short or prefix-hit prompts**; batch KV transfers into ≥128-token chunks.
 - **Watch KV utilization and swap/copy-engine activity**; they predict latency spikes ([06](06-serving-at-scale.md#watching-a-fleet)).
+
+## Pitfalls
+
+- **Sizing with attention heads.** Symptom: a plan for 328 GB of KV (Fregly's 250,000-token example) when a real 70B with 8 KV heads needs ~82 GB. Fix: use `n_kv_heads` in the formula, at your real precision.
+- **Disaggregating too early.** Symptom: two pools to size and KV transfers to pay for, on a handful of GPUs with short prompts or loose SLOs. Fix: turn on chunked prefill first, and disaggregate when long prompts and strict TTFT and TPOT SLOs coincide at scale.
+- **Offloading the wrong prompts.** Symptom: short or mostly cached prompts spend more on transfer than they save on prefill. Fix: route on effective length (prompt minus cached prefix), with something like Fregly's 256-token threshold.
+- **Many small KV transfers.** Symptom: KV transfer dominates, as in Fregly's 7,500-token cache sent as 470 transfers at ~20 ms. Fix: collate 16-token pages into ≥128-token chunks, which took it to ~8 ms.
+- **A timestamp at the top of the prompt.** Symptom: a low prefix hit rate on repetitive traffic, because one changed early token invalidates everything after it. Fix: lay prompts out stable-first and variable-last.
+- **No cache-aware routing.** Symptom: each replica recomputes and stores the same prefixes. Fix: route to the replica that holds the prefix, as llm-d, Dynamo and the SGLang router do.
+- **Budgeting KV from the weights alone.** Symptom: running out at less than the planned concurrency, since activations and CUDA graph buffers also take memory. Fix: treat 180 − 70 = 110 GB as an upper bound (the book prints 122), and watch KV utilization and copy-engine activity.
+- **Assuming FP8 KV is free.** Symptom: quality falls on long-context tasks after the flag goes on. Fix: evaluate long-context tasks after enabling it ([08](08-adaptive-inference.md#kv-cache-quantization)).
+
+## Try it
+
+1. Compute KV bytes per token for 80 layers, 8 KV heads, head dim 128, FP16. How many tokens fit the 110 GB budget? What does it become with 32 heads?
+
+   <details><summary>Answer</summary>
+
+   2 × 80 × 8 × 128 × 2 = 327,680 bytes, about 0.33 MB/token, so about 336,000 tokens. With 32 heads it is 1,310,720 bytes, 1.31 MB/token, and about 84,000 tokens. The formula's head count alone moves capacity by 4×.
+
+   </details>
+
+2. Vary DistServe's worked example. With 3 prefill GPUs (5.6 RPS each) and 1 decode GPU (10 RPS), what is the rate per GPU, and what limits it?
+
+   <details><summary>Answer</summary>
+
+   min(16.8, 10) / 4 = 2.5 RPS per GPU, against 3.3 at the 2:1 split and 1.6 colocated. Decode is the limit, so the third prefill GPU adds only idle capacity. Pool sizes have to balance the two rates.
+
+   </details>
+
+3. A 4,000-token prompt has a 3,900-token prefix cache hit. Should a router using Fregly's rules offload it to a prefill worker? And a 300-token prompt with no hit?
+
+   <details><summary>Answer</summary>
+
+   The first: no. Effective length is 100 tokens, under the 256-token example threshold, even though the raw prompt is long. The second: effective length is 300, so it passes that threshold, though only just. The threshold depends on your interconnect, so measure it.
+
+   </details>
+
+4. In the [inference lab](../practice/inference-lab/README.md#things-to-try), run items 2 to 4: raise `prefill_ms_per_token` to see head-of-line blocking, evict the oldest sequence, and set `block_tokens` to 64 in the prefix table. Answers are in the lab README.
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the two ways to deal with prefill and decode interfering? | Chunked prefill, which slices prefill so decodes run alongside it (SARATHI reports ~1.3–1.9× over naive scheduling) and is the first choice on one pool. Or disaggregation, which moves prefill to its own GPUs. |
+| Walk through DistServe's numbers. | Colocated, the GPU holds 3 RPS for TTFT but 1.6 RPS for TPOT, so 1.6. With 2 prefill at 5.6 and 1 decode at 10, min(11.2, 10) / 3 ≈ 3.3 RPS per GPU, about 2×. |
+| When would you not disaggregate? | Short prompts with long outputs, low load or loose SLOs, KV crossing slow Ethernet, or only a handful of GPUs. Huyen's ratios also show it depends on workload: 2:1 to 4:1 for long inputs and 1:2 to 1:1 for short. |
+| How big is the KV cache for Llama 2 13B at 4,096 tokens? | 2 × 40 × 40 × 128 × 2 bytes ≈ 0.82 MB/token, so 3.36 GB in FP16 per sequence. With GQA-8 it would be 0.67 GB. |
+| Why did PagedAttention matter? | Reserved slabs left only 20–38% of KV memory holding real tokens. Paging cut waste to under 4%, lets a sequence grow by a block at a time, and lets common prefixes share physical blocks with copy-on-write. |
+| Your agent's cache hit rate is low. What do you check? | Prompt layout first, because one changed early token invalidates everything after it and vLLM matches full 16-token blocks exactly from the first token. Then whether routing sends requests to the replica holding the prefix. |
+| Do long agent sessions change the picture? | Yes: in one AgentSysBench session accumulated tool calls and observations reached 84.3% of the input, and the final step emitted 151 tokens after a 166,721-token input. The input side dominates that step, not decode. |
+
+## Next
+
+[08-adaptive-inference.md](08-adaptive-inference.md): decode's idle compute is what speculative decoding spends, and quantization reduces the bytes it has to move.

@@ -623,7 +623,7 @@ Count successes and attempts per domain on every run (the book's pipeline writes
 | Failure unit | One file or one day | One message; needs idempotent sinks |
 | Operational cost | A scheduled container | Always-on brokers, schema registry, consumers |
 
-Default to batch. Move a source to streaming when a named consumer needs the freshness. Real-time inference ([feature serve](../../06-ml-platform/notes/01-feature-serve.md), Kinesis + Lambda) is the course's example of a consumer that does.
+Default to batch. Move a source to streaming when a named consumer needs the freshness. Real-time inference ([online serving](../../06-ml-platform/notes/03-batch-and-online-serving.md), Kinesis + Lambda) is the course's example of a consumer that does.
 
 ---
 

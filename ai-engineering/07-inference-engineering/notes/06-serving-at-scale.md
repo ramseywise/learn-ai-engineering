@@ -19,11 +19,13 @@ sources:
   - https://arxiv.org/abs/2407.06204
   - https://arxiv.org/abs/2112.06905
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 6 — Serving at Scale
 
 > One request on one GPU is a demo. Serving means many requests of unknown length sharing a fleet, with a latency promise for each. The levers are how you batch, how you route, how you split the model, and when you add machines.
+
+Autoscaling on GPU utilization, routing with round-robin and running batches until the longest request finishes are the defaults many teams inherit from web serving or vendor recipes. Each one breaks on LLM traffic, because requests differ in cost by orders of magnitude and a decode loop reads busy at light load. This chapter covers the batching, routing and parallelism choices that work with that traffic.
 
 ---
 
@@ -168,3 +170,49 @@ Two problems with the recipe for LLMs:
 - **Scale on queue depth, KV utilization or TTFT**, not on GPU util. Keep warm capacity for cold starts.
 - **Alert on copy-engine spikes**; they mean KV swapping.
 - **Stream over SSE**, with `TCP_NODELAY`.
+
+## Pitfalls
+
+- **Autoscaling on GPU utilization.** Symptom: replicas that don't help, or no scale-out when KV memory is what ran out, because a lightly loaded decode loop reads near 100%. Fix: scale on queue depth, KV utilization or TTFT.
+- **Scaling for a spike you can't catch.** Symptom: the spike is over before the new replica is up, with the Handbook's own deploy time at 15–30 min. Fix: keep warm headroom, pre-pull weights, cache compiled artifacts, and use a queue for spiky async work.
+- **Round-robin across replicas.** Symptom: one replica stuck on long requests while another idles, and low prefix-cache hit rates. Fix: route on load and cache affinity.
+- **Static or dynamic batching for chat.** Symptom: a 10-token request holds its slot for 1,000 steps because a batch-mate is long. Fix: continuous batching, capped where p99 TPOT starts to climb.
+- **Believing the cascade headline.** Symptom: a plan built on Fregly's "5×" for sending 60% of queries to a 10× smaller model, when the arithmetic gives about 2.2× (0.46). Fix: compute it, and count the small model's cost on escalated queries too.
+- **Keeping retrieval and business logic in the GPU process.** Symptom: the GPU idles while CPU code runs, and both have to scale together. Fix: split a CPU service from the LLM service, as the Handbook's LLM Twin build does.
+- **Missing a KV shortage.** Symptom: a spike in `DCGM_FI_DEV_MEM_COPY_UTIL` with flat compute, then a latency jump as the engine swaps KV to host memory. Fix: alert on copy-engine utilization and KV utilization.
+- **Bursty streams.** Symptom: tokens arrive in clumps though TPOT is fine, because Nagle's algorithm holds small writes. Fix: set `TCP_NODELAY` on token-streaming sockets, and stream over SSE.
+
+## Try it
+
+1. Redo the cascade with escalated queries paying for both models, then find the share you would have to route to the small model to reach 5× at all if none of them pay twice.
+
+   <details><summary>Answer</summary>
+
+   If the 40% that escalate pay for both: 0.6 × 0.1 + 0.4 × 1.1 = 0.50, so 2×, not 2.2×. For 5×, the cost must be 0.2: 0.1x + (1 − x) = 0.2 gives x ≈ 89% of queries.
+
+   </details>
+
+2. Check Fregly's length-aware example: prefill cost is about N(N+1)/2, and the prompts are [6K, 2K, 6K, 2K, 2K, 2K] on two GPUs. What is the critical path for the naive split and the rebalanced one?
+
+   <details><summary>Answer</summary>
+
+   Naive puts [6K, 6K, 2K] on one GPU: 2 × 18.003M + 2.001M ≈ 38.0M Q·K products. Rebalanced [2K, 2K, 6K] on each gives 2 × 2.001M + 18.003M ≈ 22.0M, 42% lower. Same prompts and GPUs; only the assignment changed.
+
+   </details>
+
+3. In the [inference lab](../practice/inference-lab/README.md#things-to-try), run items 1 and 2: set `decode_per_seq_ms` to 10 and rerun, then raise `prefill_ms_per_token` to 1. Answers are in the lab README, and the lab's numbers follow from its stated assumptions, not from a measured GPU.
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why does latency buy throughput? | In the Handbook's arithmetic, 20 requests in 100 ms is 200 RPS and 60 in 200 ms is 300 RPS: each request waits twice as long and the fleet serves 50% more. Decode's weight read is amortized over the batch. |
+| Static, dynamic or continuous batching? | Static waits to fill. Dynamic also fires on a time window, but runs until its longest member finishes. Continuous admits and retires at each decode step, and needs paged KV memory and a scheduler. |
+| How do you split a model too big for one GPU? | TP inside the NVLink domain, PP only for capacity, EP for MoE, then replicate with DP: Fregly's order is TP → PP → EP → DP. Measure before adding EP or CP. |
+| What should autoscaling track? | Queue depth, KV utilization or TTFT. GPU utilization is time-active and misses KV exhaustion, and with 15–30 min deploys you also need warm headroom. |
+| Someone proposes a cascade with 60% of traffic on a 10× smaller model. What saving do you tell them? | About 2.2× (0.6 × 0.1 + 0.4 = 0.46), not the book's 5×, and less if escalated queries pay for both models. Decide after measuring how often the small model must escalate. |
+| Copy-engine utilization spikes while compute stays flat. What is happening? | The engine is probably swapping KV to host memory because it is out of KV space, and latency is about to jump. Lower the batch cap, shrink KV, or add capacity. |
+
+## Next
+
+[07-prefill-decode-kv-cache.md](07-prefill-decode-kv-cache.md): the batch cap, routing and swap alerts here all come back to where the KV cache lives and which GPU computes it.

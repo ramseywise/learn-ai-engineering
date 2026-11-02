@@ -374,10 +374,17 @@ Check the definition and the k before comparing numbers across sources ([Eval pi
 
 ## A worked example
 
-A first production pipeline: ingestion and indexing on the left, query and retrieval on the right.
+A first production pipeline, from a support assistant on AWS Bedrock Knowledge Bases: ingestion and indexing in the managed box, with the query path running through it.
 
-![AWS Bedrock knowledge base pipeline: web crawl → semantic chunking → vector database, then query transformation → hybrid search → context injection → generation](../sources/images/billydk-bedrock-kb-pipeline.png)
-*Image Source: Billy.dk support assistant on AWS Bedrock Knowledge Bases (author's diagram)*
+```mermaid
+flowchart LR
+    subgraph Service["Bedrock knowledge base"]
+        C[Web crawl] --> S[Semantic chunking] --> V[(Vector database)]
+        V --> H[Hybrid search]
+    end
+    Q[User query] --> T[Query transformation] --> H
+    H --> I[Context injection] --> G[Generation]
+```
 
 Two things to note against the abstract pipeline. **Hybrid search** runs semantic and keyword retrieval together rather than choosing: vectors catch paraphrase, keywords catch exact identifiers, and each covers the other's failure mode. **Query transformation** sits before retrieval: the user's phrasing is rewritten into tool parameters, because the text a human types is rarely the text that retrieves best.
 

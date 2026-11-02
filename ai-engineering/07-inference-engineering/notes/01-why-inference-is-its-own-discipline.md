@@ -8,11 +8,13 @@ sources:
   - https://arxiv.org/abs/2211.05102
   - https://arxiv.org/abs/1606.07947
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 1 — Why Inference Is Its Own Discipline
 
 > Training is a one-time bill. Inference runs every time a user types. The two have different bottlenecks, metrics and failure modes, so they need different engineering.
+
+A team that budgets from its training run and watches one GPU-utilization chart can read 95% on a fleet that is badly underused, buy more compute when decode is short of memory bandwidth, and report a mean TTFT that describes no real request. This chapter sets out the two bottlenecks and the metrics that show which one you have, before any tuning starts.
 
 ---
 
@@ -73,6 +75,34 @@ Total latency = TTFT + TPOT × output tokens. Two systems with the same total ca
 
 Report **percentiles, not means**. Huyen's example: a set of TTFTs with one 3,000 ms outlier averages 390 ms, which describes no real request. Use p50, p90, p95 and p99, and watch the tail. For agents the tail compounds, because a task that makes ten calls hits the p90 of a single call far more often than one call does.
 
+The script below uses ten TTFTs I made up to match Huyen's description, since the book's example gives only the outlier and the mean. It also prices the agent case and shows two requests with the same total latency.
+
+```python
+# TTFTs in ms: made up to fit Huyen's description, nine fast requests and one 3,000 ms outlier.
+ttft = sorted([100, 102, 100, 100, 99, 104, 110, 90, 3000, 95])
+
+def pct(xs, p):  # nearest-rank percentile on sorted data
+    return xs[max(0, round(p / 100 * len(xs)) - 1)]
+
+print("mean", sum(ttft) / len(ttft), "| p50", pct(ttft, 50), "| p90", pct(ttft, 90), "| p99", pct(ttft, 99))
+
+# An agent task makes ten calls. How often does at least one land beyond the single-call p90?
+print(f"ten calls, at least one past p90: {1 - 0.9 ** 10:.0%}")
+
+# Total latency = TTFT + TPOT x output tokens: same total, very different experience.
+for name, t, tpot in [("slow start", 2000, 10), ("slow stream", 200, 19)]:
+    print(f"{name}: {(t + tpot * 200) / 1000:.1f} s for 200 tokens")
+```
+
+Output:
+
+```text
+mean 390.0 | p50 100 | p90 110 | p99 3000
+ten calls, at least one past p90: 65%
+slow start: 4.0 s for 200 tokens
+slow stream: 4.0 s for 200 tokens
+```
+
 ---
 
 ## Throughput, cost and goodput
@@ -88,6 +118,23 @@ Throughput and latency trade against each other. LinkedIn reported that doubling
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 9-4*
 
 Huyen's caption says 3 of the 10 requests meet the SLO, so goodput is 3 RPS. Read the bars, though. Only two requests (TTFT 150/TPOT 70 and 140/60) clear both lines. A third (260/80) meets TPOT but misses TTFT. The point still holds, and the figure shows how easy it is to count a request that meets only one objective.
+
+Applying the SLO in code makes the rule explicit. Goodput counts a request only if it meets both objectives, so the count below is two.
+
+```python
+# Goodput counts a request only if it meets every objective. The three requests named above:
+slo_ttft, slo_tpot = 200, 100
+reqs = [(150, 70), (140, 60), (260, 80)]
+print("meets both:", [r for r in reqs if r[0] <= slo_ttft and r[1] <= slo_tpot])
+print("meets TPOT only:", [r for r in reqs if r[0] > slo_ttft and r[1] <= slo_tpot])
+```
+
+Output:
+
+```text
+meets both: [(150, 70), (140, 60)]
+meets TPOT only: [(260, 80)]
+```
 
 ### Three definitions of goodput
 
@@ -182,3 +229,54 @@ Huyen's ranking of the techniques with the widest impact, across the companies s
 - **Don't trust GPU util**. Track MFU for prefill, MBU for decode, and SM activity.
 - **Price per request**, not per token, when comparing models with different tokenizers.
 - **Check whether a published FLOP/s figure assumes sparsity** before using it in a roofline.
+
+## Pitfalls
+
+- **Reading GPU utilization as load.** Symptom: the chart shows near 100% while queues are short and tokens per second are poor. It only measures the fraction of time any kernel runs. Fix: track MFU for prefill, MBU for decode, and SM activity.
+- **Buying compute for a decode problem.** Symptom: a part with more FLOP/s leaves TPOT flat. Decode is bandwidth-bound, and PaLM 540B decode reached only 14% MFU at batch 64 and 33% at batch 512. Fix: compare HBM bandwidth first, and place the workload on the roofline before buying.
+- **Reporting the mean.** Symptom: a dashboard says 390 ms when nine of ten requests took about 100 ms and one took 3,000 ms. Fix: report p50, p90, p95 and p99, and for agents look at the tail of the whole task.
+- **Tuning raw throughput.** Symptom: tokens per second rise while fewer requests meet the SLO, as in the figure where only two of ten clear both lines. Fix: optimize goodput, and state which of the three definitions a dashboard or paper uses.
+- **Quoting sparse FLOP/s.** Symptom: a roofline that puts the H100 at 1,979 TFLOPS BF16, twice its dense figure. Fix: use the dense number unless the workload really uses 2:4 sparsity, and attach a precision to every FLOPS figure.
+- **Comparing models per token.** Symptom: a cheaper price per token that turns into a larger bill, because the tokenizers differ. Fix: price per request on your own prompts, and weight output tokens at 2–4× input tokens where a provider does.
+
+## Try it
+
+1. In the percentile script, change the outlier from 3,000 to 30,000 and predict what moves.
+
+   <details><summary>Answer</summary>
+
+   The output becomes `mean 3090.0 | p50 100 | p90 110 | p99 30000`. The mean moves by a factor of about eight, p50 and p90 do not move, and only p99 shows the outlier.
+
+   </details>
+
+2. In the goodput script, relax the TTFT objective from 200 ms to 300 ms. How many of the three requests count now?
+
+   <details><summary>Answer</summary>
+
+   All three. `meets both` lists (150, 70), (140, 60) and (260, 80), and `meets TPOT only` is empty. Goodput is a property of the SLO as much as of the hardware, so a goodput number without its SLO says nothing.
+
+   </details>
+
+3. Repeat Huyen's MBU calculation for a 13B model in FP16 at 50 tokens/s, on an A100 (2 TB/s) and an H100 (3.35 TB/s).
+
+   <details><summary>Answer</summary>
+
+   13B × 2 bytes × 50 = 1.3 TB/s. That is 65% MBU on the A100 and about 39% on the H100. The 13B parameter count and 50 tokens/s are my inputs; the method and the bandwidths are from this chapter and [02](02-the-hardware.md#inside-the-b200).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why is prefill compute-bound and decode bandwidth-bound? | Prefill processes all prompt tokens in parallel, so it does much math per byte and sets TTFT. Decode reads every weight and the KV cache to produce one token per sequence, so it waits on memory and sets TPOT. |
+| GPU utilization reads 95%. Can this box take more traffic? | You can't tell from that number, because it is the fraction of time any kernel runs. Check MFU, MBU, SM activity and queue depth; a decode loop can read near 100% at light load. |
+| What does the 90% figure in "inference is up to 90% of ML cost" actually claim? | Desislavov et al. give it as an upper bound on a deployed system's ML cost. It is why inference is treated as its own bill: training is paid once and inference on every request. |
+| Why not report mean TTFT? | One 3,000 ms outlier among fast requests gives a 390 ms mean that describes no request. For an agent making ten calls, about 65% of tasks hit at least one call beyond the single-call p90, if calls are independent. |
+| Hardware costs $2/hour and makes 100 output tokens/s. What does a million tokens cost? | About $5.56 (Huyen's example), since it takes 10,000 s to make a million tokens. That is at full use, so serving below capacity costs more per token. |
+| Your choice is a part with 2× FLOPS or one with 2× memory bandwidth, for chat at low batch. Which? | Bandwidth, because decode at small batch sits on the bandwidth slope of the roofline. The extra FLOPS would help prefill and TTFT only. |
+| Throughput and goodput disagree. Which one do you tune? | Goodput, the throughput that meets the SLO. In Huyen's figure only two of ten requests clear both lines, whatever the raw token rate, even though her caption says three. |
+
+## Next
+
+[02-the-hardware.md](02-the-hardware.md): where the bytes live on a real GPU, and what the bandwidth and compute limits are in numbers.

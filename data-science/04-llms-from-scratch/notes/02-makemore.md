@@ -27,7 +27,7 @@ flowchart LR
     W --> T["Transformer<br/>next chapter"]
 ```
 
-## The framework: a language model is a next-token distribution
+## The framework: a language model is a distribution over tokens
 
 A language model assigns a probability to the next token given the previous ones, `P(x_t | x_<t)`. Train it by maximising the likelihood of the data, which is the same as minimising the **average negative log-likelihood** (cross-entropy) of each true next character. Generate by sampling from the distribution one token at a time and feeding the sample back in.
 
@@ -49,6 +49,11 @@ random.shuffle(words)
 n1, n2 = int(0.8 * len(words)), int(0.9 * len(words))
 print(len(words), "names, longest", max(map(len, words)), ", vocabulary", vocab_size, ", first:", words[:4])
 print("uniform baseline loss:", round(-math.log(1 / vocab_size), 3))
+```
+
+```text
+32033 names, longest 15 , vocabulary 27 , first: ['yuheng', 'diondre', 'xavien', 'jori']
+uniform baseline loss: 3.296
 ```
 
 A model that guesses uniformly over 27 characters has loss `-log(1/27) = 3.30`, and every model below is measured against that.
@@ -86,7 +91,12 @@ g = torch.Generator().manual_seed(2147483647)
 print("samples:", [bigram_sample(g) for _ in range(8)])
 ```
 
-TODO_COUNT
+```text
+count model NLL: 2.4546
+samples: ['cexze', 'momasurailezitynn', 'konimittain', 'llayn', 'ka', 'da', 'staiyaubrtthrigotai', 'moliellavo']
+```
+
+An NLL of 2.45 sits well below the uniform 3.30, and the samples show how little that buys. Names of a plausible length, with letter pairs that occur in English, and no memory of anything but the last letter: `cexze`, `momasurailezitynn`. One previous character is simply not enough context, and the table cannot grow to fix that: it has 27² cells now, and each extra character of context multiplies that by 27, far faster than 32,033 names can fill.
 
 **The same model as a neural network.** One-hot encode the previous character, multiply by a 27×27 weight matrix to get *logits* (log-counts), exponentiate and normalise (softmax), and train `W` by gradient descent on the NLL.
 
@@ -105,6 +115,11 @@ for k in range(200):
 learned = (W.detach().exp() / W.detach().exp().sum(1, keepdim=True))
 print("neural bigram NLL:", round(nll.item(), 4))
 print("correlation of learned table with the counts:", round(torch.corrcoef(torch.stack([learned.flatten(), P.flatten()]))[0, 1].item(), 4))
+```
+
+```text
+neural bigram NLL: 2.4653
+correlation of learned table with the counts: 0.9958
 ```
 
 It converges to nearly the same loss because it *is* the same model: `W.exp()` ends up proportional to the count matrix. There are two lessons in this. The L2 term plays the role of add-one smoothing, since pulling `W` towards 0 makes the distribution more uniform. And the neural version scales to more context, where the counting table would explode (27ⁿ rows).
@@ -170,7 +185,14 @@ with torch.no_grad():
     print("mean embedding cosine, vowel to vowel:", round(within, 3), " vowel to consonant:", round(sim[vowels][:, cons].mean().item(), 3))
 ```
 
-TODO_MLP
+```text
+parameters: 11897  examples: 182625  first loss: 27.88
+train 2.1264  dev 2.1699
+samples: ['dexzerioullus', 'rochi', 'ahnell', 'imittain', 'lucan', 'kaida', 'samiyah', 'javarii']
+mean embedding cosine, vowel to vowel: 0.686  vowel to consonant: 0.299
+```
+
+The first loss, 27.9, is far above the 3.30 a blank-slate model should report, which part 3 returns to. After 200,000 steps the train and dev losses are close together, at 2.13 and 2.17, so this model is underfitting and has room to grow. And the samples are recognisably name-like: `rochi`, `lucan`, `samiyah`. The embeddings learned something too, as vowels sit at an average cosine of 0.69 from each other, against 0.30 from consonants, even though nobody told the model what a vowel is.
 
 | Technique introduced | Detail |
 |---|---|
@@ -246,7 +268,15 @@ experiment("3 Kaiming", w1=kaiming, b1s=0.01, w2=0.01, b2s=0.0)
 experiment("4 and BatchNorm", w1=kaiming, b1s=0.01, w2=0.01, b2s=0.0, batchnorm=True)
 ```
 
-TODO_INIT
+```text
+original                 first loss  25.77   saturated at init  70%   train 2.126   dev 2.170
+1 small output layer     first loss   3.31   saturated at init  70%   train 2.070   dev 2.131
+2 and small hidden layer first loss   3.30   saturated at init   5%   train 2.036   dev 2.103
+3 Kaiming                first loss   3.30   saturated at init  19%   train 2.038   dev 2.107
+4 and BatchNorm          first loss   3.30   saturated at init   4%   train 2.067   dev 2.105
+```
+
+Using the lecture's seed, this run reproduces its table to two decimals, so the diagnosis can be trusted. The output-layer fix took the first loss from 26 to 3.31, and dev loss fell by 0.04 just by not wasting the early steps. Shrinking the hidden layer cut saturation from 70% to 5% and gained another 0.03. Kaiming scaling with its principled gain matches the hand-tuned 0.2 on the dev loss, with more saturation, 19%, as its weights are larger. BatchNorm adds nothing on top in this shallow network. That is worth remembering: it pays off on the deep nets the next section builds, where hand-tuning all the scales stops being possible.
 
 ### BatchNorm
 
@@ -338,7 +368,16 @@ diagnose("tanh only", deep(False))
 diagnose("+ BatchNorm", deep(True))
 ```
 
-TODO_DIAG
+```text
+tanh only    loss 2.18  update:data log10 -2.37
+             saturated by layer ['21%', '11%', '12%', '11%', '11%']
+             gradient std by layer ['2.9e-03', '2.7e-03', '2.6e-03', '2.6e-03', '2.3e-03']
++ BatchNorm  loss 2.15  update:data log10 -2.41
+             saturated by layer ['3%', '3%', '3%', '3%', '2%']
+             gradient std by layer ['3.7e-03', '3.2e-03', '2.8e-03', '2.4e-03', '2.1e-03']
+```
+
+BatchNorm shows up here where it did not before. The plain tanh stack has been hand-scaled by the 5/3 gain, and it still saturates 21% of the first layer and about 11% of the rest. With BatchNorm the figure is 2 to 3% at every layer. Gradient scale is similar across layers in both, which is what the gain is for. The update-to-data ratio of about −2.4 is hotter than the rule of thumb below. The rate of 0.1 suits the start of training and, once it decays to 0.01, the ratio falls by one on this scale, to about −3.4, so the two rates bracket the −3 guideline.
 
 | Plot | Healthy |
 |---|---|
@@ -413,7 +452,16 @@ for name, mine, p in [("C", dC, C), ("W1", dW1, W1), ("W2", dW2, W2), ("b2", db2
     print(f"{name:7} largest difference from autograd {(mine - p.grad).abs().max().item():.2e}")
 ```
 
-TODO_NINJA
+```text
+C       largest difference from autograd 1.12e-08
+W1      largest difference from autograd 9.31e-09
+W2      largest difference from autograd 1.49e-08
+b2      largest difference from autograd 4.66e-09
+bngain  largest difference from autograd 1.86e-09
+bnbias  largest difference from autograd 7.45e-09
+```
+
+Every gradient matches autograd to about 1e-8, which is floating-point noise at this precision. The exercises build up to these lines by differentiating each atomic step of the forward pass, and that slow version is worth doing once, in the notebook listed under Practice.
 
 The cross-entropy shortcut has a plain reading. Each row pulls the wrong classes' logits down by their probability and pushes the correct one up by `1 − p`, and those pulls and pushes in a row sum to zero. Why bother when autograd exists? Because backprop is a *leaky abstraction*. Knowing that saturated tanh kills gradient, that `dlogits` is `p − y`, or that BatchNorm couples examples is what lets you debug training that silently fails.
 
@@ -495,7 +543,15 @@ run("tree, BatchNorm fixed", tree())
 final = run("tree, scaled up (24, 128)", tree(24, 128), sample=True)
 ```
 
-TODO_WAVE
+```text
+flat, context 8                   22097 params  train 1.916  dev 2.030    71s
+tree, BatchNorm bug               22397 params  train 1.937  dev 2.022    98s
+tree, BatchNorm fixed             22397 params  train 1.910  dev 2.023   112s
+tree, scaled up (24, 128)         76579 params  train 1.769  dev 2.000   143s
+samples: ['jawyn', 'cortyn', 'airon', 'zamira', 'gracelynn', 'keece', 'arnely', 'ruqay', 'helina', 'avalyndal']
+```
+
+Our run matches the notebook's log closely, ending at a dev loss of 2.000 where the lecture has 1.993, and the samples have become plausible names: `jawyn`, `zamira`, `gracelynn`. Going from context 3 to context 8 was worth about 0.08 on dev. The tree alone adds almost nothing beyond the flat model at the same parameter count, 2.022 against 2.030. What it does offer is room to scale: 76k parameters reach 2.000, though with train at 1.77 the gap has widened to 0.23, so the overfitting has begun. In our run the bug fix improves train by 0.03 and leaves dev where it was, 2.022 against 2.023, so a bug like this is very hard to spot from the loss alone.
 
 `Linear` works on 3-d input because `@` broadcasts over leading dimensions. **The bug** is in our `fix_3d=False` path: a hand-written `BatchNorm1d` computing statistics over dimension 0 only, so with (B, T, C) input it kept separate statistics for each of the T positions. The fix reduces over `(0, 1)`. PyTorch's `nn.BatchNorm1d` expects (B, C, T), with channels in the middle, which is another way to get this wrong. The notebook's log, for comparison with ours:
 
@@ -513,7 +569,15 @@ The original WaveNet ([arXiv:1609.03499](https://arxiv.org/abs/1609.03499) (van 
 
 ## Results across the series
 
-TODO_RESULTS
+| Model | Context | Dev loss, this chapter | Dev loss, lectures |
+|---|---|---|---|
+| Uniform | none | 3.30 | 3.30 |
+| Bigram, counted or learned | 1 character | 2.45 (all pairs, no split) | about 2.45 |
+| MLP (part 2) | 3 | 2.17 | 2.17 |
+| MLP with init fixes and BatchNorm (part 3) | 3 | 2.105 | 2.10 |
+| WaveNet-style tree, scaled up (part 5) | 8 | 2.000 | 1.993 |
+
+Each line is the same task and the same data, so the numbers are directly comparable, apart from the bigram row, which is measured on the pairs it was counted from. The move from 2.45 to 2.00 came from more context, then from training that context well. A transformer is the next step in this series. The makemore repository includes one as a model type, without a published loss for it, and we did not run it here, so its row stays empty until you try it.
 
 ## Practice
 
@@ -552,11 +616,16 @@ Lectures, in order: [building makemore](https://www.youtube.com/watch?v=PaCmpygF
 Q = (N + 1).float()
 bad = Q / Q.sum(1)                # (27, 27) / (27,): divides each COLUMN by a row's total
 good = Q / Q.sum(1, keepdim=True)
-print("row sums, bad:", bad.sum(1)[:4].round(decimals=3).tolist(), " good:", good.sum(1)[:4].round(decimals=3).tolist())
+print("row sums, bad:", [round(v, 3) for v in bad.sum(1)[:4].tolist()], " good:", [round(v, 3) for v in good.sum(1)[:4].tolist()])
 print("NLL if you trusted it, bad:", round(-bad[xs, ys].log().mean().item(), 3), " good:", round(-good[xs, ys].log().mean().item(), 3))
 ```
 
-TODO_A1
+```text
+row sums, bad: [6.925, 4.367, 0.212, 0.379]  good: [1.0, 1.0, 1.0, 1.0]
+NLL if you trusted it, bad: 2.455  good: 2.455
+```
+
+The row sums give it away: the bad matrix no longer holds probability distributions, so any sampling from it is wrong. The NLL is the surprise. It comes out as 2.455 both ways, so the loss cannot see this bug at all. The reason is that a letter's total as a previous character exactly equals its total as a following one, since every letter that arrives also leaves and each name's `.` both opens and closes it. `N.sum(0)` and `N.sum(1)` are identical on this data, so over all the training pairs the wrong denominators add up to the same sum of logs as the right ones. Broadcasting aligned the shapes from the right, (27, 27) with (27,) stretched into a row, so no error was raised either. Check that rows sum to one, and look at samples.
 
 </details>
 
@@ -584,7 +653,17 @@ for j in range(0, len(smooth), 3):
     print(f"lr {rates[j * 50 + 25].item():.4f}  loss {smooth[j].item():.2f}")
 ```
 
-TODO_A2
+```text
+lr 0.0012  loss 25.25
+lr 0.0034  loss 20.68
+lr 0.0095  loss 15.50
+lr 0.0267  loss 10.81
+lr 0.0753  loss 8.30
+lr 0.2125  loss 7.51
+lr 0.5995  loss 9.73
+```
+
+The loss falls through rates up to about 0.2 and climbs again by 0.6, so you would take something a little below the valley, and 0.1 is the conventional choice. All these losses are high because the sweep has only 1,000 steps and starts from the unfixed init, whose first losses are over 20. A sweep compares rates. It does not predict the final loss.
 
 </details>
 
@@ -608,7 +687,12 @@ for l in final:
     if isinstance(l, BatchNorm1d): l.training = False
 ```
 
-TODO_A3
+```text
+8 windows, inference statistics: 2.829  batch statistics: 3.352
+1 window, batch statistics: nan
+```
+
+On eight consecutive windows, batch statistics give a worse loss, 3.35 against 2.83, as those windows are similar to each other and unrepresentative of the data. With one window the variance has `n − 1 = 0` in its denominator, so the output is `nan`. This is why every BatchNorm layer stores running statistics, and why forgetting to switch modes fails in a way that varies with batch size.
 
 </details>
 

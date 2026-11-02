@@ -4,11 +4,13 @@ sources:
   - "Fregly, AI Systems Performance Engineering (O'Reilly, 2025), ch. 2, 6"
   - https://docs.nvidia.com/cuda/cuda-c-programming-guide/
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 2 — The Hardware: GPUs, Memory Hierarchy, Interconnect
 
 > An inference engineer does not need to design chips. They need to know where the bytes live, how fast each hop is, and which limit a kernel will hit first. That map is what this note gives you, from one SM up to a 72-GPU rack.
+
+A model can fit in addressable memory and still be unusably slow. Spill a KV cache across NVLink-C2C from HBM into Grace memory, or stretch a tensor-parallel group across racks, and every token pays for a slower hop that the capacity numbers never mentioned. Reasoning about those hops takes a map, with sizes and speeds, of the machine a kernel runs on.
 
 ---
 
@@ -146,3 +148,53 @@ Fregly's prefill/decode discussion in ch. 6 states the bound both ways in differ
 - Grace memory is an overflow tier, not HBM. Prefetch or place explicitly.
 - Keep TP/EP groups inside one NVLink domain; use the scale-out network only for traffic that tolerates 5–10 µs and ~10× less bandwidth.
 - Occupancy limits are per architecture. Check registers, SMEM and threads per block against the table above before tuning ([04](04-kernels.md#occupancy-and-the-latency-it-hides)).
+
+## Pitfalls
+
+- **Treating Grace memory as more HBM.** Symptom: the model "fits" in about 900 GB of one address space, and TPOT falls apart when weights or KV reach LPDDR5X. HBM gives ~8 TB/s per GPU and the C2C path ~900 GB/s. Fix: keep weights and active KV in HBM, and use Grace memory only as a tier you page from on purpose.
+- **Using `cudaMallocManaged` and hoping.** Symptom: correct results with kernels that run far slower than the same code on explicit buffers. Fix: set a preferred location and prefetch before the kernel runs, or place data explicitly.
+- **Stretching TP or EP past the NVLink domain.** Symptom: all-reduce or dispatch time dominates once a group crosses racks, at 20–80 GB/s and 5–10 µs per GPU against 1.8 TB/s and 1–2 µs inside one. Fix: keep those groups within the rack, and use the scale-out network for data parallelism and pipeline stages.
+- **Carrying occupancy math across architectures.** Symptom: `256 × 8 = 2,048` threads planned for a 12.x part, which caps at 48 warps and 1,536 threads per SM. Fix: check the table for your compute capability before tuning.
+- **Using the FP32 ridge for transformer math.** Symptom: expecting a GEMM to turn compute-bound at 10 FLOP/byte, when tensor-core BF16 puts the ridge near 280. Fix: compute the ridge as FLOPS ÷ bandwidth at the precision and unit you really use.
+- **Quoting a vendor ratio without its conditions.** Symptom: "3.4 versus ~150 tokens/s per GPU" presented as a hardware gain, when it compares FP8 on Hopper with FP4 on Blackwell. Fix: attach precision, model and latency target to every number you repeat.
+
+## Try it
+
+1. Compute the tensor-core ridge for a B200 at BF16 (about 2.25 PFLOPS) and at NVFP4 (about 10 PFLOPS, from [04](04-kernels.md#precision)), both at 8 TB/s. What does the difference tell you about decode?
+
+   <details><summary>Answer</summary>
+
+   2,250 / 8 ≈ 281 FLOP/byte and 10,000 / 8 = 1,250 FLOP/byte. The ridge moves right at lower precision, so a low-intensity decode step sits even further on the bandwidth slope. Lower precision helps it by cutting the bytes read, not by adding usable FLOPS.
+
+   </details>
+
+2. How many blocks per SM give full occupancy at 256 threads per block on a B200, and on a 12.x part? At 1,024 threads per block on the B200?
+
+   <details><summary>Answer</summary>
+
+   2,048 / 256 = 8 blocks on the B200. 1,536 / 256 = 6 on a 12.x part. 2,048 / 1,024 = 2. All are within the limit of 32 resident blocks; in practice registers or SMEM per block may run out first.
+
+   </details>
+
+3. A B200 has about 180 GB usable. Weights take 70 GB and the KV cache you want is 190 GB. What are your options, and which do you try first?
+
+   <details><summary>Answer</summary>
+
+   KV is 80 GB over the 110 GB budget, so 80 GB would otherwise sit behind a link about 9× slower than HBM (8 TB/s against 0.9 TB/s). First shrink it: if the cache is FP16 now, FP8 KV halves it to 95 GB, which fits. Then consider a second GPU with tensor parallelism inside the NVLink domain. Spilling to Grace memory is the last choice, and only with explicit paging of cold entries. These sizes are my example; the budget method is from [07](07-prefill-decode-kv-cache.md#sizing-the-cache).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is in a GB200 superchip, and why does the C2C link matter? | One Grace CPU with 480 GB LPDDR5X and two B200s with 192 GB HBM3e each, joined by coherent NVLink-C2C at ~900 GB/s. That is roughly 14× PCIe Gen5 x16's 64 GB/s, so spilling is possible, though still far from HBM's ~8 TB/s. |
+| Coherent means uniform: true or false? | False. A GPU can touch Grace memory directly, but at about a ninth of HBM bandwidth and with far higher latency, so placement still decides speed. |
+| What limits occupancy on a B200 SM? | 64 resident warps (2,048 threads) and 32 blocks, plus 64K registers and up to 228 KB of SMEM. Whichever runs out first sets occupancy; 12.x parts allow only 48 warps. |
+| How far apart are the levels of the memory ladder? | Registers ~1 cycle, SMEM ~20–30, L2 ~200 and HBM hundreds to ~1,000. So an HBM load costs as much time as hundreds of arithmetic instructions, which is what occupancy, ILP and pipelining are there to cover. |
+| You need TP across more GPUs than a rack holds. What do you do? | Avoid it: keep TP and EP inside the NVLink domain (up to 72 GPUs on NVL72) and use cross-rack links for pipeline stages or replicas, because those links give about 10× less bandwidth at 5–10 µs. |
+| Where is a vector add on the roofline? | One FLOP per 12 bytes is 0.083 FLOP/byte, more than 100× below the 10 FLOP/byte FP32 ridge (80 TFLOPS / 8 TB/s), so it is purely bandwidth-limited. |
+
+## Next
+
+[03-the-platform.md](03-the-platform.md): the OS, containers, network and storage around the GPU, where one wrong setting can waste what this hardware offers.

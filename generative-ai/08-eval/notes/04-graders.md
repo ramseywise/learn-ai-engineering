@@ -22,11 +22,13 @@ sources:
   - https://arxiv.org/abs/2108.07732
   - https://arxiv.org/abs/2212.10481
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 4 — Graders
 
 > A grader turns one trial into a score for one dimension. Use the simplest grader that can be trusted: code first, a model above that floor, people to calibrate both.
+
+An LLM judge costing thousands of calls a night reports that an answer "seems well grounded", while a five-line check would have shown that the cited URL was never retrieved. Choosing the wrong kind of grader wastes budget and gives a false reading. This chapter orders the choices: code first, then a model where the quality is semantic, humans to calibrate both, and an explicit rule for combining them.
 
 ---
 
@@ -235,4 +237,53 @@ Binary has one trap when the task has a right answer and the system is allowed t
 
 ---
 
-→ Next: [05-llm-as-judge.md](05-llm-as-judge.md) — making model graders trustworthy.
+## Pitfalls
+
+- **Reaching for a judge first.** Symptom: a large bill for checks a regex or schema could do, plus noise in a metric that could have been exact. Fix: layer the graders, run code first, and stop early so a failed row never reaches a judge.
+- **A composite that hides a regression.** Symptom: a flat score on a model that gained 5 points of relevance and lost 5 of grounding. Fix: report each dimension alongside any composite, and put must-pass gates in front of the weighted part.
+- **No veto on hallucination.** Symptom: a fluent answer with an invented fact outscores a terse correct one, and keyword stuffing raises the score. Fix: make it a veto item, so the total goes to zero when it fires.
+- **Comparing wording with BLEU or ROUGE.** Symptom: a good paraphrase scores low, and a longer answer scores higher, because ROUGE recall favors length. Tokenization alone moved BLEU by up to 1.8 points on one WMT'17 language pair. Fix: keep these for narrow uses, and check facts or tests instead.
+- **Abstention scored like a wrong answer.** Symptom: the system guesses more over time, because a guess has the higher expected score. Fix: a three-outcome grader with a stated confidence target, and report the abstention rate on its own.
+- **Changing a threshold quietly.** Symptom: a green dashboard after someone lowered a bar, with no evidence behind it. Fix: a threshold change without calibration puts the grader back to experimental, which can't block a release.
+- **Rubrics that need the grader's expertise.** Symptom: graders disagree on "shows good reasoning". Fix: make each item self-contained, such as "cites at least two named sources and says how each supports the conclusion".
+
+## Try it
+
+1. A hybrid rule says: schema valid AND no citation hallucination AND (0.5 × grounding + 0.3 × completeness + 0.2 × relevance ≥ 0.75). A reply has a valid schema, no hallucination, and scores 0.9, 0.6 and 0.7. Does it pass? And if a citation was hallucinated?
+
+   <details><summary>Answer</summary>
+
+   0.45 + 0.18 + 0.14 = 0.77, so it passes. With a hallucinated citation it fails, whatever the 0.77 says, because that condition is a must-pass gate rather than part of the weighted sum.
+
+   </details>
+
+2. Using this chapter's confidence target, set *t* = 0.75, so a mistake costs *t*/(1−*t*) = 3 points. A system is 60% sure of one answer and 80% sure of another. Should it answer either?
+
+   <details><summary>Answer</summary>
+
+   Expected score at 60%: 0.6 − 0.4 × 3 = −0.6, worse than the 0 for "I don't know", so it should abstain. At 80%: 0.8 − 0.2 × 3 = +0.2, so it should answer. The break-even is exactly *t*.
+
+   </details>
+
+3. Design the graders for a support agent's refund flow, in order, with cost in mind. The checks: JSON shape, refund row in the database, tone, tool order.
+
+   <details><summary>Answer</summary>
+
+   Run the JSON schema first, then the database state and the tool order, all as code and with failures stopping the row there. Tone comes last, as the only judge. The state check matters most, since only it catches a reply saying "I've issued your refund" when no refund exists ([06](06-evaluating-agents.md#grade-the-outcome-by-state-not-by-words)).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the three kinds of grader, and in which order? | Code, then model, then human. Code is cheap and exact, a model handles semantic qualities, and a human sample of about 5 to 10% calibrates the rest. |
+| Why not use BLEU or ROUGE for LLM answers? | They compare surface wording, so valid paraphrases score low, and ROUGE recall favors length. A tokenization choice alone moved BLEU by up to 1.8 points on one WMT'17 language pair. |
+| Binary or 1 to 5 scale for a judge? | Binary per dimension by default, because graders disagree most in the middle of a scale and a rate has simple statistics. Berryman & Ziegler prefer a described 1 to 5 scale, and both approaches fix a bar the judge would otherwise guess. |
+| What is a veto item? | A must-pass gate on a quality dimension: if it fires the total is zero. Hallucination is the classic one, and HealthBench's negative criteria of up to −10 points work in a similar spirit. |
+| How do grader states work? | Heuristic code checks can gate, calibrated judges can gate at their calibrated threshold, and experimental ones are tracked but can't block a release. Changing a threshold without calibration evidence sends a grader back to experimental. |
+| A new model has +5 relevance and −5 grounding, and the composite is flat. Ship? | No, not on the composite. Report the dimensions, because this is worse for anyone who needs correct answers. A hybrid rule with a grounding floor would have caught it. |
+
+## Next
+
+[05-llm-as-judge.md](05-llm-as-judge.md): making model graders trustworthy.

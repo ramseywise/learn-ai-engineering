@@ -6,11 +6,13 @@ sources:
   - https://inspect.aisi.org.uk/
   - https://hamel.dev/blog/posts/evals/
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 1 — What an Eval Is
 
 > An eval is a repeatable experiment that turns "does this work?" into a number you can compare across changes. This chapter sets the vocabulary every later chapter uses.
+
+A prompt change ships because three test questions looked better, and a week later refund answers are wrong for one customer segment and nobody can say when it started. Unit tests can't catch this, because the same input gives a different output on each run and "correct" takes judgment. This chapter defines the repeatable experiment that replaces the three questions, and the words the other twelve chapters use for its parts.
 
 ---
 
@@ -70,6 +72,52 @@ Two more terms come from the harness layer:
 - **Eval harness.** The infrastructure that runs the suite: it loads tasks, runs trials (often in parallel), records trajectories, applies graders and aggregates results. It treats the SUT as a black box with an entry point.
 
 Inspect AI uses the cleanest version of this split: a `Task` is a **dataset** + a **solver** (the SUT) + a **scorer** (the grader). Keep those three separable and you can swap any one without touching the others.
+
+Here is that split at its smallest: a dataset, a solver and a scorer, run for five trials each. The solver is a stub so that the example runs with no key. That only shows the shape of the harness, because a real eval calls the real system ([Test vs. eval](#test-vs-eval-the-seam)).
+
+```python
+import random
+
+SUITE = [  # each task: an input and what success means
+    {"id": "refund-window", "input": "How long do refunds take?", "must_say": "5 business days"},
+    {"id": "payout-path", "input": "Where do I change my payout account?", "must_say": "Settings"},
+    {"id": "cancel-fee", "input": "Is there a cancellation fee?", "must_say": "no fee"},
+]
+
+STUB = {  # stands in for the model: a right answer, a wrong one, and how often it gets it right
+    "refund-window": ("Refunds take 5 business days.", "Refunds are quick.", 0.9),
+    "payout-path": ("Go to Settings, then Payouts.", "Contact your bank.", 1.0),
+    "cancel-fee": ("There is no fee to cancel.", "A small fee may apply.", 0.6),
+}
+
+def solver(task, rng):                     # the system under test
+    right, wrong, p = STUB[task["id"]]
+    return right if rng.random() < p else wrong
+
+def scorer(task, outcome):                 # the grader: code, checking one thing
+    return task["must_say"] in outcome
+
+def run_suite(trials, seed):
+    rng = random.Random(seed)
+    return {t["id"]: [scorer(t, solver(t, rng)) for _ in range(trials)] for t in SUITE}
+
+results = run_suite(trials=5, seed=7)
+for task_id, grades in results.items():
+    print(f"{task_id:14} {sum(grades)}/{len(grades)} trials passed")
+rate = sum(sum(g) / len(g) for g in results.values()) / len(results)
+print(f"suite pass rate {rate:.2f}, criterion >= 0.90: {'met' if rate >= 0.90 else 'not met'}")
+```
+
+Output:
+
+```text
+refund-window  5/5 trials passed
+payout-path    5/5 trials passed
+cancel-fee     4/5 trials passed
+suite pass rate 0.93, criterion >= 0.90: met
+```
+
+The stub is right 90%, 100% and 60% of the time, so the true suite rate is 0.83. This run reports 0.93 and says the criterion is met. Three tasks and five trials are not enough to tell those apart, which is why [09](09-reading-results.md) exists.
 
 ### The core flow
 
@@ -177,4 +225,58 @@ Eval measures every layer below it and inherits their weaknesses. It also has we
 
 ---
 
-→ Next: [02-defining-correct.md](02-defining-correct.md) — before any data or graders, write down what success means.
+## Pitfalls
+
+- **Asserting model text in a unit test.** Symptom: CI goes red on a rephrased but correct answer, and the fix is to loosen the test until it checks nothing. Fix: unit-test the deterministic parts (prompt rendering, retry on 429), and move answer quality to an eval that reports a rate.
+- **Mocking the model inside an eval.** Symptom: scores never move, whatever you change in the prompt. An eval with a mocked model measures the mock. Fix: mock in unit tests only, and run evals against the real system under test.
+- **One trial per task.** Symptom: the same commit passes and fails on consecutive runs. Fix: run several trials and report rates. The stub above gives 1.0, 0.67, 0.67, 1.0 and 1.0 on five seeds at one trial per task, for one unchanged system.
+- **Reading a capability eval like a regression eval.** Symptom: a release gets blocked because a frontier suite fell from 40% to 36%, or nobody reacts when a mastered task starts failing. Fix: keep two suites. A drop on the capability hill means little alone, and a drop on the regression suite blocks the release.
+- **Never graduating tasks.** Symptom: the capability suite creeps toward 100% and stops showing progress, while mastered tasks are checked only by accident. Fix: move reliably passing tasks to the regression suite and add harder ones ([12](12-failure-modes.md#saturation)).
+- **Treating a public benchmark as your eval.** Symptom: a model with the best leaderboard number does worse on your tickets. Fix: use benchmarks for a shortlist, and decide on tasks drawn from your own users ([03](03-eval-datasets.md)).
+
+## Try it
+
+1. Sort these into unit test, deterministic grader or eval: (a) the template inserts the user's name; (b) the reply is valid JSON with a `citations` array; (c) the grounded answer rate on the golden set is at least 0.90; (d) a retry fires three times on a 429.
+
+   <details><summary>Answer</summary>
+
+   (a) and (d) are unit tests, since they are deterministic and assert exact values. (b) is a deterministic grader inside an eval: the check is exact, but it needs a model output to check. (c) is an eval, because it is a rate over many tasks and trials.
+
+   </details>
+
+2. In the script above, run `run_suite` with `trials` set to 1, 5 and 50, on seeds 0 to 4, and print the suite rate each time. What happens to the spread, and does it reach the true 0.83?
+
+   <details><summary>Answer</summary>
+
+   | Trials | Suite rate on seeds 0 to 4 |
+   |---|---|
+   | 1 | 1.0, 0.67, 0.67, 1.0, 1.0 |
+   | 5 | 0.8, 0.87, 0.8, 0.8, 1.0 |
+   | 50 | 0.83, 0.87, 0.83, 0.86, 0.86 |
+
+   The spread narrows from 0.33 to 0.04, around the true rate. More trials reduce sampling noise within these three tasks. They say nothing about whether these three tasks are the right ones.
+
+   </details>
+
+3. A support team has a chat assistant, no evals, and one week. A capability task, "handles a multi-currency refund", passes 19 of 20 trials on each of the last three releases. What should they do with it?
+
+   <details><summary>Answer</summary>
+
+   Graduate it to the regression suite, where it should stay near 100% and block a release if it falls, and add a harder multi-currency case to the capability suite. It has stopped telling them what the system can newly do.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why can't unit tests cover an LLM feature? | The same input gives different outputs, and "correct" is often a judgment, so you need many tasks and trials and report a rate with an error bar. Unit tests still cover the deterministic parts, such as prompt rendering and retry logic. |
+| Define task, trial, trajectory, outcome, grader and suite. | A task is an input plus success criteria, and a trial is one attempt at it. The trajectory is the record of that attempt, the outcome is its end state, a grader scores one aspect, and a suite is the set of tasks run together. |
+| Where do you mock the model? | In unit tests, never in evals, because an eval with a mocked model measures the mock. |
+| How do capability and regression evals differ? | A capability eval asks what the system can do and sits at a low to medium pass rate. A regression eval asks whether it still does what it used to, sits near 100% and blocks a release when it drops. |
+| Your suite went from 41% to 38% overnight. Block the release? | First ask which suite it is. On a capability suite a 3-point drop means little alone, while on a regression suite a drop that size means something broke. |
+| Your PM says the demo looks great, so evals can wait. What do you say? | A demo is a vibe check on a handful of inputs and leaves no number to compare after the next change. Offline evals give that number before shipping, and online evals say whether it holds for real users. |
+
+## Next
+
+[02-defining-correct.md](02-defining-correct.md): before any data or graders, write down what success means.

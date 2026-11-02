@@ -6,11 +6,13 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 8"
   - https://pytorch.org/docs/stable/torch.compiler.html
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — Compilers and Frameworks
 
 > Between the model code and the GPU sits a compiler. Most of the cheap speed in inference comes from letting it see a whole graph: fewer launches, fused kernels, and no Python on the hot path.
+
+A `torch.compile` that worked in a demo can quietly stop helping in production: a graph break leaves eager Python between fragments, a new sequence length triggers a recompile, and a dynamic shape disables CUDA graphs for that region. None of it raises an error. Knowing what the compiler has to see tells you when compiling pays, and how to catch it when it stops.
 
 ---
 
@@ -157,3 +159,54 @@ A few other ch. 13 claims to correct or update before reusing:
 - Run `dynamo.explain` once per model change; add `fail_on_recompile` (recompiles) and `fullgraph=True` (breaks) in CI.
 - Cache compiled artifacts or export AOT for fast cold starts.
 - Gate merges on a sustained ≥5% regression check, on pinned versions.
+
+## Pitfalls
+
+- **Timing launch instead of execution.** Symptom: a kernel that looks impossibly fast under `time.time()`, because CUDA calls are asynchronous. Fix: call `torch.cuda.synchronize()` before reading the clock, or use CUDA events.
+- **Compiling before profiling.** Symptom: expecting Fregly's ~30% (248 → 173 ms, an MoE training iteration) from a dense model dominated by one GEMM, which may see under 10%. Fix: profile first. If Python overhead dominates, compile; if one GEMM dominates, expect little.
+- **Silent graph breaks.** Symptom: a compiled model that is barely faster than eager, with `.item()`, prints or data-dependent control flow in `forward`. Fix: run `torch._dynamo.explain` after each model change, and compile with `fullgraph=True` in CI.
+- **Assuming `fail_on_recompile` catches breaks.** Symptom: a green CI run on a model full of graph breaks, because the book says it raises on both. Fix: use both guards; `fail_on_recompile` for recompiles and `fullgraph=True` for breaks.
+- **Letting every sequence length through.** Symptom: latency spikes when a new length arrives, and CUDA graph capture disabled for that region. On XLA it is worse, since each new shape recompiles. Fix: pad to a few buckets within ±10–20%, and capture one graph per batch-size bucket from a shared pool, largest first.
+- **Forgetting what a static cache costs.** Symptom: KV memory reserved at maximum length for requests that use a fraction of it. Fix: accept that for small-batch work, and use an engine with paged KV blocks when serving many requests ([07](07-prefill-decode-kv-cache.md#pagedattention)).
+- **Compiling on the serving path.** Symptom: minutes of `max-autotune` compile during a scale-out. Fix: use regional compilation, a shared Mega-Cache, or `torch.export` with AOTInductor.
+
+## Try it
+
+1. Fregly's profile showed 45% of the time in Python `forward` overhead. If compilation removed all of it, what is the most that step could gain? How does the measured 248 → 173 ms compare?
+
+   <details><summary>Answer</summary>
+
+   Amdahl's bound is 1 / 0.55 ≈ 1.8×. The measured change is 248 / 173 ≈ 1.43×, or about 30% less time. It is under that bound, though the note doesn't say the two numbers come from the same run, so treat the comparison as a sanity check.
+
+   </details>
+
+2. Which CI guard catches each of these: (a) a `.item()` call added inside `forward`; (b) a batch arriving with an unseen sequence length, with that dim not marked dynamic; (c) a 6% slowdown from a dependency bump, sustained over 3 runs?
+
+   <details><summary>Answer</summary>
+
+   (a) `fullgraph=True`, because it is a graph break. (b) `fail_on_recompile`, because a guard failed. (c) Neither: the performance-regression job, which fails at 5% or more over 3 runs, on pinned versions.
+
+   </details>
+
+3. You serve a decode loop at small batch with bucketed shapes, and a separate GEMM-heavy offline job that runs for days. Which `torch.compile` mode for each?
+
+   <details><summary>Answer</summary>
+
+   `reduce-overhead` for the decode loop, because CUDA graphs remove launch overhead on stable shapes. `max-autotune` for the offline job, because a long run amortizes the compile time and the GEMM tuning pays.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What does `torch.compile` actually do? | TorchDynamo hooks bytecode into an FX graph with guards, AOTAutograd traces ahead of time, PrimTorch decomposes 2,000+ ops to ~250 primitives, and TorchInductor fuses and generates Triton kernels. Fusion and removing Python are where inference gains come from. |
+| Your compiled model is no faster. Where do you look? | Graph breaks first (`torch._dynamo.explain`), then recompiles from changing shapes, then whether one large GEMM dominates. Fregly's dense case may see under 10%, since Tensor Cores are already doing the work. |
+| `reduce-overhead` or `max-autotune`? | `reduce-overhead` for small batches and stable decode shapes, through CUDA graphs. `max-autotune` when you compile once and serve long, on GEMM-heavy work. `default` has no CUDA graphs. |
+| How do you serve variable lengths with CUDA graphs? | Bucket: pad to a few lengths within ±10–20% and capture one graph per batch-size bucket (Fregly's example uses 1, 2, 4, 8) from a shared memory pool, largest first. |
+| Your scale-out takes minutes because of compile. What are the options? | Regional compilation of one transformer block, a Mega-Cache shared across replicas, or `torch.export` with AOTInductor to ship a binary with no compile on the serving path. |
+| How do you stop performance regressions reaching main? | A CI job on a fixed model and hardware that fails on a slowdown of 5% or more sustained over 3 runs, with pinned versions so noise and upgrades don't look like regressions. |
+
+## Next
+
+[06-serving-at-scale.md](06-serving-at-scale.md): one fast model on one GPU is still one user at a time, and serving is what comes next.
