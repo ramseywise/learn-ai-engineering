@@ -283,7 +283,7 @@ The result is valid by construction. It is not necessarily correct, because a gr
 | Question | Answer |
 |---|---|
 | What are prefill and decode? | Prefill runs the prompt through the model in one parallel pass. Decode generates one token at a time, each with its own forward pass |
-| What does the KV cache store, and what does it cost? | Keys and values of all earlier tokens per layer and head, so the new token needs only its own. It grows linearly with context and is the main memory cost of serving |
+| What does the KV cache store, and what does it cost? | Keys and values of all earlier tokens per layer and head, so the new token needs only its own. It grows linearly with context, and it is the part of serving memory that long prompts push up, on top of the weights |
 | What does temperature do? | It divides logits before the softmax, so values above 1 flatten the distribution and values below 1 sharpen it. Zero is implemented as argmax |
 | Top-k or top-p? | Top-k keeps a fixed number of tokens. Top-p keeps however many reach a probability mass, so it adapts to how peaked the distribution is |
 | Why isn't temperature 0 fully reproducible on an API? | Hosted runs can differ in hardware and version, even with sampling removed |

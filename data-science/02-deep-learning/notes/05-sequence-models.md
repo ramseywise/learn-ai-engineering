@@ -1,0 +1,419 @@
+---
+origin: own coursework (Ng Deep Learning Specialization, course 5) + curated
+sources:
+  - ../practice/ng-deep-learning/Sequence Models/
+  - https://www.coursera.org/specializations/deep-learning
+  - ../../sources/buduma-fundamentals-of-deep-learning.pdf
+  - https://doi.org/10.1038/323533a0
+  - https://doi.org/10.1162/neco.1997.9.8.1735
+  - https://arxiv.org/abs/1406.1078
+  - https://proceedings.mlr.press/v37/jozefowicz15.html
+  - https://arxiv.org/abs/1409.3215
+  - https://arxiv.org/abs/1409.0473
+  - https://aclanthology.org/D14-1162/
+  - https://arxiv.org/abs/1607.06520
+confidence: high
+cleaned: 2026-11-01
+---
+# Sequence models
+
+> A review, a sentence or a clip of audio has an order and any length. A recurrent network reads it one step at a time and carries a memory, and everything hard about RNNs comes from that memory: it fades, and without some care it explodes. Course 5 builds the cells in NumPy, then uses them for names, music, word vectors and translation. This chapter runs those ideas in PyTorch, and ends on the mechanism that replaced them: attention.
+
+| Notebook | Builds | Key idea |
+|---|---|---|
+| Building an RNN: Step by Step | `rnn_cell_forward`, `lstm_cell_forward` and backward passes in NumPy | $a^{\langle t\rangle} = \tanh(W_{aa} a^{\langle t-1\rangle} + W_{ax} x^{\langle t\rangle} + b_a)$; LSTM gates (forget, update, output) protect the cell state from vanishing gradients |
+| Dinosaurus Island | Character-level RNN language model on dinosaur names; gradient clipping; sampling | The same task as [makemore](../../04-llms-from-scratch/notes/02-makemore.md), with an RNN instead of an MLP |
+| Jazz improvisation with LSTM | Keras LSTM that generates music values; inference loop feeding samples back in | Training vs autoregressive sampling |
+| Operations on word vectors | Cosine similarity, analogies with GloVe (`man : woman :: king : ?`), debiasing by neutralise/equalise | Embedding geometry; bias in embeddings ([NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md)) |
+| Emojify | Average of GloVe vectors → softmax; then a 2-layer LSTM over the embeddings | Pretrained embeddings let 127 training sentences generalise |
+| Neural machine translation with attention | Date normalisation ("3 May 1979" → "1979-05-03") with a Bi-LSTM encoder and attention | Attention weights $\alpha^{\langle t, t'\rangle} = \text{softmax}(e)$: the bridge to [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) |
+| Trigger word detection | Synthesise audio training data, spectrogram → Conv1D → GRU → per-timestep sigmoid | Data synthesis; sequence labelling |
+
+```mermaid
+flowchart LR
+    X1[x 1] --> R1[Cell]
+    X2[x 2] --> R2[Cell]
+    X3[x 3] --> R3[Cell]
+    A0[a 0] --> R1
+    R1 -->|a 1| R2
+    R2 -->|a 2| R3
+    R3 --> Y[Prediction]
+```
+
+## The recurrent cell
+
+The same cell, with the same weights, runs at every step. It takes the current input and the previous state. Training unrolls it and backpropagates through time, the same chain rule as [the first chapter](01-neural-networks-fundamentals.md#backpropagation), over one layer per step, an approach described in [doi:10.1038/323533a0](https://doi.org/10.1038/323533a0) (Rumelhart, Hinton and Williams, Nature 1986). Here are the Step by Step notebook's two cells, cut down:
+
+```python
+import numpy as np, torch, torch.nn as nn, torch.nn.functional as F
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+
+def sigmoid(z): return 1 / (1 + np.exp(-z))
+
+def rnn_cell(x, a, p):
+    return np.tanh(p["Waa"] @ a + p["Wax"] @ x + p["ba"])
+
+def lstm_cell(x, a, c, p):
+    z = np.concatenate([a, x])
+    forget = sigmoid(p["Wf"] @ z + p["bf"])       # what to erase from memory
+    update = sigmoid(p["Wu"] @ z + p["bu"])       # what to write
+    candidate = np.tanh(p["Wc"] @ z + p["bc"])
+    c = forget * c + update * candidate           # memory: additive, so gradients survive
+    output = sigmoid(p["Wo"] @ z + p["bo"])
+    return output * np.tanh(c), c
+
+rng = np.random.default_rng(0)
+n_x, n_a = 3, 5
+p = {"Waa": rng.normal(size=(n_a, n_a)), "Wax": rng.normal(size=(n_a, n_x)), "ba": rng.normal(size=n_a)}
+for g in "fuco":
+    p[f"W{g}"], p[f"b{g}"] = rng.normal(size=(n_a, n_a + n_x)), rng.normal(size=n_a)
+
+a = np.zeros(n_a)
+c = np.zeros(n_a)
+a_lstm = np.zeros(n_a)
+for t in range(4):
+    x = rng.normal(size=n_x)
+    a = rnn_cell(x, a, p)
+    a_lstm, c = lstm_cell(x, a_lstm, c, p)
+print("RNN state", np.round(a, 2))
+print("LSTM hidden", np.round(a_lstm, 2), "cell", np.round(c, 2))
+
+params = lambda n_a, n_x: (n_a * n_a + n_a * n_x + n_a, 4 * (n_a * (n_a + n_x) + n_a))
+print("parameters RNN, LSTM for n_a=64, n_x=8:", params(64, 8))
+```
+
+@@CELL@@
+
+The LSTM ([doi:10.1162/neco.1997.9.8.1735](https://doi.org/10.1162/neco.1997.9.8.1735) (Hochreiter and Schmidhuber, Neural Computation 1997)) adds a cell state updated by addition, with gates that decide what to erase and write. It has four times the RNN's parameters at the same size. The GRU merges the forget and update gates and drops the separate cell state, so it has three sets ([arXiv:1406.1078](https://arxiv.org/abs/1406.1078) (Cho et al., EMNLP 2014)).
+
+## Digits, one row at a time
+
+To thread the same data through, treat each 8×8 digit as a sequence of 8 rows of 8 pixels. It isn't a natural sequence task, but all the cells should manage it:
+
+```python
+d = load_digits()
+Xa, Xb, ya, yb = train_test_split(d.data / 16.0, d.target, test_size=0.3, random_state=0, stratify=d.target)
+X_tr = torch.tensor(Xa, dtype=torch.float32).reshape(-1, 8, 8)    # (batch, time, features)
+X_te = torch.tensor(Xb, dtype=torch.float32).reshape(-1, 8, 8)
+y_tr, y_te = torch.tensor(ya), torch.tensor(yb)
+
+class Reader(nn.Module):
+    def __init__(self, cell, inp=8, hidden=64, classes=10):
+        super().__init__()
+        self.rnn = {"rnn": nn.RNN, "gru": nn.GRU, "lstm": nn.LSTM}[cell](inp, hidden, batch_first=True)
+        self.out = nn.Linear(hidden, classes)
+    def forward(self, x):
+        outputs, _ = self.rnn(x)           # outputs for every step; h_n is second, and for LSTM a tuple
+        return self.out(outputs[:, -1])    # the last step's state
+
+for cell in ["rnn", "gru", "lstm"]:
+    res = []
+    for s in range(3):
+        torch.manual_seed(s)
+        m = Reader(cell)
+        opt = torch.optim.Adam(m.parameters(), lr=3e-3)
+        for epoch in range(20):
+            perm = torch.randperm(len(X_tr))
+            for i in range(0, len(perm) - 32, 32):
+                b = perm[i:i+32]
+                loss = F.cross_entropy(m(X_tr[b]), y_tr[b])
+                opt.zero_grad(); loss.backward(); opt.step()
+        with torch.no_grad():
+            res.append((m(X_te).argmax(1) == y_te).float().mean().item())
+    n = sum(q.numel() for q in m.parameters())
+    print(f"{cell:<5} params {n:>6}  test {np.mean(res):.3f} +- {np.std(res):.3f}")
+```
+
+@@ROWS@@
+
+Eight steps is short, so a plain RNN keeps up, at far fewer parameters, and all three stay behind the CNN's 0.984. The next experiment makes the sequence long.
+
+## Vanishing gradients, and the forget-gate bias
+
+Backpropagation through $T$ steps multiplies $T$ factors, and if they're below one the signal vanishes. The simplest test: the label is the sign of the first number, and all later numbers are noise. So the network must carry one bit through the whole sequence. PyTorch initialises an LSTM's biases like everything else, so its forget gate starts near 0.5 and halves the memory at every step. Setting the forget-gate bias to 1, an old recommendation supported by Jozefowicz et al.'s architecture search ([PMLR v37](https://proceedings.mlr.press/v37/jozefowicz15.html) (Jozefowicz, Zaremba and Sutskever, ICML 2015)), starts it near keep:
+
+```python
+def seqs(n, T, seed):
+    g = torch.Generator().manual_seed(seed)
+    x = (torch.randint(0, 2, (n, T, 1), generator=g) * 2 - 1).float()
+    return x, (x[:, 0, 0] > 0).long()
+
+def memory_net(cell, forget_bias=False, h=32):
+    m = Reader(cell, inp=1, hidden=h, classes=2)
+    if forget_bias:
+        for name, q in m.rnn.named_parameters():
+            if "bias" in name:
+                nn.init.zeros_(q)
+                q.data[h:2 * h] = 1.0     # PyTorch's order: input, forget, cell, output
+    return m
+
+variants = [("rnn", False), ("lstm", False), ("lstm", True)]
+for cell, fb in variants:
+    torch.manual_seed(0)
+    m = memory_net(cell, fb)
+    x = torch.randn(1, 50, 1, requires_grad=True)
+    m(x)[0, 0].backward()
+    g = x.grad.abs().flatten()
+    print(f"{cell} forget_bias={fb!s:<5}  |d output / d x_t|  t=49 {g[49]:.1e}  t=25 {g[25]:.1e}  t=0 {g[0]:.1e}")
+
+for T in [20, 50]:
+    for cell, fb in variants:
+        res = []
+        for s in range(3):
+            torch.manual_seed(s)
+            m = memory_net(cell, fb)
+            opt = torch.optim.Adam(m.parameters(), lr=3e-3)
+            X_val, y_val = seqs(500, T, 99)
+            for step in range(500):
+                x, y = seqs(64, T, step + 1000)
+                loss = F.cross_entropy(m(x), y)
+                opt.zero_grad(); loss.backward()
+                nn.utils.clip_grad_norm_(m.parameters(), 1.0)
+                opt.step()
+            with torch.no_grad():
+                res.append((m(X_val).argmax(1) == y_val).float().mean().item())
+        print(f"T={T:<3} {cell} forget_bias={fb!s:<5}  accuracy per seed {np.round(res, 3)}")
+```
+
+@@MEM@@
+
+Before training, an LSTM with PyTorch's defaults is no better than a plain RNN: the gradient from the first step is about $10^{-12}$ in both. With the forget-gate bias it is about 0.02, as large as the last step's. So the LSTM's advantage is not automatic. It depends on this initialisation, and without it both cells stayed at chance for $T=20$ in this budget. At $T=50$, even the biased LSTM doesn't always succeed in 500 steps, and it is clearly a harder task.
+
+The opposite failure is exploding gradients, and the fix is to rescale the whole gradient when its norm goes over a threshold, which is what the `clip_grad_norm_` line does. The next section prints its effect.
+
+## Character models and sampling
+
+The **Dinosaurus Island** notebook trains on dinosaur names, one character per step, each predicting the next. The name list didn't get copied to this repo, so here is a stand-in built from syllables. [makemore](../../04-llms-from-scratch/notes/02-makemore.md) trains the same kind of model on real names.
+
+```python
+import random
+
+random.seed(0)
+heads = ["tyranno", "stego", "veloci", "ptero", "brachio", "allo", "diplo", "tricera", "ankylo", "spino"]
+tails = ["saurus", "don", "raptor", "ceratops", "mimus", "pteryx", "venator", "titan"]
+names = sorted({random.choice(heads) + random.choice(["", "ma", "ri", "lo"]) + random.choice(tails) for _ in range(300)})
+vocab = ["."] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(vocab)}
+maxlen = max(map(len, names)) + 1
+def encode(w): return [stoi[c] for c in w + "."] + [0] * (maxlen - len(w) - 1)
+data = torch.tensor([encode(w) for w in names])
+print(len(names), "names", "vocabulary", len(vocab), "examples", names[:3])
+
+class CharRNN(nn.Module):
+    def __init__(self, v, h=64):
+        super().__init__()
+        self.emb, self.gru, self.out = nn.Embedding(v, 16), nn.GRU(16, h, batch_first=True), nn.Linear(h, v)
+    def forward(self, x, h=None):
+        o, h = self.gru(self.emb(x), h)
+        return self.out(o), h
+
+torch.manual_seed(0)
+model = CharRNN(len(vocab))
+opt = torch.optim.Adam(model.parameters(), lr=5e-3)
+inp = torch.cat([torch.zeros(len(data), 1, dtype=torch.long), data[:, :-1]], dim=1)   # "." starts each name
+norms = []
+for step in range(300):
+    logits, _ = model(inp)
+    loss = F.cross_entropy(logits.transpose(1, 2), data)
+    opt.zero_grad(); loss.backward()
+    norms.append(nn.utils.clip_grad_norm_(model.parameters(), 1.0).item())   # returns the norm before clipping
+    opt.step()
+print(f"loss {loss.item():.3f}; gradient norm before clipping: first {norms[0]:.2f}, largest {max(norms):.2f}, last {norms[-1]:.2f}")
+
+@torch.no_grad()
+def sample(temperature=1.0, seed=0):
+    torch.manual_seed(seed)
+    x, h, out = torch.zeros(1, 1, dtype=torch.long), None, ""
+    for _ in range(maxlen):
+        logits, h = model(x, h)
+        ch = torch.multinomial((logits[0, -1] / temperature).softmax(0), 1).item()   # feed the sample back in
+        if ch == 0: break
+        out += vocab[ch]
+        x = torch.tensor([[ch]])
+    return out
+
+print("t=1.0:", [sample(1.0, s) for s in range(4)])
+print("t=0.1:", [sample(0.1, s) for s in range(4)])
+print("t=3.0:", [sample(3.0, s) for s in range(4)])
+```
+
+@@CHAR@@
+
+Training feeds in the true previous character, and sampling feeds back its own output. The **Jazz** notebook has the same two modes for music. A low temperature concentrates on the likeliest next character, and a high one flattens the distribution until the structure goes.
+
+## Word vectors
+
+A word is a one-hot vector until you embed it, and in one-hot form every pair of words is equally far apart. The **Operations on word vectors** notebook uses pretrained GloVe ([Pennington, Socher and Manning, EMNLP 2014](https://aclanthology.org/D14-1162/)). The arithmetic works on any vectors, so these are small ones constructed to carry the idea. Dimension 0 is gender and the others are "royalty", "age" and "occupation":
+
+```python
+vec = {"man": [ 1, 0, 0.3, 0], "woman": [-1, 0, 0.3, 0], "king": [ 1, 1, 0.5, 0], "queen": [-1, 1, 0.5, 0],
+       "boy": [ 1, 0, -0.8, 0], "girl": [-1, 0, -0.8, 0], "doctor": [0.4, 0, 0.5, 1], "nurse": [-0.5, 0, 0.5, 1]}
+vec = {k: np.array(v, dtype=float) for k, v in vec.items()}
+
+def cosine(u, v): return u @ v / (np.linalg.norm(u) * np.linalg.norm(v))
+
+def analogy(a, b, c):
+    target = vec[b] - vec[a] + vec[c]                  # a : b :: c : ?
+    return max((w for w in vec if w not in (a, b, c)), key=lambda w: cosine(target, vec[w]))
+
+print("man : woman :: king :", analogy("man", "woman", "king"))
+print("man : woman :: boy  :", analogy("man", "woman", "boy"))
+
+g = vec["woman"] - vec["man"]                          # the bias direction
+def neutralise(v): return v - (v @ g) / (g @ g) * g    # remove the component along g
+
+print("doctor vs gender direction, before %.3f, after %.3f" % (cosine(vec["doctor"], g), cosine(neutralise(vec["doctor"]), g)))
+print("nurse  vs gender direction, before %.3f, after %.3f" % (cosine(vec["nurse"], g), cosine(neutralise(vec["nurse"]), g)))
+```
+
+@@WV@@
+
+Neutralise and its companion equalise come from Bolukbasi et al. ([arXiv:1607.06520](https://arxiv.org/abs/1607.06520) (Bolukbasi et al., NeurIPS 2016)). Occupations in real GloVe vectors do lean along the gender direction, which your notebook prints. **Emojify** shows the other use of pretrained vectors: averaging GloVe vectors then a softmax generalises from 127 training sentences, and swapping in an LSTM over the same embeddings lets it handle word order, which an average can't. [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) continues from here.
+
+## Seq2seq and attention
+
+Sutskever et al. mapped a sequence to a sequence by encoding the input into one vector and decoding from it ([arXiv:1409.3215](https://arxiv.org/abs/1409.3215) (Sutskever, Vinyals and Le, NeurIPS 2014)). That single vector becomes the bottleneck. Bahdanau et al. let the decoder look back at all encoder states at each step, weighted by a learned score ([arXiv:1409.0473](https://arxiv.org/abs/1409.0473) (Bahdanau, Cho and Bengio, ICLR 2015)). Your **Neural machine translation** notebook applies this to dates. Here is the same task with synthetic dates, with and without attention. The model below runs in seconds:
+
+```python
+months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+rng = random.Random(0)
+def date_pair():
+    d, m, y = rng.randint(1, 28), rng.randint(1, 12), rng.randint(1950, 2030)
+    form = rng.choice(["{d} {M} {y}", "{M} {d}, {y}", "{d}/{m}/{y}", "{d} {Ms} {y}"])
+    return form.format(d=d, M=months[m-1], Ms=months[m-1][:3], m=m, y=y).lower(), f"{y}-{m:02d}-{d:02d}"
+
+pairs = [date_pair() for _ in range(4000)]
+itos = ["<pad>"] + sorted(set("".join(a for a, _ in pairs)))
+in_stoi = {c: i for i, c in enumerate(itos)}
+out_vocab = "0123456789-"
+out_stoi = {c: i + 1 for i, c in enumerate(out_vocab)}          # 0 is the start symbol
+L = max(len(a) for a, _ in pairs)
+def enc(a): return [in_stoi[c] for c in a] + [0] * (L - len(a))
+X = torch.tensor([enc(a) for a, _ in pairs])
+Y = torch.tensor([[out_stoi[c] for c in b] for _, b in pairs])
+X_a, Y_a, X_v, Y_v = X[:3500], Y[:3500], X[3500:], Y[3500:]
+
+class DateModel(nn.Module):
+    def __init__(self, attention, h=32):
+        super().__init__()
+        self.attention = attention
+        self.emb = nn.Embedding(len(itos), 16, padding_idx=0)
+        self.enc = nn.GRU(16, h, batch_first=True, bidirectional=True)
+        self.dec = nn.GRUCell(12 + (2 * h if attention else 0), 2 * h)
+        self.query, self.out = nn.Linear(2 * h, 2 * h), nn.Linear(2 * h, 12)
+    def forward(self, x, y=None):
+        H, last = self.enc(self.emb(x))
+        s = torch.cat([last[0], last[1]], dim=1)                # the seq2seq bottleneck
+        prev, outs, alphas = torch.zeros(len(x), 12), [], []
+        for t in range(10):
+            inp = prev
+            if self.attention:
+                e = (self.query(s)[:, None] * H).sum(2).masked_fill(x == 0, -1e9)
+                alpha = e.softmax(1)                            # the notebook's alpha<t, t'>
+                alphas.append(alpha)
+                inp = torch.cat([prev, (alpha[:, :, None] * H).sum(1)], dim=1)
+            s = self.dec(inp, s)
+            logits = self.out(s)
+            outs.append(logits)
+            nxt = y[:, t] if y is not None else logits.argmax(1)  # teacher forcing in training
+            prev = F.one_hot(nxt, 12).float()
+        return torch.stack(outs, 1), alphas
+
+trained = {}
+for attention in [False, True]:
+    torch.manual_seed(0)
+    m = DateModel(attention)
+    opt = torch.optim.Adam(m.parameters(), lr=3e-3)
+    for epoch in range(6):
+        perm = torch.randperm(len(X_a))
+        for i in range(0, len(perm) - 64, 64):
+            b = perm[i:i+64]
+            logits, _ = m(X_a[b], Y_a[b])
+            loss = F.cross_entropy(logits.transpose(1, 2), Y_a[b])
+            opt.zero_grad(); loss.backward(); opt.step()
+    with torch.no_grad():
+        pred = m(X_v)[0].argmax(2)
+    print(f"attention={attention!s:<5}  characters right {(pred == Y_v).float().mean():.3f}  whole date right {(pred == Y_v).all(1).float().mean():.3f}")
+    trained[attention] = m
+
+text = "3 may 1979"
+x = torch.tensor([enc(text)])
+with torch.no_grad():
+    logits, alphas = trained[True](x)
+out = "".join(out_vocab[i - 1] for i in logits[0].argmax(1).tolist())
+print(text, "->", out)
+for t, ch in enumerate(out):
+    print(f"  output '{ch}' looks at '{text[alphas[t][0, :len(text)].argmax().item()]}' at position {alphas[t][0, :len(text)].argmax().item()}")
+```
+
+@@ATT@@
+
+Six epochs with attention get every date right, while the bottleneck model is still at about chance for whole dates. The printout shows what the weights are looking at. Take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
+
+## Reading
+
+Buduma, *Fundamentals of Deep Learning* ([PDF](../../sources/buduma-fundamentals-of-deep-learning.pdf)), ch. 7 (models for sequence analysis) parallels this chapter, using TensorFlow.
+
+| Set | Runs |
+|---|---|
+| [`Sequence Models`](../practice/ng-deep-learning/Sequence%20Models/) (7 notebooks across weeks 1 to 3) | Legacy, reading-only as stored: `emo_utils`, GloVe vectors, the dinosaur name list and pretrained weights weren't copied. The Keras notebooks use standalone `keras` 2.x, and [the migration table](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) has the status |
+
+All the numbers on digits, memory, names and dates came from running the code shown. The name list and word vectors are constructed, as the text says.
+
+## Pitfalls
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Loss goes to `nan` during an RNN's training | Exploding gradients | `clip_grad_norm_` between `backward()` and `step()` |
+| LSTM doesn't beat a plain RNN on long sequences | Forget gate starts near 0.5, as PyTorch sets no bias | Set the forget-gate bias to 1 |
+| Dimension errors when porting Keras or NumPy code | PyTorch's RNNs default to `(time, batch, features)` | `batch_first=True` |
+| `h_n` has the wrong shape for a classifier | It is `(layers * directions, batch, hidden)`, and a tuple for LSTM | Use `outputs[:, -1]`, or concatenate the last forward and backward states |
+| Padded batches give worse results | The last "step" for short sequences is padding | `pack_padded_sequence`, or index the true last step |
+| Good loss in training, bad text when sampling | Teacher forcing: the model never saw its own mistakes | Sample while training to check; lower the temperature |
+| Decoder fine for short input, poor for long | Everything squeezed into one vector | Attention |
+
+## Try it
+
+1. In the memory task, replace the LSTM with `nn.GRU` for $T=20$, using PyTorch's defaults, for three seeds and 500 steps. Is the GRU in the same trouble as the unbiased LSTM?
+
+   <details><summary>Answer</summary>
+
+   @@A1@@
+
+   </details>
+
+2. Count by hand the parameters of an `nn.GRU(8, 64)`, then check with PyTorch. How does this compare with the printed `gru` count of the reader, which includes a linear layer?
+
+   <details><summary>Answer</summary>
+
+   @@A2@@
+
+   </details>
+
+3. Train the date model with attention on only 500 pairs, and report the whole-date accuracy for both models after 6 epochs.
+
+   <details><summary>Answer</summary>
+
+   @@A3@@
+
+   </details>
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Why not an MLP for sequences? | Inputs have variable length and an MLP doesn't share what it learns across positions. |
+| Why do RNN gradients vanish or explode? | Backprop through time multiplies one factor per step, so it decays or grows exponentially. |
+| What does an LSTM add? | A cell state updated additively, with forget, update and output gates. |
+| LSTM or GRU? | The GRU has fewer parameters and often similar results, so try it first where size matters. |
+| Why set the forget-gate bias to 1? | So that the gate starts near "keep" and gradients reach early steps at initialisation. |
+| What is gradient clipping? | Rescaling the gradient when its global norm exceeds a threshold, between `backward` and `step`. |
+| What is teacher forcing? | Feeding the true previous token in training instead of the model's own output. |
+| What does temperature do at sampling time? | Divides logits before the softmax: lower is more conservative, higher is more random. |
+| What problem did attention solve? | The fixed-size bottleneck: the decoder chooses which encoder states to read at each step. |
+| What's a word-vector analogy test doing? | Checking that $\text{woman} - \text{man} + \text{king}$ is nearest to queen by cosine, excluding the inputs. |
+
+## Next
+
+[Neural text models](06-neural-text-models.md): the same layers on real text, from tokens to a classifier and pretrained embeddings.

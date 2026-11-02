@@ -196,7 +196,7 @@ The difference between the two share columns is itself worth teaching. Mean of s
 
 This is the centre of the design, so here is what it must not do: ask the model whether its answer is right. A check that shares the same reasoning shares the same errors. The validator takes the structured claim (metric, grouping, group, value), recomputes it in pandas from the source data without seeing the agent's SQL, and applies rules a statistician would apply by reflex.
 
-The check on the claimed lead needs a sense of noise. A bootstrap is a good fit here because it needs no distribution assumptions and takes four lines: resample each group with replacement, take the difference of means, repeat, and read off the middle 95%. [Estimation](../../../data-analytics/02-probability-and-statistics/notes/03-estimation.md) gives the reasoning behind it.
+The check on the claimed lead needs a sense of noise. A bootstrap is a good fit here because it needs no distribution assumptions and takes four lines: resample each group with replacement, take the difference of means, repeat, and read off the middle 95%. [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) gives the reasoning behind it.
 
 ```python
 import re
@@ -276,7 +276,7 @@ The lab's validator has two more rules, both driven by the Titanic data.
 answer: Among the 714 of 891 passengers with a recorded age, survivors averaged 28.34 years.
 ```
 
-The causal lint is a crude word list, and a determined sentence gets past it. It is here because the most common error is the casual one: "because" appearing in a sentence about observational data. [Correlation and causation](../../../data-analytics/03-experimentation-and-causality/notes/03-correlation-and-causation.md) covers the real question.
+The causal lint is a crude word list, and a determined sentence gets past it. It is here because the most common error is the casual one: "because" appearing in a sentence about observational data. [Correlation and causation](../../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) covers the real question.
 
 ## Charts as a tool with opinions
 

@@ -28,6 +28,9 @@ sources:
   - https://arxiv.org/abs/2411.16489 (O1 Replication Journey Part 2: o1 distillation)
   - https://arxiv.org/abs/2502.06773 (RLSP, exploration reward for reasoning)
   - https://arxiv.org/abs/2504.05185 (Concise Reasoning via RL: length as PPO loss artifact)
+  - https://arxiv.org/abs/2602.04118 (TinyLoRA, RL reasoning gains with 13 trained parameters)
+  - https://arxiv.org/abs/2512.07783 (Interplay of pre-, mid-training and RL, edge-of-competence data)
+  - https://arxiv.org/abs/2510.14901 (Reasoning with Sampling, training-free power-distribution MCMC)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -204,6 +207,18 @@ for k in [1, 4, 16, 64, 256, 1024]:
 
 This shape, with RL ahead at low k and behind at high k, is what to look for in your own pass@k curves. The toy only shows the mechanism, and its numbers are not a measurement of any model.
 
+If RL mostly sharpens, a sampler should be able to sharpen without training. Power sampling
+targets p^α, the base model's whole-sequence likelihood raised to α = 4. It approximates this with
+Metropolis–Hastings: generate in 192-token blocks, resample a random suffix ten times per block,
+and accept by the likelihood ratio ([arXiv:2510.14901](https://arxiv.org/abs/2510.14901) (Karan
+and Du, 2025-10, preprint)). Low temperature is not the same target. It sharpens each next token,
+so it favours tokens with many mediocre continuations over tokens with a few likely ones. On
+Qwen2.5-Math-7B, with no training, data or verifier, **MATH500 rose from 49.6% to 74.8%, against
+78.5% for GRPO trained on MATH**. HumanEval rose to 57.3% against GRPO's 53.7%, and pass@k stayed
+above the base model's instead of falling below it. The cost is about 8.8× the tokens of one
+ordinary sample. The largest out-of-domain wins come from Phi-3.5-mini, whose GRPO baseline
+scored below its own base model. The paper reports single-shot scores with no seeds and no AIME.
+
 ### How little data and reward reasoning needs
 
 The cheap recipes of 2025 are the best evidence for the Yue reading, and most of them were
@@ -310,6 +325,16 @@ and each gain shrinks off Qwen.
   unfiltered solutions. It matched rejection-sampling fine-tuning on Llama-3.1-8B-Instruct
   (average 38.3% against 38.5%, base 36.2%) with 0.2M sampled tokens against 36.9M. Both
   gains are small.
+- **Almost no parameters.** TinyLoRA trains a small vector projected through fixed random
+  matrices into the top singular directions of each weight, shared across modules
+  ([arXiv:2602.04118](https://arxiv.org/abs/2602.04118) (Morris et al., 2026-02, preprint)).
+  With GRPO on GSM8K, **Qwen2.5-7B-Instruct went from 76% to 91% training 13 parameters** (26
+  bytes) and to 95% with 120. SFT with the same adapters reached 83% and 84%. Llama-3 needed
+  about 10× more parameters for the same gain and barely moved below five. Smaller Qwen models
+  needed larger updates. On the MATH training set, 196 parameters kept 87% of the full-fine-tune
+  gain averaged over six benchmarks. The paper's own reading is that the knowledge is already
+  in the model and only the style has to change. It is math only, on instruction-tuned models,
+  with the learning rate picked per size from a sweep.
 
 *This note's reading.* Where the base already samples the right behaviour (Qwen2.5, and
 Qwen2.5-Math most of all), almost any signal that rewards confident, well-formatted,
@@ -320,6 +345,18 @@ Qwen-versus-Llama split for random and spurious rewards (Shao et al., 2025, not 
 the discovery side it cites ProRL (Liu et al., 2025), where prolonged RL raised pass@k as well
 as pass@1. Before trusting a reasoning-RL result, check two things: is there a format-only
 baseline, and was it run on a second model family?
+
+A controlled study suggests both sides are right, depending on where the RL data sits. Zhang et
+al. pretrained 100M-parameter models from scratch on 10B tokens of synthetic GSM-style problems
+with 2–10 operations, then ran GRPO and graded every step against the problem's dependency graph
+([arXiv:2512.07783](https://arxiv.org/abs/2512.07783) (Zhang et al., 2025-12, preprint)). RL on
+problems inside the pretraining range raised pass@1 but never pass@128. **RL on problems just past
+it (11–14 operations), where pass@128 was low but not zero, raised pass@128 by up to 42 points.**
+RL on far harder problems did not help. A new surface context transferred only if the
+pretraining data held at least 1% of simple examples in it; at 0.1% RL did not transfer at all.
+At equal compute, spending some of the budget on next-token training at the edge range before RL
+beat RL alone by 10.8 points on the hardest problems. Rewarding correct steps as well as the
+answer added 4–5 points of pass@1. All of it is synthetic arithmetic at 100M parameters.
 
 ## Pitfalls
 

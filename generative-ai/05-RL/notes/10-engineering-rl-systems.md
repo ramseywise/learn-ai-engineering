@@ -10,6 +10,8 @@ sources:
   - https://arxiv.org/abs/2512.16144
   - https://arxiv.org/abs/2602.15763
   - https://arxiv.org/abs/2510.18855
+  - https://arxiv.org/abs/2510.13786 (ScaleRL, sigmoidal compute-scaling fits for RL recipes)
+  - https://arxiv.org/abs/2510.26788 (Precision-RL, FP16 removes the training-inference mismatch)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -266,6 +268,38 @@ token-level ratio π_train / π_inference rather than a V-trace-style truncated 
 
 Only Ring-1T ablates the correction, on a smaller sibling model and from curves. GLM-5 does not
 disclose ε or τ.
+
+**Most recipe choices move speed, not the ceiling.** ScaleRL fits a sigmoid of held-out pass rate
+against RL compute, with an asymptote A and an efficiency exponent B, and compares recipes on both
+([arXiv:2510.13786](https://arxiv.org/abs/2510.13786) (Khatri et al., 2025-10, preprint)). The
+study spent over 400k GB200 GPU-hours, mostly on an 8B dense model doing math RL on Polaris-53K.
+Only a few choices moved A. The loss type did (CISPO and GSPO above DAPO), and so did FP32 at the
+LM head, which raised A **from 0.52 to 0.61** by shrinking the trainer–generator log-prob mismatch.
+PipelineRL's streaming weight updates, batch size and generation length also moved it. Loss
+aggregation, advantage normalization, curricula and length penalties mostly changed B. In
+leave-one-out runs from the full recipe, every variant reached the same A within the ±0.02 spread
+of three seeds. A fit on the first 50k GPU-hours predicted the 100k-hour point. Recipes that
+looked better early were sometimes overtaken. Runs became unstable once 10–15% of generations hit
+the length cap, so the truncation rate is the metric to watch. Entropy was not a useful signal:
+batch 2048 and batch 768 had the same entropy curve, and batch 2048 did better downstream. The
+curves are fitted on in-distribution validation, not on downstream benchmarks, and the larger
+runs are one seed each.
+
+**Or remove the mismatch at its source: train and sample in FP16.** BF16 keeps 7 mantissa bits
+and FP16 keeps 10. Under BF16, the two engines' rounding differences add up over a long sequence.
+On DeepSeek-R1-Distill-Qwen-1.5B samples, the sequence-level log-ratio between the
+inference engine and the training engine grew with length. Under FP16 it was about 24× smaller
+([arXiv:2510.26788](https://arxiv.org/abs/2510.26788) (Qi et al., 2025-10, preprint)). The test
+set was 1,460 MATH problems the model solved 20–80% of the time, which a sound algorithm should
+take to near 100% training accuracy. In BF16, GRPO collapsed after peaking at 73% (VeRL) or 84%
+(Oat), and token-level TIS collapsed after 82% and 88%. Sequence-level masking stayed stable but
+reached only 95% and 34% on AIME 2024. **Plain importance-weighted policy gradient in FP16 reached
+99% and 39%**, and in FP16 the algorithms were nearly indistinguishable. BF16 training with FP32
+inference was also stable, but sampled about 3× slower. FP16 also held up on a Qwen3-30B-A3B
+MoE, Qwen3-14B with DAPO, LoRA and OctoThinker-3B, though those runs are reported as curves. A
+growing mismatch preceded every collapse, so it is worth logging. The paper cites others for the
+claim that an FP32 LM head alone does not prevent collapse, where ScaleRL found it raised the
+asymptote. FP16's narrow range may need care at larger scale.
 
 ## Running RL in production
 

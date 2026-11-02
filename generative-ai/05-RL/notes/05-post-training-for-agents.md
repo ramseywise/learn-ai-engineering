@@ -427,7 +427,7 @@ tool agent   RL: format is stable, SFT has plateaued, and the reward is trustwor
 
 Fail fast before you fail at scale.
 
-**Eval vs. train data.** SWE-Gym trains; SWE-Bench Verified must stay held out. τ²-bench trajectories make good imitation data, and AndroidWorld's templates generate curricula. Reuse the *environment*, never the *eval items* ([06-eval](../../08-eval/README.md)).
+**Eval vs. train data.** SWE-Gym trains; SWE-Bench Verified must stay held out. τ²-bench trajectories make good imitation data, and AndroidWorld's templates generate curricula. Reuse the *environment*, never the *eval items* ([08-eval](../../08-eval/README.md)).
 
 ## Try it
 

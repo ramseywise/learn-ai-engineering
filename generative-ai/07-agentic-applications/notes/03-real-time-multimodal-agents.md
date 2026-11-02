@@ -311,7 +311,7 @@ user: ok           status: done       fast: All set: booked, confirmation 7Q2.
 - **Action chunking (ACT, 2023)** bridges the frequency gap. Control loops run at 50–1000 Hz, and VLA inference at 1–10 Hz; the original OpenVLA ran at 6 Hz and moved jerkily. Generate 25–50 actions (0.5–1 s at 50 Hz) per inference. Replay them while the next chunk computes, like video buffering.
   - The trade-off: longer chunks are smoother but **blind to sudden changes**. The two-layer design relocates the real-time tension. It doesn't remove it.
 
-**Sim2Real.** Domain randomization (see [06-eval environments](../../08-eval/README.md)) plus two steps you can't skip:
+**Sim2Real.** Domain randomization (see [08-eval environments](../../08-eval/README.md)) plus two steps you can't skip:
 1. **Calibrate the randomization range from measured real data.** Measure friction and motor delay. Too narrow misses reality. Too wide gives a policy that handles everything and masters nothing.
 2. **Align visuals.** Match the camera pose between simulation and reality, and splice in real backgrounds (greenscreen).
 

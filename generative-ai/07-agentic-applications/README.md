@@ -1,7 +1,7 @@
 # 07 — Agentic Applications
 
 > Depth layer. Summary: [interviewing/guides/4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md)
-> Position in the path: last generative-ai pillar, the payoff. It holds end-to-end applications built with the frameworks and patterns from [03-agentic-foundations](../03-agentic-foundations/README.md) and [04-agentic-frameworks](../04-agentic-frameworks/README.md).
+> Position in the path: the last of the build pillars in generative-ai, the payoff; the [Eval pillar](../08-eval/README.md) measures what it ships. It holds end-to-end applications built with the frameworks and patterns from [03-agentic-foundations](../03-agentic-foundations/README.md) and [04-agentic-frameworks](../04-agentic-frameworks/README.md).
 
 ---
 
@@ -57,7 +57,7 @@ Details are in the [coding-agent](practice/coding-agent/README.md) and [data-ana
 
 ## The deck
 
-[slides/agentic-applications.pptx](slides/agentic-applications.pptx), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=generative-ai/07-agentic-applications`. It follows the same order as the notes.
+[slides/agentic-applications.pptx](slides/agentic-applications.pptx) ([PDF](slides/agentic-applications.pdf)), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=generative-ai/07-agentic-applications`. It follows the same order as the notes.
 
 ---
 
@@ -79,7 +79,7 @@ Details are in the [coding-agent](practice/coding-agent/README.md) and [data-ana
 │   ├── data-analysis-agent/      # built here: SQL + pandas agent over tips and Titanic, offline
 │   ├── deep-research-bot/        # W&B workshop agent (Apache-2.0), notebooks 01–03, RACE eval
 │   └── deep_research_bench/      # DeepResearch Bench RACE scorer (Apache-2.0), vendored
-├── slides/                       # deck.yaml, agentic-applications.pptx
+├── slides/                       # deck.yaml, agentic-applications.pptx and .pdf
 └── sources/
     ├── images/                   # li-ai-agents-in-depth-fig6-*.svg, context-engineering-multi-agent-systems-fig9-1.png, lab chart
     ├── context-engineering-multi-agent-systems/   # ch. 9 PDF
@@ -153,4 +153,4 @@ Read in place and not copied: [tips.csv](../../data-analytics/01-python-for-data
 ### Layers
 
 - Previous: [06-observability](../06-observability/README.md).
-- Next: [ai-engineering](../../ai-engineering/README.md), the engineering layer under these applications (context, harness, loop and graph engineering).
+- Next: [08-eval](../08-eval/README.md), which measures these applications, and [ai-engineering](../../ai-engineering/README.md), the engineering layer under them (context, harness, loop and graph engineering).

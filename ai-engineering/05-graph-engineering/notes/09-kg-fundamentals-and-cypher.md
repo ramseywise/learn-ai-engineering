@@ -134,7 +134,7 @@ flowchart LR
     D -->|next round starts<br/>from the existing KG| BU
 ```
 
-Later rounds work **by difference and extension**: add node and relationship types without breaking what earlier rounds built. A graph database's near-schemaless storage is what makes that cheap. It is the same advice as appendix C's "curate before you scale" ([note 10](10-building-kgs-with-llms.md#stage-5-assembly-with-the-course-as-worked-example)): fix the questions before you add edge types.
+Later rounds work **by difference and extension**: add node and relationship types without breaking what earlier rounds built. A graph database's near-schemaless storage is what makes that cheap. It is the same advice as appendix C's "curate before you scale" ([note 10](10b-assembling-and-maintaining-kgs.md#stage-5-assembly-with-the-course-as-worked-example)): fix the questions before you add edge types.
 
 ---
 

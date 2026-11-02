@@ -121,7 +121,7 @@ How much also depends on the ability: a survey of SFT data management finds **ge
    Duplicates cost more than compute. In an Anthropic study, repeating 0.1% of the data 100
    times degraded an 800M model to the level of a 400M one.
 3. **Decontamination:** the same dedup methods, run against every eval set. Otherwise your
-   benchmark scores measure memorization ([06-eval](../../08-eval/README.md)).
+   benchmark scores measure memorization ([08-eval](../../08-eval/README.md)).
    Public sets leak more than you'd expect. Platypus flagged training questions with over 80%
    embedding similarity to a test question. It found 77 near-copies in each of PRM800K and the
    MATH train split, 71 in SciQ and 13 each in airoboros and OpenAssistant-Guanaco

@@ -3,8 +3,8 @@
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a support-ticket assistant that invents a refund policy.
 deck:
-  title: LLM Fundamentals
-  subtitle: What a model is, how it is trained, and how to use one
+  title: How LLMs work
+  subtitle: 'LLM fundamentals: what a model is, how it is trained, and how to use one'
   tagline: It predicts · It is trained · You use it · You run it
   reference: 'Notes: generative-ai/01-llm-fundamentals'
   output: llm-fundamentals.pptx
@@ -194,14 +194,14 @@ parts:
       sub: one pass per token
     bullets:
     - '**Input tokens** are cheap in time; **output tokens** are sequential.'
-    - '**The KV cache** grows linearly with context and dominates serving memory.'
+    - '**The KV cache** grows linearly with context, on top of the weights.'
     takeaway: Prefill reads in parallel and decode writes serially, and the KV cache trades growing memory for that
       speed.
     source: notes/04-decoding-and-inference-behaviour.md
     notes: Two very different phases hide inside one request. Prefill reads the whole prompt in one parallel pass.
       Decode produces one token per forward pass, each waiting for the last. The KV cache means a new token needs
-      to compute only its own keys and values, but the cache grows linearly with context, and it is the main memory
-      cost of serving.
+      to compute only its own keys and values, but the cache grows linearly with context, on top of the memory for
+      the weights.
   - layout: image
     title: Temperature reshapes the choice among the logits
     recall: What does a temperature above 1 do to the distribution?
@@ -493,7 +493,7 @@ parts:
       sometimes a paragraph about what billing is. Nothing in the model is broken. A prompt is the only thing we
       have changed so far, and it is the cheapest change we will ever make, because no weight moves.'
   - layout: cards
-    title: Five principles, and only one is about wording
+    title: Five principles, and the last two are about how you work
     recall: What are the five principles of prompting?
     cards:
     - title: Give direction
@@ -538,9 +538,11 @@ parts:
     title: LangChain makes each box a swappable Runnable
     recall: What does the pipe operator do in LCEL?
     lang: python
-    code: "from langchain_core.language_models.fake_chat_models \\\n  import FakeListChatModel\n\nmodel = FakeListChatModel(\n\
-      \    responses=['billing'])\nchain = prompt | model | StrOutputParser()\n\nchain.invoke({'ticket': 'charged\
-      \ twice'})\nchain.batch([a, b])\nchain.stream(a)"
+    code: "from langchain_core.language_models import (\n    FakeListChatModel)\nfrom langchain_core.output_parsers\
+      \ import (\n    StrOutputParser)\nfrom langchain_core.prompts import (\n    ChatPromptTemplate)\n\nprompt\
+      \ = ChatPromptTemplate.from_template(\n    'Label this ticket: {ticket}')\nmodel = FakeListChatModel(responses=['billing'])\n\
+      chain = prompt | model | StrOutputParser()\n\nchain.invoke({'ticket': 'charged twice'})\nchain.batch([{'ticket':\
+      \ 'a'}, {'ticket': 'b'}])"
     bullets:
     - '**A Runnable** has invoke, batch and stream.'
     - '**Fake models** test wiring, not quality.'
@@ -754,11 +756,11 @@ parts:
     title: Where this goes next
     recall: What can the assistant still not do at the end of this pillar?
     bullets:
-    - '**[02 RAG and retrieval](../../02-rag-retrieval/README.md):** knowledge the model was not trained on.'
-    - '**[03 Agentic foundations](../../03-agentic-foundations/README.md):** the tool loop, grown up.'
-    - '**[05 RL](../../05-RL/README.md):** post-training in depth.'
-    - '**[08 Eval](../../08-eval/README.md):** how you know any of it worked.'
-    - '**[ai-engineering/07](../../../ai-engineering/07-inference-engineering/README.md):** serving at scale.'
+    - '**02 RAG and retrieval:** knowledge the model was not trained on.'
+    - '**03 Agentic foundations:** the tool loop, grown up.'
+    - '**05 RL:** post-training in depth.'
+    - '**08 Eval:** how you know any of it worked.'
+    - '**ai-engineering 07, inference engineering:** serving at scale.'
     takeaway: The assistant still lacks your facts, so retrieval comes next, then agents, post-training depth and
       evaluation.
     source: notes/14-open-weight-models-and-local-inference.md

@@ -1,0 +1,527 @@
+# Applied Analyses lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=data-analytics/06-applied-analyses STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Fernhill Home, a fictional retailer, from the seeded generator in practice/retail.py.
+# Part 2 uses the open South German Credit data. Costs and margins are assumptions and are named as such.
+deck:
+  title: Applied Analyses
+  subtitle: Six business questions, each taken through to a recommendation
+  tagline: |-
+    Forecast · Score · Retain · Convert · Segment · Query
+  reference: "Notes: data-analytics/06-applied-analyses"
+  output: applied-analyses.pptx
+  notes: >-
+    Each part is one complete analysis: a business question, a dataset, a check against something known, and a
+    recommendation with its limits. The methods differ from part to part, and the shape stays the same.
+
+parts:
+  - title: Forecasting
+    summary: The decision · Backtesting · Which model · From forecast to plan
+    notes: >-
+      Fernhill's operations manager has to book temporary warehouse staff for the fourth quarter.
+    slides:
+      - layout: statement
+        title: She does not want a forecast
+        kicker: The problem
+        statement: "How many people should the warehouse book for Q4, when too few costs £12 a unit and too many costs £4?"
+        attribution: "Fernhill operations, last Monday of September. Costs are assumptions."
+        takeaway: A forecast matters only through the decision it sets, so start from the decision and its costs.
+        source: notes/01-forecasting.md
+        recall: Why are the two unit costs part of the forecasting problem?
+        notes: >-
+          A late parcel costs three times an idle unit, so the right plan isn't the central estimate. Keep that in mind
+          while we choose the model.
+
+      - layout: flow
+        title: One split is one anecdote
+        kicker: Rolling-origin backtest
+        steps:
+          - {label: Train, sub: "all weeks to the origin"}
+          - {label: Forecast, sub: "next 13 weeks"}
+          - {label: Score, sub: "MASE, coverage"}
+          - {label: Move, sub: "origin 13 weeks on"}
+        loop: true
+        bullets:
+          - "Eleven origins for selection, so every model faces many different seasons."
+          - "The twelfth is an **exam quarter**, kept out of model selection."
+        takeaway: Score a forecast over many origins, and keep one final period out of selection altogether.
+        source: notes/01-forecasting.md
+        recall: Why hold back an exam quarter when you already have eleven backtest origins?
+        notes: >-
+          Selecting the best of seven models on the same backtest makes its score optimistic, which is why the last
+          quarter stays out until the choice has been made.
+
+      - layout: code
+        title: The backtest loop
+        kicker: Worked example
+        lang: python
+        code: |-
+          origins = [len(units) - H * i
+                     for i in range(12, 0, -1)]
+          for n_train in origins:
+              train = units.iloc[:n_train]
+              test = units.iloc[n_train:n_train + H]
+              # MASE scale from this origin's past only
+              scale = train.diff(SEASON).abs().mean()
+              for name, method in METHODS.items():
+                  out = method(train)
+        bullets:
+          - "Refit at every origin."
+          - "The scale uses only past data, so **no leakage**."
+        takeaway: Each origin refits on its own past and scales errors by its own past, so nothing leaks from the test weeks.
+        source: notes/01-forecasting.md
+        recall: What does a MASE below 1 mean?
+        notes: >-
+          MASE divides the error by the in-sample error of the seasonal naive. Below 1 means better than that benchmark.
+
+      - layout: image
+        title: Beat seasonal naive before anything else
+        kicker: Model selection
+        image: ../../sources/images/applied-forecast-backtest-mase.png
+        caption: "Eleven origins of 13 weeks on Fernhill's weekly units. Lower is better."
+        bullets:
+          - "Prophet 0.63 and harmonic regression 0.70 clear **seasonal naive at 1.21**."
+          - "Interval coverage differs: harmonic 93%, Prophet 75%, STL + ETS 48%, nominal 80%."
+        takeaway: Prophet scored best, but its intervals covered 75% against a nominal 80%, so the plan's buffer comes from backtest errors.
+        source: notes/01-forecasting.md
+        recall: Why not take a model's intervals at face value?
+        notes: >-
+          A narrow interval from a good point forecast is still miscalibrated. Empirical errors from the backtest are a
+          safer basis for the buffer.
+
+      - layout: table
+        title: A buffer turns a forecast into a plan
+        kicker: The exam quarter
+        header: ["Plan", "MASE", "Mismatch cost"]
+        widths: [5, 2, 3]
+        rows:
+          - ["Last year's numbers (seasonal naive)", "1.24", "£38,876"]
+          - ["Prophet forecast", "0.64", "£13,272"]
+          - ["**Prophet × 1.047**", "n/a", "**£11,788**"]
+        bullets:
+          - "1.047 is the 75th percentile of backtest errors, the critical fractile for £12 against £4."
+          - "Recommendation: staff to this, refresh weekly, keep seasonal naive as a tripwire."
+        takeaway: Plan at the quantile set by the costs. Here that saved about £27,000 against last year's numbers, on one quarter and assumed costs.
+        source: notes/01-forecasting.md
+        recall: Why does a 12-to-4 cost ratio point at the 75th percentile?
+        notes: >-
+          Critical fractile: 12 / (12 + 4) = 0.75. Say what this doesn't cover: one exam quarter, assumed costs, and a
+          demand series censored in the week of the outage.
+
+  - title: Credit scoring
+    summary: The sample problem · Weight of evidence · The cutoff · Basel
+    notes: >-
+      We step outside Fernhill to a real dataset: 1,000 German consumer loans from the 1970s.
+    slides:
+      - layout: statement
+        title: The sample is not the population
+        kicker: The problem
+        statement: "The file says 30% of loans go bad. The bank's book runs at about 5%. Which applications do we approve?"
+        attribution: "South German Credit, 1973 to 1975, as corrected by Grömping (2019)"
+        takeaway: A stratified sample ranks applicants correctly but gets every probability wrong until you correct for the prior.
+        source: notes/02-credit-scoring.md
+        recall: What is unaffected by oversampling bad loans, and what is badly affected?
+        notes: >-
+          Bad loans were oversampled, so the file's rate isn't the book's. Ranking survives this, and probabilities don't.
+
+      - layout: code
+        title: Weight of evidence, and the prior
+        kicker: Worked example
+        lang: python
+        code: |-
+          # per coarse class, on training data only
+          woe = np.log(table.pct_good / table.pct_bad)
+          iv = ((table.pct_good - table.pct_bad)
+                * woe).sum()
+
+          # move the log odds to the true bad rate
+          shift = (np.log(true_bad / (1 - true_bad))
+                 - np.log(sample_bad / (1 - sample_bad)))
+          logit = np.log(p / (1 - p)) + shift
+        bullets:
+          - "WoE makes each class **linear in the log odds**."
+          - "The shift is −2.10; Gini does not change."
+        takeaway: WoE gives a linear, explainable model, and a constant log-odds shift corrects its probabilities without changing its ranking.
+        source: notes/02-credit-scoring.md
+        recall: Why does the prior correction leave the Gini unchanged?
+        notes: >-
+          Adding a constant to the log odds preserves order. Mean PD falls from about 27% to about 5%, and test Gini stays
+          at 0.48 with a bootstrap interval of 0.355 to 0.600.
+
+      - layout: image
+        title: The uncorrected model turns away 42% of applicants
+        kicker: Setting the cutoff
+        image: ../../sources/images/applied-credit-cost-curve.png
+        caption: "Cost per application at a 5:1 cost ratio, by cutoff. South German Credit."
+        bullets:
+          - "Sample PDs: approve 58%, cost **0.444**. Corrected: approve 93%, cost **0.245**."
+          - "Approve-all costs 0.250, so the model barely wins at 5:1."
+        takeaway: The prior correction nearly halved the expected cost, while the scorecard itself barely beat approving everyone at this cost ratio.
+        source: notes/02-credit-scoring.md
+        recall: If a scorecard barely beats approve-all, what should you ask the business?
+        notes: >-
+          At 10:1 the gap is wider, 0.403 against 0.500. So the first conversation is about the true cost of a bad loan.
+          Recommendation: approve above score 548 and treat that as provisional.
+
+      - layout: table
+        title: The Basel vocabulary
+        kicker: From score to capital
+        header: ["Term", "Meaning", "Note"]
+        widths: [2, 5, 4]
+        rows:
+          - ["PD", "Probability of default over a year", "What the scorecard estimates, after correction"]
+          - ["LGD", "Share lost if default happens", "Needs recovery data, which we lack"]
+          - ["EAD", "Amount owed at default", "For a term loan, close to the balance"]
+          - ["K", "Capital for unexpected loss", "8.06% at PD 10%; 3.45% at PD 0.5%; LGD 60% assumed"]
+        takeaway: PD, LGD and EAD price expected loss, and the IRB formula turns them into capital for unexpected loss.
+        source: notes/02-credit-scoring.md
+        recall: Why does capital rise more slowly than PD?
+        notes: >-
+          The K figures use the other-retail formula as in the note, with an assumed LGD of 60%. Expected loss is covered by
+          pricing and provisions, and capital covers the unexpected part.
+
+      - layout: cards
+        title: Measuring a scorecard
+        kicker: Discrimination and drift
+        cards:
+          - {title: Gini, body: "Ranking quality. Train 0.68, test 0.48, so report the test figure and its interval.", accent: D4621A}
+          - {title: KS, body: "Largest gap between the score distributions of goods and bads. Test 0.41.", accent: 2A78D6}
+          - {title: PSI, body: "Has the population moved? Under 0.10 little shift, over 0.25 act. Rule of thumb only.", accent: 0F8A7E}
+        takeaway: Gini and KS measure how well a score ranks, and PSI warns when the population has moved away from it.
+        source: notes/02-credit-scoring.md
+        recall: Does a stable PSI mean the model still works?
+        notes: >-
+          PSI watches the inputs, or the score distribution. It can't see a change in the relation between score and
+          default, which needs outcomes, and those arrive late.
+
+  - title: Cohort and retention
+    summary: The triangle · Rate and mix · Survival · Budget
+    notes: >-
+      Back at Fernhill. The email budget was cut in January 2025 and paid social scaled to 2.6 times. Repeat buying fell.
+    slides:
+      - layout: image
+        title: Did we lose customers, or buy worse ones?
+        kicker: The problem
+        image: ../../sources/images/applied-cohort-heatmap.png
+        caption: "Share of each acquisition quarter ordering in each month of age."
+        bullets:
+          - "Rows age a cohort, columns compare cohorts, **diagonals are calendar time**."
+          - "A band along a diagonal means something happened to everyone at once."
+        takeaway: A retention triangle shows age, cohort and calendar effects in one picture, which a single retention figure cannot.
+        source: notes/03-cohort-and-retention.md
+        recall: Why can't a regression separate age, period and cohort?
+        notes: >-
+          Age equals period minus cohort, so they are perfectly collinear. You need an outside fact, such as knowing the
+          date of the email cut.
+
+      - layout: compare
+        title: Split the fall into rate and mix
+        kicker: Decomposition
+        emphasis: none
+        left:
+          title: Rate effect, −6.2 points
+          bullets:
+            - "Every channel's repeat rate fell."
+            - "Only retention work can reach this."
+        right:
+          title: Mix effect, −5.2 points
+          bullets:
+            - "More customers came from paid social."
+            - "Only the acquisition budget can reach this."
+        takeaway: The fall from 31.6% to 20.2% was about half rate and half mix, so neither team's explanation alone was right.
+        source: notes/03-cohort-and-retention.md
+        recall: How do you check that a decomposition doesn't depend on its order?
+        notes: >-
+          Reversing the order gives −5.8 and −5.6, so the split is robust here. Report that sensitivity with the result.
+
+      - layout: code
+        title: A model with a mechanism
+        kicker: Shifted-beta-geometric
+        lang: python
+        code: |-
+          def sbg_survival(a, b, t):
+              """S(t) = B(a, b + t) / B(a, b)"""
+              t = np.asarray(t, dtype=float)
+              return np.exp(betaln(a, b + t)
+                            - betaln(a, b))
+        bullets:
+          - "Month 24, actual **23.8%**: sBG 25.1%, exponential 8.7%."
+          - "Churn varies across customers, so leavers go first."
+        takeaway: Fitted on six months, the sBG forecast month 24 far better than an exponential, because it models customers who differ.
+        source: notes/03-cohort-and-retention.md
+        recall: Why does a cohort's retention rate rise with age even if nobody changes?
+        notes: >-
+          The rate rises because the likely leavers have gone. We refit Fader and Hardie's table as a check, getting alpha
+          of 0.668 for High End where the paper prints 0.688.
+
+      - layout: table
+        title: What each customer returns
+        kicker: 24-month margin per customer
+        header: ["Channel", "Margin", "Reading"]
+        widths: [3, 2, 6]
+        rows:
+          - ["Paid social", "£32.68", "1.0× its assumed cost per customer"]
+          - ["Email", "£10.95", "Budget cut in January"]
+          - ["Organic", "£10.45", "No direct acquisition cost"]
+          - ["Referral", "£4.39", "Small and cheap"]
+        bullets:
+          - "Recommendation: restore email with a holdout, cap paid social until its true cost is confirmed."
+        takeaway: On assumed costs, paid social only just returns its cost over 24 months, so confirm the real cost before scaling it.
+        source: notes/03-cohort-and-retention.md
+        recall: What must you state alongside any LTV to CAC ratio?
+        notes: >-
+          If paid social really costs £15 per customer, the ratio is about 2.2 and the case for scaling back weakens. A
+          ratio without its horizon and margin assumption means nothing.
+
+  - title: Funnel and conversion
+    summary: A flat headline · Conditional steps · The control · The price
+    notes: >-
+      A new mobile checkout page shipped on 15 September 2025. Conversion went from 7.48% to 7.60%.
+    slides:
+      - layout: image
+        title: The headline holds still while the devices part
+        kicker: The problem
+        image: ../../sources/images/applied-funnel-simpson.png
+        caption: "Weekly share of sessions ending in a purchase. Checkout redesign on 15 September."
+        bullets:
+          - "Rate change at the old mix: **+0.38**. Mix towards mobile: **−0.25**."
+          - "Conversion rose 0.12 points, and mobile fell."
+        takeaway: An aggregate rate is a weighted average with moving weights, so a page can break while the headline holds still.
+        source: notes/04-funnel-and-conversion.md
+        recall: Is this strictly Simpson's paradox?
+        notes: >-
+          Not strictly, since desktop moved with the total. The lesson is the same. The product manager's figure is correct,
+          and it is the wrong one to stop at.
+
+      - layout: table
+        title: One row behaves differently
+        kicker: Conditional step rates, %
+        header: ["Step", "Mobile before", "Mobile after", "Desktop before", "Desktop after"]
+        widths: [4, 2, 2, 2, 2]
+        rows:
+          - ["Visit to product", "54.9", "54.9", "62.0", "62.0"]
+          - ["Product to basket", "22.3", "25.4", "30.1", "34.4"]
+          - ["Basket to checkout", "61.9", "61.3", "68.2", "68.0"]
+          - ["**Checkout to payment**", "**82.4**", "**67.6**", "83.2", "84.0"]
+          - ["Payment to purchase", "93.3", "93.0", "94.8", "95.5"]
+        takeaway: Conditional rates isolate each step. Only mobile checkout-to-payment fell, and the basket lift on both devices is seasonal.
+        source: notes/04-funnel-and-conversion.md
+        recall: Why does the basket row point at the customers and not at a page?
+        notes: >-
+          No page changed at the basket step and both devices rose together. In this synthetic data we know that autumn
+          intent is responsible. Good news upstream was covering bad news downstream.
+
+      - layout: code
+        title: Desktop as the comparison
+        kicker: Difference in differences
+        lang: python
+        code: |-
+          z = norm.ppf(.975)
+          did = mobile[0] - desktop[0]
+          did_se = np.hypot(mobile[1], desktop[1])
+          # mobile  -14.8, CI -15.9 to -13.7
+          # desktop  +0.8, CI  -0.2 to  +1.7
+          # diff    -15.5, CI -17.0 to -14.1
+        bullets:
+          - "Removes whatever hit **both devices alike**."
+          - "Rests on parallel trends."
+        takeaway: The drop is real and tied to the redesign. Mobile fell 15.5 points relative to desktop, with an interval far from zero.
+        source: notes/04-funnel-and-conversion.md
+        recall: How do you rule out a tracking bug at the changed page?
+        notes: >-
+          Reconcile with something that doesn't depend on the page. Mobile purchases fell even though the steps above
+          improved, and a purchase is recorded when money moves.
+
+      - layout: bullets
+        title: Roll it back, and measure the rollback
+        kicker: Price and decision
+        bullets:
+          - "About **1,518 orders** lost in 108 days, £79,865 revenue, £27,953 margin at an assumed 35%."
+          - "Each further week costs about £1,812 of margin."
+          - "97 sessions a day reach the step: +10 points takes 6 days to detect, +2 points takes 173."
+          - "Recommendation: a two-week 50/50 rollback, then send everyone to the winner."
+        takeaway: Price the loss, then roll back as a test. Traffic at the step, not total traffic, limits how small an effect you can detect.
+        source: notes/04-funnel-and-conversion.md
+        recall: Why does a low-funnel page only permit tests of large changes?
+        notes: >-
+          The estimate is an upper-end figure, because some customers may have returned on another device. The analysis also
+          says nothing about why customers abandon the page. That needs recordings and conversations.
+
+  - title: Segmentation and RFM
+    summary: The plan · Validation · Silence · Persuadable
+    notes: >-
+      A £4,000 win-back catalogue is ready to go to former big spenders. We test the plan before it ships.
+    slides:
+      - layout: statement
+        title: Who is the campaign paying for?
+        kicker: The problem
+        statement: "Send £4,000 of catalogues to the At risk segment of former big spenders. Will they come back, and would they have bought anyway?"
+        attribution: "Fernhill CRM plan. Snapshot 30 June 2025, holdout to December."
+        takeaway: A segmentation is a prediction, so test it on a later period before you spend on it.
+        source: notes/05-segmentation-and-rfm.md
+        recall: What makes a segmentation a prediction rather than a description?
+        notes: >-
+          Build features to the snapshot, and score them on the six months after. Nothing after the snapshot touches a
+          feature.
+
+      - layout: image
+        title: The target has already gone
+        kicker: Validation on a holdout
+        image: ../../sources/images/applied-rfm-segments.png
+        caption: "Mean revenue per customer, July to December 2025, by segment set on 30 June."
+        bullets:
+          - "Champions: 18% of customers, **68%** of future revenue."
+          - "At risk: £168 past value, 3% buy again, **£1.72** future value."
+        takeaway: On the holdout, At risk customers were worth about £2 each, despite a high past value, so most had already left.
+        source: notes/05-segmentation-and-rfm.md
+        recall: Why should monetary be mean order value rather than total spend?
+        notes: >-
+          Total spend mostly repeats frequency. A first version of this code broke frequency ties by row order, and the New
+          segment fell from about 3,000 to 315. Always check what decides the ties.
+
+      - layout: table
+        title: Long silence cancels high frequency
+        kicker: Mean future value, £, by recency and orders
+        header: ["Days since last order", "1", "2", "3-4", "5+"]
+        widths: [4, 1, 1, 1, 1]
+        rows:
+          - ["0 to 60", "18", "34", "54", "113"]
+          - ["61 to 180", "9", "21", "34", "67"]
+          - ["181 to 365", "6", "10", "17", "22"]
+          - ["366 or more", "1", "2", "3", "**1**"]
+        bullets:
+          - "Fader, Hardie and Lee (2005) find this bend in **iso-value curves** for CDNOW."
+        takeaway: A long silence from a frequent buyer suggests they have left, so frequent old customers are worth little.
+        source: notes/05-segmentation-and-rfm.md
+        recall: Why is the same silence more informative for a frequent buyer?
+        notes: >-
+          Someone buying weekly who has been quiet for a year has probably gone. Someone buying once a year may just not be
+          due. K-means adds little here: silhouettes sit near 0.3, and two clusters differing by order value have similar
+          future value.
+
+      - layout: code
+        title: The breakeven arithmetic
+        kicker: Worked example
+        lang: python
+        code: |-
+          MARGIN, COST = .35, 1.50
+          aov = past.value.mean()         # £52.67
+          lift = COST / (aov * MARGIN)    # 8.1 points
+          # segment  customers  buy again  needs
+          # At risk      2,651       2.6%   4.1x
+          # Hibernating  3,848       1.8%   5.5x
+          # Lapsing      1,206      45.2%   1.2x
+        bullets:
+          - "RFM predicts **who buys**, not who is persuadable."
+          - "Test Lapsing, half contacted, half held out."
+        takeaway: Win-back of At risk can't pay. Test the Lapsing group against a random holdout, as only that measures persuasion.
+        source: notes/05-segmentation-and-rfm.md
+        recall: Why does a campaign's response rate say nothing about its value?
+        notes: >-
+          Nearly half the Lapsing group buy anyway, and each one looks like a success. 589 per arm of 1,206 forces a split
+          close to 50/50, costing about £900. The cost and margin are assumptions.
+
+  - title: SQL for analytics
+    summary: The bridge · Reconcile · The patterns · Fan-out
+    notes: >-
+      The year's revenue, written as one query that everyone can agree on. The language itself is in programming/sql.
+    slides:
+      - layout: statement
+        title: Two teams, two spreadsheets
+        kicker: The problem
+        statement: "Revenue is up 2.1%. Marketing says new customers did it. Finance says customers are leaving. Who is right?"
+        attribution: "Fernhill board pack, 2025"
+        takeaway: When two teams disagree over a number, the job is often a shared definition, written as one query.
+        source: notes/06-sql-for-analytics.md
+        recall: What does a revenue bridge do that a total can't?
+        notes: >-
+          A bridge splits a period's total into labelled parts, so a change in the total becomes changes in the parts.
+
+      - layout: code
+        title: The bridge is a chain of small steps
+        kicker: Windows and CTEs
+        lang: sql
+        code: |-
+          WITH monthly AS (...),      -- customer, month
+          history AS (
+            SELECT *, lag(month) OVER (
+              PARTITION BY customer_id ORDER BY month
+            ) AS previous_month
+            FROM monthly
+          )
+          SELECT *, CASE
+            WHEN previous_month IS NULL THEN 'new'
+            WHEN date_diff('month', previous_month, month)
+                 <= 3 THEN 'returning'
+            ELSE 'reactivated' END AS kind
+          FROM history
+        takeaway: A window sees earlier rows without collapsing them, so the label comes from lag, and each CTE can be checked by itself.
+        source: notes/06-sql-for-analytics.md
+        recall: Why must the three-month rule be reported with the result?
+        notes: >-
+          With a six-month rule, 2025 reactivated falls from £230,947 to £102,942. Levels depend on the rule, but returning
+          revenue falls either way, 24% or 18%.
+
+      - layout: image
+        title: Both teams were right, about different rows
+        kicker: The answer
+        image: ../../sources/images/applied-sql-revenue-bridge.png
+        caption: "Fernhill revenue per quarter by customer kind."
+        bullets:
+          - "New **+£124,260**, reactivated **+£55,021**, returning **−£152,017**."
+          - "Total +£27,264. Reconciled to source within £1 of rounding."
+        takeaway: The 2.1% growth contains a 24% fall in revenue from customers who keep buying, so plan 2026 on the returning line.
+        source: notes/06-sql-for-analytics.md
+        recall: What is the most useful single test of any report built from joins?
+        notes: >-
+          Reconcile the total with the source. We also checked each kind against a pandas implementation, and the differences
+          of a pound or two are rounding, which we explained rather than dismissed.
+
+      - layout: cards
+        title: Patterns worth knowing by heart
+        kicker: The toolkit
+        cards:
+          - {title: Date spine, body: "Left join to every period, so empty weeks stay as zeros.", accent: D4621A}
+          - {title: Sessionise, body: "Flag gaps with lag, then a running sum of the flags numbers the sessions.", accent: 2A78D6}
+          - {title: Gaps and islands, body: "Running index minus row_number is constant along a consecutive run.", accent: 0F8A7E}
+          - {title: Fan-out, body: "A non-unique join inflated revenue by 8.2% with no error. Aggregate first.", accent: 7A5AF8}
+        takeaway: A handful of window and join patterns covers most analytics SQL, and a fan-out is the bug to look for first.
+        source: notes/06-sql-for-analytics.md
+        recall: In a fan-out, which side's sums are inflated, and why?
+        notes: >-
+          The one side is repeated, so its sums grow. Refunds were correct in both queries, so a spot check on refunds would
+          have passed. Aggregate the many side to the one side's grain before joining.
+
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: Six analyses, one shape
+        cards:
+          - {title: Decide first, body: "Write down the decision. If no result could change it, stop.", accent: D4621A}
+          - {title: Beat a baseline, body: "Compare with last year's numbers, approve-all, or doing nothing.", accent: 2A78D6}
+          - {title: Check against the known, body: "A synthetic truth, a published table, or a second implementation.", accent: 0F8A7E}
+          - {title: Price it and bound it, body: "Turn a rate into money, then say what would change the answer.", accent: 7A5AF8}
+        takeaway: Every analysis needs a decision, a baseline, a check against something known, a price, and honest limits.
+        source: notes/06-sql-for-analytics.md
+        recall: Pick one of the six analyses. What was its baseline, and what was its check?
+        notes: >-
+          Baselines were seasonal naive, approve-all, the exponential, desktop, and a holdout. Checks were the generator's
+          known truth, Fader and Hardie's published table, and a pandas reimplementation.
+
+      - layout: bullets
+        title: Where next
+        kicker: After data analytics
+        bullets:
+          - "Size tests properly: **experimentation and causality**, in this subject."
+          - "Learn the language under the bridge: the **SQL module** in `programming/sql`."
+          - "Take the modelling further: **data science**, starting with machine learning."
+          - "Run the scripts in `practice/`, and try each chapter's exercises."
+        takeaway: Keep the shape of these analyses as the methods get harder, and practise on the scripts before moving on.
+        source: notes/06-sql-for-analytics.md
+        recall: Which chapter would you redo on your own company's data first, and why?
+        notes: >-
+          The UCI Online Retail dataset linked in the references is a good way to repeat chapters 3 and 5 on data that isn't
+          ours.

@@ -54,7 +54,7 @@ A LangGraph support graph: routing, a fan-out with a reducer, a retry cycle, an 
 ```
 README.md      this file: overview, start here, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes
-notes/         01–13, the course; figures and code inline
+notes/         01–13 (with 10b, 11b, 13b), the course; figures and code inline
 slides/        deck.yaml + graph-engineering.pptx
 practice/      the lab, in TypeScript and Python
 sources/       book chapter PDFs, paper PDFs, the LangGraph style deck
@@ -79,10 +79,13 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | 7 | [Failure modes at scale](notes/07-failure-modes-at-scale.md) | Mechanical and control failures, correlated errors, verifier isolation, anchors, pre-flight check |
 | 8 | [Governance and production](notes/08-governance-and-production.md) | IDs and tracing, budgets, approvals, the checklist, n8n case study |
 | 9 | [KG fundamentals and Cypher](notes/09-kg-fundamentals-and-cypher.md) | What a KG is, why it pairs with LLMs, LPG vs. RDF, typed edges, Cypher cheat sheet |
-| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals, the lifecycle after the load |
-| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes and granularity, graph-to-prompt formats, schema-first text-to-Cypher, the LangGraph QA agent |
+| 10 | [Building KGs with LLMs](notes/10-building-kgs-with-llms.md) | Per-hop compounding, the extraction pipeline, model tiers, metagraph, ER and NED, extraction evals |
+| 10b | [Assembling and maintaining KGs](notes/10b-assembling-and-maintaining-kgs.md) | Deterministic assembly on the SEC filings graph, fusing structured sources, the lifecycle after the load |
+| 11 | [KG-RAG and text-to-Cypher](notes/11-kg-rag-and-text-to-cypher.md) | Vector RAG limits, GraphRAG evidence, retrieval modes and granularity, graph-to-prompt formats, schema-first text-to-Cypher |
+| 11b | [A text-to-Cypher QA agent](notes/11b-text-to-cypher-qa-agent.md) | The LangGraph QA agent: state by node, bounded retry, validate before execute, streaming, a worked investigation |
 | 12 | [KG as shared agent memory](notes/12-kg-as-shared-agent-memory.md) | State vs. memory, loop → swarm → graph, `GraphUpdate`, reversible ER and provenance, five planes, swarm cost |
-| 13 | [Learning on graphs](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, embeddings and message passing, GNN + LLM patterns, LLM graph reasoning and its limits, predictions as claims |
+| 13 | [Learning on graphs: tasks and features](notes/13-graph-ml-and-gnns.md) | Why nodes aren't i.i.d., the task map, manual vs. learned features, DWPC, ReFeX |
+| 13b | [Learning on graphs: embeddings and GNNs](notes/13b-representation-learning-and-gnns.md) | Embeddings and message passing, GNN + LLM patterns, LLM graph reasoning and its limits, predictions as claims |
 
 ## Rules of thumb
 
@@ -101,12 +104,12 @@ Read the notes in order; each one is earned by the one before. Notes 01–08 are
 | Never merge entities destructively; keep provenance on every edge | [10](notes/10-building-kgs-with-llms.md), [12](notes/12-kg-as-shared-agent-memory.md) |
 | Vector search first, canned traversals for named question shapes, text-to-Cypher only with a validator | [11](notes/11-kg-rag-and-text-to-cypher.md) |
 | Never execute model-written Cypher as a write: extract structured mentions, assemble with deterministic `MERGE` | [10](notes/10-building-kgs-with-llms.md) |
-| A live KG needs standing pipelines for update, assessment, deletion and access, not a one-off build | [10](notes/10-building-kgs-with-llms.md) |
+| A live KG needs standing pipelines for update, assessment, deletion and access, not a one-off build | [10b](notes/10b-assembling-and-maintaining-kgs.md) |
 | Return the smallest graph unit the question needs: node, triplet, path, then subgraph | [11](notes/11-kg-rag-and-text-to-cypher.md) |
-| Paths, degree and ordering are graph queries, not prompts: give the model the tool | [13](notes/13-graph-ml-and-gnns.md) |
+| Paths, degree and ordering are graph queries, not prompts: give the model the tool | [13b](notes/13b-representation-learning-and-gnns.md) |
 | If a run's only durable record is its chat transcript, you have no graph | [12](notes/12-kg-as-shared-agent-memory.md) |
 | Beat a domain-informed feature baseline before trusting a learned embedding | [13](notes/13-graph-ml-and-gnns.md) |
-| A predicted edge is a claim: flag it, score it, keep it out of default traversals | [13](notes/13-graph-ml-and-gnns.md) |
+| A predicted edge is a claim: flag it, score it, keep it out of default traversals | [13b](notes/13b-representation-learning-and-gnns.md) |
 
 ---
 

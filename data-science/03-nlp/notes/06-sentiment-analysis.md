@@ -29,7 +29,7 @@ flowchart TD
 
 ## The task and the data
 
-Sentiment is binary or graded polarity (positive, negative, sometimes neutral or a 1–5 score). Finer forms are **aspect-based** (the battery is great, the screen is poor) and emotion detection. All of Sarkar's chapter 9 uses the 50,000-review IMDb dataset (`movie_reviews.csv`, balanced, 35k train and 15k test), normalised with the chapter's `text_normalizer.py` (HTML strip, accent removal, contraction expansion, lemmatisation, stop words; see [text representation](01-text-representation.md)). His CSV is not in this snapshot, so we use the standard 25k/25k split of the same reviews (Maas et al., 2011), downloaded once and cached.
+Sentiment is binary or graded polarity (positive, negative, sometimes neutral or a 1–5 score). Finer forms are **aspect-based** (the battery is great, the screen is poor) and emotion detection. All of Sarkar's chapter 9 uses the 50,000-review IMDb dataset (`movie_reviews.csv`, balanced, 35k train and 15k test), normalised with the chapter's `text_normalizer.py` (HTML strip, accent removal, contraction expansion, lemmatisation, stop words; see [text representation](01-text-representation.md)). His CSV is not in this snapshot, so we use the standard 25k/25k split of the same reviews ([Maas et al., ACL 2011](https://aclanthology.org/P11-1015/)), downloaded once and cached.
 
 ```python
 from pathlib import Path
@@ -117,7 +117,7 @@ TextBlob      book threshold  0.1: 0.761   tuned on train (  0.10): 0.759     1.
 SentiWordNet  book threshold  0.0: 0.613   tuned on train (  0.02): 0.658    14.2s
 ```
 
-TODO_LEX Sarkar's book reports AFINN and VADER near 71% with SentiWordNet slightly lower, on his split. Lexicons fail on domain vocabulary ("unpredictable" is good for a thriller, bad for a car), sarcasm, and reviews that describe a sad plot positively. Each lexicon needs a threshold, and the threshold is a parameter you are tuning on the test set if you pick it by looking at test accuracy, which is why we tuned on train above.
+A dictionary with no labels gets about 70% right, against 50% for a coin. Sarkar's [Ch09a notebook](https://github.com/dipanjanS/text-analytics-with-python/tree/master/New-Second-Edition/Ch09%20-%20Sentiment%20Analysis) reports close to the same on his 15,000-review test set: TextBlob 0.767, AFINN 0.712, VADER 0.711, SentiWordNet 0.630. Our order matches his, and our book-threshold figures are within two points of his on all four. Tuning a threshold adds up to four points on three of them, and TextBlob is the one that gains nothing. Lexicons fail on domain vocabulary ("unpredictable" is good for a thriller, bad for a car), sarcasm, and reviews that describe a sad plot positively. Each lexicon needs a threshold, and the threshold is a parameter you are tuning on the test set if you pick it by looking at test accuracy, which is why we tuned on train above.
 
 ## 2. Supervised models (ch. 9b)
 
@@ -146,15 +146,15 @@ Counts 1-2 grams + LR          test accuracy 0.898  13s
 TF-IDF 1-2 grams + SVM (SGD)   test accuracy 0.902  8s
 ```
 
-TODO_LINEAR The same notebook then tries dense features in a small Keras network. These are the results it reports on its split, with the book's approximate accuracies:
+Thirty points above the lexicons, for nine seconds of training. That gap is what 25,000 labels buy. Sarkar's Ch09b notebook then tries dense features in a small Keras network, and these are the results saved in his notebooks, on his 35,000/15,000 split:
 
-| Features | Model | Approx. accuracy (book) |
+| Features | Model | Accuracy (Sarkar's notebooks) |
 |---|---|---|
-| Lexicon (AFINN, VADER) | none | ~0.71 |
-| BoW / TF-IDF 1–2 grams | LogisticRegression, linear SVM | ~0.90 |
-| Averaged word2vec (512-d, trained on the reviews) | 3-layer dense net with dropout | ~0.88 |
-| spaCy GloVe document vector (300-d) | same dense net | ~0.85 |
-| Learned embedding + LSTM (ch. 9c) | sequence model | ~0.88 |
+| Lexicon (AFINN, VADER) | none | 0.71 |
+| BoW / TF-IDF 1–2 grams | LogisticRegression, linear SVM | 0.894 to 0.905 |
+| Averaged word2vec (512-d, trained on the reviews) | 3-layer dense net with dropout | 0.882 |
+| spaCy GloVe document vector (300-d) | same dense net | 0.860 |
+| Learned embedding + LSTM (ch. 9c) | sequence model | 0.88 |
 
 Here is the dense row on our split, in modern Keras (the notebook uses standalone `keras` and `keras.layers.normalization`). We use 200 dimensions rather than 512 to keep the run short.
 
@@ -238,7 +238,7 @@ SimpleRNN  val acc per epoch [0.505 0.496 0.511 0.592]  val loss [0.69 0.75 0.87
 LSTM       val acc per epoch [0.72  0.768 0.782 0.782]  val loss [0.59 0.5  0.53 0.62]  train acc 0.941  10s
 ```
 
-TODO_SEQ Use early stopping on `val_loss` ([neural network fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md)). `predict_classes()` from the older notebooks was removed in TF 2.6, so threshold `predict` yourself.
+Read the last column before the accuracies. Every sequence model has memorised its training set (0.94 to 0.97) while validation sits near 0.80, and the CNN and LSTM validation losses have already turned upward. The plain pooled model, a learned bag of words, ties or beats them all with the least overfitting. SimpleRNN is the casualty, barely above chance at 0.59 after four epochs, which fits the vanishing-gradient behaviour in the table. These models are starved here, since six thousand reviews is not much for tens of thousands of embedding weights. Sarkar's LSTM on 35,000 reviews reaches 0.88, and his TF-IDF model on the same reviews still beats it. Use early stopping on `val_loss` ([neural network fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md)). `predict_classes()` from the older notebooks was removed in TF 2.6, so threshold `predict` yourself.
 
 ### A bug worth remembering
 
@@ -263,9 +263,9 @@ bug: length 20:     [0.992 0.145 0.988 0.767]
 accuracy on held-out reviews: length 120 0.782  length 20 0.672
 ```
 
-TODO_BUG Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
+The hand-written reviews barely move, because they fit inside twenty tokens anyway, so a quick spot check would have passed. Real reviews lose eleven points, from 0.782 to 0.672, because the model now sees only the opening of each one. No error, and no sign of it unless you measure accuracy through the serving path. Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
 
-The CNN and RNN mechanics belong to [neural text models](../../02-deep-learning/notes/02-neural-text-models.md). The contextual models that replaced them are in [transformers pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines), where a fine-tuned DistilBERT gets about 93% on IMDb, and an off-the-shelf `pipeline("sentiment-analysis")` about 89% with no training.
+The CNN and RNN mechanics belong to [neural text models](../../02-deep-learning/notes/02-neural-text-models.md). The contextual models that replaced them are in [transformers pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines), which you can try off the shelf with `pipeline("sentiment-analysis")` and no training.
 
 ## 4. What drives sentiment (ch. 9d, 9e)
 
@@ -329,7 +329,7 @@ negative
    waste, time, money, don, watching, free, general
 ```
 
-TODO_NMF In the book's run, positive topics are about performances, story and "must watch", and negative topics are about bad acting, boring plots and wasted money. On product reviews the same split surfaces delivery, quality and support complaints.
+The negative side reads as a list of complaints: bad acting, cheap special effects, disappointing adaptations of books, "worst" and "horrible", and a waste of time and money. The positive side is comedy, TV series and generic praise. Look at the tails too. "Effects, special, friend, genre, generally" has only two real words, because the L1 penalty zeroed the rest of that topic's weights and the sort then returns ties in an arbitrary order, so check for zeros before reading a list to the end. On product reviews you would look here for delivery, quality and support themes.
 
 ## Word clouds and quick text EDA
 
@@ -359,7 +359,7 @@ most negative: ['boll', 'uwe', 'manos', 'slater', 'savini', 'hobgoblins', 'karee
 most positive: ['edie', 'din', 'mcintire', 'antwone', 'tsui', 'gunga', 'sabu', 'goldsworthy', 'visconti', 'joss']
 ```
 
-TODO_ODDS
+Both outputs fail in instructive ways. The cloud draws "the", "a" and "i" largest, because we turned its stop list off to show what it really encodes, which is raw frequency. The log-odds lists have the opposite problem: "boll" and "uwe" (the director Uwe Boll, a byword for bad films) and other names that occur in few reviews, all of them about one film. Log-odds of a rare word has high variance, and a rare word that appears only in reviews of one film is a fact about that film. Raise `min_df`, or shrink rare words toward zero with an informative prior, as in "Fightin' Words" ([Monroe, Colaresi and Quinn, *Political Analysis* 2008](https://doi.org/10.1093/pan/mpn018)). Either way you get a ranked list you can read and compare, which the cloud never gives you.
 
 ## Practice notebooks
 
@@ -382,7 +382,7 @@ The intro-to-nlp CNN and RNN sentiment notebooks are in [`practice/intro-to-nlp/
 | Use VADER when you have no labels and short informal text | Rules for negation, intensifiers, emoji |
 | Use the same preprocessing at inference as in training | The maxlen=20 bug fails silently |
 | Pair a sentiment model with per-class topics | The score says how many are unhappy; topics say about what |
-| For new work, try a pre-trained transformer before training anything | Off-the-shelf or fine-tuned, it beats every model here on IMDb |
+| For new work, try a pre-trained transformer before training anything | Off the shelf it needs no training, so measure it against the linear model before you build anything |
 
 - **Picking a lexicon threshold on the test set.** A threshold is a parameter, so it is tuned on train like any other.
 - **Reading LIME as ground truth.** It is a local approximation with random perturbations, so re-run it with another seed before quoting a word's weight.
@@ -406,7 +406,7 @@ for ngrams in [(1, 1), (1, 2)]:
 (1, 2) 436597 features, accuracy 0.906
 ```
 
-TODO_A1
+Ten times the features for 2.3 more points. Sparse linear models handle that size easily, so here bigrams earn their cost. On a dataset with far fewer documents, check it again, since many bigrams would then occur too rarely to learn from.
 
 </details>
 
@@ -428,7 +428,7 @@ stop words removed, accuracy 0.89
 with stop words kept: [0.02 0.02 0.26]  removed: [0.99 0.8  0.99]
 ```
 
-TODO_A2
+Removing stop words costs 1.6 points overall, but the examples show the real damage. "not good" is gone from the vocabulary, the model sees only "good", and the phrase flips from 0.02 to 0.99 probability of positive.
 
 </details>
 
@@ -452,7 +452,7 @@ for text in tricky:
    -5 -0.24 0.00  Not the worst film ever, but not good either.
 ```
 
-TODO_A3
+The first sentence is easy, because "great" carries it and none of the three needs "unpredictable". The second defeats all three: the plot's words outweigh "adored". The sarcasm in the third fools both lexicons, and the linear model is merely undecided at 0.53. The fourth comes out negative everywhere, though with hedged wording that VADER scores only mildly. All of these are single sentences, so treat them as a way to probe a model and not as a measure of it.
 
 </details>
 

@@ -137,9 +137,12 @@ They meet in [note 12](12-kg-as-shared-agent-memory.md): in a multi-agent system
 | 08 | [Governance and production](08-governance-and-production.md) | A | How do you operate a graph, not just demo one? |
 | 09 | [KG fundamentals and Cypher](09-kg-fundamentals-and-cypher.md) | B | What is a knowledge graph and how do you query it? |
 | 10 | [Building KGs with LLMs](10-building-kgs-with-llms.md) | B | How do you turn text into a graph you can trust? |
+| 10b | [Assembling and maintaining KGs](10b-assembling-and-maintaining-kgs.md) | B | How do you load the graph and keep it correct? |
 | 11 | [KG-RAG and text-to-Cypher](11-kg-rag-and-text-to-cypher.md) | B | How do you retrieve from a graph in natural language? |
+| 11b | [A text-to-Cypher QA agent](11b-text-to-cypher-qa-agent.md) | A + B | What does text-to-Cypher look like as a bounded graph? |
 | 12 | [KG as shared agent memory](12-kg-as-shared-agent-memory.md) | A + B | How does a KG become a swarm's memory? |
-| 13 | [Learning on graphs](13-graph-ml-and-gnns.md) | B | What can a model learn from the graph's structure? |
+| 13 | [Learning on graphs: tasks and features](13-graph-ml-and-gnns.md) | B | What can you predict from structure, and with which hand-built features? |
+| 13b | [Learning on graphs: embeddings and GNNs](13b-representation-learning-and-gnns.md) | B | When do learned vectors beat those features, and how do predictions enter the graph? |
 
 
 ---

@@ -2,6 +2,9 @@
 origin: web-authored
 sources:
   - https://arxiv.org/abs/2503.14476
+  - https://arxiv.org/abs/2507.12507 (NVIDIA prolonged RL, KL plus reference-policy resets)
+  - https://arxiv.org/abs/2512.16649 (JustRL, single-stage fixed-hyperparameter GRPO at 1.5B)
+  - https://arxiv.org/abs/2509.03646 (HICRA, planning-token credit assignment)
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://arxiv.org/abs/2311.10702 (Tülu 2: DPO scaled to 70B)
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
@@ -439,6 +442,42 @@ sampling, the last step, gave the biggest gain in this order.** It drops only pr
 exactly 0 or 1 and refills the batch. The overlong penalty applies only to responses between
 16k and 20k tokens. The 50 beat DeepSeek-R1-Zero-Qwen-32B's 47 "with 50% training steps", but
 the two runs used different evaluation settings.
+
+DAPO's "drop the KL" holds for a base model. Starting from DeepSeek-R1-Distill-Qwen-1.5B, which
+already writes coherent chains of thought, NVIDIA kept a small KL penalty (β = 1e-4) on top of
+Clip-Higher (ε 0.2/0.4) and dynamic sampling. When the KL term began to dominate or validation
+dropped, they **hard-reset the reference policy to the current policy and cleared the optimizer
+state** ([arXiv:2507.12507](https://arxiv.org/abs/2507.12507) (Liu et al., 2025-07, tech report)).
+About 16k H100 hours over eight such stages on 136k math, code, STEM, puzzle and
+instruction-following prompts raised pass@1 over the starting model by 14.7% on math, 13.9% on
+code and 54.8% on Reasoning Gym puzzles. Much of the puzzle gain was format: the base boxed its
+answers instead of using the requested tags. Rollout temperature 1.2 beat 0.6 early and late.
+Without a reset, extending the first stage crashed Codeforces validation. Each stage also changed
+data, rollout count or context, so the reset's share of the gain is not isolated, and it is one
+run at 1.5B.
+JustRL ran the opposite experiment on the same base model: one stage of veRL GRPO with fixed
+hyperparameters, Clip-Higher, no KL, no resets, no length penalty and a 16k cap, on DAPO-Math-17K
+([arXiv:2512.16649](https://arxiv.org/abs/2512.16649) (He et al., 2025-12, preprint)). Over 4,380
+steps it **averaged 54.9% on nine math benchmarks, against 53.1% for the nine-stage ProRL-V2, with
+about half its token budget**. The same settings took OpenMath-Nemotron-1.5B to 64.3%, against
+63.8% for QuestA's hint curriculum. Entropy held at 1.2–1.4 and length fell on its own from about
+8k to 4–5k tokens. Adding DAPO's overlong penalty cut AIME 2024 from about 55% to 50% and dropped
+entropy to 0.5–0.6. Adding a more lenient verifier as well cut it to 45%. Both are single runs at
+1.5B and the margins are a point or two, so neither shows that its tricks, or their absence, are
+needed.
+
+HICRA attacks the evenly spread credit directly. It tags "planning" tokens, the members of
+frequent 3–5-gram clusters such as "let's try a different approach", and adds α·|Â| to their
+advantage (α = 0.2), which amplifies them in correct rollouts and softens their penalty in wrong
+ones ([arXiv:2509.03646](https://arxiv.org/abs/2509.03646) (Wang et al., 2025-09, preprint)).
+Against GRPO with Clip-Higher, **Qwen3-4B-Instruct-2507 rose from 68.5 to 73.1 on AIME 2024 and
+from 60.0 to 65.1 on AIME 2025**, and Qwen3-4B-Base gained 3–6 points on most of six math sets.
+Llama-3.1-8B-Instruct gained nothing (8.9 against 8.3 on AIME 2024). The authors read this as
+needing a base that already executes steps reliably. The paper's diagnostic is more durable than
+the method: token entropy fell while the diversity of planning phrases rose, and fewer than 10%
+of high-entropy "fork" tokens were planning tokens, so falling token entropy need not mean
+exploration has stopped. Every comparison is one run, and HICRA's Qwen2.5-7B-Base row matches
+the ORZ baseline exactly on four of six benchmarks.
 
 **Several rewards break the group normalization.** Summing the rewards first and then
 normalizing within the group merges different reward combinations. With two binary rewards

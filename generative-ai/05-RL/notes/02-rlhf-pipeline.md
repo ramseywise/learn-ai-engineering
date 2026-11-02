@@ -316,7 +316,7 @@ scalar head (Stage 2).
 GPT-2 355M with Llama 3 8B as a judge on a 0–100 scale: 50.32 on his 110 test items. The same
 setup gives the *untuned* Llama 3 8B base 58.51 and Llama 3 8B Instruct 82.6. A small model
 on 1,100 examples won't beat a larger base model. Those are 2024 small-model numbers for the
-mechanics, not a benchmark. For judge design see [06-eval](../../08-eval/README.md).
+mechanics, not a benchmark. For judge design see [08-eval](../../08-eval/README.md).
 
 **Where the demonstrations come from.** Instruction tuning, InstructGPT's labeler counts and the data engineering behind a good SFT set are in [06](06-data-and-environments.md#where-the-demonstrations-came-from).
 
