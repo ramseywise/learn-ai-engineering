@@ -1,0 +1,440 @@
+# Ingest and modelling lecture deck. Covers notes 01-04.
+# Build: make slides PILLAR=data-engineering/02-ingest-and-modelling STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: a small trips source for ingest, one million synthetic taxi trips for modelling. Numbers come from the runs printed in the notes.
+deck:
+  title: Ingest and Modelling
+  subtitle: Getting data in, and agreeing what a row means
+  tagline: |-
+    Load · Star · Vault · Contract
+  reference: "Notes: data-engineering/02-ingest-and-modelling"
+  output: ingest-and-modelling.pptx
+  notes: >-
+    Today we copy data out of a system not built to be copied from, then shape it so two people get one answer. Each part
+    ends with something a later stage will take on trust, so we make that trust explicit.
+
+parts:
+  - title: Getting data in
+    summary: Retries · Watermarks · Change logs · dlt
+    notes: >-
+      Every number your company reports begins with someone copying rows. Whether a retry doubles them is decided by a few lines in the loader.
+    slides:
+      - layout: statement
+        title: Your scheduler will run this load twice
+        kicker: The problem
+        statement: "A naive append, retried once, turned 1,000 rows into 2,000. No error, and the job shows green."
+        attribution: Measured in chapter 1
+        takeaway: Every ingest job gets retried, so a load that is not safe to repeat will eventually double a day's data.
+        source: notes/01-ingest.md
+        notes: >-
+          Network drops at 2:04, the scheduler retries, and the append runs again. The dashboards go up, and nobody is paged. The rest of this part makes that impossible.
+      - layout: code
+        title: Replace the window, in one transaction
+        recall: What happens without the BEGIN if the insert fails?
+        lang: python
+        code: |-
+          wh.execute("BEGIN")
+          wh.execute("DELETE FROM raw_trips "
+                     "WHERE pickup_date = ?", [day])
+          wh.executemany("INSERT INTO raw_trips "
+                         "VALUES (?,?,?,?)", rows)
+          wh.execute("COMMIT")
+          # run twice: (1000, 1000), not (2000, 1000)
+        bullets:
+          - "**Idempotent:** the second run gives the same state."
+          - "**Atomic:** without `BEGIN`, a crash after the delete leaves 0 rows."
+        takeaway: Delete and insert one window in one transaction, so a re-run replaces data and a crash leaves it untouched.
+        source: notes/01-ingest.md
+        notes: >-
+          The exercise in the chapter shows the count falling to zero without a transaction. Merge on a key is the other route when rows have a stable id.
+      - layout: compare
+        title: A watermark cannot see everything
+        recall: Which two changes did the watermark miss?
+        left:
+          title: "Query on updated_at"
+          tag: "Simple, needs no source access beyond SELECT"
+          bullets:
+            - Trip 42, updated before the mark, kept its old fare
+            - Trip 43, deleted, stayed in the warehouse
+            - An overlap window fixes late updates, not deletes
+        right:
+          title: Read the change log
+          tag: "Needs replication access"
+          bullets:
+            - Every insert, update and delete, in order
+            - Save the log position with the data
+            - Replay changes nothing
+        emphasis: right
+        takeaway: A watermark misses deletes and late updates, while a change log carries both, at the cost of access and operations.
+        source: notes/01-ingest.md
+        notes: >-
+          After extraction by watermark, only trip 44 came through. The source said 42 was 99 dollars and 43 was gone; the warehouse disagreed on both, with no error.
+      - layout: flow
+        title: Change data capture, end to end
+        recall: Why take the snapshot at a known log position?
+        steps:
+          - Snapshot at a known position
+          - Read changes after it
+          - Apply in log order
+          - Store position with the row
+        bullets:
+          - "**Replay safe:** the same events applied twice left 42, 43 and 44 correct."
+          - "**Tombstones:** deletes must be remembered, or an old update resurrects the row."
+        takeaway: CDC starts from a snapshot at a known log position, then applies changes in order and stores the position so a replay is harmless.
+        source: notes/01-ingest.md
+        notes: >-
+          Kleppmann covers this in chapter 11 of DDIA. The chapter uses a trigger-based log as a stand-in for reading the real replication log, and Debezium is what you would run in production.
+      - layout: table
+        title: Choosing how to ingest
+        recall: When is batch still the right answer?
+        header: [Source, Method, Accept that]
+        widths: [3, 3, 4]
+        rows:
+          - [Small reference table, Full copy, "Cost grows with the table"]
+          - [Append-mostly with timestamps, Watermark with overlap, "Deletes are invisible"]
+          - [Operational DB with deletes, Log-based CDC, "Needs access and operations"]
+          - [REST API, "dlt, merge on key", "State lives with the pipeline"]
+          - [Events from services, Kafka with a schema registry, "Reprocessing is on you"]
+        highlight: [2]
+        takeaway: Pick the simplest method whose blind spots the data can tolerate, and write down what it cannot see.
+        source: notes/01-ingest.md
+        notes: >-
+          Streaming is justified by someone acting on data within minutes, not by data arriving continuously. Most reporting is fine on a schedule.
+
+  - title: The star
+    summary: Grain · Keys · Additivity · History
+    notes: >-
+      Now the data is ours. Next, agreements about what a row means, what adds up, and what a label meant that day.
+    slides:
+      - layout: statement
+        title: Two analysts, one metric, two numbers
+        kicker: The problem
+        statement: "A dimensional model is a small set of agreements: what one row means, what can be added up, and what a label meant on the day."
+        attribution: "After Kimball and Ross, The Data Warehouse Toolkit, ch. 1"
+        takeaway: A dimensional model exists so that two people asking the same question get the same number.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          Kimball lists that scene near the top of what a warehouse is for. Everything below breaks one agreement and shows the wrong number that results.
+      - layout: flow
+        title: Four decisions, in order
+        recall: Why does the grain come before the dimensions?
+        steps:
+          - Business process
+          - Grain
+          - Dimensions
+          - Facts
+        bullets:
+          - "**Grain sentence:** one row per completed trip."
+          - "**Atomic:** rolled-up tables answer only the questions you predicted."
+          - "**Test:** a dimension takes one value per row at the grain."
+        takeaway: Pick a process, state the grain in one sentence at the atomic level, and only then choose dimensions and facts true to it.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          Kimball's order is the useful part. A column with several values per row, like tolls on a trip, is telling you the grain is wrong or it needs its own fact.
+      - layout: code
+        title: A star in SQL, with an honest Unknown
+        recall: What would an inner join have done to those 2187 trips?
+        lang: sql
+        code: |-
+          CREATE TABLE fact_trips AS
+          SELECT t.trip_id,        -- degenerate dimension
+                 d_key(t.pickup_at) AS date_key,
+                 coalesce(z.zone_key, -1) AS zone_key,
+                 t.trip_miles, t.fare_usd
+          FROM src_trips t
+          LEFT JOIN dim_zone z USING (zone_id);
+        bullets:
+          - "**Surrogate key:** owned by the warehouse."
+          - "**Key -1:** 2,187 orphan trips stay countable."
+        takeaway: Load facts with left joins to a default row, so totals reconcile and each gap is a row someone can count.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          Simplified here; d_key stands for the date key expression in the chapter. Trips use 260 zones and the lookup knows 250. Kimball uses the same device for No Promotion in Effect.
+      - layout: table
+        title: A finer table fans out the fact
+        recall: Why did revenue change with no error raised?
+        header: [Query, Fares]
+        widths: [5, 2]
+        rows:
+          - [True total, "11,257,895"]
+          - ["Joined to tolls, two rows per tolled trip", "12,157,075"]
+          - [Tolls rolled up to the trip first, "11,257,895"]
+        highlight: [1]
+        takeaway: A join to anything finer than the fact silently multiplies it, so roll up first and test key uniqueness after each join.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          Revenue rose by 899,180 dollars, or 8 percent, because 80,000 trips appear twice. The SQL is valid and reads naturally. This is the most common bug in analytics SQL.
+      - layout: cards
+        title: Three answers to "what do we charge per mile?"
+        recall: Which aggregate does Kimball insist on for ratios?
+        cards:
+          - title: Ratio of sums, 3.41
+            body: "Total fares over total miles. The real rate."
+          - title: Average of ratios, 4.10
+            body: "Weights a short hop like an airport run. A different quantity."
+          - title: Sum of ratios, 4.1 million
+            body: "Nonsense, and the default in a dashboard tool."
+        takeaway: Store the numerator and denominator of a ratio and compute it at query time, so nobody can add it up by accident.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          The average overstates by 20 percent if the rate is what you meant. Semi-additive facts, like balances, have the same kind of trap across time.
+      - layout: table
+        title: "Slowly changing dimensions: choose per attribute"
+        recall: Which type changes numbers you already published?
+        header: [Type, Mechanism, History, Use for]
+        widths: [1, 3, 2, 4]
+        rows:
+          - ["1", Overwrite, Gone, Corrections]
+          - ["2", New row and new key, Full, Anything compared over time]
+          - ["3", New column, One step, A single planned before and after]
+        highlight: [1]
+        takeaway: Type 1 rewrites published history, Type 2 preserves it with a new key, and Type 3 keeps a single prior value.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          Kimball named these in 1994. When we moved zone 6 from Queens to Brooklyn with Type 1, January's Brooklyn revenue changed by about 328,000 dollars with no record of it.
+      - layout: code
+        title: Type 2 gives both views of history
+        recall: Why does the fact query need no date condition?
+        lang: text
+        code: |-
+          key  zone  borough   valid_from  valid_to
+            6     6  Queens    2025-01-01  2026-01-15
+          251     6  Brooklyn  2026-01-15  9999-12-31
+
+          by fact key:     Queens 13,251, Brooklyn 15,998
+          by natural key:  Brooklyn 29,249
+        bullets:
+          - "**As it was:** the fact holds the key in force."
+          - "**As it is:** join to the current row."
+          - "**Retry:** the row hash means no new row."
+        takeaway: With Type 2 the fact keeps the key in force at event time, and joining through the natural key restates history to today.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          The dimension grew by one row. Late-arriving facts need no special case, because the range join looks at event date. dbt snapshots generate this logic for you.
+      - layout: code
+        title: Never join two facts directly
+        recall: What does drilling across do differently?
+        lang: text
+        code: |-
+          method                     fares     drivers
+          fact joined to fact   22,466,405  42,499,888
+          drill across          11,233,203     314,322
+          true                  11,233,203     314,322
+        bullets:
+          - "**Fan-out twice:** two shifts per day and zone, many trips per shift."
+          - "**Conformed:** `dim_zone` means one thing in both."
+        takeaway: Aggregate each fact to its shared conformed dimensions first and then join the results, because a direct join multiplies both sides.
+        source: notes/02-dimensional-modelling.md
+        notes: >-
+          The bus matrix plans which dimensions each process shares. That single page is Kimball's integration plan.
+
+  - title: Vault and One Big Table
+    summary: Hubs · Links · Satellites · Wide tables
+    notes: >-
+      The star sits in the middle of a range. One direction pulls it apart, the other joins it all up.
+    slides:
+      - layout: statement
+        title: Move either way from the star and you pay
+        kicker: The problem
+        statement: "Pull it apart and a question needs three joins. Join it up and one label change rewrites 29,249 rows."
+        attribution: Measured in chapter 3, on the same million trips
+        takeaway: The vault and the wide table each buy something real from the star, and each sends a bill you should read first.
+        source: notes/03-data-vault-and-obt.md
+        notes: >-
+          Both are used in production for sound reasons, and both are oversold. We measure so the choice rests on your constraints.
+      - layout: flow
+        title: A vault separates keys, relationships and history
+        recall: What does adding a new source of zone attributes cost?
+        steps:
+          - "Hub: business keys"
+          - "Link: relationships"
+          - "Satellite: attributes over time"
+          - "Marts: stars for readers"
+        bullets:
+          - "**Insert-only:** the zone change added 1 satellite row, nothing updated."
+          - "**Mechanical:** loads are similar enough to generate from metadata."
+        takeaway: A vault makes a new source cost one new table and keeps every version, and in exchange readers need marts built on top.
+        source: notes/03-data-vault-and-obt.md
+        notes: >-
+          The same query took three joins and about 28 milliseconds against one join and 3 for the star, in one run on a laptop. Fit: many changing sources and an audit duty. The notes follow standard descriptions; the book was not read in full.
+      - layout: table
+        title: "Star vs OBT: Kaminsky's benchmark"
+        recall: Why is this evidence about reads and not a verdict?
+        header: [Warehouse, Denormalized vs star]
+        widths: [3, 6]
+        rows:
+          - [Redshift, "25-30% faster excluding compile; lost on query 4"]
+          - [Snowflake, "About 25% faster; star won simple queries 3, 4, 7"]
+          - [BigQuery, "About 49% faster on average"]
+        takeaway: On one public TPC-DS benchmark a wide table read 25-50% faster, on ten chosen queries, with a vendor-published setup you should re-test.
+        source: notes/03-data-vault-and-obt.md
+        notes: >-
+          Fivetran, 2022, TPC-DS subset at scale 100. Redshift storage was 60,250 megabytes against 29,778 for store_sales, likely a worst case because dbt could not apply column encodings. On our data the wide table used 25 percent more space.
+      - layout: code
+        title: The real cost of a wide table is a change
+        recall: Why does object storage make this worse?
+        lang: text
+        code: |-
+          move zone 6 to Brooklyn
+          star:           1 row        0.4 ms
+          one big table:  29,249 rows  4.4 ms
+          obt.parquet:    whole file   40 ms
+        bullets:
+          - "**Frozen:** history is what the build joined."
+          - "**One grain:** a second fact does not fit."
+          - "**Gaps:** a zone with no trips disappears."
+        takeaway: A wide table copies each label into every row, so one change rewrites rows or files, and a second grain needs a second table.
+        source: notes/03-data-vault-and-obt.md
+        notes: >-
+          Trivial on this data, and a real bill on a petabyte. Table formats reduce but do not remove it. Treat wide tables as disposable outputs of a star.
+      - layout: compare
+        title: Which shape for which team
+        recall: What makes a wide table stop being a cache?
+        left:
+          title: Default
+          tag: Most teams
+          bullets:
+            - Raw, then star, then a few wide tables
+            - Definitions live in the star
+            - Wide tables can be dropped and rebuilt
+        right:
+          title: Consider a vault
+          tag: Many sources and auditors
+          bullets:
+            - Sources overlap and change often
+            - You must show what was received when
+            - Marts still sit on top
+        takeaway: Keep definitions in a star and treat wide tables as caches, and add a vault only when sources and auditors demand it.
+        source: notes/03-data-vault-and-obt.md
+        notes: >-
+          A startup with six source tables gets no value from a vault. And if a wide table is the only place a definition exists, it has become your model by accident.
+
+  - title: Data contracts
+    summary: Promises · Enforcement · Quarantine · CI
+    notes: >-
+      Every model assumes the source keeps sending what it sent yesterday. A contract writes that assumption down and checks it.
+    slides:
+      - layout: statement
+        title: A schema cannot see dollars become cents
+        kicker: The problem
+        statement: "Average fare went from 11.23 to 1122.8. The column kept its name and type, so each structural test still passed."
+        attribution: Measured in chapter 4
+        takeaway: Structural checks cannot notice a change in meaning, so somebody has to write down what a plausible value is.
+        source: notes/04-data-contracts.md
+        notes: >-
+          The engineer did nothing wrong by their own lights. They did not know a warehouse read the column. That is the missing agreement.
+      - layout: code
+        title: A contract in the open standard
+        recall: What does this hold that a schema does not?
+        lang: yaml
+        code: |-
+          apiVersion: v3.1.0
+          kind: DataContract
+          schema:
+            - name: trips
+              dataGranularityDescription: One row per trip
+              properties:
+                - name: fare_usd
+                  physicalType: DOUBLE
+                  description: Fare in US dollars
+                  quality:
+                    - query: SELECT median(fare_usd)...
+                      mustBeBetween: [5, 40]
+        bullets:
+          - "**Validated:** against the ODCS JSON Schema."
+          - "**Lives:** in the producer's repository."
+        takeaway: A contract adds meaning, quality rules, service levels and an owner to a schema, in a format that tools can validate and enforce.
+        source: notes/04-data-contracts.md
+        notes: >-
+          Shortened for the slide; the chapter's version validates with no errors. Breck and colleagues at Google report the opposite starting point, where the data comes first and a schema is inferred and curated.
+      - layout: table
+        title: Six batches, one checker
+        recall: Why does the checker test structure first?
+        header: [Batch, Result]
+        widths: [2, 5]
+        rows:
+          - [Good, ok]
+          - [Renamed, missing column fare_usd]
+          - [Zone as string, "zone_id is string, promised int32"]
+          - [3% null zones, "zone_id: 577 nulls"]
+          - [Duplicate ids, "trip_id: 49 duplicates"]
+          - [Cents, "median 993, promised 5 to 40"]
+        highlight: [5]
+        takeaway: Check structure first and content second, and name the column and promise in every breach so the owner can act on it.
+        source: notes/04-data-contracts.md
+        notes: >-
+          Only the semantic rules caught cents. A distribution monitor picks up what a static rule misses.
+      - layout: compare
+        title: Stop the load, or quarantine rows
+        recall: Why is nothing loaded better than something wrong?
+        left:
+          title: Stop
+          tag: The batch is suspect
+          bullets:
+            - Missing column, wrong units, half the volume
+            - Consumers can see stale data
+        right:
+          title: Quarantine
+          tag: Failures are isolated
+          bullets:
+            - Bad rows go aside with a reason
+            - Good plus bad equals received
+        takeaway: Stop when the batch itself is suspect and quarantine isolated rows, using a threshold the business sets, and always reconcile counts.
+        source: notes/04-data-contracts.md
+        notes: >-
+          In the chapter, 2.9 percent of rows failed against a 1 percent limit, so we stop. The limit belongs in the contract.
+      - layout: flow
+        title: Shipping a breaking change
+        recall: Which step needs sign-off, and why is it then harmless?
+        steps:
+          - CI compares versions
+          - Expand, write both
+          - Migrate consumers
+          - Contract, new major
+        bullets:
+          - "**Flagged:** a type change or removal prints BREAKING on the pull request."
+          - "**Expand:** add `fare_cents` beside `fare_usd`, then drop the old one last."
+        takeaway: Add the new field and write both, move consumers before a deadline, and only then remove the old field in a new major version.
+        source: notes/04-data-contracts.md
+        notes: >-
+          The check runs on the pull request, while the person who can fix it is looking at the code. A rename is a drop plus an add, so it is breaking too.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What to remember
+        cards:
+          - title: Assume two runs
+            body: "Replace a window in one transaction."
+          - title: Read the log
+            body: "A watermark cannot see a delete."
+          - title: Write the grain
+            body: "One sentence, before any columns."
+          - title: Left join to Unknown
+            body: "Totals must reconcile."
+          - title: Choose history per attribute
+            body: "Type 1 rewrites what was published."
+          - title: Check meaning
+            body: "Types cannot see a change of units."
+        takeaway: Each stage should state what it will not trust, in keys, default rows, history and contracts, so that failures become visible.
+        source: notes/04-data-contracts.md
+        notes: >-
+          The theme of the subject: a stage silently trusts the one before it. Each of these turns one silent trust into something checked.
+      - layout: bullets
+        title: Where to go next
+        recall: Which pillar turns these models into scheduled builds?
+        bullets:
+          - "**03 Transform and orchestrate:** build the models with tests, and schedule them so re-runs do no damage."
+          - "**05 Quality and observability:** monitors for what contract rules did not foresee."
+          - "**Run the code:** one script per chapter in `practice/`."
+          - "**Read:** Kimball ch. 1 to 5; DDIA ch. 11; Breck 2019."
+        aside:
+          title: The one idea to keep
+          accent: "1E3A5F"
+          body: Nearly every wrong number is a broken agreement about what a row means.
+        takeaway: Pillar 3 builds these models with dbt and schedules them, so that everything agreed here is tested on every run.
+        source: notes/04-data-contracts.md
+        notes: >-
+          Next we make the agreements executable: dbt tests, snapshots and incremental models, then idempotent backfills under a scheduler.

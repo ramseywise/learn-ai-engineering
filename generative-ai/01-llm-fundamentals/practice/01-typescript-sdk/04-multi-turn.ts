@@ -17,7 +17,7 @@ async function chat(userMessage: string): Promise<string> {
   history.push({ role: "user", content: userMessage });
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-5-5",
     max_tokens: 1024,
     system: SYSTEM,
     // Send the full history so Claude has context from prior turns

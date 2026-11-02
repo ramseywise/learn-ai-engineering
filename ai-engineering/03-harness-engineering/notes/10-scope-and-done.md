@@ -6,7 +6,7 @@ sources:
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 10 — Scope and Done
 
@@ -139,6 +139,73 @@ stateDiagram-v2
 
 Four states only. The important rule is **pass-state gating: the only way into `passing` is a successful run of that feature's verification.** Ideally a script runs the checks and flips the state. The agent requests verification; it doesn't edit the status field to say it passed.
 
+The gate is short to write, which leaves little excuse for trusting an agent's word. Here is one, with the VCR refusal from [WIP = 1](#wip--1). The agent calls `request_pass`, and only a zero exit code from the feature's own check changes the state. The check commands are stubs so that the script runs anywhere.
+
+```python
+import subprocess
+import sys
+
+PASS = [sys.executable, "-c", "raise SystemExit(0)"]
+FAIL = [sys.executable, "-c", "print('POST /cart returned 500'); raise SystemExit(1)"]
+
+features = [
+    {"id": "cart-001", "behavior": "User can add an item to the cart",
+     "verify": PASS, "state": "active"},
+    {"id": "cart-002", "behavior": "Cart total updates when quantity changes",
+     "verify": FAIL, "state": "not_started"},
+    {"id": "cart-003", "behavior": "User can remove an item",
+     "verify": PASS, "state": "not_started"},
+]
+
+def request_pass(feature):
+    """The agent asks. Only a zero exit code moves the state."""
+    run = subprocess.run(feature["verify"], capture_output=True, text=True)
+    if run.returncode == 0:
+        feature["state"], feature["evidence"] = "passing", "verify exited 0"
+    else:
+        feature["evidence"] = run.stdout.strip()
+    return feature["state"]
+
+def vcr(items):
+    """Verified completion rate: verified / activated."""
+    activated = [f for f in items if f["state"] != "not_started"]
+    verified = [f for f in activated if f["state"] == "passing"]
+    return len(verified), len(activated)
+
+def activate(item, items):
+    done, started = vcr(items)
+    if done < started:
+        return f"refused: VCR {done}/{started}, finish or block the active feature"
+    item["state"] = "active"
+    return f"{item['id']} is active"
+
+print("cart-001 ->", request_pass(features[0]))
+print(activate(features[1], features))
+print("cart-002 ->", request_pass(features[1]), "|", features[1]["evidence"])
+print("VCR", "{}/{}".format(*vcr(features)))
+print(activate(features[2], features))
+
+features[1]["verify"] = PASS  # stands in for fixing the code, with the check unchanged
+print("cart-002 ->", request_pass(features[1]))
+print("VCR", "{}/{}".format(*vcr(features)))
+print(activate(features[2], features))
+```
+
+Output:
+
+```text
+cart-001 -> passing
+cart-002 is active
+cart-002 -> active | POST /cart returned 500
+VCR 1/2
+refused: VCR 1/2, finish or block the active feature
+cart-002 -> passing
+VCR 2/2
+cart-003 is active
+```
+
+`cart-002` stayed `active` when its check failed, and `cart-003` couldn't start until the rate returned to 1.0. Notice what the agent can't do here: no call sets the state directly, and nothing in `request_pass` reads a claim from the model. In a real harness, keep `feature_list.json` writes behind this function and put the check commands where the agent can't change them mid-implementation.
+
 A feature may move to `passing` only when:
 
 - the expected workflow was actually exercised
@@ -188,4 +255,53 @@ Every "what's left to do" lives in the feature list, not in chat history, TODO c
 
 ---
 
-→ Next: [04-loop-engineering](../../04-loop-engineering/README.md) — run the harness again, against a goal, until a scorekeeper says stop.
+## Pitfalls
+
+- **Broad prompts.** Symptom: "add user registration" becomes a mail service, an error-middleware refactor and a reorganized test directory, with lines written rising and verified features flat. Fix: WIP = 1, plus a next-task block whose last line names what is out of bounds.
+- **A progress memo instead of a primitive.** Symptom: "cart mostly done", and a fresh session re-derives everything. Fix: a feature list that the scheduler, verifier and handoff reporter actually read.
+- **Letting the agent set `passing`.** Symptom: features pass because code was added, or the list was rewritten to hide unfinished work. Fix: pass-state gating, so a script runs the checks and flips the state.
+- **Weakening the check to get through.** Symptom: tests deleted or rules changed mid-implementation. Fix: state the prohibitions in `AGENTS.md`, and keep the check outside what the agent edits.
+- **Loose verification.** Symptom: a list of `passing` features that don't work, verified by "code compiles" or "endpoint exists". Fix: verify the behavior a user would see, such as "POST returns 201 and the item is retrievable".
+- **Wrong granularity.** Symptom: "implement the shopping cart" never finishes inside the limit, while "add `name` field to Cart model" makes list management cost more than the work. Fix: one feature, finishable in one session, written from the user's side.
+- **Two sources of scope.** Symptom: chat history, TODO comments and the list disagree about what's left. Fix: move the item into the feature list or delete it.
+
+## Try it
+
+1. Five features were activated and three verified. What is the VCR, and what may the harness do next?
+
+   <details><summary>Answer</summary>
+
+   VCR = 3/5 = 0.6. Under WIP = 1 it should be 1.0 between features, so the harness refuses to activate a new one until the other two pass verification or are explicitly marked `blocked`. Two features being open at all is itself a sign the limit wasn't enforced.
+
+   </details>
+
+2. Rewrite "Implement the export feature" into a triple with a strict check.
+
+   <details><summary>One good answer</summary>
+
+   Behavior: "User can download their cart as a CSV." Verification: "An E2E test clicks Export and the file has one row per item with the correct total." State: `not_started`, with evidence added once it passes. A loose version would be "the export endpoint exists", which passes without working. Split further if it won't finish in one session.
+
+   </details>
+
+3. Change the script above so that `activate` also accepts `blocked` features as finished. Which line changes, and what does it let through?
+
+   <details><summary>Answer</summary>
+
+   Have `vcr` drop `blocked` items from the `activated` list, for example with `f["state"] not in ("not_started", "blocked")`. A feature marked `blocked` then no longer holds up the next, which matches the rule that the next starts after a pass or an explicit `blocked`. It also lets an agent escape a hard feature by marking it blocked, so log who set that state and review it.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are overreach and under-finish? | Overreach is more tasks active than a session can finish, and under-finish is too few of them passing end-to-end verification. They feed each other, and the tell is lines written rising while verified features stay flat. |
+| What is verified completion rate? | Verified features divided by activated features. Under WIP = 1 it sits at 1.0 between features, and a harness can refuse to activate a new one below that. |
+| Why is a feature list a primitive rather than a memo? | Other parts of the harness read it: the scheduler, verifier, handoff reporter and progress tracker. A document can be ignored, while a primitive works like a database check. |
+| What's in a feature entry? | The triple: behavior as user-visible behavior, verification as executable steps or a command, and state. Evidence such as a commit or test output is added once it passes. |
+| How does a feature get to `passing`? | Only by a successful run of its own verification, ideally through a script that flips the state. The agent requests verification rather than editing the status. |
+| Your team wants faster delivery and proposes WIP = 3 for the agent. What's your response? | The cost is half-done code that raises complexity and invites more overreach. Keep WIP = 1 per agent, and if you need parallelism, use isolated agents with their own worktrees and progress files. |
+
+## Next
+
+[04-loop-engineering](../../04-loop-engineering/README.md): run the harness again, against a goal, until a scorekeeper says stop.

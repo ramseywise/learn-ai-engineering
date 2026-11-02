@@ -43,7 +43,7 @@ cleaned: 2026-11-01
 
 # 9 — PEFT and fine-tuning in practice
 
-@@HOOK@@
+You have decided a fine-tune is justified. The ticket classifier can't be reached by prompting, and you have a few thousand examples. A full fine-tune would need optimizer state for every weight and might still erase what the model knew. A smaller option exists for nearly every budget, and this chapter walks through them: the older parameter-efficient methods and why LoRA displaced them, how to build a LoRA in thirty lines and with the `peft` library, how to shrink a model once trained, and the question that comes before all of that, which is whether to fine-tune at all.
 
 ---
 
@@ -61,7 +61,7 @@ Full fine-tuning updates every weight and needs optimizer state for all of them,
 
 **LoRA** ([arXiv:2106.09685](https://arxiv.org/abs/2106.09685), Hu et al., 2021) is the default. For a frozen weight matrix `W` (d × k), learn a low-rank update:
 
-```
+```text
 W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 ```
 
@@ -86,9 +86,20 @@ W' = W + ΔW,   ΔW = B · A,   B: d × r,  A: r × k,  r ≪ min(d, k)
 
 ```python
 from peft import LoraConfig, get_peft_model
+from transformers import LlamaConfig, LlamaForCausalLM
+
+base_model = LlamaForCausalLM(LlamaConfig(vocab_size=1000, hidden_size=256, num_hidden_layers=4,
+                                          num_attention_heads=4, intermediate_size=512))
 config = LoraConfig(r=16, lora_alpha=32, target_modules=["q_proj", "v_proj"], lora_dropout=0.05)
-model = get_peft_model(base_model, config)   # model.print_trainable_parameters() -> well under 1%
+model = get_peft_model(base_model, config)
+model.print_trainable_parameters()
 ```
+
+```text
+trainable params: 65,536 || all params: 3,201,280 || trainable%: 2.0472
+```
+
+That is a small random Llama, so it runs on a laptop with no downloads, and its share of trainable parameters is much higher than on a real model because it has only 4 layers and a low `d`. On real LLM sizes the same config comes in well under 1%.
 
 ---
 
@@ -101,6 +112,29 @@ Three ways to cut memory and latency once a model is trained (*Building AI Agent
 - **Distillation** trains a small *student* to match a large *teacher*'s output distribution. The recipe is Hinton, Vinyals and Dean's ([arXiv:1503.02531](https://arxiv.org/abs/1503.02531) (Hinton et al., 2015, NIPS 2014 Deep Learning Workshop)). Raise the softmax temperature T so that the teacher's *soft targets* show how it ranks the wrong answers. Train the student on those at the same T, add a lower-weighted cross-entropy on the true labels at T = 1, and multiply the soft-target gradients by T² so the mix stays balanced when T changes. Matching logits is the high-temperature limit of this loss. Label smoothing is the version without a teacher. Szegedy et al. trained Inception-v3 on targets that put 1 − ε on the true class and spread ε evenly over all K classes. That equals the usual loss plus a cross-entropy against the uniform distribution, and it keeps the top logit from growing without limit. On ImageNet (K = 1,000, ε = 0.1) it cut top-1 error from 23.1% to 22.8% ([arXiv:1512.00567](https://arxiv.org/abs/1512.00567) (Szegedy et al., CVPR 2016)). The original transformer trained with the same ε = 0.1. **Soft targets carry far more information per example than labels.** On an 85M-parameter speech model trained on only 3% of the data, hard labels overfit at 44.5% test frame accuracy, while soft targets reached 57.0%, against 58.9% for the full-data baseline. A single distilled model also kept more than 80% of a 10-model ensemble's accuracy gain. DistilBERT applied the recipe during pretraining rather than for one task ([arXiv:1910.01108](https://arxiv.org/abs/1910.01108) (Sanh et al., 2019, preprint)). The student keeps BERT-base's width, drops every other layer and starts from the teacher's remaining layers. It trains on soft targets plus the masked-LM loss and a cosine loss on hidden states. At 66M parameters against 110M, it scored 77.0 on GLUE dev against 79.5 (the "97% retained"), ran 60% faster on CPU at batch size 1, and trained in about 90 hours on 8 V100s. The average hides the spread: RTE fell from 69.3 to 59.9 and MNLI from 86.7 to 82.2. Removing the two distillation losses cost 2.96 GLUE points, and starting from random weights instead of the teacher's cost 3.69. DistilGPT-2 is a distilled GPT-2. In the LLM era the cheaper variant is to fine-tune a small model on a large model's generated outputs, which is distillation without access to the teacher's logits. Distilling the teacher's *rationales* as well as its answers cuts the data the student needs. A 770M T5 trained to output PaLM-540B's chain-of-thought rationales as a second task beat few-shot PaLM-540B on ANLI using 80% of the labeled data, which standard fine-tuning of the same T5 could not match with all of it ([arXiv:2305.02301](https://arxiv.org/abs/2305.02301) (Hsieh et al., ACL Findings 2023)). The rationale is a training-only task, so at inference the student emits just the label. The teacher also needn't be bigger, or single. FuseLLM continually trained Llama-2 7B on the token distributions of three 7B models with different architectures (Llama-2, MPT, OpenLLaMA) and gained 5.16% (relative) on BBH. Distilling from Llama-2 13B gained 2.97%, and plain continued training on the same corpus gained 1.86% ([arXiv:2401.10491](https://arxiv.org/abs/2401.10491) (Wan et al., ICLR 2024)). Gains this small are worth trying only if the models are already on hand. Google's on-device Gemini Nano models (1.8B and 3.25B) were distilled from larger Gemini models and shipped with 4-bit weights ([arXiv:2312.11805](https://arxiv.org/abs/2312.11805) (Gemini Team, 2023-12)).
 
 Wang et al.'s survey of small language models uses the same three routes from a large model to a small one: pruning, distillation and quantization. It splits distillation by what the student can see. *White-box* distillation trains on the teacher's output distributions or internal states, as Hinton's recipe and Minitron do. *Black-box* distillation has only the teacher's generated text, as with rationale distillation ([arXiv:2411.03350](https://arxiv.org/abs/2411.03350) (Wang et al., ACM TIST 2025)). Closed APIs allow only black-box distillation. Chen & Varoquaux's survey adds when a small model is the right end point and not just a cheaper copy. They list three settings: limited compute (on-device or low-latency serving), narrow tasks with little data, and work where the decision must be explained ([arXiv:2409.06857](https://arxiv.org/abs/2409.06857) (Chen & Varoquaux, Computational Linguistics 2026)). Their MTEB plots of embedding models from about 100M parameters up to 7B show diminishing returns from size on text similarity and classification, which is one reason small encoders still do most retrieval.
+
+Here is the affine scheme in full, on a weight tensor. It is a lossy round trip. The worst-case error is half of one quantization step, and the step grows quickly as the bits drop:
+
+```python
+import torch
+
+torch.manual_seed(0)
+x = torch.randn(10_000) * 0.1 + 0.02
+
+for bits in (8, 4):
+    levels = 2 ** bits - 1
+    s = (x.max() - x.min()) / levels                 # scale
+    z = -torch.round(x.min() / s)                    # zero point
+    x_q = torch.round(x / s) + z                     # float -> int
+    x_back = (x_q - z) * s                           # int -> float
+    print(f"{bits} bits: {x_q.min():.0f}..{x_q.max():.0f}  step {s:.5f}  "
+          f"max error {(x - x_back).abs().max():.5f}  storage {100 * bits / 32:.1f}% of FP32")
+```
+
+```text
+8 bits: 0..255  step 0.00331  max error 0.00166  storage 25.0% of FP32
+4 bits: 0..15  step 0.05630  max error 0.02815  storage 12.5% of FP32
+```
 
 Quantization for *serving* (int8/int4 weights, KV-cache compression) is an inference topic; see *LLM Engineer's Handbook* ch. 8 and [ai-engineering/07-inference-engineering](../../../ai-engineering/07-inference-engineering/README.md).
 
@@ -119,4 +153,112 @@ The "skill the model lacks" row matters most for narrow classification with plen
 
 The *LLM Engineer's Handbook*'s framing (ch. 1) is useful for whole systems: separate **feature**, **training** and **inference** pipelines (the FTI architecture), so data preparation, fine-tuning runs and serving can change independently. Its running example, the "LLM Twin", fine-tunes a model on one person's writing and serves it behind RAG.
 
-@@END@@
+---
+
+## Worked example: LoRA in thirty lines
+
+The library wraps a simple idea, and it is worth writing it once. A frozen layer gets two small matrices beside it, the second starts at zero so the model is unchanged at the first step, and only those two are trained. The task is deliberately small: a frozen `W` must learn a low-rank correction that shifts its outputs for a new domain.
+
+```python
+import torch
+import torch.nn as nn
+
+class LoRALinear(nn.Module):
+    def __init__(self, base, r=4, alpha=8):
+        super().__init__()
+        self.base = base
+        for p in self.base.parameters():
+            p.requires_grad = False
+        self.A = nn.Parameter(torch.randn(r, base.in_features) / r)
+        self.B = nn.Parameter(torch.zeros(base.out_features, r))     # zero: starts as a no-op
+        self.scale = alpha / r
+
+    def forward(self, x):
+        return self.base(x) + self.scale * x @ self.A.T @ self.B.T
+
+torch.manual_seed(0)
+base = nn.Linear(256, 256, bias=False)
+lora = LoRALinear(base)
+x = torch.randn(512, 256)
+print("no change at init:", torch.equal(lora(x), base(x)))
+
+target_delta = torch.randn(256, 2) @ torch.randn(2, 256) * 0.05     # a rank-2 shift to learn
+y = base(x).detach() + x @ target_delta.T
+
+opt = torch.optim.Adam([lora.A, lora.B], lr=0.01)
+before = nn.functional.mse_loss(lora(x), y).item()
+for _ in range(400):
+    loss = nn.functional.mse_loss(lora(x), y)
+    opt.zero_grad(); loss.backward(); opt.step()
+
+full = base.weight.numel()
+small = lora.A.numel() + lora.B.numel()
+print(f"loss {before:.4f} -> {loss.item():.6f}")
+print(f"trainable {small:,} of {full + small:,} ({100 * small / (full + small):.1f}%), base unchanged: {base.weight.requires_grad is False}")
+```
+
+```text
+no change at init: True
+loss 1.3381 -> 0.000000
+trainable 2,048 of 67,584 (3.0%), base unchanged: True
+```
+
+A few things to read in it. `B` starting at zero is the reason adding a LoRA is safe at step 0; gated LLaMA-Adapter and LLaMA Pro use the same trick. `scale` (α / r) means changing `r` does not silently rescale the update. At serve time you can merge `W + scale · BA` back into one matrix, so LoRA costs nothing extra at inference, which is why it beats adapter layers there.
+
+```mermaid
+flowchart LR
+    I[input x] --> W["Frozen W (d × k)"]
+    I --> A["A (r × k)"] --> B["B (d × r), starts at zero"] --> S["× α / r"]
+    W --> P((+))
+    S --> P
+    P --> O[output]
+```
+
+---
+
+## Pitfalls
+
+- **Fine-tuning before the prompt has been tried.** Do the table above first. It is the cheapest ten minutes in the project.
+- **Targeting the wrong modules.** `target_modules` is matched against module names, and these differ across architectures. Check `print_trainable_parameters` every time.
+- **Comparing LoRAs of different `r` at the same `lora_alpha` without thinking about scale.** The update is multiplied by α / r.
+- **Using a LoRA to store facts.** ChipNeMo's DAPT through LoRA left a significant accuracy gap, and LoRA does not change the argument of chapter 07. Facts belong in retrieval.
+- **Assuming fewer bits mean faster.** On some hardware, quantized formats need more work per operation. Measure on the serving target, as Lu et al. did.
+- **Quantizing without re-evaluating.** It changes the model. Run the same evals before and after.
+- **Forgetting that a LoRA is tied to its base.** The adapter is meaningless without the exact base weights, so version them together.
+
+---
+
+## Try it
+
+1. In `LoRALinear`, set `r=1`. The target shift has rank 2. What happens to the final loss, and why?
+2. Take a 32-layer model whose `q_proj` and `v_proj` are both 4,096 × 4,096 matrices. How many parameters does one LoRA with `r=16` add across both modules in all layers?
+3. In the quantization block, add `bits = 2`. What is the max error now relative to the standard deviation of the weights, and what might that do to a model?
+
+<details>
+<summary>Answers</summary>
+
+1. The final loss stalls near 0.47, against practically zero at `r=4`: a rank-1 update can't represent a rank-2 change, so part of the target is out of reach however long you train.
+2. Each matrix adds `r × (4096 + 4096)` = 131,072 parameters, so 2 × 32 × 131,072 = 8,388,608, about 8.4M, far below a 7B model's total.
+3. Levels drop to 4 and the step grows to 0.28, a third of the total range. The max error is 0.14, larger than the weights' 0.10 standard deviation, so this scheme would destroy most of what the weights encode. The *LLM Engineer's Handbook* (ch. 8) rates GGUF's lowest-bit formats as low quality for the same reason.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Why PEFT over full fine-tuning? | Full fine-tuning needs gradients and optimizer state for every weight, several times the model's memory. PEFT trains a small set of new parameters and freezes the rest |
+| How does LoRA work? | It adds a low-rank update `BA` to frozen weight matrices, starting from zero so the model is unchanged at first. It is merged for serving |
+| Which modules are usually targeted? | The attention projections, commonly `q_proj` and `v_proj`, and more if the budget allows |
+| LoRA versus adapters and prefix tuning? | Hu et al. found LoRA at or above the older methods on GPT-3, with no inference overhead once merged |
+| What is QLoRA? | LoRA on a base held in 4-bit NF4, so the frozen weights take less memory during training |
+| When is fine-tuning the wrong answer? | When facts are missing or stale (retrieval) or when the format is reachable by prompting |
+| What is the FTI architecture? | Separate feature, training and inference pipelines, so each can change independently |
+
+---
+
+## Next
+
+[10 — Prompting fundamentals](10-prompting-fundamentals.md) goes to the first fix in the table above: no weight moves at all.

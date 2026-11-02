@@ -57,13 +57,13 @@ cleaned: 2026-11-01
 
 # 6 — Pretraining: data and objectives
 
-@@HOOK@@
+A team asks whether they should train their own support model on five years of tickets. Before anyone reaches for a GPU, it helps to know what the question means: what training optimises, what it needs, and what it costs. Pretraining is the stage that builds the base model every later stage inherits, and it takes almost all of the compute. Its loop is short enough to fit on a slide, while the scale it runs at is what makes it a capital decision. This chapter starts with the loop, runs it on the smallest data that shows every moving part, then scales the arithmetic up until the reasons few organisations do this are plain.
 
 ---
 
 ## The pipeline
 
-```
+```text
 raw text ──pretrain──▶ base model ──SFT──▶ instruction model ──preference optimization──▶ assistant
  (trillions of tokens)   (continues text)   (follows the format)   (RLHF / DPO / RLAIF)    (helpful, harmless)
 ```
@@ -83,11 +83,48 @@ The InstructGPT paper ([arXiv:2203.02155](https://arxiv.org/abs/2203.02155), Ouy
 Pretraining is self-supervised: the label for each position is the next token in the text. Raschka writes the loop by hand (*LLMs from Scratch*, ch. 5; full code at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch)):
 
 ```python
-for input_ids, target_ids in train_loader:          # targets = inputs shifted one to the left
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+text = ("my refund is late. please refund my order. the order arrived late. "
+        "please cancel my order. my card was charged twice. refund my card. ") * 40
+chars = sorted(set(text))
+ids = torch.tensor([chars.index(c) for c in text])
+split = int(0.9 * len(ids))
+train_ids, val_ids = ids[:split], ids[split:]
+
+def batches(data, seq=32, batch=32, steps=300):
+    for _ in range(steps):
+        starts = torch.randint(0, len(data) - seq - 1, (batch,))
+        yield (torch.stack([data[s:s + seq] for s in starts]),
+               torch.stack([data[s + 1:s + seq + 1] for s in starts]))   # shifted one left
+
+torch.manual_seed(0)
+model = nn.Sequential(nn.Embedding(len(chars), 32), nn.Linear(32, 64), nn.ReLU(), nn.Linear(64, len(chars)))
+optimizer = torch.optim.AdamW(model.parameters(), lr=3e-3)
+
+def mean_loss(data):
+    with torch.no_grad():
+        return sum(F.cross_entropy(model(x).flatten(0, 1), y.flatten()).item()
+                   for x, y in batches(data, steps=10)) / 10
+
+print(f"untrained loss {mean_loss(train_ids):.3f}  ln(vocab) {math.log(len(chars)):.3f}")
+for input_ids, target_ids in batches(train_ids):     # targets = inputs shifted one to the left
     logits = model(input_ids)                        # (batch, seq, vocab)
     loss = F.cross_entropy(logits.flatten(0, 1), target_ids.flatten())
     optimizer.zero_grad(); loss.backward(); optimizer.step()
+train, val = mean_loss(train_ids), mean_loss(val_ids)
+print(f"after 300 steps: train {train:.3f}  val {val:.3f}  val perplexity {math.exp(val):.1f}")
 ```
+
+```text
+untrained loss 3.210  ln(vocab) 3.091
+after 300 steps: train 1.168  val 1.191  val perplexity 3.3
+```
+
+The first printed line is the check to run before any long job. An untrained model should score about `ln(vocab)`, because it spreads probability evenly across the vocabulary, and a very different value means a bug in the data or the loss. The model here sees only the previous character, so it stops improving at the entropy of that one-character view of this text. Its perplexity is about how many next characters it is still choosing between. The loop is the same one you would run on a real model.
 
 One forward pass scores every position at once: the causal mask lets the model predict token 2 from token 1, token 3 from tokens 1–2, and so on, all in parallel. Feeding the true previous tokens rather than the model's own guesses is called *teacher forcing* (*Building AI Agents*, ch. 2). It is why training is parallel while generation ([chapter 04](04-decoding-and-inference-behaviour.md)) is not.
 
@@ -154,4 +191,81 @@ Chinchilla ([chapter 03](03-scale-and-the-model-zoo.md#scale)) trained 400 model
 
 *Building AI Agents* (ch. 3) adds the emergent-abilities debate covered in [chapter 03](03-scale-and-the-model-zoo.md) and the Kaplan law; it adds nothing to either.
 
-@@END@@
+---
+
+## Worked example: price a pretraining run before you plan one
+
+Every figure above reduces to the same few multiplications, so it is worth having them as code. Using Raschka's and Meta's numbers for Llama 2 7B, and counting memory per parameter for a 1.5B model trained with Adam (weights, gradients and two running statistics at 32 bits each):
+
+```python
+def cloud_cost(gpu_hours, gpus_per_server, price_per_server_hour):
+    return gpu_hours / gpus_per_server * price_per_server_hour
+
+def adam_memory_gb(params, bytes_per_value=4):
+    weights, gradients, adam_stats = 1, 1, 2
+    return params * (weights + gradients + adam_stats) * bytes_per_value / 1e9
+
+print(f"Llama 2 7B at $30/hour for 8×A100:  ${cloud_cost(184_320, 8, 30):>10,.0f}")
+print(f"Training memory, 1.5B params with Adam: {adam_memory_gb(1.5e9):.0f} GB, before any activations")
+print(f"Tokens per parameter, Llama 2 7B on 2T: {2e12 / 7e9:.0f}")
+
+support_tokens = 5 * 365 * 20_000 * 300    # 5 years, 20k tickets/day, 300 tokens each
+print(f"Five years of tickets: {support_tokens:,} tokens = {support_tokens / 2e12:.2%} of Llama 2's data")
+```
+
+```text
+Llama 2 7B at $30/hour for 8×A100:  $   691,200
+Training memory, 1.5B params with Adam: 24 GB, before any activations
+Tokens per parameter, Llama 2 7B on 2T: 286
+Five years of tickets: 10,950,000,000 tokens = 0.55% of Llama 2's data
+```
+
+The last line answers the question that opened the chapter. The ticket volume there is an assumption, chosen to be generous. Even so, a company's own text is a fraction of a percent of what a useful base model takes, so that data will not pretrain one. It might suit continued pretraining or fine-tuning, which is what the next chapter covers.
+
+---
+
+## Pitfalls
+
+- **Skipping the `ln(vocab)` check.** A loss that starts wrong is telling you there is a bug, long before the expensive part begins.
+- **Using only training loss.** Keep a held-out split from the same distribution, and watch it for the gap.
+- **Reading perplexity across tokenizers.** It depends on the vocabulary, so scores from different tokenizers are not comparable.
+- **Splitting after shuffling overlapping windows.** The same text ends up on both sides of the split and the validation score looks better than it is. Split first, then cut windows.
+- **Confusing FLOPs with FLOP/s.** One measures the work and the other the speed. Copying a cost example without noticing which is which can leave you an order of magnitude out.
+- **Quoting a headline cost as if it were a quote.** Most published costs are estimates, built on utilisation, price and hardware assumptions. Keep the setup attached to the number.
+- **Saving weights without the optimizer state.** A resumed run then behaves as if its optimizer were new.
+
+---
+
+## Try it
+
+1. In the training block, set `steps=0` in the training loop's `batches` call. What is the printed loss, and why?
+2. Change the model so that it cannot learn: replace `model(input_ids)` with `model(input_ids).detach().requires_grad_()`. What happens to the loss?
+3. Meta's table puts the whole Llama 2 family at 3.3M A100-hours. Price that with `cloud_cost` and compare it to the 7B alone.
+
+<details>
+<summary>Answers</summary>
+
+1. Train loss stays at the untrained value, about 3.2 here, close to ln(22) = 3.09 for this text's 22 characters. Nothing has trained.
+2. The loss stays at the untrained value. The gradient stops at the detached tensor, so the weights never change, which is a common bug behind a flat curve.
+3. `cloud_cost(3.3e6, 8, 30)` is about $12.4M, roughly 18 times the 7B's $691,200, under the same price assumption.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What is the training objective of pretraining? | Cross-entropy of the next token at every position, with labels being the input shifted by one, so no human labels are needed |
+| What is teacher forcing, and why does it make training parallel? | Each position sees the true previous tokens, so one masked forward pass scores all positions at once. Generation has to wait for its own output |
+| What should the loss be before training? | About `ln(vocab)`. A different value suggests a bug |
+| What dominates the cost of a run? | Compute-hours times price, set by parameters, tokens and hardware utilisation. Pretraining is about 98% of the compute for InstructGPT |
+| Why does training need far more memory than inference? | Weights, gradients and optimizer state for every parameter, and activations. Adam alone keeps two extra values per weight |
+| Why not pretrain on your company's data? | It is several orders of magnitude too small. Continue pretraining or fine-tune instead |
+
+---
+
+## Next
+
+[07 — Continued pretraining and supervised fine-tuning](07-sft-and-instruction-tuning.md) starts from an existing base model and teaches it a domain and a format.

@@ -16,11 +16,13 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 3, 4"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — Verification and Feedback Loops
 
 > Models lean toward the first plausible solution and rate their own work generously. Verification is the harness's answer to both.
+
+An agent's "done" is a claim, and the agent making it is the party least able to judge it. In Anthropic's app-generation post a solo run took 20 minutes and $9 and produced broken core gameplay, while the full harness took 6 hours and $200 and produced a working game. Without verification the loop ends when the model feels finished, regressions ship as success, and a retry repeats the same wrong move. This chapter covers what turns the claim into evidence: forced completion checks, separate evaluators, sprint contracts, loop detection and a retry policy that knows when to stop.
 
 ---
 
@@ -438,4 +440,55 @@ The general principle: **in any domain where a human must sign off, traceability
 
 ---
 
-→ Next: [06-long-horizon-execution.md](06-long-horizon-execution.md) — surviving past one context window.
+## Pitfalls
+
+- **Letting the agent declare done.** Symptom: "complete" with nothing run. Fix: intercept the exit, as `PreCompletionChecklistMiddleware` does, so the agent can only request done and the harness adjudicates.
+- **Trusting unit tests alone.** Symptom: both mocked sides pass while a relative path meets a callee that expects an absolute one. Fix: unit tests can't see boundary defects, so add runtime and system layers to the check.
+- **Letting the maker grade its own work.** Symptom: confident approval of broken features. Fix: use a separate evaluator with weighted criteria. In the DAW run, QA was $10 of $124.70 and still found that core features were presentational only.
+- **Keeping a verifier that cries wolf.** Symptom: valid work keeps getting flagged, and throughput falls with no accuracy gain. Fix: measure false positives and delete the verifier if it doesn't earn its place. PRINCE removed its LLM SQL reviewer for this reason.
+- **Shipping on Pass@k.** Symptom: the eval shows the agent can do the task, and users see it fail intermittently. Fix: Pass@k measures capability and Pass^k measures whether it succeeds every time, so ship on Pass^k.
+- **Retrying a refusal or a bad spec.** Symptom: three identical failures and a growing bill. Fix: use the retry taxonomy. Never retry a refusal. After two failed retries, treat the problem as a bad spec, since a third attempt adds no information.
+- **A retry budget per tool.** Symptom: five tools with three retries each become fifteen attempts. Fix: budget per invocation, with a circuit breaker after 5 consecutive failures and a 60s cooldown.
+- **Treating error handling as free.** Symptom: an error path calls the LLM, fails, and cascades. Before Claude Code's compaction breaker, which now trips after 3 consecutive failures, one session failed more than 3,000 times in a row. Fix: every recovery path gets a ceiling set from data.
+
+## Try it
+
+1. Classify each failure and choose a response from the retry taxonomy: a 429, a safety refusal, JSON missing a required field, a window overflow.
+
+   <details><summary>Answer</summary>
+
+   429: transient, exponential backoff with jitter, max 3. Refusal: never retry, because it will refuse again. Missing field: schema violation, return the validation error and retry once with it in context. Overflow: context exhaustion, compact or reset and resume.
+
+   </details>
+
+2. An agent passes a task on 8 of 10 runs. Report its Pass@10 and Pass^10, and say whether it ships for a billing workflow.
+
+   <details><summary>Answer</summary>
+
+   Pass@10 is true, because it can do the task at least once. Pass^10 is false, because it didn't succeed on all ten. Don't ship a billing workflow on that result. The failing two runs are the next thing to attribute.
+
+   </details>
+
+3. Write a sprint contract for "add dark mode" that names at least two exclusions and one check at each of the static, runtime and system layers.
+
+   <details><summary>What a good one has</summary>
+
+   Exclusions such as "no theme editor" and "no changes to the marketing site" stop scope growth before review. A lint or type check is static. Loading the settings page and toggling without a console error is runtime. A user toggling, reloading and still seeing dark mode is system. Compare with the [dark mode contract](#sprint-contracts) in the note, then build a real loop in [loop-scorekeeper-py](../../04-loop-engineering/practice/loop-scorekeeper-py/README.md).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why not let the agent decide when it is done? | It finishes confidently on broken work. The harness intercepts the exit and forces a check, so the agent can only request done. |
+| Why are unit tests not enough? | Isolation and mocks make them blind to boundary defects: interface mismatch, state propagation, resource lifecycle and environment. The fix is the static, runtime and system layers. |
+| Is a separate evaluator worth paying for? | Usually. Anthropic's DAW run spent $10 of $124.70 on QA, and it caught core features that were presentational only. The cost argument is often whether you get a working result at all: $9 broken against $200 working. |
+| Pass@k or Pass^k? | Pass@k asks whether it can ever do the task, and Pass^k whether it does so every time. Use the first for capability and ship on the second. |
+| A verifier is blocking good work. When do you delete it? | When its false positives cost more than the defects it catches. PRINCE deleted its LLM SQL reviewer because it kept flagging valid queries, adding cost and latency with no accuracy gain. |
+| How do you stop an agent stuck on the same bug? | Track per-file edit counts or a `hash(tool, args)` fingerprint and prompt "reconsider your approach" after N. After two failed retries, assume a bad spec. A hard stop alone doesn't force re-planning. |
+| Why is a retry budget per invocation? | Otherwise five tools with three retries each become fifteen attempts. Add a circuit breaker after 5 consecutive failures, with a 60s cooldown, then fail fast. |
+
+## Next
+
+[06-long-horizon-execution.md](06-long-horizon-execution.md): surviving past one context window.

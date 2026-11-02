@@ -11,7 +11,7 @@ Reinforcement learning is how a pretrained model becomes an assistant. It is als
 
 ## Why it matters
 
-The thread through all twelve chapters is that **the reward signal is the product**. Where it comes from (humans, a reward model, a constitution, a verifier, an environment), how dense it is and how easy it is to game decides more than the choice of optimizer. If you build, buy or evaluate a trained model, this is the part that tells you what the model was actually asked to do.
+The thread through all fourteen chapters is that **the reward signal is the product**. Where it comes from (humans, a reward model, a constitution, a verifier, an environment), how dense it is and how easy it is to game decides more than the choice of optimizer. If you build, buy or evaluate a trained model, this is the part that tells you what the model was actually asked to do.
 
 ## The story
 
@@ -27,8 +27,10 @@ New to RL? Start at 00. It assumes no notation and no data-science pillar. If yo
 |---|---|---|
 | 00 | [RL in plain language](notes/00-rl-in-plain-language.md) | Agent, reward, exploration, value and policy in plain words with small runnable examples; why this matters for LLMs |
 | 01 | [RL foundations](notes/01-rl-foundations.md) | MDP tuple; Bellman and TD; DQN and offline RL; policy gradients to the PPO clip; maximum entropy; exploration; how RL maps onto LLMs |
-| 02 | [RLHF pipeline](notes/02-rlhf-pipeline.md) | SFT and SFT in practice; reward-model training; PPO with a KL penalty; reward hacking and overoptimization; alignment tax |
-| 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO, GRPO and GSPO; KTO, IPO, ORPO, SimPO and self-play; the decision framework |
+| 02 | [RLHF pipeline](notes/02-rlhf-pipeline.md) | SFT and SFT in practice; reward-model training; PPO with a KL penalty |
+| 12 | [RLHF failure modes](notes/12-rlhf-failure-modes.md) | Read after 02. Reward hacking; overoptimization and the reverse KL; alignment tax; a toy of the whole failure |
+| 03 | [Preference optimization](notes/03-preference-optimization.md) | PPO, DPO, GRPO and GSPO; the decision framework |
+| 13 | [Preference variants](notes/13-preference-variants.md) | Read after 03. KTO, IPO, ORPO, SimPO, DiscoPOP; self-play with SPIN, SPPO, DITTO and RLHI |
 | 04 | [Constitutional AI and RLAIF](notes/04-constitutional-ai.md) | The constitution; critique and revision; RLAIF labels; red-teaming; self-improvement and scaling |
 | 05 | [Post-training for agents](notes/05-post-training-for-agents.md) | The three stages; SFT memorizes, RL generalizes; LLMs inside classic RL; learning without weights; when to pick SFT or RL |
 | 06 | [Data and environments](notes/06-data-and-environments.md) | Environments as practice fields; simulators; data quality; dataset engineering; preference data at practitioner scale |
@@ -38,7 +40,7 @@ New to RL? Start at 00. It assumes no notation and no data-science pillar. If yo
 | 10 | [Engineering RL systems](notes/10-engineering-rl-systems.md) | Imitation and inverse RL; hierarchy and curricula; engineering an RL problem; scaling; running RL in production; what has dated |
 | 11 | [Multi-agent and RAG RL](notes/11-multi-agent-and-rag-rl.md) | CTDE, VDN/QMIX, MADDPG, MAPPO; path finding; RL over retrieval and tool actions; Self-RAG |
 
-Short route for a working engineer: 02, 03, 05, 07, then run the [Q-learning lab](practice/01-q-learning-treasure-hunt/).
+Chapters 12 and 13 sit where the table puts them; they were split out of 02 and 03 and kept those numbers so that links to the other chapters still hold. Short route for a working engineer: 02, 12, 03, 05, 07, then run the [Q-learning lab](practice/01-q-learning-treasure-hunt/).
 
 ---
 
@@ -48,7 +50,7 @@ Short route for a working engineer: 02, 03, 05, 07, then run the [Q-learning lab
 05-RL/
 ├── README.md
 ├── references.md           every source, mapped to notes; open gaps
-├── notes/                  00–11, read in order
+├── notes/                  00–13, read in order
 ├── slides/                 deck.yaml and rl-and-alignment.pptx
 ├── practice/
 │   └── 01-q-learning-treasure-hunt/   tabular Q-learning lab (offline, numpy)
@@ -98,7 +100,7 @@ Short route for a working engineer: 02, 03, 05, 07, then run the [Q-learning lab
 
 **Practice and slides**
 
-Deck: [slides/rl-and-alignment.pptx](slides/rl-and-alignment.pptx), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=generative-ai/05-RL STRICT=1 PREVIEW=1`.
+Deck: [slides/rl-and-alignment.pptx](slides/rl-and-alignment.pptx) and [.pdf](slides/rl-and-alignment.pdf), built from [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=generative-ai/05-RL STRICT=1 PREVIEW=1`.
 
 | Lab | What it shows | Run |
 |---|---|---|

@@ -13,11 +13,13 @@ sources:
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 4, 5, 8"
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 8"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 7 — Orchestration and Multi-Agent Harnesses
 
 > Subagents are a context management technique before they are an architecture. Treat the second as a consequence of the first.
+
+Adding agents feels like adding capacity, but agents that coordinate only by conversation forget commitments, both claim one task, and overwrite each other's work. Measured runs in Rothman's engine took 148 s and 151 s for three-step plans against an estimate near 10.7 s. Multi-agent also has a real payoff, because a subagent that reads 40 files can hand back the 3 that matter and keep the parent's window clean. This chapter covers how to get that payoff with protocols, ownership and handoff rules, and when one agent is the better answer.
 
 ---
 
@@ -328,4 +330,54 @@ Absent one of these, added agents multiply token cost and introduce the four fai
 
 ---
 
-→ Next: [08-maturity-and-failure-modes.md](08-maturity-and-failure-modes.md) — staging the build, and what goes wrong.
+## Pitfalls
+
+- **Parallelizing before defining the protocol.** Symptom: two agents own one task, or work starts before its dependency finishes. Fix: define what each agent owns, receives, returns and may touch. Use natural language inside a task and protocols between tasks.
+- **Returning the exploration instead of the result.** Symptom: the parent window fills with all 40 files. Fix: the subagent returns the 3 relevant ones in a condensed summary of about 1,000–2,000 tokens, with large artifacts on disk.
+- **An unresolved placeholder passed along as text.** Symptom: the next agent receives the literal string `$$STEP_1_OUTPUT$$`. Fix: fail fast on a missing reference, as Rothman's executor does, so the trace shows which step broke.
+- **Cycles without counters.** Symptom: two nodes bounce work indefinitely. Fix: put iteration counters on cyclic edges and force escalation.
+- **Parallel branches writing the same state.** Symptom: a concurrency collision, with one branch's result overwritten. Fix: per-branch ownership of state keys, and JoinNode barriers.
+- **Reviewers with no way to finish.** Symptom: consensus deadlock blocks the run. Fix: a tie-break rule, a majority threshold or a final arbiter.
+- **Going by a latency estimate.** Symptom: a plan estimated near 10.7 s takes about 150 s. Fix: measure real runs, then run independent calls in parallel, cache repeated retrievals and plans, and use smaller models for simpler steps.
+- **Generalizing from a showcase.** Symptom: "the Minecraft agents coordinated with almost no messages, so ours can". Fix: remember it was one run, one game, on Easy. A silently wrong shared note costs more in your domain.
+
+## Try it
+
+1. The planner emits three steps, and step 3 references `$$STEP_4_OUTPUT$$`. What should the executor do, and what goes wrong if it doesn't?
+
+   <details><summary>Answer</summary>
+
+   It halts at step 3, with a trace naming the step and what it was given. Without that, the literal placeholder reaches the next agent, which may treat it as text and produce a plausible answer built on nothing.
+
+   </details>
+
+2. A user sends a second message while the agent is working on the first. From the note's double-texting table, pick a strategy for (a) a typo correction and (b) an unrelated new request, and say what each costs.
+
+   <details><summary>Answer</summary>
+
+   (a) Interrupt: stop the run and restart with both inputs. You must choose what to keep, and the state has to be cleaned up or padded so every tool call keeps its result. (b) Queue, at the risk that later inputs go stale, or handle independently on a new thread, where the user sees two runs that can't be reconciled.
+
+   </details>
+
+3. For one multi-agent system you know, fill in the protocol table: communication protocol, task graph and isolation boundary. Then say what it would take to remove one agent.
+
+   <details><summary>What to look for</summary>
+
+   Any cell you can't fill is a place conversation is standing in for a protocol, and it maps to a failure such as double execution or write collisions. If an agent has the same tools and trust level as its parent and doesn't need context isolation, it is a candidate for removal under [when not to go multi-agent](#when-not-to-go-multi-agent).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is a subagent's main value? | Context isolation, as a firewall. A search that reads 40 files and finds 3 returns the 3 in a summary of about 1,000–2,000 tokens, so the parent stays coherent longer. |
+| Why define protocols before parallelism? | Parallelism on an undefined task structure produces collision, not speed. Use natural language inside tasks and protocols between them. |
+| Name four orchestration failures and their fixes. | Loop oscillation: iteration counters. Context pollution: boundary schemas, returning summaries only. Concurrency collision: per-branch state ownership and JoinNode barriers. Consensus deadlock: a tie-break or arbiter. |
+| Why was Rothman's measured latency so far above the estimate? | The estimate was about 10.7 s and measured three-step runs took 148 s and 151 s with gpt-5 from Colab, with generation calls dominating. The levers are parallel independent calls, caching and smaller models. |
+| Does the Minecraft run prove agents can self-coordinate? | It shows emergent coordination can hold for a day: 229 messages across 2,783 programs. It was one run, one game, on Easy, so don't extrapolate to domains where a wrong note is costly. |
+| When do you stay with one agent? | When tasks don't need separate tools, trust levels or context isolation, because coordination overhead can exceed the parallel gain. Find the single-agent limit first. |
+
+## Next
+
+[08-maturity-and-failure-modes.md](08-maturity-and-failure-modes.md): staging the build, and what goes wrong.

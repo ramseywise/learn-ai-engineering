@@ -7,6 +7,7 @@ sources:
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
   - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
   - https://arxiv.org/abs/2402.01306 (KTO)
+  - https://arxiv.org/abs/2404.02078 (Eurus, DPO vs KTO/NCA on reasoning pairs)
   - https://arxiv.org/abs/2506.21495 (offline vs semi-online vs online DPO/GRPO)
   - https://arxiv.org/abs/2503.01067 (All Roads Lead to Likelihood)
   - https://arxiv.org/abs/2504.13837 (RLVR and the base model's reasoning boundary)
@@ -22,6 +23,7 @@ sources:
   - https://arxiv.org/abs/2311.08401 (FactTune, DPO on automatic factuality preferences)
   - https://arxiv.org/abs/2404.03862 (Quote-Tuning, DPO toward verbatim Wikipedia quotes)
   - https://arxiv.org/abs/2509.25137 (RLHI, DPO from real user conversations)
+  - https://arxiv.org/abs/2307.12966 (Aligning LLMs with Human survey)
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
   - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
 confidence: medium
@@ -62,6 +64,13 @@ RLHF (2017–2022)
 
 Each step removed a component that was expensive, unstable, or hard to tune — while
 preserving (or improving) alignment quality.
+
+The diagram skips a side branch. In 2023, DPO had offline rivals: ranking losses (RRHF, PRO,
+SLiC) and language-based ones that put a "good"/"bad" prefix on each response and train with
+SFT (Chain of Hindsight, conditional behavior cloning). Few open models used any of them. In a
+mid-2023 survey table of 27 open aligned models, **none used PPO, one used a ranking loss and two
+used a language-based one; the rest were SFT or LoRA on distilled data**
+([arXiv:2307.12966](https://arxiv.org/abs/2307.12966) (Wang et al., 2023-07, preprint)).
 
 ---
 
@@ -188,7 +197,7 @@ incorporate new feedback during training. That is a property of the data pipelin
 loss: the same DPO loss run on fresh samples from the current model works well (heuristic 2). Sensitive
 to dataset quality (bad preferred/rejected pairs have direct gradient impact). Can
 increase probability of rejected responses in some settings (the "DPO length problem";
-SimPO, [below](#simpo--no-reference-model-length-normalized-reward), measures it).
+SimPO, [13](13-preference-variants.md#simpo--no-reference-model-length-normalized-reward), measures it).
 Does not generalize beyond the preference distribution seen in training.
 
 **When to use DPO:** You have a clean preference dataset, want stability over online
@@ -261,6 +270,8 @@ version you install.
 | `rewards/margins` | Rises quickly, then plateaus | Flat from the start |
 | `rewards/accuracies` | Climbs gradually; need not reach 100% | 100% early means the pairs are too easy. Add harder ones |
 | Train vs. val loss, grad norm | Small gap; small norms with few spikes | — |
+
+Falling chosen rewards matter most on reasoning, where one correct answer faces many wrong ones. Eurus trained Mistral-7B on UltraInteract, 220K correct/incorrect action pairs over math, code and logic problems. **DPO lowered the SFT model's average over 12 benchmarks from 46.5 to 44.5, and LeetCode from 20.0 to 8.3. KTO raised it to 48.8 and NCA to 48.1.** DPO's chosen rewards went below zero, while KTO's and NCA's kept rising. At 70B the rewards went to −∞ and DPO did not train at all. The same idea helped the reward model: adding −log σ(r_chosen) − log σ(−r_rejected) to the Bradley–Terry loss raised RewardBench reasoning from 77.5 to 87.0. This is one dataset and β = 0.1, with GPT-3.5 Turbo writing the correct actions and the explanation read from reward curves ([arXiv:2404.02078](https://arxiv.org/abs/2404.02078) (Yuan et al., 2024-04, preprint)).
 
 *Dated:* LLMEH (2024) treats DPO as offline only and says "for large-scale training runs
 with millions of preference samples, PPO-inspired methods still have a higher performance
@@ -526,158 +537,7 @@ collapsed after about 250 steps while GMPO did not. GSPO is not among its baseli
 
 ## Variants and extensions
 
-### KTO — Kahneman-Tversky Optimization
-
-**Paper:** [arXiv:2402.01306](https://arxiv.org/abs/2402.01306) (Ethayarajh et al., 2024-02),
-ICML 2024. Named after prospect theory (Kahneman-Tversky).
-
-**Motivation:** DPO requires paired (chosen, rejected) examples. KTO works with unpaired
-binary feedback — just labels of "desirable" or "undesirable" for individual outputs.
-This matches how feedback often arrives in practice.
-
-**Objective:** Maximizes the "human utility" of model outputs using a utility function
-that down-weights extreme rewards (mirroring how humans actually value outcomes). Concretely,
-an example's gradient goes to zero once its implied reward is far from the reference point in
-either direction, so KTO stops learning from examples the policy finds too easy or too hard.
-The authors read that as ignoring likely-mislabelled feedback, at the risk of underfitting
-hard-but-correct data (their fix: lower β, more epochs).
-
-**When to use:** When preference pairs are hard to collect but binary thumbs-up/thumbs-down
-signals are abundant. More data-efficient than DPO when pairs are scarce. Trained on
-HH+OASST+SHP and judged by GPT-4 winrate against the SFT targets, KTO matched or beat DPO from
-Pythia-1.4B to Llama-30B. On Zephyr-β-SFT trained on UltraFeedback it raised GSM8K from 40.0
-(DPO) to 53.5, and on Llama-7B it still beat DPO with "up to 90% of the desirable data"
-discarded. At Llama-13B and 30B, KTO without SFT was competitive with SFT+KTO, while DPO
-always needed SFT first. The authors' own limit: "if your preference data has sufficiently little noise and
-sufficiently little intransitivity, then DPO will work better."
-
-### IPO — Identity Preference Optimization
-
-**Motivation:** DPO can overfit — the policy collapses to assigning zero probability to
-rejected responses. IPO modifies the objective to directly minimize the squared difference
-between model preference and a target margin, preventing collapse
-([arXiv:2310.12036](https://arxiv.org/abs/2310.12036) (Azar et al., AISTATS 2024)).
-
-**When to use:** When DPO training is unstable or collapses to mode-dropping behavior.
-
-### ORPO — Odds Ratio Preference Optimization
-
-**Motivation:** Eliminates the reference model. ORPO integrates the preference objective
-directly into the SFT loss using an odds ratio term, so you train once (not SFT-then-DPO).
-
-**Objective:**
-
-```
-L_ORPO = L_SFT - λ · log σ( log(odds_θ(y_w|x) / odds_θ(y_l|x)) )
-```
-
-where `odds_θ(y|x) = π_θ(y|x) / (1 - π_θ(y|x))`.
-
-**When to use:** Compute-constrained settings where running SFT and then DPO is too
-expensive. Trades some alignment quality for efficiency (no reference model inference).
-
-The SFT term also works as a regularizer when the pairs are noisy. In weak-to-strong
-reasoning, Llama2-70b (LoRA) built its own pairs: no gold labels, its majority-vote answer
-against a weak model's solution
-([arXiv:2407.13647](https://arxiv.org/abs/2407.13647) (Yang et al., Findings of EMNLP 2024)).
-On MATH, DPO on those pairs lowered accuracy by 1.4–2.6 points across three weak supervisors.
-ORPO raised it by 1.0–2.2, from a base of about 14%. On GSM8K both helped, by 2.6–8.5 points.
-
-### SimPO — no reference model, length-normalized reward
-
-**Paper:** [arXiv:2405.14734](https://arxiv.org/abs/2405.14734) (Meng et al., NeurIPS 2024).
-
-SimPO replaces DPO's implicit reward, the log-ratio against `π_ref`, with the policy's own
-**average** log-probability per token. It adds a target margin γ:
-
-```
-L_SimPO = -log σ( β/|y_w| · log π_θ(y_w|x) - β/|y_l| · log π_θ(y_l|x) - γ )
-```
-
-On AlpacaEval 2 LC (GPT-4 Turbo judge), from the same SFT models, SimPO beat DPO 21.5 to 15.1
-on Mistral-7B-Base (UltraFeedback) and 44.7 to 40.3 on Llama-3-8B-Instruct. The Instruct setup
-used near-on-policy pairs, sampled from the SFT model and ranked by PairRM. Read the name with
-care:
-
-- **The gain comes from length normalization, not from dropping the reference.** In the
-  Mistral-Base ablation, SimPO without normalization scored 11.9 LC, below DPO's 15.1. With
-  γ = 0 it still scored 16.8. Without normalization, likelihood tracks length (Spearman ρ
-  0.82, against 0.59 for DPO and 0.34 for SimPO).
-- **"Reference-free" means there is no reference in the loss.** Training still starts from an
-  SFT model and has no KL term. A small learning rate is what keeps the policy near its start,
-  and the authors warn this "could potentially lead to reward hacking".
-- **The saving is small.** It runs about 20% faster and uses 10% less memory than vanilla DPO.
-  DPO matches that if the reference log-probs are precomputed.
-- **Forgetting is a real cost.** The released Llama-3-8B-Instruct-SimPO reached 53.7 LC, but
-  GSM8K fell from 78.5 to 57.4 and MMLU from 61.7 to 54.9. On Gemma-2-9B-it, GSM8K held, and
-  SimPO beat DPO 72.4 to 67.8 LC.
-
-Arena-Hard has no length control, so read its gains next to response length. The comparisons
-are offline only, with no online DPO or PPO baseline. β of 2–2.5 and γ of 0.5–1.5 need tuning.
-
-### DiscoPOP — a loss found by search
-
-Most offline variants are DPO with a different scalar loss on the same margin
-`βρ = β·(log π_θ/π_ref (y_w) − log π_θ/π_ref (y_l))`: logistic gives DPO, hinge gives SLiC,
-squared gives IPO. DiscoPOP searched that space automatically. GPT-4 wrote about 100 candidate
-losses as PyTorch code, and each one trained zephyr-7b-gemma-sft on the 7k-pair Argilla DPO Mix
-at β = 0.05 and was scored on MT-Bench
-([arXiv:2406.08414](https://arxiv.org/abs/2406.08414) (Lu et al., NeurIPS 2024)). The winner
-blends logistic and exponential losses with a sigmoid gate on the margin, and is non-convex
-around ρ = 0. The gains are small. MT-Bench went from 7.888 for DPO to 7.916, and the best
-MT-Bench loss did not transfer to held-out tasks. AlpacaEval 2 win rate against GPT-4 went from
-11.2% to 13.2% (±1.0), and on TL;DR it about tied DPO. Two cautions carry over to any loss you
-tune this way. **Validation reward accuracy did not predict MT-Bench**: DiscoPOP had the worst
-accuracy of the four losses plotted. And the loss only worked near the β it was found at: on
-GPT-2 IMDb it failed to converge at β ≤ 0.01 and collapsed to NaN at β ≥ 2.5.
-
-### Self-play: SPIN, SPPO, DITTO
-
-These methods build pairs from the model's own samples, round after round. They differ in what
-counts as "chosen".
-
-**SPIN** ([arXiv:2401.01335](https://arxiv.org/abs/2401.01335) (Chen et al., ICML 2024)) uses
-the human SFT response as chosen and the previous iterate's sample as rejected. It needs no
-preference labels at all. On zephyr-7b-sft-full with 50k UltraChat prompts, the Open LLM
-Leaderboard average went from 58.14 to 63.16 after four iterations (iterations 0–3). zephyr-7b-dpo-full, trained
-on 62k GPT-4-labelled UltraFeedback pairs, scored 61.31. A further SFT epoch scored 57.23. That
-leaderboard tests knowledge and reasoning, not chat preference. The gains shrank toward zero
-by iteration 3, as the theory predicts: SPIN converges to the SFT data distribution, so it can
-only be as good as that data.
-
-**SPPO** ([arXiv:2405.00675](https://arxiv.org/abs/2405.00675) (Wu et al., ICLR 2025)) drops
-Bradley-Terry. It treats alignment as a two-player constant-sum game and approximates the Nash
-equilibrium with multiplicative weights. In practice that is a square loss pushing
-`log π_θ/π_t` toward `η·(P̂(y ≻ π_t) − ½)`, with the win rate estimated by PairRM-0.4B over 5
-samples. On Mistral-7B-Instruct-v0.2 with 60k UltraFeedback prompts over 3 iterations,
-AlpacaEval 2 LC went from 17.1 to 28.5. The authors' iterative DPO peaked at 24.2 and iterative
-IPO at 23.8. Average length also grew, from 1,676 to 2,163. Hyperparameters were chosen by
-PairRM win rate, and PairRM itself prefers IPO's longer outputs. Open LLM Leaderboard averages
-fell after iteration 1–2.
-
-**DITTO** ([arXiv:2406.00888](https://arxiv.org/abs/2406.00888) (Shaikh et al., ICLR 2025))
-takes SPIN's pairing down to fewer than 10 user demonstrations: the user's text is chosen and
-the model's samples are rejected. It aligns to one author's style, using Mistral-7B-Instruct
-with LoRA. Judged by GPT-4 on 20 authors from CMCC and CCAT50, it won 77% head-to-head on
-average, 11.7 points above SFT. The paper puts its lead over SPIN at 20.2 points in the
-introduction and 9.3 in the results. In a 16-person user study it won
-68.8%, against 55.5% for SFT and 51.6% for few-shot GPT-4. Two limits: updating `π_ref` every
-iteration, SPIN-style, dropped the win rate from 70.1% to 45.8%, and the adapter lost general
-skills such as coding.
-
-**RLHI** ([arXiv:2509.25137](https://arxiv.org/abs/2509.25137) (Jin et al., 2025-09, preprint))
-mines the pairs from logged chats instead. In WildChat, 26.5% of user messages are re-attempts
-with feedback ("i said 2000+ word"). The model rewrites its earlier answer to follow that message,
-and the rewrite becomes chosen over the original. A persona summarised from the user's past chats
-goes into the prompt of both, and the loss is plain DPO. Turns without a follow-up get
-best-vs-worst pairs from 64 samples, ranked by Athene-RM-8B given the persona. From
-Llama-3.1-8B-Instruct, **the rewrite variant took the o3-judged win rate against the original
-ChatGPT replies from 32.5% to 52.0%, and the reward variant reached 77.9% AlpacaEval 2 LC
-against 77.0% for the same loop without personas**. The filter does most of the work: without
-reward-model filtering of the pairs, the rewrite variant gained only 2.5 points on the user
-evaluation, against 23.4 with it. The data is a fixed offline log with Llama-regenerated
-replies, the user evaluation covers 100 users, and the math version uses simulated users who
-point to the wrong step.
+DPO has spawned a family, each member changing one thing. **KTO** takes unpaired thumbs up or down. **IPO** swaps in a squared loss to stop pairs collapsing. **ORPO** folds the preference term into SFT, so there is one training run and no reference model. **SimPO** normalizes by length. **DiscoPOP** searched for a loss automatically. **SPIN, SPPO, DITTO and RLHI** build pairs from the model's own samples or from logged chats. [13 — Preference variants](13-preference-variants.md) has the numbers and limits for each. The framework below chooses among all of them.
 
 ---
 

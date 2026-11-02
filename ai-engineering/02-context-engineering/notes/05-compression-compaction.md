@@ -16,11 +16,13 @@ sources:
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 6, 10 — sources/context-engineering-multi-agent-systems/"
   - https://www.microsoft.com/en-us/research/wp-content/uploads/2025/06/Code_Researcher-1.pdf
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — Compression and Compaction
 
 > What to do when the window fills anyway. The technique that makes long-horizon agents possible.
+
+Compaction lets a long-running agent keep going, and it's also how an agent forgets the rule that mattered. In one test, Sonnet 4.6 kept 53% of its safety rules after one `/compact` round and 10% after five, and in another, agents deleted without approval in 30 of 100 runs once a constraint had been summarized away. This chapter covers what to compress, when to trigger it and which items must stay verbatim, so that long sessions keep their guardrails along with their budget.
 
 ---
 
@@ -238,4 +240,53 @@ The upstream processing module describes self-refinement (generate → critique 
 
 ---
 
-→ Next: [06-memory.md](06-memory.md) — persisting state outside the window entirely.
+## Pitfalls
+
+- **Trusting a summary to keep safety rules.** Symptom: an agent follows a constraint early and breaks it after compaction. Zerhoudi found 53% of rules kept after one round and 10% after five, and Wang et al. saw deletion without approval in 30 of 100 runs against 13 of 100 with a restatement. Fix: hold constraints in a registry outside the compacted text and restate them each time.
+- **Trusting a reported retention score.** Symptom: a configuration reports 1.00 recall while silently dropping a mean 57% of its constraints, as Zerhoudi et al. found. Fix: check retention with a deterministic test, not the compressor's own report.
+- **Paraphrasing identifiers.** Symptom: after compaction the agent edits the wrong file or queries an ID that doesn't exist. Fix: keep paths, IDs, numbers and error strings verbatim in the summary template.
+- **Compacting only at overflow.** Symptom: quality falls late in a run, then a hard failure; with no compression, Li's agent overflowed at iteration 5. Fix: trigger near ~80% occupancy or at phase boundaries, whichever comes first.
+- **Rolling trim on every turn.** Symptom: fewer tokens yet a higher bill. Keeping the last 12 tool responses cost 1.85× full context on 100 BrowseComp-Plus tasks with GPT-OSS-120B, because each turn re-prefilled. Fix: compact in batches.
+- **Summarizing tool results you could clear.** Symptom: compaction costs a model call to condense data the agent can read again. Fix: clear old tool results first, keeping a pointer, and summarize only what can't be re-fetched.
+- **No crash-recovery story.** Symptom: a process dies and hours of work are gone, because state lived only in the window. Fix: use the 30-minute rule in this chapter and persist state outside the window.
+
+## Try it
+
+1. A 200k window compacts at 80%. A session begins at 40k and adds 6k per turn. When does compaction first fire? After it fires, the baseline is 40k plus a 15k summary, so when does it fire next?
+
+   <details><summary>Answer</summary>
+
+   First: (160k − 40k) / 6k = 20 turns. Next: (160k − 55k) / 6k = 17.5, so during the 18th turn. Each surviving summary shortens the interval, which is why a summary needs its own cap.
+
+   </details>
+
+2. Sort these for a compaction template into keep verbatim, summarize or clear: the rule "never delete without approval", `billing/client.py`, a 4,000-line log already on disk, the reasoning behind the retry decision, the exact error `E1105`.
+
+   <details><summary>Answer</summary>
+
+   Verbatim: the rule, the path and the error. Summarize: the reasoning, keeping the decision itself. Clear: the log, leaving a pointer, since it can be read again.
+
+   </details>
+
+3. Design the smallest test that would have caught Zerhoudi's result in your own agent.
+
+   <details><summary>Answer</summary>
+
+   Plant N known rules, run the compactor for one round and for five, and check for each rule with a deterministic search (see the fact-retention code in [12](12-evaluating-context.md#metrics-by-lever)). Then follow up with a behavioural probe such as a task that tempts a deletion, because Wang et al. measured the behaviour itself, not just the text.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What should survive compaction word for word? | Constraints, identifiers, numbers, error strings and open decisions. A summary can paraphrase reasoning, not these. |
+| How safe is `/compact` for safety rules? | Not safe alone: Zerhoudi measured 53% kept after one round and 10% after five on Sonnet 4.6. Wang et al.'s constraint registry, appended verbatim after the summary, reached 90-95%. |
+| When do you trigger compaction? | Near ~80% occupancy or at a phase boundary, and the boundary is usually the better moment because state is clean there. |
+| Why might per-turn trimming cost more than no trimming at all? | Each edit rewrites the prefix so the cache misses: 1.85× the full-context baseline for last-12-responses on 100 BrowseComp-Plus tasks. A 48K summarization threshold was about 7% cheaper than full context but lost 5 accuracy points. |
+| You have a 1M-token codebase task. Summarize or use recursion? | If the answer depends on dense access throughout, try an RLM: GPT-5 scored 58.0 as one against 0.1 F1 alone or with summarize-on-overflow on OOLONG-Pairs, and 91.3% against 70.5% on BrowseComp-Plus. The costs are latency and a long tail of expensive runs. |
+| How do you test a compressor? | Plant known facts, compress, and check deterministically. TypeCompact shows why: a reported recall of 1.00 hid a mean drop of 57%. |
+
+## Next
+
+[06-memory.md](06-memory.md): compaction loses something every time, so the next step is persisting state outside the window entirely.

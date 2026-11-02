@@ -11,11 +11,13 @@ sources:
   - https://arxiv.org/abs/2609.11999
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 4, 5"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — Tool Design as Harness Surface
 
 > Tools are the agent's action surface, and their descriptions are the routing logic. This is where most harnesses leak.
+
+The tool interface is the part of an agent that most often decides whether the model's ability reaches the task. SWE-agent resolved 18.0% of SWE-bench Lite with a purpose-built interface and 11.0% through a plain shell, with the same GPT-4 Turbo. A vague description sends calls to the wrong tool, a silent truncation makes the model believe it saw a whole file, and an unguarded retry on a write charges a customer three times. This chapter covers how to design the agent-computer interface so those failures stop at the boundary.
 
 ---
 
@@ -340,4 +342,54 @@ Labs, upstream (Apache-2.0; READMEs partly in Chinese): [4-1 perception MCP serv
 
 ---
 
-→ Next: [04-execution-boundaries.md](04-execution-boundaries.md) — where the tools are allowed to run.
+## Pitfalls
+
+- **Silent truncation.** Symptom: the agent reasons confidently from a file it only saw part of. Fix: make it visible ("lines 1–200 of 4,812"), with `offset`/`limit` windows.
+- **Paging search results one at a time.** Symptom: the agent walks every match. SWE-agent's paged search scored 12.0%, below no search at all at 15.7%, against 18.0% for a summary. Fix: return a summary of which files matched.
+- **Auto-retrying a write with no idempotency key.** Symptom: one transient timeout becomes three charged invoices. Fix: apply the four gating questions. A tool that isn't idempotent is not retried without a key.
+- **Descriptions with only positive guidance.** Symptom: the model confuses `search`, `grep` and `read`. Fix: add WHEN NOT TO USE and DO NOT USE FOR, ratcheted from real misuse, plus examples. In Li's book, examples moved tool-call accuracy from about 72% to 90%.
+- **Loading every MCP definition up front.** Symptom: about 55K tokens, roughly 30% of a 200K window, spent on five servers before the first user message (Li's measurement). Fix: progressive disclosure or discovery, keeping the stable prefix intact for the cache.
+- **Helpful silent argument changes.** Symptom: edits to files with curly quotes fail in a way the model can't diagnose, because the tool straightened its input. Fix: pass arguments through unchanged, or say in the result what changed.
+- **Treating tool descriptions as trusted config.** Symptom: a server update quietly adds an instruction such as reading `~/.ssh` and passing it as `notes`. Fix: review descriptions as code, diff them on every update, namespace per server, and break the lethal triad.
+- **A tool name that implies the work is finished.** Symptom: the model treats `phone_call` as complete when it returns. Fix: name the initiation, as in `initiate_phone_call`, and report `phone_call_connected` and `phone_call_ended` as later events.
+
+## Try it
+
+1. Run the four gating questions on `charge_card(customer_id, amount_cents)` and say what the harness must do for each one that fails.
+
+   <details><summary>Answer</summary>
+
+   It isn't cleanly reversible, so it needs a confirmation gate. As written it isn't idempotent, so it must not be retried without an idempotency key; adding one is the better fix. It is observable only if it emits a trace the harness can inspect. Two concurrent charges aren't safe, so calls per customer are serialized.
+
+   </details>
+
+2. Five MCP servers cost about 55K tokens in Li's measurement. How many of a 200K window remain, and what is the first fix you try?
+
+   <details><summary>Answer</summary>
+
+   145K, with 27.5% gone (the note rounds to roughly 30%) before the first user message. Start with lazy loading or discovery, keeping tool definitions out of the changing part of the prefix so the KV cache survives. Measure selection accuracy afterwards, since selection falls as the visible catalog grows.
+
+   </details>
+
+3. Run the pillar lab, [tool-server-sandbox-py](../practice/tool-server-sandbox-py/README.md) or its [TypeScript twin](../practice/tool-server-sandbox/README.md), and read what the model sees when a call is blocked. Then add a tool of your own that returns a structured error.
+
+   <details><summary>What to check</summary>
+
+   A blocked call returns a tool error the model can read and doesn't end the session. Your error should carry a stable `error_code`, plus `is_fatal` and `retry_after` where relevant, so the agent can classify it instead of guessing from a string.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Give evidence that the interface matters independently of the model. | SWE-agent: the same GPT-4 Turbo resolved 18.0% of SWE-bench Lite through a purpose-built interface and 11.0% through a plain shell. |
+| Typed catalog or bash for a strong current model? | Mak et al. found bash alone beat a typed catalog by 21.8–24.5 pp on TheAgentCompany and 4.8–7.4 pp on APEX-Agents with Opus-4.8 and GPT-5.5, using fewer tokens. Keep typed tools for steps needing a gate, an audit record or a retry policy. |
+| What are the four gating questions? | Reversible, idempotent, observable, parallel-safe. Failing them means, in order, a confirmation gate, no retry without an idempotency key, undebuggable, and serialized execution. |
+| A payment tool timed out and the customer was charged three times. What went wrong? | A non-idempotent write was auto-retried. Tools without idempotency keys must not be auto-retried, and the fix is a key on the call plus a query-before-mutate check. |
+| Why are negative boundaries in a description worth writing? | Positive descriptions leave the model to infer the boundary between similar tools. WHEN NOT TO USE and DO NOT USE FOR disambiguate `search`, `grep` and `read`, and each entry should come from observed misuse. |
+| Your agent has about 100 tools and picks wrongly. What are your options? | Merge overlapping tools, namespace the rest, and stop loading every definition up front. Use progressive disclosure or discovery, keeping dynamic content out of the cached prefix. |
+
+## Next
+
+[04-execution-boundaries.md](04-execution-boundaries.md): where the tools are allowed to run.

@@ -10,11 +10,13 @@ sources:
   - https://docs.langchain.com/oss/python/deepagents/overview
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-11-01
 ---
 # 2 — Harness Anatomy
 
 > The component inventory: what ships inside a harness, and which primitives are foundational.
+
+"Improve the harness" is not an actionable instruction until you can name the parts. Without an inventory, a failing agent gets another paragraph of prompt because that is the one part everyone can see, while the real gap sits in a missing log file, a boot script or a test the agent can't read. This chapter lists the nine components, sorts them into five subsystems you can diagnose against, and shows the build order that follows.
 
 ---
 
@@ -216,4 +218,52 @@ Six items. Everything else in this note is elaboration on those.
 
 ---
 
-→ Next: [03-tool-design.md](03-tool-design.md) — the component with the highest failure rate.
+## Pitfalls
+
+- **Fixing an evaluation gap with more tools.** Symptom: the agent acts confidently and is wrong, and adding capability doesn't help. Fix: separate the two gulfs. Agents are rarely stuck on execution; most need a feedback signal that shows whether the action worked.
+- **Keeping progress only in the context window.** Symptom: a compaction or crash loses the run, and a 2,000-line log crowds out the task. Fix: use the filesystem for state, and leave the head and tail of large output plus a path in the window.
+- **Putting changing values in the system prompt.** Symptom: cache hit rate falls, because the branch or recent-commit list changes the prefix. Fix: append the environment status bar at the end of the context, before each inference.
+- **Holding a must-always rule in the innermost layer.** Symptom: "never push to main" holds until it doesn't. Fix: reliability requirements move outward to the deterministic shell, since a prompt can be ignored and a hook cannot. Then use the innermost layer that can hold the requirement, because cost and blast radius also grow outward.
+- **Typing every tool on day one.** Symptom: a large catalog with overlapping tools before anyone knows which get used. Fix: start with bash and promote to a typed tool when you need a gate, a rendered result, an audit record, parallelism or a retry policy.
+- **Guessing which parts are load-bearing.** Symptom: components nobody dares remove and nobody can justify. Fix: run an ablation, removing one subsystem at a time on a fixed task and watching what breaks.
+
+## Try it
+
+1. Attribute each failure to one of the five subsystems: (a) a new session spends its first 20 minutes finding out how to start the app; (b) the agent says the tests pass and it never ran them; (c) a resumed run redoes work already finished.
+
+   <details><summary>Answer</summary>
+
+   (a) Environment: the subsystem table puts `init.sh` there. (b) Feedback: a gulf of evaluation, closed by a verification gate or hook. (c) State: no progress log or feature list for the new session to read.
+
+   </details>
+
+2. Plan an ablation for a harness you use. Name the fixed task, the five removals, and the signal you will read each time.
+
+   <details><summary>What a good plan has</summary>
+
+   One task with a binary pass check, run several times per condition since a single run proves little. Remove instructions, tools, environment help, state files and feedback in turn. Read pass rate and the point where it fails, and treat a removal that changes nothing as a candidate for deletion ([note 08](08-maturity-and-failure-modes.md#iterative-simplification)).
+
+   </details>
+
+3. A team needs an audit record of every database write. Their agent writes through bash. Apply promote-from-bash and say what stays in bash.
+
+   <details><summary>Answer</summary>
+
+   Promote the database write to a typed tool, since an audit record is one of the five named reasons, and the typed call also gives you a place for a gate. Ordinary shell work such as builds and greps stays in bash, because none of the five reasons applies to it.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the five subsystems of a harness? | Instructions, tools, environment, state and feedback. Every failure can be attributed to one of them, which is why this cut is for diagnosis while the nine components describe what ships. |
+| What are the gulfs of execution and evaluation, and which do agents hit more? | Execution is knowing what to do but being unable to act, a tools or environment gap. Evaluation is acting but being unable to tell if it worked, a feedback gap; agents usually fail here, confidently wrong rather than stuck. |
+| Why does the filesystem matter so much in a harness? | It lets state outlive one context window, so the loop becomes re-entrant, and it gives large tool output a home: a 2,000-line log can leave only its head, tail and a path in the window. |
+| Where do you put the current branch and recent commits, and why? | At the end of the context, before each inference. In the system prompt the changing values would break the KV cache. |
+| Bash or typed tools? | Start with bash, and promote when you need a gate, a rendered result, an audit record, parallelism or a retry policy. Bash is maximally capable and dangerous, so pair it with a sandbox and hooks. |
+| A requirement must hold on every run. Which layer does it go in? | The deterministic shell, because reliability requirements move outward. Otherwise use the innermost layer that can hold it, because a sentence is cheap and reversible while a subagent tier multiplies tokens and loses shared context. |
+
+## Next
+
+[03-tool-design.md](03-tool-design.md): the component with the highest failure rate.

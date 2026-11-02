@@ -1,4 +1,4 @@
-# RL & Alignment lecture deck. Covers notes 00-11.
+# RL & Alignment lecture deck. Covers notes 00-13.
 # Build: make slides PILLAR=generative-ai/05-RL STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a treasure-hunt agent told only a score. The same question follows it into language
@@ -38,7 +38,7 @@ parts:
       - layout: flow
         title: One loop underlies every method in this deck
         recall: What are the steps of the agent-environment loop?
-        loop: true
+        loop: new state, next action
         steps:
           - {label: State, sub: what the agent sees}
           - {label: Action, sub: chosen by the policy}
@@ -56,10 +56,11 @@ parts:
         recall: What happened to the bandit agent at epsilon 0, 0.1 and 0.5?
         lang: text
         code: |
-          # 1000 pulls of three slot machines, averaged over many runs
-          epsilon=0.0  average reward= 199.6  on best machine=0%
-          epsilon=0.1  average reward= 654.8  on best machine=85%
-          epsilon=0.5  average reward= 580.8  on best machine=66%
+          # 1000 pulls of three slot machines, many runs
+          # epsilon  avg reward  on best machine
+          0.0        199.6       0%
+          0.1        654.8       85%
+          0.5        580.8       66%
         bullets:
           - "**Zero exploration** locks onto whichever machine came first."
           - "**A little** finds the best one and mostly stays."
@@ -221,7 +222,7 @@ parts:
           - "**Actual** preference peaks near KL 10, then falls to about 0.05."
           - "**Track** a held-out human or judge score, not training reward."
         takeaway: A reward model is a proxy, so optimizing past its region of validity raises predicted quality while true quality falls.
-        source: notes/02-rlhf-pipeline.md
+        source: notes/12-rlhf-failure-modes.md
         notes: >-
           This one chart is the argument for the rest of the deck. The dashed prediction line goes up the whole way. The real
           line peaks early and collapses. Without the KL penalty, Ziegler's mock-sentiment policy reached 99.97 percent
@@ -236,7 +237,7 @@ parts:
           - {title: Mode collapse, body: "Repetitive, formulaic outputs that score consistently."}
           - {title: KL penalty, accent: "D4621A", body: "A leash to the SFT model. Too low drifts, too high barely moves."}
         takeaway: Verbosity, sycophancy and mode collapse are common reward hacks, and a tuned KL penalty is the first defence.
-        source: notes/02-rlhf-pipeline.md
+        source: notes/12-rlhf-failure-modes.md
         notes: >-
           The reward model was trained on outputs near the SFT model, and it is unreliable far from them. PPO goes looking for
           exactly those places. Inoculation prompting is a cheap extra mitigation once you know which hack to expect. Tune the
@@ -276,6 +277,22 @@ parts:
         notes: >-
           This table is the decision framework. Pair it with the warning from the chapter: reward hacking risk is lower for
           GRPO, not gone, because the verifier itself can be gamed.
+
+      - layout: cards
+        title: Each variant answers one wall
+        recall: Which DPO variant answers which practical problem?
+        cards:
+          - {title: Thumbs not pairs, body: "**KTO** learns from unpaired up or down labels. With clean pairs, its authors say DPO works better."}
+          - {title: Pairs collapse, body: "**IPO** swaps in a squared loss toward a target margin, which punishes overshoot."}
+          - {title: One run only, body: "**ORPO** folds the preference term into SFT, with no reference model."}
+          - {title: Length drift, body: "**SimPO** averages per token. Without that, it scored 11.9 against DPO's 15.1."}
+          - {title: No labels, accent: "0EA5C9", body: "**SPIN** and **DITTO** pair human text against the model's own samples."}
+          - {title: Logged chats, accent: "0EA5C9", body: "**RLHI** mines pairs from follow-ups. Without filtering, it gained 2.5 points against 23.4."}
+        takeaway: DPO variants each change one thing, so choose by the problem you have, whether that's unpaired feedback, collapse, budget, length or missing labels.
+        source: notes/13-preference-variants.md
+        notes: >-
+          Numbers come from different papers with different judges, so compare within a paper and not across. SimPO's 11.9 against 15.1 is
+          its Mistral-7B-Base ablation on AlpacaEval 2 LC, and RLHI's is on its user evaluation of 100 users.
 
       - layout: code
         title: DPO's loss moves probability from rejected to chosen
@@ -415,7 +432,7 @@ parts:
         title: How far can a model train itself?
         recall: What limits self-improvement loops according to the chapter?
         axis: Less human input
-        rows:
+        steps:
           - {title: RLAIF, text: "Parity with RLHF on summaries: humans preferred each over SFT at 71% and 73%."}
           - {title: STaR, text: "Rationale bootstrapping reached 72.5% on CommonsenseQA dev, against 60.0% fine-tuned directly."}
           - {title: Self-rewarding, text: "AlpacaEval win rate rose 9.9%, 15.4%, 20.4%, while answer length grew from 1,092 to 2,552."}
@@ -678,7 +695,7 @@ parts:
       - layout: flow
         title: Search and training feed each other
         recall: How does rStar-Math turn search into training data?
-        loop: true
+        loop: the better policy searches again
         steps:
           - {label: Search, sub: MCTS writes solutions}
           - {label: Verify, sub: code or a proof}
@@ -731,7 +748,7 @@ parts:
         title: Deploying a policy means staying close to never
         recall: How should you roll out a new RL policy and why stay near never updating live?
         axis: More exposure
-        rows:
+        steps:
           - {title: Shadow, text: "Tests decisions at no risk, but a hidden agent can't explore: its actions never happen."}
           - {title: Canary, text: "Keep stickiness, so one user stays on one policy for a whole trajectory."}
           - {title: Bandit A/B, text: "Shifts traffic toward the winner automatically."}

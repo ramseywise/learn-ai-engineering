@@ -12,19 +12,22 @@ interface BookReview {
 }
 
 // --- Tool-use approach: define a tool whose input IS the structured data ---
-// Claude is forced to call this tool, which means its response is valid JSON
-// matching the input schema. No parsing heuristics needed.
+// strict: true makes Claude's tool input match the schema, so when it calls the
+// tool the input is valid JSON of this shape. No parsing heuristics needed.
+// Forcing the call with tool_choice { type: "tool" } returns a 400 on current
+// models, so the prompt asks for the call and the code checks that it happened.
 async function structuredViaToolUse(bookDescription: string) {
   console.log("--- Structured output via tool_use ---");
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-5-5",
     max_tokens: 512,
     tools: [
       {
         name: "record_book_review",
         description:
           "Record a structured review of a book. Always call this tool with your analysis.",
+        strict: true,
         input_schema: {
           type: "object" as const,
           properties: {
@@ -45,15 +48,16 @@ async function structuredViaToolUse(bookDescription: string) {
             },
           },
           required: ["title", "author", "rating", "summary", "themes"],
+          additionalProperties: false,
         },
       },
     ],
-    // tool_choice forces Claude to call a specific tool rather than choosing
-    tool_choice: { type: "tool", name: "record_book_review" },
+    // auto lets Claude choose, so the prompt below names the tool it should call
+    tool_choice: { type: "auto" },
     messages: [
       {
         role: "user",
-        content: `Analyze this book and record a structured review: ${bookDescription}`,
+        content: `Analyze this book and record your review by calling the record_book_review tool: ${bookDescription}`,
       },
     ],
   });
@@ -64,6 +68,7 @@ async function structuredViaToolUse(bookDescription: string) {
   );
 
   if (!toolUseBlock || toolUseBlock.type !== "tool_use") {
+    // auto does not guarantee a call. A real application would re-prompt here.
     throw new Error("Expected a tool_use block in the response");
   }
 

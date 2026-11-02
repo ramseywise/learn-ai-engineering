@@ -1,0 +1,536 @@
+# Safety and Security lecture deck. Covers notes 01-06.
+# Build: make slides PILLAR=ai-engineering/09-safety-and-security STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Harbour, a support agent that reads help articles and tickets, looks up orders,
+# sends email and issues refunds. It is a teaching thread. Every number comes from a study or a run in the notes.
+deck:
+  title: Safety and Security
+  subtitle: Keeping an LLM system from being turned against its users
+  tagline: |-
+    It reads · It obeys · It filters · It's fenced in · It's tested · It fails anyway
+  reference: "Notes: ai-engineering/09-safety-and-security"
+  output: safety-and-security.pptx
+  notes: >-
+    Today we follow one system, a support agent called Harbour, from the first diagram of what could go
+    wrong to the morning after something did. Each part answers one question. What can go wrong, why the
+    model can't protect itself, what filters are worth, which limits hold regardless, how much testing
+    proves, and what to do when something gets through. All of it is defensive, and on systems you own.
+
+parts:
+  - title: The agent that reads strangers' text
+    summary: Why old defences don't transfer · The trifecta · Rating paths · Beyond attackers
+    notes: >-
+      A threat model comes first, since it tells us where everything later should go. The surprise is that
+      an LLM system has no separate code path for instructions. We draw the system and find the dangerous
+      combination.
+    slides:
+      - layout: statement
+        title: What is different about securing this system?
+        kicker: The problem
+        statement: "A database can tell a query from its parameters. A model reads instructions and data as one stream of tokens."
+        attribution: So text the agent merely reads can steer what it does
+        takeaway: LLM systems lack the separation between code and data that the usual defences rely on.
+        source: notes/01-threat-model.md
+        notes: >-
+          This is why parameterised queries have no equivalent here. Everything else in the deck follows
+          from accepting that sentence.
+      - layout: flow
+        title: The lethal trifecta needs all three legs
+        kicker: The dangerous combination
+        lead: Willison's name for a path that will eventually be exploited.
+        steps:
+          - {label: Untrusted content, sub: "help articles, tickets", accent: D4621A}
+          - {label: Private data, sub: "orders, past tickets", accent: 0EA5C9}
+          - {label: A way out, sub: "email, links, refunds", accent: 5B21B6}
+        caption: Remove any one leg from a path and that attack loses its route.
+        takeaway: An agent with untrusted input, private data and external communication can be made to leak.
+        source: notes/01-threat-model.md
+        notes: >-
+          Harbour has all three as soon as it can read a ticket, read an order and send an email. Removing
+          the email tool, or the untrusted sources, makes the path safe from this attack. It usually costs
+          features, which is the real design conversation.
+      - layout: code
+        title: Check the trifecta from the tool list
+        kicker: Worked example
+        lang: python
+        code: |-
+          @dataclass(frozen=True)
+          class Tool:
+              name: str
+              reads_private: bool = False
+              reads_untrusted: bool = False
+              sends_out: bool = False
+
+          def lethal(tools):
+              return (any(t.reads_private for t in tools)
+                  and any(t.reads_untrusted for t in tools)
+                  and any(t.sends_out for t in tools))
+        bullets:
+          - "Full agent: **lethal**"
+          - "No email tool: safe from this path"
+          - "No help centre or tickets: safe from this path"
+        takeaway: The trifecta is a property of the tool list, so a build can check it automatically.
+        source: notes/01-threat-model.md
+        notes: >-
+          Abridged from the chapter. The point is that this is a plain check over tool metadata, one you can
+          run in CI whenever someone adds a tool.
+      - layout: cards
+        title: The threat model is wider than injection
+        kicker: Other paths
+        cards:
+          - {title: Data and privacy, body: "Filter retrieval by owner before the model sees it. Reasoning traces and logs hold private data too.", accent: 0EA5C9}
+          - {title: Supply chain, body: "Weights, datasets and MCP servers. As few as 100 poison examples can shift outputs on a trigger phrase (Wan et al.).", accent: D4621A}
+          - {title: Misuse, body: "Your user may be the threat. Capability laundering splits a harmful task into harmless-looking requests.", accent: 5B21B6}
+          - {title: No attacker, body: "Bad advice, biased output and drift after an upgrade take the same process.", accent: 0F7490}
+        takeaway: List paths for privacy, supply chain, misuse and accidental harm, as well as for injection.
+        source: notes/01-threat-model.md
+
+  - title: The model can't protect itself
+    summary: Injection and jailbreak · Why detection isn't a boundary · Designing for a fooled model
+    notes: >-
+      Now we watch the path get used. The instinct is to detect bad text. That helps, and this part explains
+      why it can't be the boundary, and what to do instead.
+    slides:
+      - layout: statement
+        title: Can we just detect the injected text?
+        kicker: The problem
+        statement: "An 88% prevention rate means the attack still works about one time in eight, and a planted document gets a try from every reader."
+        attribution: Reading of the Claude 3.7 Sonnet system card's computer-use evaluation (vendor-reported)
+        takeaway: A good detection rate lowers risk, and it doesn't give you a boundary you can rely on.
+        source: notes/02-prompt-injection-and-jailbreaks.md
+      - layout: compare
+        title: Two attacks with different owners
+        kicker: Vocabulary
+        left:
+          title: Jailbreak
+          tag: The user attacks the model
+          bullets:
+            - Overrides safety training
+            - Harm is content it shouldn't produce
+            - "Defence: model training, output classifiers"
+        right:
+          title: Prompt injection
+          tag: A third party attacks through data
+          bullets:
+            - Overrides the application's instructions
+            - Harm is an action the user never asked for
+            - "Defence: system design"
+        takeaway: Jailbreaks are mostly a model problem, and injection is mostly a system design problem.
+        source: notes/02-prompt-injection-and-jailbreaks.md
+      - layout: code
+        title: A detector and honest text look alike
+        kicker: Worked example
+        lang: python
+        code: |-
+          PATTERN = re.compile(
+              r"(ignore|disregard).{0,20}"
+              r"(previous|above|earlier)", re.I)
+
+          # three planted samples, three honest messages
+          flagged = [PATTERN.search(t) for t, _ in samples]
+        bullets:
+          - "Output: recall **0.33**, false positive rate **0.67**"
+          - A customer changing address trips it
+          - Real detectors are far better, with the same trade-off
+        takeaway: Injected and legitimate text overlap, so detectors trade missed attacks against false alarms.
+        source: notes/02-prompt-injection-and-jailbreaks.md
+        notes: >-
+          This one is deliberately simple. Trained detectors do much better. The shape remains, and an attacker
+          can retry and adapt.
+      - layout: flow
+        title: Dual LLM keeps tools away from untrusted text
+        kicker: Design
+        lead: The privileged model only ever handles a name for the content.
+        steps:
+          - {label: Privileged LLM, sub: "has tools, sees trusted request", accent: 1E3A5F}
+          - {label: Quarantined LLM, sub: "reads the ticket, no tools", accent: D4621A}
+          - {label: Orchestrator, sub: "plain code, holds $S", accent: 0F7490}
+          - {label: Policy check, sub: "where did this value come from?", accent: 5B21B6}
+        caption: CaMeL adds capabilities on each value, so $S can't choose an email's recipient.
+        takeaway: Separating the model that reads untrusted text from the one with tools limits what a fooled model can do.
+        source: notes/02-prompt-injection-and-jailbreaks.md
+      - layout: table
+        title: Measure both sides of every defence
+        kicker: Simulated, plus one published result
+        header: [Defence, Utility on honest tasks, Attack success]
+        widths: [4, 3, 3]
+        rows:
+          - [None, "1.000", "0.373"]
+          - [Detector, "0.890", "0.101"]
+          - [Provenance policy, "0.855", "0.000"]
+          - ["CaMeL on AgentDojo (reported)", "77% vs 84% undefended", provable on this benchmark]
+        highlight: [2]
+        takeaway: A provenance policy can stop the attack outright, at a utility cost you should measure.
+        source: notes/02-prompt-injection-and-jailbreaks.md
+        notes: >-
+          The first three rows are a simulation from the chapter, with assumed rates. The last is what the
+          CaMeL authors report. Always read attack success beside utility.
+
+  - title: What a guardrail is worth
+    summary: Rails · Base rates · Cascades · Refusals and fairness
+    notes: >-
+      Harbour still needs guards. It can say offensive things and repeat private data, none of which design
+      prevents. A guard is a classifier, so it has error rates, and these depend on your traffic.
+    slides:
+      - layout: statement
+        title: Why does a good guard swamp its reviewers?
+        kicker: The problem
+        statement: "A guardrail is a classifier with a policy attached. It is worth exactly what you measure on your own traffic."
+        attribution: The same classifier gives very different precision as the base rate falls
+        takeaway: Judge a guard on your own traffic, since a vendor's benchmark has a different base rate.
+        source: notes/03-guardrail-models.md
+      - layout: flow
+        title: Guardrails sit on both sides of the model
+        kicker: The shape
+        steps:
+          - {label: Input rail, sub: "mask PII, block by policy", accent: 0EA5C9}
+          - {label: Model, sub: "the reply or tool call", accent: 1E3A5F}
+          - {label: Output rail, sub: "harm, leakage, unsafe links", accent: D4621A}
+          - {label: Delivery, sub: "buffer before streaming", accent: 0F7490}
+        caption: Run input checks in parallel with the main call, so the safe path isn't slowed.
+        takeaway: Input rails protect what the model sees, and output rails protect what users see.
+        source: notes/03-guardrail-models.md
+      - layout: table
+        title: Same classifier, different traffic
+        kicker: Simulated, threshold 0.5
+        header: [Base rate, Recall, False positive rate, Precision]
+        widths: [3, 2, 3, 2]
+        rows:
+          - ["20%", "0.89", "0.11", "0.672"]
+          - ["2%", "0.89", "0.11", "0.144"]
+          - ["0.2%", "0.88", "0.11", "0.017"]
+        highlight: [2]
+        takeaway: Recall holds as harmful traffic gets rarer, while precision collapses and nearly every flag is false.
+        source: notes/03-guardrail-models.md
+      - layout: code
+        title: A cascade spends the big model on hard cases
+        kicker: Worked example
+        lang: text
+        code: |-
+          # simulated latencies, 2% harmful traffic
+          small only  recall 0.731  FPR 0.0373   15.0 ms
+          large only  recall 0.778  FPR 0.0108  180.0 ms
+          cascade     recall 0.779  FPR 0.0122   49.2 ms
+                                    escalated 19.0%
+        bullets:
+          - The small model handles confident cases
+          - Only uncertain ones reach the large model
+          - Recall of the large model, at a fraction of its latency
+        takeaway: A cascade gets near-large-model accuracy at far lower average latency.
+        source: notes/03-guardrail-models.md
+      - layout: compare
+        title: Blocking too much is also a failure
+        kicker: Refusals and fairness
+        left:
+          title: Refusals
+          tag: Quiet errors
+          bullets:
+            - Keep a benign borderline set
+            - Track false refusals each release
+            - "Wen et al.: unanswerable, unconfident and value conflicts need different fixes"
+        right:
+          title: Fairness
+          tag: Visible only across responses
+          bullets:
+            - Same prompt, names swapped, repeated samples
+            - First-Person Fairness used this at scale
+            - One response per name is mostly noise
+        takeaway: Track false refusals and paired fairness gaps, because neither one shows up in a single reply.
+        source: notes/03-guardrail-models.md
+
+  - title: Limits that hold when the model doesn't
+    summary: Layers · The policy engine · Sandboxes · Egress · Pins
+    notes: >-
+      Now we stop asking the model to behave. The model proposes and our code disposes. These limits hold
+      even if the model is entirely fooled.
+    slides:
+      - layout: statement
+        title: Where should the hard limits live?
+        kicker: The problem
+        statement: "The model proposes and your code disposes. A rule in a system prompt is guidance, and a rule in the tool layer is a limit."
+        attribution: Treat each tool call as a request from a semi-trusted party
+        takeaway: Enforce security rules in code outside the model, since prompts only ask for good behaviour.
+        source: notes/04-tool-and-execution-sandboxing.md
+      - layout: code
+        title: A policy engine between model and tool
+        kicker: Worked example
+        lang: python
+        code: |-
+          def decide(tool, args, session):
+              if tool not in {"get_order", "refund"}:
+                  return "DENY", "tool not available"
+              owner, paid = ORDERS[str(args["order_id"])]
+              if owner != session.customer_id:
+                  return "DENY", "another customer's order"
+              if tool == "get_order":
+                  return "ALLOW", "own order"
+              amount = args.get("amount")
+              if not 0 < amount <= paid:
+                  return "DENY", "amount out of range"
+              if amount > AUTO_LIMIT:
+                  return "APPROVE", "needs a person"
+              return "ALLOW", "within limits"
+        takeaway: A short function can check tool choice, ownership and amount with identity taken from the session.
+        source: notes/04-tool-and-execution-sandboxing.md
+        notes: >-
+          Abridged from the chapter's version, which also handles unknown orders and a daily limit. Note that
+          customer_id comes from authentication and never from the model.
+      - layout: flow
+        title: Each layer assumes the last one failed
+        kicker: Defence in depth
+        steps:
+          - {label: Scope, sub: "least tools, valid args", accent: 1E3A5F}
+          - {label: Identity, sub: "from the session", accent: 0EA5C9}
+          - {label: Approval, sub: "for irreversible actions", accent: D4621A}
+          - {label: Isolation, sub: "process, container, VM", accent: 5B21B6}
+          - {label: Egress and audit, sub: "allow-list, log", accent: 0F7490}
+        caption: A schema misses a valid refund to the wrong person, and an ownership check catches it.
+        takeaway: Layers with different blind spots give real depth, and a stack of similar filters doesn't.
+        source: notes/04-tool-and-execution-sandboxing.md
+      - layout: table
+        title: What a light sandbox did and didn't stop
+        kicker: Run from the chapter
+        header: [Script, Result, Reading]
+        widths: [3, 4, 4]
+        rows:
+          - [Normal work, "exit 0", Works]
+          - [Runaway loop, "killed by CPU limit", Stopped]
+          - [Env secret, "not visible", Stopped]
+          - [Disk filler, "file too large", Stopped]
+          - [File outside its dir, "read succeeded", "**Not stopped**"]
+        highlight: [4]
+        takeaway: Process limits stop runaway work, and only a stronger boundary stops reads outside the directory.
+        source: notes/04-tool-and-execution-sandboxing.md
+      - layout: cards
+        title: Close the way out, and pin what you installed
+        kicker: Egress and supply chain
+        cards:
+          - {title: Network egress, body: "Default deny, with an allow-list for the sandbox.", accent: 0EA5C9}
+          - {title: Rendered links, body: "An image URL can carry data out with no click. Filter links and images in output.", accent: D4621A}
+          - {title: Tool pins, body: "Hash each tool definition at review. A changed or new tool waits for review.", accent: 5B21B6}
+          - {title: Agent-written skills, body: "Gate and attribute writes. EvoMal measured self-poisoning from 20.3% to 41.8% across six models.", accent: 0F7490}
+        takeaway: Filter network and rendered links, and hash the tool definitions you reviewed so changes stand out.
+        source: notes/04-tool-and-execution-sandboxing.md
+
+  - title: How much does a clean run prove?
+    summary: Automated loops · Tools by job · Reading numbers · Tests that can't fool themselves
+    notes: >-
+      Now we test all this. Harbour's team ran twenty hand-written attacks, and none worked. We look at what
+      that does and doesn't show, then build a suite that stays honest.
+    slides:
+      - layout: statement
+        title: Twenty attacks failed. Are we safe?
+        kicker: The problem
+        statement: "If the true attack rate were one in ten, a clean run of twenty would still happen about one time in eight."
+        attribution: 0.9 to the power 20 is 12.2%
+        takeaway: A small clean run is common even when the true attack rate is high.
+        source: notes/05-red-teaming-tools.md
+      - layout: flow
+        title: Red-teaming became a loop
+        kicker: From people to loops
+        steps:
+          - {label: Adversary, sub: "writes new attacks", accent: D4621A}
+          - {label: Target, sub: "your whole system", accent: 1E3A5F}
+          - {label: Judge, sub: "did it fail?", accent: 5B21B6}
+          - {label: Fix, sub: "code, policy, training", accent: 0F7490}
+          - {label: Regression suite, sub: "each finding stays", accent: 0EA5C9}
+        caption: "MART reported violation rates down by up to 84.7% after four rounds on adversarial benchmarks."
+        takeaway: Automated adversaries scale testing, and each confirmed finding should become a permanent test.
+        source: notes/05-red-teaming-tools.md
+      - layout: table
+        title: Pick a tool by the job
+        kicker: The tools
+        header: [Tool, Job, Use it when]
+        widths: [2, 4, 4]
+        rows:
+          - [garak, Vulnerability scanner, A broad sweep of an endpoint]
+          - [PyRIT, Attack orchestration framework, Scripting a custom campaign]
+          - [promptfoo, App-specific attacks and CI, Red-teaming beside your evals]
+          - [AgentDojo, Benchmark for agents, Comparing utility and attack success]
+          - [HarmBench, Standardised evaluation, Comparing methods fairly]
+        takeaway: Point these tools at the whole application, since a bare model scan can't see your tools or data.
+        source: notes/05-red-teaming-tools.md
+      - layout: code
+        title: Report the bound, and not the zero
+        kicker: Worked example
+        lang: python
+        code: |-
+          def wilson_upper(k, n, z=1.96):
+              p = k / n
+              c = p + z * z / (2 * n)
+              m = z * sqrt(p * (1 - p) / n
+                           + z * z / (4 * n * n))
+              return (c + m) / (1 + z * z / n)
+
+          # 0 successes: how high could the rate still be?
+          # n=20    16.1%
+          # n=100    3.7%
+          # n=500    0.8%
+        bullets:
+          - "At 1% per try, 100 tries succeed 63.4% of the time"
+          - Attackers get many tries
+        takeaway: Zero successes in twenty tries still allows a true attack rate of about 16%.
+        source: notes/05-red-teaming-tools.md
+      - layout: code
+        title: A test can pass while measuring nothing
+        kicker: Worked example
+        lang: python
+        code: |-
+          def verdict(agent):
+              base = World(); agent(base, guarded=False)
+              if not base.refunds:
+                  return "INCONCLUSIVE"  # can't see harm
+              g = World(); agent(g, guarded=True)
+              if g.refunds:
+                  return "FAILED"
+              if not g.denials:
+                  return "INCONCLUSIVE"  # guard never fired
+              return "HELD"
+        bullets:
+          - "Attempts: HELD"
+          - "Declines: INCONCLUSIVE"
+          - "Bypasses guard: FAILED"
+          - "Only tries unguarded: INCONCLUSIVE"
+        takeaway: Count a security test as passed only with harm in the baseline and a recorded denial when guarded.
+        source: notes/05-red-teaming-tools.md
+      - layout: compare
+        title: You need both kinds of testing
+        kicker: Static and adaptive
+        left:
+          title: Regression suite
+          tag: Did we bring back a known failure?
+          bullets:
+            - Every change, in CI
+            - Low, bounded cost
+            - Pass or fail
+        right:
+          title: Adaptive campaign
+          tag: What's the next unknown failure?
+          bullets:
+            - Before launch, and on a schedule
+            - High, open-ended cost
+            - "Claudini: agents devised attacks beating tuned baselines"
+        takeaway: Campaigns find what suites don't know about, and suites keep those findings fixed.
+        source: notes/05-red-teaming-tools.md
+
+  - title: The morning it gets through
+    summary: Preparing · Detecting · Containing · Eradicating · Learning
+    notes: >-
+      A customer writes in to ask why the assistant emailed their order details to a stranger. Everything
+      that helps now had to exist before this message arrived.
+    slides:
+      - layout: statement
+        title: One customer, or a thousand?
+        kicker: The problem
+        statement: "No alert fired. The logs show the tool call and not the text behind it. Nobody knows who else is affected, or what's safe to turn off."
+        attribution: Each of those gaps can only be closed before the incident
+        takeaway: The ability to investigate and contain an incident has to be built before it happens.
+        source: notes/06-incident-response.md
+      - layout: flow
+        title: The classic lifecycle still applies
+        kicker: The process
+        lead: NIST SP 800-61r3 and the OWASP GenAI guide give the frame.
+        steps:
+          - {label: Prepare, sub: "logs, switches, pins", accent: 1E3A5F}
+          - {label: Detect, sub: "actions, canaries, reports", accent: 0EA5C9}
+          - {label: Contain, sub: "narrowest switch", accent: D4621A}
+          - {label: Eradicate, sub: "the input and its copies", accent: 5B21B6}
+          - {label: Learn, sub: "test, rule, threat model", accent: 0F7490}
+        caption: "LLM differences: runs may not reproduce, there's often no error, and logs hold sensitive content."
+        takeaway: Standard incident response applies, with non-determinism, sensitive evidence and persistent bad inputs added.
+        source: notes/06-incident-response.md
+      - layout: table
+        title: Build switches narrower than the whole product
+        kicker: Prepare
+        header: [Switch, Effect, Harbour]
+        widths: [3, 4, 4]
+        rows:
+          - [Per-tool kill, Tool returns a denial, Turn off send_email]
+          - [Read-only mode, Side effects denied, Answers but no refunds]
+          - [Human approval, Calls wait for a person, Refunds queue for review]
+          - [Source quarantine, Exclude from retrieval, Pull one help article]
+          - [Version rollback, Back to known-good, Re-pin last week's prompt]
+        takeaway: Narrow, tested kill switches let you act quickly, while keeping most of the product running.
+        source: notes/06-incident-response.md
+      - layout: code
+        title: The blast radius is a query over traces
+        kicker: Worked example
+        lang: python
+        code: |-
+          def blast_radius(traces, doc):
+              touched = [t for t in traces
+                         if doc in t["docs"]]
+              leaked = [t for t in touched
+                        if t["to"] == "outside"]
+              return {
+                  "sessions": [t["s"] for t in touched],
+                  "exposed": [t["customer"] for t in leaked],
+              }
+          # sessions: s2 s4 s5 s7
+          # exposed:  ben dee
+        bullets:
+          - Needs document IDs in the trace
+          - Treat log gaps as affected
+          - Clean-looking sessions still need review
+        takeaway: With retrieved document IDs in your traces, finding everyone affected becomes a simple query.
+        source: notes/06-incident-response.md
+        notes: >-
+          Abridged from the chapter, which also reports first and last seen, fields exposed and sessions needing
+          review. A breach may carry a legal clock, such as GDPR's 72 hours, so bring legal in early.
+      - layout: cards
+        title: Removing the cause isn't always enough
+        kicker: Eradicate and detect
+        cards:
+          - {title: Copies remain, body: "EvoMal: up to 68% self-poisoning at round five after planted skills were removed. Follow lineage, or rebuild.", accent: D4621A}
+          - {title: Derived stores, body: "Memory, caches, indexes and summaries keep what they absorbed. Clear them too.", accent: 0EA5C9}
+          - {title: Monitors help, body: "SHADE-Arena's best monitor reached AUC 0.87. It sees only what it's shown.", accent: 5B21B6}
+          - {title: Retrained models, body: "After safety training, misalignment persisted on agentic tasks (MacDiarmid et al.). Test those too.", accent: 0F7490}
+        takeaway: Clear everything derived from a bad input, and evaluate retrained models on agentic tasks.
+        source: notes/06-incident-response.md
+      - layout: compare
+        title: Each incident should leave something behind
+        kicker: Learn
+        left:
+          title: Why the layers missed
+          tag: Blameless and specific
+          bullets:
+            - "Source: community text wasn't marked untrusted"
+            - "Policy: send_email allowed any recipient"
+            - "Logging: no document IDs in the trace"
+        right:
+          title: What stays
+          tag: Three artefacts at least
+          bullets:
+            - A regression case with baseline and denial checks
+            - An updated threat model
+            - A detection rule, so you find the next one first
+        takeaway: An incident is finished once a regression test, threat-model update and detection rule exist.
+        source: notes/06-incident-response.md
+
+  - title: What to carry away
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        kicker: Summary
+        cards:
+          - {title: Any input is an instruction, body: "Break the trifecta on each path that has all three legs.", accent: D4621A}
+          - {title: Limits go outside the model, body: "A prompt asks, and a policy engine enforces.", accent: 1E3A5F}
+          - {title: Measure both error rates, body: "On your own traffic, with false refusals beside catch rate.", accent: 0EA5C9}
+          - {title: Report the bound, body: "Zero in twenty still allows about 16%. Require proof the control fired.", accent: 5B21B6}
+          - {title: Build narrow switches, body: "Per-tool kill, read-only mode, quarantine and rollback, each drilled.", accent: 0F7490}
+          - {title: Incidents leave tests, body: "Clear the copies too, then add a test, a rule and a threat-model update.", accent: 94A3B8}
+        takeaway: Assume the model will be fooled, limit what a fooled model can do, and test that the limit holds.
+        source: notes/01-threat-model.md
+      - layout: bullets
+        title: Where to go next
+        kicker: Next steps
+        bullets:
+          - "**Prompt-level defences:** adversarial prompting, in the prompt engineering pillar"
+          - "**Hooks and permission gates:** execution boundaries, in the harness pillar"
+          - "**Running suites on every change:** evals in CI, in the Eval pillar in generative-ai"
+          - "**Alignment training:** RLHF and constitutional AI, in generative-ai"
+          - "**Try it:** draw your own system, then find its trifecta paths"
+        takeaway: Start by drawing your own system and listing its paths from untrusted text to a way out.
+        source: notes/06-incident-response.md

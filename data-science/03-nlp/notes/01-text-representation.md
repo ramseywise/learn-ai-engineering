@@ -47,6 +47,12 @@ print(movies.loc[movies.title == "Minions", "description"].iloc[0][:200])
 print("median words per description:", int(movies.description.str.split().str.len().median()))
 ```
 
+```text
+(4803, 22)
+Before Gru, they had a history of bad bosses Minions Stuart, Kevin and Bob are recruited by Scarlet Overkill, a super-villain who, alongside her inventor husband Herb, hatches a plot to take over the
+median words per description: 55
+```
+
 ## The preprocessing pipeline
 
 Sarkar's chapter 3 (*Text Analytics with Python*, 2nd ed.) and the condensed NLP course notebooks build the same chain. Not every step helps every task. For sentiment, removing "not" destroys the signal, and for neural models less preprocessing is usually better, because the model can learn what a step would have thrown away.
@@ -65,7 +71,7 @@ Sarkar's chapter 3 (*Text Analytics with Python*, 2nd ed.) and the condensed NLP
 | Stem | `PorterStemmer`, `LancasterStemmer` (aggressive), `SnowballStemmer("german")` | jumping, jumps → jump | Need real words |
 | Lemmatise | `WordNetLemmatizer().lemmatize("cars", "n")`, spaCy `token.lemma_` | better → good (adj) | Speed matters |
 
-Here is that chain as one function, with spaCy for lemmas. It keeps "no" and "not", for the reason above.
+Here is that chain as one function, with spaCy for lemmas. It keeps "no" and "not", for the reason above, and it expands negative contractions first. Without that step the regex would turn "weren't" into "weren t", and the negation would vanish even though "not" is safe in the stop-word list. The order of these steps matters as much as the steps.
 
 ```python
 import re, unicodedata
@@ -75,17 +81,29 @@ nltk.download("stopwords", quiet=True)
 nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])   # spaCy 3 name; the notebooks use 'en' or 'en_core'
 stop = set(nltk.corpus.stopwords.words("english")) - {"no", "not"}
 
-def normalize(doc, lemmatize=True):
+def normalize(doc, lemmatize=True, expand=True):
+    if expand:
+        doc = re.sub(r"can't", "can not", doc, flags=re.I)      # Sarkar's contractions.py has the full map
+        doc = re.sub(r"won't", "will not", doc, flags=re.I)
+        doc = re.sub(r"n't\b", " not", doc, flags=re.I)
     doc = unicodedata.normalize("NFKD", doc).encode("ascii", "ignore").decode("utf-8")
     doc = re.sub(r"[^a-zA-Z\s]", " ", doc.lower())
     tokens = [t.lemma_ if lemmatize else t.text for t in nlp(doc)]
     return " ".join(t for t in tokens if t.strip() and t not in stop)
 
-print(normalize("The brown foxes weren't jumping over the lazy dogs!"))
+sentence = "The brown foxes weren't jumping over the lazy dogs!"
+print("no expansion:  ", normalize(sentence, expand=False))
+print("with expansion:", normalize(sentence))
 print(normalize(movies.description[0]))
 ```
 
-**Stemming and lemmatisation.** A stemmer chops suffixes by rule. It is fast and may produce non-words. A lemmatiser looks up the dictionary form using the part of speech, which is slower and produces real words. The output below shows the difference. M&G compare both on IMDb and find that lemmatisation gives a slightly better and smaller vocabulary, but the gain over plain tokens is small, and larger when training data is scarce.
+```text
+no expansion:   brown fox jump lazy dog
+with expansion: brown fox not jump lazy dog
+enter world pandora nd century paraplegic marine dispatch moon pandora unique mission become tear follow order protect alien civilization
+```
+
+**Stemming and lemmatisation.** A stemmer chops suffixes by rule. It is fast and may produce non-words. A lemmatiser looks up the dictionary form using the part of speech, which is slower and produces real words. The output below shows the difference, and also why part of speech matters: alone, "better" is read as an adverb and maps to "well", whereas as an adjective it would map to "good". M&G compare both on IMDb and find that lemmatisation gives a slightly better and smaller vocabulary, but the gain over plain tokens is small, and larger when training data is scarce.
 
 ```python
 from nltk.stem import PorterStemmer, LancasterStemmer
@@ -94,6 +112,16 @@ porter, lancaster = PorterStemmer(), LancasterStemmer()
 print(f"{'word':12} {'porter':10} {'lancaster':10} spacy lemma")
 for word in ["jumping", "strange", "lying", "studies", "organization", "better"]:
     print(f"{word:12} {porter.stem(word):10} {lancaster.stem(word):10} {nlp(word)[0].lemma_}")
+```
+
+```text
+word         porter     lancaster  spacy lemma
+jumping      jump       jump       jump
+strange      strang     strange    strange
+lying        lie        lying      lie
+studies      studi      study      study
+organization organ      org        organization
+better       better     bet        well
 ```
 
 ### Linguistic structure (Sarkar ch. 1, 3b)
@@ -109,10 +137,16 @@ Beyond tokens, Sarkar's chapter 3b covers the syntax layer that later chapters u
 
 ```python
 parser = spacy.load("en_core_web_sm")
-sentence = parser("The brown fox is quick and he is jumping over the lazy dog")
-print([(t.text, t.tag_) for t in sentence][:5])
-print([(t.text, t.dep_, t.head.text) for t in sentence if t.dep_ in {"nsubj", "acomp", "pobj"}])
-print([chunk.text for chunk in sentence.noun_chunks])
+parsed = parser("The brown fox is quick and he is jumping over the lazy dog")
+print([(t.text, t.tag_) for t in parsed][:5])
+print([(t.text, t.dep_, t.head.text) for t in parsed if t.dep_ in {"nsubj", "acomp", "pobj"}])
+print([chunk.text for chunk in parsed.noun_chunks])
+```
+
+```text
+[('The', 'DT'), ('brown', 'JJ'), ('fox', 'NN'), ('is', 'VBZ'), ('quick', 'JJ')]
+[('fox', 'nsubj', 'is'), ('quick', 'acomp', 'is'), ('he', 'nsubj', 'jumping'), ('dog', 'pobj', 'over')]
+['The brown fox', 'he', 'the lazy dog']
 ```
 
 These features power the rule-based extraction in [semantic analysis and NER](05-semantic-analysis-and-ner.md) and the keyphrase chunking in [topic models](03-topic-models-and-summarization.md).
@@ -134,6 +168,11 @@ cv = CountVectorizer()
 X = cv.fit_transform(corpus)          # scipy.sparse CSR matrix: (n_docs, n_vocab)
 print(X.shape, list(cv.get_feature_names_out()))
 print(X.toarray()[0])                 # counts for document 0
+```
+
+```text
+(3, 15) ['and', 'beautiful', 'blue', 'brown', 'dog', 'fox', 'is', 'jumps', 'lazy', 'love', 'over', 'quick', 'sky', 'the', 'this']
+[1 1 1 0 0 0 1 0 0 0 0 0 1 1 0]
 ```
 
 The matrix is **sparse**. M&G's IMDb vocabulary of 25,000 reviews has 74,849 words and each review uses a few hundred. Keep it as `scipy.sparse`, because `.toarray()` on real data runs out of memory.
@@ -164,7 +203,17 @@ for label, params in [("default", {}),
     print(f"{label:24} {M.shape[1]:>8,} features  {M.nnz / M.shape[0] / M.shape[1]:.3%} non-zero")
 ```
 
-TODO_VOCAB
+```text
+default                    21,809 features  0.209% non-zero
+min_df=5                    5,435 features  0.738% non-zero
+min_df=5, max_df=0.5        5,429 features  0.660% non-zero
+stop_words + min_df=5       5,175 features  0.451% non-zero
+(1,2)-grams               168,646 features  0.059% non-zero
+(1,3)-grams               398,412 features  0.039% non-zero
+(1,3)-grams, min_df=5      13,657 features  0.460% non-zero
+```
+
+`min_df=5` removes three quarters of the vocabulary. Trigrams take it from about 22,000 to about 400,000 features, and `min_df=5` brings that back to under 14,000. `max_df=0.5` removes only six words here, because very few words occur in half of these short descriptions, and that tells you to look at your own data before copying a setting.
 
 ### n-grams
 
@@ -175,6 +224,10 @@ cv12 = CountVectorizer(ngram_range=(1, 2), min_df=5)
 cv12.fit(texts)
 names = cv12.get_feature_names_out()
 print([n for n in names if n.startswith(("not ", "new york", "world war"))][:12])
+```
+
+```text
+['new york', 'new yorker', 'new yorkers', 'not all', 'not alone', 'not as', 'not be', 'not every', 'not everyone', 'not going', 'not in', 'not just']
 ```
 
 ## TF-IDF
@@ -200,7 +253,12 @@ tfidf = tf * idf
 tfidf /= np.linalg.norm(tfidf, axis=1, keepdims=True)
 
 print("matches sklearn:", np.allclose(tfidf, TfidfVectorizer().fit_transform(norm_corpus).toarray()))
-print(dict(zip(vocab, tfidf[0].round(2))))
+print({w: round(float(x), 2) for w, x in zip(vocab, tfidf[0]) if x > 0})
+```
+
+```text
+matches sklearn: True
+{'and': 0.39, 'beautiful': 0.39, 'blue': 0.39, 'is': 0.51, 'sky': 0.39, 'the': 0.39}
 ```
 
 **TF-IDF is a fitted transform.** The IDF comes from the training corpus, so it belongs inside the pipeline, for the same reason as any scaler ([why pipelines exist](../../01-classical-ml/notes/03-feature-engineering-and-pipelines.md#leakage-and-why-pipelines-exist)). M&G show that the words with the lowest IDF on IMDb are "the", "and", "movie", "film": corpus-specific stop words that TF-IDF finds by itself. Our corpus has its own.
@@ -213,9 +271,14 @@ print("lowest idf: ", list(tv.get_feature_names_out()[order[:15]]))
 print("highest idf:", list(tv.get_feature_names_out()[order[-6:]]))
 ```
 
+```text
+lowest idf:  ['the', 'to', 'and', 'of', 'in', 'is', 'his', 'with', 'for', 'on', 'an', 'he', 'that', 'who', 'when']
+highest idf: ['overprotective', 'overrun by', 'go in', 'go from', 'god and', 'movements']
+```
+
 ## Document similarity from the vectors
 
-Once documents are vectors, **cosine similarity** compares them independent of length. Sarkar's chapter 4a clusters an 8-document toy corpus (weather, animals, food) with Ward linkage on that similarity matrix and recovers the three topics, and it does the same with LDA topic features. On real descriptions the nearest neighbour of a film is usually a sensible match, and sometimes only shares a name.
+Once documents are vectors, **cosine similarity** compares them independent of length. Sarkar's chapter 4a clusters an 8-document toy corpus (weather, animals, food) with Ward linkage on that similarity matrix and recovers the three topics, and it does the same with LDA topic features. On real descriptions the results show both what this buys and where it stops.
 
 ```python
 from sklearn.metrics.pairwise import linear_kernel    # TF-IDF rows are unit length, so a dot product is cosine
@@ -229,7 +292,13 @@ for title in ["Toy Story", "Alien", "The Godfather"]:
     print(title, "->", nearest(title))
 ```
 
-[Embeddings and similarity](04-embeddings-and-similarity.md) builds a recommender on this idea, and [topic models](03-topic-models-and-summarization.md) goes further with the same matrix.
+```text
+Toy Story -> ['Toy Story 2', 'Toy Story 3', 'Free Birds', 'Stepmom']
+Alien -> ["The Hitchhiker's Guide to the Galaxy", 'Aliens', 'I Think I Love My Wife', 'Star Trek: Insurrection']
+The Godfather -> ['Three Men and a Baby', 'Blood Ties', 'Mickey Blue Eyes', 'Made']
+```
+
+Toy Story finds its sequels, and Alien finds Aliens, among films that merely use the word. The Godfather lands on *Three Men and a Baby*, presumably through shared family vocabulary, because TF-IDF knows which words match and nothing about what they mean. That gap is why dense vectors exist. [Embeddings and similarity](04-embeddings-and-similarity.md) builds a recommender on this idea, and [topic models](03-topic-models-and-summarization.md) goes further with the same matrix.
 
 ## Sequences for neural models
 
@@ -248,6 +317,12 @@ print(seqs)
 print(pad_sequences(seqs, maxlen=10, padding="post", truncating="post"))
 ```
 
+```text
+{'<OOV>': 1, 'my': 2, 'i': 3, 'love': 4, 'dog': 5, 'cat': 6, 'do': 7, 'you': 8, 'think': 9, 'is': 10, 'amazing': 11}
+[[2, 5, 1, 2, 1]]
+[[2 5 1 2 1 0 0 0 0 0]]
+```
+
 `Tokenizer` and `pad_sequences` are legacy Keras utilities. In current TensorFlow you would use the `TextVectorization` layer, which puts the vocabulary inside the model so that training and serving share one code path.
 
 ```python
@@ -255,10 +330,16 @@ import tensorflow as tf
 
 vec = tf.keras.layers.TextVectorization(max_tokens=10_000, output_sequence_length=120)
 vec.adapt(texts.tolist())                  # learns the vocabulary
-print(vec.get_vocabulary()[:8])
+print([str(w) for w in vec.get_vocabulary()[:8]])
 print(vec(["A young wizard goes to school"]).numpy()[0][:8])
 lengths = texts.str.split().str.len()
 print("length percentiles (50, 90, 95, 99):", np.percentile(lengths, [50, 90, 95, 99]).astype(int))
+```
+
+```text
+['', '[UNK]', 'the', 'a', 'to', 'and', 'of', 'in']
+[   3   41 2022  192    4   90    0    0]
+length percentiles (50, 90, 95, 99): [ 55  93 113 152]
 ```
 
 | Decision | Options | Note |
@@ -333,7 +414,12 @@ print("keeps negations:", normalize(phrase))
 print("full list:      ", " ".join(t for t in normalize(phrase).split() if t not in full_stop))
 ```
 
-TODO_A1
+```text
+keeps negations: not good film not
+full list:       good film
+```
+
+Keeping negations leaves "not good film not". The full list leaves "good film", the opposite claim. Notice too that the keep-negations version still drops "at all", and that neither is a perfect summary of the phrase, only a set of features.
 
 </details>
 
@@ -348,7 +434,12 @@ print(f"top 100 words: {ordered[:100].sum() / counts.sum():.1%} of tokens")
 print(f"words seen once: {(counts == 1).sum():,} of {len(counts):,}")
 ```
 
-TODO_A2
+```text
+top 100 words: 44.2% of tokens
+words seen once: 9,561 of 21,809
+```
+
+The top 100 words are 44.2% of all tokens, and 9,561 of the 21,809 vocabulary words, about 44%, occur once. This long tail is why `min_df` removes so much at so little cost.
 
 </details>
 
@@ -362,7 +453,12 @@ print("95th percentile:", p95, "tokens")
 print(f"descriptions longer than 20 tokens: {(lengths > 20).mean():.1%}")
 ```
 
-TODO_A3
+```text
+95th percentile: 113 tokens
+descriptions longer than 20 tokens: 97.1%
+```
+
+A length of 113 covers 95% of descriptions. Truncating at 20 tokens would cut 97.1% of them, and with `truncating="post"` it would keep little more than the tagline.
 
 </details>
 

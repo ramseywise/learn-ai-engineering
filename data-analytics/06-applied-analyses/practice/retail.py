@@ -90,9 +90,9 @@ def _weekly(seed=SEED):
     season = 1 + .16 * np.cos(2 * np.pi * (doy - 340) / 365.25) + .04 * np.cos(4 * np.pi * (doy - 100) / 365.25)
     y = level * season
     for i, week in enumerate(weeks):
-        # Black Friday moves: the fourth Friday of November can land in different weeks.
+        # Black Friday moves: the day after the fourth Thursday of November.
         nov1 = pd.Timestamp(week.year, 11, 1)
-        black_friday = nov1 + pd.Timedelta(days=(4 - nov1.dayofweek) % 7 + 21)
+        black_friday = nov1 + pd.Timedelta(days=(3 - nov1.dayofweek) % 7 + 22)
         if week <= black_friday < week + pd.Timedelta(days=7):
             y[i] *= 1.45
         days_to_xmas = (pd.Timestamp(week.year, 12, 25) - week).days

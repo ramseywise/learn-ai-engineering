@@ -11,11 +11,13 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 12"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 5"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 8 — Harness Maturity and Failure Modes
 
 > Where a harness sits today, what to build next, and the five ways teams fool themselves.
+
+Teams rarely know how mature their harness is, and "we have evals" often means one notebook run by hand. Most teams claiming Stage 3 are at Stage 1, so they invest in the wrong next layer while plan errors propagate through expensive execution and the same failure recurs monthly. This chapter gives you a five-stage maturity model and a per-task pipeline to place your harness honestly, then covers production lessons from PRINCE, the failure modes, and how to remove parts of the harness when a model no longer needs them.
 
 ---
 
@@ -206,21 +208,6 @@ It does three jobs. A fresh session reads it and **fixes the lowest grade first.
 
 Failure 1 is the meta-failure — it hides the other four. The honest test is not *"do we have verification?"* but *"can I point to the code that runs it, on every task, without a human remembering to?"*
 
-### Eight deployment anti-patterns
-
-The same diagnosis at the level of individual design choices. Each looks like a model limitation and turns out to be a missing engineering constraint:
-
-| Anti-pattern | Symptom | Fix |
-|---|---|---|
-| **System prompt as knowledge base** | Prompt keeps growing; key rules get ignored | Keep conventions in the prompt and move knowledge to skills ([03](03-tool-design.md#progressive-disclosure-skills)) |
-| **Unbounded tool count** | Wrong tool chosen often | Merge overlapping tools, namespace the rest |
-| **No verification loop** | "Done" that nobody can check | Acceptance criteria per task type ([05](05-verification-loops.md#the-three-layer-termination-check)) |
-| **Boundaryless multi-agent** | State drift; failures can't be attributed | Roles, permissions, a worktree per agent ([07](07-orchestration.md#protocols-precede-collaboration)) |
-| **Unmanaged memory** | Decision quality drops after ~20 turns | Monitor tokens; compact or reset at a threshold ([06](06-long-horizon-execution.md#compaction-vs-context-reset)) |
-| **No evaluation** | Nobody knows whether a change regressed | Turn every failure into a test case |
-| **Premature multi-agent** | Coordination overhead exceeds the parallel gain | Find the single-agent limit first ([07](07-orchestration.md#when-not-to-go-multi-agent)) |
-| **Constraints by expectation** | Documented rules are followed selectively | Enforce with tools, linters and hooks ([04](04-execution-boundaries.md#prompts-vs-hooks)) |
-
 ---
 
 ## Iterative simplification
@@ -342,4 +329,58 @@ Items 1–8 get you to Stage 2. Items 9–16 get you to Stage 3. Item 17 keeps i
 
 ---
 
-→ Next: [09-repo-as-system-of-record.md](09-repo-as-system-of-record.md) — building this harness into a real repo.
+## Pitfalls
+
+Eight deployment anti-patterns, the [five failure modes](#the-five-failure-modes) again at the level of individual design choices. Each looks like a model limitation and turns out to be a missing engineering constraint.
+
+| Anti-pattern | Symptom | Fix |
+|---|---|---|
+| **System prompt as knowledge base** | Prompt keeps growing; key rules get ignored | Keep conventions in the prompt and move knowledge to skills ([03](03-tool-design.md#progressive-disclosure-skills)) |
+| **Unbounded tool count** | Wrong tool chosen often | Merge overlapping tools, namespace the rest |
+| **No verification loop** | "Done" that nobody can check | Acceptance criteria per task type ([05](05-verification-loops.md#the-three-layer-termination-check)) |
+| **Boundaryless multi-agent** | State drift; failures can't be attributed | Roles, permissions, a worktree per agent ([07](07-orchestration.md#protocols-precede-collaboration)) |
+| **Unmanaged memory** | Decision quality drops after ~20 turns | Monitor tokens; compact or reset at a threshold ([06](06-long-horizon-execution.md#compaction-vs-context-reset)) |
+| **No evaluation** | Nobody knows whether a change regressed | Turn every failure into a test case |
+| **Premature multi-agent** | Coordination overhead exceeds the parallel gain | Find the single-agent limit first ([07](07-orchestration.md#when-not-to-go-multi-agent)) |
+| **Constraints by expectation** | Documented rules are followed selectively | Enforce with tools, linters and hooks ([04](04-execution-boundaries.md#prompts-vs-hooks)) |
+
+## Try it
+
+1. A team has schema-first tool specs, unit tests in CI and logs in a shared notebook. They say they are at Stage 3. Where are they, and what comes next?
+
+   <details><summary>Answer</summary>
+
+   Stage 1: tool specs and minimal verification through unit tests. Stage 2 needs static verification in CI, sandboxed execution, structured tracing, behavioral evals and branch-per-agent. The honest test: can they point to the code that runs verification on every task, without a human remembering to?
+
+   </details>
+
+2. Your agent's run status reads Success and its output is wrong. Which observability layer failed, and what do you add?
+
+   <details><summary>Answer</summary>
+
+   The runtime layer reported what the system did, and nothing checked the content. A run status is not a content verdict, as in Rothman's `Trace Status: Success` over a step whose output said its sources were unrelated. Add a process artifact with a binary verdict, such as a rubric or an acceptance check.
+
+   </details>
+
+3. Plan the subtraction protocol for your next model upgrade. List three components, the weakness each mitigates, and the eval you will re-run.
+
+   <details><summary>What a good plan has</summary>
+
+   One disable at a time, a re-run of the same eval suite, then delete if quality holds or keep and note the model version if it drops. If you have no binary eval, build that first (failure mode 5), since subtraction can't be measured without it. Remember that a component that helps one task class can hurt another, so read results per class when you can.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the maturity stages, and where does most production value land? | Ad-hoc, Basic, Verified, Observability-first and Self-healing, numbered 0 to 4, with value concentrated at 2→3. Stage 4 is still emerging, so treat it as direction rather than a target. |
+| Which pipeline stage do teams skip, and why does it pay? | Approve, the human gate on the plan in Preflight → Plan → Approve → Tasks → Verify → Finish. Reviewing a wrong plan takes minutes, while reviewing code from a wrong plan takes an hour. |
+| Do you cut cost or raise accuracy first? | Accuracy. PRINCE accepted high inference costs early, because a system not good enough to adopt has no usage worth optimizing and cheap-and-wrong burns adoption. |
+| Runtime or process observability? | Runtime answers what the system did, through logs and traces. Process answers why a change should be accepted, through contracts and rubrics. You need both, and the harness collects them, not the agent. |
+| A new model is out. What do you do to the harness? | List components with the weakness each mitigates, disable one, run the eval suite, then delete it if quality holds. Opus 4.6 allowed Anthropic to remove sprint decomposition. |
+| What is the meta-failure among the five? | Skipped harness: claiming Stage 2 while at Stage 0, which hides the other four. Ask for the code that runs verification on every task with no human remembering. |
+
+## Next
+
+[09-repo-as-system-of-record.md](09-repo-as-system-of-record.md): building this harness into a real repo.

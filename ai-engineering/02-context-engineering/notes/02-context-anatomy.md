@@ -7,11 +7,13 @@ sources:
   - https://github.com/davidkimai/Context-Engineering (00_foundations/01–03, 00_COURSE/01_context_retrieval_generation/01–03) — snapshot 2026-08-14)
   - "Bojie Li, AI Agents in Depth (2026), ch. 2 — https://github.com/bojieli/ai-agent-book"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 2 — The Anatomy of Effective Context
 
 > What goes in the window, in what order, and which layer each piece belongs to.
+
+An agent can have the right facts and still fail because they sit in the wrong place. One team added `Current time: {{now}}` to a system prompt and watched time to first token go from 0.5 s to 3-5 s while the bill nearly doubled, and nothing about the model had changed. This chapter takes the window apart into its components and layers, then shows how altitude, disclosure and ordering decide whether each one helps the model or quietly works against it.
 
 ---
 
@@ -275,4 +277,61 @@ The upstream "molecule" material comes down to three rules:
 
 ---
 
-→ Next: [03-budgeting-the-window.md](03-budgeting-the-window.md) — how much of each component the window can afford.
+## Pitfalls
+
+- **A timestamp in the system prompt.** Symptom: cache hit rate falls to near zero, TTFT jumps and the bill climbs, as in the `Current time` incident on a 100k-conversation/day agent. Fix: pass time as a late message or a clock tool.
+- **Writing at the wrong altitude.** Symptom: either brittle if-else rules that break on the first unlisted case, or vague advice the model ignores. Fix: state the principle and the reason, then add 2-5 canonical examples for the edge cases.
+- **Runtime conditions above the cache marker.** Symptom: many near-identical cached prefixes and a poor hit rate. N binary conditions make 2^N cache-key variants. Fix: move conditional fragments after the marker and keep the prefix the same for everyone.
+- **Sliding-window history instead of compaction.** Symptom: the agent re-runs tool calls and loops, because old results vanished and the prefix shifted each turn. Fix: compact in place ([05](05-compression-compaction.md)).
+- **Asking the LLM to maintain status.** Symptom: the status bar drifts and reasoning gets worse. In Li and Shi's study an LLM summarizer did worse than no status at all. Fix: compute status in code from tool results and inject it verbatim.
+- **Trusting a status bar that's sometimes wrong.** Symptom: the agent acts on a stale count without checking, because models trust the bar almost unconditionally. Li and Shi found errors under about 10% tolerated and larger ones worse than no bar. Fix: monitor its accuracy as a first-line metric, and source it only from real observations.
+- **Rotating few-shot examples per request.** Symptom: examples sit early, so each swap breaks the prefix and the cost rises with no quality gain. Fix: one fixed example set per task type.
+
+## Try it
+
+1. A system prompt has five yes-or-no runtime conditions before the cache marker. How many cache-key variants exist? What if three of them move after the marker?
+
+   <details><summary>Answer</summary>
+
+   2⁵ = 32 variants. Moving three leaves 2² = 4.
+
+   </details>
+
+2. A 20k-token prefix is sent on 10 calls. Using this chapter's rough figure of cached reads at one-tenth of fresh prefill, and ignoring any cache-write premium, how many fresh-token equivalents do you pay with and without a cache hit after the first call?
+
+   <details><summary>Answer</summary>
+
+   Without: 10 × 20k = 200k. With: 20k + 9 × 2k = 38k, or 81% less. Attention cost is the same in both cases, because a cached token still occupies the window.
+
+   </details>
+
+3. Sort these into the order this chapter prescribes: current query, tool schemas, retrieved documents, stable memory, runtime state, system prompt, history.
+
+   <details><summary>Answer</summary>
+
+   System prompt, tool schemas, stable memory, then retrieved documents, history, runtime state, and the query last. The first three make up the cacheable prefix. Putting longform data above the query also matches Anthropic's finding of up to 30% quality improvement on long-document work.
+
+   </details>
+
+4. Your status bar reports `pairs` but the model is asked for triples. What failure should you expect, and what would you test?
+
+   <details><summary>Answer</summary>
+
+   Li and Shi saw Claude fall from 100% to 7.6% when a question needed triple intersections and the bar stored only pairs. The bar is a lossy projection, so treat a new question type like a schema change: keep raw history until the bar covers it, and test questions in the new shape.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What goes in the stable prefix and what stays out? | System prompt, tools and stable memory go in, in a fixed order. Time, per-user quota, retrieved documents and history stay out, because any change there invalidates everything after it. |
+| Your agent's bill doubled overnight and TTFT went from 0.5 s to 3-5 s, with no model change. First check? | Diff the assembled prompt between two calls and look for a value that changes in the prefix, such as a `Current time` line, then read the cache-hit numbers. |
+| What does "altitude" mean for a system prompt? | The level between brittle rules and vague guidance: specific enough to steer behaviour, general enough to carry heuristics, with 2-5 examples for the hard cases. |
+| What does a status bar buy, and how do you keep it accurate? | In Li and Shi (11 models, about 24k evals), weak models gained 40-54 points and strong models kept accuracy while cutting reasoning tokens 80-90%. Maintain it in code from observations, and monitor it, since errors above about 10% are worse than no bar. |
+| Why would sub-agents be byte-aligned with their parent? | So their side queries reuse the parent's cached prefix. Same prompt, tools, model config and message prefix means a cache hit instead of a fresh prefill. |
+| Flatten messages to `USER: ... ASSISTANT: ...` text to save effort? | No. The main damage is leaving the trained format, which leads to ignored tool results, repeated actions and text where a call was needed. Use the API's structured roles. |
+
+## Next
+
+[03-budgeting-the-window.md](03-budgeting-the-window.md): you know what goes in, and now you need to know how much of each component the window can afford.

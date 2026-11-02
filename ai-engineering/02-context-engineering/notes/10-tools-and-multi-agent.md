@@ -7,11 +7,13 @@ sources:
   - "Kyle Stratis, AI Agents with MCP (O'Reilly, 2025), ch. 1–5 — sources/ai-agents-with-mcp/"
   - "Denis Rothman, Context Engineering for Multi-Agent Systems (Packt, 2025), ch. 2, 6, appendix A — sources/context-engineering-multi-agent-systems/"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 10 — Multi-Agent Context and Tool Design
 
 > Isolation is the highest-cost context lever. Use it when compression is not enough.
+
+Your agent's window is full at 100k tokens, so you split the work among sub-agents and the orchestrator now holds 2k. The window looks cured, but the same job may now spend 240k tokens to produce 6k of visible output, and every sub-agent's summary has become untrusted data that the next agent reads as fact. This chapter covers when isolation earns that price, how to define the tool and agent boundaries, and how to stop a schema change or a noisy tool from breaking the whole chain.
 
 ---
 
@@ -256,4 +258,53 @@ The book's ch. 2 calls its envelope `{protocol_version, sender, content, metadat
 
 ---
 
-→ Next: [11-failure-modes.md](11-failure-modes.md) — how context goes wrong.
+## Pitfalls
+
+- **Reaching for agents before compression.** Symptom: token spend multiplies with no quality gain: three sub-agents at 80k each is 240k real tokens for 6k of output. Fix: try compaction and retrieval first, and split only when tasks are truly independent.
+- **Thin agent descriptions.** Symptom: the orchestrator routes tasks to the wrong sub-agent, or to none. A ~9-token description gives it little to choose on, and a ~45-token one states when to use the agent. Fix: spend the extra tokens on the description.
+- **Treating a sub-agent's summary as fact.** Symptom: a wrong claim is repeated with growing confidence, or an injected instruction crosses agents. Fix: treat the summary as data, and verify what matters.
+- **Renaming a field between agents.** Symptom: downstream agents silently use empty input, as in Rothman's `facts` to `summary` breakage. Fix: define the contract in code and pass values with placeholders such as `$$STEP_1_OUTPUT$$`, not model memory.
+- **Auto-generating an MCP server from a REST API.** Symptom: one user action needs several tool choices, and 0.95⁵ ≈ 77% of runs succeed, at about 8× the tokens in the book's estimate. Fix: design tools around user actions.
+- **Treating MCP roots as a security boundary.** Symptom: a server reads outside the declared roots because nothing forced it not to. Fix: enforce access outside the protocol, with OS or sandbox controls.
+- **An unbounded review loop.** Symptom: a reviewer and a writer revise forever. Fix: cap revisions at 2, as in Rothman's design, then escalate.
+
+## Try it
+
+1. A workflow needs 8 tool choices at 95% accuracy each. What's the chance that all are right? How much accuracy per choice would you need for 90% overall?
+
+   <details><summary>Answer</summary>
+
+   0.95⁸ ≈ 66.3%. For 90% overall you need 0.90^(1/8) ≈ 98.7% per choice, which is why fewer, higher-level tools usually beat better routing.
+
+   </details>
+
+2. You have 5 AI applications and 6 tool sources. How many integrations do you need with and without MCP?
+
+   <details><summary>Answer</summary>
+
+   Without: M×N = 30. With: M+N = 11. Same reasoning as this chapter's 12 against 7 example.
+
+   </details>
+
+3. Five research sub-agents use 60k tokens each and return 1.5k each, where a single-agent version takes 90k. Compare the orchestrator's window and the absolute spend.
+
+   <details><summary>Answer</summary>
+
+   The orchestrator holds 7.5k of results against up to 90k, so its window is 12× smaller. Absolute spend is at least 300k against 90k, so 3.3× higher before you count the orchestrator's own tokens. You'd pay that only if parallelism or isolation lifts quality or latency.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| When do you use sub-agents? | When the tasks are independent and the window is the constraint, after compression has been tried, since isolation has the highest cost: 240k real tokens for 6k visible in this chapter's example. |
+| What does the orchestrator hold? | The plan and summaries, about 2k rather than 100k, and that is the benefit of isolation. |
+| How long should an agent's description be? | Long enough to route on. A ~45-token description that says when to use it beats a ~9-token label, and the cost is small compared with a wrong delegation. |
+| Why does MCP help at scale? | It turns an M×N integration problem into M+N: 12 integrations become 7 in this chapter's example. |
+| Your team wants to auto-generate an MCP server from your REST API. What do you say? | No: granular endpoints mean several tool choices per action, and at 95% each five choices succeed only about 77% of the time, at around 8× the tokens in the book's estimate. |
+| An agent's output is passed to the next agent and a schema field is renamed. What should happen? | The pipeline should fail at the boundary rather than continue on empty input, as in Rothman's `facts` versus `summary` case. Pass outputs by reference and validate them in code. |
+
+## Next
+
+[11-failure-modes.md](11-failure-modes.md): every lever so far can fail, and the next step is recognizing how context goes wrong.

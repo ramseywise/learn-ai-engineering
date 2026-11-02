@@ -14,11 +14,13 @@ sources:
   - https://github.com/openclaw/openclaw
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: high
-cleaned: 2026-07-29
+cleaned: 2026-11-01
 ---
 # 1 — What a Harness Is
 
 > The definition, the four load-bearing parts, and why the same failure keeps being a configuration problem.
+
+A model that answers well in a demo can still fail in production for reasons no better prompt fixes: it declares done without checking, repeats the same failing call, or takes an action nobody can undo. Chain five steps that each succeed 90% of the time and the run lands near 60%. This chapter defines the harness, the code around the model that constrains, informs, verifies and corrects it, and shows why changing that code often moves results more than changing the model.
 
 ---
 
@@ -92,6 +94,38 @@ Contrast this with the classic **agent = LLM + planning + tools + memory** decom
 ## Why the harness dominates the model
 
 **Reliability compounds negatively.** A step that succeeds 90% of the time, chained five times, lands near 60%. Real agents exceed five steps as soon as you count tool calls, output parses, and handoffs. Model quality shifts per-step accuracy a few points; harness structure changes *how many steps must succeed in a row* and *what happens when one doesn't*.
+
+The arithmetic is short enough to run. The second column swaps in a model that is two points better per step. The third keeps the 90% model and adds one retry, which assumes failures are independent and the step is safe to repeat ([note 03](03-tool-design.md#the-four-gating-questions) covers when it isn't).
+
+```python
+def chain(per_step, steps):
+    return per_step ** steps
+
+def with_retries(per_step, retries):
+    # Assumes failures are independent and the step is safe to repeat.
+    return 1 - (1 - per_step) ** (retries + 1)
+
+print("steps  90% per step  92% (better model)  90% + one retry")
+for steps in (1, 5, 10, 20):
+    print(f"{steps:>5}  {chain(0.90, steps):>12.1%}  "
+          f"{chain(0.92, steps):>18.1%}  "
+          f"{chain(with_retries(0.90, 1), steps):>15.1%}")
+
+print(f"needed per step for 90% over 20 steps: {0.90 ** (1 / 20):.2%}")
+```
+
+Output:
+
+```text
+steps  90% per step  92% (better model)  90% + one retry
+    1         90.0%               92.0%            99.0%
+    5         59.0%               65.9%            95.1%
+   10         34.9%               43.4%            90.4%
+   20         12.2%               18.9%            81.8%
+needed per step for 90% over 20 steps: 99.47%
+```
+
+Two points of model quality move a five-step run about seven points. One retry moves it about thirty-six, and that retry is harness code. The numbers are this script's arithmetic, not a measurement, but the shape is why the benchmark results below come from harness changes.
 
 Three data points:
 
@@ -226,4 +260,52 @@ Practical consequence: **a harness needs periodic subtraction, not just addition
 
 ---
 
-→ Next: [02-harness-anatomy.md](02-harness-anatomy.md) — the component inventory.
+## Pitfalls
+
+- **Buying a model to fix a harness failure.** Symptom: the same failure comes back under the new model, at a higher price. Fix: run the [fix-the-harness loop](#fix-the-harness-first) on a fixed model first. LangChain moved DeepAgents from 52.8% to 66.5% on Terminal Bench 2.0 with harness-only changes.
+- **A faked acceptance baseline.** Symptom: runs are signed off with "looks good", and nobody can say what would have failed them. Fix: write a binary check per task type. This is the part the note calls most commonly faked.
+- **No rollback.** Symptom: every action needs a human gate, because a bad one can't be undone. Fix: treat rollback as one of the [four parts](#the-four-parts); it is the one most often missing, and [note 04](04-execution-boundaries.md#rollback) starts it with git and sandbox snapshots.
+- **Checking the agent's prose instead of its effects.** Symptom: the agent says the refund went through and it didn't. Fix: verify structured tool fields or the database row, as the refund table does. Model prose can be steered by injection.
+- **Counting only the steps you designed.** Symptom: each step looks fine in isolation and end-to-end success is poor. Fix: count tool calls, output parses and handoffs as steps, then measure the whole chain.
+- **An `AGENTS.md` that grows by habit.** Symptom: the file passes ~60 lines and the agent starts ignoring it. Fix: every line names the failure that produced it. A line that can't is speculative and goes. Pair the [ratchet](#the-ratchet) with periodic subtraction.
+
+## Try it
+
+1. Your agent runs 20 steps and you want 90% end-to-end success. Without retries, how reliable must each step be? Change the script's inputs and work it out.
+
+   <details><summary>Answer</summary>
+
+   99.47% per step, the last line of the script's output. At the 90% per-step rate the same chain succeeds 12.2% of the time. That gap is why long chains need retries, checkpoints and rollback rather than a slightly better model.
+
+   </details>
+
+2. A support agent issues a refund on an order bought 12 days ago, although the policy allows 7. Which of the five functions in the refund table should have caught it, and how?
+
+   <details><summary>Answer</summary>
+
+   Context supplied the policy and didn't stop anything, since a model can ignore a sentence. The fix belongs in Constrain: a framework check on the policy window, of the same kind as the table's "refund ≤ order total", run before `process_refund`. Verify, which confirms in the database that the refund landed, runs too late and passes anyway.
+
+   </details>
+
+3. Fill in the [four parts](#the-four-parts) for an agent you use: acceptance baseline, execution boundary, feedback signals, rollback. Which is missing, and which is only a "looks good"?
+
+   <details><summary>What to look for</summary>
+
+   Expect rollback to be absent and the baseline to be weakest, the two patterns the note names. A part counts only if you can point to the code that enforces it. The pillar lab, [tool-server-sandbox-py](../practice/tool-server-sandbox-py/README.md), builds one of them, the execution boundary, end to end.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is a harness? | Everything around the model that isn't the model: `Agent = Model + Harness`, where the harness informs, constrains, verifies and corrects. |
+| Your agent is 90% reliable per step over five steps. What end-to-end success do you expect, and what changes it most? | About 59%, from 0.9^5. Harness structure changes it most, because it sets how many steps must succeed in a row and what happens when one doesn't; a better model only moves per-step accuracy a few points. |
+| What are the four parts of a harness, and which do teams miss? | Acceptance baseline, execution boundary, feedback signals and rollback. Rollback is most often missing, and the baseline is most often faked with a "looks good". |
+| Give evidence that the harness matters as much as the model. | LangChain DeepAgents went from 52.8% to 66.5% on Terminal Bench 2.0 with a fixed model. Agent S4 evolved only interfaces and took Qwen3.8-27B from 5.6% to 21.3% on OSWorld V2, above GPT-5.5 at 13.0% and Opus 4.8 at 20.6%. |
+| An agent keeps failing and a stakeholder wants the newest model. What do you do? | Run, attribute the failure to one subsystem, fix only that one, and re-run the same task on the fixed model. Swapping first hides which part was missing, so the failure returns under the next model. |
+| How do framework, runtime and harness differ? | A framework gives abstractions and integrations, a runtime gives durable execution, streaming, HITL and persistence, and a harness is batteries-included: predefined tools, prompts, a to-do planner, a virtual filesystem, subagents and history summarization. |
+
+## Next
+
+[02-harness-anatomy.md](02-harness-anatomy.md): the component inventory, so a failure can be attributed to one part.

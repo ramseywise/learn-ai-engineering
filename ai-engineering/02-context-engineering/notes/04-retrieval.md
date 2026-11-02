@@ -12,7 +12,7 @@ sources:
   - "Bojie Li, AI Agents in Depth (2026), ch. 3 — https://github.com/bojieli/ai-agent-book"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 4 — Retrieval: One Lever on the Window
 
@@ -272,4 +272,61 @@ Worked examples: [BM25 from scratch](../../../generative-ai/02-rag-retrieval/not
 
 ---
 
-→ Next: [05-compression-compaction.md](05-compression-compaction.md) — what to do when the window fills anyway.
+## Pitfalls
+
+- **Pre-loading what the agent could fetch.** Symptom: 250,000 tokens of files in the window when the agent reads three, a job that costs about 15.5k with paths and a read tool. Fix: apply the ≥80%-of-turns rule, and otherwise give an identifier plus a tool.
+- **Long context as the answer to every question.** Symptom: reasoning over tables stays weak, as on LOFT's SQL-like task, where Gemini 1.5 Pro with 128k in the prompt scored .38 against .65 for the specialized system, and latency reaches about 100 s at 1M. Fix: route by question shape and answerability, as Self-Route does.
+- **Sending the top-k directly.** Symptom: high recall in the retriever, and answers that still miss, because the best evidence sits mid-list. Fix: retrieve wide, rerank, narrow, and put the best evidence at the edges of the block.
+- **Retrieval for an aggregation question.** Symptom: asked for the ratio across 100 case files (90 black cats, 10 white), the model reasons from a top-k sample of 15 and 3. Fix: distill aggregates and rules at index time rather than retrieving them at query time.
+- **Filtering permissions after retrieval.** Symptom: a user sees, or the model quotes, a document they shouldn't. A cached corpus is visible to everyone sharing it. Fix: filter inside the query, and scope caches to the audience.
+- **Cached retrieval with no expiry.** Symptom: answers cite a policy changed last week. Fix: set an expiry, and distinguish prompt caching, which is safe by construction, from retrieval caching, which can serve stale content.
+- **No way for the model to say the evidence is missing.** Symptom: fluent answers invented when retrieval comes back empty. Fix: add the say-so line that lets it report the gap.
+
+## Try it
+
+1. An agent has 40 files of 5,000 tokens each, and a task needs 8 of them. Using this chapter's costs (a path is ~10 tokens), compare identifiers with pre-loading.
+
+   <details><summary>Answer</summary>
+
+   Identifiers: 400 for the index + 8 × 5,000 = 40,400 tokens. Pre-load: 200,000. Identifiers spend about a fifth, and the gap widens as the corpus grows.
+
+   </details>
+
+2. Over 20 turns, the style guide is used on 18 and the database schema on 3. Which do you pre-load?
+
+   <details><summary>Answer</summary>
+
+   The style guide, at 90% of turns, clears the ≥80% rule. The schema, at 15%, stays behind an identifier and a fetch tool.
+
+   </details>
+
+3. Suppose your top-20 retrieval fails on 10% of questions (an illustrative baseline, not a measurement). What failure rate do you expect from the 49% and 67% contextual retrieval reductions?
+
+   <details><summary>Answer</summary>
+
+   10% × 0.51 = 5.1%, and 10% × 0.33 = 3.3%. Those are Anthropic's reductions from its own test, so measure on your own corpus before relying on them.
+
+   </details>
+
+4. Route each one: "Quote clause 12", "What's the total of all invoices above 10k?", "Does a nurse qualify for the discount?"
+
+   <details><summary>Answer</summary>
+
+   The clause goes to a plain lookup with retrieval or a read tool. The invoice total goes to a structured query or an aggregate computed at index time. The discount question goes to a rule distilled at index time, because "nurse" sits near "doctor" in embedding space and retrieval misses the teacher case that shows the limit.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Pre-load or fetch just in time? | Pre-load only what's needed on about ≥80% of turns. Otherwise a path costing about 10 tokens beats a 5,000-token file. |
+| RAG or long context for a document set? | Depends on the query: on LOFT with 128k in the prompt, Gemini 1.5 Pro matched specialized retrievers on text retrieval (.77 vs .76) and RAG (.53 vs .52) but not SQL-like reasoning (.38 vs .65). |
+| How do you combine them? | Route. Full context and top-5 RAG gave identical answers on 63% of LongBench queries, so Self-Route lets RAG answer first and escalate on "unanswerable": 48.89 against 48.67 for GPT-4o on 61% of the tokens. |
+| What does latency look like at long context? | LOFT saw roughly 4 s, 12 s and 100 s at 32k, 128k and 1M. A long-context design has to be acceptable at that latency before accuracy matters. |
+| When does retrieval structurally fail? | On aggregation and rule induction, where the answer isn't in any chunk. Distill those at index time, for example the count of 90 black cats or the nurse rule. |
+| Why add context to chunks before embedding? | Anthropic reports top-20 retrieval failures down 49% with contextual embeddings and contextual BM25, and 67% with a reranker, at about $1 per million document tokens with prompt caching. A chunk alone often lacks the identifier that makes it findable. |
+
+## Next
+
+[05-compression-compaction.md](05-compression-compaction.md): selection controls what enters the window, and the next lever covers what to do when it fills anyway.

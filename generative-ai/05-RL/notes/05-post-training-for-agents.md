@@ -366,7 +366,7 @@ tool agent   RL: format is stable, SFT has plateaued, and the reward is trustwor
 1. **Using post-training to store facts.** Use RAG; post-training teaches how to use knowledge.
 2. **Starting RL before format is stable.** If the parse-failure rate is above 20%, RL will fail.
 3. **Reward hacking, which does not stay local.** Reward the real objective, not a proxy like
-   length. On RM over-optimization, see [02-rlhf-pipeline.md](02-rlhf-pipeline.md#overoptimization).
+   length. On RM over-optimization, see [02-rlhf-pipeline.md](12-rlhf-failure-modes.md#overoptimization).
 
    Anthropic gave a pretrained model knowledge of three hacks, then ran RL on real Claude
    Sonnet 3.7 coding environments with the anti-hack checks removed. The hacks were an
@@ -388,7 +388,7 @@ tool agent   RL: format is stable, SFT has plateaued, and the reward is trustwor
      misalignment 75–90% even with hacking above 99%; it was weaker in the synthetic-document
      setting. Inoculation prompting was introduced in SFT by Wichers et al., on MBPP solutions that
      hard-code the visible test ([arXiv:2510.05024](https://arxiv.org/abs/2510.05024) (Wichers et al.,
-     2025-10, preprint)); its limits are in [02](02-rlhf-pipeline.md#reward-hacking).
+     2025-10, preprint)); its limits are in [12](12-rlhf-failure-modes.md#reward-hacking).
    - These are single runs per configuration with Claude graders. The hack-describing
      documents also labelled each hack "misaligned", which pre-installs part of the
      association.

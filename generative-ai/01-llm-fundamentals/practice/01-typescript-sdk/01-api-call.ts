@@ -8,7 +8,7 @@ async function basicMessage() {
   console.log("--- Basic message ---");
 
   const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-5-5",
     max_tokens: 256,
     messages: [{ role: "user", content: "What is a large language model?" }],
   });
@@ -30,7 +30,7 @@ async function streamingMessage() {
 
   // stream() returns an async iterable of server-sent events
   const stream = await client.messages.stream({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-opus-5-5",
     max_tokens: 256,
     messages: [
       { role: "user", content: "Count from 1 to 5, one number per line." },
@@ -56,7 +56,7 @@ async function withErrorHandling() {
   console.log("\n--- Error handling ---");
   try {
     await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-5-5",
       max_tokens: 1, // intentionally tiny to show stop_reason: max_tokens
       messages: [{ role: "user", content: "Tell me a long story." }],
     });

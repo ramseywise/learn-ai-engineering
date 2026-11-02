@@ -193,9 +193,9 @@ for char in ["status", "duration"]:
     print(char, {str(k): v for k, v in points.round(0).astype(int).items()})
 sample = test.iloc[[0]]
 print(f"first test applicant: PD {pd_true(sample)[0]:.3f}, score {score(sample)[0]:.0f}")
+s_test = score(test)
 
 # %% chart_ks
-s_test = score(test)
 grid = np.sort(s_test)
 cdf_bad = np.array([(s_test[y_test == 1] <= v).mean() for v in grid])
 cdf_good = np.array([(s_test[y_test == 0] <= v).mean() for v in grid])

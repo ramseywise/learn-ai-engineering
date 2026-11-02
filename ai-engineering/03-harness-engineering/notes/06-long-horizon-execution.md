@@ -12,11 +12,13 @@ sources:
   - https://github.com/walkinglabs/learn-harness-engineering
   - "Faldor, Singh, Raileanu, A team of Gemini 4 Argon agents beats Minecraft (2026), arXiv 2610.22319 — sources/faldor-2026-team-gemini-4-argon-agents.pdf"
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 6 — Long-Horizon Execution
 
 > Work that outlasts a single context window. The harness's job is to make the loop re-entrant.
+
+Models don't run out of ability on long tasks so much as they run out of window, and a session boundary erases the reasoning behind the work. As the limit nears, agents wrap up early and confidently. In the next session the why is gone, passed tests have to be rediscovered, and decisions get silently reversed. This chapter covers how to make multi-session work survive that: state outside the window, a fixed clock-in and clock-out, handoffs that separate verified from assumed, and a choice between compaction and reset.
 
 ---
 
@@ -411,4 +413,54 @@ Multi-agent depth: [note 07](07-orchestration.md).
 
 ---
 
-→ Next: [07-orchestration.md](07-orchestration.md) — many agents, one harness.
+## Pitfalls
+
+- **Mistaking context anxiety for completion.** Symptom: the agent finishes early and confidently as the window fills. Fix: give it a mechanism to continue. Start the handoff once a task looks set to use more than ~60% of the window.
+- **Letting the first session write features.** Symptom: visible output arrives quickly and every later session re-learns how to start. Fix: make Phase 0 its own session with no feature code, and check it against the four readiness conditions, starting with `./init.sh` succeeding from a clean checkout.
+- **A generated summary in place of a handoff.** Symptom: the next session can't tell what was verified from what was assumed. Fix: a handoff document with a Verified Now section recording what verification actually ran.
+- **Dropping the decision log.** Symptom: a resumed session reverses a choice or retries a rejected alternative. Fix: record what was decided, why, and what was rejected. It holds exactly the why that compaction loses.
+- **"Clean up later".** Symptom: debug prints and half-done code spread, because agents copy patterns already in the repo. Fix: make the five clean-state conditions part of done, and treat a session as a transaction that commits or rolls back.
+- **Only per-session cleanup.** Symptom: each session is tidy while structure drifts over weeks. Fix: add the periodic mode, and make cleanup idempotent so running it twice is safe.
+- **Adding a paragraph to the root file for every long-run failure.** Symptom: `AGENTS.md` grows and the failure recurs. Fix: use the [diagnostic table](#diagnosing-which-artifact-is-missing) to add the smallest artifact that addresses the failure, such as `init.sh` for fragile startup.
+- **Assuming a compaction or reset finding carries across models.** Symptom: a harness keeps scaffolding the current model doesn't need. Fix: re-test on upgrades. Resets beat compaction for Sonnet 4.5 in Anthropic's finding, and Opus 4.6 mitigated the underlying issue.
+
+## Try it
+
+1. Your agent's sessions end at a 200K window. At what token count should it start writing a handoff under the ~60% trigger, and what does it record?
+
+   <details><summary>Answer</summary>
+
+   Around 120K. It records a Verified Now section (what works and what verification actually ran), what changed this session, and what comes next, with the unverified or broken items stated explicitly. Starting at 60% leaves room to write it well, before context anxiety ends the work early.
+
+   </details>
+
+2. Choose compaction or reset for each: (a) one long debugging session on a single bug, (b) a feature list that takes a week of sessions. Say what each choice risks.
+
+   <details><summary>Answer</summary>
+
+   (a) Compaction, which suits a single long session; the risk is summary-of-summary drift over many cycles. (b) Context reset with structured state, which suits multi-day work; the risk is that anything not written down is gone. That is why the handoff, progress log and decision log carry the load.
+
+   </details>
+
+3. Clone a repo you have an agent working in, then time a fresh session from opening to first useful edit. Which clean-state condition or state file would have cut the time most?
+
+   <details><summary>What to look for</summary>
+
+   This is the note's rebuild-cost metric, and a good harness gets it to a few minutes. Time spent finding the start command points to `init.sh`. Time spent asking what is done points to the progress log or feature list. Time re-reading old decisions points to the decision log. Add one artifact and time it again.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is context anxiety, and why is it hard to spot? | As the window nears its limit, models prematurely wrap up. It doesn't fail loudly: the agent finishes early and confidently, so the fix is a harness mechanism to continue. |
+| What is lost at a session boundary? | The why behind decisions, which work is already done, which tests passed and failed, and the match between the agent's picture and the real repo, which drifts. That's why you measure rebuild cost and keep state in files. |
+| Compaction or context reset? | Compaction summarizes in place, suits a single long session and risks summary drift. A reset clears the window and hands off through state, suits multi-day work and loses anything not written down. |
+| What does Phase 0 do, and why separate it? | It sets up the repo, including `init.sh`, and writes no feature code. Implementation maximizes verified features and initialization maximizes the reliability of later sessions; combined, the agent drifts toward visible output. |
+| What makes a session finished? | The task passes verification and the clean-state check passes: build, all tests including older ones, progress recorded, no stale artifacts, and a standard startup that works. |
+| Why does a handoff separate verified from assumed? | A generated summary blurs them, so the next session either trusts unverified work or redoes all of it. |
+
+## Next
+
+[07-orchestration.md](07-orchestration.md): many agents, one harness.

@@ -79,14 +79,15 @@ def stl_ets(train, h=H):
     return np.exp(frame["mean"]).to_numpy(), np.exp(frame["mean_ci_lower"]).to_numpy(), np.exp(frame["mean_ci_upper"]).to_numpy()
 
 
+def black_friday(year):
+    """The day after the fourth Thursday of November."""
+    nov1 = pd.Timestamp(year, 11, 1)
+    return nov1 + pd.Timedelta(days=(3 - nov1.dayofweek) % 7 + 22)
+
+
 def black_friday_weeks(index):
-    """1 for the week holding the fourth Friday of November, else 0."""
-    flags = []
-    for week in index:
-        nov1 = pd.Timestamp(week.year, 11, 1)
-        friday = nov1 + pd.Timedelta(days=(4 - nov1.dayofweek) % 7 + 21)
-        flags.append(int(week <= friday < week + pd.Timedelta(days=7)))
-    return np.array(flags)
+    """1 for the week holding Black Friday, else 0."""
+    return np.array([int(w <= black_friday(w.year) < w + pd.Timedelta(days=7)) for w in index])
 
 
 def harmonic_exog(index, K):
@@ -123,15 +124,14 @@ def dhr(train, h=H):
 
 
 def prophet(train, h=H):
-    days = pd.date_range("2021-01-01", "2026-12-31")
-    fridays = days[(days.month == 11) & (days.dayofweek == 4) & (days.day >= 22) & (days.day <= 28)]
     # A weekly series is stamped on Mondays, so the event sits on the Monday of the Friday's week.
-    mondays = fridays - pd.Timedelta(days=4)
+    mondays = [black_friday(y) - pd.Timedelta(days=4) for y in range(2021, 2027)]
     events = pd.DataFrame({"holiday": "black_friday", "ds": mondays})
     model = Prophet(seasonality_mode="multiplicative", weekly_seasonality=False, daily_seasonality=False,
                     yearly_seasonality=10, holidays=events, interval_width=.8, uncertainty_samples=300)
     model.fit(pd.DataFrame({"ds": train.index, "y": train.to_numpy()}))
     future = pd.DataFrame({"ds": pd.date_range(train.index[-1] + pd.Timedelta(weeks=1), periods=h, freq="W-MON")})
+    np.random.seed(7)     # Prophet simulates its intervals; fix them so every run prints the same
     out = model.predict(future)
     return out["yhat"].to_numpy(), out["yhat_lower"].to_numpy(), out["yhat_upper"].to_numpy()
 

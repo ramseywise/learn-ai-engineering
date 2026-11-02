@@ -4,7 +4,7 @@ sources:
   - https://arxiv.org/abs/2506.12115
   - https://github.com/davidkimai/Context-Engineering (00_foundations/05_cognitive_tools.md, 07_prompt_programming.md, cognitive-tools/cognitive-templates/, cognitive-tools/cognitive-programs/, cognitive-tools/cognitive_patterns.md — snapshot 2026-08-14)
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 8 — Cognitive Tools and Prompt Programs
 
@@ -108,6 +108,36 @@ def self_correct(problem, max_iter=3):
 ```
 
 Bound the loop. Verification by the same model shares its blind spots, so loops beyond 2–3 iterations rarely help, and the model can "fix" a correct answer into a wrong one. Where a ground-truth check exists (tests, a calculator, a schema validator), use it instead of a model verifier. See [03-harness — verification loops](../../03-harness-engineering/notes/05-verification-loops.md) and [04-loop — layered exits](../../04-loop-engineering/notes/09-failure-modes-and-guardrails.md#layered-exits).
+
+Why a separate verifier matters more than more rounds can be shown with a small model. Each round produces a correct draft with probability 0.5. A verifier always passes a right draft, and wrongly passes a wrong draft with probability `blind`. A self-grading model shares its own blind spots, which puts it at the high end of `blind`. The values here are assumptions chosen to show the shape, not measurements.
+
+```python
+# Same model, same verifier budget: how a self-grading loop differs from a real check.
+# Each round a draft is correct with probability p. The verifier passes correct drafts,
+# and it wrongly passes a wrong draft with probability blind (the shared blind spot).
+def final_accuracy(p, blind, rounds):
+    right, wrong_open, done_wrong = p, 1 - p, 0.0
+    for _ in range(rounds):
+        done_wrong += wrong_open * blind             # wrong draft approved: the loop stops
+        wrong_open *= 1 - blind                      # wrong draft caught: revise
+        right += wrong_open * p                      # the revision may be right
+        wrong_open *= 1 - p
+    return right, done_wrong + wrong_open
+
+for blind in (0.0, 0.5, 0.9):
+    row = [f"{final_accuracy(0.5, blind, r)[0]:.3f}" for r in (0, 1, 2, 3, 5)]
+    print(f"blind={blind}: rounds 0,1,2,3,5 -> {row}")
+```
+
+Output:
+
+```text
+blind=0.0: rounds 0,1,2,3,5 -> ['0.500', '0.750', '0.875', '0.938', '0.984']
+blind=0.5: rounds 0,1,2,3,5 -> ['0.500', '0.625', '0.656', '0.664', '0.667']
+blind=0.9: rounds 0,1,2,3,5 -> ['0.500', '0.525', '0.526', '0.526', '0.526']
+```
+
+With a perfect check, each round closes half the remaining gap, and most of the gain has arrived by round 2 or 3, which is the case for the bound above. At `blind=0.9`, a loop gets almost nothing at any bound, because it stops at the first draft it approves. A deterministic check such as `python_validator` moves you towards `blind=0`, whereas a self-graded 0.8 score doesn't.
 
 The swap is small. Here the verifier is Python's own compiler, from the upstream course's `03_control_loops.py`:
 
@@ -213,4 +243,62 @@ The upstream `cognitive-tools/` held about 100k words: the template families abo
 
 ---
 
-→ Next: [09-protocols.md](09-protocols.md) — the same ideas without code.
+## Pitfalls
+
+- **Copying a cognitive tool without its stopping rule.** Symptom: the model keeps calling tools or re-deriving. Ebouky et al.'s templates end with an explicit "Then stop". Fix: keep the stop line and a verdict line in every template.
+- **Generalizing one model's gain.** Symptom: expecting +21 points everywhere because GPT-4.1 rose from 32.0 to 53.0 on AIME 2024. Llama3.1-8B moved only from 5.8 to 8.8. Fix: measure on the model you ship.
+- **Forcing the sequence.** Symptom: rigid cognitive prompting underperforms. In Ebouky et al., it scored 42.0, where tools the model chose when to use reached 53.0. Fix: offer the tools, and let the model choose when to use them.
+- **Trusting a self-graded stop.** Symptom: the loop stops at a confident 0.8 on wrong work, as the `blind=0.9` row shows. Fix: use a deterministic check where one exists, such as `python_validator`'s `compile` step.
+- **Unbounded self-correction.** Symptom: rounds pile up, and each adds to the window with little gain. Fix: bound the loop to 2-3 rounds and return the best draft with its verdict.
+- **Reaching for a framework first.** Symptom: a prompt program for a task that one good instruction solves. Fix: use the checks in the "When to reach for this" section, and prefer a single tool until an eval says otherwise.
+
+## Try it
+
+1. Use the worked model to find how many rounds a `blind=0.0` loop needs to pass 0.95 when `p=0.5`, and what happens with `blind=0.5`.
+
+   <details><summary>Answer</summary>
+
+   With `blind=0.0`, 5 rounds reach 0.984 and 3 rounds reach 0.938, so four rounds (1 − 0.5⁵ = 0.969) are the first to pass 0.95. With `blind=0.5`, it plateaus at about 0.667 and never gets there, so more rounds won't fix a weak verifier.
+
+   </details>
+
+2. Write a cognitive tool for reading a failing stack trace, in the template's shape: a name, inputs, numbered steps, a verdict line and "Then stop."
+
+   <details><summary>Answer</summary>
+
+   ```text
+   Tool: triage_stack_trace
+   Input: {trace}, {changed_files}
+   1. Name the innermost frame in code you own.
+   2. State the exception and the value that caused it.
+   3. Say whether a file in {changed_files} appears in the trace.
+   Verdict: CAUSE_IN_CHANGE | CAUSE_ELSEWHERE | UNKNOWN
+   Then stop.
+   ```
+
+   The verdict line gives the calling code something to branch on, and "Then stop" keeps the model from drifting into a fix.
+
+   </details>
+
+3. Which is a better fit for a tool, and which for a program: a) a model working through unfamiliar maths problems, b) an extract, validate, then file workflow that always runs in the same order?
+
+   <details><summary>Answer</summary>
+
+   a) Tools, since the model benefits from choosing when to call them. b) A prompt program, since the order is known and your code should own it.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What's a cognitive tool? | A reasoning step packaged like a function: a named prompt with inputs and outputs that the model or your code can call, and which adds no external capability. |
+| What's the evidence for them? | Ebouky et al.: GPT-4.1 on AIME 2024 went from 32.0 to 53.0 with tools, against 42.0 for cognitive prompting and 44.6 for o1-preview. |
+| Do they help every model equally? | No. Qwen2.5-32B went from 17.2 to 32.1 and Llama3.3-70B from 13.1 to 29.8, but Qwen2.5-7B only from 12.5 to 14.6 and Llama3.1-8B from 5.8 to 8.8. |
+| Should a tool call or a fixed order drive the reasoning? | Let the model choose when the problem varies, since that freedom accounts for the +11 over forced cognitive prompting. Use a program with a fixed order when the workflow is known. |
+| Your self-correction loop stops at a self-score of 0.8 and quality is flat. Why? | The verifier shares the writer's blind spots. In a simple model with `blind=0.9`, accuracy stays near 0.526 at any bound, so replace the self-score with a deterministic check. |
+| How many correction rounds do you allow? | 2-3. In the worked model with a perfect check, 3 rounds reach 0.938 from 0.5, and further rounds add little while each one adds to the window. |
+
+## Next
+
+[09-protocols.md](09-protocols.md): the same ideas, written for people who don't write code.

@@ -87,7 +87,6 @@ Recent papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Paper
 
 | Resource | Why use it | Maps to |
 |---|---|---|
-| DeepLearning.AI with Giskard, [Red Teaming LLM Applications](https://www.deeplearning.ai/short-courses/red-teaming-llm-applications/) | Short course on finding vulnerabilities in an LLM application | [05](notes/05-red-teaming-tools.md) |
 | PortSwigger Web Security Academy, [Web LLM attacks](https://portswigger.net/web-security/llm-attacks) | Free labs on LLM attacks from a web-security viewpoint, including indirect injection | [02](notes/02-prompt-injection-and-jailbreaks.md) |
 | Lakera, [Gandalf](https://gandalf.lakera.ai/) | A game that shows first-hand why prompt-level defences leak | [02](notes/02-prompt-injection-and-jailbreaks.md) |
 | Andrej Karpathy, [Intro to Large Language Models](https://www.youtube.com/watch?v=zjkBMFhNj_g) | The last part of this one-hour talk is a clear introduction to LLM security | [01](notes/01-threat-model.md) · [02](notes/02-prompt-injection-and-jailbreaks.md) |

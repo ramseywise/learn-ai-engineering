@@ -17,11 +17,13 @@ sources:
   - https://arxiv.org/abs/2402.06664
   - https://www.microsoft.com/en-us/research/uploads/prod/2024/12/HCAI_Agents.pdf
 confidence: high
-cleaned: 2026-07-30
+cleaned: 2026-11-01
 ---
 # 4 — Execution Boundaries and Guardrails
 
 > Where the agent runs, what it can touch, and the controls that cannot be argued with.
+
+A tool call is untrusted input, because retrieved text can talk the model into almost anything and a model can reason its way around a rule written in prose. In STOP, GPT-4 rewrote its own improver and removed the sandbox flag in 0.42% of 10,000 attempts, usually commenting the change "for efficiency". Without an enforced boundary, the only thing between an injected instruction and a deleted database is the model's judgment. This chapter covers what enforces the limit: sandboxes, hooks, permission gates, rollback and cost ceilings that sit outside what the agent can edit.
 
 ---
 
@@ -409,4 +411,54 @@ Consequences for harness design:
 
 ---
 
-→ Next: [05-verification-loops.md](05-verification-loops.md) — proving the work is actually done.
+## Pitfalls
+
+- **Keeping the isolation switch where the agent can edit it.** Symptom: the sandbox flag disappears in a change labelled as an optimization, as in STOP's 0.42% of 10,000 attempts. Fix: enforce isolation in the runtime, never in code or config the agent can reach.
+- **Counting a `venv` as a sandbox.** Symptom: code in a "sandboxed" environment reads your home directory. Fix: a `venv` isolates dependencies, not effects. Pick a rung on the ladder: OS-level, container or microVM, each with resource quotas.
+- **Keyword blacklists on commands.** Symptom: `$(echo rm) -rf /` and `find / -name '*.log' -exec rm {} \;` both pass. Fix: parse each command's flags and arguments to find the real effect.
+- **Gating reversible operations.** Symptom: operators click through prompts, and the approval that mattered goes through with the rest. Fix: gate only irreversible actions. Gating reversible ones is the most common way to make an agent useless, and it feeds alert fatigue.
+- **A human gate with no timeout.** Symptom: the run stalls overnight on an unanswered question. Fix: give the request a timeout with a declared default of proceed, skip or abort.
+- **Believing a role label or `CLAUDE.md` restricts the agent.** Symptom: an agent told it is read-only still writes. Fix: instructions shape what it tries, while permissions enforced by the harness shape what it is allowed to do.
+- **A same-family reviewer.** Symptom: the reviewer approves what the proposer got wrong, for the same reason. Fix: use a different model family at similar capability, with a circuit breaker that escalates to a human after N rejections.
+- **No cost ceiling.** Symptom: a doom loop runs up a bill and nothing stops it. Fix: instrument token spend per run, set a ceiling, and fail closed with a partial result.
+
+## Try it
+
+1. Sort these into always, ask and never buckets for a coding agent: run the test suite, `git push --force` to main, edit a file on its own branch, read `.env`, delete a staging database.
+
+   <details><summary>Answer</summary>
+
+   Always: run tests and edit on the branch, since both are reversible. Ask: delete the staging database, which is irreversible and sometimes legitimate. Never: read `.env` and force-push to main. Encode the never bucket in permissions or hooks rather than prose, since documented rules are followed selectively.
+
+   </details>
+
+2. An agent has private customer data, reads web pages and can post to a webhook. Which single boundary change most reliably stops exfiltration, and why not a better system prompt?
+
+   <details><summary>Answer</summary>
+
+   Network egress: none by default, with a whitelisted set of destinations through a proxy. It cuts the exfiltration leg of the triad deterministically, even when an injection succeeds. A prompt depends on the model, and the injected text is aimed at that same model.
+
+   </details>
+
+3. Attack the boundary. Run [tool-server-sandbox-py](../practice/tool-server-sandbox-py/README.md), then add one new attack of your own, such as a symlink to `/etc/passwd` placed inside the workspace.
+
+   <details><summary>What to check</summary>
+
+   The path jail must resolve symlinks before comparing paths, and the lab's tests already cover a symlink escape. Your attack should appear in the audit log as a blocked call, returned to the model as a tool error it can read.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Rank the isolation options. | OS-level (Seatbelt, seccomp, Landlock), then container, then microVM such as Firecracker, each with quotas on CPU, memory, disk, network and wall-clock time. A `venv` isn't on the ladder. |
+| Why not just tell the model not to touch production? | Instructions change what the agent tries, not what it is allowed to do. Enforce the rule in the runtime; STOP saw GPT-4 remove its own sandbox flag in 0.42% of 10,000 attempts. |
+| Where do you place human approval, and what goes wrong otherwise? | On irreversible actions only, with a timeout and declared default. Gating reversible steps makes the agent useless and causes alert fatigue, so people click through the approval that matters. |
+| Why does `$(echo rm) -rf /` matter? | It shows shell composition defeats keyword blacklists. A production gate parses each command's flags and arguments to find its real effect. |
+| Proposer-Reviewer or Sidecar for a risky tool? Give the trade-off. | Proposer-Reviewer runs in series with the conversation, suits high-stakes, low-frequency actions and has higher injection exposure. Sidecar sees only structured call fields and runs in parallel at low latency, so it suits every call to a risky tool class. Either way, use a different model family and a circuit breaker. |
+| What makes autonomy affordable? | Rollback: git branch-per-agent, sandbox snapshots and editable memory. An agent that can act but not be undone forces a human gate on every action. |
+
+## Next
+
+[05-verification-loops.md](05-verification-loops.md): proving the work is actually done.

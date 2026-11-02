@@ -9,6 +9,7 @@ sources:
   - https://arxiv.org/abs/2610.06647
   - https://arxiv.org/abs/2512.16144
   - https://arxiv.org/abs/2602.15763
+  - https://arxiv.org/abs/2510.18855
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -236,9 +237,20 @@ Pass@1 was 67.87 vs 63.77 at 1.5B and 72.33 vs 72.48 at 7B. The setup is deliber
 only, one sample per prompt, a running-mean baseline. In its own comparison at 1.5B, plain LoRA had
 higher mean Pass@1 (70.45 vs 68.47) at more memory (13.2 vs 7.2 GiB).
 
-Two 2025–26 open reports show what that correction looks like now: double-sided masking of the
+Three 2025–26 open reports show what that correction looks like now: double-sided masking of the
 token-level ratio π_train / π_inference rather than a V-trace-style truncated weight.
 
+- **Ring-1T.** A 1T-total / 50B-active MoE, where routing makes the two engines' log-probs drift
+  apart faster. Its IcePop drops tokens whose ratio falls outside [0.5, 5] from the GRPO loss
+  ([arXiv:2510.18855](https://arxiv.org/abs/2510.18855) (Ling Team, 2025-10, tech report)).
+  - In an ablation on the 16.8B-total Ring-mini-2.0, plain GRPO's reward collapsed after about
+    200 steps. Both IcePop and truncated importance sampling (TIS) stayed stable, and IcePop
+    scored higher on AIME25. The authors give that gap only as "relative 6%", from a curve.
+  - It masks only 1–2 tokens per thousand, and these have higher entropy than average. A
+    narrower [0.5, 2] range destabilized training at once.
+  - Its C3PO++ caps each step at a token budget and carries unfinished rollouts into the next
+    policy version. That made rollout about 2.5× faster and the end-to-end step about 1.5×
+    faster, at similar reward.
 - **INTELLECT-3.** A 106B-total / 12B-active MoE post-trained from GLM-4.5-Air on prime-rl.
   - The setup: 16 training nodes and 44 inference nodes, with in-flight weight updates.
   - Rollouts more than 8 policy versions old are discarded.
@@ -252,7 +264,8 @@ token-level ratio π_train / π_inference rather than a V-trace-style truncated 
   - Its sharpest lesson is about mismatch: a non-deterministic top-k in the sparse-attention
     indexer collapsed RL entropy within a few steps.
 
-Neither report ablates the correction quantitatively, and GLM-5 does not disclose ε or τ.
+Only Ring-1T ablates the correction, on a smaller sibling model and from curves. GLM-5 does not
+disclose ε or τ.
 
 ## Running RL in production
 

@@ -28,7 +28,7 @@ cleaned: 2026-11-01
 
 # 7 — Continued pretraining and supervised fine-tuning
 
-@@HOOK@@
+The ticket assistant now has a base model, which continues text and answers nothing. Two different things can be added to it. Knowledge, such as the vocabulary of a domain, comes from reading more of that domain's text. Behaviour, such as answering in a fixed format, comes from training on examples of that behaviour. Mixing these up is the most expensive mistake in applied fine-tuning: people try to teach facts with examples, and get a model that states falsehoods in exactly the right tone. This chapter takes the two in turn, with the masks and the prompt format made explicit in running code.
 
 ---
 
@@ -76,4 +76,144 @@ Fine-tuning can also erase what pretraining taught. The effect shrinks with scal
 
 Replay works, but it gets more expensive as a model accumulates training stages. The alternative is to limit which weights move. Two examples are LLaMA Pro's frozen-base block expansion (Continued pretraining, above) and sparse memory finetuning ([arXiv:2510.15103](https://arxiv.org/abs/2510.15103) (Lin et al., 2025-10, preprint)). Sparse memory finetuning needs a model with a *memory layer*: a pool of 1M slots, of which each token reads only 32. On each step it updates only the slots that the new data uses much more than pretraining data did (a TF-IDF ranking). **Trained on a stream of TriviaQA facts to the same recall, a 1.3B model lost 89% of its NaturalQuestions F1 under full fine-tuning, 71% under LoRA and 11% under sparse memory finetuning.** The result covers fact learning only, at 1.3B, on a memory-layer architecture you would have to pretrain yourself.
 
-@@END@@
+---
+
+## Worked example: what the instruction loss actually sees
+
+Raschka's chapter 7 builds SFT from a dataset of 1,100 instruction–response pairs in the Alpaca format. The only unusual step is the collation: padding lets a batch have one shape, and setting a target to `-100` tells cross-entropy to ignore that position, since PyTorch's `ignore_index` defaults to that value. The following keeps his template and also masks the prompt, the "usually" option from the table above, on one of our tickets:
+
+```python
+import tiktoken
+import torch
+import torch.nn.functional as F
+
+enc = tiktoken.get_encoding("gpt2")
+PAD, IGNORE = 50256, -100
+
+def alpaca(instruction, response):
+    prompt = ("Below is an instruction that describes a task. "
+              "Write a response that appropriately completes the request.\n\n"
+              f"### Instruction:\n{instruction}\n\n### Response:\n")
+    return enc.encode(prompt), enc.encode(response) + [PAD]
+
+def collate(pairs):
+    rows = [alpaca(*p) for p in pairs]
+    longest = max(len(p) + len(r) for p, r in rows)
+    inputs, targets = [], []
+    for p, r in rows:
+        ids = p + r + [PAD] * (longest - len(p) - len(r))
+        tgt = ids[1:] + [PAD]
+        tgt[:len(p) - 1] = [IGNORE] * (len(p) - 1)                  # prompt: not graded
+        tgt[len(p) + len(r) - 1:] = [IGNORE] * (longest - len(p) - len(r) + 1)   # padding: not graded
+        inputs.append(ids); targets.append(tgt)
+    return torch.tensor(inputs), torch.tensor(targets)
+
+x, y = collate([("Classify this ticket.", "billing"),
+                ("Reply to a late parcel.", "Sorry, your parcel is on its way.")])
+print("shape:", tuple(x.shape), " graded positions per row:", (y != IGNORE).sum(1).tolist())
+print("graded text, row 0:", repr(enc.decode([t for t in y[0].tolist() if t != IGNORE])))
+
+logits = torch.randn(*x.shape, 50257, generator=torch.Generator().manual_seed(0))
+masked = F.cross_entropy(logits.flatten(0, 1), y.flatten())
+keep = y.flatten() != IGNORE
+manual = F.cross_entropy(logits.flatten(0, 1)[keep], y.flatten()[keep])
+print(f"ignore_index loss {masked:.4f} == loss on graded positions only {manual:.4f}")
+```
+
+```text
+shape: (2, 46)  graded positions per row: [3, 10]
+graded text, row 0: 'billing<|endoftext|>'
+ignore_index loss 11.6498 == loss on graded positions only 11.6498
+```
+
+The last token graded is the end-of-text marker, which is how the model learns to stop. Without it, you get a model that answers and then carries on writing. The prompt positions cost nothing here because the gradient only comes from the graded ones.
+
+Classification fine-tuning has a different change: you swap the head. This is the entire difference between a language model and a two-class ticket classifier, with the sizes printed:
+
+```python
+import torch.nn as nn
+
+class Tiny(nn.Module):
+    def __init__(self, vocab=50257, d=768, layers=2):
+        super().__init__()
+        self.tok = nn.Embedding(vocab, d)
+        self.blocks = nn.ModuleList(nn.TransformerEncoderLayer(d, 12, 4 * d, batch_first=True) for _ in range(layers))
+        self.head = nn.Linear(d, vocab, bias=False)
+
+def trainable(m):
+    return sum(p.numel() for p in m.parameters() if p.requires_grad)
+
+model = Tiny()
+print(f"language model, all trainable: {trainable(model):>12,}")
+for p in model.parameters():
+    p.requires_grad = False
+model.head = nn.Linear(768, 2)                       # spam / not spam
+print(f"new head only:                 {trainable(model):>12,}")
+for p in model.blocks[-1].parameters():
+    p.requires_grad = True
+print(f"head plus last block:          {trainable(model):>12,}")
+```
+
+```text
+language model, all trainable:   91,370,496
+new head only:                        1,538
+head plus last block:             7,089,410
+```
+
+Which of these routes you choose follows from what you are teaching:
+
+```mermaid
+flowchart TD
+    Q{What is missing?} -->|Domain language, large stable text| A["Continued pretraining: next-token loss on raw text"]
+    Q -->|Format, tone, behaviour| B["Instruction SFT: next-token loss on graded response"]
+    Q -->|A label for each input| C["Classification SFT: new head, last-token logits"]
+    Q -->|Facts that change or need citing| D["Retrieval, not training"]
+```
+
+---
+
+## Pitfalls
+
+- **Teaching facts with fine-tuning.** Gekhman's result is the warning: as unknown facts are fitted, test accuracy falls.
+- **Forgetting the end-of-text target.** The model won't learn to stop.
+- **Grading padding.** Without `-100` the model is rewarded for predicting padding, and the loss looks better than the model is.
+- **Training and serving with different templates.** The chat template and its whitespace are part of the model now.
+- **Replaying no old data on a long run.** Continued pretraining forgets. Code Llama kept 7% general text for this reason.
+- **Trusting a loss curve for instruction tuning.** A falling next-token loss says little about whether answers are right. Evaluate on a held-out set of tasks with a judge or a metric.
+- **Skipping the small-scale baseline.** Most of the format gain comes early in Flan-PaLM. Try hundreds of examples first and measure the curve before paying for thousands.
+
+---
+
+## Try it
+
+1. Change `collate` to grade the prompt too (delete the first mask line). How do the graded positions per row change, and why is it usually left out?
+2. In the head-swap block, also unfreeze the token embedding. How many parameters are now trainable, and what is the risk with a small dataset?
+3. For a dataset of 2,000 tickets, of which half are "billing", what is the accuracy of a model that always says "billing"? What does that imply for how you report a classification fine-tune?
+
+<details>
+<summary>Answers</summary>
+
+1. Each row grades all of its prompt tokens as well. Usually you leave them out because the model can't choose the prompt, though Raschka's own version does grade the prompt by default and treats masking as an exercise, so both are in use.
+2. Add 50,257 × 768 = 38,597,376 to the head-plus-last-block count. Embeddings make up most of the model, and with little data they mostly overfit.
+3. 50%. Report against that baseline, and report per-class precision and recall.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| Continued pretraining or SFT? | Continued pretraining adds knowledge from raw domain text with the same next-token loss. SFT teaches format and behaviour from demonstrations |
+| How does the loss differ from pretraining? | It is the same next-token cross-entropy, with padding (and usually the prompt) masked out via `ignore_index=-100` |
+| What does a classification fine-tune change? | It replaces the head and usually trains only the last blocks and the head, taking the loss on the last token's logits |
+| How many SFT examples do you need? | InstructGPT used about 13,000 and typical sets run from 10,000 to 100,000, but much of the format gain arrives early, as with Flan-PaLM and LIMA |
+| What happens if you fine-tune on unknown facts? | The model fits them slowly, and as it does, test accuracy falls. Early stopping or "I don't know" labels reduce the damage |
+| Why does fine-tuning cause forgetting, and how do you limit it? | Weights that held older knowledge move. Replay old data or limit which weights move |
+
+---
+
+## Next
+
+[08 — Preference optimisation: an overview](08-preference-optimisation-overview.md) trains on comparisons, which demonstrations alone cannot do.

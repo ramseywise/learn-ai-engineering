@@ -11,11 +11,13 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 4 — generative-ai/01-llm-fundamentals/sources/learning-langchain/"
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 6, 13 — sources/building-applications-with-ai-agents/"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 6 — Memory as a Context Sub-Component
 
 > Memory is not a sibling pillar of context engineering. It is the mechanism by which context outlives a window.
+
+An agent that forgets between sessions makes the user repeat themselves, and an agent that remembers badly is worse, because it acts on the old address or the rule from last quarter with full confidence. Memory only ever helps by entering a window, so every stored fact competes for the same budget as everything else. This chapter covers what to distil, how to store and update it, and how to measure it, using systems from Mem0 and ChatGPT's four layers to a plain `MEMORY.md` file.
 
 ---
 
@@ -391,4 +393,62 @@ Public multi-turn benchmarks stress later turns, questions that aren't standalon
 
 ---
 
-→ Next: [07-structured-context.md](07-structured-context.md) — giving context a shape.
+## Pitfalls
+
+- **Append-only memory.** Symptom: "lives in Beijing" and "I moved to Shanghai" are both retrieved, and the agent picks one. Fix: use Mem0's ADD, UPDATE, DELETE, NOOP decision, and update rather than append.
+- **Relative dates.** Symptom: "last week" means nothing a month later, and the agent acts on it. Fix: store absolute dates.
+- **Storing what can be derived.** Symptom: memory says a function lives in one file after it has moved. Fix: don't store what the code or the tools can answer, and verify any remembered fact before relying on it.
+- **FIFO as a memory policy.** Symptom: the agent forgets the task after a long conversation, because the first turns often hold its definition. Huyen calls FIFO's assumption "fatally wrong" for this reason. Fix: pin the system message and the original request, or summarize them.
+- **An oversized index.** Symptom: the memory file itself eats the budget, or lines past its limit are never loaded. `MEMORY.md` is capped at 200 lines or 25 KB. Fix: one-line hooks in an index, with the detail in files fetched on demand.
+- **Memory that crosses audiences.** Symptom: one user's fact shows up in another user's session. Fix: scope each entry to its audience and sanitize logs before they become memory.
+- **Consolidation with no way back.** Symptom: a bad nightly merge corrupts everything. Fix: keep a pointer to the old version so you can roll back, as OpenClaw does, and keep the trajectory log.
+- **Reading a benchmark as a verdict.** Symptom: picking a memory system from one table. Peng's LoCoMo result rests on 419 turns and 152 questions, one conversation and one run. Fix: run your own three-level eval, including memory hit rate.
+
+## Try it
+
+1. `MEMORY.md` allows 200 lines or 25 KB. What average line length uses both limits at once, and what does this say about how to write an index line?
+
+   <details><summary>Answer</summary>
+
+   25,000 / 200 = 125 bytes per line. An index line is a one-line hook and a pointer, not the memory itself.
+
+   </details>
+
+2. Choose a Mem0 operation for each new message, given stored facts "lives in Beijing" and "prefers pnpm": "I moved to Shanghai", "I still use pnpm", "I started learning Rust", "Please forget my package preference".
+
+   <details><summary>Answer</summary>
+
+   UPDATE, NOOP, ADD, DELETE.
+
+   </details>
+
+3. Memoria reports top-20 triples under 400 tokens against about 115K of full history. What's the rough compression ratio, and what do you still need to check?
+
+   <details><summary>Answer</summary>
+
+   More than 115,000 / 400 ≈ 288×. Ratio alone says nothing about usefulness, so check retention and answer quality, as in [12](12-evaluating-context.md).
+
+   </details>
+
+4. Rewrite this as a good memory entry: "Yesterday we decided the deploy script is in `scripts/deploy.sh` and the team prefers small PRs."
+
+   <details><summary>Answer</summary>
+
+   Drop the script location, which the repo can answer. Keep the preference with an absolute date, its scope and the reason, if known: "Team prefers small PRs (decided 2026-11-01, applies to this repo)." The date here stands in for whatever day "yesterday" was.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Episodic or semantic memory? | Episodic records what happened, semantic records what's true, and the useful step distils the first into the second, such as three commit-format corrections into one rule. |
+| Does a good memory system need a vector database? | Not always. ChatGPT's memory, as analysed here, has four layers with about 33 facts and about 15 summaries and no vector DB, and Peng found a coding agent searching raw history hit 99% at under half full context's cost, on one conversation and one run. |
+| How would you handle "I moved to Shanghai" when "lives in Beijing" is stored? | Run a write-time decision between ADD, UPDATE, DELETE and NOOP, then UPDATE. Append-only leaves two contradictory facts for retrieval to choose between. |
+| How do you structure user facts for reliability? | When questions aggregate, use typed state: User as Code regenerates typed Python from a fact log and reached about 99% on aggregation against 6-43% for retrieval-based memory, because a count becomes one expression. |
+| What's the highest-leverage part of an index-plus-detail memory? | The one-line hook, because it decides whether the detail file ever gets opened. |
+| Do you evaluate a memory system on overall answer accuracy only? | No. Evaluate at three levels, including hit rate. In Peng's test Opus 5.5 reading Zep's GPT-4o-mini graph scored 45% against GPT-4o-mini's 43%, so a stronger reader can't recover what a weak writer never stored. |
+
+## Next
+
+[07-structured-context.md](07-structured-context.md): memory keeps facts between windows, and next comes giving the context a shape that the model and your code can both rely on.

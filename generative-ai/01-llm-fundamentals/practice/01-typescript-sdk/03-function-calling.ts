@@ -96,7 +96,7 @@ async function runWithTools(userMessage: string) {
 
   while (true) {
     const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-5-5",
       max_tokens: 1024,
       tools,
       messages,

@@ -22,6 +22,10 @@ sources:
   - https://arxiv.org/abs/2505.03335
   - https://arxiv.org/abs/2503.02875
   - https://arxiv.org/abs/2509.08827
+  - https://arxiv.org/abs/2512.13607
+  - https://arxiv.org/abs/2506.10910
+  - https://arxiv.org/abs/2410.18982 (O1 Replication Journey: journey vs shortcut SFT)
+  - https://arxiv.org/abs/2411.16489 (O1 Replication Journey Part 2: o1 distillation)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -62,6 +66,12 @@ Key findings ([arXiv:2501.12948](https://arxiv.org/abs/2501.12948) (DeepSeek-AI,
   - DeepSeek's conclusion: distilling a strong model beats RL on a small one, though small
     models still benefit from RL afterwards.
   - That is one RL run, confounded by the teacher's size.
+  - Mistral's Magistral found the opposite at 24B, with a much smaller gap between teacher and
+    student ([arXiv:2506.10910](https://arxiv.org/abs/2506.10910) (Mistral AI, 2025-06, tech
+    report)). **Pure RL on Mistral Small 3 reached 65.8% AIME24 pass@1, level with SFT on
+    traces from the RL-only Magistral Medium (65.4%).** SFT then RL reached 70.7%. At maj@64
+    the distilled model still led, 90.0 against 86.7. Their RL data was filtered to 38k math
+    and 35k code problems that a model solves sometimes but not always.
 - **Full R1.** A cold start of "thousands" of long-CoT examples, then reasoning RL with a
   language-consistency reward, rejection sampling (about 600k reasoning + 200k other samples),
   and a final all-scenario RL.
@@ -99,6 +109,23 @@ KL and a binary reward ([arXiv:2503.24290](https://arxiv.org/abs/2503.24290) (Hu
   - The margin is about a third of one AIME problem.
   - It is below QwQ-32B-Preview (50.0).
 
+NVIDIA's Nemotron-Cascade replaces R1's mixed-domain RL with one domain at a time
+([arXiv:2512.13607](https://arxiv.org/abs/2512.13607) (Wang et al., 2025-12, tech report)):
+
+- **Recipe.** Two-stage SFT of Qwen3-8B/14B-Base on DeepSeek-R1 and R1-0528 traces, then
+  on-policy GRPO with no KL, in the order RLHF → instruction-following RL → math → code → SWE.
+  Each stage gets its own length cap and hyperparameters, which is the authors' case against
+  blending domains.
+- **RLHF first helps reasoning.** The RLHF stage used a 72B reward model and no math or code
+  prompts, yet raised LiveCodeBench v5 by 9 to 11 points and AIME by 0.7 to 3.5, mostly by
+  cutting the SFT model's verbose reasoning. It cost 12 to 21 points of IFEval, which the next
+  stage won back. Running instruction-following RL before RLHF was "much worse".
+- **Little forgetting.** Later stages mostly moved earlier benchmarks by about a point; SWE RL
+  added 3.5 to 5.6 on SWE-bench Verified. The authors credit on-policy data and overlapping
+  rewards. The report has no joint multi-domain run at equal compute to compare against.
+- **Result.** The 14B thinking model scored 83.3 AIME25 and 74.6 LiveCodeBench v6, above its
+  SFT teacher R1-0528 on LiveCodeBench (73.3).
+
 This validated the verifiable rewards paradigm and shifted the field's attention from
 "what alignment technique" to "what reward structure."
 
@@ -129,6 +156,9 @@ Xiaomi's MiMo-7B points the same way from the pretraining side
   - It still loses badly on MMLU-Pro (58.6 vs 80.3).
 - **What the RL changed.**
   - The code reward gives partial credit by test difficulty.
+    Magistral tried partial credit by fraction of tests passed and dropped it. Over 250 steps
+    at 24B it threw away a third as many zero-advantage groups, but ended 2 points lower on
+    LiveCodeBench and grew its reasoning length more slowly.
   - The RL data drops easy problems but resamples 10% of them.
   - Dropping them entirely "introduces significant instability".
 - **Caveat.** The "base" saw about 10% synthetic reasoning traces in its last pretraining
@@ -181,6 +211,9 @@ measured on Qwen2.5.
 ([arXiv:2305.11206](https://arxiv.org/abs/2305.11206) (Zhou et al., NeurIPS 2023)), applied to
 long CoT.
 
+- **Before R1, two open o1 replications** from GAIR tested the format first.
+  - Part 1 ([arXiv:2410.18982](https://arxiv.org/abs/2410.18982) (Qin et al., 2024-10, preprint)) built "journey" traces. It grew a reasoning tree with o1-mini marking each step, walked it depth-first through one wrong branch per correct step, and had GPT-4o smooth the result. **On DeepSeekMath-7B, 327 journey traces scored 47.0% on MATH500 against 38.6% for the 327 matching shortcut paths.** DPO on outcome pairs then added 0.2 points. That is one run per arm, three epochs on 327 examples, with no variance reported.
+  - Part 2 ([arXiv:2411.16489](https://arxiv.org/abs/2411.16489) (Huang et al., 2024-11, preprint)) simply distilled o1's outputs. Tens of thousands of traces, with the exact count withheld, on Qwen2.5-Math-72B scored 13/30 on AIME 2024 against o1-preview's 12/30, a one-problem margin. SFT on about 5,000 of the math traces translated into Chinese moved Qwen2.5-72B-Instruct's WildSafety score from 92.0% to 86.5% and its ChineseFactEval accuracy from 69.1% to 62.7%. The extra reasoning invented search results.
 - **s1** ([arXiv:2501.19393](https://arxiv.org/abs/2501.19393) (Muennighoff et al., EMNLP
   2025)) fine-tuned Qwen2.5-32B-Instruct on 1,000 questions with traces distilled from Gemini
   2.0 Flash Thinking, in 26 minutes on 16 H100s.

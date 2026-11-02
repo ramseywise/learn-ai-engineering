@@ -9,7 +9,7 @@ sources:
   - https://addyosmani.com/blog/agent-harness-engineering/
   - "Karpathy, AISN 2026 talk (secondary: YouTube breakdown)"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 9 — The Repo as System of Record
 
@@ -90,6 +90,17 @@ The common failure: the agent makes a mistake, you add a rule, it works for a wh
 - **Decay and contradiction.** Adding feels free and deleting feels risky, so the file only grows, and rules written months apart start disagreeing.
 
 The fix is **progressive disclosure.** The entry file is an index, and the details live in topic docs read on demand. OpenAI calls `AGENTS.md` a *table of contents, not an encyclopedia*, and keeps theirs to about 100 lines.
+
+```mermaid
+flowchart LR
+  A["AGENTS.md<br/>the router, read every session"] --> B["ARCHITECTURE.md<br/>layers, dependency rules"]
+  A --> C["init.sh<br/>how to run"]
+  A --> D["Test, lint and check commands<br/>how to verify"]
+  A --> E["progress.md, feature_list.json<br/>where we are now"]
+  A --> F["docs/<br/>topic files, read on demand"]
+```
+
+Everything to the right of the router costs tokens only when a task opens it. Each arrow answers one question from the fresh session test above.
 
 How long, exactly? The sources disagree. Osmani says under ~60 lines ([note 01](01-what-a-harness-is.md#the-ratchet)), OpenAI about 100, the *learn-harness-engineering* course 50–200. They agree on the rule behind the number: **everything in the root file is read on every task, so each line has to earn that.** Start near 60. Grow only when a line traces to a real failure ([the ratchet](01-what-a-harness-is.md#the-ratchet)), and move a section out to a topic doc once it applies to only some tasks:
 
@@ -196,4 +207,53 @@ A useful lens for agent state:
 
 ---
 
-→ Next: [10-scope-and-done.md](10-scope-and-done.md) — one feature at a time, and what "done" means.
+## Pitfalls
+
+- **Treating a growing rules file as progress.** Symptom: after a few months the entry file is 600 lines and the agent is doing worse. Fix: make it a router with topic docs on demand, whatever length you pick from the sources' ~60, about 100 or 50–200 lines.
+- **Critical rules in the middle of a long file.** Symptom: a security constraint at line 300 gets ignored, since models use the start and end of a long context better (Liu et al., 2023). Fix: keep non-negotiable constraints in the root, near the top.
+- **Decisions that stay in Slack.** Symptom: reviews cite rules nobody wrote down, and sessions redo settled discovery. Fix: update the repo in the same session the decision is made, and delete the stale copy.
+- **Writing a long design doc instead of a short near one.** Symptom: nobody maintains it, and the agent never reaches it. Fix: proximity beats length, so a 50-line `ARCHITECTURE.md` in `src/api/` is worth more than a 500-page design doc.
+- **Rules with no expiry.** Symptom: contradictions between rules written months apart. Fix: record each rule's source, applicability and expiry, and audit on a schedule the way you remove unused dependencies.
+- **Rules that only live in docs.** Symptom: the same boundary violation keeps coming back. Fix: pick the single costliest violation and add one executable guardrail, with an error message that tells the agent how to fix it.
+- **Concurrent writes to one state file.** Symptom: a corrupted progress file. Fix: treat state as transactions, and give each concurrent agent its own branch or worktree and its own progress file.
+
+## Try it
+
+1. Run the fresh session test on a repo you own: a new session, no verbal context, and the five questions. Count the blank spots.
+
+   <details><summary>What to look for</summary>
+
+   Each unanswered question is a blank spot that every new session guesses at again. Fill them in table order: entry file, architecture doc, `init.sh`, verification commands, progress log. Use a second fresh session to confirm, since the first one can't check its own answers against what you know.
+
+   </details>
+
+2. Decide where each goes: "never use `eval()`", "we fixed a WebSocket leak last week", an endpoint auth rule, how to run the migration tool, the decision to use Postgres over DynamoDB.
+
+   <details><summary>Answer</summary>
+
+   Root: `eval()`, as a non-negotiable constraint, ideally also enforced by a check. Progress log or decision log: the WebSocket fix, which is history rather than a rule. Next to the API code: the auth rule. A topic doc or `docs/references/`: the migration tool manual, since long tool manuals don't belong in startup context. `docs/design-docs/`: the Postgres rationale.
+
+   </details>
+
+3. Measure your knowledge visibility gap. List ten decisions or constraints that matter on a project, mark each as in the repo or not, and compute the ratio.
+
+   <details><summary>Worked example</summary>
+
+   If 4 of 10 aren't in the repo, the gap is 40%. Move those in with short, clearly named files, then check that a fresh session finds them without being told where they are. Discovery cost is the next number to reduce.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What can a coding agent actually see? | The system prompt and task, file contents in the repo, and tool output. Slack, Jira and whiteboard decisions don't exist for it. |
+| What is the fresh session test? | Open a new session with no verbal context and ask what this is, how it's organized, how to run it, how to verify it and where things stand. Every miss is guessed again in every later session. |
+| Why does a long `AGENTS.md` hurt? | Budget crowding, lost in the middle, flat priority, and decay with contradiction. The fix is progressive disclosure: an index, plus topic docs of 50–150 lines read on demand. |
+| How long should the entry file be? | Sources disagree: Osmani under ~60 lines, OpenAI about 100, *learn-harness-engineering* 50–200. They agree that everything there is read on every task, so each line has to earn it. |
+| An agent keeps importing across layers despite the docs. What do you do? | Add a lint rule, import-graph test or CI script for that boundary, with an error message saying how to fix it. Docs state rules, and a check makes them hold. |
+| Why is a stale doc worse than none? | It sends the agent the wrong way while it believes it's on track. Update docs with the code and keep one truth. |
+
+## Next
+
+[10-scope-and-done.md](10-scope-and-done.md): one feature at a time, and what "done" means.

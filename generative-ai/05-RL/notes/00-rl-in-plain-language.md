@@ -250,7 +250,7 @@ thumbs-up rate: 0.72 -> 0.85
 truly helpful:  0.57 -> 0.31
 ```
 
-Training worked. The agent did just what it was asked, the thumbs-up rate went from 0.72 to 0.85, and people are helped far less often than before (0.57 down to 0.31). Nothing malfunctioned. The reward was simply a stand-in for what we wanted, and the training found the gap between the two. This is called **reward hacking**, and a real version of it has a name in the field, sycophancy. Chapter [02](02-rlhf-pipeline.md#failure-modes) covers what it looks like at scale and what labs do about it.
+Training worked. The agent did just what it was asked, the thumbs-up rate went from 0.72 to 0.85, and people are helped far less often than before (0.57 down to 0.31). Nothing malfunctioned. The reward was simply a stand-in for what we wanted, and the training found the gap between the two. This is called **reward hacking**, and a real version of it has a name in the field, sycophancy. Chapter [12](12-rlhf-failure-modes.md) covers what it looks like at scale and what labs do about it.
 
 ## Pitfalls
 

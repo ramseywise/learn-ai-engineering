@@ -1,0 +1,623 @@
+# Agentic Frameworks lecture deck. Covers notes 01-07.
+# Build: make slides PILLAR=generative-ai/04-agentic-frameworks STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: one research agent, built by hand, in LangGraph and in Google ADK.
+# Every output on a slide is real output of the lab, with a stub model and no API key.
+deck:
+  title: Agentic Frameworks
+  subtitle: One research agent, built three ways
+  tagline: |-
+    By hand · LangGraph · ADK · Traced · Compared · Composed
+  reference: "Notes: generative-ai/04-agentic-frameworks"
+  output: agentic-frameworks.pptx
+  notes: >-
+    We build one agent over and over. It answers one question from six sources: why do framework agents get stuck in
+    loops, and what stops them? We write the loop by hand, then let LangGraph own it, then give it memory, then rebuild
+    it on ADK, then trace it. At the end we can answer the question every team asks at the start, which is which framework
+    to use, with measurements in place of opinion. Everything runs offline on a scripted stub model.
+
+parts:
+  - title: The loop you write first
+    summary: The research agent · The split of work · From a class to a graph
+    notes: >-
+      Frameworks are easier to judge once you have written what they replace. So we start with no framework.
+    slides:
+      - layout: statement
+        title: What does a framework actually do for you?
+        kicker: The problem
+        statement: "You can't judge a framework until you've written what it replaces, and that turns out to be about twenty lines."
+        attribution: The hand-written loop in the lab, practice/01-research-agent/agent_scratch.py
+        source: notes/01-react-from-scratch-to-langgraph.md
+        notes: >-
+          Most framework comparisons start from feature lists. We start from the loop itself. Once you have it, each framework
+          feature becomes a specific thing you no longer write, and you can ask whether that is worth the indirection.
+
+      - layout: image
+        title: The model proposes, your code acts
+        recall: Who does what in a ReAct loop?
+        image: ../sources/images/ksm26-ai-agents-in-langgraph-fig1.png
+        caption: The ReAct loop (DeepLearning.AI, AI Agents in LangGraph, figure from the ksm26 course snapshot)
+        bullets:
+          - "**The model** only ever writes text or a tool request."
+          - "**Your code** runs the tool and feeds back the result."
+          - "**The loop** ends when the model stops asking."
+        takeaway: The model never runs anything itself; it proposes an action and the code around it runs the action and returns the observation.
+        source: notes/01-react-from-scratch-to-langgraph.md
+        notes: >-
+          This split is the whole architecture. Every framework in this lecture is a different way of organising the code on the
+          right-hand side of this picture.
+
+      - layout: code
+        title: The whole agent is a loop with a guard
+        recall: What are the essential parts of a hand-written agent loop?
+        lang: python
+        code: |-
+          for _ in range(max_turns):
+              reply = model(messages)
+              messages.append({"role": "assistant",
+                               "content": reply})
+              actions = [m for m in map(ACTION_RE.match,
+                         reply.split("\n")) if m]
+              if not actions:
+                  return reply
+              name, arg = actions[0].groups()
+              observation = KNOWN_ACTIONS[name](arg)
+              messages.append({"role": "user",
+                  "content": f"Observation: {observation}"})
+          return None
+        bullets:
+          - "**Stop rule:** no action means done."
+          - "**Guard:** `max_turns` is a budget."
+          - "**The catch:** running out returns `None`, which a caller can miss."
+        takeaway: An agent is a loop that calls a model, runs what it asks for and stops on no action or an exhausted budget.
+        source: notes/01-react-from-scratch-to-langgraph.md
+        notes: >-
+          Simplified from agent_scratch.py. The regex parser is the course's teaching choice, and real agents use native tool
+          calling. Note 01 shows the same loop on the Claude API as well.
+
+      - layout: flow
+        title: The same loop as a two-node graph
+        recall: How does the hand-written loop map onto LangGraph?
+        steps:
+          - {label: START, sub: the question}
+          - {label: model, sub: proposes a call}
+          - {label: route, sub: tool call or not}
+          - {label: tools, sub: run and observe}
+          - {label: END, sub: no more calls}
+        loop: tools goes back to model
+        bullets:
+          - "**State** holds the messages, and a reducer appends to them."
+          - "**The guard moved:** `max_turns` became `recursion_limit`, which counts steps."
+        takeaway: LangGraph's agent is two nodes and one conditional edge, and its loop guard counts graph steps, so a limit of 9 allows 5 model calls.
+        source: notes/01-react-from-scratch-to-langgraph.md
+        notes: >-
+          A model call and a tool run are two steps, and that catches everyone once. The exception also differs. The hand loop
+          returned None, and LangGraph raises GraphRecursionError, which forces the caller to decide what a failed run means.
+
+  - title: A run you can stop and rewind
+    summary: Search built for agents · Threads and checkpoints · Approval gates · Rewinding
+    notes: >-
+      A loop in memory dies with its process. This part makes the run an object you can save, pause and go back to.
+    slides:
+      - layout: statement
+        title: What if the agent is about to publish something wrong?
+        kicker: The problem
+        statement: "The agent's next step is `publish_report`. Nothing lets a person look first, and if the process dies, the run is gone."
+        attribution: The research agent's publish tool, in practice/01-research-agent/research_lab.py
+        source: notes/02-agentic-search-persistence-streaming.md
+        notes: >-
+          Two problems share one solution. Approval needs the run to stop and wait. Crash recovery needs the run to be on disk.
+          Both need the state saved after every step.
+
+      - layout: image
+        title: An agent's search tool should return context, not pages
+        recall: How does agentic search differ from web search?
+        image: ../sources/images/ksm26-ai-agents-in-langgraph-fig5.png
+        caption: Agentic search pipeline (DeepLearning.AI, AI Agents in LangGraph, figure from the ksm26 course snapshot)
+        bullets:
+          - "**Sub-queries, retrieval, chunking, scoring.** The tool does the reduction."
+          - "**Tool output is context.** Every long page costs tokens on every later call."
+        takeaway: Tool output becomes context on every later call, so an agent's search tool should return short scored results, not whole pages.
+        source: notes/02-agentic-search-persistence-streaming.md
+        notes: >-
+          This is lesson three of the course. The lab's search tool returns ids and titles only, and the agent chooses what to
+          read. Same principle, smaller.
+
+      - layout: code
+        title: One checkpointer turns a graph into a resumable thread
+        recall: What does adding a checkpointer change?
+        lang: python
+        code: |-
+          agent = build_agent(
+              checkpointer=InMemorySaver(),
+              interrupt_before=["tools"])
+          config = {"configurable": {"thread_id": "t1"}}
+          inputs = {"messages": [("user", QUESTION)]}
+
+          agent.invoke(inputs, config)
+          agent.get_state(config).next  # ('tools',)
+          agent.invoke(None, config)    # continue
+        bullets:
+          - "**Saved after every node,** keyed by thread id."
+          - "**Nothing about the logic changes.**"
+          - "**`None` as input** means carry on from the checkpoint."
+        takeaway: A checkpointer saves state after every node under a thread id, so a run can pause, resume, survive a crash or rewind without any logic changes.
+        source: notes/02-agentic-search-persistence-streaming.md
+        notes: >-
+          Use a SQLite or Postgres saver in production, because the in-memory one dies with the process. Note 02 builds a second agent over
+          the same SQLite file and restores all 8 messages, standing in for a process restart.
+
+      - layout: compare
+        title: Two ways to gate a publish
+        recall: How do interrupt_before and interrupt() differ?
+        left:
+          title: interrupt_before
+          bullets:
+            - Set at compile time on a node name
+            - The caller inspects and edits state
+            - Good for "stop before every tool"
+          tag: "Lab: paused before tools, wants publish_report"
+        right:
+          title: interrupt() inside a node
+          bullets:
+            - Called from your code, with a payload
+            - Resume with a `Command` carrying the decision
+            - Good for "ask only for this action"
+          tag: "Lab: 'cites only two sources' comes back as REJECTED"
+        takeaway: Use interrupt_before to stop at a fixed node and interrupt() to ask only when a specific action is about to happen, resuming with the reviewer's decision.
+        source: notes/02-agentic-search-persistence-streaming.md
+        notes: >-
+          The rejection goes back to the model as a tool result, which means the model can respond to the review. It is better
+          than failing the run.
+
+      - layout: table
+        title: What a rewind does and does not undo
+        recall: Does rewinding a graph undo external effects?
+        header: [Thing, After a rewind]
+        widths: [3, 7]
+        rows:
+          - [Graph state, Back at the chosen checkpoint]
+          - [Old checkpoints, "Kept. The replay branches, and 12 became 13 in the lab"]
+          - [Nodes after that point, Run again]
+          - [A real API call, "**Happens twice**, unless you use idempotency keys"]
+        highlight: [3]
+        takeaway: Rewinding moves the graph's state and keeps its history, but it reruns nodes, so external actions need idempotency keys or they happen twice.
+        source: notes/02-agentic-search-persistence-streaming.md
+        notes: >-
+          Time travel is wonderful for debugging and dangerous around side effects. The numbers come from the rewind block in note 02.
+
+  - title: An agent that remembers
+    summary: Thread versus store · Semantic memory · Episodic and procedural memory
+    notes: >-
+      A checkpointer remembers one thread. Ask the same question on a new thread and the agent pays for everything again.
+    slides:
+      - layout: statement
+        title: Why does it pay for the same research twice?
+        kicker: The problem
+        statement: "A checkpointer remembers a thread and nothing else. A new thread means every search and every read happens again."
+        attribution: 'The opening problem of note 03, which ends with a repeat question taking 0 tool calls'
+        source: notes/03-long-term-memory-with-langgraph.md
+        notes: >-
+          Short-term memory answers what happened in this conversation. Long-term memory answers what do we know across all of
+          them. Different lifetimes need different storage.
+
+      - layout: flow
+        title: Read memory before the model, write it after
+        recall: Where does long-term memory attach to the graph?
+        steps:
+          - {label: Recall, sub: search the user's namespace}
+          - {label: Model, sub: with findings in context}
+          - {label: Tools, sub: only what's missing}
+          - {label: Store, sub: "write findings", accent: "0EA5C9"}
+        bullets:
+          - "**The checkpointer** holds one thread's messages."
+          - "**The store** outlives every thread and is keyed by namespace."
+        takeaway: Long-term memory is a store read before the model call and written after it, with a lifetime separate from the thread's checkpoints.
+        source: notes/03-long-term-memory-with-langgraph.md
+        notes: >-
+          Keep the two apart in your head. Delete a thread and the store stays. Change a stored fact and every later thread sees it,
+          which is why a wrong memory is more dangerous than a wrong message.
+
+      - layout: cards
+        title: Three kinds of memory, one store
+        recall: What are the three types of long-term memory?
+        cards:
+          - {title: Semantic, body: "Facts the agent found. Saves repeat work. In the lab, findings are stored by user."}
+          - {title: Episodic, body: "Labelled past decisions. Retrieved as few-shot examples, so a correction stays corrected."}
+          - {title: Procedural, accent: "0EA5C9", body: "The prompts themselves, kept in the store. An optimizer can rewrite them, so treat a rewrite as a deploy."}
+        takeaway: Semantic memory holds facts, episodic holds labelled examples and procedural holds the prompts, and all three live in one namespaced store.
+        source: notes/03-long-term-memory-with-langgraph.md
+        notes: >-
+          The course's email assistant uses the same three types. The taxonomy itself is covered in the context engineering
+          pillar. Here we care about how it looks in code.
+
+      - layout: code
+        title: The second visit costs a quarter as much
+        recall: What did semantic memory save in the lab?
+        lang: text
+        code: |-
+          monday, user ana:     3 tool calls, 749 stub tokens
+          tuesday, user ana:    0 tool calls, 184 stub tokens
+          wednesday, user ben:  3 tool calls, 749 stub tokens
+
+          namespaces:
+            ('research', 'ana', 'findings')
+            ('research', 'ben', 'findings')
+        bullets:
+          - "**Tuesday** reuses Monday's findings."
+          - "**Ben pays again,** because memory is namespaced by user."
+          - "**Take the id from run config,** never from model output."
+        takeaway: Semantic memory took a repeat question from 749 to 184 stub tokens for the same user, and namespacing keeps one user's memory away from another's.
+        source: notes/03-long-term-memory-with-langgraph.md
+        notes: >-
+          These are stub token counts from the lab, a word-based count and not billing data, so read the ratio and not the dollars. And
+          sometimes Ben should share what Ana found, which is a design choice about the namespace.
+
+  - title: The same agent on a new runtime
+    summary: ADK's shape · Events · Limits and approval · Built-in evals
+    notes: >-
+      Now we keep the tools and the question and change everything else. The differences are what we came to see.
+    slides:
+      - layout: statement
+        title: What changes when the same tools run on ADK?
+        kicker: The problem
+        statement: "Same tools, same question, same answer. The state, the loop, the guard and the approval all look different."
+        attribution: The research agent in practice/01-research-agent/agent_adk.py
+        source: notes/04-google-adk.md
+        notes: >-
+          A second framework is how you find out which of your assumptions came from the first one.
+
+      - layout: table
+        title: The same ideas under different names
+        recall: How do LangGraph's concepts map onto ADK's?
+        header: [Idea, LangGraph, ADK]
+        widths: [2.4, 3.6, 4]
+        rows:
+          - [The agent, Nodes over typed state, "`LlmAgent`, run by a `Runner`"]
+          - [The transcript, A list of messages, A stream of events]
+          - [Fixed paths, Edges, "`Workflow`, which replaces the old pipeline shells"]
+          - [Loop guard, "`recursion_limit`, in graph steps", "`max_llm_calls`, in model calls"]
+          - [Approval, "`interrupt()`", "`require_confirmation=True`"]
+          - [Saved runs, Checkpointer, Session service]
+          - [Evals, "External: LangSmith, Langfuse", "Built in: `AgentEvaluator`, `adk eval`"]
+        takeaway: LangGraph and ADK solve the same problems, but ADK runs an agent tree and event stream where LangGraph runs an explicit graph over typed state.
+        source: notes/04-google-adk.md
+        notes: >-
+          Measured at google-adk 2.13.0. Tutorials you find online often use SequentialAgent and LoopAgent, which are deprecated at
+          this version. ADK's docs moved to adk.dev as well.
+
+      - layout: code
+        title: ADK's guard counts model calls, and raises
+        recall: How do you cap an ADK agent's loop?
+        lang: python
+        code: |-
+          from google.adk.agents.run_config import RunConfig
+
+          stubborn = LlmAgent(name="stubborn",
+              model=StubLlm(behavior="stubborn"),
+              instruction=SYSTEM_PROMPT, tools=[search])
+          asyncio.run(ask(stubborn, QUESTION,
+              run_config=RunConfig(max_llm_calls=5)))
+
+          # LlmCallsLimitExceededError ->
+          # Max number of llm calls limit of `5` exceeded
+        bullets:
+          - "**Clearer unit:** calls and not graph steps."
+          - "**Still an error:** the caller has to handle it."
+        takeaway: "`RunConfig(max_llm_calls=n)` caps an ADK agent in model calls and raises `LlmCallsLimitExceededError` when the budget runs out."
+        source: notes/04-google-adk.md
+        notes: >-
+          This is real output from note 04. The next slides in the deck come back to what happens when you do not set it.
+
+      - layout: flow
+        title: "An ADK approval is a function call back to your app"
+        recall: How does ADK model a pending approval?
+        steps:
+          - {label: Tool called, sub: require_confirmation}
+          - {label: ADK asks, sub: adk_request_confirmation}
+          - {label: Your app, sub: shows the reviewer}
+          - {label: Response, sub: "confirmed: true or false"}
+        bullets:
+          - "**Same concept as `interrupt()`,** and a different mechanism."
+          - "**Plugins** give guardrails at the runner, across all agents."
+        takeaway: ADK turns a pending approval into a long-running function call your application answers, and plugins apply guardrails at the runner across all agents.
+        source: notes/04-google-adk.md
+        notes: >-
+          ADK's eval harness is the other big difference: AgentEvaluator compares the tool trajectory against a saved test file with no
+          external platform. Note 04 runs it offline on the lab's eval folder.
+
+  - title: Seeing what the agent did
+    summary: Traces · Reading a stuck run · Datasets and evaluators
+    notes: >-
+      We have two builds. How do we see inside either of them, and how do we know a change made things better?
+    slides:
+      - layout: statement
+        title: Every call returned 200. Why did the run fail?
+        kicker: The problem
+        statement: "An agent's worst failures raise no exception at the step that goes wrong. The model just does something unhelpful, twelve times."
+        attribution: "Logic control caused more than a third of failures in Wang et al., preprint, 2025"
+        source: notes/05-langsmith.md
+        notes: >-
+          A service log shows requests and errors. It shows nothing wrong here. You see this failure only by reading the sequence of
+          steps, and that is what a trace is for.
+
+      - layout: flow
+        title: A trace is a tree of runs under one question
+        recall: What does a trace contain?
+        steps:
+          - {label: Agent run, sub: the root}
+          - {label: Model, sub: prompt and reply}
+          - {label: Tool, sub: arguments and result}
+          - {label: Model, sub: next step}
+        loop: repeats until the answer
+        bullets:
+          - "**Lab:** 19 runs in the LangGraph trace and 9 in the ADK trace, for the same work."
+          - "**Tag runs** with framework and version, so experiments compare."
+        takeaway: A trace records each model and tool step as a run in a tree, and framework nesting shows up there too, 19 runs in LangGraph against 9 in ADK for the same work.
+        source: notes/05-langsmith.md
+        notes: >-
+          The count differs because LangGraph traces its graph machinery, and the extra runs are structure, not extra model calls. Both
+          traces contain four model calls.
+
+      - layout: code
+        title: A stuck run is a pattern, not a repeated call
+        recall: What does a trace of a stuck run show?
+        lang: text
+        code: |-
+          raised: GraphRecursionError
+          search | stops them? attempt 1 | furgale-2026 ...
+          search | stops them? attempt 2 | furgale-2026 ...
+          search | stops them? attempt 3 | furgale-2026 ...
+          search | stops them? attempt 4 | furgale-2026 ...
+          tools used: search 4 | read_source calls: 0
+          model calls, tokens: (5, 920)
+        bullets:
+          - "**Each query differs,** so a duplicate check won't fire."
+          - "**The pattern is:** keeps searching, never reads."
+          - "**So check runs of one tool,** and alert on them."
+        takeaway: A stuck agent varies its arguments, so exact-duplicate checks miss it, and you detect it by looking for long runs of one tool in the trace.
+        source: notes/05-langsmith.md
+        notes: >-
+          Real output, captured with a real langsmith Client whose two network calls are replaced, so no account is needed. The
+          looks_stuck check in the note flags this run and not the healthy one.
+
+      - layout: steps
+        title: From traces to a score you can compare
+        recall: How do datasets and evaluators turn traces into experiments?
+        steps:
+          - {title: Seed a dataset, text: "From real traces. A failure you saw beats a case you imagined."}
+          - {title: Start with cheap evaluators, text: "Exact match on citations and a route check on the tools used."}
+          - {title: Add judges last, text: "LLM judges only for what the cheap checks can't express."}
+          - {title: Compare experiments, text: "Lab: baseline cites 0.75 and reads 1.00. Stubborn cites 0.25 and reads 0.25."}
+          - {title: Spot-check labels, n: "★", accent: "D4621A", text: "Agreement with GPT-4 is not accuracy, and the book's 77.5% for Mixtral measures agreement."}
+        takeaway: Seed datasets from real traces, begin with cheap code evaluators, add LLM judges last, and treat agreement with a stronger model as agreement rather than accuracy.
+        source: notes/05-langsmith.md
+        notes: >-
+          The 77.5 percent figure is from Phoenix and Taylor, chapter 4, where Mixtral matched GPT-4 labels in a sentiment test. It
+          counts parse failures as wrong answers and gives no sample size.
+
+  - title: Which one do you keep?
+    summary: What each build costs · How a stuck run stops · What the research says · Lock-in
+    notes: >-
+      Three builds, one answer. Now we decide, using what we measured and what two empirical studies found.
+    slides:
+      - layout: statement
+        title: All three builds give the same answer. Now what?
+        kicker: The problem
+        statement: "Every framework's happy path looks the same. Choose on the stuck run, the resume and the export."
+        attribution: 'Measured: all three builds returned an identical answer in the lab'
+        source: notes/06-framework-selection.md
+        notes: >-
+          The demo can't help you choose. So we measure what demos skip.
+
+      - layout: table
+        title: What the framework adds, with the model removed
+        recall: What overhead does each framework add?
+        header: [Build, Cold start, Per run, Lines, Packages]
+        widths: [3, 2, 2, 1.5, 1.5]
+        rows:
+          - [No framework, 0.03 s, 0.04 ms, "55", "0"]
+          - [LangGraph, 0.34 s, 1.46 ms, "85", "38"]
+          - [Google ADK, 0.56 s, 4.22 ms, "67", "48"]
+        highlight: []
+        takeaway: With a stub model, framework overhead is milliseconds per run and invisible next to a real model call, so the package count is the cost that matters.
+        source: notes/06-framework-selection.md
+        notes: >-
+          One laptop, a stub model, medians over 200 runs and 3 cold starts, langgraph 1.2.19 and google-adk 2.13.0. Lines include each
+          build's stub. Packages come from uv pip compile. Every package is a release you have to absorb.
+
+      - layout: compare
+        title: "Left alone, a stuck agent keeps spending"
+        recall: How many model calls does a stuck agent get by default?
+        emphasis: right
+        left:
+          title: Default limits, measured
+          bullets:
+            - "No framework: your `max_turns`, 6 here, returns `None`"
+            - "ADK 2.13.0: raises after **500** calls"
+            - "LangGraph 1.2.19: raises after **5,004** calls"
+          tag: Counted on the stubborn model
+        right:
+          title: At 0.5 cents a call
+          bullets:
+            - "500 calls cost **$2.50**"
+            - "5,004 calls cost about **$25**"
+            - "Set the limit on every invocation"
+          tag: "Assumes 2,000 in and 100 out at Sonnet 5.5, a floor since transcripts grow"
+        takeaway: LangGraph's default allows 5,004 model calls on a stuck run and ADK's 500, so set a limit on every invocation and test that it trips.
+        source: notes/06-framework-selection.md
+        notes: >-
+          Say the arithmetic out loud. Sonnet 5.5 is 2 dollars in and 10 out per million tokens, so 2,000 in and 100 out is half a cent. A
+          real transcript grows, so it costs more with each call.
+
+      - layout: code
+        title: Set the limit and test that it trips
+        recall: How do you confirm a run limit works?
+        lang: python
+        code: |-
+          # LangGraph counts steps, two per round
+          agent.invoke(inputs, {"recursion_limit": 9})
+          # GraphRecursionError after 5 model calls
+
+          # ADK counts model calls
+          run_config = RunConfig(max_llm_calls=5)
+          # LlmCallsLimitExceededError past 5
+        bullets:
+          - "**Point the stubborn model at it** in a test."
+          - "**Assert the count,** not just the exception."
+        takeaway: Limits have different units, so write a test that drives a stubborn model into each guard and asserts the number of model calls it allowed.
+        source: notes/06-framework-selection.md
+        notes: >-
+          A nine-step limit and a five-call limit are the same budget here. Nobody remembers that unit difference, which is the reason to
+          have the test.
+
+      - layout: flow
+        title: How the same agent stops in each build
+        recall: What does a caller see when each build runs out of budget?
+        steps:
+          - {label: Stubborn model, sub: never stops searching}
+          - {label: Guard fires, sub: turns / steps / calls}
+          - {label: What you get, sub: None / exception / exception}
+          - {label: Caller decides, sub: "retry, report, alert", accent: "D4621A"}
+        bullets:
+          - "**`None`** is the quiet one, and the one a caller can miss."
+          - "**Exceptions** force the decision, but only if you catch them."
+        takeaway: The hand-written build returned None when the budget ran out while both frameworks raised, and in every case the caller has to decide what a stopped run means.
+        source: notes/06-framework-selection.md
+        notes: >-
+          Each row here was measured in the stuck-run section of note 06. What a stopped run should return to a user is a product decision
+          that no framework makes for you.
+
+      - layout: cards
+        title: What two studies found
+        recall: What do the empirical studies say about agent frameworks?
+        cards:
+          - {title: Failures, body: "Logic control is over a third, and termination alone is 21.63%. Wang et al., 8,710 discussions in 1,575 projects."}
+          - {title: Versions, body: "23.53% of technical obstacles are version dependencies. Budget for upgrades, and pin."}
+          - {title: Churn, body: "40.83% of commits are perfective, against 27.36% corrective. Liu et al., eight systems. The surface keeps moving."}
+          - {title: Popularity, accent: "0EA5C9", body: "LangGraph has fewer stars than AutoGen and more sampled repositories. Stars are not adoption."}
+        takeaway: Studies put logic control and version churn among the top agent failures and show stars diverge from adoption, so weigh maintenance above popularity.
+        source: notes/06-framework-selection.md
+        notes: >-
+          Treat percentages loosely. Wang's paper disagrees with itself in places, for example 25.6 against 21.63 percent for termination.
+          Trust the ordering more than the figures. Liu's sample does not include LangGraph or ADK.
+
+      - layout: steps
+        title: Pick by shape, then check how you would leave
+        recall: How do you choose an agent framework?
+        steps:
+          - {title: No framework, text: "One model, a few tools, no pause or resume. A loop over the provider's tool calling."}
+          - {title: LangGraph, text: "Approval gates, resume after a crash, replay, explicit auditable routing."}
+          - {title: ADK, text: "Gemini or Vertex shops, tree-shaped agents, eval and dev UI in the box."}
+          - {title: Others, text: "Pydantic AI for typed Python, OpenAI Agents SDK for handoffs, Microsoft for .NET and Azure."}
+          - {title: Lock-in test, n: "★", accent: "D4621A", text: "Plain-function tools, prompts in files, OTEL traces, each run exported to plain rows."}
+        takeaway: Choose by control flow and durability, not by demo, and keep tools, prompts and eval data neutral so that switching costs stop at the adapter.
+        source: notes/06-framework-selection.md
+        notes: >-
+          The other frameworks in this table are from vendor docs and we did not build them, so confidence is medium. The export test in
+          note 06 turns both builds into the same rows, and it shows the same route of tools.
+
+  - title: Inside the node
+    summary: Moving data · Capped batches · Structured output · A plan you can validate
+    notes: >-
+      Inside a graph node you often need several model calls in a row. That is what LCEL is for, up to a point.
+    slides:
+      - layout: statement
+        title: What happens to a key you forgot to carry forward?
+        kicker: The problem
+        statement: "The report needs the question, the findings and the gaps. Written by hand, one forgotten key fails three steps later."
+        attribution: 'The film-script chain in Phoenix & Taylor, ch. 4, redone on the research report'
+        source: notes/07-lcel-composition-in-practice.md
+        notes: >-
+          The book's example chains characters, plot and scenes. We use findings, gaps and report. The problem is the same.
+
+      - layout: code
+        title: Each step adds a key and keeps the rest
+        recall: What does RunnablePassthrough.assign do?
+        lang: python
+        code: |-
+          pipeline = (
+              RunnablePassthrough.assign(
+                  findings=findings_prompt | model | to_text)
+              | RunnablePassthrough.assign(
+                  gaps=gaps_prompt | model | to_text)
+              | RunnablePassthrough.assign(
+                  report=report_prompt | model | to_text)
+          )
+          list(pipeline.invoke({"question": QUESTION}))
+          # ['question', 'findings', 'gaps', 'report']
+        bullets:
+          - "**`assign`** adds a key, so nothing can go missing."
+          - "**Order matters:** `model | prompt` can run and return a prompt, silently."
+        takeaway: "`RunnablePassthrough.assign` passes the input through and adds a computed key, so later steps see both the original input and every output so far."
+        source: notes/07-lcel-composition-in-practice.md
+        notes: >-
+          The wrong-order case surprised us. We expected an error, and a one-variable template wraps whatever it receives, so it runs and
+          hands back a ChatPromptValue. Check the output type once.
+
+      - layout: image
+        title: Map-reduce is just batch, then invoke
+        recall: How do you build map-reduce with LCEL?
+        image: ../sources/images/prompt-engineering-for-generative-ai-fig4-7.png
+        caption: Map and reduce over comments (Phoenix & Taylor, Prompt Engineering for Generative AI, Fig. 4-7)
+        bullets:
+          - "**Cap it:** `max_concurrency`. In the lab, a cap of 2 peaked at exactly 2."
+          - "**Reduce can overflow.** Collapse in batches."
+          - "**Map can't see across documents.**"
+        takeaway: Map-reduce is a capped batch followed by one invoke, and its limits are that reduce can overflow and map can't see contradictions across documents.
+        source: notes/07-lcel-composition-in-practice.md
+        notes: >-
+          Tag each partial with its source before joining. The lab's run over six sources does this, so the answer can still cite.
+
+      - layout: compare
+        title: A plan from a model is untrusted input
+        recall: How do you run a model-written query plan safely?
+        left:
+          title: Validate first
+          code: |-
+            unknown id -> ValueError
+            cycle      -> CycleError
+          tag: "`graphlib`: both raise before any paid step runs"
+        right:
+          title: Then run in waves
+          code: |-
+            1 [How often ...  | using []]
+            2 [What validates | using []]
+            3 [Does valid...  | using [1, 2]]
+          tag: "Each ready wave is one `.batch()`. A runtime plan is where LCEL stops"
+        takeaway: Validate a model-written plan for unknown ids and cycles before running it, and move to a graph once the steps are decided at runtime.
+        source: notes/07-lcel-composition-in-practice.md
+        notes: >-
+          Schemas also catch invented arguments, and in the lab a wrong type and a missing field produced two validation errors, whose text
+          goes back to the model. On Claude Opus 5.5 a forced tool choice returns a 400, so check your provider.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        recall: What rules of thumb summarize agentic frameworks?
+        cards:
+          - {title: Hand-write it once, body: "You learn what a framework hides, and can judge whether that's worth it."}
+          - {title: Choose by shape, body: "Control flow and durability are expensive to change. Demos all look the same."}
+          - {title: Set every limit, body: "Defaults allow 500 to 5,004 model calls. Test that the guard trips."}
+          - {title: Keep it neutral, body: "Plain-function tools, prompts in files, one dataset. Switching stops at the adapter."}
+          - {title: Trace from day one, body: "With the framework and version in metadata. Stuck runs show up only as patterns."}
+          - {title: Pin versions, accent: "D4621A", body: "Version dependencies are 23.53% of obstacles in Wang et al. Run evals on every upgrade."}
+        takeaway: Write the loop once, choose by control flow, set every limit and keep your tools and data free of the framework.
+        source: notes/06-framework-selection.md
+        notes: The one-page summary. The fuller table is in the pillar README.
+
+      - layout: bullets
+        title: Where next
+        recall: Where does this pillar lead?
+        bullets:
+          - "**Run the lab:** `practice/01-research-agent/`, all offline. Start with `demo_06_selection.py`."
+          - "**05-RL:** how the models inside these agents are post-trained."
+          - "**06-observability and 08-eval:** tracing and evaluating agents in production, read together."
+          - "**07-agentic-applications:** these frameworks applied to complete agents."
+          - "**ai-engineering/05-graph-engineering:** the theory behind the graphs."
+        takeaway: Run the lab first, then follow the course on to post-training, observability and evaluation, and complete applications.
+        source: notes/07-lcel-composition-in-practice.md
+        notes: End on the lab. It costs nothing to run, and the numbers on these slides are yours to reproduce.
