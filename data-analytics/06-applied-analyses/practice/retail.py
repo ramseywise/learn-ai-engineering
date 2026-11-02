@@ -4,6 +4,48 @@ Same plot as the visualisation pillar: email budget cut in January 2025, paid so
 to 2.6 times its old size. This generator is new and works at customer level, so its totals
 are not calibrated to the pillar 05 charts. Nothing is read from disk, and every call with
 the default seed returns the same rows.
+
+The first five tables feed chapters 1 to 6 and are frozen: their numbers are quoted in the notes.
+The rest are overlays for later chapters. They share customer ids and channels with load_customers,
+draw from their own streams (STREAMS) and never feed back, so a club member's extra spend, say, is
+not in load_orders. Columns starting `true_` are what no analyst would see. load_truth(table) gives
+that table's parameters and realised true effects as a dict; the *_DGP constants hold the parameters.
+
+load_subscriptions (truth "subscriptions", 06/07): subscription_id, customer_id, channel, plan,
+    monthly_price, welcome_call, start_date, end_date, event, event_type (cancel, downgrade),
+    churn_reason, duration_days, price_rise_day, true_duration_days, true_event_type.
+    Cancel hazard is Weibull with HRs by channel and plan. The welcome call has HR .60 for 90 days,
+    then 1.0, so a single HR breaks proportional hazards; who gets a call is confounded by channel and
+    plan. The price rise has HR 1.5 from 2025-03-01 for those already subscribed. Downgrade is a
+    competing risk. The HRs are for cancels, treating downgrades as censored.
+load_subscription_periods (same truth): subscription_id, customer_id, channel, plan, welcome_call,
+    tenure_month, start_day, stop_day, cancel, downgrade, welcome_early, price_rise_active. One row per
+    30 days at risk. price_rise_active is 1 if the rise came by start_day; use price_rise_day for exact timing.
+load_club (truth "club", 03/05): customer_id, channel, prior_orders, prior_spend, recency_days,
+    tenure_days, club, spend_next_6m, sessions_next_6m (post-treatment), true_engagement (the unobserved
+    confounder), true_propensity, true_y0, true_y1. true_ate, true_att and true_atc differ on purpose.
+load_journeys (truth "journeys", 06/08): customer_id, channel, month_index, month, state (new, active,
+    lapsed, churned), orders, revenue, true_journey_type. Four planted types, each a Markov chain, so a
+    single pooled chain misprices a new customer.
+load_marketing_weekly (truth "marketing", 06/09): week, revenue, spend_<channel>, new_customers_<channel>,
+    true_baseline, true_contribution_<channel>. Geometric adstock and Hill saturation per channel; spend
+    follows the January 2025 cut and rises before Christmas with sales. Revenue is not reconciled to load_orders.
+load_geo_test (truth "geo_test", 06/09): geo, pair, week, holdout, post, spend_paid_social, revenue,
+    true_paid_social_contribution, true_counterfactual_revenue. Randomised paid social holdout on
+    the same response curve as load_marketing_weekly, giving true_iroas.
+load_touch_paths (truth "touch_paths", 06/09): path_id, path, n_touches, converted, value, true_intent,
+    true_p_convert. Paid social retargets people already likely to buy, so last touch overcredits it
+    against true_incremental_share.
+load_repeat_log (truth "repeat_log", 06/09): customer_id, order_date, value, true_alive_at_end,
+    true_rate_per_week, true_dropout_p. Drawn from BG/NBD and Gamma-Gamma exactly (r, alpha, a, b, p, q, v).
+load_fulfilment (truth "fulfilment", 06/10): order_id, customer_id, order_date, category, pick_minutes,
+    pack_minutes, dispatch_date, delivered_date, lead_time_days. One row per order in load_orders.
+    Furniture is slow, November and December slower, and the June 2023 outage delays dispatch.
+load_packing_line (truth "packing_line", 06/10): parcel_id, date, weekday, packer, arrived, pack_start,
+    pack_end, wait_minutes, pack_minutes. Simulated M/M/c, with erlang_c() and its results as the truth.
+load_products, load_product_demand, load_purchase_orders (truth "products", 06/10): sku, category,
+    unit_cost, unit_price, salvage_value, holding_cost_per_year, order_cost, christmas_only; week, sku,
+    units; po_id, sku, ordered, lead_time_days, received. Truth by_sku holds each newsvendor_q, eoq and safety_stock.
 """
 from copy import deepcopy
 from functools import lru_cache
@@ -321,14 +363,14 @@ def load_subscription_periods(seed=SEED):
 CLUB_DGP = {
     # P(join): logit on standardised covariates. Y(0): £ in the next six months, with a curve in prior spend.
     "logit_join": {"const": -.40, "z_log_prior_orders": 1.10, "z_log_prior_spend": .70, "z_recency": -.50,
-                   "unobserved_engagement": .80},
+                   "unobserved_engagement": .50},
     "logit_join_channel": {"paid_social": -.70, "organic": 0.0, "email": .60, "referral": .20},
     "y0": {"const": 55.0, "z_log_prior_orders": 28.0, "z_log_prior_spend": 22.0, "z_log_prior_spend_squared": 12.0,
-           "z_recency": -15.0, "unobserved_engagement": 18.0, "noise_sd": 30.0},
+           "z_recency": -15.0, "unobserved_engagement": 8.0, "noise_sd": 30.0},
     "y0_channel": {"paid_social": -8.0, "organic": 0.0, "email": 6.0, "referral": 2.0},
     # Y(1) - Y(0) grows with prior orders, so the effect on joiners exceeds the effect on everyone.
     "effect": {"const": 15.0, "z_log_prior_orders": 10.0, "email_extra": 5.0},
-    "unobserved_odds_ratio_per_sd": float(np.exp(.80)),
+    "unobserved_odds_ratio_per_sd": float(np.exp(.50)),
     "backdoor_observed": ["channel", "prior_orders", "prior_spend", "recency_days", "tenure_days"],
     "not_observed": "true_engagement",
     "post_treatment": "sessions_next_6m",
@@ -477,7 +519,7 @@ MARKETING_DGP = {
     "hill_K": {"paid_social": 5000.0, "organic": 1000.0, "email": 900.0, "referral": 500.0},
     "hill_slope": {"paid_social": 1.5, "organic": 1.0, "email": 1.2, "referral": 1.0},
     "beta": {"paid_social": 15000.0, "organic": 3000.0, "email": 6000.0, "referral": 2000.0},
-    "baseline_level": 22000.0, "baseline_trend_per_week": 15.0, "baseline_xmas_lift": .30, "revenue_noise_sd": 900.0,
+    "baseline_level": 12000.0, "baseline_trend_per_week": 15.0, "baseline_xmas_lift": .30, "revenue_noise_sd": 900.0,
 }
 
 

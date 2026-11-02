@@ -333,6 +333,8 @@ Prompt A looks ten points better. With 20 cases its lower bound is 0.81, about t
 
 BMH ch. 6's limitation: the lower bound favours old items with many votes. Ranking by a *sample* from each item's posterior (the comment-ranking bandit in [chapter 3](03-priors-and-bandits.md)) gives new items a chance to be seen.
 
+A test read across many segments or markets has the same problem at a larger scale: the small segments hold the extreme numbers, and the segment that wins was picked partly for its luck. [Chapter 7](07-multilevel-models-and-partial-pooling.md) estimates all the segments together, and measures how much that shrinks the winner's exaggeration and when it doesn't help.
+
 ## Pitfalls
 
 | Pitfall | What goes wrong | Fix |

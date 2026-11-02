@@ -45,7 +45,7 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 | [DS 01/01 Statistical foundations](../../data-science/01-classical-ml/notes/01-statistical-foundations.md) | Takes conditional probability, expectation and maximum likelihood as given |
 | [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The same two error cells, and the bootstrap for a metric's interval |
 | [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | Standard errors, paired tests and multiple comparisons on pass rates |
-| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | A judge's pass rate is biased in the same way as a base-rate calculation |
+| [GA 08/05 LLM as judge](../../generative-ai/08-eval/notes/05-llm-as-judge.md) | Correcting a judge's pass rate is the same accounting as a base-rate calculation |
 | [AIE 09/03 Guardrail models](../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md) | Shows the base-rate result on a safety classifier |
 | [DE 05/01 Quality dimensions and tests](../../data-engineering/05-quality-and-observability/notes/01-quality-dimensions-and-tests.md) | EDA's checks for impossible values become pipeline tests |
 

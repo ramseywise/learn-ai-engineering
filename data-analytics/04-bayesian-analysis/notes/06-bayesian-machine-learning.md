@@ -513,4 +513,4 @@ The final project combines both: train a VAE on faces, then use Bayesian optimis
 
 ## Next
 
-That closes the pillar. [Visualisation and storytelling](../../05-visualisation-and-storytelling/README.md) is how you present these answers to the people who decide. Model building continues in [data-science](../../../data-science/README.md), pipelines in [data-engineering](../../../data-engineering/README.md), and LLM applications in [generative-ai](../../../generative-ai/README.md).
+[Chapter 7: Multilevel Models and Partial Pooling](07-multilevel-models-and-partial-pooling.md) returns to the Larkspur experiment with many markets in it: how much to trust each market's own number, what partial pooling does to the winning segment's effect, when it does not help, and when clustered standard errors or fixed effects are the better tool.

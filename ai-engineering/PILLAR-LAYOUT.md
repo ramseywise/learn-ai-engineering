@@ -29,8 +29,8 @@ The README's groupings of the notes become the deck's parts.
 chapters in other subjects the pillar assumes, with one line on why. **Feeds into** lists the later
 chapters that use it. List only chapters that exist; a table with nothing to list says so in one row.
 `scripts/check_chapters.py` warns when a README has neither table. Links at chapter level go inline
-in the note, where the concept is first used: `see [chapter](path) in data analytics for the
-derivation`.
+in the note, where the concept is first used:
+`see [chapter](path) in data analytics for the derivation`.
 
 ## notes/
 

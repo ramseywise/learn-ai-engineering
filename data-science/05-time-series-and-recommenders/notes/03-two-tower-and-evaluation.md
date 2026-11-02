@@ -4,7 +4,7 @@ sources:
   - ../references.md
   - "MovieLens 100K (Harper & Konstan, 2015)"
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 
 # Two-tower retrieval and offline and online evaluation
@@ -269,6 +269,30 @@ two-tower plain          0.0379         0.3260
 ```
 
 Two things stand out. The sampled numbers are about four to nine times higher, so a reader would conclude that the models are far better than they are. And the order changes: EASE beats the corrected tower on the full ranking and loses on the sampled one. Had this comparison been made on the sampled metric, we would have picked the other model. With a modern laptop and a retrieval index, there is rarely a reason to accept this.
+
+The table above counts hits. **Mean reciprocal rank** (MRR) asks a narrower question: how far down the list is the first thing this user liked? Each user scores $1/\text{rank}$ of their best-placed relevant item, so it ignores everything after that. Here it is alongside the recall and NDCG from the full ranking.
+
+```python
+def mrr(score_fn, truth=truth_test):
+    us = np.array(sorted(truth))
+    S = np.asarray(score_fn(us), dtype=float).copy()
+    S[seen[us].nonzero()] = -np.inf; S[:, 0] = -np.inf
+    return np.mean([1 / ((S[row] > S[row, list(truth[u])].max()).sum() + 1) for row, u in enumerate(us)])
+print("%-20s %10s %10s %10s" % ("model", "recall@10", "NDCG@10", "MRR"))
+for name, f in models.items():
+    e = evaluate(f)
+    print("%-20s %10.4f %10.4f %10.4f" % (name, e["recall"], e["ndcg"], mrr(f)))
+```
+
+```text
+model                 recall@10    NDCG@10        MRR
+popularity               0.0900     0.0752     0.1582
+EASE                     0.1550     0.1259     0.2270
+two-tower logQ           0.1413     0.1095     0.1972
+two-tower plain          0.0532     0.0382     0.0788
+```
+
+All three metrics order these four models the same way, and they needn't. A model that places one liked film first and nothing else in the top 10 would score well on MRR and poorly on recall. Use MRR when a single good result ends the task, as it does for "find me something to watch tonight", and recall and NDCG when the list as a whole is the product. Popularity scores contain ties, and the code counts a tie in the item's favour, so its MRR is slightly generous.
 
 ## Offline evaluation: counterfactual estimates
 

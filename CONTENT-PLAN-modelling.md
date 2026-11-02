@@ -27,7 +27,7 @@ to close them inside the existing pillars, so no freeze exception is needed.
 5. **Judges are calibrated against humans, but heuristic checks and the judge's own reasoning are barely
    used as evidence.** Code checks only filter rows before the judge, nothing says what to do when a check
    and the judge disagree, and critiques are written without being coded, counted or tested for
-   faithfulness. The fix is one section in an existing note, set out in §2.7.
+   faithfulness. The fix is one new note, set out in §2.7.
 
 ---
 
@@ -201,11 +201,12 @@ A pillar "models of people and processes" would read well, but CURRICULUM.md fro
 to ten chapters, which the deck spec allows. If the pillar reads as two stories after the chapters exist
 (customers and operations), split it then, with the reason written in CURRICULUM.md.
 
-### 2.7 Not a new chapter: checks and critiques as evidence about the judge
+### 2.7 GA 08/14: checks and critiques as evidence about the judge
 
-[GA 08/05](generative-ai/08-eval/notes/05-llm-as-judge.md) gets one new section after *Calibrate against
-human labels*. The gaps come from reading the relevant sections and from keyword searches across GA 08,
-GA 06 and AIE 01 on 2026-11-02, so re-check them against the full note before writing. The section teaches
+This was planned as a section of [GA 08/05](generative-ai/08-eval/notes/05-llm-as-judge.md), but that note is at
+the 7,000-word limit. It becomes a new note, `generative-ai/08-eval/notes/14-calibrating-judges-with-checks-and-critiques.md`,
+with a pointer from 05's *Calibrate against human labels*. The gaps come from reading the relevant sections and from keyword searches across GA 08,
+GA 06 and AIE 01 on 2026-11-02, so re-check them against the full note before writing. The note teaches
 four things, in this order.
 
 **1. Run the code checks against the judge.** Where a code check tests part of the judge's criterion, the
@@ -217,7 +218,7 @@ judge.
 | **Code passes** | Normal. The random human sample covers these | Either the judge caught what the check can't see, or it failed a good output. A person decides, and the answer shows which side to fix |
 | **Code fails** | The judge passed an output with a checkable fault. This is its false-pass rate on faults you can prove, and the case to read first | Agreement. This gives the judge's catch rate on provable faults. They are probably its easiest cases, so don't assume the rate holds for the subjective ones |
 
-The section has to state four limits:
+The note has to state four limits:
 
 - **Human labels stay the calibration.** Agreement with code tests the judge only on what code can check,
   so it says nothing about the subjective part of the criterion. It doesn't move a grader out of
@@ -256,7 +257,7 @@ These prompt changes are hypotheses, so each one has to win on dev before it sta
 
 **4. Test whether a critique reports what drove the verdict.** Coding critiques assumes they are honest, and
 the evidence says that often fails. Marioriyad et al. injected cues such as source and recency, and found
-strong verdict shifts with acknowledgement at or near zero. So the section adds two tests:
+strong verdict shifts with acknowledgement at or near zero. So the note adds two tests:
 
 - **Cue test.** Add a cue that should not matter, and record both the verdict shift rate and how often the
   critique mentions the cue.
@@ -265,7 +266,7 @@ strong verdict shifts with acknowledgement at or near zero. So the section adds 
 
 Tapwal et al.'s evidence-first prompt, *Proof-Before-Preference*, is the mitigation to try: it locks the
 evidence before scoring. Note 05's line that reasoning first "improves accuracy" has no source today, so find one
-or soften it when this section goes in. Mittal and Arike add a warning: judges
+or soften it when this note goes in. Mittal and Arike add a warning: judges
 often detect that a reasoning error exists but struggle to locate it, and they overestimate completeness.
 Don't rely on a judge alone to grade reasoning.
 
@@ -278,12 +279,12 @@ to claim anything about faithfulness.
 
 | Note | Links to | What to add |
 |---|---|---|
-| [GA 08/04 Graders](generative-ai/08-eval/notes/04-graders.md) | GA 08/05 | One line in *Layer them, don't choose*: stop early in production, but not during calibration |
-| [GA 08/02 Defining correct](generative-ai/08-eval/notes/02-defining-correct.md) | GA 08/05 | Open coding also applies to the judge's critiques |
-| [GA 06/03 Judge pipelines](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) | GA 08/05 | The override and the Danish false alarms are instances of parts 2 and 3 |
-| [AIE 01/08 Prompt optimization](ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md) | GA 08/05 | An optimiser fed judge feedback inherits unfaithful critiques, so test the judge first. Add to the failure-category checklist and the GEPA pitfall |
-| [AIE 01/09 Evaluating prompts](ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | GA 08/05 | From its judge section to this one |
-| [AIE 01/03 Core techniques](ai-engineering/01-prompt-engineering/notes/03-core-techniques.md) | GA 08/05 | Its warning about rationalisation, and Turpin et al., applied to judges |
+| [GA 08/04 Graders](generative-ai/08-eval/notes/04-graders.md) | GA 08/14 (new) | One line in *Layer them, don't choose*: stop early in production, but not during calibration |
+| [GA 08/02 Defining correct](generative-ai/08-eval/notes/02-defining-correct.md) | GA 08/14 (new) | Open coding also applies to the judge's critiques |
+| [GA 06/03 Judge pipelines](generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) | GA 08/14 (new) | The override and the Danish false alarms are instances of parts 2 and 3 |
+| [AIE 01/08 Prompt optimization](ai-engineering/01-prompt-engineering/notes/08-prompt-optimization.md) | GA 08/14 (new) | An optimiser fed judge feedback inherits unfaithful critiques, so test the judge first. Add to the failure-category checklist and the GEPA pitfall |
+| [AIE 01/09 Evaluating prompts](ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | GA 08/14 (new) | From its judge section to this one |
+| [AIE 01/03 Core techniques](ai-engineering/01-prompt-engineering/notes/03-core-techniques.md) | GA 08/14 (new) | Its warning about rationalisation, and Turpin et al., applied to judges |
 
 ---
 
@@ -528,7 +529,7 @@ GA and AIE papers go into the ledger under their own pillars, not `home: analyti
 | 10 | DA 06/10 operations | `/chapter` with Cachon and Terwiesch | one chapter |
 | 11 | DS 01/11 metric map, plus the fills in DS 01/04, DS 05/03 and DA 02/06. Reuses DS 01/10 and the credit lab, both finished | `/chapter` with Gneiting, Chicco and Jurman | one short chapter and three small edits |
 | 12 | DS 01/12 reading the errors, including the noise-fix demonstration. Starts after phase 11 so it can link back | `/chapter` with Ng, Errudite, Slice Finder | one chapter |
-| 13 | GA 08/05's new section (§2.7), and one exercise each for its offline and online parts. Links to DS 01/12, so it follows phase 12 unless the link is added later | `/papers` with Marioriyad, Tapwal, Mittal and Arike, Lanham | one section and one exercise |
+| 13 | GA 08/14 (§2.7) with a pointer from 05, and one exercise each for its offline and online parts. Links to DS 01/12, so it follows phase 12 unless the link is added later | `/papers` with Marioriyad, Tapwal, Mittal and Arike, Lanham | one note and its exercises |
 | 14 | Second cross-link pass for the rows marked new, including the thread in §3.7 and the §2.7 links; READMEs, CURRICULUM.md path (new steps 4b "say what the model claims" and 8b "model an event, a state and a plan"), rules of thumb; rebuild the five decks (DA 02, 03, 04, 06 and DS 01) | `/pillar`, `/slides` | one pass |
 | 15 | Ledger: curated rows for every §4 paper, route the free PDFs, mark `integrated` as each chapter lands | `/readings` | runs alongside 3 to 13 |
 
@@ -553,7 +554,7 @@ For the data-analytics README once they exist:
 - Read errors on one split and score fixes on another. Fix a class of error, never the rows you read.
 - Start from the target: it picks the model family, the loss, the metric and the baseline, in that order.
 
-For [GA 08/05](generative-ai/08-eval/notes/05-llm-as-judge.md) once its new section exists:
+For GA 08/14 once it exists:
 
 - When a code check and the judge disagree, read that row first. It shows which of them to fix.
 - Run the judge on rows code already failed during calibration, and stop early only in production.

@@ -9,8 +9,10 @@ sources:
   - ../../sources/davis-2006-relationship-between-precision-recall-roc.pdf
   - ../../sources/guo-2017-calibration-modern-neural-networks.pdf
   - ../../sources/minderer-2021-revisiting-calibration-modern-neural-networks.pdf
+  - https://doi.org/10.1186/s12864-019-6413-7
+  - https://doi.org/10.1109/ICPR.2010.764
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 # Model Evaluation
 
@@ -225,8 +227,30 @@ weighted avg       0.98      0.98      0.98       450
 | FPR | $FP/(FP+TN)$ | | The x-axis of ROC |
 | F1 | $2PR/(P+R)$ | Harmonic mean of P and R | One number for an imbalanced positive class |
 | $F_\beta$ | weights recall $\beta$ times | | Asymmetric preference |
+| Balanced accuracy | $\tfrac12\big(TP/(TP+FN) + TN/(TN+FP)\big)$ | Mean recall over the two classes; 0.5 is chance | Skewed classes when you have no costs |
+| Matthews correlation (MCC) | $\dfrac{TP\cdot TN - FP\cdot FN}{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}$ | Correlation between prediction and truth; 0 is chance, 1 is perfect | One number that uses all four cells, with no costs |
 
 The dummy "always not-nine" has accuracy 0.90 and F1 0.00 on the positive class. F1 exposes it.
+
+Balanced accuracy and MCC expose it too, and they don't need you to pick a positive class for F1 to report:
+
+```python
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, matthews_corrcoef
+
+for name, m in models.items():
+    pred = m.predict(X_test)
+    print(f"{name:14s} accuracy {accuracy_score(y_test, pred):.3f}  "
+          f"balanced {balanced_accuracy_score(y_test, pred):.3f}  MCC {matthews_corrcoef(y_test, pred):.3f}")
+```
+
+```text
+most_frequent  accuracy 0.896  balanced 0.500  MCC 0.000
+stratified     accuracy 0.802  balanced 0.485  MCC -0.028
+tree depth 2   accuracy 0.918  balanced 0.729  MCC 0.515
+logistic       accuracy 0.984  balanced 0.935  MCC 0.915
+```
+
+The tree's accuracy of 0.918 looks close to the dummy's 0.896, and the other two columns show how wide the gap really is. [Brodersen et al.](https://doi.org/10.1109/ICPR.2010.764) (ICPR 2010) argue for balanced accuracy on this ground: when accuracy is high only because of an imbalanced test set, balanced accuracy "will drop to chance". [Chicco and Jurman](https://doi.org/10.1186/s12864-019-6413-7) (BMC Genomics 2020) argue for MCC over accuracy and F1 when you have a threshold. Neither is a cost, and each has limits.
 
 This table comes back with new labels. In a [RAG pipeline](../../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md#measure-each-stage), a relevant chunk in the top k is a true positive, an irrelevant one a false positive and a relevant chunk left out a false negative. The cut-off k plays the part of the threshold, and the true negatives are the rest of the corpus, so many that accuracy says nothing.
 
