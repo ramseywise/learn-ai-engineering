@@ -37,10 +37,12 @@ The chapters can be read in any order, though 3 to 6 share a dataset and refer t
 
 | Chapter | Why |
 |---|---|
-| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Forecasting carries the same idea through to a staffing decision |
+| [DS 05/01 Time-series ML](../../data-science/05-time-series-and-recommenders/notes/01-time-series-ml.md) | Forecasting carries the same idea through to a staffing decision, and note 10 through to a stock order |
 | [DS 01/10 Imbalance, errors and drift](../../data-science/01-classical-ml/notes/10-imbalance-errors-and-drift.md) | Picks up where the credit scorecard stops |
-| [DS 01/05 Unsupervised learning](../../data-science/01-classical-ml/notes/05-unsupervised-learning.md) | Segmentation puts k-means to work on customers |
+| [DS 01/05 Unsupervised learning](../../data-science/01-classical-ml/notes/05-unsupervised-learning.md) | Segmentation puts k-means to work on customers, and note 08 clusters journeys by their order |
 | [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | PSI is computed in the credit chapter |
+| [GA 05 RL](../../generative-ai/05-RL/README.md) | Note 08's Markov chain with rewards is an MDP without actions |
+| [DS 01/12 Reading the errors](../../data-science/01-classical-ml/notes/12-reading-the-errors.md) | Credit's cut-off leads on to reading who is wrongly declined |
 
 ## Rules of thumb
 

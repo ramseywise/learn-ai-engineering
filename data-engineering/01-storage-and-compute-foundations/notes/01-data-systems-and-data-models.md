@@ -11,7 +11,7 @@ cleaned: 2026-11-01
 
 A taxi app looks like one product and is really a small crowd of storage systems: a relational database for trips, a cache in front of it, a search index for addresses, a queue for receipts and a warehouse for the finance team. Nobody sold you that combination. You assembled it with application code, which makes you the designer of a data system whether or not that was the plan. This chapter sets out the vocabulary for talking about such a system, namely what reliable and scalable actually mean in numbers, and then the first decision every system makes, which is the shape data takes when you write it down. Everything later in this pillar is a mechanism under one of these two headings.
 
-Kleppmann's [*Designing Data-Intensive Applications*](https://dataintensive.net/) is the core text for this subject, and this chapter follows its first two chapters (ch. 1, pp. 3-23; ch. 2, pp. 27-64). The [reading map](../../CURRICULUM.md#reading-map-designing-data-intensive-applications) shows where each of its twelve chapters lands in these notes. All the code here runs with `uv run --with numpy python 01_data_systems_and_data_models.py`, using SQLite from the standard library.
+Kleppmann's [*Designing Data-Intensive Applications*](https://dataintensive.net/) is the core text for this subject, and this chapter follows its first two chapters (ch. 1, pp. 3-23; ch. 2, pp. 27-64). The [reading map](../../references.md#reading-map-designing-data-intensive-applications) shows where each of its twelve chapters lands in these notes. All the code here runs with `uv run --with numpy python 01_data_systems_and_data_models.py`, using SQLite from the standard library.
 
 ## You are building a data system
 

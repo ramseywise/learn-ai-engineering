@@ -44,11 +44,11 @@ By the end of the course, you can:
 | Pillar | The analyst's job | What you learn | Portfolio evidence |
 |---|---|---|---|
 | [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | Cleaned dataset and validated analysis |
-| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | Statistical analysis memo |
-| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | Experiment brief or causal-design critique |
-| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | Diagnosed PyMC decision analysis |
+| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test and fit regressions, then say what a model claims. | Statistical analysis memo |
+| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading, including by matching and weighting. | Experiment brief or causal-design critique |
+| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests, loss functions and multilevel models. | Diagnosed PyMC decision analysis |
 | [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | Decision-ready visual narrative or dashboard |
-| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | End-to-end analysis portfolio |
+| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation, SQL, survival, journeys, marketing measurement and operations. | End-to-end analysis portfolio |
 
 Read them in order the first time. Units 01 to 03 are the core sequence. Take Unit 04 after Unit 03; it revisits inference and A/B testing through a Bayesian decision framework. Take Unit 05 before or alongside Unit 06.
 
@@ -100,6 +100,8 @@ Name the distribution, fix the sample size before you look, and report effect si
 4. Estimate quantities with intervals, bootstrap procedures, and sample-size reasoning.
 5. Select, run, and interpret a hypothesis test, including an appropriate multiple-comparison correction ([Wasserstein and Lazar](https://doi.org/10.1080/00031305.2016.1154108) on what a p-value does not say).
 6. Fit and interpret linear, logistic, and Poisson regression models with useful uncertainty checks ([James et al.](https://www.statlearning.com/)).
+7. Say what a model claims: write the data generating process you believe, and separate a better fit from better generalisation ([The data generating process](02-probability-and-statistics/notes/07-data-generating-process.md)).
+8. Compare units with themselves using panel data and fixed effects, and say what that does and does not remove ([Panel data and fixed effects](02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md)).
 
 **Review and practice:** [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) · chapter `Try it` exercises and interview checks · optional guided [statistical-analysis notebook](02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb).
 
@@ -121,6 +123,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 4. Apply CUPED and suitable sequential testing, and explain interference and overlapping-experiment risks.
 5. Draw a causal graph and distinguish confounders, mediators, and colliders.
 6. Choose and qualify DiD, IV, RD, weighting, or synthetic control, naming its identifying assumption ([Cunningham](https://mixtape.scunning.com/)).
+7. Build a comparison group by matching or weighting, show balance before reading the outcome, and say what a hidden confounder would have to do to undo the result ([Matching and weighting](03-experimentation-and-causality/notes/05-matching-and-weighting.md)).
 
 **Review and practice:** [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) · runnable chapter examples and drills, including the Larkspur checkout experiment and causal-reasoning examples.
 
@@ -142,6 +145,7 @@ Name the distribution, fix the sample size before you look, and report effect si
 4. Select, justify, and pressure-test priors with prior-predictive simulation.
 5. Compare variants in a Bayesian A/B test using probability of superiority, lift uncertainty, and expected loss.
 6. Translate posterior uncertainty into a decision by defining an appropriate loss function.
+7. Fit a multilevel model, choose between clustering and modelling a group, and read many segment effects with partial pooling ([Multilevel models and partial pooling](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md)).
 
 **Review and practice:** [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) · fixed-seed chapter examples · optional advanced [Bayesian ML coursework](04-bayesian-analysis/practice/BayesianML/README.md).
 
@@ -183,6 +187,10 @@ Name the distribution, fix the sample size before you look, and report effect si
 4. Diagnose retention and conversion with cohorts and funnels, separating rate from mix and association from causation ([Fader and Hardie](https://doi.org/10.1002/dir.20074)).
 5. Segment customers responsibly, validate later usefulness, and distinguish targeting from persuadability.
 6. Use analytical SQL to reconcile changes in a business total and explain their drivers.
+7. Model time to an event, treating customers who have not left yet as censored ([Survival and event history](06-applied-analyses/notes/07-survival-and-event-history.md)).
+8. Model customers as states and sequences, and check a transition matrix on a holdout before using it to forecast ([States and sequences](06-applied-analyses/notes/08-states-and-sequences.md)).
+9. Separate attribution from incrementality when you allocate a marketing budget ([Marketing measurement](06-applied-analyses/notes/09-marketing-measurement.md)).
+10. Turn a forecast's error distribution into stock and staffing decisions ([Operations and supply chain](06-applied-analyses/notes/10-operations-and-supply-chain.md)).
 
 **Review and practice:** [deck](06-applied-analyses/slides/applied-analyses.pptx) · runnable [case-study scripts](06-applied-analyses/practice/) and their generated or documented datasets.
 
@@ -212,6 +220,18 @@ Name the distribution, fix the sample size before you look, and report effect si
 | Squared loss gives the mean, absolute loss the median, zero-one loss the MAP; any other loss needs an optimiser | [04](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) |
 | Beat a baseline first, and backtest over many origins because one split is one anecdote | [06](06-applied-analyses/README.md#rules-of-thumb) |
 | Split a change in any aggregate into rate and mix before you explain it | [06](06-applied-analyses/README.md#rules-of-thumb) |
+| Write the data generating process you believe before you fit, and simulate from it to see whether your estimator recovers it | [02](02-probability-and-statistics/notes/07-data-generating-process.md) |
+| A better fit in this sample is not a better answer for the population; ask how the rows got in before you admire R² | [02](02-probability-and-statistics/notes/07-data-generating-process.md) |
+| Match or weight on covariates measured before treatment, show the balance table first, and say what an unmeasured confounder would have to do to undo the result | [03](03-experimentation-and-causality/notes/05-matching-and-weighting.md) |
+| Cluster when groups are a nuisance, model them when they are the question | [04](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) |
+| Reading many segment effects? Partially pool them first, because the winning segment's raw estimate is exaggerated | [04](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) |
+| A customer who has not churned yet is censored, not retained; never average lifetimes over the churned only | [06](06-applied-analyses/notes/07-survival-and-event-history.md) |
+| A transition matrix describes the past; it forecasts only if the process is stationary, so check it on a holdout period | [06](06-applied-analyses/notes/08-states-and-sequences.md) |
+| Attribution allocates credit; only an experiment or a model with a causal design measures incrementality | [06](06-applied-analyses/notes/09-marketing-measurement.md) |
+| The forecast's error distribution is the input to the stock decision, not the point forecast | [06](06-applied-analyses/notes/10-operations-and-supply-chain.md) |
+| Before tuning, read the false positives and false negatives: what the model finds, what it misses, and whether the data could tell them apart | [DS 01](../data-science/01-classical-ml/notes/12-reading-the-errors.md) |
+| Read errors on one split and score fixes on another; fix a class of error, never the rows you read | [DS 01](../data-science/01-classical-ml/notes/12-reading-the-errors.md) |
+| Start from the target: it picks the model family, the loss, the metric and the baseline, in that order | [DS 01](../data-science/01-classical-ml/notes/11-choosing-a-metric.md) |
 
 ## Completion standard and next steps
 

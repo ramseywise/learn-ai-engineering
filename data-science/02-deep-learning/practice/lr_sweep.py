@@ -70,6 +70,6 @@ ax.minorticks_off()
 offs = [(10, 0, "left"), (10, -2, "left"), (0, 10, "center"), (0, 10, "center"), (10, 4, "left"), (-10, 4, "right")]
 for x, y, (dx, dy, ha) in zip(lrs, m, offs):
     ax.annotate(f"{y:.3f}", (x, y), xytext=(dx, dy), textcoords="offset points", ha=ha, va="center" if dy in (0, -2, 4) else "bottom")
-ax.legend(loc="lower center")
+ax.legend(loc="upper left")
 ax.set_title("Too low has not finished; too high never settles. Digits, three seeds")
 cs.save(fig, "dl-lr-sweep.png")

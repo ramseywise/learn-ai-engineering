@@ -50,7 +50,7 @@ for cell, fb, name, colour in variants:
     m(x)[0, 0].backward()
     g = x.grad.abs().flatten().numpy()
     print(f"{name:<22} t=49 {g[49]:.1e} t=25 {g[25]:.1e} t=0 {g[0]:.1e}")
-    ax.plot(np.arange(50), g, color=colour, label=f"{name}: {g[0]:.0e} at step 0".replace("e-0", "e-").replace("e+0", "e+"))
+    ax.plot(np.arange(50), g, color=colour, label=f"{name}: {g[0]:.1e} at step 0".replace("e-0", "e-"))
 ax.set_yscale("log")
 ax.set(xlabel="Input step t (the output reads step 49)", ylabel="|d output / d x_t| (log scale)", xlim=(0, 49))
 ax.minorticks_off()

@@ -38,13 +38,18 @@ By the end of the course, you can:
 | Unit | Focus | Chapters | Portfolio evidence |
 |---|---|---:|---|
 | [01 Python for data analysis](#unit-01--python-for-data-analysis) | Make trustworthy tables | 7 | Cleaned dataset and validated analysis |
-| [02 Probability and statistics](#unit-02--probability-and-statistics) | Quantify uncertainty | 6 | Statistical analysis memo |
-| [03 Experimentation and causality](#unit-03--experimentation-and-causality) | Establish whether change caused an outcome | 4 | Experiment brief or causal-design critique |
-| [04 Bayesian analysis](#unit-04--bayesian-analysis) | Decide under uncertainty | 6 | Diagnosed PyMC decision analysis |
+| [02 Probability and statistics](#unit-02--probability-and-statistics) | Quantify uncertainty | 8 | Statistical analysis memo |
+| [03 Experimentation and causality](#unit-03--experimentation-and-causality) | Establish whether change caused an outcome | 5 | Experiment brief or causal-design critique |
+| [04 Bayesian analysis](#unit-04--bayesian-analysis) | Decide under uncertainty | 7 | Diagnosed PyMC decision analysis |
 | [05 Visualisation and storytelling](#unit-05--visualisation-and-storytelling) | Make evidence understandable | 5 | Decision-ready visual narrative or dashboard |
-| [06 Applied analyses](#unit-06--applied-analyses) | Integrate the workflow | 6 | End-to-end analysis portfolio |
+| [06 Applied analyses](#unit-06--applied-analyses) | Integrate the workflow | 10 | End-to-end analysis portfolio |
 
 Units 01–03 are the core sequence. Take Unit 04 after Unit 03; it revisits inference and A/B testing through a Bayesian decision framework. Take Unit 05 before or alongside Unit 06.
+
+Two steps cut across the units:
+
+- **Step 4b, say what the model claims.** Once you can fit a regression, read [the data generating process](02-probability-and-statistics/notes/07-data-generating-process.md) and [panel data and fixed effects](02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md). Then, after the causal chapter, [matching and weighting](03-experimentation-and-causality/notes/05-matching-and-weighting.md), and after MCMC, [multilevel models and partial pooling](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md). The test is whether you can say what your model assumes about how the rows came to exist, and what it would take to be wrong.
+- **Step 8b, model an event, a state and a plan.** After the first six applied cases, take [survival and event history](06-applied-analyses/notes/07-survival-and-event-history.md) for the event, [states and sequences](06-applied-analyses/notes/08-states-and-sequences.md) for the state, then [marketing measurement](06-applied-analyses/notes/09-marketing-measurement.md) and [operations and supply chain](06-applied-analyses/notes/10-operations-and-supply-chain.md) for the plan. The test is whether you can pick the model from the decision, and name the assumption that would change it.
 
 ---
 
@@ -89,8 +94,10 @@ After this unit, you can:
 4. Estimate quantities with intervals, bootstrap procedures, and sample-size reasoning.
 5. Select, run, and interpret a hypothesis test, including an appropriate multiple-comparison correction.
 6. Fit and interpret linear, logistic, and Poisson regression models with useful uncertainty checks.
+7. Say what a model claims: write the data generating process you believe, and separate a better fit from better generalisation ([The data generating process](02-probability-and-statistics/notes/07-data-generating-process.md)).
+8. Compare units with themselves using panel data and fixed effects, and say what that does and does not remove ([Panel data and fixed effects](02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md)).
 
-**Chapters:** [Descriptive statistics and EDA](02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md) · [Probability foundations](02-probability-and-statistics/notes/02-probability-foundations.md) · [Distributions and sampling](02-probability-and-statistics/notes/03-distributions-and-sampling.md) · [Estimation](02-probability-and-statistics/notes/04-estimation.md) · [Hypothesis testing](02-probability-and-statistics/notes/05-hypothesis-testing.md) · [Regression and GLMs](02-probability-and-statistics/notes/06-regression-and-glms.md)
+**Chapters:** [Descriptive statistics and EDA](02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md) · [Probability foundations](02-probability-and-statistics/notes/02-probability-foundations.md) · [Distributions and sampling](02-probability-and-statistics/notes/03-distributions-and-sampling.md) · [Estimation](02-probability-and-statistics/notes/04-estimation.md) · [Hypothesis testing](02-probability-and-statistics/notes/05-hypothesis-testing.md) · [Regression and GLMs](02-probability-and-statistics/notes/06-regression-and-glms.md) · [The data generating process](02-probability-and-statistics/notes/07-data-generating-process.md) · [Panel data and fixed effects](02-probability-and-statistics/notes/08-panel-data-and-fixed-effects.md)
 
 **Review and practice:** [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) · chapter `Try it` exercises and interview checks · optional guided [statistical-analysis notebook](02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb).
 
@@ -116,8 +123,9 @@ After this unit, you can:
 4. Apply CUPED and suitable sequential testing, and explain interference and overlapping-experiment risks.
 5. Draw a causal graph and distinguish confounders, mediators, and colliders.
 6. Choose and qualify DiD, IV, RD, weighting, or synthetic control, naming its identifying assumption.
+7. Build a comparison group by matching or weighting, show balance before reading the outcome, and say what a hidden confounder would have to do to undo the result ([Matching and weighting](03-experimentation-and-causality/notes/05-matching-and-weighting.md)).
 
-**Chapters:** [A/B testing](03-experimentation-and-causality/notes/01-ab-testing.md) · [Metrics and KPI design](03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) · [Experimentation at scale](03-experimentation-and-causality/notes/03-experimentation-at-scale.md) · [Correlation, confounding and causation](03-experimentation-and-causality/notes/04-correlation-and-causation.md)
+**Chapters:** [A/B testing](03-experimentation-and-causality/notes/01-ab-testing.md) · [Metrics and KPI design](03-experimentation-and-causality/notes/02-metrics-and-kpi-design.md) · [Experimentation at scale](03-experimentation-and-causality/notes/03-experimentation-at-scale.md) · [Correlation, confounding and causation](03-experimentation-and-causality/notes/04-correlation-and-causation.md) · [Matching and weighting](03-experimentation-and-causality/notes/05-matching-and-weighting.md)
 
 **Review and practice:** [deck](03-experimentation-and-causality/slides/experimentation-and-causality.pptx) · runnable chapter examples and drills, including the Larkspur checkout experiment and causal-reasoning examples.
 
@@ -143,8 +151,9 @@ After this unit, you can:
 4. Select, justify, and pressure-test priors with prior-predictive simulation.
 5. Compare variants in a Bayesian A/B test using probability of superiority, lift uncertainty, and expected loss.
 6. Translate posterior uncertainty into a decision by defining an appropriate loss function.
+7. Fit a multilevel model, choose between clustering and modelling a group, and read many segment effects with partial pooling ([Multilevel models and partial pooling](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md)).
 
-**Chapters:** [Bayesian inference](04-bayesian-analysis/notes/01-bayesian-inference.md) · [MCMC and PyMC](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) · [Priors and bandits](04-bayesian-analysis/notes/03-priors-and-bandits.md) · [Bayesian A/B testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) · [Loss functions and Bayesian decisions](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) · [Bayesian machine learning](04-bayesian-analysis/notes/06-bayesian-machine-learning.md)
+**Chapters:** [Bayesian inference](04-bayesian-analysis/notes/01-bayesian-inference.md) · [MCMC and PyMC](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) · [Priors and bandits](04-bayesian-analysis/notes/03-priors-and-bandits.md) · [Bayesian A/B testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) · [Loss functions and Bayesian decisions](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) · [Bayesian machine learning](04-bayesian-analysis/notes/06-bayesian-machine-learning.md) · [Multilevel models and partial pooling](04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md)
 
 **Review and practice:** [deck](04-bayesian-analysis/slides/bayesian-analysis.pptx) · fixed-seed chapter examples · optional advanced [Bayesian ML coursework](04-bayesian-analysis/practice/BayesianML/README.md).
 
@@ -196,8 +205,12 @@ After this unit, you can:
 4. Diagnose retention and conversion with cohorts and funnels, separating rate from mix and association from causation.
 5. Segment customers responsibly, validate later usefulness, and distinguish targeting from persuadability.
 6. Use analytical SQL to reconcile changes in a business total and explain their drivers.
+7. Model time to an event, treating customers who have not left yet as censored ([Survival and event history](06-applied-analyses/notes/07-survival-and-event-history.md)).
+8. Model customers as states and sequences, and check a transition matrix on a holdout before using it to forecast ([States and sequences](06-applied-analyses/notes/08-states-and-sequences.md)).
+9. Separate attribution from incrementality when you allocate a marketing budget ([Marketing measurement](06-applied-analyses/notes/09-marketing-measurement.md)).
+10. Turn a forecast's error distribution into stock and staffing decisions ([Operations and supply chain](06-applied-analyses/notes/10-operations-and-supply-chain.md)).
 
-**Chapters:** [Forecasting](06-applied-analyses/notes/01-forecasting.md) · [Credit scoring](06-applied-analyses/notes/02-credit-scoring.md) · [Cohort and retention](06-applied-analyses/notes/03-cohort-and-retention.md) · [Funnel and conversion](06-applied-analyses/notes/04-funnel-and-conversion.md) · [Segmentation and RFM](06-applied-analyses/notes/05-segmentation-and-rfm.md) · [SQL for analytics](06-applied-analyses/notes/06-sql-for-analytics.md)
+**Chapters:** [Forecasting](06-applied-analyses/notes/01-forecasting.md) · [Credit scoring](06-applied-analyses/notes/02-credit-scoring.md) · [Cohort and retention](06-applied-analyses/notes/03-cohort-and-retention.md) · [Funnel and conversion](06-applied-analyses/notes/04-funnel-and-conversion.md) · [Segmentation and RFM](06-applied-analyses/notes/05-segmentation-and-rfm.md) · [SQL for analytics](06-applied-analyses/notes/06-sql-for-analytics.md) · [Survival and event history](06-applied-analyses/notes/07-survival-and-event-history.md) · [States and sequences](06-applied-analyses/notes/08-states-and-sequences.md) · [Marketing measurement](06-applied-analyses/notes/09-marketing-measurement.md) · [Operations and supply chain](06-applied-analyses/notes/10-operations-and-supply-chain.md)
 
 **Review and practice:** [deck](06-applied-analyses/slides/applied-analyses.pptx) · six runnable [case-study scripts](06-applied-analyses/practice/) and their generated or documented datasets.
 

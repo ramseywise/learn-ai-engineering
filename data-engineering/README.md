@@ -2,7 +2,7 @@
 
 > How data gets from where it is born to where it is used: on a schedule, correctly, and in a shape the next stage can trust.
 
-Position in the path: after [programming](../programming/README.md) (Python, SQL) and [data analytics](../data-analytics/README.md); alongside or before [data science](../data-science/README.md). It is the pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md). Interview summary: [8-data-eng-mlops](../practice/interviewing/guides/8-data-eng-mlops/00-overview.md).
+Position in the path: after [programming](../programming/README.md) (Python, SQL); [data analytics](../data-analytics/README.md) is recommended, not required. It comes alongside or before [data science](../data-science/README.md), and it is the pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md).
 
 ## What it is
 
@@ -13,24 +13,32 @@ The chain is hard to run for one reason, and it is the thread through all seven 
 > **Every stage has the same failure mode: it silently trusts the one before it. The engineering is in making that trust explicit: keys, contracts, tests, logical dates, monitored metrics.**
 
 A pipeline that trusts its input does not crash when the input is wrong. It produces a plausible number, and the first alarm is a person holding it. So each pillar opens with a failure that raises no error, measured on data you can regenerate, and then adds the mechanism that would have made it visible.
-
 ## The core text
 
 Martin Kleppmann's [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) is the book behind this subject. Its subject is the logic that outlasts any one tool: why data is split and copied, what transactions actually promise, what a machine can know in a network, and how derived data stays correct. Tools come and go across these pillars, but when one of them makes a claim about ordering or "exactly once", this book is how you check it.
 
-[Pillar 01](01-storage-and-compute-foundations/README.md) retells chapters 1 to 10 with code that runs, including real anomalies on real Postgres. Later pillars use the book where it sharpens a decision, with page pointers throughout, and chapter 12 frames the lakehouse and architecture choices in pillars 04 and 07. The [reading map](CURRICULUM.md#reading-map-designing-data-intensive-applications) lists every book chapter with the notes that use it. Read it beside pillar 01 the first time, and return to chapters 11 and 12 once you have run a pipeline.
+[Pillar 01](01-storage-and-compute-foundations/README.md) retells chapters 1 to 10 with code that runs, including real anomalies on real Postgres. Later pillars use the book where it sharpens a decision, with page pointers throughout, and chapter 12 frames the lakehouse and architecture choices in pillars 04 and 07. The [reading map](references.md#reading-map-designing-data-intensive-applications) lists every book chapter with the notes that use it. Read it beside pillar 01 the first time, and return to chapters 11 and 12 once you have run a pipeline.
+## Course outcomes
+
+By the end, you can build repeatable ingestion and well-modelled data; deliver tested, recoverable pipelines; choose storage and streaming systems by correctness, latency, and cost; detect and repair data incidents; build ML-platform foundations; and make defensible architecture and governance decisions.
+
+## Before you begin
+
+**Required:** [Programming](../programming/README.md): Python modules 01 to 03 and SQL up to its capstone. The zoomcamps assume SQL and teach none. Docker basics help, and they are introduced in early practice. [Data Analytics](../data-analytics/README.md) is recommended, not required.
+
+**Learning model:** read the unit's chapters, use its deck where present, complete drills and practice, then keep the stated evidence of mastery. Core examples run locally; cloud coursework is optional enrichment, with local alternatives described in pillar READMEs.
 
 ## The seven pillars
 
-| Pillar | The stage | A silent failure it opens | What makes the trust explicit | Chapters | Deck |
+| Pillar | The stage | A silent failure it opens | What makes the trust explicit | Mastery evidence | Deck |
 |---|---|---|---|---|---|
-| [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md) | Data systems, bytes on disk, concurrent writers, machines that fail and agree | A file with a new column is read with the first file's schema, and the column is dropped | Stated schemas, isolation levels, request IDs, read plans, measuring before scaling | 8 | [pptx](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pptx), [pdf](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pdf) |
-| [02 Ingest and modelling](02-ingest-and-modelling/README.md) | Getting data in, saying what a row means | A retried load doubles the day's rows | Keys, change capture, a declared grain, data contracts | 4 | [pptx](02-ingest-and-modelling/slides/ingest-and-modelling.pptx), [pdf](02-ingest-and-modelling/slides/ingest-and-modelling.pdf) |
-| [03 Transform and orchestrate](03-transform-and-orchestrate/README.md) | Tested models, built for the right day | An inner join loses 5,680 trips and about $96,000 with every test green | Grain tests, logical dates, idempotent writes, write-audit-publish | 5 | [pptx](03-transform-and-orchestrate/slides/transform-and-orchestrate.pptx), [pdf](03-transform-and-orchestrate/slides/transform-and-orchestrate.pdf) |
-| [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md) | Where it rests, how it moves, what it costs | A rewrite dies halfway and a dashboard reads half of it as the truth | Table-format commits, event-time windows, committed offsets, byte limits | 5 | [pptx](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), [pdf](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pdf) |
-| [05 Quality and observability](05-quality-and-observability/README.md) | Finding out it is wrong | A source switches from miles to kilometres without telling anyone | Tests, monitors against history, lineage, playbooks | 3 | [pptx](05-quality-and-observability/slides/quality-and-observability.pptx), [pdf](05-quality-and-observability/slides/quality-and-observability.pdf) |
-| [06 ML platform](06-ml-platform/README.md) | Features, models and serving | A leaky join scores 2.79 offline and 5.48 in production | Point-in-time joins, a registry, gates, drift monitors | 5 | [pptx](06-ml-platform/slides/ml-platform.pptx), [pdf](06-ml-platform/slides/ml-platform.pdf) |
-| [07 Architecture and governance](07-architecture-and-governance/README.md) | Many pipelines, many teams, the regulator | Two correct tables join on `CA` and `California`, and a filed figure is less than half the truth | Ownership, global rules that can fail a build, access control, erasure | 2 | [pptx](07-architecture-and-governance/slides/architecture-and-governance.pptx), [pdf](07-architecture-and-governance/slides/architecture-and-governance.pdf) |
+| [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md) | Data systems, bytes on disk, concurrent writers, machines that fail and agree | A file with a new column is read with the first file's schema, and the column is dropped | Stated schemas, isolation levels, request IDs, read plans, measuring before scaling | Measured system design and failure analysis | [pptx](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pptx), [pdf](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pdf) |
+| [02 Ingest and modelling](02-ingest-and-modelling/README.md) | Getting data in, saying what a row means | A retried load doubles the day's rows | Keys, change capture, a declared grain, data contracts | Repeatable load, grain statement, contract | [pptx](02-ingest-and-modelling/slides/ingest-and-modelling.pptx), [pdf](02-ingest-and-modelling/slides/ingest-and-modelling.pdf) |
+| [03 Transform and orchestrate](03-transform-and-orchestrate/README.md) | Tested models, built for the right day | An inner join loses 5,680 trips and about $96,000 with every test green | Grain tests, logical dates, idempotent writes, write-audit-publish | Green build and idempotent backfill | [pptx](03-transform-and-orchestrate/slides/transform-and-orchestrate.pptx), [pdf](03-transform-and-orchestrate/slides/transform-and-orchestrate.pdf) |
+| [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md) | Where it rests, how it moves, what it costs | A rewrite dies halfway and a dashboard reads half of it as the truth | Table-format commits, event-time windows, committed offsets, byte limits | Costed architecture decision | [pptx](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), [pdf](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pdf) |
+| [05 Quality and observability](05-quality-and-observability/README.md) | Finding out it is wrong | A source switches from miles to kilometres without telling anyone | Tests, monitors against history, lineage, playbooks | Monitor, lineage trace, incident playbook | [pptx](05-quality-and-observability/slides/quality-and-observability.pptx), [pdf](05-quality-and-observability/slides/quality-and-observability.pdf) |
+| [06 ML platform](06-ml-platform/README.md) | Features, models and serving | A leaky join scores 2.79 offline and 5.48 in production | Point-in-time joins, a registry, gates, drift monitors | Point-in-time dataset and monitored service | [pptx](06-ml-platform/slides/ml-platform.pptx), [pdf](06-ml-platform/slides/ml-platform.pdf) |
+| [07 Architecture and governance](07-architecture-and-governance/README.md) | Many pipelines, many teams, the regulator | Two correct tables join on `CA` and `California`, and a filed figure is less than half the truth | Ownership, global rules that can fail a build, access control, erasure | Defended architecture scenario | [pptx](07-architecture-and-governance/slides/architecture-and-governance.pptx), [pdf](07-architecture-and-governance/slides/architecture-and-governance.pdf) |
 
 ```mermaid
 flowchart LR
@@ -45,80 +53,53 @@ flowchart LR
   P7 -.-> P6
 ```
 
-Read them in order the first time, because each pillar consumes the previous one's output. Pillar 07 sits across the chain, and the dotted line from 05 to 03 is the repair: an incident ends in a backfill and a new test. [CURRICULUM.md](CURRICULUM.md) gives the sequence, the practice for each step and how you know you are done. [references.md](references.md) is the shared library of books, papers, courses and videos.
-
-## How this folder is organised
-
-```
-data-engineering/
-├── README.md, CURRICULUM.md, references.md
-├── sources/                         shared PDFs for all seven pillars
-└── NN-pillar/
-    ├── README.md                    reading order, rules of thumb, deck, practice
-    ├── notes/                       the chapters
-    ├── references.md                this pillar's sources, mapped to its chapters
-    ├── slides/                      lecture deck and its deck.yaml
-    └── practice/                    chapter scripts and zoomcamp coursework, where the pillar has any
-```
+Read them in order the first time, because each pillar consumes the previous one's output. Pillars 01 to 03 are the critical path, since every later pillar assumes them. If your goal is ML rather than platform work, you can take pillar 04 lightly and go on to pillars 05 and 06. Pillar 07 sits across the chain, and the dotted line from 05 to 03 is the repair: an incident ends in a backfill and a new test. [references.md](references.md) is the shared library of books, papers, courses and videos.
 
 The coursework is two DataTalksClub zoomcamps, kept as worked material and divided among the pillars they serve. Pillars 05 and 07 have no practice folder, and their chapter code runs from each chapter's `uv run --with ...` line.
 
-## Syllabus
-
-These are the chapters on disk as of 2 November 2026.
+## Units
 
 ### [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md)
 
-1. [Data systems and data models](01-storage-and-compute-foundations/notes/01-data-systems-and-data-models.md)
-2. [Encoding and files](01-storage-and-compute-foundations/notes/02-encoding-and-files.md)
-3. [Row and column stores](01-storage-and-compute-foundations/notes/03-row-and-column-stores.md)
-4. [Transactions and isolation](01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md)
-5. [Partitioning and replication](01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)
-6. [When distributed systems fail](01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md)
-7. [Consistency and consensus](01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md)
-8. [Distributed compute](01-storage-and-compute-foundations/notes/08-distributed-compute.md)
+**Objectives:** define reliability and performance goals; choose data models and encodings ([Kleppmann 2017, ch. 1–4](https://dataintensive.net/)); explain row versus column storage; reproduce and prevent transaction anomalies (ch. 7); reason about replication, partitioning (ch. 5–6), clocks, consensus (ch. 8–9), and distributed compute (ch. 10).
+
+**Learning:** [reading order](01-storage-and-compute-foundations/README.md#reading-order), chapter code, and practice. **Evidence:** measure a representative workload, explain a failure mode, and defend the smallest system that meets the requirement.
 
 ### [02 Ingest and modelling](02-ingest-and-modelling/README.md)
 
-1. [Ingest](02-ingest-and-modelling/notes/01-ingest.md)
-2. [Dimensional modelling](02-ingest-and-modelling/notes/02-dimensional-modelling.md)
-3. [Data Vault and One Big Table](02-ingest-and-modelling/notes/03-data-vault-and-obt.md)
-4. [Data contracts](02-ingest-and-modelling/notes/04-data-contracts.md)
+**Objectives:** make loads repeatable; choose batch, CDC, or log ingestion ([Kleppmann 2017, ch. 11](https://dataintensive.net/)); declare table grain; model facts, dimensions, and slowly changing attributes ([Kimball and Ross](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/)); compare Data Vault and One Big Table; write a data contract (Breck et al., *Data Validation for Machine Learning*).
+
+**Learning:** [reading order](02-ingest-and-modelling/README.md#reading-order) and DataTalks practice. **Evidence:** a rerunnable load, star-model grain statement, reconciliation check, and contract that rejects a bad batch. **Book chapters:** Kleppmann 3, 4, 11, and 12.
 
 ### [03 Transform and orchestrate](03-transform-and-orchestrate/README.md)
 
-1. [Transform](03-transform-and-orchestrate/notes/01-transform.md)
-2. [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md)
-3. [dbt tests, snapshots and incremental models](03-transform-and-orchestrate/notes/03-dbt-tests-snapshots-incremental.md)
-4. [Idempotency and backfills](03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md)
-5. [Dagster and Airflow](03-transform-and-orchestrate/notes/05-dagster-and-airflow.md)
+**Objectives:** structure transformations; test grain and joins; use dbt tests, snapshots, and incremental models (dbt documentation); reason about logical dates, retries, and backfills ([Kleppmann 2017, ch. 8–10](https://dataintensive.net/)); compare Dagster and Airflow.
+
+**Learning:** [reading order](03-transform-and-orchestrate/README.md#reading-order), runnable chapter code, and practice. **Evidence:** a green tested model plus a backfill that produces identical output when rerun.
 
 ### [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md)
 
-1. [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)
-2. [Table formats](04-warehouse-lakehouse-streaming/notes/02-table-formats.md)
-3. [Lakehouse against warehouse](04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md)
-4. [Kafka and stream semantics](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md)
-5. [Cost](04-warehouse-lakehouse-streaming/notes/05-cost.md)
+**Objectives:** estimate scan cost; select layout and partitioning; explain table-format transactions ([Armbrust et al.](https://www.vldb.org/pvldb/vol13/p3411-armbrust.pdf)); evaluate lakehouse trade-offs; implement safe producer/consumer semantics; reason about event time, watermarks, and lag ([Akidau et al.](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)).
+
+**Learning:** [reading order](04-warehouse-lakehouse-streaming/README.md#reading-order), [deck](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), and labelled practice. **Evidence:** a costed store decision plus a stream design that says exactly-once from where to where. **Book chapters and docs:** Kleppmann 3, 6, 7, 10–12; Kafka and Iceberg/Delta documentation.
 
 ### [05 Quality and observability](05-quality-and-observability/README.md)
 
-1. [Quality dimensions and tests](05-quality-and-observability/notes/01-quality-dimensions-and-tests.md)
-2. [Monitors and lineage](05-quality-and-observability/notes/02-monitors-and-lineage.md)
-3. [Incident playbooks](05-quality-and-observability/notes/03-incident-playbooks.md)
+**Objectives:** define quality dimensions ([Schelter et al.](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf)); write batch tests and time-aware monitors ([Beyer et al.](https://sre.google/sre-book/table-of-contents/)); use lineage to bound an incident; contain and repair safely; write a blameless playbook and postmortem.
+
+**Learning:** [reading order](05-quality-and-observability/README.md#reading-order) and [deck](05-quality-and-observability/slides/quality-and-observability.pptx). **Evidence:** catch a planted fault, trace its impact, execute an idempotent repair, and add a preventive check. **Tools:** Great Expectations, dbt, OpenLineage.
 
 ### [06 ML platform](06-ml-platform/README.md)
 
-1. [Feature stores](06-ml-platform/notes/01-feature-stores.md)
-2. [Experiment tracking and the model registry](06-ml-platform/notes/02-experiment-tracking-and-model-registry.md)
-3. [Batch and online serving](06-ml-platform/notes/03-batch-and-online-serving.md)
-4. [Drift](06-ml-platform/notes/04-drift.md)
-5. [The MLOps maturity model and best practices](06-ml-platform/notes/05-mlops-maturity-and-best-practices.md)
+**Objectives:** build point-in-time features (Kleppmann 2017, ch. 11, pp. 475–476); track experiments and models ([Wilson](https://www.manning.com/books/machine-learning-engineering-in-action)); compare batch and online serving; detect drift ([Gama et al.](http://eprints.bournemouth.ac.uk/22491/)); select appropriate platform maturity.
+
+**Learning:** [chapters and practice](06-ml-platform/README.md), including the DataTalks MLOps coursework. **Evidence:** a point-in-time-safe training dataset, registered run/model, served prediction, and diagnosis of drift versus pipeline failure.
 
 ### [07 Architecture and governance](07-architecture-and-governance/README.md)
 
-1. [Data architectures: MDW, fabric, mesh](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)
-2. [Access control, PII and GDPR](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md)
+**Objectives:** compare centralised, mesh, fabric, and MDW architectures (Serra; [Dehghani](https://martinfowler.com/articles/data-mesh-principles.html)); design ownership and interoperability; control access; protect PII; account for deletion, retention, and audit obligations (Kleppmann 2017, ch. 11–12).
+
+**Learning:** [chapters and scenarios](07-architecture-and-governance/README.md); the scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice. **Evidence:** defend an architecture with mechanisms and trade-offs, then write an access/retention decision for a dataset.
 
 ## Rules of thumb
 
@@ -190,13 +171,26 @@ Labels: **offline** = runs on a laptop with no account once data is downloaded �
 
 [sources/](sources/) holds the shared PDFs and [references.md](references.md) maps each to its chapters. Run `/papers` or `/chapter` to fold in what the `/readings` router files here.
 
-### Interviewing guide
-
-[8-data-eng-mlops/00-overview.md](../practice/interviewing/guides/8-data-eng-mlops/00-overview.md). The scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice.
-
 ### Previous and next layer
 
 | | Where |
 |---|---|
 | Previous | [data-analytics/](../data-analytics/README.md), on top of [programming/](../programming/README.md) |
 | Next | [data-science/](../data-science/README.md) for the modelling side; [generative-ai/](../generative-ai/README.md) and [ai-engineering/](../ai-engineering/README.md), which use these pipelines as their data layer |
+
+## Completion standard and next steps
+
+Complete a portfolio containing a repeatable ingest/model, tested and orchestrated pipeline, costed storage or streaming decision, quality incident response, ML-platform exercise, and governed architecture decision. Every item should state its grain or contract, failure handling, evidence, and trade-offs. The capstone is MLOps `07-project` or the DE [project brief](02-ingest-and-modelling/practice/datatalks-de/projects): self-score against the evaluation criteria in the brief, with LocalStack standing in for the cloud criterion.
+
+Continue to [Data Science](../data-science/README.md) for modelling depth, or [Generative AI](../generative-ai/README.md) and [AI Engineering](../ai-engineering/README.md) for LLM systems.
+
+## Primary texts
+
+- Kleppmann, *Designing Data-Intensive Applications*: the core text, run through Unit 01 and used across the rest
+- Kimball and Ross, *The Data Warehouse Toolkit*, 2nd ed.: dimensional modelling in Unit 02
+- Beyer et al., *Site Reliability Engineering*: monitoring and incidents in Unit 05
+- Wilson, *Machine Learning Engineering in Action*: Unit 06
+- Serra, *Deciphering Data Architectures*, excerpts: Unit 07, with attribution inferred from content
+- Reis and Housley, *Fundamentals of Data Engineering*: lifecycle background for all units
+
+Everything else: [references.md](references.md), including the [reading map](references.md#reading-map-designing-data-intensive-applications) for Kleppmann.

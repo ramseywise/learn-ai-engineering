@@ -88,6 +88,8 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 6. Compare ensembles and boosting libraries across seeds, tune with cross-validation and early stopping, and report uncertainty in a claimed improvement.
 7. Use permutation importance, PDPs, and SHAP appropriately while distinguishing model explanations from causal claims.
 8. Diagnose imbalance, recurring errors, and distribution shift before deploying a model.
+9. Start from the target to pick the family, loss, metric and baseline ([Choosing a metric](01-classical-ml/notes/11-choosing-a-metric.md)).
+10. Read false positives and false negatives before tuning, and fix a class of error on one split while scoring on another ([Reading the errors](01-classical-ml/notes/12-reading-the-errors.md)).
 
 **Review and practice:** [deck](01-classical-ml/slides/classical-ml.pptx) · chapter exercises · [boosting comparison](01-classical-ml/practice/boosting-comparison/README.md) · [credit-default lab](01-classical-ml/practice/credit-default-lab/README.md) · [music-clustering lab](01-classical-ml/practice/music-clustering-lab/README.md).
 
