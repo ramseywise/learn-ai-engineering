@@ -1,12 +1,12 @@
 # Programming
 
-> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`practice/drills/`](../practice/drills/README.md).
+> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**, plus **software design**: keeping code cheap to change. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`practice/drills/`](../practice/drills/README.md).
 >
 > Position in the path: the entry point, no prerequisites; next are [data-analytics](../data-analytics/README.md) and [ai-engineering](../ai-engineering/README.md).
 
 ## What it is
 
-A self-paced course in the three languages an AI or data engineer writes every day. Each track goes from first principles to the idioms you need in production code. Each module is a short set of notes followed by exercises you can run offline.
+A self-paced course in the three languages an AI or data engineer writes every day, and in how to keep that code cheap to change. Each language track goes from first principles to the idioms you need in production code. Each module is a short set of notes followed by exercises you can run offline.
 
 This repo started as a Python learning repo built from *Python for Informatics* (now *Python for Everybody*) and McKinney's *Python for Data Analysis*. The Python track keeps the first of those as its spine and adds a module on the language features that engineering code relies on. The pandas half now has its own home: when Python 03 is done, the path hands off to [data-analytics 01, Python for data analysis](../data-analytics/01-python-for-data-analysis/README.md).
 
@@ -42,6 +42,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | [Python](python/README.md) | Start here | Foundations → informatics → language for engineers, then a hand-off to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) | Severance, *Python for Everybody* (paraphrased); VanderPlas, *A Whirlwind Tour of Python*; Python documentation | Passing exercises and a small tested package |
 | [SQL](sql/README.md) | After Python foundations | Querying → analysis → data design → performance → Python, plus a capstone | Software Carpentry *Databases and SQL*; PGExercises; Knight Lab *SQL Murder Mystery* | Checked queries and an investigative capstone |
 | [TypeScript](typescript/README.md) | After Python for engineers | JavaScript → types → async and tooling → typed AI apps | TypeScript Handbook; *typescript-exercises*; *type-challenges* | Type-safe exercises and a validated async boundary |
+| [Software design](software-design/README.md) | After Python for engineers | Readable code → refactoring → design principles → patterns → testing → debugging → Git, review and design docs | Authors' free writing, papers and tool documentation; see its [references](software-design/references.md) | A smelly module refactored under tests, then extended |
 
 The tracks deliberately overlap. Python gives SQL and TypeScript their programming vocabulary; SQL sharpens the data model before [Data Analytics](../data-analytics/README.md); Python plus TypeScript prepares you for [AI Engineering](../ai-engineering/README.md).
 
@@ -130,6 +131,14 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 **Next:** [AI Engineering](../ai-engineering/README.md) for production LLM systems, or [Generative AI](../generative-ai/README.md) for LLM foundations and applications.
 
+### [Software design](software-design/README.md)
+
+**Purpose:** Keep code cheap to change: read it, refactor it, test it, debug it, and work on it with other people. Unlike the language tracks, its notes follow the full chapter standard.
+
+**Evidence:** Take the [lab](software-design/practice/README.md)'s module through refactoring under tests, then add a feature, and say honestly whether the refactoring made the feature cheaper.
+
+**Next:** Apply it in any later course. The reading order and sources are in the [track README](software-design/README.md).
+
 ## Completion standard and further practice
 
 Complete the Python track before moving to data or AI work. Take SQL when you will query or model data; take TypeScript when you will build typed applications. A complete programming foundation includes a passing Python exercise set and package, checked SQL exercises and capstone, and passing TypeScript checks plus a validated asynchronous boundary.
@@ -177,6 +186,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 - Winand, *Use The Index, Luke*: background for indexes and query plans
 - TypeScript Handbook, with *typescript-exercises* and *type-challenges* as practice
 - Ramalho, *Fluent Python*: further reading for Python 03
+- Software design: the [track's primary texts](software-design/README.md#primary-texts)
 - McKinney, *Python for Data Analysis*: where the path goes next, in [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md)
 
 Everything else, with licences: [references.md](references.md). Each track README also maps sources directly to its notes.

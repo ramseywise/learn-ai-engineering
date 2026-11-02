@@ -5,9 +5,14 @@ Usage:  cd exercises/usage_report_lab && uv run python ../../mutate.py
 Each mutant changes one comparison, arithmetic operator or boolean connective in
 report-producing code, then runs the lab's tests. A survivor is a changed program that
 every test still accepts. Real tools (mutmut, cosmic-ray) have many more operators.
+
+Bytecode caching is off on purpose. Python reuses a .pyc whose recorded source mtime and
+size match, mtime in whole seconds, and a swap like + to - keeps the size. With caching on,
+a test run can import the previous mutant, and the score changes from run to run.
 """
 import ast
 import copy
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -46,12 +51,15 @@ def mutated(tree: ast.Module, index: int) -> tuple[str, int, str]:
 
 def tests_pass() -> bool:
     run = subprocess.run([sys.executable, "-m", "pytest", "-x", "-q", "-p", "no:cacheprovider"],
-                         capture_output=True, timeout=120)
+                         capture_output=True, timeout=120,
+                         env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
     return run.returncode == 0
 
 
 def main() -> None:
     target = Path("usage_report.py")
+    for stale in Path("__pycache__").glob("usage_report.*.pyc"):
+        stale.unlink()
     original = target.read_text()
     tree = ast.parse(original)
     points = mutation_points(tree)

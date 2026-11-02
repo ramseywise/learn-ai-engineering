@@ -418,7 +418,7 @@ Prompts and judge instructions are especially easy to overfit, because they take
 - **Assuming a good story must help.** The mechanism fix read well and gained nothing detectable. Report that, and don't keep trying variants on the same blackbox set until one wins.
 - **Reusing a holdout without counting.** After 20 rounds of noise, the reused half showed a gain of 16.5.
 - **Reading a small slice's rate.** A false negative rate of 1.000 came from one defaulter.
-- **Fixing only the labels of misclassified rows.** This biases the evaluation, as Ng warns. Audit correct rows too.
+- **Fixing only the labels of misclassified rows.** This biases the evaluation, as Ng warns. Audit correct rows too, and [note 14](14-learning-from-corrections.md#audit-a-random-sample) sizes that audit.
 - **Adding a feature that knows the future.** Compare each new feature's date with the decision's.
 
 ## Try it
@@ -459,4 +459,4 @@ Prompts and judge instructions are especially easy to overfit, because they take
 
 ## Next
 
-[Deep learning](../../02-deep-learning/README.md): the same discipline of splits, thresholds and calibration, now with models that learn their own features.
+[Automate, review or reject](13-automate-review-or-reject.md): a threshold becomes two, and a person joins the decision.

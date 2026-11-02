@@ -390,7 +390,7 @@ call_model     real   1014 ms   sampled   1011 ms
 parse_reply    real    100 ms   sampled     71 ms
 ```
 
-The sampler weights each sample by the gap since the last one. Without that, a separate run on this same workload that counted one per sample gave `call_model` 88% of the samples against 68% by the stopwatch, because a Python thread can't sample while another thread holds the GIL, so CPU-heavy sections are undersampled. The stopwatch comparison at the end is how to catch a profiler lying.
+The percentages move with the machine: the sleep in `call_model` is fixed, but the CPU work isn't, and a rerun gave `call_model` 70.0% rather than 60.7%. The sampler weights each sample by the gap since the last one. Without that, a separate run on this same workload that counted one per sample gave `call_model` 88% of the samples against 68% by the stopwatch, because a Python thread can't sample while another thread holds the GIL, so CPU-heavy sections are undersampled. The stopwatch comparison at the end is how to catch a profiler lying.
 
 The `name;name;name count` lines are the "folded" format that Gregg's `flamegraph.pl` consumes. [Brendan Gregg, who invented flame graphs](https://www.brendangregg.com/flamegraphs.html), defines the picture precisely, and each detail is commonly misread:
 

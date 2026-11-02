@@ -8,7 +8,7 @@ Run from this folder:
     uv run learning_from_corrections.py
 
 Invoices are generated (see invoices.py), so the truth is known and the clerk is simulated. Active learning is
-also run on the real credit file, whose labels are nobody's simulation. Takes about ten minutes. Writes two
+also run on the real credit file, whose labels are nobody's simulation. Takes about half an hour. Writes two
 figures to ../../sources/images/.
 """
 # %% Setup
@@ -125,7 +125,6 @@ for s in range(5):
         wrong = ytr != ytrue
         flag = missed | spurious
         base = ((p >= 0.5).astype(int) != ytr)
-        est = (missed.sum() / (missed.sum() + (ytr == 0).sum() - missed.sum())) * (ytr == 0).sum() / ytr.sum()
         # Three uses of the flags, all calibrated on the same clean validation set
         keep = ~flag
         mp = inv.fit_boosted(tr[FEATURES][keep], ytr[keep], s)
@@ -231,14 +230,11 @@ for s in range(5):
         i = rng.choice(len(pool), n, replace=False)
         clerk = np.where(pool.y.to_numpy()[i] == 1, rng.random(n) < C.catch, rng.random(n) < C.false_alarm).astype(int)
         methods[f"{n:,} clerk labels"] = inv.fit_boosted(pool[FEATURES].iloc[i], clerk, s)
-    q_dep = dawid_skene(v)
     for name, m in methods.items():
         q = inv.platt(inv.score(m, va[FEATURES]), va.y)(inv.score(m, te[FEATURES]))
         rows.append({"source": name, "auc": roc_auc_score(yt, q), "cost_priced": inv.report(yt, q, inv.route(q, LO, HI))["cost"]})
-    rows.append({"source": "label accuracy, majority", "auc": np.nan, "cost_priced": np.nan, "label_acc": np.nanmean(np.round(np.nan_to_num(majority(v), nan=0.5)) == pool.y)})
-    rows.append({"source": "label auc, learned weights", "auc": roc_auc_score(pool.y, q_dep), "cost_priced": np.nan})
 print("\nModels trained on each source of labels, calibrated on 5,000 true labels, mean of 5 seeds")
-print(pd.DataFrame(rows).drop(columns="label_acc").groupby("source", sort=False).mean(numeric_only=True).to_string())
+print(pd.DataFrame(rows).groupby("source", sort=False).mean(numeric_only=True).to_string())
 
 
 # %% Active learning: uncertainty against random, on both data sets
@@ -328,9 +324,9 @@ print(pd.DataFrame(out).to_string(index=False))
 
 
 # %% Selection bias: what the corrections can see
-def month(n, seed, m, cal, c=C, discover=0.1, new_pattern=0.0):
+def month(n, seed, m, cal, c=C, discover=0.1, new_pattern=0.0, quiet=False):
     """One month of invoices through the router. Returns the frame with what each party saw."""
-    df = inv.make_invoices(n, seed, new_pattern=new_pattern)
+    df = inv.make_invoices(n, seed, new_pattern=new_pattern, quiet=quiet)
     rng = np.random.default_rng(seed + 1)
     p = cal(inv.score(m, df[FEATURES]))
     df["p"] = p
@@ -380,7 +376,7 @@ for rep in range(500):
     found = r.random(len(df)) < 0.1
     silent_est = (y[paid] & found[paid]).mean()
     # The dashboard: every clerk decision counts as truth, and silence counts as correct
-    dash_final = ((y & found & paid).sum() + (df.route == REJECT).sum() * 0) / len(df)
+    dash_final = (y & found & paid).sum() / len(df)
     # Audit a random 1% of paid, 1% of accepted, 10% of auto-rejected, then reweight to the whole flow
     rates = np.where(paid, 0.01, np.where(accepted, 0.01, np.where(df.route == REJECT, 0.10, 0.0)))
     audited = r.random(len(df)) < rates
@@ -389,6 +385,7 @@ for rep in range(500):
     same_clerk = r.random(len(df)) < C.catch
     audit_paid_clerk = (y[sel_paid] & same_clerk[sel_paid]).mean()
     decided = wrong_final.astype(float)
+    # Strata weights undo the sampling rates. Good invoices the clerk sent back are counted directly: suppliers object.
     ht = (decided[audited] / rates[audited]).sum() / len(df) + ((df.route == REVIEW) & df.clerk_rejects & (df.y == 0)).mean()
     rows.append({"silent_paid": silent_est, "audit_paid": audit_paid, "audit_paid_same_clerk": audit_paid_clerk, "dash_final": dash_final, "ht_final": ht, "n_audited": audited.mean() * len(df), "n_paid_audit": sel_paid.sum()})
 est = pd.DataFrame(rows)
@@ -431,14 +428,15 @@ def labels_for(df, policy, audit_rate, rng):
         return review.to_numpy(), clerk, np.ones(len(df))
     if policy == "audit":
         audited = paid.to_numpy() & (rng.random(len(df)) < audit_rate)
-        keep = review.to_numpy() | reject.to_numpy() | audited | found
-        label = np.where(audited, y, np.where(review, clerk, np.where(reject, 1, found.astype(int))))
+        # Paid invoices enter through the audit alone: its weights already stand for the ones that later surface
+        keep = review.to_numpy() | reject.to_numpy() | audited
+        label = np.where(audited, y, np.where(review, clerk, 1))
         weight = np.where(audited, 1 / audit_rate, 1.0)
         return keep, label, weight
     raise ValueError(policy)
 
 
-def run_loop(policy, seed, audit_rate=0.05, months=8, n=10_000, start_drift=3, strength=0.35):
+def run_loop(policy, seed, audit_rate=0.05, months=8, n=10_000, start_drift=3, strength=0.35, quiet=False):
     rng = np.random.default_rng(seed)
     hist = inv.make_invoices(10_000, 8000 + seed)
     m = inv.fit_boosted(hist[FEATURES], hist.y, seed)
@@ -448,13 +446,16 @@ def run_loop(policy, seed, audit_rate=0.05, months=8, n=10_000, start_drift=3, s
     rows = []
     for t in range(1, months + 1):
         np_t = strength if t >= start_drift else 0.0
-        test = inv.make_invoices(30_000, 8500 + 100 * seed + t, new_pattern=np_t)
+        test = inv.make_invoices(30_000, 8500 + 100 * seed + t, new_pattern=np_t, quiet=quiet)
+        new_type = inv.quiet_mask(test) if quiet else test.round_amount == 1
         q = cal(inv.score(m, test[FEATURES]))
         rep = inv.report(test.y.to_numpy(), q, inv.route(q, LO, HI))
         rows.append({"policy": policy, "seed": seed, "month": t, "paid": rep["paid"], "reviewed": rep["reviewed"], "error_paid": rep["error_paid"], "cost": rep["cost"], "auc": roc_auc_score(test.y, q),
                      "cost_with_audit": rep["cost"] + (rep["paid"] * audit_rate * C.review if policy == "audit" else 0.0),
-                     "new_type_paid": (inv.route(q, LO, HI)[(test.round_amount == 1).to_numpy()] == PAY).mean()})
-        df = month(n, 9000 + 100 * seed + t, m, cal, new_pattern=np_t)
+                     "new_type_paid": (inv.route(q, LO, HI)[new_type.to_numpy()] == PAY).mean()})
+        if policy == "never retrained":
+            continue
+        df = month(n, 9000 + 100 * seed + t, m, cal, new_pattern=np_t, quiet=quiet)
         keep, label, w = labels_for(df, policy, audit_rate, rng)
         window.append((df[FEATURES][keep], label[keep], w[keep]))
         window = window[-4:]
@@ -468,20 +469,23 @@ def run_loop(policy, seed, audit_rate=0.05, months=8, n=10_000, start_drift=3, s
     return rows
 
 
-rows = []
-for s in range(8):
-    for policy in ("true labels", "silence is correct", "reviewed only", "audit"):
-        rows += run_loop(policy, s)
-    rows += [{**r, "policy": "audit 2%"} for r in run_loop("audit", s, audit_rate=0.02)]
-    frozen = run_loop("true labels", s, months=1)[0]
-loop = pd.DataFrame(rows)
-print("\nEight months, 10,000 invoices each, retrained monthly on the last three months. New fraud type from month 3. Mean of 8 seeds, judged on fresh true outcomes")
-pv = loop.groupby(["policy", "month"], sort=False)[["paid", "reviewed", "error_paid", "new_type_paid", "auc", "cost_with_audit"]].mean()
-print(pv[pv.index.get_level_values("month").isin([2, 3, 5, 8])].to_string())
-m8 = loop[loop.month == 8].pivot(index="seed", columns="policy", values="cost_with_audit")
-for a in ("silence is correct", "reviewed only", "audit 2%"):
-    diff = m8[a] - m8["audit"]
-    print(f"Month 8 cost, {a} minus audit 5%: {diff.mean():+.3f} (sd {diff.std():.3f}, {(diff > 0).sum()}/8 seeds)")
+loops = {}
+for scenario, quiet in (("anywhere", False), ("only on invoices that look clean", True)):
+    rows = []
+    for s in range(8):
+        for policy in ("true labels", "never retrained", "silence is correct", "reviewed only", "audit"):
+            rows += run_loop(policy, s, quiet=quiet)
+        rows += [{**r, "policy": "audit 2%"} for r in run_loop("audit", s, audit_rate=0.02, quiet=quiet)]
+    loop = pd.DataFrame(rows)
+    loops[scenario] = loop
+    print(f"\nEight months, 10,000 invoices each, retrained monthly on the last three months. New fraud type from month 3, {scenario}. Mean of 8 seeds, judged on fresh true outcomes")
+    pv = loop.groupby(["policy", "month"], sort=False)[["paid", "reviewed", "error_paid", "new_type_paid", "auc", "cost_with_audit"]].mean()
+    print(pv[pv.index.get_level_values("month").isin([2, 3, 5, 8])].to_string())
+    after = loop[loop.month >= 3].groupby(["policy", "seed"]).cost_with_audit.mean().unstack(0)
+    print("Mean cost per invoice, months 3 to 8, audit paid for: " + ", ".join(f"{k} {after[k].mean():.3f}" for k in after))
+    for a in ("silence is correct", "reviewed only", "never retrained", "audit 2%"):
+        diff = after[a] - after["audit"]
+        print(f"{a} minus audit 5%: {diff.mean():+.3f} (sd {diff.std():.3f}, {(diff > 0).sum()}/8 seeds)")
 
 # %% Production failures as test cases: fix the class, not the rows
 rows = []
@@ -529,16 +533,19 @@ for ax, data, title in [(axes[0], "invoices", "Generated invoices"), (axes[1], "
 axes[0].legend(loc="lower right")
 cs.save(fig, "corrections-active-learning.png")
 
-fig, ax = plt.subplots()
-for policy, colour, ls in [("true labels", cs.INK, ":"), ("silence is correct", cs.ORANGE, "-"), ("reviewed only", cs.YELLOW, "-"), ("audit", cs.BLUE, "-")]:
-    c = loop[loop.policy == policy].groupby("month").error_paid.mean()
-    ax.plot(c.index, c.values, color=colour, ls=ls, label={"audit": "Random audit, 5%", "true labels": "Every true label (unobtainable)", "silence is correct": "Silence counts as correct", "reviewed only": "Reviewed invoices only"}[policy])
-ax.axvline(3, color=cs.MUTED, lw=1)
-ax.annotate("new fraud type arrives", (3, ax.get_ylim()[1]), xytext=(5, -12), textcoords="offset points", color=cs.SECONDARY)
-ax.set_xlabel("Month")
-ax.set_ylabel("True error rate among invoices paid automatically")
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.1%}"))
-ax.set_ylim(0, None)
-ax.set_title("What each labelling policy does to the invoices nobody looks at")
-ax.legend(loc="center right")
+NAMES = {"never retrained": "Never retrained", "silence is correct": "Silence counts as correct", "reviewed only": "Reviewed invoices only", "audit": "Random audit, 5%", "true labels": "Every true label (unobtainable)"}
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.4), sharey=True)
+for ax, (scenario, title) in zip(axes, [("anywhere", "New fraud type on any round amount"), ("only on invoices that look clean", "New fraud type only on clean-looking invoices")]):
+    d = loops[scenario]
+    for policy, colour, ls in [("never retrained", cs.MUTED, "--"), ("silence is correct", cs.ORANGE, "-"), ("reviewed only", cs.YELLOW, "-"), ("audit", cs.BLUE, "-"), ("true labels", cs.INK, ":")]:
+        c = d[d.policy == policy].groupby("month").error_paid.mean()
+        ax.plot(c.index, c.values, color=colour, ls=ls, label=NAMES[policy])
+    ax.axvline(3, color=cs.MUTED, lw=1)
+    ax.set_xlabel("Month; the fraud type arrives in month 3")
+    ax.set_title(title)
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.1%}"))
+    ax.set_ylim(0, None)
+axes[0].set_ylabel("True error rate on invoices paid automatically")
+fig.legend(*axes[0].get_legend_handles_labels(), loc="lower center", ncols=3)
+fig.subplots_adjust(bottom=0.26)
 cs.save(fig, "corrections-silent-acceptance.png")

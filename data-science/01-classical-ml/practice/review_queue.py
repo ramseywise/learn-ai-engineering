@@ -390,7 +390,7 @@ fig, ax = plt.subplots()
 for j, (label, colour) in enumerate([("Pay", cs.BLUE), ("Review", cs.ORANGE), ("Reject", cs.AQUA)]):
     ax.plot(grid, ec[:, j], color=colour, label=label)
 ax.plot(grid, ec.min(axis=1), color=cs.INK, lw=1, ls=":", label="Cheapest route")
-for t, txt in [(LO, f"pay below {LO:.3f}"), (HI, f"reject above {HI:.2f}")]:
+for t, txt in [(LO, f"pay below {LO:.3f}"), (HI, f"reject above {HI:.3f}")]:
     ax.axvline(t, color=cs.MUTED, lw=1)
     ax.annotate(txt, (t, 34), xytext=(5, 0), textcoords="offset points", color=cs.SECONDARY)
 ax.set_xlim(0, 1)

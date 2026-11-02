@@ -83,7 +83,7 @@ Keep the **random sample separate** when you report rates. The rule-based sample
 
 Neither humans nor judges are enough on their own:
 
-1. **Human layer.** People review a rule-based sample (errors, long dialogues, negative feedback), label pass/fail and the reason. This finds new failure patterns and produces calibration data.
+1. **Human layer.** People review a rule-based sample (errors, long dialogues, negative feedback), label pass/fail and the reason. This finds new failure patterns and produces calibration data. A rule-based sample can't estimate the rate on what it skips, so add a small random one ([DS 01/14](../../../data-science/01-classical-ml/notes/14-learning-from-corrections.md#audit-a-random-sample)).
 2. **Judge layer.** Calibrated LLM judges score a much wider slice of traffic, using the human labels as their calibration basis ([05](05-llm-as-judge.md#keep-it-calibrated)).
 
 Judges alone drift: nobody notices the criteria moving. Humans alone don't cover real traffic at scale. Run both, and track human–judge agreement on the overlap as its own metric.
@@ -257,7 +257,7 @@ Evals sit inside a wider set of things a production agent needs. The ones that t
 | Piece | Eval connection |
 |---|---|
 | **Fallback and escalation logic** | Escalation correctness is an eval dimension. Wrong escalations are a failure label |
-| **Human-in-the-loop checkpoints** | Every human correction is a labeled example, *if* it's logged |
+| **Human-in-the-loop checkpoints** | Every human correction is a labeled example, *if* it's logged, and a biased one: [DS 01/14](../../../data-science/01-classical-ml/notes/14-learning-from-corrections.md#a-correction-rate-reads-two-things-at-once) measures what it hides |
 | **Audit logging** | The same traces serve debugging, compliance and evals ([08](08-tracing-and-observability.md)) |
 | **Handoff protocol** (agent ↔ agent, agent ↔ human) | Handoffs are failure points. Evaluate what context transferred, and whether it was enough |
 

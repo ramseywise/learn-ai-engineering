@@ -154,6 +154,6 @@ for (name, vals), colour in zip(sweep_noise.items(), [cs.BLUE, cs.ORANGE]):
     a2.plot(range(len(extras)), vals, color=colour, marker="o", ms=6, label=name)
 a2.set_xticks(range(len(extras)), extras)
 a2.set(xlabel="Irrelevant columns added to the six real ones", title="Columns that carry no signal")
-a2.legend(loc="lower left")
+a2.legend(loc="upper right")
 a2.grid(False, axis="x")
 cs.save(fig, "classical-iforest-limits.png")

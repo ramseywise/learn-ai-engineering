@@ -8,7 +8,7 @@ A self-paced curriculum for AI and data engineering: notes, notebooks, exercises
 
 | Subject | What it covers |
 |---|---|
-| [Programming](programming/README.md) | [Python](programming/python/README.md), [SQL](programming/sql/README.md) and [TypeScript](programming/typescript/README.md), from first principles to production idioms |
+| [Programming](programming/README.md) | [Python](programming/python/README.md), [SQL](programming/sql/README.md) and [TypeScript](programming/typescript/README.md), from first principles to production idioms, plus [software design](programming/software-design/README.md) |
 | [Data Analytics](data-analytics/README.md) | pandas, statistics, experimentation and causality, Bayesian analysis, visualisation, and applied analyses |
 | [Data Engineering](data-engineering/README.md) | Built around *Designing Data-Intensive Applications*: storage, ingest and modelling, orchestration, lakehouse and streaming, quality, ML platform, governance |
 | [Data Science](data-science/README.md) | Classical ML, deep learning, NLP, time series and recommenders |

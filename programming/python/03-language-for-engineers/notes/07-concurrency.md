@@ -129,3 +129,7 @@ Retry only errors that can succeed next time (timeouts, 429, 5xx), never 4xx val
 ## Exercises
 
 [`practice/exercises/07_concurrency.py`](../practice/exercises/07_concurrency.py)
+
+## Next
+
+[8 — Objects, inheritance and MRO](08-objects-inheritance-and-mro.md): how classes really work, including the attribute lookup behind `super()`.

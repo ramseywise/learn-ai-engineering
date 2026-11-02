@@ -419,7 +419,7 @@ The repairs, all on held-out validation data, never on train:
 - **Intercept recalibration**, van den Goorbergh et al.'s fix, and **Platt scaling** both restore the mean, to 0.030, with the Brier back to 0.028 for every method.
 - **Isotonic** restores the mean too, but with 144 defaulters to fit on, the steps make a slope near 0.8. Note 04 keeps sigmoid for when data is short, and this is that case.
 
-After repair every method has the same Brier as doing nothing, so the resampling and its repair cancel out. Their conclusion is ours: correction followed by recalibration is "only worth the effort if imbalance correction leads to better discrimination", and here it doesn't. The fix also costs validation data you could have used elsewhere.
+After repair every method has the same Brier as doing nothing, so the resampling and its repair cancel out. Their conclusion is ours: correction followed by recalibration is "only worth the effort if imbalance correction leads to better discrimination", and here it doesn't. The fix also costs validation data you could have used elsewhere. [Note 13](13-automate-review-or-reject.md#calibration-is-the-precondition) shows the same repair deciding whether a two-threshold queue works at all.
 
 ## Drift: when the world moves
 
@@ -473,7 +473,7 @@ decline rate: {'no change': 0.024, 'covariate: towards low limits': 0.033, 'prio
 - **PAY_0 filled with 0**, the classic late join. PSI 3.5, score PSI just 0.073. Declines collapse from 2.4% to 0.1%, and cost hits 150, the approve-everyone line. The model has silently stopped working.
 - **Amounts in thousands**, a broken feed: PSI 7.7, the mean PD rises to 0.043, yet ROC-AUC holds at 0.753. Huge alarm, moderate harm.
 
-The score monitor alone misses most of this, so watch inputs too. PSI's noise floor here was 0.011, topping out at 0.014 across 20 seeds; the 0.1 and 0.25 lines are conventions.
+The score monitor alone misses most of this, so watch inputs too. [Note 13](13-automate-review-or-reject.md) follows the same three shifts into a review queue. PSI's noise floor here was 0.011, topping out at 0.014 across 20 seeds; the 0.1 and 0.25 lines are conventions.
 
 For what to do next, go to the [drift note](../../../data-engineering/06-ml-platform/notes/04-drift.md) in the data engineering pillar. It covers real against virtual drift, Wilson's table of drift types, why PSI must be calibrated on your own windows, the many-features problem, domain classifiers, and retraining policy. It also makes the point this section leans on: in credit scoring, labels arrive a year late, so input and prediction monitors are what you have, and a broken feed is an incident, not a reason to retrain.
 

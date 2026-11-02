@@ -343,7 +343,7 @@ boundaries   coverage 100.0%   killed 3/3   survivors on lines []
 
 The first suite has perfect coverage and checks nothing. The second looks responsible, and lets boundary bugs through. This small tool is a toy, but it's the same idea real ones scale up.
 
-On the lab's module, [`practice/mutate.py`](../practice/mutate.py) makes 37 operator swaps across `usage_report.py`, and the [22 characterization tests](../practice/README.md) kill all 37. Remove the 16 golden-master cases, leaving 6 targeted tests, and it falls to 10 killed and 27 survivors. A golden master compares whole reports, so a wrong operator nearly always changes some number. That's an argument for golden masters, within the limits of the swaps this tool tries: it doesn't touch constants, and a wrong price would need the golden file to be right about it.
+On the lab's module, [`practice/mutate.py`](../practice/mutate.py) makes 37 operator swaps across `usage_report.py`, and the [22 characterization tests](../practice/README.md) kill all 37. Remove the 16 golden-master cases, leaving 6 targeted tests, and it falls to 13 killed and 24 survivors. A golden master compares whole reports, so a wrong operator nearly always changes some number. That's an argument for golden masters, within the limits of the swaps this tool tries: it doesn't touch constants, and a wrong price would need the golden file to be right about it.
 
 Practice at scale is more cautious than the idea. [Petrović et al.](https://arxiv.org/abs/2102.11378) describe Google's system: running over the whole codebase is infeasible, and a mutation *score* wasn't actionable. So it mutates only changed, covered lines, reports at most one mutant per line, and shows survivors to authors in code review. The main finding for you is about usefulness: developers initially classified 85% of reported mutants as unproductive, meaning equivalent to the original or not worth a test, and suppression rules built on developer feedback raised the productive share from 15% to 89%. They also warn that a test written to kill an unproductive mutant can be a change-detector that makes the suite worse.
 
@@ -454,6 +454,7 @@ Don't assert exact strings from a live model: that test either flakes or pins th
 - **`MagicMock` without a spec.** Symptom: a typo in a method name passes. Use `create_autospec`, or a small hand-written fake.
 - **Coverage as a target.** Symptom: assertion-free tests, and a bar that behaves like a ceiling. Read uncovered lines rather than the percentage.
 - **Chasing every surviving mutant.** Symptom: tests that assert on internal details. Ask whether a behaviour is unspecified; many survivors aren't worth a test.
+- **Trusting a score you've seen once.** My first `mutate.py` reported 10, 11, 24 and 30 killed on the same six tests. Python reuses a `.pyc` when the source's mtime, in whole seconds, and size both match, and swapping `+` for `-` keeps the size, so a test run could import the previous mutant. With bytecode writing off, it gives 13 every time. Run a new measuring tool twice before believing it.
 - **Sleep in a test.** Symptom: slow suite, sporadic failures. Inject a clock or wait on a condition.
 - **Shared state across tests.** Symptom: passes alone, fails together, or depends on order. Tests should be hermetic: each sets up what it needs.
 - **Logic in tests.** Symptom: a loop or computed expectation that repeats the implementation's bug. SWE's advice is to prefer obvious, even repetitive, tests ("DAMP, not DRY").
@@ -472,7 +473,7 @@ Don't assert exact strings from a live model: that test either flakes or pins th
 
 1. `no_asserts` catches nothing, and `typical` catches any changed return string. The constant mutant, for example `0.8` to `0.9`, survives `typical` (0.9 is still "warn"), and survives `boundaries` too, because that suite's `warn_ratio=0.5` call doesn't touch the default. A test like `fn(0.8, 1.0) == "warn"` is what's missing, which shows that a toy operator set can give false comfort.
 2. The size property holds. With `size == overlap`, the step is 0 and `range` raises `ValueError: range() arg 3 must not be zero`. That's a reasonable outcome if you say so: validate `0 <= overlap < size` at the top, with a clear message.
-3. When I ran it: 37 mutants, 10 killed, 27 survived. Survivors include the arithmetic in the pricing lines, the running totals, and the `mode == "summary"` comparisons. All of those change what a reader sees, so a suite like that is thin despite passing, which is what the golden master was covering.
+3. When I ran it: 37 mutants, 13 killed, 24 survived, the same on five runs. Survivors include the arithmetic in the pricing lines, the per-model counters, the `or` that gives `atlas-small-2` its price, and the `mode == "full"` check before the file write. All of those change what a reader sees, so a suite like that is thin despite passing, which is what the golden master was covering.
 4. `@pytest.mark.slow` on the real implementation's parameter (via `pytest.param(..., marks=pytest.mark.slow)`), registered in `pyproject.toml`, with `pytest -m "not slow"` on each commit and the full set nightly.
 
 </details>

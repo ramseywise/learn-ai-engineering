@@ -30,6 +30,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 10 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
 | 11 | [Choosing a metric](notes/11-choosing-a-metric.md) | Given this target and this decision, which loss, metric and baseline? |
 | 12 | [Reading the errors](notes/12-reading-the-errors.md) | Which rows does the model get wrong, why, and how do you learn from them without fitting to them? |
+| 13 | [Automate, review or reject](notes/13-automate-review-or-reject.md) | Which decisions may the model take alone, and what is a person's review worth? |
+| 14 | [Learning from corrections](notes/14-learning-from-corrections.md) | What can people's corrections teach a model, and how do you measure what they never see? |
 
 ## Builds on and feeds into
 
@@ -43,6 +45,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [DA 02/06 Regression and GLMs](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Inference for linear models, which scikit-learn leaves out |
 | [DA 03/04 Correlation and causation](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | Why a model's explanations are not causal |
 | [DA 06/02 Credit scoring](../../data-analytics/06-applied-analyses/notes/02-credit-scoring.md) | The scorecard that the imbalance chapter starts from |
+| [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Harvesting failures into a test set, which note 14 measures |
+| [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | Sampling live traffic for review, which note 14 prices |
 
 **Feeds into**
 
@@ -60,6 +64,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Dev and held-out eval sets play the eyeball and blackbox roles |
 | [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | Slicing and reading transcripts, with the same traps |
 | [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | A prompt tuned on failures it is scored on is the noise fix again |
+| [GA 08/04 Graders](../../generative-ai/08-eval/notes/04-graders.md) | Abstention, seen from the grader's side |
+| [GA 08/11 Production and the maturity ladder](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md) | Human corrections are labelled examples only with the audit that notes 13 and 14 describe |
 
 ## Rules of thumb
 
@@ -74,6 +80,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 - Explanations describe the model, not the world.
 - Name the target and the decision before the metric. A metric's favourite prediction is what you are asking the model for.
 - Read errors on one split and score fixes on another. A fix built from noise gained 18.6 per 1,000 on the rows that chose it and lost 8.3 on the rest.
+- Price the review route before building it. Thresholds come from the error costs, the review cost and how often the reviewer catches a problem, and the straight-through rate is a constraint, not a goal.
+- Silence isn't confirmation. Audit a random sample of what nobody looks at, because no other number can see a new kind of failure.
 
 ## Practice
 
@@ -84,6 +92,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [`practice/music-clustering-lab/`](practice/music-clustering-lab/) | Clustering a real music library with a light reranker on top, for [note 05](notes/05-unsupervised-learning.md#case-clustering-a-music-library) | See its [README](practice/music-clustering-lab/README.md); about a minute, internet needed once |
 | [`practice/metric_map.py`](practice/metric_map.py) | Metrics by target, thresholds by cost, and retrieval on one table, for [note 11](notes/11-choosing-a-metric.md) | `uv run metric_map.py`, from `practice/` |
 | [`practice/reading_errors.py`](practice/reading_errors.py) | Six steps of error analysis on the credit model, and a noise fix against a mechanism fix over 30 seeds, for [note 12](notes/12-reading-the-errors.md) | `uv run reading_errors.py`, from `practice/`; under a minute |
+| [`practice/review_queue.py`](practice/review_queue.py) | Two thresholds on generated invoices and real credit data: prices, capacity, calibration, drift, risk targets and conformal, for [note 13](notes/13-automate-review-or-reject.md). Shares [`invoices.py`](practice/invoices.py) | `uv run review_queue.py`, from `practice/`; about three minutes, internet needed once |
+| [`practice/learning_from_corrections.py`](practice/learning_from_corrections.py) | Agreement, label noise, weak supervision, active learning, audits and regression cases, for [note 14](notes/14-learning-from-corrections.md) | `uv run learning_from_corrections.py`, from `practice/`; RUNTIME, internet needed once |
 | [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | Müller and Guido's notebooks, with local `mglearn` and data | `uv run --with scikit-learn --with pandas --with matplotlib --with jupyter jupyter lab`, from that folder |
 | [`practice/ng-machine-learning/`](practice/ng-machine-learning/) | Own Python ports of Ng's ex1 to ex8 | Same command, from that folder |
 | [`practice/udacity_mlnd_python_practice.ipynb`](practice/udacity_mlnd_python_practice.ipynb) | Python and data-handling warm-up | Same command |

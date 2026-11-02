@@ -1,6 +1,6 @@
 # Programming — references
 
-Everything the three tracks are built from, with how each source is used. Per-note sources are
+Everything the Python, SQL and TypeScript tracks are built from, with how each source is used. Per-note sources are
 in each note's frontmatter. [Sources and depth](../CURRICULUM.md#sources-and-depth) says how source maps work across the courses.
 
 ## Python
@@ -15,6 +15,11 @@ in each note's frontmatter. [Sources and depth](../CURRICULUM.md#sources-and-dep
 | University of Michigan, *Applied Data Science with Python*; Wesleyan, *Data Analysis and Interpretation* (Coursera) | Proprietary | Moved with the hand-off: own course notes in [data-analytics 01](../data-analytics/01-python-for-data-analysis/references.md) `practice/courses/`; no course data included |
 | Ben Gorman, [*DataWrangling*](https://github.com/ben519/DataWrangling) | Read online | Moved with the hand-off: [data-analytics 01](../data-analytics/01-python-for-data-analysis/references.md) `practice/courses/wrangle_pandas.py` (reads its CSVs from GitHub) |
 | Luciano Ramalho, *Fluent Python*, 2nd ed. | Proprietary | Further reading for 03 |
+| Python 3.14 documentation: [descriptor guide](https://docs.python.org/3.14/howto/descriptor.html), [MRO](https://docs.python.org/3.14/howto/mro.html), [data model](https://docs.python.org/3.14/reference/datamodel.html), [gc](https://docs.python.org/3.14/library/gc.html), [free threading](https://docs.python.org/3.14/howto/free-threading-python.html), [tracemalloc](https://docs.python.org/3.14/library/tracemalloc.html) | PSF | 03 · 08–09 |
+| [PEP 487](https://peps.python.org/pep-0487/), [PEP 779](https://peps.python.org/pep-0779/) | Public domain or CC0 | 03 · 08 (487), 09 (779) |
+| Raymond Hettinger, [*Python's super() considered super!*](https://rhettinger.wordpress.com/2011/05/26/super-considered-super/) | Read online | 03 · 08 |
+
+The software design track keeps its own list: [software-design/references.md](software-design/references.md).
 
 ## SQL
 

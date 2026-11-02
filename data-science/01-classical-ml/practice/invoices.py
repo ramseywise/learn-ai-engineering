@@ -26,17 +26,24 @@ class Prices:
     false_alarm: float = 0.02    # share of good invoices the clerk sends back
 
 
-def true_probability(x, new_pattern=0.0):
-    """P(problem | features). `new_pattern` adds a fraud type on round-amount invoices, absent at training time."""
+def quiet_mask(x):
+    """Round-amount invoices that otherwise look clean, so a model trained before the fraud type sends them to pay."""
+    return (x["round_amount"] == 1) & (x["po_match"] == 1) & (x["price_diff"] < 0.03) & (x["bank_changed"] == 0)
+
+
+def true_probability(x, new_pattern=0.0, quiet=False):
+    """P(problem | features). `new_pattern` adds a fraud type on round-amount invoices, absent at training time.
+    With `quiet`, it hits only the round-amount invoices that otherwise look clean."""
     z = (-5.0 + 1.3 * (1 - x["po_match"]) + 12 * x["price_diff"].clip(upper=0.3) + 1.1 * x["qty_mismatch"]
          + 2.2 * x["bank_changed"] + 7 * x["dup_sim"] ** 2 + 16 * x["prior_issue_rate"]
          + 0.8 * (x["tenure_months"] < 6) + 1.2 * x["bank_changed"] * (x["tenure_months"] < 6)
          - 6 * (x["extract_conf"] - 0.9) + 0.25 * (x["log_amount"] - 6.3))
     p = 1 / (1 + np.exp(-z))
-    return p + (1 - p) * new_pattern * x["round_amount"]
+    hit = quiet_mask(x) if quiet else x["round_amount"]
+    return p + (1 - p) * new_pattern * hit
 
 
-def make_invoices(n, seed, new_pattern=0.0, tenure_mean=40.0, po_rate=0.82):
+def make_invoices(n, seed, new_pattern=0.0, tenure_mean=40.0, po_rate=0.82, quiet=False):
     """n invoices with features, the true probability and a drawn outcome `y`."""
     rng = np.random.default_rng(seed)
     po = rng.binomial(1, po_rate, n)
@@ -52,7 +59,7 @@ def make_invoices(n, seed, new_pattern=0.0, tenure_mean=40.0, po_rate=0.82):
         "extract_conf": rng.beta(20, 2, n),
         "round_amount": rng.binomial(1, 0.06, n),
     })
-    x["true_p"] = true_probability(x, new_pattern)
+    x["true_p"] = true_probability(x, new_pattern, quiet)
     x["y"] = rng.binomial(1, x["true_p"])
     return x
 

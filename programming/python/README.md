@@ -40,6 +40,8 @@
 | 05 | [Type hints and dataclasses](03-language-for-engineers/notes/05-types-and-dataclasses.md) | Type signatures, use Protocols, frozen dataclasses, Pydantic at boundaries | [py](03-language-for-engineers/practice/exercises/05_types.py) |
 | 06 | [Modules, packaging and tooling](03-language-for-engineers/notes/06-modules-packaging-tooling.md) | Lay out a package with `pyproject.toml`; use uv, ruff and pytest | [package](03-language-for-engineers/practice/exercises/06_tooling/) |
 | 07 | [Concurrency](03-language-for-engineers/notes/07-concurrency.md) | Choose threads vs asyncio vs processes, limit concurrency, add timeouts | [py](03-language-for-engineers/practice/exercises/07_concurrency.py) |
+| 08 | [Objects, inheritance and the MRO](03-language-for-engineers/notes/08-objects-inheritance-and-mro.md) | Choose classmethods and staticmethods, predict the MRO, use `super()`, descriptors and `__init_subclass__`, and avoid metaclasses | in-note Try it |
+| 09 | [Memory and the runtime](03-language-for-engineers/notes/09-memory-and-the-runtime.md) | Reason about refcounting and the GC, find a leak with `tracemalloc`, weigh `__slots__`, read bytecode with `dis` | in-note Try it |
 
 Worked answers are in each module's `practice/solutions/`. Try each exercise before you open them.
 

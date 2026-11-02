@@ -12,7 +12,7 @@ sources:
   - "Casey Muratori, 'Clean' Code, Horrible Performance (2023) — https://www.computerenhance.com/p/clean-code-horrible-performance"
   - "Martin Fowler, Yagni (2015) and BeckDesignRules (2015) — https://martinfowler.com/bliki/Yagni.html , https://martinfowler.com/bliki/BeckDesignRules.html"
   - "Fred Brooks, No Silver Bullet (1986) — https://doi.org/10.1109/MC.1987.1663532"
-  - "Ben Moseley and Peter Marks, Out of the Tar Pit (2006) — ../../sources/moseley-2006-out-tar-pit.pdf"
+  - "Ben Moseley and Peter Marks, Out of the Tar Pit (2006) — https://curtclifton.net/papers/MoseleyMarks06a.pdf"
 concepts: [coupling, cohesion, information-hiding, deep-modules, wrong-abstraction, yagni, simple-design, solid, liskov-substitution, dependency-inversion, cupid, essential-complexity]
 confidence: high
 cleaned: 2026-11-02
@@ -422,7 +422,7 @@ For an LLM system, where work is dominated by waiting for a model, a few hundred
 
 ## Essential and accidental complexity
 
-[Brooks (1986)](https://doi.org/10.1109/MC.1987.1663532) separates the essential difficulty of a software task, fashioning its conceptual structures, from accidental difficulty in representing them. Unless accidental work is more than 9/10 of all effort, he argues, removing all of it won't give an order-of-magnitude improvement. [Moseley and Marks (2006)](../../sources/moseley-2006-out-tar-pit.pdf) take it further: complexity causes more problems in large systems than anything else, and it can be tamed only by avoiding it where possible and separating it where not; they propose splitting a system into essential state, essential logic and accidental state and control.
+[Brooks (1986)](https://doi.org/10.1109/MC.1987.1663532) separates the essential difficulty of a software task, fashioning its conceptual structures, from accidental difficulty in representing them. Unless accidental work is more than 9/10 of all effort, he argues, removing all of it won't give an order-of-magnitude improvement. [Moseley and Marks (2006)](https://curtclifton.net/papers/MoseleyMarks06a.pdf) take it further: complexity causes more problems in large systems than anything else, and it can be tamed only by avoiding it where possible and separating it where not; they propose splitting a system into essential state, essential logic and accidental state and control.
 
 You won't adopt their full architecture, but a Python version of the idea is everywhere in this course: keep state in few places and logic in pure functions. The [lab](../practice/README.md)'s second call returning zero calls is a pure example of accidental state. Step 3 removes it with a small edit, and that fixes two of the three pinned bugs; the third, retried calls going uncounted, was a misplaced status check.
 

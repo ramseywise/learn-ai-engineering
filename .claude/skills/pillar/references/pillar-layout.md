@@ -96,7 +96,7 @@ parts in this order. `make chapter-check PILLAR=<pillar>` checks them.
 6. **`## Interview checklist`.** A table of questions with the answers filled in.
 7. **`## Next`.** The link to the following note, or to the next pillar on the last note.
 
-Programming modules are exercise-driven at 300 to 600 words and are exempt from this section.
+Python, SQL and TypeScript modules under `programming/` are exercise-driven at 300 to 600 words and are exempt from this section. New `programming/` chapters and tracks, such as `software-design/` and Python 03/08 and 03/09, follow the full standard.
 
 ## references.md
 

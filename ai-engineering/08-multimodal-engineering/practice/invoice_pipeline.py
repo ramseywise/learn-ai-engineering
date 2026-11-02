@@ -106,7 +106,7 @@ def render(path, dpi):
     return pypdfium2.PdfDocument(str(path))[0].render(scale=dpi / 72).to_pil().convert("L")
 
 
-QUALITY = {"scan": dict(blur=.5, noise=12), "poor scan": dict(blur=.9, noise=40)}
+QUALITY = {"scan": dict(blur=.5, noise=12), "poor scan": dict(blur=.7, noise=25)}
 
 
 def scan(path, r, dpi, blur, noise):
@@ -323,12 +323,17 @@ print(pol.to_string(index=False, float_format=lambda v: f"{v:.6f}"))
 
 # %% Figure
 cs.apply()
-fig, ax = plt.subplots()
-for _, row in pol.iterrows():
-    ax.scatter(row.cost_per_doc, row.f1, s=80, color=cs.ORANGE if row.reviewed else cs.BLUE, zorder=3)
-    ax.annotate(row.policy, (row.cost_per_doc, row.f1), xytext=(8, -3), textcoords="offset points", color=cs.SECONDARY)
-ax.set_xscale("symlog", linthresh=.01)
-ax.set(xlabel="Cost per document on the stated assumptions (symmetric log scale)", ylabel="Field F1")
-ax.grid(False, axis="x")
-ax.set_title("Review buys the last errors, and it costs far more than compute")
+fig, (a1, a2) = plt.subplots(1, 2, sharey=True, figsize=(9, 4.5))
+ys = np.arange(len(pol))[::-1]
+colours = [cs.ORANGE if v else cs.BLUE for v in pol.reviewed]
+a1.barh(ys, pol.f1, color=colours)
+a1.set_yticks(ys, pol.policy)
+a1.set(xlim=(.8, 1.0), xlabel="Field F1")
+a1.set_title("What ships")
+a2.barh(ys, pol.cost_per_doc, color=colours)
+a2.set_xscale("log")
+a2.set(xlabel="Cost per document on the stated assumptions (log scale)")
+a2.set_title("What it costs, with people in orange")
+for a in (a1, a2):
+    a.grid(False, axis="y")
 cs.save(fig, "docs-invoice-route-cost.png")
