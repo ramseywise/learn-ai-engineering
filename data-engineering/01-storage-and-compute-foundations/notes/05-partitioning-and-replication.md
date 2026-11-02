@@ -110,7 +110,7 @@ no salt, busiest partition: 307030
 salted,  busiest partition: 19127
 ```
 
-The busiest partition dropped by a factor of 16. The price is that any read for the celebrity must now fetch and combine 100 keys, so this should only be done for the keys that need it. It is the same salting as in the [previous chapter's shuffle](08-distributed-compute.md), for the same reason.
+The busiest partition dropped by a factor of 16. The price is that any read for the celebrity must now fetch and combine 100 keys, so this should only be done for the keys that need it. The same salting returns in the [distributed compute chapter's shuffle](08-distributed-compute.md), for the same reason.
 
 ## Secondary indexes and fan-out
 
@@ -179,6 +179,8 @@ Going from 10 to 11 nodes with `mod N` moves 91% of the data. Creating far more 
 
 He also warns about automation. If rebalancing fires automatically on failure detection, a node that is only slow gets declared dead, more data moves to the remaining nodes, and the extra load can make them look dead too. Keeping a person in the loop for the rebalance decision is slower and safer.
 
+One more question follows from all this movement: how does a client know which node holds a key right now? Kleppmann gives three designs, where a client can ask any node, a routing tier, or the client itself knows, and the hard part is common to all of them, since every participant has to agree on a changing assignment (pp. 214-215). Many systems hand that problem to a coordination service such as ZooKeeper, while Cassandra and Riak gossip it between nodes (pp. 215-216). Agreement of that kind is what [Consistency and consensus](07-consistency-and-consensus.md) is about. Partitioning also leaves one thing unresolved, which the chapter ends on: a write that has to touch several partitions cannot be done with anything so far, because one partition can succeed while another fails (pp. 217-218). [Transactions](04-transactions-and-isolation.md) and [atomic commit](07-consistency-and-consensus.md) are the answers to that.
+
 ## Partitioning a lake
 
 So far these have been database mechanisms. The version a data engineer handles most often is a folder layout in object storage, and the rules are the same.
@@ -210,7 +212,7 @@ average file 438 KB
 [(742153.250000002,)]
 ```
 
-`Scanning Files: 1/31` is partition pruning: the engine read the folder names and opened a single file. It is the same mechanism as the footer pruning from [chapter 1](02-encoding-and-files.md), one level higher. So the partition key should be the column most queries filter on, usually a date, and hive-style `key=value` folders make it readable to any engine. Now go too far with the same idea and partition by day and zone.
+`Scanning Files: 1/31` is partition pruning: the engine read the folder names and opened a single file. It is the same mechanism as the footer pruning from [chapter 2](02-encoding-and-files.md), one level higher. So the partition key should be the column most queries filter on, usually a date, and hive-style `key=value` folders make it readable to any engine. Now go too far with the same idea and partition by day and zone.
 
 ```python
 con.execute("""COPY (SELECT *, pickup_at::DATE AS day FROM trips)
@@ -262,6 +264,8 @@ row replica matches leader:       True
 ```
 
 Replaying the statement diverged at once, because `random()` differs on each machine, and `NOW()` and autoincrement have the same problem. Kleppmann lists the options: statement-based replication, write-ahead log shipping, which is exact but tied to one storage version, and logical row-based logs, which are decoupled from the storage engine. The last one is also easy for other programs to parse, so it is what **change data capture** tools use to feed warehouses, and why the [ingest chapter](../../02-ingest-and-modelling/notes/01-ingest.md) prefers CDC to dumping tables.
+
+Adding a follower deserves a mention, because the recipe recurs across this subject. Take a consistent snapshot, note the exact log position it corresponds to, copy it, then replay the log from that position (pp. 155-156). [Change data capture](../../02-ingest-and-modelling/notes/01-ingest.md) starts the same way, and so does `CREATE INDEX` (p. 500).
 
 Replication can be synchronous or asynchronous. A synchronous follower is guaranteed current, but a stalled one blocks all writes, so a common setup, semi-synchronous replication, makes one follower synchronous and the rest asynchronous. Fully asynchronous systems keep writing through follower failures. They accept the risk this model shows next.
 
@@ -315,7 +319,7 @@ lost acknowledged write: [(4, 'receipt for di')]
 new write reused id 4 - the old id 4 belonged to: receipt for di
 ```
 
-Each of those four lines is a lesson. The client was told `di`'s receipt was saved, and it no longer exists. That is the durability cost of asynchronous replication. Follower `f1` was serving stale data the whole time, with no error. And then the failover did something worse: the new leader's counter handed out ID 4 a second time. If any other system has stored the first ID 4, such as a cache or a warehouse, the two rows now collide. This is a simplified form of an incident Kleppmann recounts from GitHub, in which an out-of-date MySQL follower was promoted, reused autoincrement keys that Redis also stored, and disclosed private data to the wrong users. He lists further failover problems: split brain, when two nodes both believe they lead, and the difficulty of setting a timeout (30 seconds is his example value) that neither triggers needlessly nor leaves a long outage.
+Each of those four lines is a lesson. The client was told `di`'s receipt was saved, and it no longer exists. That is the durability cost of asynchronous replication. Follower `f1` was serving stale data the whole time, with no error. And then the failover did something worse: the new leader's counter handed out ID 4 a second time. If any other system has stored the first ID 4, such as a cache or a warehouse, the two rows now collide. This is a simplified form of an incident Kleppmann recounts from GitHub, in which an out-of-date MySQL follower was promoted, reused autoincrement keys that Redis also stored, and disclosed private data to the wrong users. He lists further failover problems: split brain, when two nodes both believe they lead, and the difficulty of setting a timeout (30 seconds is his example value) that neither triggers needlessly nor leaves a long outage. [When distributed systems fail](06-when-distributed-systems-fail.md) shows why no timeout can make that detection reliable, and how a fencing token stops a deposed leader.
 
 ```mermaid
 sequenceDiagram
@@ -353,7 +357,9 @@ pinned by hash of user id: {'ana': 'f0', 'bo': 'f1', 'cy': 'f1'}
 
 **Read-your-writes** fails when a user saves something and then reads from a stale replica. **Monotonic reads** fails when successive reads hit replicas with different lag, so that data appears to go backwards. The output shows nine comments followed by seven. Pinning each user to one replica by hash of user ID, as the second line does, is the standard fix for that one. **Consistent prefix** fails when causally related writes on different partitions arrive out of order, so an answer appears before its question, which is a common form of the problem in a warehouse where two tables load at different times. Kleppmann's warning applies directly here: pretending that asynchronous replication is synchronous is a recipe for problems later.
 
-Multi-leader setups exist for multiple data centres and offline clients, but they make write conflicts possible and are often considered risky, so avoid them unless you have that exact need.
+The fixes for read-your-writes are worth knowing because you can borrow them: read data the user may have changed from the leader, read everything from the leader for a minute after an update, or have the client remember the log position of its last write and only read from a replica that has reached it (pp. 163-164). That last one is the trick to copy in a pipeline. A load step records the source position it reached and a later step refuses to run until its replica has passed that position, rather than sleeping and hoping. Measuring lag is straightforward with a leader, since it is the leader's log position minus the follower's, and it is a metric that deserves an alert (pp. 182-183).
+
+Multi-leader setups exist for multiple data centres and offline clients, but they make write conflicts possible and are often considered risky, so avoid them unless you have that exact need (p. 170). Conflicts can also be hard to see. Two people booking one room on different leaders each pass the availability check, and neither write conflicts with the other as a write, the same shape as the [write skew in chapter 4](04-transactions-and-isolation.md) (pp. 174-175). Merging is not free of surprises either: Amazon's cart once merged by union, so items a customer had removed came back (p. 174).
 
 ## Leaderless and quorums
 
@@ -379,7 +385,51 @@ for n, w, r in [(3, 2, 2), (3, 1, 1), (3, 3, 1), (5, 3, 3), (5, 2, 2)]:
  5  2  2  False    3 / 3
 ```
 
-The combination `n=3, w=2, r=2` tolerates one node down, and `n=5, w=3, r=3` tolerates two, matching the examples Kleppmann gives. The exhaustive check confirms that `n=3, w=1, r=1` can miss. Latency follows the slowest member of each quorum, as the Dynamo paper states, so `R` and `W` are usually set below `N`. Note that quorums are not a guarantee of linearisable reads. Kleppmann works through the exceptions: sloppy quorums, concurrent writes settled by last-write-wins that lose data under clock skew, and partial write failures. Note too that despite the name, DynamoDB itself uses a single leader per partition (his footnote), so "Dynamo-style" describes Riak, Cassandra and Voldemort.
+The combination `n=3, w=2, r=2` tolerates one node down, and `n=5, w=3, r=3` tolerates two, matching the examples Kleppmann gives. The exhaustive check confirms that `n=3, w=1, r=1` can miss. Latency follows the slowest member of each quorum, as the Dynamo paper states, so `R` and `W` are usually set below `N`. Note that quorums are not a guarantee of linearisable reads. Kleppmann works through the exceptions: sloppy quorums, concurrent writes settled by last-write-wins that lose data under clock skew, and partial write failures. Note too that despite the name, DynamoDB itself uses a single leader per partition (his footnote), so "Dynamo-style" describes Riak, Cassandra and Voldemort. [Chapter 7](07-consistency-and-consensus.md) measures this: with `n=3, w=3, r=2`, 22% of the histories it simulates turn out not to be linearisable. Two further details affect durability. Stale replicas catch up through read repair and a background anti-entropy process, and without the latter, data that is rarely read can stay under-replicated (p. 179). A **sloppy quorum** accepts writes on any reachable node when the proper ones are down, handing them over later, so it assures only that the data is somewhere and not that a reader will find it (pp. 183-184).
+
+## Concurrent writes
+
+When two clients write one key without seeing each other, replicas may receive them in different orders, and some rule has to pick the result. "Concurrent" has a precise meaning here, and it has nothing to do with the clock: two operations are concurrent if neither knew about the other, whatever time they happened (pp. 186-187). A **version vector**, one counter per client or replica for each key, tracks what each write had seen, so the store can tell an overwrite from a conflict and keep both sides of a conflict as siblings for the application to merge (pp. 188-191). This model is simplified from the book's cart example.
+
+```python
+def dominates(a, b):
+    return all(a.get(k, 0) >= v for k, v in b.items())
+
+class VersionedKey:
+    """One key on one replica: a version vector, and the siblings it could not order."""
+    def __init__(self):
+        self.seen, self.siblings = {}, []
+    def write(self, client, cart, context):
+        self.seen[client] = self.seen.get(client, 0) + 1
+        # A write replaces only what its author had read. Anything newer stays a sibling.
+        self.siblings = [(vv, c) for vv, c in self.siblings if not dominates(context, vv)]
+        self.siblings.append((dict(self.seen), cart))
+        return dict(self.seen)
+    def read(self):
+        return dict(self.seen), [sorted(c) for _, c in self.siblings]
+
+key = VersionedKey()
+ctx_a = key.write("a", {"milk"}, {})               # a has read nothing
+ctx_b = key.write("b", {"eggs"}, {})               # nor has b: these two are concurrent
+print("two concurrent writes:", key.read()[1])
+ctx_a = key.write("a", {"milk", "flour"}, ctx_a)   # a replaces its own write, not b's
+print("a adds flour:         ", key.read()[1])
+ctx, siblings = key.read()
+key.write("b", set().union(*siblings), ctx)        # b read both and merges them
+print("b merges both:        ", key.read()[1])
+
+timestamped = [(100, {"milk"}), (101, {"eggs"}), (102, {"milk", "flour"})]
+print("last write wins keeps:", sorted(max(timestamped, key=lambda w: w[0])[1]))
+```
+
+```text
+two concurrent writes: [['milk'], ['eggs']]
+a adds flour:          [['eggs'], ['flour', 'milk']]
+b merges both:         [['eggs', 'flour', 'milk']]
+last write wins keeps: ['flour', 'milk']
+```
+
+Flour replaced `milk` because that client had read it, and `eggs` stayed because it had not. The last line is the common alternative, **last write wins**, the only method Cassandra offered when the book was written. It discards a write the client was told had succeeded, with no error (p. 186). Kleppmann's advice is that it is only safe when a key is written once and then never changed, such as a UUID per event (p. 186), and an append-only event table has that shape. [Chapter 6](06-when-distributed-systems-fail.md) measures how much it loses to clock skew.
 
 ## In a pipeline
 
@@ -393,6 +443,8 @@ A data engineer usually does not operate these systems, but consumes them, and t
 | Fact row has no matching dimension row | Consistent prefix across tables | Load in dependency order, and test for orphans |
 | One Spark task takes an hour | Skewed key | Salt or broadcast |
 | Query scans every file | Filter column is not the partition key | Repartition, or sort inside files |
+| A value reverts after a write you saw succeed | Last write wins on a multi-writer key | Make keys immutable, or use a store that keeps siblings |
+
 | Thousands of tiny files | Too fine a partition, streaming sink | Compact, or partition more coarsely |
 
 The first four rows are cases of a stage trusting the one before it. They are why the [next pillar](../../02-ingest-and-modelling/README.md) begins by treating ingest as an honest copy of a source that may be behind, and why [the quality pillar](../../05-quality-and-observability/README.md) tests rather than assumes.
@@ -452,4 +504,4 @@ Partition by day, sort by zone inside each file. Day has low cardinality and als
 
 ## Next
 
-That completes the storage and compute foundations. [Pillar 02, ingest and modelling](../../02-ingest-and-modelling/README.md), starts getting data out of sources and shaping it for questions.
+So far the failures here have been polite ones, a follower that lags or a leader that dies. [When distributed systems fail](06-when-distributed-systems-fail.md) drops that assumption, with networks that lose messages, clocks that lie and processes that pause without knowing it.

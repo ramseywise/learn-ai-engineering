@@ -153,6 +153,8 @@ attempt 2: output lines: 1000
 
 The first attempt died and left nothing, so a retry cannot double-count. Kleppmann calls the wider property human fault tolerance. If bad code ships, you can roll it back, re-run it, and overwrite the bad output, which is impossible for a database mutated in place.
 
+Two tempting shortcuts break those habits, and Kleppmann warns against both. The first is having a job call a production database for each record, as a join. It is slow, it can overwhelm the database, and the result depends on when it ran, so a retry can produce a different answer. Copy a snapshot of the database into the cluster and join against that (pp. 404-405). The second is having a job write its results straight into a production database, row by row. That loses the all-or-nothing property, because a failed or speculatively duplicated task has already had its effect outside the framework. The alternative is to build the database files inside the job and switch to them atomically, as Voldemort does, so that a bad run can be undone by switching back (pp. 412-413). Retrying automatically is only safe because the input never changes and the output of a failed attempt is thrown away (p. 414). Everything [pillar 03 says about backfills](../../03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md) is the same discipline.
+
 The paper also records why scale makes stragglers matter. Its sort of about a terabyte (10^10 100-byte records on about 1,800 machines) finished in 891 seconds, and it took 44% longer with the "backup task" speculative re-execution disabled, because a few slow machines kept the whole job waiting. Failure at this scale is more common than you might assume. Kleppmann explains that MapReduce's design tolerates preemption: at Google, batch tasks ran alongside priority work and could be killed to make room, with about a 5% chance of an hour-long task being terminated. The arithmetic for a realistic job follows.
 
 ```python
@@ -167,7 +169,7 @@ print(f"at least one of 100 killed: {1 - (1 - per_10_min) ** 100:.0%}")
 at least one of 100 killed: 57%
 ```
 
-A hundred ten-minute tasks have better-than-even odds that at least one gets killed, which matches the figure Kleppmann gives. That explains why MapReduce writes each stage to disk: restarting one task is cheap. On a cluster where preemption is rare, that same choice is pure overhead, as Spark would show.
+A hundred ten-minute tasks have better-than-even odds that at least one gets killed, which matches the figure Kleppmann gives. That explains why MapReduce writes each stage to disk: restarting one task is cheap. On a cluster where preemption is rare, that same choice is pure overhead, as Spark would show. The contrast is with the older parallel databases, which aborted a query on failure and had the user run it again, a reasonable choice when queries are short (p. 417). MapReduce's restricted model is also what lets the framework hide [partial failure](06-when-distributed-systems-fail.md) from your code: a task that was declared dead may still be running, and a speculative copy is running on purpose, but since neither has side effects and only one output is kept, your code never has to care (p. 430). That is exactly what stops being true when a job writes to the outside world.
 
 ## Joins are shuffles
 
@@ -245,7 +247,7 @@ print(rdd.toDebugString().decode())
     |  ParallelCollectionRDD[0] at readRDDFromFile at PythonRDD.scala:326 []
 ```
 
-The `ShuffledRDD` line marks the boundary between stages. If a partition after it is lost, Spark re-reads shuffle files from the parents, or re-runs them if those are gone. Kleppmann adds an important condition: recomputation is only safe if the operators are deterministic, so a task that consumed random numbers or iterated a hash in unstable order can yield different data the second time. Downstream tasks then have to be killed and re-run too.
+The `ShuffledRDD` line marks the boundary between stages. If a partition after it is lost, Spark re-reads shuffle files from the parents, or re-runs them if those are gone. Kleppmann adds an important condition: recomputation is only safe if the operators are deterministic, so a task that consumed random numbers or iterated a hash in unstable order can yield different data the second time. Downstream tasks then have to be killed and re-run too. He adds that recomputing is not always the right choice either: if the intermediate data is much smaller than its source, or is expensive to compute, it is cheaper to write it down (p. 423). That is what `.cache()` and `.checkpoint()` trade.
 
 Spark SQL then lifted this from RDDs to relations (Armbrust et al., [*Spark SQL*](https://doi.org/10.1145/2723372.2742797), SIGMOD 2015): a declarative DataFrame API and an extensible optimiser, Catalyst. Declaring what you want rather than which function to call lets the engine rearrange your query. You can see the rearrangement in a local run on our Parquet file.
 
@@ -281,6 +283,8 @@ AdaptiveSparkPlan isFinalPlan=false
 ```
 
 (The `FileScan` line runs past the page; it has been truncated.) Read the plan from the bottom up: a scan of three of seven columns with the filter pushed into Parquet, a partial aggregate on each partition, an `Exchange` which is the shuffle, into 200 partitions by default, and a final aggregate. Partial aggregation before the shuffle is the combiner idea from MapReduce, chosen automatically. The default of 200 partitions is one to check: it is a lot of partitions for a million rows, though adaptive execution, shown by `AdaptiveSparkPlan`, can coalesce them at run time. This code needs only `pyspark` and a Java runtime, and `local[4]` runs it in one process with four threads. Practice with a real cluster is in the [zoomcamp batch module](../../04-warehouse-lakehouse-streaming/practice/datatalks-de/05-batch/).
+
+This convergence has a history worth knowing, since it explains how a lake differs from a warehouse. Massively parallel databases had been doing distributed joins for a decade before MapReduce, but demanded a model before a load. Hadoop's contribution was to accept any bytes first, and leave the interpretation to whoever read them, which is the [schema-on-read](01-data-systems-and-data-models.md) idea (pp. 415-416). The principle gets called sushi: raw is better (p. 416). It moves the burden from the producer to every consumer, which is why the [data contracts chapter](../../02-ingest-and-modelling/notes/04-data-contracts.md) exists. Then both sides moved towards each other, with dataflow engines adopting declarative joins and columnar execution while warehouses took on arbitrary code (pp. 427-429).
 
 ## One machine again: DuckDB and Polars
 
@@ -451,4 +455,4 @@ On the 12-core laptop used here the query finished at 200 MB and raised `OutOfMe
 
 ## Next
 
-A cluster has to decide where each row lives and how many copies it keeps. [Partitioning and replication](05-partitioning-and-replication.md) covers those two decisions.
+That completes the storage and compute foundations. [Pillar 02, ingest and modelling](../../02-ingest-and-modelling/README.md), starts getting data out of sources and shaping it for questions.

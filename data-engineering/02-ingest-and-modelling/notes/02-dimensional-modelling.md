@@ -363,6 +363,8 @@ That range join is also the answer to **late-arriving facts**. A trip dated Janu
 
 The trade-offs in row growth are real. Kimball warns about Type 2 on a rapidly changing attribute, since a dimension of millions of customers with one volatile column can grow past the point where it is a dimension. Split the volatile columns into their own dimension. In dbt you do not write `apply_scd2` by hand: a [snapshot](https://docs.getdbt.com/docs/build/snapshots) generates it, with `dbt_valid_from` and `dbt_valid_to` in place of our two columns. It is still worth writing once, so that when a snapshot does something surprising you know what it is doing.
 
+Streaming has the same problem under another name. Kleppmann's example is applying a tax rate to a past sale: if you join to the rate as it is now, a rerun gives a different answer, so the join is not deterministic (pp. 475-476). His fix is the Type 2 idea, giving each version of the rate an identifier and referring to it from the sale. He also names the cost that a warehouse rarely feels and a log does, which is that with every version needed forever, log compaction cannot throw any of them away (p. 476). That is the same row growth as above, and the reason streaming pipelines tend to prefer a versioned dimension table to an endless changelog.
+
 ## Conformed dimensions and drilling across
 
 One star is a report, while an enterprise warehouse is many stars that can be compared. Kimball's answer is the **bus architecture** (ch. 3): dimensions are built once and shared, so `dim_zone` means the same in trips, in driver shifts and in vehicle inspections. Planning happens on a **bus matrix**, business processes down the side and dimensions across the top, with a tick where a process uses a dimension. His retail example has rows such as Retail Sales, Retail Inventory and Purchase Orders against columns such as Date, Product, Store and Vendor. A single page makes the integration plan visible before anyone writes a pipeline.
@@ -405,6 +407,8 @@ Joining fact to fact doubled the fares, because each day and zone has two shifts
 ## When the star is the wrong tool
 
 Stars are built for analytical questions, and some other uses do not fit them. They are slower to change than a raw layer, they take design effort before value, and they assume someone owns the conformed dimensions. When many source systems need to be integrated and audited, the next chapter's Data Vault separates integration from presentation. When a team has one consumer and a modern column store, the same chapter's One Big Table is often cheaper. Neither removes the need to know what a row means, so the grain sentence survives every alternative.
+
+Two remarks from Kleppmann put the star in a wider frame. An event log and a fact table resemble each other, since both record immutable facts at a fine grain and derive everything else (p. 458). And once a read shape can be derived from a log, the question of whether to normalise or denormalise loses most of its force, because you can have both: normalised at the system of record, denormalised wherever it is read (p. 462). The [first chapter of this subject](../../01-storage-and-compute-foundations/notes/01-data-systems-and-data-models.md) sets out why normalisation exists at all. Dimensional modelling is the discipline of deciding what the derived shape should be.
 
 ## Pitfalls
 

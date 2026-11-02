@@ -24,7 +24,7 @@ Kleppmann's distinction ([*Designing Data-Intensive Applications*](https://datai
 | Data represents | The latest state | History of events |
 | Typical size | Gigabytes to terabytes | Terabytes to petabytes |
 
-The practical point is that an analyst's query can hold a production database's disks hostage. So companies copy data into a separate read-only **warehouse** through a pipeline, which is why this subject exists at all. Kimball's image for the split is that operational systems are where users turn the wheels of the organisation and the warehouse is where they watch them turn ([*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed., ch. 1).
+The practical point is that an analyst's query can hold a production database's disks hostage. So companies copy data into a separate read-only **warehouse** through a pipeline, which is why this subject exists at all. Kimball's image for the split is that operational systems are where users turn the wheels of the organisation and the warehouse is where they watch them turn ([*The Data Warehouse Toolkit*](https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/books/), 2nd ed., ch. 1). The same SQL can sit on top of both, which hides how different the machines underneath are (p. 93). The bottleneck is different too: a transactional store is limited by how many seeks it can do, an analytic one by how much data it can move off disk per second (p. 103).
 
 The size of the gap surprises people the first time. Here are both engines on the same rows, using the same `make_trips` as the [previous chapter](02-encoding-and-files.md).
 
@@ -248,6 +248,78 @@ print(plan)
 ╰───────────────────────────────────╯
 ```
 
+## Two ways to keep an index
+
+An index is derived data, which means it can be dropped and rebuilt from the table without losing anything, and every index you add speeds some reads and slows every write ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 3, p. 71). Most stores keep one in one of two ways, and since the sources you extract from are built on them, their costs turn up in a pipeline.
+
+A **B-tree** divides the disk into fixed pages, usually 4 KB, and updates them in place. With a branching factor of 500, four levels of those pages address 256 TB, which is why a lookup costs so few reads (p. 81). Overwriting a page in place is not crash safe, so each change also goes to a write-ahead log first, and is therefore written at least twice (pp. 82, 84).
+
+A **log-structured merge-tree** never overwrites. Writes collect in a sorted in-memory table, which is flushed as an immutable sorted segment and merged with its neighbours in the background (pp. 76-78). A delete is just a tombstone record, which the merge eventually acts on (p. 74). Here is a toy version, counting what reaches the disk.
+
+```python
+import random
+from bisect import bisect_left
+
+class ToyLSM:
+    """A memtable, flushed to sorted segments, merged when four pile up (size-tiered)."""
+    def __init__(self, memtable_rows=1_000, fanout=4):
+        self.mem, self.tiers = {}, {}          # tier number -> list of sorted segments
+        self.memtable_rows, self.fanout = memtable_rows, fanout
+        self.rows_written = 0
+    def put(self, key, value):
+        self.mem[key] = value
+        if len(self.mem) >= self.memtable_rows:
+            self._add(0, sorted(self.mem.items()))
+            self.mem = {}
+    def _add(self, tier, segment):
+        self.rows_written += len(segment)      # every flush or merge rewrites these rows
+        self.tiers.setdefault(tier, []).append(segment)
+        if len(self.tiers[tier]) == self.fanout:
+            newest_wins = {}
+            for seg in self.tiers.pop(tier):   # oldest first, so later values overwrite
+                newest_wins.update(seg)
+            self._add(tier + 1, sorted(newest_wins.items()))
+    def get(self, key):
+        """Check newest to oldest. Returns the value and how many segments were opened."""
+        if key in self.mem:
+            return self.mem[key], 0
+        opened = 0
+        for tier in sorted(self.tiers):
+            for seg in reversed(self.tiers[tier]):
+                opened += 1
+                i = bisect_left(seg, (key,))
+                if i < len(seg) and seg[i][0] == key:
+                    return seg[i][1], opened
+        return None, opened
+
+random.seed(7)
+n_writes, n_keys, row_bytes, page_bytes = 500_000, 50_000, 100, 4096
+db = ToyLSM()
+for i in range(n_writes):
+    db.put(random.randrange(n_keys), i)
+print(f"LSM: {db.rows_written / n_writes:.1f} rows reach disk per row updated "
+      f"= {db.rows_written * row_bytes / n_writes:,.0f} bytes per update")
+print(f"B-tree rewriting its {page_bytes}-byte page on every commit: {page_bytes:,} bytes per update")
+opened = [db.get(random.randrange(n_keys))[1] for _ in range(5_000)]
+print(f"segments on disk: {sum(len(v) for v in db.tiers.values())}, "
+      f"opened per read: mean {sum(opened)/len(opened):.1f}, worst {max(opened)}")
+missing = [db.get(n_keys + k)[1] for k in range(1_000)]
+print(f"a key that does not exist opens all {max(missing)} segments")
+```
+
+```text
+LSM: 3.4 rows reach disk per row updated = 338 bytes per update
+B-tree rewriting its 4096-byte page on every commit: 4,096 bytes per update
+segments on disk: 12, opened per read: mean 7.3, worst 12
+a key that does not exist opens all 12 segments
+```
+
+The write cost is a few rewrites of a small row, and the B-tree line is its worst case, since it leaves out the log and any batching of updates into one page. The read cost is the last two lines. One key can be in any of a dozen segments, and looking for a key that does not exist has to open them all, which is the case a Bloom filter exists to avoid (p. 79).
+
+So log-structured stores tend to be faster to write and B-trees faster to read, though Kleppmann says benchmarks are often inconclusive and sensitive to the workload, so test with yours (p. 83). Two further costs do not show up in a mean. Compaction competes with live requests, so it shows up at the high percentiles, and on a write-heavy load it can fall behind while the database keeps accepting writes (p. 85). And a B-tree holds each key in exactly one place, so it can attach range locks straight to the tree, a technique serializable databases use against the phantoms of the [next chapter](04-transactions-and-isolation.md) (pp. 85, 259-260). A concatenated index has a limit of its own: like a phone book sorted by last name then first name, it cannot find everyone with a given first name (p. 87).
+
+The analogy I find useful, and it is mine rather than the book's, is that a lakehouse table is an LSM-tree at a larger scale: immutable files, new data in small ones, and a background job that compacts them, as the [table formats chapter](../../04-warehouse-lakehouse-streaming/notes/02-table-formats.md) shows.
+
 ## Rollups and cubes
 
 If the same aggregate is computed all day, it can be stored. A materialised view is the result of a query saved as data, and a data cube is the grid of such aggregates across several dimensions with totals along each edge. SQL expresses the cube directly.
@@ -371,6 +443,8 @@ Add a derived dimension, `trip_miles > 10 AS long_trip`, to `daily_zone` and reg
 | OLTP vs OLAP? | OLTP does small reads and writes by key for applications. OLAP does large scans and aggregates over history for analysis. Their access patterns need different storage. |
 | Why are column stores fast for analytics? | They read only the named columns, compress similar values well, skip blocks by min and max, and use vectorised execution with tight loops over columns. |
 | Can a row store emulate one with narrow tables? | Not effectively, as Abadi et al. (SIGMOD 2008) showed. Tuple reconstruction and per-row overhead dominate, and the executor must also be built for columns. |
+| B-tree vs LSM-tree? | B-trees update fixed pages in place and write a log first, so reads are cheap and each key has one home. LSM-trees append sorted segments and merge them later, so writes are cheap, reads may open several segments and compaction can hurt tail latency. |
+
 | What is late materialisation? | Keeping columns separate through the query and building rows only when necessary. Abadi et al. measured about a factor of three. |
 | Why do warehouses avoid secondary indexes? | Each match is a random lookup, which loses to a scan as selectivity falls. Sort order and block statistics deliver most of the benefit without slowing writes. |
 | How do column stores handle writes? | Recent writes go to an in-memory or row-oriented store and are merged into compressed columns in bulk. Reads combine both. |
@@ -379,4 +453,4 @@ Add a derived dimension, `trip_miles > 10 AS long_trip`, to `daily_zone` and reg
 
 ## Next
 
-Both engines here ran on one machine. [Distributed compute](08-distributed-compute.md) asks when one machine stops being enough, and what it costs to use many.
+Every test here had one writer on one machine. [Transactions and isolation](04-transactions-and-isolation.md) adds the second writer, and shows what breaks when both touch the same rows.

@@ -113,6 +113,57 @@ plan = duck.execute("EXPLAIN SELECT pickup_zone, sum(fare_usd) FROM trips WHERE 
 print(plan)
 print("--- explain done")
 
+# --- lsm ---
+import random
+from bisect import bisect_left
+
+class ToyLSM:
+    """A memtable, flushed to sorted segments, merged when four pile up (size-tiered)."""
+    def __init__(self, memtable_rows=1_000, fanout=4):
+        self.mem, self.tiers = {}, {}          # tier number -> list of sorted segments
+        self.memtable_rows, self.fanout = memtable_rows, fanout
+        self.rows_written = 0
+    def put(self, key, value):
+        self.mem[key] = value
+        if len(self.mem) >= self.memtable_rows:
+            self._add(0, sorted(self.mem.items()))
+            self.mem = {}
+    def _add(self, tier, segment):
+        self.rows_written += len(segment)      # every flush or merge rewrites these rows
+        self.tiers.setdefault(tier, []).append(segment)
+        if len(self.tiers[tier]) == self.fanout:
+            newest_wins = {}
+            for seg in self.tiers.pop(tier):   # oldest first, so later values overwrite
+                newest_wins.update(seg)
+            self._add(tier + 1, sorted(newest_wins.items()))
+    def get(self, key):
+        """Check newest to oldest. Returns the value and how many segments were opened."""
+        if key in self.mem:
+            return self.mem[key], 0
+        opened = 0
+        for tier in sorted(self.tiers):
+            for seg in reversed(self.tiers[tier]):
+                opened += 1
+                i = bisect_left(seg, (key,))
+                if i < len(seg) and seg[i][0] == key:
+                    return seg[i][1], opened
+        return None, opened
+
+random.seed(7)
+n_writes, n_keys, row_bytes, page_bytes = 500_000, 50_000, 100, 4096
+db = ToyLSM()
+for i in range(n_writes):
+    db.put(random.randrange(n_keys), i)
+print(f"LSM: {db.rows_written / n_writes:.1f} rows reach disk per row updated "
+      f"= {db.rows_written * row_bytes / n_writes:,.0f} bytes per update")
+print(f"B-tree rewriting its {page_bytes}-byte page on every commit: {page_bytes:,} bytes per update")
+opened = [db.get(random.randrange(n_keys))[1] for _ in range(5_000)]
+print(f"segments on disk: {sum(len(v) for v in db.tiers.values())}, "
+      f"opened per read: mean {sum(opened)/len(opened):.1f}, worst {max(opened)}")
+missing = [db.get(n_keys + k)[1] for k in range(1_000)]
+print(f"a key that does not exist opens all {max(missing)} segments")
+print("--- lsm done")
+
 # --- cube ---
 print(duck.sql("""
     SELECT date_trunc('week', pickup_at)::DATE AS week, payment_type, sum(fare_usd)::INT AS fares

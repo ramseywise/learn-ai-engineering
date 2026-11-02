@@ -32,7 +32,7 @@ The DE orchestration module opens with "What is orchestration?" and this table i
 | Observability | Log files | Run history, task state, logs per run, alerts |
 | Triggers | None | Schedule, sensor (new data arrived), API call, upstream success |
 
-None of this is new. Kleppmann notes in [*Designing Data-Intensive Applications*](https://dataintensive.net/) (ch. 10, pp. 402-403) that once MapReduce jobs were being chained into workflows of 50 to 100 jobs, schedulers like Oozie, Azkaban, Luigi, Airflow and Pinball appeared to manage them, because chaining jobs by directory convention stopped being survivable. The engines changed, and the shape of the problem didn't.
+None of this is new. Kleppmann notes in [*Designing Data-Intensive Applications*](https://dataintensive.net/) (ch. 10, pp. 402-403) that once MapReduce jobs were being chained into workflows of 50 to 100 jobs, schedulers like Oozie, Azkaban, Luigi, Airflow and Pinball appeared to manage them, because chaining jobs by directory convention stopped being survivable. Directories did give those workflows one thing worth keeping: a job's output was only treated as valid once the job had succeeded, so the next job could not start on half of it (p. 402). The engines changed, and the shape of the problem didn't.
 
 Adopt the orchestrator on day 0, even if it only runs locally at first. An orchestrator forces each pipeline to be a separate unit that hands off only through storage (warehouse, feature store, artifact store), and a pipeline built that way can later be triggered by a schedule, an API call or a monitoring alert without a rewrite. The *LLM Engineer's Handbook* authors credit this decoupling with making continuous training a small step at the end of their project rather than a refactor (*LLM Engineer's Handbook*, ch. 11). Once the whole system runs from one manual trigger, the automated triggers are configuration.
 
@@ -192,7 +192,7 @@ rerun 2026-01-07 with a logical date: ['raw_2026-01-07.parquet', 'revenue_2026-0
 
 ### Scheduling is computing what is missing
 
-A scheduler is a clock plus a comparison: the runs the schedule says should exist, minus the runs that have succeeded. Backfill, catch-up and recovering from an outage are all the same operation on different ranges, which is why a good tool does not treat them as different features.
+A scheduler is a clock plus a comparison: the runs the schedule says should exist, minus the runs that have succeeded. Backfill, catch-up and recovering from an outage are all the same operation on different ranges, which is why a good tool does not treat them as different features. The comparison has to live somewhere durable, and it has to be the same for everyone asking, so the state of an orchestrator is a small database problem. Airflow, for one, settles which scheduler launches a task with row locks in its metadata database rather than a consensus algorithm, which [Consistency and consensus](../../01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) puts in context.
 
 ```python
 def schedule(start, end):
@@ -473,6 +473,8 @@ MLOps 05 reuses the pattern: `@flow batch_monitoring_backfill` loops over days, 
 - **Reading the clock in a task.** `now()`, `current_date` and `date.today()` make a run unrepeatable. Take the logical date as a parameter.
 - **Retrying non-idempotent work.** A retry after a timeout can repeat a write that already happened. Make the write safe before you turn retries on.
 - **Retrying forever or not at all.** No retries pages someone for every blip, and unlimited retries hide an outage. Set a small limit with backoff, and alert after it.
+- **Assuming a failed task has stopped.** An orchestrator declares failure from a missing heartbeat or a timeout, and it cannot tell a dead worker from a paused or partitioned one. The old attempt may still be writing while the retry runs, so writes need to be safe against it. [When distributed systems fail](../../01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md) runs this case.
+
 - **Heavy work in the orchestrator's process.** The scheduler should start work elsewhere, in the warehouse or on a worker. One heavy task on the scheduler's machine stalls every other pipeline.
 - **Passing data between tasks through the orchestrator.** Hand off through storage and pass the path. XComs and task results are for small values.
 - **A sensor with no timeout.** A source that stops sending is what the sensor exists to notice, and an untimed sensor just waits with it.

@@ -124,6 +124,27 @@ The zip code `02134` became the integer `2134`, and the amount `007` in the seco
 
 JSON has the same gap in a different place. It distinguishes strings from numbers but has no integer type, no decimal, no date, and no binary, so binary data is usually base64-encoded at a cost of about a third more bytes. The practical rule is that text formats are a good **interchange** choice between organisations, where the shared format matters more than efficiency, and a poor choice for anything you control end to end. In a pipeline, CSV is what you are handed, and the first job is to read it with an explicit schema, as the `typed` read did.
 
+Numbers carry a sharper version of the same problem. Kleppmann points out that integers above 2^53 cannot be represented exactly in the IEEE 754 double a JavaScript reader parses every JSON number into, and that Twitter responded by returning its 64-bit post IDs twice, once as a number and once as a decimal string ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 4, p. 114).
+
+```python
+import json
+tweet_id = 2**53 + 1                      # 9007199254740993
+text = json.dumps({"id": tweet_id, "id_str": str(tweet_id)})
+# A JavaScript reader parses every JSON number as a 64-bit float. parse_int=float does the same here.
+as_js = json.loads(text, parse_int=float)
+print(text)
+print("number field:", int(as_js["id"]), "off by", tweet_id - int(as_js["id"]))
+print("string field:", int(as_js["id_str"]), "off by", tweet_id - int(as_js["id_str"]))
+```
+
+```text
+{"id": 9007199254740993, "id_str": "9007199254740993"}
+number field: 9007199254740992 off by 1
+string field: 9007199254740993 off by 0
+```
+
+The damaged ID is off by one, and it looks fine. Any key column that passes through a JSON API on its way to the warehouse deserves this check. He also explains why these formats persist despite all of this: getting several organisations to agree on any format is harder than the format's flaws are costly (p. 115).
+
 ## Binary encodings and schemas
 
 Binary formats with a schema remove the guessing. Kleppmann works one small record through each, and the results are worth reproducing because they show where the bytes go. For `userName` Martin, `favoriteNumber` 1337, and `interests` daydreaming and hacking, his counts are 81 bytes for compact JSON, 66 for MessagePack, 59 for Thrift's binary protocol, 34 for Thrift's compact protocol, 33 for Protocol Buffers and 32 for Avro. MessagePack still repeats every field name, which is why it saves so little. The schema-based formats replace the names with something shorter or with nothing at all. Running two of them confirms the figures.
@@ -183,7 +204,7 @@ SchemaResolutionError - No default value for field city in Person
 
 That is schema evolution in two cases. Adding `city` with a default works against old data, and dropping `favoriteNumber` works because the reader skips it. Requiring `city` with no default fails loudly, and the failure is the feature. The rule Avro enforces is that you may add or remove only fields that have a default.
 
-Thrift and Protocol Buffers take a different route with numbered field tags. A field can be renamed freely because the name is not in the data, but a tag can never change meaning or be reused after deletion. Avro's by-name approach has a benefit that matters here: you can generate a schema from a database table on every export, and the names do the matching, where tags would need someone to assign them by hand. That is why Avro is common for database dumps and for event streams. It raises a practical question, though, which is where the reader gets the writer's schema. There are three common answers:
+Thrift and Protocol Buffers take a different route with numbered field tags. A field can be renamed freely because the name is not in the data, but a tag can never change meaning or be reused after deletion. A new field cannot be required, since old data does not have it, and only an optional field can be removed. Widening a type is subtler still: old code reading a 64-bit value into a 32-bit variable truncates it without complaint (pp. 120-121). Avro has its own edge: a rename through a reader's alias is backward compatible but not forward compatible, because old readers do not know the new name (p. 125). Avro's by-name approach has a benefit that matters here: you can generate a schema from a database table on every export, and the names do the matching, where tags would need someone to assign them by hand. That is why Avro is common for database dumps and for event streams. It raises a practical question, though, which is where the reader gets the writer's schema. There are three common answers:
 
 | Setting | Where the writer's schema lives |
 |---|---|
@@ -193,7 +214,9 @@ Thrift and Protocol Buffers take a different route with numbered field tags. A f
 
 The third row is why the Kafka section of the [ingest chapter](../../02-ingest-and-modelling/notes/01-ingest.md) runs a Schema Registry beside the broker. A registry also gives you a place to refuse an incompatible change before it ships, the idea that [data contracts](../../02-ingest-and-modelling/notes/04-data-contracts.md) later extend to whole datasets.
 
-One failure survives all of this tooling. If an old service reads a record written by newer code, decodes it into a model class, and writes it back, any field the old code did not know about can vanish. Kleppmann draws this case explicitly in chapter 4. Formats can preserve unknown fields, but application code usually discards them at the model class boundary, so the check has to include the application.
+One failure survives all of this tooling. If an old service reads a record written by newer code, decodes it into a model class, and writes it back, any field the old code did not know about can vanish. Kleppmann draws this case explicitly (pp. 129-130), and the same trap catches a consumer that republishes a message it decoded (p. 138). Formats can preserve unknown fields, but application code usually discards them at the model class boundary, so the check has to include the application.
+
+A database is the place where this matters most, and his framing is worth keeping: writing to a database is sending a message to your future self, and data outlives code (pp. 129-130). A deploy replaces every running process within minutes, while a row written five years ago stays in its original encoding until something rewrites it. Schema evolution is what lets the whole store look as if it had one schema, and a bulk rewrite of everything is only worth doing when an archive is being made anyway, which is the moment to write a consistent snapshot in the latest schema to a format like Avro or Parquet (pp. 130-131). Each of the three ways data travels between programs changes who has to be compatible with whom. For a service, deploy servers first, so requests need backward compatibility and responses need forward compatibility (p. 136). A service call also fails in ways a local one cannot: it can time out with no way of knowing whether it ran (p. 134), which is the subject of [When distributed systems fail](06-when-distributed-systems-fail.md).
 
 Row-oriented binary formats are the right choice for records in motion, one at a time. Analytics asks a different question, which is the sum of one column over a billion rows, and needs a different layout.
 

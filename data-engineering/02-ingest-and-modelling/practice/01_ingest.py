@@ -104,6 +104,27 @@ print("extracted", len(rows), "rows")
 print(wh.execute("SELECT trip_id, fare_usd FROM raw_trips WHERE trip_id IN (42, 43, 44) ORDER BY 1").fetchall())
 print("--- overlap done")
 
+# --- dual_write ---
+import random
+rng = random.Random(7)
+
+def dual_write():
+    """Two clients write one key to the database and to a search index, separately."""
+    to_db, to_index = ["A", "B"], ["A", "B"]
+    rng.shuffle(to_db); rng.shuffle(to_index)      # each write races to each system on its own
+    return to_db[-1], to_index[-1]
+
+def follow_log():
+    """The database decides one order, and the index applies that same order."""
+    log = ["A", "B"]; rng.shuffle(log)
+    return log[-1], log[-1]
+
+N = 100_000
+for name, fn in [("dual write", dual_write), ("follow the log", follow_log)]:
+    disagree = sum(db != index for db, index in (fn() for _ in range(N)))
+    print(f"{name:15s} the two systems disagree in {disagree / N:6.2%} of runs")
+print("--- dual_write done")
+
 # --- cdc ---
 source = make_source()
 source.executescript("""

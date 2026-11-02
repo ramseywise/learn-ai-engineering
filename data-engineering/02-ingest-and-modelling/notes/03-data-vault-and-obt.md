@@ -266,6 +266,8 @@ Three more costs follow from the same fact, that a dimension's value has been co
 - **Grain has nowhere to go.** A second fact at a different grain (shifts, tolls) cannot live in this table without fan-out, so you end up with one table per grain. The "one" in the name lasts until the second fact arrives.
 - **Dimensions without facts disappear.** A zone that had no trips this month is simply absent from the table, so a report that should show zero shows nothing.
 
+This is where it helps to remember that a One Big Table is derived data. Kleppmann's argument that the normalisation debate largely goes away once views are derived from a log (p. 462 of [*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 11) only holds if the rebuild really is cheap and reliable. An OBT rebuilt in full from a star or a vault is a cache, and nothing is lost when it is wrong. An OBT that has become the only copy is a denormalised source of record, and every correction becomes the [many-row rewrite](../../01-storage-and-compute-foundations/notes/01-data-systems-and-data-models.md) that normalisation exists to avoid.
+
 ## Choosing
 
 | Question | Star | Data Vault | One Big Table |

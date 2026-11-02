@@ -254,9 +254,41 @@ extracted 1002 rows
 
 Trip 42 is now right, at the price of re-reading rows. Here it took 1,002 rows to find two, because this synthetic source stamps a day's rows at one time. Deletion is still not fixed, and no overlap will fix it. Teams work around that with soft-delete columns, which only help if every writer honours them, or with a periodic key comparison against the source. An overlap also only covers commits within its width, so it is a guess about how long your longest transaction runs.
 
+### Why not write to both
+
+Before CDC, one more tempting option deserves a clear refusal. The application could write to its database and also to the warehouse, search index or cache. Kleppmann calls this a dual write and gives two reasons it goes wrong: two clients can reach the two systems in different orders, and one of the writes can fail while the other succeeds (pp. 452-453). Here is the first reason alone.
+
+```python
+import random
+rng = random.Random(7)
+
+def dual_write():
+    """Two clients write one key to the database and to a search index, separately."""
+    to_db, to_index = ["A", "B"], ["A", "B"]
+    rng.shuffle(to_db); rng.shuffle(to_index)      # each write races to each system on its own
+    return to_db[-1], to_index[-1]
+
+def follow_log():
+    """The database decides one order, and the index applies that same order."""
+    log = ["A", "B"]; rng.shuffle(log)
+    return log[-1], log[-1]
+
+N = 100_000
+for name, fn in [("dual write", dual_write), ("follow the log", follow_log)]:
+    disagree = sum(db != index for db, index in (fn() for _ in range(N)))
+    print(f"{name:15s} the two systems disagree in {disagree / N:6.2%} of runs")
+```
+
+```text
+dual write      the two systems disagree in 49.71% of runs
+follow the log  the two systems disagree in  0.00% of runs
+```
+
+Half the time, the two systems end up permanently different, and nothing failed, so nothing is logged. Making the two writes atomic is the atomic commit problem, which is expensive to solve (p. 453), and [consistency and consensus](../../01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) shows what it blocks on. The better shape is to make one system the leader, have it decide the order, and let everything else follow (p. 454), which is what CDC does.
+
 ### Change data capture
 
-The alternative is to stop asking the table and read the database's own record of what happened. Replication already needs that record: the leader writes every change to a log, and followers apply it in order. Change data capture (CDC) exposes that stream to other systems, which in effect makes your warehouse one more follower ([*DDIA*](https://dataintensive.net/), p. 454-455). [Debezium](https://debezium.io/documentation/reference/stable/features.html) is the common open-source implementation. It reads the log of databases such as PostgreSQL and MySQL and publishes change events through Kafka Connect. Its documentation lists the advantages over polling that the failures above predict: all changes are captured, deletes included, and no "last updated" column is needed.
+The alternative is to stop asking the table and read the database's own record of what happened. Replication already needs that record: the leader writes every change to a log, and followers apply it in order. Change data capture (CDC) exposes that stream to other systems, which in effect makes your warehouse one more follower ([*DDIA*](https://dataintensive.net/), p. 454-455). [Debezium](https://debezium.io/documentation/reference/stable/features.html) is the common open-source implementation. It reads the log of databases such as PostgreSQL and MySQL and publishes change events through Kafka Connect. Its documentation lists the advantages over polling that the failures above predict: all changes are captured, deletes included, and no "last updated" column is needed. The follower comparison is more than a metaphor, because the [recipe for adding a follower](../../01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md) is the recipe below.
 
 We have no replication slot in SQLite, so we imitate the log with triggers that write a change table. Kleppmann points out that triggers are also a real way to build CDC, though fragile and costly compared with parsing the log (p. 455), so use this to learn the shape and not as a design. The steps are the same as for a real connector. Take a snapshot at a known log position, then apply everything after it.
 
@@ -325,9 +357,11 @@ position 3
 rows match source: True
 ```
 
-The replay did nothing, trip 42 has its correct fare, and trip 43 is gone. The delete table is there for a subtle reason: without it, replaying an old `u` event for a deleted key would bring the row back. Retention creates one more operational requirement. A real log is truncated, so a connector that falls too far behind has to take a new snapshot. In return for all of this, you run more moving parts than a nightly query needs, and CDC is usually asynchronous, so all the replication lag behaviour from pillar 1 still applies (p. 455).
+The replay did nothing, trip 42 has its correct fare, and trip 43 is gone. The delete table is there for a subtle reason: without it, replaying an old `u` event for a deleted key would bring the row back. Retention creates one more operational requirement. A real log is truncated, so a connector that falls too far behind has to take a new snapshot. In return for all of this, you run more moving parts than a nightly query needs, and CDC is usually asynchronous, so all the replication lag behaviour from pillar 1 still applies (p. 455). A compacted topic softens the requirement, since keeping the latest value per key lets a new consumer rebuild from offset zero without a separate snapshot (p. 456).
 
 So the choice runs in order of cost. Copy the table if it is small. Use a watermark with an overlap if rows are never hard deleted and a small error is tolerable. Move to CDC when deletes matter, when the table is too big to re-read, or when consumers need freshness measured in minutes.
+
+Whichever you pick, keep hold of three kinds of change record and what they can tell you. A CDC event says what a row became. An **event** in the event-sourcing sense says what happened, such as "the student cancelled", which is richer because it keeps the intent that a row update discards (pp. 457-458). And a **command** is a request that can still be refused. Only once it has been validated does it become an event, a fact that consumers may not reject (p. 459). A pipeline downstream of an event log can trust what it reads in a way it cannot with a stream of commands, so ask which of the three a source is really emitting.
 
 | Method | Sees updates | Sees hard deletes | Load on source | Operational cost |
 |---|---|---|---|---|

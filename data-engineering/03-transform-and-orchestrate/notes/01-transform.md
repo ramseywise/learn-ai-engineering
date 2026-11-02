@@ -348,7 +348,7 @@ for key in ["vendorid, lpep_pickup_datetime",
 
 ## `ref()` builds the graph
 
-You never write the build order. dbt parses every `ref` and `source` call to build a graph, and running it in topological order is what `dbt build` does. The graph is in a plain JSON file, which is also how tools like dagster-dbt and Cosmos read a project in the [orchestrator chapter](05-dagster-and-airflow.md).
+You never write the build order. dbt parses every `ref` and `source` call to build a graph, and running it in topological order is what `dbt build` does. The graph is in a plain JSON file, which is also how tools like dagster-dbt and Cosmos read a project in the [orchestrator chapter](05-dagster-and-airflow.md). This is the old Unix idea Kleppmann calls separating logic from wiring: the model says what to compute, and something else decides where its input comes from and where its output goes ([*Designing Data-Intensive Applications*](https://dataintensive.net/), ch. 10, p. 396). That is why the same model can run against dev and prod unchanged.
 
 ```python
 manifest = json.loads(pathlib.Path("target/manifest.json").read_text())

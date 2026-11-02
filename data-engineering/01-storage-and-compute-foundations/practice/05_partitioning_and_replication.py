@@ -196,6 +196,37 @@ pick = lambda user: "f" + str(zlib.crc32(user.encode()) % 2)
 print("pinned by hash of user id:", {u: pick(u) for u in ["ana", "bo", "cy"]})
 print("--- monotonic done")
 
+# --- version_vector ---
+def dominates(a, b):
+    return all(a.get(k, 0) >= v for k, v in b.items())
+
+class VersionedKey:
+    """One key on one replica: a version vector, and the siblings it could not order."""
+    def __init__(self):
+        self.seen, self.siblings = {}, []
+    def write(self, client, cart, context):
+        self.seen[client] = self.seen.get(client, 0) + 1
+        # A write replaces only what its author had read. Anything newer stays a sibling.
+        self.siblings = [(vv, c) for vv, c in self.siblings if not dominates(context, vv)]
+        self.siblings.append((dict(self.seen), cart))
+        return dict(self.seen)
+    def read(self):
+        return dict(self.seen), [sorted(c) for _, c in self.siblings]
+
+key = VersionedKey()
+ctx_a = key.write("a", {"milk"}, {})               # a has read nothing
+ctx_b = key.write("b", {"eggs"}, {})               # nor has b: these two are concurrent
+print("two concurrent writes:", key.read()[1])
+ctx_a = key.write("a", {"milk", "flour"}, ctx_a)   # a replaces its own write, not b's
+print("a adds flour:         ", key.read()[1])
+ctx, siblings = key.read()
+key.write("b", set().union(*siblings), ctx)        # b read both and merges them
+print("b merges both:        ", key.read()[1])
+
+timestamped = [(100, {"milk"}), (101, {"eggs"}), (102, {"milk", "flour"})]
+print("last write wins keeps:", sorted(max(timestamped, key=lambda w: w[0])[1]))
+print("--- version_vector done")
+
 # --- quorum ---
 def always_overlap(n, w, r):
     nodes = range(n)

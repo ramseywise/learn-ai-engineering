@@ -64,6 +64,17 @@ tweet_id = 2**53 + 1
 print(tweet_id, "->", int(float(tweet_id)))
 print("--- csv_traps done")
 
+# --- big_ints ---
+import json
+tweet_id = 2**53 + 1                      # 9007199254740993
+text = json.dumps({"id": tweet_id, "id_str": str(tweet_id)})
+# A JavaScript reader parses every JSON number as a 64-bit float. parse_int=float does the same here.
+as_js = json.loads(text, parse_int=float)
+print(text)
+print("number field:", int(as_js["id"]), "off by", tweet_id - int(as_js["id"]))
+print("string field:", int(as_js["id_str"]), "off by", tweet_id - int(as_js["id_str"]))
+print("--- big_ints done")
+
 # --- encodings_compared ---
 import json, fastavro
 

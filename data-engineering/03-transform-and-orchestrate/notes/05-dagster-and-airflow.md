@@ -280,7 +280,7 @@ print(result.output_for_node("monthly_total"))
 
 Airflow was [started in 2014 by Maxime Beauchemin at Airbnb](https://airflow.apache.org/docs/apache-airflow/stable/project.html), who later wrote the case for pure, partition-replacing tasks that [chapter 4](04-idempotency-and-backfills.md) relies on. It is the older tool, and in our judgement the one you are more likely to inherit; the 2022 cohort of the DataTalks zoomcamp taught it. Version 3 changed enough that tutorials written for 2.x will mislead you, so everything below was run on 3.3.2.
 
-Dag code lives in a file that a separate process parses, not in your session, so the setup is larger than Dagster's. Airflow needs a home and a metadata database, here SQLite in a throwaway folder:
+Dag code lives in a file that a separate process parses, not in your session, so the setup is larger than Dagster's. Airflow needs a home and a metadata database, here SQLite in a throwaway folder: (That database is more than bookkeeping. In a real deployment it is how schedulers avoid launching the same task twice, through [row locks rather than consensus](../../01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md), so a SQLite file is for trying things out only.)
 
 ```python
 import json, os, subprocess
