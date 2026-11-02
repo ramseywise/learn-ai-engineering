@@ -1,6 +1,6 @@
 # Content plan: statistical models, social-science methods and cross-subject links
 
-Status: 2026-11-02, approved and in progress. Companion to [CONTENT-PLAN.md](CONTENT-PLAN.md), which set the pillar
+Status: 2026-11-02, approved and in progress. Companion to [CONTENT-PLAN.md](.claude/docs/plans/CONTENT-PLAN.md), which set the pillar
 shape, and [CURRICULUM.md](CURRICULUM.md), which froze the subjects. This file names five gaps and says how
 to close them inside the existing pillars, so no freeze exception is needed.
 
@@ -56,7 +56,7 @@ Measured 2026-11-02 by reading the notes, not by word count.
 ## 2. New chapters
 
 All inside existing pillars. Chapter numbers continue each pillar's sequence so that no link, deck or
-slide breaks. Each chapter follows the standard in [CONTENT-PLAN.md §2.2](CONTENT-PLAN.md): hook, concepts
+slide breaks. Each chapter follows the standard in [CONTENT-PLAN.md §2.2](.claude/docs/plans/CONTENT-PLAN.md): hook, concepts
 with runnable code, a figure, pitfalls, try-it, interview checklist, next. Practice is one `# %%` script
 per chapter, like pillar 06's, and Fernhill stays the running example wherever a dataset is needed, except DA 02/07, 02/08 and 04/07, which use Larkspur or a plain simulation.
 
@@ -289,7 +289,7 @@ to claim anything about faithfulness.
 
 ## 3. Cross-subject links
 
-The rule to add to [ai-engineering/PILLAR-LAYOUT.md](ai-engineering/PILLAR-LAYOUT.md): every pillar
+The rule to add to [pillar-layout.md](.claude/skills/pillar/references/pillar-layout.md): every pillar
 README has a **Builds on** table (which earlier chapters in other subjects it assumes, with one line on
 why) and a **Feeds into** table (which later chapters use it). `scripts/check_chapters.py` warns when a
 pillar README has neither. Chapter-level links go inline where the concept is first used, in the form

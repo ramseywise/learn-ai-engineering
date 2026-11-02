@@ -388,20 +388,26 @@ print(f"baseline {1000 * cb.mean():.1f}  real-mechanism fix {1000 * cr.mean():.1
       f"approve everyone {lab.expected_cost(yte, np.zeros(len(yte)), 0.5):.1f}")
 
 # %% Figure: what looked like a gain on the eyeball set, and what remained on the blackbox set
-plt = lab._style()
-fig, ax = plt.subplots(figsize=(7.2, 3.4))
+import chartstyle as cs
+import matplotlib.pyplot as plt
+
+cs.apply()
+fig, ax = plt.subplots()
 jit = np.random.default_rng(0)
 rows = [("Noise fix", "noise eye", "noise bb"), ("Real-mechanism fix", "real eye", "real bb")]
 for i, (name, a, b) in enumerate(rows):
-    for col, off, colour, label in [(a, 0.17, lab.BLUE, "Eyeball set (read)"), (b, -0.17, lab.ORANGE, "Blackbox set (not read)")]:
+    for col, off, colour, label in [(a, 0.17, cs.BLUE, "Eyeball set (read)"), (b, -0.17, cs.ORANGE, "Blackbox set (not read)")]:
         y = 1 - i + off + jit.uniform(-0.07, 0.07, len(demo))
         ax.plot(demo[col], y, "o", ms=5, color=colour, alpha=0.6, mec="none", label=label if i == 0 else None)
-        ax.plot([demo[col].mean()] * 2, [1 - i + off - 0.13, 1 - i + off + 0.13], color=lab.INK, lw=2)
-ax.axvline(0, color=lab.MUTED, lw=1)
+        mean = demo[col].mean()
+        ax.plot([mean] * 2, [1 - i + off - 0.13, 1 - i + off + 0.13], color=cs.INK, lw=2)
+        ax.annotate(f"{mean:+.1f}", (mean, 1 - i + off + 0.13), xytext=(0, 2), textcoords="offset points", ha="center", fontweight="bold")
+ax.axvline(0, color=cs.MUTED, lw=1)
 ax.set_yticks([1, 0], [r[0] for r in rows])
-ax.set_ylim(-0.5, 1.5)
-ax.grid(axis="y", visible=False)
+ax.set_ylim(-0.5, 1.55)
+ax.grid(False, axis="y")
+ax.grid(True, axis="x")
 ax.set_xlabel("Fall in cost per 1,000 applicants; dots are seeds, black bars their means")
 ax.set_title(f"What each fix gained, read and unread ({len(SEEDS)} seeds)")
-ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=2)
-print("\nwrote", lab._save(fig, "reading-errors-noise-fix.png").name)
+ax.legend(loc="lower right")
+cs.save(fig, "reading-errors-noise-fix.png")

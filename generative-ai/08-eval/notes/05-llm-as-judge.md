@@ -65,6 +65,8 @@ A judge that checks "quality" will silently switch between criteria from row to 
 
 Huyen reports the same from practice: judges do better on classification than on numerical scores, discrete scores beat continuous ones, and the wider the discrete range, the worse the judge gets (*AI Engineering*, ch. 3). Oshin & Campos give the matching rule: a judge prompt a person could replicate, and no 0–10 scale with vague distinctions between scores (*Learning LangChain*, ch. 10).
 
+GEMBA shows what a wide numeric scale does. Kocmi & Federmann had GPT-4 score translations 0–100, zero-shot, on WMT22 (3 language pairs, 54 systems, professional MQM labels as gold). **At system level it ranked systems correctly 89.8% of the time, ahead of every trained metric (COMET-22 83.9%, BLEU 70.8%), but per segment it trailed** (Kendall τ 0.36–0.38 against COMET-22's 0.37–0.43). The scores clumped: 60.6% of its reference-free scores were exactly 95, so per-item ties were everywhere and only the averages separated systems. Models below GPT-3.5 gave unusable output ([arXiv:2302.14520](https://arxiv.org/abs/2302.14520) (Kocmi & Federmann, EAMT 2023)). A judge that ranks systems well may still be unable to grade items, and a release gate grades items.
+
 ### Structure that works
 
 1. **Role and task.** Frame it as grading a third party's work. Never tell the model it's grading its own output. Berryman & Ziegler report that judges get a bit less accurate when told the work is the user's and much worse when told it is their own, because the model is pulled between conflicting habits: forum-style text that rarely self-criticizes fairly, and RLHF that makes it recant at any hint of doubt (*Prompt Engineering for LLMs*, ch. 10; [01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md#llm-as-judge)). This is about framing, and it is separate from self-preference (below), which applies even when the judge doesn't know whose output it is.
@@ -134,6 +136,8 @@ For grounding and completeness, a single holistic question ("is this faithful?")
 - **Completeness:** list the sub-questions in the query → check each is answered.
 
 Decomposition gives partial credit, finds *which* claim failed, and is easier for the judge. G-Eval (Liu et al. 2023) formalizes a version of this: the judge writes its own evaluation steps for a criterion, then follows them.
+
+An earlier design skipped the verdict altogether. GPTScore scores a text by the log-probability a model assigns to it, conditioned on an instruction that names the aspect ("Generate a coherent summary for the following text"). It carries BARTScore's generation-probability idea to 19 models from 80M to 175B parameters, across 4 tasks and 22 aspects ([arXiv:2302.04166](https://arxiv.org/abs/2302.04166) (Fu et al., 2023, preprint)). **Naming the aspect helped, but only a little**: average Spearman with humans on summary coherence went from 38.0 to 40.2. The RLHF-tuned text-davinci-003 usually correlated worse than the older davinci-001 (dialogue-level FED, 13.5 against 54.3). Correlations stayed around 0.3–0.5. The method also needs log-probabilities for a given text, which hosted chat APIs don't generally return, so treat it as background, not a judge to build.
 
 ---
 

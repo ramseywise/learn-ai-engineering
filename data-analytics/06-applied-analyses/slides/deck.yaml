@@ -1,4 +1,5 @@
 # Applied Analyses lecture deck. Covers notes 01-10.
+# Parts carry no summary: at ten agenda rows the title slide has no room for one under the part name.
 # Build: make slides PILLAR=data-analytics/06-applied-analyses STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: Fernhill Home, a fictional retailer, from the seeded generator in practice/retail.py.
@@ -16,7 +17,6 @@ deck:
 
 parts:
   - title: Forecasting
-    summary: The decision · Backtesting · Which model · From forecast to plan
     notes: >-
       Fernhill's operations manager has to book temporary warehouse staff for the fourth quarter.
     slides:
@@ -107,7 +107,6 @@ parts:
           demand series censored in the week of the outage.
 
   - title: Credit scoring
-    summary: The sample problem · Weight of evidence · The cutoff · Basel
     notes: >-
       We step outside Fernhill to a real dataset: 1,000 German consumer loans from the 1970s.
     slides:
@@ -176,7 +175,6 @@ parts:
           default, which needs outcomes, and those arrive late. One Basel note before we move on: PD, LGD and EAD price expected loss, and the IRB formula turns them into capital for unexpected loss. With an assumed LGD of 60%, K is 8.06% at a PD of 10% and 3.45% at a PD of 0.5%, so capital rises more slowly than PD.
 
   - title: Cohort and retention
-    summary: The triangle · Rate and mix · Survival · Budget
     notes: >-
       Back at Fernhill. The email budget was cut in January 2025 and paid social scaled to 2.6 times. Repeat buying fell.
     slides:
@@ -253,7 +251,6 @@ parts:
           ratio without its horizon and margin assumption means nothing.
 
   - title: Funnel and conversion
-    summary: A flat headline · Conditional steps · The control · The price
     notes: >-
       A new mobile checkout page shipped on 15 September 2025. Conversion went from 7.48% to 7.60%.
     slides:
@@ -327,7 +324,6 @@ parts:
           says nothing about why customers abandon the page. That needs recordings and conversations.
 
   - title: Segmentation and RFM
-    summary: The plan · Validation · Silence · Persuadable
     notes: >-
       A £4,000 win-back catalogue is ready to go to former big spenders. We test the plan before it ships.
     slides:
@@ -399,7 +395,6 @@ parts:
           close to 50/50, costing about £900. The cost and margin are assumptions.
 
   - title: SQL for analytics
-    summary: The bridge · Reconcile · The patterns · Fan-out
     notes: >-
       The year's revenue, written as one query that everyone can agree on. The language itself is in programming/sql.
     slides:
@@ -470,7 +465,6 @@ parts:
           have passed. Aggregate the many side to the one side's grain before joining.
 
   - title: Survival and event history
-    summary: Censoring · One hazard ratio · When it wears off · Months and pounds
     notes: >-
       Fernhill has a subscription box, and a welcome call that some new subscribers receive. The question is whether the call keeps them, and many of the answers are still in the future.
     slides:
@@ -486,7 +480,7 @@ parts:
           The call is not random: 37.9% of paid subscribers get one, 57.4% of organic and 78.2% of email. So the unadjusted number flatters it, and even the adjusted one is an average across a curve.
 
       - layout: code
-        title: Treat the censored as ended and the mean halves
+        title: Ignore censoring and the mean falls far short
         kicker: Censoring
         recall: What do mean tenure among the churned, censoring as end, and Kaplan-Meier give against the true 401.8 days?
         lang: Text output
@@ -500,12 +494,12 @@ parts:
           KM median           255    248
           restricted mean   361.1  355.0
         bullets:
-          - "Both shortcuts answer **a different question**."
-          - "Without a long enough window, **report a restricted mean**."
+          - "Both shortcuts **fall far short** of the true mean."
+          - "No method reads a full mean from three years of data, so **report a restricted mean**."
         takeaway: Subscribers still active have not ended, so use Kaplan-Meier and quote a median or restricted mean.
         source: notes/07-survival-and-event-history.md
         notes: >-
-          The channels differ: Kaplan-Meier medians are 139 days for paid, 288 organic, 350 email and 286 referral, with a log-rank chi-square of 296.7. A customer who leaves for another reason is a different problem: competing risks give 0.620 for a cancellation, where treating the other exit as censored gives 0.726. And the shifted beta-geometric forecast at month 36 reads 0.121 against a Kaplan-Meier 0.087, so check any parametric curve against the data.
+          The channels differ: Kaplan-Meier medians are 139 days for paid, 288 organic, 350 email and 286 referral, with a log-rank chi-square of 296.7. A downgrade competes with a cancellation: on the large plan, 0.620 have cancelled by day 720, where 1 minus Kaplan-Meier with downgrades censored says 0.726. And the shifted beta-geometric forecast at month 36 reads 0.121 against a Kaplan-Meier 0.087, so check any parametric curve against the data.
 
       - layout: image
         title: The call works for ninety days, and then it stops
@@ -516,12 +510,12 @@ parts:
         bullets:
           - "**0 to 90 days:** 0.535 [0.472, 0.606]."
           - "**After:** 1.024, 0.984, 1.076."
-          - "**`check_assumptions`** fails only on the call, p below 5e-5."
-          - "**Truth:** 0.6, recovered at 0.600 over 20 seeds."
+          - "**`check_assumptions`** fails on the call, p below 5e-05."
+          - "**Truth, first 90 days:** 0.6; 20 seeds average 0.600."
         takeaway: The call's whole effect sits in the first ninety days, and a test of proportional hazards tells you to look.
         source: notes/07-survival-and-event-history.md
         notes: >-
-          With a time-varying term, the call's early hazard ratio is 0.535 and its late one 1.024. Everything after ninety days is consistent with no effect, which also tells you when a second call might be worth trying.
+          The call nearly halves the hazard for ninety days and then does nothing. A single Cox ratio is a weighted average of the ratios at each time, so it drifts towards 1 the longer you follow people, without anything having changed.
 
       - layout: table
         title: Months and pounds decide; hazard ratios do not
@@ -534,14 +528,13 @@ parts:
           - ["Still subscribed, month 12", "0.059 [0.033, 0.083]", "0.053"]
           - ["Still subscribed, month 24", "0.033", "0.029"]
           - ["Box-months in 24 months", "1.48 [0.91, 1.95]", "1.30"]
-          - ["Margin per call", "£14.85 [£9.09, £19.52]", "assumed cost £4.00"]
+          - ["Margin per call, against an assumed £4", "£14.85 [£9.09, £19.52]", "–"]
         takeaway: The call looks worth extending, and the way to extend it is a randomised rollout, because this estimate is observational.
         source: notes/07-survival-and-event-history.md
         notes: >-
-          If the estimate is causal, net margin on the 2,235 subscribers with no call is about £24,000. Both the 35% margin and the £4 are assumptions, so put your own in. The answer changes below about 0.4 box-months of gain. A price rise on the 1,582 on the books gains £16.95, £23.56 or £24.14 depending on the scenario in the chapter.
+          If the estimate is causal, net margin on the 2,235 subscribers with no call is about £24,000. Both the 35% margin and the £4 are assumptions, so put your own in. A randomised gain below about 0.4 box-months would stop paying, at £10.03 a box-month. The chapter also prices a rise for the 1,582 on the books: about £24 more margin a subscriber over two years, with the gain nearly flat after month 12 (£23.56, then £24.14).
 
   - title: States and sequences
-    summary: The pooled chain · Hidden types · Holdout · Clusters or mixtures
     notes: >-
       Customers move between active, lapsed and churned. A transition matrix turns that into a value, and it is right only if all customers behave alike.
     slides:
@@ -575,19 +568,19 @@ parts:
         takeaway: The same state means different things by type, so a lapsed customer's value depends on who they are.
         source: notes/08-states-and-sequences.md
         notes: >-
-          The fundamental matrix is the shortcut for expected time in each state before churn. The range for lapsed customers is the slide's main point: a campaign priced at £413 is wrong for almost everyone it reaches.
+          The fundamental matrix is the shortcut for expected time in each state before churn. A lapse means something completely different depending on who lapsed, and the pooled chain can't say who.
 
       - layout: image
         title: Mixtures and type chains beat the pooled chain on holdout
         kicker: Holdout
         recall: Fitting on months 0 to 8, how close did each model come to survival at month 17?
         image: ../../sources/images/applied-sequence-holdout.png
-        caption: Fit on months 0 to 8, then forecast. Each model against what happened.
+        caption: Fit on months 0 to 8, then forecast. Type chains use the true labels.
         bullets:
           - "**Alive at 17:** observed 0.247."
           - "**Pooled 0.178**, type chains 0.257, mixture 0.280."
           - "**Revenue:** 126.17; pooled 94.76, type chains 128.34, mixture 131.31."
-        takeaway: Test a sequence model on later months, because the pooled chain's error only shows once its customers have had time to differ.
+        takeaway: Test a sequence model on later months, because the customers who remain are not the ones who started.
         source: notes/08-states-and-sequences.md
         notes: >-
           Type chains need the true type, which a real analyst does not have, so read that line as the ceiling. The mixture needs no labels and gets within 4% of revenue, while overshooting survival.
@@ -614,10 +607,9 @@ parts:
         takeaway: Clusters are a useful description and a poor input, so use a mixture for value and quote the range across k.
         source: notes/08-states-and-sequences.md
         notes: >-
-          One more thing a state model must allow: 22.0% of customers ever called churned later ordered again, so check that churned really is absorbing before you build on it.
+          One more thing a state model must allow: 22.0% of the customers the rule called churned later ordered again, 2,684 of 12,201, so churned is not truly absorbing, and every number here assumes it is.
 
   - title: Marketing measurement
-    summary: Attribution · Incrementality · Mix models · A geo test · Moving budget · Customer value
     notes: >-
       The finance lead asks where next quarter's budget should go, after a year of moving money to paid social because the dashboard said it closes almost half of all sales.
     slides:
@@ -630,7 +622,7 @@ parts:
         source: notes/09-marketing-measurement.md
         recall: What do last touch and Shapley credit to paid social, against the true incremental share?
         notes: >-
-          Both methods must hand out all 899 conversions, while the truth says about half would have happened with no touch at all. Dalessandro and colleagues reach the same place from theory and recast the result as channel importance rather than cause.
+          Both methods must hand out all 899 conversions, while the truth says about half would have happened with no touch at all. Dalessandro and colleagues reach the same place from theory and recast the result as channel importance; they report an intent-like confounder accounting for 38% to 73% of conversions in four campaigns.
 
       - layout: image
         title: Shapley is fairer, and still about twice the truth
@@ -642,7 +634,7 @@ parts:
           - "**12 seeds, paid social:** last touch 47.5%, Shapley 29.0%, truth 16.8%."
           - "**Shapley is about twice the truth.**"
           - "**Noisy-or with intent:** 18.0%, ranging 6.3% to 25.5%."
-        takeaway: Even the true form with an unobservable variable pins down a 1% lift poorly, and this takes an experiment.
+        takeaway: Even the generator's own form, with an intent variable you would not observe, swings by seed, so this takes an experiment.
         source: notes/09-marketing-measurement.md
         notes: >-
           The noisy-or fit uses a variable you would never observe, and it is still unreliable on any single seed. That is the argument for a geo test.
@@ -666,7 +658,7 @@ parts:
         takeaway: A geo test fixes the average return over the tested spend, and leaves everything beyond that to the curve.
         source: notes/09-marketing-measurement.md
         notes: >-
-          Chan and Perry warn that mix models are correlational and cite 7 to 10 data points per parameter as a minimum. OLS gives email 0.46, and correlation between paid and email spend is minus 0.72, which is why the channels are hard to separate. Sampling needed care: largest R-hat 1.6 under PyMC's default and 1.04 under nutpie before the priors were changed.
+          Chan and Perry warn that mix models are correlational and cite 7 to 10 data points per parameter as a minimum. OLS gives email 0.46, and correlation between paid and email spend is minus 0.72, which is why the channels are hard to separate. Sampling needed work: PyMC's own NUTS gave R-hat up to 1.6, while nutpie with more tuning gave about 1.04 at worst.
 
       - layout: image
         title: The marginal stays uncertain, and email's is poorly known
@@ -687,6 +679,7 @@ parts:
         title: Move £500 to £1,000, and the risk grows quickly after
         kicker: The recommendation
         recall: Over what range does moving money from paid social to email pay, and what happens at £4,000 a week?
+        lead: Weekly spend moved from paid social to email.
         header: ["Moved a week", "True gain", "Model median", "P(gain)"]
         widths: [3, 3, 3, 2.4]
         highlight: [1, 2]
@@ -696,10 +689,10 @@ parts:
           - ["£1,000", "£1,232", "£1,124", "0.983"]
           - ["£2,000", "£1,049", "£205", "0.656"]
           - ["£4,000", "−£925", "−£2,700", "0.001"]
-        takeaway: Recommend a move of £500 to £1,000 a week and test it, because the model's sizing beyond that rests on curves the data barely see.
+        takeaway: Move £500 to £1,000 a week, not £2,000 on this evidence, and run a geo test at today's spend.
         source: notes/09-marketing-measurement.md
         notes: >-
-          The true best split would add about £1,280 a week. These are simulated tables. A test at current spend showing paid social's marginal above break-even would change the recommendation.
+          The true best split would add about £1,280 a week. These are simulated tables. A test at current spend showing paid social's marginal above about 1.6 would end the case for moving money, and a fall in email's returns when spend is restored would cap the move early. Total spend is the larger question, and the chapter puts it off until that test reports.
 
       - layout: compare
         title: Customer value passes a test built to be passed
@@ -723,12 +716,11 @@ parts:
         takeaway: Quote a range wider than the interval, and do not defend a channel with its LTV to CAC, which folklore wants above 3.
         source: notes/09-marketing-measurement.md
         notes: >-
-          LTV to CAC by channel runs from 2.53 for paid social to 12.09 for organic, with 3.58 and 5.37 for the others, and none of that says what an extra pound would do. The interval covers sampling error given a correct model, which is why the honest range is wider.
+          LTV to CAC by channel runs from 2.53 for paid social to 12.09 for organic, with 3.58 and 5.37 for the others. The chapter has no source for the rule that above 3 is healthy, and the overlays do not reconcile, so do not multiply LTV by new customers to get a channel's return. The interval covers sampling error given a correct model, which is why the honest range is wider.
 
   - title: Operations and supply chain
-    summary: Newsvendor · Safety stock · Queues · The price of a packer
     notes: >-
-      The forecast from the first chapter has now reached the warehouse floor. Three decisions: how much to order, how much to hold, and how many packers to roster.
+      A forecast of 1,120 units is not an order of 1,120 units. Fernhill's warehouse manager commits to stock months ahead and to packers days ahead, and each decision turns on a spread and two prices rather than on an average.
     slides:
       - layout: statement
         title: Ordering the forecast leaves money on the table
@@ -739,7 +731,7 @@ parts:
         source: notes/10-operations-and-supply-chain.md
         recall: What is the critical fractile and how much did it add over ordering the forecast?
         notes: >-
-          The gain is real and small: over seeds 100 to 111 it averaged 1.70% and was positive on 11 of 12. One real season is not a verdict: on real 2025 demand the fractile won on one line, lost on two, and ended £161 up. EOQ tells a similar story, taking cost from £10,767 to £9,860, about £907 a year.
+          The gain is real and small: over seeds 100 to 111 it averaged 1.70% and was positive on 11 of 12. One real season is not a verdict: on real 2025 demand the fractile won on one line, lost on two, and ended £161 up. The distance to the best orders is mostly forecast error, so the forecast matters more than the quantile. EOQ tells a similar story, taking cost from £10,767 to £9,860, about £907 a year.
 
       - layout: image
         title: A 95% target gives 79% in the season that matters
@@ -748,35 +740,35 @@ parts:
         image: ../../sources/images/applied-safety-stock-service.png
         caption: Delivered service against target, by season.
         bullets:
-          - "**At 95%:** off-season 94.8%, in-season 79.4%."
+          - "**At 95%:** off-season 94.8%, in-season 79.4%; all-year 91.4% hides it."
           - "**Asking 99%** gets in-season to about 89%."
           - "**A seasonal reorder point:** 94.7% for about £374 a year."
           - "**95% to 99%:** +£2,005 on £4,839."
         takeaway: Fix the seasonal mean before buying more buffer, because the formula's failure is in the mean and the buffer is expensive.
         source: notes/10-operations-and-supply-chain.md
         notes: >-
-          The reorder point uses a year-round mean while in-season demand runs 60% higher. About a third of the safety stock is there only because deliveries vary, and leaving that out is the commonest mistake.
+          The reorder point uses a year-round mean while in-season demand runs 60% higher. About a third of the safety stock is there only because deliveries vary, and leaving that out is the commonest shortcut.
 
       - layout: code
-        title: The queue is busiest where the utilisation is not
+        title: The longest wait is Wednesday, not the busiest day
         kicker: Queues
         recall: Which day has the longest recorded wait, and why does utilisation alone not tell you?
         lang: Text output
         code: |-
-          day  packers  rho    recorded  Erlang C
-          Mon  6        0.849  2.91      3.89
-          Tue  5        0.720  1.17      1.62
-          Wed  4        0.838  4.35      4.93
-          Thu  4        0.784  1.98      3.49
-          Fri  4        0.725  1.96      1.89
+          day  packers  rho    Erlang C  simulated  recorded
+          Mon  6        0.861  3.89      3.42       2.91
+          Tue  5        0.733  1.62      1.53       1.17
+          Wed  4        0.833  4.93      4.25       4.35
+          Thu  4        0.792  3.49      3.15       1.98
+          Fri  4        0.708  1.89      1.80       1.96
         bullets:
-          - "**Wed beats Mon** on wait in 10 of 12 seeds."
-          - "Fewer packers wait longer **at the same utilisation**."
+          - "**Wed waits longer than Mon** in 10 of 12 seeds."
+          - "A smaller crew **pools less**, so it waits longer at a similar utilisation."
           - "**Little's law** gap: 8.88e-16."
         takeaway: Waiting depends on crew size as well as utilisation, so read a queue model day by day.
         source: notes/10-operations-and-supply-chain.md
         notes: >-
-          Waits are in minutes. A check on Monday at 5 packers: utilisation is 1.03, Erlang C is infinite, and the simulation gives 18.9 minutes on a finite day. That is why five is out.
+          Waits are in minutes, and a day that starts empty runs below Erlang C. Monday with 5 packers has a utilisation of 1.03 and an infinite Erlang wait, while the real day ends: the simulation gives 18.9 minutes. That is why the recommendation says never five.
 
       - layout: table
         title: The plan depends on what a parcel-hour is worth
@@ -785,16 +777,17 @@ parts:
         lead: "An extra packer costs £112 a day. Break-even value of a parcel-hour: Mon £5.66, Wed £6.20, Thu £8.95, Tue £17.04, Fri £19.03."
         header: ["Value of a parcel-hour", "Packers, Mon to Fri", "Packer-days"]
         widths: [4, 4, 3]
-        highlight: [1]
+        highlight: [4]
         rows:
           - ["£5", "6, 5, 4, 4, 4", "23"]
           - ["£7", "7, 5, 5, 4, 4", "25"]
           - ["£10", "7, 5, 5, 5, 4", "26"]
           - ["£20", "7, 6, 5, 5, 5", "28"]
+          - ["The plan run below", "7, 5, 5, 5, 5", "27"]
         takeaway: The data do not say what waiting is worth, so show the plan at each value and let the business choose.
         source: notes/10-operations-and-supply-chain.md
         notes: >-
-          The recommended plan takes mean wait from 2.96 to 0.95 minutes and packer-days from 23 to 27, for £392 a week, on assumed contracts. Pack time is the other thing to confirm: 3.5 minutes in the operations data against 4.97 on the packing line changes the answer.
+          The recommended plan takes mean wait from 2.96 to 0.95 minutes and packer-days from 23 to 27, for £392 a week, on assumed contracts. Pack time is the other thing to confirm: 3.5 minutes in the operations data against 4.97 on the packing line, and a time near 3.5 would take a packer or more off every day.
 
   - title: Wrap-up
     agenda: false
@@ -813,7 +806,7 @@ parts:
         recall: Pick one of the ten analyses. What was its baseline, and what was its check?
         notes: >-
           Baselines were seasonal naive, approve-all, the exponential, desktop, and a holdout. Checks were the generator's
-          known truth, Fader and Hardie's published table, and a pandas reimplementation. The later chapters add holdouts, geo tests and seeds, and each says what would change its recommendation.
+          known truth, Fader and Hardie's published table, and a pandas reimplementation. The later chapters add holdouts, geo tests and repeated seeds.
 
       - layout: bullets
         title: Where next

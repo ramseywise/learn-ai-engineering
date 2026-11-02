@@ -258,25 +258,32 @@ for lift in (1.0, 2.0, 3.0, 4.0):
 
 
 # %% 8. Figure: what each threshold-based metric prefers
-plt = lab._style()
-fig, (a, b) = plt.subplots(2, 1, figsize=(7.2, 5.6), sharex=True, height_ratios=[3, 2])
-for col, colour, label in [("accuracy", lab.BLUE, "Accuracy"), ("balanced", lab.AQUA, "Balanced accuracy"),
-                           ("MCC", lab.ORANGE, "Matthews correlation")]:
+import chartstyle as cs
+import matplotlib.pyplot as plt
+
+cs.apply()
+fig, (a, b) = plt.subplots(2, 1, sharex=True, height_ratios=[3, 2])
+for col, colour, label in [("accuracy", cs.BLUE, "Accuracy"), ("balanced", cs.ORANGE, "Balanced accuracy"),
+                           ("MCC", cs.AQUA, "Matthews correlation")]:
     a.plot(st.t, st[col], color=colour, lw=2, label=label)
     i = st[col].idxmax()
-    a.plot(st.t[i], st[col][i], "o", color=colour, ms=8, mec=lab.SURFACE, mew=2)
+    a.plot(st.t[i], st[col][i], "o", color=colour, ms=8, mec=cs.SURFACE, mew=2)
 a.set_ylabel("Score on test")
 a.set_title("Each metric prefers a different threshold; only cost says what that costs")
 a.legend(loc="center right", bbox_to_anchor=(1, 0.36))
-b.plot(st.t, st["cost 5:1"], color=lab.VIOLET, lw=2, label="Cost per 1,000 at 5:1")
+b.plot(st.t, st["cost 5:1"], color=cs.SECONDARY, lw=2, label="Cost per 1,000 at 5:1")
 i = st["cost 5:1"].idxmin()
-b.plot(st.t[i], st["cost 5:1"][i], "o", color=lab.VIOLET, ms=8, mec=lab.SURFACE, mew=2)
-b.axvline(lab.BAYES, color=lab.MUTED, lw=1, ls="--")
+b.plot(st.t[i], st["cost 5:1"][i], "o", color=cs.SECONDARY, ms=8, mec=cs.SURFACE, mew=2)
+b.annotate(f"Lowest {st['cost 5:1'][i]:.1f}", (st.t[i], st["cost 5:1"][i]), xytext=(0, 9), textcoords="offset points", ha="center")
+i = picks["balanced accuracy"]
+b.plot(st.t[i], st["cost 5:1"][i], "o", color=cs.ORANGE, ms=8, mec=cs.SURFACE, mew=2)
+b.annotate(f"Balanced accuracy's pick: {st['cost 5:1'][i]:.0f}", (st.t[i], st["cost 5:1"][i]), xytext=(9, 0),
+           textcoords="offset points", va="center")
+b.axvline(lab.BAYES, color=cs.MUTED, lw=1, ls="--")
 b.annotate("1/6, from the 5:1 cost ratio", (lab.BAYES, st["cost 5:1"].max() * 0.9), xytext=(6, 0),
-           textcoords="offset points", color=lab.MUTED)
+           textcoords="offset points", color=cs.SECONDARY)
 b.set_xscale("log")
 b.set_xlabel("Threshold on predicted default probability (log scale; dots mark each line's best)")
 b.set_ylabel("Cost per 1,000")
-b.legend(loc="upper left", bbox_to_anchor=(0, 0.6))
-fig.tight_layout()
-print("\nwrote", lab._save(fig, "metric-map-threshold.png").name)
+b.legend(loc="upper right")
+cs.save(fig, "metric-map-threshold.png")

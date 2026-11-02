@@ -15,6 +15,7 @@ sources:
   - https://www.datocms-assets.com/64837/1763496622-dr_tulu_draft.pdf
   - https://arxiv.org/abs/2312.11805
   - https://doi.org/10.18653/v1/2023.findings-acl.824
+  - https://arxiv.org/abs/2103.06332
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -195,6 +196,8 @@ Contamination is usually accidental: web scrapes pick up published benchmarks, a
 ![Relative difference in GPT-3's performance on the clean subset vs the full benchmark, per benchmark](../sources/images/huyen-ai-engineering-fig4-10.png)
 *Image Source: Huyen, *AI Engineering* (O'Reilly, 2025), Fig. 4-10*
 
+The split itself can leak, with no pre-training involved. ELI5's authors removed near-duplicate questions between the splits using TF-IDF similarity. Krishna et al. retrieved the 7 nearest training questions for 300 validation questions and had crowd-workers label each pair. **81% of validation questions had a paraphrase in the training set, and all 300 had a topically similar one** (Fleiss κ 0.29). A RoBERTa paraphrase classifier trained on QQP flagged only 43.6%, so automatic checks undercount. Copying the best answer among the 7 retrieved training questions scored 28.5 ROUGE-L, higher than every model on the leaderboard ([arXiv:2103.06332](https://arxiv.org/abs/2103.06332) (Krishna, Roy & Iyyer, NAACL 2021)). Lewis et al. (EACL 2021) found the same kind of overlap in short-answer open-domain QA sets such as Natural Questions. Dedupe a held-out split by meaning, not by n-grams. Retrieve near neighbours, have a person check them, or hold out whole topics.
+
 Benchmark maintainers can keep part of the data private and evaluate submissions against that hold-out. For your own fine-tunes there's a quick tell: if fine-tuning raises the base model's MMLU by 10 points, suspect the instruction data overlaps the test set before you celebrate (*LLM Engineer's Handbook*, ch. 7).
 
 ---
@@ -220,6 +223,7 @@ The quietest failure: everything works and the metric doesn't track what users c
 - **Wrong unit**: per-turn scores look fine while conversations fail to resolve.
 - **Wrong denominator**: grounding rate rises because the system answers less ([09](09-reading-results.md#pitfalls)).
 - **Offline–online gap**: eval set doesn't look like production traffic any more.
+- **Overlap metrics on open-ended text.** On ELI5, ROUGE-L against reference answers barely separates trivial outputs from good ones. The question copied five times scored 20.0 on validation, above RAG's 16.1. A random off-topic training answer scored 16.2. Krishna et al.'s system scored 24.4, above the longest human-written gold answer (21.2), yet people preferred the gold answer 68% to 14%. ROUGE-L also rose steadily with output length ([arXiv:2103.06332](https://arxiv.org/abs/2103.06332) (Krishna, Roy & Iyyer, NAACL 2021)). Before trusting a reference-overlap metric, score a trivial baseline and a human reference with it.
 
 Check periodically that offline scores **predict** online outcomes. If the version that won offline doesn't win online, the eval is measuring something else.
 

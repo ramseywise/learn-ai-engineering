@@ -45,7 +45,7 @@ Worked answers are in each module's `practice/solutions/`. Try each exercise bef
 
 ### Next: Python for data
 
-This track stops at the language. Phase 4 of the [curriculum](../CURRICULUM.md) hands off to the
+This track stops at the language. The [programming syllabus](../README.md) hands off to the
 [data-analytics 01 pillar](../../data-analytics/01-python-for-data-analysis/README.md), which owns
 the seven course notebooks (arrays, DataFrames, plotting, aggregation, time series), McKinney's
 chapter notebooks and the earlier Michigan and Wesleyan coursework.

@@ -5,6 +5,7 @@ sources:
   - https://www.langchain.com/blog/agent-evaluation-readiness-checklist
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 9, 10"
   - 13-case-study-support-agent.md
+  - https://arxiv.org/abs/2004.04696
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -118,7 +119,7 @@ same drop, n=40         {'verdict': 'inconclusive', 'delta': -0.05, 'ci': [-0.14
 
 The second and third lines simulate the same change, and only the 300-task run has the evidence to block it. Treating the third line as a pass is how a thin suite lets regressions through. The last line is a verdict on the run, not on the agent.
 
-Update the baseline deliberately: after a release, store its results as the new baseline with the dataset and grader versions.
+Update the baseline deliberately: after a release, store its results as the new baseline with the dataset and grader versions. A grader fitted to past outputs needs the same care. BLEURT, a metric fine-tuned on human ratings, lost agreement with humans when trained on poorly rated translations and tested on well rated ones, and every metric tested agreed less as the systems improved ([arXiv:2004.04696](https://arxiv.org/abs/2004.04696) (Sellam et al., ACL 2020); [04](04-graders.md#reference-based-text-metrics)). Re-check a learned grader or judge against fresh human labels when the system has moved a lot, not only when the grader changes.
 
 ---
 

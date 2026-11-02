@@ -23,9 +23,7 @@ By the end of the course, you can:
 
 ## Before you begin
 
-**Required:** Python fundamentals through modules 01 to 03 of [Programming: Python](../programming/python/README.md). You should be comfortable with variables, functions, collections, files, and a terminal. No pandas or statistics course is assumed.
-
-**Helpful alongside this course:** [Programming: SQL](../programming/sql/README.md). Unit 06 applies analytical SQL; the SQL track teaches the language in depth.
+**Required:** Python fundamentals through modules 01 to 03 of [Programming: Python](../programming/python/README.md). You should be comfortable with variables, functions, collections, files, and a terminal. No pandas or statistics course is assumed. **Helpful alongside this course:** [Programming: SQL](../programming/sql/README.md). Unit 06 applies analytical SQL; the SQL track teaches the language in depth.
 
 **Course language:** Python. The main tools are pandas, NumPy, SciPy, statsmodels, PyMC, matplotlib, seaborn, Plotly, and DuckDB. Each pillar README covers its own setup and how to run its practice.
 

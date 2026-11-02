@@ -84,5 +84,5 @@ for vals in (M, T):
     ax.annotate(f"{vals[0]:.3f}", (sizes[0], vals[0]), xytext=(0, 9), textcoords="offset points", ha="center")
     ax.annotate(f"{vals[-1]:.3f}", (sizes[-1], vals[-1]), xytext=(0, 9), textcoords="offset points", ha="center")
 ax.legend(loc="lower right")
-ax.set_title("With few labels, pretrained embeddings lead; the gap narrows as labels grow")
+ax.set_title("Pretrained embeddings lead at every size; the gap peaks at 300 labels, then narrows")
 cs.save(fig, "nlp-labels-vs-f1.png")

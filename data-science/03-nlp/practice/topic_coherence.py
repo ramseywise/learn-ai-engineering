@@ -57,10 +57,10 @@ ax.plot(x, m, color=cs.BLUE, marker="o", ms=7, label="Mean of three seeds", zord
 for j in range(len(seeds)):
     ax.scatter(x, res[:, j], s=20, color=cs.MUTED, zorder=2, label="Each seed" if j == 0 else None)
 for xi, v in zip(x, m):
-    ax.annotate(f"{v:.3f}", (xi, v), xytext=(10, 0), textcoords="offset points", va="center")
+    ax.annotate(f"{v:.3f}", (xi, v), xytext=(0, 12), textcoords="offset points", ha="center")
 ax.set_xticks(x, ks)
 ax.set(xlabel="Number of topics", ylabel="Coherence c_v", ylim=(.25, .42), xlim=(-.3, 3.5))
 ax.grid(False, axis="x")
 ax.legend(loc="upper right")
-ax.set_title("No knee: coherence moves about as much between seeds as between sizes")
+ax.set_title("No knee: coherence slides from 0.352 to 0.322; seeds differ by about 0.01")
 cs.save(fig, "nlp-topic-coherence.png")

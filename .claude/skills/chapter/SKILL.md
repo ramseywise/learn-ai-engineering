@@ -107,7 +107,7 @@ on later chapters extend its "Folded in as" map:
 ```
 
 Use the column shape the file already has. If the home has no references.md, create it
-from `PILLAR-LAYOUT.md`.
+from `.claude/skills/pillar/references/pillar-layout.md`.
 
 ## Step 6 — Close out
 

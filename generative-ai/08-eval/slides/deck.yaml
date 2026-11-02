@@ -1,4 +1,4 @@
-# Lecture deck for generative-ai/08-eval, notes 01-13.
+# Lecture deck for generative-ai/08-eval, notes 01-14.
 # Build: make slides PILLAR=generative-ai/08-eval STRICT=1 PREVIEW=1
 # Running example: a customer-support agent that answers from help-centre articles and can issue
 # refunds. Version B scores 85% against version A's 84%. The talk earns the answer: do not ship.
@@ -6,7 +6,7 @@ deck:
   title: Eval Engineering
   subtitle: "Version B scores one point higher. Do you ship it?"
   tagline: "Define correct, trust no grader you have not checked, and put an error bar on every number"
-  reference: "Notes: generative-ai/08-eval/notes/01-13"
+  reference: "Notes: generative-ai/08-eval/notes/01-14"
   output: eval-engineering.pptx
   notes: >-
     This talk follows one decision from start to finish. A support agent has two versions, B scores
@@ -213,26 +213,9 @@ parts:
         notes: >-
           Here is a real shape. Order 8812 charged twice, with the tool calls we expect and the article it
           should cite. The language label looks like a detail now, but it is what will save us in part four.
-          If the expected article is not in the index, the row is unfair for retrieval, and eligibility says so.
-      - layout: cards
-        kicker: Evidence
-        title: Public benchmarks learned these lessons the hard way
-        cards:
-          - {title: Budget for rejection, body: "SWE-bench Verified: 93 developers reviewed tasks and only **500 of 2,294** survived."}
-          - {title: Fixed it, broke nothing, body: "FAIL_TO_PASS tests prove the fix. PASS_TO_PASS tests prove no regression."}
-          - {title: Difficulty as diagnosis, body: "GAIA L1: humans 93.9%, GPT-4 30.3%. L3: 87.3% against **0%**."}
-          - {title: Fresh parameters, body: "τ²-bench and AndroidWorld fill templates with new values each run, so memorized paths fail."}
-          - {title: Canaries, body: "Terminal-Bench embeds a unique GUID. If a model can produce it, the set leaked."}
-          - {title: Monday morning, accent: 0EA5C9, body: "Split dev and held-out, version the dataset, record the version with every result."}
-        takeaway: "Budget for rejecting bad tasks, split dev from held-out, version the dataset and record that version with every result."
-        recall: "What share of SWE-bench tasks survived review for SWE-bench Verified, and what is the lesson?"
-        source: notes/03-eval-datasets.md
-        notes: >-
-          Well-funded teams still threw out most of their tasks. Reviewers kept 500 of 2,294 for SWE-bench
-          Verified, so expect to reject rows in your own set. That closes part one: we can now say what
-          better means and have rows that test it. Next question: who is allowed to grade them?
+          If the expected article is not in the index, the row is unfair for retrieval, and eligibility says so. Well-funded teams still threw out most of their tasks: reviewers kept 500 of 2,294 for SWE-bench Verified, so expect to reject rows in your own set. That closes part one: we can now say what better means and have rows that test it. Next question: who is allowed to grade them?
   - title: Who can you trust to grade?
-    summary: "Graders · LLM as judge · Calibration"
+    summary: "Graders · LLM as judge · Calibration · Checks and critiques"
     divider: true
     agenda: true
     notes: >-
@@ -406,25 +389,83 @@ parts:
           The left panel is agreement near 0.8 next to kappa near 0.4 to 0.5, the same judges measured two
           ways. On the right, a judge that gives the same verdict nearly every time also has the strongest
           position bias. A deterministic judge just reproduces its bias exactly. So run the swap check, even
-          on a judge that never changes its mind.
-      - layout: image
-        kicker: When there is no absolute scale
-        title: Pairwise votes can become a ranking
-        image: ../sources/images/li-ai-agents-in-depth-fig7-6.svg
-        caption: "Elo rating and pairwise comparison ranking (Li, AI Agents in Depth, 2026, Fig. 7-6, Apache-2.0)"
+          on a judge that never changes its mind. Where a score will not work, pairwise votes can become a ranking through Elo, as long as a win holds in both orders, but a ranking cannot monitor production.
+
+      - layout: code
+        kicker: Beyond the rates
+        title: Cross the code checks with the judge
+        lang: text
+        code: |-
+          on dev, 560 rows       lenient  strict
+          code pass, judge pass      377     538
+          code pass, judge FAIL      161       0
+          code FAIL, judge pass        3       3
+          code FAIL, judge FAIL       19      19
         bullets:
-          - "Expected: E = 1 / (1 + 10^((R_B − R_A)/400))"
-          - "Update: R ← R + K·(S − E)"
-          - "1200 against 1000 expects a win **76%** of the time"
-          - "LLM voter: **swap the order**, count a win only if it holds both ways"
-          - "Check for cycles; Bradley–Terry assumes transitivity"
-        takeaway: "Pairwise comparison is easier for a judge than absolute scoring, but it cannot monitor production because it only ranks."
-        recall: "What check do you add when an LLM casts pairwise votes, and what can pairwise ranking not do?"
-        source: notes/05-llm-as-judge.md
+          - "**Read code fail, judge pass first:** three false passes say 30 days where the cited document says 14"
+          - "**t00689:** both fail, the label says PASS, and a person decides"
+          - "**The 161:** all labelled PASS, 151 of them Danish. TPR 10/161 on Danish, 367/378 on English"
+        takeaway: "Cross code checks with the judge to find what to fix, then read the false passes first. Agreement with code never replaces human labels."
+        recall: "Which cell of the cross do you read first, and why does agreement with code not move a grader out of experimental?"
+        source: notes/14-calibrating-judges-with-checks-and-critiques.md
         notes: >-
-          Sometimes asking which of these two is better works where a score does not. Elo turns those votes
-          into a ranking, the same arithmetic as chess. Swap the order because of the position bias we just
-          saw. That closes part two: we trust our graders. Next, what should they look at in an agent?
+          This exercise tests the procedure and measures no real model. The judges are deterministic rules,
+          the human labels are planted failures, and only 42 of 1,400 rows are FAIL, split 12, 21 and 9 across
+          train, dev and test. The false passes came from comparing numbers with every retrieved document, so
+          the fix is on the judge's side: compare against the cited source. The language slice stays after
+          Holm's correction across 19 tests, and cutting one flag within another shows that two other slices
+          are partly language in disguise.
+      - layout: table
+        kicker: The calibration record
+        title: Fix the largest class of error, then test once
+        lead: "Rule judges and planted failures: this tests the procedure, and says nothing about a real model."
+        header: [Version, TPR, TNR, kappa]
+        widths: [6, 2, 2, 2]
+        highlight: [3]
+        rows:
+          - ["v0 lenient, dev", "0.699", "0.857", "0.120"]
+          - ["v1 no overlap rule, dev", "0.998", "0.857", "0.896"]
+          - ["v2 numbers against cited documents, dev", "0.998", "1.000", "0.976"]
+          - ["v2 on test, once", "550/551", "9/9", "0.946"]
+        takeaway: "Each change must win on dev. The test's 9/9 has a Wilson interval of 0.70 to 1.00, and its perfect score is a property of this setup."
+        recall: "Why does 9/9 on test support no strong claim, and what did v2 do to the cross-check?"
+        source: notes/14-calibrating-judges-with-checks-and-critiques.md
+        notes: >-
+          v2 is the code check: we rewrote the judge into the same rule, so nothing now cross-checks anything.
+          Measurement has its own traps. Stop early and you lose what you came to measure: strict-judge TNR is
+          18/21 on every row, 11/14 on rows passing check A, and 0/0 on rows passing both. The disagreement
+          queue, n = 415, shows TPR 0 and TNR 0 for a judge whose real values are 0.694 and 0.929, so use it to
+          find fixes and never for rates. A random 105 rows give a TNR anywhere from 0.50 to 1.00, and a
+          stratified 150 weighted by known odds of selection is still a valid probability sample.
+      - layout: compare
+        kicker: Critiques as evidence
+        title: A critique is a clue, not the cause
+        left:
+          title: What the research warns
+          bullets:
+            - "**Turpin 2023:** 1 of 426 explanations mentioned the bias; accuracy fell by up to 36.3%"
+            - "**Chen 2025:** models revealed a hint 25% and 39% of the time"
+            - "**Mittal and Arike:** detect 88–94%, locate 56–68%, flag 40–55% of perfect chains"
+          tag: Almost none tests a judge on a rubric
+        right:
+          title: What to do about it
+          bullets:
+            - "**Tag critiques**, fix the largest class, keep it only if it wins on dev"
+            - "**Prompt fixes** are hypotheses, not findings"
+            - "**Cue and edit tests** are online: not run, no results here"
+            - "**Human labels** settle which judge is right"
+          tag: Necessary, not sufficient
+        emphasis: right
+        takeaway: "Use a critique to find what to change, and change the input to see whether the verdict follows, because it can leave out what moved the verdict."
+        recall: "What does a cue test measure, and what does passing it prove?"
+        source: notes/14-calibrating-judges-with-checks-and-critiques.md
+        notes: >-
+          These sources mostly test answering models, and Mittal and Arike grade reasoning chains rather than a
+          judge's own critiques, so treat them as warnings. Tapwal's locked notes cut revisions after a reveal
+          to 5 to 22% from 76 to 85%, but tied on 82 to 94% of near-equivalent pairs, which a release gate cannot
+          copy as it stands. That closes part two: we trust our graders only as far as we have checked them.
+          Next, what should they look at in an agent?
+
   - title: What do you actually measure?
     summary: "Evaluating agents · RAG and grounding · Tracing"
     divider: true
@@ -462,23 +503,7 @@ parts:
         notes: >-
           Two of these four rows mislead you if you only look at the end. The agent that got there with 40
           paid calls looks fine until the invoice comes, and the one defeated by a tool timeout gets blamed
-          for someone else's outage. Grading both tells you which fix to make.
-      - layout: cards
-        kicker: Scoring the path
-        title: Choose how strictly to match tool calls
-        cards:
-          - {title: Exact, body: "Same tools, order and arguments. For strict protocols, like auth before action."}
-          - {title: In order, body: "Expected calls in order, extras allowed. A required sequence with some freedom."}
-          - {title: Any order, body: "All expected calls appear. For independent lookups."}
-          - {title: Subset or superset, body: "Calls within or covering an allowed set. Never call outside this set."}
-        takeaway: "When no single path is correct, grade invariants such as never issue_refund before lookup_order, or use a trajectory judge."
-        recall: "Which match mode fits independent lookups, and which fits auth before action?"
-        source: notes/06-evaluating-agents.md
-        notes: >-
-          Exact matching breaks whenever the agent finds a sensible different route, and you then spend your
-          time updating expected paths. So match only as strictly as the requirement. For a refund, the rule
-          that matters is an invariant: never issue_refund before lookup_order. And grade each component too,
-          because an end-to-end failure does not say which part broke.
+          for someone else's outage. Grading both tells you which fix to make. Match tool calls only as strictly as the requirement: exact, in order, any order, or within an allowed set. For a refund, the rule that matters is an invariant: never issue_refund before lookup_order.
       - layout: code
         kicker: Worked example
         title: "One task, k = 3: pass@k rises, pass^k falls"
@@ -911,7 +936,7 @@ parts:
         cards:
           - {title: Before any grader, body: "Write success down. Two experts must agree. Read 50–100 traces first."}
           - {title: The dataset, body: "Start with 20–50 real failures. Negatives and boundaries. Eligible rows only."}
-          - {title: Graders, body: "Code first. One judge per criterion. Uncalibrated judges never gate."}
+          - {title: Graders, body: "Code first. One judge per criterion. Read code-fail, judge-pass rows first. Uncalibrated judges never gate."}
           - {title: Agents and RAG, body: "Outcome and trajectory. k trials, pass^k. Grounding claim by claim."}
           - {title: Reading and gating, body: "Error bars, paired comparisons, slices. Run, then assert, against a baseline."}
           - {title: Production, body: "Sample by rule. Humans calibrate the judges. Debug infra before the agent."}
@@ -929,6 +954,7 @@ parts:
           - "**Lab:** `practice/eval-suite-ci/` (TypeScript) and `practice/eval-suite-ci-py/` (Python): 24 cases, three graders, a baseline, paired regression testing, an exit code"
           - "**Copy-ready:** judge prompt (05), failure taxonomy (02), row schema (03), gate rules and CI workflow (10)"
           - "**A real system:** note 13, a multi-agent support system's eval design, mistakes included"
+          - "**A judge is wrong, now what?** note 14, checks, slices and critiques as evidence"
           - "**Course:** DeepLearning.AI and Arize, Evaluating AI Agents, folded into notes 05, 06 and 08"
           - "**Loops:** `ai-engineering/04-loop-engineering`, where an eval becomes the optimizer's target"
         aside:

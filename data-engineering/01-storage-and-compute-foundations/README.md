@@ -9,7 +9,7 @@ cleaned: 2026-11-01
 
 The logic that the rest of data engineering rests on: what a data system promises, how data is encoded and laid out, what happens when two writers meet, how data is split and copied across machines, what goes wrong there, how machines agree anyway, and how work spreads over all of it. Each of the later pillars makes decisions that only look like preferences until you know this layer.
 
-The pillar follows [*Designing Data-Intensive Applications*](https://dataintensive.net/) (Kleppmann, 2017), the [core text of this subject](../README.md#the-core-text), and retells chapters 1 to 10 with code you can run. Every chapter gives page pointers, so you can read the book alongside it. The full [reading map](../CURRICULUM.md#reading-map-designing-data-intensive-applications) says where each of its twelve chapters is used.
+The pillar follows [*Designing Data-Intensive Applications*](https://dataintensive.net/) (Kleppmann, 2017), the [core text of this subject](../README.md#the-core-text), and retells chapters 1 to 10 with code you can run. Every chapter gives page pointers, so you can read the book alongside it. The full [reading map](../references.md#reading-map-designing-data-intensive-applications) says where each of its twelve chapters is used.
 
 **Why it comes first.** Almost every debate in the field reduces to one of these mechanisms. "Why is this query slow?" comes down to layout and pruning. "Why did this count drop?" often comes down to replication lag. "Why is the balance wrong when each job looks right?" comes down to isolation. "Is exactly-once real?" comes down to what a timeout can and cannot tell you. "Do we need Spark?" comes down to how much one query actually reads. Learn the mechanism once and those stop being matters of taste.
 
@@ -28,7 +28,7 @@ The pillar follows [*Designing Data-Intensive Applications*](https://dataintensi
 | 7 | [Consistency and consensus](notes/07-consistency-and-consensus.md) | How do machines agree? Linearizability, ordering, 2PC, quorums | ch. 9 |
 | 8 | [Distributed compute](notes/08-distributed-compute.md) | What does a cluster cost, and when does one machine suffice? | ch. 10 |
 
-Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
+Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The order across all seven pillars is in the [subject syllabus](../README.md).
 
 ## Builds on and feeds into
 

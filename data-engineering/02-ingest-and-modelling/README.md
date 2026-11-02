@@ -22,7 +22,7 @@ How data enters a platform you control, and what shape it takes once it is there
 | 3 | [Data Vault and One Big Table](notes/03-data-vault-and-obt.md) | When is the star wrong, in either direction? |
 | 4 | [Data contracts](notes/04-data-contracts.md) | How do you turn "the source keeps sending this" into a promise a machine checks? |
 
-Then go to [03, transform and orchestrate](../03-transform-and-orchestrate/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
+Then go to [03, transform and orchestrate](../03-transform-and-orchestrate/README.md). The order across all seven pillars is in the [subject syllabus](../README.md).
 
 ## Builds on and feeds into
 

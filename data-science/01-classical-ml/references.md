@@ -15,7 +15,7 @@ cleaned: 2026-11-02
 |---|---|---|---|
 | ★ Müller and Guido, *Introduction to Machine Learning with Python* (O'Reilly, 2016) | The practical spine of this pillar, with companion notebooks in [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | [PDF](../sources/mueller-guido-introduction-to-ml-with-python.pdf) | ch. 1 → 01; ch. 2 → 02, 06; ch. 3 → 05; ch. 4 → 03; ch. 5 → 04; ch. 6 → 03 |
 | James, Witten, Hastie, Tibshirani and Taylor, *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023) | The statistical reasoning behind the same models | [PDF](../../data-analytics/sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf) | ch. 2 to 6 → 01 to 04; ch. 8 → 06; ch. 12 → 05 |
-| ★ Ng, [*Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) (draft, 2018) | The eyeball and blackbox split, the error ceiling, and how big to make each set. Chapters 15 to 19 read for this pillar | Link only | ch. 15 to 19 → 12 |
+| ★ Ng, [*Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) (draft, 2018) | The eyeball and blackbox split, the error ceiling, and how big to make each set. Chapters 13 to 19 read for this pillar | Link only | ch. 15 to 19 → 12 |
 | Manning, Raghavan and Schütze, [*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (Cambridge, 2008) | Why accuracy is the wrong measure for retrieval. Chapter 8 read in full, through an archived copy because the host refused connections | Link only | ch. 8 → 11, 12 |
 
 ## Core papers

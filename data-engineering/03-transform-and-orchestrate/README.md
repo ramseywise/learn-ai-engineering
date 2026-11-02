@@ -25,7 +25,7 @@ How landed tables become tested models, and how those models get built on schedu
 
 The plan listed four chapters. Dagster and Airflow got a chapter of their own, since the comparison needs running code in both.
 
-Then go to [04, warehouse, lakehouse and streaming](../04-warehouse-lakehouse-streaming/README.md). The sequenced path across all seven pillars is in the [curriculum](../CURRICULUM.md).
+Then go to [04, warehouse, lakehouse and streaming](../04-warehouse-lakehouse-streaming/README.md). The order across all seven pillars is in the [subject syllabus](../README.md).
 
 ## Builds on and feeds into
 
