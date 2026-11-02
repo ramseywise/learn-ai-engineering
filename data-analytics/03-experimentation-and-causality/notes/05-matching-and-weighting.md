@@ -10,6 +10,7 @@ sources:
   - "Mathur, Ding, Riddell and VanderWeele, Web Site and R Package for Computing E-values, Epidemiology, 2018"
   - "VanderWeele and Ding, Sensitivity Analysis in Observational Research: Introducing the E-Value, Annals of Internal Medicine, 2017 (abstract only)"
   - "Liu, Kuramoto and Stuart, An Introduction to Sensitivity Analysis for Unobserved Confounding in Nonexperimental Prevention Research, Prevention Science, 2013 (Rosenbaum section read)"
+  - "Hernán and Robins, Causal Inference: What If (chapter 15 read)"
   - https://www.pywhy.org/dowhy/
   - ../practice/ch05_matching_weighting.py
   - ../../06-applied-analyses/practice/retail.py
@@ -112,7 +113,7 @@ Treated above the highest control score: 29; controls with score over 0.9: 40; t
 
 ![Histogram of estimated log odds of joining. Non-joiners peak near minus two, joiners spread from zero to six, and few non-joiners exist above log odds of three.](../../sources/images/causal-club-overlap.png)
 
-The chart is the warning for the rest of the chapter. There are 970 joiners with a score above 0.9, and only 40 non-joiners to stand in for them. Any method that keeps all the joiners must lean hard on those 40, and any method that does not lean on them has to drop joiners, which changes the question.
+The chart is the warning for the rest of the chapter. There are 970 joiners with a score above 0.9, and only 40 non-joiners to stand in for them. Any method that keeps all the joiners must lean hard on those 40, and any method that does not lean on them has to drop joiners, which changes the question. [Hernán and Robins (*What If*, §15.4)](https://miguelhernan.org/whatifbook) note the catch: "individuals do not come with a propensity score tattooed on their forehead", so when you restrict, use real variables such as age to say who is left.
 
 ## Six ways to build a comparison group
 

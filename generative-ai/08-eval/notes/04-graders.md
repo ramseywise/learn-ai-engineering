@@ -21,6 +21,7 @@ sources:
   - https://arxiv.org/abs/2107.03374
   - https://arxiv.org/abs/2108.07732
   - https://arxiv.org/abs/2212.10481
+  - https://arxiv.org/abs/2401.03038
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -178,6 +179,8 @@ A task often has several graders. Decide up front how they combine:
 | **Report separately** | No composite. Show each dimension | Diagnosis. Always do this alongside any composite |
 
 Hybrid example: *schema valid AND no citation hallucination AND (0.5 × grounding + 0.3 × completeness + 0.2 × relevance ≥ 0.75)*.
+
+All-pass rules pile up false alarms, because any one check can fail a good output. In [SPADE](https://arxiv.org/abs/2401.03038) (Shankar et al., 2024), 67 and 32 assertions each met a false-failure limit alone, yet together wrongly failed 88% and 53% of good outputs on two pipelines, so measure the false-failure rate of the whole set.
 
 ### Veto items
 

@@ -10,6 +10,7 @@ sources:
   - https://arxiv.org/abs/2103.14749
   - https://arxiv.org/abs/2005.04118
   - https://doi.org/10.1089/big.2016.0047
+  - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: high
 cleaned: 2026-11-02
 ---
@@ -71,6 +72,8 @@ approve everyone: cost per 1,000 1106.7
 ```
 
 These are two different models of the business. At 0.5 the errors are mostly missed defaulters, and at $1/6$ they are mostly declined good customers. Studying the 0.5 table would send you to fix a problem the lender doesn't have.
+
+[Manning, Raghavan and Schütze](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (ch. 8) warn off accuracy because a system tuned for it can do well by calling every document nonrelevant, when normally over 99.9% are. Here accuracy falls from 81.5% at 0.5 to 64.5% at $1/6$, the cheaper threshold.
 
 ### Step 2: profile the four cells
 

@@ -105,11 +105,11 @@ Rules that go with it:
 
 - **Parse `<verdict>` strictly.** Anything else counts as a grader error, not a FAIL.
 - **Pin the judge model** to a different family from the system under test, and version the prompt (`grounding-v3`).
-- **Give it the reference answer when you have one.** Iusztin & Labonne note that adding a ground-truth answer as context improves the judge's accuracy (*LLM Engineer's Handbook*, ch. 7). That's the reference-guided shape above.
+- **Give it the reference answer when you have one.** Iusztin & Labonne note that adding a ground-truth answer as context improves the judge's accuracy (*LLM Engineer's Handbook*, ch. 7).
 - **Set temperature to 0**, as Huyen advises (*AI Engineering*, ch. 4). The worked example in *LLM Engineer's Handbook* (ch. 7) runs its GPT-4o-mini judge at temperature 0.8, single pass. That **contradicts** this rule: at 0.8 the same answer can get a different score on a rerun, and the chapter reports no repeat runs to show how much. If you must sample (to estimate judge variance, say), run several times and report the spread ([09](09-reading-results.md#repeats-and-clustering)).
 - **A prompt change resets the judge to experimental** until it is re-calibrated (below).
 
-A compact version from the DeepLearning.AI course's analysis-clarity judge (Lab 3). It is one criterion, delimited data, and the explanation before the label:
+A compact version from the DeepLearning.AI course's analysis-clarity judge (Lab 3), with one criterion, delimited data, and the explanation before the label:
 
 ```text
 You are evaluating whether an answer to a query is clear.
@@ -124,7 +124,7 @@ EXPLANATION: <step-by-step reasoning>
 LABEL: "clear" or "unclear"
 ```
 
-**Parse strictly.** Phoenix's `llm_classify(..., rails=["clear", "unclear"])` snaps the output to one of the rails and records anything else as unparseable. Count an unparseable verdict as a **grader error**, not a FAIL. Folding it into FAIL makes a formatting bug look like an agent regression. The course's Lab 5 adds a second judge on the same answer for entity correctness. That's the one-judge-per-criterion rule in practice.
+**Parse strictly.** Phoenix's `llm_classify(..., rails=["clear", "unclear"])` snaps the output to one of the rails and records anything else as unparseable. Folding an unparseable verdict into FAIL makes a formatting bug look like an agent regression. The course's Lab 5 adds a second judge on the same answer for entity correctness, the one-judge-per-criterion rule in practice.
 
 ### Decompose hard criteria
 
@@ -167,7 +167,7 @@ The master-key row comes from Zhao et al., who tested judges that grade reasonin
 
 ### The procedure
 
-1. **Get human labels.** 100–200 outputs labeled PASS/FAIL on the judge's criterion, by your domain expert ([02](02-defining-correct.md#one-person-decides)). Include both classes in reasonable numbers. If real user signal exists (👍/👎, escalation, resolution), it can serve as the label, as in the case study, but only for a criterion it actually measures. **Satisfaction is not task success.** In GAUGE (25 agents on τ²-bench and SimulatorArena), "57.5% of conversations our blind human panel rated satisfied (≥5/7) had failed the customer’s task". That is the same as the 57.3% base failure rate, so the rating carried no information about success (AUC 0.44). A policy-aware judge that read the tool calls did discriminate success (AUC 0.73) ([arXiv:2609.12191](https://arxiv.org/abs/2609.12191) (Bodhwani et al., 2026-09)). A 👍 can label a tone or experience judge. A resolution judge needs labels from the outcome.
+1. **Get human labels.** 100–200 outputs labeled PASS/FAIL on the judge's criterion, by your domain expert ([02](02-defining-correct.md#one-person-decides)). Include both classes in reasonable numbers. Labelling can move the criterion itself ([criteria drift](02-defining-correct.md#criteria-drift); [Shankar et al.](https://arxiv.org/abs/2404.12272), 2024, nine practitioners). Real user signal (👍/👎, escalation, resolution) can be the label, as in the case study, but only for a criterion it measures. **Satisfaction is not task success.** In GAUGE (25 agents on τ²-bench and SimulatorArena), "57.5% of conversations our blind human panel rated satisfied (≥5/7) had failed the customer’s task". That matches the 57.3% base failure rate, so the rating said nothing about success (AUC 0.44). A policy-aware judge reading the tool calls did (AUC 0.73) ([arXiv:2609.12191](https://arxiv.org/abs/2609.12191) (Bodhwani et al., 2026-09)). A 👍 can label a tone or experience judge; a resolution judge needs outcome labels.
 2. **Split** the labels: **train** (pick few-shot examples from here), **dev** (iterate on the prompt here), **test** (measure once at the end).
 3. **Run the judge** on dev. Build the confusion matrix against the human labels.
 4. **Read the disagreements.** Each is a judge prompt problem (fix the prompt), a criteria problem (fix the criteria, re-label), or a hard case (add to few-shot).
@@ -420,11 +420,11 @@ Know the multiplier. Using GPT-4 to generate and to judge one criterion doubles 
 
 - **One judge for "quality".** Symptom: verdicts switch criteria from row to row, and disagreements can't be diagnosed. Fix: one judge per criterion, with written PASS and FAIL definitions, and decomposition for grounding and completeness.
 - **Gating on an uncalibrated judge.** Symptom: a good number with no human labels behind it, sometimes pointing the wrong way, like the off-the-shelf completeness judge that scored disliked answers higher ([case study](13-case-study-support-agent.md#calibration-results)). Fix: 100 to 200 human labels, split train, dev and test, and measure once on test.
-- **Reporting raw agreement.** Symptom: "85% agreement" on a skewed set. Across Norman et al.'s 21 judges on MT-Bench, agreement exceeded κ by 33.8 to 41.3 points. Fix: lead with κ and report TPR and TNR separately, as the script above shows.
-- **Trusting a consistent judge.** Symptom: reruns match, so nobody checks further. Qwen 3 8B had test–retest α 0.992 and the cohort's strongest position bias, 0.192. Fix: run the swap check even on a judge that never changes its mind.
-- **Tuning on the test split.** Symptom: a calibration number that doesn't hold in production. Fix: draw few-shot examples from train, iterate on dev, and read test once. If you tune against test, it's a dev set.
+- **Reporting raw agreement.** Symptom: "85% agreement" on a skewed set. Fix: lead with κ and report TPR and TNR separately, as the script above shows.
+- **Trusting a consistent judge.** Symptom: reruns match, so nobody checks further. Fix: run the swap check even on a judge that never changes its mind.
+- **Tuning on the test split.** Symptom: a calibration number that doesn't hold in production. Fix: draw few-shot examples from train, iterate on dev, and read test once.
 - **Counting a parse failure as FAIL.** Symptom: pass rates drop after a model update because the output format changed. Fix: parse the verdict strictly, and count anything else as a grader error. Give the judge a `CANNOT_GRADE` escape as well, or it will guess.
-- **Judging with the same family as the system.** Symptom: scores favor your own model, as in GAUGE, where an Opus-4.8 judge rated Claude agents 0.75 points higher (on a 7-point scale), relative to a GPT-5.5 judge, than non-Claude agents. Fix: use a different family, and don't expect a panel to fix close calls, because correlated judges flip the same pairs.
+- **Judging with the same family as the system.** Symptom: scores favor your own model, as GAUGE measured ([above](#multi-family-judging)). Fix: use a different family, and don't expect a panel to fix close calls, because correlated judges flip the same pairs.
 
 ## Try it
 

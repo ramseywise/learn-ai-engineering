@@ -6,6 +6,7 @@ sources:
   - ../../sources/computer%20age%20statistical%20inference.pdf (ch. 8, GLMs and Regression Trees)
   - ../../sources/gelman-2009-weakly-informative-default-prior-distribution.pdf (separation)
   - https://www.statsmodels.org/stable/index.html
+  - https://doi.org/10.3368/jhr.50.2.317 (Cameron and Miller, J. Human Resources, 2015; authors' draft read)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -309,7 +310,7 @@ print("false positive rate at nominal .05 (naive, clustered): %.3f, %.3f" % fp()
 false positive rate at nominal .05 (naive, clustered): 0.278, 0.035
 ```
 
-The naive analysis calls a null experiment significant more than a quarter of the time at a nominal 5%. Clustering on the user brings it back to about the nominal rate. Reinhart's pseudoreplication chapter is this exact problem (*Statistics Done Wrong*, ch. 3). The rule: cluster at the level of randomisation. An experiment randomised by user and analysed by session must cluster on user. Randomised by city, cluster on city, and note that with few cities even this is not enough.
+The naive analysis calls a null experiment significant more than a quarter of the time at a nominal 5%. Clustering on the user brings it back to about the nominal rate. Reinhart's pseudoreplication chapter is this exact problem (*Statistics Done Wrong*, ch. 3). The rule: cluster at the level of randomisation. An experiment randomised by user and analysed by session must cluster on user. Randomised by city, cluster on city, and note that with few cities even this is not enough. [Cameron and Miller (J. Human Resources, 2015)](https://doi.org/10.3368/jhr.50.2.317), read in the authors' draft, show how far off it gets: in simulations they report, a nominal 5% test using clustered errors and the usual 1.96 rejected about 21% of the time with five clusters, and they give no clear cut-off for "few", which may range from under 20 to under 50 when clusters are balanced.
 
 Clustered errors treat the groups as a nuisance: the coefficient stays where it was, and only its standard error changes. If the group effect may be correlated with the predictor, you need [fixed effects](08-panel-data-and-fixed-effects.md). If the group-level estimates are themselves the question, you need a multilevel model. The [decision table in the multilevel chapter](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#which-tool-the-decision-table) sets the three side by side.
 

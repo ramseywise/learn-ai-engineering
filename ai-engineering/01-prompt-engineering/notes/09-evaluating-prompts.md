@@ -5,6 +5,7 @@ sources:
   - https://www.promptingguide.ai/applications/workplace_casestudy
   - https://arxiv.org/abs/2303.07142
   - "Phoenix & Taylor, Prompt Engineering for Generative AI (O'Reilly, 2024), ch. 1, 10"
+  - https://arxiv.org/abs/2005.04118
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -73,6 +74,8 @@ From easiest to hardest to set up (the book's order, which is not an order of ri
 3. **LLM-as-judge** — for qualities like helpfulness and tone. See below.
 
 Cheap programmatic checks belong next to these. Phoenix & Taylor's list: cost and latency per prompt, the number of calls per task, classification accuracy against labels, hallucination measured as terms that appear in the output but nowhere in the context, refusal rate by matching known refusal phrases, resistance to known injection strings, and similarity to a reference (*Prompt Engineering for Generative AI*, ch. 1).
+
+[CheckList](https://arxiv.org/abs/2005.04118) (Ribeiro et al., ACL 2020) adds two tests that need no gold answers: an invariance test changes something that shouldn't alter the output (swap a place name, add a typo), and a directional test changes something that should move it a known way. It tested NLP models rather than prompts, but adding a random URL or handle changed 24.8% of one commercial sentiment model's predictions.
 
 **Similarity to a reference is the weakest of these, so read its results carefully.** Phoenix & Taylor score four prompts for rewriting text in Mike Taylor's style (the text says "five different prompt approaches" but lists four). The metric is the cosine distance between ada-002 embeddings of the output and of a hand-rewritten reference, on three topics (*Prompt Engineering for Generative AI*, ch. 10):
 

@@ -21,7 +21,7 @@ catalogue, the palette and the writing rules. The worked example is
 `$ARGUMENTS` names a pillar directory under `ai-engineering/` (`02-context-engineering`, or
 just `02`), a path such as `data-science/03-nlp`, or a programming module such as
 `programming/sql/01-select`. Below, `<pillar>` means that full path, and `make slides PILLAR=`
-takes any of these forms. A pillar that does not yet match `ai-engineering/PILLAR-LAYOUT.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
+takes any of these forms. A pillar that does not yet match `.claude/skills/pillar/references/pillar-layout.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
 and pick the first. If `slides/deck.yaml` already exists, you are **revising** it. Read it
 first and keep what still matches the notes.
 

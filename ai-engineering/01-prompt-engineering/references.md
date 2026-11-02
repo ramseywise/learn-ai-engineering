@@ -80,6 +80,7 @@ For [07](notes/07-prompting-reasoning-models.md). This area moves fastest, so ch
 - *The Pitfalls of Reasoning for Instruction Following* — 2505.11423 (explicit CoT hurts instruction-following)
 - Ma et al., *Reasoning Models Can Be Effective Without Thinking* — 2504.09858 · [PDF](sources/ma-2025-reasoning-models-can-be-effective.pdf) (NoThinking prefill plus parallel sampling)
 - Anthropic, *Reasoning Models Don't Always Say What They Think* — 2505.05410 (CoT faithfulness)
+- Lanham et al., *Measuring Faithfulness in Chain-of-Thought Reasoning* — 2307.13702 · [PDF](../../generative-ai/08-eval/sources/lanham-2023-measuring-faithfulness-cot.pdf) (early answering, adding mistakes, filler tokens, paraphrasing; how much the answer depends on the chain varies by task and falls with model size; for [03](notes/03-core-techniques.md))
 - Shojaee et al., [*The Illusion of Thinking*](https://machinelearning.apple.com/research/illusion-of-thinking) (Apple, 2025) — collapse on harder puzzles; read it with the rebuttals it prompted
 
 ### Evaluation
@@ -90,6 +91,7 @@ For [09](notes/09-evaluating-prompts.md). Deeper material is in [the Eval pillar
 - Clavié et al., *Large Language Models in the Workplace* — 2303.07142 (the case-study table)
 - Huyen, *AI Engineering* Ch 3–4 — [ch03](../../generative-ai/08-eval/sources/huyen-ai-engineering/ch03-evaluation-methodology.pdf), [ch04](../../generative-ai/08-eval/sources/huyen-ai-engineering/ch04-evaluate-ai-systems.pdf)
 - Zheng et al., *Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena* — 2306.05685 (judge biases: position, verbosity, self-preference)
+- Ribeiro et al., *Beyond Accuracy: Behavioral Testing of NLP Models with CheckList* — 2005.04118 (minimum functionality, invariance and directional tests; pre-LLM NLP models)
 - Husain, [*Your AI Product Needs Evals*](https://hamel.dev/blog/posts/evals/) — the practitioner's case for building the eval first
 
 ### Safety and adversarial

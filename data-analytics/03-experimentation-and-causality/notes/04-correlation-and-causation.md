@@ -9,6 +9,7 @@ sources:
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
   - https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)
+  - https://miguelhernan.org/whatifbook (Hernán and Robins, Causal Inference: What If; link only, ch. 7 read)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -126,7 +127,7 @@ Once temperature is held fixed, the link vanishes. Both methods remove only conf
 
 ### Bad controls
 
-"Control for everything" sounds cautious, and it is wrong. Whether a variable belongs in the model depends on the causal story, which is why you draw the graph first. [Pearl's survey](https://doi.org/10.1214/09-ss057) gives the formal rules for reading a graph to choose controls, and the [section below](#the-backdoor-and-front-door-criteria) states the two you will use most.
+"Control for everything" sounds cautious, and it is wrong. Whether a variable belongs in the model depends on the causal story, which is why you draw the graph first. [Hernán and Robins (*What If*, §7.4)](https://miguelhernan.org/whatifbook) show why association cannot decide it: the traditional test for a confounder, built on associations with treatment and outcome, "misleads investigators into adjusting for variables when adjustment is harmful". [Pearl's survey](https://doi.org/10.1214/09-ss057) gives the formal rules for reading a graph to choose controls, and the [section below](#the-backdoor-and-front-door-criteria) states the two you will use most.
 
 ```mermaid
 flowchart LR

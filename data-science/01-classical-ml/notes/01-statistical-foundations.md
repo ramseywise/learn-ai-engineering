@@ -6,6 +6,8 @@ sources:
   - ../practice/intro-to-ml-in-python/01-introduction.ipynb
   - ../../sources/mueller-guido-introduction-to-ml-with-python.pdf
   - ../../sources/pedregosa-2012-scikit-learn.pdf
+  - https://doi.org/10.1214/10-STS330 (Shmueli, Statistical Science, 2010; link only, read in full)
+  - https://doi.org/10.1214/ss/1009213726 (Breiman, Statistical Science, 2001; link only, paper and discussion read)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -49,7 +51,7 @@ Two questions come before any model, and Müller & Guido open with them (*Introd
 - What question am I answering, and is the data I have able to answer it?
 - How will I measure success, and what does a wrong answer cost?
 
-Most failed projects fail here, not in model choice.
+Most failed projects fail here, not in model choice. [Breiman (Statistical Science, 2001)](https://doi.org/10.1214/ss/1009213726) made the measure of success the line between two cultures: one validates an assumed data model with goodness-of-fit tests and residuals, the other judges a model by its predictive accuracy. Cox's published reply goes back to the first question: "I would prefer to start with an issue, a question or a scientific hypothesis".
 
 ### The running example: adult census income
 
@@ -123,7 +125,7 @@ degree  bias^2  variance  test_mse
      9   0.010    17.864    17.963
 ```
 
-The straight line is all bias. Degree 3 to 5 is the sweet spot. By degree 9 the average fit is still close to the truth but any single fit swings widely with the sample. `test_mse` is bias² + variance + 0.09, where 0.09 is the irreducible $\sigma^2$. See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#estimators-bias-and-variance) in data analytics for the same split on a single estimator.
+The straight line is all bias. Degree 3 to 5 is the sweet spot. By degree 9 the average fit is still close to the truth but any single fit swings widely with the sample. `test_mse` is bias² + variance + 0.09, where 0.09 is the irreducible $\sigma^2$. See [Estimation](../../../data-analytics/02-probability-and-statistics/notes/04-estimation.md#estimators-bias-and-variance) in data analytics for the same split on a single estimator. [Shmueli (Statistical Science, 2010)](https://doi.org/10.1214/10-STS330) uses this decomposition to separate explaining from predicting: explanatory modelling focuses on minimising bias, predictive modelling on bias and variance together, so "the 'wrong' model can sometimes predict better than the correct one".
 
 ![Training and test accuracy against model complexity: underfitting on the left, overfitting on the right, the sweet spot in between](../../sources/images/mueller-guido-overfitting-underfitting-cartoon.png)
 *Image source: Müller & Guido, Introduction to Machine Learning with Python, ch. 2 (companion repo `images/`)*

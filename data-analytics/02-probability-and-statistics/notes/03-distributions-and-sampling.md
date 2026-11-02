@@ -5,6 +5,7 @@ sources:
   - https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (ch. 4, The Greatest Theorem Never Told)
   - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 2, Data and Sampling Distributions)
   - ../../sources/thinkstats.pdf (ch. 4, Continuous distributions; ch. 6, Operations on distributions)
+  - https://doi.org/10.1214/18-AOAS1161SF (Meng, Annals of Applied Statistics, 2018; link only, main text read)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -210,7 +211,7 @@ survey of responders: 11.062 from 57,152 rows
 simple random sample: 3.001 from 5,000 rows
 ```
 
-Larkspur emails a spend survey to everyone and buyers are four times likelier to reply. The result has 57,000 rows and is more than three times too high. A simple random sample of 5,000 is within about 4% of the truth. Sampling error shrinks with n. Selection bias does not. Before admiring a large N, ask how the rows got into the table.
+Larkspur emails a spend survey to everyone and buyers are four times likelier to reply. The result has 57,000 rows and is more than three times too high. A simple random sample of 5,000 is within about 4% of the truth. Sampling error shrinks with n. Selection bias does not. Before admiring a large N, ask how the rows got into the table. [Meng (Annals of Applied Statistics, 2018)](https://doi.org/10.1214/18-AOAS1161SF) puts a number on it for the 2016 US election: a correlation of only about -0.005 between responding and reporting a vote for Trump leaves a sample of 1% of eligible voters, about 2.3 million people, with the same mean squared error as a simple random sample of about 400.
 
 ## The small-N trap
 

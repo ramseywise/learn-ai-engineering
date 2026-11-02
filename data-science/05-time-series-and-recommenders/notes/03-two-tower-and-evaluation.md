@@ -294,6 +294,8 @@ two-tower plain          0.0532     0.0382     0.0788
 
 All three metrics order these four models the same way, and they needn't. A model that places one liked film first and nothing else in the top 10 would score well on MRR and poorly on recall. Use MRR when a single good result ends the task, as it does for "find me something to watch tonight", and recall and NDCG when the list as a whole is the product. Popularity scores contain ties, and the code counts a tie in the item's favour, so its MRR is slightly generous.
 
+NDCG comes from [Järvelin and Kekäläinen](https://doi.org/10.1145/582415.582418) (ACM TOIS 2002; [preprint](https://trepo.tuni.fi/handle/10024/65718)), who wanted graded relevance and a discount for documents a user is less likely to reach. Our code has only binary hits and divides by $\log_2(\text{rank}+1)$, so here only the discount separates it from recall.
+
 ## Offline evaluation: counterfactual estimates
 
 All the offline numbers so far share a deeper flaw. Interaction logs record what people did with what the old system showed them. Gomez-Uribe and Hunt describe this for Netflix ([*ACM TMIS*, 2015](https://doi.org/10.1145/2843948)): offline experiments assume members would have behaved the same way under the new algorithm, so an algorithm that recommends very different things gets little credit, because the log never showed those things.

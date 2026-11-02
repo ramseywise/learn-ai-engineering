@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check notes against the chapter standard in ai-engineering/PILLAR-LAYOUT.md.
+"""Check notes against the chapter standard in .claude/skills/pillar/references/pillar-layout.md.
 
     python3 scripts/check_chapters.py data-analytics/06-applied-analyses [more paths] [--strict]
 

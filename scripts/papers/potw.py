@@ -166,7 +166,7 @@ OFF_SYLLABUS = {
 WATCH = {"interpretability", "alignment"}
 # Sort key for every reading: the homes first, then the off-syllabus buckets.
 TOPICS = {**{k: scope for k, (_, scope) in HOMES.items()}, **OFF_SYLLABUS}
-SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "CURRICULUM.md", "resources.md"}
+SKIP_NOTES = {"README.md", "references.md", "OUTLINE.md", "resources.md"}
 PDF_SKIP_DIRS = {".git", "node_modules", ".venv", "idk", "slides", "datasets"}  # slides/ holds our own decks
 STOPWORDS = {"a", "an", "the", "of", "for", "and", "in", "on", "to", "with", "via", "is", "are", "by", "from", "at"}
 

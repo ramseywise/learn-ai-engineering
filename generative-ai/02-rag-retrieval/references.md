@@ -8,6 +8,7 @@
 
 | | Source | Notes |
 |---|---|---|
+| | Manning, Raghavan and Schütze, [*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (Cambridge, 2008), ch. 8: precision and recall as fractions of the retrieved and relevant sets, why accuracy fails, then P@k, MAP and NDCG. Whole chapter read, through an archived copy because the host refused connections. Link only | 01 |
 | ★ | Bojie Li, *AI Agents in Depth* (2026), [ch. 3 User Memory and Knowledge Base](https://github.com/bojieli/ai-agent-book/blob/main/book-en/chapter3.md): hybrid stages, metrics, RAPTOR vs GraphRAG, agentic RAG (Exp. 3-9), BM25 from scratch. Labs [upstream](https://github.com/bojieli/ai-agent-book/tree/main/chapter3) | 01 |
 | ★ | Huyen, *AI Engineering* (O'Reilly, 2025). Chapter PDF in [sources/huyen-ai-engineering/](sources/huyen-ai-engineering/). Folded in as: ch. 6, RAG half → [01](notes/01-rag-pipeline.md) (hybrid order, text-to-SQL table selection, agentic RAG), [02](notes/02-why-rag-and-the-augmented-prompt.md) (RAG vs long context), [03](notes/03-keyword-semantic-and-hybrid-search.md) (term vs embedding retrieval, naming of metrics), [04](notes/04-vector-databases-and-ann.md) (ANN families), [05](notes/05-chunking-query-parsing-and-reranking.md) (chunk units and overlap, contextual retrieval, query rewriting, reranking), [07](notes/07-rag-in-production.md) (cost, CLIP). The agents half of ch. 6 belongs to other pillars and is not folded in here. Figures as `huyen-ai-engineering-fig6-*`. Notes cite it as (*AI Engineering*, ch. 6) | 01–05, 07 |
 | | Raieli & Iuculano, *Building AI Agents with LLMs, RAG, and Knowledge Graphs* (Packt, 2025). Chapter PDFs in [sources/building-ai-agents-llms-rag-kgs/](sources/building-ai-agents-llms-rag-kgs/). Folded in as: ch. 5 → [03](notes/03-keyword-semantic-and-hybrid-search.md) (BM25 parameters, embedder training, rogue dimensions), [04](notes/04-vector-databases-and-ann.md) (choosing a store), [06](notes/06-generation-for-rag.md) (extra RAGAS metrics, RAG vs fine-tuning), [07](notes/07-rag-in-production.md) (quantization); ch. 6 → [01](notes/01-rag-pipeline.md) (naive-RAG failures, routers, hierarchical indexing, iterative retrieval), [02](notes/02-why-rag-and-the-augmented-prompt.md) (training paradigms, long context), [05](notes/05-chunking-query-parsing-and-reranking.md) (chunkers, hypothetical questions, rerankers), [06](notes/06-generation-for-rag.md) (context vs prior, compression, synthesizers), [07](notes/07-rag-in-production.md) (security, scale, multimodal). Figures as `building-ai-agents-llms-rag-kgs-fig*`. Notes cite it as (*Building AI Agents*, ch. N) | 01–07 |
@@ -124,7 +125,7 @@ Papers picked up by the weekly [DAIR](https://github.com/dair-ai/AI-Papers-of-th
 
 ## Secondary and vendor posts
 
-Use these as gap-detectors, not citations of record (see [SOURCES.md](../../ai-engineering/SOURCES.md) Tier 2).
+Use these as gap-detectors, not citations of record (see [recurring sources](../../scripts/papers/recurring-sources.md) Tier 2).
 
 | Source | What the notes take from it | Notes |
 |---|---|---|

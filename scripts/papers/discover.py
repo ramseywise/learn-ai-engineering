@@ -4,7 +4,7 @@
 The citation graph grows outward from papers we already hold, so a home that holds few
 (data-analytics, data-engineering, programming) gets almost nothing from it. This script
 searches by topic instead and adds what it finds to the ledger as `new` rows, so the usual
-`potw.py triage` scores them. Plan: subject-areas-plan.md.
+`potw.py triage` scores them.
 
   queries   one Haiku call per home turns each note's headings into 2-4 search queries:
             discover/queries-<home>.json. Review and edit that file before `search`.

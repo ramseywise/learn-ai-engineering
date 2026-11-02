@@ -8,6 +8,7 @@ sources:
   - https://assets.anthropic.com/m/785e231869ea8b3b/original/claude-3-7-sonnet-system-card.pdf
   - "Huyen, AI Engineering (O'Reilly, 2025), ch. 4"
   - 13-case-study-support-agent.md
+  - https://aclanthology.org/P19-1073/
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -86,6 +87,8 @@ flowchart LR
 ```
 
 Note the *first* failure only. Later failures in a trajectory are often caused by the first, and counting them inflates the wrong category.
+
+Reading a small sample has a known weakness. [Errudite](https://aclanthology.org/P19-1073/) (Wu et al., ACL 2019) argues that it "can yield biased and incomplete conclusions", and when question-answering experts re-created one published error group from the same description, theirs ranged from 13.8% to 45.2% of all errors, so write each category as a precise rule and count it over all traces, including those that passed.
 
 Step 4 changes the roadmap, and the arithmetic is one line. The counts below are invented, and the costs are one team's estimates, not measurements:
 

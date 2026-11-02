@@ -5,6 +5,7 @@ sources:
   - ../../sources/Practical_Statistics_for_Data_Scientist.pdf (ch. 1-2, expected value, sampling)
   - ../../sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf (ch. 4, The p Value and the Base Rate Fallacy; ch. 3, Pseudoreplication)
   - ../../sources/computer%20age%20statistical%20inference.pdf (ch. 3, Bayesian inference)
+  - https://www.stat.berkeley.edu/users/aldous/134/grinstead.pdf (Grinstead and Snell, Introduction to Probability; link only, ch. 4 read)
 confidence: high
 cleaned: 2026-11-01
 ---
@@ -131,7 +132,7 @@ print(f"after two independent positives: {posterior(posterior(0.001, 0.99, 0.99)
 after two independent positives: 0.907
 ```
 
-Three lessons sit in those lines. The answer depends on the base rate as much as on accuracy: moving prevalence from 1 in 1,000 to 1 in 100 lifts 9% to 50%. Improving the test helps, but it must beat the base rate, which is why rare-event detection needs extreme specificity. And evidence accumulates: yesterday's posterior is today's prior, so a second independent positive takes you to 91%. That sequential reading is the idea of [Bayesian inference](../../04-bayesian-analysis/notes/01-bayesian-inference.md), applied there to a parameter instead of an event. The word "independent" carries weight in that last step: a repeat of the same test on the same order would not count as new evidence. The same calculation is why precision collapses on rare events: see the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) in data science and [measuring a guard on your own traffic](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md#measuring-a-guard-on-your-own-traffic) in AI engineering.
+Three lessons sit in those lines. The answer depends on the base rate as much as on accuracy: moving prevalence from 1 in 1,000 to 1 in 100 lifts 9% to 50%. [Grinstead and Snell (*Introduction to Probability*, ch. 4)](https://www.stat.berkeley.edu/users/aldous/134/grinstead.pdf) work the same trap as a cancer test: with a 1-in-1,000 prior, 99% positive on cancers and 95% negative otherwise, 98.1% of positives are false, yet over half of a group of second-year medical students guessed the chance of cancer was above .5. Improving the test helps, but it must beat the base rate, which is why rare-event detection needs extreme specificity. And evidence accumulates: yesterday's posterior is today's prior, so a second independent positive takes you to 91%. That sequential reading is the idea of [Bayesian inference](../../04-bayesian-analysis/notes/01-bayesian-inference.md), applied there to a parameter instead of an event. The word "independent" carries weight in that last step: a repeat of the same test on the same order would not count as new evidence. The same calculation is why precision collapses on rare events: see the [confusion matrix](../../../data-science/01-classical-ml/notes/04-model-evaluation.md#confusion-matrix-precision-recall-f1) in data science and [measuring a guard on your own traffic](../../../ai-engineering/09-safety-and-security/notes/03-guardrail-models.md#measuring-a-guard-on-your-own-traffic) in AI engineering.
 
 ### The same mistake in hypothesis testing
 

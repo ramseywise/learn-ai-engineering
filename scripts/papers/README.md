@@ -99,8 +99,7 @@ make papers                                               # weekly: fetch DAIR, 
 ## Discovery for the subject homes
 
 The citation graph grows outward from papers we already hold, so a home that holds few gets
-little from it. [`discover.py`](discover.py) searches by topic instead. Plan:
-[subject-areas-plan.md](subject-areas-plan.md).
+little from it. [`discover.py`](discover.py) searches by topic instead.
 
 1. `queries` writes `discover/queries-<home>.json`, a few search queries per note. You edit that file first.
 2. `search` runs each query through OpenAlex semantic search and adds the well-cited works the ledger lacks as `new` rows.
@@ -123,7 +122,7 @@ python3 scripts/papers/citegraph.py bridges                           # works bo
 ## Citation graph
 
 `citegraph.py` builds a graph of what our papers cite, so we can see where ideas come from and
-cite the peer-reviewed version. Plan and reasoning: [citation-graph-plan.md](citation-graph-plan.md).
+cite the peer-reviewed version.
 
 - **Seeds** are the papers a home's markdown links (arXiv, DOI, ACL Anthology), every PDF in
   its folder, and its ledger rows marked `integrated`, `filed` or `downloaded`. The status
@@ -183,7 +182,7 @@ python3 scripts/papers/citegraph.py export --html                # reports/graph
 | `/pillar` | Bring a pillar folder to the standard layout (`notes/`, `sources/`, `references.md`). |
 | `/slides` | One pillar's notes into a lecture deck, kept as `.pptx` and `.pdf`. |
 
-The standard layout every skill writes to is in [PILLAR-LAYOUT.md](../../ai-engineering/PILLAR-LAYOUT.md).
+The standard layout every skill writes to is in [pillar-layout.md](../../.claude/skills/pillar/references/pillar-layout.md).
 
 ## Running sessions side by side
 

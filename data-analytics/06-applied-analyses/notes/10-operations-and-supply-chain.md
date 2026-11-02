@@ -266,7 +266,7 @@ mean_on_hand                211.094
    0.99       6844.032              0.959                     0.978                    0.891            0.997           0.976
 ```
 
-Outside the season, the formula gets what it promises: 94.8% against a target of 95%. In season it gets 79.4%, because the reorder point uses a year-round mean, and demand runs 60% higher in those weeks. The all-year figure of 91.4% hides this. So does the fill rate, which still looks healthy at 94.7%, because a stockout late in a cycle loses few units. FUR-03 shows the other way to miss, at 86.4% off season, because its lead-time spread was underestimated. Asking the formula for 99% only lifts in-season service to 89%. A higher z is a costly fix for a wrong mean, and exercise 2 tries the proper one.
+Outside the season, the formula gets what it promises: 94.8% against a target of 95%. In season it gets 79.4% (81.4% in the ladder's separate draw), because the reorder point uses a year-round mean, and demand runs 60% higher in those weeks. The all-year figure of 91.4% hides this. So does the fill rate, which still looks healthy at 94.7%, because a stockout late in a cycle loses few units. FUR-03 shows the other way to miss, at 86.4% off season, because its lead-time spread was underestimated. Asking the formula for 99% only lifts in-season service to 89%. A higher z is a costly fix for a wrong mean, and exercise 2 tries the proper one.
 
 ![Line chart of simulated cycle service against the service level the formula was asked for, from 80% to 99%. Cycles ordered off season run near the target line. Cycles ordered in season run 10 to 20 points below it.](../../sources/images/applied-safety-stock-service.png)
 
@@ -589,7 +589,7 @@ Peak season lifts picking by about 31% in every category and does nothing to pac
 - **Monday: never five. Go from six to seven if a parcel-hour of waiting is worth more than about £6, and then Wednesday's fifth packer should come with it,** since it costs and earns about the same. Six is already fragile: 10% more parcels takes Monday's wait from 3.4 to 7.9 minutes.
 - **The plan:** five permanent packers and two Monday agency, if agency costs 1.5 times the wage or more. Below about 1.25 times, stay at four permanents.
 
-These are simulated tables, the contracts are assumed, real demand won't match the simulation, and queues here have no absence, no breaks and no peak uplift. What would change the recommendation: a stated value for waiting, or a promise on dispatch times, would settle the Monday choice outright. A pack time near 3.5 minutes rather than 5 would take a packer or more off every day. Parcels that arrive in bursts rather than evenly would make waits worse than any of these figures.
+These are simulated tables, the contracts are assumed, real demand won't match the simulation, and queues here have no absence, no breaks and no peak uplift. What would change the recommendation: a stated value for waiting, or a promise on dispatch times, would settle the Monday choice outright. A pack time near 3.5 minutes rather than 5 would take a packer or more off every day. Parcels that arrive in bursts rather than evenly would make waits worse than any of these figures. Cachon and Terwiesch, and Hillier and Lieberman, are the textbook treatments; neither was read here.
 
 ## Pitfalls
 

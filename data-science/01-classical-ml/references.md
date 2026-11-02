@@ -16,13 +16,15 @@ cleaned: 2026-11-02
 | ★ Müller and Guido, *Introduction to Machine Learning with Python* (O'Reilly, 2016) | The practical spine of this pillar, with companion notebooks in [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | [PDF](../sources/mueller-guido-introduction-to-ml-with-python.pdf) | ch. 1 → 01; ch. 2 → 02, 06; ch. 3 → 05; ch. 4 → 03; ch. 5 → 04; ch. 6 → 03 |
 | James, Witten, Hastie, Tibshirani and Taylor, *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023) | The statistical reasoning behind the same models | [PDF](../../data-analytics/sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf) | ch. 2 to 6 → 01 to 04; ch. 8 → 06; ch. 12 → 05 |
 | ★ Ng, [*Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) (draft, 2018) | The eyeball and blackbox split, the error ceiling, and how big to make each set. Chapters 15 to 19 read for this pillar | Link only | ch. 15 to 19 → 12 |
-| Manning, Raghavan and Schütze, [*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (Cambridge, 2008) | Why accuracy is the wrong measure for retrieval. The one page on unranked evaluation read, through an archived copy because the host refused connections | Link only | ch. 8 → 11 |
+| Manning, Raghavan and Schütze, [*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (Cambridge, 2008) | Why accuracy is the wrong measure for retrieval. Chapter 8 read in full, through an archived copy because the host refused connections | Link only | ch. 8 → 11, 12 |
 
 ## Core papers
 
 | Paper | Why read it | Local | Maps to |
 |---|---|---|---|
 | Pedregosa et al., [*Scikit-learn: Machine Learning in Python*](https://arxiv.org/abs/1201.0490) (JMLR 2011) | Why the estimator API is uniform | [PDF](../sources/pedregosa-2012-scikit-learn.pdf) | 01 |
+| Breiman, [*Statistical Modeling: The Two Cultures*](https://doi.org/10.1214/ss/1009213726) (Statistical Science 2001) | Data models against algorithmic models, judged by predictive accuracy. Paper, discussion and rejoinder read in full | Link only | 01 |
+| Shmueli, [*To Explain or to Predict?*](https://doi.org/10.1214/10-STS330) (Statistical Science 2010) | Explaining and predicting are different goals, and the bias-variance split shows why. Read in full | Link only | 01 |
 | Tibshirani, [*Regression Shrinkage and Selection via the Lasso*](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x) (JRSS B 1996) | The origin of the lasso | Link only | 02 |
 | Cortes and Vapnik, [*Support-Vector Networks*](https://doi.org/10.1007/bf00994018) (Machine Learning 1995) | The origin of soft-margin SVMs | [PDF](../sources/cortes-1995-support-vector-networks.pdf) | 02 |
 | Niculescu-Mizil and Caruana, [*Predicting Good Probabilities with Supervised Learning*](https://doi.org/10.1145/1102351.1102430) (ICML 2005) | Which families distort probabilities, and how to fix them | Link only | 02, 04 |

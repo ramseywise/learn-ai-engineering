@@ -37,6 +37,7 @@ cleaned: 2026-11-01
 
 | Paper | Why read it | Link | Maps to |
 |---|---|---|---|
+| Järvelin and Kekäläinen, *Cumulated Gain-Based Evaluation of IR Techniques* (ACM TOIS 2002) | The origin of cumulated gain and its normalised form. Read in full in the Tampere preprint, titled *Cumulated gain-based indicators of IR performance*; the journal text not read | [DOI](https://doi.org/10.1145/582415.582418), [preprint](https://trepo.tuni.fi/handle/10024/65718) | [03](notes/03-two-tower-and-evaluation.md#offline-evaluation-sampled-metrics) |
 | ★ Dacrema, Cremonesi and Jannach, *Are We Really Making Much Progress?* (RecSys 2019) | 18 algorithms, 7 reproducible, simple methods often better. The reason baselines come first | [arXiv](https://arxiv.org/abs/1907.06902) | [02](notes/02-collaborative-filtering-and-matrix-factorisation.md#the-reproducibility-warning) |
 | ★ Rendle, Krichene, Zhang and Anderson, *Neural Collaborative Filtering vs. Matrix Factorization Revisited* (RecSys 2020) | A tuned dot product beats the learned MLP similarity | [arXiv](https://arxiv.org/abs/2005.09683) | [02](notes/02-collaborative-filtering-and-matrix-factorisation.md#the-reproducibility-warning) |
 | ★ Steck, *Embarrassingly Shallow Autoencoders for Sparse Data* (WWW 2019) | EASE, the closed-form model that tops our table | [arXiv](https://arxiv.org/abs/1905.03375) | [02](notes/02-collaborative-filtering-and-matrix-factorisation.md#a-linear-model-with-a-closed-form) |

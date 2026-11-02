@@ -1,11 +1,11 @@
 ---
 name: pillar
-description: "Bring one pillar (<area>/NN-* in ai-engineering, generative-ai, data-analytics, data-science or data-engineering) to the standard layout in ai-engineering/PILLAR-LAYOUT.md and the definition of done in CURRICULUM.md: README with reading order, notes/ with frontmatter, references.md, sources/ with flat images/, vendored course snapshots folded into notes and listed for removal. Usage: /pillar generative-ai/02-rag-retrieval, or /pillar new <name> to scaffold a new pillar. Run from the learn-ai-engineering repo."
+description: "Bring one pillar (<area>/NN-* in ai-engineering, generative-ai, data-analytics, data-science or data-engineering) to the standard layout and definition of done in .claude/skills/pillar/references/pillar-layout.md: README with reading order, notes/ with frontmatter, references.md, sources/ with flat images/, vendored course snapshots folded into notes and listed for removal. Usage: /pillar generative-ai/02-rag-retrieval, or /pillar new <name> to scaffold a new pillar. Run from the learn-ai-engineering repo."
 ---
 
 You are normalising one pillar so it looks and works like the others. Read
-`ai-engineering/PILLAR-LAYOUT.md` (the target tree and house style) and the "Definition of
-done" section of `CURRICULUM.md` first. The best worked examples are
+`.claude/skills/pillar/references/pillar-layout.md` first: the target tree, the house style and its
+"Definition of done" section. The best worked examples are
 `ai-engineering/02-context-engineering/` and `ai-engineering/05-graph-engineering/`.
 
 Check each note with `make chapter-check PILLAR=<pillar>` and list what falls short of the chapter standard.
@@ -18,9 +18,9 @@ in. Content changes beyond that are for `/papers` and `/chapter`.
 
 ## Step 1 — Inventory
 
-`$ARGUMENTS` is a pillar path (`generative-ai/02-rag-retrieval`, `data-science/03-nlp`, or `ai-engineering/04`). Raw course folders go in the pillar's `practice/`. The four subject areas keep one shared `sources/` at the subject root (see PILLAR-LAYOUT).
+`$ARGUMENTS` is a pillar path (`generative-ai/02-rag-retrieval`, `data-science/03-nlp`, or `ai-engineering/04`). Raw course folders go in the pillar's `practice/`. The four subject areas keep one shared `sources/` at the subject root (see `pillar-layout.md`).
 `new <name>` scaffolds a new pillar instead (skip to Step 4, then add it to `HOMES` in
-`scripts/papers/potw.py`, to the subject map in `CURRICULUM.md` and to the parent README).
+`scripts/papers/potw.py`, to the parent subject README (its syllabus) and to the structure decisions in `pillar-layout.md`, with the reason).
 
 List everything in the pillar:
 
@@ -52,14 +52,14 @@ For each snapshot the user approves:
 3. Copy figures you use into `sources/images/` with the
    `<author>-<short-title>-fig<N>.<ext>` name and a caption line.
 4. Keep a lab only if it runs offline. Otherwise link it upstream from the note.
-5. Add a row to the "Vendored snapshots" table in `CURRICULUM.md` saying what went where
+5. Add a row to the "Removed snapshots" table in `THIRD_PARTY.md` saying what went where
    and what was dropped, in the style of the rows already there.
 6. Delete the snapshot only after the user confirms.
 
 ## Step 4 — The layout
 
 - `README.md`: what the pillar teaches, prerequisites, a table of notes in reading order
-  grouped into parts, and links to references.md and slides. Copy the shape of
+  grouped into parts, Primary texts taken from references.md, and links to references.md and slides. Copy the shape of
   `ai-engineering/02-context-engineering/README.md`.
 - `notes/NN-<slug>.md`: number in reading order. Every note gets frontmatter with
   `title`, `origin`, `sources:` and `confidence:`. Use `git mv` so history follows, then fix
@@ -68,9 +68,9 @@ For each snapshot the user approves:
   grep -rln '<old-name>.md' --include='*.md' .
   ```
 - `references.md`: Books / Core papers / AI Papers of the Week tables, as in
-  `PILLAR-LAYOUT.md`. Seed it from the sources the notes already cite and from any PDFs
+  `pillar-layout.md`. Seed it from the sources the notes already cite and from any PDFs
   in `sources/`.
-- `sources/` and `sources/images/`: flat, with the naming rules from `PILLAR-LAYOUT.md`.
+- `sources/` and `sources/images/`: flat, with the naming rules from `pillar-layout.md`.
   Rename with `git mv` and update the image links in the notes.
 - `slides/`: leave alone unless it exists. Decks are built with `/slides`.
 

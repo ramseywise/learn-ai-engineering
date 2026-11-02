@@ -43,11 +43,11 @@ five-layer stack: prompt → context → harness → loop → graph). It does no
 layer; here Eval is its own pillar in generative-ai, measuring all five.
 
 Landed in the 2026-07-30 sweep:
-- [04-loop-engineering/notes/07-autonomy-ladder.md](04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
-- [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
-- [generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md](../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)
-- [05-graph-engineering/notes/01-graph-vs-loop.md](05-graph-engineering/notes/01-graph-vs-loop.md) — escalation framing + decision tree (was graph-engineering.md §11)
-- [03-harness-engineering/notes/04-execution-boundaries.md](03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
+- [04-loop-engineering/notes/07-autonomy-ladder.md](../../ai-engineering/04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
+- [04-loop-engineering/notes/08-self-improving-loops.md](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
+- [generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md](../../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)
+- [05-graph-engineering/notes/01-graph-vs-loop.md](../../ai-engineering/05-graph-engineering/notes/01-graph-vs-loop.md) — escalation framing + decision tree (was graph-engineering.md §11)
+- [03-harness-engineering/notes/04-execution-boundaries.md](../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
 
 Assessed and **skipped** as already covered at equal or greater depth: harness 6 components,
 the 5 layers of AI engineering, episodic/semantic/procedural memory, context engineering
@@ -57,7 +57,7 @@ guide, prompt engineering 2026, and the Claude Code fundamentals track (that is
 ### MarkTechPost
 
 Added 2026-07-31. High volume, low signal-per-post — most of its loop-engineering guide
-duplicated material already in [04-loop-engineering/](04-loop-engineering/README.md)
+duplicated material already in [04-loop-engineering/](../../ai-engineering/04-loop-engineering/README.md)
 (three components, five building blocks, the loop skeleton). Its value was one thing: the
 `autoresearch` case study, which pointed at two primary sources worth citing directly.
 
@@ -67,7 +67,7 @@ claimed ~90,000 GitHub stars (~48,000 two weeks post-release). The load-bearing 
 (630 lines, 700 experiments, 20 improvements, 2.02→1.80h, 5× val_bpb) all held up.
 
 Landed in the 2026-07-31 sweep:
-- [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-worked-example-autoresearch) — the `autoresearch`
+- [04-loop-engineering/notes/08-self-improving-loops.md](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md#the-worked-example-autoresearch) — the `autoresearch`
   worked example and bilevel autoresearch, cited to
   [karpathy/autoresearch](https://github.com/karpathy/autoresearch) and
   [arXiv:2603.23420](https://arxiv.org/abs/2603.23420) rather than to MarkTechPost.
@@ -76,20 +76,20 @@ Landed in the 2026-07-31 sweep:
 
 **Not automated.**
 - *Prompt Engineering Guide*: the snapshot was **removed on 2026-10-28**. Its English
-  pages were merged into [01-prompt-engineering/notes/](01-prompt-engineering/notes/), with each
+  pages were merged into [01-prompt-engineering/notes/](../../ai-engineering/01-prompt-engineering/notes/), with each
   note listing its `promptingguide.ai` sources in its frontmatter. Its notebooks were excerpted into
   the same notes (removed 2026-10-30), except the RAG and context-caching ones, which were later folded into
-  [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) and 02-context note 04. To check for new
+  [generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md](../../generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md) and 02-context note 04. To check for new
   material, browse [promptingguide.ai](https://www.promptingguide.ai/) and compare it against
-  [01-prompt-engineering/references.md](01-prompt-engineering/references.md).
+  [01-prompt-engineering/references.md](../../ai-engineering/01-prompt-engineering/references.md).
 
 ### AI Papers of the Week (DAIR)
 
 Automated. A weekly launchd job (`com.wiseer.potw`, Monday 11:00) reads
 [dair-ai/AI-Papers-of-the-Week](https://github.com/dair-ai/AI-Papers-of-the-Week) from GitHub,
-records every paper in [scripts/papers/ledger.jsonl](../scripts/papers/ledger.jsonl), triages it to a
+records every paper in [scripts/papers/ledger.jsonl](ledger.jsonl), triages it to a
 pillar and note, and downloads relevant arXiv PDFs into that pillar's `sources/`. `/papers` then
-writes the findings into the notes. See [scripts/papers/potw.py](../scripts/papers/potw.py).
+writes the findings into the notes. See [scripts/papers/potw.py](potw.py).
 
 ### librarian / cartographer
 

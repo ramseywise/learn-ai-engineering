@@ -20,7 +20,7 @@ vision answer can't be graded by string match.
 model that mishears a product name, hands every layer above it a wrong fact that looks like a
 right one. Prompting can't recover detail the encoder never captured.
 
-**Why a pillar, not a note.** Added 2026-10-31 (see [CURRICULUM.md](../../CURRICULUM.md#definition-of-done)).
+**Why a pillar, not a note.** Added 2026-10-31 (see the [structure decisions](../../.claude/skills/pillar/references/pillar-layout.md#structure-decisions)).
 The readings ledger had parked 205 multimodal papers as a watch topic with no home, and the
 repo's only multimodal material was the voice and computer-use note in
 [generative-ai/07](../../generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md).

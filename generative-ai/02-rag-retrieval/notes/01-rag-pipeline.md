@@ -1,5 +1,6 @@
 ---
 origin: notion-export + ai-engineering/02-context-engineering/notes/04-retrieval.md (pipeline material moved here)
+  - "Manning, Raghavan & Schütze, Introduction to Information Retrieval (Cambridge, 2008), ch. 8"
 confidence: medium
 sources:
   - https://arxiv.org/abs/2312.10997
@@ -364,7 +365,7 @@ The sparse half fits in about 40 lines of standard-library Python. The formula, 
 
 ### Measure each stage
 
-- **recall@k**: did a relevant document reach the top k? The metric closest to what RAG needs. Many reports, Anthropic's included, mean *hit rate*: at least one relevant document in the top k. "Retrieval failure rate" is 1 − recall@20.
+- **recall@k**: did a relevant document reach the top k? The metric closest to what RAG needs. Many reports, Anthropic's included, mean *hit rate*: at least one relevant document in the top k. "Retrieval failure rate" is 1 − recall@20. Manning, Raghavan and Schütze ([*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html), ch. 8) define recall as the fraction of all relevant documents retrieved, so it equals hit rate only when a query has one relevant document, and it can't fall as k grows.
 - **MRR**: how high the first hit ranked.
 - **nDCG**: grades the whole ranked list.
 
