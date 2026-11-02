@@ -16,6 +16,7 @@ cleaned: 2026-11-02
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
+| Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | Ch. 11, time-dependent joins, pp. 475-476 | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-feature-stores.md) |
 | ★ Wilson, [*Machine Learning Engineering in Action*](https://www.manning.com/books/machine-learning-engineering-in-action) (Manning, 2022) | Ch. 12 (drift); ch. 16 (registry, feature stores, serving) | [PDF](../sources/machine-learning-engineering-action.pdf) | [01](notes/01-feature-stores.md), [02](notes/02-experiment-tracking-and-model-registry.md), [03](notes/03-batch-and-online-serving.md), [04](notes/04-drift.md) |
 | Iusztin and Labonne, *LLM Engineer's Handbook* ([code](https://github.com/PacktPublishing/LLM-Engineers-Handbook); Packt, 2024) | Appendix, MLOps principles | none | [05](notes/05-mlops-maturity-and-best-practices.md) |
 

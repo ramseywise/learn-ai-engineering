@@ -90,10 +90,15 @@ print("boosting", hgb_cv.round(4), f"mean {hgb_cv.mean():.4f} sd {hgb_cv.std(ddo
 d = hgb_cv - log_cv
 print("boosting minus logistic, fold by fold", d.round(4), f"mean {d.mean():.4f} sd {d.std(ddof=1):.4f}")
 
-for n in (500, 2000, 8000, len(Xa_dev)):
-    Xs, ys = (Xa_dev, ya_dev) if n == len(Xa_dev) else train_test_split(Xa_dev, ya_dev, train_size=n, stratify=ya_dev, random_state=0)[0::2]
-    s = cross_val_score(models["boosting"], Xs, ys, cv=cv5, scoring="roc_auc")
-    print(f"n={n:6d} mean {s.mean():.4f} sd {s.std(ddof=1):.4f} range {s.min():.4f}-{s.max():.4f}")
+shuffled = np.random.default_rng(0).permutation(len(Xa_dev))
+for n in (500, 2000):
+    means, naive = [], []
+    for k in range(len(Xa_dev) // n)[:20]:          # disjoint samples, so these runs are truly independent
+        i = shuffled[k * n:(k + 1) * n]
+        s = cross_val_score(models["boosting"], Xa_dev.iloc[i], ya_dev.iloc[i], cv=cv5, scoring="roc_auc")
+        means.append(s.mean()); naive.append(s.std(ddof=1) / np.sqrt(5))
+    print(f"n={n:5d}, {len(means)} independent samples: mean CV AUC {np.mean(means):.4f}; true sd of the CV mean {np.std(means, ddof=1):.4f}; "
+          f"naive fold sd/sqrt(5) averages {np.mean(naive):.4f}, ranges {min(naive):.4f}-{max(naive):.4f}")
 ```
 ```python
 Xt, yt = Xa_dev.iloc[:200], ya_dev.iloc[:200]
@@ -102,8 +107,7 @@ for name, cv in [("plain", KFold(5, shuffle=True, random_state=1)), ("stratified
     print(f"{name:10s} positive rate per fold {np.round(rates, 3)}")
 
 gkf = GroupKFold(5)
-X_ng = Xa_dev.drop(columns="occupation")
-groups = Xa_dev["occupation"].astype(str)
+groups = Xa_dev["occupation"].astype(object).fillna("unknown")
 g = cross_val_score(models["boosting"], Xa_dev, ya_dev, cv=gkf, groups=groups, scoring="roc_auc")
 print("GroupKFold on occupation", g.round(4), f"mean {g.mean():.4f} sd {g.std(ddof=1):.4f}")
 

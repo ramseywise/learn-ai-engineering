@@ -14,11 +14,17 @@ The chain is hard to run for one reason, and it is the thread through all seven 
 
 A pipeline that trusts its input does not crash when the input is wrong. It produces a plausible number, and the first alarm is a person holding it. So each pillar opens with a failure that raises no error, measured on data you can regenerate, and then adds the mechanism that would have made it visible.
 
+## The core text
+
+Martin Kleppmann's [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) is the book behind this subject. Its subject is the logic that outlasts any one tool: why data is split and copied, what transactions actually promise, what a machine can know in a network, and how derived data stays correct. Tools come and go across these pillars, but when one of them makes a claim about ordering or "exactly once", this book is how you check it.
+
+[Pillar 01](01-storage-and-compute-foundations/README.md) retells chapters 1 to 10 with code that runs, including real anomalies on real Postgres. Later pillars use the book where it sharpens a decision, with page pointers throughout, and chapter 12 frames the lakehouse and architecture choices in pillars 04 and 07. The [reading map](CURRICULUM.md#reading-map-designing-data-intensive-applications) lists every book chapter with the notes that use it. Read it beside pillar 01 the first time, and return to chapters 11 and 12 once you have run a pipeline.
+
 ## The seven pillars
 
 | Pillar | The stage | A silent failure it opens | What makes the trust explicit | Chapters | Deck |
 |---|---|---|---|---|---|
-| [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md) | Bytes on disk, work across machines | A file with a new column is read with the first file's schema, and the column is dropped | Stated schemas, read plans, measuring before buying a cluster | 4 | [pptx](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pptx), [pdf](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pdf) |
+| [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md) | Data systems, bytes on disk, concurrent writers, machines that fail and agree | A file with a new column is read with the first file's schema, and the column is dropped | Stated schemas, isolation levels, request IDs, read plans, measuring before scaling | 8 | [pptx](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pptx), [pdf](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pdf) |
 | [02 Ingest and modelling](02-ingest-and-modelling/README.md) | Getting data in, saying what a row means | A retried load doubles the day's rows | Keys, change capture, a declared grain, data contracts | 4 | [pptx](02-ingest-and-modelling/slides/ingest-and-modelling.pptx), [pdf](02-ingest-and-modelling/slides/ingest-and-modelling.pdf) |
 | [03 Transform and orchestrate](03-transform-and-orchestrate/README.md) | Tested models, built for the right day | An inner join loses 5,680 trips and about $96,000 with every test green | Grain tests, logical dates, idempotent writes, write-audit-publish | 5 | [pptx](03-transform-and-orchestrate/slides/transform-and-orchestrate.pptx), [pdf](03-transform-and-orchestrate/slides/transform-and-orchestrate.pdf) |
 | [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md) | Where it rests, how it moves, what it costs | A rewrite dies halfway and a dashboard reads half of it as the truth | Table-format commits, event-time windows, committed offsets, byte limits | 5 | [pptx](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), [pdf](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pdf) |
@@ -63,10 +69,14 @@ These are the chapters on disk as of 2 November 2026.
 
 ### [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md)
 
-1. [Encoding and files](01-storage-and-compute-foundations/notes/02-encoding-and-files.md)
-2. [Row and column stores](01-storage-and-compute-foundations/notes/03-row-and-column-stores.md)
-3. [Distributed compute](01-storage-and-compute-foundations/notes/08-distributed-compute.md)
-4. [Partitioning and replication](01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)
+1. [Data systems and data models](01-storage-and-compute-foundations/notes/01-data-systems-and-data-models.md)
+2. [Encoding and files](01-storage-and-compute-foundations/notes/02-encoding-and-files.md)
+3. [Row and column stores](01-storage-and-compute-foundations/notes/03-row-and-column-stores.md)
+4. [Transactions and isolation](01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md)
+5. [Partitioning and replication](01-storage-and-compute-foundations/notes/05-partitioning-and-replication.md)
+6. [When distributed systems fail](01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md)
+7. [Consistency and consensus](01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md)
+8. [Distributed compute](01-storage-and-compute-foundations/notes/08-distributed-compute.md)
 
 ### [02 Ingest and modelling](02-ingest-and-modelling/README.md)
 
@@ -117,6 +127,9 @@ Each pillar's README has its own full list. These are the ones that cross stages
 | Rule | Where |
 |---|---|
 | State the schema on first read; inference destroys zip codes and big IDs silently | [01](01-storage-and-compute-foundations/notes/02-encoding-and-files.md) |
+| Read, decide, then write needs serializable isolation or a lock; snapshot isolation allows write skew | [01](01-storage-and-compute-foundations/notes/04-transactions-and-isolation.md) |
+| A timeout does not say whether a write applied, so retry with one request ID from client to store | [01](01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md) |
+| Do not order events by wall clock across machines, and do not build your own consensus | [01](01-storage-and-compute-foundations/notes/06-when-distributed-systems-fail.md), [01](01-storage-and-compute-foundations/notes/07-consistency-and-consensus.md) |
 | Reach for DuckDB or Polars before Spark when the data fits on one machine | [01](01-storage-and-compute-foundations/notes/08-distributed-compute.md), [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
 | Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [02](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
 | Put a contract at every producer and consumer boundary | [02](02-ingest-and-modelling/notes/04-data-contracts.md) |
@@ -128,6 +141,7 @@ Each pillar's README has its own full list. These are the ones that cross stages
 | Contain before you diagnose, and never fix raw in place | [05](05-quality-and-observability/notes/03-incident-playbooks.md) |
 | One function computes a feature everywhere, joined as of the prediction time | [06](06-ml-platform/notes/01-feature-stores.md) |
 | On a drift alert, check for a pipeline fault before retraining | [06](06-ml-platform/notes/04-drift.md) |
+| Name the system of record for each fact; everything else is derived and can be rebuilt | [04](04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
 | A mesh is an ownership model, not a storage choice; contracts come before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
 | Hashed is not anonymous: pseudonymised data stays personal data | [07](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md) |
 

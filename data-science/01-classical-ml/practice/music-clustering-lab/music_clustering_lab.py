@@ -15,6 +15,7 @@ import hashlib
 import itertools
 import json
 import platform
+import sys
 import time
 import urllib.request
 from pathlib import Path
@@ -54,16 +55,18 @@ ENOA = ["top", "left", "artist_enoa_top", "artist_enoa_left"]
 PROJECT_CONT = AUDIO + ["top", "left", "fave_score", "n_playlists",
                         "year_normalized", "duration_ms_normalized"]
 DECADES = ["1950s", "1960s", "1970s", "1980s", "1990s", "2000s", "2010s", "2020s"]
+GEN4 = ["acoustic", "dance", "electronic", "instrumental"]
 GEN8 = ["acoustic", "ambient", "dance", "electronica", "house", "jazz", "r&b", "rock"]
 
 # An allow-list, not a drop-list: id, track_name, release_date, first_genre and color stay on disk.
 SAFE_COLUMNS = AUDIO + PP + T2V + ENOA + [
     "duration_ms", "duration_ms_normalized", "year_normalized", "decade", "key_mode", "popularity",
-    "gen_8", "fave_score", "n_playlists", "playlist_diversity", "features_source",
+    "gen_4", "gen_8", "fave_score", "n_playlists", "playlist_diversity", "features_source",
 ]
 KS = list(range(2, 15))
 SEEDS = list(range(10))
 PROJECT_K = 8
+STABLE_JACCARD = 0.75  # Hennig (2007): below 0.6 a cluster is not a real pattern, above 0.75 it is stable
 
 
 def load_library(cache: Path = CACHE) -> pd.DataFrame:
@@ -81,6 +84,11 @@ def load_library(cache: Path = CACHE) -> pd.DataFrame:
     return pd.read_parquet(cache, columns=SAFE_COLUMNS)
 
 
+def one_hot(series: pd.Series, categories: list[str]) -> np.ndarray:
+    """One column per category; values outside the list (1920s, 1940s) and nulls get all zeros."""
+    return pd.get_dummies(pd.Categorical(series.where(series.isin(categories)), categories=categories)).to_numpy(float)
+
+
 def audio_matrix(df: pd.DataFrame) -> np.ndarray:
     """The nine audio features, standardised."""
     return StandardScaler().fit_transform(df[AUDIO])
@@ -90,7 +98,7 @@ def project_matrix(df: pd.DataFrame) -> np.ndarray:
     """clustering.py's 47 columns: 15 continuous + 24 key_mode + 8 decade, min-max scaled."""
     parts = [df[PROJECT_CONT].to_numpy(float),
              pd.get_dummies(df["key_mode"]).to_numpy(float),
-             pd.get_dummies(pd.Categorical(df["decade"], categories=DECADES)).to_numpy(float)]
+             one_hot(df["decade"], DECADES)]
     return MinMaxScaler().fit_transform(np.hstack(parts))
 
 
@@ -138,6 +146,7 @@ def k_sweep(X: np.ndarray, ks=KS, seeds=SEEDS) -> pd.DataFrame:
         return dict(
             k=k,
             bic=float(np.mean([m.bic(X) for m in models])),
+            bic_sd=float(np.std([m.bic(X) for m in models])),
             sil_kmeans=float(np.mean([silhouette_score(X, y) for y in km])),
             sil_gmm=float(np.mean([silhouette_score(X, y) for y in gm])),
             ari_kmeans=seed_ari(km),
@@ -145,6 +154,12 @@ def k_sweep(X: np.ndarray, ks=KS, seeds=SEEDS) -> pd.DataFrame:
             min_cluster_gmm=int(min(np.bincount(y, minlength=k).min() for y in gm)),
         )
     return pd.DataFrame(Parallel(n_jobs=-1)(delayed(one_k)(k) for k in ks))
+
+
+def shuffle_columns(X: np.ndarray, seed: int = 0) -> np.ndarray:
+    """The same marginals with every link between features cut: a library with no real groups."""
+    rng = np.random.default_rng(seed)
+    return np.column_stack([rng.permutation(X[:, j]) for j in range(X.shape[1])])
 
 
 def eta2(values: np.ndarray, labels: np.ndarray) -> float:
@@ -196,6 +211,8 @@ def name_clusters(df, X, labels, posterior, seeds=SEEDS, k=PROJECT_K) -> pd.Data
             tracks=int(mask.sum()),
             mean_top_posterior=float(posterior[mask].max(1).mean()),
             jaccard_across_seeds=float(np.median(jaccard[:, c])),
+            name=(" / ".join(f"{'high' if value > 0 else 'low'} {feature}" for feature, value in profile.head(2).items())
+                  if np.median(jaccard[:, c]) >= STABLE_JACCARD else "(unstable: no name)"),
             profile=", ".join(f"{name} {value:+.1f}" for name, value in profile.head(3).items()),
             top_gen8=genres.index[0],
             top_gen8_share=float(genres.iloc[0]),
@@ -209,22 +226,28 @@ def soft_vs_hard_retrieval(df, playlists, X, k=PROJECT_K, min_prob=0.05, seed=0)
 
     Hard keeps its single top cluster; soft keeps every cluster at >= min_prob (clustering.py's
     threshold). Recall is over held-out members; pool is the share of held-out tracks kept.
+    k-means has no posterior, so it can only play the hard version.
     """
     idx = np.where(playlists.notna())[0]
     y = playlists.to_numpy()[idx].astype(int)
     keep = np.isin(y, np.where(np.bincount(y) >= 20)[0])
     idx, y = idx[keep], y[keep]
-    out = {"hard": [], "soft": []}
+    out = {"kmeans hard": [], "gmm hard": [], "gmm soft": []}
     for train, test in StratifiedKFold(5, shuffle=True, random_state=seed).split(idx, y):
         scaler = StandardScaler().fit(X[idx[train]])
         gm = fit_gmm(scaler.transform(X[idx[train]]), k, seed)
         p_train = gm.predict_proba(scaler.transform(X[idx[train]]))
         dominant = gm.predict(scaler.transform(X[idx[test]]))
+        km = KMeans(n_clusters=k, n_init=10, random_state=seed).fit(scaler.transform(X[idx[train]]))
+        km_test = km.predict(scaler.transform(X[idx[test]]))
         for g in np.unique(y):
             query = p_train[y[train] == g].mean(0)
             positives = y[test] == g
-            for name, clusters in (("hard", [query.argmax()]), ("soft", np.where(query >= min_prob)[0])):
-                kept = np.isin(dominant, clusters)
+            km_top = np.bincount(km.labels_[y[train] == g], minlength=k).argmax()
+            for name, assigned, clusters in (("kmeans hard", km_test, [km_top]),
+                                             ("gmm hard", dominant, [query.argmax()]),
+                                             ("gmm soft", dominant, np.where(query >= min_prob)[0])):
+                kept = np.isin(assigned, clusters)
                 out[name].append((kept[positives].mean(), kept.mean()))
     return {name: dict(recall=float(np.mean([r for r, _ in v])), pool=float(np.mean([p for _, p in v])))
             for name, v in out.items()}
@@ -245,14 +268,15 @@ def lgbm(seed=0) -> LGBMClassifier:
 def feature_sets(df: pd.DataFrame) -> dict[str, np.ndarray]:
     audio = df[AUDIO].to_numpy(float)
     enoa = df[ENOA].replace(0.0, np.nan).to_numpy(float)   # 0,0 is "not on the map", not a place
-    genre = pd.get_dummies(pd.Categorical(df["gen_8"], categories=GEN8)).to_numpy(float)
+    genre = one_hot(df["gen_8"], GEN8)
     year = df[["year_normalized"]].to_numpy(float)
     return {
         "audio": np.hstack([audio, year]),
         "proxies": np.hstack([enoa, genre, year]),
         "audio+proxies": np.hstack([audio, enoa, genre, year]),
+        "map position only": enoa,
+        "t2v only": df[T2V].to_numpy(float),
         "audio+pp (leak)": np.hstack([audio, year, df[PP].to_numpy(float)]),
-        "audio+t2v (leak)": np.hstack([audio, year, df[T2V].to_numpy(float)]),
     }
 
 
@@ -272,7 +296,7 @@ def rerank_cv(df: pd.DataFrame, playlists: pd.Series, repeats: int = 2, k: int =
     groups = np.unique(y_all)
 
     def score(y, s):
-        return roc_auc_score(y, s), average_precision_score(y, s), topk(y, s), y.mean()
+        return roc_auc_score(y, s), average_precision_score(y, s), topk(y, s), min(10, y.sum()) / 10, y.mean()
 
     def one_fold(repeat, fold, train, test):
         rows = []
@@ -298,9 +322,9 @@ def rerank_cv(df: pd.DataFrame, playlists: pd.Series, repeats: int = 2, k: int =
     splits = [(r, f, tr, te) for r in range(repeats)
               for f, (tr, te) in enumerate(StratifiedKFold(5, shuffle=True, random_state=r).split(audio, y_all))]
     rows = sum(Parallel(n_jobs=-1)(delayed(one_fold)(*s) for s in splits), [])
-    cols = ["method", "repeat", "fold", "playlist", "auc", "ap", "p_at_10", "base_rate"]
+    cols = ["method", "repeat", "fold", "playlist", "auc", "ap", "p_at_10", "p_at_10_ceiling", "base_rate"]
     return pd.DataFrame(rows, columns=cols).groupby(["method", "repeat", "playlist"], as_index=False)[
-        ["auc", "ap", "p_at_10", "base_rate"]].mean()
+        ["auc", "ap", "p_at_10", "p_at_10_ceiling", "base_rate"]].mean()
 
 
 def project_recipe(df: pd.DataFrame, playlists: pd.Series) -> pd.DataFrame:
@@ -308,8 +332,9 @@ def project_recipe(df: pd.DataFrame, playlists: pd.Series) -> pd.DataFrame:
 
     "as written" builds similarity_score and tempo_deviation from every positive, test ones
     included. "train-only" builds them from training positives. "no playlist columns" also drops
-    fave_score and playlist_diversity. Camelot distance and calibration are left out; population
-    is the one-playlist tracks, because multi-playlist membership can't be recovered from the file.
+    fave_score and playlist_diversity. Camelot distance, the all-zero embedding_similarity and
+    calibration are left out; population is the one-playlist tracks, because multi-playlist
+    membership can't be recovered from the file.
     """
     idx = np.where(playlists.notna())[0]
     y_all = playlists.to_numpy()[idx].astype(int)
@@ -318,8 +343,7 @@ def project_recipe(df: pd.DataFrame, playlists: pd.Series) -> pd.DataFrame:
     cluster_prob = gm.predict_proba(project_matrix(df))[idx].max(1)
     sim_cols = AUDIO + ["popularity", "top", "left", "fave_score", "n_playlists", "year_normalized"]
     base = frame[sim_cols].to_numpy(float)
-    cats = np.hstack([pd.get_dummies(pd.Categorical(frame["decade"], categories=DECADES)).to_numpy(float),
-                      pd.get_dummies(pd.Categorical(frame["gen_8"], categories=GEN8)).to_numpy(float)])
+    cats = np.hstack([one_hot(frame["decade"], DECADES), one_hot(frame["gen_4"], GEN4)])
     extra = frame[["playlist_diversity"]].to_numpy(float)
     groups = [g for g in np.unique(y_all) if (y_all == g).sum() >= 20]
 
@@ -334,10 +358,9 @@ def project_recipe(df: pd.DataFrame, playlists: pd.Series) -> pd.DataFrame:
                                                  ("train-only", tr, True),
                                                  ("train-only, no playlist columns", tr, False)):
             positives = source[y[source] == 1]
-            sim = cos(base, base[positives].mean(0))
+            core = base if keep_playlist_cols else np.delete(base, sim_cols.index("fave_score"), axis=1)
+            sim = cos(core, core[positives].mean(0))
             tempo = np.abs(frame["tempo"].to_numpy(float) - frame["tempo"].to_numpy(float)[positives].mean()).reshape(-1, 1)
-            drop = [sim_cols.index("fave_score")]
-            core = base if keep_playlist_cols else np.delete(base, drop, axis=1)
             parts = [core, sim, cluster_prob.reshape(-1, 1), tempo, cats] + ([extra] if keep_playlist_cols else [])
             X = np.hstack(parts)
             model = LGBMClassifier(class_weight="balanced", n_estimators=200, learning_rate=0.05,
@@ -363,7 +386,7 @@ def plot_sweep(sweep: pd.DataFrame, path: Path = FIGURE) -> None:
     panels = [
         (axes[0], "BIC (lower fits better)", [("bic", "GMM", blue)]),
         (axes[1], "Silhouette (higher separates better)", [("sil_kmeans", "k-means", orange), ("sil_gmm", "GMM", blue)]),
-        (axes[2], "Agreement across 10 seeds (mean pairwise ARI)", [("ari_kmeans", "k-means", orange), ("ari_gmm", "GMM", blue)]),
+        (axes[2], "Agreement across 10 seeds (ARI)", [("ari_kmeans", "k-means", orange), ("ari_gmm", "GMM", blue)]),
     ]
     for ax, title, series in panels:
         ax.set_facecolor("#fcfcfb")
@@ -386,9 +409,15 @@ def plot_sweep(sweep: pd.DataFrame, path: Path = FIGURE) -> None:
     plt.close(fig)
 
 
-def summarise_rerank(table: pd.DataFrame, by: str = "method") -> pd.DataFrame:
-    """Mean over playlists, plus the spread of that mean across repeats where there are repeats."""
-    return table.groupby(by)[["auc", "p_at_10", "base_rate"]].mean().sort_values("auc")
+def t2v_separation(df: pd.DataFrame, playlists: pd.Series) -> dict:
+    """Mean cosine between t2v vectors of tracks in the same playlist and in different ones."""
+    mask = playlists.notna().to_numpy()
+    v = df.loc[mask, T2V].to_numpy(float)
+    v = v / np.linalg.norm(v, axis=1, keepdims=True)
+    groups = playlists[mask].to_numpy()
+    cos, same = v @ v.T, groups[:, None] == groups[None, :]
+    off = ~np.eye(len(v), dtype=bool)
+    return dict(same_playlist=float(cos[same & off].mean()), different_playlist=float(cos[~same].mean()))
 
 
 def main() -> None:
@@ -398,7 +427,7 @@ def main() -> None:
     results: dict = {"commit": COMMIT, "versions": dict(
         python=platform.python_version(), sklearn=sklearn.__version__, lightgbm=lightgbm.__version__)}
     print(f"versions: python {platform.python_version()}, scikit-learn {sklearn.__version__}, "
-          f"lightgbm {lightgbm.__version__}, numpy {np.__version__}")
+          f"lightgbm {lightgbm.__version__}, numpy {np.__version__}, pandas {pd.__version__}")
 
     print("\n== 1. The data ==")
     missing = int(((df["top"] == 0) & (df["left"] == 0)).sum())
@@ -440,6 +469,18 @@ def main() -> None:
     )
     print(results["k_choice"])
     plot_sweep(sweep)
+    null = k_sweep(shuffle_columns(X), seeds=SEEDS[:3])
+    results["null_sweep"] = dict(
+        bic_best_k=int(null.loc[null.bic.idxmin(), "k"]),
+        sil_kmeans_k2=float(null.loc[null.k == 2, "sil_kmeans"].iloc[0]),
+        sil_kmeans_k8=float(null.loc[null.k == PROJECT_K, "sil_kmeans"].iloc[0]),
+        sil_gmm_k8=float(null.loc[null.k == PROJECT_K, "sil_gmm"].iloc[0]),
+        sil_real_kmeans_k2=float(sweep.loc[sweep.k == 2, "sil_kmeans"].iloc[0]),
+        sil_real_kmeans_k8=float(sweep.loc[sweep.k == PROJECT_K, "sil_kmeans"].iloc[0]),
+        bic_real_k8=float(sweep.loc[sweep.k == PROJECT_K, "bic"].iloc[0]),
+        bic_shuffled_k8=float(null.loc[null.k == PROJECT_K, "bic"].iloc[0]),
+    )
+    print("same library, each column shuffled separately:", json.dumps(results["null_sweep"], indent=1))
 
     print(f"\n== 4. Soft assignment at k={PROJECT_K} ==")
     gm = fit_gmm(X, PROJECT_K, 0, n_init=5)
@@ -475,7 +516,7 @@ def main() -> None:
 
     print(f"\n== 6. Naming the {PROJECT_K} audio clusters (aggregates only) ==")
     names = name_clusters(df, X, labels, posterior)
-    print(names.round(2).to_string(index=False))
+    print(names.round(3).to_string(index=False))
     results["clusters"] = names.round(3).to_dict("records")
     has_genre = df["gen_8"].notna().to_numpy()
     results["nmi_gmm_vs_gen8"] = float(normalized_mutual_info_score(df["gen_8"][has_genre], labels[has_genre]))
@@ -483,8 +524,10 @@ def main() -> None:
 
     print("\n== 7. The reranker: one model per playlist, 5-fold x 2 repeats, held-out tracks ==")
     rerank = rerank_cv(df, playlists)
-    summary = summarise_rerank(rerank)
+    summary = rerank.groupby("method")[["auc", "ap", "p_at_10", "p_at_10_ceiling", "base_rate"]].mean().sort_values("auc")
     print(summary.round(3).to_string())
+    results["t2v_cosine"] = t2v_separation(df, playlists)
+    print("t2v cosine:", {k: round(v, 3) for k, v in results["t2v_cosine"].items()})
     per_playlist = rerank.groupby(["method", "playlist"])[["auc"]].mean().reset_index()
     pivot = per_playlist.pivot(index="playlist", columns="method", values="auc")
     def paired(a, b):
@@ -512,7 +555,7 @@ def main() -> None:
 
     (HERE / "results.json").write_text(json.dumps(results, indent=1) + "\n")
     print(f"\nwrote results.json and {FIGURE.name}")
-    print(f"runtime: {time.time() - start:.0f}s")
+    print(f"runtime: {time.time() - start:.0f}s", file=sys.stderr)
 
 
 if __name__ == "__main__":

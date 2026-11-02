@@ -1,0 +1,122 @@
+versions: python 3.12.14, scikit-learn 1.9.1, lightgbm 4.7.0, numpy 2.5.4, pandas 3.1.0
+
+== 1. The data ==
+tracks: 2182
+columns_in_file: 114
+columns_read: 98
+features_source: {'spotify': 2182}
+map_position_zero: 266
+gen8_missing: 402
+min_n_playlists: 1
+energy_loudness_r: 0.7958327560659691
+playlists_recoverable: 29
+tracks_one_playlist: 1597
+
+== 2. Scaling ==
+{
+ "duration_variance_share": 0.9999998873928747,
+ "ari_unscaled_vs_duration_only": 0.9883168702911531,
+ "ari_scaled_vs_duration_only": 0.07185871086553874
+}
+
+== 3. Choosing k on the nine audio features (10 seeds each, n_init=1) ==
+ k       bic   bic_sd  sil_kmeans  sil_gmm  ari_kmeans  ari_gmm  min_cluster_gmm
+ 2 44389.461    0.014       0.258    0.086       0.997    0.999              830
+ 3 40616.242 4041.462       0.236    0.118       0.752    0.582              339
+ 4 33428.910  130.473       0.221    0.078       0.593    0.885              232
+ 5 32309.616  754.561       0.219    0.067       0.641    0.719              136
+ 6 31440.726  436.143       0.220    0.045       0.742    0.792              131
+ 7 31001.459  138.537       0.217    0.042       0.823    0.649               68
+ 8 30825.144   36.079       0.191    0.032       0.683    0.718               92
+ 9 30898.518  213.148       0.185    0.046       0.756    0.697               89
+10 30689.655  235.665       0.185    0.053       0.771    0.627               76
+11 30323.131  129.727       0.182    0.040       0.714    0.637               49
+12 30393.640  121.407       0.180    0.032       0.687    0.633               27
+13 30356.351  223.729       0.177    0.027       0.709    0.610               11
+14 30507.337  138.276       0.178    0.026       0.736    0.686               17
+{'bic_best_k': 11, 'sil_best_k_kmeans': 2, 'sil_best_k_gmm': 3, 'ari_best_k_kmeans': 2, 'ari_best_k_gmm': 2}
+same library, each column shuffled separately: {
+ "bic_best_k": 7,
+ "sil_kmeans_k2": 0.10679421891955093,
+ "sil_kmeans_k8": 0.11407097832553803,
+ "sil_gmm_k8": -0.008414705513722353,
+ "sil_real_kmeans_k2": 0.25808166009564104,
+ "sil_real_kmeans_k8": 0.19064227520672125,
+ "bic_real_k8": 30825.143567760846,
+ "bic_shuffled_k8": 39448.55250341663
+}
+
+== 4. Soft assignment at k=8 ==
+{
+ "share_top_posterior_under_0_8": 0.14069660861594868,
+ "share_top_posterior_under_0_6": 0.03895508707607699,
+ "median_top_posterior": 0.9918081073978003,
+ "ari_gmm_vs_kmeans": 0.2967805759775332,
+ "retrieval": {
+  "kmeans hard": {
+   "recall": 0.5360778316970267,
+   "pool": 0.20391690155548597
+  },
+  "gmm hard": {
+   "recall": 0.45657832363714723,
+   "pool": 0.18788873095794487
+  },
+  "gmm soft": {
+   "recall": 0.9254943633078307,
+   "pool": 0.6197602929485172
+  }
+ }
+}
+
+== 5. What each feature space clusters on, at k=8 (5 seeds) ==
+space                     audio (9)  project (47)  proxies (13)
+d                                 9            47            13
+params                          439          9407           839
+silhouette                    0.033         0.091         0.027
+seed_ari                      0.711         0.583         0.653
+audio_variance_explained      0.357         0.031         0.126
+nmi_gen8                        0.2         0.138         0.282
+nmi_playlist                  0.241          0.15         0.281
+nmi_key_mode                  0.023         0.235         0.028
+nmi_decade                    0.039         0.714         0.319
+nmi_missing_map_position      0.005         0.099         0.226
+ARI, audio partition vs proxy partition: 0.08
+
+== 6. Naming the 8 audio clusters (aggregates only) ==
+ cluster  tracks  mean_top_posterior  jaccard_across_seeds                                    name                                                 profile top_gen8  top_gen8_share  lift
+       0     511               0.943                 0.767        high valence / high danceability  valence +0.8, danceability +0.7, instrumentalness -0.7    dance           0.704 1.939
+       4     448               0.960                 0.844 high speechiness / low instrumentalness  speechiness +0.9, instrumentalness -0.7, loudness +0.4    dance           0.600 1.653
+       6     294               0.879                 0.517                     (unstable: no name)    instrumentalness +0.7, acousticness -0.6, tempo -0.5    house           0.226 4.905
+       7     252               0.891                 0.207                     (unstable: no name)           danceability -0.7, loudness -0.6, energy -0.5     rock           0.247 2.159
+       3     227               0.949                 0.736                     (unstable: no name) liveness +1.7, instrumentalness +0.4, danceability -0.3      r&b           0.279 1.687
+       5     172               0.945                 0.514                     (unstable: no name)            energy -1.2, acousticness +1.2, valence -0.7 acoustic           0.336 3.622
+       1     158               0.958                 0.908    low loudness / high instrumentalness       loudness -2.0, instrumentalness +1.8, energy -1.5  ambient           0.382 9.706
+       2     120               0.887                 0.745                     (unstable: no name)         speechiness +1.1, tempo +0.7, danceability +0.6    dance           0.567 1.561
+NMI, GMM clusters vs gen_8 taxonomy: 0.208
+
+== 7. The reranker: one model per playlist, 5-fold x 2 repeats, held-out tracks ==
+                              auc     ap  p_at_10  p_at_10_ceiling  base_rate
+method
+LightGBM t2v only           0.596  0.085    0.083            0.891      0.038
+GMM posterior overlap       0.742  0.157    0.147            0.891      0.038
+cosine to centroid          0.833  0.250    0.250            0.891      0.038
+LightGBM audio+posteriors   0.869  0.383    0.394            0.891      0.038
+LightGBM audio              0.870  0.386    0.397            0.891      0.038
+LightGBM map position only  0.899  0.527    0.556            0.891      0.038
+LightGBM audio+proxies      0.919  0.600    0.590            0.891      0.038
+LightGBM proxies            0.920  0.601    0.603            0.891      0.038
+LightGBM audio+pp (leak)    1.000  0.998    0.891            0.891      0.038
+t2v cosine: {'same_playlist': 0.334, 'different_playlist': 0.323}
+LightGBM audio minus cosine to centroid: AUC +0.037 (95% CI +0.015 to +0.057 over playlists; wins 21/26)
+LightGBM audio minus LightGBM proxies: AUC -0.050 (95% CI -0.075 to -0.028 over playlists; wins 6/26)
+LightGBM audio+proxies minus LightGBM proxies: AUC -0.002 (95% CI -0.015 to +0.012 over playlists; wins 15/26)
+LightGBM audio+posteriors minus LightGBM audio: AUC -0.001 (95% CI -0.007 to +0.005 over playlists; wins 9/26)
+
+== 8. The project's recipe, on the same tracks, one 70/30 split per playlist ==
+                                   auc  p_at_10  base_rate
+variant
+train-only, no playlist columns  0.934    0.596      0.037
+as written                       0.947    0.635      0.037
+train-only                       0.948    0.642      0.037
+
+wrote results.json and wise-music-clustering-lab-fig1.png

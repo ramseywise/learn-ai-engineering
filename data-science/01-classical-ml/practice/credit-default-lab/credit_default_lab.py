@@ -12,15 +12,16 @@ the same for every method, and saves a table under results/. Figures go to
 The discussion is in ../../notes/10-imbalance-errors-and-drift.md, which imports this file.
 """
 
-import argparse
 import hashlib
 import io
+import os
 import sys
-import time
 import urllib.request
 import warnings
 import zipfile
 from pathlib import Path
+
+os.environ.setdefault("OMP_NUM_THREADS", "1")  # parallelism is across seeds, not inside a fit
 
 import numpy as np
 import pandas as pd
@@ -194,7 +195,7 @@ def prior_shift(p, odds_train, odds_true):
 # ------------------------------------------------------------------------------------ learners
 LEARNERS = {
     "boosted": (
-        lambda s: HistGradientBoostingClassifier(learning_rate=0.05, random_state=s),
+        lambda s: HistGradientBoostingClassifier(learning_rate=0.05, early_stopping=False, random_state=s),
         [{"max_leaf_nodes": a, "max_iter": b} for a in (4, 15) for b in (100, 300)],
     ),
     "logistic": (
@@ -248,6 +249,10 @@ def make_pipeline(sampler, learner, params, weights, seed):
 def fit_best(xtr, ytr, xva, yva, method, learner, seed):
     """Try each setting and keep the best validation PR-AUC. Validation data is never resampled."""
     samplers, weights = METHODS[method]
+    odds = ytr.mean() / (1 - ytr.mean())
+    # a ratio at or below today's odds would mean removing defaulters, so it cannot be tried
+    samplers = [s if not s or s[1] > 1.05 * odds else (s[0], min(1.0, 2 * odds)) for s in samplers]
+    samplers = list(dict.fromkeys(samplers))
     best = (-1.0, None, None)
     for sampler in samplers:
         for params in LEARNERS[learner][1]:

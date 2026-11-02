@@ -15,6 +15,7 @@ cleaned: 2026-11-02
 
 | Book | Chapters | PDF | Maps to |
 |---|---|---|---|
+| Kleppmann, [*Designing Data-Intensive Applications*](https://dataintensive.net/) (O'Reilly, 2017) | Ch. 12, auditing and end-to-end checks, pp. 530-532 | [PDF](../sources/kleppmann-designing-data-intensive-applications.pdf) | [01](notes/01-quality-dimensions-and-tests.md) |
 | ★ Beyer, Jones, Petoff and Murphy, [*Site Reliability Engineering*](https://sre.google/sre-book/table-of-contents/) (O'Reilly, 2016), free online | [6 Monitoring](https://sre.google/sre-book/monitoring-distributed-systems/), [14 Managing incidents](https://sre.google/sre-book/managing-incidents/), [15 Postmortem culture](https://sre.google/sre-book/postmortem-culture/) | none | [02](notes/02-monitors-and-lineage.md), [03](notes/03-incident-playbooks.md) |
 | Iusztin and Labonne, *LLM Engineer's Handbook* (Packt, 2024) | Appendix, MLOps principles | none | [02](notes/02-monitors-and-lineage.md) |
 

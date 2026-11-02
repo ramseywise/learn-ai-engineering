@@ -137,6 +137,21 @@ parts:
         source: notes/02-table-formats.md
         notes: >-
           This is real output from deltalake 1.6.6 on a laptop. Copy-on-write means old files stay until cleanup. Forcing retention to zero makes the log list a version whose files are gone.
+      - layout: code
+        title: Two valid commits can still break a rule
+        lang: text
+        code: |-
+          ann read version 0, saw 2 on duty, committed version 1
+          ben read version 0, saw 2 on duty, committed version 2
+          on duty now: 0
+        bullets:
+          - "**The log** behaves as a commit point, a snapshot and a total order."
+          - "**Two appends** never conflict, by Delta's own documentation."
+          - "**The read** that decided each append is outside the log's view."
+        takeaway: Keep a rule of this kind inside one MERGE or UPDATE, or run one writer at a time, because the table cannot check a read it never saw.
+        source: notes/02-table-formats.md
+        notes: >-
+          This is write skew from the transactions chapter of the foundations pillar, in a table format. Both jobs read a true snapshot, the rule held for each, and the result is nobody on duty. The chapter maps each log idea to its database name, with pointers into Designing Data-Intensive Applications chapters 7 and 9.
       - layout: table
         title: Three formats, one idea, different structures
         header: ["", "Delta Lake", "Iceberg", "Hudi"]

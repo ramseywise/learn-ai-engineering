@@ -1,126 +1,89 @@
-# Storage and compute foundations lecture deck. Covers notes 01-04.
+# Storage and compute foundations lecture deck. Covers notes 01-08.
 # Build: make slides PILLAR=data-engineering/01-storage-and-compute-foundations STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
-# Running example: one million synthetic taxi trips. Measured numbers come from the runs printed in the notes.
+# Running example: synthetic taxi trips. Measured numbers come from the runs printed in the notes.
 deck:
   title: Storage and Compute Foundations
-  subtitle: The physical facts under every pipeline
+  subtitle: The logic under every pipeline
   tagline: |-
-    Files · Layouts · Clusters · Copies
-  reference: "Notes: data-engineering/01-storage-and-compute-foundations"
+    Promises · Files · Writers · Copies · Faults · Agreement · Clusters
+  reference: "Notes: data-engineering/01-storage-and-compute-foundations. Core text: Kleppmann, Designing Data-Intensive Applications (2017)."
   output: storage-and-compute-foundations.pptx
   notes: >-
-    Today we follow one million taxi trips down the stack. We write them to files, load them into two kinds of database,
-    spread the work across machines, and then split and copy the data. Each step ends with a mechanism that explains a
-    symptom you will see at work.
+    Today we start with one machine and add trouble a step at a time, following Kleppmann's book. What a system promises, how data
+    sits in a file and on disk, what happens when a second writer arrives, what happens with copies, what happens when the network
+    and the clocks stop cooperating, how machines agree anyway, and finally how to compute over all of it. Every number on these
+    slides comes from code you can run in the practice folder.
 
 parts:
-  - title: What a file promises
-    summary: Encoding · Compatibility · Parquet · Arrow
+  - title: What a data system promises
+    summary: Reliability · Percentiles · Data models
     notes: >-
-      The writer of a file and its reader never meet. So the first question is how much the reader has to guess.
+      Before any mechanism, the vocabulary. You are already designing a data system, so you need words for judging one.
+    slides:
+      - layout: statement
+        title: You are already the designer of a data system
+        kicker: The problem
+        statement: "A taxi app is a database, a cache, a search index, a queue and a warehouse, held together by your own application code."
+        attribution: Chapter 1, after Kleppmann, ch. 1
+        takeaway: Combining storage tools with application code makes you the designer of a data system, so its guarantees are yours to state.
+        source: notes/01-data-systems-and-data-models.md
+        notes: >-
+          Nobody sold you that combination. Once you have assembled it, nobody else can say what it promises. Kleppmann's words are
+          reliability, scalability and maintainability, and each one is only useful once it is measured.
+      - layout: code
+        title: The mean hides the customers who suffer
+        recall: Why does a slow backend hurt more as a request calls more of them?
+        lang: text
+        code: |-
+          mean   55.2 ms    p50    40.3 ms
+          p95    82.1 ms    p99   366.6 ms
+          p99.9  2184.1 ms
+
+          backend calls    requests hit by a p99 call
+                      1      1.0%
+                     10      9.6%
+                    100     63.4%
+        bullets:
+          - "**Never average percentiles:** 476.8 against a true 535.9."
+          - "**Merge histograms** instead: 524.0."
+        takeaway: State latency as percentiles from the client, since the tail reaches most requests that fan out, and percentiles cannot be averaged.
+        source: notes/01-data-systems-and-data-models.md
+        notes: >-
+          The second table is why large services care about p99.9. Also watch for coordinated omission. An open-loop test saw a p99 of
+          1505 ms where a closed-loop test reported 5 ms, on the same system. The closed loop stopped sending while the server was stalled.
+      - layout: flow
+        title: A data model decides what stays easy
+        recall: Which operation did the relational model make cheap, and which the document model?
+        steps:
+          - Choose relationships
+          - Choose a model
+          - State the query
+          - Engine picks a path
+        bullets:
+          - "**Rename a zone:** 1 row in relational form, 92 in documents."
+          - "**Same SQL, new index:** 3.57 ms scan, 0.03 ms covering index."
+        takeaway: Normalised data keeps updates in one place, documents keep reads together, and declarative queries let the engine change the path later.
+        source: notes/01-data-systems-and-data-models.md
+        notes: >-
+          The second bullet is what Codd's model buys. The query did not change at all and got a hundred times faster, because it never named
+          an access path. Graph models take over when anything may relate to anything.
+
+  - title: Files and layouts
+    summary: Compatibility · Parquet · Row and column · B-tree and LSM
+    notes: >-
+      Writers and readers never meet, and analytics and transactions want opposite layouts. Both facts come from what is cheap on disk.
     slides:
       - layout: statement
         title: The writer of a file and its reader never meet
         kicker: The problem
         statement: "Bytes on disk are all they share. A CSV leaves everything to inference: 02134 comes back as 2134, with no error."
-        attribution: Measured with pyarrow's CSV reader in chapter 1
+        attribution: Measured with pyarrow's CSV reader in chapter 2
         takeaway: A file format decides how much its reader must guess, and CSV makes it guess everything.
         source: notes/02-encoding-and-files.md
         notes: >-
           A program that wrote a file last March may no longer exist. CSV has no types, so the zip code lost its leading zero
-          and nothing complained. That silent loss is the theme of the whole subject.
-      - layout: compare
-        title: Compatibility runs in two directions
-        recall: Which is harder, backward or forward compatibility, and why?
-        left:
-          title: Backward
-          tag: new code, old data
-          bullets:
-            - Every warehouse holds years of old files
-            - The author of the new code knows the old format
-        right:
-          title: Forward
-          tag: old code, new data
-          bullets:
-            - During any rollout some consumers lag the producer
-            - Old code must ignore what it has never seen
-        takeaway: Backward means new code reads old data and forward means old code reads new data, and a warehouse needs both.
-        source: notes/02-encoding-and-files.md
-        notes: >-
-          Data outlives code. You redeploy in minutes, but a five-year-old partition keeps the shape it was written in.
-      - layout: code
-        title: Avro resolves two schemas by field name
-        recall: Why does adding a field with no default fail?
-        lang: python
-        code: |-
-          person = {"userName": "Martin",
-                    "favoriteNumber": 1337,
-                    "interests": ["daydreaming", "hacking"]}
-          # JSON 81 bytes, Avro 32 bytes
-          reader(buf, writer_schema, reader_schema)
-          # adds city with default "unknown": works
-          # adds city with no default:
-          # SchemaResolutionError
-        bullets:
-          - "**No names in the bytes:** the schema carries them."
-          - "**Add or drop fields** only with a default."
-          - "**Find the schema** in the file header or a registry."
-        takeaway: Avro stores no field names and resolves writer and reader schemas by name, so only fields with defaults can change.
-        source: notes/02-encoding-and-files.md
-        notes: >-
-          These are Kleppmann's example record and sizes, and the run confirms 81 and 32 bytes. Failure on a missing default is the
-          feature, because it refuses a change that old data cannot satisfy.
-      - layout: flow
-        title: A Parquet reader starts at the end of the file
-        recall: What can a reader skip using only the footer?
-        steps:
-          - Read the footer
-          - Pick columns
-          - Skip row groups by min and max
-          - Fetch byte ranges
-          - Decode pages
-        bullets:
-          - "**Column pruning:** 7 columns took 7.3 ms to read, one column took 1.3 ms."
-          - "**Pushdown:** a tight `trip_id` range touched 1 of 20 row groups, a `fare_usd` range touched all 20."
-        takeaway: Parquet's footer lets a reader skip columns and row groups, but min and max only help when the data's order matches the filter.
-        source: notes/02-encoding-and-files.md
-        notes: >-
-          trip_id rose monotonically so its statistics narrow the search. Fare is scattered through time, so every row group spans
-          the range and nothing is skipped. Statistics always exist, but they only help in the right order.
-      - layout: table
-        title: Sorting saves bytes in one column and costs them in another
-        recall: Why did sorting make the file larger overall?
-        header: [Sort order, Whole file, pickup_zone, pickup_at]
-        widths: [3, 2, 2, 2]
-        rows:
-          - [Arrival order, "7.7 MB", "1,033 KB", "2,111 KB"]
-          - ["Zone, then payment", "9.0 MB", "4.8 KB", "3,575 KB"]
-        highlight: [1]
-        takeaway: Only one sort order can be physical, so choose it from your common filters and compare the whole file, not one column.
-        source: notes/02-encoding-and-files.md
-        notes: >-
-          The zone column collapsed by a factor of two hundred, while pickup_at lost its order and grew by 70 percent.
-      - layout: compare
-        title: Parquet and Arrow optimise opposite costs
-        recall: Why is Arrow uncompressed while Parquet is compressed?
-        left:
-          title: Parquet, on disk
-          tag: "7.7 MB, about 11 ms to open"
-          bullets:
-            - I/O is the slow step, so spend CPU to save bytes
-            - Dictionaries, run lengths, compression
-        right:
-          title: Arrow, in memory
-          tag: "44.9 MB, about 1 ms to open"
-          bullets:
-            - CPU is the slow step, so keep values at known addresses
-            - DuckDB, Polars and NumPy can share one buffer
-        takeaway: Parquet spends CPU to save I/O for storage, and Arrow stays uncompressed so that engines can share memory without copying.
-        source: notes/02-encoding-and-files.md
-        notes: >-
-          They look alike and do different jobs. One is for storing and moving data, the other for computing on it and handing it between
-          libraries. The times come from a single run and are best read as orders of magnitude.
+          and nothing complained. Data outlives code: compatibility has to run both ways, backward for old files and forward for lagging consumers.
       - layout: code
         title: Drift can vanish inside one line of SQL
         recall: What does read_parquet do with a column only the second file has?
@@ -140,206 +103,160 @@ parts:
         notes: >-
           January's pipeline keeps working in February and never sees a tip. Table formats handle this properly by keeping schema history in
           a transaction log.
-
-  - title: Two layouts, two workloads
-    summary: OLTP and OLAP · Column layout · Compression · Write path
-    notes: >-
-      We have good files. Now load the same trips into a row store and a column store, and measure.
-    slides:
-      - layout: statement
-        title: One layout cannot serve both kinds of query
-        kicker: The problem
-        statement: "On the same million rows, DuckDB won the scan by about 200 times, and SQLite won the key lookup by about 60."
-        attribution: One laptop run, best of five, in chapter 2
-        takeaway: OLTP and OLAP pull storage in opposite directions, which is why companies copy data into a separate warehouse.
-        source: notes/03-row-and-column-stores.md
+      - layout: flow
+        title: A Parquet reader starts at the end of the file
+        recall: What can a reader skip using only the footer?
+        steps:
+          - Read the footer
+          - Pick columns
+          - Skip row groups by min and max
+          - Fetch byte ranges
+          - Decode pages
+        bullets:
+          - "**Column pruning:** 7 columns took 7.7 ms to read, one column took 1.3 ms."
+          - "**Pushdown:** a tight `trip_id` range touched 1 of 20 row groups, a `fare_usd` range touched all 20."
+        takeaway: Parquet's footer lets a reader skip columns and row groups, but min and max only help when the data's order matches the filter.
+        source: notes/02-encoding-and-files.md
         notes: >-
-          Neither engine is badly built. Each does what its layout makes cheap. This gap is the reason a pipeline exists at all.
+          trip_id rose monotonically so its statistics narrow the search. Fare is scattered through time, so every row group spans
+          the range and nothing is skipped. Arrow is the in-memory counterpart: uncompressed, so engines can share buffers without copying.
       - layout: table
-        title: Access patterns separate the two worlds
-        recall: Name three ways an OLAP workload differs from OLTP.
-        header: ["", OLTP, OLAP]
-        widths: [2, 3, 3]
-        rows:
-          - [Reads, "A few rows, by key", "Aggregates over many rows"]
-          - [Writes, "Random, low latency", "Bulk load or stream"]
-          - [Users, "Through an application", "Analysts and models"]
-          - [Data, "Latest state", "History of events"]
-          - [Size, "GB to TB", "TB to PB"]
-        takeaway: OLTP serves small reads and writes by key for applications, while OLAP scans history for analysis, and each needs its own layout.
-        source: notes/03-row-and-column-stores.md
-        notes: >-
-          This is Kleppmann's table in short form. The practical point is that an analyst's scan can hold a production database's disks hostage.
-      - layout: cards
-        title: Four things make a column store fast
-        recall: Which of these does a row store with narrow tables fail to get?
-        cards:
-          - title: Read less
-            body: "A query names 4 or 5 of a fact table's 100 columns."
-          - title: Compress runs
-            body: "Sorted, zone falls from 956,362 runs to 260."
-          - title: Bitmaps
-            body: "IN becomes OR and AND works bit by bit."
-          - title: Vectors
-            body: "Loops over 1,024 values fit in cache and use SIMD."
-        takeaway: Column stores read only named columns, compress similar values, filter with bitmaps, and process batches in tight loops.
-        source: notes/03-row-and-column-stores.md
-        notes: >-
-          Abadi and colleagues showed a row store with narrow tables does not get these. Late materialisation gave about three times, compression
-          about two on average, and invisible joins about 50 percent. Both storage and executor have to change.
-      - layout: code
         title: Selectivity decides between index and scan
         recall: Why did SQLite's index fall behind on the busy zone?
-        lang: text
-        code: |-
-          rows matched       SQLite index   DuckDB scan
-          rare zone,    623       0.37 ms       0.47 ms
-          busy zone, 163162      24.83 ms       0.59 ms
+        header: [Rows matched, SQLite index, DuckDB scan]
+        widths: [3, 2, 2]
+        rows:
+          - ["Rare zone, 623", "0.37 ms", "0.47 ms"]
+          - ["Busy zone, 163,162", "24.83 ms", "0.59 ms"]
+        highlight: [1]
         takeaway: An index is a series of random lookups, so it loses to a compressed scan as selectivity falls, and warehouses mostly skip them.
         source: notes/03-row-and-column-stores.md
         notes: >-
-          At 623 rows they are level. At one trip in six the index chases 163 thousand rows. The scan barely changes.
-      - layout: flow
-        title: Column stores buffer writes and merge them in bulk
-        recall: Why can't a column store insert into the middle of a column?
-        steps:
-          - Write arrives
-          - In-memory store
-          - Read merges both
-          - Bulk merge into sorted columns
-        caption: The log-structured approach, as Kleppmann describes it for Vertica
-        takeaway: A sorted compressed column cannot accept an insert, so recent writes sit in a buffer and merge in bulk, which suits batch loads.
+          On full workloads the gap is about two orders of magnitude each way: DuckDB won the scan by about 200 times and SQLite won the key
+          lookup by about 60. That gap is the reason a warehouse and a pipeline exist at all.
+      - layout: compare
+        title: Two ways to keep an index on disk
+        recall: What does an LSM-tree pay for its cheap writes?
+        left:
+          title: B-tree
+          tag: "overwrite a page: 4,096 bytes per update"
+          bullets:
+            - One page holds each key, so reads are predictable
+            - Each small update rewrites a whole page
+        right:
+          title: LSM-tree
+          tag: "append a segment: 338 bytes per update"
+          bullets:
+            - Batches writes into sorted files, merged later
+            - A read opened 7.3 of 12 segments on average
+        takeaway: B-trees update in place and read predictably, and LSM-trees batch writes cheaply but must merge and search several segments on read.
         source: notes/03-row-and-column-stores.md
         notes: >-
-          We also timed single-row commits and found no large gap: both took about a quarter of a millisecond. That is a reason to measure before
-          repeating the rule, not evidence that a warehouse is a transactional store.
-      - layout: bullets
-        title: A rollup answers only the questions it kept
-        recall: What did the cube discard that makes some questions impossible?
-        bullets:
-          - "**Rollup:** 8,060 zone-day rows replace a million trips, about 4x faster here."
-          - "**The cost:** fare share of trips over 10 miles is unanswerable, since miles is not a column."
-          - "**Keep atomic facts** and treat rollups as an acceleration layer."
-        takeaway: Materialised views and cubes trade flexibility for speed, so keep the atomic table and build rollups from questions actually asked.
-        source: notes/03-row-and-column-stores.md
-        notes: >-
-          Kleppmann's example is the share of sales from items over 100 dollars, and price is not a dimension. Kimball makes the same case for atomic grain.
+          A missing key opened all 12 segments, which is why real engines add Bloom filters. You will meet the same shape again: table formats
+          write small immutable files and compact them, and column stores buffer writes and merge them in bulk.
 
-  - title: When one machine isn't enough
-    summary: MapReduce · Joins · Spark · Single-node engines
+  - title: When two writers meet
+    summary: Lost updates · Write skew · Isolation levels · Retries
     notes: >-
-      A cluster has a large hidden cost. We build MapReduce to see it, and then ask how often you need one.
+      Now a second writer arrives. Everything here ran on real PostgreSQL 16.
     slides:
       - layout: statement
-        title: A cluster costs far more than the bill
+        title: Two correct transactions can break a rule together
         kicker: The problem
-        statement: "Over a network, each join becomes a shuffle, each failed worker a recovery plan, and the slowest task sets the finish time."
-        attribution: Chapter 3
-        takeaway: Distributed compute adds shuffles, retries and stragglers, so use it when you must and not by default.
-        source: notes/08-distributed-compute.md
+        statement: "Ana and Ben each check that two doctors are on duty, each sign off, and both commit. Now nobody is on duty."
+        attribution: Write skew, run on PostgreSQL 16 in chapter 4, after Kleppmann, ch. 7
+        takeaway: Write skew happens when two transactions read the same premise and write different rows, so neither sees a conflict.
+        source: notes/04-transactions-and-isolation.md
         notes: >-
-          Kleppmann opens his batch chapter with sort and uniq for good reason. The same design, spread over many machines, is what we build next.
-      - layout: flow
-        title: MapReduce is a Unix sort across machines
-        recall: Why does the partition hash have to be stable across processes?
-        steps:
-          - Split input
-          - Map to key and value
-          - Partition by hash
-          - Sort and merge
-          - Reduce and commit
-        bullets:
-          - "**The shuffle** moves and sorts data, so it is the expensive stage."
-          - "**Immutable inputs and atomic output** make retries safe."
-        takeaway: MapReduce partitions keys with a stable hash, sorts and merges them, and commits output atomically so a retry cannot double count.
-        source: notes/08-distributed-compute.md
-        notes: >-
-          The paper's terabyte sort took 891 seconds on about 1,800 machines, and took 44 percent longer with backup tasks disabled. A
-          Python string hash differs per process, which would split a key silently.
+          Each transaction was correct against a true snapshot. The rule spans rows that no single write touches, so a row lock on the rows
+          you updated has nothing to detect.
       - layout: table
-        title: Reading a query plan starts with the join
-        recall: When does a broadcast join stop being possible?
-        header: [Join, Needs, Moves]
-        widths: [3, 4, 3]
+        title: Name the anomaly, then choose the level
+        recall: Which level first stops write skew in Postgres?
+        header: [Run on Postgres, Read committed, Repeatable read, Serializable]
+        widths: [3, 2, 2, 2]
         rows:
-          - [Sort-merge, "Nothing", "Both tables"]
-          - [Broadcast hash, "A small side that fits in memory", "Small table per worker"]
-          - [Bucketed, "Both sides partitioned on the key", "Nothing"]
-        takeaway: Sort-merge shuffles both sides, broadcast copies the small table, and bucketed joins move nothing but need matching layouts.
-        source: notes/08-distributed-compute.md
+          - ["Summed balances, true 100,000", "110,000", "100,000", "100,000"]
+          - ["Lost update, 100 + 1 + 1", "101", "aborts", "aborts"]
+          - ["Write skew, on duty", "0", "0", "1"]
+          - ["Phantom, bookings", "2", "2", "1"]
+        highlight: [2]
+        takeaway: A level's name tells you little, so ask which anomalies it allows, because in Postgres only serializable stopped write skew and phantoms.
+        source: notes/04-transactions-and-isolation.md
         notes: >-
-          On a rough count for our trips and a 260-row dimension on ten nodes, 40 megabytes moves in the shuffle and 0.15 in the broadcast. Stale statistics
-          that hide a small table can lose you that.
+          The serializable column for the first two rows follows from repeatable read being weaker. Repeatable read in Postgres is snapshot
+          isolation, and it detects a lost update by itself, which not every database does.
       - layout: code
-        title: Lineage replaced replicated intermediate files
-        recall: Which property must an operator have for lineage recovery to be safe?
+        title: A level that aborts needs a retry loop
+        recall: Why did a transaction with a new id charge twice as much?
         lang: text
         code: |-
-          (4) PythonRDD[5]
-           |  MapPartitionsRDD[4]
-           |  ShuffledRDD[3] at partitionBy
-           +-(8) PairwiseRDD[2] at reduceByKey
-              |  PythonRDD[1]
-              |  ParallelCollectionRDD[0]
+          expected 1200 from 8 threads
+          read-then-write, read committed  172
+          atomic update                   1200
+          select for update               1200
+          compare-and-set                 1200
+          read-then-write, repeatable    1200  4240 retries
+
+          new id on each retry:   charged 4000
+          same id on each retry:  charged 2000
         bullets:
-          - "**Lost partition:** recompute it from its parents."
-          - "**Needs determinism,** or downstream re-runs too."
-          - "**The paper:** up to 20x faster on iterative work."
-        takeaway: Spark records how each partition was built and recomputes it after a failure, which needs deterministic operators.
-        source: notes/08-distributed-compute.md
+          - "**Prefer** an atomic update when one fits."
+          - "**A retry** repeats work, so reuse the id."
+        takeaway: Fix lost updates with atomic writes, locks or compare-and-set, and if aborts are possible retry with one id so effects do not repeat.
+        source: notes/04-transactions-and-isolation.md
         notes: >-
-          The shuffled line is the stage boundary. Spark SQL adds a declarative layer on top, and the optimiser pushes the filter into Parquet and aggregates partially before the
-          exchange, as we saw in the plan.
-      - layout: code
-        title: The same query on a laptop, with pushdown
-        recall: What does PROJECT 3/7 COLUMNS tell you?
-        lang: python
-        code: |-
-          lazy = (pl.scan_parquet("trips.parquet")
-            .filter(pl.col("payment_type") == "card")
-            .group_by("pickup_zone")
-            .agg(pl.len().alias("trips"))
-            .sort("trips", descending=True).limit(3))
-          # Parquet SCAN, PROJECT 3/7 COLUMNS
-          # SELECTION: payment_type == "card"
+          Thread timing changes the read committed total from run to run. The other rows are stable. Lost updates vanish inside a single
+          atomic statement at no cost in retries, so a fix needs no higher level if one statement will do.
+      - layout: flow
+        title: Serializable snapshot isolation decides at commit
+        recall: When does optimistic concurrency perform badly?
+        steps:
+          - Read a snapshot
+          - Track what was read
+          - Check at commit
+          - Abort if a premise changed
+          - Retry
         bullets:
-          - "**DuckDB, Polars, Spark:** identical answers."
-          - "**Eager reads** skip these optimisations."
-          - "**Spilling:** 3M groups ran under a 200 MB limit."
-        takeaway: DuckDB and Polars plan queries like a cluster engine and can work beyond memory, so test one machine first.
-        source: notes/08-distributed-compute.md
+          - "**1 hot row:** 78% of attempts aborted."
+          - "**10 rows:** 28%. **1,000 rows:** 6%."
+        takeaway: Serializable snapshot isolation runs without blocking and aborts a transaction whose premise changed, so it costs most under contention.
+        source: notes/04-transactions-and-isolation.md
         notes: >-
-          The grouped query over a 640 megabyte file finished in about three seconds. On the same machine a 100 MB limit failed until we set threads to one.
-      - layout: table
-        title: COST asks when a cluster beats one good thread
-        recall: Why can't this table be read as "Spark is slow"?
-        header: [System, Cores, "20 PageRank iterations"]
-        widths: [3, 2, 3]
-        rows:
-          - [Spark, "128", "857 s"]
-          - [GraphX, "128", "419 s"]
-          - [GraphLab, "128", "249 s"]
-          - ["Single thread, SSD", "1", "300 s"]
-        highlight: [3]
-        takeaway: Good scaling can hide large overhead, so measure absolute time against a single thread before trusting a scaling curve.
-        source: notes/08-distributed-compute.md
+          The other two routes are literal serial execution and two-phase locking. Table formats use the same optimistic pattern for commits,
+          which is why many writers on one table spend their time retrying.
+      - layout: cards
+        title: The same anomalies appear in warehouses
+        recall: Which warehouse habit is a write skew waiting to happen?
+        cards:
+          - title: Half-loaded view
+            body: "Two commits for one load: a reader saw (0, None)."
+          - title: Overlapping backfills
+            body: "Two jobs on one table are a lost update."
+          - title: Check, then append
+            body: "A rule outside the commit is write skew."
+          - title: One transaction
+            body: "A single commit shows old, then new, never both."
+        takeaway: Pipelines hit the same anomalies as applications, so make one load one commit and do not let concurrent jobs check and write separately.
+        source: notes/04-transactions-and-isolation.md
         notes: >-
-          McSherry, Isard and Murray, HotOS 2015, on the twitter_rv graph, with 2014 versions. Graphs partition badly, so this is a hard case. Scans are friendlier to clusters, but the habit of measuring carries over.
+          The check-then-append case is real on Delta as well. Pillar 4 runs it: two jobs read version 0, both commit, and the rota ends with nobody on duty.
 
   - title: Where each row lives
-    summary: Partitioning · Rebalancing · Lake layout · Replication · Quorums
+    summary: Partition keys · Lake layout · Lag · Failover
     notes: >-
-      A cluster has to put each row somewhere and keep copies. Those choices become what a reader sees.
+      The data has outgrown one machine, so we split it and copy it. Those choices become what a reader sees.
     slides:
       - layout: statement
         title: A dashboard can be wrong while nothing is broken
         kicker: The problem
         statement: "Partitioning decides which machine holds a row. Replication decides what a reader sees just after a write."
-        attribution: Chapter 4
+        attribution: Chapter 5, after Kleppmann, ch. 5 and 6
         takeaway: Partitioning spreads data for scale and replication copies it for availability, and replication lag shows up as wrong-looking data.
         source: notes/05-partitioning-and-replication.md
         notes: >-
-          These are easy to confuse and most systems use both, with a node leading some partitions and following others.
+          These are easy to confuse and most systems use both, with a node leading some partitions and following others. The named failures
+          are read-your-writes, monotonic reads and consistent prefix, and in a warehouse the third is a fact row with no dimension yet.
       - layout: compare
         title: A partition key buys either order or spread
         recall: What problem does a compound key solve?
@@ -358,20 +275,8 @@ parts:
         takeaway: Range keeps order at the risk of write hot spots, hash spreads load but fans out, and a compound key gets some of both.
         source: notes/05-partitioning-and-replication.md
         notes: >-
-          A compound key like zone and day finds one partition and then a sorted run. Hot keys still need salting, which cut the busiest partition 16 times here.
-      - layout: table
-        title: Adding one node should not move everything
-        recall: How does a fixed partition count avoid moving most keys?
-        header: [Placement, "Keys moved, 10 to 11 nodes"]
-        widths: [4, 3]
-        rows:
-          - ["hash mod N", "91.0%"]
-          - ["1,024 fixed partitions", "9.8%"]
-        highlight: [1]
-        takeaway: Hash mod N moves most keys on any resize, so systems keep many fixed partitions and move only whole ones to the new node.
-        source: notes/05-partitioning-and-replication.md
-        notes: >-
-          Measured over a million keys. Kleppmann also warns about automating this when failure detection is aggressive, because a slow node declared dead can cascade.
+          A compound key like zone and day finds one partition and then a sorted run. Adding a node should not move everything: hash mod N
+          moved 91 percent of keys going from 10 to 11 nodes, and 1,024 fixed partitions moved 9.8 percent.
       - layout: code
         title: The small files problem is a partitioning mistake
         recall: What is a good rule for choosing lake partition and sort keys?
@@ -398,39 +303,196 @@ parts:
           - Leader fails
           - Follower with 3 promoted
           - New write takes ID 4
-        caption: From the Cluster model in chapter 4. Kleppmann recounts a GitHub incident of this type.
+        caption: From the Cluster model in chapter 5. Kleppmann recounts a GitHub incident of this type.
         takeaway: Asynchronous replication acknowledges writes a failover can lose, and a stale new leader can reuse their keys, so don't trust IDs alone.
         source: notes/05-partitioning-and-replication.md
         notes: >-
-          At GitHub, an out-of-date MySQL follower was promoted, reused keys that Redis also held, and disclosed private data to the wrong users. Keep the log position with extracted rows.
-      - layout: cards
-        title: Replication lag has three named failures
-        recall: What fixes monotonic read violations?
-        cards:
-          - title: Read your writes
-            body: "You save something, then read a replica that lacks it."
-          - title: Monotonic reads
-            body: "Nine comments, then seven: replicas with different lag. Pin users by hash."
-          - title: Consistent prefix
-            body: "Answers before questions: partitions have no global order."
-        takeaway: Read-your-writes, monotonic reads and consistent prefix each fail under replica lag, and they appear as flickering dashboards.
-        source: notes/05-partitioning-and-replication.md
+          At GitHub, an out-of-date MySQL follower was promoted, reused keys that Redis also held, and disclosed private data to the wrong users.
+          The next part asks how the system even knows the leader has failed.
+
+  - title: When machines fail
+    summary: Partial failure · Timeouts · Clocks · Fencing
+    notes: >-
+      One computer is deterministic: it works or it crashes. A network of them is neither, and everything here follows from that.
+    slides:
+      - layout: statement
+        title: A timeout does not tell you what happened
+        kicker: The problem
+        statement: "The request or the reply may have been lost. In this simulation, 57% of timeouts hid a write that had in fact been applied."
+        attribution: Simulated in chapter 6, after Kleppmann, ch. 8
+        takeaway: A timed-out request may or may not have been applied, and from where the client sits those two cases look identical.
+        source: notes/06-when-distributed-systems-fail.md
         notes: >-
-          In a warehouse the third one is the fact row with no dimension yet, because the tables loaded at different times.
+          This is partial failure. A shorter timeout does not fix it either: at 10 ms this model raised 840 false alarms per 10,000 requests and at
+          2000 ms it raised 0.1, and you pay for the second in how long you take to notice a real fault.
+      - layout: code
+        title: Retries turn a lost reply into a double charge
+        recall: What does a request id let the receiver do?
+        lang: text
+        code: |-
+          100,000 payments        duplicates  never charged
+          no retry                         0          2,943
+          retry 3x                     4,131              2
+          retry 3x, request id             0              2
+        bullets:
+          - "**Without retries** you lose payments."
+          - "**With retries** you repeat them."
+          - "**With an id** the receiver can drop repeats."
+        takeaway: Plain retries trade lost writes for duplicates, and only an id that the receiver can check gets rid of both.
+        source: notes/06-when-distributed-systems-fail.md
+        notes: >-
+          This is the root of every exactly-once claim in the later pillars: at-least-once delivery plus an idempotent receiver.
       - layout: table
-        title: Quorums overlap, which is less than consistency
-        recall: Why does w + r > n still not give linearisable reads?
-        header: [n, w, r, Overlap, "Tolerates down (w / r)"]
-        widths: [1, 1, 1, 2, 3]
+        title: Last-write-wins loses data on a skew of milliseconds
+        recall: Why are the dropped writes invisible?
+        header: [Clock skew, "Acknowledged writes silently dropped"]
+        widths: [2, 4]
         rows:
-          - ["3", "2", "2", "Always", "1 / 1"]
-          - ["3", "1", "1", "Can miss", "2 / 2"]
-          - ["5", "3", "3", "Always", "2 / 2"]
-          - ["5", "2", "2", "Can miss", "3 / 3"]
-        takeaway: With w + r > n a read overlaps the latest write, but sloppy quorums and last-write-wins mean this is not linearisability.
-        source: notes/05-partitioning-and-replication.md
+          - ["1 ms", "2.48%"]
+          - ["3 ms", "7.05%"]
+          - ["10 ms", "19.61%"]
+          - ["35 ms", "41.25%"]
+          - ["1000 ms", "50.01%"]
+        highlight: [2]
+        takeaway: Ordering by wall clock across machines silently drops acknowledged writes, so use logical versions when order matters.
+        source: notes/06-when-distributed-systems-fail.md
         notes: >-
-          An exhaustive check in the chapter. Dynamo designed this for an always-writeable shopping cart. Riak and Cassandra follow that style, while DynamoDB itself uses a leader per partition.
+          A quartz clock at 200 parts per million drifts 6 ms in 30 seconds and 17.3 seconds in a day. Every write that vanished had been acknowledged, and no
+          replica reports an error.
+      - layout: flow
+        title: A paused worker wakes up believing it still holds the lock
+        recall: Who rejects the stale writer, and why not the writer itself?
+        steps:
+          - A takes lease, token 1
+          - A pauses
+          - Lease expires, B gets token 2
+          - A wakes and writes
+          - Store rejects token 1
+        bullets:
+          - "**A real SIGSTOP** stretched a loop gap from 0.010 s to 0.804 s."
+          - "**The store checks,** because A cannot know it has paused."
+        takeaway: A process can pause at any line and not know it, so the storage must reject stale work using a token that only goes up.
+        source: notes/06-when-distributed-systems-fail.md
+        notes: >-
+          A zombie Airflow task or Spark executor is this exact case. A node cannot trust its own judgement of the situation: truth is decided by a
+          majority, which takes us to agreement.
+
+  - title: How machines agree
+    summary: Linearizability · Two-phase commit · Consensus
+    notes: >-
+      Given all that, how can machines agree on anything at all? Consensus is possible, and it has a price.
+    slides:
+      - layout: statement
+        title: Overlapping quorums can still go backwards in time
+        kicker: The problem
+        statement: "With n=3, w=3, r=2, 22% of runs were not linearizable: one read saw the new value, a later read saw the old one."
+        attribution: Simulated in chapter 7, after Kleppmann, ch. 9
+        takeaway: Quorum overlap does not give you linearizability, which needs a system that behaves as if there were one copy.
+        source: notes/07-consistency-and-consensus.md
+        notes: >-
+          At n=5 it was 37 percent, and a single leader was 0 of 5000. The price of linearizability is latency and availability under partition,
+          and the honest form of CAP is exactly that: when the network fails, choose between linearizable and available.
+      - layout: flow
+        title: Two-phase commit blocks when its coordinator dies
+        recall: Why can't a prepared participant decide by itself?
+        steps:
+          - Prepare to all
+          - All vote yes
+          - Coordinator logs decision
+          - Commit to all
+        bullets:
+          - "**Die before step 3:** everyone is in doubt, holding locks."
+          - "**The commit point** is one record on one disk."
+        takeaway: Two-phase commit is atomic only by blocking, since a prepared participant must hold its locks until the coordinator's decision arrives.
+        source: notes/07-consistency-and-consensus.md
+        notes: >-
+          A participant that voted yes has given up its right to abort, and it cannot commit either, since someone else may have voted no. That is why the
+          book treats heterogeneous distributed transactions as a source of amplified failures.
+      - layout: code
+        title: A real in-doubt transaction survives a restart
+        recall: What ended the block?
+        lang: text
+        code: |-
+          PREPARE TRANSACTION 'trip-42', then the client dies
+
+          in doubt: [('trip-42', True)]
+          visible value: 0
+          another writer: canceling statement due to lock timeout
+          after a restart, still in doubt: [('trip-42',)]
+          after commit prepared: 2000
+        takeaway: A prepared transaction outlives its client and a restart and keeps its locks until someone commits it, so a lost coordinator stops others.
+        source: notes/07-consistency-and-consensus.md
+        notes: >-
+          This ran on PostgreSQL 16 with no simulation at all. An operator had to resolve it by hand, which is what the book means by in-doubt
+          transactions that need a person.
+      - layout: table
+        title: Consensus holds exactly while a majority overlaps
+        recall: Why is two of five not enough?
+        header: [Quorum of 5, "Runs that broke an invariant, of 1,000"]
+        widths: [2, 4]
+        rows:
+          - ["1", "898"]
+          - ["2", "688"]
+          - ["3", "0"]
+          - ["4", "0"]
+        highlight: [2]
+        takeaway: Any two majorities share a node, which carries an acknowledged write into each new term, and below a majority the proof and the system both fail.
+        source: notes/07-consistency-and-consensus.md
+        notes: >-
+          Our toy follows Raft's shape. With a majority, 3000 random runs elected 36,436 leaders and acknowledged 53,047 writes without losing one. In practice,
+          do not write this: use the consensus inside ZooKeeper, etcd, Kafka's KRaft or your database. Airflow's schedulers lean on database row locks for the same reason.
+
+  - title: When one machine isn't enough
+    summary: MapReduce · Lineage · Single-node engines
+    notes: >-
+      We know what a cluster risks. Now we compute across one, and then ask how often you need to.
+    slides:
+      - layout: statement
+        title: A cluster costs far more than the bill
+        kicker: The problem
+        statement: "In the COST paper, GraphX on 128 cores took 419 s for 20 PageRank iterations. One good thread on an SSD took 300 s."
+        attribution: McSherry, Isard and Murray, HotOS 2015, with 2014 systems. Chapter 8
+        takeaway: Distributed compute adds shuffles, retries and stragglers, so measure against one good thread and use a cluster when you must.
+        source: notes/08-distributed-compute.md
+        notes: >-
+          Graphs partition badly, so this is a hard case, and scans are friendlier to clusters. The point is to measure absolute time and not a scaling curve.
+      - layout: flow
+        title: MapReduce is a Unix sort across machines
+        recall: Why does the partition hash have to be stable across processes?
+        steps:
+          - Split input
+          - Map to key and value
+          - Partition by hash
+          - Sort and merge
+          - Reduce and commit
+        bullets:
+          - "**The shuffle** moves and sorts data, so it is the expensive stage."
+          - "**Immutable inputs and atomic output** make retries safe."
+        takeaway: MapReduce partitions keys with a stable hash, sorts and merges them, and commits output atomically so a retry cannot double count.
+        source: notes/08-distributed-compute.md
+        notes: >-
+          The paper's terabyte sort took 891 seconds on about 1,800 machines, and took 44 percent longer with backup tasks disabled. Spark replaced replicated intermediate
+          files with lineage: a lost partition is recomputed from its parents, which needs deterministic operators.
+      - layout: code
+        title: The same query on a laptop, with pushdown
+        recall: What does PROJECT 3/7 COLUMNS tell you?
+        lang: python
+        code: |-
+          lazy = (pl.scan_parquet("trips.parquet")
+            .filter(pl.col("payment_type") == "card")
+            .group_by("pickup_zone")
+            .agg(pl.len().alias("trips"))
+            .sort("trips", descending=True).limit(3))
+          # Parquet SCAN, PROJECT 3/7 COLUMNS
+          # SELECTION: payment_type == "card"
+        bullets:
+          - "**DuckDB, Polars, Spark:** identical answers."
+          - "**Eager reads** skip these optimisations."
+          - "**Spilling:** 3M groups ran under a 200 MB limit."
+        takeaway: DuckDB and Polars plan queries like a cluster engine and can work beyond memory, so test one machine first.
+        source: notes/08-distributed-compute.md
+        notes: >-
+          The grouped query over a 640 megabyte file finished in about three seconds. On the same machine a 100 MB limit failed until we set threads to one.
 
   - title: Rules of thumb
     agenda: false
@@ -439,36 +501,37 @@ parts:
       - layout: cards
         title: What to remember
         cards:
+          - title: Measure the tail
+            body: "Percentiles from the client, merged by histogram."
           - title: State the schema
             body: "On first read of any CSV, then convert."
-          - title: Sort for your filter
-            body: "Pushdown needs physical order."
+          - title: Name the anomaly
+            body: "Read, decide, write needs serializable or a lock."
+          - title: Reuse one request ID
+            body: "A timeout does not say whether it applied."
+          - title: Distrust wall clocks
+            body: "Use versions, and fence stale workers."
           - title: Measure one machine
             body: "What a query reads after pruning decides."
-          - title: Partition for backfills
-            body: "Sort for filters, and avoid small files."
-          - title: Assume replicas lag
-            body: "Extract to a watermark, not to now."
-          - title: Read the plan
-            body: "Find the shuffle and the pruning first."
-        takeaway: Most data engineering debates reduce to layout, pruning, shuffles and lag, so learn these mechanisms and measure before you decide.
-        source: notes/05-partitioning-and-replication.md
+        takeaway: Most data engineering debates reduce to layout, isolation, faults and shuffles, so learn these mechanisms and measure before you decide.
+        source: notes/08-distributed-compute.md
         notes: >-
-          From here, pillar 2 takes data out of sources and shapes it for questions, relying on everything we learned about files and lag.
+          From here, pillar 2 takes data out of sources and shapes it for questions, relying on everything we learned about files, lag and retries.
 
       - layout: bullets
         title: Where to go next
         recall: Which pillar builds on these mechanisms first?
         bullets:
-          - "**02 Ingest and modelling:** take data out of sources and shape it for questions."
-          - "**03 Transform and orchestrate:** idempotent builds use the partitions chosen here."
+          - "**02 Ingest and modelling:** CDC and contracts, from a log you now understand."
+          - "**03 Transform and orchestrate:** idempotent builds and zombie tasks."
+          - "**04 Lakehouse and streaming:** table commits and exactly-once."
           - "**Run the code:** one script per chapter in `practice/`."
-          - "**Read:** Kleppmann, DDIA, ch. 3 to 6 and 10; Abadi 2008; COST 2015."
+          - "**Read:** Kleppmann, DDIA, in full, the reading map in the curriculum."
         aside:
           title: The one idea to keep
           accent: "1E3A5F"
           body: Each layer here fails silently, so later stages must not trust it blindly.
         takeaway: Later pillars rely on these mechanisms, starting with how to extract from a lagging source and model what arrives.
-        source: notes/05-partitioning-and-replication.md
+        source: notes/08-distributed-compute.md
         notes: >-
-          Pillar two starts at the source system, where replica lag and log positions become your problem.
+          The book's chapters 11 and 12 pick up where this ends, and the reading map says which note covers each.
