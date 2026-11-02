@@ -4,7 +4,7 @@
 # ///
 """Chapter 5: one observational question, answered six ways, on Fernhill's loyalty club.
 
-Run from anywhere with: uv run ch05_matching_weighting.py   (about two minutes; the first run installs DoWhy)
+Run from anywhere with: uv run ch05_matching_weighting.py   (under a minute; the first run also installs DoWhy)
 
 The table comes from the shared retail generator in 06-applied-analyses/practice. The columns that
 start with true_ are hidden truth. The estimators never see them. They appear only in the sections
@@ -343,6 +343,25 @@ floor = pd.DataFrame(floor)
 print("\nSCORING. ATT gap by world and adjustment set, mean over 20 datasets (standard error of the mean in brackets):")
 ft = floor.groupby(["world", "adjust"], sort=False)[["regression", "entropy", "weights"]]
 print((ft.mean().round(2).astype(str) + " (" + ft.sem().round(2).astype(str) + ")").to_string())
+wide = floor.pivot_table(index=["seed", "adjust"], columns="world", values=["regression", "entropy", "weights"])
+paired = {}
+for est in ["regression", "entropy", "weights"]:
+    dd = (wide[est]["redrawn, with floor"] - wide[est]["redrawn, no floor"]).unstack()
+    paired[est] = {a: f"{dd[a].mean():.2f} ({dd[a].sem():.2f})" for a in ["observed", "observed + engagement"]}
+print("Floor minus no floor, same customers and same noise, paired over 20 datasets (standard error in brackets):")
+print(pd.DataFrame(paired).to_string())
+
+deltas = []
+for s in SEEDS:
+    d = load_club(seed=s)
+    D_, X_ = d.club.to_numpy(), design_matrix(d).to_numpy()
+    u_ = ((d.true_engagement - d.true_engagement.mean()) / d.true_engagement.std()).to_numpy()
+    deltas.append({"before": u_[D_ == 1].mean() - u_[D_ == 0].mean(), "after": u_[D_ == 1].mean() - (entropy_balance(X_[D_ == 0], X_[D_ == 1].mean(0)) * u_[D_ == 0]).sum(),
+                   "same_orders": float(d.prior_orders.mean()), "n": len(d)})
+deltas = pd.DataFrame(deltas)
+print(f"\nEngagement gap in SD over 20 datasets: before {deltas.before.mean():.2f}, after entropy balancing {deltas.after.mean():.2f} (SE {deltas.after.sem():.2f})")
+print(f"Planted 8 pounds per SD times that gap = {8 * deltas.after.mean():.2f}, against the mean entropy gap {runs['Entropy balancing (ATT)'].mean():.2f}")
+print(f"Across datasets: customers {deltas.n.min()} to {deltas.n.max()}, mean prior orders {deltas.same_orders.min():.2f} to {deltas.same_orders.max():.2f}")
 
 # %% SCORING: the bad control
 post = X.assign(sessions=(club.sessions_next_6m - club.sessions_next_6m.mean()) / club.sessions_next_6m.std())
@@ -359,6 +378,15 @@ for s in SEEDS:
                  "with": arm_models(d.spend_next_6m.to_numpy(), D_, Xp)[1] - (d.true_y1 - d.true_y0)[D_ == 1].mean()})
 print("Regression ATT gap over 20 datasets:", pd.DataFrame(gaps).mean().round(2).to_dict())
 
+# the same column in a world where sessions are how the club works: spend gains k pounds per session
+z_ = lambda v: (v - v.mean()) / v.std()
+mu0 = np.exp(1.2 + .15 * z_(np.log1p(club.prior_orders)) + .2 * z_(club.true_engagement)).to_numpy()
+lift = mu0 * (np.exp(.35) - 1)
+k = true_att / lift[D == 1].mean()
+y_med = club.true_y0.to_numpy() + k * club.sessions_next_6m.to_numpy()
+print(f"Mediator world, {k:.1f} pounds per session, true ATT {k * lift[D == 1].mean():.2f}: "
+      f"regression without sessions {arm_models(y_med, D, X)[1]:.2f}, with sessions {arm_models(y_med, D, post)[1]:.2f}")
+
 # %% DoWhy as the cross-check
 import dowhy
 
@@ -366,13 +394,28 @@ frame = X.assign(club=D.astype(bool), spend=y)
 model = dowhy.CausalModel(data=frame, treatment="club", outcome="spend", common_causes=list(X.columns))
 estimand = model.identify_effect(proceed_when_unidentifiable=True)
 print(f"\nDoWhy {dowhy.__version__}. Backdoor set: {len(estimand.get_backdoor_variables())} variables")
-for method, target in [("backdoor.linear_regression", "ate"), ("backdoor.propensity_score_weighting", "ate"), ("backdoor.propensity_score_weighting", "att"),
-                       ("backdoor.propensity_score_matching", "att"), ("backdoor.propensity_score_stratification", "att")]:
+NO_CLIP = {"init_params": {"min_ps_score": 1e-9, "max_ps_score": 1 - 1e-9}}
+for label, method, target, params in [
+        ("linear regression", "backdoor.linear_regression", "ate", {}),
+        ("weighting, defaults", "backdoor.propensity_score_weighting", "ate", {}),
+        ("weighting, defaults", "backdoor.propensity_score_weighting", "att", {}),
+        ("weighting, clipping off", "backdoor.propensity_score_weighting", "ate", NO_CLIP),
+        ("weighting, clipping off", "backdoor.propensity_score_weighting", "att", NO_CLIP),
+        ("matching", "backdoor.propensity_score_matching", "att", {}),
+        ("stratification", "backdoor.propensity_score_stratification", "att", {})]:
     try:
-        e = model.estimate_effect(estimand, method_name=method, target_units=target, test_significance=False)
-        print(f"  {method:45s} {target}  {e.value:8.2f}")
+        # a fresh frame every time: DoWhy writes the score into the model's data, clipped, and the next estimator reuses it
+        fresh = dowhy.CausalModel(data=frame.copy(), treatment="club", outcome="spend", common_causes=list(X.columns))
+        e = fresh.estimate_effect(fresh.identify_effect(proceed_when_unidentifiable=True), method_name=method, target_units=target,
+                                  test_significance=False, method_params=params)
+        print(f"  {label:26s} {target}  {e.value:8.2f}")
     except Exception as ex:
-        print(f"  {method:45s} {target}  FAILED: {type(ex).__name__}: {ex}")
+        print(f"  {label:26s} {target}  FAILED: {type(ex).__name__}: {ex}")
+clip = p.clip(.05, .95)
+print(f"  by hand, scores clipped to 0.05-0.95: ATE {np.average(y[D == 1], weights=1 / clip[D == 1]) - np.average(y[D == 0], weights=1 / (1 - clip[D == 0])):.2f}, "
+      f"ATT {att(y, D, np.where(D == 1, 1.0, clip / (1 - clip))):.2f}; balance after clipped ATT weights, largest |SMD| {smd(X, D, np.where(D == 1, 1.0, clip / (1 - clip)), RAW_SD).abs().max():.2f}")
+print(f"  by hand, matching with no caliper, on log odds: {att(y, D, nearest_neighbour(lp, D, np.inf, True)[0]):.2f}, "
+      f"on the score: {att(y, D, nearest_neighbour(p, D, np.inf, True)[0]):.2f}")
 base = model.estimate_effect(estimand, method_name="backdoor.linear_regression", test_significance=False)
 ref = model.refute_estimate(estimand, base, method_name="random_common_cause", num_simulations=10, random_seed=SEED)
 print(f"  random common cause refuter: {ref.estimated_effect:.2f} becomes {ref.new_effect:.2f}")
@@ -427,10 +470,10 @@ print(f"Smallest gamma with upper p above 0.05: {g_star}")
 print("\nATT if a hidden trait moves spend by gamma pounds per SD and stays delta SD out of balance after weighting:")
 grid_t = pd.DataFrame({f"delta {dl}": {f"gamma {g}": round(y1_mean - y0_mean - g * dl, 1) for g in [5, 10, 20, 30]} for dl in [.1, .25, .5, 1]})
 print(grid_t.to_string())
-Xz = X.copy()
-coef = sm.OLS(y[D == 0], sm.add_constant(Xz[D == 0])).fit().params
-print("\nBenchmarks from what is observed, control-group spend per SD of each covariate, and its imbalance before weighting:")
-print(pd.DataFrame({"pounds_per_sd": coef.drop("const"), "smd_before": smd(X, D, one, RAW_SD)}).round(2).to_string())
+main = [c for c in X.columns if not c.endswith("_sq")]
+coef = sm.OLS(y[D == 0], sm.add_constant(X[main][D == 0])).fit().params
+print("\nBenchmarks from what is observed, control-group spend per SD of each main covariate, and its imbalance before weighting:")
+print(pd.DataFrame({"pounds_per_sd": coef.drop("const"), "smd_before": smd(X, D, one, RAW_SD)[main]}).round(2).to_string())
 
 # SCORING
 u = ((club.true_engagement - club.true_engagement.mean()) / club.true_engagement.std()).to_numpy()
@@ -444,3 +487,22 @@ true_ratio = y1_mean / (y1_mean - true_att)
 print(f"True ratio of means {true_ratio:.3f}. E-value to move the estimate to the null {e_value(ratio):.2f}, to the truth {e_value(ratio / true_ratio):.2f}")
 odds = np.exp(CLUB_DGP["logit_join"]["unobserved_engagement"] * np.abs(u[pairs[:, 0]] - u[pairs[:, 1]]))
 print(f"Hidden odds ratio inside matched pairs from engagement: median {np.median(odds):.2f}, 90th percentile {np.percentile(odds, 90):.2f}, 99th {np.percentile(odds, 99):.2f}")
+
+
+# %% Try it: the answers quoted in the note
+print("\nTry it 1. Caliper width against who is kept, no replacement:")
+sd_lp = lp.std()
+for c_ in [.05, .2, .5, 1.0]:
+    w_, _ = nearest_neighbour(lp, D, c_ * sd_lp, False)
+    print(f"  caliper {c_:.2f} SD: treated kept {int((w_[D == 1] > 0).sum())}, estimate {att(y, D, w_):.2f}, "
+          f"truth for those kept {np.average(te[D == 1], weights=w_[D == 1]):.2f}, largest |SMD| {smd(X, D, w_, RAW_SD).abs().max():.3f}")
+
+keep = [c for c in X.columns if "orders" not in c]
+Xo, xvo = X[keep], X[keep].to_numpy()
+wo = np.ones(len(D))
+wo[D == 0] = entropy_balance(xvo[D == 0], xvo[D == 1].mean(0)) * (D == 1).sum()
+print("\nTry it 2. Hide prior orders from entropy balancing, as if it had never been logged:")
+print(f"  ATT {att(y, D, wo):.2f} against {att(y, D, W['Entropy balancing']):.2f} with it; log_orders left out of balance by {smd(X, D, wo, RAW_SD)['log_orders']:.2f} SD")
+print(f"  benchmark {coef['log_orders']:.2f} pounds per SD times that gap = {coef['log_orders'] * smd(X, D, wo, RAW_SD)['log_orders']:.2f}")
+
+print(f"\nTry it 3. E-value for a ratio of 1.10: {e_value(1.10):.2f}; for a ratio of 2.00: {e_value(2.0):.2f}")

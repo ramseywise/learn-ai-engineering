@@ -47,7 +47,8 @@ print(f"true effect on log spend {TRUE_COUPON}, so a lift of {np.exp(TRUE_COUPON
 big = simulate(2_000_000, np.random.default_rng(1))
 no_coupon = np.exp(big.log_spend - TRUE_COUPON * big.coupon)
 true_gbp = ((np.exp(TRUE_COUPON) - 1) * no_coupon).mean()
-print(f"true average effect in pounds, all customers: {true_gbp:.2f}")
+true_gbp_att = ((np.exp(TRUE_COUPON) - 1) * no_coupon)[big.coupon == 1].mean()
+print(f"true average effect in pounds: all customers {true_gbp:.2f}, customers who got a coupon {true_gbp_att:.2f}")
 
 # %% one dataset, four estimators
 FORMULAS = {
@@ -147,7 +148,7 @@ r = np.random.default_rng(41)
 t = r.uniform(1, 60, 800)
 truths = {"Truth rises then falls": lambda x: 0.14 * x - 0.0024 * x**2,
           "Truth rises then flattens": lambda x: 2.0 * (1 - np.exp(-x / 15))}
-grid = pd.DataFrame({"t": np.linspace(1, 60, 200)})
+grid = pd.DataFrame({"t": np.linspace(t.min(), t.max(), 200)})  # patsy's bs() will not extrapolate past its knots
 curves = {}
 for label, f in truths.items():
     d = pd.DataFrame({"t": t, "y": f(t) + r.normal(0, 0.5, t.size)})
@@ -162,9 +163,9 @@ for label, f in truths.items():
         bm = smf.ols("y ~ t + I(t**2)", bd).fit()
         boots.append(-bm.params["t"] / (2 * bm.params["I(t ** 2)"]))
     lo, hi = np.percentile(boots, [2.5, 97.5])
-    fall_q = q.predict(pd.DataFrame({"t": [60.0]})).iloc[0] - q.predict(pd.DataFrame({"t": [peak]})).iloc[0]
+    fall_q = q.predict(pd.DataFrame({"t": [60.0]})).iloc[0] - q.predict(pd.DataFrame({"t": [min(peak, 60.0)]})).iloc[0]
     print(f"{label}: t^2 coef {b2:.5f} (p {q.pvalues['I(t ** 2)']:.1e}); quadratic peak at {peak:.1f} "
-          f"[{lo:.1f}, {hi:.1f}]; quadratic says peak-to-60 change {fall_q:.2f}, truth {f(60.0) - f(peak):.2f}; "
+          f"[{lo:.1f}, {hi:.1f}]; quadratic says peak-to-60 change {fall_q:.2f}, truth {f(60.0) - f(min(peak, 60.0)):.2f}; "
           f"R2 quad {q.rsquared:.3f}, spline {s.rsquared:.3f}")
     curves[label] = (d, q.predict(grid), s.predict(grid), f(grid.t), peak)
 
@@ -256,6 +257,7 @@ rho_hat = np.corrcoef(R, G)[0, 1]
 lhs = G[R].mean() - G.mean()
 rhs = rho_hat * np.sqrt((1 - f) / f) * G.std()
 print(f"N {N:,}, n {n:,}, f {f:.4f}, rho {rho_hat:.5f}, population mean {G.mean():.5f}, sample mean {G[R].mean():.5f}")
+print(f"response rate with the trait {R[G == 1].mean():.4f}, without it {R[G == 0].mean():.4f}")
 print(f"actual error {lhs:.10f}; rho x sqrt((1-f)/f) x sigma {rhs:.10f}; difference {lhs - rhs:.1e}")
 
 # %% effective sample size: what is that big sample worth?
@@ -305,7 +307,7 @@ for y, (e, s, c) in enumerate([(ex, ex_se, cs.BLUE), (est_sel, sel_se, cs.ORANGE
     ax.plot([e - 1.96 * s, e + 1.96 * s], [y, y], color=c, lw=2)
     ax.plot(e, y, "o", color=c, ms=8)
 ax.axvline(G.mean(), color=cs.INK, lw=1.5)
-ax.annotate("Population truth", (G.mean(), 1.42), ha="center", color=cs.INK, fontsize=10)
+ax.annotate("Population truth", (G.mean(), 1.42), xytext=(6, 0), textcoords="offset points", ha="left", color=cs.INK, fontsize=10)
 ax.set_yticks([0, 1], labels)
 ax.set_ylim(-0.5, 1.7)
 ax.set_xlabel("Estimated share, with 95% interval")
@@ -336,3 +338,25 @@ for label, idx in samples.items():
     rows.append(dict(sample=label, n=idx.size, share_keen=keen[idx].mean(), slope=m.params[1], sample_R2=m.rsquared,
                      sample_rmse=np.sqrt(m.mse_resid), population_rmse=np.sqrt(np.mean((y - pred) ** 2))))
 print(pd.DataFrame(rows).round(3).to_string(index=False))
+
+# %% Try it: answers
+# 1. Set the coupon's true effect to zero. What does each estimator now report?
+r = np.random.default_rng(91)
+placebo = {k: [] for k in ["log_spend ~ coupon + tenure", "log_spend ~ coupon + tenure + I(tenure**2)"]}
+for _ in range(300):
+    d = simulate(800, r)
+    d["log_spend"] -= TRUE_COUPON * d.coupon
+    for f in placebo:
+        m = smf.ols(f, d).fit()
+        placebo[f].append((m.params["coupon"], m.pvalues["coupon"] < 0.05))
+for f, v in placebo.items():
+    est, sig = zip(*v)
+    print(f"{f}: mean coupon {np.mean(est):.3f}, significant at 5% in {np.mean(sig):.1%} of datasets")
+
+# 2. Meng's two worked numbers, from the formula.
+print(f"f=0.5, rho=0.05, N=230m: n_eff {n_eff(0.5, 0.05, 230_000_000):.0f}")
+print(f"f=0.01, rho=0.005, N=231,557,000: n_eff {n_eff(0.01, 0.005, 231_557_000):.0f}, "
+      f"Z {np.sqrt(231_557_000 * 0.01) * np.sqrt(99 * 0.005**2 / (1 - 99 * 0.005**2)):.2f}")
+
+# 3. Uncorrelated predictors: the short model is no longer biased in b1.
+print(pd.DataFrame([explain_vs_predict(n, rho=0.0, reps=1000) for n in (30, 300)]).round(3).to_string(index=False))

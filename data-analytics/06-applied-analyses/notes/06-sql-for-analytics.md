@@ -453,4 +453,4 @@ Exercises use `practice/ch06_sql_analytics.py`, after the `setup` section. For a
 
 ## Next
 
-This closes the applied analyses, and with them data analytics. All six chapters kept to one shape: a question, a dataset, a check against something known, and a recommendation with its limits. [Data science](../../../data-science/README.md) takes the modelling further, starting with machine learning.
+All six chapters so far kept to one shape: a question, a dataset, a check against something known, and a recommendation with its limits. [Survival and event history](07-survival-and-event-history.md) keeps that shape for a harder kind of question: when will a customer leave, given that many of them haven't yet?

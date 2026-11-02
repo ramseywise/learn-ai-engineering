@@ -357,4 +357,4 @@ A guardrail suite keeps safety behaviour from regressing silently ([12](12-failu
 
 ## Next
 
-[../README.md](../README.md): back to the pillar's chapter map.
+[14 — Calibrating Judges with Checks and Critiques](14-calibrating-judges-with-checks-and-critiques.md): this case study's cross-checks disagreed for reasons worth reading, and 14 turns that reading into a procedure.

@@ -156,6 +156,8 @@ def compare(data, fit, truth):
     print(sampler_report(idata, names))
     print(pd.DataFrame({"parameter": names, "truth": truth, "MixedLM": variance_parts(fit),
                         "PyMC": [float(idata.posterior[k].mean()) for k in names]}).round(2).to_string(index=False))
+    rho = idata.posterior["rho"].to_numpy().ravel()
+    print(f"PyMC rho, 90% interval: {np.percentile(rho, 5):.2f} to {np.percentile(rho, 95):.2f}")
     blup = np.array([fit.random_effects[g].to_numpy() for g in sorted(data["user"].unique())])
     return blup, idata.posterior["u"].mean(("chain", "draw")).to_numpy()
 
@@ -202,6 +204,13 @@ for correlated in [False, True]:
     print(f"market effect correlated with discount: {correlated} (true within-market effect 2.0)")
     print(pd.DataFrame({"estimator": labels, "mean_estimate": est.mean(0), "median_SE": np.nanmedian(se, 0),
                         "actual_sd": est.std(0), "SE_missing": np.isnan(se).sum(0)}).round(3).to_string(index=False), "\n")
+
+def within_slope(d):
+    xw, yw = (d[c] - d.groupby("market")[c].transform("mean") for c in ("x", "y"))
+    return (xw * yw).sum() / (xw ** 2).sum()
+
+spread = np.std([within_slope(simulate_discount(s, False)) for s in range(10_000)])
+print(f"the within-market estimator alone, 10,000 datasets: actual sd {spread:.3f}; theory 5 / sqrt(40 x 7) = {5 / np.sqrt(280):.3f}")
 
 # %% ab segments
 def pool(y, se, prior="halfnormal", scale=2.0, X=None):
@@ -422,7 +431,12 @@ print(f"multilevel treatment log-odds, beta:     {float(conv.posterior['beta'].m
 big = np.random.default_rng(4)
 a_pop = -3.0 + 0.7 * big.normal(size=2_000_000)
 b_pop = 0.15 + 0.15 * big.normal(size=2_000_000)
-print(f"from the true parameters: cluster-specific 0.150, population-averaged {logit(expit(a_pop + b_pop).mean()) - logit(expit(a_pop).mean()):.3f}")
+def averaged(a, b):
+    return logit(expit(a + b).mean()) - logit(expit(a).mean())
+
+print(f"true parameters, effect varying by market: within a market 0.150, population-averaged {averaged(a_pop, b_pop):.3f}")
+print(f"true parameters, effect fixed at 0.15:     within a market 0.150, population-averaged {averaged(a_pop, 0.15):.3f}")
+print(f"common outcome (intercept -1, sd 2, effect 0.5): within a market 0.500, population-averaged {averaged(-1 + 2 * big.normal(size=2_000_000), 0.5):.3f}")
 
 # %% try it
 print(f"exercise 1: weight on a 20-user market's own mean {tau2 / (tau2 + sigma2 / 20):.2f}")
@@ -450,8 +464,8 @@ cs.save(fig, "bayes-multilevel-shrinkage.png")
 
 # %% figure scenarios
 ratios = scen["ratio"].to_dict()
-ratios["one small segment that truly is an outlier"] = np.sqrt((pool_err ** 2).mean()) / np.sqrt((raw_err ** 2).mean())
-ratios["small segments, pooled to the wrong centre"] = by_size(plain)[1] / by_size([l[1] for l in linked])[1]
+ratios["one small true outlier, that segment's error"] = np.sqrt((pool_err ** 2).mean()) / np.sqrt((raw_err ** 2).mean())
+ratios["small segments pooled to the wrong centre"] = by_size(plain)[1] / by_size([l[1] for l in linked])[1]
 ratios["4 segments, tau 2.0, prior far too tight"] = float(few.query("true_tau == 2 and prior == 'half-normal(0.25)'")["ratio"].iloc[0])
 values = pd.Series(ratios).sort_values(ascending=False)
 fig, ax = plt.subplots(figsize=(8, 4.4))
@@ -463,8 +477,9 @@ for label, v in values.items():
     ax.annotate(f"{v:.2f}", (v, label), xytext=(9 if right else -9, 0), textcoords="offset points",
                 ha="left" if right else "right", va="center", color=cs.INK, fontsize=9)
 ax.set_xlim(0, max(1.1, values.max() + .15)); ax.grid(False)
-ax.set_xlabel("RMSE of pooled estimates as a share of per-segment RMSE (1.00 means no gain, above it pooling hurts)")
-ax.set_title("Pooling gains most on noisy, similar segments and can lose on the wrong ones")
+ax.annotate("no gain", (1, 1), xycoords=("data", "axes fraction"), xytext=(0, 3), textcoords="offset points", ha="center", color=cs.SECONDARY, fontsize=9)
+ax.set_xlabel("Pooled RMSE as a share of per-segment RMSE")
+ax.set_title("Where partial pooling helps and where it hurts", pad=16)
 cs.save(fig, "bayes-multilevel-scenarios.png")
 
 # %% figure few groups

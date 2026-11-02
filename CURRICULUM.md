@@ -1,273 +1,108 @@
-# Curriculum — learn-ai-engineering
+# Learn AI Engineering: program curriculum
 
-A coordinator, not a syllabus. This file maps the subjects, names the prerequisites, and
-routes you to the right starting point. Per-subject `CURRICULUM.md` files hold the
-sequenced learning paths for each domain.
+> A practical curriculum for understanding data, machine learning, large language models, and the systems that make them useful and reliable.
 
-> **Self-learner?** Start with the [Learning Paths](#learning-paths) section below.
-> **Interview prep?** Interview guides and coding drills live in the private
-> [sisyphus](https://github.com/ramseywise/sisyphus) repo — start at
-> [interviewing/guides/00-start-here.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
+This is the program-level syllabus. It helps you choose a direction and connects the subject courses. Each subject curriculum is the authoritative workbook for its own learning objectives, chapters, decks, drills, labs, and sources.
 
----
+## Program outcomes
 
-## Subject-area map
+By working through a path in this program, you will be able to:
 
-| Subject | CURRICULUM.md | Prerequisites | Structure |
+1. Write reliable Python, SQL, and TypeScript for data and AI work.
+2. Prepare data, quantify uncertainty, evaluate evidence, and make a defensible recommendation.
+3. Train, assess, and explain predictive models while recognising their limits.
+4. Build data pipelines whose outputs are reproducible, observable, governed, and useful downstream.
+5. Explain how LLMs work and build retrieval, agentic, evaluation, and observability systems around them.
+6. Engineer AI applications that are testable, secure, cost-aware, and suitable for production use.
+
+## How to use this curriculum
+
+Each subject is organised as a course workbook. A pillar is a unit; its notes are chapters, slides are lecture and recall material, and practice folders contain drills and labs. Work through a unit in this rhythm:
+
+1. Read the chapters and reproduce their examples.
+2. Review the deck and explain the ideas from memory.
+3. Complete the `Try it` exercises and focused drills.
+4. Complete a lab or applied task.
+5. Keep the unit's mastery evidence—a working artifact plus assumptions, checks, and limitations—in a portfolio.
+
+Librarian can present these same materials as lessons, decks, practice, and progress. This document deliberately describes learning outcomes rather than repository operations or build commands.
+
+## Subject courses
+
+| Course | What you learn | Recommended preparation | Curriculum |
 |---|---|---|---|
-| Programming | [programming/CURRICULUM.md](programming/CURRICULUM.md) | None — entry point | Three tracks (Python 01–04, SQL 01–10, TypeScript 01–09), partly in parallel; practice drills live in [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md) |
-| Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | Programming: Python 01–04 | 6 pillars: Python for data → probability and statistics → experimentation and causality → Bayesian analysis → visualisation and storytelling → applied analyses |
-| Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | 7 pillars: storage and compute foundations (*Designing Data-Intensive Applications*) → ingest and modelling → transform and orchestrate → warehouse, lakehouse and streaming → quality and observability → ML platform → architecture and governance. The DataTalks zoomcamps sit under each pillar's `practice/` |
-| Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree: classical-ML core, then the neural-net, NLP, and time-series and recommender arcs. From-scratch (micrograd → nanoGPT) lives in generative-ai 09. Bayesian methods live in data-analytics |
-| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 9 pillars (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications → Eval → LLMs from scratch) |
-| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 5-pillar sequential (prompt → context → harness → loop → graph), plus inference as the substrate and two cross-cuts: multimodal, safety and security. Evaluation lives in [generative-ai/08-eval](generative-ai/08-eval/README.md) |
+| Programming | The Python, SQL, and TypeScript fluency needed to read, test, and build technical systems. | None | [Course curriculum](programming/CURRICULUM.md) |
+| Data analytics | Turn messy data into statistically honest, decision-ready analysis. | Python foundations; SQL alongside it | [Course curriculum](data-analytics/CURRICULUM.md) |
+| Data science | Fit, evaluate, explain, and apply classical, neural, NLP, time-series, and recommender models. | Python and data-analytics foundations | [Course curriculum](data-science/CURRICULUM.md) |
+| Data engineering | Build the storage, ingestion, transformation, quality, serving, and governance systems that data products rely on. | Python, SQL, and data-analytics foundations | [Course curriculum](data-engineering/CURRICULUM.md) |
+| Generative AI | Understand LLMs; build retrieval, agents, evaluation, observability, alignment, and applications. | Python helps; data and ML enrich the later units | [Course curriculum](generative-ai/CURRICULUM.md) |
+| AI engineering | Build reliable AI products through prompt, context, harness, loop, graph, inference, multimodal, and safety engineering. | Generative-AI fundamentals | [Course curriculum](ai-engineering/CURRICULUM.md) |
 
-**Reading the table:** "Prerequisites" are recommendations, not gates. You can start
-generative-ai cold — you'll just revisit data-science concepts as they come up rather than
-having them in memory already.
+## Learning paths
 
----
+### Path A — Data analyst
 
-## Learning Paths
+**Goal:** answer business questions with trustworthy analysis and useful communication.
 
-### Path A: AI Engineering (recommended for new AI engineers)
+1. [Programming](programming/CURRICULUM.md): Python foundations and SQL.
+2. [Data analytics](data-analytics/CURRICULUM.md): complete all six units and retain the applied-analysis portfolio.
+3. Optional depth: [Data science](data-science/CURRICULUM.md) for predictive modelling, or [Data engineering](data-engineering/CURRICULUM.md) for durable pipelines.
 
-Goal: build reliable, production-grade LLM systems.
+### Path B — Data scientist
 
-1. **Python fluency** — [`programming/python/`](programming/python/README.md) 01–03, then 04 (6–8 weeks)
-   Language, engineering idioms (types, async, packaging), then pandas. Add TypeScript 01–09 if
-   you'll build in TS. Skip what you already know: each module's exercises double as a placement test.
+**Goal:** turn data into validated predictive models and model-driven decisions.
 
-2. **What LLMs are** — `generative-ai/01-llm-fundamentals/` (3–4 weeks)
-   Build a tiny GPT (Karpathy's `nn-zero-to-hero`), read the attention paper,
-   understand RLHF and prompting. This is the theory foundation everything else rests on.
+1. [Programming](programming/CURRICULUM.md): Python and SQL.
+2. [Data analytics](data-analytics/CURRICULUM.md): Units 01–03 as the essential foundation; Unit 04 and Unit 06 provide valuable depth.
+3. [Data science](data-science/CURRICULUM.md): work through the core model-building units, then choose NLP, time series, or recommenders to suit your work.
+4. Optional depth: [Data engineering](data-engineering/CURRICULUM.md) for production data and ML platforms.
 
-3. **Engineering discipline** — `ai-engineering/` pillars 01–06 (4–6 weeks)
-   Prompt → context → harness → loop → graph → eval. Six numbered foundations.
-   Each has a depth README, a cleaned note, and an interview guide summary.
+### Path C — Data engineer
 
-4. **Build things** — `generative-ai/02-rag-retrieval/` through `07-agentic-applications/` (4–6 weeks)
-   The application layer: RAG (the first killer app pattern), agentic foundations and
-   frameworks, RL/alignment, observability, then full agentic applications.
-   After the ai-engineering discipline, the code patterns will make sense structurally.
+**Goal:** make trustworthy data available for analytics, ML, and AI applications.
 
-Interview guide: start at [interviewing/guides/00-start-here.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md),
-pillars 0–4 are the core loop for this path.
+1. [Programming](programming/CURRICULUM.md): Python and SQL.
+2. [Data analytics](data-analytics/CURRICULUM.md): Unit 01, then the statistical and experimentation foundations in Units 02–03.
+3. [Data engineering](data-engineering/CURRICULUM.md): complete the pillars in order; revisit quality and governance during every project.
+4. Optional depth: [Data science](data-science/CURRICULUM.md) for ML-platform users, or [Generative AI](generative-ai/CURRICULUM.md) for LLM-data systems.
 
----
+### Path D — AI engineer
 
-### Path B: Data Engineering
+**Goal:** build reliable, evaluated LLM-powered applications.
 
-Goal: build data pipelines and ML infrastructure.
+1. [Programming](programming/CURRICULUM.md): Python; add TypeScript when it is your application language.
+2. [Generative AI](generative-ai/CURRICULUM.md): LLM fundamentals, retrieval, agents, observability, and evaluation.
+3. [AI engineering](ai-engineering/CURRICULUM.md): prompt, context, harness, loop, and graph engineering; then inference, multimodal, and safety.
+4. [Data analytics](data-analytics/CURRICULUM.md): Units 02–03 strengthen experiment design and result interpretation.
 
-1. **Python and SQL fluency** — [`programming/`](programming/README.md): Python 01–04 and SQL 01–10
+### Path E — Full-stack data and AI
 
-2. **Data Engineering sequence** — `data-engineering/CURRICULUM.md`
-   Ingest → transform → orchestrate → warehouse → monitor → feature-serve.
-   Follows the DataTalks modules (Docker, workflow, DWH, batch, streaming) + MLOps track.
+**Goal:** understand the entire journey from raw data to a production AI product.
 
-3. **Optional depth** — `data-science/CURRICULUM.md` for the ML side of data pipelines
-   (feature engineering, model evaluation), or `generative-ai/` for LLM-native pipelines.
+1. [Programming](programming/CURRICULUM.md)
+2. [Data analytics](data-analytics/CURRICULUM.md)
+3. [Data science](data-science/CURRICULUM.md)
+4. [Data engineering](data-engineering/CURRICULUM.md)
+5. [Generative AI](generative-ai/CURRICULUM.md)
+6. [AI engineering](ai-engineering/CURRICULUM.md)
 
-Interview guide: [interviewing/guides/8-data-eng-mlops/00-overview.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md).
+This broad path is intentionally iterative: return to earlier courses as later projects reveal gaps.
 
----
+## Portfolio standard
 
-### Path C: Full-Stack Data
+Completion is demonstrated by artifacts, not by reading alone. A well-rounded portfolio includes:
 
-Goal: broad foundation across the full data/AI stack.
+- a small tested Python or TypeScript program and a set of analytical SQL queries;
+- a reproducible analysis with uncertainty, a decision memo, and an honest visualisation;
+- a predictive-model or data-engineering project with validation and monitoring evidence;
+- an LLM application with an evaluation set, traces or measurements, a safety boundary, and an explanation of trade-offs.
 
-1. `programming/CURRICULUM.md` — Python, SQL, TypeScript
-2. `data-analytics/CURRICULUM.md` — analytics and statistics basics
-3. `data-science/CURRICULUM.md` — classical ML, stats, model evaluation (tree-shaped: go deep on 1–2 branches)
-4. `data-engineering/CURRICULUM.md` — pipelines and infrastructure
-5. `generative-ai/` + `ai-engineering/` — the LLM application and engineering layer
+Choose artifacts that match your path; the subject curricula define the unit-level standard.
 
-This path takes 6–12 months at 10–15 hours/week. It's broad first, deep second — plan
-to revisit each subject's depth READMEs once you've seen the whole landscape.
+## Sources and depth
 
-Interview guide: all 10 pillars in [interviewing/guides/00-start-here.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md)
-are relevant; prioritize by role (see the role × topic matrix in [interviewing/README.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/README.md)).
+Each course maintains its own source map. Start with the course curriculum, then use the pillar's `references.md` to find books, papers, videos, courses, and primary documentation behind a specific chapter. Use the notes and labs as the primary learning surface; use references to deepen a question that practice has made concrete.
 
----
+## Where to go next
 
-## Three-layer architecture
-
-This repo has three layers that each serve a different purpose:
-
-| Layer | What it is | Where |
-|---|---|---|
-| **Depth** | Hands-on code, notebooks, course material — the actual learning | Subject dirs (`programming/`, `data-analytics/`, `generative-ai/`, `ai-engineering/`, etc.) |
-| **Summary** | Compressed exam-prep view: concepts, trade-offs, question banks | sisyphus `interviewing/guides/` (10 pillars + Pillar 0 programming) |
-| **Reference** | PDFs, papers, book chapters — theory to anchor the code | `readings/` and `sources/` inside each pillar (see the README's Readings list) |
-
-**How to use the three layers:** Go deep first (subject dirs + CURRICULUM.md). Use the
-summary layer (interview guides) as self-tests after each pillar, not as the primary
-learning surface. Use readings to anchor specific concepts when a code exercise leaves a
-"why does this work?" gap.
-
-The layers point at each other — every interview guide's `00-overview.md` has a resource
-map that links back to the depth dirs and the readings that support it.
-
----
-
-## Definition of done
-
-The curriculum is **structurally frozen** as of 2026-10-28: the six subjects and their
-pillars above are the full set. New material goes into an existing pillar; a new top-level
-folder or pillar needs a reason written here first.
-
-**Decision 2026-11-02: LLMs from scratch moves to generative-ai as pillar 09.** It was filed as a second pillar 04 beside agentic frameworks, so it takes the next free number and reads after 01 LLM fundamentals. data-science keeps its folder numbers, with 04 as a gap.
-
-**Decision 2026-11-02: evaluation moves to generative-ai.** `ai-engineering/06-eval` is now
-[`generative-ai/08-eval`](generative-ai/08-eval/README.md), its own pillar beside
-[06-observability](generative-ai/06-observability/README.md). The ledger home key stays `eval`.
-ai-engineering keeps its other pillar numbers, so it runs 01 to 05, then 07 to 09.
-
-**Decision 2026-11-01: every subject is pillars, and a note is a chapter.** data-analytics,
-data-science and data-engineering move from flat `notes/` to `<NN-pillar>/` folders with raw courses
-under `practice/`, reversing the flat shape chosen 2026-10-31. Their PDFs stay in one shared
-`sources/` per subject, since books span pillars. `programming/python/04-python-for-data` returns to
-`data-analytics/01-python-for-data-analysis` with chapters written over the notebooks, reversing part
-of the 2026-10-29 decision. Python is the language of the data areas and generative-ai. ai-engineering
-labs come in both TypeScript and Python, side by side, so the two can be compared. See
-[CONTENT-PLAN.md](CONTENT-PLAN.md), [PILLAR-LAYOUT](ai-engineering/PILLAR-LAYOUT.md) and the
-[deck spec](.claude/skills/slides/references/deck-spec.md).
-
-**Decision 2026-10-29: `programming/` added as a sixth subject.** Python, SQL and TypeScript
-are prerequisites for every other subject, but the repo only had seven pandas notebooks
-(`data-analytics/python-basics/`) and no SQL or TypeScript at all. Language fluency doesn't belong in
-any one pillar, and sisyphus `drills/` is practice, not teaching. So `programming/` holds the
-course (notes, exercises, solutions), sisyphus holds the drills, and librarian shows both.
-`python-basics/` moved to `programming/python/04-python-for-data/` along with the restored
-McKinney notebooks and the Michigan/Wesleyan scripts.
-
-**Decision 2026-10-31: `ai-engineering/07-inference-engineering/` added as a seventh
-ai-engineering pillar.** The readings backlog held a whole book on AI systems performance
-(20 chapters plus a checklist), Huyen's inference-optimization chapter and a steady flow of
-serving papers. None of the six layers could hold GPU kernels, KV-cache management or
-prefill/decode disaggregation without becoming a hardware course, and moving the material
-out of the repo would have dropped it. Inference sits under the six layers as their
-substrate: it prices every call they make. The freeze is relaxed in one direction only: a
-new pillar is added when the readings triage finds a body of sources with no home.
-
-**Decision 2026-10-31: `ai-engineering/08-multimodal-engineering/` and
-`ai-engineering/09-safety-and-security/` added.** Both were already watch topics in
-`scripts/papers/potw.py`: off-syllabus buckets kept "so it is still in the ledger when the pillar
-arrives". By 2026-10-31 the ledger held 205 multimodal and 83 safety papers with no home. A
-roadmap.sh comparison found the same two gaps: the repo had nothing on image or document input,
-multimodal RAG or speech outside one voice-agent note, and its security material was split across
-three notes, with no threat modelling, guardrail models or red-teaming tools. Both are cross-cuts,
-not layers: each changes all six foundations, so they are read after them. Alignment research
-(scheming, alignment faking) and interpretability stay parked. The engineering pillar covers
-the application side. Two smaller gaps from the same comparison went into existing homes:
-open-weight models and local inference became a planned note in `generative-ai/01`, and LLM
-embeddings as features (classification, clustering, anomaly detection) a planned note in
-`data-science`.
-
-A pillar is **done** when all five hold:
-
-1. **README** — what the pillar teaches, the order to read it in, prerequisites.
-2. **Condensed** — no vendored snapshot left inside it. Upstream courses are synthesised into
-   `notes/` with sources cited (note frontmatter or a `references.md`), then the snapshot is
-   deleted and its row moves to [Removed snapshots](#removed-snapshots) below.
-3. **Runnable or labelled** — each notebook or practice lab runs offline, or says what it
-   needs (API key, GPU, service).
-4. **Imports cleanly** — `make import-courses` in librarian brings it in with no broken
-   relative links.
-5. **Cross-linked** — points to its sisyphus interview guide (the summary layer) and, once
-   they exist, to the drills that practise it (drills name their `concepts`).
-
-### Status
-
-Every pillar now has a README, `references.md`, `notes/` written as chapters, `slides/` (deck.yaml, .pptx, .pdf) and `practice/`. `data-analytics`, `data-science` and `data-engineering` share a subject-level `sources/`. Numbers below are chapters.
-
-| Subject | Pillars | Left to do |
-|---|---|---|
-| ai-engineering | 01 prompt 12, 02 context 14, 03 harness 10, 04 loop 10, 05 graph 16, 07 inference 9, 08 multimodal 7, 09 safety 6 | Labs run in TypeScript and Python on a stub and a local fake server, not yet against a live API |
-| generative-ai | 01 LLM fundamentals 14, 02 RAG 12, 03 agentic foundations 7, 04 frameworks 7, 05 RL 14, 06 observability 6, 07 applications 6, 08 eval 13, 09 LLMs from scratch 3 | Illustrative code in some chapters not run |
-| data-analytics | 01 Python for data 7, 02 probability and statistics 6, 03 experimentation 4, 04 Bayesian 6, 05 visualisation 5, 06 applied analyses 6 | Several visualisation and credit books cited but not read in full |
-| data-engineering | 01 foundations 8, 02 ingest and modelling 4, 03 transform and orchestrate 5, 04 warehouse, lakehouse and streaming 5, 05 quality 3, 06 ML platform 5, 07 architecture and governance 2 | Cloud and cluster code illustrative; zoomcamps not re-run |
-| data-science | 01 classical ML 10, 02 deep learning 6, 03 NLP 7, 05 time series and recommenders 3 | See its [known gaps](data-science/CURRICULUM.md#known-gaps) |
-| programming | Python, SQL and TypeScript tracks, with decks used as flashcards in librarian | None |
-
-Remaining across subjects: run every notebook offline or label it (check 3), and tag drills with `concepts` (check 5). Chapter counts drift; `make chapter-check PILLAR=<path>` is the check.
-
----
-
-## Sources
-
-Upstream material copied into this repo, recorded so its origin and license aren't lost. Notes
-written here cite their own sources in frontmatter or a pillar `references.md`; this section covers
-only material that was **copied in**.
-
-### Vendored snapshots
-
-ZIP downloads of other people's public repositories (hence the `-main` / `-master` suffixes):
-read-reference material, not authored here, and tracked in git. They were downloaded as ZIPs, so
-no nested `.git/config` records the upstream. Each URL was resolved by matching directory
-contents, not names. Verified 2026-08-14: no third-party or hand-authored edits inside them.
-Each one is condensed into notes and then deleted (see [Definition of done](#definition-of-done)).
-
-None remain. Every snapshot listed here on 2026-08-14 was condensed into notes and removed by
-2026-10-31; each now has a row in [Removed snapshots](#removed-snapshots).
-
-### Removed snapshots
-
-| Directory | Upstream | Removed | What was kept |
-|---|---|---|---|
-| `ai-engineering/01-prompt-engineering/Prompt-Engineering-Guide-main` (originally `01-prompt/`) | https://github.com/dair-ai/Prompt-Engineering-Guide (MIT) | 2026-10-28 | Its English `pages/` content was merged into `ai-engineering/01-prompt-engineering/notes/`, with sources in each note's frontmatter. The notebooks were kept as `ai-engineering/01-prompt-engineering/notebooks/` and the lecture PDF as `notes/dair-prompt-engineering-lecture.pdf` (deleted 2026-10-30, superseded by `01-prompt-engineering/slides/`). The upstream `img/` folder was restored on 2026-10-28 (upstream commit `5767372`) as `sources/dair-prompt-engineering-guide/images/`. The Next.js site code and translations were dropped. Re-clone the upstream repo if you need them. |
-| `ai-engineering/03-harness/learn-harness-engineering-main` (gitignored, never tracked) | https://github.com/walkinglabs/learn-harness-engineering (MIT) | 2026-10-28 | English lectures L01–L12 and projects 01–06 were folded into `ai-engineering/03-harness/notes/` (practice track `notes/practice/P1–P4` plus additions to notes 01, 02, 05, 07, 08). Templates from the course and the harness-creator skill were merged into `03-harness/templates/` (removed 2026-10-31: key snippets inline in notes 06, 09, 10; the rest is on the galactus handoff list, in history at `6ee939f`). The practice track became notes 09–10 (the exercises built on it were deleted 2026-10-31). Mapping and dropped material are in `03-harness/references.md`. The Electron projects, translations, site tooling and the rest of the skill were dropped. L13 and project 07 (loop engineering) were set aside for `04-loop/`. |
-| `ai-engineering/readings/ai-agent-book-main` (vendored 2026-07-30) | https://github.com/bojieli/ai-agent-book (Apache-2.0) | 2026-10-28 | Bojie Li, *AI Agents in Depth*. The English chapters were synthesised into the pillar notes, each citing its chapter upstream: ch. 1 → `generative-ai/03-agentic-foundations/notes/01-agent-fundamentals.md` and `03-harness-engineering` note 01; ch. 2 → `01-prompt-engineering` notes 02, 10 and `02-context-engineering` notes 02, 05; ch. 3 → `02-context-engineering` notes 04, 06 and `05-graph-engineering` note 11; ch. 4–5 → `03-harness-engineering` notes 01–07; ch. 6 → `generative-ai/07-agentic-applications/notes/03-real-time-multimodal-agents.md`; ch. 7 → `06-eval`; ch. 8 → `generative-ai/05-RL/notes/05-post-training-for-agents.md`; ch. 9 → `04-loop-engineering` note 08 (upstream has since renumbered its chapters; these are the current numbers); ch. 10 → `05-graph-engineering` notes 05, 07. The reference answers were condensed into `interviewing/guides/*/interview-guide.md`. Labs that run offline were copied, translated where needed. On 2026-10-31 the BM25, Elo-leaderboard, trajectory-verifier and self-modifying-agent labs were folded into worked examples (`generative-ai/02-rag-retrieval/notes/01-rag-pipeline.md`, `06-eval` note 05, `04-loop-engineering` note 08) and their copies deleted; they are linked upstream. `generative-ai/05-RL/practice/01-q-learning-treasure-hunt/` remains. Every other lab is linked upstream from the note it supports, because it needs an API key, a GPU or hardware, or is in Chinese. Translations, Chinese originals, site tooling and the local `READING-MAP.md` were dropped. |
-| `ai-engineering/02-context/Context-Engineering-main` | https://github.com/davidkimai/Context-Engineering | 2026-10-28 | Synthesized into `02-context-engineering/notes/01–13` + `99` (speculative appendix). Its `templates/` and `notebooks/` were kept until 2026-10-31, then folded into the notes and deleted (in history at `6ee939f`). Cited paper PDFs are in `sources/`, links in `references.md`. |
-| `ai-engineering/05-graph-engineering/notebooks/knowledge-graphs-for-rag` | https://github.com/kaushikacharya/Knowledge_Graphs_for_RAG | 2026-10-31 | Folded into `05-graph-engineering/notes/09–11` (in history at `6ee939f`, including the 22 MB `neo4j_L7.dump`). |
-| `generative-ai/02-rag-retrieval/Deeplearning.ai-RAG-main` | https://github.com/MohammadWasiq0786/Deeplearning.ai-RAG (MIT) | 2026-10-31 | Condensed into `02-rag-retrieval/notes/02–07`; 6 figures kept in `sources/images/`. The slide decks and certificate were dropped. |
-| `generative-ai/03-agentic-foundations/AgenticAIFrameworks-master` | https://github.com/adv-11/AgenticAIFrameworks | 2026-10-31 | Condensed into `03-agentic-foundations/notes/05-framework-survey.md`. A nested `.github/workflows/pdd-secrets-dispatch.yml` that posts repo secrets to a callback URL was found inside it; it never ran (nested workflows are inert) and is deleted, but remains in history. |
-| `generative-ai/03-agentic-foundations/LLMs-as-Operating-Systems--Agent-Memory-main` | https://github.com/frankwwu/LLMs-as-Operating-Systems--Agent-Memory | 2026-10-31 | Condensed into `03-agentic-foundations/notes/03-memory-as-an-operating-system.md`; the Letta handbook PDF kept in `sources/`. |
-| `generative-ai/03-agentic-foundations/AI-Agentic-Design-Patterns-with-AutoGen-main` | https://github.com/ksm26/AI-Agentic-Design-Patterns-with-AutoGen | 2026-10-31 | Condensed into `03-agentic-foundations/notes/04-multi-agent-design-patterns.md`. |
-| `generative-ai/04-agentic-frameworks/AI-Agents-in-LangGraph-main` | https://github.com/ksm26/AI-Agents-in-LangGraph | 2026-10-31 | Condensed into `04-agentic-frameworks/notes/01–02`. |
-| `generative-ai/04-agentic-frameworks/Long-Term-Agentic-Memory-With-LangGraph-main` | https://github.com/YunghuiHsu/Long-Term-Agentic-Memory-With-LangGraph | 2026-10-31 | Condensed into `04-agentic-frameworks/notes/03-long-term-memory-with-langgraph.md`. |
-| `generative-ai/06-observability/Learning-LangFuse-main` | https://github.com/pedroalexleite/Learning-LangFuse | 2026-10-31 | Condensed into `06-observability/notes/02-scoring-datasets-experiments.md`. |
-| `generative-ai/06-observability/langfuse-evaluation-main` | https://github.com/gustavobrieva1/langfuse-evaluation | 2026-10-31 | Condensed into `06-observability/notes/03-judge-pipelines-over-trace-exports.md`. Only the generic design was kept; the client-specific material was dropped. |
-| `generative-ai/06-observability/langfuse-mcp-python-main` | https://github.com/Log-LogN/langfuse-mcp-python | 2026-10-31 | Condensed into `06-observability/notes/04-langfuse-mcp-server.md`. |
-| `generative-ai/07-agentic-applications/internet-search-agent-main` | https://github.com/omidreza-amrollahi/internet-search-agent (MIT) | 2026-10-31 | Condensed into `07-agentic-applications/notes/01-internet-search-agent.md`; the code is linked upstream as legacy (the Bing Search API was retired in August 2025). |
-| `data-analytics/Bayes/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77` | https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers (MIT) | 2026-10-31 | Condensed into `data-analytics/notes/09-bayesian-inference.md` and the Bayesian notes after it. |
-| `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-10-31 | Condensed into `data-analytics/notes/09-bayesian-inference.md`. |
-
-### Programming course material (added 2026-10-29)
-
-`programming/` vendors **exercises and data**, not course snapshots. They are kept on purpose because
-they are the practice surface, and each keeps its license. Notes are written for this repo and cite
-their sources in frontmatter. The full list is in [programming/references.md](programming/references.md).
-
-| Path | Upstream | License | What's here |
-|---|---|---|---|
-| `programming/typescript/practice/typescript-exercises/` | https://github.com/typescript-exercises/typescript-exercises | MIT | 15 exercises with solutions. Patches for TypeScript 7 are listed in its `NOTICE.md` |
-| `programming/typescript/practice/type-challenges/challenges/` | https://github.com/type-challenges/type-challenges | MIT | 26 easy and medium challenges with their test cases. The solutions are written here |
-| `programming/sql/practice/data/survey.db` | https://github.com/swcarpentry/sql-novice-survey | CC-BY 4.0 | The Antarctic survey database (committed, 8 KB) |
-| `programming/sql/practice/data/clubdata.sql` | https://pgexercises.com/ | CC BY-SA 3.0 | PGExercises club data converted from Postgres to SQLite. `clubdata.db` is built from it and gitignored |
-| `programming/sql/practice/data/sql-murder-mystery.db` | https://github.com/NUKnightLab/sql-mysteries | MIT | Downloaded by `setup.sh`, gitignored |
-| `programming/python/04-python-for-data/mckinney/ch*.ipynb` | https://github.com/wesm/pydata-book (`2nd-edition`) | MIT (code) | Chapter notebooks restored from history (they were deleted in commit `1c72b00`). `examples/` and `datasets/` (~240 MB) are downloaded by `fetch_data.sh` and gitignored |
-
-**Paraphrased, not vendored:** Charles Severance's *Python for Everybody* (CC BY-NC-SA 3.0) and the
-TypeScript Handbook (CC-BY 4.0). No book text, slides or `mbox` data files are copied. Practice
-files use their own sample data.
-
-`data-analytics/practice/BayesianML/` (formerly `Bayes/BayesianML/`) is **not** a snapshot despite its old `-master` suffix. It is
-personal Coursera coursework with a `final_assignment/` that exists nowhere else, so it was renamed
-on 2026-10-28 to keep suffix-based rules from sweeping it up. Nested `.git` directories, the
-Dependabot cleanup and repo-size analysis are recorded in
-`.claude/docs/research/2026-08-14_LAE-106_vendored-findings.md`.
-
----
-
-## Role-based sequencing
-
-If your goal is interview prep rather than learning progression, use the role × topic
-matrix in [interviewing/guides/00-start-here.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md).
-That file maps each pillar to prerequisites and tells you which pillars matter most for
-which roles (AI engineer, data engineer, data scientist, ML engineer).
-
-The self-learner paths above and the interview-prep sequence are complementary — the paths
-build deep understanding; the pillar sequence builds exam-ready breadth. Most people want
-both.
+This program has no single finish line. Choose the next subject based on the system you want to build: analytics for decisions, data science for models, data engineering for durable data systems, generative AI for LLM capabilities, and AI engineering for reliable AI products.

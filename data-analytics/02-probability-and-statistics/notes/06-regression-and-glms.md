@@ -311,6 +311,8 @@ false positive rate at nominal .05 (naive, clustered): 0.278, 0.035
 
 The naive analysis calls a null experiment significant more than a quarter of the time at a nominal 5%. Clustering on the user brings it back to about the nominal rate. Reinhart's pseudoreplication chapter is this exact problem (*Statistics Done Wrong*, ch. 3). The rule: cluster at the level of randomisation. An experiment randomised by user and analysed by session must cluster on user. Randomised by city, cluster on city, and note that with few cities even this is not enough.
 
+Clustered errors treat the groups as a nuisance: the coefficient stays where it was, and only its standard error changes. If the group effect may be correlated with the predictor, you need [fixed effects](08-panel-data-and-fixed-effects.md). If the group-level estimates are themselves the question, you need a multilevel model. The [decision table in the multilevel chapter](../../04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md#which-tool-the-decision-table) sets the three side by side.
+
 ## Logistic regression
 
 For a yes/no outcome, a straight line can predict probabilities outside 0 and 1. Logistic regression models the log-odds as linear, then squashes the prediction with the logistic function (ISLP §4.3; Bruce & Bruce, 2017, ch. 5). It is fitted by the [maximum likelihood of chapter 4](04-estimation.md).
@@ -436,6 +438,35 @@ rate ratio 1.092 (truth 1.105), SE 0.0155, dispersion 1.00
 
 Exponentiating the coefficient gives a rate ratio: the new app multiplies the order rate by 1.09, against a true 1.105. The dispersion, Pearson χ² over the residual degrees of freedom, is 1.00 here, because the data really are Poisson.
 
+### Deviance
+
+GLMs have no residual sum of squares to report, so they report **deviance** instead: twice the gap in log likelihood between the fitted model and a *saturated* model, one with a free parameter for every row, which fits each row exactly. Fitting a GLM by maximum likelihood is "least total deviance" in the same way that OLS is least sum of squares (Efron & Hastie, §8.2). For Poisson, with fitted means μ̂ᵢ:
+
+```text
+D = 2 × Σ [ yᵢ log(yᵢ / μ̂ᵢ) - (yᵢ - μ̂ᵢ) ]        (a row with yᵢ = 0 contributes 2μ̂ᵢ)
+```
+
+Two values matter. The **null deviance** is the deviance of a model with only an intercept (plus any offset). The **residual deviance** is that of your model. The drop between them plays the role that the explained sum of squares plays in OLS, and for nested models it is the likelihood-ratio statistic, approximately χ² with one degree of freedom per added term.
+
+```python
+from scipy.special import xlogy
+
+y, mu = d7.orders, po.fittedvalues
+by_hand = 2 * np.sum(xlogy(y, y / mu) - (y - mu))    # xlogy treats 0 log 0 as 0
+gap = po.null_deviance - po.deviance
+print(f"null deviance {po.null_deviance:.1f} on {int(po.df_resid + po.df_model)} df, "
+      f"residual deviance {po.deviance:.1f} on {int(po.df_resid)} df")
+print(f"by hand {by_hand:.1f}; drop {gap:.1f}, p {stats.chi2.sf(gap, po.df_model):.1e}; "
+      f"z-test on new_app p {po.pvalues['new_app']:.1e}; deviance/df {po.deviance / po.df_resid:.2f}")
+```
+
+```text
+null deviance 5482.5 on 4999 df, residual deviance 5450.1 on 4998 df
+by hand 5450.1; drop 32.4, p 1.2e-08; z-test on new_app p 1.2e-08; deviance/df 1.09
+```
+
+Adding `new_app` removes 32.4 of deviance for one degree of freedom, and that test agrees with the z-test on its coefficient. Only about 0.6% of the null deviance goes, because a randomised app says little about any one user's orders. A small drop can still be a clear effect, as with a low R² in OLS. Residual deviance per degree of freedom comes out at 1.09 where the Pearson dispersion above is 1.00, on data that really are Poisson, because with small counts deviance is an unreliable check on the variance. Use the Pearson version for the check below, and deviance for comparing models. On held-out rows, the same quantity averaged per row is `mean_poisson_deviance`, the count row in [choosing a metric](../../../data-science/01-classical-ml/notes/11-choosing-a-metric.md#counts).
+
 ### Overdispersion
 
 Poisson forces the variance to equal the mean. Real counts rarely comply, since a few users order all the time and most hardly ever. When variance exceeds the mean, the standard errors from a Poisson fit are too small, and the Z-values too large (ISLP §4.6). Here is the same experiment with users who vary.
@@ -525,10 +556,11 @@ The first model is the *right* one for the question "did the checkout work?", an
 | What does multicollinearity do? | Inflates coefficient SEs and makes individual coefficients unstable. It does not bias them and rarely hurts prediction. |
 | What is a link function? | It connects the mean of the outcome to the linear predictor: identity for linear, logit for logistic, log for Poisson. |
 | Your logistic coefficient is 28 with SE in the thousands. What now? | Separation. Check for a predictor that splits the outcome perfectly, then regularise or use a weakly informative prior. |
+| What is deviance? | Twice the log-likelihood gap from a model that fits every row exactly: a GLM's version of the residual sum of squares. The drop from null to residual deviance is a likelihood-ratio test. |
 | What is overdispersion? | Count variance above the mean. A Poisson fit then has SEs too small, so use robust SEs or a negative binomial. |
 
 ---
 
 ## Next
 
-That closes the pillar. [Pillar 03 starts with A/B testing](../../03-experimentation-and-causality/notes/01-ab-testing.md), where hypothesis testing meets product experiments: power, sample size, the two-proportion z-test and peeking.
+[Chapter 7 steps back from fitting](07-data-generating-process.md) to ask what a model is a claim about: the data generating process, how to choose a specification, whether the goal is to explain or to predict, and how the rows got in.

@@ -43,18 +43,23 @@ print(f"Kaplan-Meier mean to day {HORIZON}:      {restricted_mean_survival_time(
 print(f"truth, uncapped mean:              {subs.true_duration_days.mean():.1f}   (longest {subs.true_duration_days.max()} days; the data stop at {subs.duration_days.max()})")
 
 # %% km_channel
-fig, ax = plt.subplots()
+curves = {}
 for channel in CHANNELS:
     part = subs[subs.channel == channel]
-    km = KaplanMeierFitter().fit(part.duration_days, part.event)
+    km = curves[channel] = KaplanMeierFitter().fit(part.duration_days, part.event)
+    print(f"{channel:12s} n {len(part):5d}  median {km.median_survival_time_:6.0f}  still subscribed at 360 days {km.predict(360):.1%}")
+test = multivariate_logrank_test(subs.duration_days, subs.channel, subs.event)
+print(f"log-rank across four channels: chi2 {test.test_statistic:.1f} on {test.degrees_of_freedom} df, p = {test.p_value:.1e}")
+
+# %% chart_km_channel
+fig, ax = plt.subplots()
+for channel, km in curves.items():
     curve = km.survival_function_.iloc[:, 0] * 100
     ax.step(curve.index, curve, where="post", color=cs.CHANNEL_COLOUR[channel])
     band = km.confidence_interval_ * 100
     ax.fill_between(band.index, band.iloc[:, 0], band.iloc[:, 1], step="post", color=cs.CHANNEL_COLOUR[channel], alpha=.15, lw=0)
-    at_360 = km.predict(360)
-    print(f"{channel:12s} n {len(part):5d}  median {km.median_survival_time_:6.0f}  still subscribed at 360 days {at_360:.1%}")
     last = curve.loc[:HORIZON].iloc[-1]
-    ax.text(HORIZON + 8, last + {"organic": 1.5, "referral": -1.5}.get(channel, 0), channel.replace("_", " "), color=cs.SECONDARY, va="center")
+    ax.text(HORIZON + 8, {"organic": 8, "referral": 15, "email": 11.5}.get(channel, last), channel.replace("_", " "), color=cs.CHANNEL_COLOUR[channel], va="center")
 ax.set_xlim(0, HORIZON + 130)
 ax.set_ylim(0, 100)
 ax.set_xticks(range(0, HORIZON + 1, 180))
@@ -62,9 +67,6 @@ ax.set_xlabel("Days since the box started")
 ax.set_ylabel("Still subscribed (%)")
 ax.set_title("Paid social subscribers leave first and email subscribers last")
 cs.save(fig, "applied-survival-km-channel.png")
-
-test = multivariate_logrank_test(subs.duration_days, subs.channel, subs.event)
-print(f"log-rank across four channels: chi2 {test.test_statistic:.1f} on {test.degrees_of_freedom} df, p = {test.p_value:.1e}")
 
 # %% cox_single
 # From here the event is a cancel, and a downgrade ends a subscriber's time at risk, because the question is about cancels.
@@ -86,7 +88,8 @@ with contextlib.redirect_stdout(report), warnings.catch_warnings():
     warnings.simplefilter("ignore")
     single.check_assumptions(subs[["welcome_call", *CONFOUNDERS, "duration_days", "cancel"]], p_value_threshold=.01, show_plots=False)
 lines = report.getvalue().splitlines()
-print("\n".join(line for line in lines if line.strip().startswith(("welcome_call", "1. Variable", "test_name", "paid_social", "email", "referral", "large"))))
+keep = [line for line in lines if line.strip().startswith(("test_statistic", "email", "large", "paid_social", "referral", "welcome_call", "km", "rank", "1. Variable"))]
+print("\n".join(keep))
 
 
 # %% wear_off
@@ -123,6 +126,7 @@ bands.columns = ["hr", "low", "high"]
 bands.index = ["0-90", "90-180", "180-360", "360+"]
 print(bands.round(3).to_string())
 
+# %% chart_wear_off
 fig, ax = plt.subplots(figsize=(8, 3.6))
 y = np.arange(len(bands))[::-1]
 ax.hlines(y, bands.low, bands.high, color=cs.BLUE, lw=2)
@@ -166,7 +170,7 @@ def early_late(seed):
 
 runs = pd.DataFrame([early_late(SEED + i) for i in range(1, 21)])
 check = pd.DataFrame({"mean of 20 seeds": runs.mean(), "lowest": runs.min(), "highest": runs.max()})
-print(check.loc[["call_early", "call_late", "rise"]].round(3).to_string())
+print(check.round(3).to_string())
 
 # %% discrete_time
 periods["paid_social"] = (periods.channel == "paid_social").astype(int)
@@ -181,7 +185,14 @@ print(f"mean monthly cancel hazard {periods.cancel.mean():.3f}")
 compare = pd.DataFrame({"logit odds ratio": np.exp(logit.params)}).drop(["Intercept", "log_month"])
 compare["Cox hazard ratio"] = tv.hazard_ratios_.rename({"call_early": "welcome_early", "call_late": "welcome_late", "rise": "price_rise_active"})
 print(compare.round(3).to_string())
-print(f"coefficient on log(tenure month) {logit.params['log_month']:.3f}; a Weibull of shape .75 implies about {.75 - 1:.2f}")
+month = np.arange(1, 37)
+binned = np.polyfit(np.log(month), np.log(month ** .75 - (month - 1) ** .75), 1)[0]
+print(f"coefficient on log(tenure month) {logit.params['log_month']:.3f}; the generator's Weibull binned into months gives {binned:.3f}")
+print("hazard by tenure month:", periods.groupby("tenure_month").cancel.mean().loc[[1, 2, 3, 4, 6, 12, 24]].round(3).to_dict())
+
+# Does the shape of the tenure term move the answer? Give every month its own intercept.
+flexible = smf.logit(FORMULA.replace("log_month", "C(tenure_month)"), periods[periods.tenure_month <= 36]).fit(disp=0)
+print(f"with a free intercept per month: early {np.exp(flexible.params['welcome_early']):.3f}, late {np.exp(flexible.params['welcome_late']):.3f}, rise {np.exp(flexible.params['price_rise_active']):.3f}")
 
 
 # %% competing
@@ -227,9 +238,18 @@ forecast = sbg_survival(a, b, months)
 print(f"sBG on months 0 to {calibrate - 1}: alpha {a:.3f}, beta {b:.3f}")
 for t in (12, 18, 24, 30, 36):
     print(f"month {t:2d}  Kaplan-Meier {actual[t]:.3f}  sBG forecast {forecast[t]:.3f}")
+stop = subs.duration_days.where(subs.price_rise_day.isna() | (subs.duration_days <= subs.price_rise_day), subs.price_rise_day)
+ended = subs.event.where(stop == subs.duration_days, 0)
+before_rise = KaplanMeierFitter().fit(stop[stop > 0], ended[stop > 0])
+print("Kaplan-Meier with time after the rise removed:", {t: round(float(before_rise.predict(t * 30)), 3) for t in (12, 18, 24)})
 
 # %% standardise
 HOLD = 24
+
+
+def months_gained(s0, s1, h):
+    """Survival summed over months is months subscribed, so the gap between two curves is months gained."""
+    return (s1[:h] - s0[:h]).sum()
 
 
 def standardised(model, frame):
@@ -259,13 +279,11 @@ def true_curves(frame):
     return np.exp(-np.outer(base, H0)).mean(axis=0), np.exp(-np.outer(base, called)).mean(axis=0)
 
 
-unit = periods.drop(columns=["channel", "plan"]).merge(subs[["subscription_id"]], on="subscription_id")
-none, called = standardised(logit, subs.assign(**{c: subs[c] for c in CONFOUNDERS}))
+none, called = standardised(logit, subs)
 true_none, true_called = true_curves(subs)
-months_gained = lambda s0, s1, h: (s1[:h] - s0[:h]).sum()      # survival summed over months = months subscribed
 
 rng = np.random.default_rng(SEED)
-by_id = {i: g for i, g in periods.groupby("subscription_id").indices.items()}
+by_id = periods.groupby("subscription_id").indices
 ids = np.array(list(by_id))
 boot = []
 for _ in range(200):
@@ -276,12 +294,14 @@ for _ in range(200):
 low, high = np.percentile(boot, [2.5, 97.5], axis=0)
 print(f"{'':28s}{'estimate':>9s}{'95% interval':>18s}{'truth':>8s}")
 print(f"{'gain in survival, month 12':28s}{called[11] - none[11]:9.3f}{low[0]:10.3f} to{high[0]:6.3f}{true_called[11] - true_none[11]:8.3f}")
-print(f"{'gain in survival, month 24':28s}{called[23] - none[23]:9.3f}{low[1]:10.3f} to{high[1]:6.3f}{true_called[23] - true_none[23]:8.3f}")
+print(f"{'gain in survival, month 24':28s}{called[HOLD - 1] - none[HOLD - 1]:9.3f}{low[1]:10.3f} to{high[1]:6.3f}{true_called[HOLD - 1] - true_none[HOLD - 1]:8.3f}")
 gain = months_gained(none, called, HOLD)
 print(f"{'box-months gained in 24':28s}{gain:9.2f}{low[2]:10.2f} to{high[2]:6.2f}{months_gained(true_none, true_called, HOLD):8.2f}")
 crude = {c: KaplanMeierFitter().fit(g.duration_days, g.cancel).predict(360) for c, g in subs.groupby("welcome_call")}
 print(f"crude gap at day 360, no adjustment: {crude[1] - crude[0]:.3f}")
+print(f"gain in survival at month 3: {called[2] - none[2]:.3f}; at month 36: {called[35] - none[35]:.3f}")
 
+# %% chart_standardise
 fig, ax = plt.subplots()
 x = np.arange(1, 37)
 ax.plot(x, called * 100, color=cs.BLUE)
@@ -297,17 +317,18 @@ ax.set_ylim(0, 100)
 ax.set_xticks(range(0, 37, 6))
 ax.set_xlabel("Months since the box started (dotted: the generator's true curves)")
 ax.set_ylabel("Not yet cancelled (%)")
-ax.set_title("The effect is short but the gap it opens stays open")
+ax.set_title("The call opens its lead in three months, and the lead then slowly narrows")
 cs.save(fig, "applied-survival-standardised.png")
 
 # %% price_call
 MARGIN = .35                            # as in chapter 3, assumed
-CALL_COST = 4.0                         # assumed: fifteen minutes of a loaded agent, pounds per call reached
+CALL_COST = 4.0                         # assumed: fifteen minutes of an agent's time, pounds per call
 mean_price = subs.plan.map({p: v[0] for p, v in PLANS.items()}).mean()
-print(f"margin per box-month at pre-rise prices £{mean_price * MARGIN:.2f}; gain per call reached £{gain * mean_price * MARGIN:.2f}, assumed cost £{CALL_COST:.2f}")
+print(f"margin per box-month at pre-rise prices £{mean_price * MARGIN:.2f}; gain per call £{gain * mean_price * MARGIN:.2f}, assumed cost £{CALL_COST:.2f}")
 print(f"at the interval's ends: £{low[2] * mean_price * MARGIN:.2f} to £{high[2] * mean_price * MARGIN:.2f}")
 uncalled = subs[subs.welcome_call == 0].channel.value_counts().loc[CHANNELS]
 print(uncalled.to_string())
+print(f"{uncalled.sum()} subscribers had no call; net margin if all had, at this estimate: £{uncalled.sum() * (gain * mean_price * MARGIN - CALL_COST):,.0f}")
 
 # %% price_rise
 reason = subs[subs.event_type == "cancel"].copy()
@@ -325,10 +346,10 @@ for h in (6, 12, 24):
         start = int(r.price_rise_day // 30) + 1
         future = pd.DataFrame({"tenure_month": np.arange(start, start + h)})
         future["log_month"] = np.log(future.tenure_month)
-        future = future.assign(paid_social=r.paid_social, email=r.email, referral=r.referral, large=r.large, welcome_early=0, welcome_late=r.welcome_call)
+        future = future.assign(paid_social=r.paid_social, email=r.email, referral=r.referral, large=r.large, welcome_early=r.welcome_call * (future.tenure_month <= 3), welcome_late=r.welcome_call * (future.tenure_month > 3))
         old, new = PLANS[r.plan]
         for rise, price in ((0, old), (1, new)):
             s = (1 - logit.predict(future.assign(price_rise_active=rise))).cumprod().to_numpy()
             totals[rise] += (s * (price - old * (1 - MARGIN))).sum()
-    rows.append({"months": h, "margin_no_rise": totals[0] / len(at_rise), "margin_rise": totals[1] / len(at_rise)})
+    rows.append({"months": h, "margin_no_rise": totals[0] / len(at_rise), "margin_rise": totals[1] / len(at_rise), "gain": (totals[1] - totals[0]) / len(at_rise)})
 print(pd.DataFrame(rows).round(2).to_string(index=False))

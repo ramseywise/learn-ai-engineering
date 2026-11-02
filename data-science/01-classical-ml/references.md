@@ -3,7 +3,7 @@ origin: curated
 sources:
   - ../sources/
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 # 01-classical-ml references
 
@@ -15,6 +15,8 @@ cleaned: 2026-11-01
 |---|---|---|---|
 | ★ Müller and Guido, *Introduction to Machine Learning with Python* (O'Reilly, 2016) | The practical spine of this pillar, with companion notebooks in [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | [PDF](../sources/mueller-guido-introduction-to-ml-with-python.pdf) | ch. 1 → 01; ch. 2 → 02, 06; ch. 3 → 05; ch. 4 → 03; ch. 5 → 04; ch. 6 → 03 |
 | James, Witten, Hastie, Tibshirani and Taylor, *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023) | The statistical reasoning behind the same models | [PDF](../../data-analytics/sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf) | ch. 2 to 6 → 01 to 04; ch. 8 → 06; ch. 12 → 05 |
+| ★ Ng, [*Machine Learning Yearning*](https://home-wordpress.deeplearning.ai/wp-content/uploads/2022/03/andrew-ng-machine-learning-yearning.pdf) (draft, 2018) | The eyeball and blackbox split, the error ceiling, and how big to make each set. Chapters 15 to 19 read for this pillar | Link only | ch. 15 to 19 → 12 |
+| Manning, Raghavan and Schütze, [*Introduction to Information Retrieval*](https://nlp.stanford.edu/IR-book/html/htmledition/evaluation-of-unranked-retrieval-sets-1.html) (Cambridge, 2008) | Why accuracy is the wrong measure for retrieval. The one page on unranked evaluation read, through an archived copy because the host refused connections | Link only | ch. 8 → 11 |
 
 ## Core papers
 
@@ -65,6 +67,18 @@ cleaned: 2026-11-01
 | Bergstra et al., [*Algorithms for Hyper-Parameter Optimization*](https://papers.nips.cc/paper_files/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf) (NeurIPS 2011) | The Tree-structured Parzen Estimator | [PDF](../sources/bergstra-2011-algorithms-hyper-parameter-optimization.pdf) | 09 |
 | Akiba et al., [*Optuna*](https://arxiv.org/abs/1907.10902) (KDD 2019) | Define-by-run search spaces, and pruning | [PDF](../sources/akiba-2019-optuna.pdf) | 09 |
 | Cawley and Talbot, [*On Over-fitting in Model Selection*](https://jmlr.org/papers/volume11/cawley10a/cawley10a.pdf) (JMLR 2010) | Why a search winner's score is optimistic, and how large the bias gets | [PDF](../sources/cawley-2010-over-fitting-model-selection.pdf) | 09 |
+| ★ Gneiting, [*Making and Evaluating Point Forecasts*](https://arxiv.org/abs/0912.0902) ([JASA 2011](https://doi.org/10.1198/jasa.2011.r10138)) | A scoring function rewards a particular functional of the outcome, so the metric chooses what the forecast is asked to be. Read in the arXiv version. It runs one way: a functional doesn't fix the loss | Link only | 11 |
+| ★ Chicco and Jurman, [*The advantages of the Matthews correlation coefficient (MCC) over F1 score and accuracy*](https://doi.org/10.1186/s12864-019-6413-7) (BMC Genomics 2020) | The case for MCC on the four cells. Our run shows it has no cost in it and moves with the base rate, so it doesn't replace a cost-tuned threshold | [PDF](../sources/chicco-2020-mcc-advantages-over-f1-accuracy.pdf) | 04, 11 |
+| ★ Saito and Rehmsmeier, [*The Precision-Recall Plot Is More Informative than the ROC Plot*](https://doi.org/10.1371/journal.pone.0118432) (PLoS ONE 2015) | Why PR reads better than ROC on imbalanced data. The evidence concerns interpretation, since ROC and PR points map to each other | [PDF](../sources/saito-2015-precision-recall-more-informative-than-roc.pdf) | 11 |
+| Brodersen, Ong, Stephan and Buhmann, [*The Balanced Accuracy and Its Posterior Distribution*](https://doi.org/10.1109/ICPR.2010.764) (ICPR 2010) | Balanced accuracy, with the classifier that exploits imbalance as its motivation. Full text at [the author's site](https://ong-home.my/papers/brodersen10post-balacc.pdf) | Link only | 04, 11 |
+| Järvelin and Kekäläinen, [*Cumulated Gain-Based Evaluation of IR Techniques*](https://doi.org/10.1145/582415.582418) (ACM TOIS 2002) | The origin of cumulated gain and its normalised form. Sections 2.2 and 2.3 and the summary of strengths read, not the whole paper | Link only | 11 |
+| ★ Wu, Ribeiro, Heer and Weld, [*Errudite: Scalable, Reproducible, and Testable Error Analysis*](https://aclanthology.org/P19-1073/) (ACL 2019) | Define error groups precisely, apply them to all data including correct predictions, and test with counterfactuals. Its case for sampling bias is argued, not measured | Link only | 12 |
+| ★ Chung, Kraska, Polyzotis, Tae and Whang, [*Automated Data Slicing for Model Validation*](https://arxiv.org/abs/1807.06068), the extended version of [*Slice Finder*](https://doi.org/10.1109/ICDE.2019.00139) (ICDE 2019) | Automated search for slices with high loss: Welch's t-test, an effect size threshold and α-investing. Read in the extended arXiv version, not the ICDE text | Link only | 12 |
+| ★ Dwork, Feldman, Hardt, Pitassi, Reingold and Roth, [*The reusable holdout*](https://doi.org/10.1126/science.aaa9375) (Science 2015) | Adaptive reuse overfits a holdout, and Thresholdout. Journal text not obtained: findings in note 12 come from the companion paper below | Link only | 12 |
+| ★ Dwork, Feldman, Hardt, Pitassi, Reingold and Roth, [*Generalization in Adaptive Data Analysis and Holdout Reuse*](https://arxiv.org/abs/1506.02629) (NIPS 2015) | The companion read in full: the random-label experiment, over 63% on holdout at k = 500, and how Thresholdout spends its budget. It doesn't say when to refresh a holdout; that is our advice | Link only | 12 |
+| Northcutt, Athalye and Mueller, [*Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks*](https://arxiv.org/abs/2103.14749) (NeurIPS 2021 Datasets and Benchmarks) | At least 3.3% of test labels wrong across ten datasets, a lower bound. Rankings hold at natural noise and can flip with a little more | Link only | 12 |
+| Ribeiro, Wu, Guestrin and Singh, [*Beyond Accuracy: Behavioral Testing of NLP Models with CheckList*](https://arxiv.org/abs/2005.04118) (ACL 2020) | Templates, and invariance and direction tests, which give a known error class a lasting form. Starts from capabilities, not errors | Link only | 12 |
+| ★ Chouldechova, [*Fair Prediction with Disparate Impact*](https://arxiv.org/abs/1703.00056) ([Big Data 2017](https://doi.org/10.1089/big.2016.0047)) | The identity tying FPR, FNR, PPV and prevalence: with equal PPV and different prevalence, the error rates can't both be equal. About predictive parity at a threshold, not calibration | Link only | 12 |
 
 ## Courses and videos
 
@@ -73,10 +87,10 @@ Linked, never vendored.
 | Course | Platform | Cost | What it supports |
 |---|---|---|---|
 | [Machine Learning Specialization](https://www.coursera.org/specializations/machine-learning-introduction) (Ng) | Coursera | Paid certificate, audit options vary | 01, 02, 05, 06. The current version of the course whose older exercises are in [`practice/ng-machine-learning/`](practice/ng-machine-learning/) |
-| [StatQuest: Machine Learning playlist](https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF) (Starmer) | YouTube | Free | 02, 04, 06, for visual explanations |
+| [StatQuest: Machine Learning playlist](https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF) (Starmer) | YouTube | Free | 02, 04, 06, 11, for visual explanations |
 | [CS229 Machine Learning, Autumn 2018](https://www.youtube.com/playlist?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU) (Ng, Stanford) | YouTube | Free | 01, 02, 05, at a mathematical level |
 | [Intro to Machine Learning](https://www.kaggle.com/learn/intro-to-machine-learning) | Kaggle Learn | Free | 02 |
 | [Intermediate Machine Learning](https://www.kaggle.com/learn/intermediate-machine-learning) | Kaggle Learn | Free | 03, 06, 07 |
 | [Feature Engineering](https://www.kaggle.com/learn/feature-engineering) | Kaggle Learn | Free | 03 |
 
-Library documentation: [scikit-learn](https://scikit-learn.org/stable/user_guide.html), [XGBoost](https://xgboost.readthedocs.io/), [LightGBM](https://lightgbm.readthedocs.io/), [CatBoost](https://catboost.ai/docs/), [SHAP](https://shap.readthedocs.io/).
+Library documentation: [scikit-learn](https://scikit-learn.org/stable/user_guide.html) (its [metrics guide](https://scikit-learn.org/stable/modules/model_evaluation.html) supports 04 and 11), [XGBoost](https://xgboost.readthedocs.io/), [LightGBM](https://lightgbm.readthedocs.io/), [CatBoost](https://catboost.ai/docs/), [SHAP](https://shap.readthedocs.io/).

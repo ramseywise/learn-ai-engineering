@@ -71,7 +71,7 @@ Huyen reports the same from practice: judges do better on classification than on
 2. **The criterion**, with a precise definition of PASS and FAIL. State it before the content: the judge reads once, front to back, so it should read the output already knowing what to look for.
 3. **Few-shot examples**: 2–4 labeled cases, including a tricky PASS and a tricky FAIL near the boundary. Take them from your human-labeled data, never from the test split.
 4. **The inputs**, clearly delimited: question, output, reference or context.
-5. **Reason, then verdict.** Ask for a short critique first, then a final label in a fixed format (`"verdict": "PASS"`). Reasoning first improves accuracy and gives you something to read when the judge is wrong.
+5. **Reason, then verdict.** Ask for a short critique, then a label in a fixed format (`"verdict": "PASS"`). Reasoning first gives you something to read when the judge is wrong; test any accuracy gain.
 6. **An escape hatch**: `CANNOT_GRADE` when the inputs are missing or the case is out of scope. Without it the judge guesses.
 
 A reusable single-criterion judge prompt with all six parts:
@@ -170,12 +170,12 @@ The master-key row comes from Zhao et al., who tested judges that grade reasonin
 1. **Get human labels.** 100–200 outputs labeled PASS/FAIL on the judge's criterion, by your domain expert ([02](02-defining-correct.md#one-person-decides)). Include both classes in reasonable numbers. If real user signal exists (👍/👎, escalation, resolution), it can serve as the label, as in the case study, but only for a criterion it actually measures. **Satisfaction is not task success.** In GAUGE (25 agents on τ²-bench and SimulatorArena), "57.5% of conversations our blind human panel rated satisfied (≥5/7) had failed the customer’s task". That is the same as the 57.3% base failure rate, so the rating carried no information about success (AUC 0.44). A policy-aware judge that read the tool calls did discriminate success (AUC 0.73) ([arXiv:2609.12191](https://arxiv.org/abs/2609.12191) (Bodhwani et al., 2026-09)). A 👍 can label a tone or experience judge. A resolution judge needs labels from the outcome.
 2. **Split** the labels: **train** (pick few-shot examples from here), **dev** (iterate on the prompt here), **test** (measure once at the end).
 3. **Run the judge** on dev. Build the confusion matrix against the human labels.
-4. **Read the disagreements.** Each one is either a judge prompt problem (fix the prompt), a criteria problem (fix the criteria, re-label), or a hard case (add to few-shot).
+4. **Read the disagreements.** Each is a judge prompt problem (fix the prompt), a criteria problem (fix the criteria, re-label), or a hard case (add to few-shot).
 5. **Iterate** on dev until the numbers are good enough for the job.
 6. **Measure on test once.** That's the number you report. If you tune against test, it's a dev set.
 7. **Record** the judge model, prompt version and test metrics. Re-run when any of them changes.
 
-Keep one calibration record per judge version. It holds: the label counts per split (train/dev/test, PASS/FAIL); human–human agreement on a double-labelled subset (the ceiling); one line per dev iteration (prompt change → TPR/TNR); the test confusion matrix with TPR, TNR, precision, κ, separation and the `CANNOT_GRADE` rate; the bias checks (position swap, length, self-preference); and a decision (calibrated for gating, tracking only, or rework).
+Keep one calibration record per version: PASS/FAIL label counts per split; human–human agreement on a double-labelled subset (the ceiling); one line per dev iteration (prompt change → TPR/TNR); test confusion matrix with TPR, TNR, precision, κ, separation and `CANNOT_GRADE` rate; bias checks (position swap, length, self-preference); a decision (calibrated for gating, tracking only, or rework). [Note 14](14-calibrating-judges-with-checks-and-critiques.md) adds code checks, slices and critiques to step 4.
 
 **Few-shot examples help consistency, not necessarily accuracy.** Zheng et al. raised GPT-4's consistency from 65% to 77.5% by putting evaluation examples in the prompt, but the longer prompt quadrupled their judge cost, and "high consistency may not imply high accuracy": the judge can make the same mistake every time (*AI Engineering*, ch. 3). LangSmith turns calibration into a loop: when a person corrects a judge verdict, the correction, with an optional explanation, is stored and fed back as a few-shot example on later runs (*Learning LangChain*, ch. 10). Draw those examples from the train split only, or the test agreement you report is inflated.
 

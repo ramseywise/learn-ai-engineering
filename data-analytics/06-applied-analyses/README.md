@@ -1,10 +1,10 @@
 # Applied analyses
 
-Six complete analyses, each going from a business question through a dataset to a recommendation someone could act on.
+Complete analyses, each going from a business question through a dataset to a recommendation someone could act on.
 
-**Why this pillar.** The earlier pillars teach tools one at a time. Real work arrives as a vague question from someone with a decision to make, and most of the skill lies in what surrounds the method: choosing a baseline, finding what to check the answer against, pricing the result, and saying what it does not establish. A model that nobody can act on is unfinished. These chapters finish the job six times.
+**Why this pillar.** The earlier pillars teach tools one at a time. Real work arrives as a vague question from someone with a decision to make, and most of the skill lies in what surrounds the method: choosing a baseline, finding what to check the answer against, pricing the result, and saying what it does not establish. A model that nobody can act on is unfinished. These chapters finish the job each time.
 
-**The story.** Fernhill Home, the fictional retailer from the [visualisation pillar](../05-visualisation-and-storytelling/README.md), has a busy year. Its operations manager needs to book warehouse staff for the fourth quarter, so we forecast demand and find that the point of a forecast is the plan it sets. Credit scoring steps outside the shop to a real dataset of German loans, where the sample isn't the population and correcting for that changes the decision. Back at Fernhill, retention has fallen, and cohorts split the fall into what happened to customers and who was bought. A new mobile checkout looks harmless on the headline, and the funnel finds the broken step behind it. A win-back campaign would have gone to the wrong customers, and a holdout shows why. Finally, the whole year goes into one SQL query that ends an argument about where the growth came from. Every chapter has the same shape: a question, a dataset, a check against something known, and a recommendation with its limits.
+**The story.** Fernhill Home, the fictional retailer from the [visualisation pillar](../05-visualisation-and-storytelling/README.md), has a busy year. Its operations manager needs to book warehouse staff for the fourth quarter, so we forecast demand and find that the point of a forecast is the plan it sets. Credit scoring steps outside the shop to a real dataset of German loans, where the sample isn't the population and correcting for that changes the decision. Back at Fernhill, retention has fallen, and cohorts split the fall into what happened to customers and who was bought. A new mobile checkout looks harmless on the headline, and the funnel finds the broken step behind it. A win-back campaign would have gone to the wrong customers, and a holdout shows why. The whole year then goes into one SQL query that ends an argument about where the growth came from. A new subscription box raises a harder question, when customers will leave given that many haven't yet, and a welcome call that looks excellent turns out to work for three months and to be worth about half of what its chart suggested. Following customers month by month through states puts a price on each and shows why one chain for everybody undervalues them. Every chapter has the same shape: a question, a dataset, a check against something known, and a recommendation with its limits.
 
 ## Reading order
 
@@ -16,6 +16,8 @@ Six complete analyses, each going from a business question through a dataset to 
 | 4 | [Funnel and conversion](notes/04-funnel-and-conversion.md) | Did the checkout redesign hurt, and should we roll it back? |
 | 5 | [Segmentation and RFM](notes/05-segmentation-and-rfm.md) | Who should a campaign target, and how will we know it worked? |
 | 6 | [SQL for analytics](notes/06-sql-for-analytics.md) | Where did the year's revenue change come from? |
+| 7 | [Survival and event history](notes/07-survival-and-event-history.md) | When will a customer leave, and does the welcome call delay it? |
+| 8 | [States and sequences](notes/08-states-and-sequences.md) | Which journeys lead to a second order, and what is a customer in each state worth? |
 
 Chapter 5 also holds a separate case, [segmenting B2B customers by behaviour](notes/05-segmentation-and-rfm.md#case-segmenting-b2b-customers-by-behaviour), which tests whether cohorts found by clustering deserve trust on synthetic data.
 
@@ -50,13 +52,15 @@ The chapters can be read in any order, though 3 to 6 share a dataset and refer t
 - Score every segmentation on a later period. Otherwise it is a description, not a prediction.
 - Predicting who buys is not the same as knowing who is persuadable. Only a holdout tells you.
 - Reconcile each report's total against the source before anyone reads it.
+- A customer who has not churned yet is censored, not retained. Never average lifetimes over the churned only.
+- A transition matrix is a description of the past; it forecasts only if the process is stationary, so check it on a holdout period.
 - End with the recommendation, then say what would change it.
 
 ## Deck and practice
 
 The deck is [`slides/applied-analyses.pptx`](slides/applied-analyses.pptx), with its source in [`slides/deck.yaml`](slides/deck.yaml). Rebuild it with `make slides PILLAR=data-analytics/06-applied-analyses STRICT=1`.
 
-The code is in [`practice/`](practice/). There is one script per chapter, split into `# %%` sections that match the note's code blocks, and every chart is saved to `data-analytics/sources/images/`. `retail.py` is the seeded Fernhill generator, so chapters 1 and 3 to 6 need no download. Chapter 2 uses the open South German Credit data, kept in `practice/data/` and described in its [README](practice/data/README.md).
+The code is in [`practice/`](practice/). There is one script per chapter, split into `# %%` sections that match the note's code blocks, and every chart is saved to `data-analytics/sources/images/`. `retail.py` is the seeded Fernhill generator, so chapters 1 and 3 to 8 need no download. Chapter 2 uses the open South German Credit data, kept in `practice/data/` and described in its [README](practice/data/README.md).
 
 ```bash
 cd data-analytics/06-applied-analyses/practice
@@ -66,4 +70,6 @@ uv run ch03_cohort_retention.py
 uv run ch04_funnel.py
 uv run ch05_segmentation_rfm.py
 uv run ch06_sql_analytics.py        # DuckDB, no server
+uv run ch07_survival.py             # lifelines, about a minute
+uv run ch08_states_sequences.py     # sequenzo for the distance matrix
 ```

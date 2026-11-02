@@ -231,9 +231,177 @@ for v in ("male", "female"):
     implied = prev / (1 - prev) * (1 - ppv) / ppv * (1 - fnr)
     print(f"{v:7s} n {m.sum():4d}  prevalence {prev:.3f}  PPV {ppv:.3f}  FPR {fpr:.3f}  FNR {fnr:.3f}  "
           f"FPR from the identity {implied:.3f}")
+    lo, hi = wilson(fp, fp + tn), wilson(fn, fn + tp)
+    print(f"        95% Wilson: FPR {lo[0]:.3f} to {lo[1]:.3f}, FNR {hi[0]:.3f} to {hi[1]:.3f}")
 
 # %% Step 5: the threshold, one of the diagnoses
 print("\n--- step 5: moving the threshold on the eyeball set ---")
 for t in (0.1, 0.13, lab.BAYES, 0.2, 0.25, 0.3, 0.4, 0.5):
     tn, fp, fn, tp = confusion_matrix(yeye, peye >= t).ravel()
     print(f"t {t:.3f}  FP {fp:4d}  FN {fn:4d}  cost/1000 {lab.expected_cost(yeye, peye, t):6.1f}")
+
+# how much of the FN against TN separation is just the model's own score?
+from sklearn.metrics import roc_auc_score
+
+print(f"\nthe model's own score, FN against TN among the approved, ROC-AUC {roc_auc_score(ya, peye[peye < lab.BAYES]):.3f}")
+
+for t in (0.13, lab.BAYES):
+    print(f"blackbox cost/1000 at t {t:.3f}: {lab.expected_cost(ybb, pbb, t):.1f}")
+
+# %% Step 6: confirm the eyeball's slices on data nobody read
+sbb = scan(dbb, ybb, pbb, real_slices(dbb))
+print("\n--- step 6: the same slices on the blackbox set (4,500 rows, not read) ---")
+pick = ["limit: under 50k", "limit: 240k+", "status: 2+ months late", "status: paid or none (<=0)",
+        "education: high school", "bill: near limit (util>=0.8)"]
+both = pd.concat({"eyeball": sl.loc[pick, ["cost/1000", "p", "BH"]], "blackbox": sbb.loc[pick, ["cost/1000", "p", "BH"]]}, axis=1)
+print(both.round(3).to_string())
+print("calibration inside slices on the blackbox set: mean score against default rate")
+for k in ("limit: under 50k", "limit: 240k+", "status: 2+ months late", "status: paid or none (<=0)"):
+    m = np.asarray(real_slices(dbb)[k])
+    print(f"  {k:28s} score {pbb[m].mean():.3f}  default {ybb[m].mean():.3f}")
+print(f"slices surviving BH: eyeball {sl.BH.sum()} of {len(sl)}, blackbox {sbb.BH.sum()} of {len(sbb)}")
+print(f"blackbox cost overall {1000 * row_cost(ybb, pbb).mean():.1f}; approve everyone "
+      f"{lab.expected_cost(ybb, np.zeros(len(ybb)), 0.5):.1f}")
+
+
+# %% The hypothesis from reading, written down before any scoring of a fix
+# Mechanism: the model sees money in absolute amounts. Reading the eyeball rows, declined good customers
+# include people with tiny bills who paid little (ids 1126, 28810, 10531), and approved defaulters include
+# people at status 0 with a bill near their limit (ids 16325, 27689, 18340). Risk should depend on the amount
+# relative to the limit and to what was due, and shallow trees on separate logged amounts build ratios badly.
+# Fix: add utilisation (BILL_AMTk / LIMIT_BAL, six months) and payment share (PAY_AMTk / BILL_AMT(k+1), five
+# months, capped at 2). All of these are dated September or earlier, before the October outcome.
+def features_plus(raw):
+    x = lab.features(raw)
+    for k in range(1, 7):
+        x[f"util_{k}"] = raw[f"BILL_AMT{k}"] / raw["LIMIT_BAL"]
+    for k in range(1, 6):
+        x[f"paid_share_{k}"] = (raw[f"PAY_AMT{k}"] / raw[f"BILL_AMT{k + 1}"].clip(lower=1)).clip(upper=2)
+    return x
+
+
+def noise_slices(n, rng, columns=10):
+    """Ten pure-noise columns cut into five equal slices each: fifty slices, none of which means anything."""
+    cuts = stats.norm.ppf([0.2, 0.4, 0.6, 0.8])
+    out = {}
+    for c in range(columns):
+        q = np.digitize(rng.normal(size=n), cuts)
+        for b in range(5):
+            out[f"noise_{c} q{b + 1}"] = q == b
+    return out
+
+
+def per_1000(c):
+    return 1000 * c.mean()
+
+
+def costs(y, p, t):
+    return lab.COST_FN * ((y == 1) & (p < t)) + lab.COST_FP * ((y == 0) & (p >= t))
+
+
+# %% The demonstration. Seeds 0-29, fixed before the first run and reported whatever they give.
+SEEDS = range(30)
+
+
+def one_seed(seed):
+    tr, eye, bb, _ = carve(raw, seed)
+    base = fit(tr, seed)
+    plus = fit(tr, seed, features_plus)
+    ye, yb = eye[T].to_numpy(), bb[T].to_numpy()
+    pe, pb = base.predict_proba(lab.features(eye))[:, 1], base.predict_proba(lab.features(bb))[:, 1]
+    # new noise each seed, for eyeball and blackbox rows alike
+    rng = np.random.default_rng(1000 + seed)
+    n_all = len(eye) + len(bb)
+    slices = noise_slices(n_all, rng)
+    se = {k: v[: len(eye)] for k, v in slices.items()}
+    sb = {k: v[len(eye):] for k, v in slices.items()}
+    res = scan(None, ye, pe, se)
+    worst = res["cost/1000"].idxmax()
+    t = lab.tune_threshold(ye[se[worst]], pe[se[worst]])
+    te = np.where(se[worst], t, lab.BAYES)
+    tb = np.where(sb[worst], t, lab.BAYES)
+    base_e, base_b = per_1000(costs(ye, pe, lab.BAYES)), per_1000(costs(yb, pb, lab.BAYES))
+    qe = plus.predict_proba(features_plus(eye))[:, 1]
+    qb = plus.predict_proba(features_plus(bb))[:, 1]
+    # the worst slice's own cost, read on eyeball and then on blackbox
+    return {
+        "seed": seed, "worst": worst, "worst cost eye": res.loc[worst, "cost/1000"],
+        "worst cost bb": 1000 * costs(yb, pb, lab.BAYES)[sb[worst]].mean(), "base eye": base_e, "base bb": base_b,
+        "raw p<.05": (res.p < 0.05).sum(), "BH": res.BH.sum(), "worst p": res.loc[worst, "p"], "patch t": t,
+        "noise eye": base_e - per_1000(costs(ye, pe, te)), "noise bb": base_b - per_1000(costs(yb, pb, tb)),
+        "real eye": base_e - per_1000(costs(ye, qe, lab.BAYES)), "real bb": base_b - per_1000(costs(yb, qb, lab.BAYES)),
+    }
+
+
+demo = pd.DataFrame([one_seed(s) for s in SEEDS])
+print(f"\n--- the demonstration: seeds 0-{len(SEEDS) - 1}, {len(SEEDS)} runs, each a new split and new noise ---")
+print("seed 0:")
+print(demo.loc[0, ["worst", "worst cost eye", "worst cost bb", "worst p", "raw p<.05", "BH", "patch t",
+                   "noise eye", "noise bb", "real eye", "real bb"]].to_string())
+print(f"\nover {len(SEEDS)} seeds: base cost eyeball {demo['base eye'].mean():.1f}, blackbox {demo['base bb'].mean():.1f}")
+print(f"worst noise slice cost: on eyeball {demo['worst cost eye'].mean():.1f}, the same slice on blackbox {demo['worst cost bb'].mean():.1f}")
+print(f"noise slices with raw p<.05, mean of 50: {demo['raw p<.05'].mean():.1f}; seeds with any BH survivor: {(demo.BH > 0).sum()}")
+print("gain in cost per 1,000 applicants, positive is better")
+g = demo[["noise eye", "noise bb", "real eye", "real bb"]]
+print(pd.DataFrame({"mean": g.mean(), "sd": g.std(), "min": g.min(), "max": g.max(), "seeds > 0": (g > 0).sum(),
+                    "seeds < 0": (g < 0).sum()}).round(2).to_string())
+
+
+# %% Count the rounds: keep every noise patch that helps half the blackbox, score on the other half
+def rounds_seed(seed, rounds=20):
+    tr, _, bb, _ = carve(raw, seed)
+    base = fit(tr, seed)
+    y, p = bb[T].to_numpy(), base.predict_proba(lab.features(bb))[:, 1]
+    rng = np.random.default_rng(2000 + seed)
+    a = rng.permutation(len(y)) < len(y) // 2  # half A is reused every round, half B is only scored
+    slices = list(noise_slices(len(y), rng).values())
+    t = np.full(len(y), lab.BAYES)
+    start_a, start_b = per_1000(costs(y[a], p[a], t[a])), per_1000(costs(y[~a], p[~a], t[~a]))
+    out = []
+    for r in range(1, rounds + 1):
+        mask = slices[rng.integers(len(slices))]
+        trial = t + mask * rng.uniform(-0.05, 0.05)
+        if per_1000(costs(y[a], p[a], trial[a])) < per_1000(costs(y[a], p[a], t[a])):
+            t = trial
+        out.append({"seed": seed, "round": r, "reused half": start_a - per_1000(costs(y[a], p[a], t[a])),
+                    "fresh half": start_b - per_1000(costs(y[~a], p[~a], t[~a]))})
+    return out
+
+
+rr = pd.DataFrame([x for s in SEEDS for x in rounds_seed(s)])
+print(f"\n--- reusing a holdout: noise patches kept if they help half A, 20 rounds, {len(SEEDS)} seeds ---")
+print("gain in cost per 1,000, mean over seeds")
+print(rr[rr["round"].isin([1, 5, 10, 20])].groupby("round")[["reused half", "fresh half"]].mean().round(2).to_string())
+
+# %% The test set, once: the baseline and the mechanism fix, chosen before any of this ran
+tr, eye, bb, te = carve(raw, SEED)
+yte = te[T].to_numpy()
+base = fit(tr, SEED)
+pte = base.predict_proba(lab.features(te))[:, 1]
+qte = fit(tr, SEED, features_plus).predict_proba(features_plus(te))[:, 1]
+cb, cr = costs(yte, pte, lab.BAYES), costs(yte, qte, lab.BAYES)
+rng = np.random.default_rng(SEED)
+boots = [(lambda i: 1000 * (cb[i].mean() - cr[i].mean()))(rng.integers(len(yte), size=len(yte))) for _ in range(2000)]
+print("\n--- the test set, used once (seed 0, 6,000 rows, a noise slice can't transfer so it isn't scored) ---")
+print(f"baseline {1000 * cb.mean():.1f}  real-mechanism fix {1000 * cr.mean():.1f}  "
+      f"gain {1000 * (cb.mean() - cr.mean()):.1f} (bootstrap 95% {np.quantile(boots, 0.025):.1f} to {np.quantile(boots, 0.975):.1f})  "
+      f"approve everyone {lab.expected_cost(yte, np.zeros(len(yte)), 0.5):.1f}")
+
+# %% Figure: what looked like a gain on the eyeball set, and what remained on the blackbox set
+plt = lab._style()
+fig, ax = plt.subplots(figsize=(7.2, 3.4))
+jit = np.random.default_rng(0)
+rows = [("Noise fix", "noise eye", "noise bb"), ("Real-mechanism fix", "real eye", "real bb")]
+for i, (name, a, b) in enumerate(rows):
+    for col, off, colour, label in [(a, 0.17, lab.BLUE, "Eyeball set (read)"), (b, -0.17, lab.ORANGE, "Blackbox set (not read)")]:
+        y = 1 - i + off + jit.uniform(-0.07, 0.07, len(demo))
+        ax.plot(demo[col], y, "o", ms=5, color=colour, alpha=0.6, mec="none", label=label if i == 0 else None)
+        ax.plot([demo[col].mean()] * 2, [1 - i + off - 0.13, 1 - i + off + 0.13], color=lab.INK, lw=2)
+ax.axvline(0, color=lab.MUTED, lw=1)
+ax.set_yticks([1, 0], [r[0] for r in rows])
+ax.set_ylim(-0.5, 1.5)
+ax.grid(axis="y", visible=False)
+ax.set_xlabel("Fall in cost per 1,000 applicants; dots are seeds, black bars their means")
+ax.set_title(f"What each fix gained, read and unread ({len(SEEDS)} seeds)")
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=2)
+print("\nwrote", lab._save(fig, "reading-errors-noise-fix.png").name)

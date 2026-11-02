@@ -546,4 +546,4 @@ This case is hypothetical; the rows are real and the rate is our doing.
 
 ## Next
 
-[Deep learning](../../02-deep-learning/README.md): the same discipline of splits, thresholds and calibration, now with models that learn their own features.
+[Choosing a metric](11-choosing-a-metric.md): this chapter chose costs for one rare-event decision. The next one maps every kind of target to its loss, metric and baseline.

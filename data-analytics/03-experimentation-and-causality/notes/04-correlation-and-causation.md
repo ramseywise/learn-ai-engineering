@@ -8,6 +8,7 @@ sources:
   - https://doi.org/10.1126/science.187.4175.398 (Bickel, Hammel and O'Connell, Science, 1975; not held)
   - https://doi.org/10.1037/h0037350 (Rubin, J. Educational Psychology, 1974; not held)
   - https://doi.org/10.1214/09-ss057 (Pearl, Statistics Surveys, 2009; not held)
+  - https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf (Pearl, Glymour and Jewell, Causal Inference in Statistics: A Primer, Wiley, 2016; link only, sections 3.3 and 3.4 and part of 3.6 read)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -125,7 +126,7 @@ Once temperature is held fixed, the link vanishes. Both methods remove only conf
 
 ### Bad controls
 
-"Control for everything" sounds cautious, and it is wrong. Whether a variable belongs in the model depends on the causal story, which is why you draw the graph first. [Pearl's survey](https://doi.org/10.1214/09-ss057) gives the formal rules for reading a graph to choose controls.
+"Control for everything" sounds cautious, and it is wrong. Whether a variable belongs in the model depends on the causal story, which is why you draw the graph first. [Pearl's survey](https://doi.org/10.1214/09-ss057) gives the formal rules for reading a graph to choose controls, and the [section below](#the-backdoor-and-front-door-criteria) states the two you will use most.
 
 ```mermaid
 flowchart LR
@@ -185,6 +186,53 @@ controlling for the mediator, visits:  0.331 (direct only)
 ```
 
 The coupon works mainly by bringing people back, and the model that holds visits fixed reports only the small direct part. Anything measured after treatment deserves suspicion as a control, for this reason and because it may also be a collider.
+
+### The backdoor and front-door criteria
+
+The table above gives three cases. The **backdoor criterion** is the rule that covers any graph. This section follows Pearl, Glymour and Jewell's [*Causal Inference in Statistics: A Primer*](https://web.cs.ucla.edu/~kaoru/primer-complete-2019.pdf) (Wiley, 2016). We read sections 3.3 and 3.4 and part of 3.6, not the whole book, and the page numbers are the printed ones. A backdoor path is any path between X and Y that starts with an arrow into X. Definition 3.3.1 (p. 61):
+
+> Given an ordered pair of variables (X, Y) in a directed acyclic graph G, a set of variables Z satisfies the backdoor criterion relative to (X, Y) if no node in Z is a descendant of X, and Z blocks every path between X and Y that contains an arrow into X.
+
+The primer gives the logic in three steps: block all the spurious paths, leave the directed paths from X to Y unperturbed, and create no new spurious paths. If Z passes, the effect comes from observational data alone:
+
+P(Y = y | do(X = x)) = Σ_z P(Y = y | X = x, Z = z) P(Z = z)
+
+Here do(X = x) means setting X, rather than observing it. Three consequences matter in practice:
+
+- **Only a sufficient set is required.** An unmeasured variable need not end the analysis if another measured variable blocks its path (Figure 3.6, p. 62).
+- **The set is not simply "all confounders".** A collider sometimes has to be adjusted, along with whatever blocks the path that adjustment opens (Figure 3.7, p. 63).
+- **Any valid set gives the same answer** (p. 64). When two defensible sets disagree in a real analysis, at least one of them is wrong or the estimator is struggling.
+
+The propensity score does not relax any of this. Inverse probability weighting is valid only when the covariates in the weight satisfy the criterion, and otherwise it may add bias (§3.6, p. 75). Weighting without the graph is still an assumption.
+
+Sometimes the confounder can't be measured and no set will work. The **front-door criterion** can still identify the effect if a mediator carries it. A set Z satisfies the criterion relative to (X, Y) under three conditions (Definition 3.4.1, p. 69):
+
+1. Z intercepts all directed paths from X to Y.
+2. There is no backdoor path from X to Z.
+3. All backdoor paths from Z to Y are blocked by X.
+
+The idea is to chain two effects that can each be estimated: X on Z, which has no open backdoor, and Z on Y, whose backdoor is blocked by adjusting for X. The formula is P(y | do(x)) = Σ_z P(z | x) Σ_x' P(y | x', z) P(x'), given P(x, z) > 0 (Theorem 3.4.1). The primer's example is smoking, tar and cancer, using hypothetical data (pp. 66-69). In a linear model with a binary treatment, the chain reduces to a product of two slopes:
+
+```python
+rng = np.random.default_rng(406)
+n_fd = 50_000
+hidden = rng.normal(0, 1, n_fd)                                # never logged
+treat = (rng.random(n_fd) < 1 / (1 + np.exp(-hidden))).astype(int)
+middle = 0.5 * treat + rng.normal(0, 1, n_fd)                  # all of treat's effect runs through here
+outcome = 0.8 * middle + 1.5 * hidden + rng.normal(0, 1, n_fd)  # true effect of treat: 0.5 * 0.8 = 0.40
+f = pd.DataFrame({"treat": treat, "middle": middle, "outcome": outcome})
+step1 = smf.ols("middle ~ treat", f).fit().params["treat"]
+step2 = smf.ols("outcome ~ middle + treat", f).fit().params["middle"]
+print(f"naive difference {f.outcome[f.treat == 1].mean() - f.outcome[f.treat == 0].mean():.3f}")
+print(f"front-door: {step1:.3f} x {step2:.3f} = {step1 * step2:.3f} (true 0.40)")
+```
+
+```text
+naive difference 1.649
+front-door: 0.498 x 0.794 = 0.396 (true 0.40)
+```
+
+It works here because we wrote the graph to fit. In practice the conditions are rarely believable: the hidden cause must have no direct link to the mediator, and the mediator must carry all of the effect. It is rarer in analytics than the backdoor criterion, which every chapter on observational data relies on. [Chapter 5](05-matching-and-weighting.md) applies the backdoor rule to a real-shaped table, and shows what happens when an unlogged trait leaves the rule unmet.
 
 ## Simpson's paradox
 
@@ -290,7 +338,7 @@ That "if" is the assumption of **no unmeasured confounders**, and the rest of th
 
 | Method | Idea | Key assumption | Analytics example |
 |---|---|---|---|
-| **Propensity score weighting** | model P(treated given X), and reweight so that the groups match on X | no unmeasured confounders; overlap | users who opted into a feature |
+| **Matching and weighting** | build a comparison group that matches the treated on X; propensity weighting is below, and [chapter 5](05-matching-and-weighting.md) has the full set | no unmeasured confounders; overlap | users who opted into a feature |
 | **Difference-in-differences (DiD)** | compare the before/after change in a treated group with the change in an untreated group | parallel trends: without treatment both groups would have moved together | a feature launched in one country but not another |
 | **Instrumental variables (IV)** | find Z that moves X but affects Y only through X | exclusion restriction (untestable) | a randomised invitation to a loyalty scheme |
 | **Regression discontinuity (RD)** | units just above and just below a cutoff are comparable | no manipulation of the running variable at the cutoff | a loyalty tier at 1,000 points; a credit score threshold |
@@ -338,7 +386,7 @@ controlling for past orders only: 0.642 (true 0.30)
 if we had logged the hidden cause: 0.3
 ```
 
-Nothing in the data warns you. That is why a good observational analysis ends with a sensitivity analysis asking how strong a hidden confounder would need to be to change the conclusion.
+Nothing in the data warns you. That is why a good observational analysis ends with a sensitivity analysis asking how strong a hidden confounder would need to be to change the conclusion. [Chapter 5](05-matching-and-weighting.md) compares this method with matching and entropy balancing on one table, checks balance and overlap first, and runs that sensitivity analysis.
 
 ### Difference-in-differences
 
@@ -494,7 +542,7 @@ The optimiser puts most of its weight on the three donors the simulation used (1
 | A rollout hit some units and not others, with pre-period data | DiD; plot the pre-trends |
 | Treatment assigned by a threshold | RD |
 | A randomised nudge exists, and treatment is self-selected | IV |
-| Self-selected treatment, rich covariates | propensity weighting, plus a sensitivity analysis |
+| Self-selected treatment, rich covariates | [matching or weighting](05-matching-and-weighting.md), plus a sensitivity analysis |
 | One treated unit, many controls | synthetic control |
 
 ### DoWhy
@@ -583,4 +631,4 @@ Cunningham's [Mixtape](https://mixtape.scunning.com/) is the natural next read, 
 
 ## Next
 
-[Bayesian inference](../../04-bayesian-analysis/notes/01-bayesian-inference.md) opens the next pillar with a different way of answering "what do the data say": probability as belief, priors and posteriors, and the first PyMC models.
+[Matching and weighting](05-matching-and-weighting.md) takes the no-unmeasured-confounders route further: one observational question answered six ways on Fernhill's loyalty club, scored against a known truth.

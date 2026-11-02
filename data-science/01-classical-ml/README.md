@@ -28,6 +28,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | 8 | [Model interpretability](notes/08-model-interpretability.md) | What did the model learn, and why this answer for this row? |
 | 9 | [Training and tuning](notes/09-training-and-tuning.md) | How do you run the whole loop and end with a number you can defend? |
 | 10 | [Imbalance, errors and drift](notes/10-imbalance-errors-and-drift.md) | What does a good score hide when the event is rare and the world moves? |
+| 11 | [Choosing a metric](notes/11-choosing-a-metric.md) | Given this target and this decision, which loss, metric and baseline? |
+| 12 | [Reading the errors](notes/12-reading-the-errors.md) | Which rows does the model get wrong, why, and how do you learn from them without fitting to them? |
 
 ## Builds on and feeds into
 
@@ -36,7 +38,7 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | Chapter | Why |
 |---|---|
 | [DA 02/02 Probability foundations](../../data-analytics/02-probability-and-statistics/notes/02-probability-foundations.md) | Conditional probability, expectation and variance |
-| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Bias, variance, maximum likelihood and the bootstrap |
+| [DA 02/04 Estimation](../../data-analytics/02-probability-and-statistics/notes/04-estimation.md) | Bias, variance, maximum likelihood, the bootstrap and Wilson intervals |
 | [DA 02/05 Hypothesis testing](../../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Type I and II errors and multiple comparisons |
 | [DA 02/06 Regression and GLMs](../../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | Inference for linear models, which scikit-learn leaves out |
 | [DA 03/04 Correlation and causation](../../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) | Why a model's explanations are not causal |
@@ -53,6 +55,11 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [AIE 02/12 Evaluating context](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Low recall and low precision as cells of the table |
 | [AIE 03/05 Verification loops](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | A verifier that cries wolf is a false positive with a cost |
 | [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | Drift monitoring in production |
+| [DS 05/03 Two-tower and evaluation](../05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | Recall, NDCG and MRR at work on a ranking task |
+| [GA 08/02 Defining correct](../../generative-ai/08-eval/notes/02-defining-correct.md) | Open coding of traces is error analysis on text |
+| [GA 08/03 Eval datasets](../../generative-ai/08-eval/notes/03-eval-datasets.md) | Dev and held-out eval sets play the eyeball and blackbox roles |
+| [GA 08/09 Reading results](../../generative-ai/08-eval/notes/09-reading-results.md) | Slicing and reading transcripts, with the same traps |
+| [AIE 01/09 Evaluating prompts](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | A prompt tuned on failures it is scored on is the noise fix again |
 
 ## Rules of thumb
 
@@ -65,6 +72,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 - Let early stopping pick the rounds.
 - Report permutation importance or SHAP, not impurity importance.
 - Explanations describe the model, not the world.
+- Name the target and the decision before the metric. A metric's favourite prediction is what you are asking the model for.
+- Read errors on one split and score fixes on another. A fix built from noise gained 18.6 per 1,000 on the rows that chose it and lost 8.3 on the rest.
 
 ## Practice
 
@@ -73,6 +82,8 @@ You are asked whether someone will earn over $50k. A one-line split and a linear
 | [`practice/boosting-comparison/`](practice/boosting-comparison/) | Four boosting libraries on adult census across five seeds | See its [README](practice/boosting-comparison/README.md); a few minutes |
 | [`practice/credit-default-lab/`](practice/credit-default-lab/) | Credit card default at a 3% rate: what each way of handling imbalance costs, for [note 10](notes/10-imbalance-errors-and-drift.md) | See its [README](practice/credit-default-lab/README.md); about four minutes, internet needed once |
 | [`practice/music-clustering-lab/`](practice/music-clustering-lab/) | Clustering a real music library with a light reranker on top, for [note 05](notes/05-unsupervised-learning.md#case-clustering-a-music-library) | See its [README](practice/music-clustering-lab/README.md); about a minute, internet needed once |
+| [`practice/metric_map.py`](practice/metric_map.py) | Metrics by target, thresholds by cost, and retrieval on one table, for [note 11](notes/11-choosing-a-metric.md) | `uv run metric_map.py`, from `practice/` |
+| [`practice/reading_errors.py`](practice/reading_errors.py) | Six steps of error analysis on the credit model, and a noise fix against a mechanism fix over 30 seeds, for [note 12](notes/12-reading-the-errors.md) | `uv run reading_errors.py`, from `practice/`; under a minute |
 | [`practice/intro-to-ml-in-python/`](practice/intro-to-ml-in-python/) | Müller and Guido's notebooks, with local `mglearn` and data | `uv run --with scikit-learn --with pandas --with matplotlib --with jupyter jupyter lab`, from that folder |
 | [`practice/ng-machine-learning/`](practice/ng-machine-learning/) | Own Python ports of Ng's ex1 to ex8 | Same command, from that folder |
 | [`practice/udacity_mlnd_python_practice.ipynb`](practice/udacity_mlnd_python_practice.ipynb) | Python and data-handling warm-up | Same command |

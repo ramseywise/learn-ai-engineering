@@ -15,7 +15,7 @@ Stakeholders ask how likely B is to be better and how much it could cost to be w
 
 ## The story
 
-Larkspur's checkout test from the previous pillar gets a new question. [Chapter 1](notes/01-bayesian-inference.md) builds the update and the habit of telling a generative story, on coins, Challenger and German tanks. [Chapter 2](notes/02-mcmc-and-pymc.md) opens the sampler, because a posterior you cannot trust is worse than none. [Chapter 3](notes/03-priors-and-bandits.md) tests priors before fitting and turns posteriors into traffic allocation with Thompson sampling. [Chapter 4](notes/04-bayesian-ab-testing.md) answers Larkspur: P(B > A) of 0.99999, a lift between +0.34 and +0.95 points, and a measured answer to whether peeking is safe. [Chapter 5](notes/05-loss-functions-and-decisions.md) turns that posterior into a ship decision in dollars. [Chapter 6](notes/06-bayesian-machine-learning.md) carries the same ideas into EM, variational inference, VAEs and Gaussian processes.
+Larkspur's checkout test from the previous pillar gets a new question. [Chapter 1](notes/01-bayesian-inference.md) builds the update and the habit of telling a generative story, on coins, Challenger and German tanks. [Chapter 2](notes/02-mcmc-and-pymc.md) opens the sampler, because a posterior you cannot trust is worse than none. [Chapter 3](notes/03-priors-and-bandits.md) tests priors before fitting and turns posteriors into traffic allocation with Thompson sampling. [Chapter 4](notes/04-bayesian-ab-testing.md) answers Larkspur: P(B > A) of 0.99999, a lift between +0.34 and +0.95 points, and a measured answer to whether peeking is safe. [Chapter 5](notes/05-loss-functions-and-decisions.md) turns that posterior into a ship decision in dollars. [Chapter 6](notes/06-bayesian-machine-learning.md) carries the same ideas into EM, variational inference, VAEs and Gaussian processes. [Chapter 7](notes/07-multilevel-models-and-partial-pooling.md) reads the test across many markets, and measures how partial pooling cuts the winning segment's exaggeration and where it doesn't help.
 
 ---
 
@@ -29,8 +29,9 @@ Larkspur's checkout test from the previous pillar gets a new question. [Chapter 
 | 4 | [Bayesian A/B testing](notes/04-bayesian-ab-testing.md) | Report P(B > A), a lift interval and expected loss, and say what peeking does to each |
 | 5 | [Loss functions and decisions](notes/05-loss-functions-and-decisions.md) | Choose the action that minimises expected loss, and price a ship decision |
 | 6 | [Bayesian machine learning](notes/06-bayesian-machine-learning.md) | Derive EM and the ELBO, see where ADVI underestimates uncertainty, and run a GP with Bayesian optimisation |
+| 7 | [Multilevel models and partial pooling](notes/07-multilevel-models-and-partial-pooling.md) | Fit random intercepts and slopes in `MixedLM` and PyMC, choose between clustered SEs, fixed effects and a multilevel model, and say when partial pooling does not help |
 
-Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
+Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianML coursework](practice/BayesianML). Chapter 7 needs 2 and 4, plus clustered SEs from [regression](../02-probability-and-statistics/notes/06-regression-and-glms.md) and the design effect from [probability foundations](../02-probability-and-statistics/notes/02-probability-foundations.md). Earlier pillars: [probability and statistics](../02-probability-and-statistics/README.md) and [experimentation](../03-experimentation-and-causality/README.md), whose Larkspur test chapter 4 reuses.
 
 ## Builds on and feeds into
 
@@ -47,6 +48,7 @@ Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianM
 | [DS 03/03 Topic models and summarization](../../data-science/03-nlp/notes/03-topic-models-and-summarization.md) | LDA is Bayesian inference with conjugate priors |
 | [GA 05/01 RL foundations](../../generative-ai/05-RL/notes/01-rl-foundations.md) | Bandits lead into contextual bandits and RL |
 | [AIE 04/08 Self-improving loops](../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md) | A Bayesian bandit shifts live traffic between candidates |
+| [DS 05/03 Two-tower and evaluation](../../data-science/05-time-series-and-recommenders/notes/03-two-tower-and-evaluation.md) | Segment effects read with partial pooling (the pointer back from that chapter is still to come) |
 
 ---
 
@@ -80,6 +82,11 @@ Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianM
 - Restart EM. It finds local optima, and a single run cannot tell you which one you got.
 - Mean-field ADVI is fast and understates correlated uncertainty. Check it against NUTS on a small version.
 
+**Multilevel models** ([7](notes/07-multilevel-models-and-partial-pooling.md))
+- Cluster when groups are a nuisance, model them when they are the question.
+- Reading many segment effects? Partially pool them first. The raw winner overstated its true lift by 2.93 in the chapter's simulation, and the pooled winner by 0.09.
+- With a handful of groups the between-group spread is barely known, so run several priors and report the range.
+
 ---
 
 ## Deck and practice
@@ -92,7 +99,7 @@ Read 1 to 5 in order. Chapter 6 needs 1 and 2, and is the map for the [BayesianM
 uv run --with pymc --with arviz --with scipy --with scikit-learn python
 ```
 
-Three legacy blocks in chapter 6 are marked `# illustrative`, because they show the coursework's PyMC3, GPy and GPyOpt code and need its pinned environment.
+Three legacy blocks in chapter 6 are marked `# illustrative`, because they show the coursework's PyMC3, GPy and GPyOpt code and need its pinned environment. Chapter 7 shows the core of each simulation, and its runnable form is [practice/ch07_multilevel_models.py](practice/ch07_multilevel_models.py): run `uv run ch07_multilevel_models.py` from that folder. It also needs `statsmodels` and the chart helpers in [06/practice](../06-applied-analyses/practice/chartstyle.py).
 
 **Practice:** the coursework in [practice/BayesianML/](practice/BayesianML) is kept as written, with no saved outputs. It targets Python 3.7, TensorFlow 1.15, Keras 2.3.1, `pymc3==3.11.4` and `theano-pymc==1.1.2`, set up with [bayesian.yml](practice/BayesianML/bayesian.yml). The course grader is not included, and these notebooks are not run by the repo checks.
 

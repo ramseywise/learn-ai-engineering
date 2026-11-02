@@ -32,7 +32,7 @@ Four questions, in order. Each one depends on the answer before:
 |---|---|---|
 | **What does correct mean?** | Graders measure noise; two experts disagree | [02](notes/02-defining-correct.md) |
 | **Which tasks represent real use?** | Precise answers to the wrong question | [03](notes/03-eval-datasets.md) |
-| **Can the grader be trusted?** | Confidently wrong scores | [04](notes/04-graders.md), [05](notes/05-llm-as-judge.md) |
+| **Can the grader be trusted?** | Confidently wrong scores | [04](notes/04-graders.md), [05](notes/05-llm-as-judge.md), [14](notes/14-calibrating-judges-with-checks-and-critiques.md) |
 | **Is the difference real?** | Shipping noise | [09](notes/09-reading-results.md) |
 
 ---
@@ -98,6 +98,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | SRM, CUPED and looking early |
 | [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under judges and retrieval metrics |
 | [DS 02/03 Structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md) | Error analysis and dev and test sets |
+| [GA 06/03 Judge pipelines over trace exports](../06-observability/notes/03-judge-pipelines-over-trace-exports.md) | The planted failures and rule judges behind note 14's exercise |
 | [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG |
 
 **Feeds into**
@@ -121,12 +122,14 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 | TypeScript | [practice/eval-suite-ci/](practice/eval-suite-ci/README.md) | `cd practice/eval-suite-ci && npx tsx demo.ts` |
 | Python | [practice/eval-suite-ci-py/](practice/eval-suite-ci-py/README.md) | `cd practice/eval-suite-ci-py && uv run demo.py` |
 
+Note 14 has its own script, [practice/judge_checks_and_critiques.py](practice/judge_checks_and_critiques.py). It tests the procedure on GA 06's rule judges and measures no real model. Its cue and edit tests need your own model. Run it with `cd practice && uv run judge_checks_and_critiques.py`.
+
 ## Layout
 
 ```
 08-eval/
 ├── README.md                     ← you are here: summary, rules of thumb, chapter index
-├── notes/                        ← chapters 01–13, read in order; figures and code inline
+├── notes/                        ← chapters 01–14, read in order; figures and code inline
 ├── slides/                       ← lecture deck (deck.yaml → eval-engineering.pptx)
 ├── practice/                     ← the lab, in TypeScript and Python
 ├── sources/                      ← papers filed for this pillar
@@ -162,6 +165,10 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 **Worked example**
 
 13. [Case study: a multi-agent support system](notes/13-case-study-support-agent.md) — routing vs. domain evals, free labels from metadata, an eight-gate ladder with row pools and a failure taxonomy, claim-level grounding, grader selection against user sentiment, calibration results (including inverted off-the-shelf metrics and a grounding check that failed for an eval reason).
+
+**Going deeper**
+
+14. [Calibrating judges with checks and critiques](notes/14-calibrating-judges-with-checks-and-critiques.md) — code checks against the judge, errors by slice, coding the critiques, and cue and edit tests of whether a critique reports what drove the verdict. It comes after the case study because it needs 09's multiple comparisons and uses 13's cases, but you can read it straight after 05 if you're calibrating a judge now.
 
 ### Course code
 

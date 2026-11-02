@@ -561,3 +561,66 @@ For GA 08/14 once it exists:
 - Keep the random human sample and the disagreement queue apart. Only the random sample gives you rates.
 - Read critiques on agreements as well as disagreements. A right verdict can rest on a wrong reason.
 - A critique is a hypothesis about the verdict. Change the input and see whether the verdict follows.
+
+## 7. Next round: production ML gaps
+
+Status: 2026-11-02, agreed in outline, not started. It doesn't belong to the 15 phases in §5, so the final pass (phases 14 and 15) leaves it alone. Start it after phase 15, because 7.1 and 7.2 build on DS 01/11 and DS 01/12.
+
+The gaps came from checking the course against one job description, [Senior ML Engineer, Embedded AI at Pennylane](https://jobs.ashbyhq.com/pennylane/57614043-7914-40b1-94a2-ed5203c4c0d4): document understanding, classification, matching, scoring, and learning from user corrections. The audit searched the notes and read the sections behind thin results, without reading every note in full. Each chapter works an invoice-style example, but teaches the general method, so the course doesn't turn into preparation for one company.
+
+### 7.1 Coverage found
+
+| Area | Rating | Where it is now |
+|---|---|---|
+| Transformer architecture | Strong, so no new chapter | GA 01/02, GA 01/03, GA 01/12, GA 09/03, DS 02/05 |
+| Bi-encoders and cross-encoders | Strong | GA 02/05 |
+| Classification, generative AI and evals, Python and PyTorch, recommendation, drift and data quality, cost and latency | Strong | DS 01, DS 03/02, GA 08, DS 02, DS 05/02 and 05/03, DE 05, DE 06/04, GA 06/06, AIE 07 |
+| Airflow and Spark, serving and registry | Decent | DE 03/05, DE 01/08, DE 04/01, DE 06/02 and 06/03 |
+| Document AI | Decent, one note | AIE 08/02: routes, cost and field-level F1, with nothing on invoices as a domain |
+| Anomaly detection | Decent | DS 01/05 (Gaussian), DS 03/07 (embeddings), little on tabular data |
+| Autoencoders | Thin | VAE section in DA 04/06, passing mentions elsewhere, no plain autoencoder in DS 02 |
+| Ranking | Partial | Retrieval and metrics are there, learning to rank isn't |
+| Labelling strategy, label noise | Thin | Scattered tips in DS 02/03 and DS 03/02 |
+| SageMaker, Redshift | Thin | Almost nothing, and both are quick to learn from what's already taught |
+| Automation coverage, straight-through processing | Gap | Abstaining appears only as a grading issue in GA 08/04 |
+| Active learning, learning from corrections | Gap | One-line mentions, plus one table row in GA 08/11 |
+| Entity matching | Gap | Only as a knowledge-graph concern in AIE 05/10 |
+| End-to-end ML case study | Gap | Each stage is taught, in separate notes, and none walks one problem through |
+
+### 7.2 New chapters
+
+Numbers continue each pillar's sequence, and they assume DS 01/12 lands as planned. Check the folder before creating a file.
+
+| Chapter | Title | What it teaches | Builds on |
+|---|---|---|---|
+| DS 01/13 | **Automate, review or reject** | Two thresholds split predictions into automate, send to a person, and reject. Coverage against precision on the automated share, straight-through rate and human correction rate as the product metrics. Price the choice using the cost of each error and of review time. Calibration as the precondition, and what happens when it drifts. Conformal prediction only if it earns its place | DS 01/10 calibration and error costs, DS 01/11, DS 01/12 |
+| DS 01/14 | **Learning from corrections** | Labelling strategy, agreement between annotators, and label noise. Active learning, with a simulation that compares uncertainty sampling against random sampling and reports whichever wins. The selection bias in corrections: people see only what the model surfaced, and silent acceptance isn't confirmation. Holding out a random audit sample to measure it. Turning production failures into test cases | DS 01/12, DS 01/13, GA 08/03, GA 08/11 |
+| DS 05/04 | **Entity matching and learning to rank** | Match bank transactions to invoices: blocking to cut the candidates, pairwise scoring, then ranking the candidates. Pointwise, pairwise and listwise objectives, with LambdaMART against a baseline on NDCG. How match errors differ from classification errors, including one-to-many matches | DS 05/02 metrics, DS 05/03 retrieve then rank, DS 01/07, GA 02/05 |
+| DE 06/06 | **An ML system from framing to monitoring** | One invoice extraction problem through every stage: framing, what "correct" means, data and labels, baseline, the choice between rules, classical ML, deep learning and an LLM, offline and online metrics, shadow and canary rollout, monitoring, and the correction loop. Mostly links to the notes that teach each stage. Ends with a timed practice case: 75 minutes, one new problem | All of the above, DE 06/03, DE 06/04, AIE 08/02, GA 08/02 |
+
+### 7.3 Smaller additions
+
+- **Autoencoders, DS 02.** One section: the bottleneck, denoising, and reconstruction error as an anomaly score, with a pointer to the VAE section in DA 04/06. DS 02/05 or a new DS 02/07 could hold it, so check the word limit first.
+- **Tabular anomaly detection, DS 01/05.** An isolation forest example on tabular data, to sit beside the Gaussian one.
+- **Runnable invoice pipeline, AIE 08/02.** Synthetic invoices through a multimodal route, scored by field-level F1, reporting cost per document.
+- **Mapping to SageMaker and Redshift, DE 06.** A short section mapping what DE 06 teaches onto them, not a tutorial. Redshift may sit better in DE 04/01.
+
+### 7.4 Order
+
+1. DS 01/13, then DS 01/14, because the second uses the first's review queue.
+2. DS 05/04.
+3. The smaller additions in 7.3.
+4. DE 06/06 last, since it links to the rest. If an interview comes first, write it first and add those links afterwards.
+5. Then the usual pass: READMEs, `CURRICULUM.md`, rules of thumb, deck rebuilds and ledger rows.
+
+### 7.5 Sources to check
+
+Listed from memory and not yet read or verified. Under the rules in §4, each must be read before it's cited, and any that doesn't hold up gets dropped.
+
+| For | Source |
+|---|---|
+| DS 01/13 | Chow, "On optimum recognition error and reject tradeoff" (1970). Geifman and El-Yaniv, "Selective classification for deep neural networks" ([arXiv:1705.08500](https://arxiv.org/abs/1705.08500)). Angelopoulos and Bates, a gentle introduction to conformal prediction ([arXiv:2107.07511](https://arxiv.org/abs/2107.07511)) |
+| DS 01/14 | Settles, "Active learning literature survey" (2009). Northcutt et al., "Confident learning" ([arXiv:1911.00068](https://arxiv.org/abs/1911.00068)). Ratner et al., "Snorkel" ([arXiv:1711.10160](https://arxiv.org/abs/1711.10160)) |
+| DS 05/04 | Fellegi and Sunter, "A theory for record linkage" (1969). Christen, *Data Matching* (2012). Li et al., "Deep entity matching with pre-trained transformers" ([arXiv:2004.00584](https://arxiv.org/abs/2004.00584)). Burges, "From RankNet to LambdaRank to LambdaMART" (2010) |
+| DE 06/06 | Huyen, *Designing Machine Learning Systems* (2022). Sculley et al., "Hidden technical debt in machine learning systems" (2015). Breck et al., "The ML test score" (2017) |
+| 7.3 | Hinton and Salakhutdinov, "Reducing the dimensionality of data with neural networks" (2006). Vincent et al., denoising autoencoders (2008). Liu et al., "Isolation forest" (2008). Xu et al., "LayoutLM" ([arXiv:1912.13318](https://arxiv.org/abs/1912.13318)) |

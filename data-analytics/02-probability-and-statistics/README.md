@@ -15,7 +15,7 @@ The errors that reach a decision are rarely exotic. A mean is quoted over a colu
 
 ## The story
 
-Larkspur, a fictional online plant shop, hands you twenty thousand users and asks about the average customer. You look first and find that the average customer does not exist ([1](notes/01-descriptive-statistics-and-eda.md)). You learn the rules for reasoning about data you do not have, including the base-rate rule that makes the fraud filter wrong nine times in ten ([2](notes/02-probability-foundations.md)), then the shapes that recur and why the Central Limit Theorem takes tens of thousands of users to earn its keep on revenue ([3](notes/03-distributions-and-sampling.md)). You report numbers with intervals, by formula and by bootstrap ([4](notes/04-estimation.md)), turn intervals into decisions and watch twenty tests produce a false discovery ([5](notes/05-hypothesis-testing.md)), and finally see that a t-test was a regression all along, which lets you add covariates, fix standard errors and model conversions and counts ([6](notes/06-regression-and-glms.md)). The new checkout you have been testing then goes to a proper experiment in pillar 03.
+Larkspur, a fictional online plant shop, hands you twenty thousand users and asks about the average customer. You look first and find that the average customer does not exist ([1](notes/01-descriptive-statistics-and-eda.md)). You learn the rules for reasoning about data you do not have, including the base-rate rule that makes the fraud filter wrong nine times in ten ([2](notes/02-probability-foundations.md)), then the shapes that recur and why the Central Limit Theorem takes tens of thousands of users to earn its keep on revenue ([3](notes/03-distributions-and-sampling.md)). You report numbers with intervals, by formula and by bootstrap ([4](notes/04-estimation.md)), turn intervals into decisions and watch twenty tests produce a false discovery ([5](notes/05-hypothesis-testing.md)), and finally see that a t-test was a regression all along, which lets you add covariates, fix standard errors and model conversions and counts ([6](notes/06-regression-and-glms.md)). You then step back and ask what a model claims about the process behind the rows, and find that a better fit is not always a better answer ([7](notes/07-data-generating-process.md)). When the same stores come back week after week, you compare each with itself, and a discount that looked harmful turns out to help ([8](notes/08-panel-data-and-fixed-effects.md)). The new checkout you have been testing then goes to a proper experiment in pillar 03.
 
 ---
 
@@ -29,6 +29,8 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 | 4 | [Estimation](notes/04-estimation.md) | Fit by maximum likelihood, read a confidence interval, bootstrap, plan sample size |
 | 5 | [Hypothesis Testing](notes/05-hypothesis-testing.md) | Pick a test, read a p-value correctly, and correct for many comparisons |
 | 6 | [Regression and GLMs](notes/06-regression-and-glms.md) | Read OLS output, check it, cluster its errors, and fit logistic and Poisson models |
+| 7 | [The data generating process](notes/07-data-generating-process.md) | State the process you believe, compare specifications with a known truth, separate explaining from predicting, and ask how the rows got in |
+| 8 | [Panel data and fixed effects](notes/08-panel-data-and-fixed-effects.md) | Separate within from between variation, fit two-way fixed effects, read an event study, and say what these cannot fix |
 
 ## Builds on and feeds into
 
@@ -83,6 +85,16 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 - Cluster at the level of randomisation. Use robust SEs on money.
 - Report marginal effects rather than odds ratios, and check dispersion on every Poisson fit.
 
+**The data generating process** ([7](notes/07-data-generating-process.md))
+- Write the data generating process you believe before you fit, and simulate from it to see whether your estimator recovers it.
+- A better fit in this sample is not a better answer for the population. Ask how the rows got in before you admire R².
+- Decide whether you are explaining or predicting first. Held-out error can prefer a model whose coefficient is biased.
+
+**Panel data** ([8](notes/08-panel-data-and-fixed-effects.md))
+- Clustered errors fix the standard error and not the estimate. Fixed effects change the estimate, because they change the comparison.
+- Fixed effects remove what is constant within a unit. Ask what moved at the same time as the treatment, and whether the treatment responded to the outcome.
+- A flat pre-period is not a proof of parallel trends. On a staggered rollout, do not trust the single coefficient.
+
 ---
 
 ## Deck and practice
@@ -95,10 +107,12 @@ Larkspur, a fictional online plant shop, hands you twenty thousand users and ask
 uv run --with numpy --with pandas --with scipy --with statsmodels python
 ```
 
-**Practice:** the coursework in [practice/](practice/) is kept as written.
+**Practice:** the coursework in [practice/](practice/) is kept as written. The two chapter scripts are simulations with a known truth, and write their figures to `../sources/images/`.
 
 | File | What it is | How to run |
 |---|---|---|
+| [ch07_data_generating_process.py](practice/ch07_data_generating_process.py) | Chapter 7: specifications, Meng's data defect correlation, and selection into the sample | `uv run ch07_data_generating_process.py` from `practice/` |
+| [ch08_panel_data.py](practice/ch08_panel_data.py) | Chapter 8: pooled OLS, fixed effects, event studies and staggered timing | `uv run ch08_panel_data.py` from `practice/` |
 | [5_Statistical_Analysis.ipynb](practice/5_Statistical_Analysis.ipynb) | Distributions, tests, A/B basics, correlation and causation | `uv run --with jupyter --with numpy --with pandas --with scipy --with statsmodels --with matplotlib --with seaborn jupyter lab` |
 | [courses/wesleyan_data_cleaning.py](practice/courses/wesleyan_data_cleaning.py) | Recoding survey sentinels on NESARC | Needs `nesarc_pds.csv`, which is not in the repo; read it as a worked example |
 | [courses/wesleyan_inferential_statistics.py](practice/courses/wesleyan_inferential_statistics.py) | ANOVA, chi-square and Tukey via formulas on NESARC | Same data requirement |
