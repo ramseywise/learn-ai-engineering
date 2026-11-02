@@ -181,7 +181,7 @@ Read the accuracy column. It is 0.96 at k = 1, where four of the five relevant d
 MRR and NDCG go a step further. They weight positions, so no single confusion table produces them; they summarise across cut-offs.
 
 - **MRR**, mean reciprocal rank, averages $1/\text{rank}$ of the first relevant result. It stops looking after that one.
-- **NDCG**, normalised discounted cumulative gain, sums the gain at each position with a discount for depth, then divides by the score of the ideal ordering. [Järvelin and Kekäläinen](https://doi.org/10.1145/582415.582418) (ACM TOIS 2002) introduced it to reward graded relevance and to discount documents found late. Theirs divides by $\log_b(\text{rank})$ and doesn't discount before rank $b$. `sklearn.metrics.ndcg_score` divides by $\log_2(\text{rank}+1)$, as do most libraries. So NDCG figures from different tools or papers needn't agree.
+- **NDCG**, normalised discounted cumulative gain, sums the gain at each position with a discount for depth, then divides by the score of the ideal ordering. [Järvelin and Kekäläinen](https://doi.org/10.1145/582415.582418) (ACM TOIS 2002) introduced it to reward graded relevance and to discount documents found late. Theirs divides by $\log_b(\text{rank})$. `sklearn.metrics.ndcg_score` divides by $\log_2(\text{rank}+1)$, as do most libraries. So NDCG figures from different tools or papers needn't agree.
 
 Two rankers built to differ show them disagreeing. The finder lifts one relevant document by 4 standard deviations and does nothing for the rest, like a search engine that nails the single best match. The broad ranker lifts all five by 1.7.
 

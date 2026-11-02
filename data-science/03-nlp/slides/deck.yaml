@@ -71,6 +71,16 @@ parts:
           Three lines carry most of the classical toolkit. Sublinear term frequency stops a word repeated ten times counting ten
           times as much. Bigrams recover some order at the cost of many more columns.
 
+      - layout: image
+        title: Removing stopwords turned "not good" from 0.02 to 0.99
+        recall: What did stopword removal cost on IMDb, and why did it flip "not good"?
+        image: ../../sources/images/nlp-stopword-negation.png
+        caption: "TF-IDF logistic regression on 25,000 IMDb reviews: P(positive) for 'not good' goes from 0.02 to 0.99 with stopwords removed, and accuracy from 0.906 to 0.890. Run `practice/stopword_negation.py`."
+        takeaway: Your stopword list holds "not", so check what it deletes before you trust the small accuracy change.
+        source: notes/01-text-representation.md, notes/06-sentiment-analysis.md
+        notes: >-
+          Accuracy loses only 1.6 points, so the average hides it. Delete "not" and the sentence that remains is "good", so the model reads it as positive. Bigrams only help if the bigram is still there.
+
       - layout: table
         title: Pick the cheapest text representation that keeps your signal
         kicker: Decision guide
@@ -148,45 +158,34 @@ parts:
           Putting the vectoriser in the pipeline means each fold builds its own vocabulary, so the cross-validated score is honest.
           Reading the top coefficients often exposes a word that gives the label away.
 
-      - layout: compare
-        title: Accuracy flatters a lazy model when classes are imbalanced
+      - layout: image
+        title: Accuracy 0.532 hides a Crime F1 of 0.067
         kicker: Evaluation
         recall: What should decide your metric, and what goes wrong with accuracy on imbalanced text?
-        left:
-          title: Accuracy is fine when
-          bullets:
-            - Topics are balanced
-            - Errors cost about the same
-        right:
-          title: Use something else when
-          bullets:
-            - "Imbalanced classes: macro-F1"
-            - "Rare positives: PR-AUC at an operating point"
-            - "Downstream ranking: log-loss"
+        image: ../../sources/images/nlp-genre-f1.png
+        caption: "Genre from film descriptions: accuracy 0.532, macro-F1 0.423, majority class 0.315. Crime, 5.1% of films, gets F1 0.067. Run `practice/genre_f1.py`."
+        bullets:
+          - "**Accuracy is fine when** topics are balanced and errors cost about the same."
+          - "**Otherwise:** macro-F1 for imbalance, PR-AUC for rare positives, log-loss for ranking."
         takeaway: Choose the metric from the costs of the errors, since accuracy on imbalanced text flatters a lazy model.
         source: notes/02-text-classification.md
         notes: >-
-          Genre has a 31.5% majority class, so accuracy alone would flatter a model that favours drama. Macro-F1 weights every genre equally.
+          Genre has a 31.5% majority class, so accuracy alone would flatter a model that favours drama. Macro-F1 weights every genre equally, and Crime shows what that catches.
 
   - title: Text with no labels
     summary: Topics · Coherence · Clusters · Summaries
     notes: >-
       Ten thousand support tickets, no labels, and nobody will read them. What can you honestly say?
     slides:
-      - layout: image
+      - layout: statement
         title: What is in a corpus nobody has labelled?
         kicker: The problem
         recall: What can a model give you on unlabelled text, and what must a person still do?
-        image: ../../sources/images/sarkar-movie-hierarchical-clusters.png
-        caption: "Figure: Sarkar, Text Analytics with Python. Hierarchical clustering of film descriptions."
-        bullets:
-          - No held-out accuracy to lean on
-          - A cluster number means nothing until named
+        statement: With no labels there is no held-out accuracy to lean on, and a cluster number means nothing until a person names it.
         takeaway: With no labels you get candidate themes and groups, which a person still has to read and name.
         source: notes/03-topic-models-and-summarization.md
         notes: >-
-          We need phrases that matter, themes with a weight per document, and groups of similar documents. None of them comes with
-          a score we can trust alone.
+          We need phrases that matter, themes with a weight per document, and groups of similar documents. None of them comes with a score we can trust alone.
 
       - layout: table
         title: NMF gave readable topics on short film descriptions
@@ -203,6 +202,16 @@ parts:
         notes: >-
           On the film data NMF gave readable themes such as falling in love, and true stories. LDA's topics were muddier on such
           short texts, which is a common result.
+
+      - layout: image
+        title: "No knee: coherence slides from 0.352 to 0.322"
+        recall: Why doesn't coherence pick a number of topics here, and what do you do instead?
+        image: ../../sources/images/nlp-topic-coherence.png
+        caption: "LDA on film descriptions, three seeds: mean c_v 0.352 at 5 topics and 0.322 at 40, with seeds about 0.01 apart. Run `practice/topic_coherence.py`."
+        takeaway: Coherence shows no clear elbow on this corpus, so choose the topic count by reading the topics.
+        source: notes/03-topic-models-and-summarization.md
+        notes: >-
+          The whole range is 0.03, and the seeds spread about 0.01 at each size, so the small differences between neighbours aren't worth acting on. It is a gentle slide with no point that asks to be chosen. Read the topics.
 
       - layout: code
         title: Coherence barely moves, so read the topics
@@ -243,6 +252,16 @@ parts:
           Every word in TF-IDF is its own axis, so similar words have nothing in common. Word2vec fits small dense vectors so that
           words appearing in similar contexts get similar vectors.
 
+      - layout: image
+        title: GloVe puts car near truck at 0.92, and good near bad at 0.80
+        recall: What does a pretrained vector give that a one-hot never does, and what does it get wrong?
+        image: ../../sources/images/nlp-word-similarity.png
+        caption: "Cosine similarity in GloVe 50-d: hotel/motel 0.78, hotel/banana 0.09, good/bad 0.80. One-hot gives 0 for every pair. Run `practice/word_similarity.py`."
+        takeaway: Vectors measure shared contexts, so opposites used in the same places score as similar.
+        source: notes/04-embeddings-and-similarity.md
+        notes: >-
+          To one-hot and TF-IDF, every different word is equally far. Vectors recover similarity from the contexts words appear in. Good and bad appear in the same contexts, so they sit close, which is why embeddings alone don't solve sentiment.
+
       - layout: code
         title: Train word vectors in a few lines
         kicker: Worked example
@@ -282,20 +301,17 @@ parts:
         notes: >-
           These books are heavy on history, and so "king" has presidents among its neighbours. Neighbours include antonyms too, so do not treat them as synonyms.
 
-      - layout: image
+      - layout: bullets
         title: NER pulls out who, where and when as typed spans
         kicker: From similarity to structure
         recall: What does NER return, and what must you do before trusting a pretrained tagger?
-        image: ../../sources/images/sarkar-spacy-ner.png
-        caption: "Figure: Sarkar, Text Analytics with Python. The entity types spaCy's English models tag."
         bullets:
-          - "Named entity recognition: spans of text with types attached"
-          - Pretrained models are domain-bound
+          - "**Named entity recognition:** spans of text with types attached, such as person, organisation, place and date."
+          - "**Pretrained models are domain-bound:** they tag text that resembles what they trained on."
         takeaway: NER returns typed spans of text, and a pretrained tagger must be measured on your own domain before you trust it.
         source: notes/05-semantic-analysis-and-ner.md
         notes: >-
-          Similarity cannot tell a compliance team which companies appear in a contract. Named entity recognition can, as long as
-          the text resembles what the tagger trained on.
+          Similarity cannot tell a compliance team which companies appear in a contract. Named entity recognition can, as long as the text resembles what the tagger trained on.
 
       - layout: bullets
         title: Score entities, not tokens
@@ -349,25 +365,18 @@ parts:
         notes: >-
           Check this against the next table before you reach for a sequence model.
 
-      - layout: table
+      - layout: image
         title: With labels, TF-IDF beats lexicons and small networks on IMDb
         kicker: Worked example
         recall: With labels, what beat both lexicons and small neural networks on review sentiment?
-        header: [Method, Labels needed, Accuracy]
-        widths: [5, 3, 2]
-        highlight: [3]
-        rows:
-          - [SentiWordNet tuned, None, "0.658"]
-          - [AFINN tuned, None, "0.735"]
-          - [TextBlob, None, "0.761"]
-          - [TF-IDF bigrams + logistic, "25,000", "0.906"]
-          - [Averaged word2vec + dense net, "25,000", "0.831"]
-          - ["Pooled, CNN and LSTM, on less data", "6,000", "about 0.80"]
+        image: ../../sources/images/nlp-sentiment-methods.png
+        caption: "The same 1,500 test reviews: TF-IDF logistic 0.902, against TextBlob 0.759, AFINN 0.735, VADER 0.714 and SentiWordNet 0.658. Run `practice/sentiment_methods.py`."
+        bullets:
+          - "**From the note:** averaged word2vec + dense net 0.831, and pooled, CNN and LSTM on 6,000 reviews about 0.80."
         takeaway: With labels, TF-IDF bigrams beat both the lexicons and small neural networks on review sentiment.
         source: notes/06-sentiment-analysis.md
         notes: >-
-          The sequence models trained on 6,000 reviews, so that is not an even contest, but the point stands: the network has to earn
-          its place. The lexicons remain useful when you have no labels at all.
+          TF-IDF on all 25,000 test reviews gets 0.906. The sequence models trained on 6,000 reviews, so that is not an even contest, but the point stands: the network has to earn its place. The lexicons remain useful when you have no labels at all.
 
       - layout: flow
         title: Explanations turn a sentiment score into a reason
@@ -393,15 +402,11 @@ parts:
     notes: >-
       A pretrained encoder turns any text into 384 numbers. We promised a fair comparison on the film task, so here it is.
     slides:
-      - layout: image
+      - layout: statement
         title: Does a pretrained encoder make TF-IDF obsolete?
         kicker: The problem
         recall: Once text is a dense feature matrix, what tools apply to it?
-        image: ../../sources/images/sarkar-universal-embeddings-classification.png
-        caption: "Figure: Sarkar, Text Analytics with Python. A pretrained sentence encoder feeding a classifier."
-        bullets:
-          - Encode once and cache the matrix
-          - Then it is ordinary scikit-learn
+        statement: Encode once and cache the matrix, and from there on it is ordinary scikit-learn.
         takeaway: A sentence embedding is just a dense feature matrix, so all of classical ML applies to it again.
         source: notes/07-llm-embeddings-as-features.md
         notes: >-
@@ -427,24 +432,16 @@ parts:
         notes: >-
           Swap the model name and the rest of the code does not change, which makes testing an encoder on your task one line.
 
-      - layout: table
+      - layout: image
         title: The gap depends on how many labels you have
         kicker: Worked example
         recall: How does the encoder's lead over TF-IDF change as labels grow?
-        lead: Macro-F1 scores every genre equally. Higher is better.
-        header: [Training films, TF-IDF macro-F1, MiniLM macro-F1]
-        widths: [3, 3, 3]
-        highlight: [1]
-        rows:
-          - ["60", "0.144", "0.261"]
-          - ["300", "0.224", "0.383"]
-          - ["1,200", "0.335", "0.439"]
-          - ["2,877", "0.404", "0.484"]
+        image: ../../sources/images/nlp-labels-vs-f1.png
+        caption: "Macro-F1 over five samples: MiniLM 0.261 and TF-IDF 0.144 at 60 films; 0.484 and 0.404 at all 2,877. Run `practice/labels_vs_f1.py`."
         takeaway: The encoder leads at every size, by the most below about 1,000 labels, and TF-IDF gains ground as labels grow.
         source: notes/07-llm-embeddings-as-features.md
         notes: >-
-          At sixty labels MiniLM nearly doubles TF-IDF's score. With all the labels the gap is 0.08, and a bootstrap interval says it is real.
-          TF-IDF tuned with a wider search reaches 0.423 here, so the lead would be 0.06.
+          At sixty labels MiniLM nearly doubles TF-IDF's score. With all the labels the gap is 0.08, and a bootstrap interval says it is real. TF-IDF tuned with a wider search reaches 0.423 here, so the lead would be 0.06.
 
       - layout: cards
         title: The same embeddings also cluster text and catch anomalies

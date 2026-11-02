@@ -274,16 +274,16 @@ a.legend(loc="center right", bbox_to_anchor=(1, 0.36))
 b.plot(st.t, st["cost 5:1"], color=cs.SECONDARY, lw=2, label="Cost per 1,000 at 5:1")
 i = st["cost 5:1"].idxmin()
 b.plot(st.t[i], st["cost 5:1"][i], "o", color=cs.SECONDARY, ms=8, mec=cs.SURFACE, mew=2)
-b.annotate(f"Lowest {st['cost 5:1'][i]:.1f}", (st.t[i], st["cost 5:1"][i]), xytext=(0, 9), textcoords="offset points", ha="center")
+b.annotate(f"Lowest {st['cost 5:1'][i]:.1f}", (st.t[i], st["cost 5:1"][i]), xytext=(-4, 9), textcoords="offset points", ha="right")
 i = picks["balanced accuracy"]
 b.plot(st.t[i], st["cost 5:1"][i], "o", color=cs.ORANGE, ms=8, mec=cs.SURFACE, mew=2)
-b.annotate(f"Balanced accuracy's pick: {st['cost 5:1'][i]:.0f}", (st.t[i], st["cost 5:1"][i]), xytext=(9, 0),
-           textcoords="offset points", va="center")
+b.annotate(f"Balanced accuracy's pick: {st['cost 5:1'][i]:.0f}", (st.t[i], st["cost 5:1"][i]), xytext=(9, 9),
+           textcoords="offset points")
 b.axvline(lab.BAYES, color=cs.MUTED, lw=1, ls="--")
 b.annotate("1/6, from the 5:1 cost ratio", (lab.BAYES, st["cost 5:1"].max() * 0.9), xytext=(6, 0),
            textcoords="offset points", color=cs.SECONDARY)
 b.set_xscale("log")
 b.set_xlabel("Threshold on predicted default probability (log scale; dots mark each line's best)")
 b.set_ylabel("Cost per 1,000")
-b.legend(loc="upper right")
+b.legend(loc="upper right", bbox_to_anchor=(1, .75))
 cs.save(fig, "metric-map-threshold.png")

@@ -332,25 +332,16 @@ parts:
           Steck reports this beating deep models on most public datasets in his paper. It fits in a fraction of a second here. The inverse limits it to
           catalogues in the tens of thousands, which is what pushes larger systems to factor models.
 
-      - layout: table
+      - layout: image
         title: Models built to rank beat a popularity list
         kicker: Worked example
         recall: On full-catalogue top-10, which kind of model beat popularity?
-        lead: 861 test users, full catalogue minus what they have seen. Relevant means rated 4 or 5.
-        header: [Model, Recall@10, NDCG@10, Coverage]
-        widths: [3, 1, 1, 1]
-        rows:
-          - [EASE, "0.155", "0.126", "0.22"]
-          - [Item kNN, "0.137", "0.114", "0.23"]
-          - [Implicit ALS, "0.138", "0.112", "0.25"]
-          - [BPR, "0.126", "0.099", "0.31"]
-          - [Popularity, "0.090", "0.075", "0.04"]
-          - [MF on ratings, "0.043", "0.034", "0.21"]
-        highlight: [0]
+        image: ../../sources/images/recsys-ranking-coverage.png
+        caption: "861 test users, full catalogue: EASE reaches NDCG@10 0.126 at 22% coverage; popularity 0.075 at 4%. Run `practice/02_ranking_plot.py`."
         takeaway: On full-catalogue top-10, models that target ranking beat popularity, and the simplest learned model led on our data.
         source: notes/02-collaborative-filtering-and-matrix-factorisation.md
         notes: >-
-          One small dataset, so treat this as a demonstration of method. Watch coverage too. A high NDCG with 4 percent coverage is a bestseller list.
+          Relevant means rated 4 or 5, minus what the user has seen. Recall@10 follows the same order: EASE 0.155, ALS 0.138, kNN 0.137, BPR 0.126, popularity 0.090, MF on ratings 0.043. One small dataset, so treat this as a demonstration of method. Watch coverage too. A high NDCG with 4 percent coverage is a bestseller list.
 
       - layout: compare
         title: Implicit data has no dislikes, so model it differently
@@ -460,29 +451,15 @@ parts:
           EASE still wins on this small catalogue. The tower has to earn its complexity elsewhere, and cold start is where it does: on films hidden from training it reaches
           recall 0.22 against 0.08 for random, and EASE only matches random.
 
-      - layout: compare
+      - layout: image
         title: A sampled metric reversed two models
         recall: What can ranking against sampled negatives do to the order of two models?
-        lead: HR@10 is the hit rate, how often a test item reaches the top ten. Same models, same users.
-        emphasis: left
-        left:
-          title: Full catalogue
-          bullets:
-            - "EASE: **0.137**"
-            - "Tower with logQ: **0.125**"
-            - EASE wins
-          tag: What users get
-        right:
-          title: 99 sampled negatives
-          bullets:
-            - "EASE: **0.591**"
-            - "Tower with logQ: **0.617**"
-            - The tower wins
-          tag: What the paper would report
+        image: ../../sources/images/recsys-sampled-metric.png
+        caption: "HR@10, same models and users. Against 99 negatives EASE 0.591, tower 0.617. Against the full catalogue EASE 0.137, tower 0.125. Run `practice/03_sampled_metric_plot.py`."
         takeaway: Sampled metrics are inconsistent with exact ones and can reverse model order, so rank the whole catalogue whenever you can.
         source: notes/03-two-tower-and-evaluation.md
         notes: >-
-          Krichene and Rendle prove this is not noise. As the sample shrinks, all metrics collapse towards AUC. We see it directly here: numbers roughly four to nine times too high, and the order flipped.
+          Krichene and Rendle prove this is not noise. As the sample shrinks, all metrics collapse towards AUC. We see it directly here: numbers roughly four to nine times too high, and the order flipped. The tower's lead holds up to 499 negatives and ends at 999, so a paper's choice of sample size can decide the winner.
 
       - layout: table
         title: Reweighting recovers the value of an unshipped policy

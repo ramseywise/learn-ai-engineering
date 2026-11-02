@@ -1,4 +1,4 @@
-# Classical ML lecture deck. Covers notes 01-10.
+# Classical ML lecture deck. Covers notes 01-12.
 # Build: make slides PILLAR=data-science/01-classical-ml STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: predict who earns over $50k on the adult census, from a dummy at 0.759 accuracy
@@ -40,14 +40,14 @@ parts:
       - layout: image
         title: Too simple misses signal, too flexible fits noise
         recall: Which error falls as a model gets more complex, and which turns back up?
-        image: ../../sources/images/mueller-guido-overfitting-underfitting-cartoon.png
-        caption: Müller and Guido, Introduction to Machine Learning with Python, ch. 2
+        image: ../../sources/images/classical-overfit-curve.png
+        caption: "A tree on breast cancer, 20 stratified splits: depth 10 scores 1.000 on train and 0.927 on test, and test peaks at 0.931 at depth 5. Run `practice/overfit_curve.py`."
         bullets:
           - "**Underfit:** low train score and low test score."
           - "**Overfit:** high train score, much lower test score."
           - "**Every family has a knob** that moves along this curve."
         takeaway: Read train and test together, because the gap between them tells you which side of the curve you are on.
-        source: notes/01-statistical-foundations.md
+        source: notes/01-statistical-foundations.md, notes/06-ensembles.md
         notes: >-
           This is the bias and variance picture. Too simple a family misses real structure, and too flexible a family
           follows the sample's noise. What we want is the middle, and each family gives us a knob for finding it.
@@ -91,22 +91,7 @@ parts:
         source: notes/02-supervised-learning.md
         notes: >-
           You don't need every parameter. For each family, know the one that controls complexity and how the family fails.
-          Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance.
-
-      - layout: image
-        title: Families draw different boundaries on the same data
-        recall: Why do trees draw boxes and linear models one straight line?
-        image: ../../sources/images/mueller-guido-classifier-comparison.png
-        caption: Ten classifiers on three toy datasets, from Müller and Guido's notebooks
-        bullets:
-          - "**Linear:** one flat boundary, so it depends on the features you give it."
-          - "**Trees:** axis-aligned boxes."
-          - "**Kernels and kNN:** smooth, local boundaries."
-        takeaway: A model's shape of boundary is its assumption, so check that it can express your problem.
-        source: notes/02-supervised-learning.md
-        notes: >-
-          Look at the same data with different models. Each family has its own shape of boundary, which is its assumption
-          about the world. No family wins everywhere. Now, what does the model actually get to see?
+          Trees don't need scaling because each split reads one feature's order. Kernel SVMs do, because they use distance. The knob also sets the shape of the boundary: a linear model draws one flat cut, a tree draws axis-aligned boxes, and kernels and kNN draw smooth local curves. That shape is the model's assumption, and no family wins everywhere.
 
   - title: Is it cheating?
     summary: Domain features · Leakage · Pipelines · Metrics and thresholds
@@ -146,30 +131,18 @@ parts:
           Linear on weekday as a number is poor, because Monday isn't numerically related to Sunday. One-hot encoding fixes
           that, and pairs of hour and weekday let it express the commute. It then edges the forest on this split.
 
-      - layout: compare
-        title: On pure noise, a leaky selection step reports R² 0.89
+      - layout: image
+        title: On pure noise, a leaky selection step reports R² 0.90
         recall: Why did selecting features before cross-validation give a strong score on random numbers?
-        lead: Keep the top 5% of 10,000 noise columns against a random target, then cross-validate ridge.
-        emphasis: right
-        left:
-          title: Select, then cross-validate
-          bullets:
-            - Selection saw every fold's target
-            - CV reports **0.89**
-            - A strong model on random numbers
-          tag: Wrong
-        right:
-          title: Cross-validate the pipeline
-          bullets:
-            - Selection is refit inside each fold
-            - CV reports **-0.03**
-            - Correct, because there is no signal
-          tag: Right
+        image: ../../sources/images/classical-leaky-selection.png
+        caption: "Ten datasets of pure noise, keeping the top 5% of 10,000 columns: mean R² 0.90 leaky, -0.10 in a pipeline. Run `practice/leaky_selection.py`."
+        bullets:
+          - "**Select, then cross-validate:** selection saw every fold's target."
+          - "**Cross-validate the pipeline:** selection is refit inside each fold, and the score is honest."
         takeaway: Any step with a fit must be refit inside each fold, or the score includes the answer.
         source: notes/03-feature-engineering-and-pipelines.md
         notes: >-
-          This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With
-          scaling the bias is small, and with selection it is enormous. The book's own run gets 0.91 and -0.25.
+          This is the most important bug in applied machine learning. Nothing crashes. You get a wonderful score. With scaling the bias is small, and with selection it is enormous. The note's single run on seed 42 gets 0.89 and -0.03, and the book's own run gets 0.91 and -0.25. Ten datasets give the bars here.
 
       - layout: image
         title: A pipeline fits on train and only transforms on test
@@ -240,21 +213,6 @@ parts:
         notes: >-
           Two kinds of work live here. Transforming the data, with PCA, NMF or t-SNE, and grouping it, with k-means,
           hierarchical clustering or DBSCAN. Both end with a person looking at the output.
-
-      - layout: image
-        title: Agglomerative clustering keeps every level of the tree
-        recall: How do you read a chosen number of clusters from a dendrogram?
-        image: ../../sources/images/mueller-guido-dendrogram.png
-        caption: Dendrogram with lines at two and three clusters (Müller and Guido, ch. 3)
-        bullets:
-          - "**Long branches** show clusters that stay far apart."
-          - "Cut the tree at any height to choose the number of clusters."
-          - "No `predict` for new points."
-        takeaway: A dendrogram lets you see the choice of cluster count, instead of assuming it.
-        source: notes/05-unsupervised-learning.md
-        notes: >-
-          k-means makes you commit to k first. A hierarchy shows all of the choices at once. The trade-off is that it scales
-          poorly and has no way to assign a new point.
 
       - layout: compare
         title: k-means misses the moons and DBSCAN finds them
@@ -448,27 +406,18 @@ parts:
           We fit a one-tree XGBoost model and recompute its leaves by hand. They match. LightGBM adds gradient-based sampling
           and feature bundling, and grows leaf-wise. CatBoost uses symmetric trees and ordered statistics.
 
-      - layout: steps
-        title: Tune in this order, and expect modest gains
-        recall: Why not grid-search rounds and learning rate together?
-        steps:
-          - title: Learning rate
-            text: 0.1 to search, 0.02 to 0.05 to finish
-          - title: Rounds
-            text: Early stopping, patience 50, and keep the best round
-          - title: Tree size
-            text: 8 to 64 leaves
-          - title: Leaf size
-            text: "`min_child_samples`, 5 to 200"
-          - title: Sampling
-            text: Rows and columns, 0.5 to 1.0
-          - title: L1 and L2
-            text: Usually the smallest effect
-        takeaway: On adult census this whole search moves AUC by under 0.003, so spend your time on features and leakage first.
-        source: notes/07-boosting-in-practice.md
+      - layout: image
+        title: Boosting peaks at 200 trees; a forest just stops improving
+        recall: Why not grid-search rounds and learning rate together, and why do extra boosting rounds hurt when extra forest trees don't?
+        image: ../../sources/images/classical-trees-vs-rounds.png
+        caption: "Adult census, test AUC: boosting at rate 0.05 peaks at 0.928 with 200 trees and falls to 0.920 at 2,000. A forest reaches 0.900 at 500. Run `practice/trees_vs_rounds.py`."
+        bullets:
+          - "**Rounds:** early stopping, patience 50, keep the best round."
+          - "**Tune in order:** rate, then rounds, leaves, leaf size, sampling, L1 and L2."
+        takeaway: On adult census the whole search moves AUC by under 0.003, so spend your time on features and leakage first.
+        source: notes/06-ensembles.md, notes/07-boosting-in-practice.md
         notes: >-
-          Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927. Rounds change by a factor
-          of 17. Harder problems reward tuning more, but expect a good default to be close.
+          More forest trees can only average away variance, so the curve flattens. More boosting rounds keep fitting the training set, so the test curve turns over, which is why rounds get early stopping rather than a grid. Use a learning rate of 0.1 to search and 0.02 to 0.05 to finish, 8 to 64 leaves, min_child_samples from 5 to 200, and rows and columns sampled at 0.5 to 1.0. Learning rates from 0.3 to 0.02, and leaves from 4 to 128, stay between 0.924 and 0.927, while rounds change by a factor of 17. Harder problems reward tuning more, but expect a good default to be close. This forest uses ordinal-coded columns, so its 0.900 differs a little from the one-hot 0.896 in the note.
 
   - title: Why this answer?
     summary: Permutation importance · Partial dependence · SHAP · Do explanations help?
@@ -505,24 +454,15 @@ parts:
           These three cover most real questions. All three depend on the data's correlations, as we'll see. LIME sits with
           SHAP as a local method, fitting a small surrogate around one row.
 
-      - layout: table
+      - layout: image
         title: Built-in importance credits random columns
         recall: Why does a random column get impurity credit but not permutation credit?
-        lead: LightGBM on adult census, with two random columns added on purpose. Gain counts how much splitting a column did. Permutation shuffles it and measures the fall in AUC.
-        header: [Column, Gain share, Permutation AUC drop]
-        widths: [4, 3, 4]
-        rows:
-          - [relationship, "0.278", "0.0231"]
-          - [capital-gain, "0.180", "0.0574"]
-          - [age, "0.086", "0.0564"]
-          - [noisy_id (random), "0.028", "0.0002"]
-          - [noise (random), "0.023", "0.0003"]
-          - [workclass, "0.009", "0.0027"]
+        image: ../../sources/images/classical-importance-noise.png
+        caption: "LightGBM on adult census with two planted random columns: gain share 0.028 and 0.023, permutation AUC drop 0.0002 and 0.0003. Run `practice/importance_noise.py`."
         takeaway: Gain is measured on training data and credits overfit noise, so use permutation on held-out data.
         source: notes/08-model-interpretability.md
         notes: >-
-          The random columns rank above workclass, gender and race on gain. By permutation they fall to the bottom. But
-          permutation has its own trap: add a noisy copy of age and age falls by a factor of nine, from 0.056 to 0.006.
+          Gain counts how much splitting a column did. Permutation shuffles it and measures the fall in AUC. The random columns rank above workclass, gender and race on gain. By permutation they fall to the bottom. But permutation has its own trap: add a noisy copy of age and age falls by a factor of nine, from 0.056 to 0.006.
 
       - layout: code
         title: SHAP values add up to the model's score
@@ -628,35 +568,7 @@ parts:
         notes: >-
           Holding out occupation asks how the model would do on a job it has never seen. Occupation stands in for customers,
           patients or stores, where the group split is usually the honest one. Spread jumps from 0.0041 to 0.0286. Adult has no
-          time column, so the last row uses Citi Bike. Shuffling trains on next Tuesday to predict this Monday.
-
-      - layout: compare
-        title: Fold spread is a rough guide, not a standard error
-        kicker: Bengio and Grandvalet, 2004
-        recall: Why can't you divide fold spread by the square root of k, and how should you compare two models?
-        lead: Folds share training rows, so their scores are correlated, and the simple formula does not hold.
-        emphasis: right
-        left:
-          title: Fold SD divided by √5
-          bullets:
-            - "500 rows: the true SD is **0.0252**"
-            - "The formula averages **0.0147**, about 40% too confident"
-            - "2,000 rows: true SD 0.0066, formula 0.0069 on average, yet one run's figure ranges from 0.0042 to 0.0116"
-          tag: Too sure
-        right:
-          title: Compare fold by fold
-          bullets:
-            - "Boosting beats logistic by **0.0197**, on all five folds"
-            - "Paired SD **0.0025**, against 0.0041 and 0.0043 for each model alone"
-            - A fold of easy rows is easy for both models
-          tag: Pairing removes the shared luck
-        takeaway: Use the spread as a rough size for noise, and use paired differences to compare two models.
-        source: notes/09-training-and-tuning.md
-        notes: >-
-          We tested the tempting formula by running 5-fold on separate, non-overlapping samples and measuring how much the CV
-          mean truly varies. These are 20 and 13 samples, so treat them as rough. Bengio and Grandvalet prove that no universal
-          unbiased estimator of this variance exists. The part a naive estimate captured was 50 to 70% of the total in their
-          experiments.
+          time column, so the last row uses Citi Bike. Shuffling trains on next Tuesday to predict this Monday. Fold spread is only a rough size for noise, because folds share training rows: dividing the fold SD by root k was about 40% too confident on 500 rows. To compare two models, pair them fold by fold. Boosting beat logistic by 0.0197 on all five folds, with a paired SD of 0.0025 against 0.0041 and 0.0043 for each model alone.
 
       - layout: cards
         title: "Regularisation is one idea: charge for complexity"
@@ -894,6 +806,46 @@ parts:
           coded columns by level. The noise floor here was 0.011, and the 0.1 and 0.25 lines are conventions. In credit scoring
           labels arrive a year late, so input and prediction monitors are what you have.
 
+      - layout: table
+        title: Each loss rewards its own forecast
+        kicker: Gneiting, 2011
+        recall: Which constant forecast does each of RMSE, MAE, pinball and MAPE reward on a skewed target, and why is MAPE's a warning?
+        lead: "Four constant forecasts on one skewed target, 100,000 lognormal draws. Nothing here is a better model, since all four are one number."
+        header: ["Forecast", "Value", "RMSE", "MAE", "Pinball 0.9", "MAPE"]
+        widths: [3, 1.2, 1.2, 1.2, 1.5, 1.2]
+        rows:
+          - ["The mean", "1.648", "**2.191**", "1.261", "0.631", "1.978"]
+          - ["The median", "0.996", "2.286", "**1.125**", "0.824", "1.125"]
+          - ["90th percentile", "3.586", "2.925", "2.505", "**0.477**", "4.994"]
+          - ["Best for MAPE", "0.367", "2.538", "1.323", "1.174", "**0.684**"]
+        takeaway: Choosing a metric chooses the quantity you forecast, and 84% of outcomes sit above MAPE's favourite.
+        source: notes/11-choosing-a-metric.md
+        notes: >-
+          Each column has a different winner, and the winner is the forecast built for that column. RMSE picks the mean, MAE the median, pinball its quantile. MAPE's favourite is 0.367, far under the median of 0.996, so about 84 percent of outcomes sit above it. Run practice/metric_map.py for these.
+
+      - layout: image
+        title: Balanced accuracy's threshold costs twice approving everyone
+        recall: Why does tuning a threshold on accuracy, balanced accuracy or MCC give three different decisions, and which responds to the cost ratio?
+        image: ../../sources/images/metric-map-threshold.png
+        caption: "The 3% credit data, 5:1 costs. Tuned on validation, accuracy declines nobody, and balanced accuracy declines 27% at 303 per 1,000. Run `practice/metric_map.py`."
+        takeaway: A metric you tune against also chooses a threshold, so only tune on a metric that holds your costs.
+        source: notes/11-choosing-a-metric.md
+        notes: >-
+          A metric doesn't just report a threshold. If you tune against it, it chooses one. Accuracy's pick declines nobody. Balanced accuracy's declines 27 percent of applicants and costs twice the 150.5 of approving everyone. MCC's pick is close to the cost-tuned one at 5:1, 150.1 against 148.8, and further at 20:1, 467.6 against 428.2, because MCC has no cost in it and cannot respond when the ratio changes. Dots mark each line's best on the test set, so they sit a little apart from the validation choices in the caption.
+
+      - layout: image
+        title: A noise fix gained 18.6 on rows read and lost 8.3 unread
+        recall: Why did the noise fix look good on the eyeball set, and what separates a real gain from one the reading produced?
+        image: ../../sources/images/reading-errors-noise-fix.png
+        caption: "Thirty seeds. The noise fix gains 18.6 per 1,000 on the rows read and loses 8.3 on the rows not read, on 27 of 30 seeds. Run `practice/reading_errors.py`."
+        bullets:
+          - "**Mechanism fix:** +4.1 read, -1.1 unread, so it did not work either."
+          - "**Test set, used once:** gain 5.5, interval -7.3 to 18.2, so no evidence of a gain."
+        takeaway: Read errors on one set and score the fix on rows you did not read, because reading selects on noise.
+        source: notes/12-reading-the-errors.md
+        notes: >-
+          Look at the mean bars. Any slice picked for being bad looks fixable on the rows we read: it was bad by chance, and that badness doesn't repeat. We expected the real-mechanism fix to survive, and it did not, with 13 seeds above zero and 17 below. Boosted trees had already taken most of what those columns hold. Reuse a holdout to accept 20 rounds of noise patches and it reports a gain of 16.5, while a fresh half shows -1.9, so a held-out set can only select so many times before it becomes another training set.
+
   - title: Take it with you
     agenda: false
     divider: false
@@ -915,7 +867,7 @@ parts:
           - title: Keep watching
             body: SHAP describes the model, not the world. Score monitors miss most drift.
         takeaway: Most of classical ML's failures are in the measurement, not in the model.
-        source: notes/09-training-and-tuning.md, notes/10-imbalance-errors-and-drift.md
+        source: notes/09-training-and-tuning.md, notes/10-imbalance-errors-and-drift.md, notes/11-choosing-a-metric.md
         notes: >-
           If you remember one slide, take this one. Nearly all of these are about believing your number rather than about
           choosing a cleverer algorithm.
@@ -926,7 +878,7 @@ parts:
         bullets:
           - "**Deep learning:** the MLP grows into backprop, CNNs and sequence models."
           - "**NLP:** tree and linear models meet text, with bag-of-words and TF-IDF."
-          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then `practice/credit-default-lab/` and `practice/music-clustering-lab/`."
+          - "**Practice:** run `practice/boosting-comparison/compare_boosters.py`, then `practice/credit-default-lab/` and `practice/music-clustering-lab/`. Then `practice/metric_map.py` and `practice/reading_errors.py`."
           - "**Exercises:** try the Try-it section at the end of each note."
         takeaway: Pipelines, metrics and calibration carry over unchanged to every neural model that follows.
         source: notes/10-imbalance-errors-and-drift.md

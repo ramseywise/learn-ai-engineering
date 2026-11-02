@@ -79,22 +79,15 @@ parts:
           Learn this loop by heart. The model outputs logits because cross-entropy applies the log-softmax itself. Zero the
           gradients or they accumulate. Switch modes or batch norm and dropout do the wrong thing. None of these raise errors.
 
-      - layout: table
-        title: Every Ng notebook step has a one-line PyTorch equivalent
-        recall: Which PyTorch calls replace the cost, backward and update functions of Ng's notebooks?
-        header: ["Ng NumPy", "Ng TF 1.x / Keras", "PyTorch"]
-        widths: [3, 3, 3]
-        rows:
-          - ["`L_model_forward`", "`tf.layers.dense`", "`nn.Sequential`, `model(x)`"]
-          - ["`compute_cost`", "`softmax_cross_entropy`", "`F.cross_entropy`"]
-          - ["`L_model_backward`", "automatic in the graph", "`loss.backward()`"]
-          - ["`update_parameters`", "`minimize` in `sess.run`", "`optimizer.step()`"]
-          - ["Rows as columns (`X.T`)", "Channels last", "Rows are examples, channels second"]
-        takeaway: "Cost, backward and update become `F.cross_entropy`, `loss.backward()` and `optimizer.step()`, so you can redo any notebook in PyTorch."
+      - layout: image
+        title: One hidden layer took two moons from 0.895 to 0.955
+        recall: What can the hidden layer draw that logistic regression cannot, and which PyTorch calls replace Ng's cost, backward and update functions?
+        image: ../../sources/images/dl-moons-boundary.png
+        caption: "Two moons, same loop: logistic regression tests at 0.895 with one straight cut, and one hidden layer at 0.955. Run `practice/moons_boundary.py`."
+        takeaway: The same loop with one hidden layer draws a curve that logistic regression cannot.
         source: notes/01-neural-networks-fundamentals.md
         notes: >-
-          The specialization mixes NumPy, TensorFlow 1 and standalone Keras. PyTorch is the framework for this course, so the
-          chapter has a full translation table and a status table for the old TensorFlow APIs. Here is the gist.
+          Same data and same training loop. Only the model differs. The curve is what the hidden layer buys. The note also has a full table translating Ng's notebooks to PyTorch: cost, backward and update become F.cross_entropy, loss.backward() and optimizer.step().
 
   - title: Why won't it train, or generalise?
     summary: Initialisation · Batch norm · AdamW · The learning rate · Noisy labels
@@ -159,24 +152,15 @@ parts:
           Ioffe and Szegedy's layer speeds up training a great deal. Wu and Johnson catalogue what it costs: a dependence on the
           batch that shows up as silent bugs like this. At batch size 2 it's bad either way.
 
-      - layout: table
+      - layout: image
         title: Sweep the learning rate before anything else
         recall: How far can the learning rate move accuracy, compared with the choice of adaptive optimiser?
-        header: ["Learning rate", "Test accuracy, Adam, 10 epochs"]
-        widths: [3, 4]
-        highlight: [2, 3]
-        rows:
-          - ["1e-5", "0.174"]
-          - ["1e-4", "0.647"]
-          - ["1e-3", "0.956"]
-          - ["1e-2", "0.961"]
-          - ["1e-1", "0.847"]
-          - ["1.0", "0.100"]
+        image: ../../sources/images/dl-lr-sweep.png
+        caption: "Digits, Adam, 10 epochs, mean of three seeds: 0.961 at a rate of 0.01, and 0.100 at 1.0, which is chance. Run `practice/lr_sweep.py`."
         takeaway: The rate moves accuracy from chance to 0.96, far more than choosing among adaptive optimisers does.
         source: notes/02-optimisation-and-regularisation.md
         notes: >-
-          In the same chapter, the gaps between Adam, RMSprop and Lion were inside the noise on this short budget, but
-          the rate moves everything. Tools like D-Adaptation try to remove the search; on this task one seed in five failed.
+          In the same chapter, the gaps between Adam, RMSprop and Lion were inside the noise on this short budget, but the rate moves everything. Tools like D-Adaptation try to remove the search; on this task one seed in five failed.
 
       - layout: flow
         title: Stopping early beats other regularisers on 30% noisy labels
@@ -253,21 +237,15 @@ parts:
           The function subtracts neighbouring error rates and names the biggest one. Same training error of two percent in
           the first two cases, and entirely different next steps.
 
-      - layout: table
+      - layout: image
         title: Only a train-dev set reveals data mismatch
         recall: How did making training data look like production change dev error here?
-        lead: Error rates in percent. Train-dev comes from the training data, but the model is not trained on it.
-        header: ["Trained on", "Train", "Train-dev", "Dev", "Test"]
-        widths: [4, 1, 2, 1, 1]
-        highlight: [1]
-        rows:
-          - ["Clean digits only", "1.60", "4.67", "62.96", "58.52"]
-          - ["Plus synthetic corruption", "3.70", "9.73", "14.07", "17.04"]
+        image: ../../sources/images/dl-data-mismatch.png
+        caption: "Train on clean digits, deploy on corrupted: dev error is 63.0%. With synthetic corruption added it falls to 14.1%. Run `practice/data_mismatch.py`."
         takeaway: Adding artificial data that looks like production cut dev error from 63% to 14%, at some cost to training error.
         source: notes/03-structuring-ml-projects.md
         notes: >-
-          Train on clean digits, deploy on corrupted ones. The first row looks like a great model until the last step. Without
-          train-dev you might read it as variance and go collect more of the wrong data.
+          Train-dev comes from the training data, but the model is not trained on it. Train on clean digits, deploy on corrupted ones. The clean row looks like a great model until the last step. Without train-dev you might read it as variance and go collect more of the wrong data.
 
       - layout: compare
         title: Transfer learning lost to training from scratch on 25 labels
@@ -333,21 +311,15 @@ parts:
           Local filters, shared weights, subsampling: three ideas from LeCun in 1998. LeNet-5 used about 60,000 parameters for
           345,308 connections and reached 0.95 percent error on MNIST.
 
-      - layout: table
-        title: Deeper plain networks train worse, residual ones don't
+      - layout: image
+        title: "Deeper plain networks train worse, residual ones don't"
         recall: Why is a very deep plain network's failure not overfitting, and what fixes it?
-        header: ["Layers", "Plain train / test", "Residual train / test"]
-        widths: [2, 3, 3]
-        highlight: [2]
-        rows:
-          - ["6", "0.986 / 0.969", "0.984 / 0.965"]
-          - ["22", "0.946 / 0.924", "0.982 / 0.978"]
-          - ["62", "0.379 / 0.370", "0.983 / 0.965"]
-        takeaway: "Plain depth fails on the training data itself, so it isn't overfitting, and `out + x` makes doing nothing the easy default."
+        image: ../../sources/images/dl-depth-degradation.png
+        caption: "Digits, seed 0: at 62 layers the plain network trains to 0.379 and the residual one to 0.983. Run `practice/depth_degradation.py`."
+        takeaway: Plain depth fails on the training data itself, so it isn't overfitting, and `out + x` makes doing nothing the easy default.
         source: notes/04-convolutional-networks.md
         notes: >-
-          He and colleagues called this the degradation problem. At 62 layers the training score itself is 0.38, so it can't be
-          overfitting. The block learns a residual, so doing nothing is easy. Transformers carried the idea straight over.
+          He and colleagues called this the degradation problem. At 62 layers the training score itself is 0.38, so it can't be overfitting. The block learns a residual, so doing nothing is easy. Transformers carried the idea straight over. Residuals aren't free at shallow depth: at 12 layers the plain network wins here, 0.985 against 0.974 on test, and the gap only opens from 22 layers on.
 
       - layout: flow
         title: Detection keeps the best box and drops near duplicates
@@ -403,23 +375,17 @@ parts:
           The rest of the numbers are noise. So the network only has to carry one bit along. Backpropagation through time multiplies
           one factor per step, and the signal fades away. What fixes it turns out to be a single initial value.
 
-      - layout: table
+      - layout: image
         title: The forget-gate bias decides whether gradient reaches step 0
         recall: What sets how much gradient reaches the first step of an LSTM?
-        lead: Gradient size at three time steps before any training, on a sequence of 50 steps.
-        header: ["Cell", "t=49", "t=25", "t=0", "Accuracy T=50, per seed"]
-        widths: [3, 2, 2, 2, 4]
-        highlight: [3]
-        rows:
-          - ["RNN", "4.5e-02", "5.0e-07", "1.4e-12", "0.51, 0.50, 0.50"]
-          - ["LSTM, bias 0", "1.7e-02", "1.7e-07", "1.2e-12", "0.50, 0.50, 0.50"]
-          - ["LSTM, bias 1", "1.5e-02", "1.8e-04", "9.5e-06", "0.50, 0.50, 0.50"]
-          - ["LSTM, bias 2", "1.4e-02", "6.8e-03", "2.0e-02", "0.50, 0.89, 1.00"]
+        image: ../../sources/images/dl-forget-gate-gradient.png
+        caption: "Gradient before training on 50 steps: 1.2e-12 at step 0 with bias 0, and 2.0e-2 with bias 2. Run `practice/forget_gate_gradient.py`."
+        bullets:
+          - "**Accuracy at T=50, three seeds:** bias 2 reaches 0.50, 0.89, 1.00; every other cell stays near 0.50."
         takeaway: Ten orders of magnitude separate these rows at the first step, set entirely by initialisation.
         source: notes/05-sequence-models.md
         notes: >-
-          Bias 1 solves T equals 20, which Jozefowicz and colleagues recommend. T equals 50 needs more. One trap: nn.LSTM has two
-          bias vectors, and each gate adds both, so the widely copied snippet that writes 1 to both is really setting 2.
+          Bias 1 solves T equals 20, which Jozefowicz and colleagues recommend. T equals 50 needs more. One trap: nn.LSTM has two bias vectors, and each gate adds both, so the widely copied snippet that writes 1 to both is really setting 2.
 
       - layout: code
         title: A wrong parameter name sets no forget-gate bias, and no error
@@ -500,22 +466,15 @@ parts:
           This is the most useful result for a practitioner. Each neural model has over 160,000 parameters for 5,000 reviews,
           and all of it has to come from these labels. So what changed the picture?
 
-      - layout: table
+      - layout: image
         title: Word counts beat three neural models on 5,000 reviews
         recall: Which kind of model won on 5,000 reviews, and did it still lead on 25,000?
-        header: ["Model", "Params", "Train", "Test", "Seconds"]
-        widths: [5, 2, 1, 1, 2]
-        highlight: [0]
-        rows:
-          - ["TF-IDF bigrams + logistic regression", "n/a", "1.000", "0.886", "n/a"]
-          - ["Embedding average", "160,034", "0.969", "0.847", "4"]
-          - ["TextCNN", "170,626", "0.998", "0.741", "52"]
-          - ["BiLSTM, 4 epochs", "202,242", "0.880", "0.716", "116"]
+        image: ../../sources/images/dl-imdb-models.png
+        caption: "IMDb, 5,000 training reviews: TF-IDF bigrams test at 0.886, ahead of embedding average 0.847, TextCNN 0.741 and BiLSTM 0.716. Run `practice/imdb_models.py`."
         takeaway: The linear model wins here, and a notebook on 25,000 reviews saw 0.87 to 0.89 against about 0.90.
         source: notes/06-neural-text-models.md
         notes: >-
-          The CNN memorises and the BiLSTM is still learning. The intro-to-nlp notebook on five times the data saw a closer race,
-          and the linear model still led it.
+          The CNN memorises and the BiLSTM is still learning. The intro-to-nlp notebook on five times the data saw a closer race, and the linear model still led it.
 
       - layout: image
         title: A pretrained encoder supplies what few labels can't

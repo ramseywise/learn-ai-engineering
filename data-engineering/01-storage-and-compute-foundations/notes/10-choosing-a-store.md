@@ -124,7 +124,7 @@ A few details from the sources are worth having precisely.
 
 ## When Postgres is enough
 
-Stonebraker and Pavlo review 20 years of attempts to replace the relational model and conclude, as their abstract says, that "SQL has been extended to capture the good ideas from others". Their arguments are specific. Relational systems "easily emulate" key-value stores without changes, and vector databases are "essentially document-oriented DBMSs with specialized ANN indexes", where those indexes are "a feature, not the foundation of a new system architecture". They saw JSON support take years to reach relational systems and vector indexes take under one. Keep in mind one of the authors founded database companies and neither is neutral on this; still, these are checkable claims.
+Stonebraker and Pavlo review 20 years of attempts to replace the relational model and conclude, as their abstract says, that "SQL has been extended to capture the good ideas from others". Their arguments are specific. Relational systems, they write, "easily emulates" key-value stores without any changes, and vector databases are "essentially document-oriented DBMSs with specialized ANN indexes", where those indexes are "a feature, not the foundation of a new system architecture". They saw JSON support take years to reach relational systems and vector indexes take under one. This is an argued position from two database researchers rather than a neutral survey, but the claims can be checked.
 
 So check them. Each block below tries one specialised pattern on a single private Postgres. These aren't benchmarks against the specialised stores, which I did not run. The question is only whether the plain option clears the bar your workload sets.
 
@@ -150,7 +150,7 @@ reads per second, one client, over a Unix socket: 33,181
 upserts per second, one client, durable commit:   20,741
 ```
 
-Tens of thousands of operations a second from one client, against a million keys, on a laptop. Note the durable commit here uses macOS's `fsync`, which [does not flush the drive](09-persistence.md#fsync-what-a-power-cut-takes-and-what-it-costs), so a server with honest flushes will show lower upsert numbers. Most applications don't need more than this, and those that do tend to know it. Redis earns its place when you want sub-millisecond reads as a cache in front of the database, or its [data structures](https://redis.io/docs/latest/develop/data-types/): sorted sets, HyperLogLog, streams.
+Tens of thousands of operations a second from one client, against a million keys, on a laptop. Note the durable commit here uses macOS's `fsync`, which [does not flush the drive](09-persistence.md#fsync-what-a-power-cut-takes-and-what-it-costs), so a server with honest flushes will show lower upsert numbers. Most applications don't need more than this, and those that do tend to know it. Redis earns its place as a cache in front of the database, or for its [data structures](https://redis.io/docs/latest/develop/data-types/), such as sorted sets, HyperLogLog and streams.
 
 ### As a document store
 

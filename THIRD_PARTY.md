@@ -6,8 +6,8 @@ covers only material that was **copied in**, and it does not grant any rights in
 
 ## Still in this repository
 
-`programming/` and one data-analytics pillar vendor **exercises and data**, not course snapshots. They
-are the practice surface, so they stay, and each keeps its licence. The full list of sources is in
+`programming/`, one data-analytics pillar and `practice/drills/coding/dsa/` vendor **exercises and data**,
+not course snapshots. They are the practice surface, so they stay, and each keeps its licence. The full list of sources is in
 [programming/references.md](programming/references.md).
 
 | Path | Upstream | Licence | What's here |
@@ -17,6 +17,7 @@ are the practice surface, so they stay, and each keeps its licence. The full lis
 | `programming/sql/practice/data/survey.db` | https://github.com/swcarpentry/sql-novice-survey | CC-BY 4.0 | The Antarctic survey database (committed, 8 KB) |
 | `programming/sql/practice/data/clubdata.sql` | https://pgexercises.com/ | CC BY-SA 3.0 | PGExercises club data converted from Postgres to SQLite. `clubdata.db` is built from it and gitignored |
 | `programming/sql/practice/data/sql-murder-mystery.db` | https://github.com/NUKnightLab/sql-mysteries | MIT | Downloaded by `setup.sh`, gitignored |
+| `practice/drills/coding/dsa/` | https://github.com/dileeppandey/hello-interview | MIT, (c) 2019 Dileep Pandey | "Hello, Interview!" data structures and algorithms material, with its `LICENSE` kept alongside. Its problem statements derive from LeetCode, which the licence does not cover |
 | `data-analytics/01-python-for-data-analysis/practice/mckinney/` | https://github.com/wesm/pydata-book (`2nd-edition`) | MIT (code) | Chapter notebooks restored from history (they were deleted in commit `1c72b00`). `examples/` and `datasets/` (~240 MB) are downloaded by `fetch_data.sh` and gitignored |
 
 **Paraphrased, not vendored:** Charles Severance's *Python for Everybody* (CC BY-NC-SA 3.0) and the
@@ -66,8 +67,9 @@ moved.
 
 ## Practice material: upstreams with no licence
 
-The local `practice/` folder (gitignored in this repository) holds drills and interview material
-condensed from these upstream repositories. **None of these upstreams carries a licence**, and a
+Part of the local `practice/` folder holds drills and interview material condensed from these upstream
+repositories. Those files are ignored by git and not published until rewritten or cleared; only files
+named in `practice/.gitignore` are tracked. **None of these upstreams carries a licence**, and a
 repository with no licence grants no right to copy or redistribute it. This table records where the
 material came from. It is not permission to reuse it, and clearing it is still open.
 
@@ -84,7 +86,5 @@ Upstreams were confirmed through the GitHub API on 2026-10-28. The snapshots wer
 Two more items have the same gap:
 
 - `ai-engineer-test-main`, an "AI Property Search" take-home with **no known upstream** and so no
-  known licence. It is kept verbatim in `practice/drills/coding/problems/property-search/` and
-  `practice/interviewing/rounds/coding-challenge/examples/`.
-- `practice/drills/coding/dsa/` ("Hello, Interview!") is upstream material in drill form, with no
-  licence file alongside it.
+  known licence. It is not published: the copies in `practice/drills/coding/problems/property-search/`
+  and `practice/interviewing/rounds/coding-challenge/examples/` are ignored by git.

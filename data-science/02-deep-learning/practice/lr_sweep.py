@@ -53,6 +53,7 @@ def mlp(hidden=64, depth=2):
 
 
 lrs = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0]
+torch.manual_seed(0)  # run() reseeds after each model is built, so only the first model needs this
 res = np.array([[accuracy(run(mlp(), lr, seed=s), X_te, y_te) for s in range(3)] for lr in lrs])
 for lr, r in zip(lrs, res):
     print(f"lr {lr:<7} mean {r.mean():.3f} seeds {np.round(r, 3)}")
