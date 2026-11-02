@@ -2,7 +2,19 @@
 
 > What a data scientist has to know beyond the analyst: fit, evaluate and explain a model, know the classical and neural families, and know what a text or an embedding is to a model.
 >
-> Position: [data analytics](../data-analytics/README.md) comes first, for statistics, inference and Bayes. [Generative AI](../generative-ai/README.md) builds on this subject, from [LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md) onward.
+> Position: [Generative AI](../generative-ai/README.md) builds on this subject, from [LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md) onward.
+
+## Builds on
+
+| Chapter | Why |
+|---|---|
+| [Data analytics](../data-analytics/README.md) | Comes first, for statistics, inference and Bayes |
+| [DA 02/04 Estimation](../data-analytics/02-probability-and-statistics/notes/04-estimation.md) and [02/05 Hypothesis testing](../data-analytics/02-probability-and-statistics/notes/05-hypothesis-testing.md) | Intervals on a test score; comparing many models is many tests |
+| [DA 02/06 Regression and GLMs](../data-analytics/02-probability-and-statistics/notes/06-regression-and-glms.md) | The same regressions, read for inference there and for prediction here |
+| [DA 02/07 The data generating process](../data-analytics/02-probability-and-statistics/notes/07-data-generating-process.md) | "A model is an estimate of f", in the analyst's terms |
+| [DA 03/04 Correlation and causation](../data-analytics/03-experimentation-and-causality/notes/04-correlation-and-causation.md) and [03/05 Matching and weighting](../data-analytics/03-experimentation-and-causality/notes/05-matching-and-weighting.md) | A feature's importance is not its causal effect |
+| [DA 04/01 Bayesian inference](../data-analytics/04-bayesian-analysis/notes/01-bayesian-inference.md) and [04/07 Multilevel models](../data-analytics/04-bayesian-analysis/notes/07-multilevel-models-and-partial-pooling.md) | The vocabulary for topic models, and partial pooling for small slices and segments |
+| [DA 06 Applied analyses](../data-analytics/06-applied-analyses/README.md) | RFM, forecasting and credit scoring: what the models here are for |
 
 ## What it adds to the analyst
 

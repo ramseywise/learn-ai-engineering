@@ -98,6 +98,7 @@ The rules from the topic notes on one page. Each group links to the chapter that
 | [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | SRM, CUPED and looking early |
 | [DS 01/04 Model evaluation](../../data-science/01-classical-ml/notes/04-model-evaluation.md) | The confusion matrix under judges and retrieval metrics |
 | [DS 02/03 Structuring ML projects](../../data-science/02-deep-learning/notes/03-structuring-ml-projects.md) | Error analysis and dev and test sets |
+| [DS 01/12 Reading the errors](../../data-science/01-classical-ml/notes/12-reading-the-errors.md) | The procedure behind 02's error analysis and 14's reading of a judge |
 | [GA 06/03 Judge pipelines over trace exports](../06-observability/notes/03-judge-pipelines-over-trace-exports.md) | The planted failures and rule judges behind note 14's exercise |
 | [DS 05/02 Collaborative filtering](../../data-science/05-time-series-and-recommenders/notes/02-collaborative-filtering-and-matrix-factorisation.md) | Recall and NDCG |
 

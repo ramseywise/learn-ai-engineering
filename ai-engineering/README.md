@@ -6,6 +6,15 @@
 > The [interviewing guides](../practice/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
+## Builds on
+
+| Chapter | Why |
+|---|---|
+| [GA 01 LLM fundamentals](../generative-ai/01-llm-fundamentals/README.md) | The model: tokens, attention and what a prompt becomes |
+| [DS 02 Deep learning](../data-science/02-deep-learning/README.md) | Training, and what a forward pass costs |
+| [DA 02 Probability and statistics](../data-analytics/02-probability-and-statistics/README.md) | Intervals and tests behind every measurement here |
+| [DA 03 Experimentation and causality](../data-analytics/03-experimentation-and-causality/README.md) | Prompt A against prompt B is an A/B test, with the same sample-size arithmetic |
+
 ---
 
 ## The five peer foundations
