@@ -5,6 +5,8 @@ sources:
   - https://arxiv.org/abs/2309.00267 (RLAIF)
   - https://arxiv.org/abs/2302.05206 (HIR, hindsight instruction relabeling)
   - https://arxiv.org/abs/2309.07124 (RAIN, self-evaluating rewindable decoding)
+  - https://arxiv.org/abs/2407.19594 (Meta-Rewarding, LLM-as-a-meta-judge)
+  - https://arxiv.org/abs/2308.06259 (Humpback, instruction backtranslation)
   - https://arxiv.org/abs/2512.23707 (AI co-scientists, self-grading with privileged rubrics)
 confidence: medium
 cleaned: 2026-11-01
@@ -369,6 +371,18 @@ expert iteration: sample, keep what a check accepts, fine-tune, repeat.
   model, at a large compute cost per token
   ([arXiv:2403.09629](https://arxiv.org/abs/2403.09629) (Zelikman et al., COLM 2024)).
 
+The same loop can make SFT data from web text, with the model as its own filter. Instruction
+backtranslation fine-tunes LLaMA on 3,200 OpenAssistant pairs flipped to (output, instruction),
+uses it to write instructions for 502k ClueWeb segments, then has the seed model rate each pair on
+a 5-point scale and keeps only the top ones. A second round rescores with the improved model.
+**Without curation, more augmented data did not raise the 7B win rate at all; with it, 45k
+examples took Humpback 65B to 83.7% on AlpacaEval 1 against text-davinci-003**, beating
+Guanaco 65B (71.8%, 9k human pairs) and LIMA 65B (62.7%). Tagging the two sources with different
+system prompts, and using both at inference, raised the dev win rate from 60.0% to 66.5%. The self-curator is weak: on 250 author-labelled pairs the
+seed model's precision was 0.44 at recall 0.09 (GPT-4: 0.88/0.92), yet training on its picks
+still helped. The judge is GPT-4 on the AlpacaEval 1 baseline, and safety was checked on only 30
+prompts ([arXiv:2308.06259](https://arxiv.org/abs/2308.06259) (Li et al., ICLR 2024)).
+
 **Self-rewarding takes the human out of the reward too.** CAI still trains a preference model
 from AI labels. Self-Rewarding Language Models let the policy judge its own samples, using a
 5-point rubric in an LLM-as-judge prompt. The best and worst sample for each prompt become a
@@ -379,6 +393,18 @@ also rose (65.1% → 81.7%). Two caveats: average AlpacaEval response length gre
 (the paper gives no unit) over the same iterations, and length is a known judge bias; the authors did not
 test reward hacking or safety beyond three rounds
 ([arXiv:2401.10020](https://arxiv.org/abs/2401.10020) (Yuan et al., ICML 2024)).
+
+Meta-Rewarding adds a third role, so the judge improves too. The same model compares pairs of
+its own judgments of one response, and the winners and losers become DPO pairs for judging. Both
+loops also pick the *shortest* response near the top score and the longest near the bottom.
+**From Llama-3-8B-Instruct, four iterations raised AlpacaEval 2 LC win rate from 22.9% to 39.4%,
+against 35.5% for Self-Rewarding with the same length control**, with average length about flat
+(1,899 to 2,003 characters). Arena-Hard went from 20.6% to 29.1%. Without the length rule
+(ρ = 0), responses grew and LC win rate fell. The meta-judge picked up its own biases: by the second
+iteration it preferred the higher-scored judgment 97.7% of the time, and the judge's mean score
+climbed from 4.1 to over 4.7 on a 5-point scale. That is why judge training stopped after two
+rounds. Judge agreement with human OpenAssistant rankings peaked at iteration 2 and then fell back
+([arXiv:2407.19594](https://arxiv.org/abs/2407.19594) (Wu et al., 2024-07, preprint)).
 
 A self-grader gets an edge if it sees something the policy doesn't. Goel et al. extract a research
 goal and ten goal-specific rubric items from each of about 7k ML papers. A frozen copy of

@@ -1,0 +1,417 @@
+# Experimentation and Causality lecture deck. Covers notes 01-04.
+# Build: make slides PILLAR=data-analytics/03-experimentation-and-causality STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running example: Larkspur, a fictional online plant shop. All Larkspur numbers come from
+# synthetic data with fixed seeds in the notes.
+deck:
+  title: Experiments and Causality
+  subtitle: Did the change cause the result?
+  tagline: |-
+    Test · Measure · Scale · Infer
+  reference: "Notes: data-analytics/03-experimentation-and-causality"
+  output: experimentation-and-causality.pptx
+  notes: >-
+    Larkspur is a fictional online plant shop testing a new checkout. We will run that test properly, discover that the
+    answer depends on the metric, scale up to many tests at once, and then deal with the questions that cannot be randomised.
+
+parts:
+  - title: One good test
+    summary: Size it · Check the split · Right unit · Report an interval
+    notes: >-
+      A controlled experiment is the only tool that removes every confounder, measured or not. This part is what must be right for one test to mean anything.
+    slides:
+      - layout: statement
+        title: Plans are the part you cannot fix afterwards
+        kicker: The problem
+        statement: "Larkspur wants to know if a new checkout lifts conversion from 5.0% to 5.5%. Answering takes 31,231 users per arm, decided before the first user arrives."
+        attribution: Larkspur plan, 80% power at 5% significance
+        takeaway: Sample size is set by the smallest effect worth detecting, and it must be fixed before the test starts.
+        source: notes/01-ab-testing.md
+        notes: >-
+          At 4,000 users a day, this test takes three weeks, 84,000 users in all. The sizing decides whether the test can answer the question at all.
+
+      - layout: flow
+        title: A test is a pipeline, and each stage can break it
+        recall: What are the stages of a well-run A/B test?
+        steps:
+          - {label: Hypothesis, sub: "one primary metric"}
+          - {label: Size, sub: "MDE, power, duration"}
+          - {label: Assign, sub: "hash at user level"}
+          - {label: Check, sub: "SRM before outcome", accent: "D4621A"}
+          - {label: Decide, sub: "lift with interval"}
+        bullets:
+          - "**Unit:** analyse what you randomised."
+          - "**Order:** the SRM check comes first, so a broken test never gets read."
+        takeaway: Run the trust check before reading the outcome, because a broken split invalidates everything after it.
+        source: notes/01-ab-testing.md
+        notes: >-
+          The order matters psychologically as well as statistically. Once someone has seen a win, nobody wants to hear about the split.
+
+      - layout: code
+        title: The Larkspur result
+        recall: What should the report of an A/B test include?
+        lang: Text output
+        code: |-
+          conversion   A 4.93%   B 5.58%
+          lift         +0.64 points
+          95% CI       [+0.34, +0.95]
+          p            below 0.001
+          SRM p        0.33
+          relative     +13.1%  [6.7, 19.8]
+        bullets:
+          - "**Lead with the interval:** it states size and uncertainty together."
+          - "**SRM passes,** so the rest can be read."
+        takeaway: Report the lift with its interval and the SRM result, and treat the p-value as a supporting detail.
+        source: notes/01-ab-testing.md
+        notes: >-
+          The relative lift needs its own interval, since its denominator is itself estimated. A plain ratio of the bounds is not the right calculation.
+
+      - layout: table
+        title: What each planning choice costs
+        lead: Starting from the Larkspur plan, how the required sample changes.
+        recall: How does sample size respond to MDE, power and significance?
+        header: ["Change", "Multiplier on users"]
+        widths: [3, 2]
+        highlight: [1]
+        rows:
+          - ["Halve the minimum detectable effect", "x 3.91"]
+          - ["Power 80% to 90%", "x 1.34"]
+          - ["Significance 5% to 1%", "x 1.49"]
+          - ["Baseline 20% and not 5%", "x 3.25"]
+          - ["99/1 split in place of 50/50", "x 25.3"]
+        takeaway: Sample size goes with the inverse square of the effect, so the choice of MDE dominates every other choice.
+        source: notes/01-ab-testing.md
+        notes: >-
+          The baseline row is the same absolute half-point lift on a higher baseline, where variance is larger. Skewed splits are expensive, which is why ramps end at 50/50.
+
+      - layout: compare
+        title: Two ways to get 5% wrong
+        lead: Both errors look like an ordinary analysis, and A/A tests expose both.
+        recall: How do peeking and the wrong unit inflate false positives?
+        emphasis: right
+        left:
+          title: Analysing pageviews
+          tag: unit error
+          bullets:
+            - "False positive rate 10.8% against 4.6% by user."
+            - "Pages from one user are not independent."
+            - "Fix: analyse at the randomised unit."
+        right:
+          title: Peeking twenty times
+          tag: stopping error
+          bullets:
+            - "False positive rate 25.0% against 5.5%."
+            - "Stopping at the first low p selects for noise."
+            - "Fix: fixed horizon, or a sequential test."
+        takeaway: Peeking and the wrong unit each inflate false positives while the analysis looks entirely ordinary.
+        source: notes/01-ab-testing.md
+        notes: >-
+          Note the A/A false positive rate for the correct analysis, 4.6%, is what you would hope. Running A/A tests is how a platform finds these errors.
+
+  - title: What you measure
+    summary: Kinds of metric · The denominator trap · Sensitivity · Guardrails
+    notes: >-
+      A correct test on the wrong metric gives a confident wrong answer. This part is about choosing and reading metrics.
+    slides:
+      - layout: statement
+        title: A falling metric, and a winning change
+        kicker: The problem
+        statement: "Moving a module up cut click-through per user by 40%. Clicks rose 74%, impressions rose 200%, and revenue went up."
+        attribution: Dmitriev et al., KDD 2017
+        takeaway: A ratio can move because its denominator moved, so read numerator and denominator before the ratio.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          This is from Microsoft's catalogue of twelve metric pitfalls. The change was good, and the headline metric said the opposite.
+
+      - layout: cards
+        title: Four kinds of metric, read four different ways
+        recall: What are the four metric types and how is each read?
+        cards:
+          - {title: Data quality, body: "Can I trust this test? SRM, event loss. Any failure stops the read.", accent: "D4621A"}
+          - {title: OEC, body: "Did it succeed? One number, chosen in advance, which decides launch.", accent: "1E3A5F"}
+          - {title: Guardrail, body: "Did it break a promise? Must not worsen beyond a margin.", accent: "0F7490"}
+          - {title: Diagnostic, body: "Why did it happen? Explains the result and never decides it.", accent: "5B21B6"}
+        takeaway: Name each metric's job before the test, because each kind is read with a different rule.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          A north star sits above this: the company number across quarters. The OEC is its experiment-sized proxy, which needs checking against long-term outcomes.
+
+      - layout: flow
+        title: A metric tree links the goal to what teams can move
+        recall: How does a north star connect to an OEC and its drivers?
+        steps:
+          - {label: North star, sub: "repeat customer revenue"}
+          - {label: OEC, sub: "revenue per user", accent: "D4621A"}
+          - {label: Drivers, sub: "conversion, order value"}
+          - {label: Funnel, sub: "cart, address, payment"}
+        bullets:
+          - "**Identity check:** conversion x orders per buyer x value per order = revenue per user."
+          - "**Validate** each proxy against what it stands in for."
+        takeaway: Draw the tree first, since it shows which levers a team holds and where a proxy might drift from its parent.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          On our data the identity is 0.0454 x 1.026 x 56.00 = 2.612. If the parts stop multiplying back to the total, your definitions disagree.
+
+      - layout: code
+        title: Same test, opposite stories
+        recall: Why did revenue per session fall while revenue per user rose?
+        lang: Text output
+        code: |-
+          metric             A       B   B vs A
+          conversion     0.045   0.052   +13.9%
+          revenue/user   2.612   2.882   +10.3%
+          sessions/user  2.590   3.113   +20.2%
+          conv/session   0.018   0.017    -5.2%
+          revenue/sess   1.008   0.926    -8.2%
+        bullets:
+          - "**The email** brought people back for low-intent visits."
+          - "**Sessions** grew faster than revenue."
+        takeaway: When treatment can change the denominator, session metrics can fall while the business improves.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          Both readings are arithmetically right. That is why the metric definition has to be agreed in advance, including the unit and the denominator.
+
+      - layout: table
+        title: A 5% change costs very different amounts
+        lead: Users per arm by metric, using the 16σ²/Δ² rule on the same data.
+        recall: Why do teams reach for proxies over revenue?
+        header: ["Metric", "SD", "Users per arm"]
+        widths: [3, 1, 2]
+        highlight: [2]
+        rows:
+          - ["Revenue per user", "18.49", "290,154"]
+          - ["Revenue capped at 99.9th percentile", "16.44", "247,386"]
+          - ["Conversion", "0.215", "125,290"]
+        takeaway: Revenue is often right in concept and too noisy to use, so cap it or find a validated proxy.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          Forty users hold 13% of revenue here. Kohavi's worked example has the same pattern: over 409,000 on revenue and under 122,000 on conversion.
+
+      - layout: code
+        title: A guardrail needs its own test
+        recall: Why does a non-significant change not pass a guardrail?
+        lang: Text output
+        code: |-
+          margin +50 ms, sd 900 ms
+          n=   400  +8 ms  upper 112.7  cannot pass
+          n=20,000  +8 ms  upper  22.8  pass
+          n=20,000 +45 ms  upper  59.8  cannot pass
+          n=20,000 +70 ms  upper  84.8  cannot pass
+        bullets:
+          - "**Non-inferiority:** the one-sided bound must clear a margin."
+          - "**First row:** a naive check would pass it."
+        takeaway: Passing a guardrail means bounding the harm, which takes a preset margin and enough users.
+        source: notes/02-metrics-and-kpi-design.md
+        notes: >-
+          At Live Search, Kohavi and colleagues report that one extra second cut queries per user by 1% and ad clicks by 1.5%, which is why load time gets this status.
+
+  - title: Many tests at once
+    summary: CUPED · Safe peeking · SRM · Interference · The portfolio
+    notes: >-
+      At scale the hard parts change. Effects are small, people look constantly, and the pipeline itself breaks.
+    slides:
+      - layout: statement
+        title: A rounding error, or a broken test?
+        kicker: The problem
+        statement: "A dashboard shows a 50.4/49.6 split on two million users. The p-value is about 1e-29, and the test must stop."
+        attribution: Larkspur synthetic example
+        takeaway: A tiny imbalance on a huge sample means something is losing users, and it is unlikely to be doing so at random.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          In our simulation with no treatment effect, losing 4% of one arm's low-value users produced a significant fake win.
+
+      - layout: code
+        title: "CUPED: free power from last month's data"
+        recall: How much variance does CUPED remove, and what must be true of the covariate?
+        lang: Python
+        code: |-
+          theta = np.cov(pre, post)[0, 1] / pre.var(ddof=1)
+          adj = post - theta * (pre - pre.mean())
+
+          # raw    effect 0.101  SE 0.0488  z 2.08
+          # CUPED  effect 0.123  SE 0.0348  z 3.53
+          # variance ratio 0.508 = 1 - rho^2
+        bullets:
+          - "**The covariate must predate exposure,** or bias returns."
+          - "**Deng et al.** report about 50% at Bing."
+        takeaway: CUPED removes ρ² of the variance at no traffic cost, as long as the covariate predates exposure.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          Across repeated simulations both estimators average about 0.12 and the CUPED spread is 30% smaller. It is the same estimate as regression on the centred pre-period value.
+
+      - layout: table
+        title: Looks inflate false positives, and two ways to pay
+        lead: Under the null, with the fixed threshold of 1.96 at every look.
+        recall: What are the two valid ways to look early?
+        header: ["Looks", "False positive rate"]
+        widths: [2, 2]
+        highlight: [1]
+        rows:
+          - ["1", "4.8%"]
+          - ["5", "14.1%"]
+          - ["20", "24.5%"]
+          - ["100", "39.0%"]
+          - ["5, O'Brien-Fleming", "5.2%"]
+          - ["Every pair, mSPRT", "4.1%"]
+        takeaway: People will look, so give them group-sequential boundaries or always-valid p-values.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          O'Brien-Fleming's five boundaries go 4.53, 3.2, 2.61, 2.26, 2.03: strict early and close to 1.96 at the end. The mSPRT median stop was 5,897 pairs against 6,272 fixed, with a tail past 12,932.
+
+      - layout: flow
+        title: When the SRM fires, follow the pipeline
+        recall: How do you diagnose a sample ratio mismatch?
+        steps:
+          - {label: Assignment, sub: "hash, reused salt"}
+          - {label: Execution, sub: "redirect, crash"}
+          - {label: Logging, sub: "bot filter, loss"}
+          - {label: Analysis, sub: "filter, start date", accent: "D4621A"}
+        bullets:
+          - "**Slice the counts** by browser, day and filter stage."
+          - "**Our example:** only Safari fails, 15,020 against 13,800."
+        takeaway: Slicing the counts by dimension localises an SRM, and only then can you fix it and rerun.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          Fabijan and colleagues give a taxonomy and method for this. You generally can't reweight your way out, because you don't know who was lost.
+
+      - layout: compare
+        title: When individual tests mislead
+        lead: Two ways the sum of the tests differs from the truth.
+        recall: What do interference and the winner's curse do to measured lifts?
+        left:
+          title: Interference
+          tag: fixed stock
+          bullets:
+            - "Inside one market the A/B lift is +30.1%."
+            - "The real gain is +19.0%."
+            - "Treatment takes units from control."
+            - "Fix: cluster or switchback."
+        right:
+          title: Winner's curse
+          tag: 200 experiments
+          bullets:
+            - "Shipped 19, measured total 18.6."
+            - "True total 9.2."
+            - "37% of what shipped did nothing."
+            - "Fix: holdouts and shrinkage."
+        takeaway: The lifts a platform reports overstate what it delivered, through spillover and through selection.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          Cluster randomisation pays through the design effect: clusters of 1,000 with intra-cluster correlation 0.01 multiply variance by 11. Kohavi's eBay case is the auction version of interference.
+
+  - title: When you cannot randomise
+    summary: Confounders and colliders · Simpson · Selection · DiD, IV, RD, synthetic control
+    notes: >-
+      Many questions come after the fact, or concern things you can't assign. Here is how to read them honestly.
+    slides:
+      - layout: statement
+        title: Subscribers order more. So what?
+        kicker: The problem
+        statement: "Loyalty-email subscribers placed 1.21 more orders. The true effect in this simulation is 0.30, and the other 0.91 is who chooses to subscribe."
+        attribution: Larkspur synthetic example
+        takeaway: A naive comparison equals the effect plus selection bias, and randomisation is what makes the second term zero.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          In potential outcomes terms, the comparison splits into the effect on those who opted in, and the difference their untreated outcomes would have had anyway.
+
+      - layout: table
+        title: Which controls help and which harm
+        lead: The causal graph decides this, not the correlation matrix.
+        recall: Should you control for a confounder, a mediator, a collider?
+        header: ["Variable", "Path", "Control?", "Example result"]
+        widths: [2, 2, 1, 4]
+        highlight: [2]
+        rows:
+          - ["Confounder", "Z → X, Z → Y", "Yes", "Ice cream and drownings, r 0.517 to 0.027"]
+          - ["Mediator", "X → M → Y", "No", "Coupon effect 1.92 falls to 0.33"]
+          - ["Collider", "X → C ← Y", "Never", "Independent scores, r -0.01 to -0.68 among admitted"]
+        takeaway: Draw the graph first, since controlling for the wrong variable creates bias and does not remove it.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          Collider selection hides in any analysis restricted to survivors of a filter: reviewers, people who finished onboarding, customers still active.
+
+      - layout: code
+        title: "Simpson's paradox: better everywhere, worse overall"
+        recall: Why can a treatment win in every subgroup and lose overall?
+        lang: Text output
+        code: |-
+          group    control       treatment
+          mild      90/100  90%   39/40   97.5%
+          severe    30/100  30%   80/160  50%
+          overall  120/200  60%  119/200  59.5%
+        bullets:
+          - "**Severity** drove both treatment and recovery, so stratify."
+          - "**In A/B tests,** a changing split by day can do this."
+        takeaway: Only the causal story says which table to trust, as the arithmetic is the same either way.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          The classic case is Berkeley admissions in 1973. Bickel and colleagues found little bias within departments, because women applied more to departments that were harder to get into.
+
+      - layout: table
+        title: Designs for when randomisation is off the table
+        lead: Each simulation has a known truth. Each design rests on an assumption the data can't prove.
+        recall: What does each quasi-experimental design assume?
+        header: ["Design", "Naive", "Design says", "Truth", "Assumes"]
+        widths: [2, 1, 1, 1, 3]
+        highlight: [2]
+        rows:
+          - ["Weighting", "1.21", "0.34", "0.30", "No unmeasured confounders"]
+          - ["DiD", "1.48", "0.43", "0.40", "Parallel trends"]
+          - ["IV", "8.80", "2.79", "3.00", "Exclusion, for compliers"]
+          - ["RD, ±300", "22.54", "2.69", "2.50", "No manipulation at cutoff"]
+          - ["Synthetic control", "6.09", "2.01", "2.00", "Pre-period fit carries on"]
+        takeaway: Pick the design from how treatment was assigned, then state and check the assumption it rests on.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          The "naive" for DiD is treated minus control after launch; for synthetic control it's the city's before-and-after. Good-looking numbers don't validate the assumption. With diverging trends the DiD estimate doubled to 0.76 and looked just as confident.
+
+      - layout: flow
+        title: Choosing a design
+        recall: Which design fits which situation?
+        steps:
+          - {label: "Control assignment?", sub: "A/B test", accent: "D4621A"}
+          - {label: "Rollout with pre-period?", sub: "DiD"}
+          - {label: "Threshold?", sub: "RD"}
+          - {label: "Randomised nudge?", sub: "IV"}
+          - {label: "Rich covariates?", sub: "weighting, sensitivity"}
+        bullets:
+          - "**One treated unit, many donors:** synthetic control."
+          - "**Always:** state the assumption in plain words."
+        takeaway: Work down from the strongest design available, since each step down rests on a stronger assumption.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          Regression alone isn't on this list as a design. A coefficient is a conditional association until a design or randomisation makes it causal.
+
+  - title: Wrap-up
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: Rules of thumb
+        cards:
+          - {title: Run the SRM first, body: "Stop if it fails. Everything downstream depends on it.", accent: "D4621A"}
+          - {title: Read ratio parts, body: "Show numerator and denominator every time.", accent: "D4621A"}
+          - {title: Agree metrics early, body: "One OEC, guardrails with margins, decided in advance.", accent: "D4621A"}
+          - {title: Use the pre-period, body: "CUPED can halve variance, at no traffic cost.", accent: "D4621A"}
+          - {title: Plan your looks, body: "Sequential methods, or a fixed end date.", accent: "D4621A"}
+          - {title: Draw the graph, body: "It chooses controls and exposes the assumption.", accent: "D4621A"}
+        takeaway: Most experiment failures are design and reading errors, and every one has a check you can automate.
+        source: notes/03-experimentation-at-scale.md
+        notes: >-
+          These six catch most of what goes wrong. Everything here applies to online evaluation of LLM features too.
+
+      - layout: bullets
+        title: Where to go next
+        bullets:
+          - "**Bayesian analysis:** the same checkout test, as a probability of being better."
+          - "**Eval pillar in generative-ai:** this machinery applied to LLM features."
+          - "**Read:** Dmitriev et al. and Kohavi et al., both held in sources."
+          - "**Causal:** Cunningham's Mixtape, free online."
+        aside:
+          title: Practice
+          accent: "1E3A5F"
+          body: "Every chapter block runs as written. Change a seed and a parameter, and predict the result before you run it."
+        takeaway: The next step is to rerun the chapters' simulations with your own company's numbers.
+        source: notes/04-correlation-and-causation.md
+        notes: >-
+          The Bayesian pillar picks up the same Larkspur checkout data, so you can compare the two answers directly.

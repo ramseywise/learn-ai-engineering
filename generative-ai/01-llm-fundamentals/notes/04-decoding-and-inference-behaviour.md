@@ -31,7 +31,9 @@ cleaned: 2026-11-01
 
 # 4 — Decoding and inference behaviour
 
-@@HOOK@@
+Run the ticket assistant twice on the same ticket and it may reply in different words. Ask for JSON and one run in a hundred may break your parser. Lengthen the conversation and it gets slower and its memory use climbs. None of these is a bug in your code. They follow from how a decoder produces text at run time: one parallel pass over the prompt, then one token at a time, each picked from a distribution by a rule you can configure. This chapter opens that loop.
+
+> An LLM is a decoder-only transformer trained to predict the next token. Tokens, embeddings, causal self-attention and scale explain most of its behaviour, including the failures.
 
 ---
 
@@ -80,16 +82,41 @@ The model outputs logits; the decoder picks a token.
 Raschka makes the same point by counting (*LLMs from Scratch*, ch. 5). On a toy nine-word vocabulary, sampling the next token 1,000 times from his model's distribution after "every effort moves you" gave "forward" 582 times, "toward" 343, "closer" 73 and "inches" 2. At T = 5 the nonsense continuation "pizza" came up about 4% of the time. Top-k with k = 3 removes it entirely. The sampling step, rewritten from his `generate()` (full version in [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch), ch05):
 
 ```python
-logits = model(idx[:, -context_len:])[:, -1, :]               # last position only
-if top_k:                                                      # keep the k largest logits
-    kth = torch.topk(logits, top_k).values[:, [-1]]
-    logits = logits.masked_fill(logits < kth, float("-inf"))
-if temperature > 0:
-    next_id = torch.multinomial(torch.softmax(logits / temperature, -1), 1)
-else:
-    next_id = logits.argmax(-1, keepdim=True)                  # greedy
-idx = torch.cat([idx, next_id], dim=1)
+import torch
+
+vocab = ["closer", "every", "effort", "forward", "inches", "moves", "pizza", "toward", "you"]
+fixed = torch.tensor([[4.51, 0.89, -1.90, 6.75, 1.63, -1.62, -1.89, 6.28, 1.79]])
+model = lambda idx: fixed.expand(idx.shape[1], -1).unsqueeze(0)   # stands in for a real model
+
+def step(idx, temperature=1.0, top_k=None, context_len=8):
+    logits = model(idx[:, -context_len:])[:, -1, :]               # last position only
+    if top_k:                                                      # keep the k largest logits
+        kth = torch.topk(logits, top_k).values[:, [-1]]
+        logits = logits.masked_fill(logits < kth, float("-inf"))
+    if temperature > 0:
+        next_id = torch.multinomial(torch.softmax(logits / temperature, -1), 1)
+    else:
+        next_id = logits.argmax(-1, keepdim=True)                  # greedy
+    return torch.cat([idx, next_id], dim=1)
+
+idx = torch.tensor([[1, 2, 5, 8]])                                 # "every effort moves you"
+for settings in [dict(), dict(temperature=0.1), dict(temperature=5.0),
+                 dict(temperature=5.0, top_k=3), dict(temperature=0)]:
+    torch.manual_seed(123)
+    counts = torch.bincount(torch.cat([step(idx, **settings)[0, -1:] for _ in range(1000)]),
+                            minlength=len(vocab))
+    print(settings, {w: int(c) for w, c in zip(vocab, counts) if c})
 ```
+
+```text
+{} {'closer': 73, 'forward': 582, 'inches': 2, 'toward': 343}
+{'temperature': 0.1} {'forward': 985, 'toward': 15}
+{'temperature': 5.0} {'closer': 165, 'every': 75, 'effort': 42, 'forward': 239, 'inches': 71, 'moves': 46, 'pizza': 32, 'toward': 227, 'you': 103}
+{'temperature': 5.0, 'top_k': 3} {'closer': 258, 'forward': 385, 'toward': 357}
+{'temperature': 0} {'forward': 1000}
+```
+
+The logits are the toy values from Raschka's chapter, so `model` here is a stand-in that returns the same distribution every time. A real model takes the last position of a forward pass. Plain sampling at T = 1 follows the distribution, T = 5 lets `pizza` through, and top-k removes it again.
 
 Two things the books get wrong or overstate here:
 
@@ -127,4 +154,142 @@ Sampling several outputs and checking whether they agree is also a cheap halluci
 
 If code will parse the answer, you need more than a polite request. Huyen ranks the options by how deep in the stack they act (*AI Engineering*, ch. 2): prompting for the format; post-processing (LinkedIn's defensive YAML parser took correct outputs from 90% to 99.99%); **constrained sampling**, which at each step masks the logits of every token the grammar does not allow, the same `-inf` trick as top-k; and fine-tuning, up to replacing the language-model head with a classifier head. A provider's "JSON mode" usually guarantees valid JSON, not JSON that matches your schema, and a response cut off by `max_tokens` is invalid whatever the mode. The API patterns are in [chapter 13](13-calling-models-from-code.md).
 
-@@END@@
+## Worked example: the KV cache and a constrained decode
+
+**The cache is an optimisation that changes no answer.** The new token's output depends on its own query and on every key and value so far. Everything else in the full recompute is wasted work. So you can store the keys and values, compute only the new token's, and get the identical result:
+
+```python
+import torch
+
+torch.manual_seed(0)
+d = 16
+Wq, Wk, Wv = [torch.nn.Linear(d, d, bias=False) for _ in range(3)]
+
+def attend(q_last, k, v):
+    scores = q_last @ k.transpose(-2, -1) / d ** 0.5
+    return torch.softmax(scores, -1) @ v
+
+prompt = torch.randn(1, 9, d)
+new_token = torch.randn(1, 1, d)
+x = torch.cat([prompt, new_token], 1)
+
+full = attend(Wq(x)[:, -1:], Wk(x), Wv(x))                        # recompute everything
+
+k_cache, v_cache = Wk(prompt), Wv(prompt)                         # stored during prefill
+k = torch.cat([k_cache, Wk(new_token)], 1)
+v = torch.cat([v_cache, Wv(new_token)], 1)
+cached = attend(Wq(new_token), k, v)
+
+print("same output:", torch.allclose(full, cached))
+print("K, V vectors computed for this token: full =", 2 * x.shape[1], " cached = 2")
+```
+
+```text
+same output: True
+K, V vectors computed for this token: full = 20  cached = 2
+```
+
+What you pay for that is memory, and it scales with every part of the model's shape. One key and one value per token, per head, per layer. Reducing the number of key/value heads is exactly what GQA does:
+
+```python
+def kv_gb(layers, kv_heads, head_dim, context, bytes_per=2):
+    return 2 * layers * kv_heads * head_dim * context * bytes_per / 1e9
+
+shape = dict(layers=32, head_dim=128)                             # a 4096-wide model, like a Llama 2 7B
+for kv_heads, label in [(32, "one KV head per query head"), (8, "GQA, 8 KV heads")]:
+    for context in (4_096, 128_000):
+        print(f"{label:<27} T={context:>7,}: {kv_gb(kv_heads=kv_heads, context=context, **shape):6.1f} GB per conversation")
+```
+
+```text
+one KV head per query head  T=  4,096:    2.1 GB per conversation
+one KV head per query head  T=128,000:   67.1 GB per conversation
+GQA, 8 KV heads             T=  4,096:    0.5 GB per conversation
+GQA, 8 KV heads             T=128,000:   16.8 GB per conversation
+```
+
+So a long context is expensive twice: in compute at prefill, and in memory for every conversation the server holds open.
+
+**Constrained sampling** is the same mask as top-k with a different rule. At each step a grammar names the tokens that are legal, and everything else gets minus infinity. The toy below has a vocabulary of a few tokens, and a state machine for one small JSON shape. The logits favour prose, but the output cannot break the shape:
+
+```python
+import json
+import torch
+
+tokens = ['{"', 'priority', '":"', 'high', 'low', '"}', 'Sure', 'here', ' is']
+index = {t: i for i, t in enumerate(tokens)}
+legal_after = {None: ['{"'], '{"': ['priority'], 'priority': ['":"'],
+               '":"': ['high', 'low'], 'high': ['"}'], 'low': ['"}']}
+
+torch.manual_seed(7)
+logits = torch.randn(len(tokens))
+logits[index['Sure']] = 10.0                # the model strongly wants to chat
+
+out, last = [], None
+while last != '"}':
+    mask = torch.full_like(logits, float("-inf"))
+    mask[[index[t] for t in legal_after[last]]] = 0.0
+    last = tokens[(logits + mask).argmax().item()]
+    out.append(last)
+
+text = "".join(out)
+print("unconstrained first token:", tokens[logits.argmax().item()])
+print("constrained output:", text)
+print("parses:", json.loads(text))
+```
+
+```text
+unconstrained first token: Sure
+constrained output: {"priority":"low"}
+parses: {'priority': 'low'}
+```
+
+The result is valid by construction. It is not necessarily correct, because a grammar can force `high` or `low` but cannot tell you which is true.
+
+---
+
+## Pitfalls
+
+- **Taking temperature 0 as a determinism guarantee.** It removes sampling and nothing else. Hosted models can run on different hardware, and hosted versions change. Cache what must be stable.
+- **Setting both temperature and top-p, then tuning each by feel.** Each changes the same distribution. Fix one, tune the other, and measure on more than one run.
+- **Reading `stop_reason` last, or never.** A truncated JSON object fails loudly and a truncated sentence passes unnoticed. Check it before trusting the output.
+- **Forgetting that the KV cache is per conversation.** Load tests with short prompts will miss the memory ceiling that production's long ones hit.
+- **Trusting a schema as if it were validation.** Constrained decoding guarantees the shape. Whether the values are right is still a job for checks and evals.
+- **Expecting best-of-N or self-consistency for free.** Cost scales with the number of samples, and only answers you can compare exactly can be majority-voted.
+
+---
+
+## Try it
+
+1. Add top-p to `step` in the first code block: keep the smallest set of tokens whose probabilities reach `p`. Set `p = 0.9` and count how often `closer` appears.
+2. In the KV table, what is the memory per conversation for 16 KV heads at a 32,000-token context?
+3. Add a third priority, `medium`, to the constrained decode. What has to change besides the vocabulary?
+
+<details>
+<summary>Answers</summary>
+
+1. Sort the probabilities in descending order, take the cumulative sum and keep tokens until it reaches 0.9, then mask the rest. In this toy distribution `forward` and `toward` already hold about 0.93 at T = 1, so `closer` drops out. The same `p` can keep one token on a peaked distribution and dozens on a flat one, and that adaptivity is its advantage over top-k.
+2. `kv_gb(32, 16, 128, 32_000)` is 2 × 32 × 16 × 128 × 32,000 × 2 bytes, about 8.4 GB.
+3. The state machine: `legal_after['":"']` needs the new token, and a `medium` entry must lead to `'"}'`. The grammar, not the logits, decides what is legal.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What are prefill and decode? | Prefill runs the prompt through the model in one parallel pass. Decode generates one token at a time, each with its own forward pass |
+| What does the KV cache store, and what does it cost? | Keys and values of all earlier tokens per layer and head, so the new token needs only its own. It grows linearly with context and is the main memory cost of serving |
+| What does temperature do? | It divides logits before the softmax, so values above 1 flatten the distribution and values below 1 sharpen it. Zero is implemented as argmax |
+| Top-k or top-p? | Top-k keeps a fixed number of tokens. Top-p keeps however many reach a probability mass, so it adapts to how peaked the distribution is |
+| Why isn't temperature 0 fully reproducible on an API? | Hosted runs can differ in hardware and version, even with sampling removed |
+| How does constrained decoding work, and what doesn't it solve? | It masks tokens the grammar forbids at each step. It guarantees shape but not the truth of the values |
+| What is GQA for? | Several query heads share one key/value head, which shrinks the KV cache at a small quality cost |
+
+---
+
+## Next
+
+[05 — Hallucination and base versus assistant](05-hallucination-and-base-vs-assistant.md) turns from how the model produces tokens to what those tokens can and cannot be trusted to mean.

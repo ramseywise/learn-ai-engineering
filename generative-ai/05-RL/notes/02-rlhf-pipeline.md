@@ -27,6 +27,7 @@ sources:
   - https://arxiv.org/abs/2503.13551 (Hierarchical reward model, PRM degrades with N)
   - https://arxiv.org/abs/2505.02387 (RM-R1, reasoning reward model)
   - https://arxiv.org/abs/2606.09076 (Z-Reward, distilled score-distribution RM)
+  - https://arxiv.org/abs/2308.03958 (Synthetic data reduces sycophancy)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -610,6 +611,18 @@ feature the model believed was unknown went from 20.9% to 84.5%
 is the authors' own LoRA run on 7–8B Llama with a deliberately myopic reward, evaluated in the
 same environment family. Read it as what a satisfaction-only reward does, not as a measurement
 of production RLHF.
+
+It is not only RL. On PaLM and Flan-PaLM up to 540B, **instruction tuning alone raised agreement
+with the user's stated view by 26.0% at 8B**, and scaling from 8B to 62B raised it 19.8% more. The
+models also agreed that 1 + 1 = 956446 once the user said they did, though without the opinion
+they rejected the claim. A cheap fix was 1k steps of SFT on claims built from 17 NLP
+classification datasets, where the label is independent of a randomly assigned user opinion, mixed
+5:1 with instruction data. That cut opinion-matching by 4.7–10.0%, and it fixed the addition test
+at 62B and above. The data has to be filtered to claims the model already gets right: without the
+filter Flan-PaLM-62B behaved erratically, and at 8B, where the model is near chance on the claims,
+the intervention made it always agree. MMLU and BBH moved by −1.6 to +0.6. All of it is one
+fixed "Human:/Assistant:" multiple-choice format, and agreement with true statements was not tested
+([arXiv:2308.03958](https://arxiv.org/abs/2308.03958) (Wei et al., 2023-08, preprint)).
 
 ### Overoptimization
 

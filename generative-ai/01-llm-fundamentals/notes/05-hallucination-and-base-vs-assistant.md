@@ -14,7 +14,9 @@ cleaned: 2026-11-01
 
 # 5 — Hallucination and base versus assistant
 
-@@HOOK@@
+Our ticket assistant tells a customer that refunds take fourteen days. The policy says five. Nothing in the logs looks wrong: the request succeeded, the sentence is well formed, and the model sounded sure. This chapter is about why that happens. A model generates plausible next tokens and has no separate store of facts to consult. The assistant you talk to is a text-continuer that has been trained on top to behave like an assistant. Knowing where those two layers meet tells you what you can trust and how to check the rest.
+
+> An LLM is a decoder-only transformer trained to predict the next token. Tokens, embeddings, causal self-attention and scale explain most of its behaviour, including the failures.
 
 ---
 
@@ -37,4 +39,169 @@ A base model also reproduces what is in its training text, including the parts n
 
 Fluent text is also not evidence of thought. Mahowald et al. separate *formal* linguistic competence (grammar and the rules of a language) from *functional* competence (reasoning, world knowledge, tracking a situation, social inference), which in humans run on different brain networks. Next-token prediction delivers the first reliably. A BabyLM model trained on at most 100M words, about what a child hears, scored 86% on BLiMP's grammatical-versus-ungrammatical sentence pairs against a human baseline of 89%. The second stays patchy and usually comes from fine-tuning or added tools. It is a position paper, and its evidence is drawn from other studies ([arXiv:2301.06627](https://arxiv.org/abs/2301.06627) (Mahowald et al., Trends in Cognitive Sciences 2024)).
 
-@@END@@
+---
+
+## A worked example: the same model, with and without a template
+
+A base model has no notion of a question. It continues whatever it is given in the style of its training text. You can watch this with the smallest possible language model, a table of word bigrams built from a tiny mock forum:
+
+```python
+import random
+from collections import defaultdict
+
+corpus = """how do i get a refund ? how do i change my address ? how long does a refund take ?
+how do i cancel my order ? why is my order late ? why was my card charged twice ?
+a refund takes five days . my order is late . my card was charged twice .""".split()
+
+next_words = defaultdict(list)
+for a, b in zip(corpus, corpus[1:]):
+    next_words[a].append(b)
+
+def continue_text(prompt, steps=14, seed=3):
+    rng = random.Random(seed)
+    out = prompt.split()
+    for _ in range(steps):
+        out.append(rng.choice(next_words[out[-1]]))
+    return " ".join(out)
+
+print(continue_text("how long does a refund take ?"))
+```
+
+```text
+how long does a refund take ? how do i cancel my card charged twice . my order ? how do
+```
+
+Ask a question and you get more text in the shape of the corpus, in this case more forum questions. It isn't refusing or confused; it was only ever asked to continue. This is the behaviour Huyen's "completion machine" describes, at a scale where you can read the whole model.
+
+Post-training fixes the shape by teaching the model a template. The *LLM Engineer's Handbook* (ch. 5) makes the point in practical terms. Base models have no template, so when you fine-tune one you may choose any, but you then have to use that same template at inference. ChatML, from OpenAI, is a popular choice, and Alpaca, Llama 3 and Mistral each have their own. The template is just a string:
+
+```python
+def chatml(messages, generation_prompt=True):
+    text = ""
+    for m in messages:
+        text += f"<|im_start|>{m['role']}\n{m['content']}<|im_end|>\n"
+    if generation_prompt:
+        text += "<|im_start|>assistant\n"
+    return text
+
+ticket = [{"role": "system", "content": "You answer refund questions from the policy."},
+          {"role": "user", "content": "How long does a refund take?"}]
+print(chatml(ticket))
+print("---- one stray space changes what the model sees ----")
+print(repr(chatml(ticket)[-25:]))
+print(repr((chatml(ticket)[:-1] + " \n")[-26:]))
+```
+
+```text
+<|im_start|>system
+You answer refund questions from the policy.<|im_end|>
+<|im_start|>user
+How long does a refund take?<|im_end|>
+<|im_start|>assistant
+
+---- one stray space changes what the model sees ----
+'|>\n<|im_start|>assistant\n'
+'|>\n<|im_start|>assistant \n'
+```
+
+The rendered string ends where the model must take over, with `<|im_start|>assistant` and a newline. The model continues that, and it answers because it has seen thousands of examples whose continuation at that point was an answer. It remains a text-continuer. It also explains a whole class of silent failures: a template that differs by one space from the one used in training gives you a model that seems slightly worse, with no error anywhere. The handbook warns that every whitespace matters. In Transformers the template ships with the tokenizer, written in Jinja, so `tokenizer.apply_chat_template` is safer than writing your own.
+
+```mermaid
+flowchart LR
+    A[Messages] -->|chat template| B["&lt;|im_start|&gt;user ... &lt;|im_start|&gt;assistant"]
+    B --> C[Tokens]
+    C --> D[Base-model machinery: next-token prediction]
+    D --> E[Text in the style post-training rewarded]
+    E -.->|no fact store consulted| F[Plausible, not verified]
+```
+
+---
+
+## Checking for hallucination from the outside
+
+If the model has no fact store, what can you measure? One useful observation is that the model's sampling reveals what its weights are sure of. If a fact is well supported, repeated samples agree on it. If it was made up, each sample tends to invent something different. **SelfCheckGPT** uses exactly that ([arXiv:2303.08896](https://arxiv.org/abs/2303.08896) (Manakul et al., EMNLP 2023)). It draws extra samples for the same prompt and scores each sentence of the answer by how far the samples support it, with no outside database and no access to the model's internals.
+
+```python
+samples = {
+    "How many days does a refund take?": ["5", "5", "5", "5", "5", "5", "5", "7", "5", "5"],
+    "What year was the refunds team founded?": ["2009", "2014", "2011", "2009", "1998",
+                                                 "2016", "2003", "2012", "2014", "2001"],
+}
+
+def inconsistency(answer, others):
+    """Share of extra samples that disagree with the answer: 0 is steady, 1 is invented."""
+    return sum(s != answer for s in others) / len(others)
+
+for question, runs in samples.items():
+    answer, others = runs[0], runs[1:]
+    print(f"{question:<42} answer={answer:<5} inconsistency={inconsistency(answer, others):.2f}")
+```
+
+```text
+How many days does a refund take?          answer=5     inconsistency=0.11
+What year was the refunds team founded?    answer=2009  inconsistency=0.89
+```
+
+The samples here are written by hand to show the arithmetic. In a real run, you draw them from the model, and since real sentences rarely match exactly, the paper compares them with sentence-level methods instead of string equality: BERTScore, question answering, n-grams, NLI or an LLM prompt.
+
+On 238 passages generated by `text-davinci-003` from WikiBio, annotated across 1,908 sentences (39.9% major inaccurate, 33.1% minor inaccurate, 27.0% accurate), detecting non-factual sentences scored these AUC-PRs:
+
+| Method | Non-factual AUC-PR |
+|---|---|
+| Random | 72.96 |
+| GPT-3 average token −log p | 83.21 |
+| GPT-3 max token −log p | 87.51 |
+| SelfCheck NLI | 92.50 |
+| SelfCheck with an LLM prompt | 93.42 |
+
+Two limits sit alongside those numbers. The random baseline is high because most sentences in the set are inaccurate, and it matters more that factual sentences are hard to find: on that task random is 27.04, average −log p is 53.97 and the prompt method 67.09. Also, a model that is consistently wrong passes the check, because all it measures is agreement, not truth, and the cost grows with the number of samples.
+
+Can you ask the model itself? Partly. Kadavath et al. trained and tested two self-reports in Anthropic's models ([arXiv:2207.05221](https://arxiv.org/abs/2207.05221) (Kadavath et al., 2022, preprint)). **P(True)** asks the model to judge whether an answer it proposed is correct. It was well calibrated for large models in the right format, and it improved when the model was shown several of its own samples first (their largest model, at 52B, with 20-shot prompts). **P(IK)**, "I know the answer", was trained to predict whether the model would get a question right. It partially generalised across tasks, but it was poorly calibrated on new ones, and it rose when relevant source material was supplied. A model's confidence is a signal to route on, not a claim to show a customer.
+
+---
+
+## Pitfalls
+
+- **Treating fluency as evidence.** The model's grammar is excellent whether or not its facts are, so a clean sentence tells you nothing about either.
+- **Blaming the model for a template bug.** Check the rendered string first. A stray space or a missing generation prompt looks like a quality problem.
+- **Fine-tuning a base model and leaving the template unspecified.** Pick one, write it down and ship it with the tokenizer. Training and serving must match exactly.
+- **Reading a low inconsistency score as "true".** A model that learned a falsehood repeats it steadily. Self-consistency finds some invention, not all error.
+- **Showing raw self-reported confidence to users.** Kadavath's P(IK) was poorly calibrated on new tasks. Calibrate on your own data first.
+- **Using a closed-domain fix for an open-domain problem.** "Answer only from the context" helps when there is a context to check against. Without retrieval, it only asks the model to behave as if it had one.
+
+---
+
+## Try it
+
+1. Change `seed` in `continue_text` a few times and try a prompt ending in `.` rather than `?`. What does the toy produce, and why can it never give an answer it has not seen?
+2. Change the `chatml` call to `generation_prompt=False`. What would the model most plausibly generate next, given how it was trained?
+3. Add a third question to `samples` where the model is confidently wrong: all ten samples say "14" and the policy says 5. What does the score say? What would catch this one?
+
+<details>
+<summary>Answers</summary>
+
+1. It always prints a walk through words seen in the corpus, following adjacent pairs it has seen. It has no way to produce anything else, and it knows nothing about what `?` is for.
+2. With no assistant header, the model has nothing that marks the next turn as its own. It might start another user turn, or a new `<|im_start|>` of any role, since that is what often follows `<|im_end|>` in training text.
+3. Inconsistency is 0.00, the "most trusted" value. Only a check against the policy document can catch it, which is why retrieval and evals sit in later pillars.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What is a base model? | A pretrained text-continuer, trained by self-supervision on next tokens. It has no instruction-following behaviour of its own |
+| Where does assistant behaviour come from? | Post-training: supervised fine-tuning on demonstrations, then preference optimisation, in a fixed chat template |
+| What are the two hypotheses for hallucination? | The model can't tell given text from its own generated text, so errors snowball; or SFT teaches it to imitate knowledge it doesn't have. Neither is settled |
+| What does a chat template do? | It turns role-tagged messages into the one string the model sees, ending in a generation prompt. A mismatch with training silently degrades quality |
+| How does SelfCheckGPT work? | It draws more samples and scores each sentence by how far they support it, on the idea that invented facts disagree across samples |
+| What can't self-consistency catch? | Consistent errors, such as a falsehood present in the training data |
+| How far can you trust a model's self-confidence? | P(True) can be calibrated in the right setup, but P(IK) generalises poorly to new tasks. Calibrate on your own data |
+
+---
+
+## Next
+
+[06 — Pretraining: data and objectives](06-pretraining-data-and-objectives.md) opens the training pipeline at its first and most expensive stage.

@@ -137,7 +137,11 @@ for sizes in ([2, 1], [2, 8, 1], [2, 16, 8, 1]):
     print(f"{str(sizes):<14} train cost {c:.3f}  test accuracy {acc:.3f}")
 ```
 
-@@MOONS@@
+```text
+[2, 1]         train cost 0.288  test accuracy 0.895
+[2, 8, 1]      train cost 0.058  test accuracy 0.955
+[2, 16, 8, 1]  train cost 0.050  test accuracy 0.965
+```
 
 The one-layer network is logistic regression, and its straight boundary is the ceiling. One hidden layer removes that ceiling on this data. **Deep Neural Network: Application** makes the same comparison on the cat data: a 4-layer [12288, 20, 7, 5, 1] network reaches 80% test accuracy against 72% for the 2-layer network in your notebook.
 
@@ -171,7 +175,10 @@ print("correct backprop:", rel_diff(g_num, g_bp))
 print("planted bug, gradient off by 10%:", rel_diff(g_num, 1.1 * g_bp))
 ```
 
-@@GRADCHECK@@
+```text
+correct backprop: 9.110807226610613e-11
+planted bug, gradient off by 10%: 0.04761904761148488
+```
 
 A relative difference below about $10^{-7}$ passes; your notebook uses the same threshold. ReLU's kink can raise it a little when a unit sits at zero. Turn the check off during training, because it costs one full forward pass per parameter, twice.
 
@@ -196,7 +203,10 @@ print("loss, NumPy vs PyTorch:", round(cost(A, Y), 6), round(loss.item(), 6))
 print("max |dW1 NumPy - dW1 autograd|:", np.abs(g_bp - W1.grad.numpy()).max())
 ```
 
-@@AUTOGRAD@@
+```text
+loss, NumPy vs PyTorch: 0.707864 0.707864
+max |dW1 NumPy - dW1 autograd|: 6.938893903907228e-17
+```
 
 So `backward()` is the notebook's `L_model_backward` with the bookkeeping done for you. The rest of the course stops writing it.
 
@@ -219,7 +229,9 @@ train_ds = TensorDataset(X_tr, y_tr)
 print(X_tr.shape, X_te.shape, "chance accuracy:", round(1 / 10, 2))
 ```
 
-@@DATA@@
+```text
+torch.Size([1257, 64]) torch.Size([540, 64]) chance accuracy: 0.1
+```
 
 ## The PyTorch training loop
 
@@ -257,7 +269,10 @@ again.load_state_dict(torch.load("/tmp/mlp.pth"))    # rebuild the class, then l
 print("reloaded test", round(accuracy(again, X_te, y_te), 3))
 ```
 
-@@LOOP@@
+```text
+MLP train 0.985 test 0.972
+reloaded test 0.972
+```
 
 `num_workers=4` is Raschka's rule of thumb for real datasets. Keep it at 0 for tiny datasets and in notebooks, where worker processes cost more than they save and can crash the kernel. To go multi-GPU with `DistributedDataParallel`, run one process per GPU (from a script; DDP doesn't work inside Jupyter) and change four things:
 
@@ -344,7 +359,8 @@ All are your own Coursera submissions, kept untouched, and their outputs are not
 |---|---|---|
 | Accuracy stays near chance and the loss barely moves | All weights equal, so every unit in a layer computes the same thing | Random initialisation |
 | `RuntimeError: mat1 and mat2 shapes cannot be multiplied` when porting a notebook | Ng columns against PyTorch rows | Transpose `X`; store examples as rows |
-| The loss starts low, then jumps around, and gets worse | Softmax applied before `F.cross_entropy` squashes the logits twice, or the gradient was not zeroed | Return logits from the model; call `optimizer.zero_grad()` |
+| The loss flattens near 1.46 on ten classes instead of approaching 0, and accuracy is a little lower | A softmax layer before `F.cross_entropy`, which applies its own | Return logits from the model |
+| The loss jumps around and gets worse as training goes on | `optimizer.zero_grad()` missing, so gradients accumulate | Zero the gradients before `backward()` |
 | Validation accuracy differs between runs with the same weights | Dropout or batch norm still in training mode | `model.eval()` before evaluating |
 | Memory climbs during a validation loop | Autograd graphs kept for every batch | `torch.no_grad()`, and `.item()` when logging the loss |
 | A network ported from TF trains but scores lower | `keep_prob=0.8` copied as `nn.Dropout(0.8)`, which drops 80% | `p = 1 - keep_prob` |
@@ -355,15 +371,15 @@ All are your own Coursera submissions, kept untouched, and their outputs are not
 
    <details><summary>Answer</summary>
 
-   @@A1@@
+   I got train 0.984, test 0.974, about the same as with the ReLU (0.985, 0.972). The model is now linear, and the result says that scaled 8×8 digits are close to linearly separable, so this dataset barely rewards non-linearity. A single `nn.Linear(64, 10)` reaches only 0.926 test in the same 30 epochs, because it has not finished training. Two stacked linear layers can represent nothing the single layer can't, but they can converge faster under the same learning rate. To see non-linearity matter, use moons above, where the straight boundary stops at 0.895.
 
    </details>
 
-2. In the gradient check, change `dW = dZ @ A_prev.T / m` to omit the `/ m`. What relative difference do you get, and why does it not catch a bug that scales every gradient by the same amount in a less obvious form, for instance a wrong learning rate?
+2. In the gradient check, change `dW = dZ @ A_prev.T / m` to omit the `/ m`, with $m = 400$. What relative difference do you get, and does that value depend on the data?
 
    <details><summary>Answer</summary>
 
-   @@A2@@
+   0.995 when I ran it, a clear fail. A gradient scaled by a constant $c$ gives $|c-1|/(c+1)$ whatever the data, which is $399/401$ here. The 10% bug in the chapter gives $0.1/2.1 = 0.0476$, matching the printed value.
 
    </details>
 
@@ -371,7 +387,7 @@ All are your own Coursera submissions, kept untouched, and their outputs are not
 
    <details><summary>Answer</summary>
 
-   @@A3@@
+   Train 0.980, test 0.957, against 0.985 and 0.972 without it. Nothing crashes, which is why this bug survives. `F.cross_entropy` applies log-softmax to what are now probabilities, so a confident correct prediction can only reach a loss of $\ln(e+9) - 1 \approx 1.46$ rather than 0, and gradients shrink as predictions improve. Remove the layer and return logits.
 
    </details>
 

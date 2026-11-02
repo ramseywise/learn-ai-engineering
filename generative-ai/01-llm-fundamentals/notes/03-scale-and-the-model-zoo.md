@@ -61,7 +61,9 @@ cleaned: 2026-11-01
 
 # 3 — Architectures, scale and the model zoo
 
-@@HOOK@@
+Someone on your team proposes a model for the ticket assistant and says only "it's a 70B". What does that tell you? It tells you roughly how much memory the weights need, and little about what the model can do, how much data trained it, or whether it can be served on your hardware. This chapter covers the families of architecture you will meet on a model card, the scaling results that made "large" part of the name, and how to read the numbers a model report gives you without being misled by them.
+
+> An LLM is a decoder-only transformer trained to predict the next token. Tokens, embeddings, causal self-attention and scale explain most of its behaviour, including the failures.
 
 ---
 
@@ -135,4 +137,127 @@ A recurrent-looking state does not give an SSM an RNN's power. Merrill et al. pr
 
 Masked diffusion has since been scaled. LLaDA trains a transformer without a causal mask to predict tokens hidden at a random ratio, and at 8B parameters on 2.3T tokens it scored 65.9 on MMLU, against 65.4 for LLaMA 3 8B trained on 15T, and 70.3 against 48.7 on GSM8K. It trailed on BBH (49.7 against 62.1) and HellaSwag (70.5 against 79.1). Because it sees context on both sides, it handles the reversal curse better: completing the *previous* line of a Chinese poem it scored 45.6, against 34.3 for GPT-4o, which was far ahead going forwards (82.7 against 51.8) ([arXiv:2502.09992](https://arxiv.org/abs/2502.09992) (Nie et al., NeurIPS 2025)). It cannot use a KV cache, the output length must be fixed in advance, and its compute-matched comparison with autoregressive models stops below 10²³ FLOPs. Diffusion's clearest advantage is when data, not compute, runs out. Ni et al. trained 1B models on 96B tokens in total, drawn from pools of 0.5B to 96B unique tokens. With little unique data, repeated many times, diffusion overtook autoregressive training and matched an autoregressive model given about 3× the unique data. The crossover came later with more or better data, and earlier with larger models. The price is compute: diffusion needed over 100× the training FLOPs to reach its peak, and 16 to 4,700 times the inference FLOPs per task. The hyperparameters were tuned for autoregressive models, which the authors say favours them ([arXiv:2511.03276](https://arxiv.org/abs/2511.03276) (Ni et al., 2025-11, preprint)).
 
-@@END@@
+## Worked example: read a model's size yourself
+
+A size label is a count you can reproduce from the config. The two numbers worth reproducing for GPT-2 small are Raschka's 163,009,536 parameters, with a separate output head and no Q/K/V bias, and 124,412,160 with the head tied to the token embedding (*LLMs from Scratch*, ch. 4). OpenAI's released checkpoints have the Q/K/V bias, so they come out a little higher:
+
+```python
+def gpt_params(vocab, context, d, layers, qkv_bias=False, tie_head=True):
+    tok, pos = vocab * d, context * d
+    attn = 3 * d * d + (3 * d if qkv_bias else 0) + d * d + d     # Q, K, V, output projection
+    ff = (d * 4 * d + 4 * d) + (4 * d * d + d)                    # expand, then project back
+    norms = 2 * 2 * d                                             # two LayerNorms per block
+    block = attn + ff + norms
+    head = 0 if tie_head else vocab * d
+    return tok + pos + layers * block + 2 * d + head              # final LayerNorm
+
+print(f"GPT-2 small, separate head:   {gpt_params(50257, 1024, 768, 12, tie_head=False):>13,}")
+print(f"GPT-2 small, tied head:       {gpt_params(50257, 1024, 768, 12):>13,}")
+print(f"GPT-2 small, tied, QKV bias:  {gpt_params(50257, 1024, 768, 12, qkv_bias=True):>13,}")
+```
+
+```text
+GPT-2 small, separate head:     163,009,536
+GPT-2 small, tied head:         124,412,160
+GPT-2 small, tied, QKV bias:    124,439,808
+```
+
+Those first two lines match the book's figures exactly. To check the third against a real implementation, build the architecture from its config, with random weights and no download:
+
+```python
+from transformers import GPT2Config, GPT2LMHeadModel
+
+model = GPT2LMHeadModel(GPT2Config())                  # defaults are GPT-2 small
+print(f"{sum(p.numel() for p in model.parameters()):,} parameters")
+```
+
+```text
+124,439,808 parameters
+```
+
+Once you have a count, three questions follow directly. How much memory do the weights need? How many tokens would a compute-optimal training run use (the Chinchilla ratio, about 20 per parameter)? How does that compare to the 2,000 billion tokens Meta used for each Llama 2 size (*LLMs from Scratch*, ch. 5; [arXiv:2307.09288](https://arxiv.org/abs/2307.09288))?
+
+```python
+BYTES = {"fp32": 4, "fp16/bf16": 2, "int8": 1, "4-bit": 0.5}
+
+for name, params in [("GPT-2 small", 124e6), ("Llama 2 7B", 7e9), ("Llama 2 70B", 70e9)]:
+    mem = ", ".join(f"{k} {params * b / 1e9:.1f} GB" for k, b in BYTES.items())
+    print(f"{name:<12} {mem}")
+    print(f"{'':<12} Chinchilla tokens: {params * 20 / 1e12:.3f}T; "
+          f"tokens per parameter at 2T: {2e12 / params:,.0f}")
+```
+
+```text
+GPT-2 small  fp32 0.5 GB, fp16/bf16 0.2 GB, int8 0.1 GB, 4-bit 0.1 GB
+             Chinchilla tokens: 0.002T; tokens per parameter at 2T: 16,129
+Llama 2 7B   fp32 28.0 GB, fp16/bf16 14.0 GB, int8 7.0 GB, 4-bit 3.5 GB
+             Chinchilla tokens: 0.140T; tokens per parameter at 2T: 286
+Llama 2 70B  fp32 280.0 GB, fp16/bf16 140.0 GB, int8 70.0 GB, 4-bit 35.0 GB
+             Chinchilla tokens: 1.400T; tokens per parameter at 2T: 29
+```
+
+The memory lines are lower bounds, because weights are not everything: the KV cache in [chapter 04](04-decoding-and-inference-behaviour.md) and the file overhead in [chapter 14](14-open-weight-models-and-local-inference.md) come on top. The token lines show why the 20-tokens rule is a statement about compute, not about quality. Llama 2's 7B got about 286 tokens per parameter, far more than compute-optimal. LLaMA's authors gave the reason: the Chinchilla objective ignores the inference budget, and for a fixed level of performance the preferred model is the one that is fastest at inference, not fastest to train ([arXiv:2302.13971](https://arxiv.org/abs/2302.13971)). Parameters also tell you nothing about active parameters. A mixture-of-experts model with 32B active out of 355B needs the full 355B in memory, and uses compute closer to the active count.
+
+The family map below is the short form of this chapter:
+
+```mermaid
+flowchart TD
+    A[Transformer] --> B[Encoder-only<br/>BERT, RoBERTa]
+    A --> C[Encoder-decoder<br/>T5, BART]
+    A --> D[Decoder-only<br/>GPT, Llama, Claude]
+    D --> E[Dense]
+    D --> F[Mixture of experts<br/>active is less than total]
+    G[Not transformers] --> H[RNN-style: RWKV, xLSTM]
+    G --> I[State-space: Mamba]
+    G --> J[Diffusion: LLaDA]
+    B --> K[Embeddings and classification]
+    C --> L[Translation, summarisation]
+    E --> M[Chat and tools]
+    F --> M
+```
+
+---
+
+## Pitfalls
+
+- **Comparing models by parameter count.** Size is a label for memory, and a weak predictor of ability. LLaMA's 13B beat the 175B GPT-3 on most of its report's benchmarks.
+- **Assuming a higher count means a higher bill.** Compute at inference follows active parameters and context length. A mixture-of-experts model's total and active numbers answer different questions: memory, and speed.
+- **Treating 20 tokens per parameter as a recipe for quality.** It is the training-compute optimum. An operator that cares about inference cost will rationally train a smaller model past it.
+- **Trusting a benchmark table from one report.** Each lab picks its own suite and shots. Read what was held out, and whether the same suite scores the competitors.
+- **Reaching for an encoder-only model to generate, or a chat model to embed.** They were trained on different objectives. Use the shape of model that matches the job.
+
+---
+
+## Try it
+
+1. Compute the parameters for GPT-2 XL: `d = 1600`, 48 layers, 25 heads, context 1,024, tied head, Q/K/V bias on. How close is it to the 1,558M label?
+2. How much memory would a 355B model need for its weights in bf16? In 4-bit?
+3. A model has 8B parameters and is trained on 2T tokens. Is it above or below the Chinchilla ratio, and by how much?
+
+<details>
+<summary>Answers</summary>
+
+1. `gpt_params(50257, 1024, 1600, 48, qkv_bias=True)` gives 1,557,611,200, which is the 1,558M label. The head count does not change the total, since heads split `d`.
+2. 710 GB in bf16 and about 178 GB in 4-bit, weights alone.
+3. Above: 2T / 8B = 250 tokens per parameter, about 12.5 times the Chinchilla ratio.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What did Chinchilla change? | For a fixed compute budget, scale parameters and tokens about equally, roughly 20 tokens per parameter, which overturned Kaplan's fit of bigger models with less data |
+| Why might an operator still train past 20 tokens per parameter? | Inference traffic can dwarf training cost, so a smaller model on more data costs less over its life |
+| Encoder-only, decoder-only, encoder-decoder? | Masked-token prediction suits embeddings and classification. Next-token prediction suits generation. Sequence-to-sequence suits translation and summarisation |
+| What does "355B with 32B active" mean? | A mixture-of-experts model holds all 355B in memory but routes each token through only a few experts, so compute per token follows the active count |
+| Does lower language-modelling loss guarantee better tasks? | No. Downstream scores do not always follow loss, and some tasks get worse as it falls |
+| How do you estimate memory for a model? | Parameters times bytes per parameter for the chosen precision, plus KV cache and activations for serving |
+
+---
+
+## Next
+
+[04 — Decoding and inference behaviour](04-decoding-and-inference-behaviour.md) moves from what the model is to what it does at run time, from one prompt to one token to the next.

@@ -44,7 +44,9 @@ cleaned: 2026-11-01
 
 # 2 — Attention and the transformer block
 
-@@HOOK@@
+Take the ticket from the last chapter and add a sentence: `The refund for order #A1B2 failed because it was too old.` What does *it* refer to, and how would a model know? An embedding table gives *it* the same vector in every document, so the meaning has to come from elsewhere. Attention is that mechanism: each token computes which earlier tokens matter to it and averages their information into its own vector. Stack that with a little per-token processing, and you have the block that every chat model repeats dozens of times.
+
+> An LLM is a decoder-only transformer trained to predict the next token. Tokens, embeddings, causal self-attention and scale explain most of its behaviour, including the failures.
 
 ---
 
@@ -52,7 +54,7 @@ cleaned: 2026-11-01
 
 Self-attention lets every token build its representation from every other token it can see ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), Vaswani et al., 2017). Each token is projected into a **query**, a **key** and a **value**:
 
-```
+```text
 Attention(Q, K, V) = softmax(Q Kᵀ / √d_k) · V
 ```
 
@@ -72,12 +74,34 @@ Three refinements make it a language-model layer (*LLMs from Scratch*, ch. 3 bui
 The whole causal head fits in four lines. This is a rewrite of the idea in Raschka's `CausalAttention` class, not his code; the full version is at [rasbt/LLMs-from-scratch](https://github.com/rasbt/LLMs-from-scratch) (ch03):
 
 ```python
-# q, k, v: (batch, T, d_k), already projected from the token embeddings
+import torch
+
+torch.manual_seed(0)
+batch, T, d_k = 1, 5, 8
+q, k, v = torch.randn(batch, T, d_k), torch.randn(batch, T, d_k), torch.randn(batch, T, d_k)
+dropout = torch.nn.Dropout(0.1)   # q, k, v: normally projected from the token embeddings
+
 scores = q @ k.transpose(-2, -1) / k.shape[-1] ** 0.5         # (batch, T, T)
 future = torch.triu(torch.ones(T, T, dtype=torch.bool), diagonal=1)
 weights = torch.softmax(scores.masked_fill(future, float("-inf")), dim=-1)
 out = dropout(weights) @ v                                     # (batch, T, d_k)
+
+print(out.shape)
+print(weights[0].round(decimals=2))
+print("each row sums to 1:", weights.sum(-1).isclose(torch.tensor(1.0)).all().item())
 ```
+
+```text
+torch.Size([1, 5, 8])
+tensor([[1.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        [0.8100, 0.1900, 0.0000, 0.0000, 0.0000],
+        [0.0800, 0.8000, 0.1200, 0.0000, 0.0000],
+        [0.1200, 0.3000, 0.1300, 0.4400, 0.0000],
+        [0.0600, 0.1600, 0.2500, 0.4900, 0.0400]])
+each row sums to 1: True
+```
+
+Read a row of the weights as one token's budget of attention. Row 3 can spend on tokens 1 to 3 and nothing later, because the mask set the rest to minus infinity before the softmax.
 
 Masking with −∞ *before* the softmax matters. Raschka first zeroes the weights after the softmax and renormalizes, then shows that the −∞ version gives the same result in one step and leaks nothing from the masked positions.
 
@@ -105,7 +129,7 @@ The first fix was to stop every token from attending to every earlier one. The S
 
 A GPT is a stack of identical blocks (*LLMs from Scratch*, ch. 4):
 
-```
+```text
 x → LayerNorm → masked multi-head attention → + x  (residual)
   → LayerNorm → feed-forward (expand 4×, GELU, project back) → + x  (residual)
 ```
@@ -143,4 +167,111 @@ For scale, Huyen's table of Llama shapes (*AI Engineering*, ch. 2), from Meta's 
 
 The book labels the third row "Llama 3-7B"; the model is Llama 3-8B. Its 128K context is Llama 3.1's: Llama 3 as released in April 2024 had an 8K window. Llama's feed-forward layer uses SwiGLU, with three matrices and a hidden size of about 2.7 × d_model in place of GPT-2's two at 4×, so the 12d² rule is approximate for it. The 2.7 is ⅔ × 4. Shazeer cut the hidden size by a third so that a three-matrix gated layer has the same parameter and FLOP count as a two-matrix one. On T5-base span filling over C4, with parameters and compute matched, SwiGLU reached a held-out log-perplexity of **1.636 after 524,288 steps, against 1.677 for ReLU** and 1.679 for GELU. The paper offers "no explanation" for why gating helps ([arXiv:2002.05202](https://arxiv.org/abs/2002.05202) (Shazeer, 2020-02, preprint)). GELU, GPT-2's activation, is `x·Φ(x)`: the input times the probability that a standard normal falls below it. Hendrycks & Gimpel derived it as the expected value of a dropout-like mask that zeroes smaller inputs more often. The same paper defined the SiLU, `x·σ(x)`, which Google Brain later published as "Swish". It is the Swish in SwiGLU, and the GELU paper found it worse than GELU. The evidence was small models only. On CIFAR-10, for example, GELU reached 7.89% error, against 8.16% for ReLU ([arXiv:1606.08415](https://arxiv.org/abs/1606.08415) (Hendrycks & Gimpel, 2016, preprint)).
 
-@@END@@
+## Worked example: build the block, then test the mask
+
+The code below is that diagram as a module, using PyTorch's multi-head attention. Its test is the most useful one you can write for a language model: change a later token, and check that no earlier output moves. If the mask were missing or transposed, training would look healthy and the model would be useless, since it could read the answer it is meant to predict.
+
+```python
+import torch
+from torch import nn
+
+class Block(nn.Module):
+    def __init__(self, d_model=32, n_heads=4):
+        super().__init__()
+        self.norm1, self.norm2 = nn.LayerNorm(d_model), nn.LayerNorm(d_model)
+        self.attn = nn.MultiheadAttention(d_model, n_heads, batch_first=True)
+        self.ff = nn.Sequential(nn.Linear(d_model, 4 * d_model), nn.GELU(),
+                                nn.Linear(4 * d_model, d_model))
+
+    def forward(self, x, masked=True):
+        T = x.shape[1]
+        mask = torch.triu(torch.ones(T, T, dtype=torch.bool), 1) if masked else None
+        h = self.norm1(x)
+        x = x + self.attn(h, h, h, attn_mask=mask, need_weights=False)[0]
+        return x + self.ff(self.norm2(x))
+
+torch.manual_seed(0)
+block = Block().eval()
+x = torch.randn(1, 6, 32)
+changed = x.clone()
+changed[0, 4] = torch.randn(32)       # replace token 5 of 6
+
+for masked in (True, False):
+    a, b = block(x, masked), block(changed, masked)
+    moved = (a - b).abs().sum(-1)[0].gt(1e-5).tolist()
+    print("masked" if masked else "no mask", "outputs that moved:", moved)
+print("parameters:", sum(p.numel() for p in block.parameters()))
+```
+
+```text
+masked outputs that moved: [False, False, False, False, True, True]
+no mask outputs that moved: [True, True, True, True, True, True]
+parameters: 12704
+```
+
+With the mask, only positions 5 and 6 move, because they are the only ones allowed to see the edited token. Without it, the edit leaks into every position. The same test on a whole model is one line in a test suite, and [chapter 12](12-build-a-tiny-gpt.md) adds it to the list of checks that catch most bugs.
+
+The attention layer is also where cost concentrates. Comparing every token to every earlier token is quadratic in `T`, while the feed-forward layer runs once per token:
+
+```python
+d_model, n_heads = 768, 12
+for T in (256, 1024, 8192):
+    attention_scores = n_heads * T * T // 2
+    print(f"T={T:>5}: {attention_scores:>12,} attention scores per block, "
+          f"{T:>5} feed-forward passes per block")
+```
+
+```text
+T=  256:      393,216 attention scores per block,   256 feed-forward passes per block
+T= 1024:    6,291,456 attention scores per block,  1024 feed-forward passes per block
+T= 8192:  402,653,184 attention scores per block,  8192 feed-forward passes per block
+```
+
+That quadratic term is what the alternatives surveyed in [chapter 03](03-scale-and-the-model-zoo.md) try to escape, and the KV cache in [chapter 04](04-decoding-and-inference-behaviour.md) softens at generation time.
+
+---
+
+## Pitfalls
+
+- **Masking after the softmax.** Zeroing weights after the softmax leaves rows that do not sum to one. Set future entries to minus infinity before it, or renormalize.
+- **Reading attention weights as an explanation.** A high weight shows where a head drew from, not why the model answered as it did. Weights are one step in a stack with many heads and layers.
+- **Getting the mask's direction wrong.** PyTorch's boolean `attn_mask` marks positions to block, while some other APIs mark positions to keep. The change-a-later-token test above catches either mistake.
+- **Forgetting the √d_k.** Without the scale, large `d_k` pushes the softmax towards one-hot and gradients shrink. Models still train, only worse, so the bug is easy to miss.
+- **Comparing parameter counts across different bias settings.** Bias terms on the query, key and value projections change the total. Decide what you are counting before you compare to a published number.
+
+---
+
+## Try it
+
+1. In the worked example, edit token 1 instead of token 5, with the mask on. Which outputs should move?
+2. Print `weights[0]` from the first code block with `d_k = 2` and with `d_k = 512`, keeping the √d_k scale. Then remove the scale. What happens to the rows at `d_k = 512`?
+3. Double `n_heads` in the cost table and keep `d_model` fixed. Does the per-block parameter count of the attention layer double?
+
+<details>
+<summary>Answers</summary>
+
+1. All six, since every position may look at position 1.
+2. With the scale, the spread of the scores stays about the same across `d_k`. Without it, the scores at `d_k = 512` grow by about √512 ≈ 23 times, and most rows collapse to nearly one-hot.
+3. No. Multi-head attention splits `d_model` across the heads, so the projection sizes stay the same and only the number of attention scores doubles.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What do query, key and value do? | A token's query is compared with each key to produce weights, and those weights average the values into the token's new vector |
+| Why divide by √d_k? | Dot products grow with dimension, which would push the softmax towards one-hot and shrink its gradients |
+| What does the causal mask do? | It stops each position from seeing later positions, so one forward pass can train every position to predict its next token |
+| Why multiple heads? | Each head has its own projections, so different heads can attend to different relationships at the same total width |
+| What does the residual do, and the LayerNorm? | The residual gives gradients a direct path through deep stacks. LayerNorm keeps each token's activations in a stable range without needing batch statistics |
+| What dominates the cost of a block? | The attention step, quadratic in sequence length, and it also sets the memory that the KV cache must hold at generation time |
+| How do you test the mask? | Change a later token and check that earlier outputs stay the same |
+
+---
+
+## Next
+
+[03 — Architectures, scale and the model zoo](03-scale-and-the-model-zoo.md) repeats this block more times with more width, and asks what that buys.

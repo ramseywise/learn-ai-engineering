@@ -231,7 +231,7 @@ MF on ratings  0.0428  0.0340    0.2140
 median training positives per listed film: popularity 262, MF on ratings 90
 ```
 
-This is the central result of the chapter. The matrix factorisation model that was the best of the three on RMSE recommends worse than a list of the most popular films, with less than half of popularity's NDCG. It was never asked to rank unrated films, and when it does, it reaches for much less popular ones, as the last line shows, including films with few ratings whose scores the data barely constrains. It is not broken. It is answering a different question from the one you are now asking.
+This is the central result of the chapter. The matrix factorisation model that was the best of the three on RMSE recommends worse than a list of the most popular films, with less than half of popularity's NDCG. It was never asked to rank unrated films, and when it does, it reaches for much less popular ones, as the last line shows: the median film on its lists has 90 training positives against 262 for popularity, so its scores rest on far less data. It is not broken. It is answering a different question from the one you are now asking.
 
 ## Neighbourhoods: item-based filtering
 

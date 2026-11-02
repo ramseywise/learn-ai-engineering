@@ -111,7 +111,7 @@ print("round trip ok:", enc.decode(ids) == ticket)
 round trip ok: True
 ```
 
-The product code `A1B2` falls apart into pieces while common words stay whole, and a leading space belongs to the token that follows it. That is why a model that reads `A1B2` perfectly well can still trip when asked to spell it backwards.
+`' order'` stays one token and the leading space belongs to it. Capitalised `Refund` splits in two, and the product code `A1B2` falls apart into four pieces. That is why a model that reads `A1B2` perfectly well can still trip when asked to spell it backwards.
 
 Open-weight models ship their tokenizer with the weights. Hugging Face's Transformers library defines every model as three parts: a tokenizer, a transformer body and a task head that can be swapped for fine-tuning. `AutoTokenizer.from_pretrained(name)` loads the tokenizer the model was pretrained with, because tokenizers "often differ in small details, but need to be in sync with pretraining" ([doi:10.18653/v1/2020.emnlp-demos.6](https://doi.org/10.18653/v1/2020.emnlp-demos.6) (Wolf et al., EMNLP 2020 Demos)). When the paper was written, its model hub held 2,097 community models. The paper is a system description and reports no controlled benchmarks; its one speed figure is a near-4× ONNX speedup on BERT, RoBERTa and GPT-2, with no setup given.
 
@@ -216,7 +216,7 @@ print(sorted(vocab, key=len))
 [('refund</w>',), ('m', 'y', '</w>'), ('o', 'rde', 'r', '</w>'), ('p', 'l', 'e', 'a', 's', 'e', '</w>'), ('s', 't', 'a', 't', 'u', 's', '</w>')]
 ```
 
-Frequent words collapse to one or two symbols, and the rare `status` and `please` stay in many. Real tokenizers do this over gigabytes of text until they reach the target vocabulary, 50,257 entries for GPT-2.
+After eight merges `refund` is one symbol, while the rarer `status` and `please` are still single characters. Real tokenizers do this over gigabytes of text until they reach the target vocabulary, 50,257 entries for GPT-2.
 
 **Step 2: why position has to be added.** An embedding table maps each id to the same vector wherever it appears. Attention, as the next chapter shows, is a weighted average, and an average does not care about order. So without a position signal, `order refund` and `refund order` are the same bag of vectors:
 
@@ -276,13 +276,13 @@ query at 1000, key at 1003: score = 0.384553
 query at    0, key at    4: score = 0.287155
 ```
 
-The three pairs three apart score the same, wherever they sit in the document, and the pair four apart differs. Real RoPE applies this to many coordinate pairs at different frequencies. That shape is why the positional table above lists RoPE as usable beyond the training length with some loss, and why the extensions earlier in this chapter go after its frequencies.
+The three pairs three apart score the same, wherever they sit in the document, and the pair four apart differs. Real RoPE applies this to many coordinate pairs at different frequencies. So RoPE has no hard maximum, but the positional table above still says it does not by itself run past the training length: the model only ever learned on offsets inside that range. That is why the extensions earlier in this chapter go after its frequencies.
 
 ---
 
 ## Pitfalls
 
-- **Estimating cost from characters.** Four characters per token is an English rule of thumb. Code, identifiers and other languages differ, so count with the model's own tokenizer, or its counting endpoint, before you promise a budget.
+- **Estimating cost from word counts.** 100 tokens per 75 words is a rule for English prose. Code, identifiers and other languages differ widely (Burmese ran to ten times English, above), so count with the model's own tokenizer, or its counting endpoint, before you promise a budget.
 - **Mixing tokenizers.** Token ids mean nothing outside the tokenizer that made them. Counting with GPT-2's and billing against another model's will be wrong, and loading weights with the wrong tokenizer produces fluent-looking garbage.
 - **Asking for character-level work and trusting the answer.** Spelling, counting letters and reversing strings ask the model about units it never sees directly. Give it a tool, or split the string into separate tokens first.
 - **Treating the context limit as a soft target.** Providers differ on what happens past the limit, and frameworks may truncate silently. Measure the assembled prompt in tokens.
@@ -293,14 +293,14 @@ The three pairs three apart score the same, wherever they sit in the document, a
 ## Try it
 
 1. Tokenize `A1B2`, `a1b2` and ` A1B2` (leading space) with GPT-2's encoding. Do they share tokens? What does that say about normalising case in a retrieval key?
-2. In the BPE example, add `"refund"` ten more times to the corpus and rerun it. Which merges appear earlier?
+2. In the BPE example, add `"status"` ten more times to the corpus and rerun it. Which merges appear first now?
 3. In the RoPE example, change `theta` to `0.5` and check that equal offsets still score equally. What changes?
 
 <details>
 <summary>Answers</summary>
 
 1. They produce different ids, and the leading space changes the first token, because a token's identity includes its case and its leading space. A retrieval key or cache key normalised after tokenizing will miss, so normalise the text first.
-2. Pairs inside `refund` gain count and merge first, so `refund` collapses to one symbol in fewer steps. Merge order follows frequency, which is why common words end up as single tokens.
+2. Pairs inside `status` now have the highest counts, so they merge first and `status` collapses to one symbol. Merge order follows frequency, which is why common words end up as single tokens.
 3. Equal offsets still match, since the score depends on the offset alone. A larger `theta` makes the score change faster with offset, so it encodes fine distance over a shorter range before the angle wraps around.
 
 </details>
@@ -312,11 +312,11 @@ The three pairs three apart score the same, wherever they sit in the document, a
 | Question | Answer |
 |---|---|
 | Why do LLMs use subword tokens? | Characters give too few units per unit of meaning and whole words cannot cover the open vocabulary. BPE gives a fixed vocabulary that can encode any string |
-| What is the effect of tokenization on cost and language quality? | Pricing and context limits are per token, and a language with less training data takes more tokens for the same text and tends to get worse quality |
+| What is the effect of tokenization on cost and language quality? | Pricing and context limits are per token. The same short sentence had a median of 7 GPT-4 tokens in English and 72 in Burmese, and languages rare in the training data also tend to score worse |
 | Why can a model fail to reverse a string it reads correctly? | It sees tokens, not characters, so the letters inside a token are not directly available to it |
 | What does an embedding layer learn? | A trainable table with one vector per token id, fit by next-token loss so that tokens used alike end up with useful vectors |
 | Why is a position signal needed at all? | Attention is order-blind on its own, and without one a reordered sentence would produce the same set of vectors |
-| Learned positions versus RoPE? | A learned table is simple and has a hard maximum length. RoPE rotates queries and keys so scores depend on relative offset, which makes extension possible, with some loss, past the training length |
+| Learned positions versus RoPE? | A learned table is simple and has a hard maximum length. RoPE rotates queries and keys so scores depend on relative offset. It has no hard limit, though running past the training length needs extra tricks |
 
 ---
 

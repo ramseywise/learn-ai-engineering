@@ -18,6 +18,10 @@ sources:
   - https://arxiv.org/abs/2507.20673 (GMPO, geometric-mean token ratios)
   - https://arxiv.org/abs/2406.08414 (DiscoPOP, LLM-discovered preference loss)
   - https://arxiv.org/abs/2501.18101 (DivPO, diversity-aware pair selection)
+  - https://arxiv.org/abs/2406.17744 (LIFT, length-instruction fine-tuning)
+  - https://arxiv.org/abs/2311.08401 (FactTune, DPO on automatic factuality preferences)
+  - https://arxiv.org/abs/2404.03862 (Quote-Tuning, DPO toward verbatim Wikipedia quotes)
+  - https://arxiv.org/abs/2509.25137 (RLHI, DPO from real user conversations)
   - Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 6
   - Koenigstein, AI Agents: The Definitive Guide (O'Reilly, 2026), ch. 3
 confidence: medium
@@ -283,6 +287,27 @@ multilingual TydiQA fell by 13.5 points at 13B and 17.8 at 70B. Mean AlpacaEval 
 rose by about 40% at 70B (1,011 to 1,414), so part of the win-rate gain is the
 length bias above. All gains are on GPT-4-judged benchmarks, and the paper does not compare DPO
 with PPO.
+
+The preference does not have to come from a person. FactTune samples ten biographies per
+prompt and prefers whichever has the higher share of claims that FactScore finds supported in
+Wikipedia ([arXiv:2311.08401](https://arxiv.org/abs/2311.08401) (Tian et al., ICLR 2024)). **On
+Llama-2-7B, DPO on those pairs raised the correct share of biography claims from 0.701 (SFT) to
+0.895, against 0.748 for Llama-2-Chat**, and cut incorrect claims per answer from 5.19 to 2.00.
+The reference-free variant uses the model's own agreement over 20 resamples of each claim, and
+reached 0.846. It was the only method that both added correct facts and removed wrong ones; ITI
+and DoLa traded one for the other. Human checkers agreed with the gain (0.58 to 0.85 on
+Llama-1 biographies). The answers turn terser and less conversational, though, and it is 7B only,
+on 296 training people and 150 medical conditions.
+
+Quote-Tuning uses a cheaper automatic signal still: the share of character 25-grams that a Bloom
+filter finds in the Pile's Wikipedia. It keeps one pair per prompt out of 32 samples, and the
+two answers must be within 10% of each other in length
+([arXiv:2404.03862](https://arxiv.org/abs/2404.03862) (Zhang et al., NAACL 2025)). **On Natural
+Questions, DPO on about 20k such pairs lifted Llama-2-7B-Chat's quoted share from 34.9% to 54.5%,
+above best-of-32 reranking (50.4%), at unchanged answer length.** TruthfulQA truthful-and-informative
+rose 46.6 to 51.5, and MMLU, GSM8K, BBH and HellaSwag each fell by under 1.6. Without the length
+filter, answers came out about 10% shorter. The score counts many short quotes the same as a few
+long ones, and it says nothing about whether the quoted text answers the question.
 
 ---
 
@@ -640,6 +665,20 @@ introduction and 9.3 in the results. In a 16-person user study it won
 iteration, SPIN-style, dropped the win rate from 70.1% to 45.8%, and the adapter lost general
 skills such as coding.
 
+**RLHI** ([arXiv:2509.25137](https://arxiv.org/abs/2509.25137) (Jin et al., 2025-09, preprint))
+mines the pairs from logged chats instead. In WildChat, 26.5% of user messages are re-attempts
+with feedback ("i said 2000+ word"). The model rewrites its earlier answer to follow that message,
+and the rewrite becomes chosen over the original. A persona summarised from the user's past chats
+goes into the prompt of both, and the loss is plain DPO. Turns without a follow-up get
+best-vs-worst pairs from 64 samples, ranked by Athene-RM-8B given the persona. From
+Llama-3.1-8B-Instruct, **the rewrite variant took the o3-judged win rate against the original
+ChatGPT replies from 32.5% to 52.0%, and the reward variant reached 77.9% AlpacaEval 2 LC
+against 77.0% for the same loop without personas**. The filter does most of the work: without
+reward-model filtering of the pairs, the rewrite variant gained only 2.5 points on the user
+evaluation, against 23.4 with it. The data is a fixed offline log with Llama-regenerated
+replies, the user evaluation covers 100 users, and the math version uses simulated users who
+point to the wrong step.
+
 ---
 
 ## Decision framework
@@ -701,7 +740,7 @@ skills such as coding.
 
 - **Picking DPO for reasoning.** Offline preference pairs can't explore answers no one wrote down. Where a checker exists, online methods tend to win, as the comparisons in this chapter report.
 - **Picking GRPO with no sound checker.** It amplifies whatever the reward likes, including checker bugs. Audit the checker first.
-- **Ignoring length drift with DPO.** A longer chosen answer becomes the thing learned. Check average length before and after, and consider a length-normalized variant.
+- **Ignoring length drift with DPO.** A longer chosen answer becomes the thing learned. Check average length before and after, and consider a length-normalized variant. Or make length part of the instruction: LIFT adds "answer in N words or less" to the prompts and, when the limit falls between the two answers, flips the pair so the longer winner loses. On 3,200 OpenAssistant pairs with Llama-2-70B-Base, **length-instruction violations fell from 65.8% under plain DPO to 7.1%**, and length-instructed win rate rose from 4.6% to 13.6%. R-DPO's length penalty only got to 45.0%, and standard AlpacaEval 2 did not drop. The same runs show length-controlled AlpacaEval can still be moved from 23% to 29% just by changing the requested length. The constraint is a word count from one fixed template, max only, and the judge is GPT-4 ([arXiv:2406.17744](https://arxiv.org/abs/2406.17744) (Yuan et al., 2024-06, preprint)).
 - **Losing diversity to best-vs-worst pairs.** Win rate can rise while every sample says the same thing. Asked for a random persona, Llama-3.1-8B-Instruct named "Astrid" over 10% of the time, and online DPO cut the share of unique attributes from 24% to 9%. DivPO keeps the DPO loss and changes only the pair: the chosen is the *least* likely response within ρ of the top reward, and the rejected is the most likely one near the bottom. Online DivPO reached 54% unique attributes at the same reward-model score. Trained on WildChat prompts, AlpacaEval 2 LC was 44.1 at ρ = 0.2 against 41.3 for DPO, with more unique words (1,178 against 995; the seed model had 1,393). Push ρ to 0.5 and quality drops to 31.3. All runs use Llama-3.1-8B-Instruct and ArmoRM as the reward ([arXiv:2501.18101](https://arxiv.org/abs/2501.18101) (Lanchantin et al., 2025-01, preprint)).
 - **Comparing runs across different group sizes.** `G` changes the variance of the advantage, so compare at a fixed group size.
 - **All-pass or all-fail groups.** The advantage is zero, and the group teaches nothing. If most groups are like that, change the problem difficulty, not the algorithm.

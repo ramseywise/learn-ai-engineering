@@ -57,7 +57,7 @@ Getting a first result from a scanner takes one command, using each project's do
 
 ```bash
 # illustrative: needs credentials for the chosen target
-uvx garak --target_type bedrock --target_name claude-3-sonnet --spec probes.dan
+uvx garak --target_type openai --target_name gpt-5-nano --spec probes.encoding
 
 # illustrative: needs Node and a provider key; setup writes a config for your app
 npx promptfoo@latest redteam setup
@@ -123,7 +123,7 @@ The last table explains why rates that look small can still matter. An attacker 
 
 **Compare attack success with utility.** A defence that blocks everything scores perfectly, which is why [AgentDojo](https://arxiv.org/abs/2406.13352) (Debenedetti et al., NeurIPS 2024) reports both together. Its 97 tasks and 629 security cases were built to be extended and not to be a static list, because static defences only ever face yesterday's attacks.
 
-**Attack success depends on the setup.** HarmBench, [arXiv:2402.04249](https://arxiv.org/abs/2402.04249) (Mazeika et al., 2024-02, preprint), exists because the field lacked a standard way to compare methods. It compares 18 red-teaming methods against 33 target models and defences using one setup. When you read a claimed attack success rate, ask about the target, the judge, the number of attempts allowed and the set of behaviours.
+**Attack success depends on the setup.** HarmBench, [arXiv:2402.04249](https://arxiv.org/abs/2402.04249) (Mazeika et al., ICML 2024), exists because the field lacked a standard way to compare methods. It compares 18 red-teaming methods against 33 target models and defences using one setup. When you read a claimed attack success rate, ask about the target, the judge, the number of attempts allowed and the set of behaviours.
 
 **The judge has error rates too.** Most automated red-teaming grades outcomes with a model, and a bad judge inflates or hides results. Treat it like any other judge, measure it against human labels, and look at a sample of its passes. The [Eval pillar's judge chapter](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) covers this. For actions, skip the judge entirely if you can: whether an email went out is a fact in a log.
 

@@ -364,7 +364,7 @@ uv run --with numpy --with pandas --with scipy --with torch python practice/03_t
 
 <details><summary>Answer</summary>
 
-ANSWER1
+Validation NDCG falls as the batch grows, from 0.1304 at 128 to 0.1258 at 512 and 0.1001 at 2048, with coverage roughly flat at 0.29 to 0.31. Bigger batches give more negatives per positive, which you might expect to help, but at a fixed number of epochs they also mean far fewer gradient steps. On this small dataset the lost steps seem to dominate, although this run does not separate the two effects. To separate them, hold the number of steps constant and vary the batch alone.
 
 </details>
 
@@ -372,7 +372,7 @@ ANSWER1
 
 <details><summary>Answer</summary>
 
-ANSWER2
+Yes to both. With 999 negatives EASE scores 0.1723 and the tower 0.1683, against full-catalogue 0.1366 and 0.1248, so the inflation shrinks from more than fourfold to about 1.3 times. The order also recovers: EASE leads again. It took a sample of more than half of this 1,682-item catalogue to get there, which is little help at millions of items, so the practical advice stays the same: rank the whole catalogue.
 
 </details>
 
@@ -380,7 +380,7 @@ ANSWER2
 
 <details><summary>Answer</summary>
 
-ANSWER3
+The effective sample size drops from 3,237 to 332, and the largest weight rises from 100 to 1,000. IPS moves from 0.2190 to 0.2037 and SNIPS from 0.2161 to 0.2055, against a true value of 0.2162, so both now miss by about 5%. Nothing warns you in the point estimate. The effective sample size and the largest weight are the numbers to log, and they tell you that exploring less now means weaker evaluation later.
 
 </details>
 

@@ -437,7 +437,7 @@ trip 44 fare 22.0
 ['_dlt_loads', '_dlt_pipeline_state', '_dlt_version', 'trips']
 ```
 
-The second run found trip 44's update and merged it, and the row count held still. Note the `>=` in the query. dlt deduplicates rows at the boundary value for you, which is its answer to the same mark problem. This source still has the two gaps from the last section, because `dlt.sources.incremental` is a watermark. Trip 43's deletion arrived only because the earlier example had reset the source. dlt gives you state, schema evolution and merge in a few lines, and it cannot find a change that the query cannot see.
+The second run found trip 44's update and merged it, and the row count held still. Note the `>=` in the query. dlt deduplicates rows at the boundary value for you, which is its answer to the same mark problem. This source still has the two gaps from the last section, because `dlt.sources.incremental` is a watermark. Its first run counted 2,999 rows only because trip 43 had already gone before the run started; a delete after that first run would stay in `raw.trips`. dlt gives you state, schema evolution and merge in a few lines, and it cannot find a change that the query cannot see.
 
 
 **Modern gap: dlt.** The zoomcamp uses dlt only for one workshop (the course syllabus and module map tag it as ingest), but it is the cleanest Python-native answer to "pull from an API, land it typed, don't reload history". Treat it as the default for API sources and keep the hand-rolled loader for understanding. Source: [dlt docs](https://dlthub.com/docs/intro), [Workshop 1](https://github.com/DataTalksClub/data-engineering-zoomcamp/blob/main/cohorts/2024/workshops/dlt.md).

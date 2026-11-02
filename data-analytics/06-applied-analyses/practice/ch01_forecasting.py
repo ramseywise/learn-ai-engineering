@@ -177,15 +177,15 @@ baselines = {"Mean", "Naive", "Drift", "Seasonal naive"}
 fig, ax = plt.subplots(figsize=(8, 3.8))
 colours = [cs.MUTED if m in baselines else cs.BLUE for m in ranked.index]
 bars = ax.barh(ranked.index, ranked, color=colours, height=.6)
-ax.bar_label(bars, fmt="%.2f", padding=4, color=cs.SECONDARY)
-ax.axvline(1, color=cs.BASELINE, lw=1)
+ax.bar_label(bars, fmt="%.2f", padding=4, color=cs.SECONDARY, backgroundcolor=cs.SURFACE)
+ax.axvline(1, color=cs.BASELINE, lw=1, zorder=0)
 ax.grid(False)
-ax.set_xticks([0, 1, 2, 3])
+ax.set_xticks([0, 1, 2])
 ax.set_xlabel("MASE over 11 rolling origins, 13 weeks ahead (1 = in-sample seasonal naive error)")
 ax.set_title("Beat the seasonal naive before you trust a model")
 ax.bar(0, 0, color=cs.MUTED, label="Baseline")
 ax.bar(0, 0, color=cs.BLUE, label="Model")
-ax.legend(loc="lower right")
+ax.legend(loc="upper right")
 cs.save(fig, "applied-forecast-backtest-mase.png")
 
 # %% coverage

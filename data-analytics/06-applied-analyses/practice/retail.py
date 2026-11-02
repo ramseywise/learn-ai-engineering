@@ -12,7 +12,7 @@ import pandas as pd
 
 SEED = 20250101
 CUT = pd.Timestamp("2025-01-01")          # email budget cut
-REDESIGN = pd.Timestamp("2025-09-15")     # new mobile payment page ships
+REDESIGN = pd.Timestamp("2025-09-15")     # new mobile checkout page ships
 END = pd.Timestamp("2025-12-31")
 CHANNELS = ["paid_social", "organic", "email", "referral"]
 STEPS = ["visit", "product", "basket", "checkout", "payment", "purchase"]

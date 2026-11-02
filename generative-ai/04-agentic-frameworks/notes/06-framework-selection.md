@@ -70,6 +70,10 @@ compare.main()
 ```
 
 ```text
+                  cold s    ms/run   lines
+no framework        0.03      0.04      55
+langgraph           0.34      1.46      85
+google-adk          0.56      4.22      67
 ```
 
 `cold s` is the median of three fresh interpreters importing the agent and running it once. `ms/run` is the median of 200 runs in one process. `lines` counts non-blank, non-comment lines of the build file on this machine, and it includes each stub. Resolving the dependencies with `uv pip compile` gave 38 packages for `langgraph` and 48 for `google-adk`, against none for the loop.
@@ -80,7 +84,7 @@ Read those numbers in proportion. A real model call takes seconds, so an extra 4
 
 ## How each build stops when the model won't
 
-The lab's `stubborn` behaviour never stops searching. Termination is the failure mode developers report most in the study below, so it is worth comparing what each build does with it out of the box. The code counts model calls with the default settings.
+The lab's `stubborn` behaviour never stops searching. Termination alone accounts for 21.63% of the failures in the study below, so it is worth comparing what each build does with it out of the box. The code counts model calls with the default settings.
 
 ```python
 import asyncio
@@ -138,6 +142,9 @@ except Exception as error:
 ```
 
 ```text
+no framework returned None after 6 calls
+langgraph raised GraphRecursionError after 5004 calls
+google-adk raised LlmCallsLimitExceededError after 500 calls
 ```
 
 Three builds give three answers, and the defaults are the point. The hand-written loop stops at the `max_turns=6` you gave it and returns `None`, so your caller has to treat that as a failure. LangGraph's default limit at this version allows more than five thousand model calls before it raises. ADK's `RunConfig` allows 500.
@@ -274,6 +281,11 @@ print(answers["langgraph"])
 ```
 
 ```text
+scratch uses the shared search: True
+langgraph wraps it: True
+adk takes it as is: True
+all three give the same answer: True
+Requiring a validated typed result before an agent may stop prevents unsupported declarations of completion [furgale-2026]. Logic control caused more than a third of the agent failures studied, with task termination alone at 21.63 percent of them [wang-2025].
 ```
 
 | | No framework | LangGraph | ADK |
@@ -344,6 +356,9 @@ print("same route:", tool_order(graph_rows) == tool_order(adk_rows))
 ```
 
 ```text
+langgraph tools: ['search', 'read_source', 'read_source']
+adk tools:       ['search', 'read_source', 'read_source']
+same route: True
 ```
 
 With that one adapter per framework, the same evaluators score both builds, and that is what makes a comparison honest. It also shows the shape difference a migration has to absorb. LangGraph keeps a flat list of typed messages, and ADK a stream of events whose parts carry calls and results.
@@ -391,7 +406,7 @@ With that one adapter per framework, the same evaluators score both builds, and 
 1. Usually `cold s` and `ms/run` move with the machine and the package cache, and `lines` does not move at all. The first run after a cache miss is much slower, which is why the script takes medians.
 2. LangGraph spends two steps per round, so a limit of 9 allows 5 model calls. This is the same count as note 01's stuck run. ADK's limit counts model calls directly, so 4 means 4, and the fifth attempt raises.
 3. Callers must catch the exception or let it propagate. That is the point: a failure now has to be handled somewhere, where `None` could be printed as an empty answer.
-4. In my experience the state question is the slowest, because docs describe the API and not the stored format. A slow answer is itself useful evidence about lock-in.
+4. Expect the state question to be slow, because docs tend to describe the API and not the stored format. A slow answer is itself useful evidence about lock-in.
 
 </details>
 

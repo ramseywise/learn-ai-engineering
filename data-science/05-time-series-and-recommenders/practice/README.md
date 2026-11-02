@@ -4,10 +4,10 @@ Run everything from the pillar folder, `data-science/05-time-series-and-recommen
 
 | File | What it does | Runtime on a laptop CPU | Packages |
 |---|---|---|---|
-| [`run_note.py`](run_note.py) | Runs a chapter's Python blocks in order and fails on the first error | Chapter 1 about 7 minutes, chapter 2 about 1, chapter 3 about 3 | As below |
-| [`01_forecast_lab.py`](01_forecast_lab.py) | Backtest harness and the exercises for [Time series ML](../notes/01-time-series-ml.md) | About 2 minutes | `scikit-learn pandas` |
-| [`02_cf_lab.py`](02_cf_lab.py) | Exercises for [Collaborative filtering](../notes/02-collaborative-filtering-and-matrix-factorisation.md): split, positives, segments | Under a minute | `numpy pandas scipy` |
-| [`03_two_tower_lab.py`](03_two_tower_lab.py) | Exercises for [Two towers and evaluation](../notes/03-two-tower-and-evaluation.md): batch size, sampled metrics, IPS | About 3 minutes | `numpy pandas scipy torch` |
+| [`run_note.py`](run_note.py) | Runs a chapter's Python blocks in order and fails on the first error | Chapter 1 several minutes, since its neural backtest alone takes about 3; chapters 2 and 3 a minute or two | As below |
+| [`01_forecast_lab.py`](01_forecast_lab.py) | Backtest harness and the exercises for [Time series ML](../notes/01-time-series-ml.md) | A few minutes | `scikit-learn pandas` |
+| [`02_cf_lab.py`](02_cf_lab.py) | Exercises for [Collaborative filtering](../notes/02-collaborative-filtering-and-matrix-factorisation.md): split, positives, segments | A minute or two | `numpy pandas scipy` |
+| [`03_two_tower_lab.py`](03_two_tower_lab.py) | Exercises for [Two towers and evaluation](../notes/03-two-tower-and-evaluation.md): batch size, sampled metrics, IPS | A few minutes | `numpy pandas scipy torch` |
 | [`movielens.py`](movielens.py) | Shared MovieLens loader, split, metric and EASE, imported by the two recommender labs | | |
 
 ```bash

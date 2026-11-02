@@ -20,7 +20,8 @@ class RuleModel(BaseChatModel):
         return "rule-stub"
 
     def bind_tools(self, tools, tool_choice=None, **kwargs):
-        name = tools[0]["function"]["name"] if isinstance(tools[0], dict) else getattr(tools[0], "__name__", tools[0].name)
+        first = tools[0]
+        name = first["function"]["name"] if isinstance(first, dict) else getattr(first, "__name__", None) or first.name
         return self.model_copy(update={"bound_tool": name})
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):

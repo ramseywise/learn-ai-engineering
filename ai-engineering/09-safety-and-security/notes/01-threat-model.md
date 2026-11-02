@@ -12,6 +12,8 @@ sources:
   - https://arxiv.org/abs/2403.09539
   - https://arxiv.org/abs/2502.07776
   - https://arxiv.org/abs/2506.15674
+  - https://arxiv.org/abs/2305.00944
+  - https://arxiv.org/abs/2401.05566
   - https://arxiv.org/abs/2608.09867
   - https://arxiv.org/abs/2407.20516
   - https://arxiv.org/abs/2308.12833
@@ -253,7 +255,7 @@ The comment in `search_scoped` is the load-bearing line. If the caller's identit
 Your system also trusts code and data that other people wrote. OWASP files this under LLM03 and LLM04. The main paths are:
 
 - **Model weights.** A `.ckpt` is a Python pickle and can execute code on load, while `.safetensors` holds only tensors. Pin a hash, and load the safer format.
-- **Datasets.** A training set or fine-tuning file you didn't build may be poisoned. NIST's poisoning class covers this.
+- **Datasets.** A training set or fine-tuning file you didn't build may be poisoned. NIST's poisoning class covers this. [arXiv:2305.00944](https://arxiv.org/abs/2305.00944) (Wan et al., ICML 2023) showed that as few as 100 poison examples contributed to an instruction-tuning dataset could make a chosen phrase produce negative polarity or degenerate outputs across held-out tasks, and that data filtering gave only moderate protection. [arXiv:2401.05566](https://arxiv.org/abs/2401.05566) (Hubinger et al., 2024-01, preprint) deliberately trained models with backdoors and found that standard safety training, including adversarial training, didn't remove them. So a clean safety eval doesn't clear a model of unknown provenance.
 - **MCP servers and plugins.** Installing one adds both a code dependency and new text the model will read as tool descriptions. [Chapter 4](04-tool-and-execution-sandboxing.md) builds a pin check for this.
 - **Skills and memories an agent writes for itself.** This is the newest path and it runs inside your own trust boundary. [arXiv:2608.25776](https://arxiv.org/abs/2608.25776) (Wu et al., 2026-08, preprint) plants malicious skills in the library of self-evolving coding agents, and measures how often the agent writes new malicious skills of its own. Across six models and 153 SWE-bench Verified tasks that rate ranged from 20.3% to 41.8%, and libraries ended with 4.9 to 9.0 times as many malicious skills as were planted. After the planted ones were removed, the highest retained rate at round five was still 68%. Its counter-prompt defence cut the rate to at most 6.7%, as reported by the authors. So cleaning up after a poisoned artefact isn't one deletion, a point we return to in [chapter 6](06-incident-response.md).
 

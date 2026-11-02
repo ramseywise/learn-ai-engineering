@@ -6,11 +6,19 @@ sources:
   - https://python.langchain.com/docs/concepts/lcel/
   - https://python.langchain.com/docs/concepts/structured_outputs/
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 7 — LCEL Composition in Practice
 
 > The layer under LangGraph: how data moves through a chain, how to fan a step out, three ways to get structured output, and the point where a chain should become a graph.
+
+Inside the research agent's `model` node there is usually more than one model call. A real report needs the findings pulled out first, then the gaps in them, then a write-up that needs both of those and the original question. Written by hand, that is a pile of dictionaries where one forgotten key fails three steps later. LCEL is the small language LangChain offers for this plumbing, and it stays useful right up to the point where the plan is decided at runtime and a graph takes over. This note builds that report chain, adds fan-out with a cap, gets structured output three ways, validates a plan the model wrote, and runs map-reduce over the lab's corpus.
+
+The code runs offline on `langchain-core` 1.7.3, with a stub model from [`agent_lcel.py`](../practice/01-research-agent/agent_lcel.py) that replies from a function of the prompt. From [practice/01-research-agent/](../practice/01-research-agent/README.md):
+
+```bash
+uv run --with langchain-core python demo_07_lcel.py
+```
 
 ---
 
@@ -34,30 +42,75 @@ A chain's steps pass one value along. Once a later prompt needs a key from an ea
 | `RunnableLambda(f)` / a plain `lambda` | Wraps a function | Reshape a value between steps |
 | `RunnableParallel(a=…, b=…)` or a dict | Runs its branches on the same input and returns a dict | Fan one input into several chains |
 
-The book's film-script generator chains characters → plot → scenes. Each later prompt needs the genre from the input plus the outputs so far:
+The book's film-script generator chains characters, then plot, then scenes, and each later prompt needs the genre from the input plus the outputs so far. The research report has the same shape: findings, then gaps, then a report that needs all of them.
 
 ```python
-from operator import itemgetter
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
-characters = character_prompt | model | StrOutputParser()
-plot       = plot_prompt      | model | StrOutputParser()   # needs genre + characters
-scenes     = scene_prompt     | model | StrOutputParser()   # needs genre + characters + plot
+from agent_lcel import RuleModel
+from research_lab import CORPUS, QUESTION
+
+
+def rule(prompt: str) -> str:
+    """Stands in for a model. Each step's reply depends only on how its prompt begins."""
+    if prompt.startswith("Findings"):
+        return "Termination causes 21.63% of failures [wang-2025]."
+    if prompt.startswith("Gaps"):
+        return "No study measures the cost of a stuck run."
+    return "REPORT\n" + prompt
+
+
+model = RuleModel(rule=rule)
+to_text = StrOutputParser()
+findings_prompt = ChatPromptTemplate.from_template("Findings for: {question}")
+gaps_prompt = ChatPromptTemplate.from_template("Gaps in: {findings}")
+report_prompt = ChatPromptTemplate.from_template("Report.\nQ: {question}\nF: {findings}\nG: {gaps}")
 
 pipeline = (
-    RunnablePassthrough.assign(characters=characters)        # {"genre"} -> {"genre", "characters"}
-    | RunnablePassthrough.assign(plot=plot)                  # ... + "plot"
-    | RunnablePassthrough.assign(scenes=scenes)              # ... + "scenes"
+    RunnablePassthrough.assign(findings=findings_prompt | model | to_text)   # {question} + findings
+    | RunnablePassthrough.assign(gaps=gaps_prompt | model | to_text)         # ... + gaps
+    | RunnablePassthrough.assign(report=report_prompt | model | to_text)     # ... + report
 )
-pipeline.invoke({"genre": "fantasy"})
+result = pipeline.invoke({"question": QUESTION})
+print(list(result))
+print(result["report"])
+```
+
+```text
+['question', 'findings', 'gaps', 'report']
+REPORT
+Report.
+Q: Why do framework agents get stuck in loops, and what stops them?
+F: Termination causes 21.63% of failures [wang-2025].
+G: No study measures the cost of a stuck run.
 ```
 
 The book builds the same thing from explicit dicts with `itemgetter` on every key. `.assign` is the same idea with less to get wrong: a template variable can't go missing because someone forgot to carry it forward.
 
-**The first element must be a runnable.** A dict is coerced to `RunnableParallel` when its values are runnables or callables. A dict holding plain values (the book's example is `{"age": 18}`) is not, and neither is a plain f-string, so `"text" | model` raises. Order matters too: `model | prompt` composes without complaint and then feeds an `AIMessage` into a template that expected a dict.
+**The first element must be a runnable.** A dict is coerced to `RunnableParallel` when its values are runnables or callables. A dict holding plain values (the book's example is `{"age": 18}`) is not, and neither is a plain string. Order matters too, and getting it wrong can be silent. `model | prompt` composes, and with a one-variable template it runs as well, because the template wraps whatever it receives.
 
-### Sequential when the next step needs the last one
+```python
+for label, build in [("string first", lambda: "some text" | model),
+                     ("plain dict first", lambda: {"age": 18} | model)]:
+    try:
+        build()
+        print(label, "composed")
+    except TypeError as error:
+        print(label, "-> TypeError")
+
+backwards = model | findings_prompt     # composes and runs, and no model sees this prompt
+print("model | prompt returns a", type(backwards.invoke("Findings for: anything")).__name__)
+```
+
+```text
+string first -> TypeError
+plain dict first -> TypeError
+model | prompt returns a ChatPromptValue
+```
+
+### Sequential when a step needs the one before
 
 The book generates nine scenes. It could write every scene's script in parallel, but chooses not to: each scene's prompt gets a **summary of the previous scene**, a one-item buffer memory, so characters don't repeat themselves. That is the real trade-off in chain design. Parallel is faster. Sequential lets a step see what came before. The book's rule of thumb is that long sequential chains suit server-side jobs, where nobody is watching a spinner.
 
@@ -65,13 +118,43 @@ The book also points out that a chain lets you **mix models per step**: a strong
 
 ### Fan out with a concurrency cap
 
-`.batch()` runs inputs in parallel threads. Cap it, or a large batch becomes a rate-limit incident:
+`.batch()` runs inputs in parallel threads. Cap it, or a large batch becomes a rate-limit incident. The stub below records how many calls are in flight at once:
 
 ```python
-results = chain.batch(inputs, config={"max_concurrency": 5})   # book: RunnableConfig(max_concurrency=5)
+import threading
+import time
+
+in_flight, peak, lock = 0, 0, threading.Lock()
+
+
+def slow_rule(prompt: str) -> str:
+    """Sleeps like a network call and tracks the most calls running at once."""
+    global in_flight, peak
+    with lock:
+        in_flight += 1
+        peak = max(peak, in_flight)
+    time.sleep(0.02)
+    with lock:
+        in_flight -= 1
+    return prompt.split("about ")[-1]
+
+
+slow_chain = ChatPromptTemplate.from_template("Summarise: about {source}") | RuleModel(rule=slow_rule) | to_text
+inputs = [{"source": source_id} for source_id in CORPUS]
+for cap in (1, 2, 6):
+    peak = 0
+    start = time.perf_counter()
+    answers = slow_chain.batch(inputs, config={"max_concurrency": cap})
+    print(f"cap {cap}: peak {peak}, {time.perf_counter() - start:.2f}s, in input order: {answers == list(CORPUS)}")
 ```
 
-`abatch` is the async form. Results come back in input order.
+```text
+cap 1: peak 1, 0.15s, in input order: True
+cap 2: peak 2, 0.07s, in input order: True
+cap 6: peak 6, 0.03s, in input order: True
+```
+
+The book passes `RunnableConfig(max_concurrency=5)`, which is the same dictionary. `abatch` is the async form. Results come back in input order.
 
 ---
 
@@ -85,10 +168,54 @@ results = chain.batch(inputs, config={"max_concurrency": 5})   # book: RunnableC
 
 Two things the book adds about tool calling (*Prompt Engineering for Generative AI*, ch. 4):
 
-- **`tool_choice`** controls whether the model must call a tool. `auto` (default) lets it decide, `none` forbids calls, and naming a function forces that one. Force the call when the step's only job is extraction; an `auto` model can answer in prose and skip it.
+- **`tool_choice`** controls whether the model must call a tool. `auto` (default) lets it decide, `none` forbids calls, and naming a function forces that one. Force the call when the step's only job is extraction; an `auto` model can answer in prose and skip it. Check your provider first: on Claude Opus 5.5 a forced tool choice returns a 400, so use `auto` with a clear instruction, or structured outputs ([claude-api docs](https://platform.claude.com/docs/en/api/overview)).
 - **Models hallucinate function parameters.** The book's fix is to be more explicit in the system message. The stronger fix is to validate arguments in code before acting on them, and to return validation errors to the model as an observation ([01](01-react-from-scratch-to-langgraph.md)).
 
 Parallel tool calls are how one call extracts a list. The book's `create_extraction_chain_pydantic` returns two `Person` objects from one sentence. That helper is legacy; current code is `bind_tools([Person])` plus `PydanticToolsParser`, or `with_structured_output` over a wrapper model with `people: list[Person]`.
+
+Here are all three routes on one finding. The stub replies with JSON, which is what a model following the instruction or calling the tool would produce.
+
+```python
+import json
+
+from langchain_core.output_parsers import PydanticOutputParser, PydanticToolsParser
+from pydantic import BaseModel, Field, ValidationError
+
+
+class Finding(BaseModel):
+    source_id: str
+    claim: str
+    percent: float | None = Field(default=None, description="The number the claim rests on, if any")
+
+
+reply = json.dumps({"source_id": "wang-2025", "claim": "Termination causes failures", "percent": 21.63})
+stub = RuleModel(rule=lambda prompt: reply)
+
+parser = PydanticOutputParser(pydantic_object=Finding)
+print("parser:", (stub | parser).invoke("Extract one finding.").percent)
+print("instructions it adds:", parser.get_format_instructions()[:48] + "...")
+
+tools = stub.bind_tools([Finding]) | PydanticToolsParser(tools=[Finding])
+print("tools: ", tools.invoke("Extract one finding.")[0].percent)
+
+print("schema:", stub.with_structured_output(Finding).invoke("Extract one finding.").percent)
+
+bad = RuleModel(rule=lambda prompt: json.dumps({"source_id": "wang-2025", "percent": "about a fifth"}))
+try:
+    bad.with_structured_output(Finding).invoke("Extract one finding.")
+except ValidationError as error:
+    print("validation:", error.error_count(), "errors:", [e["loc"][0] for e in error.errors()])
+```
+
+```text
+parser: 21.63
+instructions it adds: The output should be formatted as a JSON instanc...
+tools:  21.63
+schema: 21.63
+validation: 2 errors: ['claim', 'percent']
+```
+
+The last block is the hallucination case. The model invented a value of the wrong type and left out a required field, and the schema caught both before anything acted on them. That error text is what you feed back to the model as an observation.
 
 ---
 
@@ -98,7 +225,7 @@ When one user request holds several intents that depend on each other, ask the m
 
 ```python
 from graphlib import TopologicalSorter, CycleError
-from pydantic import BaseModel, Field
+
 
 class Query(BaseModel):
     id: int
@@ -106,10 +233,24 @@ class Query(BaseModel):
     dependencies: list[int] = Field(default_factory=list,
                                     description="ids of queries whose answers this one needs")
 
+
 class QueryPlan(BaseModel):
     query_graph: list[Query]
 
-plan = model.with_structured_output(QueryPlan).invoke(user_request)
+
+plan_reply = json.dumps({"query_graph": [
+    {"id": 1, "question": "How often do agents fail to terminate?"},
+    {"id": 2, "question": "What validates completion?"},
+    {"id": 3, "question": "Does validation address the failure rate?", "dependencies": [1, 2]},
+]})
+user_request = "Why do agents get stuck, and would validated termination fix it?"
+planner = RuleModel(rule=lambda prompt: plan_reply).with_structured_output(QueryPlan)
+plan = planner.invoke(user_request)
+print([(q.id, q.dependencies) for q in plan.query_graph])
+```
+
+```text
+[(1, []), (2, []), (3, [1, 2])]
 ```
 
 The book stops at the parsed plan. Executing it is where things break, because the model can reference an id that doesn't exist or create a cycle. Validate the plan, then run it in waves:
@@ -130,6 +271,30 @@ def run_plan(plan: QueryPlan, answer_one) -> dict[int, str]:
             answers[qid] = answer_one(q.question, {d: answers[d] for d in q.dependencies})
         ts.done(*ready)
     return answers
+
+
+def answer_one(question: str, context: dict[int, str]) -> str:
+    return f"[{question[:22]} | using {sorted(context)}]"
+
+
+for qid, answer in run_plan(plan, answer_one).items():
+    print(qid, answer)
+
+for label, graph in [("unknown id", [Query(id=1, question="a", dependencies=[9])]),
+                     ("cycle", [Query(id=1, question="a", dependencies=[2]),
+                                Query(id=2, question="b", dependencies=[1])])]:
+    try:
+        run_plan(QueryPlan(query_graph=graph), answer_one)
+    except (ValueError, CycleError) as error:
+        print(label, "->", type(error).__name__)
+```
+
+```text
+1 [How often do agents fa | using []]
+2 [What validates complet | using []]
+3 [Does validation addres | using [1, 2]]
+unknown id -> ValueError
+cycle -> CycleError
 ```
 
 This is HuggingGPT's task-planning stage in miniature ([graph note 05](../../../ai-engineering/05-graph-engineering/notes/05-topology-patterns.md#manager-agents-as-tools)). It also marks where LCEL runs out. Once the plan is decided at runtime, you want LangGraph's `Send` for the fan-out, plus a checkpointer if any step is slow ([graph note 03](../../../ai-engineering/05-graph-engineering/notes/03-state-and-reducers.md#dynamic-fan-out-the-send-api)).
@@ -144,11 +309,25 @@ The four document-chain strategies (stuff, refine, map-reduce, map-rerank) are t
 *Image Source: James Phoenix & Mike Taylor, *Prompt Engineering for Generative AI* (O'Reilly, 2024), Fig. 4-7*
 
 ```python
-map_chain    = map_prompt    | model | StrOutputParser()
-reduce_chain = reduce_prompt | model | StrOutputParser()
+def map_reduce_rule(prompt: str) -> str:
+    if prompt.startswith("Extract"):
+        source_id, text = prompt.removeprefix("Extract one claim from ").split(": ", 1)
+        return f"{text.split('. ')[0].rstrip('.')} [{source_id}]"
+    claims = prompt.splitlines()[1:]
+    return f"{len(claims)} claims. First: {claims[0]}"
 
-partials = map_chain.batch([{"doc": d} for d in docs], config={"max_concurrency": 5})
-answer   = reduce_chain.invoke({"docs": "\n\n".join(partials)})
+
+stub = RuleModel(rule=map_reduce_rule)
+map_chain = ChatPromptTemplate.from_template("Extract one claim from {source_id}: {text}") | stub | to_text
+reduce_chain = ChatPromptTemplate.from_template("Combine these claims:\n{claims}") | stub | to_text
+
+partials = map_chain.batch([{"source_id": sid, "text": doc["text"]} for sid, doc in CORPUS.items()],
+                           config={"max_concurrency": 5})
+print(reduce_chain.invoke({"claims": "\n".join(partials)}))
+```
+
+```text
+6 claims. First: Logic control caused more than a third of the agent failures studied, with task termination alone at 21.63 percent of them [wang-2025]
 ```
 
 The book's version is `load_summarize_chain(chain_type="map_reduce")`, which is legacy. Two failure cases from its Table 4-1 carry over:
@@ -183,4 +362,56 @@ The book's version is `load_summarize_chain(chain_type="map_reduce")`, which is 
 
 ---
 
-→ Back to [06 — framework selection](06-framework-selection.md), or forward to the graph theory in [ai-engineering/05-graph-engineering](../../../ai-engineering/05-graph-engineering/README.md).
+## Pitfalls
+
+| Pitfall | What it looks like | Fix |
+|---|---|---|
+| Carrying keys by hand | `KeyError` for a template variable three steps later | `RunnablePassthrough.assign`, so each step adds to the input |
+| Prompt and model in the wrong order | `model \| prompt` composes and may even run, returning a prompt where you expected an answer | Test each chain once with a stub model, and check the output type |
+| An uncapped `.batch()` | Rate-limit errors on large inputs, with every worker retrying at once | Always pass `max_concurrency` |
+| Trusting a parsed object | The JSON parses and the arguments are invented | Validate with a schema, and feed the errors back as an observation |
+| Executing a plan unchecked | A cycle hangs the run, or an unknown id raises halfway through paid work | Validate ids and cycles before the first step |
+| Assuming a forced `tool_choice` works everywhere | A 400 on models that reject it | Check the provider, and use `auto` or structured outputs |
+| Joining partials without their sources | The reduce step can't cite, and overflows on long documents | Tag each partial, and collapse in batches |
+| Keeping a chain past its limit | Dynamic fan-out and retries written as nested lambdas | Move to a graph when the steps are decided at runtime or need a checkpoint |
+
+---
+
+## Try it
+
+1. Add a fourth `.assign` step to the report pipeline, `title`, that needs only `report`. What is in the final dictionary?
+2. In the concurrency example, predict the elapsed time at cap 3, then run it. How does it scale?
+3. Change the plan so query 1 depends on query 3. What does `run_plan` do, and at which line?
+4. Make the map step of map-reduce return nothing for one source. What happens to the reduce step, and how would you detect it?
+
+<details>
+<summary>Answers</summary>
+
+1. `question`, `findings`, `gaps`, `report` and `title`. `assign` only ever adds keys, so `title`'s prompt can use `report` without any other step changing.
+2. About two rounds of the sleep, near 0.05 s with overhead. Six inputs at 0.02 s each take about `ceil(6 / cap) * 0.02` s, plus thread and chain overhead.
+3. It raises `CycleError` at `ts.prepare()`, before any answer is computed, because 1 needs 3 and 3 needs 1.
+4. An empty line joins the rest and the reduce step counts one extra blank claim without any complaint. Check for empty partials before the reduce, and count how many sources contributed.
+
+</details>
+
+---
+
+## Interview checklist
+
+| Question | Answer |
+|---|---|
+| What is LCEL for? | Composing runnables with `\|` so that streaming, batching and tracing come for free across prompt, model and parser |
+| What does `RunnablePassthrough.assign` do? | Passes the input through and adds a computed key, so later steps see both |
+| When is sequential better than parallel? | When a step needs what the previous one produced. The book's scenes each get a summary of the last scene |
+| How do you stop `.batch()` causing rate-limit errors? | `max_concurrency` in the config |
+| Name three routes to structured output | Output parser with format instructions, tool calling with `PydanticToolsParser`, and `with_structured_output`, the default |
+| What do you do about hallucinated tool arguments? | Validate in code before acting, and return the validation error as an observation |
+| How do you execute a query plan safely? | Check for unknown ids and cycles, then run in topological waves, each wave in parallel |
+| What are map-reduce's two failure modes? | The reduce step can overflow, and a map step can't see anything that spans documents |
+| When should a chain become a graph? | When the steps are chosen at runtime, or you need retries with state, checkpoints or human approval |
+
+---
+
+## Next
+
+This closes the pillar. Forward to [05-RL](../../05-RL/README.md) for how the models inside these agents are post-trained, or to [06-observability](../../06-observability/README.md) for tracing and evaluating these agents in production. The graph theory behind notes 01 to 03 is in [ai-engineering/05-graph-engineering](../../../ai-engineering/05-graph-engineering/README.md), and [06 — framework selection](06-framework-selection.md) is the note to reread before you choose.

@@ -93,7 +93,7 @@ ax.set_xlabel("Weight of evidence, training set (ln of share of goods / share of
 ax.set_title("Checking-account status: above zero is safer than average")
 ax.bar(0, 0, color=cs.BLUE, label="Safer")
 ax.bar(0, 0, color=cs.ORANGE, label="Riskier")
-ax.legend(loc="lower right")
+ax.legend(loc="upper right")
 cs.save(fig, "applied-credit-woe-status.png")
 
 # %% fit
@@ -204,7 +204,7 @@ fig, ax = plt.subplots()
 ax.plot(grid, cdf_bad, color=cs.ORANGE, label="Bad credits")
 ax.plot(grid, cdf_good, color=cs.BLUE, label="Good credits")
 ax.vlines(grid[gap], cdf_good[gap], cdf_bad[gap], color=cs.INK, lw=1)
-ax.text(grid[gap] + 3, (cdf_good[gap] + cdf_bad[gap]) / 2, f"KS = {cdf_bad[gap] - cdf_good[gap]:.2f}", color=cs.INK)
+ax.text(grid[gap] + 3, cdf_good[gap] + .7 * (cdf_bad[gap] - cdf_good[gap]), f"KS = {cdf_bad[gap] - cdf_good[gap]:.2f}", color=cs.INK)
 ax.set_xlabel("Score (higher is safer)")
 ax.set_ylabel("Share at or below this score")
 ax.set_title("KS is the widest gap between the two score distributions")

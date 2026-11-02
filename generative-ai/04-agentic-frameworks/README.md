@@ -9,7 +9,11 @@
 
 The hands-on framework layer: how the agent ideas from 03 and from ai-engineering's loop and graph pillars look in real code, and how to choose between the frameworks that implement them.
 
-The pillar builds one agent several times. First it is a 40-line Python loop around a chat model. Then it is a two-node LangGraph graph, then a graph with a checkpointer, streaming and human approval, and finally an email assistant with semantic, episodic and procedural memory in a LangGraph store. Google ADK and LangSmith follow as reference specs. A selection note turns all of that into a decision, and a last note drops one layer down to the LCEL chains that sit inside graph nodes.
+The pillar builds one research agent several times, all on the question "Why do framework agents get stuck in loops, and what stops them?". First it is a 40-line Python loop around a chat model. Then it is a two-node LangGraph graph, then a graph with a checkpointer, streaming and human approval, then one with semantic, episodic and procedural memory in a store. The same agent moves to Google ADK, and LangSmith traces both builds. With three working builds in hand, a selection note measures what each costs, how each stops when the model won't, and what the research says about how these frameworks fail. A last note drops one layer down to the LCEL chains that sit inside graph nodes.
+
+## Why it matters
+
+Framework choice is one of the expensive decisions in an agent project, and the demos won't help you make it. All three builds in the lab return the identical answer. Left to run on a stuck model, one stops after 6 calls, one after 500 and one after 5,004. You find differences like that only by building the same thing more than once and measuring it, so that is how this pillar is organised. [Wang et al.](https://arxiv.org/abs/2512.01939) found that more than a third of agent failures come from logic control, which no framework takes off your hands.
 
 > **Build the loop by hand once. Then a framework is a set of things you no longer write, and you can judge whether that set is worth its indirection.**
 
@@ -19,11 +23,16 @@ Theory stays in ai-engineering. Why an agent is a cyclic graph, how reducers mer
 
 ## Start here
 
-1. Read notes 01–03 in order. They are the two DeepLearning.AI LangGraph courses, condensed with their code and figures inline.
-2. Read 04 (ADK) and 05 (LangSmith) as reference specs, when you need them.
-3. Read 06 before choosing a framework for anything new.
+1. Read notes 01–03 in order, running each demo as you go. They begin from the two DeepLearning.AI LangGraph courses, grown onto the lab's research agent.
+2. Read 04 to see the same agent on ADK, and 05 to trace both builds with LangSmith.
+3. Read 06 before choosing a framework for anything new. It compares the three builds and weighs them against the research.
 4. Read 07 when a node needs a multi-step chain, a fan-out, structured output or a plan of dependent queries. Read [01-llm-fundamentals note 04](../01-llm-fundamentals/notes/04-langchain-basics.md) first if LCEL is new.
 5. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+
+## Deck and practice
+
+- **Deck:** [slides/agentic-frameworks.pptx](slides/agentic-frameworks.pptx), with a [PDF](slides/agentic-frameworks.pdf). Build it with `make slides PILLAR=generative-ai/04-agentic-frameworks`.
+- **Lab:** [practice/01-research-agent/](practice/01-research-agent/README.md) runs every note offline with no API key. From that folder, try `uv run --with langgraph --with 'google-adk[eval]' python demo_06_selection.py`.
 
 ## Layout
 
@@ -31,7 +40,9 @@ Theory stays in ai-engineering. Why an agent is a cyclic graph, how reducers mer
 README.md      this file: overview, start here, syllabus, rules of thumb, resource map
 references.md  every source the notes cite, mapped to notes, with licences
 notes/         01–07, the course; code and figures inline
-sources/
+practice/      01-research-agent: the same agent built each way, offline
+slides/        deck.yaml and the built deck
+sources/       the papers these notes cite, as PDFs
   images/      course figures (ksm26-ai-agents-in-langgraph-fig1..6),
                book figures (prompt-engineering-for-generative-ai-fig4-7)
 ```
@@ -45,9 +56,9 @@ sources/
 | 1 | [ReAct from scratch to LangGraph](notes/01-react-from-scratch-to-langgraph.md) | L1 hand-rolled ReAct loop (prompt protocol, registry, regex parser); L2 the same agent as a `StateGraph`: state, reducer, nodes, conditional edge, `bind_tools`, `ToolMessage`; API drift |
 | 2 | [Agentic search, persistence, streaming](notes/02-agentic-search-persistence-streaming.md) | L3 agent-oriented search vs scrape; L4 checkpointers and threads, node vs token streaming; L5 HITL (interrupt, inspect, edit, time travel); L6 essay-writer graph |
 | 3 | [Long-term memory with LangGraph](notes/03-long-term-memory-with-langgraph.md) | Triage router + ReAct agent; semantic memory (store + langmem tools), episodic (few-shot from labelled examples), procedural (prompts in the store, `create_multi_prompt_optimizer`); namespace map |
-| 4 | [Google ADK](notes/04-google-adk.md) | Primitives, ADK vs LangGraph, workflow agents, `ToolContext` state, `adk run`/`adk web`, ADK eval metrics and config, guardrail callbacks |
-| 5 | [LangSmith](notes/05-langsmith.md) | Wiring for LangGraph (env vars) and ADK (`@traceable`), trace anatomy, datasets, `evaluate()`, testing whether a cheaper model is good enough, annotation queues, experiment comparison |
-| 6 | [Framework selection](notes/06-framework-selection.md) | Do you need one; the dimensions; LangGraph, ADK, Pydantic AI, OpenAI Agents SDK, MS Agent Framework compared; decision table; running two frameworks side by side; lock-in checklist |
+| 4 | [Google ADK](notes/04-google-adk.md) | The research agent on ADK: primitives, ADK vs LangGraph, `Workflow`, `max_llm_calls`, `ToolContext` state, `adk run`/`adk web`, eval metrics and config, guardrail callbacks and plugins |
+| 5 | [LangSmith](notes/05-langsmith.md) | Tracing both builds, with runs captured offline: wiring for LangGraph and ADK, trace anatomy, reading a stuck run, datasets, `evaluate()`, testing whether a cheaper model is good enough, annotation queues |
+| 6 | [Framework selection](notes/06-framework-selection.md) | Do you need one; measured cost and stuck-run behaviour of the three builds; the dimensions; five frameworks compared; what the empirical studies found; running two side by side; lock-in checklist with an export test |
 | 7 | [LCEL composition in practice](notes/07-lcel-composition-in-practice.md) | Data flow (`RunnablePassthrough.assign`, `itemgetter`, `RunnableParallel`), sequential vs batch with `max_concurrency`, three routes to structured output (`tool_choice`, hallucinated arguments), a query plan as a validated DAG, map-reduce, few-shot limits, book APIs and their current form |
 
 ## Rules of thumb
@@ -68,6 +79,7 @@ sources/
 | Validate a model-written plan (unknown ids, cycles) before executing it | [07](notes/07-lcel-composition-in-practice.md#query-planning-a-plan-is-a-dag) |
 | Never load prompts with pickle; keep them as text files under version control | [07](notes/07-lcel-composition-in-practice.md#few-shot-selection-and-prompt-files) |
 | Choose a framework by control flow and durability, not by demo | [06](notes/06-framework-selection.md) |
+| Set the loop limit on every invocation; the defaults allow 500 to 5,004 model calls | [06](notes/06-framework-selection.md#how-each-build-stops-when-the-model-wont) |
 | Keep tools, prompts and eval data framework-neutral | [06](notes/06-framework-selection.md) |
 
 ---
@@ -87,15 +99,7 @@ sources/
 - Full citations, upstream repos and licences: [references.md](references.md).
 
 ### Coursework and practice
-The course snapshots were condensed into the notes and removed. Each note ends with a **Labs** table linking the upstream notebooks:
-
-| Lab | Note | Runs |
-|---|---|---|
-| ReAct from scratch, LangGraph components (L1–L2) | [01](notes/01-react-from-scratch-to-langgraph.md#labs) | Needs `OPENAI_API_KEY`; L2 also `TAVILY_API_KEY` |
-| Agentic search, persistence, streaming (L3–L4) | [02](notes/02-agentic-search-persistence-streaming.md#labs) | Needs `OPENAI_API_KEY`, `TAVILY_API_KEY` |
-| HITL, essay writer (L5–L6) | [02](notes/02-agentic-search-persistence-streaming.md#labs) | DeepLearning.AI platform only |
-| Email assistant with memory (L2–L5) | [03](notes/03-long-term-memory-with-langgraph.md#labs) | Needs `OPENAI_API_KEY`; L3 and L5 also `ANTHROPIC_API_KEY` |
-| ADK `adk run` / `adk web` / `adk eval` | [04](notes/04-google-adk.md) | Needs a Gemini API key or Vertex project |
+[practice/01-research-agent/](practice/01-research-agent/README.md) runs the code from every note offline, with a stub model. Its README lists the command for each note. The course snapshots were condensed into the notes and removed, and each note's **Labs** table links the upstream notebooks, which need API keys. Running on real models takes a provider key, and ADK's `adk run`, `adk web` and `adk eval` need a Gemini key or a Vertex project.
 
 ### Readings
 - Framework docs and guides (Anthropic, OpenAI, 12-Factor Agents, ReAct): [references.md](references.md).

@@ -47,9 +47,9 @@ from matplotlib.colors import LinearSegmentedColormap
 
 ramp = LinearSegmentedColormap.from_list("blue", cs.SEQUENTIAL)
 ramp.set_bad(cs.SURFACE)
-show = q_ret.loc[:, 1:18] * 100
+show = q_ret.loc[:, 1:18].dropna(how="all") * 100
 fig, ax = plt.subplots(figsize=(8.5, 4.6))
-im = ax.imshow(np.ma.masked_invalid(show.to_numpy()), aspect="auto", cmap=ramp, vmin=0, vmax=30)
+im = ax.imshow(np.ma.masked_invalid(show.to_numpy()), aspect="auto", cmap=ramp, vmin=0, vmax=20)
 ax.set_xticks(range(0, 18, 2), [str(a) for a in show.columns[::2]])
 ax.set_yticks(range(len(show)), [str(q) for q in show.index])
 ax.grid(False)
@@ -99,14 +99,15 @@ for channel in CHANNELS:
     members = pre[pre.channel == channel].customer_id
     curve = cumulative_rev(tagged, members)
     ltv[channel] = curve
-    ax.plot(curve.index, curve, color=cs.CHANNEL_COLOUR[channel], label=channel)
-    ax.text(12.15, curve[12], channel, color=cs.SECONDARY, va="center")
+    ax.plot(curve.index, curve, color=cs.CHANNEL_COLOUR[channel], label=channel.replace("_", " "))
+    nudge = {"organic": 4, "referral": -4}.get(channel, 0)    # these two nearly coincide
+    ax.text(12.15, curve[12] + nudge, channel.replace("_", " "), color=cs.SECONDARY, va="center")
 ax.set_xlim(0, 14.2)
 ax.set_ylim(0)
 ax.set_xticks(range(0, 13, 3))
 ax.set_xlabel("Months since first order")
 ax.set_ylabel("Cumulative revenue per customer (£)")
-ax.set_title("2023 customers: the first order is similar, the years after are not")
+ax.set_title("2023 customers: the first order is similar, the next twelve months are not")
 ax.legend(loc="upper left")
 cs.save(fig, "applied-cohort-ltv-channel.png")
 
@@ -150,6 +151,14 @@ for name, curve in {"High End": high_end, "Regular": regular}.items():
     a, b = sbg_fit(curve[:8])
     s12 = sbg_survival(a, b, 12)
     print(f"{name:9s} alpha {a:.3f}  beta {b:.3f}  year 12 forecast {s12:.1%}  actual {curve[12]:.1%}  error {s12 / curve[12] - 1:+.1%}")
+
+# The PDF prints alpha = 0.688 for High End; compare the two values at the printed beta.
+def sbg_ll(a, b, survival):
+    s = sbg_survival(a, b, np.arange(len(survival)))
+    return (-np.diff(survival) * np.log(-np.diff(s))).sum() + survival[-1] * np.log(s[-1])
+
+
+print(f"High End log likelihood per customer: {sbg_ll(.668, 3.806, high_end[:8]):.5f} at 0.668, {sbg_ll(.688, 3.806, high_end[:8]):.5f} at 0.688")
 
 # %% sbg_fernhill
 # The generator's true lifetimes stand in for what a subscription firm would see. Fernhill cannot.

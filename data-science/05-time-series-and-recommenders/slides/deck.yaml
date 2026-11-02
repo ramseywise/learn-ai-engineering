@@ -55,14 +55,14 @@ parts:
         title: A backtest replays history one fold at a time
         recall: How does an expanding-window backtest work?
         steps:
-          - title: Cut
-            body: Pick a date in the past
-          - title: Train
-            body: Fit only on data before it
-          - title: Issue
-            body: Forecast each midnight in the next month
-          - title: Score
-            body: Record MAE and MASE for this fold
+          - label: Cut
+            sub: Pick a date in the past
+          - label: Train
+            sub: Fit only on data before it
+          - label: Issue
+            sub: Forecast each midnight in the next month
+          - label: Score
+            sub: Record MAE and MASE for this fold
         loop: Move the cut one month on and repeat
         caption: Six folds from July to December 2012. Report each fold, since an average can hide one bad month.
         takeaway: An expanding-window backtest trains only on the past at each cut, and gives you as many looks at the future as you have folds.
@@ -83,7 +83,7 @@ parts:
           - [Same hour last week, "66.0", "1.074"]
           - [GBM on absolute counts, "55.4", "0.906"]
           - [GBM relative to last week's level, "48.2", "0.786"]
-        highlight: 3
+        highlight: [3]
         takeaway: A regression tree cannot predict above its training targets, so model the ratio to a known level when the series is growing.
         source: notes/01-time-series-ml.md
         notes: >-
@@ -124,12 +124,14 @@ parts:
               def __init__(self, L, H, kernel=25):
                   super().__init__()
                   self.avg = nn.AvgPool1d(kernel, stride=1,
-                      padding=kernel // 2, count_include_pad=False)
+                  padding=kernel // 2,
+                  count_include_pad=False)
                   self.seasonal = nn.Linear(L, H)
                   self.trend = nn.Linear(L, H)
               def forward(self, x):
                   trend = self.avg(x.unsqueeze(1)).squeeze(1)
-                  return self.seasonal(x - trend) + self.trend(trend)
+                  y = self.seasonal(x - trend)
+                  return y + self.trend(trend)
         bullets:
           - "Zeng et al. (AAAI 2023): one-layer models beat Transformers on nine datasets"
           - "Attention is permutation invariant, which loses order"
@@ -152,14 +154,14 @@ parts:
           - [LSTM, "1.039", About 1 min]
           - [DLinear, "1.056", 2 s]
           - [Same hour last week, "1.074", None]
-        highlight: 0
+        highlight: [0]
         takeaway: On a small single series start with features and trees, and make any deep model beat that number in the same backtest.
         source: notes/01-time-series-ml.md
         notes: >-
           This is one series with a few hundred training windows. In M5, with 42,840 related series, cross-learning and LightGBM won, and only
           35.8 percent of teams beat the seasonal naive. DeepAR and its relatives are designed for many series, and a single short one starves them.
 
-  - title: Why the best predictor makes the worst list
+  - title: The best predictor, the worst list
     summary: Sparse data · Biases and factors · Top-N · EASE · Implicit feedback
     notes: >-
       Now a film site wants a top ten list per person. We have MovieLens 100K, and we start where the Netflix Prize started, predicting stars.
@@ -179,12 +181,12 @@ parts:
         title: Split interaction logs by time, not at random
         recall: Why did we split per user, and how much does random holdout inflate NDCG?
         steps:
-          - title: Global cut first
-            body: Only 109 of 301 future raters have any history
-          - title: Per-user split
-            body: Oldest 80% train, next 10% validate, newest 10% test
-          - title: Name the compromise
-            body: Some global information still crosses the line
+          - label: Global cut first
+            sub: Only 109 of 301 future raters have any history
+          - label: Per-user split
+            sub: Oldest 80% train, next 10% validate, newest 10% test
+          - label: Name the compromise
+            sub: Some global information still crosses the line
         caption: "A random 90/10 split lifts EASE from NDCG 0.126 to 0.309 with no change in the model."
         takeaway: Random holdout lets a model see the future, which on our data more than doubled NDCG for the same model.
         source: notes/02-collaborative-filtering-and-matrix-factorisation.md
@@ -200,7 +202,9 @@ parts:
           - "Add user and item biases: **1.015**"
           - "Add 20 latent factors: **0.996**"
           - "Koren et al.: Netflix's own system 0.9514, grand prize target 0.8563"
-        aside: Factors find real structure with no genre input. Star Wars lands next to The Empire Strikes Back.
+        aside:
+          title: What factors find
+          body: Real structure with no genre input. Star Wars lands next to The Empire Strikes Back.
         takeaway: User and item biases capture most of the rating signal, and latent factors add the interaction term on top.
         source: notes/02-collaborative-filtering-and-matrix-factorisation.md
         notes: >-
@@ -245,7 +249,7 @@ parts:
           - [BPR, "0.126", "0.099", "0.31"]
           - [Popularity, "0.090", "0.075", "0.04"]
           - [MF on ratings, "0.043", "0.034", "0.21"]
-        highlight: 0
+        highlight: [0]
         takeaway: On full-catalogue top-10, models that target ranking beat popularity, and the simplest learned model led on our data.
         source: notes/02-collaborative-filtering-and-matrix-factorisation.md
         notes: >-
@@ -304,12 +308,12 @@ parts:
         title: Large systems narrow the catalogue in stages
         recall: What is each stage in the funnel judged on?
         steps:
-          - title: Retrieval
-            body: Millions to hundreds. Judged on recall.
-          - title: Ranking
-            body: Hundreds to tens. Rich features, judged at the top.
-          - title: Re-ranking
-            body: Diversity, freshness, business rules.
+          - label: Retrieval
+            sub: Millions to hundreds. Judged on recall.
+          - label: Ranking
+            sub: Hundreds to tens. Rich features, judged at the top.
+          - label: Re-ranking
+            sub: Diversity, freshness, business rules.
         caption: "Covington, Adams and Sargin, RecSys 2016. The towers cannot share inputs, so cross-features go to the ranker."
         takeaway: Retrieval narrows the catalogue cheaply and is judged on recall, because anything it drops can never be recovered downstream.
         source: notes/03-two-tower-and-evaluation.md
@@ -347,10 +351,10 @@ parts:
         widths: [3, 1, 1, 1]
         rows:
           - [EASE, "0.155", "0.126", "0.22"]
-          - [Two-tower, logQ, "0.141", "0.110", "0.31"]
+          - ["Two-tower, logQ", "0.141", "0.110", "0.31"]
           - [Popularity, "0.090", "0.075", "0.04"]
-          - [Two-tower, plain, "0.053", "0.038", "0.86"]
-        highlight: 1
+          - ["Two-tower, plain", "0.053", "0.038", "0.86"]
+        highlight: [1]
         takeaway: The logQ correction lifted our tower from below popularity to close to EASE, while the uncorrected model scattered over the catalogue.
         source: notes/03-two-tower-and-evaluation.md
         notes: >-
@@ -393,7 +397,7 @@ parts:
           - [Naive CTR on matching events, "0.2955"]
           - [IPS, "0.2190"]
           - [Self-normalised IPS, "0.2161"]
-        highlight: 4
+        highlight: [4]
         takeaway: IPS reweights logged events by inverse propensity to estimate a new policy, but it needs logged probabilities and pays for them in variance.
         source: notes/03-two-tower-and-evaluation.md
         notes: >-
@@ -405,15 +409,15 @@ parts:
         recall: What are the stages of the evaluation ladder, and why does the ladder exist?
         steps:
           - title: Full-catalogue offline
-            body: Cheap, biased by logs
+            text: Cheap, biased by logs
           - title: Counterfactual estimate
-            body: Needs logged propensities
+            text: Needs logged propensities
           - title: Small live ramp
-            body: Guardrails, latency, bugs
+            text: Guardrails, latency, bugs
           - title: A/B test
-            body: "1% lift on a 5% rate: about 3 million per arm"
+            text: "1% lift on a 5% rate: about 3 million per arm"
           - title: Long-term holdout
-            body: Catches slow effects
+            text: Catches slow effects
         takeaway: Only a live test measures the real counterfactual, and because it needs millions of users each offline stage must remove candidates first.
         source: notes/03-two-tower-and-evaluation.md
         notes: >-
