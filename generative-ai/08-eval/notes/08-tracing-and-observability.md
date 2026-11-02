@@ -9,11 +9,13 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 10"
   - eval-harness.md (retired 2026-10-28)
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 8 — Tracing and Observability
 
 > You can't grade what you didn't record. A trace is the eval's raw material: every model call, tool call and retrieval as a span, with inputs, outputs, tokens and timing. Instrument once, and the same traces feed offline evals, production monitoring and debugging.
+
+A nightly eval says grounding fell, and the team can't say which request, prompt version or retrieval caused it, because they logged only the final reply. Every grader in this course reads from a record of what happened: a trajectory check needs tool calls, and a grounding check needs passage text. This chapter covers what a trace has to hold so that evals, cost attribution and debugging all work from one source.
 
 ---
 
@@ -154,6 +156,57 @@ Traces are where cost lives. Roll up per span → per request → per user / fea
 - **Cache hit rate** for prompt caching. A prompt change that breaks the cacheable prefix can double cost overnight.
 - **Tail latency by step.** p95 is usually one slow tool or one long generation, not the whole pipeline.
 
+Rolling a trace up takes little code, and so does scrubbing it on the way out. This uses the trace in the diagram above, with assumed prices of $3 and $15 per million tokens, so its cost differs from the diagram's $0.012:
+
+```python
+import re
+
+# One trace, flattened. Tokens are recorded on model spans; retrieval carries text, not just ids.
+TRACE = {"trace_id": "t-8812", "outcome": "resolved", "spans": [
+    {"name": "chat plan", "in": 1840, "out": 120, "ms": 900},
+    {"name": "execute_tool search_help_center", "ms": 400,
+     "chunks": [{"id": "p1", "text": "Refunds go back to the card within 5 days."}]},
+    {"name": "execute_tool lookup_order", "ms": 200, "args": "order 8812 for jo@example.com"},
+    {"name": "chat answer", "in": 3210, "out": 260, "ms": 1300},
+]}
+IN_PRICE, OUT_PRICE = 3 / 1e6, 15 / 1e6      # assumed $ per token, for the example only
+
+EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+def export(trace):                           # scrub as the span leaves the process
+    clean = dict(trace, spans=[])
+    for span in trace["spans"]:
+        clean["spans"].append({k: EMAIL.sub("<email>", v) if isinstance(v, str) else v
+                               for k, v in span.items()})
+    return clean
+
+def rollup(trace):
+    spans = trace["spans"]
+    cost = sum(s.get("in", 0) * IN_PRICE + s.get("out", 0) * OUT_PRICE for s in spans)
+    slowest = max(spans, key=lambda s: s["ms"])
+    return {"cost": round(cost, 4), "total_ms": sum(s["ms"] for s in spans),
+            "slowest": slowest["name"], "slowest_share": round(slowest["ms"] / sum(s["ms"] for s in spans), 2)}
+
+print(rollup(TRACE))
+print(export(TRACE)["spans"][2]["args"])
+
+def cost_per_success(traces):                # failed runs are paid for too
+    return sum(rollup(t)["cost"] for t in traces) / sum(t["outcome"] == "resolved" for t in traces)
+
+failed = dict(TRACE, outcome="abandoned")
+print("per run", rollup(TRACE)["cost"], "per success at 50%", round(cost_per_success([TRACE, failed]), 4))
+```
+
+Output:
+
+```text
+{'cost': 0.0209, 'total_ms': 2800, 'slowest': 'chat answer', 'slowest_share': 0.46}
+order 8812 for <email>
+per run 0.0209 per success at 50% 0.0418
+```
+
+The slowest span takes 46% of the time, and a 50% success rate doubles the cost of each success. The email is gone before the span reaches a backend.
+
 ---
 
 ## What to watch, and when to page someone
@@ -213,4 +266,54 @@ Redact **at span export**, not in the dashboard. OTel exporters provide hooks fo
 
 ---
 
-→ Next: [09-reading-results.md](09-reading-results.md) — when a number changed, did anything change?
+## Pitfalls
+
+- **Logging only the final answer.** Symptom: a failed eval with nothing to read, and "which change caused this?" has no answer. Fix: a span for every model call, tool call and retrieval, with versions on the root span.
+- **Retrieval spans with IDs and no text.** Symptom: grounding graders can't run or return `context_missing`. Fix: record passage text, scores and rank on the retrieval span, and the query after rewriting.
+- **Two copies of each grader.** Symptom: offline and online scores disagree with no system change. Fix: run the same grader code in CI and on sampled traffic, and attach scores to the spans they graded.
+- **Scrubbing PII in the dashboard.** Symptom: raw emails and card numbers sit in the backend behind a display filter, and eval rows inherit them. Fix: redact at span export, restrict raw traces with role-based access, and apply the retention limit to derived rows.
+- **Paging on copied thresholds.** Symptom: alert fatigue from Albada's example numbers, which are illustrations and not measurements. Fix: set thresholds from your own baseline variance.
+- **Tracking cost per call.** Symptom: a cheaper model looks like a win while retries raise the true bill. Fix: report cost per success, split input tokens by source, and watch the cache hit rate, since a prompt change that breaks the cacheable prefix can double cost overnight.
+- **Late logs.** Symptom: metrics show a break five minutes ago, the logs arrive 15 minutes late, and MTTR can't be better than that delay. Fix: treat log lag as part of the monitoring's own grade, beside MTTD, MTTR and CFR.
+
+## Try it
+
+1. Check your own agent's traces, or the trace in this chapter's diagram, against the six questions. Which can't the diagram answer?
+
+   <details><summary>Answer</summary>
+
+   The diagram answers question 2 (which steps ran, in what order) and most of question 5 (where the time went, plus total cost). It partly answers question 4, since it names the tools but not what came back. It doesn't show what the user asked or received (1), the full context the model saw (3) or the versions running (6), so those are the instrumentation gaps. The span table shows the fields that close them.
+
+   </details>
+
+2. In the script, set the answer span's input tokens to 8,210, as if a 5,000-token tool output had been added to the context. What are the cost per run and the cost per success at 50%?
+
+   <details><summary>Answer</summary>
+
+   Running it gives $0.0358 per run and $0.0716 per success, up from $0.0209 and $0.0418. No extra steps were taken, which is why the cost shows up only if tokens are recorded per span.
+
+   </details>
+
+3. A bad output fails 4 of 5 reruns. Under Albada's triage, is that a systematic bug? What about 5 of 5, and 1 of 5?
+
+   <details><summary>Answer</summary>
+
+   His rule is "more than 80%", so 4 of 5 sits exactly on the line and 5 of 5 is the only clear result at five reruns: that is a systematic bug for engineering. Treat 4 of 5 as probably systematic and run more. For 1 of 5, compare with the baseline distribution before acting, and log it for drift watch if it is expected variation.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What must a retrieval span record? | The query after rewriting, the returned IDs and text, scores and rank. Without text, a grounding grader has nothing to verify. |
+| What goes on the root span? | User or session ID, final output, outcome label, total cost, and the versions of prompt, model, tool set, index and config. |
+| Why use the OpenTelemetry GenAI conventions? | Standard span and attribute names such as `invoke_agent` and `gen_ai.usage.input_tokens` let you switch backends without re-instrumenting. |
+| Where do you redact PII? | At span export, so raw PII never reaches the backend, with role-based access on raw traces. Eval rows derived from traces should inherit the same retention limit. |
+| What do MTTD, MTTR and CFR tell you? | Time to detect, time to resolve, and the share of deploys that need a fix or rollback. A high CFR says the offline eval pipeline is missing bad changes. |
+| Your bill doubled overnight and traffic is flat. Where do you look? | Cache hit rate first, since a prompt change that breaks the cacheable prefix can double cost, then input-token share by source for context bloat, then cost per success by version. |
+| What features would you require of a tracing tool? | Evals over stored traces, scores attached to spans, datasets built from traces, and side-by-side experiment comparison. Those four turn a trace viewer into part of the eval loop. |
+
+## Next
+
+[09-reading-results.md](09-reading-results.md): when a number changed, did anything change?

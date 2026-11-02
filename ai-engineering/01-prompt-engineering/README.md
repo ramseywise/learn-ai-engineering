@@ -68,7 +68,7 @@ The rules from the topic notes on one page. Each group links to the note that ex
 
 - **Lecture deck:** [slides/prompt-engineering.pptx](slides/prompt-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=01-prompt-engineering`).
 - **New to this:** watch the [DAIR lecture](https://youtu.be/dOxUroR57xs) (1 h), read notes 01–06 alongside book Ch 1–9 and run the code snippets in each note, then read notes 07–11.
-- **Building something now:** the [vendor guides](#vendor-guides) for your model, then [09 — evaluating prompts](notes/09-evaluating-prompts.md).
+- **Building something now:** the [vendor guides](references.md#vendor-guides) for your model, then [09 — evaluating prompts](notes/09-evaluating-prompts.md).
 - **Need an example prompt:** the [prompt library](notes/prompt-library.md).
 - **Security:** [10](notes/10-adversarial-prompting.md) and [prompt-injection.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/prompt-injection.md).
 

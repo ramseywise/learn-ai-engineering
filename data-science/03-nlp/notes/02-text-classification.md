@@ -174,7 +174,7 @@ The shape matches Sarkar's on this harder task with fewer documents. Linear mode
 | Averaged FastText | `SGDClassifier` | Below TF-IDF |
 | Averaged GloVe | `MLPClassifier` | Better than linear on the same vectors, still not above tuned TF-IDF |
 
-Averaging throws away word order and dilutes the informative words with common ones. Dense vectors win when training data is small, the vocabulary at test time differs, or the vectors are contextual and fine-tuned ([neural text models](../../02-deep-learning/notes/02-neural-text-models.md), [LLM embeddings as features](07-llm-embeddings-as-features.md)). [Embeddings and similarity](04-embeddings-and-similarity.md) explains the vectors themselves. We can check the first row directly.
+Averaging throws away word order and dilutes the informative words with common ones. Dense vectors win when training data is small, the vocabulary at test time differs, or the vectors are contextual and fine-tuned ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md), [LLM embeddings as features](07-llm-embeddings-as-features.md)). [Embeddings and similarity](04-embeddings-and-similarity.md) explains the vectors themselves. We can check the first row directly.
 
 ```python
 from gensim.models import Word2Vec
@@ -271,7 +271,7 @@ flowchart TD
 | 5 | TF-IDF, counts, SVD | XGBoost | Trees on sparse text are mediocre ([ensembles](../../01-classical-ml/notes/06-ensembles.md)) |
 | 6 | Pipeline SVD + scaler + LR; NB alone | `GridSearchCV` with a log-loss scorer | Tuned NB alpha: 8% better than default |
 | 7 | GloVe 840B averaged sentence vectors | XGBoost | Dense vectors help trees |
-| 8 | GloVe embedding layer (frozen) | LSTM, Bi-LSTM, GRU (Keras), early stopping | Sequence models on embeddings ([neural text models](../../02-deep-learning/notes/02-neural-text-models.md)) |
+| 8 | GloVe embedding layer (frozen) | LSTM, Bi-LSTM, GRU (Keras), early stopping | Sequence models on embeddings ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)) |
 | 9 | All of the above | Ensembling | Blend out-of-fold predictions ([stacking and voting](../../01-classical-ml/notes/06-ensembles.md)) |
 
 Step 6 is worth running, because it is the shape of every grid search with a custom metric. We run it on our genres, and we keep the vectoriser inside the pipeline.

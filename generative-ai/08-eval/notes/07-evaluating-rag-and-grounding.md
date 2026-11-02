@@ -11,11 +11,13 @@ sources:
   - "Iusztin & Labonne, LLM Engineer's Handbook (Packt, 2024), ch. 7"
   - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 7 — Evaluating RAG and Grounding
 
 > A RAG answer can fail in retrieval, in generation, or in the gap between them. Score each stage separately, score only the rows each stage could have got right, and check grounding claim by claim instead of asking a judge for a vibe.
+
+A RAG assistant gets a bad score, the team rewrites the prompt for a week, and the real cause is that retrieval never found the right article. One score across the pipeline can't say which stage failed, and a grader handed URLs in place of passage text produces confident noise. This chapter scores retrieval, ranking, generation and citations separately, on rows each stage could have got right.
 
 *Context-side view (what to put in the window and how to measure that) is in [02/12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md). This chapter is the measurement machinery.*
 
@@ -60,6 +62,35 @@ flowchart LR
 | **nDCG@k** | Rank-discounted gain, normalized to the ideal ranking | Graded relevance (highly / partly / not) |
 
 Pick *k* to match what actually goes into the prompt. Recall@50 is irrelevant if only the top 5 are passed to the model.
+
+These metrics fit in a few lines. In the three rows below, the first finds its source at rank 1, the second finds one of two sources at rank 3, and the third misses:
+
+```python
+def retrieval(rows, k):                    # rows: (ranked ids, relevant ids)
+    hit = recall = rr = 0
+    for ranked, relevant in rows:
+        top = ranked[:k]
+        hit += any(d in relevant for d in top)
+        recall += len(set(top) & set(relevant)) / len(relevant)
+        rr += next((1 / (i + 1) for i, d in enumerate(top) if d in relevant), 0)
+    n = len(rows)
+    return {"hit": round(hit / n, 2), "recall": round(recall / n, 2), "mrr": round(rr / n, 2)}
+
+rows = [(["d1", "d7", "d3"], {"d1"}),            # first place
+        (["d4", "d9", "d2"], {"d2", "d8"}),      # one of two sources, third place
+        (["d5", "d6", "d0"], {"d7"})]            # never retrieved
+print("k=3", retrieval(rows, 3))
+print("k=1", retrieval(rows, 1))
+```
+
+Output:
+
+```text
+k=3 {'hit': 0.67, 'recall': 0.5, 'mrr': 0.44}
+k=1 {'hit': 0.33, 'recall': 0.33, 'mrr': 0.33}
+```
+
+Cutting to k = 1 halves the hit rate. If only the top chunk reaches the prompt, the first line is measuring something the model never sees.
 
 RAGAS's two retrieval metrics are not plain recall and precision (*LLM Engineer's Handbook*, ch. 7). **Context precision** is rank-aware: it rewards putting the relevant passages at the top, closer to nDCG than to precision@k. **Context recall** splits the *reference answer* into claims and checks how many can be attributed to the retrieved context, so it needs a ground-truth answer, not labeled sources. **Answer relevancy** is indirect too: an LLM writes several questions that the answer would fit, and the score is their mean cosine similarity to the real question. It catches off-topic or partial answers, and it inherits the embedding model's notion of similarity.
 
@@ -130,11 +161,55 @@ Citations are one of the few places in RAG where code can grade semantics cheapl
 
 Then, with a judge: **citation precision** (does the cited passage support the sentence it's attached to?) and **citation recall** (is every claim that needs a citation cited?). ALCE (Gao et al. 2023) defines both and shows models citing irrelevant passages often.
 
+The code half of that table on a sample answer. The fifth claim is a greeting in the general tier, and the last call passes a URL where passage text belongs:
+
+```python
+from difflib import SequenceMatcher
+
+PASSAGES = {"p1": "To change your payout account go to Settings > Payouts and click Edit.",
+            "p2": "Changes to payout details take 2 business days to apply."}
+
+def check_citations(claims, retrieved):
+    if not retrieved or any(text.startswith("http") for text in retrieved.values()):
+        return {"label": "context_missing"}         # a grader fault, not a system failure
+    labels = []
+    for claim in claims:
+        cited = claim.get("cite")
+        if cited is None:
+            labels.append("missing_citation" if claim["tier"] == "strict" else "exempt")
+        elif cited not in retrieved:
+            labels.append("citation_hallucination")
+        else:
+            quote, passage = claim["quote"].lower(), retrieved[cited].lower()
+            m = SequenceMatcher(None, quote, passage).find_longest_match()
+            labels.append("ok" if m.size / len(quote) >= 0.9 else "quote_not_found")
+    return {"label": "graded", "claims": labels}
+
+claims = [
+    {"tier": "strict", "cite": "p1", "quote": "go to Settings > Payouts and click Edit"},
+    {"tier": "strict", "cite": "p2", "quote": "take 5 business days to apply"},
+    {"tier": "strict", "cite": "p9", "quote": "free of charge"},
+    {"tier": "strict", "cite": None},
+    {"tier": "general", "cite": None},
+]
+print(check_citations(claims, PASSAGES))
+print(check_citations(claims, {"p1": "https://help.example.com/payouts"}))
+```
+
+Output:
+
+```text
+{'label': 'graded', 'claims': ['ok', 'quote_not_found', 'citation_hallucination', 'missing_citation', 'exempt']}
+{'label': 'context_missing'}
+```
+
+Each label names a different fix. The second claim has a real citation whose quote says 5 days where the passage says 2, and the third cites a passage that was never retrieved. The last line is the guard from [Pass the text, not the pointer](#pass-the-text-not-the-pointer): it reports a fault in the eval, not a failure of the system.
+
 ---
 
 ## Pass the text, not the pointer
 
-The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against RAGAS showed near-zero agreement for exactly this reason ([case study](13-case-study-support-agent.md#why-the-grounding-cross-check-showed-low-agreement)).
+The most common grounding eval bug: the grader receives passage IDs or URLs instead of passage text, can't verify anything, and scores near zero, or worse, scores from its own knowledge. The case study's cross-check against DeepEval faithfulness and G-Eval accuracy showed low agreement for exactly this reason ([case study](13-case-study-support-agent.md#why-the-grounding-cross-check-showed-low-agreement)).
 
 Guard against it in the grader interface (`requires = {"retrieved_context"}`, [04](04-graders.md#the-grader-interface)) and label it `context_missing` in the taxonomy. Assert in CI that grounding graders received non-empty text.
 
@@ -164,4 +239,55 @@ Iusztin & Labonne pair the two: RAGAS for quick iteration, ARES once trained for
 
 ---
 
-→ Next: [08-tracing-and-observability.md](08-tracing-and-observability.md) — the data every grader reads from.
+## Pitfalls
+
+- **Blaming generation for retrieval misses.** Symptom: prompt work doesn't move the answer score. Fix: score generation only on `generation_eligible` rows and report the rest as their own slice.
+- **Choosing k for a flattering number.** Symptom: excellent Recall@50 when only the top 5 reach the prompt. Fix: set k to what goes into the model.
+- **Passing pointers to the grader.** Symptom: grounding near zero, or scores that come from the judge's own knowledge, and a low cross-check with other judges. Fix: `requires = {"retrieved_context"}` in the grader interface, `context_missing` as a label, and a CI assertion that the text was non-empty.
+- **One holistic faithfulness question.** Symptom: lenient scores that don't say which claim failed. Fix: extract claims, verify each as supported, contradicted or not found, and report contradicted separately.
+- **Grounding with no tiers.** Symptom: "let me know if…" fails while an invented menu path slips through. Fix: strict, paraphrase and general tiers, each with its own evidence rule.
+- **Equating faithful with correct.** Symptom: a high faithfulness score on an answer drawn from a stale document. Fix: track correctness against a reference beside it, since faithfulness measures the generator and correctness measures the system.
+- **Skipping the no-context baseline.** Symptom: credit to retrieval that the model's priors earned. OpenEQA's blind GPT-4 scored 33.5 against 55.3 for GPT-4V with frames. Fix: run the same questions with nothing retrieved.
+- **Trusting RAGAS defaults because they are popular.** Symptom: an uncalibrated score gating releases. Its 0.95, 0.78 and 0.70 agreement came from a pairwise task against deliberately degraded answers on 50 pages. Fix: calibrate on your labelled set first.
+
+## Try it
+
+1. Change the third row in the retrieval script so that `d7` appears at rank 3. Which of the k = 3 metrics changes, and which of the k = 1 metrics?
+
+   <details><summary>Answer</summary>
+
+   At k = 3, hit goes from 0.67 to 1.0, recall from 0.5 to 0.83 and MRR from 0.44 to 0.56. The k = 1 line is unchanged at 0.33 across the board. If only the top chunk reaches the prompt, this retrieval "improvement" changes nothing for the model.
+
+   </details>
+
+2. Split this answer into claims and assign tiers: "Hi! Go to Settings → Payouts and click Edit. Changes take 2 business days. Let me know if that helps."
+
+   <details><summary>Answer</summary>
+
+   Strict: the menu path, the "click Edit" step and the 2 business days, as in this chapter's three-claim example. Each needs near-verbatim support. General and exempt: the greeting and "let me know if that helps". A faithfulness score of 2 of 3 here means one specific claim failed, which you can check.
+
+   </details>
+
+3. Your faithfulness is 0.95 and users still report wrong answers about a pricing change. What's the likely cause, and what would show it?
+
+   <details><summary>Answer</summary>
+
+   An answer can be faithful to a stale document, so suspect corpus staleness. Correctness against an up-to-date reference would show the gap, and checking the retrieved passage's date on the failing rows would confirm it.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| How do you split a RAG eval? | Retrieval (Recall@k, hit rate), ranking (MRR, nDCG), context precision, generation (faithfulness, completeness, relevance) and citations, each with its own required inputs. |
+| Recall@k or hit rate? | Hit rate when one good source is enough, recall when the answer needs several. Set k to what reaches the prompt in either case. |
+| How does claim-based faithfulness work? | Extract atomic claims, verify each against the passages as supported, contradicted or not found, and score supported ÷ total. Report contradicted separately, because it is worse than an omission. |
+| Which citation checks need no LLM? | Cited ID in the retrieved set, quote found (fuzzy) in the cited passage, every strict-tier claim cited, and markers that parse. Only citation precision and recall need a judge. |
+| Grounding dropped to 0.5 across every row overnight. First suspicion? | The grader's inputs, not the model. The case study's custom grader returned a flat 0.5 and `context_missing` when given URLs in place of text. |
+| Why isn't high faithfulness enough? | It measures the generator against whatever was retrieved, so a stale document gives a faithful wrong answer. Correctness against a reference measures the system. |
+| RAGAS or ARES? | RAGAS for quick iteration, reference-free, after calibrating. ARES needs setup per domain and about 150 labels, and in its paper it beat RAGAS by 59 points on context relevance, so it pays off at volume. |
+
+## Next
+
+[08-tracing-and-observability.md](08-tracing-and-observability.md): the data every grader reads from.

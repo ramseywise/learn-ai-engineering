@@ -349,7 +349,7 @@ length percentiles (50, 90, 95, 99): [ 55  93 113 152]
 | Sequence length | Cover ~90–95% of documents | Plot the length distribution |
 | Padding / truncating | `"pre"` (default) or `"post"` | For RNNs, `pre`-padding keeps the real tokens near the final state |
 
-Word-level vocabularies cannot handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead. The [Hugging Face pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines) use one, and [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) and the [LLM fundamentals pillar](../../../generative-ai/01-llm-fundamentals/README.md) build BPE.
+Word-level vocabularies cannot handle new words or misspellings. Transformer models use **subword** tokenisation (BPE, WordPiece) instead. The [Hugging Face pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines) use one, and [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) and the [LLM fundamentals pillar](../../../generative-ai/01-llm-fundamentals/README.md) build BPE.
 
 ## Choosing a representation
 
@@ -374,7 +374,7 @@ flowchart LR
 | n-gram TF-IDF | Larger, sparse | Locally | No | Linear models: the strong classical baseline ([text classification](02-text-classification.md)) |
 | Topic proportions (LDA, NMF) | 10–200, dense | No | Coarse | Exploration, features ([topic models](03-topic-models-and-summarization.md)) |
 | Averaged word vectors | 100–300, dense | No | Yes | Small data ([embeddings](04-embeddings-and-similarity.md)) |
-| Token-id sequences + learned embedding | Sequence × embed dim | Yes | Learned | CNN / RNN / transformer ([neural text models](../../02-deep-learning/notes/02-neural-text-models.md)) |
+| Token-id sequences + learned embedding | Sequence × embed dim | Yes | Learned | CNN / RNN / transformer ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)) |
 | Sentence embeddings | 384–1024, dense | Encoded | Yes | Retrieval, few-shot classification ([LLM embeddings as features](07-llm-embeddings-as-features.md)) |
 
 ## Reading and notebooks

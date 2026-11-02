@@ -39,8 +39,9 @@ Real output with the stub:
   #2  visible 1/4   held-out 0/4
   #3  visible 1/4   held-out 0/4
 
---- expensive maker: stop=passed, 1 iterations, 76 tokens, shippable=true
-  #1  visible 4/4   held-out 4/4
+--- expensive maker: stop=budget, 2 iterations, 181 tokens, shippable=false
+  #1  visible 1/4   held-out 0/4
+  #2  visible 3/4   held-out 0/4
 ```
 
 The second run is the one to study. Its visible score reaches 4/4 by memorising the inputs, and only

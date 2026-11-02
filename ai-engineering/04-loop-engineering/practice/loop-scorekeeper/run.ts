@@ -1,6 +1,6 @@
 import { runLoop, type Limits, type Result } from "./loop.ts";
 import { chooseModel } from "./model.ts";
-import { gamer, honest, overfit, stuck } from "./stub.ts";
+import { gamer, honest, makeHonest, overfit, stuck } from "./stub.ts";
 
 const limits: Limits = { maxIterations: 6, maxTokens: 4000, patience: 2 };
 
@@ -17,5 +17,5 @@ if (process.env.MODEL) {
   report("maker memorises the visible checks", await runLoop(gamer, limits));
   report("ordinary overfit", await runLoop(overfit, limits));
   report("stuck maker", await runLoop(stuck, limits));
-  report("expensive maker", await runLoop(honest, { ...limits, maxTokens: 150 }));
+  report("expensive maker", await runLoop(makeHonest(), { ...limits, maxTokens: 150 }));
 }

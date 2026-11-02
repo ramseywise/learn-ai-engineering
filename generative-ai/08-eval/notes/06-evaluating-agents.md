@@ -21,11 +21,13 @@ sources:
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 10"
   - 13-case-study-support-agent.md
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 6 — Evaluating Agents
 
 > An agent's output is a path, not just an answer. Grade the outcome *and* the trajectory, run every task several times, and evaluate each component (router, tools, final answer) on its own as well as end to end.
+
+An agent tells a customer "I've issued your refund", the answer-quality judge gives it full marks, and no refund exists. On another ticket it reaches the right result after calling a paid API 40 times. Grading the final text misses both, and one run per task can't tell a reliable agent from a lucky one. This chapter grades the end state and the path, runs every task several times, and tracks what each success costs.
 
 ---
 
@@ -337,4 +339,55 @@ An agent eval environment has five parts. Each one can be wrong on its own:
 
 ---
 
-→ Next: [07-evaluating-rag-and-grounding.md](07-evaluating-rag-and-grounding.md) — when the answer has to come from the documents.
+## Pitfalls
+
+- **Grading what the agent says.** Symptom: "I've issued your refund" passes with no refund row. Fix: check the end state directly: the row with the right amount, the repo's tests, the query's result rather than its SQL text.
+- **Enforcing a single golden path.** Symptom: Anthropic's flight-booking agent found a cheaper fare through a policy loophole and failed the trajectory check. Fix: use trajectory checks for invariants such as "never book before confirming", with match modes chosen per task.
+- **Reporting pass@k for a customer-facing agent.** Symptom: a high headline with users hitting failures. At p = 0.75 and k = 3, pass@3 is 0.98 and pass^3 is 0.42. Fix: report pass^k or Worst@k where each user gets one try, and say which metric you report.
+- **Treating a suite average as one thing.** Symptom: 70% hides either flakiness or a capability gap. Fix: plot the per-task pass rate. On BrowseComp, Deep Research solved 16% of questions in all 64 trials and failed 14% in all 64.
+- **Sharing state between trials.** Symptom: order-dependent failures, as with WebArena's rate-limited Reddit clone. Fix: reset state each trial, isolate parallel runs, and shuffle task order. A score that moves with order means the tasks aren't independent.
+- **Blaming the agent for a 0% task.** Symptom: weeks spent on a broken task. 21 of the 118 BrowseComp questions Deep Research never solved had a bad reference answer. Fix: check the task first, and give a capable model the reference to see if evidence can be found.
+- **Leaving the answer in reach.** Symptom: a surprising pass, such as Claude 3.7 Sonnet finding a capture-the-flag answer in plaintext after searching the machine. Fix: keep references, grader code and hidden tests away from the agent's tools, and read surprising passes.
+- **Speed and cost claims without review or baselines.** Symptom: GPT-5's 90× speedup on GDPval falls to 1.12× to 1.39× once review and redo time are counted. Fix: count human time, plot accuracy against cost, and include simple baselines.
+
+## Try it
+
+1. Expected calls are `lookup_order`, then `issue_refund`. The agent calls `lookup_order`, `lookup_order`, `get_policy`, `issue_refund`. Score it under exact and in-order match, and with `tool_metrics` above.
+
+   <details><summary>Answer</summary>
+
+   Exact fails, because there are extra calls. In-order passes, since the expected calls appear in order. Running `tool_metrics` gives recall 1.0 and precision 0.67: nothing essential was skipped, and `get_policy` was extra. The duplicate `lookup_order` doesn't show, because these are sets, which is why they sit beside a match mode rather than replacing one.
+
+   </details>
+
+2. An agent's per-trial success is 0.95 and trials are independent. What is pass^8? And what is the real cost per success of Li's $0.022 refund run at 50% success?
+
+   <details><summary>Answer</summary>
+
+   0.95⁸ = **0.66**, so an agent that looks fine trial by trial gets through all eight only two-thirds of the time. Cost per success is $0.022 / 0.5 = **$0.044**, since failed runs are paid for too.
+
+   </details>
+
+3. Your support agent sits at 70%. The first run shows half the tasks pass 5 of 5 and half pass 2 of 5. What do you do differently than if 70% of tasks always passed and 30% never did?
+
+   <details><summary>Answer</summary>
+
+   Here half the suite is flaky, which points at non-determinism: ambiguous instructions, unstable tools or shared state, so read the failing trials against the passing ones. With the 70/30 split the agent has a capability gap on a set of tasks, so check those tasks for faults, then add tools or instructions for them.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why grade both outcome and trajectory? | They fail independently. The right answer by an unsafe path passes an outcome-only eval, and a reasonable path that failed on a tool timeout isn't the agent's fault. |
+| Compare pass@k and pass^k, with numbers. | pass@k is the chance that at least one of k trials succeeds, and pass^k that all do. At p = 0.75 and k = 3 they are 0.98 and 0.42, so use pass^k for customer-facing agents where each user gets one try. |
+| How would you evaluate a router-plus-skills agent? | Give each part a grader: a judge over the tool-call span for the router, per-skill checks (code execution for the visualization skill), and optimal ÷ actual steps for the path, then an end-to-end score. An end-to-end failure alone doesn't say which part broke. |
+| What is convergence, and what's the catch? | Optimal steps ÷ actual steps over paraphrases of a question. "Optimal" is the shortest run observed, so a suite where every run thrashes can still score near 1.0. |
+| Why does agent cost grow faster than step count? | Every turn re-sends the whole context, so a 5,000-token tool output is billed again each later turn. Thinking tokens and detours add to it, which makes turn count and context growth the levers, not only a cheaper model. |
+| A simulated user gives a 0.47 reward. Do you trust it? | Not from one cooperative user. In GAUGE, a population of personas cut mean verifiable reward by 42%, from 0.47 to 0.27, and the judge needs to see tool calls and outcome, since a truncated transcript got 4.6/7 for satisfaction with reward 0. |
+| A simple baseline nearly matches your agent framework on accuracy. How do you decide? | Plot accuracy against cost with simple baselines. Kapoor et al. found a warming baseline at 93.2% for $2.45 against LDB at 93.3% for $6.36, so check the gap against the error bar and log tokens so that you can re-price later. |
+
+## Next
+
+[07-evaluating-rag-and-grounding.md](07-evaluating-rag-and-grounding.md): when the answer has to come from the documents.

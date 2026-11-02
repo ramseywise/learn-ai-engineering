@@ -22,11 +22,13 @@ sources:
   - 13-case-study-support-agent.md
   - https://arxiv.org/abs/2304.05376
 confidence: high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — LLM-as-Judge and Calibration
 
 > A judge is a model making a measurement. Until you've checked it against human labels, you don't know what it measures. Write a narrow rubric, mitigate the known biases, and calibrate before you gate on it.
+
+In this course's case study, an off-the-shelf judge scored the answers users disliked higher on completeness than the ones they liked, and nothing in its output showed that. Asking a model to grade feels like measuring, but until a judge is compared with human labels nobody knows what its number means, and any change to its model, prompt or sampling makes it a new instrument. This chapter covers how to write a judge, which biases to test for, and how to calibrate it on your own data.
 
 ---
 
@@ -218,6 +220,41 @@ true pass rate ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)
 
 Example: judge passes 80% of production outputs, TPR 0.95, TNR 0.80 → (0.80 + 0.80 − 1) / (0.95 + 0.80 − 1) = 0.60 / 0.75 = **0.80**. With TNR 0.70 instead → 0.50 / 0.65 = **0.77**. The correction is small when the judge is good and large when it's lenient. Only valid when TPR + TNR is well above 1.
 
+The metrics and this correction are a few lines of code. Both confusion matrices below are invented, and both show 78% raw agreement:
+
+```python
+def calibration(tp, fn, fp, tn):
+    """Judge against human labels on the test split. Positive means PASS."""
+    n = tp + fn + fp + tn
+    agree = (tp + tn) / n
+    judge_pass, human_pass = (tp + fp) / n, (tp + fn) / n
+    chance = judge_pass * human_pass + (1 - judge_pass) * (1 - human_pass)
+    return {"TPR": round(tp / (tp + fn), 2), "TNR": round(tn / (tn + fp), 2),
+            "precision_pass": round(tp / (tp + fp), 2), "agreement": round(agree, 2),
+            "kappa": round((agree - chance) / (1 - chance), 2)}
+
+def corrected(p_hat, tpr, tnr):
+    return round((p_hat + tnr - 1) / (tpr + tnr - 1), 2)
+
+# 100 human labels, 60 PASS and 40 FAIL. The judge passes most of what it sees.
+stats = calibration(tp=54, fn=6, fp=16, tn=24)
+print(stats)
+print("judge passes 70% in production; corrected:", corrected(0.70, stats["TPR"], stats["TNR"]))
+
+# Same 78% agreement on a skewed set: 90 PASS and 10 FAIL.
+print(calibration(tp=75, fn=15, fp=7, tn=3))
+```
+
+Output:
+
+```text
+{'TPR': 0.9, 'TNR': 0.6, 'precision_pass': 0.77, 'agreement': 0.78, 'kappa': 0.52}
+judge passes 70% in production; corrected: 0.6
+{'TPR': 0.83, 'TNR': 0.3, 'precision_pass': 0.91, 'agreement': 0.78, 'kappa': 0.1}
+```
+
+The second judge agrees just as often and finds 3 of the 10 bad outputs, which is why κ falls to 0.10 and why TNR, not agreement, is the number to read for a release gate.
+
 ---
 
 ## Keep it calibrated
@@ -379,4 +416,54 @@ Know the multiplier. Using GPT-4 to generate and to judge one criterion doubles 
 
 ---
 
-→ Next: [06-evaluating-agents.md](06-evaluating-agents.md) — when the output is a trajectory, not an answer.
+## Pitfalls
+
+- **One judge for "quality".** Symptom: verdicts switch criteria from row to row, and disagreements can't be diagnosed. Fix: one judge per criterion, with written PASS and FAIL definitions, and decomposition for grounding and completeness.
+- **Gating on an uncalibrated judge.** Symptom: a good number with no human labels behind it, sometimes pointing the wrong way, like the off-the-shelf completeness judge that scored disliked answers higher ([case study](13-case-study-support-agent.md#calibration-results)). Fix: 100 to 200 human labels, split train, dev and test, and measure once on test.
+- **Reporting raw agreement.** Symptom: "85% agreement" on a skewed set. Across Norman et al.'s 21 judges on MT-Bench, agreement exceeded κ by 33.8 to 41.3 points. Fix: lead with κ and report TPR and TNR separately, as the script above shows.
+- **Trusting a consistent judge.** Symptom: reruns match, so nobody checks further. Qwen 3 8B had test–retest α 0.992 and the cohort's strongest position bias, 0.192. Fix: run the swap check even on a judge that never changes its mind.
+- **Tuning on the test split.** Symptom: a calibration number that doesn't hold in production. Fix: draw few-shot examples from train, iterate on dev, and read test once. If you tune against test, it's a dev set.
+- **Counting a parse failure as FAIL.** Symptom: pass rates drop after a model update because the output format changed. Fix: parse the verdict strictly, and count anything else as a grader error. Give the judge a `CANNOT_GRADE` escape as well, or it will guess.
+- **Judging with the same family as the system.** Symptom: scores favor your own model, as in GAUGE, where an Opus-4.8 judge rated Claude agents 0.75 points higher (on a 7-point scale), relative to a GPT-5.5 judge, than non-Claude agents. Fix: use a different family, and don't expect a panel to fix close calls, because correlated judges flip the same pairs.
+
+## Try it
+
+1. Your judge has TPR 0.90 and TNR 0.60 on test, and it passes 70% of production outputs. Estimate the true pass rate, and say whether this judge should gate releases.
+
+   <details><summary>Answer</summary>
+
+   (0.70 + 0.60 − 1) / (0.90 + 0.60 − 1) = 0.30 / 0.50 = **0.60**, which is what the script prints. As a gate it is weak, since it lets through 40% of the outputs humans fail, so work on TNR with tricky-FAIL few-shot examples before it gates anything.
+
+   </details>
+
+2. Two systems start at 1000 and 1200, with K = 32, and the weaker one wins. By how much do the ratings move?
+
+   <details><summary>Answer</summary>
+
+   The weaker side's expected score is 1 / (1 + 10^(200/400)) = 0.24, so it gains 32 × (1 − 0.24) = **24.3** points and the stronger side loses the same. A win by the favourite (E = 0.76) moves only 7.7 points.
+
+   </details>
+
+3. Write a position-bias check for a pairwise judge, then decide what to do with these three pairs. Pair 1: A wins in both orders. Pair 2: the first-shown answer wins both times. Pair 3: the judge says tie, then A.
+
+   <details><summary>Answer</summary>
+
+   Run each pair in both orders and count a win only if it holds both ways, as `judge_pair` above does. Pair 1 is a win for A. Pair 2 is a tie, and it's the bias itself. Pair 3 is a tie too, because the win did not hold in both orders. To measure the bias over a set, compute |P(A wins) − 0.5| over both orders, the measure Norman et al. report (0.002 to 0.192 across 21 judges).
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What makes an LLM judge calibrated? | You have measured how often it agrees with humans on your data: 100 to 200 labels split into train, dev and test, with TPR, TNR and κ reported once on test and compared with human–human agreement. |
+| TPR or TNR for a release gate? | TNR, because it measures how many bad outputs get caught. A golden-label builder wants high precision on PASS instead, and if one judge doesn't win both, use two. |
+| Why lead with κ over raw agreement? | Ties and base rates inflate agreement. Norman et al. note that "85% agreement" on MT-Bench corresponds to κ of about 0.48. |
+| Name the biases you'd test for, and the fix for each. | Position: run both orders. Self-preference: use a different family. Leniency: binary criteria with tricky-FAIL examples. Master keys: put empty and opener-only answers in the calibration set. Verbosity was below 0.011 for all 21 judges under one 2026 rubric, so test it instead of assuming it. |
+| How do you judge at low cost? | Run code first and skip the judge on failed rows, use a cost-capped deterministic sample, swap in a smaller model once it calibrates as well on test, and cache by output hash and judge version. Remember that one generate plus three judges quadruples the calls. |
+| Two judges from different vendors disagree on a candidate. Add a third? | Not to settle close pairs. In GAUGE's τ²-bench test the four-judge average picked the wrong winner 31% of the time on close pairs, the same as the best single judge, because the judges were correlated. Report "no detectable difference", or abstain when the gap is inside the noise. |
+| Why did Chatbot Arena move from Elo to Bradley–Terry? | Elo depends on the order of the matches, and Bradley–Terry is a global fit that doesn't. Its coverage is still thin: 153 comparisons per pair in January 2024. |
+
+## Next
+
+[06-evaluating-agents.md](06-evaluating-agents.md): when the output is a trajectory, not an answer.

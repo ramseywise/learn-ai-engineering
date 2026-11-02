@@ -265,7 +265,7 @@ accuracy on held-out reviews: length 120 0.782  length 20 0.672
 
 The hand-written reviews barely move, because they fit inside twenty tokens anyway, so a quick spot check would have passed. Real reviews lose eleven points, from 0.782 to 0.672, because the model now sees only the opening of each one. No error, and no sign of it unless you measure accuracy through the serving path. Preprocess inference inputs with exactly the training settings, ideally by putting `TextVectorization` inside the model so there is one code path.
 
-The CNN and RNN mechanics belong to [neural text models](../../02-deep-learning/notes/02-neural-text-models.md). The contextual models that replaced them are in [transformers pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines), which you can try off the shelf with `pipeline("sentiment-analysis")` and no training.
+The CNN and RNN mechanics belong to [neural text models](../../02-deep-learning/notes/06-neural-text-models.md). The contextual models that replaced them are in [transformers pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines), which you can try off the shelf with `pipeline("sentiment-analysis")` and no training.
 
 ## 4. What drives sentiment (ch. 9d, 9e)
 

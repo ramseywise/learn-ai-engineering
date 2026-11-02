@@ -1,0 +1,545 @@
+# LLMs from scratch lecture deck. Covers notes/01-micrograd.md, notes/02-makemore.md, notes/03-nanogpt.md.
+# Build: make slides PILLAR=data-science/04-llms-from-scratch STRICT=1 PREVIEW=1
+# Spec:  .claude/skills/slides/references/deck-spec.md
+# Running examples: a small dataset for micrograd, 32,033 names for makemore, Tiny Shakespeare and then
+# OpenAI's GPT-2 weights for nanoGPT. Numbers were measured by running the notes unless attributed to a lecture.
+deck:
+  title: LLMs from Scratch
+  subtitle: Build the whole stack by hand
+  tagline: |-
+    Backprop · Character models · Attention · GPT-2
+  reference: "Notes: data-science/04-llms-from-scratch"
+  output: llms-from-scratch.pptx
+  notes: >-
+    Today we build a language model from nothing, so that nothing beneath one stays magic. We begin with the engine for
+    gradients, in 100 lines of Python. We then model characters, learn why deep networks refuse to train, and add
+    attention. We finish by loading OpenAI's weights into code we wrote ourselves and checking that every logit agrees.
+
+parts:
+  - title: Backprop by hand
+    summary: Derivatives · Value objects · Topological order · Zeroing
+    notes: >-
+      Every network you have trained ended with loss.backward, and something filled in the gradients. We write that
+      something. Why bother? Because the failure modes make sense once you have built it.
+    slides:
+      - layout: statement
+        title: What does loss.backward() actually do?
+        kicker: The problem
+        statement: "A network is one big expression, and backward() is the chain rule walked through it in reverse."
+        attribution: About 100 lines of Python, which agree with PyTorch to the printed digit
+        takeaway: Backpropagation is just the chain rule applied to a graph that records how each number was made.
+        source: notes/01-micrograd.md
+        notes: >-
+          If you can read the chain rule, you can read autograd. A gradient says how the output moves when you nudge an
+          input. The question is how to get all of them at once, cheaply.
+
+      - layout: code
+        title: A number that remembers where it came from
+        kicker: Worked example
+        lang: python
+        code: |-
+          class Value:
+              def __add__(self, other):
+                  out = Value(self.data + other.data,
+                              (self, other))
+                  def _backward():
+                      self.grad += out.grad
+                      other.grad += out.grad
+                  out._backward = _backward
+                  return out
+        bullets:
+          - "**+=** not **=**, so `a + a` gives 2"
+          - Each op knows its own local derivative
+        takeaway: Each operation stores its inputs and one local rule, which is all that the backward pass needs.
+        source: notes/01-micrograd.md
+        notes: >-
+          Addition just routes the gradient to both inputs, unchanged. Remember that: it is why residual connections work,
+          later. And a + a is the classic bug: with an equals sign, the second write overwrites the first and you get 1.
+
+      - layout: flow
+        title: Forward once, then backward in reverse order
+        recall: Why must backward run in reverse topological order?
+        steps:
+          - label: Forward
+            sub: Build the graph
+          - label: Sort
+            sub: Topological order
+          - label: Seed
+            sub: output.grad = 1
+          - label: Reverse
+            sub: Each node's rule
+          - label: Update
+            sub: Step against gradient
+        caption: A node must collect all its gradient before passing it on, and that order guarantees it.
+        takeaway: Reverse topological order means each node has every contribution before it passes its gradient on.
+        source: notes/01-micrograd.md
+        notes: >-
+          Without the sort, a node could fire before all its consumers have reported, and part of the gradient would be
+          lost. One forward and one backward give every gradient at once.
+
+      - layout: table
+        title: Why backward beats nudging
+        kicker: Measured
+        header: [Method, "Cost, 41 parameters", Result]
+        widths: [3, 3, 4]
+        rows:
+          - ["Backward", "0.08 ms", "All 41 gradients"]
+          - ["Nudge each parameter", "29.2 ms", "Same, within 3.43e-07"]
+        highlight: [0]
+        takeaway: One backward pass costs about one forward pass, while nudging costs one forward pass per parameter.
+        source: notes/01-micrograd.md
+        notes: >-
+          Numerical gradients are still useful: this table is how we tested the code. But 41 parameters already cost several
+          hundred times more, and GPT-2 has 124 million.
+
+      - layout: compare
+        title: Forgetting to zero gradients
+        kicker: A trap
+        left:
+          title: Zeroed
+          bullets:
+            - "lr 0.1: losses 0.001, 0.002, 0.001"
+            - Steady at all sensible rates
+        right:
+          title: Not zeroed
+          bullets:
+            - "lr 0.1: losses 0.0, 0.0, 8.0"
+            - Some seeds excellent, others stuck at 8.0
+        emphasis: right
+        takeaway: Skipped zeroing can look like a lucky win on one seed, so check several seeds before you trust a run.
+        source: notes/01-micrograd.md
+        notes: >-
+          The awkward thing here is that the broken version sometimes wins. Stale gradients act like huge momentum, which
+          happens to work on a tiny problem, and fails outright on others. One seed would have fooled you.
+
+  - title: Models of characters
+    summary: Counts · Neural bigrams · Embeddings · Honest splits
+    notes: >-
+      With gradients in hand, we pick the smallest possible language problem: 32,033 names, one character at a time.
+      Everything that a large language model does is already here, at a size you can read.
+    slides:
+      - layout: statement
+        title: Can a program make up a new name?
+        kicker: The problem
+        statement: "Pick a distribution over the following token, sample, repeat. That is all of language modelling."
+        attribution: "Uniform guessing over 27 characters scores -log(1/27) = 3.30"
+        takeaway: A language model is a distribution over the following token, and every model is measured against uniform.
+        source: notes/02-makemore.md
+        notes: >-
+          Three point three is the number to beat, and it also tells you what a good first loss looks like. Now what is the
+          simplest thing that beats it?
+
+      - layout: compare
+        title: Count it or learn it, and you get the same answer
+        kicker: Bigrams, two ways
+        left:
+          title: Count the pairs
+          bullets:
+            - NLL 2.455
+            - Row-normalise a 27 by 27 table
+        right:
+          title: One-layer network
+          bullets:
+            - NLL 2.465
+            - Probabilities correlate 0.9958 with counts
+        takeaway: Counting and gradient descent find the same model, and only the neural version can grow from here.
+        source: notes/02-makemore.md
+        notes: >-
+          Counting reads the answer off directly. The neural version finds nearly the same table by descent. Why bother? A
+          table grows by a factor of 27 per character of context. A network does not.
+
+      - layout: code
+        title: An MLP over a context window
+        kicker: Worked example
+        lang: python
+        code: |-
+          C = torch.randn((27, 10))     # embeddings
+          emb = C[X]                    # (B, 3, 10)
+          h = torch.tanh(
+              emb.view(-1, 30) @ W1 + b1)
+          logits = h @ W2 + b2
+          loss = F.cross_entropy(logits, Y)
+        bullets:
+          - 11,897 parameters
+          - "Train 2.13, dev 2.17"
+        takeaway: Sharing an embedding across positions lets the model use three characters without a table of 27³ cells.
+        source: notes/02-makemore.md
+        notes: >-
+          This is Bengio's 2003 model at character scale. The embeddings learn on their own that vowels resemble vowels:
+          0.69 average cosine against 0.30 to consonants, and nobody told it what a vowel is.
+
+      - layout: flow
+        title: What each step of context buys
+        kicker: Samples
+        steps:
+          - label: Uniform
+            sub: "Loss 3.30"
+          - label: Bigram
+            sub: "NLL 2.45: cexze"
+          - label: MLP, 3 characters
+            sub: "Dev 2.17: rochi, lucan"
+          - label: Tree, 8 characters
+            sub: "Dev 2.00, once trainable"
+        caption: The samples go from letter pairs to things that could be names, as the context grows.
+        takeaway: Each step in context buys a lower loss and better names, which you can check by reading the samples.
+        source: notes/02-makemore.md
+        notes: >-
+          Read the samples as well as the loss. A bigram remembers one letter, so it writes cexze and momasurailezitynn. Three
+          characters of context write rochi, lucan and samiyah. Deeper networks would go further, if they trained.
+
+  - title: Keeping it trainable
+    summary: First loss · Saturation · BatchNorm · Trees
+    notes: >-
+      Deep networks tend not to train by default. This part is about why, and about how to look inside a network to find
+      out. The cure comes in three layers, each of which you can measure.
+    slides:
+      - layout: statement
+        title: Why does the first loss say 27 when it should say 3.3?
+        kicker: The problem
+        statement: "A first loss of 27 means the model is confidently wrong before it has seen anything."
+        attribution: The check costs one line, and it finds real bugs
+        takeaway: Compare the first loss against -log(1/vocab) before anything else, because a gap means a bad init.
+        source: notes/02-makemore.md
+        notes: >-
+          It tells you the model's first thousand steps will be spent undoing its init. Fix the output layer and you recover
+          those steps. That one change moves the dev loss by 0.04.
+
+      - layout: table
+        title: Each fix, measured against the same split
+        kicker: Worked example
+        header: [Change, First loss, Tanh saturated, Train, Dev]
+        widths: [4, 2, 2, 2, 2]
+        rows:
+          - ["Original", "25.77", "70%", "2.126", "2.170"]
+          - ["Small output layer", "3.31", "70%", "2.070", "2.131"]
+          - ["+ small hidden layer", "3.30", "5%", "2.036", "2.103"]
+          - ["Kaiming init", "3.30", "19%", "2.038", "2.107"]
+          - ["+ BatchNorm", "3.30", "4%", "2.067", "2.105"]
+        highlight: [2]
+        takeaway: Init fixes win on this shallow network, and BatchNorm adds nothing until the model gets deep.
+        source: notes/02-makemore.md
+        notes: >-
+          The values reproduce the lecture's table to two decimals, using the same seed. BatchNorm matters for depth, so do
+          not read its zero here as a verdict on it.
+
+      - layout: bullets
+        title: What to watch, on five tanh layers
+        kicker: Diagnostics
+        bullets:
+          - "**Saturation:** 21% in layer one, tanh only; 3% with BatchNorm"
+          - "**Gradient scale:** similar across layers, thanks to the 5/3 gain"
+          - "**Update-to-data ratio:** about -2.4 on log10 at lr 0.1, and -3.4 at 0.01"
+        aside:
+          title: Rule of thumb
+          body: A healthy update is about one thousandth of the data, or -3 on a log10 scale.
+        takeaway: Plot saturation, gradient scale and update ratio per layer, since a loss curve cannot explain any failure.
+        source: notes/02-makemore.md
+        notes: >-
+          A loss can look fine while half a layer is dead. These three plots tell you which. Our run brackets the guideline
+          between the two rates that the training schedule uses.
+
+      - layout: code
+        title: The whole backward pass, by hand
+        kicker: Becoming a backprop ninja
+        lang: python
+        code: |-
+          dlogits = F.softmax(logits, 1)
+          dlogits[range(n), Yb] -= 1
+          dlogits /= n
+          dh = dlogits @ W2.T
+          dW2 = h.T @ dlogits
+          db2 = dlogits.sum(0)
+          dhpreact = (1.0 - h**2) * dh
+          # ...through BatchNorm and embeddings
+        bullets:
+          - Matches autograd to about 1e-8
+          - "Softmax's gradient: `(p - y) / n`"
+        takeaway: Writing backward by hand is checkable against autograd, and it makes gradient bugs legible for good.
+        source: notes/02-makemore.md
+        notes: >-
+          Everything is about matching shapes and asking what a matrix multiply does to a gradient. You do it once, slowly,
+          then you can read a gradient bug anywhere.
+
+      - layout: table
+        title: More context, then a tree
+        kicker: WaveNet-style
+        header: [Model, Parameters, Train, Dev]
+        widths: [5, 2, 2, 2]
+        rows:
+          - ["Flat MLP, context 8", "22,097", "1.916", "2.030"]
+          - ["Tree, with BatchNorm bug", "22,397", "1.937", "2.022"]
+          - ["Tree, bug fixed", "22,397", "1.910", "2.023"]
+          - ["Tree, scaled up", "76,579", "1.769", "2.000"]
+        highlight: [3]
+        takeaway: The tree alone adds little, but it scales cheaply, and the widening train-dev gap shows where it stops.
+        source: notes/02-makemore.md
+        notes: >-
+          Notice the bug fix helped training and left dev where it was. A shape bug in BatchNorm cost almost nothing on the
+          loss, so you could not have found it that way. Only checking shapes would have found it.
+
+      - layout: flow
+        title: The tree fuses context a little at a time
+        kicker: How it works
+        steps:
+          - label: Characters
+            sub: 8 embeddings
+          - label: Pairs
+            sub: 4 groups
+          - label: Fours
+            sub: 2 groups
+          - label: All eight
+            sub: 1 vector
+          - label: Logits
+            sub: 27 classes
+        caption: The same idea, at 16,000 samples a second, is WaveNet (van den Oord et al., SSW 2016).
+        takeaway: Fusing context gradually keeps early layers small, which is the idea behind dilated causal convolutions.
+        source: notes/02-makemore.md
+        notes: >-
+          Fixed trees are a limit, though: which earlier characters matter is fixed by position, regardless of the data. That
+          is the gap attention closes.
+
+  - title: Attention
+    summary: The trick · Keys and queries · Each piece measured · Scale
+    notes: >-
+      The tree fused context in a fixed pattern. Attention lets the data decide. We measure every piece of the transformer
+      block by adding them one at a time, on Tiny Shakespeare.
+    slides:
+      - layout: statement
+        title: How can a token choose what to look at?
+        kicker: The problem
+        statement: "A fixed tree decides by position which characters matter. Which ones matter should depend on the characters."
+        attribution: "A bigram on Tiny Shakespeare stops at a val loss of 2.48, since tokens never talk"
+        takeaway: Attention replaces a fixed pattern of mixing with weights computed from the tokens themselves.
+        source: notes/03-nanogpt.md
+        notes: >-
+          The bigram gives play-shaped text with few real words. Each prediction sees one character. We want tokens to
+          talk to earlier tokens, and only earlier ones, since the model must not see what it predicts.
+
+      - layout: flow
+        title: One head, from tokens to a weighted sum
+        kicker: How it works
+        recall: What goes wrong without the division by the square root of d?
+        steps:
+          - label: Query, key
+            sub: From each token
+          - label: Score
+            sub: q @ k, scaled
+          - label: Mask
+            sub: Future to -inf
+          - label: Softmax
+            sub: Weights sum to 1
+          - label: Mix
+            sub: Weights @ values
+        caption: "Scaling by sqrt(64) took score variance from 66.1 to 1.03, and largest weights from near one-hot to 0.17-0.68."
+        takeaway: Scores come from the data, the mask hides the future, and scaling stops softmax saturating at init.
+        source: notes/03-nanogpt.md
+        notes: >-
+          This is a matrix multiply by a lower-triangular matrix of weights, the same trick as averaging the past, except that
+          the weights are now computed. Six of eight rows were near one-hot without the scale.
+
+      - layout: code
+        title: The head in code
+        kicker: Worked example
+        lang: python
+        code: |-
+          def forward(self, x):
+              B, T, C = x.shape
+              k, q = self.key(x), self.query(x)
+              wei = q @ k.transpose(-2, -1)
+              wei = wei * k.shape[-1] ** -0.5
+              wei = wei.masked_fill(
+                  self.tril[:T, :T] == 0, float("-inf"))
+              wei = F.softmax(wei, dim=-1)
+              return wei @ self.value(x)
+        bullets:
+          - Keys and queries are linear maps of the same `x`
+          - "Trained: top weight 0.11, against 0.03 uniform"
+        takeaway: Self-attention is about ten lines, and a trained head puts more weight on some tokens than on others.
+        source: notes/03-nanogpt.md
+        notes: >-
+          Do not read a story into which letters a head picks. Two heads on one prompt show only that the weights are no
+          longer uniform.
+
+      - layout: table
+        title: Add one piece at a time, and measure
+        kicker: Ablation
+        header: [Model, Parameters, Our val, Lecture val]
+        widths: [5, 2, 2, 2]
+        rows:
+          - ["One head of 32", "8,609", "2.421", "about 2.4"]
+          - ["4 heads of 8", "8,609", "2.275", "about 2.28"]
+          - ["+ feed-forward", "16,961", "2.197", "about 2.24"]
+          - ["3 blocks, nothing else", "41,921", "2.254", "not reported"]
+          - ["+ residual", "41,921", "2.067", "about 2.08"]
+          - ["+ LayerNorm", "42,369", "2.049", "about 2.06"]
+        highlight: [3, 4]
+        takeaway: Depth alone made the model worse, and residual connections fixed that without adding a single parameter.
+        source: notes/03-nanogpt.md
+        notes: >-
+          Three blocks have 2.5 times the parameters and do worse, since a deeper network you cannot optimise is not stronger.
+          The residual path is worth 0.19. LayerNorm's 0.02 is on one seed, too small to call at this depth.
+
+      - layout: compare
+        title: The leak that a validation split cannot see
+        kicker: A trap
+        left:
+          title: Masked
+          bullets:
+            - "Train 2.107, val 2.143"
+            - Honest loss, on the same 2,000 steps
+        right:
+          title: No mask
+          bullets:
+            - "Train 0.288, val 0.292"
+            - Every position can read its own target
+            - Samples show a script's outline and few words
+        emphasis: right
+        takeaway: A mask leak lowers train and validation together, so only generating text will reveal it.
+        source: notes/03-nanogpt.md
+        notes: >-
+          The leak is in both splits, so comparing them tells you nothing. While sampling, the predicted position is last, and
+          there is nothing to its right to read. So the model has learned little it can use.
+
+      - layout: bullets
+        title: Then simply scale up
+        kicker: Scale
+        bullets:
+          - "**Our CPU run:** 209,729 params, 1.2 minutes, val 1.76"
+          - "**The lecture's A100 run:** 10.8M params, about 15 minutes, val 1.48"
+          - "**Same model:** only embedding, heads, layers and context change"
+        aside:
+          title: Sample at 1.76
+          body: Speaker names, verse lines and real words such as lords, thee and service.
+        takeaway: The architecture barely changes with scale, so only the size of the numbers separates a toy from the lecture.
+        source: notes/03-nanogpt.md
+        notes: >-
+          The gap between train and validation opens to 0.17 on our small run, the first sign that the model has the capacity
+          to overfit one megabyte of text.
+
+  - title: Reproducing GPT-2
+    summary: Exact weights · Speed · Recipe · Result
+    notes: >-
+      Now the same block at full size. We write GPT-2 in about a hundred lines, load OpenAI's weights and check every logit.
+      Then we follow the lecture through speed, the training recipe and the result.
+    slides:
+      - layout: statement
+        title: Is our code really GPT-2?
+        kicker: The problem
+        statement: "If the code is right, OpenAI's weights must produce the same logits as Hugging Face's implementation."
+        attribution: "Measured on one prompt: largest logit difference 0.00e+00, on 124,439,808 parameters"
+        takeaway: Loading published weights and comparing every logit tests the whole implementation at once, on real numbers.
+        source: notes/03-nanogpt.md
+        notes: >-
+          An exact zero comes from running both in the same floating-point environment. Elsewhere, expect tiny differences and
+          judge by size: near 1e-5 is rounding and near 1 is a bug.
+
+      - layout: code
+        title: Four matrices are the other way around
+        kicker: Worked example
+        lang: python
+        code: |-
+          flipped = ("attn.c_attn.weight",
+                     "attn.c_proj.weight",
+                     "mlp.c_fc.weight",
+                     "mlp.c_proj.weight")
+          for name, t in hf.state_dict().items():
+              if name.endswith((".attn.bias",
+                                ".attn.masked_bias")):
+                  continue
+              ours[name].copy_(
+                  t.t() if name.endswith(flipped) else t)
+        bullets:
+          - "OpenAI's `Conv1D` stores them transposed"
+          - "First loss 11.05, against -ln(1/50257) = 10.82"
+        takeaway: Four transposes are the only trick in loading the weights, and the first loss still checks the init.
+        source: notes/03-nanogpt.md
+        notes: >-
+          The first-loss check from makemore works at any size. The tied matrix, the output head and the token embedding as one
+          tensor, is 31% of the model on its own.
+
+      - layout: table
+        title: Speed, as the lecture reports it
+        kicker: One A100, B=16, T=1024
+        header: [Step, Time per step, Why]
+        widths: [4, 2, 4]
+        rows:
+          - ["Baseline, float32", "about 1,000 ms", "Starting point"]
+          - ["Matmul precision high", "about 300 ms", "TF32 for matmuls"]
+          - ["torch.compile", "about 129 ms", "Less Python overhead"]
+          - ["Flash attention", "about 95 ms", "No T by T matrix"]
+          - ["Fused AdamW", "about 90 ms", "One kernel for the update"]
+        highlight: [2]
+        takeaway: Most of the speed came from a few settings, and those figures are the lecture's, not rerun here.
+        source: notes/03-nanogpt.md
+        notes: >-
+          We did not rerun these, since they need the GPU, so read them as his numbers on his machine. The same levers come back
+          in the inference engineering pillar.
+
+      - layout: flow
+        title: One training step, with accumulation
+        kicker: The recipe
+        recall: What happens if you forget to divide the loss by the accumulation steps?
+        steps:
+          - label: Micro-batches
+            sub: 0.5M tokens in all
+          - label: Divide
+            sub: loss / accum steps
+          - label: Backward
+            sub: Sync on the last
+          - label: Clip
+            sub: Norm to 1.0
+          - label: Step
+            sub: Warm-up, then cosine
+        caption: "With the division, the difference from one big batch was 4.10e-08. Without it, gradients were 4.00 times too large."
+        takeaway: Skipping the division silently multiplies the learning rate by the number of micro-batches, with no error raised.
+        source: notes/03-nanogpt.md
+        notes: >-
+          The schedule follows from token counts: 375M tokens of warm-up is 715 steps, and 19,073 steps is 10B tokens. The rate
+          climbs to 6e-4, then falls to 6e-5.
+
+      - layout: compare
+        title: What the reproduction shows, and what it does not
+        kicker: The result, per the lecture
+        left:
+          title: Shows
+          bullets:
+            - One epoch of 10B tokens took about two hours on eight A100s
+            - Passes OpenAI's GPT-2 124M on HellaSwag
+            - Training works
+        right:
+          title: Does not show
+          bullets:
+            - FineWeb-Edu is English, with little code or math
+            - HellaSwag may have reached the web crawl
+            - No fair comparison of efficiency
+        takeaway: Beating GPT-2 on one benchmark confirms that training works, and Karpathy himself says it proves no more.
+        source: notes/03-nanogpt.md
+        notes: >-
+          HellaSwag scores each ending by the model's average loss on its tokens and picks the lowest. It measures which string
+          is less surprising, not which makes sense. Our hand-made kettle example only shows the mechanism.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    slides:
+      - layout: cards
+        title: What to remember
+        cards:
+          - title: Check the first loss
+            body: "3.30 for 27 characters, 10.82 for GPT-2's vocabulary."
+          - title: Test against a reference
+            body: Numerical gradients, autograd, published logits.
+          - title: Look inside
+            body: Saturation, gradient scale and update ratio, per layer.
+          - title: Depth needs help
+            body: Residuals took 2.25 to 2.07 with no new parameters.
+          - title: Generate text
+            body: A mask leak hides from both loss curves.
+          - title: Divide when you sum
+            body: Accumulate the mean, or the rate is silently wrong.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**From building one to using many:** tokenisation, pre-training and inference, in LLM fundamentals"
+          - "**Serving it fast:** the same levers, in inference engineering"
+          - "**Measuring it:** the Eval pillar in generative AI"

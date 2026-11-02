@@ -1,81 +1,135 @@
 # Data Engineering
 
-> Interview summary: [interviewing/guides/8-data-eng-mlops](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md)
-> Position in the learning path: after [programming](../programming/README.md) (Python, SQL) and [data analytics](../data-analytics/README.md); alongside or before [data science](../data-science/README.md). The pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md). The sequenced path and prerequisites are in [CURRICULUM.md](CURRICULUM.md).
+> How data gets from where it is born to where it is used: on a schedule, correctly, and in a shape the next stage can trust.
 
----
+Position in the path: after [programming](../programming/README.md) (Python, SQL) and [data analytics](../data-analytics/README.md); alongside or before [data science](../data-science/README.md). It is the pipeline layer under [generative AI](../generative-ai/README.md) and [AI engineering](../ai-engineering/README.md). Interview summary: [8-data-eng-mlops](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md).
 
 ## What it is
 
-Data engineering is the pipeline discipline: getting data from where it's born to where it's used, on a schedule, correctly, and in a shape the next stage can trust. This folder treats it as **six foundations**, each preparing data for the next: ingest → transform → orchestrate → warehouse/store → monitor → feature-serve. The last two reach into MLOps, where the "data" is a model's inputs and predictions.
+A data platform is a chain of stages, and the pillars here follow the data along it. Bytes get a format and a place on disk, they are ingested and given a model, transformed on a schedule, stored at a price, watched, fed to models, and finally governed across teams.
 
-Two notes sit above the pipeline. One covers how an organisation arranges many pipelines (modern data warehouse, data fabric, data mesh). The other covers how automated the ML lifecycle is (the maturity model) and the engineering practices that move it up a level.
+The chain is hard to run for one reason, and it is the thread through all seven pillars.
 
-The coursework is two complete DataTalksClub zoomcamps, kept as worked material. The notes are the synthesis: each one folds the relevant modules into commands, configs, SQL and Python, says what's legacy, and fills the gaps the zoomcamps leave (DuckDB, Polars, Delta/Iceberg, Dagster, deeper dlt).
+> **Every stage has the same failure mode: it silently trusts the one before it. The engineering is in making that trust explicit: keys, contracts, tests, logical dates, monitored metrics.**
 
-> **Every foundation has the same failure mode: a stage silently trusts the one before it. The engineering is in making that trust explicit — keys, contracts, tests, logical dates, monitored metrics.**
+A pipeline that trusts its input does not crash when the input is wrong. It produces a plausible number, and the first alarm is a person holding it. So each pillar opens with a failure that raises no error, measured on data you can regenerate, and then adds the mechanism that would have made it visible.
 
----
+## The seven pillars
 
-## Start here
+| Pillar | The stage | A silent failure it opens | What makes the trust explicit | Chapters | Deck |
+|---|---|---|---|---|---|
+| [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md) | Bytes on disk, work across machines | A file with a new column is read with the first file's schema, and the column is dropped | Stated schemas, read plans, measuring before buying a cluster | 4 | [pptx](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pptx), [pdf](01-storage-and-compute-foundations/slides/storage-and-compute-foundations.pdf) |
+| [02 Ingest and modelling](02-ingest-and-modelling/README.md) | Getting data in, saying what a row means | A retried load doubles the day's rows | Keys, change capture, a declared grain, data contracts | 4 | [pptx](02-ingest-and-modelling/slides/ingest-and-modelling.pptx), [pdf](02-ingest-and-modelling/slides/ingest-and-modelling.pdf) |
+| [03 Transform and orchestrate](03-transform-and-orchestrate/README.md) | Tested models, built for the right day | An inner join loses 5,680 trips and about $96,000 with every test green | Grain tests, logical dates, idempotent writes, write-audit-publish | 5 | [pptx](03-transform-and-orchestrate/slides/transform-and-orchestrate.pptx), [pdf](03-transform-and-orchestrate/slides/transform-and-orchestrate.pdf) |
+| [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md) | Where it rests, how it moves, what it costs | A rewrite dies halfway and a dashboard reads half of it as the truth | Table-format commits, event-time windows, committed offsets, byte limits | 5 | [pptx](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), [pdf](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pdf) |
+| [05 Quality and observability](05-quality-and-observability/README.md) | Finding out it is wrong | A source switches from miles to kilometres without telling anyone | Tests, monitors against history, lineage, playbooks | 3 | [pptx](05-quality-and-observability/slides/quality-and-observability.pptx), [pdf](05-quality-and-observability/slides/quality-and-observability.pdf) |
+| [06 ML platform](06-ml-platform/README.md) | Features, models and serving | A leaky join scores 2.79 offline and 5.48 in production | Point-in-time joins, a registry, gates, drift monitors | 5 | [pptx](06-ml-platform/slides/ml-platform.pptx), [pdf](06-ml-platform/slides/ml-platform.pdf) |
+| [07 Architecture and governance](07-architecture-and-governance/README.md) | Many pipelines, many teams, the regulator | Two correct tables join on `CA` and `California`, and a filed figure is less than half the truth | Ownership, global rules that can fail a build, access control, erasure | 2 | [pptx](07-architecture-and-governance/slides/architecture-and-governance.pptx), [pdf](07-architecture-and-governance/slides/architecture-and-governance.pdf) |
 
-1. Read [01-ingest](02-ingest-and-modelling/notes/01-ingest.md) and run DE 01 `2_docker_sql` (Docker + Postgres). It's the setup every later module reuses.
-2. Read [02-transform](03-transform-and-orchestrate/notes/01-transform.md) and [04-warehouse-and-store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) together: dbt models are only as good as the tables underneath them.
-3. Read [03-orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) for the scheduling ideas (logical dates, idempotent outputs, backfills) and the orchestration-tool inconsistency between the two courses.
-4. Switch to MLOps: [06-feature-serve](06-ml-platform/notes/01-feature-serve.md), then [05-monitor](05-quality-and-observability/notes/01-monitor.md). Train, track, deploy, then watch.
-5. Finish with [08-mlops-maturity-and-best-practices](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) (tests, IaC, CI/CD) and [07-data-architectures-mesh-fabric-mdw](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) (the interview-level architecture questions).
+```mermaid
+flowchart LR
+  P1[01 Storage and compute] --> P2[02 Ingest and model]
+  P2 --> P3[03 Transform and orchestrate]
+  P3 --> P4[04 Warehouse, lakehouse, streaming]
+  P4 --> P5[05 Quality and observability]
+  P5 --> P6[06 ML platform]
+  P5 -.-> P3
+  P7[07 Architecture and governance] -.->|who owns each stage| P2
+  P7 -.-> P4
+  P7 -.-> P6
+```
 
----
+Read them in order the first time, because each pillar consumes the previous one's output. Pillar 07 sits across the chain, and the dotted line from 05 to 03 is the repair: an incident ends in a backfill and a new test. [CURRICULUM.md](CURRICULUM.md) gives the sequence, the practice for each step and how you know you are done. [references.md](references.md) is the shared library of books, papers, courses and videos.
 
-## Layout
+## How this folder is organised
 
 ```
 data-engineering/
-├── README.md                     this file
-├── CURRICULUM.md                 sequenced path and prerequisites
-├── references.md                 every source, mapped to notes, with licences
-├── notes/                        01–08, the synthesis (see Syllabus)
-├── sources/                      local PDFs: DDIA, three Serra chapters, Strengholt, scenario prompts
-├── DataTalks Data Engineering/   DE Zoomcamp snapshot: 01-docker-terraform … 06-streaming, projects/
-└── DataTalks MLOps/              MLOps Zoomcamp snapshot: 01-intro … 07-project, generate/
+├── README.md, CURRICULUM.md, references.md
+├── sources/                         shared PDFs for all seven pillars
+└── NN-pillar/
+    ├── README.md                    reading order, rules of thumb, deck, practice
+    ├── notes/                       the chapters
+    ├── references.md                this pillar's sources, mapped to its chapters
+    ├── slides/                      lecture deck and its deck.yaml
+    └── practice/                    chapter scripts and zoomcamp coursework, where the pillar has any
 ```
 
-**Why the two zoomcamp folders keep their names and places.** Unlike the vendored snapshots elsewhere in this repo, which were condensed into notes and deleted, these hold real worked notebooks and runnable code (`duration-prediction.ipynb`, `model-registry.ipynb`, the Lambda, the Evidently stack, the Terraform). The notes quote them rather than replace them. Their paths are also load-bearing: [`.github/dependabot.yml`](../.github/dependabot.yml) watches six `DataTalks MLOps/...` directories by exact path, the snapshots' own READMEs link between modules with relative paths, and the notes link into them. Renaming would break all of those for no gain.
-
----
+The coursework is two DataTalksClub zoomcamps, kept as worked material and divided among the pillars they serve. Pillars 05 and 07 have no practice folder, and their chapter code runs from each chapter's `uv run --with ...` line.
 
 ## Syllabus
 
-| # | Note | Covers |
-|---|---|---|
-| 01 | [Ingest](02-ingest-and-modelling/notes/01-ingest.md) | Batch vs incremental vs stream; chunked loader into Postgres; Docker, compose, Terraform on GCP; dlt (merge, incremental cursors); Kafka (keys, partitions, delivery semantics, Avro + schema registry, windows); RisingWave; DDIA ch. 4 and 11 |
-| 02 | [Transform](03-transform-and-orchestrate/notes/01-transform.md) | ETL vs ELT; staging/core/marts layers; dbt project, models, macros, packages, tests, seeds, freshness; dbt Cloud vs Core; BI on top |
-| 03 | [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) | DAGs, retries, logical dates, backfills; Mage (DE 02, MLOps 03); Prefect 2 (MLOps 04/05, legacy); the course-to-course tool inconsistency; Dagster assets and Airflow as the gaps |
-| 04 | [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) | OLTP vs OLAP; BigQuery external tables, partitioning, clustering, cost; BQML and model export; Spark DataFrames, SQL, UDFs, joins, RDDs, Dataproc; DuckDB, Polars, Delta Lake and Iceberg as the gaps |
-| 05 | [Monitor](05-quality-and-observability/notes/01-monitor.md) | What to monitor (service, data, model); Evidently reports, test suites, metrics to Postgres; Grafana dashboards and alerts; pipeline-side checks |
-| 06 | [Feature-serve](06-ml-platform/notes/01-feature-serve.md) | One `prepare_features` against train/serve skew; MLflow tracking, autolog, hyperopt, three server set-ups; the registry (stages → aliases); web service, Kinesis + Lambda stream, batch scoring |
-| 07 | [Data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) | Modern data warehouse, data fabric, lakehouse; data mesh's four principles and domain types; Serra's skepticism and mesh types; Strengholt's six topologies; scenario prompts mapped to mechanisms |
-| 08 | [MLOps maturity and best practices](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) | Microsoft maturity levels 0–4 and where the course reaches; testable refactor; pytest, LocalStack integration tests, pre-commit, Makefile; Terraform modules and remote state; GitHub Actions CI/CD; the capstone rubric |
+These are the chapters on disk as of 2 November 2026.
 
----
+### [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md)
+
+1. [Encoding and files](01-storage-and-compute-foundations/notes/01-encoding-and-files.md)
+2. [Row and column stores](01-storage-and-compute-foundations/notes/02-row-and-column-stores.md)
+3. [Distributed compute](01-storage-and-compute-foundations/notes/03-distributed-compute.md)
+4. [Partitioning and replication](01-storage-and-compute-foundations/notes/04-partitioning-and-replication.md)
+
+### [02 Ingest and modelling](02-ingest-and-modelling/README.md)
+
+1. [Ingest](02-ingest-and-modelling/notes/01-ingest.md)
+2. [Dimensional modelling](02-ingest-and-modelling/notes/02-dimensional-modelling.md)
+3. [Data Vault and One Big Table](02-ingest-and-modelling/notes/03-data-vault-and-obt.md)
+4. [Data contracts](02-ingest-and-modelling/notes/04-data-contracts.md)
+
+### [03 Transform and orchestrate](03-transform-and-orchestrate/README.md)
+
+1. [Transform](03-transform-and-orchestrate/notes/01-transform.md)
+2. [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md)
+3. [dbt tests, snapshots and incremental models](03-transform-and-orchestrate/notes/03-dbt-tests-snapshots-incremental.md)
+4. [Idempotency and backfills](03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md)
+5. [Dagster and Airflow](03-transform-and-orchestrate/notes/05-dagster-and-airflow.md)
+
+### [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md)
+
+1. [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md)
+2. [Table formats](04-warehouse-lakehouse-streaming/notes/02-table-formats.md)
+3. [Lakehouse against warehouse](04-warehouse-lakehouse-streaming/notes/03-lakehouse-vs-warehouse.md)
+4. [Kafka and stream semantics](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md)
+5. [Cost](04-warehouse-lakehouse-streaming/notes/05-cost.md)
+
+### [05 Quality and observability](05-quality-and-observability/README.md)
+
+1. [Quality dimensions and tests](05-quality-and-observability/notes/01-quality-dimensions-and-tests.md)
+2. [Monitors and lineage](05-quality-and-observability/notes/02-monitors-and-lineage.md)
+3. [Incident playbooks](05-quality-and-observability/notes/03-incident-playbooks.md)
+
+### [06 ML platform](06-ml-platform/README.md)
+
+1. [Feature stores](06-ml-platform/notes/01-feature-stores.md)
+2. [Experiment tracking and the model registry](06-ml-platform/notes/02-experiment-tracking-and-model-registry.md)
+3. [Batch and online serving](06-ml-platform/notes/03-batch-and-online-serving.md)
+4. [Drift](06-ml-platform/notes/04-drift.md)
+5. [The MLOps maturity model and best practices](06-ml-platform/notes/05-mlops-maturity-and-best-practices.md)
+
+### [07 Architecture and governance](07-architecture-and-governance/README.md)
+
+1. [Data architectures: MDW, fabric, mesh](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md)
+2. [Access control, PII and GDPR](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md)
 
 ## Rules of thumb
 
-| Rule | Note |
-|---|---|
-| Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [01](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
-| Commit stream offsets after processing, never before | [01](02-ingest-and-modelling/notes/01-ingest.md) |
-| Put a schema contract at every producer/consumer boundary (Avro + registry, dbt tests at `error` on staging) | [01](02-ingest-and-modelling/notes/01-ingest.md), [02](03-transform-and-orchestrate/notes/01-transform.md) |
-| Define each metric once, in one mart, with an owner | [02](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
-| Partition on the filter column; cluster on the next one; don't partition tables under 1 GB | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
-| Reach for DuckDB or Polars before Spark when the data fits on one machine | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
-| Monitor inputs and predictions, not just accuracy; alert only on what someone will act on | [05](05-quality-and-observability/notes/01-monitor.md) |
-| One feature function shared by training and every serving path | [06](06-ml-platform/notes/01-feature-serve.md) |
-| The registry labels models; CI/CD deploys them | [06](06-ml-platform/notes/01-feature-serve.md), [08](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) |
-| Inject side effects so the service can be unit-tested; integration-test the real container against LocalStack | [08](06-ml-platform/notes/02-mlops-maturity-and-best-practices.md) |
-| A data mesh is an ownership model, not a storage choice; contracts before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+Each pillar's README has its own full list. These are the ones that cross stages.
 
----
+| Rule | Where |
+|---|---|
+| State the schema on first read; inference destroys zip codes and big IDs silently | [01](01-storage-and-compute-foundations/notes/01-encoding-and-files.md) |
+| Reach for DuckDB or Polars before Spark when the data fits on one machine | [01](01-storage-and-compute-foundations/notes/03-distributed-compute.md), [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
+| Every load is keyed and re-runnable: merge on a primary key, write to a path derived from the logical date | [02](02-ingest-and-modelling/notes/01-ingest.md), [03](03-transform-and-orchestrate/notes/02-orchestrate.md) |
+| Put a contract at every producer and consumer boundary | [02](02-ingest-and-modelling/notes/04-data-contracts.md) |
+| Define each metric once, in one mart, with an owner | [03](03-transform-and-orchestrate/notes/01-transform.md), [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+| Make a task idempotent before you let anything retry it | [03](03-transform-and-orchestrate/notes/04-idempotency-and-backfills.md) |
+| Partition on the date you always filter by, cluster on the next filter, and do not partition small tables | [04](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) |
+| Commit output and offset together, or make the sink idempotent | [04](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) |
+| A test asks about a batch, a monitor asks about a batch against time, and you need both | [05](05-quality-and-observability/notes/02-monitors-and-lineage.md) |
+| Contain before you diagnose, and never fix raw in place | [05](05-quality-and-observability/notes/03-incident-playbooks.md) |
+| One function computes a feature everywhere, joined as of the prediction time | [06](06-ml-platform/notes/01-feature-stores.md) |
+| On a drift alert, check for a pipeline fault before retraining | [06](06-ml-platform/notes/04-drift.md) |
+| A mesh is an ownership model, not a storage choice; contracts come before decentralisation | [07](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) |
+| Hashed is not anonymous: pseudonymised data stays personal data | [07](07-architecture-and-governance/notes/02-access-control-pii-gdpr.md) |
 
 ## Resource map
 
@@ -83,52 +137,48 @@ data-engineering/
 
 | Where | Why |
 |---|---|
-| [programming/](../programming/README.md) SQL 01–10, Python 03 | SQL and Python fluency the zoomcamps assume |
-| [data-analytics/](../data-analytics/README.md) | Wrangling and statistics; the consumer of the marts in 02 |
-| [data-science/](../data-science/README.md) | The models that 06 serves and 05 monitors; feature engineering and evaluation in depth |
-| [generative-ai/06-observability](../generative-ai/06-observability/README.md) | Tracing and scoring for LLM apps: the same monitoring ideas as 05, for a different model type |
-
-### Books and courses
-
-Two zoomcamps, *Designing Data-Intensive Applications*, and three chapters of *Deciphering Data Architectures*. Full list, licences and chapter-to-note mapping in [references.md](references.md#books-and-courses).
+| [programming/](../programming/README.md) SQL and Python | The fluency the zoomcamps assume |
+| [data-analytics/](../data-analytics/README.md) | Wrangling and statistics; the consumer of the marts in pillar 03 |
+| [data-science/](../data-science/README.md) | The models that pillar 06 serves and monitors |
+| [generative-ai/06-observability](../generative-ai/06-observability/README.md) | Tracing and scoring for LLM apps: the monitoring ideas of pillar 05 for a different model type |
+| [generative-ai/08-eval](../generative-ai/08-eval/README.md) | Evaluation of LLM systems, which pillar 06's gates and drift checks sit beside |
 
 ### Coursework, with run labels
 
-Labels: **offline** = runs on a laptop with no account once data is downloaded · **Docker** · **GCP** / **AWS** = needs a cloud account (and billing) · **pin** = unpinned dependencies; pin as stated · **legacy** = API or tool superseded · **reading** = videos or text, no code. No notebook was executed for this pass.
+Labels: **offline** = runs on a laptop with no account once data is downloaded · **Docker** · **GCP** / **AWS** = needs a cloud account and billing · **pin** = unpinned dependencies; pin as stated · **legacy** = API or tool superseded · **reading** = videos or text, no code. These labels are read from the course material; the zoomcamp notebooks and modules were not executed. Module numbers are those of the 2024-era snapshot, and upstream has since renumbered, as [references.md](references.md#courses-and-videos) explains.
 
-**[DataTalks Data Engineering/](02-ingest-and-modelling/practice/datatalks-de/README.md)**
+**DE Zoomcamp** ([course README](02-ingest-and-modelling/practice/datatalks-de/README.md))
 
-| Module | Note | Needs |
+| Module | Folder | Chapter | Needs |
+|---|---|---|---|
+| `01-docker-terraform` | [02](02-ingest-and-modelling/practice/datatalks-de/01-docker-terraform) | [Ingest](02-ingest-and-modelling/notes/01-ingest.md) | Docker (Postgres, pgAdmin, ingest container): offline. Terraform part: GCP (service-account key) |
+| `02-workflow-orchestration` | [03](03-transform-and-orchestrate/practice/datatalks-de/02-workflow-orchestration) | [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) | Reading (videos only in the snapshot); to follow along, Docker (Mage) + GCP |
+| `03-data-warehouse` | [04](04-warehouse-lakehouse-streaming/practice/datatalks-de/03-data-warehouse) | [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) | GCP (BigQuery, billing). BQML export: Docker (`tensorflow/serving`) |
+| `04-analytics-engineering` | [03](03-transform-and-orchestrate/practice/datatalks-de/04-analytics-engineering) | [Transform](03-transform-and-orchestrate/notes/01-transform.md) | GCP (BigQuery + dbt Cloud), or offline with dbt Core + Postgres |
+| `05-batch` | [04](04-warehouse-lakehouse-streaming/practice/datatalks-de/05-batch) | [Warehouse and store](04-warehouse-lakehouse-streaming/notes/01-warehouse-and-store.md) | Java 11 + Spark 3.3.2 (pin); offline locally. Dataproc and the GCS connector: GCP |
+| `06-streaming` | [04](04-warehouse-lakehouse-streaming/practice/datatalks-de/06-streaming) | [Kafka](04-warehouse-lakehouse-streaming/notes/04-kafka-and-stream-semantics.md) | Docker (Kafka / Confluent compose, Redpanda); Java for the Kafka Streams examples; ksqlDB folder is SQL only |
+| `projects/` | [02](02-ingest-and-modelling/practice/datatalks-de/projects) | Capstone | Reading: project brief and dataset list |
+
+**MLOps Zoomcamp** ([course README](06-ml-platform/practice/datatalks-mlops/README.md), all in pillar 06)
+
+| Module | Chapter | Needs |
 |---|---|---|
-| `01-docker-terraform` | 01 | Docker (Postgres, pgAdmin, ingest container): offline. Terraform part: GCP (service-account key) |
-| `02-workflow-orchestration` | 03 | Reading (videos only in the snapshot); to follow along, Docker (Mage) + GCP |
-| `03-data-warehouse` | 04 | GCP (BigQuery, billing). BQML export: Docker (`tensorflow/serving`) |
-| `04-analytics-engineering` | 02 | GCP (BigQuery + dbt Cloud), or offline with dbt Core + Postgres |
-| `05-batch` | 04 | Java 11 + Spark 3.3.2 (pin); offline locally. Dataproc and the GCS connector: GCP |
-| `06-streaming` | 01 | Docker (Kafka / Confluent compose, Redpanda); Java for the Kafka Streams examples; ksqlDB folder is SQL only |
-| `projects/` | 01–05 | Reading: project brief and dataset list |
-| Workshop 1 (dlt), Workshop 2 (RisingWave) | 01 | Upstream only (cohort links in the README). dlt runs offline with DuckDB; RisingWave needs Docker |
-
-**[DataTalks MLOps/](06-ml-platform/practice/datatalks-mlops/README.md)**
-
-| Module | Note | Needs |
-|---|---|---|
-| `01-intro` | 06, 08 | Offline after downloading the taxi Parquet files (Codespaces or an EC2 VM optional) |
-| `02-experiment-tracking` | 06 | `mlflow`, `hyperopt`, `xgboost` (pin; requirements unpinned): offline. Scenario 3 and `mlflow_on_aws.md`: AWS (EC2, RDS, S3) |
-| `03-orchestration` | 03 | Docker (Mage; pinned requirements in the module) |
-| `04-deployment` | 06, 03 | `web-service/`: Docker, offline. `web-service-mlflow/`: AWS (S3). `streaming/`: Docker locally; AWS (Kinesis, Lambda, ECR) for real. `batch/`: legacy (Prefect 2 `orion`) + AWS S3 |
-| `05-monitoring` | 05 | Docker compose (Postgres, Adminer, Grafana): offline. `evidently` unpinned: pin `evidently<0.7` (legacy API). Prefect: legacy |
-| `06-best-practices` | 08 | Unit tests: offline. Integration test: Docker + LocalStack, offline. Terraform and CI/CD: AWS + GitHub |
-| `07-project` | 08 | Reading: capstone brief and rubric |
-| `generate/` | — | Course-site tooling (`generate_pages.ipynb`), not coursework |
+| `01-intro` | [Maturity](06-ml-platform/notes/05-mlops-maturity-and-best-practices.md) | Offline after downloading the taxi Parquet files |
+| `02-experiment-tracking` | [Tracking and registry](06-ml-platform/notes/02-experiment-tracking-and-model-registry.md) | `mlflow`, `hyperopt`, `xgboost` (pin): offline. Scenario 3 and `mlflow_on_aws.md`: AWS (EC2, RDS, S3) |
+| `03-orchestration` | [Orchestrate](03-transform-and-orchestrate/notes/02-orchestrate.md) | Docker (Mage; pinned requirements in the module) |
+| `04-deployment` | [Serving](06-ml-platform/notes/03-batch-and-online-serving.md) | `web-service/`: Docker, offline. `web-service-mlflow/`: AWS (S3). `streaming/`: Docker locally; AWS (Kinesis, Lambda, ECR) for real. `batch/`: legacy (Prefect 2 `orion`) + AWS S3 |
+| `05-monitoring` | [Monitors](05-quality-and-observability/notes/02-monitors-and-lineage.md), [Drift](06-ml-platform/notes/04-drift.md) | Docker compose (Postgres, Adminer, Grafana): offline. Pin `evidently<0.7` (legacy API). Prefect: legacy |
+| `06-best-practices` | [Maturity](06-ml-platform/notes/05-mlops-maturity-and-best-practices.md) | Unit tests: offline. Integration test: Docker + LocalStack, offline. Terraform and CI/CD: AWS + GitHub |
+| `07-project` | Capstone | Reading: capstone brief and rubric |
+| `generate/` | None | Course-site tooling, not coursework |
 
 ### Readings
 
-[sources/](sources/) holds the cited PDFs; see [references.md](references.md). The `/readings` router also files `ml-systems` papers and books here. These are queued and not yet cited by any note: *Hidden Technical Debt in ML Systems*, Amershi et al. *Software Engineering for ML*, *Failing Loudly*, the KDD metric-interpretation pitfalls paper, *The Data Warehouse Toolkit*, *Machine Learning Engineering in Action*. Fold them in with `/papers` or `/chapter`.
+[sources/](sources/) holds the shared PDFs and [references.md](references.md) maps each to its chapters. Run `/papers` or `/chapter` to fold in what the `/readings` router files here.
 
 ### Interviewing guide
 
-[8-data-eng-mlops/00-overview.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md). Note 07's scenario-prompt tables are written as interview practice.
+[8-data-eng-mlops/00-overview.md](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/8-data-eng-mlops/00-overview.md). The scenario prompts in [data architectures](07-architecture-and-governance/notes/01-data-architectures-mesh-fabric-mdw.md) are written as interview practice.
 
 ### Previous and next layer
 

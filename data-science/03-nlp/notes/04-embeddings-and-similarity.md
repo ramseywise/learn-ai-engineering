@@ -234,7 +234,7 @@ good/bad 0.796  good/excellent 0.806
 
 Occupation words line up along the direction: receptionist and nurse towards "woman", engineer and warrior towards "man". After neutralising, the projection is zero by construction. "Good" and "bad" have a cosine of 0.80, about the same as "good" and "excellent" at 0.81, which is the antonym problem described below. Embeddings learned from text inherit the text's associations, and any similarity system built on them does too.
 
-Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([what attention fixed](../../02-deep-learning/notes/02-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
+Two more properties follow from "similar means shares contexts" (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 1). First, **antonyms land close together**: "good" and "bad" fill the same slots, so a word2vec neighbour list mixes synonyms and antonyms. The context window decides which kind of similarity you get. Windows of about 2 group words by part of speech. Wider windows group them by topic. Second, **one vector holds every sense of a word**. Arora et al. ([TACL 2018](https://aclanthology.org/Q18-1034/)) show that a polysemous word's vector is approximately a linear superposition of its sense vectors, weighted by how often each sense occurs. "Apple" is mostly fruit or mostly company depending on the corpus. Sparse coding over the embeddings can pull the senses apart. Contextual models ([what attention fixed](../../02-deep-learning/notes/06-neural-text-models.md#what-attention-fixed)) remove the problem by giving each occurrence of a word its own vector.
 
 ## Embeddings inside a model
 
@@ -296,7 +296,7 @@ Trained for one task, the vectors organise by that task. In the projector the IM
 | TF-IDF-weighted average | Weight each word vector by its TF-IDF | Often better: downweights common words |
 | Doc2Vec | Learn a paragraph vector alongside word vectors | Better than averaging; needs training |
 | Topic proportions | LDA/NMF ([topic models](03-topic-models-and-summarization.md)) | Interpretable, coarse |
-| Sentence encoders | Universal Sentence Encoder ([neural text models](../../02-deep-learning/notes/02-neural-text-models.md)), Sentence-BERT, modern embedding APIs | Current practice |
+| Sentence encoders | Universal Sentence Encoder ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)), Sentence-BERT, modern embedding APIs | Current practice |
 
 We can compare the first two with pretrained GloVe on the same genre task.
 

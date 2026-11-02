@@ -102,7 +102,7 @@ The bank raised its interest rates         bank.n.10      a flight maneuver; air
 They fished from the bank of the river     bank.n.01      sloping land (especially the slope beside a body of water)
 ```
 
-Lesk is right on both "lead" sentences and on the river bank, then decides that a bank raising interest rates is a flight manoeuvre. That is how it fails: with no overlap in the definition, it has nothing to go on. **Lesk** picks the sense whose dictionary definition overlaps most with the context words. It is a weak baseline, and contextual embeddings ([neural text models](../../02-deep-learning/notes/02-neural-text-models.md)) disambiguate implicitly and much better. WordNet's lasting uses are lemmatisation ([text representation](01-text-representation.md)), query expansion with synonyms and hypernyms, and as a hand-built taxonomy, an early knowledge graph.
+Lesk is right on both "lead" sentences and on the river bank, then decides that a bank raising interest rates is a flight manoeuvre. That is how it fails: with no overlap in the definition, it has nothing to go on. **Lesk** picks the sense whose dictionary definition overlaps most with the context words. It is a weak baseline, and contextual embeddings ([neural text models](../../02-deep-learning/notes/06-neural-text-models.md)) disambiguate implicitly and much better. WordNet's lasting uses are lemmatisation ([text representation](01-text-representation.md)), query expansion with synonyms and hypernyms, and as a hand-built taxonomy, an early knowledge graph.
 
 ## Named entity recognition (Sarkar ch. 8b)
 
@@ -159,7 +159,7 @@ The same text can go through Stanford's CRF-based tagger (`nltk.tag.StanfordNERT
 | spaCy `en_core_web_sm/md/lg/trf` | CNN or transformer | 18 (OntoNotes) | Fast, Python-native; `trf` most accurate |
 | Stanford NER / CoreNLP | CRF | 3, 4, 7 or 12 | Java service |
 | stanza | BiLSTM-CRF | 18 | Python; many languages |
-| Hugging Face token classification | Fine-tuned BERT-style | Any | `pipeline("ner")` ([transformers pipelines](../../02-deep-learning/notes/02-neural-text-models.md#transformers-pipelines)) |
+| Hugging Face token classification | Fine-tuned BERT-style | Any | `pipeline("ner")` ([transformers pipelines](../../02-deep-learning/notes/06-neural-text-models.md#transformers-pipelines)) |
 | LLM extraction | Prompted | Any, defined in the prompt | Flexible schema; check precision |
 
 ## Building your own NER tagger (Sarkar ch. 8c)

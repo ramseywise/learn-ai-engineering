@@ -102,7 +102,19 @@ print(f"train {losses['train']:.3f}  val {losses['val']:.3f}")
 print(generate(bigram, 8, 120))
 ```
 
-TODO_BIGRAM
+```text
+1,115,390 characters, 65 unique, uniform loss 4.17
+first batch loss 4.75
+train 2.455  val 2.482
+
+
+G tl goowon d salorot nge!
+F f yothed yo,
+Be l'd l my tre! d d qulotre
+Yof am power' manoro poilanded-s, Yous g hend y
+```
+
+A uniform guess over 65 characters costs 4.17, and the untrained model starts a little above that at 4.75, since its random guesses are confidently wrong. Training settles at a validation loss of 2.48, in line with the about 2.5 of the lecture. Train and validation agree because a table of 65 by 65 numbers has little to overfit with. The text has the shape of a play, with line breaks, capitals and punctuation, and few real words. That is the ceiling of this model: each prediction sees one character, and the characters never talk to each other.
 
 ## The trick: looking back is a matrix multiply
 
@@ -124,6 +136,14 @@ softmaxed = wei @ x                                            # (T, T) @ (B, T,
 
 print(wei.round(decimals=2))
 print("all three agree:", torch.allclose(loop, matrix) and torch.allclose(loop, softmaxed))
+```
+
+```text
+tensor([[1.0000, 0.0000, 0.0000, 0.0000],
+        [0.5000, 0.5000, 0.0000, 0.0000],
+        [0.3300, 0.3300, 0.3300, 0.0000],
+        [0.2500, 0.2500, 0.2500, 0.2500]])
+all three agree: True
 ```
 
 The three versions give the same numbers. The softmax version is the one that matters, because the zeros it starts from are just scores. Replace them with scores computed from the data, and the same two lines stop averaging uniformly and become attention.
@@ -160,7 +180,13 @@ print("largest weight per row, raw:   ", [round(v, 2) for v in raw.softmax(-1)[0
 print("largest weight per row, scaled:", [round(v, 2) for v in scaled.softmax(-1)[0].max(-1).values.tolist()])
 ```
 
-TODO_SCALE
+```text
+score variance: raw 66.1, scaled 1.03
+largest weight per row, raw:    [0.93, 0.99, 0.58, 0.95, 0.74, 1.0, 1.0, 1.0]
+largest weight per row, scaled: [0.35, 0.35, 0.17, 0.32, 0.25, 0.41, 0.68, 0.44]
+```
+
+Unit-variance keys and queries of size 64 give raw scores with a variance of 66, close to the 64 the arithmetic predicts. Softmax turns scores that spread into something near one-hot: six of the eight rows put 0.93 or more on one earlier token, so that token would receive almost everything from the first step, before learning has chosen anything. Dividing by `sqrt(64)` brings the variance to 1.03, and the largest weights fall to between 0.17 and 0.68. These are random scores with no mask, so they show the effect of the scale and nothing else.
 
 A few things to notice about the mechanism, each of which turns into a design decision.
 
@@ -257,7 +283,16 @@ for name, kw in runs:
     print(f"{name:32s} {sum(p.numel() for p in m.parameters()):7,} params  train {r['train']:.3f}  val {r['val']:.3f}  {time.time() - t:4.0f}s")
 ```
 
-TODO_ABLATION
+```text
+one head of 32                     8,609 params  train 2.386  val 2.421    11s
+4 heads of 8                       8,609 params  train 2.238  val 2.275    14s
++ feed-forward                    16,961 params  train 2.143  val 2.197    15s
+3 blocks, nothing else            41,921 params  train 2.247  val 2.254    82s
+3 blocks + residual               41,921 params  train 1.995  val 2.067    76s
+3 blocks + residual + LayerNorm   42,369 params  train 1.981  val 2.049    43s
+```
+
+Read the validation column from the top: 2.42, 2.28, 2.20, then a step backwards to 2.25, then 2.07 and 2.05. The step backwards is the lesson. Three blocks have 2.5 times the parameters of one block and do worse, because a deeper network that cannot be optimised is not a stronger one. Adding the residual path changes no parameter count at all and is worth 0.19. LayerNorm adds 0.02 at this depth, on one seed, which is too small to call. The table below gives what the lecture reports for each step at the same sizes (embedding 32, context 8, 5,000 steps), and our run lands close to each one, a little lower at the feed-forward step. His order is the same as ours, without the separate row for stacking.
 
 | Addition | Problem it solves | Val loss in the lecture |
 |---|---|---|
@@ -279,7 +314,22 @@ print(f"{sum(p.numel() for p in tiny.parameters()):,} params  train {r['train']:
 print(generate(tiny, 32, 300))
 ```
 
-TODO_TINY
+```text
+209,729 params  train 1.585  val 1.758  1.2 min on CPU
+
+Is of eath, eir lords to she ear till thee:
+I'll neary will you king, that were be are it
+Presities me the wout for.
+
+DUCKEs OF EDY:
+The order envise into firthly with them doth God's nears him; thou we
+the madest be like of go thsusboyes service.
+Her will, and you have so scail:
+Yet he swify.
+Alell
+```
+
+This took 1.2 minutes on CPU for 209,729 parameters and a validation loss of 1.76, against the bigram's 2.48. The output has a speaker's name in capitals, verse lines and real words ("lords", "thee", "service") where the bigram had none. It is still far from the 1.48 of the 10.8M run, and the gap between train and validation has opened to 0.17, the first sign that this model has enough capacity to overfit a one-megabyte text.
 
 The weights are the interesting part. Asking one head what it looked at, for a real line of the play, shows the scores are no longer uniform.
 
@@ -297,7 +347,12 @@ for h in tiny.blocks[0].sa.heads[:2]:
 tiny.train();
 ```
 
-TODO_WEIGHTS
+```text
+head looks back at: [('e', 0.11), ('c', 0.11), ('o', 0.09), ('e', 0.09), ('r', 0.07)]  uniform would be 0.03
+head looks back at: [('c', 0.08), ('e', 0.08), (' ', 0.08), ('e', 0.08), (' ', 0.05)]  uniform would be 0.03
+```
+
+With 32 characters of context, uniform attention would put 0.03 on each. The first head's largest weight is 0.11, about three and a half times that, and the second head's is 0.08, so each head has concentrated on a few characters, and the two do not pick the same set. Do not read a story into which letters they are. These are two heads in the first block of a small model, and a single prompt says nothing general about what a head does. The claim the output supports is the narrow one: the weights are no longer uniform.
 
 What this leaves out, on purpose: the encoder and cross-attention, which translation needs and a pure language model does not, and everything after pre-training. ChatGPT is this plus supervised fine-tuning and RLHF, which belong to [LLM fundamentals](../../../generative-ai/01-llm-fundamentals/README.md).
 
@@ -404,7 +459,13 @@ for n in (24,):
     print(f"after {n} residual additions: std {plain.std().item():.2f} unscaled, {scaled.std().item():.2f} scaled")
 ```
 
-TODO_GPT
+```text
+124,439,808 parameters, of which 38,597,376 (31%) are the tied matrix
+first loss on random tokens 11.05, and -ln(1/50257) is 10.82
+after 24 residual additions: std 4.94 unscaled, 1.01 scaled
+```
+
+The count is 124,439,808, the figure usually rounded to "124M". The output head and the token embedding are one tensor, and that tensor alone is 31% of the model. An untrained model should be guessing evenly over 50,257 tokens, which costs -ln(1/50257) = 10.82, and it scores 11.05. That is the same check as the 3.30 in makemore, and it is the cheapest bug test in this chapter. The last line is why the output projections are scaled at init: each of 12 blocks adds to the residual stream twice, and 24 unit-variance additions give a standard deviation of 4.94, close to `sqrt(24)`. Scaling each one by `n ** -0.5` holds it at 1.01. That line demonstrates the arithmetic on random numbers, not on the model itself.
 
 Now the proof. Hugging Face stores four of the matrices the other way around, since OpenAI's code used a `Conv1D` layer, so those need a transpose. Everything else copies straight in. If our code is right, the two models must agree on every logit.
 
@@ -443,7 +504,15 @@ for s in (42, 43, 44):
     print(repr(sample(gpt, "Hello, I'm a language model,", seed=s)))
 ```
 
-TODO_PROOF
+```text
+tokens: [15496, 11, 314, 1101, 257, 3303, 2746, 11]
+largest logit difference from Hugging Face: 0.00e+00
+'Hello, I\'m a language model, not a designer. That\'s all."\n\nAdvertisement\n\n"You\'re in a lot of trouble," I respond'
+"Hello, I'm a language model, this is going to be difficult (unless you're not actually familiar with C/C++). We will be doing a"
+"Hello, I'm a language model, I don't know how you use that. It's different from English, you know? We're talking an open-"
+```
+
+The largest difference over every logit of the prompt prints as 0.00e+00, so the hundred lines above and Hugging Face's implementation are the same function on this input. The exact zero comes from running both in the same floating-point environment. On other hardware expect tiny differences, and judge by the size, since anything near 1e-5 on float32 logits is rounding, and anything near 1 is a bug. The samples are coherent English and do not stay on topic, which is what 124M parameters of GPT-2 does with no fine-tuning. They differ from the lecture's samples because the seeds and the sampling code differ.
 
 ## Making it fast
 
@@ -487,7 +556,13 @@ no_decay = [p for p in gpt.parameters() if p.dim() < 2]
 print(f"weight decay on {len(decay)} tensors ({sum(p.numel() for p in decay):,} params), none on {len(no_decay)} ({sum(p.numel() for p in no_decay):,} params)")
 ```
 
-TODO_LR
+```text
+375M tokens of warm-up is 715 steps; 19073 steps is 10.0B tokens
+lr at step {0: 8.39e-07, 357: 0.0003, 714: 0.0006, 5000: 0.000531, 10000: 0.000325, 15000: 0.000123, 19073: 6e-05}
+weight decay on 50 tensors (124,318,464 params), none on 98 (121,344 params)
+```
+
+The schedule's numbers follow from the token counts: 375M tokens at 524,288 a step is 715 steps of warm-up, and 19,073 steps is 10.0B tokens. The rate climbs to 6e-4 at step 714, and the cosine then brings it down to 6e-5 at the last step. The weight-decay split is by tensor rank, and the result is lopsided in a useful way: 98 of the 148 tensors escape decay, yet they hold only 121,344 parameters, about 0.1% of the model. Those are the biases and LayerNorm parameters, which the standard recipe leaves out of decay.
 
 The batch of 0.5M tokens does not fit on one GPU, so gradients accumulate over micro-batches. The subtle line is the division. Cross-entropy already averages over its own batch, so summing gradients from several micro-batches without dividing makes the effective learning rate that many times too large, without a single error.
 
@@ -510,7 +585,12 @@ print(f"largest difference with loss / 4: {(accumulate(True) - whole).abs().max(
 print(f"gradient ratio without dividing:  {(accumulate(False).norm() / whole.norm()).item():.2f}")
 ```
 
-TODO_ACCUM
+```text
+largest difference with loss / 4: 4.10e-08
+gradient ratio without dividing:  4.00
+```
+
+With `loss / 4`, four micro-batches of 4 reproduce one batch of 16 to within 4.10e-08, which is floating-point noise. Without the division, the gradient is 4.00 times too large. Nothing raises an error, and the training simply behaves as if the learning rate were four times what the schedule says.
 
 The loop itself needs GPUs and the dataset, so it is shown here and not run. The complete version is [`train_gpt2.py`](../practice/nn-zero-to-hero/nanogpt/build-nanogpt/train_gpt2.py).
 
@@ -564,7 +644,14 @@ for e, s in zip(endings, score_endings(gpt, context, endings)):
     print(f"{s:6.3f}  {e}")
 ```
 
-TODO_SWAG
+```text
+ 1.738  puts it on the stove and waits for the water to boil.
+ 3.745  folds it neatly and hangs it in the wardrobe.
+ 3.471  throws it over the fence to the waiting horses.
+ 2.721  reads it aloud to the rest of the class.
+```
+
+The ending that makes physical sense has the lowest loss, 1.738, and is the model's pick. The question is one we wrote to show the mechanism, not a row of HellaSwag, so it says nothing about accuracy. The ordering of the other three is also not meaningful: 2.721 for reading a kettle aloud beats 3.471 for throwing it over a fence, which is a judgement about likely wording. The method does not read for sense. It only asks which string of tokens the model finds less surprising.
 
 In the lecture, one epoch of 10B tokens took about two hours on eight A100s. It passes OpenAI's GPT-2 124M on HellaSwag, a model trained on about 100B tokens. A four-epoch overnight run of 40B tokens comes close to GPT-3's 124M model, which trained on 300B. The [build-nanogpt README](https://github.com/karpathy/build-nanogpt) puts the reproduction at about an hour and about $10 of rented GPU. Karpathy lists the caveats himself: FineWeb-Edu is English and has little code or math, so the model is spending no capacity on those, HellaSwag or a near copy of it may have reached the web crawl, and the two datasets differ in quality, so this is a cross-check that training works and not a fair comparison of efficiency. He also notes a strange periodicity in his loss curve, which he suspects comes from data that was never shuffled.
 
@@ -592,13 +679,13 @@ Beyond this table lie scale, instruction tuning, RLHF and using these models as 
 | [`build-nanogpt/fineweb.py`](../practice/nn-zero-to-hero/nanogpt/build-nanogpt/fineweb.py) | Tokenise FineWeb-Edu 10B into shards | Needs internet, `datasets`, many CPU cores and disk for 100 shards of 100M 2-byte tokens, about 20 GB |
 | [`build-nanogpt/hellaswag.py`](../practice/nn-zero-to-hero/nanogpt/build-nanogpt/hellaswag.py) | HellaSwag download and evaluation | Needs internet; GPU recommended |
 
-The blocks in this chapter run in order with `uv run --python 3.12 --with torch --with transformers --with tiktoken python ../practice/run_note.py notes/03-nanogpt.md` from the pillar folder. The step-by-step commit history is in [karpathy/build-nanogpt](https://github.com/karpathy/build-nanogpt).
+The blocks in this chapter run in order with `uv run --python 3.12 --with torch --with transformers --with tiktoken python practice/run_note.py notes/03-nanogpt.md` from the pillar folder. The step-by-step commit history is in [karpathy/build-nanogpt](https://github.com/karpathy/build-nanogpt).
 
 ## Pitfalls
 
 | Pitfall | What goes wrong | What to do |
 |---|---|---|
-| Forgetting the causal mask | The target is in the input, so train loss looks excellent and generation is rubbish | Check generation, and check a mask's upper triangle is `-inf` |
+| Forgetting the causal mask | The target is in the input, so train and validation loss both look excellent and generation is rubbish | Check generation, since no split can catch it, and check a mask's upper triangle is `-inf` |
 | Forgetting position embeddings | Attention sees a set, so order is invisible | Add them, and check that shuffling the context changes the output |
 | Leaving out the `sqrt(d)` scaling | Softmax saturates towards one-hot at init | Compare first-step attention weights to uniform |
 | Summing accumulated gradients | Effective learning rate multiplied by the number of micro-batches | `loss = loss / grad_accum_steps` |
@@ -631,7 +718,13 @@ print(f"no mask  train {r1['train']:.3f}  val {r1['val']:.3f}")
 print("no mask generates:", repr(generate(leaky, 8, 80)))
 ```
 
-TODO_A1
+```text
+masked   train 2.107  val 2.143
+no mask  train 0.288  val 0.292
+no mask generates: '\nKAO\n\n\nAULUS:\nJ, I y frory!\nDory loud, sheris wiillednd hid dild her; ou in.\n\nFTu'
+```
+
+Validation falls as far as train, to 0.292, and that is the point of the exercise. The leak is present in both splits, so a held-out split cannot catch it: every position can read its own target, which sits one place to the right in the input. Generation does catch it. When sampling, the position being predicted is the last one and there is nothing to its right to read, so the model has learned little it can use. The sample has the outline of a script and few words, from a model whose loss is seven times lower than the masked model's 2.143.
 
 </details>
 
@@ -649,7 +742,12 @@ print(f"with positions    train {r0['train']:.3f}  val {r0['val']:.3f}")
 print(f"without positions train {r2['train']:.3f}  val {r2['val']:.3f}")
 ```
 
-TODO_A2
+```text
+with positions    train 2.107  val 2.143
+without positions train 2.161  val 2.198
+```
+
+Removing positions costs 0.055 on validation, less than might be expected. With a context of eight, each token still knows its own identity, through the query and the residual path, so the model keeps at least what a bigram had. It also still knows which characters occurred in the previous seven, just not their order. What positions add at this size is the order inside a very short window. This one run does not measure what order is worth over longer contexts, so try it at a `block_size` of 32 and compare.
 
 </details>
 
@@ -669,7 +767,12 @@ print(f"by hand {by_hand:,}  by model {sum(p.numel() for p in gpt.parameters()):
 print(f"embeddings {embed:,}, each block {attn + mlp + norms:,}, final LayerNorm {final:,}")
 ```
 
-TODO_A3
+```text
+by hand 124,439,808  by model 124,439,808
+embeddings 39,383,808, each block 7,087,872, final LayerNorm 1,536
+```
+
+The blocks hold 12 x 7,087,872 = 85,054,464 parameters, or 68%, and embeddings hold the other 32%. So almost a third of GPT-2 is a lookup table, and most of that is the single tied matrix of 38,597,376.
 
 </details>
 

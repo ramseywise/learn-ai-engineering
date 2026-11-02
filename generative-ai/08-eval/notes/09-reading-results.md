@@ -12,11 +12,13 @@ sources:
   - https://arxiv.org/abs/1804.09301
   - https://arxiv.org/abs/2101.11718
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 9 — Reading Results
 
 > An eval score is an estimate from a sample, not a fact. Put an error bar on it, compare versions on the same tasks, and break it down by slice before deciding anything. Most "improvements" on small suites are noise.
+
+Version B scores 80% on 50 tasks, Version A scored 72%, and the team ships B. At that size the two are not distinguishable, and a two-point dip on the same set can get days of explanation when it was one flipped task. This chapter is how to tell a change from noise: error bars, paired comparisons, slices, and reading the transcripts behind the number.
 
 ---
 
@@ -81,7 +83,60 @@ mean difference = Δ;  SE(Δ) = sd(differences) / √n
 
 Most tasks pass or fail on both versions, so the differences are mostly zero, and the SE of the difference is much smaller than the SE of either rate. Miller (Anthropic, "Adding Error Bars to Evals", 2024) shows pairing can cut the variance of a comparison substantially for free. The paired variance is the unpaired one minus twice the covariance, so the saving grows with how often the two versions agree on a question. Two versions of the same agent usually agree on most questions, which is the best case ([arXiv:2411.00640](https://arxiv.org/abs/2411.00640)).
 
-For binary outcomes, the same idea is **McNemar's test**: only the tasks where A and B disagree carry information. If B wins 14 and loses 6 of the 20 discordant tasks, that's evidence. If it wins 11 and loses 9, it isn't.
+For binary outcomes, the same idea is **McNemar's test**: only the tasks where A and B disagree carry information. If B wins 14 and loses 6 of the 20 discordant tasks, that's suggestive and not settled: the exact two-sided p is 0.115. At 15–5, p is 0.041. At 11–9, p is 0.824, which is nothing.
+
+All of this fits in the standard library. The counts below are invented, and the last three lines use a 200-task run where A passes 150 and B passes 158:
+
+```python
+from math import comb, sqrt
+
+def wilson(passed, n, z=1.96):
+    p = passed / n
+    centre = (p + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / (1 + z * z / n)
+    return round(centre - half, 3), round(centre + half, 3)
+
+def normal(passed, n, z=1.96):
+    p = passed / n
+    half = z * sqrt(p * (1 - p) / n)
+    return round(p - half, 3), round(p + half, 3)
+
+def mcnemar_exact(b_wins, a_wins):           # two-sided sign test on the discordant tasks
+    n = b_wins + a_wins
+    tail = sum(comb(n, i) for i in range(max(b_wins, a_wins), n + 1)) / 2 ** n
+    return round(min(1.0, 2 * tail), 3)
+
+def paired_se(both, a_only, b_only, neither):
+    n = both + a_only + b_only + neither
+    d = [0] * (both + neither) + [-1] * a_only + [1] * b_only
+    mean = sum(d) / n
+    return mean, sqrt(sum((x - mean) ** 2 for x in d) / (n - 1) / n)
+
+print("n=20, 19 pass  normal", normal(19, 20), " wilson", wilson(19, 20))
+for wins in [(14, 6), (15, 5), (11, 9)]:
+    print("B wins, A wins", wins, " p =", mcnemar_exact(*wins))
+
+# 200 tasks. A passes 150, B passes 158. Only the 20 discordant tasks move the difference.
+delta, se = paired_se(both=144, a_only=6, b_only=14, neither=36)
+unpaired = sqrt(0.75 * 0.25 / 200 + 0.79 * 0.21 / 200)
+print(f"delta {delta:+.3f}, paired SE {se:.3f}, unpaired SE {unpaired:.3f}")
+print(f"paired 95% CI [{delta - 1.96 * se:+.3f}, {delta + 1.96 * se:+.3f}]")
+print(f"unpaired 95% CI [{delta - 1.96 * unpaired:+.3f}, {delta + 1.96 * unpaired:+.3f}]")
+```
+
+Output:
+
+```text
+n=20, 19 pass  normal (0.854, 1.046)  wilson (0.764, 0.991)
+B wins, A wins (14, 6)  p = 0.115
+B wins, A wins (15, 5)  p = 0.041
+B wins, A wins (11, 9)  p = 0.824
+delta +0.040, paired SE 0.022, unpaired SE 0.042
+paired 95% CI [-0.004, +0.084]
+unpaired 95% CI [-0.042, +0.122]
+```
+
+Two things to read here. The normal interval on 19 of 20 runs past 1.0, which is why small samples get Wilson. And pairing halves the standard error on the same data, but with 14 wins and 6 losses the paired interval still touches zero, which matches the McNemar result: promising, not settled.
 
 ### A worked example that needs this
 
@@ -201,34 +256,6 @@ Lab: AndroidWorld report → improvement ([upstream `chapter7/android-world`](ht
 
 ---
 
-## Metric pitfalls
-
-From the KDD 2017 "Dirty Dozen" paper on online experiments, the ones that bite LLM evals most:
-
-| Pitfall | In LLM evals |
-|---|---|
-| **Metric sample ratio mismatch** | Version B errored on 8% of tasks, which were dropped. B's pass rate is over its easier 92% |
-| **Ratio metrics with changing denominators** | "Grounding rate" rose because B answers fewer questions (refuses more) |
-| **Novelty effects** | Online, users engage more with any change for the first week |
-| **Overall vs. segment confusion** | The slicing problem above |
-| **Ignoring the error bar** | Shipping on +2 points over 50 tasks |
-
-Rule: **never let errors or refusals silently leave the denominator.** Count errors as failures. For refusals, it depends on whether declining was a legitimate answer. Where the system should have answered, a refusal is a failure. Where "I don't know" is acceptable, counting it as a failure scores a confident wrong answer the same as an honest abstention, which pushes the system toward guessing ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09)). In that case report three rates: correct, wrong and abstained. Or use a grader that penalizes wrong answers more than abstentions ([04](04-graders.md#binary-vs-scales)).
-
-### A cautionary write-up
-
-The fine-tuning evaluation in *LLM Engineer's Handbook* (ch. 7) shows how many of these pitfalls fit in one table. Two fine-tuned 8B models and Llama-3.1-8B-Instruct answered 334 test prompts. A GPT-4o-mini judge scored each answer once, at temperature 0.8, on 1–3 scales for accuracy and style:
-
-| Model | Accuracy | Style |
-|---|---|---|
-| TwinLlama-3.1-8B (SFT) | 2.45 | 2.04 |
-| TwinLlama-3.1-8B-DPO | 2.46 | 2.12 |
-| Llama-3.1-8B-Instruct | 2.62 | 1.86 |
-
-The text reads the 0.08 style gap between DPO and SFT as DPO "leading" and the 0.16 accuracy gap as Instruct having "a slight edge". There's no error bar, no repeat run of a sampled judge, no paired comparison and no human check of the style judge. Any of those gaps may be noise. The chapter's best advice is the qualitative step: read the answers, because reading catches mistakes like a wrong chat template or the wrong model being loaded, which no score will flag.
-
----
-
 ## Report template
 
 ```
@@ -257,4 +284,75 @@ Decision: do not ship. Investigate refusal behavior for non-English.
 
 ---
 
-→ Next: [10-evals-in-ci.md](10-evals-in-ci.md) — turning a result into a gate.
+## Pitfalls
+
+From the KDD 2017 "Dirty Dozen" paper on online experiments, the ones that bite LLM evals most:
+
+| Pitfall | In LLM evals (symptom) | Fix |
+|---|---|---|
+| **Metric sample ratio mismatch** | Version B errored on 8% of tasks, which were dropped. B's pass rate is over its easier 92% | Count the errored tasks for both arms, and report the count |
+| **Ratio metrics with changing denominators** | "Grounding rate" rose because B answers fewer questions (refuses more) | Report answer rate beside grounding, over the same rows |
+| **Novelty effects** | Online, users engage more with any change for the first week | Run past the first week before reading the result |
+| **Overall vs. segment confusion** | The slicing problem above | Labelled slices, each with its n |
+| **Ignoring the error bar** | Shipping on +2 points over 50 tasks | A paired CI on the difference |
+
+Two more from this chapter, outside that paper:
+
+- **Treating repeats as new tasks.** Symptom: 100 tasks run five times are reported as n = 500, and the interval looks far too tight. Fix: average within a task, or cluster by it.
+- **Picking a winner among many slices.** Symptom: one slice of 20 is "significant". Fix: declare hypotheses up front, correct for the number of tests, or re-run the positive result as an independent confirmation.
+
+Rule: **never let errors or refusals silently leave the denominator.** Count errors as failures. For refusals, it depends on whether declining was a legitimate answer. Where the system should have answered, a refusal is a failure. Where "I don't know" is acceptable, counting it as a failure scores a confident wrong answer the same as an honest abstention, which pushes the system toward guessing ([arXiv:2509.04664](https://arxiv.org/abs/2509.04664) (Kalai et al., 2025-09)). In that case report three rates: correct, wrong and abstained. Or use a grader that penalizes wrong answers more than abstentions ([04](04-graders.md#binary-vs-scales)).
+
+### A cautionary write-up
+
+The fine-tuning evaluation in *LLM Engineer's Handbook* (ch. 7) shows how many of these pitfalls fit in one table. Two fine-tuned 8B models and Llama-3.1-8B-Instruct answered 334 test prompts. A GPT-4o-mini judge scored each answer once, at temperature 0.8, on 1–3 scales for accuracy and style:
+
+| Model | Accuracy | Style |
+|---|---|---|
+| TwinLlama-3.1-8B (SFT) | 2.45 | 2.04 |
+| TwinLlama-3.1-8B-DPO | 2.46 | 2.12 |
+| Llama-3.1-8B-Instruct | 2.62 | 1.86 |
+
+The text reads the 0.08 style gap between DPO and SFT as DPO "leading" and the 0.16 accuracy gap as Instruct having "a slight edge". There's no error bar, no repeat run of a sampled judge, no paired comparison and no human check of the style judge. Any of those gaps may be noise. The chapter's best advice is the qualitative step: read the answers, because reading catches mistakes like a wrong chat template or the wrong model being loaded, which no score will flag.
+
+## Try it
+
+1. You look at 20 slices at α = 0.05 and nothing really changed. What's the chance that at least one looks significant? And with 6 pre-declared hypotheses, what Bonferroni threshold keeps the family at 0.05?
+
+   <details><summary>Answer</summary>
+
+   1 − 0.95²⁰ = **0.64**, so a "significant" slice among 20 is more likely than not. For 6 hypotheses, 0.05 / 6 = **0.0083** per test. Without the correction the chance of a false positive across 6 is 1 − 0.95⁶ = 26%.
+
+   </details>
+
+2. Work out the 95% margin (1.96 · SE) in points for n = 50 at p = 0.80, n = 100 at p = 0.70 and n = 200 at p = 0.80.
+
+   <details><summary>Answer</summary>
+
+   **±11.1**, **±9.0** and **±5.5**. The middle one is the "100 at 70%" case: 70% ± 9 points. Each row shows why the "How many tasks" guide asks for 400 to 800 tasks to see a 5-point change.
+
+   </details>
+
+3. Change the discordant counts in the script's last run to `a_only=5, b_only=15`, keeping the total at 200 (`both=144, neither=36`). Does the 95% paired interval now clear zero?
+
+   <details><summary>Answer</summary>
+
+   Yes. The delta is +0.050 with paired SE 0.022, so the interval is about [+0.007, +0.093], in line with McNemar's p = 0.041 for 15–5. One flipped task moved the verdict, so report the interval and don't treat 0.05 as a cliff.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Version B got 80% and A got 72% on 50 tasks. Ship? | Not on that. At n = 50 and p = 0.80 the 95% interval is 69% to 91%, so the two are not distinguishable. Compare them paired and collect more tasks. |
+| How many tasks to detect a 5-point change? | About 400 to 800, against 50 to 100 for 15 points and 2,500 or more for 2. Each 3× smaller difference needs about 10× the samples, by OpenAI's rule of thumb as Huyen quotes it. |
+| Why compare on the same tasks? | Most tasks pass or fail on both versions, so the differences are mostly zero and their SE is much smaller than either rate's. In this chapter's made-up 200-task example the SE falls from 0.042 unpaired to 0.022 paired. |
+| What is McNemar's test telling you? | Only discordant tasks carry information. At 14 wins and 6 losses the exact p is 0.115, suggestive at best, at 15–5 it's 0.041, and at 11–9 it's 0.824. |
+| You ran 100 tasks five times. What's your n? | 100, not 500, because repeats of a task are correlated. Average within a task or cluster by it. Miller reports a clustered SE of 1.34 against a naive 0.44 on DROP, over 3× larger, for the same reason: rows that share a document aren't independent. |
+| Overall score rose 1 point, and non-English fell 17. What do you do? | Hold the release and read those transcripts. An average can rise while a slice collapses, and with enough mix change it can even reverse (Simpson's paradox). Check the slice's n too. |
+| Version B's pass rate rose, but it errored on 8% of tasks. What's the first check? | The denominator. If those tasks were dropped, B is being scored on an easier 92%. Put them back in the reported rate, and list them. |
+
+## Next
+
+[10-evals-in-ci.md](10-evals-in-ci.md): turning a result into a gate.

@@ -14,7 +14,8 @@ const symbols = `function (s) { return s.trim().toLowerCase().replace(/[^a-z0-9]
 const accents = `function (s) { return s.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }`;
 const hardcoded = `function (s) { return ({ "Hello World": "hello-world", "  Trim me  ": "trim-me", "Already-slugged": "already-slugged", "Rock & Roll!": "rock-roll" })[s]; }`;
 
-export const honest = scripted([lower, dashes, accents]);
+export const makeHonest = () => scripted([lower, dashes, accents]);
+export const honest = makeHonest();
 /** Reaches 4/4 visible by memorising the answers. A loop that trusts visible checks ships this. */
 export const gamer = scripted([lower, dashes, hardcoded]);
 /** Fails the same way forever. */

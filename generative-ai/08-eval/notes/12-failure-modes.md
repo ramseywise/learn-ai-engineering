@@ -16,11 +16,13 @@ sources:
   - https://arxiv.org/abs/2312.11805
   - https://doi.org/10.18653/v1/2023.findings-acl.824
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 12 — When Evals Go Wrong
 
 > An eval is software and a measurement, so it fails both ways: bugs that produce wrong scores, and right scores that stop meaning what you think. When a number moves, suspect the eval before the agent.
+
+A score drops, the team spends two days rewriting the prompt, and the cause turns out to be a judge model that updated itself. The opposite failure is quieter: a score that climbs because errored rows left the denominator, or because the agent learned to game the check. This chapter covers the ways evals themselves go wrong, and the order to debug them in before anyone changes the agent.
 
 ---
 
@@ -36,7 +38,7 @@ A score drop is a claim that the system got worse. Often it's the eval that chan
 | **State leakage** | Flaky, order-dependent failures | Trial 2 sees files trial 1 wrote |
 | **Stale reference** | "Wrong" answers that are now right | Docs updated, gold answer wasn't |
 | **Version mismatch** | A jump on no change | Judge model updated, dataset v3 vs v4 |
-| **Dropped rows** | A jump in pass rate | Errored tasks silently left the denominator ([09](09-reading-results.md#metric-pitfalls)) |
+| **Dropped rows** | A jump in pass rate | Errored tasks silently left the denominator ([09](09-reading-results.md#pitfalls)) |
 
 ### The debug order
 
@@ -61,6 +63,53 @@ flowchart LR
 5. **Only then** change the model, prompt, tools or agent logic.
 
 Skipping to step 5 means "fixing" an agent that wasn't broken, and sometimes breaking it.
+
+The order fits a short function. These runs are invented: a 300-task baseline at 80%, then four runs that each have a different cause:
+
+```python
+def triage(prev, cur):
+    """Walk the debug order. Stop at the first step that explains the change."""
+    if cur["errors"] > prev["errors"] or cur["rows_scored"] < prev["rows_scored"]:
+        return f"infra: errors {prev['errors']} -> {cur['errors']}, rows scored {prev['rows_scored']} -> {cur['rows_scored']}"
+    changed = [k for k in prev["versions"] if prev["versions"][k] != cur["versions"][k]]
+    if changed:
+        return f"versions: {changed} changed, runs are not comparable"
+    moved = {s: round(cur["slices"][s] - prev["slices"][s], 2) for s in prev["slices"]}
+    worst = min(moved, key=moved.get)
+    if moved[worst] <= -0.10:
+        return f"slice: {worst} moved {moved[worst]:+.2f}, read its flipped transcripts"
+    return "read 10-20 failed transcripts with their grades, then consider the agent"
+
+def headline(run):
+    return round(run["passed"] / run["rows_scored"], 3)
+
+base = {"passed": 240, "rows_scored": 300, "errors": 0,
+        "versions": {"dataset": "v4", "judge": "grounding-v2"}, "slices": {"billing": 0.82, "how-to": 0.80}}
+
+cases = {
+    "rate jumped": dict(base, passed=230, rows_scored=270, errors=30),
+    "judge bumped": dict(base, passed=222, versions={"dataset": "v4", "judge": "grounding-v3"}),
+    "one slice fell": dict(base, passed=222, slices={"billing": 0.68, "how-to": 0.80}),
+    "small drift": dict(base, passed=234, slices={"billing": 0.80, "how-to": 0.79}),
+}
+print("baseline", headline(base))
+for name, run in cases.items():
+    print(f"{name:15} {headline(run)}  {triage(base, run)}")
+print("errors counted as fails:", round(230 / 300, 3))
+```
+
+Output:
+
+```text
+baseline 0.8
+rate jumped     0.852  infra: errors 0 -> 30, rows scored 300 -> 270
+judge bumped    0.74  versions: ['judge'] changed, runs are not comparable
+one slice fell  0.74  slice: billing moved -0.14, read its flipped transcripts
+small drift     0.78  read 10-20 failed transcripts with their grades, then consider the agent
+errors counted as fails: 0.767
+```
+
+The first run looks like a win and is really 30 lost tasks: counted as fails, the rate is 0.767. None of these results is yet a reason to edit the agent. The function checks slices before transcripts only because a slice tells you which transcripts to read first.
 
 ---
 
@@ -169,7 +218,7 @@ The quietest failure: everything works and the metric doesn't track what users c
 
 - **Generic metrics** ("helpfulness", "coherence") instead of metrics from error analysis ([02](02-defining-correct.md#find-failure-modes-by-reading-error-analysis)).
 - **Wrong unit**: per-turn scores look fine while conversations fail to resolve.
-- **Wrong denominator**: grounding rate rises because the system answers less ([09](09-reading-results.md#metric-pitfalls)).
+- **Wrong denominator**: grounding rate rises because the system answers less ([09](09-reading-results.md#pitfalls)).
 - **Offline–online gap**: eval set doesn't look like production traffic any more.
 
 Check periodically that offline scores **predict** online outcomes. If the version that won offline doesn't win online, the eval is measuring something else.
@@ -210,4 +259,55 @@ Schedule maintenance: review failure labels quarterly, prune dead rows, re-calib
 
 ---
 
-→ Next: [13-case-study-support-agent.md](13-case-study-support-agent.md) — every chapter applied to one real system.
+## Pitfalls
+
+- **Changing the agent first.** Symptom: "fixes" that don't move the score, or that break something. Fix: follow the debug order: infra, versions, traces and grades, slices, and only then the agent.
+- **Believing a jump.** Symptom: a win on a no-change run, from dropped rows or a bumped dataset or judge. Fix: put errors and version IDs in every report, and be as suspicious of a jump up as of a drop.
+- **Keeping a saturated suite as a capability measure.** Symptom: everything scores 90%+ and versions can't be told apart. Fix: graduate those tasks to a regression suite, and add harder ones or raise the bar with pass^k.
+- **Optimizing against the metric.** Symptom: scores rise while users don't notice, as with Claude 3.7 Sonnet special-casing tests. Fix: several dimensions with guardrails, held-out tests the optimizer can't see, and transcripts of the biggest gains.
+- **Overfitting the dev set.** Symptom: dev gains stop transferring. On 50 tasks, one lucky flip is 2 points. Fix: a held-out test read per release rather than per change, and fresh dev rows from production.
+- **Contaminated rows.** Symptom: scores far above similar unseen tasks, or a drop on paraphrases. Fix: keep eval rows out of few-shot examples, fine-tuning logs and the retrieval index, and prefer private, recent or regenerated tasks.
+- **Eval debt.** Symptom: thresholds set once, stale references, and two drifted copies of a grader. Fix: quarterly label reviews, pruning dead rows, re-calibrating judges and retiring metrics nobody acts on.
+- **An offline eval that doesn't predict online.** Symptom: the offline winner doesn't win online. Fix: check that prediction periodically, and when it fails treat the eval, not the launch, as the thing to fix.
+
+## Try it
+
+1. For each symptom, name the first thing you'd check. (a) One task is at 0% on every version. (b) Pass rate rises 5 points on a run with no change. (c) A test passes on one order and fails on another. (d) The answer "wrong" per the reference is right per current docs.
+
+   <details><summary>Answer</summary>
+
+   (a) Broken task: unreachable state, wrong reference or missing permission. (b) Dropped rows or a version mismatch: check the error count, denominator and versions. (c) State leakage between trials. (d) Stale reference: update the gold answer.
+
+   </details>
+
+2. In the script, the "rate jumped" run passes 230 of 270 scored rows, and 30 rows errored. Compute the rate each way, and say which one a release report should show.
+
+   <details><summary>Answer</summary>
+
+   230 / 270 = **0.852** with errors dropped, and 230 / 300 = **0.767** with errors as failures. The script's baseline is 0.80, so it's a rise on one reading and a fall on the other. Fix the errors and re-run, and if you must report now, show 0.767 with the error count beside it.
+
+   </details>
+
+3. You've made 8 prompt tweaks in a row, each keeping whatever scored better on a 50-task dev set, and the dev score rose 8 points. What do you do before believing it?
+
+   <details><summary>Answer</summary>
+
+   Run the held-out test, since one flip is 2 points on 50 tasks and selection across 8 tweaks can produce a rise like this one. If dev and test diverge, you've overfit. Refresh dev from production and keep reading test per release.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| The score dropped this morning. What's your order? | Infrastructure, then versions, then 10 to 20 failed traces with their grades, then slices, and only then the agent. |
+| How do you handle a saturated eval? | Graduate its tasks into a regression suite and add harder ones. Public benchmarks do the same, as with GLUE to SuperGLUE and MMLU to MMLU-Pro, or o3 (Medium) at 53.0% on ARC-AGI-1 and 3.0% on ARC-AGI-2. |
+| Give examples of Goodhart in agent evals. | Answers padded for a verbosity-biased judge, a code agent editing tests rather than code, 👍 optimized into flattery, and escalation rate cut until it won't escalate when it should. |
+| How can test-set scores leak? | Every reported score leaks some information. ARC Prize disclosed about 10,000 scores against the same 100 private tasks from 2020 to 2024, enough for teams to fit the private set. |
+| How do you detect contamination? | Scores well above similar unseen tasks, verbatim completions of task text, and drops on paraphrases. N-gram overlap and perplexity are the two heuristics, with different costs. |
+| Provider silently updates the model. What protects you? | Pin versions and re-run on each model change. Chen et al. found GPT-3.5 and GPT-4 scores changed significantly on many benchmarks from March to June 2023. |
+| Offline scores improve each release, but resolution is flat. What's going on? | The eval has stopped measuring what users care about, through a generic metric, wrong unit, wrong denominator, or a set that no longer resembles traffic. Check whether offline wins predict online wins. |
+
+## Next
+
+[13-case-study-support-agent.md](13-case-study-support-agent.md): every chapter applied to one real system.

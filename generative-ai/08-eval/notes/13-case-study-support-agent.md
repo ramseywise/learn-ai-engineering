@@ -1,3 +1,7 @@
+---
+cleaned: 2026-11-01
+---
+
 # 13 · Case Study: Evaluating a Multi-Agent Support System
 
 > One team applied notes 01–12 to a real system and recorded what they did, mistakes included. The system is a RAG-grounded, multi-agent customer-support assistant. It has a root agent that routes to domain sub-agents (invoices, customers, products, quotes) and a help-centre agent that answers from retrieved articles. Three implementations ran side by side: an ADK agent, a LangGraph agent and a plain RAG baseline. They shared one schema and one eval set. Project-specific paths have been stripped. The design decisions and the numbers are as the team recorded them.
@@ -303,4 +307,54 @@ A guardrail suite keeps safety behaviour from regressing silently ([12](12-failu
 
 ---
 
-→ Back to the [README](../README.md).
+## Pitfalls
+
+- **Feeding graders URLs.** Symptom: the custom grader returned a flat 0.5 and the others produced noise, so correlations were low. Fix: declare inputs on each grader, label `context_missing`, and don't compare graders until the text is wired in.
+- **Validating judges only against other judges.** Symptom: two judges agree and both are wrong about what users dislike. Fix: check separation against user outcomes, with a proxy label's biases in mind.
+- **Trusting an off-the-shelf metric.** Symptom: DeepEval completeness (Δ −0.042) and escalation (Δ −0.080) scored disliked answers higher. Fix: calibrate on your data, and don't gate on an inverted or zero-separation judge. Custom escalation had a Δ of 0.000.
+- **One blended score.** Symptom: corpus, retrieval, agent and grader problems all look the same. Fix: separate gates with named row pools, and take on a composite only if its F1 beats the best single signal at 3× the cost.
+- **Mixing routing and domain failures.** Symptom: right answer with a wrong path passes retrieval and answer-quality evals, or vice versa. Fix: separate routing and domain strands, each with its own dataset.
+- **Reusing calibration across domains.** Symptom: graders separated strongly on one product's help-centre traffic and near zero on the routing agent's staging traffic. Fix: recalibrate per domain and per judge-prompt version.
+- **Over-reading a small sample.** Symptom: an early draft called custom escalation a reliable discriminator. Fix: at n = 25 per group, read a Δ of 0.03 as noise, and keep a log of corrections.
+
+## Try it
+
+1. Run `tool_trajectory_avg_score` from this chapter on expected a, b, c against: (i) a, b, c; (ii) a, b, c, d; (iii) x, a, b, c. Then a, b against b, a. What would you change about a pass threshold of 0.8?
+
+   <details><summary>Answer</summary>
+
+   (i) 1.0. (ii) 0.75. (iii) **0.0**, because one call inserted at the start shifts every position. a, b against b, a is 0.0 too. At 0.8 a single harmless extra call fails the row, so use it where order is the point and use in-order matching where an extra lookup is fine. The row schema's `match` field exists for this.
+
+   </details>
+
+2. From the table, estimate the standard deviation of scores from Δ and Cohen's d, and then the standard error of the difference at n = 25 per group, for custom answer_relevancy (Δ +0.214, d 0.75) and custom completeness (Δ +0.030, d 0.07).
+
+   <details><summary>Answer</summary>
+
+   SD ≈ Δ / d. For relevancy SD ≈ 0.285, and SE = SD × √(2/25) ≈ **0.081**, so Δ is about 2.6 SE. For completeness SD ≈ 0.43 and SE ≈ **0.12**, so Δ is a quarter of an SE, or noise, as the chapter's caveat says.
+
+   </details>
+
+3. A golden-trace row's expected URL resolves to a known source, but that source isn't in the index. Which pool is it in, and which gates should use it?
+
+   <details><summary>Answer</summary>
+
+   It's in `all_gt` and `source_mapped_gt`, and not in `retrieval_eligible_gt`, so it counts for diagnostics and not for Gate 3, or for generation at Gate 6. It's a coverage finding for corpus QA, not a retrieval failure.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why separate routing and domain evals in a multi-agent system? | They're two failure surfaces. Routing asks if the root picked the right sub-agent, and domain assumes correct routing and asks if the sub-agent used the right tools and produced the right output. |
+| Why eight gates, not one score? | Each gate answers one question on its own row pool, so a retrieval change can't hide behind a generation gain. Any claim names its gate, pool and n. |
+| Low agreement between your grounding grader and two others. Which do you trust? | None yet. In this study the comparison passed URL strings: the custom grader's guard returned 0.5, and the others judged URLs. Check inputs, and then investigate before switching. |
+| Your grader has high recall and another high precision against user sentiment. How do you use them? | The highest-recall one for the gate, to catch what users dislike, and the highest-precision one for building golden traces, where false positives pollute labels. |
+| A judge's liked and disliked means differ by under 0.05. Next step? | Iterate on the prompt (the study's `score_delta` rule). Custom answer_relevancy went from Δ −0.080 at v2 to +0.214 at v3 on the same sample. |
+| When is a composite grader worth it? | When its F1 against sentiment beats the best single signal, which it must do to justify 3× the cost. |
+| What's the main limit of a 50-task, liked-versus-disliked calibration? | At n = 25 per group, a Δ of 0.03 is noise, and sentiment is a proxy label with its own biases. Results also don't transfer: strong separation on help-centre traffic fell near zero on routing-agent staging traffic. |
+
+## Next
+
+[../README.md](../README.md): back to the pillar's chapter map.

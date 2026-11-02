@@ -715,7 +715,7 @@ parts:
           - One `OWNS_STOCK_IN` edge **per quarter**
         takeaway: Start with a minimum viable graph, add document structure, then fuse structured data onto the same entities.
         recall: What does each of the extract, enhance and expand stages add to the SEC graph?
-        source: notes/10-building-kgs-with-llms.md
+        source: notes/10b-assembling-and-maintaining-kgs.md
         notes: >-
           This is our SEC graph. Notice the order. Text first, because it is what you can search. Then structure, so chunks know their neighbours. Then a second source joined by key,
           where a manager owns stock in a company. The quarter sits on the relationship key, so each quarter gets its own edge.
@@ -769,7 +769,7 @@ parts:
           - "Missing: an **`EXPLAIN` validator** before execution"
         takeaway: Text-to-Cypher is a bounded generate-then-verify loop, and listing relationships first reduces invented relationship types.
         recall: What verifies the generated Cypher in the QA agent, and what's still missing?
-        source: notes/11-kg-rag-and-text-to-cypher.md
+        source: notes/11b-text-to-cypher-qa-agent.md
         notes: >-
           And here the two graphs touch for the first time: a knowledge graph queried by an execution graph. The back-edge carries the database error to the next attempt. The typed state doubles as an audit trail, and a free
           dataset of failures. If you try one thing Monday, put EXPLAIN in front of execution.
@@ -864,7 +864,6 @@ parts:
         bullets:
           - "Degree only: F1 **0.43**; Node2Vec: **0.64**"
           - "Degree and neighbours per faction: **0.93**, stable"
-          - "Elliptic: SAGE caught **82.7%** of illicit nodes; GCN missed **32%**"
           - Predicted links are **claims**, out of default traversals
         takeaway: Features are the graph ML bottleneck, and a false predicted link does what a false merge does to every later traversal.
         recall: Why should predicted edges stay out of default traversals?
@@ -872,6 +871,22 @@ parts:
         notes: >-
           Connected nodes tend to be alike, so encoding that by hand beat an untuned embedding on the book's small example, where the test set is 14 members, so read the numbers small. Compute it from training labels only, or the test nodes leak answers. The figure shows message passing, where
           a GNN learns the same kind of thing. If such a model writes to the shared graph, it goes through the write path like any other agent.
+      - layout: table
+        kicker: Learning on the graph
+        title: Don't know the pattern? Let an encoder learn it
+        header: ["Encoder", "Illicit nodes (Elliptic)", "Link prediction"]
+        widths: [2, 4, 4]
+        rows:
+          - ["GCN", "Missed 32%", "Best recall, 78.6%"]
+          - ["GraphSAGE", "Caught 82.7%, best weighted F1", "Fewest false links, 5.4%"]
+          - ["GAT", "Most parameters, never beat SAGE", "Most parameters, never beat SAGE"]
+        takeaway: Every method is an encoder plus a decoder, and on the book's two runs the heaviest model, GAT, never beat GraphSAGE.
+        recall: What do matrix factorisation, Node2Vec and a GNN have in common?
+        source: notes/13b-representation-learning-and-gnns.md
+        notes: >-
+          When you can't name the pattern, you learn the features instead. Matrix factorisation, random walks and GNNs are all an
+          encoder that turns structure into a vector, and a decoder that turns the vector into the property you care about.
+          These are two runs from one book, so read them as a reason to start with GraphSAGE, not as a ranking.
       - layout: steps
         kicker: Monday morning
         title: Build a shared-memory swarm in four gates

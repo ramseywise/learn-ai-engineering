@@ -13,11 +13,13 @@ sources:
   - eval-harness.md (retired 2026-10-28)
   - eval-maturity-ladder.md (retired 2026-10-28)
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 11 — Production and the Maturity Ladder
 
 > Offline evals predict. Production tells you. Sample live traffic by rule, grade it with the same graders, keep humans calibrating the judge, and alert on drift from the baseline you set at launch. Then climb: every production failure becomes tomorrow's regression row.
+
+Offline evals only cover the failures you already thought of, and a system that passes them can still decay when a provider updates a model or the questions change. Most systems have no signal when that happens, because they sit at manual review. This chapter is the ladder from "vibes" to continuous production sampling, plus what to sample, how to alert on drift without false alarms, and when to trust an A/B test or a thumbs-down.
 
 ---
 
@@ -107,10 +109,64 @@ Detecting it:
 1. **Capture a baseline at launch**: online grader scores, efficiency metrics, feedback rate, escalation rate, per slice.
 2. **Run the same pipeline continuously** on the sample.
 3. **Alert on divergence** beyond a margin that accounts for noise ([09](09-reading-results.md)). Daily rates on small samples are noisy; use rolling windows.
-4. **Watch the inputs too.** Topic or intent mix shifting (cluster embeddings of queries, compare to the baseline mix) warns you before quality metrics move. Make it a test rather than an eyeball: keep a reference window (launch traffic) and a test window (recent traffic) and compare them with a two-sample test. Use Kolmogorov–Smirnov for a numeric feature such as query length or tool calls per turn, chi-squared for a categorical one such as intent label, and maximum mean discrepancy (MMD) over query embeddings for the text itself (*LLM Engineer's Handbook*, appendix). `alibi-detect` ships `KSDrift` and `MMDDrift`. The p-value is the alert threshold: too loose and the channel fills with false alarms people learn to ignore. The data side of this (data, concept and prediction drift, and Evidently reports) is in [data-engineering 05](../../../data-engineering/05-quality-and-observability/notes/01-monitor.md#three-kinds-of-drift).
+4. **Watch the inputs too.** Topic or intent mix shifting (cluster embeddings of queries, compare to the baseline mix) warns you before quality metrics move. Make it a test rather than an eyeball: keep a reference window (launch traffic) and a test window (recent traffic) and compare them with a two-sample test. Use Kolmogorov–Smirnov for a numeric feature such as query length or tool calls per turn, chi-squared for a categorical one such as intent label, and maximum mean discrepancy (MMD) over query embeddings for the text itself (*LLM Engineer's Handbook*, appendix). `alibi-detect` ships `KSDrift` and `MMDDrift`. The p-value is the alert threshold: too loose and the channel fills with false alarms people learn to ignore. The data side of this (data, concept and prediction drift, and Evidently reports) is in [data-engineering 05](../../../data-engineering/05-quality-and-observability/notes/02-monitors-and-lineage.md#three-kinds-of-drift).
 5. **Rule out plumbing before reacting.** An alert is first a question: is the data valid, did a schema change, is it one outlier? Only a real shift justifies re-tuning the prompt, the index or the model (*LLM Engineer's Handbook*, appendix).
 
 Pin model versions where the provider allows it, so "drift" is something you chose.
+
+Two parts of this chapter can be checked with a simulation. In this invented traffic, the true pass rate is 90%, 25% of failures and 2% of passes get a thumbs-down, and a 6-point drop arrives on day 30 of 60:
+
+```python
+import random
+from math import sqrt
+
+rng = random.Random(11)
+BASE, AFTER, CHANGE_DAY, DAYS, PER_DAY = 0.90, 0.84, 30, 60, 60    # a 6-point drop on day 30
+
+# Part 1: rule-based samples find failures, and overstate how often they happen.
+traffic = []
+for _ in range(10_000):
+    ok = rng.random() < BASE
+    thumbs_down = rng.random() < (0.02 if ok else 0.25)
+    traffic.append((ok, thumbs_down))
+rate = lambda rows: sum(ok for ok, _ in rows) / len(rows)
+flagged = [t for t in traffic if t[1]]
+print(f"true pass rate {rate(traffic):.3f}")
+print(f"thumbs-down sample (n={len(flagged)}) pass rate {rate(flagged):.3f}")
+print(f"random 5% sample   (n=500) pass rate {rate(rng.sample(traffic, 500)):.3f}")
+
+# Part 2: the same margin rule on a daily rate and on a 7-day rolling rate.
+days = [sum(rng.random() < (AFTER if d >= CHANGE_DAY else BASE) for _ in range(PER_DAY)) for d in range(DAYS)]
+
+def alerts(window):
+    fired = []
+    for d in range(window - 1, DAYS):
+        n = window * PER_DAY
+        p = sum(days[d - window + 1:d + 1]) / n
+        margin = 2.58 * sqrt(BASE * (1 - BASE) / n)        # about 99% one-sided noise band around the baseline
+        if p < BASE - margin:
+            fired.append(d)
+    return fired
+
+for window in (1, 7):
+    fired = alerts(window)
+    false = [d for d in fired if d < CHANGE_DAY]
+    first = next((d for d in fired if d >= CHANGE_DAY), None)
+    print(f"window {window}: false alarms before the change {len(false)}, first true alert day {first}, "
+          f"days alerting after the change {len([d for d in fired if d >= CHANGE_DAY])}/30")
+```
+
+Output:
+
+```text
+true pass rate 0.898
+thumbs-down sample (n=448) pass rate 0.435
+random 5% sample   (n=500) pass rate 0.894
+window 1: false alarms before the change 0, first true alert day 35, days alerting after the change 7/30
+window 7: false alarms before the change 0, first true alert day 35, days alerting after the change 25/30
+```
+
+The thumbs-down sample is good at finding failures and useless for estimating a rate, which is why the random sample stays separate. On the alerts, the daily rate at a strict margin fires on only 7 of the 30 bad days, and the rolling window holds the alert on 25 of them.
 
 ---
 
@@ -121,7 +177,7 @@ When offline evals can't settle a question (tone, engagement, real resolution), 
 - **Primary metric** tied to the outcome: resolution without escalation, task completion, retention.
 - **Guardrail metrics** that must not regress: grounding, policy violations, latency, cost per success.
 - **Pre-declare** the metric, sample size and duration ([09](09-reading-results.md#how-many-tasks)). Peeking and stopping on a good day inflates false positives.
-- **Watch the novelty effect**: early engagement lifts often fade ([09](09-reading-results.md#metric-pitfalls)).
+- **Watch the novelty effect**: early engagement lifts often fade ([09](09-reading-results.md#pitfalls)).
 - **Ramp**: 1% → 10% → 50% with guardrail checks at each step.
 - **Separate the mechanism from the target.** If the change is "shorter plan files", plan length is the *mechanism* (what you change), not the *target* (session cost). Shorter plans can cause more edit–check–edit loops and raise total cost. Optimize the target.
 - **Test several doses, not just on/off.** A control plus three progressively stricter variants shows the dose–response curve and where the optimum sits.
@@ -262,4 +318,54 @@ Automating this loop (an agent proposing fixes and an eval accepting or rejectin
 
 ---
 
-→ Next: [12-failure-modes.md](12-failure-modes.md) — how evals themselves go wrong.
+## Pitfalls
+
+- **Reporting pass rates from a failure-seeking sample.** Symptom: quality looks like 43% in the script while the true rate is about 90%. Fix: keep a random sample separate for rates, and use rule-based samples for finding problems.
+- **Alerting on noisy daily rates.** Symptom: false alarms and a flickering signal. In the script, a looser margin on the daily rate gives false alarms, while the 7-day window doesn't. Fix: rolling windows, and a margin that accounts for sample size.
+- **Re-tuning at the first alert.** Symptom: prompt changes aimed at a schema change or one outlier. Fix: an alert is first a question, so rule out plumbing before touching anything, and pin model versions so that drift is something you chose.
+- **Peeking at an A/B test.** Symptom: a win that fades after launch. Fix: pre-declare metric, sample size and duration, ramp 1%, 10%, 50% with guardrails, and allow for the novelty effect.
+- **Optimizing the mechanism and not the target.** Symptom: plan files get shorter while session cost goes up from edit–check–edit loops. Fix: optimize the outcome and record baselines, and test several doses.
+- **Taking feedback at face value.** Symptom: the number looks fine or is oddly bad, as with Uber's 4.8 average and Luma's reversed emoji form. Fix: look at the distribution, test the form, randomize answer order, and keep 👍 as one signal, not the target.
+- **Training on your own feedback loop.** Symptom: the first bias grows, since you only get feedback on what you showed. Fix: keep a random traffic sample among your eval rows, and test for sycophancy (Sharma et al.) if you train on approval.
+
+## Try it
+
+1. In the script, change the margin 2.58 to 1.64, and then to 1.96. What happens to false alarms and to alert days for each window?
+
+   <details><summary>Answer</summary>
+
+   At 1.64, the daily window has 3 false alarms, its first true alert on day 34, and 14 of 30 alert days. The 7-day window doesn't change, with 0 false alarms, day 35 and 25 of 30. At 1.96, the daily window has 0 false alarms, day 35 and 11 of 30. These are results from one seed. The lesson is that tightening a daily rule trades false alarms against missed days, and the window improves both.
+
+   </details>
+
+2. A team has unit tests on output schema, a reviewer agent that runs the output, and an eval set of curated examples, with no traces. Which ladder level are they on? What is the next step?
+
+   <details><summary>Answer</summary>
+
+   Level 2. Level 3 needs two things together: rows harvested from observed failures, and traces of each run showing where it broke. Curated examples without traces don't count. Production needs level 3 or above.
+
+   </details>
+
+3. Design the review sampling for a support agent that has just shipped a model change, using this chapter's rules.
+
+   <details><summary>Answer</summary>
+
+   100% of negative feedback; all or most escalations; high-cost and long conversations by threshold; a separate daily random sample used alone for rates; and elevated or full review for the first 48 hours after the change. The rules should come to about 10 to 20% of traces, this chapter's figure, so tighten thresholds if they select more.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Describe the eval maturity ladder. | 0 manual review, 1 deterministic gates, 2 separated evaluator, 3 eval sets from real failures plus tracing, 4 production sampling with drift alerts. Most systems sit at 0, and production needs 3 or above. |
+| How does an online grader differ from an offline one? | It has no reference for live traffic, so it must be reference-free or judged, and it's run on a sample to control cost. The grader code should be the same one CI uses. |
+| What do you sample from production? | All negative feedback, plus escalations, high cost, long conversations and a random slice, with more for 48 hours after a change. Only the random slice is used to estimate rates. |
+| Scores fell 4 points this week. Your steps? | Check data validity, schema changes and outliers first, then provider model version, then compare input mix against the baseline. Only a confirmed shift justifies re-tuning. |
+| Shadow, canary or A/B? | Shadow gets real inputs but shows you no user reaction, canary exposes 1 to 5% of traffic to catch failures, and A/B measures outcomes with guardrails. They go in that order. |
+| Should you optimize thumbs-up rate? | No. Feedback is sparse and skewed, and optimizing 👍 rewards flattery. Use it as one signal alongside graded samples and outcomes such as resolution. |
+| Your A/B test won on plan length, and session cost rose. Which one counts? | Session cost. Plan length is the mechanism and cost is the target, since shorter plans can cause more edit loops. |
+
+## Next
+
+[12-failure-modes.md](12-failure-modes.md): how evals themselves go wrong.
