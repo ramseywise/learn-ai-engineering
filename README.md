@@ -19,11 +19,11 @@ material, organized into six subjects. Each subject folder has its own README.
 | Subject | What it covers |
 |---|---|
 | [Programming](programming/README.md) | [Python](programming/python/README.md) (foundations → informatics → engineering idioms → pandas), [SQL](programming/sql/README.md) (`SELECT` to query plans, SQL Murder Mystery capstone), [TypeScript](programming/typescript/README.md) (JS for Python developers → typed LLM apps) |
-| [Data Analytics](data-analytics/README.md) | Ten notes from distributions and hypothesis testing to Bayesian inference, Bayesian A/B testing and Bayesian ML, plus Michigan/Wesleyan statistics coursework |
-| [Data Engineering](data-engineering/README.md) | Eight notes on the pipeline (ingest → transform → orchestrate → warehouse → monitor → serve), data architectures and MLOps maturity, backed by the DataTalks Data Engineering and MLOps zoomcamps |
-| [Data Science](data-science/README.md) | Seventeen notes: classical ML, NLP, neural nets and from-scratch builds, practised in Intro to ML in Python, Andrew Ng's ML and Deep Learning courses, Text Analytics with Python and Karpathy's *nn-zero-to-hero* |
-| [Generative AI](generative-ai/README.md) | Seven pillars: LLM fundamentals → RAG → agentic foundations → agentic frameworks → RL & alignment → observability → agentic applications |
-| [AI Engineering](ai-engineering/README.md) | Six foundations: prompt → context → harness → loop → graph → eval |
+| [Data Analytics](data-analytics/README.md) | Six pillars: Python for data analysis (pandas and dataframes) → probability and statistics → experimentation and causality → Bayesian analysis → visualisation and storytelling → applied analyses (forecasting, credit, churn and more) |
+| [Data Engineering](data-engineering/README.md) | Seven pillars built around *Designing Data-Intensive Applications*: storage and compute foundations → ingest and modelling → transform and orchestrate → warehouse, lakehouse and streaming → quality and observability → ML platform → architecture and governance |
+| [Data Science](data-science/README.md) | Four pillars: classical ML → deep learning → NLP → time series and recommenders, practised in Intro to ML in Python, Andrew Ng's ML and Deep Learning courses and Text Analytics with Python |
+| [Generative AI](generative-ai/README.md) | Nine pillars: LLM fundamentals → RAG → agentic foundations → agentic frameworks → RL and alignment → observability → agentic applications → evaluation → LLMs from scratch |
+| [AI Engineering](ai-engineering/README.md) | Five foundations (prompt → context → harness → loop → graph), plus inference as the substrate and two cross-cuts: multimodal, safety and security. Labs in TypeScript and Python |
 
 Generative AI builds things with LLMs; AI Engineering is the discipline that makes them reliable.
 

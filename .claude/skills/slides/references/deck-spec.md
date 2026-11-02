@@ -96,6 +96,7 @@ highlight: [1]             # 0-based row indices to tint
 bold_first: true           # bold the first column (default true)
 ```
 Up to about 8 rows of short cells fits. For more, split the table across two slides.
+The table layout ignores `bullets`: put any takeaway in the title or on its own slide.
 
 ### `flow`: left-to-right boxes with arrows
 ```yaml

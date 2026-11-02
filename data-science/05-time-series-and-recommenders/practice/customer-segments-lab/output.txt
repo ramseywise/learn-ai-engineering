@@ -1,0 +1,149 @@
+versions: numpy 2.5.4, pandas 3.1.0, scikit-learn 1.9.1, umap-learn 0.5.12, statsforecast 2.0.1, matplotlib 3.11.2
+
+=== 1. The data ===
+seed 42, 400 customers, 2023-01-02 for 156 weeks. Segments and features use data before 2025-05-19.
+planted  319,069 transactions  {'saas_growth': 108, 'smb_services': 106, 'early_stage': 75, 'retail_seasonal': 57, 'manufacturing': 54}
+blurred  328,843 transactions  {'saas_growth': 108, 'smb_services': 106, 'early_stage': 75, 'retail_seasonal': 57, 'manufacturing': 54}
+control  315,192 transactions  {'none': 400}
+ customer_id   amount    kind       date
+           0  2209.66 invoice 2023-01-02
+           0   555.41 invoice 2023-01-03
+           0 -4131.02 payable 2023-01-04
+
+=== 2. RFM rules against the planted archetypes ===
+segment          At risk  Champions  Hibernating  Middle  New
+archetype
+early_stage            1         24           13      34    3
+manufacturing          1         16           18      14    5
+retail_seasonal        1         15           17      20    4
+saas_growth            2         37           32      30    7
+smb_services           6         23           36      37    4
+ARI against archetypes 0.004; Spearman(recency, frequency) -0.705
+No customer churns in this generator, so recency carries only invoice rate. That is a limit of the data, and it favours clusters.
+
+=== 3. Clusters on eight behavioural features ===
+world    method                   k  noise silhouette ARI truth
+planted  k-means, best of 2-8     5   0.0%      0.358     0.734
+planted  HDBSCAN m=5              6  21.5%      0.424     0.721
+planted  HDBSCAN m=10             4  32.8%      0.458     0.480
+planted  HDBSCAN m=15             2  46.5%      0.467     0.416
+planted  atlas rule picks hdbscan   4  32.8%      0.458     0.480
+blurred  k-means, best of 2-8     2   0.0%      0.299     0.278
+blurred  HDBSCAN m=5              2  19.8%      0.373     0.185
+blurred  HDBSCAN m=10             0 100.0%     -1.000     0.000
+blurred  HDBSCAN m=15             0 100.0%     -1.000     0.000
+blurred  atlas rule picks kmeans   2   0.0%      0.299     0.278
+control  k-means, best of 2-8     2   0.0%      0.252       nan
+control  HDBSCAN m=5              2  13.5%      0.323       nan
+control  HDBSCAN m=10             2  13.2%      0.310       nan
+control  HDBSCAN m=15             0 100.0%     -1.000       nan
+control  atlas rule picks hdbscan   2  13.2%      0.310       nan
+
+Planted world, the rule's choice against the archetypes:
+cluster          -1   0   1    2   3
+archetype
+early_stage      52  23   0    0   0
+manufacturing    40   0  14    0   0
+retail_seasonal   3   0   0   54   0
+saas_growth       1   0   0  107   0
+smb_services     35   0   0    0  71
+
+Control world, what the rule's clusters look like (mean feature, before scaling):
+         top_share  log_burn  log_inflow  customers
+cluster
+-1           0.428     0.097      10.231         53
+ 0           0.045     0.010      10.881        331
+ 1           0.611    -0.553      11.413         16
+
+=== 4. UMAP: what it does to the same customers ===
+world    UMAP settings                m   k  noise sil on map  sil raw ARI truth dist rho 30-NN Jaccard dist
+planted  cosine, seed 42              3  24   5.2%      0.668    0.261     0.632    0.564              0.494
+planted  cosine, seed 42             10   5   0.0%      0.861    0.300     0.828    0.564              0.494
+planted  euclidean, seed 42           3  32   7.0%      0.669    0.149     0.358    0.246              0.492
+planted  euclidean, seed 42          10   6   0.0%      0.857    0.348     0.937    0.246              0.492
+planted  cosine, seed 0               3  36   8.5%      0.607    0.149     0.362    0.331              0.493
+planted  cosine, seed 0              10   5   0.0%      0.872    0.300     0.828    0.331              0.493
+planted  euclidean, seed 0            3  13   0.8%      0.820    0.246     0.881    0.320              0.488
+planted  euclidean, seed 0           10   6   0.0%      0.882    0.348     0.937    0.320              0.488
+planted  cosine, seed 1               3  45  13.2%      0.592    0.110     0.194    0.299              0.498
+planted  cosine, seed 1              10   5   0.0%      0.851    0.300     0.828    0.299              0.498
+planted  euclidean, seed 1            3  21   5.2%      0.770    0.186     0.705    0.383              0.495
+planted  euclidean, seed 1           10   6   0.0%      0.859    0.348     0.937    0.383              0.495
+control  cosine, seed 42              3  51  18.0%      0.559    0.057       nan    0.548              0.633
+control  cosine, seed 42             10   2   0.0%      0.531    0.279       nan    0.548              0.633
+control  euclidean, seed 42           3  48  18.5%      0.548    0.073       nan    0.632              0.611
+control  euclidean, seed 42          10   2   0.0%      0.522    0.279       nan    0.632              0.611
+control  cosine, seed 0               3  51  18.2%      0.549    0.046       nan    0.545              0.629
+control  cosine, seed 0              10   2   0.0%      0.568    0.279       nan    0.545              0.629
+control  euclidean, seed 0            3  48  19.8%      0.512    0.078       nan    0.634              0.610
+control  euclidean, seed 0           10   2   0.0%      0.519    0.279       nan    0.634              0.610
+control  cosine, seed 1               3  47  20.2%      0.534    0.074       nan    0.532              0.637
+control  cosine, seed 1              10   2   0.0%      0.512    0.276       nan    0.532              0.637
+control  euclidean, seed 1            3  48  19.2%      0.505    0.102       nan    0.616              0.609
+control  euclidean, seed 1           10   2   0.2%      0.479    0.281       nan    0.616              0.609
+
+=== 5. Stability: does the clustering come back? ===
+Subsample: ARI between all customers and random 80% subsamples, 20 draws. Temporal: ARI between two non-overlapping years.
+world    method         subsample     sd temporal
+planted  k-means k=5        0.999  0.002    0.902
+planted  k-means k=2        0.820  0.250    0.454
+planted  HDBSCAN m=10       0.603  0.336    0.288
+control  k-means k=5        0.665  0.120    0.398
+control  k-means k=2        0.906  0.085    0.453
+control  HDBSCAN m=10       0.768  0.384    0.000
+
+=== 6. Can anyone act on it? Predicting who burns cash next quarter ===
+Outcome: net cash below zero over the 13 weeks after the freeze. Score: each group's burn rate in the 13 weeks before the
+freeze, used to rank customers; AUC on the outcome. Tree: 5-fold accuracy of a depth-3 tree reproducing the group from features.
+world    grouping               groups    AUC   tree
+planted  burn rate next quarter 0.415
+planted  atlas rule (m=10)           5  0.678  0.823
+planted  k-means k=5                 5  0.692  0.915
+planted  RFM rules                   5  0.526  0.315
+planted  one rule: costs > income    2  0.545  0.997
+planted  random, same sizes          5  0.467
+Burn rate next quarter, by cluster: {-1: 0.58, 0: 0.739, 1: 0.429, 2: 0.23, 3: 0.423}
+control  burn rate next quarter 0.568
+control  atlas rule (m=10)           3  0.578  0.915
+control  k-means k=5                 5  0.744  0.755
+control  RFM rules                   5  0.481  0.345
+control  one rule: costs > income    2  0.754  1.000
+control  random, same sizes          3  0.490
+
+=== 7. Walk-forward forecasting: eight issue dates, four weeks ahead ===
+First issue 2025-05-19, segments frozen there. MASE scale: the same-week-last-year naive, on data before each issue date.
+Customer: mean of each customer's MASE. Segment total: MASE, SMAPE and direction on the summed forecast, averaged over segments and folds.
+
+planted: sizes {-1: 131, 0: 23, 1: 14, 2: 161, 3: 71}
+model                        customer  segment  SMAPE direct folds < naive folds < global
+naive, same week last year      1.384    1.234  113.8   61.7         0/8          0/8
+naive, 4 weeks ago              1.540    1.185  105.0   62.5         5/8          0/8
+global GBM                      1.145    0.945  123.7   68.3         8/8          0/8
+global + segment feature        1.136    0.930  128.6   68.3         7/8          5/8
+one GBM per segment             1.160    0.961  120.2   68.3         6/8          2/8
+one GBM per random group        1.177    0.936  115.1   63.3         8/8          4/8
+one GBM per true archetype      1.165    0.897  108.5   67.5         7/8          6/8
+local MSTL on each total          nan    1.136  117.1   64.2         4/8          1/8
+
+control: sizes {-1: 53, 0: 331, 1: 16}
+model                        customer  segment  SMAPE direct folds < naive folds < global
+naive, same week last year      1.441    1.413   97.1   59.7         0/8          1/8
+naive, 4 weeks ago              1.638    1.482   93.8   47.2         4/8          1/8
+global GBM                      1.199    1.070  104.7   43.1         7/8          0/8
+global + segment feature        1.199    1.093  110.9   48.6         7/8          3/8
+one GBM per segment             1.224    1.082  104.0   41.7         7/8          4/8
+one GBM per random group        1.213    1.035   99.4   62.5         7/8          6/8
+local MSTL on each total          nan    1.355  104.1   45.8         4/8          1/8
+
+Planted world, MASE on each segment's total (-1 is HDBSCAN's noise group):
+         naive, same week last year  global GBM  global + segment feature  one GBM per segment  customers
+segment
+-1                            1.086       0.967                     1.003                1.055        131
+ 0                            1.346       1.052                     1.071                1.154         23
+ 1                            1.039       0.929                     0.910                1.116         14
+ 2                            1.816       1.123                     0.981                0.807        161
+ 3                            0.880       0.657                     0.684                0.676         71
+
+figures: data-analytics/sources/images/applied-segments-umap-control.png, data-science/sources/images/ts-segment-forecast-mase.png
+
+runtime 70 s

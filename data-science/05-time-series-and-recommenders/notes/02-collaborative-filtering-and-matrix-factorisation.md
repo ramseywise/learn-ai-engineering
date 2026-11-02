@@ -372,6 +372,12 @@ Dacrema, Cremonesi and Jannach ([RecSys 2019](https://arxiv.org/abs/1907.06902))
 
 You should take from this a working habit more than a verdict on deep learning. Put popularity, kNN and EASE in every table, tune them with the same care as your favourite model, and be suspicious of any gain that vanishes when you do.
 
+## Practice
+
+| Lab | Covers | Runs |
+|---|---|---|
+| [`music-clustering-lab`](../../01-classical-ml/practice/music-clustering-lab/README.md) | The content-based side: audio and genre features, clusters as a candidate filter and a per-playlist reranker, for items with no interactions yet | Needs internet once to fetch its data; about a minute with `scikit-learn`, `lightgbm`, `pandas`, `pyarrow`, `matplotlib`, `scipy` |
+
 ## Pitfalls
 
 - **Optimising RMSE and shipping a list.** The table above is the demonstration: best RMSE, worse than popularity on top-10. Score what the product shows.

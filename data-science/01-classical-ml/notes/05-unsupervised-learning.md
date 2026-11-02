@@ -358,6 +358,149 @@ Ex8 checks the gradient numerically, adds a new user's ratings, **mean-normalise
 
 ---
 
+## Case: clustering a music library
+
+A worked case from a real project, [listen-wiseer](https://github.com/ramseywise/listen-wiseer/tree/2f03e7dd906cc2362ce602e1fc44849579c2b732), a personal recommender. The full run is the [music clustering lab](../practice/music-clustering-lab/README.md). Every number here was measured there on the project's public feature file, except the one recorded metric marked as such.
+
+**What was asked.** Given a saved playlist, suggest other tracks that belong in it. The design: a Gaussian mixture narrows the candidates ([`clustering.py`](https://github.com/ramseywise/listen-wiseer/blob/2f03e7dd906cc2362ce602e1fc44849579c2b732/src/recommend/modules/clustering.py)), then one LightGBM model per playlist ranks them ([`classifiers.py`](https://github.com/ramseywise/listen-wiseer/blob/2f03e7dd906cc2362ce602e1fc44849579c2b732/src/recommend/modules/classifiers.py)).
+
+**The data.** 2,182 tracks from one person's library, 114 columns. The lab reads 98 through an allow-list, so track names and IDs never load, and it prints aggregates only. The core is nine Spotify audio features such as `energy` and `valence`, plus a position on the Every Noise at Once genre map (`top`, `left`) and a hand-built taxonomy of eight genre groups (`gen_8`). Every track sits in at least one playlist, so there are no true negatives.
+
+**The constraint.** In November 2024 Spotify [cut Audio Features from new Web API apps](https://developer.spotify.com/blog/2024-11-27-changes-to-the-web-api). The project's README says the model "now relies on derived proxies". The code at this commit still reads the stored values, and all 2,182 rows are marked `features_source = spotify`, so the lab turns the claim into a test.
+
+### Scale, then check what the clusters found
+
+```python
+import sys
+sys.path.insert(0, "../practice/music-clustering-lab")
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.metrics import adjusted_rand_score
+from sklearn.preprocessing import StandardScaler
+import music_clustering_lab as lab
+
+df = lab.load_library()   # pinned commit, SHA-256 checked, allow-listed columns only
+raw = df[lab.AUDIO + ["duration_ms"]].to_numpy(float)
+duration_only = KMeans(8, n_init=10, random_state=0).fit_predict(raw[:, [-1]])
+for name, M in [("raw", raw), ("scaled", StandardScaler().fit_transform(raw))]:
+    y = KMeans(8, n_init=10, random_state=0).fit_predict(M)
+    print(name, "ARI with duration-only clusters:", round(adjusted_rand_score(y, duration_only), 3))
+
+X = lab.audio_matrix(df)
+playlists = lab.recover_playlists(df)   # anonymous integers, see "What broke"
+for name, M in [("nine audio", X), ("project's 47", lab.project_matrix(df))]:
+    d = lab.describe_partition(df, lab.fit_gmm(M, 8, 0).predict(M), X, playlists)
+    print(f"{name:13} params {lab.n_params(8, M.shape[1]):5}  audio variance explained "
+          f"{d['audio_variance_explained']:.3f}  NMI decade {d['nmi_decade']:.3f}")
+```
+
+```text
+raw ARI with duration-only clusters: 0.988
+scaled ARI with duration-only clusters: 0.072
+nine audio    params   439  audio variance explained 0.357  NMI decade 0.039
+project's 47  params  9407  audio variance explained 0.031  NMI decade 0.714
+```
+
+Unscaled, milliseconds are the clustering ([scaling](#preprocessing-and-scaling)). Scaling alone isn't enough. The project's matrix adds 24 key and 8 decade one-hots, which at full covariance means 9,407 parameters for 2,182 rows. Its clusters explain 3.1% of the audio variance and mostly sort tracks by decade. Choosing features is choosing what the clusters mean.
+
+### Choosing k: the criteria disagree
+
+```python
+sweep = lab.k_sweep(X).set_index("k")   # 10 seeds per k
+print(sweep.loc[[2, 3, 8, 11, 13], ["bic", "sil_kmeans", "sil_gmm", "ari_gmm", "min_cluster_gmm"]].round(3).to_string())
+shuffled = lab.k_sweep(lab.shuffle_columns(X), seeds=range(3)).set_index("k")
+print("shuffled columns: best BIC at k =", shuffled.bic.idxmin(), "| k-means silhouette at k=2:", round(shuffled.sil_kmeans[2], 3))
+```
+
+```text
+          bic  sil_kmeans  sil_gmm  ari_gmm  min_cluster_gmm
+k
+2   44389.461       0.258    0.086    0.999              830
+3   40616.242       0.236    0.118    0.582              339
+8   30825.144       0.191    0.032    0.718               92
+11  30323.131       0.182    0.040    0.637               49
+13  30356.351       0.177    0.027    0.610               11
+shuffled columns: best BIC at k = 7 | k-means silhouette at k=2: 0.107
+```
+
+![BIC, silhouette and seed agreement against k for k-means and a Gaussian mixture on the nine audio features, with k=8 marked](../../sources/images/wise-music-clustering-lab-fig1.png)
+
+*Image source: this lab's run of `music_clustering_lab.py`, 10 seeds per k*
+
+BIC ([Schwarz 1978](https://doi.org/10.1214/aos/1176344136)) is lowest at 11, though 11 to 13 sit within seed noise and k=13 has a cluster of 11 tracks. Silhouette ([Rousseeuw 1987](https://doi.org/10.1016/0377-0427(87)90125-7), and [here](#comparing-and-evaluating)) peaks at 2 or 3, and it measures distance, so it favours [k-means](#k-means) over a mixture's ellipses by construction. Seed agreement ([ARI](https://doi.org/10.1007/BF01908075)) is highest at 2. The project's k=8 matches its eight taxonomy groups: a product reason, not a measurement, and it should be stated as one.
+
+The shuffle is the check worth copying. Permuting each column separately destroys any real groups. Silhouette falls from 0.258 to 0.107, so the library has some structure. BIC still picks k=7, probably because components are spent fitting skewed features. A BIC minimum doesn't show that groups exist.
+
+### Soft assignments
+
+```python
+posterior = lab.fit_gmm(X, 8, 0, n_init=5).predict_proba(X).max(1)
+print(f"median top posterior {np.median(posterior):.3f}, under 0.8: {(posterior < .8).mean():.1%}")
+for name, v in lab.soft_vs_hard_retrieval(df, playlists, df[lab.AUDIO].to_numpy(float)).items():
+    print(f"{name:12} recall {v['recall']:.3f}  pool {v['pool']:.3f}")
+```
+
+```text
+median top posterior 0.992, under 0.8: 14.1%
+kmeans hard  recall 0.536  pool 0.204
+gmm hard     recall 0.457  pool 0.188
+gmm soft     recall 0.925  pool 0.620
+```
+
+A median posterior of 0.992 sits beside seed agreement of 0.718: a posterior is confidence inside one fitted model, not evidence the model is right. As a filter, soft assignment (keep any cluster at 0.05 or more, the project's threshold) finds 92.5% of held-out playlist members but keeps 62% of the library. Hard GMM loses to plain k-means.
+
+### Naming clusters honestly
+
+Name from the features, use the taxonomy as evidence, and only name a cluster that survives reseeding: median Jaccard of at least 0.75 after matching clusters across 10 seeds ([Hennig 2007](https://doi.org/10.1016/j.csda.2006.11.025)).
+
+| Name | Tracks | Jaccard | Largest `gen_8` group |
+|---|---|---|---|
+| low loudness / high instrumentalness | 158 | 0.908 | ambient 38%, 9.71x its overall share |
+| high speechiness / low instrumentalness | 448 | 0.844 | dance 60%, 1.65x |
+| high valence / high danceability | 511 | 0.767 | dance 70%, 1.94x |
+| Five clusters left unnamed | 1,065 | 0.207 to 0.745 | |
+
+"Ambient" would be a false name for the first row: 62% of it is something else.
+
+### The reranker, and what its score means
+
+One binary model per playlist, on the 1,597 tracks in exactly one playlist and the 26 playlists with at least 20 of them, five-fold twice, with scaler and GMM refit in each training fold.
+
+```python
+rerank = lab.rerank_cv(df, playlists)
+print(rerank.groupby("method")[["auc", "p_at_10"]].mean().sort_values("auc").round(3).to_string())
+print("base rate", round(rerank.base_rate.mean(), 3), "| P@10 ceiling", round(rerank.p_at_10_ceiling.mean(), 3))
+```
+
+```text
+                              auc  p_at_10
+method
+LightGBM t2v only           0.596    0.083
+GMM posterior overlap       0.742    0.147
+cosine to centroid          0.833    0.250
+LightGBM audio+posteriors   0.869    0.394
+LightGBM audio              0.870    0.397
+LightGBM map position only  0.899    0.556
+LightGBM audio+proxies      0.919    0.590
+LightGBM proxies            0.920    0.603
+LightGBM audio+pp (leak)    1.000    0.891
+base rate 0.038 | P@10 ceiling 0.891
+```
+
+An AUC of 0.870 means a random member outranks a random non-member 87% of the time. A P@10 of 0.397 means about four of the top ten belong, against 3.8% by chance. The non-members are tracks saved to *other* playlists, so this measures filing, not taste.
+
+- **Clusters add nothing to the ranker.** Posteriors change AUC by -0.001 (95% CI -0.007 to +0.005 over playlists). Trees already carve the raw features.
+- **Losing audio costs nothing on this task.** Proxies (map position, `gen_8`, year) beat audio by 0.050 (CI 0.028 to 0.075), and adding audio back changes -0.002 (CI -0.015 to +0.012). The same person wrote the taxonomy and filed the playlists, which flatters this result.
+- **The co-occurrence proxy is nearly empty.** `t2v` alone scores 0.596, and its mean cosine is 0.334 within a playlist against 0.323 across.
+
+### What broke
+
+- **A leak in plain sight.** `pp_*` is the mean audio of a track's playlist, so tracks in one playlist share identical values: AUC 1.000. The file has no playlist column, yet this recovers 29 groups. The lab uses it only for anonymous labels.
+- **Zero as missing.** 266 tracks have `top = left = 0`, meaning "not on the map". Proxy clusters partly find that gap (NMI 0.226 against 0.005 for audio), so the reranker treats those zeros as missing.
+- **A recorded metric that needs its setup.** The project's [April run](https://github.com/ramseywise/listen-wiseer/blob/faca2e5/models/metrics/train_lightgbm_20260405_152511.jsonl), written by `train.py`, records mean AUC 0.954 and P@10 0.814 over 28 playlists on one 70/30 split. Rebuilding that recipe here gives 0.947 and 0.635, on a smaller population, so this is a check and not a reproduction. Its centroid uses test positives, yet fixing that gives 0.948. Dropping playlist-derived columns gives 0.934.
+
+---
+
 ## Practice
 
 | Notebook | Covers | Runs |
@@ -365,6 +508,7 @@ Ex8 checks the gradient numerically, adds a new user's ratings, **mean-normalise
 | [`03-unsupervised-learning.ipynb`](../practice/intro-to-ml-in-python/03-unsupervised-learning.ipynb) | Scaling, PCA, eigenfaces, NMF, t-SNE, k-means, agglomerative, DBSCAN, evaluation | Needs internet once: `fetch_lfw_people` downloads ~200 MB; otherwise offline with `scikit-learn>=1.4`, `mglearn` |
 | [`ex7.ipynb`](../practice/ng-machine-learning/ex7/ex7.ipynb) | k-means from scratch, image compression, PCA, eigenfaces | Legacy: Python 2.7; `scipy.misc.imread`/`toimage` removed in SciPy 1.2 (use `imageio` / `PIL`) |
 | [`ex8.ipynb`](../practice/ng-machine-learning/ex8/ex8.ipynb) | Gaussian anomaly detection, collaborative filtering | Legacy: Python 2.7 kernel; data in `ex8/data/` |
+| [`music_clustering_lab.py`](../practice/music-clustering-lab/README.md) | Scaling and feature choice, k-means vs GMM, soft assignment, choosing k with BIC and silhouette, seed stability, naming clusters, a per-playlist LightGBM reranker | Script, not a notebook. Needs internet once to fetch its data; about a minute with `scikit-learn`, `lightgbm`, `pandas`, `pyarrow`, `matplotlib`, `scipy` |
 
 ---
 

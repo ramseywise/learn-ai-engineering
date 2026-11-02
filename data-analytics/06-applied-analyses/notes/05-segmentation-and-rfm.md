@@ -298,6 +298,79 @@ The sample size column confirms that a clean test is possible, just about: 589 p
 - **Why not At risk?** They bought again at 2.6%, and they'd have to more than quadruple to break even. The backward-bending curves in Fader, Hardie and Lee explain why this isn't an accident.
 - **Limits.** The £1.50 cost and 35% margin are assumptions. Breakeven counts one extra order per contact and ignores longer-term value, so it is conservative for a customer who stays. A six-month window is short, and it does not measure anyone's value beyond December. One seasonal half-year also includes Black Friday, so don't expect the same base rates in spring.
 
+## Case: segmenting B2B customers by behaviour
+
+The rest of this chapter asks who to contact. This case asks something else, with other data: can a product sort its business customers into cohorts from their transactions alone, and should it trust the cohorts? The question comes from [atlas](https://github.com/ramseywise/atlas), a public project that uses HDBSCAN with an optional UMAP step and falls back to k-means when the silhouette is below 0.25 or noise is above 50%. Those thresholds are atlas's design choices, not evidence. The code isn't part of the Fernhill script. It lives in the [customer segments lab](../../../data-science/05-time-series-and-recommenders/practice/customer-segments-lab/README.md), which produced every number below.
+
+**The data is synthetic, so none of this measures real-world performance.** The lab's generator, written from atlas's idea with seed 42, simulates 400 businesses over three years in three worlds. *Planted* has five tight archetypes, such as growing SaaS firms and seasonal retailers. *Blurred* has the same five with 2.5 times the spread. *Control* draws every customer from one Gaussian with the planted population's mean and covariance, so there is nothing to find. Finding archetypes a generator planted is a weak test, so the control is the one to watch.
+
+[RFM rules](#scores-and-named-segments) don't answer this. On the planted world they score an adjusted Rand index (ARI) of 0.004 against the archetypes. That isn't a fair verdict on RFM, because no customer churns in this generator, so recency carries little. We need features about how cash moves: eight, over the 52 weeks before 19 May 2025, covering inflow, invoice count and spread, growth, Q4 share, burn, reliance on the largest receipt, and recency. They are scaled as in [Does clustering do better?](#does-clustering-do-better).
+
+```python
+import sys
+sys.path.insert(0, "../../../data-science/05-time-series-and-recommenders/practice/customer-segments-lab")
+from forecast import FIRST_ISSUE
+from generator import make_world
+from segments import behaviour, clustered_silhouette, hdbscan_labels, kmeans_scan, scale, select_best
+
+for world in ("planted", "blurred", "control"):
+    tx, truth = make_world(world, 400)
+    X = scale(behaviour(tx, FIRST_ISSUE, 400))
+    km, k, sil, _ = kmeans_scan(X)
+    hd = hdbscan_labels(X, 10)
+    _, picked, _, _ = select_best(X, 10)
+    print(f"{world:8s} k-means k={k} silhouette {sil:.3f} | HDBSCAN noise {(hd == -1).mean():.1%} silhouette {clustered_silhouette(X, hd):.3f} | rule picks {picked}")
+```
+
+```text
+planted  k-means k=5 silhouette 0.358 | HDBSCAN noise 32.8% silhouette 0.458 | rule picks hdbscan
+blurred  k-means k=2 silhouette 0.299 | HDBSCAN noise 100.0% silhouette -1.000 | rule picks kmeans
+control  k-means k=2 silhouette 0.252 | HDBSCAN noise 13.2% silhouette 0.310 | rule picks hdbscan
+```
+
+K-means assigns everyone. [HDBSCAN](https://doi.org/10.21105/joss.00205) (McInnes, Healy & Astels, JOSS, 2017) extends [DBSCAN](../../../data-science/01-classical-ml/notes/05-unsupervised-learning.md#dbscan) across densities and keeps the clusters that persist. It can refuse to cluster a point, which McInnes and Healy ([ICDM Workshops, 2017](https://doi.org/10.1109/ICDMW.2017.12)) call the difference between clustering and partitioning. The method originates with Campello, Moulavi and Sander ([PAKDD, 2013](https://doi.org/10.1007/978-3-642-37456-2_14)), which we couldn't get an open copy of.
+
+On the blurred world HDBSCAN calls everyone noise (the -1 is the code's marker for no clusters), so the fallback fires as designed. Three other things broke. First, the rule picks HDBSCAN on the planted world even though k-means recovers the truth better, with ARI 0.734 against 0.480. Silhouette leaves noise out, so discarding hard customers raises the score. Second, noise doesn't mean junk: 40 of 54 manufacturers and 52 of 75 early-stage firms are labelled noise, because those archetypes are sparse, and they are real groups. Noise means no dense neighbourhood at this minimum cluster size. Third, the control **passes the gate**. HDBSCAN finds two clusters at silhouette 0.310 where none were planted. The small one, 16 customers, is a feature artefact: firms whose largest single receipt averages 61% of their inflow. With minimum size 15 the same control returns all noise, so the setting decides the answer. Across five fresh control worlds HDBSCAN passes once, and in the other four the fallback hands back two or three k-means clusters, so the rule always returns segments.
+
+### UMAP is for looking
+
+Atlas's optional step runs UMAP, a relative of [t-SNE](../../../data-science/01-classical-ml/notes/05-unsupervised-learning.md#manifold-learning-t-sne), down to two dimensions and then HDBSCAN on the map. At seed 42 with Euclidean distance:
+
+| World | Min size | Clusters | Silhouette on map | Silhouette on features | ARI |
+|---|---|---|---:|---:|---:|
+| Planted | 10 | 6 | 0.857 | 0.348 | 0.937 |
+| Control | 10 | 2 | 0.522 | 0.279 | n/a |
+| Control | 3 | 48 | 0.548 | 0.073 | n/a |
+
+UMAP really helps on the planted world: 0.937 is the best recovery in the lab. But it also makes 48 clusters from one Gaussian at atlas's minimum size of 3, and the score on the map clears 0.25 in every row. **A silhouette measured on the map can't separate the two cases**, while the same labels scored on the features fall to 0.073. The authors warn that UMAP "can tend to find manifold structure within the noise of a dataset" ([McInnes, Healy & Melville, preprint, 2018](https://arxiv.org/abs/1802.03426)). Chari and Pachter ([PLOS Computational Biology, 2023](https://doi.org/10.1371/journal.pcbi.1011288)) report Jaccard distances above 0.7 between neighbours on 2-D maps and in the original space, on single-cell data with far more dimensions than ours. Our eight features give 0.492 on the planted map and 0.611 on the control, still a lot of changed neighbours. The figure shows both failures: early-stage firms split into two islands, which is why five archetypes became six clusters, and one Gaussian grows a satellite.
+
+![UMAP maps: the planted customers form six islands from five archetypes, and the control customers form one mass with a separate satellite island](../../sources/images/applied-segments-umap-control.png)
+
+*Image Source: generated by `customer-segments-lab/lab.py`, seed 42, UMAP seed 42, Euclidean distance. Both worlds are synthetic.*
+
+### Stability, and whether anyone can act on it
+
+Stability asks whether a clustering comes back, on an 80% subsample and on the previous year's data.
+
+| World | Method | Subsample ARI | Previous year ARI |
+|---|---|---:|---:|
+| Planted | k-means, k=5 | 0.999 | 0.902 |
+| Planted | HDBSCAN, min size 10 | 0.603 | 0.288 |
+| Control | k-means, k=2 | 0.906 | 0.453 |
+| Control | HDBSCAN, min size 10 | 0.768 | 0.000 |
+
+K-means with k=2 is very stable on the subsample in a world with no groups. Ben-David, von Luxburg and Pál ([COLT, 2006](https://doi.org/10.1007/11776420_4)) explain why: at large samples stability reflects whether the objective has one minimiser, not whether k is right. Their theorems cover centre-based and spectral methods, so we apply it to k-means only. The previous year's data tells more here: 0.902 with structure, 0.453 without.
+
+Acting needs a decision, so take this one: who burns cash next quarter? Rank customers by their group's burn rate in the prior quarter and score the ranking by AUC. On the planted world k-means gives 0.692 and the rule's clusters 0.678, against 0.526 for RFM and 0.545 for one line, "costs exceed income". On the control, that one line scores 0.754, beating k-means at 0.744 and the rule's clusters at 0.578. Clusters earn their place only by beating that line. A depth-3 tree reproduces the planted k-means groups with 0.915 accuracy, so someone could apply them as written rules.
+
+**What to do.** Run the pipeline on a control before believing it. Score clusters on the features, and report the noise share. Keep UMAP for the picture. Require a later period to agree, and require the clusters to beat a one-line rule on a real decision. One more thing broke in atlas itself: `umap-learn` is in neither its `pyproject.toml` nor its lockfile and the import failure is caught, so a locked install silently skips the UMAP step its README names.
+
+## Practice
+
+| Lab | Covers | Runs |
+|---|---|---|
+| [`customer-segments-lab`](../../../data-science/05-time-series-and-recommenders/practice/customer-segments-lab/README.md) | Behavioural features, RFM rules, k-means, HDBSCAN and atlas's fallback rule, UMAP against a control, stability, actionability, per-segment forecasting | One to four minutes on a laptop CPU, from the pillar folder. Commands and pinned versions are in the lab's README |
+
 ## Pitfalls
 
 - **Never validating the segments.** A segmentation that wasn't scored on a later period is only a description. Hold out a period, every time.

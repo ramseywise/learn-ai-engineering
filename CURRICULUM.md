@@ -16,10 +16,10 @@ sequenced learning paths for each domain.
 | Subject | CURRICULUM.md | Prerequisites | Structure |
 |---|---|---|---|
 | Programming | [programming/CURRICULUM.md](programming/CURRICULUM.md) | None — entry point | Three tracks (Python 01–04, SQL 01–10, TypeScript 01–09), partly in parallel; practice drills live in [sisyphus `drills/`](https://github.com/ramseywise/sisyphus/blob/main/drills/README.md) |
-| Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | Programming: Python 01–04 | Linear, 10 notes: distributions → hypothesis testing → A/B testing → Bayesian inference → Bayesian A/B and ML |
-| Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear, 8 notes: ingest → transform → orchestrate → warehouse → monitor → feature-serve, then architectures and MLOps maturity; two DataTalks zoomcamps as runnable coursework |
+| Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | Programming: Python 01–04 | 6 pillars: Python for data → probability and statistics → experimentation and causality → Bayesian analysis → visualisation and storytelling → applied analyses |
+| Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | 7 pillars: storage and compute foundations (*Designing Data-Intensive Applications*) → ingest and modelling → transform and orchestrate → warehouse, lakehouse and streaming → quality and observability → ML platform → architecture and governance. The DataTalks zoomcamps sit under each pillar's `practice/` |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree: classical-ML core, then the neural-net, NLP, and time-series and recommender arcs. From-scratch (micrograd → nanoGPT) lives in generative-ai 09. Bayesian methods live in data-analytics |
-| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 9 pillars (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications → Eval) |
+| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 9 pillars (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications → Eval → LLMs from scratch) |
 | AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 5-pillar sequential (prompt → context → harness → loop → graph), plus inference as the substrate and two cross-cuts: multimodal, safety and security. Evaluation lives in [generative-ai/08-eval](generative-ai/08-eval/README.md) |
 
 **Reading the table:** "Prerequisites" are recommendations, not gates. You can start
@@ -180,24 +180,18 @@ A pillar is **done** when all five hold:
 
 ### Status
 
-| Pillar | Left to do |
-|---|---|
-| ai-engineering 01–06 | Done on 1–2. Restructured 2026-10-31: each pillar is README + `references.md` + `notes/` (images and code inline) + `slides/` (deck.yaml, .pptx, .pdf) + `sources/` (PDFs, flat `images/`). `templates/`, `notebooks/` and code labs were folded into notes or linked upstream; the `practice/exercises.md` files were deleted. Check 3–5. |
-| ai-engineering 07–09 | Scaffolded 2026-10-31: README with scope and planned notes, `references.md` seeded, empty `notes/` and `sources/`. 07 has its book in `sources/`; 08 and 09 wait on `multimodal` and `safety` becoming homes in `potw.py` so their parked papers route. Checks 1–5 open. |
-| generative-ai 01 LLM fundamentals | Done 2026-10-31 on 1–2: README, references, notes 01–06 (07 open-weight models planned), `practice/01-typescript-sdk/`, book chapters in `sources/`. Check 3–5. The TypeScript lab pins an old model id. |
-| generative-ai 02 RAG | Done 2026-10-31: README, references, notes 01–14, `sources/`. The DLAI snapshot was condensed into notes 02–07 and removed. Check 3–5. |
-| generative-ai 03 agentic foundations | Done 2026-10-31 on 1–2: notes 01–06, three snapshots removed. Left: fold *Design Patterns* chapters 1, 5 and 9, and integrate the three routed book folders in `sources/`. Check 3–5. |
-| generative-ai 04 agentic frameworks | Done 2026-10-31: notes 01–06, two snapshots removed. Check 3–5. |
-| generative-ai 05 RL | Done 2026-10-31 on 1–2: notes 01–05; six off-topic papers parked in `sources/misfiled/`. Check 3–5. |
-| generative-ai 06 observability | Done 2026-10-31: notes 01–05, three Langfuse snapshots removed. Check 3–5. |
-| generative-ai 07 agentic applications | Done 2026-10-31: notes 01–03, references, `practice/` (deep-research-bot, deep_research_bench). The internet-search-agent snapshot was condensed into note 01 and removed. Check 3–5. |
-| data-analytics | Done 2026-10-31: README, CURRICULUM (path only), references, notes 01–14 (01, 03, 05, 07 are stats-gap skeletons added 2026-10-31; see `scripts/papers/subject-areas-plan.md`), `sources/` (14 PDFs), `practice/` (4 items, run-labelled). Both Bayes snapshots removed; `readings/` became `sources/`. Check 4–5. |
-| data-engineering | Done 2026-10-31: README, CURRICULUM (path and prerequisites only), references (with licences), notes 01–08, `sources/` (6 PDFs). The two DataTalks zoomcamp folders stay in place as runnable coursework, run-labelled per module. `sources/` also holds 7 queued ml-systems PDFs from the router: integrate with `/papers` or `/chapter`. Check 4–5. |
-| data-science | Done 2026-10-31: README, CURRICULUM (path and prerequisites only), references, notes 01–17 (classical ML, the NLP arc, Ng neural nets, micrograd → makemore → nanoGPT). `practice/` keeps Müller & Guido, Sarkar, nn-zero-to-hero and own notebooks; Ng coursework untouched. `intro-to-nlp` (own coursework) kept in `practice/`; `readings/` became `sources/`. Check 3 partly: stale APIs are labelled per note. Check 4–5. |
-| programming | No snapshots (vendored TS exercises, SQL data and McKinney notebooks are kept as practice, see [Sources](#sources)). Checks 1, 3 and 5 verified 2026-10-31: track READMEs have Layout and Syllabus, every practice set and script is run-labelled, interview guide Pillar 0 and drills are linked. Check 4 waits on librarian import and drills tagging `concepts`. |
+Every pillar now has a README, `references.md`, `notes/` written as chapters, `slides/` (deck.yaml, .pptx, .pdf) and `practice/`. `data-analytics`, `data-science` and `data-engineering` share a subject-level `sources/`. Numbers below are chapters.
 
-Every pillar is now condensed (check 2). What remains is check 3 (run every notebook offline or
-label it), check 4 (librarian import) and check 5 (drills tagged with `concepts`).
+| Subject | Pillars | Left to do |
+|---|---|---|
+| ai-engineering | 01 prompt 12, 02 context 14, 03 harness 10, 04 loop 10, 05 graph 16, 07 inference 9, 08 multimodal 7, 09 safety 6 | Labs run in TypeScript and Python on a stub and a local fake server, not yet against a live API |
+| generative-ai | 01 LLM fundamentals 14, 02 RAG 12, 03 agentic foundations 7, 04 frameworks 7, 05 RL 14, 06 observability 6, 07 applications 6, 08 eval 13, 09 LLMs from scratch 3 | Illustrative code in some chapters not run |
+| data-analytics | 01 Python for data 7, 02 probability and statistics 6, 03 experimentation 4, 04 Bayesian 6, 05 visualisation 5, 06 applied analyses 6 | Several visualisation and credit books cited but not read in full |
+| data-engineering | 01 foundations 8, 02 ingest and modelling 4, 03 transform and orchestrate 5, 04 warehouse, lakehouse and streaming 5, 05 quality 3, 06 ML platform 5, 07 architecture and governance 2 | Cloud and cluster code illustrative; zoomcamps not re-run |
+| data-science | 01 classical ML 10, 02 deep learning 6, 03 NLP 7, 05 time series and recommenders 3 | 01 note 09 still needs chapter structure |
+| programming | Python, SQL and TypeScript tracks, with decks used as flashcards in librarian | None |
+
+Remaining across subjects: run every notebook offline or label it (check 3), and tag drills with `concepts` (check 5). Chapter counts drift; `make chapter-check PILLAR=<path>` is the check.
 
 ---
 

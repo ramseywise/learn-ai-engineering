@@ -30,15 +30,18 @@ from imblearn.pipeline import Pipeline
 from imblearn.under_sampling import RandomUnderSampler
 from joblib import Parallel, delayed
 from scipy.stats import norm
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 warnings.filterwarnings("ignore", message=".*xlrd engine is deprecated.*")
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
@@ -177,6 +180,22 @@ def psi(reference, current, bins=10, eps=1e-4):
     return float(np.sum((c - r) * np.log(c / r)))
 
 
+def psi_levels(reference, current, eps=1e-4):
+    """PSI for a coded column: one bin per level, because quantile bins can merge the levels."""
+    levels = np.union1d(reference, current)
+    r = np.array([np.mean(reference == v) for v in levels]) + eps
+    c = np.array([np.mean(current == v) for v in levels]) + eps
+    return float(np.sum((c - r) * np.log(c / r)))
+
+
+DISCRETE = ["EDUCATION"] + PAY
+
+
+def feature_psi(xref, x):
+    """PSI per feature: quantile bins for amounts, one bin per level for coded columns."""
+    return {c: psi_levels(xref[c], x[c]) if c in DISCRETE else psi(xref[c], x[c]) for c in FEATURES}
+
+
 def platt(p_val, y_val):
     m = LogisticRegression(C=1e6, max_iter=1000).fit(logit(p_val).reshape(-1, 1), y_val)
     return lambda p: m.predict_proba(logit(p).reshape(-1, 1))[:, 1]
@@ -205,6 +224,10 @@ LEARNERS = {
     "tree": (
         lambda s: DecisionTreeClassifier(random_state=s),
         [{"max_depth": d, "min_samples_leaf": m} for d in (4, 8) for m in (5, 50)],
+    ),
+    "neural net": (
+        lambda s: MLPClassifier(hidden_layer_sizes=(32,), max_iter=60, random_state=s),
+        [{"alpha": 1e-3}],
     ),
 }
 
@@ -265,6 +288,7 @@ def fit_best(xtr, ytr, xva, yva, method, learner, seed):
 
 # ---------------------------------------------------------------------------------- comparison
 def one_seed(raw, seed, prevalence, learner, methods):
+    warnings.filterwarnings("ignore", category=ConvergenceWarning)  # workers do not inherit filters
     rare, _ = make_rare(raw, prevalence, seed)
     tr, va, te = split(rare, seed)
     xtr, xva, xte = features(tr), features(va), features(te)
@@ -326,7 +350,7 @@ def paired(df, a, b, col):
     """Mean difference a minus b across seeds, its SD, and how often a is lower."""
     wide = df.pivot(index="seed", columns="method", values=col)
     d = wide[a] - wide[b]
-    return d.mean(), d.std(ddof=1), int((d < 0).sum()), len(d)
+    return round(float(d.mean()), 4), round(float(d.std(ddof=1)), 4), int((d < 0).sum()), len(d)
 
 
 # ----------------------------------------------------------------------------------- the leak
@@ -408,16 +432,18 @@ def _train_seed(raw, seed):
     pos, neg = tr[tr[TARGET] == 1], tr[tr[TARGET] == 0]
     rng = np.random.default_rng(seed + 2000)
     rows = []
-    grid = [(e, int(round(e * 32.33))) for e in (25, 50, 100, 200, 433)] + [
-        (433, 433), (433, 1299), (433, 4330), (100, 14000 - 1)]
+    odds = len(neg) / len(pos)
+    grid = [(int(len(pos) * f), int(len(neg) * f)) for f in (1 / 16, 1 / 8, 1 / 4, 1 / 2)]  # same rate, fewer rows
+    grid += [(25, len(neg)), (100, len(neg))]  # few defaulters, every good customer
+    grid += [(len(pos), int(len(pos) * r)) for r in (1, 3, 10)]  # every defaulter, fewer good customers
+    grid += [(len(pos), len(neg))]
     for events, goods in grid:
-        goods = min(goods, len(neg))
-        s = pd.concat([pos.sample(min(events, len(pos)), random_state=int(rng.integers(1e9))),
+        s = pd.concat([pos.sample(events, random_state=int(rng.integers(1e9))),
                        neg.sample(goods, random_state=int(rng.integers(1e9)))])
         m = make_pipeline(None, "boosted", {"max_leaf_nodes": 4, "max_iter": 100}, False, seed)
         m.fit(features(s), s[TARGET].to_numpy())
         p = m.predict_proba(xte)[:, 1]
-        rows.append(dict(seed=seed, events=min(events, len(pos)), goods=goods, roc_auc=roc_auc_score(yte, p),
+        rows.append(dict(seed=seed, events=events, goods=goods, roc_auc=roc_auc_score(yte, p),
                          pr_auc=average_precision_score(yte, p)))
     return rows
 
@@ -442,6 +468,7 @@ def _calibration_seed(raw, seed):
         m, _ = fit_best(xtr, ytr, xva, yva, method, "boosted", seed)
         pv, pt = m.predict_proba(xva)[:, 1], m.predict_proba(xte)[:, 1]
         versions = {"raw": pt, "Platt": platt(pv, yva)(pt), "isotonic": isotonic(pv, yva)(pt)}
+        versions["intercept"] = expit(calibration_intercept(yva, pv) + logit(pt))
         if method != "nothing":
             versions["prior shift"] = prior_shift(pt, 1.0, odds_true)  # all these train at 1:1 odds
         for fix, p in versions.items():
@@ -483,8 +510,8 @@ def monthly_psi(raw):
     rows = []
     for i, month in enumerate(months):
         pay, bill = PAY[5 - i], BILL[5 - i]
-        rows.append(dict(month=month, pay_psi=psi(x["PAY_6"], x[pay]), bill_psi=psi(x["BILL_AMT6"], x[bill]),
-                         pay_at_1=int((raw[pay] == 1).sum())))
+        rows.append(dict(month=month, bill_psi=psi(x["BILL_AMT6"], x[bill]), status_psi_quantile=psi(x["PAY_6"], x[pay]),
+                         status_psi_levels=psi_levels(x["PAY_6"], x[pay]), customers_at_1=int((raw[pay] == 1).sum())))
     return pd.DataFrame(rows)
 
 
@@ -514,11 +541,12 @@ def latest_status_defaults_to_zero(raw):
 def _window_report(name, m, cal, xref, sref, raw_window, y_window, seed):
     x = features(raw_window)
     p = cal(m.predict_proba(x)[:, 1])
-    by_feature = {c: psi(xref[c], x[c]) for c in FEATURES}
+    by_feature = feature_psi(xref, x)
     worst = max(by_feature, key=by_feature.get)
     return dict(seed=seed, scenario=name, n=len(y_window), events=int(y_window.sum()),
                 default_rate=y_window.mean(), mean_pd=p.mean(), worst_feature=worst,
-                worst_psi=by_feature[worst], score_psi=psi(sref, p), roc_auc=roc_auc_score(y_window, p),
+                worst_psi=by_feature[worst], worst_psi_quantile=max(psi(xref[c], x[c]) for c in FEATURES),
+                score_psi=psi(sref, p), roc_auc=roc_auc_score(y_window, p),
                 pr_auc=average_precision_score(y_window, p), decline=np.mean(p >= BAYES),
                 cost=expected_cost(y_window, p, BAYES), brier=brier_score_loss(y_window, p))
 
@@ -561,7 +589,7 @@ def _drift_seed(raw, seed):
     late, high = base["PAY_0"].to_numpy() >= 1, util >= np.quantile(util, 2 / 3)
     y = base[TARGET].to_numpy().copy()
     y[late & (y == 1) & (rng.random(len(y)) < 0.6)] = 0
-    y[high & ~late & (y == 0) & (rng.random(len(y)) < 0.08)] = 1
+    y[high & ~late & (y == 0) & (rng.random(len(y)) < 0.05)] = 1
     report("concept: what predicts default changes", base, labels=y)
 
     # train/serve skew: the same customers and labels, but serving computes features differently
@@ -574,3 +602,194 @@ def _drift_seed(raw, seed):
 def drift(raw, seeds=N_SEEDS):
     return _cached(f"drift-{seeds}", lambda: pd.DataFrame(
         [r for rows in Parallel(n_jobs=-1)(delayed(_drift_seed)(raw, s) for s in range(seeds)) for r in rows]))
+
+
+# -------------------------------------------------------------------------------------- tables
+NAMES = ["nothing", "class weights", "undersample 1:1", "oversample 1:1", "SMOTE 1:1"]
+
+
+def scoreboard(c):
+    """The comparison table: seed means, in the order of METHODS. Lower cost and Brier are better."""
+    g = c.groupby("method", sort=False)
+    t = g[["pr_auc", "roc_auc", "brier"]].mean().round(3)
+    t["cost_at_0.5"] = g["cost_05_5"].mean().round(1)
+    t["cost_tuned"] = g["cost_tuned_5"].mean().round(1)
+    t["cost20_at_0.5"] = g["cost_05_20"].mean().round(1)
+    t["cost20_tuned"] = g["cost_tuned_20"].mean().round(1)
+    return t
+
+
+def contrast(c, a, col_a, b, col_b):
+    """Paired across seeds: method a at col_a minus method b at col_b, with SD and a's wins."""
+    x = c[c.method == a].set_index("seed")[col_a]
+    y = c[c.method == b].set_index("seed")[col_b]
+    d = x - y
+    return dict(diff=round(d.mean(), 1), sd=round(d.std(ddof=1), 1), a_wins=f"{int((d < 0).sum())}/{len(d)}")
+
+
+def smote_vs_threshold(raw):
+    """The chapter's question, across learners, default rates and cost ratios."""
+    rows = []
+    cases = [(lr, PREVALENCE) for lr in ("boosted", "logistic", "tree")] + [("boosted", 0.1), ("boosted", 0.2212)]
+    for learner, prev in cases:
+        c = compare(raw, learner, prev)
+        for r in (5, 20):
+            base = c[c.method == "nothing"].set_index("seed")
+            row = dict(learner=learner, rate=prev, ratio=f"{r}:1", approve_all=round(base[f"cost_all_{r}"].mean(), 1),
+                       tuned_threshold=round(base[f"cost_tuned_{r}"].mean(), 1))
+            for name, col in (("SMOTE_at_0.5", "05"), ("SMOTE_tuned", "tuned")):
+                x = contrast(c, "SMOTE 1:1", f"cost_{col}_{r}", "nothing", f"cost_tuned_{r}")
+                row[name] = f"{x['diff']:+.1f} ({x['sd']:.1f}), {x['a_wins']}"
+            rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def neural_net(raw, seeds=10):
+    """Elor and Averbuch-Elor's other case: a weak learner, where they found SMOTE helps."""
+    return compare(raw, "neural net", PREVALENCE, seeds, ["nothing", "oversample 1:1", "SMOTE 1:1"])
+
+
+# ------------------------------------------------------------------------------------- figures
+def _style():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update({
+        "figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE,
+        "font.size": 11, "text.color": INK, "axes.labelcolor": MUTED, "xtick.color": MUTED, "ytick.color": MUTED,
+        "axes.edgecolor": GRID, "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.8,
+        "axes.spines.top": False, "axes.spines.right": False, "axes.titlesize": 12, "axes.titlelocation": "left",
+        "legend.frameon": False, "axes.axisbelow": True,
+    })
+    return plt
+
+
+def _save(fig, name):
+    IMAGES.mkdir(parents=True, exist_ok=True)
+    fig.savefig(IMAGES / name, dpi=160, bbox_inches="tight")
+    return IMAGES / name
+
+
+def figure_comparison(c):
+    """Cost of each method at a fixed 0.5 and at a tuned threshold, with the seed spread."""
+    plt = _style()
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.9), sharey=True)
+    y = np.arange(len(NAMES))[::-1]
+    for ax, r in zip(axes, (5, 20)):
+        for col, colour, label, off in (("05", ORANGE, "threshold fixed at 0.5", 0.13), ("tuned", BLUE, "threshold tuned on validation", -0.13)):
+            g = c.groupby("method")[f"cost_{col}_{r}"]
+            m, sd = g.mean().reindex(NAMES), g.std().reindex(NAMES)
+            ax.errorbar(m, y + off, xerr=sd, fmt="o", ms=7, color=colour, elinewidth=1.5, capsize=0, label=label,
+                        markeredgecolor=SURFACE, markeredgewidth=1)
+        ax.axvline(c[f"cost_all_{r}"].mean(), color=MUTED, lw=1.5, ls="--", label="approve everyone")
+        ax.set_title(f"Approving a defaulter costs {r} times a lost customer")
+        ax.set_xlabel("expected cost per 1,000 applicants (lower is better)")
+        ax.set_yticks(y, NAMES)
+        ax.grid(axis="y", visible=False)
+    axes[0].legend(loc="lower right", fontsize=9.5)
+    fig.tight_layout()
+    return _save(fig, "credit-lab-method-comparison.png")
+
+
+def figure_reliability(rel):
+    """Reliability on a log scale, because every interesting probability here is small."""
+    plt = _style()
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.8), sharex=True, sharey=True)
+    for ax, method in zip(axes, ("nothing", "undersample 1:1", "SMOTE 1:1")):
+        ax.plot([0.002, 0.8], [0.002, 0.8], color=MUTED, lw=1.5, ls="--", label="perfect")
+        for fix, colour, label in (("raw", ORANGE, "as trained"), ("Platt", BLUE, "after Platt on validation")):
+            d = rel[(rel.method == method) & (rel.fix == fix)]
+            ax.plot(d.p, d.y.clip(lower=0.002), "-o", color=colour, lw=2, ms=6, label=label, markeredgecolor=SURFACE)
+        ax.set_xscale("log"), ax.set_yscale("log")
+        ax.set_title(method)
+        ax.set_xlabel("predicted probability of default")
+    axes[0].set_ylabel("observed default rate")
+    axes[0].legend(loc="upper left", fontsize=9.5)
+    fig.tight_layout()
+    return _save(fig, "credit-lab-reliability.png")
+
+
+def figure_events(noise, te):
+    """Two questions on two panels: how noisy is a test score, and what does training data buy."""
+    plt = _style()
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.8), width_ratios=[1, 1.15])
+    ax = axes[0]
+    ax.plot(noise.events, noise.roc_auc, "-o", color=BLUE, lw=2, ms=7, label="ROC-AUC", markeredgecolor=SURFACE)
+    ax.plot(noise.events, noise.pr_auc, "-o", color=ORANGE, lw=2, ms=7, label="PR-AUC", markeredgecolor=SURFACE)
+    ax.set_xscale("log"), ax.set_ylim(0, None)
+    ax.set_xticks(noise.events, noise.events)
+    ax.minorticks_off()
+    ax.set_xlabel("defaulters in the test set")
+    ax.set_ylabel("SD of the score")
+    ax.set_title("A test set is only as big as its defaulters")
+    ax.legend()
+    ax = axes[1]
+    g = te.groupby(["events", "goods"]).roc_auc
+    m = pd.DataFrame(dict(mean=g.mean(), sd=g.std())).reset_index().sort_values("mean")
+    m = m[(m.goods == m.goods.max()) | (m.events == m.events.max()) | (m.goods / m.events > 30)]
+    y = np.arange(len(m))
+    ax.errorbar(m["mean"], y, xerr=m["sd"], fmt="o", ms=7, color=BLUE, elinewidth=1.5, markeredgecolor=SURFACE)
+    ax.set_yticks(y, [f"{e:,} defaulters + {k:,} good" for e, k in zip(m.events, m.goods)], fontsize=9.5)
+    ax.grid(axis="y", visible=False)
+    ax.set_xlabel("test ROC-AUC, by what the model trained on")
+    ax.set_title("Defaulters buy skill, good customers barely do")
+    fig.tight_layout()
+    return _save(fig, "credit-lab-events.png")
+
+
+def figure_drift(d):
+    """What each monitor sees in each scenario. PSI needs a log axis; the skews are huge."""
+    plt = _style()
+    order = list(dict.fromkeys(d.scenario))
+    y = np.arange(len(order))[::-1]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 3.9), sharey=True)
+    ax = axes[0]
+    for col, colour, label, off in (("worst_psi", BLUE, "worst feature", 0.13), ("score_psi", ORANGE, "model score", -0.13)):
+        g = d.groupby("scenario")[col]
+        ax.errorbar(g.mean().reindex(order), y + off, xerr=g.std().reindex(order), fmt="o", ms=7, color=colour,
+                    elinewidth=1.5, label=label, markeredgecolor=SURFACE)
+    ax.axvline(0.25, color=MUTED, ls="--", lw=1.5, label="conventional 0.25")
+    ax.set_xscale("log")
+    ax.set_xlabel("PSI, no labels needed")
+    ax.set_title("What a monitor sees")
+    ax.set_yticks(y, order)
+    ax.grid(axis="y", visible=False)
+    ax.legend(fontsize=9.5, loc="lower left")
+    ax = axes[1]
+    g = d.groupby("scenario").roc_auc
+    ax.errorbar(g.mean().reindex(order), y, xerr=g.std().reindex(order), fmt="o", ms=7, color=BLUE, elinewidth=1.5,
+                markeredgecolor=SURFACE)
+    ax.set_xlabel("ROC-AUC, labels arrive months later")
+    ax.set_title("What actually happened")
+    ax.grid(axis="y", visible=False)
+    fig.tight_layout()
+    return _save(fig, "credit-lab-drift.png")
+
+
+# ---------------------------------------------------------------------------------------- main
+def main():
+    pd.set_option("display.width", 200, "display.max_columns", 40, "display.max_rows", 100)
+    raw = load_credit()
+    print(f"{len(raw):,} rows, default rate {raw[TARGET].mean():.3f}")
+    c = compare(raw)
+    print("\n== methods, boosted model, 3% default rate, 20 seeds\n", scoreboard(c))
+    print("\n== SMOTE against a tuned threshold on the untouched model: difference (SD), wins\n", smote_vs_threshold(raw).to_string())
+    nn = neural_net(raw)
+    print("\n== neural net, 10 seeds\n", nn.groupby("method", sort=False)[["pr_auc", "roc_auc", "cost_05_5", "cost_tuned_5", "cost_05_20", "cost_tuned_20"]].mean().round(3))
+    print("\n== the leak\n", leak(raw).groupby("sampler")[["leaked_cv", "pipeline_cv", "test"]].mean().round(3))
+    noise, te = metric_noise(raw), training_events(raw)
+    print("\n== noise of a test score by defaulters in the test set\n", noise.round(3).to_string(index=False))
+    print("\n== training data\n", te.groupby(["events", "goods"])[["roc_auc", "pr_auc"]].mean().round(3))
+    cal, rel = calibration(raw)
+    print("\n== calibration\n", cal.groupby(["method", "fix"], sort=False)[["mean_pd", "brier", "ece", "intercept", "slope", "cost_bayes"]].mean().round(3))
+    d = drift(raw)
+    print("\n== drift\n", d.groupby("scenario", sort=False)[["default_rate", "mean_pd", "worst_psi", "worst_psi_quantile", "score_psi", "roc_auc", "cost"]].mean().round(3))
+    print("\n== inside the file, against April\n", monthly_psi(raw).round(3).to_string(index=False))
+    for path in (figure_comparison(c), figure_reliability(rel), figure_events(noise, te), figure_drift(d)):
+        print("wrote", path.relative_to(HERE.parents[2]))
+
+
+if __name__ == "__main__":
+    main()
