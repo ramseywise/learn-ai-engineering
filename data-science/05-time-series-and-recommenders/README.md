@@ -4,7 +4,7 @@
 
 ## What it is
 
-Time series ML turns a history into a forecast using feature tables, gradient boosting and sequence models, tested with backtests. Recommender systems learn preferences from interaction logs using matrix factorisation, linear item models and two-tower networks, and are tested on full-catalogue ranking, counterfactual estimates and A/B tests.
+Time series ML turns a history into a forecast using feature tables, gradient boosting and sequence models, tested with backtests. Recommender systems learn preferences from interaction logs using matrix factorisation, linear item models and two-tower networks, and are tested on full-catalogue ranking, counterfactual estimates and A/B tests. Entity matching applies the same retrieve-then-rank shape to joining records with no shared key, using blocking and learning to rank.
 
 ## Why it matters
 
@@ -21,6 +21,7 @@ An operator needs tomorrow's bike demand by midnight. A copy of last week is the
 | 1 | [Time series ML](notes/01-time-series-ml.md) | What would this forecast really have scored at the moment it was issued? |
 | 2 | [Collaborative filtering and matrix factorisation](notes/02-collaborative-filtering-and-matrix-factorisation.md) | Why can the most accurate rating predictor make the worst list? |
 | 3 | [Two-tower retrieval and evaluation](notes/03-two-tower-and-evaluation.md) | How do you serve millions of items and new items, and how do you know it works? |
+| 4 | [Entity matching and learning to rank](notes/04-entity-matching-and-learning-to-rank.md) | Which record does this one match, if any, and how do you train on the order of a list? |
 
 Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../02-deep-learning/README.md). Chapter 3 points at [LLM embeddings as features](../03-nlp/notes/07-llm-embeddings-as-features.md) for content features.
 
@@ -35,6 +36,8 @@ Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../
 | [DA 03/03 Experimentation at scale](../../data-analytics/03-experimentation-and-causality/notes/03-experimentation-at-scale.md) | Peeking and sequential methods |
 | [DA 06/01 Forecasting](../../data-analytics/06-applied-analyses/notes/01-forecasting.md) | Baselines, and a forecast taken through to a decision |
 | [DA 06/05 Segmentation and RFM](../../data-analytics/06-applied-analyses/notes/05-segmentation-and-rfm.md) | The segments in the cash-flow case |
+| [DS 01/07 Boosting in practice](../01-classical-ml/notes/07-boosting-in-practice.md) | The trees under LambdaMART |
+| [GA 02/05 Chunking, query parsing and reranking](../../generative-ai/02-rag-retrieval/notes/05-chunking-query-parsing-and-reranking.md) | A neural reranker, the same pair scoring over text |
 
 **Feeds into**
 
@@ -44,6 +47,7 @@ Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../
 | [GA 02/04 Vector databases and ANN](../../generative-ai/02-rag-retrieval/notes/04-vector-databases-and-ann.md) | The same index machinery, for documents |
 | [GA 08/07 Evaluating RAG and grounding](../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | Recall and NDCG on retrieval |
 | [DE 06/04 Drift](../../data-engineering/06-ml-platform/notes/04-drift.md) | Forecast models drift in production |
+| [DS 01/13 Automate, review or reject](../01-classical-ml/notes/13-automate-review-or-reject.md) | Pricing where to stand on the abstaining curve |
 
 ## Rules of thumb
 
@@ -58,6 +62,9 @@ Comes after [classical ML](../01-classical-ml/README.md) and [deep learning](../
 - Apply the logQ correction to in-batch softmax, in training only.
 - Log propensities and keep some randomisation, or you lose counterfactual evaluation for good.
 - Offline results choose what to test. Only a live test decides.
+- Report a blocker's recall by kind of hard case. It caps every later step.
+- Score a matcher on whole lines, not pairs. Pair accuracy was 99.5% with 72.7% of lines right.
+- For ranking, try a pairwise objective before you reach for the $|\Delta\text{NDCG}|$ factor, and check any hard constraint against the real data: one-to-one assignment lost to independent picks here.
 
 ## Practice
 
@@ -68,6 +75,7 @@ The [customer segments lab](practice/customer-segments-lab/README.md) backs the 
 ```bash
 uv run --with scikit-learn --with pandas --with torch python practice/run_note.py notes/01-time-series-ml.md
 uv run --with numpy --with pandas --with scipy python practice/02_cf_lab.py
+cd practice && uv run 04_matching_lab.py   # entity matching, on a generated ledger
 ```
 
 ## Primary texts

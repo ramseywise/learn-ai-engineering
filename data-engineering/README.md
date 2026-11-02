@@ -36,7 +36,7 @@ By the end, you can build repeatable ingestion and well-modelled data; deliver t
 | [02 Ingest and modelling](02-ingest-and-modelling/README.md) | Getting data in, saying what a row means | A retried load doubles the day's rows | Keys, change capture, a declared grain, data contracts | Repeatable load, grain statement, contract | [pptx](02-ingest-and-modelling/slides/ingest-and-modelling.pptx), [pdf](02-ingest-and-modelling/slides/ingest-and-modelling.pdf) |
 | [03 Transform and orchestrate](03-transform-and-orchestrate/README.md) | Tested models, built for the right day | An inner join loses 5,680 trips and about $96,000 with every test green | Grain tests, logical dates, idempotent writes, write-audit-publish | Green build and idempotent backfill | [pptx](03-transform-and-orchestrate/slides/transform-and-orchestrate.pptx), [pdf](03-transform-and-orchestrate/slides/transform-and-orchestrate.pdf) |
 | [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md) | Where it rests, how it moves, what it costs | A rewrite dies halfway and a dashboard reads half of it as the truth | Table-format commits, event-time windows, committed offsets, byte limits | Costed architecture decision | [pptx](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), [pdf](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pdf) |
-| [05 Quality and observability](05-quality-and-observability/README.md) | Finding out it is wrong | A source switches from miles to kilometres without telling anyone | Tests, monitors against history, lineage, playbooks | Monitor, lineage trace, incident playbook | [pptx](05-quality-and-observability/slides/quality-and-observability.pptx), [pdf](05-quality-and-observability/slides/quality-and-observability.pdf) |
+| [05 Quality, observability and operations](05-quality-and-observability/README.md) | Finding out it is wrong, and running it in production | A source switches from miles to kilometres without telling anyone | Tests, monitors against history, lineage, playbooks | Monitor, lineage trace, incident playbook | [pptx](05-quality-and-observability/slides/quality-and-observability.pptx), [pdf](05-quality-and-observability/slides/quality-and-observability.pdf) |
 | [06 ML platform](06-ml-platform/README.md) | Features, models and serving | A leaky join scores 2.79 offline and 5.48 in production | Point-in-time joins, a registry, gates, drift monitors | Point-in-time dataset and monitored service | [pptx](06-ml-platform/slides/ml-platform.pptx), [pdf](06-ml-platform/slides/ml-platform.pdf) |
 | [07 Architecture and governance](07-architecture-and-governance/README.md) | Many pipelines, many teams, the regulator | Two correct tables join on `CA` and `California`, and a filed figure is less than half the truth | Ownership, global rules that can fail a build, access control, erasure | Defended architecture scenario | [pptx](07-architecture-and-governance/slides/architecture-and-governance.pptx), [pdf](07-architecture-and-governance/slides/architecture-and-governance.pdf) |
 
@@ -45,7 +45,7 @@ flowchart LR
   P1[01 Storage and compute] --> P2[02 Ingest and model]
   P2 --> P3[03 Transform and orchestrate]
   P3 --> P4[04 Warehouse, lakehouse, streaming]
-  P4 --> P5[05 Quality and observability]
+  P4 --> P5[05 Quality, observability, operations]
   P5 --> P6[06 ML platform]
   P5 -.-> P3
   P7[07 Architecture and governance] -.->|who owns each stage| P2
@@ -57,11 +57,25 @@ Read them in order the first time, because each pillar consumes the previous one
 
 The coursework is two DataTalksClub zoomcamps, kept as worked material and divided among the pillars they serve. Pillars 05 and 07 have no practice folder, and their chapter code runs from each chapter's `uv run --with ...` line.
 
+## Where each tool sits
+
+Tools are easier to compare within a layer than across one. Snowflake against Airflow isn't a real comparison: Snowflake stores and computes, Airflow schedules, and they often run together.
+
+| Layer | Job | Tools |
+|---|---|---|
+| Ingest | Move data in | Fivetran, Airbyte, dlt, Debezium, Kafka |
+| Store: files | Cheap, durable bytes | S3, GCS, Parquet, Iceberg, Delta |
+| Store: analytical | Scan and aggregate | Snowflake, BigQuery, Redshift, ClickHouse, DuckDB |
+| Store: operational | Serve the app | Postgres, Redis, DynamoDB, vector and graph stores |
+| Transform | Model data | dbt, Spark, SQL |
+| Orchestrate | Schedule, retry, backfill | Airflow, Dagster, Prefect |
+| Observe and govern | Trust and control | Great Expectations, OpenLineage, catalogs |
+
 ## Units
 
 ### [01 Storage and compute foundations](01-storage-and-compute-foundations/README.md)
 
-**Objectives:** define reliability and performance goals; choose data models and encodings ([Kleppmann 2017, ch. 1–4](https://dataintensive.net/)); explain row versus column storage; reproduce and prevent transaction anomalies (ch. 7); reason about replication, partitioning (ch. 5–6), clocks, consensus (ch. 8–9), and distributed compute (ch. 10).
+**Objectives:** define reliability and performance goals; choose data models and encodings ([Kleppmann 2017, ch. 1–4](https://dataintensive.net/)); explain row versus column storage; reproduce and prevent transaction anomalies (ch. 7); reason about replication, partitioning (ch. 5–6), clocks, consensus (ch. 8–9), and distributed compute (ch. 10); say what a commit promises under each durability setting; pick a store from its access pattern.
 
 **Learning:** [reading order](01-storage-and-compute-foundations/README.md#reading-order), chapter code, and practice. **Evidence:** measure a representative workload, explain a failure mode, and defend the smallest system that meets the requirement.
 
@@ -79,13 +93,13 @@ The coursework is two DataTalksClub zoomcamps, kept as worked material and divid
 
 ### [04 Warehouse, lakehouse and streaming](04-warehouse-lakehouse-streaming/README.md)
 
-**Objectives:** estimate scan cost; select layout and partitioning; explain table-format transactions ([Armbrust et al.](https://www.vldb.org/pvldb/vol13/p3411-armbrust.pdf)); evaluate lakehouse trade-offs; implement safe producer/consumer semantics; reason about event time, watermarks, and lag ([Akidau et al.](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)).
+**Objectives:** estimate scan cost; select layout and partitioning; explain table-format transactions ([Armbrust et al.](https://www.vldb.org/pvldb/vol13/p3411-armbrust.pdf)); evaluate lakehouse trade-offs; implement safe producer/consumer semantics; reason about event time, watermarks, and lag ([Akidau et al.](https://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)); compare warehouses by concept (storage and compute separation, layout, concurrency); reason about object store consistency and cost.
 
 **Learning:** [reading order](04-warehouse-lakehouse-streaming/README.md#reading-order), [deck](04-warehouse-lakehouse-streaming/slides/warehouse-lakehouse-streaming.pptx), and labelled practice. **Evidence:** a costed store decision plus a stream design that says exactly-once from where to where. **Book chapters and docs:** Kleppmann 3, 6, 7, 10–12; Kafka and Iceberg/Delta documentation.
 
-### [05 Quality and observability](05-quality-and-observability/README.md)
+### [05 Quality, observability and operations](05-quality-and-observability/README.md)
 
-**Objectives:** define quality dimensions ([Schelter et al.](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf)); write batch tests and time-aware monitors ([Beyer et al.](https://sre.google/sre-book/table-of-contents/)); use lineage to bound an incident; contain and repair safely; write a blameless playbook and postmortem.
+**Objectives:** define quality dimensions ([Schelter et al.](https://www.vldb.org/pvldb/vol11/p1781-schelter.pdf)); write batch tests and time-aware monitors ([Beyer et al.](https://sre.google/sre-book/table-of-contents/)); use lineage to bound an incident; contain and repair safely; write a blameless playbook and postmortem; run an expand-contract migration with no downtime; prove a backup by restoring it; size connections and diagnose bloat and replica lag; build slim CI with `state:modified+` and `--defer`; set a freshness SLO and page on symptoms.
 
 **Learning:** [reading order](05-quality-and-observability/README.md#reading-order) and [deck](05-quality-and-observability/slides/quality-and-observability.pptx). **Evidence:** catch a planted fault, trace its impact, execute an idempotent repair, and add a preventive check. **Tools:** Great Expectations, dbt, OpenLineage.
 

@@ -27,6 +27,8 @@ The pillar follows [*Designing Data-Intensive Applications*](https://dataintensi
 | 6 | [When distributed systems fail](notes/06-when-distributed-systems-fail.md) | What can a node know, given timeouts, clocks and pauses? | ch. 8 |
 | 7 | [Consistency and consensus](notes/07-consistency-and-consensus.md) | How do machines agree? Linearizability, ordering, 2PC, quorums | ch. 9 |
 | 8 | [Distributed compute](notes/08-distributed-compute.md) | What does a cluster cost, and when does one machine suffice? | ch. 10 |
+| 9 | [Persistence](notes/09-persistence.md) | What does "saved" actually promise, and what survives a crash, a lost disk or a lost region? | ch. 7 sidebar |
+| 10 | [Choosing a store](notes/10-choosing-a-store.md) | Given an access pattern, which store fits, and how far does Postgres go first? | none |
 
 Then go to [02, ingest and modelling](../02-ingest-and-modelling/README.md). The order across all seven pillars is in the [subject syllabus](../README.md).
 

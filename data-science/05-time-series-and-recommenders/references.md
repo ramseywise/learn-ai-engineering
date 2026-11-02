@@ -7,13 +7,14 @@ cleaned: 2026-11-01
 ---
 # 05-time-series-and-recommenders references
 
-★ = changed a claim in the notes. ⚑ = preprint only. PDFs we hold live in the shared [`../sources/`](../sources/) and are linked from their row; every other row links the public copy read when writing the note. Notes: [01 time series](notes/01-time-series-ml.md), [02 collaborative filtering](notes/02-collaborative-filtering-and-matrix-factorisation.md), [03 two towers and evaluation](notes/03-two-tower-and-evaluation.md).
+★ = changed a claim in the notes. ⚑ = preprint only. PDFs we hold live in the shared [`../sources/`](../sources/) and are linked from their row; every other row links the public copy read when writing the note. Notes: [01 time series](notes/01-time-series-ml.md), [02 collaborative filtering](notes/02-collaborative-filtering-and-matrix-factorisation.md), [03 two towers and evaluation](notes/03-two-tower-and-evaluation.md), [04 entity matching and learning to rank](notes/04-entity-matching-and-learning-to-rank.md).
 
 ## Books
 
 | Book | Why read it | Local | Maps to |
 |---|---|---|---|
 | Hyndman and Athanasopoulos, [*Forecasting: Principles and Practice*, 3rd ed.](https://otexts.com/fpp3/) (OTexts, free online) | The statistical side this chapter skips: ETS, ARIMA, hierarchies, and the [time series cross-validation](https://otexts.com/fpp3/tscv.html) section behind our backtest | web only | [01](notes/01-time-series-ml.md) |
+| Christen, [*Data Matching*](https://doi.org/10.1007/978-3-642-31164-2) (Springer, 2012) | The standard book on record linkage. Further reading only: behind a paywall, not read, bibliographic record checked, and no claim in the notes rests on it | none | [04](notes/04-entity-matching-and-learning-to-rank.md) |
 
 ## Core papers
 
@@ -32,6 +33,15 @@ cleaned: 2026-11-01
 | Fanaee-T and Gama, *Event labeling combining ensemble detectors and background knowledge* (*Progress in AI*, 2014) | Required citation for the Bike Sharing data | [DOI](https://doi.org/10.1007/s13748-013-0040-3) | [01](notes/01-time-series-ml.md) |
 | ★ Montero-Manso and Hyndman, *Principles and algorithms for forecasting groups of time series: Locality and globality* (*IJF*, 2021) | Global models need no similarity between series, and a random partition can help a constrained model. Sets our expectation for per-segment against global | [DOI](https://doi.org/10.1016/j.ijforecast.2021.03.004), [PDF](../sources/montero-manso-2021-locality-globality.pdf) | [01](notes/01-time-series-ml.md#case-forecasting-each-segments-cash-flow) |
 | Bandara, Bergmeir and Smyl, *Forecasting across time series databases using recurrent neural networks on groups of similar series: A clustering approach* (*Expert Systems with Applications*, 2020) | The case for one model per cluster, with a gain on one dataset, none on another, and simple exponential smoothing beating both on the first | [DOI](https://doi.org/10.1016/j.eswa.2019.112896), [PDF](../sources/bandara-2020-forecasting-across-time-series.pdf) | [01](notes/01-time-series-ml.md#case-forecasting-each-segments-cash-flow) |
+
+### Entity matching and learning to rank
+
+| Paper | Why read it | Link | Maps to |
+|---|---|---|---|
+| ★ Fellegi and Sunter, *A Theory for Record Linkage* (*JASA* 64(328), 1969) | $m$ and $u$, additive weights, the three-way decision, and blocking as implicit non-links. Read in full in the US Internal Revenue Service's reprint, an OCR copy that drops some formula symbols; the journal page not read | [reprint](https://www.irs.gov/pub/irs-soi/1985preprintar28.pdf), [DOI](https://doi.org/10.1080/01621459.1969.10501049) | [04](notes/04-entity-matching-and-learning-to-rank.md#scoring-a-pair-fellegi-and-sunter) |
+| ★ Burges, *From RankNet to LambdaRank to LambdaMART: An Overview* (Microsoft Research TR-2010-82) | The gradient factorisation, why NDCG has no gradient, and the $\lvert\Delta\text{NDCG}\rvert$ factor we test. Read in full. It reports no experiments of its own | [PDF](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf) | [04](notes/04-entity-matching-and-learning-to-rank.md#why-ndcg-cant-be-optimised-directly-and-lambdamart) |
+| ★ Bruch, *An Alternative Cross Entropy Loss for Learning-to-Rank* (WWW 2021) | XE-NDCG, and the objection that LambdaMART has no loss. Read in full. It beat LambdaMART on his sets and lost to it on ours. Added beyond the plan's list, for the listwise case | [arXiv](https://arxiv.org/abs/1911.09798), [DOI](https://doi.org/10.1145/3442381.3449794) | [04](notes/04-entity-matching-and-learning-to-rank.md#the-results) |
+| Li, Li, Suhara, Doan and Tan, *Deep Entity Matching with Pre-Trained Language Models* (*PVLDB* 14(1), 2020) | Ditto: sequence-pair classification on serialised records, and its warning about numeric data. Read in full. The abstract says up to 29% and its Table 5 shows 31.89 points. Not run here | [arXiv](https://arxiv.org/abs/2004.00584), [DOI](https://doi.org/10.14778/3421424.3421431) | [04](notes/04-entity-matching-and-learning-to-rank.md#where-a-language-model-fits) |
 
 ### Recommenders
 

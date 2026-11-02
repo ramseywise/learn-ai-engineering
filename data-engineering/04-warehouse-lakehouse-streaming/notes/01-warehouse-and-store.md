@@ -25,6 +25,7 @@ sources:
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/03-data-warehouse
   - https://github.com/DataTalksClub/data-engineering-zoomcamp/tree/main/05-batch
   - https://spark.apache.org/docs/latest/sql-programming-guide.html
+  - https://duckdb.org/why_duckdb
   - https://duckdb.org/docs/
   - https://docs.pola.rs/
   - https://delta.io/

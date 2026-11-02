@@ -456,4 +456,4 @@ On the 12-core laptop used here the query finished at 200 MB and raised `OutOfMe
 
 ## Next
 
-That completes the storage and compute foundations. [Pillar 02, ingest and modelling](../../02-ingest-and-modelling/README.md), starts getting data out of sources and shaping it for questions.
+You now know what a cluster costs. Next is what any of these systems means by "saved": [9 — Persistence](09-persistence.md).

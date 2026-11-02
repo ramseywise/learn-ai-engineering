@@ -9,8 +9,10 @@ sources:
   - https://arxiv.org/abs/2403.03163
   - https://arxiv.org/abs/1904.08920
   - https://arxiv.org/abs/2502.17651
+  - https://arxiv.org/abs/1912.13318
+  - ../practice/invoice_pipeline.py
 confidence: medium
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 # 2 — Document Understanding
 
@@ -183,6 +185,79 @@ The total is one edit away from correct, a small normalised distance, and it wou
 
 For generated output such as HTML from a design, Design2Code found that its automatic metrics correlated with human judgment across 484 real webpages, that text-augmented prompting helped most models, and that most models struggled to improve by reviewing their own output ([arXiv:2403.03163](https://arxiv.org/abs/2403.03163) (Si et al., NAACL 2025)). METAL gets a 5.2% F1 gain in chart generation from a multi-agent loop with separate generation, visual critique, code critique and verification agents ([arXiv:2502.17651](https://arxiv.org/abs/2502.17651) (Li et al., ACL 2025)). Together they suggest that a critic works better as a distinct step with its own instructions than as a request for the same model to look again, though both measured it on synthesis tasks and not on extraction.
 
+## A pipeline you can run
+
+[`practice/invoice_pipeline.py`](../practice/invoice_pipeline.py) puts this chapter together end to end, and you can read every step. It generates 180 invoices in three layouts, as born-digital PDFs and as rendered scans. It routes each page: read the text layer if there is one, otherwise run a real open OCR engine (RapidOCR) on the image. Two extractors read the resulting tokens, one ignoring position and one using it. The checks are a shorter `reconcile`. If a scan fails them, it's scanned again at twice the resolution, and if it still fails, it goes to a person.
+
+Be clear about what this isn't. **No vision model is called**, as a course script shouldn't need a paid key, so the image route stops at OCR. Both extractors are short rules written for these three layouts. The prices are assumptions, printed with the results. Replace them with your own.
+
+```python
+# illustrative: the layout-aware rule, the idea that a model like LayoutLM learns instead
+right = [(a - x, s) for s, a, b in tokens if abs(b - y) < 6 and a > x and re.fullmatch(PATTERN[f], s.strip())]
+below = [(b - y, s) for s, a, b in tokens if abs(a - x) < 14 and 4 < b - y < 24 and re.fullmatch(PATTERN[f], s.strip())]
+```
+
+```text
+180 documents: 3 layouts, 3 kinds of page, 20 of each
+
+field F1 by extractor, first attempt, exact match after normalising number format
+            layout         kind  text_only  with_layout  fail_check  seconds
+label beside value born digital      1.000        1.000       0.000    0.002
+label beside value         scan      0.981        0.981       0.300    0.251
+label beside value    poor scan      0.940        0.940       0.700    0.220
+  label over value born digital      0.667        1.000       0.000    0.002
+  label over value         scan      0.644        0.987       0.200    0.230
+  label over value    poor scan      0.627        0.965       0.400    0.260
+       two columns born digital      1.000        1.000       0.000    0.002
+       two columns         scan      1.000        1.000       0.000    0.298
+       two columns    poor scan      0.924        0.927       0.700    0.284
+```
+
+The layout effect is the opening claim of this chapter, measured. On born-digital pages, where the text is perfect, `label over value` scores 0.667 without positions and 1.000 with them. Our two-column layout turned out harmless, as a label and its value stay neighbours when drawn in order, so positions add nothing there.
+
+```text
+field F1 per field, with layout, first attempt
+kind      born digital  poor scan   scan
+field
+vendor             1.0      0.983  1.000
+number             1.0      0.947  1.000
+issued             1.0      0.919  1.000
+due                1.0      0.992  1.000
+subtotal           1.0      0.849  0.929
+tax                1.0      0.966  1.000
+total              1.0      0.919  0.983
+iban               1.0      0.966  1.000
+vendor read character for character on scans, spaces included: 0.542
+
+documents with at least one wrong field, first attempt: 48 of 180
+  of those the checks caught 46; the checks also failed 0 clean documents
+  fields wrong on documents that passed: {'iban': 1, 'vendor': 1}
+```
+
+Two results here deserve attention. First, the vendor's F1 is 1.000 on scans only because scoring ignores spaces and case, and OCR ran the words of the bold heading together on many scans, so 54% were right character for character. Your normalisation rule is part of your metric, so write it down. Second, the checks caught 46 of 48 bad documents with no false alarms, and the two they missed are the point. Arithmetic can't see a vendor name or an IBAN. Those fields need their own checks, such as the IBAN's check digits or a supplier master list.
+
+```text
+assumptions: CPU 0.1 per hour, review 3 minutes at 30.0 per hour
+                policy       f1  seconds  retried  reviewed  cost_cpu  cost_review  cost_per_doc
+  text only, no checks 0.884764 0.171980 0.000000  0.000000  0.000005     0.000000      0.000005
+OCR every page, layout 0.977321 0.257651 0.000000  0.000000  0.000007     0.000000      0.000007
+     layout, no checks 0.978407 0.171980 0.000000  0.000000  0.000005     0.000000      0.000005
+         layout, retry 0.997915 0.265459 0.255556  0.000000  0.000007     0.000000      0.000007
+        layout, review 0.998611 0.171980 0.000000  0.255556  0.000005     0.383333      0.383338
+ layout, retry, review 0.998611 0.265459 0.255556  0.011111  0.000007     0.016667      0.016674
+```
+
+![Two bar charts by policy. Field F1 rises from 0.885 for text only to 0.999 with review. Cost per document on a log scale is thousands of times higher wherever a person reviews, and the policy that retries before review costs about a twenty-third of review alone](../sources/images/docs-invoice-route-cost.png)
+
+- **Skipping OCR saves compute, and it barely changed accuracy here.** Routing by text layer takes 0.172 seconds a page against 0.258 for OCR on everything, at 0.978 against 0.977. Clean renders of a clean font are easy for OCR, so we didn't see it add errors, though the pitfall below remains true of harder documents.
+- **People are the cost.** Compute differences are invisible next to review. Review alone costs 0.383 per document, because 25.6% of them fail a check.
+- **A cheap retry is the best money in the table.** Retrying first leaves 1.1% for review, the same F1 at 0.0167 per document, about 23 times cheaper. So the check is worth most when it triggers another attempt and not just a person.
+- **What a better second route may cost.** Going from 0.383 to 0.0167 saves 0.367 per document across the 25.6% retried, or about 1.43 per retried document. A vision model that does as well as this retry pays for itself below that price per document, on these assumptions.
+
+The seconds vary with your machine. The sample is small and generated: three layouts, one font, one written extractor, 180 documents. Real supplier documents have a long tail of formats, so treat the F1 values as the test of the code and the shape of the costs as the lesson.
+
+**Learning the layout rule.** Our `with_layout` is a hand-written version of what LayoutLM learns ([arXiv:1912.13318](https://arxiv.org/abs/1912.13318), Xu et al., KDD 2020). It gives BERT each token's 2-D position, pre-trained on about 11 million scanned pages. On the FUNSD forms task, with only 149 training forms, F1 rose from 0.6026 for BERT to 0.7866 with layout and 0.7927 with image features as well. On scanned receipts it reached 0.9524 against 0.9402 for the competition's winner, though using ground-truth OCR to remove OCR's effect, so a real pipeline starts lower. It also still needs OCR boxes first, and its pretraining took 80 hours per epoch on eight GPUs. That's a cost you can avoid by starting from the published weights. Choose it over rules once you have too many layouts to write rules for, and enough labelled documents to fine-tune.
+
 ## Choosing a route
 
 | Your documents | Start with | Why |
@@ -200,6 +275,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 - **Treating well-formed JSON as correct.** Schema validation checks shape. It cannot see a digit misread or a row dropped.
 - **Sizing for median page time.** The 95th percentile can be twenty times the median. Set per-page timeouts and a separate queue for slow pages.
 - **OCRing everything.** Running OCR on a born-digital page costs time and can introduce errors that the text layer did not have.
+- **Assuming checks cover every field.** Arithmetic can't see a name or an IBAN. In our run those were the two errors that passed.
 - **Assuming page boundaries respect content.** Tables cross pages, and footers look like last rows. Test on documents that have them.
 - **Scoring with edit distance alone.** A single wrong digit in a payment amount looks almost perfect on it.
 - **Trusting document text.** A contract can carry instructions aimed at your extraction model. See [chapter 9.2](../../09-safety-and-security/notes/02-prompt-injection-and-jailbreaks.md).
@@ -209,12 +285,14 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 1. Add a check to `reconcile` that fails when `tax_rate` isn't one of your allowed rates. Which class of error does it catch that the arithmetic misses?
 2. `repeated_tail` looks only at the suffix. Build a text where the loop stops before the end of the output, and change the function to catch it.
 3. Extend `field_scores` with a numeric rule: amounts count as correct if they match after removing thousand separators. Why not allow a tolerance?
+4. In the pipeline's table, text-only scores exactly 0.667 on born-digital `label over value`. Work out from the F1 formula which fields it found and which it missed.
 
 <details><summary>Answers</summary>
 
 1. If the model misreads both the rate and the tax consistently, for instance reading 0.19 as 0.09 and computing a tax to match, the arithmetic passes. A whitelist catches values that are internally consistent but impossible.
 2. Search a sliding window instead: for each unit size, count consecutive matches of the unit anywhere in the string. A compact way is the regular expression `(.{8,}?)\1{2,}` with `re.DOTALL`, which looks for any unit of at least 8 characters repeated at least three times in a row.
 3. Normalisation removes formatting differences that aren't errors. A tolerance would accept real errors, and small differences in invoice amounts are exactly what you are trying to detect.
+4. Four fields right and four missing, with none wrong, gives precision 1.0, recall 0.5 and F1 0.667. Those labels are drawn in one pass and their values in another, so the invoice number, both dates and the IBAN never follow their labels. The vendor and the three amounts still do.
 
 </details>
 
@@ -227,6 +305,7 @@ Whatever you start with, keep the route per page in your logs. When accuracy shi
 | What failure is specific to end-to-end document decoders? | Repetition loops, particularly on pages outside the training domain. Nougat measured 1.5% of its in-domain test pages. Detect and reroute them. |
 | How do you verify an extraction without ground truth? | Use redundancy in the document: arithmetic, cross-field rules, a second independent extraction, master data, and requiring each value to appear in the OCR text. |
 | Edit distance or field F1? | Both, for different decisions. Edit distance compares transcript engines. Field F1 reflects business correctness because one wrong character fails the field. |
+| What costs most in a document pipeline? | People. In our run review was thousands of times dearer than compute, so a retry that cut review from 25.6% to 1.1% of documents was the best value. |
 | Why route per page? | Page cost varies by more than an order of magnitude. Skipping OCR and table models on simple pages saves most of the compute, and logging the route tells you what changed when accuracy moves. |
 
 ## Next

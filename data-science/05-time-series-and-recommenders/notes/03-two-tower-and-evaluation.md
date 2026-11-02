@@ -429,4 +429,4 @@ The effective sample size drops from 3,237 to 332, and the largest weight rises 
 
 ## Next
 
-That closes the pillar: you can now predict the next value of a series and rank a catalogue, and test both honestly. Sentence embeddings can feed the same tower slot, and they lead into language modelling proper: carry on with [the LLM fundamentals pillar in generative AI](../../../generative-ai/01-llm-fundamentals/README.md).
+You can now predict the next value of a series and rank a catalogue, and test both honestly. The last chapter of this pillar takes retrieve-then-rank to a harder case, with no user and no catalogue, only two sets of records to join and no shared key: [Entity matching and learning to rank](04-entity-matching-and-learning-to-rank.md).

@@ -57,6 +57,8 @@ cleaned: 2026-11-01
 | Pennington, Socher and Manning, [*GloVe*](https://aclanthology.org/D14-1162/) (EMNLP 2014) | The vectors in the notebooks | Link only | 05 |
 | Bolukbasi et al., [*Man is to Computer Programmer as Woman is to Homemaker?*](https://arxiv.org/abs/1607.06520) (NeurIPS 2016) | Neutralise and equalise | Link only | 05 |
 | Maas et al., [*Learning Word Vectors for Sentiment Analysis*](https://aclanthology.org/P11-1015/) (ACL 2011) | The IMDb dataset | Link only | 06 |
+| ★ Hinton and Salakhutdinov, [*Reducing the Dimensionality of Data with Neural Networks*](https://doi.org/10.1126/science.1127647) (*Science* 2006) | The deep autoencoder as non-linear PCA. Read in full in the [authors' copy](https://www.cs.toronto.edu/~hinton/absps/science.pdf); the supporting material not read | Link only | [05](notes/05-sequence-models.md#autoencoders-the-bottleneck-on-its-own) |
+| ★ Vincent, Larochelle, Bengio and Manzagol, [*Extracting and Composing Robust Features with Denoising Autoencoders*](https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf) (ICML 2008) | Corruption in place of a bottleneck. Read in full | Link only | [05](notes/05-sequence-models.md#autoencoders-the-bottleneck-on-its-own) |
 | Kim, [*Convolutional Neural Networks for Sentence Classification*](https://arxiv.org/abs/1408.5882) (EMNLP 2014) | Filters as n-gram detectors | Link only | 06 |
 | Cer et al., [*Universal Sentence Encoder*](https://arxiv.org/abs/1803.11175) (2018) ⚑ | The encoder in Sarkar's comparison | Link only | 06 |
 | Reimers and Gurevych, [*Sentence-BERT*](https://arxiv.org/abs/1908.10084) (EMNLP 2019) | The encoder family behind `all-MiniLM-L6-v2` | Link only | 06 |

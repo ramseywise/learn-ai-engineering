@@ -11,8 +11,10 @@ sources:
   - https://doi.org/10.1016/0377-0427(87)90125-7
   - https://doi.org/10.1007/BF01908075
   - https://doi.org/10.1016/j.csda.2006.11.025
+  - https://doi.org/10.1109/icdm.2008.17
+  - ../practice/isolation_forest.py
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 # Unsupervised Learning
 
@@ -322,7 +324,72 @@ Two points worth carrying forward:
 - **Train on unlabeled normal data, choose $\varepsilon$ on a labelled validation set by F1.** Accuracy would be useless: anomalies are rare ([04](04-model-evaluation.md#imbalanced-data-and-the-dummy-baseline)).
 - **Anomaly detection vs supervised classification.** Use density estimation when positives are very few and future anomalies may look unlike past ones; use a classifier when you have many positives of a stable kind.
 
-scikit-learn equivalents: `EllipticEnvelope` (Gaussian), `IsolationForest` (which isolates points with random splits rather than modelling density: [doi:10.1109/icdm.2008.17](https://doi.org/10.1109/icdm.2008.17), Liu et al., ICDM 2008), `LocalOutlierFactor`, `OneClassSVM`.
+scikit-learn equivalents: `EllipticEnvelope` (Gaussian), [`IsolationForest`](#isolation-forest-on-tabular-data), `LocalOutlierFactor`, `OneClassSVM`.
+
+### Isolation forest on tabular data
+
+The Gaussian asks how likely a point is. An **isolation forest** asks how easy it is to cut off, and never models density at all. Liu, Ting and Zhou start from one observation: anomalies are "few and different", so random splitting separates them quickly ([*Isolation Forest*](https://doi.org/10.1109/icdm.2008.17), ICDM 2008). Build a tree by picking a random column and a random split value, and repeat until each point sits alone. A point's **path length** is how many splits that took. Average it over the trees, and short paths mean anomalies. The score is $s = 2^{-E(h)/c(n)}$, where $E(h)$ is the average path length and $c(n)$ the average for $n$ points, so a score near 1 flags an anomaly. Their defaults are 100 trees, each grown on just 256 sampled rows.
+
+```python
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import roc_auc_score
+
+forest = IsolationForest(n_estimators=100, max_samples=256, random_state=0).fit(ex8["X"])
+print(f"forest AUC {roc_auc_score(ex8['yval'].ravel(), -forest.score_samples(ex8['Xval'])):.3f}")
+```
+
+```text
+forest AUC 0.878
+```
+
+There's no win to report on this data, and that's the first result. [`practice/isolation_forest.py`](../practice/isolation_forest.py) scores both methods the same way:
+
+```text
+ex8: train 307, validation 307, validation anomalies 9
+Gaussian per feature   AUC 0.870  best validation F1 0.875  flagged in train 5 of 307
+Isolation forest       AUC 0.878  best validation F1 0.875  flagged in train 6 of 307
+  forest seed 0: AUC 0.878  F1 0.875
+  forest seed 1: AUC 0.884  F1 0.875
+  forest seed 2: AUC 0.870  F1 0.875
+  forest seed 3: AUC 0.887  F1 0.875
+  forest seed 4: AUC 0.881  F1 0.875
+```
+
+Both reach the same F1. The AUC gap is smaller than the spread between forest seeds, and with nine anomalies it means nothing. (The Gaussian flags 5 here and 6 above because two thresholds tie on F1 and the two searches stop at different ones.) One round cloud of server readings in two columns is what a Gaussian is built for, so a forest has little to add. The difference shows on tables that break the Gaussian's assumptions, so the script generates some, with five seeds each. Here, normal rows sit in two operating regimes across six columns. One kind of anomaly lies far out in a column and the other in the empty valley between the regimes:
+
+```text
+two regimes, six columns, mean AUC (sd) over five seeds
+Gaussian per feature       far 0.935 (0.008)  valley 0.000 (0.000)
+Gaussian, full covariance  far 1.000 (0.000)  valley 0.001 (0.001)
+Isolation forest           far 0.929 (0.003)  valley 1.000 (0.000)
+one column on an exponential scale, both anomaly kinds: full Gaussian 0.493, forest 0.952
+```
+
+An AUC of 0.000 is the worst possible, not merely poor. The valley is near the overall mean, so a single Gaussian rates those points as the *most* normal in the table. The forest gets them all, since a point alone in a gap is easy to cut off. But the forest isn't simply better: a full-covariance Gaussian beats it on anomalies far out, 1.000 to 0.929. Pick by the shape of your normal data. A skewed column, such as an amount, is the other common break. The forest assumes no distribution, so a long tail doesn't break it, though it isn't blind to scale either: split values are drawn evenly across a column's range.
+
+Liu et al. make two further claims, and both held up here.
+
+![Two panels of AUC for an isolation forest. Left: anomalies in a dense clump, where AUC falls from 1.0 at 16 sampled rows to 0.93 at 4096. Right: as irrelevant columns are added the forest falls from 0.965 to chance at 60 columns, while a per-feature Gaussian stays near 0.5 throughout](../../sources/images/classical-iforest-limits.png)
+
+```text
+clumped anomalies inside the training data, AUC by sub-sample size
+  psi 16    1.000 (0.000)
+  psi 64    1.000 (0.000)
+  psi 256   0.998 (0.001)
+  psi 1024  0.969 (0.004)
+  psi 4096  0.928 (0.010)
+
+irrelevant noise columns added to the six real ones, mean AUC, both anomaly kinds
+  0    forest 0.965  Gaussian per feature 0.468
+  6    forest 0.844  Gaussian per feature 0.490
+  20   forest 0.616  Gaussian per feature 0.501
+  60   forest 0.489  Gaussian per feature 0.502
+  200  forest 0.502  Gaussian per feature 0.515
+```
+
+**Fewer rows per tree can be better.** With more rows, a dense clump of anomalies stops looking few, so they mask each other. The paper reports the same direction on a clustered data set, Mulcross, with an AUC of 0.67 at 4,096 rows and 0.91 at 128. Our rates differ, as the data does, and the direction agrees.
+
+**Irrelevant columns hurt it badly.** Each split picks a column at random, so noise columns waste splits. Sixty of them take the forest to chance on this table. The paper warns of this too, says the method "also suffers" from high dimensions, and adds a kurtosis-based column selector in its tests. So on a wide table, choose columns first. Liu et al.'s own comparison isn't one-sided either. Against the ORCA detector, the forest wins on the Http data, 1.00 to 0.36, and loses on Pima, 0.67 to 0.71, and on Ionosphere, 0.85 to 0.92. [LLM embeddings as features](../../03-nlp/notes/07-llm-embeddings-as-features.md) runs the same forest on embeddings, which is the case where this warning matters.
 
 ---
 
@@ -532,6 +599,8 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 | k-means on non-round shapes | Moons or rings cut in half | DBSCAN or agglomerative with suitable linkage |
 | `eps` without scaling in DBSCAN | Everything is noise, or one cluster | Scale first, then sweep `eps` |
 | Collaborative filtering without mean normalisation | A new user is predicted 0 for every item | Subtract each item's mean rating |
+| A Gaussian detector scores gap points as normal | Normal data has two regimes, and the gap sits near the overall mean. We measured an AUC of 0.000 | Plot the columns first, then use a forest or one Gaussian per regime |
+| An isolation forest near chance on a wide table | Random splits land on irrelevant columns: AUC 0.965 at none, 0.489 at 60 | Select columns first |
 
 ## Try it
 
@@ -539,6 +608,7 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 2. Fit k-means with 2 to 8 clusters on the `make_blobs` data and print the silhouette of each. Does the score recover 3?
 3. Sweep `eps` over 0.1, 0.2, 0.3, 0.5, 1.0, 2.0 on the scaled moons. When does DBSCAN give two clusters?
 4. Compress an image with ex7's `run_kmeans` at K=16. Solution in [`ex7.ipynb`](../practice/ng-machine-learning/ex7/ex7.ipynb).
+5. A colleague says an isolation forest is the modern replacement for a Gaussian detector. Using the tables in [the forest section](#isolation-forest-on-tabular-data), give one case where they're right and two where they aren't.
 
 <details>
 <summary>Answers</summary>
@@ -546,6 +616,8 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 1. Seven components keep 90%. Five-fold accuracy in a pipeline is 0.972 against 0.981 with all 30, a small price for an input about 75% smaller.
 2. No. The silhouette is 0.772 at 2 clusters and 0.721 at 3, because two of the three blobs sit close together. The score favours whichever split is cleanest and not the number that generated the data, which is why inspection stays part of the job.
 3. At 0.1 and 0.2 there are seven fragments, with 161 and 6 points left as noise. At 0.3 and 0.5 there are two clusters and no noise. From 1.0 up everything is one cluster.
+4. The solution is in the notebook linked above.
+5. Right: anomalies between two regimes, 1.000 against 0.000 to 0.001, and a skewed column, 0.952 against 0.493. Wrong: on ex8 the two tie at an F1 of 0.875, on far-out anomalies a full-covariance Gaussian wins 1.000 to 0.929, and 60 irrelevant columns take the forest to chance.
 
 </details>
 
@@ -561,6 +633,8 @@ An AUC of 0.870 means a random member outranks a random non-member 87% of the ti
 | k-means vs DBSCAN? | k-means needs `k` and predicts new points. DBSCAN finds `k`, handles any shape and flags noise, but needs `eps` |
 | How do you evaluate a clustering? | ARI or NMI with labels; silhouette plus manual inspection and stability without |
 | Anomaly detection vs classification? | Density when positives are rare or novel; a classifier when positives are many and stable |
+| How does an isolation forest score a point? | By how few random splits isolate it, averaged over trees, each on a small sample. No density is modelled |
+| When does a forest beat a Gaussian, and when not? | It wins on gaps between regimes and skewed columns. It ties on round clouds and fails when irrelevant columns swamp the splits |
 | What is collaborative filtering? | Low-rank factorisation of the ratings matrix fitted on observed entries, learning item and user vectors |
 
 ## Next

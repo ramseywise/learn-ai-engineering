@@ -12,8 +12,11 @@ sources:
   - https://arxiv.org/abs/1409.0473
   - https://aclanthology.org/D14-1162/
   - https://arxiv.org/abs/1607.06520
+  - https://doi.org/10.1126/science.1127647
+  - https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf
+  - ../practice/autoencoder.py
 confidence: high
-cleaned: 2026-11-01
+cleaned: 2026-11-02
 ---
 # Sequence models
 
@@ -402,6 +405,59 @@ attention=True   characters right 1.000  whole date right 1.000
 
 After six epochs on the same data, attention gets every held-out date right, while the bottleneck model gets 3% of whole dates. The printout shows what the weights read. The year digits look at the year (the century at its neighbour, since only 19 and 20 occur), the month digits look at the "m" of "may", and the day digits look at the "3" and the space beside it. Now take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../../generative-ai/09-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
 
+## Autoencoders: the bottleneck on its own
+
+The seq2seq model squeezed a sentence through one vector and suffered for it. An **autoencoder** makes that squeeze the whole point. An encoder maps the input to a small vector called the **code**, a decoder rebuilds the input from the code, and the loss is the difference between input and output, so no labels are needed. It can't copy the input through a narrow code, so it has to learn what's regular in the data. Hinton and Salakhutdinov set this out as a non-linear generalisation of PCA, and showed a deep network reaching a squared error of 3.00 on MNIST at a code of 30, against 13.87 for PCA ([*Reducing the Dimensionality of Data with Neural Networks*](https://doi.org/10.1126/science.1127647), *Science* 2006). Deep ones were hard to train then, which is why that paper needed layer-wise pretraining.
+
+```python
+# illustrative: from practice/autoencoder.py, on scikit-learn's digits (8 by 8 pixels, scaled 0 to 1)
+def make_ae(code, hidden=128):
+    return nn.Sequential(nn.Linear(64, hidden), nn.ReLU(), nn.Linear(hidden, code), nn.ReLU(),
+                         nn.Linear(code, hidden), nn.ReLU(), nn.Linear(hidden, 64), nn.Sigmoid())
+```
+
+[`practice/autoencoder.py`](../practice/autoencoder.py) trains this on a small data set of 1,797 digit images, far smaller than the paper's MNIST, so don't compare the scale of these numbers with theirs.
+
+```text
+held-out squared error per image, mean (sd) over five splits; pixels scaled 0 to 1, 64 pixels
+code 2   autoencoder 2.807 (0.513)   PCA 3.399 (0.029)
+code 4   autoencoder 1.739 (0.393)   PCA 2.432 (0.018)
+code 8   autoencoder 1.233 (0.112)   PCA 1.569 (0.025)
+code 16  autoencoder 0.764 (0.198)   PCA 0.738 (0.008)
+code 32  autoencoder 0.315 (0.067)   PCA 0.171 (0.004)
+```
+
+The non-linear model wins only where the code is tight. At 16 they're level, and at 32 PCA is ahead, with far less variation between runs and no training. So compute PCA first: it's your baseline, and it may be all you need.
+
+**Denoising.** Vincent et al. asked what happens if you drop the bottleneck. Corrupt the input by setting a random share of it to zero, then ask for the clean version. Now copying fails even with a code wider than the input, so the corruption replaces the bottleneck as the constraint, and it applies only during training ([*Extracting and Composing Robust Features with Denoising Autoencoders*](https://www.cs.toronto.edu/~larocheh/publications/icml-2008-denoising-autoencoders.pdf), ICML 2008). Their model selection in fact chose very wide layers, 2,000 units for 784 pixels, and stacked denoising layers beat ordinary stacked autoencoders on most of their tasks, though not all. Here's the same effect on a wide network that could simply copy:
+
+```text
+wide network with 256 hidden units, test images with 30% of pixels zeroed; error measured against the clean image
+doing nothing (the corrupted image as the answer): error 4.495
+Plain, trained on clean input        clean input 0.077   corrupted input 3.771   distance from the corrupted input 0.216
+Denoising, trained with 30% zeroed   clean input 0.545   corrupted input 0.927   distance from the corrupted input 3.756
+```
+
+The plain network does learn to copy, and its output stays only 0.216 from the corrupted input, holes and all. The denoising network repairs them, taking the error from 4.495 to 0.927. It pays with a worse reconstruction of clean images, 0.545 against 0.077, as it's learned a different job.
+
+**Reconstruction error as an anomaly score.** Train on normal data only. The model rebuilds what resembles its training set and fails on what doesn't, so the error becomes a score. Neither paper above proposes this, as both are after representations, so what follows is the course's own test. We hide one digit from training and ask whether error picks it out of a test set, for each digit in turn.
+
+```text
+AUC for spotting a digit never seen in training, mean over all ten digits, five splits each
+code 2   autoencoder 0.902 (sd over runs 0.097)   PCA 0.785 (sd 0.140)
+code 4   autoencoder 0.954 (sd over runs 0.041)   PCA 0.798 (sd 0.107)
+code 8   autoencoder 0.956 (sd over runs 0.043)   PCA 0.885 (sd 0.082)
+code 16  autoencoder 0.954 (sd over runs 0.050)   PCA 0.839 (sd 0.109)
+code 32  autoencoder 0.910 (sd over runs 0.078)   PCA 0.743 (sd 0.133)
+by held-out digit at code 16, autoencoder: {0: 0.997, 1: 0.848, 2: 0.991, 3: 0.954, 4: 0.988, 5: 0.989, 6: 0.917, 7: 0.991, 8: 0.961, 9: 0.909}
+```
+
+![Two panels against size of the code. Left: squared error falls with code size, with the autoencoder ahead of PCA at 2, 4 and 8, level at 16 and behind at 32. Right: AUC for spotting an unseen digit is highest at middle code sizes, near 0.95 for the autoencoder, and lower for PCA at every size](../../sources/images/dl-autoencoder-bottleneck.png)
+
+Here's the catch, and the reason the two panels disagree. The best reconstruction isn't the best detector. Widen the code and PCA's error keeps falling, yet its AUC drops from 0.885 at 8 to 0.743 at 32, and the autoencoder's falls from 0.954 at 16 to 0.910 at 32. A code wide enough to rebuild everything rebuilds the anomalies too. So choose the code size on labelled anomalies if you have some, not on reconstruction error. Detection also depends on the anomaly: at 0.848, the digit 1 is the hardest, plausibly because its few strokes are easy to rebuild from the others.
+
+For tabular anomalies, try [an isolation forest or a Gaussian](../../01-classical-ml/notes/05-unsupervised-learning.md#anomaly-detection-ng-ex8-part-1) first, and reach for this when the input is an image or other raw signal. To turn the code into a distribution you can sample from, see [the VAE](../../../data-analytics/04-bayesian-analysis/notes/06-bayesian-machine-learning.md#the-vae).
+
 ## Reading
 
 Buduma, *Fundamentals of Deep Learning* ([PDF](../../sources/buduma-fundamentals-of-deep-learning.pdf)), ch. 7 (models for sequence analysis) parallels this chapter, using TensorFlow.
@@ -423,6 +479,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 | Padded batches give worse results | The last "step" for short sequences is padding | `pack_padded_sequence`, or index the true last step |
 | Good loss in training, bad text when sampling | Teacher forcing: the model never saw its own mistakes | Sample while training to check; lower the temperature |
 | Decoder fine for short input, poor for long | Everything squeezed into one vector | Attention |
+| An autoencoder with a low error misses anomalies | The code is wide enough to rebuild them too: PCA fell from 0.885 to 0.743 AUC between codes of 8 and 32 | Choose the code size on labelled anomalies, not on reconstruction error |
 
 ## Try it
 
@@ -450,6 +507,14 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
    </details>
 
+4. From the autoencoder tables, which code size would you ship for reconstruction, and which for spotting unseen digits? Why do they differ?
+
+   <details><summary>Answer</summary>
+
+   For reconstruction, PCA at 32, with an error of 0.171, and more components would do better still. For detection, the autoencoder at 4 to 16, with an AUC near 0.955. A wider code rebuilds unseen digits as well as seen ones, so the gap that the score relies on closes.
+
+   </details>
+
 ## Interview checklist
 
 | Question | Answer |
@@ -463,6 +528,9 @@ All the numbers on digits, memory, names and dates came from running the code sh
 | What is teacher forcing? | Feeding the true previous token in training instead of the model's own output. |
 | What does temperature do at sampling time? | Divides logits before the softmax: lower is more conservative, higher is more random. |
 | What problem did attention solve? | The fixed-size bottleneck: the decoder chooses which encoder states to read at each step. |
+| What does an autoencoder's bottleneck do? | Forces it to keep what's regular, as copying won't fit. A linear one spans the same subspace as PCA, so use PCA as the baseline. |
+| What does denoising change? | Corruption replaces the bottleneck as the constraint, so the code can be wide. Corrupt in training only. |
+| Why is reconstruction error a risky anomaly score? | A code wide enough can rebuild the anomalies as well, so the best reconstruction isn't the best detector. |
 | What's a word-vector analogy test doing? | Checking that $\text{woman} - \text{man} + \text{king}$ is nearest to queen by cosine, excluding the inputs. |
 
 ## Next

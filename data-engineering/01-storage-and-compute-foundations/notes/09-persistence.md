@@ -9,6 +9,7 @@ sources:
   - https://www.postgresql.org/docs/current/wal-async-commit.html
   - https://www.postgresql.org/docs/current/runtime-config-wal.html
   - https://www.postgresql.org/docs/current/warm-standby.html
+  - https://www.postgresql.org/docs/current/continuous-archiving.html
   - https://wiki.postgresql.org/wiki/Fsync_Errors
   - https://man7.org/linux/man-pages/man2/fsync.2.html
   - https://www.sqlite.org/howtocorrupt.html

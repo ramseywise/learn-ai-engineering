@@ -474,4 +474,4 @@ The most important line is the last. An incident is paid for once it has happene
 
 ## Next
 
-The feed is clean again, and the model downstream of it is next. The [ML platform pillar](../../06-ml-platform/README.md) takes up what that model needs from the data platform: features that match at training and serving time, a registry, serving, drift and the maturity to run it all.
+The feed is clean again. Many incidents start with a change someone shipped, so next is how to change a live table safely: [Schema and data migrations](04-schema-and-data-migrations.md).

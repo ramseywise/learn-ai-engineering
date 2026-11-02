@@ -170,8 +170,9 @@ Each pillar has a README with its reading order, a `references.md` that maps its
 3. Build collaborative-filtering and factorisation recommenders and evaluate ranking rather than only rating error ([Koren et al.](https://doi.org/10.1109/MC.2009.263)).
 4. Explain how two-tower retrieval handles large catalogues and cold-start content features.
 5. Design offline and online evaluation for ranking systems, including sampled-negative, exposure-bias, and counterfactual-evaluation pitfalls ([Dacrema et al.](https://arxiv.org/abs/1907.06902)).
+6. Match records with no shared key by blocking, scoring and ranking candidates, train pointwise, pairwise and listwise rankers, and score a match by whole records with room to abstain ([Fellegi and Sunter](https://www.irs.gov/pub/irs-soi/1985preprintar28.pdf); [Burges](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/MSR-TR-2010-82.pdf)).
 
-**Review and practice:** [deck](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) · labs in [practice](05-time-series-and-recommenders/practice/README.md) · [customer-segments lab](05-time-series-and-recommenders/practice/customer-segments-lab/README.md).
+**Review and practice:** [deck](05-time-series-and-recommenders/slides/time-series-and-recommenders.pptx) · labs in [practice](05-time-series-and-recommenders/practice/README.md) · [customer-segments lab](05-time-series-and-recommenders/practice/customer-segments-lab/README.md) · [matching lab](05-time-series-and-recommenders/practice/04_matching_lab.py).
 
 **Mastery lab:** Complete either a rolling-origin demand forecast or a recommendation-ranking comparison. State the information boundary, include the naive or popularity baseline, show the correct evaluation metric, inspect failure cases, and convert the model choice into an operational decision.
 

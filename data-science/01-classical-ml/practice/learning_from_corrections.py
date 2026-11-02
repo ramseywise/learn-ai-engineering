@@ -8,7 +8,7 @@ Run from this folder:
     uv run learning_from_corrections.py
 
 Invoices are generated (see invoices.py), so the truth is known and the clerk is simulated. Active learning is
-also run on the real credit file, whose labels are nobody's simulation. Takes about half an hour. Writes two
+also run on the real credit file, whose labels are nobody's simulation. Takes about fifteen minutes. Writes two
 figures to ../../sources/images/.
 """
 # %% Setup
@@ -478,7 +478,7 @@ for scenario, quiet in (("anywhere", False), ("only on invoices that look clean"
         rows += [{**r, "policy": "audit 2%"} for r in run_loop("audit", s, audit_rate=0.02, quiet=quiet)]
     loop = pd.DataFrame(rows)
     loops[scenario] = loop
-    print(f"\nEight months, 10,000 invoices each, retrained monthly on the last three months. New fraud type from month 3, {scenario}. Mean of 8 seeds, judged on fresh true outcomes")
+    print(f"\nEight months, 10,000 invoices each, retrained monthly on the last four months. New fraud type from month 3, {scenario}. Mean of 8 seeds, judged on fresh true outcomes")
     pv = loop.groupby(["policy", "month"], sort=False)[["paid", "reviewed", "error_paid", "new_type_paid", "auc", "cost_with_audit"]].mean()
     print(pv[pv.index.get_level_values("month").isin([2, 3, 5, 8])].to_string())
     after = loop[loop.month >= 3].groupby(["policy", "seed"]).cost_with_audit.mean().unstack(0)
@@ -534,7 +534,7 @@ axes[0].legend(loc="lower right")
 cs.save(fig, "corrections-active-learning.png")
 
 NAMES = {"never retrained": "Never retrained", "silence is correct": "Silence counts as correct", "reviewed only": "Reviewed invoices only", "audit": "Random audit, 5%", "true labels": "Every true label (unobtainable)"}
-fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.4), sharey=True)
+fig, axes = plt.subplots(1, 2, figsize=(9.5, 4.6), sharey=True, layout="constrained")
 for ax, (scenario, title) in zip(axes, [("anywhere", "New fraud type on any round amount"), ("only on invoices that look clean", "New fraud type only on clean-looking invoices")]):
     d = loops[scenario]
     for policy, colour, ls in [("never retrained", cs.MUTED, "--"), ("silence is correct", cs.ORANGE, "-"), ("reviewed only", cs.YELLOW, "-"), ("audit", cs.BLUE, "-"), ("true labels", cs.INK, ":")]:
@@ -546,6 +546,5 @@ for ax, (scenario, title) in zip(axes, [("anywhere", "New fraud type on any roun
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f"{v:.1%}"))
     ax.set_ylim(0, None)
 axes[0].set_ylabel("True error rate on invoices paid automatically")
-fig.legend(*axes[0].get_legend_handles_labels(), loc="lower center", ncols=3)
-fig.subplots_adjust(bottom=0.26)
+fig.legend(*axes[0].get_legend_handles_labels(), loc="outside lower center", ncols=3)
 cs.save(fig, "corrections-silent-acceptance.png")

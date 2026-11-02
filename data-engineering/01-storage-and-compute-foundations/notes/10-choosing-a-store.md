@@ -346,8 +346,8 @@ Two stores, perhaps three, where the first instinct might name six. If search re
 
 <details><summary>Answers</summary>
 
-1. Fan-out rises from about 5 to about 30 per node, so the reachable set explodes in two or three fewer hops and the query does far more work, with most of it deduplicating nodes already seen. That is where hub-heavy graphs start to hurt in SQL.
-2. It selects whole rows, so a column store has to reassemble every column, and a row store reads them directly. An index on `zone` helps SQLite, but at about 1 in 265 it still touches many rows. The gap narrows sharply compared with a group-by over one column.
+1. Fan-out rises from about 5 to about 30 per node. In one run, 21,921 nodes were reached at hop 3, where the smaller graph needed more than six hops to reach that many, and hop 4 reached 99,858 of the 100,000. Six hops took 4,440 ms instead of 15 ms. Hops 5 and 6 reach almost nothing new and still get slower, because the query spends its work deduplicating nodes already seen. That is where hub-heavy graphs start to hurt in SQL.
+2. DuckDB is still faster, but by much less. In one run SQLite took 46 ms with no index and 5.7 ms with an index on `zone`, against 3.0 ms for DuckDB, for the same 7,462 rows. The group-by gap was about 150 times. Selecting whole rows makes a column store reassemble every column while a row store reads them directly, and an index lets SQLite skip the scan, so the gap comes down to about 2 times.
 3. Ask how the data is read. Whole-object lookups by key and varying shape favour a document store; bulk daily reports favour files in an object store, such as Parquet, queried by DuckDB or a warehouse. JSON at ingest says nothing about either. Likely suggestion: append to object storage and leave MongoDB out.
 4. Exact search scales linearly, so at this rate about 6 million vectors reach 100 ms. Before a new store, try reducing dimensions, filtering first, or pgvector with an HNSW index if Postgres is already there.
 

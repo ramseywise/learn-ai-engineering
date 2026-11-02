@@ -102,8 +102,11 @@ the checks into one scorecard. Attacks that arrive through an image, a document 
 The lecture deck is [slides/multimodal-engineering.pptx](slides/multimodal-engineering.pptx), built from
 [slides/deck.yaml](slides/deck.yaml) with `make slides PILLAR=ai-engineering/08-multimodal-engineering STRICT=1`.
 
-This pillar has no `practice/` folder yet. Every chapter's code runs on synthetic data with
-`uv run --with numpy --with pillow python <file>.py`, and the "Try it" sections are the exercises.
+Every chapter's code runs on synthetic data with `uv run --with numpy --with pillow python <file>.py`, and the
+"Try it" sections are the exercises. [`practice/invoice_pipeline.py`](practice/invoice_pipeline.py) runs generated invoices
+through routing, extraction and checks, for [chapter 2](notes/02-document-understanding.md#a-pipeline-you-can-run), and scores
+field F1 and cost per document: `uv run invoice_pipeline.py`, from `practice/`. It takes a few minutes on a laptop CPU, and
+it calls no vision model.
 
 ---
 
@@ -111,6 +114,7 @@ This pillar has no `practice/` folder yet. Every chapter's code runs on syntheti
 
 ```
 notes/                       chapters (see Reading order)
+practice/                    runnable invoice pipeline
 references.md                papers and books, mapped to notes
 sources/<book-slug>/chNN-*.pdf   book chapters
 sources/<author-year-slug>.pdf   papers

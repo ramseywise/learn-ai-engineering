@@ -36,7 +36,7 @@ cleaned: 2026-11-02
 | Ester et al., [*A Density-Based Algorithm for Discovering Clusters*](https://cdn.aaai.org/KDD/1996/KDD96-037.pdf) (KDD 1996) | DBSCAN | Link only | 05 |
 | van der Maaten and Hinton, [*Visualizing Data using t-SNE*](https://jmlr.org/papers/v9/vandermaaten08a.html) (JMLR 2008) | t-SNE | Link only | 05 |
 | McInnes et al., [*UMAP*](https://arxiv.org/abs/1802.03426) (preprint 2018) | The faster neighbour embedding | [PDF](../sources/mcinnes-2018-umap.pdf) | 05 |
-| Liu et al., [*Isolation Forest*](https://doi.org/10.1109/icdm.2008.17) (ICDM 2008) | Anomaly detection by random splits | Link only | 05 |
+| ★ Liu, Ting and Zhou, [*Isolation Forest*](https://doi.org/10.1109/icdm.2008.17) (ICDM 2008) | Anomalies by path length under random splits, with sub-sampling against masking and the warning about irrelevant columns. Read in full in the [authors' copy](https://www.lamda.nju.edu.cn/publication/icdm08b.pdf) | Link only | [05](notes/05-unsupervised-learning.md#isolation-forest-on-tabular-data) |
 | Breiman, [*Random Forests*](https://doi.org/10.1023/a:1010933404324) (Machine Learning 2001) | The method, out-of-bag estimates, and permutation importance | Link only | 06, 08 |
 | Friedman, [*Greedy Function Approximation*](https://doi.org/10.1214/aos/1013203451) (Annals of Statistics 2001) | Gradient boosting, and partial dependence | Link only | 06, 08 |
 | ★ Chen and Guestrin, [*XGBoost*](https://arxiv.org/abs/1603.02754) (KDD 2016) | Second-order leaf weights, regularisation, sparsity-aware splits, the systems design | [PDF](../sources/chen-2016-xgboost.pdf) | 07 |

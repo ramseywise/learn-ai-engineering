@@ -11,10 +11,11 @@
 | # | Chapter | Question it answers |
 |---|---|---|
 | 1 | [Warehouse and store](notes/01-warehouse-and-store.md) | Why does layout decide the bill, and when does Spark earn its shuffle? |
-| 2 | [Table formats](notes/02-table-formats.md) | How does a log turn a bucket into a table? Delta, Iceberg and Hudi on disk. |
-| 3 | [Lakehouse against warehouse](notes/03-lakehouse-vs-warehouse.md) | What do you gain and give up when the lake is the system of record? |
-| 4 | [Kafka and stream semantics](notes/04-kafka-and-stream-semantics.md) | What do at-least-once, exactly-once and watermarks actually guarantee? |
-| 5 | [Cost](notes/05-cost.md) | How do bytes, slots and egress turn into a number before the invoice? |
+| 2 | [Object storage and the data lake](notes/01b-object-storage-and-the-data-lake.md) | What does an object store guarantee, what does it cost, and what makes a pile of files a lake? |
+| 3 | [Table formats](notes/02-table-formats.md) | How does a log turn a bucket into a table? Delta, Iceberg and Hudi on disk. |
+| 4 | [Lakehouse against warehouse](notes/03-lakehouse-vs-warehouse.md) | What do you gain and give up when the lake is the system of record? |
+| 5 | [Kafka and stream semantics](notes/04-kafka-and-stream-semantics.md) | What do at-least-once, exactly-once and watermarks actually guarantee? |
+| 6 | [Cost](notes/05-cost.md) | How do bytes, slots and egress turn into a number before the invoice? |
 
 ## Builds on and feeds into
 
@@ -46,7 +47,7 @@
 ## Deck and practice
 
 - **Deck:** [slides/warehouse-lakehouse-streaming.pptx](slides/warehouse-lakehouse-streaming.pptx). Build with `make slides PILLAR=data-engineering/04-warehouse-lakehouse-streaming STRICT=1 PREVIEW=1`.
-- **Practice:** [practice/datatalks-de](practice/datatalks-de). `03-data-warehouse` needs a GCP account with BigQuery. `05-batch` needs Java and Spark 3.x, and runs offline after its `download_data.sh`. `06-streaming` needs Docker for the broker (`docker compose up`, then the `python/json_example` producer and consumer).
+- **Practice:** [practice/01_warehouse_and_store.py](practice/01_warehouse_and_store.py) and [practice/01b_object_storage.py](practice/01b_object_storage.py) hold the code for those two chapters; the S3 code runs against moto, a local mock. [practice/datatalks-de](practice/datatalks-de). `03-data-warehouse` needs a GCP account with BigQuery. `05-batch` needs Java and Spark 3.x, and runs offline after its `download_data.sh`. `06-streaming` needs Docker for the broker (`docker compose up`, then the `python/json_example` producer and consumer).
 - **Chapter code:** every block without an `# illustrative` label runs locally. Each chapter gives its `uv run --with ...` line. No cloud account is required.
 
 ## Primary texts
