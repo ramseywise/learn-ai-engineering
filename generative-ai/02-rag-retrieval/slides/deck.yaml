@@ -620,18 +620,18 @@ parts:
       Regexes alone miss paraphrases, so add a model-based classifier.'
 - title: Case studies
   summary: PRINCE, store choice and a semantic cache.
-  notes: A published production stack and two of our own project chapters, each applying the earlier stages
+  notes: A published production stack and two chapters from a production support agent, each applying the earlier stages
     under real constraints.
   slides:
   - layout: statement
     title: What does this look like at real scale?
     kicker: The evidence
-    statement: 'A published stack and a project write-up: the same stages as before, with real constraints
+    statement: 'A published stack and a production write-up: the same stages as before, with real constraints
       and removed features.'
     attribution: What a team took out is often the most useful thing it can tell you.
     source: notes/08-agentic-rag-prince.md
     notes: 'Time for case studies. Bayer''s PRINCE answers questions over clinical documents and structured
-      data, and its numbers are specific enough to learn from. After that, our own support-agent project:
+      data, and its numbers are specific enough to learn from. After that, a production support agent with its identity removed:
       which store to use and how to skip the pipeline altogether with a cache. Each one shows the earlier
       techniques with real constraints.'
   - layout: flow
@@ -743,7 +743,7 @@ parts:
     takeaway: A cache lookup is a matrix multiply that skips the whole pipeline, and a wrong match goes
       to the user unchecked.
     source: notes/10-semantic-cache.md
-    notes: A cache skips the whole retrieval and generation path on a hit. In our project that saved about
+    notes: A cache skips the whole retrieval and generation path on a hit. In a production agent that saved about
       3 to 6 seconds and two or more LLM calls, for the price of one embedding and a matrix multiply.
       At a few hundred rows you don't need an ANN index. Unlike an exact cache, it can match wrongly,
       and nothing downstream will check it. So the threshold is the design decision.
@@ -805,31 +805,31 @@ parts:
     highlight:
     - 3
     rows:
-    - - va_staging benchmark
+    - - Incumbent benchmark
       - '0.625'
       - '0.625'
       - ~9.3 s
-    - - kb_adk + thinking
+    - - Tool-loop + thinking
       - '0.583'
       - '0.531'
       - 7.3 s
-    - - kb_lg + CRAG
+    - - Graph + CRAG
       - '0.547'
       - '0.531'
       - 7.7 s
-    - - kb_lg, no CRAG
+    - - Graph, no CRAG
       - '0.542'
       - '0.531'
       - 4.4 s
-    - - kb_adk baseline
+    - - Tool-loop baseline
       - '0.418'
       - '0.219'
       - 2.6 s
     takeaway: Ablations expose costs and interactions, like a loop that buys almost nothing and a setting
       that helps one agent only.
     source: notes/11-retrieval-improvements.md
-    notes: 'This is our project''s real table: 44 tasks, 32 with gold URLs, so read small gaps with care.
-      Thinking gave the ADK agent plus 0.165 MRR, but hurt the LangGraph agent with CRAG, because it changed
+    notes: 'This is a real table from a production support-agent evaluation, identity removed and raw data not in this repo: 44 tasks, 32 with gold URLs, so read small gaps with care.
+      Thinking gave the tool-loop agent plus 0.165 MRR, but hurt the graph agent with CRAG, because it changed
       citation style and broke the grader. CRAG itself gave plus 0.005 for plus 3.4 seconds, since the
       confidence gate short-circuited most runs. Meanwhile an LLM planner lost to a regex by 0.031 and
       added 4 seconds.'
@@ -852,8 +852,8 @@ parts:
       32 queries is at most 0.088. So plus 0.03 isn''t real yet. But the same queries go through both
       systems, so difficulty cancels. The paired bootstrap uses that: compute the per-query difference,
       resample queries, read the interval. In Tallybook''s kit, dense beats hybrid by 0.133 MRR on 20
-      queries and the interval still crosses zero. That also sets the priority order for our shortlist:
-      cheap information first. A newer model and the kb_rag backend are flags, multi-query is a node,
+      queries and the interval still crosses zero. That also sets the priority order for the shortlist:
+      cheap information first. A newer model and the pipeline backend are flags, multi-query is a node,
       HyDE depends on the backend, and DPO waits for 200 or more preference pairs.'
   - layout: flow
     title: What a managed backend takes off your hands
@@ -876,20 +876,20 @@ parts:
     takeaway: A managed backend takes the index off your hands, while the eval and the decision about
       what goes in stay yours.
     source: notes/12-managed-rag.md
-    notes: 'So do we buy it? This was our Bedrock setup. The crawl, chunking, vector database and hybrid
-      search are the service. Query transformation and generation are still ours. Crucially, the eval
+    notes: 'So do we buy it? This was the Bedrock setup in that production system. The crawl, chunking, vector database and hybrid
+      search are the service. Query transformation and generation are still yours. Crucially, the eval
       isn''t in the flow: neither service knows whether your refund answer is right. And the service won''t
       remove the 2024 page either. Dropping English duplicates and tiny pricing-table chunks was a decision
-      we had to make.'
+      the team had to make.'
   - layout: table
     title: Buy, buy, or build
     recall: What differs in who owns generation?
-    lead: As observed in the project, 2026. Check current docs.
+    lead: As one team observed, 2026. Check current docs.
     header:
     - ''
     - Bedrock KB
     - Vertex AI Search
-    - Own (kb_rag)
+    - Build your own
     widths:
     - 3
     - 3
@@ -923,10 +923,10 @@ parts:
     takeaway: Managed services differ in how much they hide, and the evaluation row reads the same across
       every option.
     source: notes/12-managed-rag.md
-    notes: 'Here are the three options our project ran. Bedrock leaves generation to you and shows you
+    notes: 'Here are the three options that system ran. Bedrock leaves generation to you and shows you
       scores. Vertex is more opaque, and its answer endpoint can own retrieval and generation. It maintains
-      sessions, too. And kb_rag is our own deterministic pipeline: retrieve once, rerank, generate. You
-      get everything, including all the work. These rows reflect what the project saw in 2026, so check
+      sessions, too. And the team''s own deterministic pipeline is the third: retrieve once, rerank, generate. You
+      get everything, including all the work. These rows reflect what the team saw in 2026, so check
       the current docs.'
   - layout: code
     title: One request, two retrieval modes
@@ -946,7 +946,7 @@ parts:
     source: notes/12-managed-rag.md
     notes: 'The two Bedrock modes differ by one configuration object. Fast takes 5 results and no reranker,
       for the agent tool. Reranking takes 15 candidates down to 5, for eval and complex queries. Note
-      that the score threshold isn''t in the request at all: it''s our client-side setting. And on an
+      that the score threshold isn''t in the request at all: it''s a client-side setting. And on an
       unsupported store, a hybrid request uses semantic search instead, so check your vector store. The
       chapter validates this with boto3''s Stubber, with no AWS account.'
   - layout: table

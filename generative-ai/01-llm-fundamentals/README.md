@@ -37,7 +37,8 @@ Read in order on a first pass. Each chapter ends with pitfalls, exercises and an
 
 | # | Chapter | Covers |
 |---|---|---|
-| 06 | [Pretraining: data and objectives](notes/06-pretraining-data-and-objectives.md) | The training pipeline, loop and loss checks, data, cost, Chinchilla in practice |
+| 06 | [Pretraining: data and objectives](notes/06-pretraining-data-and-objectives.md) | The training pipeline, loop and loss checks, overfitting, curation and data |
+| 15 | [The pretraining run: batch, cost and scale](notes/15-pretraining-runs-cost-and-scale.md) | Batch size and newer optimizers, cost and carbon, Chinchilla in practice, pricing a run |
 | 07 | [SFT and instruction tuning](notes/07-sft-and-instruction-tuning.md) | Classification and instruction fine-tuning, chat templates, continued pretraining |
 | 08 | [Preference optimisation: an overview](notes/08-preference-optimisation-overview.md) | Reward models and PPO, DPO, distillation |
 | 09 | [PEFT and fine-tuning in practice](notes/09-peft-and-fine-tuning-in-practice.md) | LoRA, QLoRA, adapters, quantization, prompt or retrieve or fine-tune |

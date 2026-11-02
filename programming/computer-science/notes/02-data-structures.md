@@ -150,17 +150,21 @@ Since Python 3.6, the table has been split in two, following [Raymond Hettinger'
 ```text
 d = {"model": "m", "tokens": 512, "ms": 81}
 
-dk_indices (8 slots: one byte each)     dk_entries (dense, insertion order)
-slot  0   1   2   3   4   5   6   7      0: hash("model"),  "model",  "m"
-     [ - ][ 2 ][ - ][ 0 ][ - ][ - ][ 1 ][ - ]      1: hash("tokens"), "tokens", 512
-                                         2: hash("ms"),     "ms",     81
-                                         3: (free)
-- means EMPTY. A deleted slot is marked DUMMY.     4: (free)
+dk_indices: 8 slots, one byte each
+  slot    0    1    2    3    4    5    6    7
+        [ . ][ 2 ][ . ][ 0 ][ . ][ . ][ 1 ][ . ]        . = EMPTY
 
-The slots shown here are illustrative: string hashes change per process.
+dk_entries: dense, in insertion order (room for 5)
+  0: hash("model")   "model"   "m"
+  1: hash("tokens")  "tokens"  512
+  2: hash("ms")      "ms"      81
+  3: free
+  4: free
+
+The slot positions are illustrative: string hashes change per process.
 ```
 
-Two good things come from this layout. Iterating walks the dense entries and so needs no scan of empty slots, and insertion order comes free, a property the language now guarantees. And the sparse part is small: a table up to 255 slots needs only 1 byte per slot rather than a full 24-byte entry, because positions are small numbers. The comment at the top of [`dictobject.c`](https://github.com/python/cpython/blob/v3.14.7/Objects/dictobject.c) lays out the same design.
+Two good things come from this layout. Iterating walks the dense entries and so needs no scan of empty slots, and insertion order comes free, a property the language now guarantees. And the sparse part is small: a table of up to 128 slots needs 1 byte per slot and not a full 24-byte entry, because positions are small numbers, and the width only steps up to 2, 4 and then 8 bytes as the table grows. The comment at the top of [`dictobject.c`](https://github.com/python/cpython/blob/v3.14.7/Objects/dictobject.c) lays out the same design.
 
 The size in bytes fits a simple model. The table is kept at most two-thirds full, by the `USABLE_FRACTION` macro. With `s` slots, the entries array has room for `2s/3` entries at 24 bytes each, and the index width depends on `s`:
 
@@ -297,7 +301,7 @@ Six thousand keys that all collide on their low bits cost about 4 probes each he
 
 ## Deleting doesn't give anything back
 
-You can't simply mark a deleted slot as empty, because other keys' probe sequences may run through it, and a lookup stops at the first empty slot. So deletion leaves a `DUMMY` in the index and a hole in the entries array. [`dictnotes.txt`](https://github.com/python/cpython/blob/v3.14.7/Objects/dictnotes.txt) says that resizing only happens on insertion, when the usable space runs out. The [time complexity page](https://docs.python.org/3/builtins/time-complexity.html) notes in a footnote that tables aren't shrunk on deletion. Together those have real consequences:
+You can't simply mark a deleted slot as empty, because other keys' probe sequences may run through it, and a lookup stops at the first empty slot. So deletion leaves a `DUMMY` in the index and a hole in the entries array. [`dictnotes.txt`](https://github.com/python/cpython/blob/v3.14.7/Objects/dictnotes.txt) says that resizing only happens on insertion, when the usable space runs out. That has real consequences:
 
 ```python
 import sys
@@ -340,7 +344,7 @@ iterate 10 keys: hollow 241.6 us, fresh 0.13 us
 inserting 1,398,092 new keys triggers a resize: 41,943,128 -> 83,886,160 bytes
 ```
 
-Delete all but 10 of a million keys and the dict still holds 41.9 MB. Iterating it costs about 240 µs for 10 keys, because it walks the dense array past all the holes, while a fresh copy takes 0.13 µs. `dict(d)` is the fix, and it's a one-liner once you know you need it. The last line is odder: after those deletions the dict is nearly empty but still has no free entries past its high-water mark for a long time, and when it finally resizes, it does so based on the number of live keys, after 1.4 million further inserts. It went to 83.9 MB because those new keys were live by then.
+Delete all but 10 of a million keys and the dict still holds 41.9 MB. Iterating it costs about 240 µs for 10 keys, because it walks the dense array past all the holes, while a fresh copy takes 0.13 µs. `dict(d)` is the fix, and it's a one-liner once you know you need it. The last line needs some arithmetic, and it comes out exact. A table of 2^21 slots has room for 1,398,101 entries, and the deleted million still occupy theirs, so 398,101 free entries remain. When they run out, the dict rebuilds from its 398,111 live keys. `used * 3` rounds up to 2^21 again, so it compacts in place at the same size, which `sys.getsizeof` can't show. The rebuilt table then takes another 999,991 inserts to fill, and that second resize is the one the block sees, at 1,398,092 inserts. By then all those keys are live, so the table doubles.
 
 The hole-walking also makes a tempting pattern quadratic. A dict is ordered, so `next(iter(d))` looks like a way to get the oldest key:
 
@@ -947,7 +951,7 @@ The general approach is to write down the operations and how often each happens,
 - **Persisting `hash()`.** Symptom: a partition assignment that changes on restart. String hashes vary per process. Use `hashlib`.
 - **Mutable or unhashable keys, or an inconsistent `__hash__`.** Symptom: a `TypeError`, or an object you put in a set that you can no longer find, because its hash changed.
 - **A `__hash__` that returns a constant.** Symptom: a dict that's quadratic with no error. Test with a counter, as in the collision block.
-- **`sys.getsizeof` on a container.** Symptom: "only 8 MB", when the objects it points to hold another 25 MB. It counts the array, not the contents. Use `tracemalloc`.
+- **`sys.getsizeof` on a container.** Symptom: "only 8 MB" for a million floats, when the float objects hold another 24 MB. It counts the array, not the contents. Use `tracemalloc`.
 - **Assuming you need a balanced tree.** Symptom: a custom structure where `sorted` once and `bisect` would have done.
 
 ## Try it
@@ -960,8 +964,8 @@ The general approach is to write down the operations and how often each happens,
 <details>
 <summary>Answers</summary>
 
-1. Measure it for your build. On 3.14.7, sets don't use the compact layout, and they resize at different points, so a set can be larger or smaller than a dict at a given count. Don't assume that a set is the cheap one without checking.
-2. With 6,000 random hashes in 32,768 slots, the load is about 18%, so the mean is close to 1.1 probes, well below the 3.9 for the adversarial `i << 16`.
+1. It depends on the count, because they resize at different points. On this build: 10 keys 728 bytes for the set against 352 for the dict, 1,000 keys 32,984 against 36,952, 10,000 keys 524,504 against 294,992. Don't assume the set is the cheap one.
+2. With 6,000 string keys in 32,768 slots, the load reaches about 18%, and I measured a mean of 1.10 probes, against 3.91 for `i << 16`.
 3. `test_delete_keeps_later_keys_reachable`: all keys collide, so `c` and `d` sit further along `b`'s probe path, and a `FREE` slot ends the search early.
 4. `latest = {}`, then for each item do `latest.pop(key(item), None); latest[key(item)] = item`, and return `list(latest.values())`. Removing before re-inserting moves the key to the end. A plain assignment wouldn't, since overwriting keeps the original position.
 

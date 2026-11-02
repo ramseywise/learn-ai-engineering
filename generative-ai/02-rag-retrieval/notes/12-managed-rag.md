@@ -1,7 +1,7 @@
 ---
 origin: notion-export
 sources:
-  - own work notes (support-agent RAG project)
+  - own work notes (production support-agent evaluation, anonymised)
   - https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html
   - https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking.html
   - https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html
@@ -13,13 +13,13 @@ cleaned: 2026-11-01
 
 Tallybook's team has spent eleven chapters learning how to chunk, embed, fuse, rerank and evaluate. Now a manager asks the fair question: AWS and Google both sell all of that as a service, so why are we building it? The answer depends on which decisions you are willing to give up. A managed backend takes ingestion, chunking, the index and often the reranker off your hands. It also takes the chunk boundaries and sometimes the scores, and when retrieval goes wrong you have fewer places to look.
 
-This chapter is a case study from our support-agent project, which ran all three options. First the AWS Bedrock knowledge base as an agent's retrieval backend, in enough detail to operate one. Then Vertex AI Search, the GCP service behind a second codebase, compared feature by feature. Then `kb_rag`, our own deterministic pipeline, and the decisions recorded when it was refactored. What you should take away is what stays your job under every option: the eval set, the text you feed the LLM, and knowing what each score means.
+This chapter is a case study from a production support-agent system, with its identity removed, which ran all three options. First the AWS Bedrock knowledge base as an agent's retrieval backend, in enough detail to operate one. Then Vertex AI Search, the GCP service behind a second agent, compared feature by feature. Then a deterministic pipeline the team built itself, and the decisions recorded when it was refactored. What you should take away is what stays your job under every option: the eval set, the text you feed the LLM, and knowing what each score means.
 
-The project details are recorded as they stood in 2026, and they are one team's choices, so check the current service docs before copying them. Where the AWS and Google docs add or qualify something, the text says so.
+The details are recorded as they stood in 2026, and they are one team's choices, so check the current service docs before copying them. Scores, thresholds and prices in the case study come from that system's notes, not from Tallybook, and its raw data is not in this repository. Where the AWS and Google docs add or qualify something, the text says so.
 
 ## What a managed backend does and doesn't do
 
-The diagram shows the Bedrock setup end to end. The crawl, chunking, vector database and hybrid search are the service. The query transformation, context injection and generation are still ours.
+The diagram shows the Bedrock setup end to end. The crawl, chunking, vector database and hybrid search are the service. The query transformation, context injection and generation are still yours.
 
 ```mermaid
 flowchart LR
@@ -31,7 +31,7 @@ flowchart LR
     H --> I[Context injection] --> G[Generation]
 ```
 
-| Job | Bedrock KB | Vertex AI Search | Build your own (`kb_rag`) |
+| Job | Bedrock KB | Vertex AI Search | Build your own |
 |---|---|---|---|
 | Crawl and parse | Service | Service | You |
 | Chunk | Service, you choose a strategy and sizes | Service, boundaries opaque | You |
@@ -44,35 +44,27 @@ The last row is the one to remember. Neither service knows whether your refund a
 
 ## Bedrock knowledge bases
 
-This section is the reference spec for retrieval from an AWS Bedrock KB as used in SupportAgent: identities, modes, reranking, metadata and env vars.
+This section is the reference spec for retrieval from an AWS Bedrock KB as that system used it: scope, modes, reranking, metadata and env vars.
 
-### Known KB identities
+### One KB per product and language
 
-| Product | KB ID | Region | Language |
-|---|---|---|---|
-| SupportAgent staging / Product (Danish) | `KB_STAGING` | `eu-north-1` | Danish, e.g. `opret faktura` |
-| SupportAgent production / Product (Danish) | `KB_PROD` | `eu-north-1` | Danish |
-| Legacy Product (Danish) | `KB_LEGACY` | `eu-north-1` | Danish |
-| Product MCP | `KB_MCP` | `eu-central-1` | Danish |
-| Clara (German) | *env var required* | `eu-central-1` | German, Clara tickets |
+The system ran one KB per product and language, each with its own ID and region. That is a normal setup with a sharp edge.
 
-**Do not run Clara/German tickets against the Danish KB.** Confirm `BEDROCK_KNOWLEDGE_BASE_ID` before running any retrieval eval. A wrong KB returns results rather than errors, with plausible scores, and only the eval notices.
+**Do not run tickets from one product or language against another's KB.** Confirm `BEDROCK_KNOWLEDGE_BASE_ID` before running any retrieval eval. A wrong KB returns results rather than errors, with plausible scores, and only the eval notices.
 
 ### Staging KB scope and composition
 
-The staging KB (`KB_STAGING`) ingested four data sources via web crawl: Danish SupportPlatform help centre articles, English SupportPlatform help centre articles, ProductWiki glossary terms, and pricing pages.
+The staging KB ingested four data sources via web crawl: help centre articles in the market's language, the same help centre in English, product glossary terms, and pricing pages.
 
-**Aligned decisions (Jun 2026):**
+**The decisions:**
 
 | Decision | Rationale |
 |----------|-----------|
-| Restrict KB to **Danish-only SupportPlatform pages** | Current market focus is Danish; English articles duplicate content and degrade retrieval precision |
-| Remove **ProductWiki** from Bedrock staging | Data quality and parsing issues; content is available in the local DuckDB corpus for `kb_rag` testing |
+| Restrict the KB to **help centre pages in the market's language** | English articles duplicate content and degrade retrieval precision |
+| Remove the **product glossary** from Bedrock staging | Data quality and parsing issues; the content stays available in a local DuckDB corpus for pipeline testing |
 | Suspend **pricing page** ingestion pending a fix | Table-based page structure produces chunks too small to contain sufficient context; requires a parsing fix or supplemented content before re-ingestion |
 
-These changes (removing English articles, ProductWiki and pricing from Bedrock) were tracked as a backlog ticket assigned to a teammate.
-
-The local DuckDB corpus (`data/corpus/`) is a separate artifact and is not subject to these Bedrock scope restrictions, so it can include ProductWiki and pricing for local `kb_rag` testing.
+The local DuckDB corpus is a separate artifact and is not subject to these Bedrock scope restrictions, so it can include the glossary and pricing for local pipeline testing.
 
 Notice what fixed these problems: removing content. Tallybook's stale refund page is the same kind of problem as the English duplicates, and no setting on the service will decide for you what belongs in the index ([07](07-rag-in-production.md)).
 
@@ -85,7 +77,7 @@ Notice what fixed these problems: removing content. Tallybook's stale refund pag
 
 **The score scale differs by mode.** Raw cosine similarity (0–1) is calibrated differently from reranker relevance scores (borderline matches 0.05–0.35). Never compare scores across modes.
 
-`scoreThreshold` is our own client-side setting. The [Retrieve request](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html) has no such field, so the threshold is applied after the response comes back. The two modes differ in one configuration object. This block builds both requests and runs them through the real boto3 client with botocore's `Stubber`, so the parameter names and types are validated against the AWS service model with no network call and no real credentials. Enum values such as `overrideSearchType` are not checked locally, so a wrong value there only fails against the real service.
+`scoreThreshold` is a client-side setting of the agent, not of the service. The [Retrieve request](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent-runtime_Retrieve.html) has no such field, so the threshold is applied after the response comes back. The two modes differ in one configuration object. This block builds both requests and runs them through the real boto3 client with botocore's `Stubber`, so the parameter names and types are validated against the AWS service model with no network call and no real credentials. Enum values such as `overrideSearchType` are not checked locally, so a wrong value there only fails against the real service.
 
 ```python
 import boto3
@@ -139,7 +131,7 @@ Three behaviours from the AWS docs are worth carrying with you. The search type 
 
 ### The pipeline around the call
 
-The service returns a list. What reaches the LLM is shaped by our code.
+The service returns a list. What reaches the LLM is shaped by your code.
 
 ```text
 queries[] ─→ parallel boto3.retrieve() ─→ flat results
@@ -165,8 +157,8 @@ queries[] ─→ parallel boto3.retrieve() ─→ flat results
 
 | Chunk type | Pattern | Example |
 |---|---|---|
-| Web-crawled | `"Page Title \| Site Name"` prefix in first 120 chars | `"Create Invoice \| Product Support"` |
-| FM-parsed | First `# Heading` or `## Heading` in text | `## Opret en faktura` |
+| Web-crawled | `"Page Title \| Site Name"` prefix in first 120 chars | `"Create Invoice \| Tallybook Support"` |
+| FM-parsed | First `# Heading` or `## Heading` in text | `## Create an invoice` |
 | Metadata | `result.metadata["title"]` if not a URL | Prefer this when present |
 
 Strip the site name suffix (`split(" | ")[0]`) from the final title.
@@ -255,24 +247,17 @@ two calls took under 0.35 s: True
 
 Four results went in and two came out: the duplicate of `kb-04` lost on its fingerprint and the runbook fell below the threshold. The stale `kb-05` is still there, with a score that gives no hint it is out of date, saying 14 days next to the current page's 30. A managed index won't catch that. It takes the metadata filter from [03](03-keyword-semantic-and-hybrid-search.md), or removing the page.
 
-### Implementation location
+### Where the code lives
 
-The code lives inline in each agent, as separate uv projects with no shared package:
-
-```text
-agents/support_adk/bedrock_kb.py
-agents/support_lg/bedrock_kb.py
-```
-
-Both files are identical. If logic diverges, keep them separate, and do not add a `sys.path` hack.
+Each agent kept its retrieval client inline, as separate uv projects with no shared package, so two identical `bedrock_kb.py` files existed. If logic diverges, keep them separate, and do not add a `sys.path` hack.
 
 ### Retrieval mode switch
 
-Both support agents read `SUPPORT_AGENT_RETRIEVAL_MODE` at startup:
+Both agents read a mode setting at startup:
 
 ```bash
-SUPPORT_AGENT_RETRIEVAL_MODE=bedrock   # call Bedrock KB directly
-SUPPORT_AGENT_RETRIEVAL_MODE=rag       # call HC_RAG_AGENT_URL (default)
+RETRIEVAL_MODE=bedrock   # call Bedrock KB directly
+RETRIEVAL_MODE=rag       # call RAG_SERVICE_URL (default)
 ```
 
 `rag` is the default, so existing behaviour is unchanged without the env var.
@@ -297,7 +282,7 @@ Constructed at runtime from `AWS_REGION`. Reranker config: 5 reranked results, m
 
 ### Storage field mapping
 
-These are the raw fields observed in the OpenSearch/Bedrock KB index and how they map to our eval schemas (`evals/pipelines/utils/schemas.py`):
+These are the raw fields observed in the OpenSearch/Bedrock KB index and how they map to an eval schema:
 
 | Production field | Schema | Notes |
 |---|---|---|
@@ -314,25 +299,24 @@ These are the raw fields observed in the OpenSearch/Bedrock KB index and how the
 | `_score` | `ChunkRecord.opensearch_score` | **Not exposed by the Bedrock KB API**, visible in the OpenSearch dashboard only; always `0.0` via API |
 | `_type` | n/a | OpenSearch/ES internal type field, not tracked |
 
-**`AMAZON_BEDROCK_TEXT` vs `AMAZON_BEDROCK_TEXT_CHUNK`** is Bedrock's native two-level hierarchy: the chunk field is what matched, and the text field is the larger context window the LLM actually reads. It maps directly to our `level=0` (leaf) and `level=1` (parent) in `ChunkRecord`. It is the same small-to-big idea as parent-child chunking in [05](05-chunking-query-parsing-and-reranking.md), done for you.
+**`AMAZON_BEDROCK_TEXT` vs `AMAZON_BEDROCK_TEXT_CHUNK`** is Bedrock's native two-level hierarchy: the chunk field is what matched, and the text field is the larger context window the LLM actually reads. It maps directly to `level=0` (leaf) and `level=1` (parent) in `ChunkRecord`. It is the same small-to-big idea as parent-child chunking in [05](05-chunking-query-parsing-and-reranking.md), done for you.
 
 ### Eval comparison
 
-The retrieval eval (M3–M4 in the migration plan) compares:
+The retrieval eval compares:
 
 | Axis | Mode A | Mode B |
 |---|---|---|
 | Reranking gap | `retrieve()` (fast, no rerank) | `retrieve_reranking()` |
-| RAG vs Bedrock | `SUPPORT_AGENT_RETRIEVAL_MODE=bedrock` | `SUPPORT_AGENT_RETRIEVAL_MODE=rag` |
+| RAG vs Bedrock | `RETRIEVAL_MODE=bedrock` | `RETRIEVAL_MODE=rag` |
 
-Score against `data/support_agent/qa_golden.jsonl` using `evals/graders/retrieval/url_coverage.py`. Metrics: hit_rate, MRR, precision@5, recall@5.
+Score against a golden set of questions with gold URLs, using a URL-coverage grader. Metrics: hit_rate, MRR, precision@5, recall@5.
 
 ### Quick smoke test
 
 This needs AWS credentials and a real KB, so it was not run for this chapter.
 
 ```bash
-cd agents/support_adk
 BEDROCK_KNOWLEDGE_BASE_ID=<id> AWS_REGION=eu-central-1 \
   uv run python -c "
 import asyncio, bedrock_kb
@@ -344,31 +328,31 @@ for p in passages:
 
 ## Vertex vs Bedrock
 
-These are the two managed RAG backends used across our codebases, side by side. Rows in this table record what the project observed. Check them against current docs before relying on them, particularly the prices.
+These are the two managed RAG backends that system used, side by side. Rows in this table record what the team observed. Check them against current docs before relying on them, particularly the prices.
 
 | | **AWS Bedrock KB** | **GCP Vertex AI Search (Discovery Engine)** |
 |---|---|---|
-| **Used in** | the eval platform, SupportAgent | chat-agent, production backend |
+| **Used in** | the AWS agent | the second agent, production backend |
 | **Service name** | Amazon Bedrock Knowledge Bases | Vertex AI Search / Agent Builder / Discovery Engine |
-| **Underlying store** | OpenSearch Serverless (in our setup) | Google's proprietary search stack |
-| **Indexing** | Data source sync (S3, web crawl, Confluence…) | Data store ingestion (web crawl, SupportPlatform, GCS, BigQuery…) |
+| **Underlying store** | OpenSearch Serverless (in this setup) | Google's proprietary search stack |
+| **Indexing** | Data source sync (S3, web crawl, Confluence…) | Data store ingestion (web crawl, help-centre platforms, GCS, BigQuery…) |
 | **Chunking** | Bedrock-managed hierarchical (leaf + parent) | Managed chunk mode, chunk boundaries opaque |
 | **Hybrid search** | Dense (HNSW) + BM25, `HYBRID` hardcoded | Internal, not configurable |
 | **Reranking** | `amazon.rerank-v1:0`, explicit config | Internal to `:answer` endpoint; not exposed in Search API |
 | **Raw scores via API** | Yes: cosine similarity (0–1) for fast mode; reranker score (0.05–0.35) | Yes: `relevance_score` per chunk result (0–1 float) |
 | **Grounding score** | Not returned | Yes: `answer.grounding_score` (`:answer` endpoint) |
 | **Session management** | Stateless, caller owns session | Native session concept (`Session` resource), persisted in Firestore for multi-replica |
-| **Language support** | Corpus language agnostic | Defaults to corpus language (French for Partner); needs preamble override per query |
+| **Language support** | Corpus language agnostic | Defaults to corpus language; needs preamble override per query |
 | **Answer generation** | Caller sends passages to LLM | Optional: `:answer` endpoint generates answer internally |
 | **Cost unit** | Per `retrieve()` call + reranker calls | $0.003/query retrieval + $0.006/query if AI model enabled |
 | **Auth** | `boto3` + AWS credentials / IAM | Application Default Credentials (ADC) / service account |
 | **EU data residency** | `eu-north-1`, `eu-central-1` | `eu` location endpoint (`eu-discoveryengine.googleapis.com`) |
 
-The prices come from our project notes and were not re-checked against [Google's pricing page](https://cloud.google.com/generative-ai-app-builder/pricing). Taken at face value, they mean 100,000 queries a month would cost $300 for retrieval, or $900 with the AI model enabled. Compare that with the engineering time for the alternative, not only with a vector database bill.
+The prices come from the team's notes and were not re-checked against [Google's pricing page](https://cloud.google.com/generative-ai-app-builder/pricing). Taken at face value, they mean 100,000 queries a month would cost $300 for retrieval, or $900 with the AI model enabled. Compare that with the engineering time for the alternative, not only with a vector database bill.
 
 ### Architecture in each codebase
 
-**The eval platform, on Bedrock KB:**
+**The AWS agent, on Bedrock KB:**
 
 ```text
 User query
@@ -387,23 +371,21 @@ Key env vars:
 ```bash
 BEDROCK_KNOWLEDGE_BASE_ID=<id>   # required
 AWS_REGION=eu-central-1
-SUPPORT_AGENT_RETRIEVAL_MODE=bedrock        # or 'rag' to call kb_rag agent instead
+RETRIEVAL_MODE=bedrock        # or 'rag' to call the pipeline instead
 ```
 
 The full spec is in [Bedrock knowledge bases](#bedrock-knowledge-bases) above.
 
-**chat-agent, on GCP Discovery Engine.** chat-agent supports three retrieval backends selectable at runtime:
+**The second agent, on GCP Discovery Engine.** It supports three retrieval backends selectable at runtime:
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Mode A — Local pgvector                                         │
-│  agent.py + tools.py                                             │
 │  PostgreSQL + pgvector, Gemini embeddings, exact cosine search   │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │  Mode B — GCP Agentic RAG                                        │
-│  gcp_agent.py + gcp_tools.py                                     │
 │  ADK agentic loop: classify → search → grade → rewrite → search  │
 │  GCP Discovery Engine Search (chunk mode) does retrieval         │
 │  Gemini grades relevance + synthesizes answer                    │
@@ -411,14 +393,13 @@ The full spec is in [Bedrock knowledge bases](#bedrock-knowledge-bases) above.
 
 ┌─────────────────────────────────────────────────────────────────┐
 │  Mode C — GCP Built-in Answer (:answer endpoint)                 │
-│  gcp_agent_search.py                                             │
 │  GCP owns retrieval + ranking + answer generation                │
 │  Thin wrapper: send query, stream tokens back                    │
 │  Benchmark target: compare vs Modes A and B                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-Key env vars (chat-agent):
+Key env vars for the second agent:
 
 ```bash
 GCP_PROJECT_ID=<id>
@@ -431,18 +412,18 @@ GCP_DISCOVERY_SERVING_CONFIG=<serving_config>
 
 Bedrock KB is language-agnostic: retrieval returns whatever language the docs are in, and the LLM generates in the query language.
 
-GCP Discovery Engine **defaults to the corpus language** (French for Partner) when the user writes plain ASCII or English. chat-agent worked around this with a per-query preamble injection in `_effective_preamble()` in `gcp_agent_search.py`. The original fragment used a `lang` variable from its surroundings, so here it is made runnable, with a crude language guess in place of the project's detection:
+GCP Discovery Engine **defaults to the corpus language** when the user writes plain ASCII or English, so a Dutch corpus answers English questions in Dutch. The second agent worked around this with a per-query preamble injection. The original fragment used a `lang` variable from its surroundings, so here it is made runnable, with a crude language guess in place of real detection:
 
 ```python
 def guess_language(message):  # stand-in; a real system uses a language detector
-    return "French" if any(w in message.lower().split() for w in ("le", "la", "je", "comment")) else "English"
+    return "Dutch" if any(w in message.lower().split() for w in ("de", "het", "ik", "hoe")) else "English"
 
 
 def effective_preamble(message):
     lang = guess_language(message)
     return (
         f"CRITICAL: The user's message is in {lang}. "
-        f"You MUST respond in {lang} only. Do not use French or any other language."
+        f"You MUST respond in {lang} only. Do not use Dutch or any other language."
     )
 
 
@@ -450,10 +431,10 @@ print(effective_preamble("how do I create an invoice"))
 ```
 
 ```text
-CRITICAL: The user's message is in English. You MUST respond in English only. Do not use French or any other language.
+CRITICAL: The user's message is in English. You MUST respond in English only. Do not use Dutch or any other language.
 ```
 
-The [answer method](https://docs.cloud.google.com/generative-ai-app-builder/docs/answer) now documents an optional `answer_language_code` field alongside the custom preamble, so try that structured control before a prompt workaround. Also notice a flaw in the fragment as written: if the user's language is French, "Do not use French" contradicts the instruction before it. Workarounds like this need a test per language.
+The [answer method](https://docs.cloud.google.com/generative-ai-app-builder/docs/answer) now documents an optional `answer_language_code` field alongside the custom preamble, so try that structured control before a prompt workaround. Also notice a flaw in the fragment as written: if the user's language is Dutch, "Do not use Dutch" contradicts the instruction before it. Workarounds like this need a test per language.
 
 ### Score semantics
 
@@ -469,7 +450,7 @@ The [answer method](https://docs.cloud.google.com/generative-ai-app-builder/docs
 ### Session state
 
 - Bedrock is stateless per call, with no session concept.
-- GCP `:answer` maintains a `Session` resource on the GCP side. chat-agent persists the GCP session name in Firestore, keyed by the caller's `session_id`, so all replicas share session state without sticky routing.
+- GCP `:answer` maintains a `Session` resource on the GCP side. The second agent persists the GCP session name in Firestore, keyed by the caller's `session_id`, so all replicas share session state without sticky routing.
 
 ### Answer generation ownership
 
@@ -488,7 +469,7 @@ When running retrieval evals, keep backends strictly separated:
 | End-to-end quality | GCP `:answer` vs GCP agentic vs local agentic | GroundingGrader, AnswerQualityGrader |
 | Cost | All three | `gcp_search_cost_usd` tracked in Langfuse |
 
-Retrieval evals for the eval platform: `evals/graders/retrieval/url_coverage.py` against `data/support_agent/qa_golden.jsonl`. Retrieval evals for chat-agent: `eval/evaluate.py` and the Langfuse dataset experiment flow.
+Retrieval evals for the AWS agent used the URL-coverage grader against the golden set. Retrieval evals for the second agent used a Langfuse dataset experiment flow.
 
 ### When to consider switching
 
@@ -500,25 +481,25 @@ Retrieval evals for the eval platform: `evals/graders/retrieval/url_coverage.py`
 
 These are one team's judgements, not measurements, so a comparison on your own eval set outranks them.
 
-## Building your own: the kb_rag decision record
+## Building your own: a pipeline's decision record
 
-> **Note:** This section is an ADR (architecture decision record) distilled from the 2026-06-04 module refactor. It captures decisions and deferred items from that point in time, and the source of truth for module boundaries, config and follow-up decisions was this record. For the current module layout see `src/support_agents/kb_rag/README.md` in the project.
+> **Note:** This section is an ADR (architecture decision record) distilled from a module refactor of that system's pipeline. It captures the decisions at that point in time, and the code it describes is not in this repository.
 
 An ADR is worth reading for the things it removes. Choosing to own the pipeline means owning every line of this section.
 
 ### Architecture
 
-`kb_rag` is a **deterministic LangChain pipeline**, not agentic, with no graph and no retry loops:
+The pipeline is a **deterministic LangChain pipeline**, not agentic, with no graph and no retry loops:
 
 ```text
 guardrail → retrieve_graded_chunks → rerank_graded_chunks → confidence gate → llm.ainvoke() → output guard
 ```
 
-| Agent | Framework | Control flow |
+| System | Framework | Control flow |
 |---|---|---|
-| `kb_rag` | LangChain | Deterministic: retrieve once, rerank, generate, done |
-| `kb_lg` | LangGraph | Explicit graph: intent router + CRAG grade/rewrite retry |
-| `kb_adk` | Google ADK | ReAct loop: model decides what to search |
+| Deterministic pipeline | LangChain | Deterministic: retrieve once, rerank, generate, done |
+| Graph agent | LangGraph | Explicit graph: intent router + CRAG grade/rewrite retry |
+| Tool-loop agent | Google ADK | ReAct loop: model decides what to search |
 
 ### Module map
 
@@ -526,24 +507,24 @@ guardrail → retrieve_graded_chunks → rerank_graded_chunks → confidence gat
 rag/
   chunkers/      ← one file per strategy; get_chunker() factory in __init__.py
   reranker/      ← one file per strategy; get_reranker() factory in __init__.py
-  retrieval/     ← ensemble search, RRF, scoring, snippet cache; pipeline.py is request-time entry
-  ingestion/     ← offline CLI: JSONL → DuckDB; corpus_v2.py is the main ingest path
-  parsing/       ← text cleaning, dedup, enrichment; wired into corpus_v2.py preprocess step
-  datastore/     ← vector index implementations + DuckDB sidecar stores; factory.py is entry point
+  retrieval/     ← ensemble search, RRF, scoring, snippet cache; one request-time entry point
+  ingestion/     ← offline CLI: JSONL → DuckDB
+  parsing/       ← text cleaning, dedup, enrichment; runs before embedding
+  datastore/     ← vector index implementations + DuckDB sidecar stores, behind a factory
   schemas/       ← GradedChunk → RankedChunk type progression
 ```
 
 Each folder has a `README.md` with per-file descriptions and tuning knobs.
 
-### Chunkers (`rag/chunkers/`)
+### Chunkers
 
 Six strategies, all implementing `chunk_document(doc: dict) -> list[Chunk]`:
 
 | Strategy | Default | Notes |
 |---|---|---|
 | `fixed` | production default | Hard word-count splits; baseline benchmark |
-| `overlapping` | | Overlap between adjacent chunks; used in `corpus_v2.py` ingest |
-| `html_aware` | | Heading-boundary first; best fit for Product/SupportPlatform HTML corpus |
+| `overlapping` | | Overlap between adjacent chunks; used in the main ingest path |
+| `html_aware` | | Heading-boundary first; best fit for a help-centre HTML corpus |
 | `hierarchical` | | Two-level parent+child; not wired in ingestion pipeline yet |
 | `adjacency` | | Positional IDs for neighbour expansion; `neighbors()` not called anywhere |
 | `structured` | | Recursive paragraph split; for prose without headings |
@@ -551,19 +532,16 @@ Six strategies, all implementing `chunk_document(doc: dict) -> list[Chunk]`:
 Select via the factory:
 
 ```python
-# illustrative: needs the project's support_agents package, which isn't in this repo.
-from support_agents.kb_rag.rag.chunkers import get_chunker
+# illustrative: the `rag` package in the module map above isn't in this repo.
+from rag.chunkers import get_chunker
 chunker = get_chunker("html_aware")
 ```
 
-**Open follow-ups:**
+Two things were left open, and both are design points worth copying. The strategy should be a config setting, so a chunker change needs no code change. And `html_aware` is the better fit for a help-centre HTML corpus than `fixed`, but making it the ingest default needs an ablation first ([11](11-retrieval-improvements.md)).
 
-- Wire the `CHUNKER_STRATEGY` env var into `config.py` and the `/config` endpoint (a one-liner)
-- Evaluate `html_aware` as the new ingest default, since it's a better fit for the Product HTML corpus than `fixed`
+### Rerankers
 
-### Rerankers (`rag/reranker/`)
-
-Five strategies via the `RERANKER_BACKEND` env var, with the factory in `rag/reranker/__init__.py`.
+Five strategies via the `RERANKER_BACKEND` env var, behind a factory.
 
 | Strategy | Default | Cost |
 |---|---|---|
@@ -573,7 +551,7 @@ Five strategies via the `RERANKER_BACKEND` env var, with the factory in `rag/rer
 | `pairwise` | | O(n²) cross-encoder calls, offline eval only |
 | `llm_listwise` | | 1 LLM call for all passages, highest quality, API cost |
 
-**Open follow-up:** wire `SCORE_DELTA_ENABLED` and `SCORE_DELTA_MIN` into the `agent.py` confidence gate. Both are defined in `config.py` but not yet read at request time. The intent: if the absolute score is borderline, require `score[0] - score[1] >= SCORE_DELTA_MIN` before accepting the top result.
+**A gate left unwired:** `SCORE_DELTA_ENABLED` and `SCORE_DELTA_MIN` were defined in config but not read at request time. The intent: if the absolute score is borderline, require `score[0] - score[1] >= SCORE_DELTA_MIN` before accepting the top result.
 
 The idea behind that gate is worth seeing, since a score's absolute value is hard to trust while the gap to the runner-up tells you whether the ranker had a clear favourite. The scores here are made up to show the logic, and the 0.7 threshold and 0.1 delta are arbitrary.
 
@@ -608,22 +586,22 @@ nothing relevant                           no delta: refuse  with delta: refuse
 
 The third case is Tallybook's refund problem. Two near-identical pages score the same, and the gate would refuse rather than pick one. The delta signal only separates cases, though. Two chunks from the same document also tie, so you would want to measure how often this refuses good answers before turning it on.
 
-### Ingestion preprocessing (`rag/parsing/`)
+### Ingestion preprocessing
 
-`preprocess_corpus()` now runs in `corpus_v2.ingest_v2_to_duckdb()` between load and embed:
+A preprocessing step runs between load and embed:
 
 ```python
-# illustrative: needs the project's rag.parsing module and its loaded docs.
+# illustrative: needs a preprocessing module and your loaded docs.
 preprocess_corpus(
     docs,
     clean=True,            # strip email/app noise, normalize horizontal whitespace
     deduplicate=True,      # normalized text hash dedup before embedding
-    filter_language=False, # Danish corpus — no language filtering
+    filter_language=False, # single-language corpus, no language filtering
     enrich=False,          # JSONL already has metadata; skip to protect Bedrock source map
 )
 ```
 
-`enrich=False` is intentional: `_BEDROCK_SOURCE_MAP` in `IngestionPipeline` is keyed on `(source, content_type)`. If `enrich=True`, heuristic `content_type` values ("procedural", "faq") could be set on docs that don't have one, potentially interfering with the map lookup.
+`enrich=False` is intentional: the ingestion pipeline's source map is keyed on `(source, content_type)`. If `enrich=True`, heuristic `content_type` values ("procedural", "faq") could be set on docs that don't have one, potentially interfering with the map lookup.
 
 `clean_text` was fixed to use `[^\S\n]+` (not `\s+`) so newlines are preserved, which is required for `HtmlAwareChunker` to detect `## Section` markers. One character class decides whether a chunker can see the document's structure:
 
@@ -656,27 +634,18 @@ A silent bug of this kind doesn't raise an error. It only makes retrieval a bit 
 
 ### Removed config vars
 
-Removed from `config.py` in the 2026-06-04 refactor. All were kb_lg orchestrator concepts that had leaked into kb_rag:
+Removed from the pipeline's config in the refactor. All were graph-agent orchestrator concepts that had leaked into the deterministic pipeline:
 
 ```text
-RAG_LLM_PLANNER, RAG_PLANNER_LIGHT_MODEL     ← planner node (kb_lg concept)
+RAG_LLM_PLANNER, RAG_PLANNER_LIGHT_MODEL     ← planner node (graph-agent concept)
 CHECKPOINTER_BACKEND, SQLITE_PATH, DATABASE_URL  ← session checkpointing (LangGraph)
 RAG_SUMMARIZATION_ENABLED/THRESHOLD/KEEP    ← conversation summarization (LangGraph state)
-RAG_POST_ANSWER_EVALUATOR                   ← post-answer node (kb_lg concept)
+RAG_POST_ANSWER_EVALUATOR                   ← post-answer node (graph-agent concept)
 RAG_POLICY_HYBRID_BORDER_LOW                ← unused (RAG_POLICY_MODE still exists)
 METADB_PATH                                 ← read via os.getenv() directly in run_ingest, no var needed
 ```
 
 Kept: `SCORE_DELTA_ENABLED` and `SCORE_DELTA_MIN`, which are valid reranker confidence signals, just not yet wired.
-
-### Deferred items
-
-| Item | Why deferred | Where to pick up |
-|---|---|---|
-| `CHUNKER_STRATEGY` env var + `/config` endpoint | One-liner; no design needed | `config.py` + `main.py:/config` |
-| `HtmlAwareChunker` as ingest default | Needs ablation to validate vs FixedChunker | [11](11-retrieval-improvements.md) |
-| `SCORE_DELTA` wiring in `agent.py` | Valid signal, just not read at request time | `agent.py` confidence gate check |
-| Split `datastore/local.py` (587 lines) | Different risk profile; `ChromaVectorIndex` has test coverage | Separate PR |
 
 ## Pitfalls
 
@@ -686,9 +655,9 @@ Kept: `SCORE_DELTA_ENABLED` and `SCORE_DELTA_MIN`, which are valid reranker conf
 - **Trusting `_score`.** It is always `0.0` through the Bedrock API. Don't build a grader on it.
 - **Expecting exactly `numberOfResults` results.** It is a maximum, and hierarchical chunking can collapse several children into one parent.
 - **Grading against the wrong text.** The chunk field is what matched, and the parent field is what the LLM read. Log both, or you can't tell a retrieval failure from an overlong context.
-- **Ingesting everything because you can.** English duplicates, tiny pricing-table chunks and glossary noise all lowered precision. Scope is a retrieval setting.
+- **Ingesting everything because you can.** Duplicate articles in a second language, tiny pricing-table chunks and glossary noise all lowered precision. Scope is a retrieval setting.
 - **Reading a grounding score as correctness.** It says the answer is supported by what was retrieved, including a stale page.
-- **Picking `:answer` before you know you won't need to intercept.** You can't grade the retrieval step inside it, so add it as a benchmark first, as chat-agent's Mode C did.
+- **Picking `:answer` before you know you won't need to intercept.** You can't grade the retrieval step inside it, so add it as a benchmark first, as the second agent's Mode C did.
 - **Destroying structure in cleaning.** `\s+` looks harmless and removes every line break a heading-aware chunker needs.
 
 ## Try it
@@ -724,7 +693,7 @@ Kept: `SCORE_DELTA_ENABLED` and `SCORE_DELTA_MIN`, which are valid reranker conf
 | What is a grounding score, and what doesn't it tell you? | How well the source passages support the answer. It doesn't tell you the sources were correct or current. |
 | When would you leave `:answer`? | When you need correction loops or control over synthesis, since you can't intercept its retrieval step. |
 | When is pgvector right? | Local dev, or a stack already on Postgres. You give up managed hybrid and reranking and take on the infrastructure work. |
-| Why does kb_rag stay deterministic? | Retrieve once, rerank, generate: predictable latency and easier to debug. Loops live in `kb_lg`, and leaked config was removed. |
+| Why keep a pipeline deterministic? | Retrieve once, rerank, generate: predictable latency and easier to debug. Loops live in the graph agent, and leaked config was removed. |
 | Why does the delta gate exist? | A borderline top score with a clear gap to the runner-up is more trustworthy than a tie. |
 | Why `[^\S\n]+` and not `\s+`? | It normalises horizontal whitespace and keeps the newlines that heading-aware chunking needs. |
 

@@ -24,7 +24,7 @@ just `02`), a path such as `data-science/03-nlp`, or a programming module such a
 takes any of these forms. A pillar that does not yet match `.claude/skills/pillar/references/pillar-layout.md` should go through `/pillar` first. If it is empty, list the pillars that have `notes/` but no `slides/deck.yaml`,
 and pick the first. If `slides/deck.yaml` already exists, you are **revising** it. Read it
 first and keep what still matches the notes. A deck inherits its notes' errors, so if the pillar has not been through
-`/review-note`, say so in your report. It does not block the deck.
+`/review`, say so in your report. It does not block the deck.
 
 ## Step 2 — Read the pillar
 

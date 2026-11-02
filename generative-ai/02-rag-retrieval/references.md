@@ -38,7 +38,7 @@
 | | AWS, [Query configuration](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-test-config.html): default result count, which stores support hybrid search, metadata filters | 12 |
 | | AWS, [Chunking for knowledge bases](https://docs.aws.amazon.com/bedrock/latest/userguide/kb-chunking.html): hierarchical child-to-parent replacement, so fewer results than requested | 12 |
 | | Google Cloud, [Get answers (`:answer` method)](https://docs.cloud.google.com/generative-ai-app-builder/docs/answer): sessions, preamble, `answer_language_code`, grounding support scores | 12 |
-| | Google Cloud, [Vertex AI Search pricing](https://cloud.google.com/generative-ai-app-builder/pricing): linked for checking; the prices in 12 come from project notes and were not re-verified | 12 |
+| | Google Cloud, [Vertex AI Search pricing](https://cloud.google.com/generative-ai-app-builder/pricing): linked for checking; the prices in 12 come from the case study's notes and were not re-verified | 12 |
 | | [RAGAS docs](https://docs.ragas.io/): faithfulness, answer relevance, context precision and recall | 06, 07, 08 |
 | | [ContextCite](https://gradientscience.org/contextcite/) (MIT Madry lab): attributing a statement to context spans | 06 |
 | | Kamradt, [*5 Levels of Text Splitting*](https://github.com/FullStackRetrieval-com/RetrievalTutorials), cited by the course | 05 |
@@ -131,7 +131,7 @@ Use these as gap-detectors, not citations of record (see [recurring sources](../
 |---|---|---|
 | Towards AI, [*9 RAG architectures that save you months of dev work*](https://pub.towardsai.net/9-rag-architectures-that-save-you-months-of-dev-work-0e219eb637cb) | the nine named patterns and decision cheat-sheet | 01 |
 | Weaviate, *Advanced RAG Techniques* ebook. [PDF](sources/weaviate-advanced-rag-techniques-ebook.pdf) (13.7 MB) | *queued*; overlaps 05 and 11 | — |
-| Own work notes (support-agent RAG project) | vector DB choice, semantic cache, ablations, Bedrock KB, Vertex comparison, pipeline ADR | 09–12 |
+| Own work notes (production support-agent evaluation, anonymised) | vector DB choice, semantic cache, ablations, Bedrock KB, Vertex comparison, pipeline ADR | 09–12 |
 
 ---
 
@@ -142,7 +142,7 @@ Use these as gap-detectors, not citations of record (see [recurring sources](../
 | Towards AI "9 architectures" | Medium-style listicle; pattern names are not standard (e.g. "Self-RAG" used loosely for query generation) | Gao survey (2312.10997); Asai et al. for Self-RAG proper |
 | Weaviate ebook | Vendor; examples assume Weaviate | Course M3 labs; Wang et al. best practices |
 | DLAI course decks | Not kept (copyright, ~30 MB); the notes give the content | The course itself |
-| Own work notes 09–12 | Single-project numbers, `confidence: medium` | Re-run on your own corpus |
+| Own work notes 09–12 | Numbers from one anonymised system, raw data not in this repo, `confidence: medium` | Re-run on your own corpus |
 | `ragas_automated_evaluation.pdf` | Byte-identical duplicate of `2309.15217v2.pdf` | `2309.15217v2.pdf` |
 | `2024-naacl-industry-23.pdf`, `2025-findings-naacl-114.pdf`, `retrieval-augmentation-reduces-hallucination-conversation.pdf` | Duplicates (routed by `/readings`) of `2024.naacl-industry.23.pdf`, `2025.findings-naacl.114.pdf`, `2021.findings-emnlp.320.pdf` | Keep one copy each |
 | `cuconasu-2024-power-noise.pdf`, `jiang-2023-active-retrieval-augmented-generation.pdf` | Second copies (arXiv builds, routed later) of `3626772.3657834.pdf` (SIGIR) and `2023.emnlp-main.495.pdf` (EMNLP) | The venue PDFs |

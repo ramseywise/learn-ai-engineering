@@ -132,7 +132,7 @@ Use **★** only for papers that change a claim (contradicts / strong extends).
 - Write in the note's voice and density. Most integrations are one to three sentences;
   a paragraph is the ceiling unless the paper overturns the section.
 - Cite inline the way the notes already do:
-  `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10)` with the
+  `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10, preprint)` with the
   finding in **bold** where it's the point of the sentence.
 - Give the venue in the citation when there is one: `(Karpukhin et al., EMNLP 2020)`; a
   preprint keeps its date and says `preprint`.

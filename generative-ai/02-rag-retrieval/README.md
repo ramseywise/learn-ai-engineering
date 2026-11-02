@@ -17,7 +17,7 @@ This pillar covers the pipeline end to end:
 - grounded generation and citations;
 - tracing, evaluation, cost and latency in production.
 
-Then come five write-ups from production: one published stack and four chapters from a real support-agent RAG project, the last of which compares two managed services with building your own.
+Then come five write-ups from production: one published stack and four chapters from a production support-agent evaluation, with its identity removed, the last of which compares two managed services with building your own.
 
 > **Retrieval sets the ceiling: the LLM can't cite a document the retriever never returned.**
 
@@ -35,7 +35,7 @@ The whole pillar follows one running example. Tallybook is a small invoicing pro
 
 1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) for the map.
 2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module.
-3. Read 08–12 as case studies: Bayer's PRINCE stack, then the support-agent project's store comparison, cache, ablations and managed backends.
+3. Read 08–12 as case studies: Bayer's PRINCE stack, then the production support agent's store comparison, cache, ablations and managed backends.
 4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary, and the [deck](slides/rag-retrieval.pptx) for review.
 
 Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are production write-ups that apply it.
@@ -53,7 +53,7 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are product
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
 | 10 | [Semantic cache](notes/10-semantic-cache.md) | A three-tier cache for support agents: offline index, runtime module, routing, eval and merge criteria |
 | 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, prioritised research items |
-| 12 | [Managed RAG: Bedrock, Vertex, and building your own](notes/12-managed-rag.md) | Bedrock KB reference spec, Vertex comparison, score semantics, when to switch, and the `kb_rag` decision record |
+| 12 | [Managed RAG: Bedrock, Vertex, and building your own](notes/12-managed-rag.md) | Bedrock KB reference spec, Vertex comparison, score semantics, when to switch, and a pipeline decision record |
 
 ## Builds on and feeds into
 

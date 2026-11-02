@@ -18,9 +18,9 @@ cleaned: 2026-11-02
 
 > [Note 15](15-calibration-against-human-labels.md#the-procedure) gives the calibration procedure: label, split, iterate on dev, score test once. This note assumes it and doesn't repeat it. It adds three sources of evidence to the step where you read disagreements, and a test of how far to trust one of them.
 
-Note 05's calibration tells you how often a judge is wrong. It says little about why, or what to change. Three things you already have can help: the code checks that ran on the same rows, the judge's errors split by flags in the data, and the critique the judge wrote (its short written reason for the verdict). Each is useful and each can mislead. A code check can only test what code can see. A slice can be a coincidence or another slice in disguise. A critique can be an account written after the fact, one that leaves out what actually moved the verdict. So this note treats all three as evidence for finding what to fix, and human labels stay the only thing that settles which judge is right.
+Note 15's calibration tells you how often a judge is wrong. It says little about why, or what to change. Three things you already have can help: the code checks that ran on the same rows, the judge's errors split by flags in the data, and the critique the judge wrote (its short written reason for the verdict). Each is useful and each can mislead. A code check can only test what code can see. A slice can be a coincidence or another slice in disguise. A critique can be an account written after the fact, one that leaves out what actually moved the verdict. So this note treats all three as evidence for finding what to fix, and human labels stay the only thing that settles which judge is right.
 
-Throughout, PASS is the positive class, as in note 05. TPR is the share of outputs people passed that the judge also passed. TNR is the share of outputs people failed that the judge also failed.
+Throughout, PASS is the positive class, as in note 15. TPR is the share of outputs people passed that the judge also passed. TNR is the share of outputs people failed that the judge also failed.
 
 ```mermaid
 flowchart TD

@@ -1,6 +1,6 @@
 ---
 name: audience-editor
-description: "Reads one note as its intended reader would and reports where it fails them: undefined terms, assumed knowledge, numbers without a setup, a weak hook, abstract passages with no example, overlong sentences. Read-only, returns suggested rewrites. Use from /review-note and /write-chapter. Give it a note path; it works out the subject's audience. Do not give it the author's reasoning."
+description: "Reads one note as its intended reader would and reports where it fails them: undefined terms, assumed knowledge, numbers without a setup, a weak hook, abstract passages with no example, overlong sentences. Read-only, returns suggested rewrites. Use from /review and /write-chapter. Give it a note path; it works out the subject's audience. Do not give it the author's reasoning."
 tools: Read, Grep, Glob, Bash
 ---
 

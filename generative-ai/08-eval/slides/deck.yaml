@@ -1,4 +1,4 @@
-# Lecture deck for generative-ai/08-eval, notes 01-14.
+# Lecture deck for generative-ai/08-eval, notes 01-15.
 # Build: make slides PILLAR=generative-ai/08-eval STRICT=1 PREVIEW=1
 # Running example: a customer-support agent that answers from help-centre articles and can issue
 # refunds. Version B scores 85% against version A's 84%. The talk earns the answer: do not ship.
@@ -355,6 +355,8 @@ parts:
           Look at verbosity. If B got wordier, this judge prefers it regardless of quality, and our one point
           could live entirely in that row. These biases are not exotic. The same ones appear in human
           feedback, as we will see. The fixes are mostly cheap, like running both orders.
+          Where a score will not work, pairwise votes can become a ranking through Elo, as long as a win holds
+          in both orders, but a ranking cannot monitor production.
       - layout: steps
         kicker: The gate to the gate
         title: Calibrate a judge before it gates anything
@@ -367,7 +369,7 @@ parts:
           - {title: Measure on test once, text: "That is the reported number. Record judge model and prompt version.", accent: D4621A}
         takeaway: "An uncalibrated judge never gates a release, and a threshold change without fresh evidence moves it back to experimental."
         recall: "What are the three grader states, and which ones may block a release?"
-        source: notes/05-llm-as-judge.md
+        source: notes/15-calibration-against-human-labels.md
         notes: >-
           This is the same discipline as training a model. Tune on dev, report on test, and look at test only
           once. Then report two error rates separately: true positive rate, so you do not block good releases,
@@ -384,12 +386,12 @@ parts:
           - "Correct the rate: true ≈ (p̂ + TNR − 1) / (TPR + TNR − 1)"
         takeaway: "Lead with kappa rather than raw agreement, because a judge can be perfectly repeatable and still be reliably biased."
         recall: "Why is high test-retest reliability not evidence that a judge is valid?"
-        source: notes/05-llm-as-judge.md
+        source: notes/15-calibration-against-human-labels.md
         notes: >-
           The left panel is agreement near 0.8 next to kappa near 0.4 to 0.5, the same judges measured two
           ways. On the right, a judge that gives the same verdict nearly every time also has the strongest
           position bias. A deterministic judge just reproduces its bias exactly. So run the swap check, even
-          on a judge that never changes its mind. Where a score will not work, pairwise votes can become a ranking through Elo, as long as a win holds in both orders, but a ranking cannot monitor production.
+          on a judge that never changes its mind.
 
       - layout: code
         kicker: Beyond the rates

@@ -1,6 +1,6 @@
 # Programming
 
-> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**, plus **software design**: keeping code cheap to change. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`practice/drills/`](../practice/drills/README.md).
+> Depth layer for the languages everything else in this repo is written in: **Python**, **SQL** and **TypeScript**, plus **computer science foundations** and **software design**: keeping code cheap to change. Timed practice (HackerRank, LeetCode, interview-format coding rounds) lives in [`practice/drills/`](../practice/drills/README.md).
 >
 > Position in the path: the entry point, no prerequisites; next are [data-analytics](../data-analytics/README.md) and [ai-engineering](../ai-engineering/README.md).
 
@@ -42,6 +42,7 @@ There are no programming prerequisites. You need a terminal, Python 3.12+, the `
 | [Python](python/README.md) | Start here | Foundations → informatics → language for engineers, then a hand-off to [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md) | Severance, *Python for Everybody* (paraphrased); VanderPlas, *A Whirlwind Tour of Python*; Python documentation | Passing exercises and a small tested package |
 | [SQL](sql/README.md) | After Python foundations | Querying → analysis → data design → performance → Python, plus a capstone | Software Carpentry *Databases and SQL*; PGExercises; Knight Lab *SQL Murder Mystery* | Checked queries and an investigative capstone |
 | [TypeScript](typescript/README.md) | After Python for engineers | JavaScript → types → async and tooling → typed AI apps | TypeScript Handbook; *typescript-exercises*; *type-challenges* | Type-safe exercises and a validated async boundary |
+| [Computer science foundations](computer-science/README.md) | After Python foundations; pairs with Python for engineers | Cost models and Big-O → data structures → algorithm patterns → numbers and memory → processes, threads and I/O → networks | OSTEP, Erickson's *Algorithms*, MIT 6.042 notes, CPython source notes, RFCs and Goldberg; see its [references](computer-science/references.md) | Data structures, a stream decoder and an RFC 6298 timer built against tests, and every timing in the notes reproducible |
 | [Software design](software-design/README.md) | After Python for engineers | Readable code → refactoring → design principles → patterns → testing → debugging → Git, review and design docs | Authors' free writing, papers and tool documentation; see its [references](software-design/references.md) | A smelly module refactored under tests, then extended |
 
 The tracks deliberately overlap. Python gives SQL and TypeScript their programming vocabulary; SQL sharpens the data model before [Data Analytics](../data-analytics/README.md); Python plus TypeScript prepares you for [AI Engineering](../ai-engineering/README.md).
@@ -131,6 +132,14 @@ The tracks deliberately overlap. Python gives SQL and TypeScript their programmi
 
 **Next:** [AI Engineering](../ai-engineering/README.md) for production LLM systems, or [Generative AI](../generative-ai/README.md) for LLM foundations and applications.
 
+### [Computer science foundations](computer-science/README.md)
+
+**Purpose:** The university-level ideas behind the Python you write, and how to reason about making it faster. Math is taught where it's used. Like software design, its notes follow the full chapter standard.
+
+**Evidence:** Build the [lab](computer-science/practice/README.md)'s array, hash table, LRU cache, compensated sum, frame decoder and retransmission timer against their tests, and explain a slow request by counting its round trips and its costs.
+
+**Next:** [Software design](software-design/README.md). The reading order and sources are in the [track README](computer-science/README.md).
+
 ### [Software design](software-design/README.md)
 
 **Purpose:** Keep code cheap to change: read it, refactor it, test it, debug it, and work on it with other people. Unlike the language tracks, its notes follow the full chapter standard.
@@ -175,6 +184,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 | SQL capstone | Needs the downloaded `sql-murder-mystery.db` | `sqlite3 data/sql-murder-mystery.db` |
 | TypeScript exercises, tests, vendored `typescript-exercises/` and `type-challenges/`, [`check.ts`](typescript/practice/check.ts) | Needs Node 22.18+ (runs `.ts` directly, no build step) and one `npm install` (downloads TypeScript 7, zod, `@types/node`, the Anthropic SDK into the gitignored `node_modules/`) | `cd typescript/practice && npm install && npm run check` |
 | TypeScript live example [`examples/claude.ts`](typescript/practice/examples/claude.ts) | Needs an API key (`ANTHROPIC_API_KEY`); exits cleanly without one | `node examples/claude.ts` |
+| [`computer-science/practice/check.sh`](computer-science/practice/check.sh) | Needs `uv` and Python 3.14; the first run downloads pytest, numpy and `python3.14t`. Runs the lab's tests and every code block in the notes. Network blocks are opt-in | `bash check.sh`, `bash check.sh exercises`, `bash check.sh network` |
 
 ## Primary texts
 
@@ -186,6 +196,7 @@ Every practice set and script, with what it needs. The track READMEs give the fu
 - Winand, *Use The Index, Luke*: background for indexes and query plans
 - TypeScript Handbook, with *typescript-exercises* and *type-challenges* as practice
 - Ramalho, *Fluent Python*: further reading for Python 03
+- Computer science foundations: the [track's primary texts](computer-science/README.md#primary-texts)
 - Software design: the [track's primary texts](software-design/README.md#primary-texts)
 - McKinney, *Python for Data Analysis*: where the path goes next, in [data-analytics 01](../data-analytics/01-python-for-data-analysis/README.md)
 

@@ -19,6 +19,8 @@ in each note's frontmatter. [Sources and depth](../CURRICULUM.md#sources-and-dep
 | [PEP 487](https://peps.python.org/pep-0487/), [PEP 779](https://peps.python.org/pep-0779/) | Public domain or CC0 | 03 · 08 (487), 09 (779) |
 | Raymond Hettinger, [*Python's super() considered super!*](https://rhettinger.wordpress.com/2011/05/26/super-considered-super/) | Read online | 03 · 08 |
 
+The computer science foundations track keeps its own list: [computer-science/references.md](computer-science/references.md).
+
 The software design track keeps its own list: [software-design/references.md](software-design/references.md).
 
 ## SQL

@@ -1,7 +1,7 @@
 ---
 origin: notion-export
 sources:
-  - own work notes (support-agent RAG project)
+  - own work notes (production support-agent evaluation, anonymised)
   - https://github.com/pgvector/pgvector
   - https://docs.pinecone.io/guides/search/hybrid-search
   - "Li, AI Agents in Depth, ch. 3"
@@ -14,7 +14,7 @@ cleaned: 2026-11-01
 
 Tallybook has 18 help articles and a Postgres database. A vendor comparison tells the team to buy a dedicated vector database with a distributed HNSW cluster, and they spend a month running it for a corpus that a `for` loop could scan in under a millisecond. A year later another team makes the opposite mistake: their corpus has grown to 30 million chunks, their embedder has moved to 3,072 dimensions, and the Postgres index they relied on will not build at all. Both teams chose a store by reputation, before they had asked three questions: how many vectors, how many dimensions, and does the query need keywords.
 
-This note is the reference for answering them. It compares the stores that appear in our support-agent codebase or are realistic migration targets, then tests the claims that matter on the running example. The comparison is a snapshot and vendors move fast. While writing this note, two entries in our old project table turned out to be out of date, and they are corrected below. Check a vendor's current documentation before you commit.
+This note is the reference for answering them. It compares the stores used by a production support-agent system, with its identity removed, or that are realistic migration targets, then tests the claims that matter on the running example. The comparison is a snapshot and vendors move fast. While writing this note, two entries in the team's earlier table turned out to be out of date, and they are corrected below. Check a vendor's current documentation before you commit.
 
 ```mermaid
 flowchart TD
@@ -32,15 +32,15 @@ flowchart TD
 
 ---
 
-## What we currently use
+## What that system used
 
 | Store | Where | Mode |
 |---|---|---|
-| OpenSearch | Bedrock KB (the eval platform SupportAgent) | Managed — Bedrock owns the index |
-| DuckDB | kb_rag default vector backend | Embedded, self-managed, no server |
-| ChromaDB | kb_rag optional backend (`chroma` extra) | Embedded, persistent HNSW |
-| pgvector | chat-agent local/dev | Self-managed PostgreSQL extension |
-| GCP Discovery Engine | chat-agent production | Fully managed — GCP owns everything |
+| OpenSearch | Bedrock KB (the AWS agent) | Managed — Bedrock owns the index |
+| DuckDB | Deterministic pipeline, default vector backend | Embedded, self-managed, no server |
+| ChromaDB | Deterministic pipeline, optional backend (`chroma` extra) | Embedded, persistent HNSW |
+| pgvector | Second agent, local/dev | Self-managed PostgreSQL extension |
+| GCP Discovery Engine | Second agent, production | Fully managed — GCP owns everything |
 
 ---
 
@@ -59,7 +59,7 @@ flowchart TD
 | **Cost model** | Free | Free / Chroma Cloud | Storage + compute (shared) | Cluster cost | Cluster cost | Per-vector + per-query | Per-query + storage |
 | **Streaming ingest** | COPY or INSERT | `upsert()` | psycopg batch insert | Bulk API | Bulk API | upsert API | Data source sync |
 
-The "Hybrid search" row means what you get from one query with no extra work. Reading it as "cannot do hybrid" is a mistake: you can always run two searches and fuse them with RRF, as in the DuckDB example below. Pinecone's row is a correction to our earlier note: its [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) describes dense and sparse vectors in one index, separate indexes, and client-side fusion.
+The "Hybrid search" row means what you get from one query with no extra work. Reading it as "cannot do hybrid" is a mistake: you can always run two searches and fuse them with RRF, as in the DuckDB example below. Pinecone's row is a correction to an earlier version of this table: its [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) describes dense and sparse vectors in one index, separate indexes, and client-side fusion.
 
 ---
 
@@ -94,7 +94,7 @@ for n, dim in [(10_000, 384), (50_000, 384), (200_000, 384), (50_000, 1024), (50
    50,000  3072   0.61       3.7
 ```
 
-These are laptop timings on random vectors with NumPy's default threading, so read the shape and not the digits. Time grows with both axes. A corpus under about 100k chunks at a few hundred dimensions answers in single-digit or low double-digit milliseconds, which is small next to a model call that takes seconds. That is why our project's DuckDB backend stays on exact search below 50k chunks. Concurrency is what this table hides: a scan holds a core for its whole duration, so ten simultaneous queries are ten scans.
+These are laptop timings on random vectors with NumPy's default threading, so read the shape and not the digits. Time grows with both axes. A corpus under about 100k chunks at a few hundred dimensions answers in single-digit or low double-digit milliseconds, which is small next to a model call that takes seconds. That is why the production pipeline's DuckDB backend stayed on exact search below 50k chunks. Concurrency is what this table hides: a scan holds a core for its whole duration, so ten simultaneous queries are ten scans.
 
 ---
 
@@ -103,13 +103,13 @@ These are laptop timings on random vectors with NumPy's default threading, so re
 ### pgvector
 Best for: dev environments, prototypes, teams already running Postgres.
 
-Constraints in chat-agent:
-- Gemini `gemini-embedding-2-preview` outputs 3072 dims → exceeds the 2,000-dim index limit of pgvector's `vector` type → **exact search only** with the column type we use. This is fine at our dataset size but won't scale to millions of docs. The [pgvector README](https://github.com/pgvector/pgvector) lists `halfvec` at up to 4,000 indexed dimensions, so a half-precision column is the way out if we ever need an index at 3072.
+Constraints in the second agent:
+- Gemini `gemini-embedding-2-preview` outputs 3072 dims → exceeds the 2,000-dim index limit of pgvector's `vector` type → **exact search only** with that column type. This is fine at that dataset size but won't scale to millions of docs. The [pgvector README](https://github.com/pgvector/pgvector) lists `halfvec` at up to 4,000 indexed dimensions, so a half-precision column is the way out if you need an index at 3072.
 - Cosine similarity via `<=>` operator.
 - No sparse/BM25 hybrid without a separate plugin (pg_bm25 / ParadeDB).
 
 ```sql
--- chat-agent pattern: cosine similarity query
+-- cosine similarity query
 SELECT text, metadata, 1 - (embedding <=> %s::vector) AS score
 FROM documents
 ORDER BY embedding <=> %s::vector
@@ -137,15 +137,15 @@ Comparable to OpenSearch (shared lineage). Prefer when:
 Diverges from OpenSearch post-v7.10 (license split). API-compatible for basic queries; Elastic-specific features (ELSER, Elastic Learned Sparse EncodeR) don't port directly.
 
 ### Pinecone
-Best for: vector similarity with no operational burden. Our project ruled it out when we read it as dense only, because keyword precision matters in a multilingual support KB (product names, billing codes). That reading is out of date: the [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) covers dense and sparse vectors in one index, or separate indexes merged on the client. The sparse vectors and the balance between the two signals are yours to produce and tune, which BM25 in OpenSearch does not ask of you. The remaining reasons not to choose it are SaaS-only hosting and per-vector pricing.
+Best for: vector similarity with no operational burden. The team ruled it out when reading it as dense only, because keyword precision matters in a multilingual support KB (product names, billing codes). That reading is out of date: the [hybrid search guide](https://docs.pinecone.io/guides/search/hybrid-search) covers dense and sparse vectors in one index, or separate indexes merged on the client. The sparse vectors and the balance between the two signals are yours to produce and tune, which BM25 in OpenSearch does not ask of you. The remaining reasons not to choose it are SaaS-only hosting and per-vector pricing.
 
 ### DuckDB
-Two roles in our codebase:
+Two roles in that system:
 
-**kb_rag production backend (default):** `VECTOR_STORE_BACKEND=duckdb` — the `DuckDBVectorIndex` in `rag/datastore/local.py` stores embeddings in a `.duckdb` file and does exact cosine search. No server, no infra. Ships as a core dep in the kb_rag `pyproject.toml` (`duckdb>=1.0`).
+**Production backend of the pipeline (default):** `VECTOR_STORE_BACKEND=duckdb` — a vector index class stores embeddings in a `.duckdb` file and does exact cosine search. No server, no infra, and only one core dependency (`duckdb>=1.0`).
 
 ```bash
-VECTOR_STORE_BACKEND=duckdb VECTORDB_PATH=data/corpus/v1/knowledge.duckdb uv run uvicorn main:app
+VECTOR_STORE_BACKEND=duckdb VECTORDB_PATH=data/knowledge.duckdb uv run uvicorn main:app
 ```
 
 **Eval / analysis backend:** DuckDB's `vss` extension adds HNSW for offline retrieval sweeps without spinning up a server.
@@ -158,7 +158,7 @@ CREATE INDEX ON docs USING HNSW (embedding);
 SELECT * FROM docs ORDER BY array_distance(embedding, ?::FLOAT[3072]) LIMIT 5;
 ```
 
-Limitation: the `vss` extension is dense only. For keyword-heavy queries (Danish product names, billing codes) our retrieval quality was lower than OpenSearch hybrid, which is what you get if you stop there. DuckDB's separate `fts` extension adds BM25, and the two lists fuse in a few lines, so the gap is one of effort and not capability.
+Limitation: the `vss` extension is dense only. For keyword-heavy queries (product names in a non-English language, billing codes) retrieval quality was lower than OpenSearch hybrid, which is what you get if you stop there. DuckDB's separate `fts` extension adds BM25, and the two lists fuse in a few lines, so the gap is one of effort and not capability.
 
 Here is the whole thing on Tallybook: exact cosine with a SQL `WHERE`, BM25 from `fts`, and RRF. It needs network access once, for `INSTALL fts`.
 
@@ -213,25 +213,25 @@ Two things to read in the output. On the error code, BM25 returns the one docume
 Keep the permissions predicate in both queries, as [note 07](07-rag-in-production.md#permissions-belong-in-retrieval) argues. The internal runbook kb-18 never appears here, and it would have appeared for the refund question without that `WHERE`.
 
 ### ChromaDB
-Optional backend in kb_rag (`pip install chromadb` or `uv sync --extra chroma`). `ChromaVectorIndex` in `rag/datastore/local.py` uses `PersistentClient` with HNSW cosine distance.
+Optional backend in the pipeline (`pip install chromadb` or `uv sync --extra chroma`). Its index class uses `PersistentClient` with HNSW cosine distance.
 
 ```bash
-VECTOR_STORE_BACKEND=chroma VECTOR_STORE_DIR=data/corpus/chroma uv run uvicorn main:app
+VECTOR_STORE_BACKEND=chroma VECTOR_STORE_DIR=data/chroma uv run uvicorn main:app
 ```
 
-When to prefer over DuckDB: when you want persistent HNSW (approximate search at larger corpus sizes) or plan to use the Chroma Cloud managed tier later. For our current corpus size (< 50k chunks), DuckDB exact search is fast enough and simpler.
+When to prefer over DuckDB: when you want persistent HNSW (approximate search at larger corpus sizes) or plan to use the Chroma Cloud managed tier later. For that corpus size (< 50k chunks), DuckDB exact search is fast enough and simpler.
 
-**Not installed in the main the eval platform venv.** Tests that exercise ChromaDB use `pytest.importorskip("chromadb")` and run only under `make test-agents` with the kb_rag extras venv.
+**Keep an optional backend optional in tests too.** Tests that exercise ChromaDB use `pytest.importorskip("chromadb")`, so they run only where the extra is installed.
 
 ### GCP Discovery Engine (Vertex AI Search)
 Best for: fully managed RAG on GCP — no index to manage, no reranker to wire up.
 
-Two modes we use in chat-agent:
+Two modes the second agent used:
 
-| Mode | Client class | Who generates the answer |
-|---|---|---|
-| Agentic RAG | `GcpAgentSearchClient` | Gemini ADK agentic loop (grade + rewrite) |
-| Built-in answer | `GcpAnswerSearchClient` | GCP Discovery Engine (black box) |
+| Mode | Who generates the answer |
+|---|---|
+| Agentic RAG | Gemini ADK agentic loop (grade + rewrite) |
+| Built-in answer | GCP Discovery Engine (black box) |
 
 See [12 — Managed RAG](12-managed-rag.md#vertex-vs-bedrock) for a detailed head-to-head comparison.
 
@@ -241,12 +241,12 @@ See [12 — Managed RAG](12-managed-rag.md#vertex-vs-bedrock) for a detailed hea
 
 | Embedding model | Dim | pgvector HNSW? | Notes |
 |---|---|---|---|
-| `gemini-embedding-2-preview` | 3072 | No with `vector` (over 2,000); yes with `halfvec` | Exact search only in our `vector` setup |
+| `gemini-embedding-2-preview` | 3072 | No with `vector` (over 2,000); yes with `halfvec` | Exact search only in a `vector` column |
 | `amazon.titan-embed-text-v2:0` | 1024 | Yes | Used by Bedrock KB |
 | `text-embedding-3-large` (OpenAI) | 3072 / 256 (MRL) | Yes at 256 | Matryoshka allows dimension reduction |
 | `text-embedding-004` (Google) | 768 | Yes | Cheaper, fits HNSW |
 
-**The dimension limit applies to the index and not to the column.** The [pgvector README](https://github.com/pgvector/pgvector) gives HNSW and IVFFlat the same ceilings: 2,000 for `vector` and 4,000 for `halfvec`. A column can hold 16,000. Our old note said IVFFlat had no hard limit, which was wrong. Exact search (no index) works at any dimension, and the only trade-off is the O(n) scan cost measured above.
+**The dimension limit applies to the index and not to the column.** The [pgvector README](https://github.com/pgvector/pgvector) gives HNSW and IVFFlat the same ceilings: 2,000 for `vector` and 4,000 for `halfvec`. A column can hold 16,000. An earlier version of this note said IVFFlat had no hard limit, which was wrong. Exact search (no index) works at any dimension, and the only trade-off is the O(n) scan cost measured above.
 
 The choice has a storage side as well. `halfvec` stores 2 bytes per dimension instead of 4, at a cost in precision, which is the same trade as the int8 quantization in [note 07](07-rag-in-production.md). Changing the embedder means re-embedding the corpus, so this table is worth reading before the first ingest and not after.
 
@@ -311,9 +311,9 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 
 1. **Hybrid search** — combine dense (semantic) + sparse (BM25/ELSER) scores. Bedrock does this automatically; pgvector requires ParadeDB or a separate BM25 index.
 2. **Reranking** — cross-encoder as a second pass over top-k candidates. Bedrock: `amazon.rerank-v1:0`. Elsewhere: Cohere Rerank, Jina Reranker, BGE-Reranker.
-3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in the eval platform kb_lg and chat-agent. See [12](12-managed-rag.md).
-4. **Parent-child chunking** — retrieve at leaf granularity, send parent context to LLM. Bedrock's native hierarchy maps to our `level=0` / `level=1` in `ChunkRecord`.
-5. **CRAG (Corrective RAG)** — grade retrieved docs, rewrite query if below threshold, retry. Used in kb_lg and chat-agent agentic pipeline.
+3. **Multi-query** — fire 2–3 reformulated queries in parallel, deduplicate by URL fingerprint. Used in the graph agent and the second agent. See [12](12-managed-rag.md).
+4. **Parent-child chunking** — retrieve at leaf granularity, send parent context to LLM. Bedrock's native hierarchy maps to `level=0` / `level=1` in a chunk schema.
+5. **CRAG (Corrective RAG)** — grade retrieved docs, rewrite query if below threshold, retry. Used in the graph agent and the second agent's agentic pipeline.
 
 ---
 
@@ -323,9 +323,9 @@ The gap grows with the corpus, and the rebuild is the mild case: it also means h
 
 **OpenSearch (Bedrock) → pgvector**: lose hybrid search and managed reranking. Not recommended for production unless you add ParadeDB + a cross-encoder.
 
-**pgvector → Pinecone**: gain SaaS zero-ops. Keyword search moves from a Postgres plugin to sparse vectors you generate, or to client-side fusion with a separate keyword index. The old rule here said "only if queries are purely semantic and the corpus is English", which was written when we read Pinecone as dense only. Evaluate the sparse path on your multilingual queries before moving.
+**pgvector → Pinecone**: gain SaaS zero-ops. Keyword search moves from a Postgres plugin to sparse vectors you generate, or to client-side fusion with a separate keyword index. The old rule here said "only if queries are purely semantic and the corpus is English", which was written when Pinecone read as dense only. Evaluate the sparse path on your multilingual queries before moving.
 
-**Any → GCP Discovery Engine**: only viable if your stack is already GCP-native. Retrieval is a black box — you lose visibility into score calibration, chunk boundaries, and reranker behaviour. Suitable when you want GCP to own the full RAG loop (as in chat-agent's `:answer` backend).
+**Any → GCP Discovery Engine**: only viable if your stack is already GCP-native. Retrieval is a black box — you lose visibility into score calibration, chunk boundaries, and reranker behaviour. Suitable when you want GCP to own the full RAG loop (as in the second agent's `:answer` backend).
 
 ---
 

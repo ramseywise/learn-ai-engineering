@@ -47,7 +47,7 @@ Frontmatter: `origin: synthesis`, `sources:` with every source, `confidence:` by
 
 ## Step 4 — Review
 
-Dispatch `audience-editor` (path only: no reasoning) and `citation-checker` (the path, with "all"), then apply `/review-note`
+Dispatch `audience-editor` (path only: no reasoning) and `citation-checker` (the path, with "all"), then apply `/review`
 Step 3's rules for what to fix. Do not stop at the first pass if a fix was substantial: re-check that part.
 
 ## Step 5 — Integrate

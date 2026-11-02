@@ -84,5 +84,5 @@ probe: a failure you learned from, adapting when a client rejects your recommend
 ## Sources
 
 - external: FDE loop analyses — case study + customer empathy ≈ 50% of evaluation (Exponent FDE guide, Perspective AI Anthropic/FDE writeups, Sundeep Teki guide)
-- librarian wiki: Agentic KPI Trees · Copilot Learning Loop · SupportAgent Product Design Patterns (interaction-level staging)
+- librarian wiki: Agentic KPI Trees · Copilot Learning Loop · Support-Agent Product Design Patterns (interaction-level staging)
 - related round: [customer-simulation](../../rounds/customer-simulation/README.md) · [leadership-rounds](../../rounds/leadership-rounds/README.md)

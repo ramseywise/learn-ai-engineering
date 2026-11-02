@@ -72,9 +72,11 @@ For each claim, decide one of:
 - **new note**: only when the chapter covers a topic the pillar plans but has no note
   for. Check the README's planned-notes table and use that number and title. Write a real
   note, not a summary.
-- **drop**: already covered at least as well, or off-topic for this pillar.
+- **drop**: off-topic for this pillar, or wrong. Not for material the note already covers:
+  that is **sharpens**, so add the citation and the "Folded in as" entry.
 
-If nothing survives, the chapter adds nothing. Run
+The references.md row records every chapter that was read. If nothing survives, the chapter
+adds nothing. Note that in its references row, run
 `python3 scripts/papers/potw.py mark skipped <key>`, keep the PDF, and say why in the report.
 
 ## Step 4 — Write

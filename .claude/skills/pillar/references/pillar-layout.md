@@ -68,7 +68,7 @@ The notes are the product. Everything else in the folder serves them.
   Name the author, title, figure number, and the licence when there is one. A figure goes
   into a note before it goes onto a slide.
 - **Inline citations** link the public URL, never the local PDF:
-  `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10)`.
+  `[arXiv:2610.28577](https://arxiv.org/abs/2610.28577) (Fu et al., 2026-10, preprint)`.
 - **Venue in citations.** Say where a paper was reviewed: `(Karpukhin et al., EMNLP 2020)`.
   A paper that is only a preprint keeps the date and says so: `(Fu et al., 2026-10, preprint)`.
   `scripts/papers/citegraph.py upgrade` lists arXiv citations that have a published version.

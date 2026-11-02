@@ -5,6 +5,8 @@ sources:
   - http://data.europa.eu/eli/reg/2026/1744/oj
   - http://data.europa.eu/eli/reg/2016/679/oj
   - http://data.europa.eu/eli/dec_impl/2023/1795/oj
+  - https://www.aicpa-cima.com/resources/download/2017-trust-services-criteria-with-revised-points-of-focus-2022
+  - https://www.aicpa-cima.com/resources/download/aicpa-exposure-drafts-proposed-2027-soc-2-trust-services-criteria-and-description-criteria
   - https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C
   - https://www.federalregister.gov/documents/2025/01/06/2024-30983/hipaa-security-rule-to-strengthen-the-cybersecurity-of-electronic-protected-health-information
   - https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services
@@ -42,7 +44,7 @@ Every statement of current law below is dated. The EU rules moved in July 2026, 
 
 ## The EU AI Act: roles first
 
-Regulation (EU) 2024/1689 ([OJ text](http://data.europa.eu/eli/reg/2024/1689/oj)) was published in July 2024 and amended by Regulation (EU) 2026/1744, the "Digital Omnibus on AI" ([OJ text](http://data.europa.eu/eli/reg/2026/1744/oj)), published on 24 July 2026. It has a long reach. Under Article 2(1) it covers providers placing systems on the EU market wherever they're located, deployers located in the Union, and third-country providers and deployers whose system's output is used in the Union. A Californian company serving EU shoppers isn't outside it. Article 2(7) leaves GDPR untouched, so everything here is additional to data protection duties.
+Regulation (EU) 2024/1689 ([OJ text](http://data.europa.eu/eli/reg/2024/1689/oj)) was published in July 2024 and amended by Regulation (EU) 2026/1744, the "Digital Omnibus on AI" ([OJ text](http://data.europa.eu/eli/reg/2026/1744/oj)), published on 24 July 2026. It has a long reach. Under Article 2(1) it covers providers placing systems on the EU market wherever they're located, deployers located in the Union, and third-country providers and deployers whose system's output is used in the Union. A Californian company serving EU shoppers isn't outside it. Article 2(7) leaves GDPR unaffected, apart from Articles 4a and 59, so nearly everything here is additional to data protection duties.
 
 Obligations attach to roles, so settle roles first. Article 3 defines the two that matter:
 
@@ -65,7 +67,7 @@ Article 25(1) is the trap for anyone customising. A deployer or other third part
 
 The Act sorts uses, not models. Four tiers matter here, and a single product can sit in several.
 
-**Prohibited (Art. 5).** Applies now. It includes manipulative techniques that cause significant harm, exploiting vulnerabilities, social scoring, profiling-only criminal risk prediction, scraping faces to build recognition databases, and inferring emotions in workplaces and education except for medical or safety reasons (Art. 5(1)(f)). A staff tool that reads an agent's mood from their voice would run into that last one. The Omnibus adds bans on non-consensual intimate imagery and child sexual abuse material from 2 December 2026.
+**Prohibited (Art. 5).** Applies now. It includes manipulative techniques that cause significant harm, exploiting vulnerabilities, social scoring, profiling-only criminal risk prediction, scraping faces to build recognition databases, and inferring emotions in workplaces and education except for medical or safety reasons (Art. 5(1)(f)). A staff tool that reads an agent's mood from their voice would run into that last one. The Omnibus adds bans on non-consensual intimate material and child sexual abuse material from 2 December 2026. For systems, these bite where producing it is the intended purpose, or a foreseeable outcome without adequate safeguards (Art. 5(1a)).
 
 **High-risk (Art. 6).** Either a safety component of a regulated product (Art. 6(1), Annex I), or a use listed in Annex III (Art. 6(2)). The Annex III areas are biometrics, critical infrastructure, education, employment, essential services, law enforcement, migration, and justice and democracy. Article 6(3) lets a provider conclude that an Annex III system isn't high-risk where it only does a narrow procedural task, improves the result of a completed human activity, detects decision patterns without replacing the human assessment, or does preparatory work. A system that profiles natural persons is always high-risk. Using this exemption has to be documented, and the system registered (Art. 6(4)).
 
@@ -90,7 +92,7 @@ The product implication is that high-risk status comes in through the roadmap. S
 
 ### If you do cross the line
 
-The provider of a high-risk system takes on risk management (Art. 9), data governance (Art. 10), logging (Art. 12), instructions for use (Art. 13), human oversight (Art. 14), accuracy, robustness and cybersecurity (Art. 15), conformity assessment, a declaration, CE marking and registration (Art. 16, 43, 47-49), post-market monitoring (Art. 72) and serious incident reports (Art. 73). Providers keep automatically generated logs at least six months (Art. 19). Deployers follow the instructions, assign competent oversight, monitor, keep logs under their control at least six months and inform workers before use at work (Art. 26). Public bodies and deployers of credit-scoring or insurance systems also need a fundamental rights impact assessment (Art. 27).
+The provider of a high-risk system takes on risk management (Art. 9), data governance (Art. 10), logging (Art. 12), instructions for use (Art. 13), human oversight (Art. 14), accuracy, robustness and cybersecurity (Art. 15), conformity assessment, a declaration, CE marking and registration (Art. 16, 43, 47-49), post-market monitoring (Art. 72) and serious incident reports (Art. 73). Providers keep automatically generated logs at least six months (Art. 19). Deployers follow the instructions, assign competent oversight, monitor, keep logs under their control at least six months and inform workers before use at work (Art. 26). Public bodies, private entities providing public services, and deployers of credit-scoring or insurance systems also need a fundamental rights impact assessment, except for critical infrastructure systems (Art. 27).
 
 Much of that is what this course already teaches, under other names. What the law adds is that it must be documented, and available on request. So don't build a second system. Keep evidence from the first.
 
@@ -158,7 +160,7 @@ as of 2027-12-02: 7 of 8 apply; next 2028-08-02: High-risk systems in Annex I re
 Annex III moved by 487 days, from 2026-08-02 to 2027-12-02
 ```
 
-Three details are worth noting. Systems already on the market before the high-risk dates are only caught if their design changes significantly, with public-authority use required to comply by 2 August 2030 (Art. 111(2) as replaced). Article 72(3) now has the Commission providing guidance and a voluntary template for post-market monitoring by 2 September 2027. And Article 4a adds a narrow, conditional permission to process special-category data for detecting bias in high-risk systems, which matters for the [audits this pillar scopes in](../README.md).
+Three details are worth noting. Systems already on the market before the high-risk dates are only caught if their design changes significantly, with public-authority use required to comply by 2 August 2030 (Art. 111(2) as replaced). Article 72(3) now has the Commission providing guidance and a voluntary template for post-market monitoring by 2 September 2027. And Article 4a adds a narrow, conditional permission to process special-category data for detecting and correcting bias, mainly in high-risk systems and on the same conditions in other systems (Art. 4a(2)), which matters for the [audits this pillar scopes in](../README.md).
 
 Fines scale with the breach: up to €35 million or 7% of worldwide turnover for prohibited practices (Art. 99(3)), up to €15 million or 3% for most operator duties, including Art. 50 and Art. 26 (Art. 99(4)), and up to €7.5 million or 1% for supplying incorrect information (Art. 99(5)). SMEs pay the lower of each pair (Art. 99(6)). GPAI model providers have their own cap, 3% or €15 million (Art. 101).
 
@@ -170,7 +172,7 @@ Three recent developments matter if you're relying on these reports (all as of 2
 
 - The AICPA has [published exposure drafts](https://www.aicpa-cima.com/resources/download/aicpa-exposure-drafts-proposed-2027-soc-2-trust-services-criteria-and-description-criteria) of proposed 2027 criteria (26 October 2026). We read the summary but not the drafts, so we can't say what they change.
 - Its [SOC hub](https://www.aicpa-cima.com/resources/landing/system-and-organization-controls-soc-suite-of-services) carries a notice that it's looking into anonymous allegations about one compliance vendor's SOC business practices, and says SOC services should be thoroughly evaluated. The quality of a report varies, then, and a logo isn't evidence.
-- The [Journal of Accountancy reported on 19 October 2026](https://www.journalofaccountancy.com/news/2026/oct/aicpa-partners-on-new-offering-that-assures-ai-systems-and-agents/) that the AICPA has partnered with AIUC on an engagement combining a SOC 2 report with an AI-agent certification, with full launch expected in early 2027. This is news of a planned product, so it's worth watching, not relying on.
+- The [Journal of Accountancy reported on 19 October 2026](https://www.journalofaccountancy.com/news/2026/oct/aicpa-partners-on-new-offering-that-assures-ai-systems-and-agents/) that the AICPA has partnered with AIUC on an engagement combining a SOC 2 report with an AI-agent certification, with full launch expected in early 2027. The article says some CPA firms are already delivering it. It's still an early-stage product, so it's worth watching, not relying on.
 
 When a vendor sends a SOC 2 report, read it rather than filing it. Practitioners distinguish a Type 1 report, on whether controls were suitably designed at a point in time, from a Type 2, on whether they operated over a period. We couldn't read AICPA's own wording on this, as it sits behind the account wall, so check the report itself. Then ask:
 
@@ -184,19 +186,19 @@ Then keep the limit in mind. A clean SOC 2 tells you about a vendor's controls i
 
 ## HIPAA: a contract before any data
 
-HIPAA doesn't attach to health information as such. It attaches to **protected health information (PHI)** held by **covered entities**: health plans, clearinghouses and providers who transmit electronically (45 CFR 160.103), and their **business associates**, meaning those who create, receive, maintain or transmit PHI on a covered entity's behalf, including subcontractors. A shop's order for vitamins isn't PHI just because it looks medical.
+HIPAA doesn't attach to health information as such. It attaches to **protected health information (PHI)** held by **covered entities**: health plans, clearinghouses and providers who transmit health information electronically in a covered transaction (45 CFR 160.103), and their **business associates**, meaning those who create, receive, maintain or transmit PHI on a covered entity's behalf, including subcontractors. A shop's order for vitamins isn't PHI just because it looks medical.
 
 So here's a hypothetical. A clinic chain wants Harbour for patient billing questions. The clinic is a covered entity, Harbour's builder is its business associate, and the model API, tracing tool and vector store are each subcontractor business associates if PHI reaches them. A subcontractor stays in the chain whether or not it reads anything, since "maintains" is in the definition. These are the rules read from the [Electronic Code of Federal Regulations](https://www.ecfr.gov/current/title-45/subtitle-A/subchapter-C), which is the text of the rules the Department of Health and Human Services issues:
 
 - **A written contract comes first.** A covered entity may let a business associate handle PHI only with satisfactory assurances, documented in a contract (§164.502(e)). That contract sets permitted uses, flows the same restrictions down to subcontractors, and requires return or destruction of PHI at termination where feasible (§164.504(e)). PHI sent to a vendor with no such contract is a problem on the day it's sent, even if nothing goes wrong later.
 - **Technical safeguards.** Access control with unique user identification, audit controls, integrity, authentication and transmission security (§164.312). Unique IDs and audit controls are the same requirement as the [end-user identity and attribution](../../05-graph-engineering/notes/08-governance-and-production.md#attribution-is-the-whole-problem) you already need for an agent.
 - **Keep the paperwork.** Required documentation is retained six years (§164.316(b)(2)).
-- **Report a breach.** A business associate notifies the covered entity without unreasonable delay and within 60 calendar days of discovery (§164.410).
+- **Report a breach.** After a breach of unsecured PHI, a business associate notifies the covered entity without unreasonable delay and within 60 calendar days of discovery (§164.410).
 - **De-identification is a real exit, and a narrow one.** Data is out of scope if an expert determines the risk is very small, or if 18 kinds of identifier are removed and you have no actual knowledge that the rest could identify someone (§164.514(a)-(b)). The list includes dates more specific than a year and any other unique code. A support conversation is free text, so a regular-expression pass won't reliably meet this. [PII detection](03-guardrail-models.md) is a control and not, in itself, de-identification.
 
 Something may change here. In January 2025 HHS proposed changing the Security Rule to remove the distinction between required and addressable implementation specifications, among much else ([90 FR, 6 January 2025](https://www.federalregister.gov/documents/2025/01/06/2024-30983/hipaa-security-rule-to-strengthen-the-cybersecurity-of-electronic-protected-health-information)). A search of the Federal Register on 2 November 2026 found no final rule, so today's text, where encryption is addressable (§164.312), still stands. Treat that as a design floor and encrypt regardless.
 
-Vendor HIPAA paths aren't the same as their zero-retention paths, and they tend to narrow what you can use. As of 2 November 2026, [Anthropic's](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention) requires a BAA and a HIPAA-enabled organisation, rejects ineligible features with a 400 error, warns against putting PHI in JSON schemas because those are cached separately, and excludes Bedrock and Google Cloud access, which have their own documentation. [OpenAI's](https://developers.openai.com/api/docs/guides/your-data) lists its own BAA-based path. So check that each feature your agent uses is on the eligible list. It's easy to pass the contract review and then ship a tool that's excluded.
+Vendor HIPAA paths aren't the same as their zero-retention paths, and they tend to narrow what you can use. As of 2 November 2026, [Anthropic's](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention) requires a BAA and a HIPAA-enabled organisation, rejects ineligible features with a 400 error, warns against putting PHI in JSON schemas because those are cached separately, and excludes Bedrock and Google Cloud's Agent Platform, which have their own documentation, and Claude Platform on AWS. [OpenAI's](https://developers.openai.com/api/docs/guides/your-data) lists its own BAA-based path. So check that each feature your agent uses is on the eligible list. It's easy to pass the contract review and then ship a tool that's excluded.
 
 ## Data residency: find the real data flow
 
@@ -207,10 +209,10 @@ As of 2 November 2026:
 | Vendor | What the docs describe | What it leaves open |
 |---|---|---|
 | [Anthropic](https://platform.claude.com/docs/en/manage-claude/data-residency) | `inference_geo` per request (`global` or `us`); workspace geography for data at rest and endpoint processing, only `us` for now, and fixed at creation | No EU option in this setting. Costs 1.1× for `us` inference on recent models |
-| [OpenAI](https://developers.openai.com/api/docs/guides/your-data) | Project-level residency, 10% uplift | Doesn't cover system data. A region without regional processing may process elsewhere. Non-US regions need extra retention terms |
+| [OpenAI](https://developers.openai.com/api/docs/guides/your-data) | Project-level residency, 10% uplift on models released from 5 March 2026 | Doesn't cover system data. A region without regional processing may process elsewhere. Non-US regions need extra retention terms |
 | [AWS Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html) | Data protection under AWS's shared responsibility model; model providers don't get access to deployment accounts or logs | Your configuration is on you, and sensitive data shouldn't go in tags |
 
-For EU personal data the legal test is the transfer, not the server location alone. GDPR Article 44 applies to transfers to third countries, including onward ones. They need either an adequacy decision (Art. 45) or appropriate safeguards such as standard contractual clauses or binding corporate rules (Art. 46). For the US, Commission Implementing Decision (EU) 2023/1795 finds adequate protection only for transfers to organisations on the [Data Privacy Framework List](http://data.europa.eu/eli/dec_impl/2023/1795/oj), so check the actual vendor's listing. We read the decision, not any later litigation about it, so have counsel confirm it stands. A vendor is also usually your processor, which requires a contract under Article 28(3), with the same duties passed to any sub-processor (Art. 28(4)).
+For EU personal data the legal test is the transfer, not the server location alone. [GDPR](http://data.europa.eu/eli/reg/2016/679/oj) Article 44 applies to transfers to third countries, including onward ones. They need either an adequacy decision (Art. 45) or appropriate safeguards such as standard contractual clauses or binding corporate rules, with enforceable rights and effective remedies for data subjects (Art. 46). Without either, only the narrow derogations in Art. 49 remain, such as explicit consent. For the US, Commission Implementing Decision (EU) 2023/1795 finds adequate protection only for transfers to organisations on the [Data Privacy Framework List](http://data.europa.eu/eli/dec_impl/2023/1795/oj), so check the actual vendor's listing. We read the decision, not any later litigation about it, so have counsel confirm it stands. A vendor is also usually your processor, which requires a contract under Article 28(3), with the same duties passed to any sub-processor (Art. 28(4)).
 
 The practical way to answer all of this is a register of every place the data goes, and most of the entries aren't the model. Traces, eval sets, vector stores, caches, email, error reporting and support tooling all count. Fill it in from contracts and settings, then run it through rules.
 
@@ -282,8 +284,8 @@ ZDR isn't one thing, because each vendor defines it. As of 2 November 2026:
 | Vendor | What it is | What still survives or needs your action |
 |---|---|---|
 | [Anthropic](https://platform.claude.com/docs/en/manage-claude/api-and-data-retention) | By arrangement, per organisation: customer prompts and responses aren't stored at rest after the response | Data required by law or flagged by trust and safety systems, flagged inputs and outputs for up to 2 years. Covers listed API features only, so code execution, the Console and some models are out. Fable and Mythos 5.x models require 30-day retention |
-| [OpenAI](https://developers.openai.com/api/docs/guides/your-data) | ZDR or Modified Abuse Monitoring on prior approval; forces `store` false | By default, abuse monitoring logs up to 30 days, or longer where the law or harm requires. Ineligible endpoints may still store state |
-| [Google](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention) | A set of things you must do, area by area | Opt out of prompt logging for abuse monitoring. Grounding with Search or Maps stores data and can't be disabled, with a named alternative. Interactions API `store` defaults to true, so set it to false |
+| [OpenAI](https://developers.openai.com/api/docs/guides/your-data) | ZDR, which forces `store` false, or Modified Abuse Monitoring, both on prior approval | By default, abuse monitoring logs up to 30 days, or longer where the law or harm requires. Ineligible endpoints may still store state |
+| [Google](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/zero-data-retention) | A set of things you must do, area by area | Take the page's specific actions on abuse monitoring. Grounding with Search or Maps stores data and can't be disabled; for Search, the page recommends Web Grounding for Enterprise, and it names no alternative for Maps. Interactions API `store` defaults to true, so set it to false |
 
 Beyond the exceptions, there are three limits:
 
@@ -297,10 +299,10 @@ If an incident touches several regimes, several clocks run at once. Put them in 
 
 | Regime | Who reports | To whom | Clock |
 |---|---|---|---|
-| GDPR Art. 33 | Controller | Supervisory authority | Without undue delay, within 72 hours where feasible |
+| GDPR Art. 33 | Controller | Supervisory authority | Without undue delay, within 72 hours where feasible, unless the breach is unlikely to create a risk to people |
 | GDPR Art. 33(2) | Processor | Controller | Without undue delay |
-| HIPAA §164.410 | Business associate | Covered entity | Without unreasonable delay, 60 calendar days at most |
-| AI Act Art. 73 (high-risk only, once those duties apply) | Provider | Market surveillance authority | On establishing a causal link, and within 15 days of becoming aware; 2 days for widespread infringement or serious disruption of critical infrastructure; 10 days for a death |
+| HIPAA §164.410 (unsecured PHI) | Business associate | Covered entity | Without unreasonable delay, 60 calendar days at most from discovery |
+| AI Act Art. 73 (high-risk only, once those duties apply) | Provider | Market surveillance authority | On establishing a causal link or its reasonable likelihood, and within 15 days of becoming aware; 2 days for widespread infringement or serious and irreversible disruption of critical infrastructure; 10 days for a death, with the clock also starting on suspicion |
 
 ## Pitfalls
 

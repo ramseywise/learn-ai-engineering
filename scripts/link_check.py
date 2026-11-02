@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 
@@ -15,15 +16,26 @@ SKIP_PREFIXES = ("/oss/", "/use-these-docs", "/langsmith/", "~/", "/guides/")
 link_re = re.compile(r"\[[^\]]*\]\(([^)#]+)(?:#[^)]*)?\)")
 fence_re = re.compile(r"```.*?```", re.DOTALL)
 
+
+
+def git_ignored(paths):
+    """The paths git ignores, so private local files under practice/ don't fail the check."""
+    if not paths:
+        return set()
+    out = subprocess.run(["git", "check-ignore", "--stdin"], input="\n".join(paths), capture_output=True, text=True)
+    return set(out.stdout.splitlines())
+
+
 errors = 0
 for root, dirs, files in os.walk("."):
     dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
     if any(root.startswith(sp) for sp in SKIP_PATHS):
         continue
-    for fname in files:
-        if not fname.endswith(".md"):
+    markdown = [os.path.join(root, f) for f in files if f.endswith(".md")]
+    ignored = git_ignored(markdown)
+    for fpath in markdown:
+        if fpath in ignored:
             continue
-        fpath = os.path.join(root, fname)
         try:
             with open(fpath, encoding="utf-8") as fh:
                 text = fh.read()

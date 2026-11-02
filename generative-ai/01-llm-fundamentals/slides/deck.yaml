@@ -1,4 +1,4 @@
-# LLM Fundamentals lecture deck. Covers notes 01-14.
+# LLM Fundamentals lecture deck. Covers notes 01-15.
 # Build: make slides PILLAR=generative-ai/01-llm-fundamentals STRICT=1 PREVIEW=1
 # Spec:  .claude/skills/slides/references/deck-spec.md
 # Running example: a support-ticket assistant that invents a refund policy.
@@ -275,7 +275,7 @@ parts:
       samples, is a good cheap filter, but it can't catch an error the model makes consistently. And calibrate any
       self-reported confidence on your own data.
 - title: How it is trained and adapted
-  summary: Pretraining · SFT · Preference · LoRA
+  summary: Pretraining · Cost and scale · SFT · Preference · LoRA
   notes: Now we follow the weights through their stages, so we can pick the right lever instead of reaching for
     fine-tuning first.
   slides:
@@ -346,6 +346,41 @@ parts:
       while validation stalls near 6.4. The model is memorising. That is why your tickets alone will not pretrain
       a useful model: it would learn your tickets. Training also needs far more memory than inference, since Adam
       keeps two extra values per weight.'
+  - layout: table
+    title: Price a run before you plan one
+    recall: What share of Llama 2's training data would five years of support tickets be?
+    lead: Every pretraining figure reduces to a few multiplications.
+    header:
+    - Question
+    - Arithmetic
+    - Answer
+    widths:
+    - 3
+    - 4.6
+    - 3
+    highlight:
+    - 3
+    rows:
+    - - Cloud bill, Llama 2 7B
+      - '184,320 A100 GPU-hours at $30 per 8×A100 server-hour'
+      - '**about $691,200**'
+    - - Training memory, 1.5B params
+      - Weights, gradients and 2 Adam statistics, 4 bytes each
+      - '**24 GB** before activations'
+    - - Tokens per parameter
+      - 2T tokens on 7B parameters
+      - '**286**, against Chinchilla''s 20'
+    - - Five years of tickets
+      - '5 × 365 × 20,000 tickets × 300 tokens, a generous guess'
+      - '**10.95B tokens**, 0.55% of Llama 2''s data'
+    takeaway: Do the multiplication first. Even generous ticket volumes are a fraction of a percent of Llama 2's data,
+      so continue pretraining or fine-tune.
+    source: notes/15-pretraining-runs-cost-and-scale.md
+    notes: 'This is the answer to the question that opened the part, in four lines of arithmetic. Llama 2 7B took 184,320
+      A100 GPU-hours, which is about $691,000 at $30 an hour for an eight-GPU server. Adam needs four values per weight,
+      so 1.5 billion parameters take 24 GB before any activations. Llama 2 trained at 286 tokens per parameter, well past
+      the Chinchilla ratio of 20, on purpose: a smaller model on more tokens costs more to train and less to run. The
+      ticket volume is an assumption, chosen to be generous, and it still comes to 0.55% of what Llama 2 saw.'
   - layout: compare
     title: Continued pretraining adds knowledge, SFT adds behaviour
     recall: How many SFT examples did InstructGPT use?

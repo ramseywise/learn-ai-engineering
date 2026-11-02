@@ -133,9 +133,9 @@ sorted()
   n=1,000,000     130.47 ms  log2(ratio)= 1.16
 ```
 
-The list version's slope is 2.0 to two decimal places, so quadratic behaviour is about as clean as measurements get. That's also where the opening's eleven minutes comes from: 690 ms at 16,000 items, times 1,000 for 500,000 items if you extrapolate with `k = 2`, is about 11.5 minutes.
+The list version's slope is 2.0 to two decimal places, so quadratic behaviour is about as clean as measurements get. That's also where the opening's eleven minutes comes from: 690 ms at 16,000 items, multiplied by about 1,000 for 500,000 items if you extrapolate with `k = 2`, is about 11 minutes.
 
-The other two rows are more instructive. `sorted` costs `n log n`, and that has a slope a bit above 1, which fits: `log2(2n)/log2(n)` is about 1.05 at this size, and the measured value is a little more. The set is the odd one. Theory says slope 1, and I measured 1.13 to 1.30. The analysis isn't wrong, but the cost model is. Those lookups stop being one unit once the table outgrows the CPU's caches, and at a million items each one is likelier to miss. [Chapter 4](04-numbers-and-memory.md#the-staircase) measures that staircase directly. A slope that doesn't match your prediction is telling you something about the machine or the code, so don't explain it away.
+The other two rows are more instructive. `sorted` costs `n log n`, and that has a slope a bit above 1, which fits: `n log n` predicts a slope of about 1.07 at this size (`1 + log2(log(2n)/log n)`), and the measured value is 1.15 to 1.18. The set is the odd one. Theory says slope 1, and I measured 1.13 to 1.30. The analysis isn't wrong, but the cost model is. Those lookups stop being one unit once the table outgrows the CPU's caches, and at a million items each one is likelier to miss. [Chapter 4](04-numbers-and-memory.md#the-staircase) measures that staircase directly. A slope that doesn't match your prediction is telling you something about the machine or the code, so don't explain it away.
 
 ## The two sums that pay for most analysis
 

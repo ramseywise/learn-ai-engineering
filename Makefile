@@ -2,7 +2,7 @@ include ~/.claude/Makefile.common
 
 LIBRARIAN_DIR ?= $(HOME)/workspace/librarian
 
-.PHONY: help lint test chapter-check link-check curriculum crosswalk learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
+.PHONY: help lint test unit chapter-check chapter-check-all link-check curriculum crosswalk crosswalk-check drill-check review-findings signals learn papers papers-status papers-route papers-install papers-nightly-install papers-nightly-uninstall slides
 
 help:  ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -15,7 +15,23 @@ lint:  ## Verify top-level topic directories exist
 	done; \
 	[ $$FAIL -eq 0 ] && echo "  OK (all topic directories present)"
 
-test: lint link-check  ## Structure check + link verification
+CHAPTER_GATE = ai-engineering/*/ generative-ai/*/ data-analytics/*/ data-science/*/ data-engineering/*/
+
+test:  ## Every repo check. Runs them all, then fails if any failed. Curriculum issues are printed, not gated
+	@fail=0; for t in lint link-check crosswalk-check chapter-check-all drill-check unit; do \
+		echo "== $$t"; $(MAKE) --no-print-directory $$t || { echo "FAILED: $$t"; fail=1; }; \
+	done; \
+	echo "== curriculum (information only)"; \
+	python3 scripts/curriculum_map.py build >/dev/null && python3 scripts/curriculum_map.py issues | tail -1; \
+	exit $$fail
+
+unit:  ## Run the tests for the repo's scripts
+	@out=$$(python3 -m unittest discover -s scripts -p 'test_*.py' 2>&1); rc=$$?; echo "$$out" | grep -E '^(Ran |OK|FAILED|FAIL:|ERROR:)'; exit $$rc
+
+chapter-check-all:  ## Hold the five pillared subjects to the chapter standard; programming/ is reported only
+	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) | tail -1
+	@python3 scripts/check_chapters.py --strict $(CHAPTER_GATE) >/dev/null
+	@python3 scripts/check_chapters.py programming/*/ | tail -1
 
 chapter-check:  ## Check notes against the chapter standard: make chapter-check PILLAR=data-analytics/06-applied-analyses [STRICT=1]
 	@test -n "$(PILLAR)" || { echo "usage: make chapter-check PILLAR=<area>/<pillar> [STRICT=1]"; exit 1; }
@@ -30,6 +46,18 @@ curriculum:  ## Rebuild the curriculum map and print integration issues: make cu
 
 crosswalk:  ## Validate practice/ units and links, then regenerate practice/CROSSWALK.md
 	@python3 scripts/practice/crosswalk.py
+
+crosswalk-check:  ## Validate practice/ units and links; fail if practice/CROSSWALK.md is stale
+	@python3 scripts/practice/crosswalk.py --check
+
+drill-check:  ## Check drill schema, that Python parses and that SQL seeds load: make drill-check [DRILL_PATH=practice/drills/sql]
+	@python3 scripts/practice/check_drills.py $(DRILL_PATH)
+
+review-findings:  ## Reviewer precision, open decisions and recurring faults from the findings log
+	@python3 scripts/review/findings.py report
+
+signals:  ## Weekly review signals (reviewer log, flashcards, drills, wiki searches): make signals [WRITE=1]
+	@python3 scripts/review/signals.py $(if $(WRITE),--write)
 
 learn:  ## Process arXiv paper queue in librarian and surface top picks (cd librarian, then /learn)
 	@echo "Switch to the librarian repo and run /learn to process the arXiv queue."
