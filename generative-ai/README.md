@@ -69,8 +69,8 @@ Temporal order: learn the gen-AI pillars first; the ai-engineering foundations (
 | 01 LLM fundamentals | [01-prompt-engineering](../ai-engineering/01-prompt-engineering/README.md) (prompting technique depth), [07-inference-engineering](../ai-engineering/07-inference-engineering/README.md) (serving) |
 | 02 RAG & retrieval | [02-context-engineering](../ai-engineering/02-context-engineering/README.md) + [05-graph-engineering](../ai-engineering/05-graph-engineering/README.md) |
 | 03–04 Agentic foundations + frameworks | [03-harness-engineering](../ai-engineering/03-harness-engineering/README.md) + [04-loop-engineering](../ai-engineering/04-loop-engineering/README.md) |
-| 05 RL & alignment | [06-eval](../ai-engineering/06-eval/README.md) (environments and graders as training signal) |
-| 06 Observability | [06-eval](../ai-engineering/06-eval/README.md) (evaluation and measurement) |
+| 05 RL & alignment | [06-eval](08-eval/README.md) (environments and graders as training signal) |
+| 06 Observability | [06-eval](08-eval/README.md) (evaluation and measurement) |
 
 ---
 

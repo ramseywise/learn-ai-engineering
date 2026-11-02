@@ -143,7 +143,7 @@ Every web source, paper and book the notes cite, mapped to notes, with the quali
 
 ### Previous and next layer
 ← Builds on [04-loop-engineering/](../04-loop-engineering/README.md)
-→ [06-eval/](../06-eval/README.md) — eval measures graph correctness and multi-agent coordination quality.
+→ [06-eval/](../../generative-ai/08-eval/README.md) — eval measures graph correctness and multi-agent coordination quality.
 
 ---
 

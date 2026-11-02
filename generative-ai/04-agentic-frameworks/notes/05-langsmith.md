@@ -17,7 +17,7 @@ cleaned: 2026-11-01
 
 The stuck run in [note 01](01-react-from-scratch-to-langgraph.md) ended with one line, `GraphRecursionError`, and that line tells you the agent ran out of budget without telling you why. To find out you need the steps, in order, with what went into each and what came out. That record is a trace. This chapter traces the same research agent from notes 01 to 04 with [LangSmith](https://docs.langchain.com/langsmith/observability), LangChain's hosted tracing and evaluation platform, first on LangGraph and then on ADK, reads a failing run, and turns traces into a dataset and an experiment.
 
-LangSmith is a hosted service, so its UI needs an account and a `LANGSMITH_API_KEY`. Its Python SDK does not need either to build runs, and that is what makes the chapter runnable. Everything below ran on `langsmith` 0.14.16 with no key, against a real `langsmith.Client` whose two network calls are replaced by a dictionary. The payloads you see are the ones the SDK would post. Blocks that need the service are marked `# illustrative` and say what they need. From [practice/01-research-agent/](../practice/01-research-agent/README.md):
+LangSmith is a hosted service, so its UI needs an account and a `LANGSMITH_API_KEY`. Its Python SDK does not need either to build runs, and that is what makes the chapter runnable. Everything below ran on `langsmith` 0.14.17 with no key, against a real `langsmith.Client` whose two network calls are replaced by a dictionary. The payloads you see are the ones the SDK would post. Blocks that need the service are marked `# illustrative` and say what they need. From [practice/01-research-agent/](../practice/01-research-agent/README.md):
 
 ```bash
 uv run --with langgraph --with 'google-adk[eval]' --with langsmith --with wrapt python demo_05_langsmith.py
@@ -82,6 +82,11 @@ print_tree(client)
 ```
 
 ```text
+tracing on with no env vars: False
+still returns: ERROR: unknown source no results
+find_and_read [chain]
+  search [tool]
+  read_source [tool]
 ```
 
 [`trace_capture.py`](../practice/01-research-agent/trace_capture.py) is twelve lines: a subclass of the real `Client` that stores what `create_run` and `update_run` receive. Here is one of those payloads. The fields are worth a look, because every feature in the UI reads them.
@@ -94,6 +99,13 @@ print("parent set:   ", run["parent_run_id"] is not None, "| same trace:", run["
 ```
 
 ```text
+name          search
+run_type      tool
+inputs        {'query': 'loops'}
+outputs       {'output': 'no results'}
+session_name  lab
+dotted_order  20261102T092024214375Z01a19b8f-5496-78cf-a008-83c8811ea326.20261102T092024
+parent set:    True | same trace: True
 ```
 
 `dotted_order` is how the tree stays a tree when runs arrive out of order over the network: each run's value is its parent's value plus its own start time and id. `trace_id` is the root's id, so every step in one invocation can be fetched together.
@@ -130,6 +142,26 @@ print_tree(graph_client)
 ```
 
 ```text
+19 runs
+research_agent [chain]
+  model [chain]
+    StubChatModel [llm]
+    route [chain]
+  tools [chain]
+    search [tool]
+  model [chain]
+    StubChatModel [llm]
+    route [chain]
+  tools [chain]
+    read_source [tool]
+  model [chain]
+    StubChatModel [llm]
+    route [chain]
+  tools [chain]
+    read_source [tool]
+  model [chain]
+    StubChatModel [llm]
+    route [chain]
 ```
 
 Seven graph steps became nineteen runs, because the tracer records structure as well as work. Each node is a `chain` run, the routing function is a child of the node it follows, and the chat model and tool sit underneath. The `llm` run holds the prompt and token counts, and you can read the bill for the whole trace straight off it.
@@ -153,6 +185,9 @@ print("tags:", root["tags"])
 ```
 
 ```text
+model calls: 4, stub tokens: 648
+metadata: {'framework': 'langgraph', 'prompt_version': 'v1'}
+tags: ['lab']
 ```
 
 ---
@@ -181,6 +216,17 @@ print_tree(adk_client)
 ```
 
 ```text
+patched: True
+9 runs
+research_agent [chain]
+  research_agent [chain]
+    research-stub [llm]
+    search [tool]
+    research-stub [llm]
+    read_source [tool]
+    research-stub [llm]
+    read_source [tool]
+    research-stub [llm]
 ```
 
 Set the two trees side by side and the two frameworks' models show through. The question and the tools are the same, and so are the three tool calls.
@@ -235,6 +281,10 @@ print_tree(plugin_client)
 ```
 
 ```text
+research_agent [chain]
+  search [tool]
+  read_source [tool]
+  read_source [tool]
 ```
 
 ---
@@ -255,7 +305,7 @@ print("root error:", root["error"].splitlines()[0][:70])
 tool_runs = sorted((r for r in stuck_client.captured.values() if r["run_type"] == "tool"),
                    key=lambda r: r["dotted_order"])
 for run in tool_runs:
-    print(run["name"], "|", run["inputs"]["query"][-22:], "|", run["outputs"]["output"].content[:32]
+    print(run["name"], "|", run["inputs"]["query"][-22:], "|", str(run["outputs"]["output"])[:32]
           if run.get("outputs") else None)
 print("tools used:", Counter(r["name"] for r in tool_runs), "| read_source calls:",
       sum(r["name"] == "read_source" for r in tool_runs))
@@ -263,6 +313,14 @@ print("model calls, tokens:", usage(stuck_client))
 ```
 
 ```text
+raised: GraphRecursionError
+root error: GraphRecursionError('Recursion limit of 9 reached without hitting a st
+search |  stops them? attempt 1 | furgale-2026 | NOOA: agents as P
+search |  stops them? attempt 2 | furgale-2026 | NOOA: agents as P
+search |  stops them? attempt 3 | furgale-2026 | NOOA: agents as P
+search |  stops them? attempt 4 | furgale-2026 | NOOA: agents as P
+tools used: Counter({'search': 4}) | read_source calls: 0
+model calls, tokens: (5, 920)
 ```
 
 Each search has a different query string, so a check for identical repeated calls would not have fired. What the trace shows is a pattern: the model keeps searching and never reads. That is the agent-tool layer, which is where Wang et al. place 72% of the recursive-call failures they found. You can write it as a rule over the tree and run it on every trace in production.
@@ -284,6 +342,8 @@ print("stubborn run flagged:", looks_stuck(stuck_client))
 ```
 
 ```text
+healthy run flagged: False
+stubborn run flagged: True
 ```
 
 The trace tells you what happened, not how to prevent it. The loop guard in [note 01](01-react-from-scratch-to-langgraph.md) caps the damage, and the stronger fix is to change what counts as done. [Furgale et al. (preprint, Jul 2026)](https://arxiv.org/abs/2607.20709) require a validated typed result before their agents may stop. They report that 77% of OpenCode's failed GPT-5.5 trials on Terminal-Bench ended within ten steps, the opposite failure from this one: an agent that replies without a tool call and is taken to be finished. Both are logic-control failures, both are invisible in the final message, and both are obvious in a trace.
@@ -374,6 +434,11 @@ for question, score in baseline.items():
 ```
 
 ```text
+Starting evaluation of experiment: %s baseline-c4907f13
+Why do framework agents get stuck in loops,    {'cites_expected': 1.0, 'read_before_answering': 1.0}
+How do no-code tools help people debug multi   {'cites_expected': 1.0, 'read_before_answering': 1.0}
+What do commit histories show about maintain   {'cites_expected': 0.0, 'read_before_answering': 1.0}
+What is the pricing of hosted vector databas   {'cites_expected': 1.0, 'read_before_answering': 1.0}
 ```
 
 The third example fails on purpose. The agent always wants two sources and cited `wang-2025` as well, so this evaluator treats the extra citation as wrong. Is that a defect in the agent, or an example written too tightly? Only a person can decide, which leads to the two usual kinds of evaluator for this agent.
@@ -406,6 +471,11 @@ for name, scores in (("baseline", baseline), ("stubborn", variant)):
 ```
 
 ```text
+Starting evaluation of experiment: %s stubborn-b6cdb985
+baseline cites_expected          0.75
+baseline read_before_answering   1.00
+stubborn cites_expected          0.25
+stubborn read_before_answering   0.25
 ```
 
 Note the question with no expected sources: the failed run scores 1.0 on it for both metrics, because saying nothing cites nothing. An average hides that. In the LangSmith UI the Experiments tab lines up runs example by example, which is how you spot it, and against the service the same call needs only the dataset name.
@@ -428,7 +498,7 @@ results = evaluate(run_research, data="research-agent-v1",
 
 Four things to know before copying this setup:
 
-- **The score measures agreement with GPT-4, not correctness.** Where GPT-4 mislabels a transaction, a small model that gets it right scores as wrong. The book's own warning covers the judge too: "if GPT-4 is bad at a task, it may also be bad at evaluating that task", so read the judge's reasoning by hand. Spot-check a sample of the reference labels before trusting any accuracy against them ([06-eval](../../../ai-engineering/06-eval/README.md)).
+- **The score measures agreement with GPT-4, not correctness.** Where GPT-4 mislabels a transaction, a small model that gets it right scores as wrong. The book's own warning covers the judge too: "if GPT-4 is bad at a task, it may also be bad at evaluating that task", so read the judge's reasoning by hand. Spot-check a sample of the reference labels before trusting any accuracy against them ([08-eval](../../08-eval/README.md)).
 - **Parse failures count as wrong answers.** The loop's `except` branch writes a `None` row instead of crashing, and `None` never matches. So the 77.5% mixes misclassifications with output that failed to parse. Track the parse-failure rate as its own metric. A model that classifies well but formats badly needs a different fix (JSON mode, `with_structured_output`) from one that classifies badly.
 - **Exact match needs no framework.** The book says so itself: a string comparison is a pandas one-liner. The LLM judges are where a library earns its place. For near-miss answers, the book points to Levenshtein and embedding-distance evaluators.
 - **The API is legacy.** `load_evaluator(...)` and `evaluate_string_pairs(...)` come from `langchain.evaluation`. In current code, store the GPT-4 labels as dataset `outputs`, write exact match as a custom evaluator like `cites_expected` above, and run both models through `evaluate()` as two experiments. Use LangSmith's pairwise comparison for the head-to-head.

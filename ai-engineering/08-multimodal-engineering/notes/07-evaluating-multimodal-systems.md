@@ -20,7 +20,7 @@ cleaned: 2026-11-01
 
 > A vision model can score well without looking at the image. Multimodal evaluation is largely the craft of building tests where the shortcut fails: paired images, shuffled answers, and questions about things that aren't there.
 
-The invoice assistant passes its benchmark at 90%, and users complain anyway. When you dig in, some correct answers didn't need the image at all, since most invoices in the test set had a due date thirty days after the issue date, so a guess worked. The model also says yes when asked about a stamp that isn't on the page, and its score drops if you reorder the multiple-choice options. All of these are the same failure: the evaluation rewarded something other than seeing. This chapter builds tests that punish the shortcuts. It then scores each part of the pillar, and it adds to the general methods in [the evaluation pillar](../../06-eval/README.md) without repeating them.
+The invoice assistant passes its benchmark at 90%, and users complain anyway. When you dig in, some correct answers didn't need the image at all, since most invoices in the test set had a due date thirty days after the issue date, so a guess worked. The model also says yes when asked about a stamp that isn't on the page, and its score drops if you reorder the multiple-choice options. All of these are the same failure: the evaluation rewarded something other than seeing. This chapter builds tests that punish the shortcuts. It then scores each part of the pillar, and it adds to the general methods in [the evaluation pillar](../../../generative-ai/08-eval/README.md) without repeating them.
 
 ## The shortcut problem
 
@@ -192,9 +192,9 @@ Every chapter introduced a score. Put them in one place, separated by stage, so 
 
 ## Using a model as a judge
 
-Multimodal answers are often judged by another model, since writing strict rules for free text is hard. Riedler and Langer did this with an LLM as judge for answer correctness, relevance and faithfulness, and reported it as a useful approximation while treating human annotation as the standard ([arXiv:2410.21943](https://arxiv.org/abs/2410.21943) (Riedler and Langer, 2024-10, preprint)). Design2Code took the other route, checking that its automatic metrics correlated with human judgement before relying on them ([arXiv:2403.03163](https://arxiv.org/abs/2403.03163) (Si et al., NAACL 2025)). The rule from [the judge note](../../06-eval/notes/05-llm-as-judge.md) applies with extra force here. Label a sample yourself, and measure the judge's agreement with you, broken down by error type. A judge that can't see the image can only check that the answer sounds consistent, so give it the same page the system used.
+Multimodal answers are often judged by another model, since writing strict rules for free text is hard. Riedler and Langer did this with an LLM as judge for answer correctness, relevance and faithfulness, and reported it as a useful approximation while treating human annotation as the standard ([arXiv:2410.21943](https://arxiv.org/abs/2410.21943) (Riedler and Langer, 2024-10, preprint)). Design2Code took the other route, checking that its automatic metrics correlated with human judgement before relying on them ([arXiv:2403.03163](https://arxiv.org/abs/2403.03163) (Si et al., NAACL 2025)). The rule from [the judge note](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) applies with extra force here. Label a sample yourself, and measure the judge's agreement with you, broken down by error type. A judge that can't see the image can only check that the answer sounds consistent, so give it the same page the system used.
 
-Once the suite exists, run it in CI as [the CI note](../../06-eval/notes/10-evals-in-ci.md) describes. Images and audio are large, so keep a small fast gate set for every change and the full paired suite for nightly runs and model upgrades.
+Once the suite exists, run it in CI as [the CI note](../../../generative-ai/08-eval/notes/10-evals-in-ci.md) describes. Images and audio are large, so keep a small fast gate set for every change and the full paired suite for nightly runs and model upgrades.
 
 ## Pitfalls
 

@@ -1,86 +1,113 @@
-# References — Data Analytics
+---
+origin: curated
+confidence: high
+cleaned: 2026-11-02
+---
 
-> Every source the notes cite, mapped to notes. **★** = read first. Local PDFs live in [sources/](sources/); figures in [sources/images/](sources/images/). Licence and quality flags are in [Source quality](#source-quality).
+# References: data analytics
+
+> The shared book library for all six pillars, with free courses and videos. **★** means read first. Each pillar's own `references.md` maps books and papers to chapters; this file maps them to pillars. PDFs are in [sources/](sources/), figures in [sources/images/](sources/images/).
 
 ---
 
-## Books and courses
+## Books
 
-| | Source | Notes |
-|---|---|---|
-| ★ | Davidson-Pilon, [*Probabilistic Programming and Bayesian Methods for Hackers*](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) (BMH; MIT licence; PyMC 5 port by Kurisu Chan). Folded in as: ch. 1–2 → [09](04-bayesian-analysis/notes/01-bayesian-inference.md) and [12](04-bayesian-analysis/notes/04-bayesian-ab-testing.md); ch. 3 → [10](04-bayesian-analysis/notes/02-mcmc-and-pymc.md); ch. 4 → [02](02-probability-and-statistics/notes/02-distributions-and-sampling.md) and [12](04-bayesian-analysis/notes/04-bayesian-ab-testing.md); ch. 5 → [13](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md); ch. 6 → [11](04-bayesian-analysis/notes/03-priors-and-bandits.md); ch. 7 (unfinished outline) → [14](04-bayesian-analysis/notes/06-bayesian-machine-learning.md). Figures as `davidson-pilon-bmh-*`. Print sample: [sources/bayes_for_hackers.pdf](sources/bayes_for_hackers.pdf) | 02, 09–14 |
-| ★ | Bruce & Bruce, *Practical Statistics for Data Scientists* (O'Reilly, 2017), [sources/](sources/Practical_Statistics_for_Data_Scientist.pdf). The working reference for distributions, testing and A/B design | 02–07 |
-| ★ | Reinhart, *Statistics Done Wrong* (No Starch, 2015), [sources/](sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf). P-value misreadings, multiple comparisons, peeking | 04, 06 |
-| | Downey, *Think Stats* and *Think Bayes* (Green Tea Press, CC BY-NC 3.0), [sources/thinkstats.pdf](sources/thinkstats.pdf), [sources/think_bayes.pdf](sources/think_bayes.pdf). Plain-Python alternatives to notes 02 and 09 | 01, 02, 09 |
-| | McElreath, *Statistical Rethinking* (draft), [sources/](sources/RM-StatRethink-Bayes.pdf). The next step after BMH; weakly informative priors | 09, 11, 14 |
-| | James, Witten, Hastie, Tibshirani & Taylor, *An Introduction to Statistical Learning with Applications in Python* (ISLP, 2023), [sources/](sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf). Regression and resampling; bridge to data-science | 05, 08, 14 |
-| | Efron & Hastie, *Computer Age Statistical Inference* (2016), [sources/](sources/computer%20age%20statistical%20inference.pdf). Frequentist, Bayesian and ML methods side by side | 03, 14 |
-| | Knaflic, *Storytelling with Data* (Wiley, 2015), [sources/](sources/Knaflic-storytelling-data.pdf). Presenting results; pairs with the Michigan visualisation scripts | none yet |
-| | McKinney, *Python for Data Analysis*, 1st and 2nd ed., [sources/](sources/Python%20for%20Data%20Analysis%202nd%20edition.pdf). The pandas layer, taught in [programming/python/04-python-for-data/](01-python-for-data-analysis/README.md) | prerequisite |
-| | VanderPlas, *Python Data Science Handbook*, [sources/](sources/Python_Datascience.pdf) | prerequisite |
-| | HSE, [*Bayesian Methods for Machine Learning*](https://www.coursera.org/learn/bayesian-methods-in-machine-learning) (Coursera). Own coursework in [practice/BayesianML/](04-bayesian-analysis/practice/BayesianML) | 10, 14 |
-| | Michigan, *Applied Data Science with Python* and Wesleyan, *Data Analysis and Interpretation* (Coursera). Own scripts in [practice/courses/](02-probability-and-statistics/practice/courses) | 04 |
-| | Cunningham, [*Causal Inference: The Mixtape*](https://mixtape.scunning.com/) (free online). The next step for the causal-methods map | 08 |
-| | Blitzstein & Hwang, [*Introduction to Probability*](https://projects.iq.harvard.edu/stat110) (2nd ed., 2019; free PDF from the Stat 110 site). Planned source for the probability skeleton; not yet held | 01 |
-| | Gelman, Hill & Vehtari, [*Regression and Other Stories*](https://avehtari.github.io/ROS-Examples/) (Cambridge, 2020; free PDF). Planned source for the regression skeleton; not yet held | 05 |
-| | Kohavi, Tang & Xu, *Trustworthy Online Controlled Experiments* (Cambridge, 2020). The practitioner reference for experimentation platforms; not yet held | 06, 07 |
+| | Book | PDF or site | Pillars |
+|---|---|---|---|
+| ★ | McKinney, *Python for Data Analysis*, 1st and 2nd eds. (O'Reilly); 3rd ed. free online | [2nd ed.](sources/Python%20for%20Data%20Analysis%202nd%20edition.pdf) · [1st ed.](sources/Python%20for%20Data%20Analysis.pdf) · [3rd ed.](https://wesmckinney.com/book/) | 01, 05 |
+| | VanderPlas, *Python Data Science Handbook* (O'Reilly) | [PDF](sources/Python_Datascience.pdf) · [online](https://jakevdp.github.io/PythonDataScienceHandbook/) | 01, 05 |
+| ★ | Bruce & Bruce, *Practical Statistics for Data Scientists* (O'Reilly, 2017) | [PDF](sources/Practical_Statistics_for_Data_Scientist.pdf) | 02, 03 |
+| ★ | Reinhart, *Statistics Done Wrong* (No Starch, 2015) | [PDF](sources/Alex_Reinhart-Statistics_Done_Wrong-EN.pdf) | 02, 03 |
+| | Downey, *Think Stats* and *Think Bayes* (Green Tea Press; CC BY-NC) | [Think Stats](sources/thinkstats.pdf) · [3rd ed. online](https://allendowney.github.io/ThinkStats/) · [Think Bayes](sources/think_bayes.pdf) | 02, 04 |
+| | James, Witten, Hastie, Tibshirani & Taylor, *An Introduction to Statistical Learning with Applications in Python* (Springer, 2023) | [PDF](sources/An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf) · [site](https://www.statlearning.com/) | 02, 03 |
+| | Efron & Hastie, *Computer Age Statistical Inference* (Cambridge, 2016) | [PDF](sources/computer%20age%20statistical%20inference.pdf) | 02, 04 |
+| | Blitzstein & Hwang, *Introduction to Probability* (2nd ed., 2019); free PDF, not held here | [probabilitybook.net](http://probabilitybook.net/) | 02 |
+| | Gelman, Hill & Vehtari, *Regression and Other Stories* (Cambridge, 2020); not held here | [site](https://avehtari.github.io/ROS-Examples/) | 02 |
+| | Kohavi, Tang & Xu, *Trustworthy Online Controlled Experiments* (Cambridge, 2020); not held here | [site](https://experimentguide.com/) | 03 |
+| | Cunningham, *Causal Inference: The Mixtape*; free online | [site](https://mixtape.scunning.com/) | 03 |
+| ★ | Davidson-Pilon, *Probabilistic Programming and Bayesian Methods for Hackers* (MIT licence; PyMC 5 port upstream) | [print sample](sources/bayes_for_hackers.pdf) · [repo](https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers) | 02, 04 |
+| | McElreath, *Statistical Rethinking* (draft) | [PDF](sources/RM-StatRethink-Bayes.pdf) | 04 |
+| ★ | Knaflic, *Storytelling with Data* (Wiley, 2015) | [PDF](sources/Knaflic-storytelling-data.pdf) · [site](https://www.storytellingwithdata.com/books) | 05 |
+| | Wilke, *Fundamentals of Data Visualization* (O'Reilly, 2019); free online | [site](https://clauswilke.com/dataviz/) | 05 |
+| | Healy, *Data Visualization: A Practical Introduction* (Princeton, 2018); free online | [site](https://socviz.co/) | 05 |
+| | Munzner, *Visualization Analysis and Design* (CRC Press, 2014); not held here | [site](https://www.cs.ubc.ca/~tmm/vadbook/) | 05 |
+| | Murray, *Interactive Data Visualization for the Web*, 2nd ed. (O'Reilly, 2017); not held here | [site](https://alignedleft.com/work/d3-book-2e) | 05 |
+| | Meeks & Dufour, *D3.js in Action*, 3rd ed. (Manning, 2024); not held here | [site](https://www.manning.com/books/d3js-in-action-third-edition) | 05 |
+| | Cairo, *The Truthful Art* (New Riders, 2016); not held here. Details are in [pillar 05's references](05-visualisation-and-storytelling/references.md) | | 05 |
+| | Hyndman & Athanasopoulos, *Forecasting: Principles and Practice*, 3rd ed.; free online | [site](https://otexts.com/fpp3/) | 06 |
+
+## Core papers
+
+| | Paper | PDF | Pillars |
+|---|---|---|---|
+| ★ | Dmitriev, Gupta, Kim & Vaz, *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017) | [PDF](sources/2017-08-kddmetricinterpretationpitfalls.pdf) | 03 |
+| | Kohavi et al., *Controlled experiments on the web: survey and practical guide* ([Data Mining and Knowledge Discovery](https://doi.org/10.1007/s10618-008-0114-1)) | [PDF](sources/kohavi-2008-controlled-experiments-web.pdf) | 02, 03 |
+| | Gelman et al., *A weakly informative default prior distribution for logistic and other regression models* ([Annals of Applied Statistics](https://doi.org/10.1214/08-aoas191)) | [PDF](sources/gelman-2009-weakly-informative-default-prior-distribution.pdf) | 02, 04 |
+| | Hoffman & Gelman, [*The No-U-Turn Sampler*](https://arxiv.org/abs/1111.4246) | [PDF](sources/hoffman-2011-no-u-turn-sampler.pdf) | 04 |
+| | Blei et al., *Variational Inference: A Review for Statisticians* ([JASA](https://doi.org/10.1080/01621459.2017.1285773)) | [PDF](sources/blei-2016-variational-inference.pdf) | 04 |
+| | Kaufmann, Cappé & Garivier, [*On Bayesian upper confidence bounds for bandit problems*](https://proceedings.mlr.press/v22/kaufmann12.html) (AISTATS 2012) | | 04 |
+
+## Courses and videos
+
+Everything here is free unless the row says otherwise.
+
+| Course or channel | What to use it for | Link | Pillars |
+|---|---|---|---|
+| Kaggle Learn | Short pandas, data cleaning, visualisation and time-series exercises in the browser | [Pandas](https://www.kaggle.com/learn/pandas) · [Data cleaning](https://www.kaggle.com/learn/data-cleaning) · [Visualisation](https://www.kaggle.com/learn/data-visualization) · [Time series](https://www.kaggle.com/learn/time-series) | 01, 05, 06 |
+| StatQuest (Josh Starmer) | Slow, clear video explanations of tests, regression and ML | [Channel](https://www.youtube.com/@statquest) · [Index](https://statquest.org/video-index/) · [Statistics fundamentals](https://www.youtube.com/playlist?list=PLblh5JKOoLUK0FLuzwntyYI10UQFUhsY9) · [Machine learning](https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF_7q2GfuJF) | 02, 03 |
+| 3Blue1Brown | Visual intuition for probability and for the linear algebra behind regression | [Probability](https://www.3blue1brown.com/topics/probability) · [Probabilities of probabilities](https://www.youtube.com/playlist?list=PLZHQObOWTQDOjmo3Y6ADm0ScWAlEXf-fp) · [Linear algebra](https://www.3blue1brown.com/topics/linear-algebra) · [Essence of linear algebra](https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab) | 02, 04 |
+| Khan Academy, Statistics and Probability | Exercises if the foundations are rusty | [Course](https://www.khanacademy.org/math/statistics-probability) | 02 |
+| MIT 18.650, Statistics for Applications (Fall 2016) | The mathematical treatment, with lectures | [OCW](https://ocw.mit.edu/courses/18-650-statistics-for-applications-fall-2016/) · [Lectures](https://www.youtube.com/playlist?list=PLUl4u3cNGP60uVBMaoNERc6knT_MgPKS0) | 02 |
+| Google Data Analytics Certificate | Paid (about $49 a month in the US when checked, after a 7-day trial). Use the nine-course syllabus as a checklist of what employers expect: ask, prepare, process, analyse, share, Python, capstone | [Coursera](https://www.coursera.org/professional-certificates/google-data-analytics) | 01, 02, 05, 06 |
+| Mode SQL tutorial | SQL for analysts, from basics to window functions | [Tutorial](https://mode.com/sql-tutorial/) | 06 |
+| Hyndman, FPP3 lectures | Lectures that go with the forecasting textbook | [Playlist](https://www.youtube.com/playlist?list=PLyCNZ_xXGzpm7W9jLqbIyBAiSO5jDwJeE) · [Announcement](https://robjhyndman.com/hyndsight/fpp3_videos.html) | 06 |
+| Cassie Kozyrkov, *Making Friends with Machine Learning* | Applied ML explained for people who decide, not only build | [About](https://cloud.google.com/blog/topics/developers-practitioners/ai-all-humans-course-delight-and-inspire) · Parts [1](https://bit.ly/mfml_part1), [2](https://bit.ly/mfml_part2), [3](https://bit.ly/mfml_part3), [4](https://bit.ly/mfml_part4) | 02, 06 |
+| Michigan, *Applied Data Science with Python* | Paid on Coursera. The source of the `umich_*` coursework scripts | [Coursera](https://www.coursera.org/specializations/data-science-python) | 01, 02 |
+| Wesleyan, *Data Analysis and Interpretation* | Paid on Coursera. The source of the `wesleyan_*` scripts | [Coursera](https://www.coursera.org/specializations/data-analysis) | 02 |
+| HSE, *Bayesian Methods for Machine Learning* | Source of the coursework in [`practice/BayesianML`](04-bayesian-analysis/practice/BayesianML). Its old Coursera page returned 404 on 2026-11-02, so no link is given | | 04 |
 
 ## Talks, docs and posts
 
-| | Source | Notes |
+| | Source | Pillars |
 |---|---|---|
-| ★ | prasoon2211, [*Introduction to Bayesian Inference for Parameter Estimation*](https://github.com/prasoon2211/bayesian_inference_talk) (DataTalks.Club talk; notebooks updated to PyMC 5). Coin toss, Beta-Binomial in closed form and PyMC, German tank | 09 |
-| | E. Adan, [*The German tank problem*](https://www.eadan.net/blog/german-tank-problem/): code the talk's notebook is built on | 09 |
-| ★ | [PyMC docs](https://www.pymc.io/) and [ArviZ](https://python.arviz.org/) | 09, 10 |
-| | [scipy.stats](https://docs.scipy.org/doc/scipy/reference/stats.html), [statsmodels power and proportions](https://www.statsmodels.org/stable/stats.html) | 02, 04, 06 |
-| | E. Miller, [*Formulas for Bayesian A/B testing*](https://www.evanmiller.org/bayesian-ab-testing.html) | 12 |
-| | C. Stucchio, [*Easy evaluation of decision rules in Bayesian A/B testing*](https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html): the expected-loss stopping rule | 12 |
-| | Kaufmann, Cappé & Garivier, [*On Bayesian upper confidence bounds for bandit problems*](http://jmlr.csail.mit.edu/proceedings/papers/v22/kaufmann12/kaufmann12.pdf) (Bayes-UCB) | 11 |
-| | T. Salimans, [Observing Dark Worlds](http://timsalimans.com/) winning solution, as retold in BMH ch. 5 | 13 |
-| | [DoWhy](https://www.pywhy.org/dowhy/) | 08 |
-| | Kaggle [`ab_data.csv`](https://www.kaggle.com/datasets/zhangluyuan/ab-testing): data for the AB notebook (not included) | 06 |
+| ★ | prasoon2211, [*Introduction to Bayesian Inference for Parameter Estimation*](https://github.com/prasoon2211/bayesian_inference_talk) (DataTalks.Club talk; notebooks updated to PyMC 5) | 04 |
+| ★ | [PyMC docs](https://www.pymc.io/) and [ArviZ](https://python.arviz.org/) | 04 |
+| | [scipy.stats](https://docs.scipy.org/doc/scipy/reference/stats.html), [statsmodels](https://www.statsmodels.org/stable/stats.html) | 02, 03 |
+| | E. Miller, [*Formulas for Bayesian A/B testing*](https://www.evanmiller.org/bayesian-ab-testing.html) | 04 |
+| | C. Stucchio, [*Easy evaluation of decision rules in Bayesian A/B testing*](https://www.chrisstucchio.com/blog/2014/bayesian_ab_decision_rule.html) | 04 |
+| | [DoWhy](https://www.pywhy.org/dowhy/) | 03 |
+| | E. Adan, *The German tank problem*: the code behind the talk's notebook. Site unreachable on 2026-11-02, so no link is given | 04 |
+| | T. Salimans, winning solution to Observing Dark Worlds, as retold in Davidson-Pilon ch. 5. Site unreachable on 2026-11-02, so no link is given | 04 |
+| | Kaggle `ab_data.csv` (`zhangluyuan/ab-testing`): data for the AB notebook, not included. Kaggle returned a bot check, so the page was not confirmed and no link is given | 03 |
 
-## Papers
+## Files in sources/
 
-Papers for notes 01–08 are being gathered with `scripts/papers/discover.py` (see `scripts/papers/subject-areas-plan.md`); rows land here as `/papers analytics` integrates them.
+The downloader can add PDFs here. Files not listed below have arrived since this table was written.
 
-| | Paper | Notes |
+| File | What it is | Status |
 |---|---|---|
-| ★ | Dmitriev, Gupta, Kim & Vaz, *A Dirty Dozen: Twelve Common Metric Interpretation Pitfalls in Online Controlled Experiments* (KDD 2017), [sources/](sources/2017-08-kddmetricinterpretationpitfalls.pdf). Moved here from data-engineering 2026-10-31; queued for `/papers` | 07 |
+| `intro_stats_learning.pdf` | ISLP again (613 pp, not the R edition) | **Duplicate**; candidate to delete |
+| `Python for Data Analysis.pdf` | McKinney, 1st ed. | Superseded by the 2nd ed. |
+| `bayes_for_hackers.pdf` | Davidson-Pilon, print sample (63 pp) | Partial |
+| `blei-2016-variational-inference.pdf`, `hoffman-2011-no-u-turn-sampler.pdf` | Downloaded papers | Filed; no note in this subject cites Blei yet |
 
-## Readings in sources/
-
-| File | Book | Size | Status |
-|---|---|---|---|
-| `Alex_Reinhart-Statistics_Done_Wrong-EN.pdf` | Reinhart, *Statistics Done Wrong* | 3.6 MB | cited |
-| `An-Introduction-to-Statistical-Learning-with-Applications-in-Python.pdf` | ISLP | 13 MB | cited |
-| `intro_stats_learning.pdf` | ISLP again (613 pp, not the R edition) | 20 MB | **duplicate**; candidate to delete |
-| `bayes_for_hackers.pdf` | BMH print sample (Addison-Wesley, 63 pp) | 1.8 MB | cited |
-| `computer age statistical inference.pdf` | Efron & Hastie | 8.5 MB | cited |
-| `Knaflic-storytelling-data.pdf` | Knaflic | 13 MB | uncited |
-| `Practical_Statistics_for_Data_Scientist.pdf` | Bruce & Bruce | 14 MB | cited |
-| `Python for Data Analysis.pdf` | McKinney, 1st ed. | 8.0 MB | superseded by 2nd ed. |
-| `Python for Data Analysis 2nd edition.pdf` | McKinney, 2nd ed. | 10.6 MB | prerequisite |
-| `Python_Datascience.pdf` | VanderPlas | 22 MB | prerequisite |
-| `RM-StatRethink-Bayes.pdf` | McElreath draft | 24 MB | cited |
-| `think_bayes.pdf`, `thinkstats.pdf` | Downey | 3.9 MB | cited |
-| `2017-08-kddmetricinterpretationpitfalls.pdf` | Dmitriev et al., *A Dirty Dozen* (KDD 2017) | 1.2 MB | queued for note 07 |
+Every other PDF is listed under Books or Core papers.
 
 ## Removed snapshots
 
 | Directory | Upstream | Removed | Kept |
 |---|---|---|---|
-| `data-analytics/Bayes/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77` | https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers | 2026-10-31 | ch. 1–7 condensed into notes 02, 09–14; two figures in `sources/images/davidson-pilon-bmh-*` |
-| `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-10-31 | three notebooks condensed into note 09; the 33-slide deck was not kept |
+| `data-analytics/Bayes/CamDavidsonPilon-Probabilistic-Programming-and-Bayesian-Methods-for-Hackers-5b33f77` | https://github.com/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers | 2026-10-31 | ch. 1–7 condensed into pillars 02 and 04; two figures in `sources/images/davidson-pilon-bmh-*` |
+| `data-analytics/Bayes/bayesian_inference_talk-main` | https://github.com/prasoon2211/bayesian_inference_talk | 2026-10-31 | three notebooks condensed into pillar 04; the 33-slide deck was not kept |
 
 ## PyMC version audit
 
-The PyMC3 → PyMC 5 map is in [note 10](04-bayesian-analysis/notes/02-mcmc-and-pymc.md#pymc3-to-pymc-5-migration-map). State of the code here:
+The PyMC3 → PyMC 5 map is in [the MCMC chapter](04-bayesian-analysis/notes/02-mcmc-and-pymc.md#pymc3-to-pymc-5-migration-map). State of the code here:
 
 | Material | PyMC version | Decision |
 |---|---|---|
-| BMH snapshot (removed) | ported to PyMC 5 upstream | snippets in notes 09–13 use PyMC 5 |
-| Talk notebooks (removed) | updated to PyMC 5 | snippets in note 09 use PyMC 5 |
+| BMH snapshot (removed) | ported to PyMC 5 upstream | snippets in pillar 04 use PyMC 5 |
+| Talk notebooks (removed) | updated to PyMC 5 | snippets in pillar 04's first chapter use PyMC 5 |
 | [practice/BayesianML/week_4](04-bayesian-analysis/practice/BayesianML/week_4) | PyMC3 + Theano | pinned at `pymc3==3.11.4 theano-pymc==1.1.2`; archival banner in the notebook |
 | [practice/BayesianML/](04-bayesian-analysis/practice/BayesianML) (all weeks) | TF 1.15, Keras 2.3.1, Python 3.7 | legacy; `bayesian.yml` |
 

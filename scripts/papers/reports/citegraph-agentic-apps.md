@@ -42,11 +42,11 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 |---|---|---|---|---|---|---|
 | 5 | 3 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 4 | 4 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
+| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `generative-ai/08-eval/sources/yao-2022-webshop.pdf` |
 | 3 | 3 | [Henderson 2019, Training Neural Response Selection for Task-Oriented Dialogue Systems](https://doi.org/10.18653/v1/p19-1536) | peer-reviewed | ACL (1) 2019 | 87 | ✓ `generative-ai/07-agentic-applications/sources/henderson-2019-training-neural-response-selection-task.pdf` |
 | 3 | 0 | [Antol 2015, VQA: Visual Question Answering](https://arxiv.org/abs/1505.00468) | peer-reviewed | ICCV 2015 | 4486 | — |
 | 3 | 0 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 3 | 0 | [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | 134 | ✓ `ai-engineering/06-eval/sources/deng-2023-mind2web.pdf` |
+| 3 | 0 | [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | 134 | ✓ `generative-ai/08-eval/sources/deng-2023-mind2web.pdf` |
 | 3 | 0 | [Zhou 2023, Autonomous Tester Agent Benchmark](https://arxiv.org/abs/2307.13854) | peer-reviewed | ICLR 2024 | 31 | — |
 | 3 | 0 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | ✓ `generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf` |
 | 2 | 2 | [Kim 2014, Convolutional Neural Networks for Sentence Classification](https://arxiv.org/abs/1408.5882) | peer-reviewed | EMNLP 2014 | 14831 | — |
@@ -71,7 +71,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 2 | 0 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 2 | 0 | [Hong 2023, MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework](https://arxiv.org/abs/2308.00352) | peer-reviewed | ICLR 2024 | 235 | ✓ `generative-ai/03-agentic-foundations/sources/hong-2023-metagpt.pdf` |
 | 2 | 0 | [Park 2023, Generative Agents: Interactive Simulacra of Human Behavior](https://arxiv.org/abs/2304.03442) | peer-reviewed | UIST 2023 | 2173 | ✓ `generative-ai/03-agentic-foundations/sources/park-2023-generative-agents.pdf` |
-| 2 | 0 | [Yang 2023, InterCode: Standardizing and Benchmarking Interactive Coding with Exec](https://arxiv.org/abs/2306.14898) | peer-reviewed | NeurIPS 2023 | 26 | ✓ `ai-engineering/06-eval/sources/yang-2023-intercode.pdf` |
+| 2 | 0 | [Yang 2023, InterCode: Standardizing and Benchmarking Interactive Coding with Exec](https://arxiv.org/abs/2306.14898) | peer-reviewed | NeurIPS 2023 | 26 | ✓ `generative-ai/08-eval/sources/yang-2023-intercode.pdf` |
 | 2 | 0 | [OpenAI 2024, OpenAI o1 System Card](https://arxiv.org/abs/2412.16720) | tech-report |  | 50 | — |
 | 2 | 0 | [Shao 2024, DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Lan](https://arxiv.org/abs/2402.03300) | preprint |  | 101 | ✓ `generative-ai/05-RL/sources/shao-2024-deepseekmath.pdf` |
 | 1 | 1 | [Taylor 1953, “Cloze Procedure”: A New Tool for Measuring Readability](https://doi.org/10.1177/107769905303000401) | peer-reviewed | Journalism Quarterly | 2332 | — |
@@ -94,7 +94,7 @@ Years whose cited references spike above their neighbours; the most cited paper 
 | 2006 | +2 | [Williams 2006, Partially observable Markov decision processes for spoken dialog syste](https://doi.org/10.1016/j.csl.2006.06.008) | peer-reviewed | — |
 | 2018 | +14 | [Peters 2018, Deep Contextualized Word Representations](https://arxiv.org/abs/1802.05365) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/deep-contextualized-word-representations.pdf` |
 | 2019 | +30 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 2022 | +8 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
+| 2022 | +8 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | ✓ `generative-ai/08-eval/sources/yao-2022-webshop.pdf` |
 
 ### Origin candidates
 

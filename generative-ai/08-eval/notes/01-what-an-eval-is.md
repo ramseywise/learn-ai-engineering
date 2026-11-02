@@ -38,14 +38,14 @@ Every layer below this one has its own eval chapter. Each says **what** to measu
 
 | Layer | Its eval chapter | Measures |
 |---|---|---|
-| Prompt | [01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md) | Output quality per prompt version |
-| Context | [02/12](../../02-context-engineering/notes/12-evaluating-context.md) | Whether the right content reached the model and got used |
-| Harness | [03/05](../../03-harness-engineering/notes/05-verification-loops.md) | Verification inside a run |
-| Loop | [04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md) | The stop condition a loop optimises against |
+| Prompt | [01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) | Output quality per prompt version |
+| Context | [02/12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md) | Whether the right content reached the model and got used |
+| Harness | [03/05](../../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md) | Verification inside a run |
+| Loop | [04/03](../../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md) | The stop condition a loop optimises against |
 
 This topic owns **how** to measure, for all of them: datasets, graders, judge calibration, traces, statistics, gates and production monitoring. It stands as its own topic because that machinery is the same everywhere, and copies spread across the layers would drift apart.
 
-Without that machinery, every change to a prompt, model, tool or retrieval config is a guess. The GitHub Copilot team built their eval framework before the prompts and before the UI ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#build-the-eval-first)). That order is the lesson.
+Without that machinery, every change to a prompt, model, tool or retrieval config is a guess. The GitHub Copilot team built their eval framework before the prompts and before the UI ([01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md#build-the-eval-first)). That order is the lesson.
 
 > **An eval is the definition of "better" for your system, written down so a machine can check it.**
 
@@ -167,7 +167,7 @@ You need both. Offline evals are the lab: cheap, repeatable, comparable. Online 
 
 ## Where it sits
 
-Eval measures every layer below it and inherits their weaknesses. It also has weaknesses of its own: an eval is only as good as its tasks (coverage), its graders (calibration) and its statistics (sample size). A well-built eval on an unrepresentative dataset gives precise answers to the wrong question. If the harness exposes no trajectory, you can only grade outcomes. If the loop has no stop condition, a trial can't end cleanly. Eval also feeds the top of the loop stack: the hill-climbing loop ([04/08](../../04-loop-engineering/notes/08-self-improving-loops.md)) is an optimizer pointed at an eval. A weak eval there produces a system that gets better at the eval and no better at the job ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
+Eval measures every layer below it and inherits their weaknesses. It also has weaknesses of its own: an eval is only as good as its tasks (coverage), its graders (calibration) and its statistics (sample size). A well-built eval on an unrepresentative dataset gives precise answers to the wrong question. If the harness exposes no trajectory, you can only grade outcomes. If the loop has no stop condition, a trial can't end cleanly. Eval also feeds the top of the loop stack: the hill-climbing loop ([04/08](../../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md)) is an optimizer pointed at an eval. A weak eval there produces a system that gets better at the eval and no better at the job ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)).
 
 ---
 

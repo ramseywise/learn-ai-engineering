@@ -78,7 +78,7 @@ What to measure, once you have more than a handful of cases:
 | Similarity to a reference | BLEU/ROUGE, or embedding distance |
 | Preference between variants | Pairwise comparison by humans or an LLM judge, ranked with Elo |
 
-Depth: [09 — Evaluating prompts](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) and [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md).
+Depth: [09 — Evaluating prompts](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md) and [generative-ai/08-eval](../../08-eval/README.md).
 
 ### 5. Divide labor
 

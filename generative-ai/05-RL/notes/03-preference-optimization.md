@@ -3,6 +3,7 @@ origin: web-authored
 sources:
   - https://arxiv.org/abs/2503.14476
   - https://arxiv.org/abs/2305.18290 (DPO)
+  - https://arxiv.org/abs/2311.10702 (Tülu 2: DPO scaled to 70B)
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
   - https://arxiv.org/abs/2501.12948 (DeepSeek-R1)
   - https://arxiv.org/abs/2402.01306 (KTO)
@@ -269,6 +270,16 @@ collapsed (4.76). SFT on the chosen responses alone was worse than DPO on the sa
 vs 7.00).** DPO overfit to 100% training accuracy after one epoch without hurting MT-Bench.
 Three DPO epochs on a one-epoch SFT model worked best, and a longer SFT made extra DPO regress.
 The judge was GPT-4, which favours models distilled from it.
+
+Tülu 2 took Zephyr's DPO recipe unchanged (UltraFeedback, 3 epochs, β = 0.1, learning rate
+5e-7) to Llama-2 at 7B, 13B and 70B ([arXiv:2311.10702](https://arxiv.org/abs/2311.10702)
+(Ivison et al., 2023-11, preprint)). **The same hyperparameters were stable at every size and
+raised AlpacaEval by 8.5 to 11.2 points, while MMLU, GSM8K and BBH moved by 3.5 points or less.**
+The cost landed where the data was thin: the SFT and DPO mixes are mostly English, and the
+multilingual TydiQA fell by 13.5 points at 13B and 17.8 at 70B. Mean AlpacaEval answer length
+rose by about 40% at 70B (1,011 to 1,414), so part of the win-rate gain is the
+length bias above. All gains are on GPT-4-judged benchmarks, and the paper does not compare DPO
+with PPO.
 
 ---
 

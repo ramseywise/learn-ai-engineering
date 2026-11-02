@@ -14,59 +14,59 @@ In notes = linked from a note or references.md; a PDF we hold that no note links
 |---|---|---|---|---|
 | [Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti](https://arxiv.org/abs/2501.14249) | peer-reviewed | Nature | ✓ | — |
 | [Chen 2026, Concise and Sufficient Sub-Sentence Citations for Retrieval-Augmented ](https://arxiv.org/abs/2509.20859) | peer-reviewed | Conference on Empirical Methods in Natural Language Processing (EMNLP) | ✓ | — |
-| [Merrill 2026, Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Comman](https://arxiv.org/abs/2601.11868) | peer-reviewed | ICLR 2026 | — | ✓ `ai-engineering/06-eval/sources/merrill-2026-terminal-bench.pdf` |
+| [Merrill 2026, Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in Comman](https://arxiv.org/abs/2601.11868) | peer-reviewed | ICLR 2026 | — | ✓ `generative-ai/08-eval/sources/merrill-2026-terminal-bench.pdf` |
 | [Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val](https://arxiv.org/abs/2510.04374) | peer-reviewed | ICLR 2026 | ✓ | — |
-| [Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o](https://arxiv.org/abs/2609.12191) | peer-reviewed | Conference on Empirical Methods in Natural Language Processing (EMNLP) | ✓ | ✓ `ai-engineering/06-eval/sources/bodhwani-2026-gauge.pdf` |
-| [Abacha 2025, MEDEC: A Benchmark for Medical Error Detection and Correction in Clini](https://arxiv.org/abs/2412.19260) | peer-reviewed | ACL (Findings) 2025 | — | ✓ `ai-engineering/06-eval/sources/abacha-2024-medec.pdf` |
-| [Lin 2025, Comparing AI Agents to Cybersecurity Professionals in Real-World Penet](https://arxiv.org/abs/2512.09882) | peer-reviewed | ICLR 2026 | — | ✓ `ai-engineering/06-eval/sources/lin-2025-comparing-ai-agents-cybersecurity-professionals.pdf` |
+| [Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o](https://arxiv.org/abs/2609.12191) | peer-reviewed | Conference on Empirical Methods in Natural Language Processing (EMNLP) | ✓ | ✓ `generative-ai/08-eval/sources/bodhwani-2026-gauge.pdf` |
+| [Abacha 2025, MEDEC: A Benchmark for Medical Error Detection and Correction in Clini](https://arxiv.org/abs/2412.19260) | peer-reviewed | ACL (Findings) 2025 | — | ✓ `generative-ai/08-eval/sources/abacha-2024-medec.pdf` |
+| [Lin 2025, Comparing AI Agents to Cybersecurity Professionals in Real-World Penet](https://arxiv.org/abs/2512.09882) | peer-reviewed | ICLR 2026 | — | ✓ `generative-ai/08-eval/sources/lin-2025-comparing-ai-agents-cybersecurity-professionals.pdf` |
 | [Chen 2025, Does Reinforcement Learning Really Incentivize Reasoning Capacity in L](https://doi.org/10.52202/085713-1933) | peer-reviewed | NeurIPS 2025 | ✓ | ✓ `generative-ai/05-RL/sources/yue-2025-does-reinforcement-learning-really-incentivize.pdf` |
-| [Chang 2024, A Survey on Evaluation of Large Language Models](https://arxiv.org/abs/2307.03109) | peer-reviewed | ACM Trans. Intell. Syst. Technol. 2024 | — | ✓ `ai-engineering/06-eval/sources/chang-2023-survey-evaluation-large-language-models.pdf` |
-| [Kapoor 2024, AI Agents That Matter](https://arxiv.org/abs/2407.01502) | peer-reviewed | Trans. Mach. Learn. Res. 2025 | ✓ | ✓ `ai-engineering/06-eval/sources/kapoor-2024-ai-agents-that-matter.pdf` |
-| [Li 2024, Red Teaming Visual Language Models](https://arxiv.org/abs/2401.12915) | peer-reviewed | Findings of the Association for Computational Linguistics: ACL (Findings of ACL) | — | ✓ `ai-engineering/06-eval/sources/li-2024-red-teaming-visual-language-models.pdf` |
+| [Chang 2024, A Survey on Evaluation of Large Language Models](https://arxiv.org/abs/2307.03109) | peer-reviewed | ACM Trans. Intell. Syst. Technol. 2024 | — | ✓ `generative-ai/08-eval/sources/chang-2023-survey-evaluation-large-language-models.pdf` |
+| [Kapoor 2024, AI Agents That Matter](https://arxiv.org/abs/2407.01502) | peer-reviewed | Trans. Mach. Learn. Res. 2025 | ✓ | ✓ `generative-ai/08-eval/sources/kapoor-2024-ai-agents-that-matter.pdf` |
+| [Li 2024, Red Teaming Visual Language Models](https://arxiv.org/abs/2401.12915) | peer-reviewed | Findings of the Association for Computational Linguistics: ACL (Findings of ACL) | — | ✓ `generative-ai/08-eval/sources/li-2024-red-teaming-visual-language-models.pdf` |
 | [Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM ](https://arxiv.org/abs/2404.12272) | peer-reviewed | UIST 2024 | ✓ | — |
-| [Huang 2024, A Survey on Hallucination in Large Language Models: Principles, Taxono](https://arxiv.org/abs/2311.05232) | peer-reviewed | ACM Trans. Inf. Syst. 2025 | — | ✓ `ai-engineering/06-eval/sources/huang-2023-survey-hallucination-large-language-models.pdf` |
-| [Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal](https://arxiv.org/abs/2401.07103) | peer-reviewed | EMNLP 2024 | ✓ | ✓ `ai-engineering/06-eval/sources/li-2024-leveraging-large-language-models-nlg.pdf` |
+| [Huang 2024, A Survey on Hallucination in Large Language Models: Principles, Taxono](https://arxiv.org/abs/2311.05232) | peer-reviewed | ACM Trans. Inf. Syst. 2025 | — | ✓ `generative-ai/08-eval/sources/huang-2023-survey-hallucination-large-language-models.pdf` |
+| [Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal](https://arxiv.org/abs/2401.07103) | peer-reviewed | EMNLP 2024 | ✓ | ✓ `generative-ai/08-eval/sources/li-2024-leveraging-large-language-models-nlg.pdf` |
 | [Qi 2024, Model Internals-based Answer Attribution for Trustworthy Retrieval-Aug](https://arxiv.org/abs/2406.13663) | peer-reviewed | EMNLP 2024 | ✓ | — |
 | [Wijk 2024, RE-Bench: Evaluating frontier AI R&D capabilities of language model ag](https://arxiv.org/abs/2411.15114) | peer-reviewed | ICML 2025 | ✓ | — |
-| [Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents](https://arxiv.org/abs/2401.13178) | peer-reviewed | NeurIPS 2024 | ✓ | ✓ `ai-engineering/06-eval/sources/ma-2024-agentboard.pdf` |
-| [Pan 2023, Do the Rewards Justify the Means? Measuring Trade-Offs Between Rewards](https://arxiv.org/abs/2304.03279) | peer-reviewed | ICML 2023 | — | ✓ `ai-engineering/06-eval/sources/pan-2023-do-rewards-justify-means.pdf` |
+| [Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents](https://arxiv.org/abs/2401.13178) | peer-reviewed | NeurIPS 2024 | ✓ | ✓ `generative-ai/08-eval/sources/ma-2024-agentboard.pdf` |
+| [Pan 2023, Do the Rewards Justify the Means? Measuring Trade-Offs Between Rewards](https://arxiv.org/abs/2304.03279) | peer-reviewed | ICML 2023 | — | ✓ `generative-ai/08-eval/sources/pan-2023-do-rewards-justify-means.pdf` |
 | [Bran 2023, ChemCrow: Augmenting large-language models with chemistry tools](https://arxiv.org/abs/2304.05376) | peer-reviewed | Nat. Mac. Intell. 2024 | ✓ | ✓ `generative-ai/03-agentic-foundations/sources/bran-2023-chemcrow.pdf` |
-| [Gilardi 2023, ChatGPT outperforms crowd workers for text-annotation tasks](https://arxiv.org/abs/2303.15056) | peer-reviewed | Proceedings of the National Academy of Sciences | — | ✓ `ai-engineering/06-eval/sources/gilardi-2023-chatgpt-outperforms-crowd-workers-text.pdf` |
-| [Liu 2023, AgentBench: Evaluating LLMs as Agents](https://arxiv.org/abs/2308.03688) | peer-reviewed | ICLR 2024 | — | ✓ `ai-engineering/06-eval/sources/liu-2023-agentbench.pdf` |
-| [Zheng 2023, LMSYS-Chat-1M: A Large-Scale Real-World LLM Conversation Dataset](https://arxiv.org/abs/2309.11998) | peer-reviewed | ICLR 2024 | — | ✓ `ai-engineering/06-eval/sources/zheng-2023-lmsys-chat-1m.pdf` |
-| [Mialon 2023, GAIA: a benchmark for General AI Assistants](https://arxiv.org/abs/2311.12983) | peer-reviewed | ICLR 2024 | — | ✓ `ai-engineering/06-eval/sources/mialon-2023-gaia.pdf` |
+| [Gilardi 2023, ChatGPT outperforms crowd workers for text-annotation tasks](https://arxiv.org/abs/2303.15056) | peer-reviewed | Proceedings of the National Academy of Sciences | — | ✓ `generative-ai/08-eval/sources/gilardi-2023-chatgpt-outperforms-crowd-workers-text.pdf` |
+| [Liu 2023, AgentBench: Evaluating LLMs as Agents](https://arxiv.org/abs/2308.03688) | peer-reviewed | ICLR 2024 | — | ✓ `generative-ai/08-eval/sources/liu-2023-agentbench.pdf` |
+| [Zheng 2023, LMSYS-Chat-1M: A Large-Scale Real-World LLM Conversation Dataset](https://arxiv.org/abs/2309.11998) | peer-reviewed | ICLR 2024 | — | ✓ `generative-ai/08-eval/sources/zheng-2023-lmsys-chat-1m.pdf` |
+| [Mialon 2023, GAIA: a benchmark for General AI Assistants](https://arxiv.org/abs/2311.12983) | peer-reviewed | ICLR 2024 | — | ✓ `generative-ai/08-eval/sources/mialon-2023-gaia.pdf` |
 | [Liu 2023, G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment](https://arxiv.org/abs/2303.16634) | peer-reviewed | EMNLP 2023 | ✓ | — |
-| [Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene](https://doi.org/10.18653/v1/2023.emnlp-main.557) | peer-reviewed | EMNLP 2023 | ✓ | ✓ `ai-engineering/06-eval/sources/manakul-2023-selfcheckgpt.pdf` |
-| [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | — | ✓ `ai-engineering/06-eval/sources/deng-2023-mind2web.pdf` |
-| [Frieder 2023, Mathematical Capabilities of ChatGPT](https://arxiv.org/abs/2301.13867) | peer-reviewed | NeurIPS 2023 | — | ✓ `ai-engineering/06-eval/sources/frieder-2023-mathematical-capabilities-chatgpt.pdf` |
+| [Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene](https://doi.org/10.18653/v1/2023.emnlp-main.557) | peer-reviewed | EMNLP 2023 | ✓ | ✓ `generative-ai/08-eval/sources/manakul-2023-selfcheckgpt.pdf` |
+| [Deng 2023, Mind2Web: Towards a Generalist Agent for the Web](https://arxiv.org/abs/2306.06070) | peer-reviewed | NeurIPS 2023 | — | ✓ `generative-ai/08-eval/sources/deng-2023-mind2web.pdf` |
+| [Frieder 2023, Mathematical Capabilities of ChatGPT](https://arxiv.org/abs/2301.13867) | peer-reviewed | NeurIPS 2023 | — | ✓ `generative-ai/08-eval/sources/frieder-2023-mathematical-capabilities-chatgpt.pdf` |
 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | ✓ | ✓ `generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf` |
-| [Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods](https://arxiv.org/abs/2109.07958) | peer-reviewed | ACL (1) 2022 | ✓ | ✓ `ai-engineering/06-eval/sources/lin-2021-truthfulqa.pdf` |
+| [Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods](https://arxiv.org/abs/2109.07958) | peer-reviewed | ACL (1) 2022 | ✓ | ✓ `generative-ai/08-eval/sources/lin-2021-truthfulqa.pdf` |
 | [Guo 2017, On Calibration of Modern Neural Networks](https://arxiv.org/abs/1706.04599) | peer-reviewed | ICML 2017 | ✓ | ✓ `data-science/sources/guo-2017-calibration-modern-neural-networks.pdf` |
-| [Li 2026, SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Ta](https://arxiv.org/abs/2602.12670) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/li-2026-skillsbench.pdf` |
-| [Foundation 2026, ARC-AGI-3: A New Challenge for Frontier Agentic Intelligence](https://arxiv.org/abs/2603.24621) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/foundation-2026-arc-agi-3.pdf` |
-| [Norman 2026, Reliability without Validity: A Systematic, Large-Scale Evaluation of ](https://arxiv.org/abs/2606.19544) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/norman-2026-reliability-without-validity.pdf` |
-| [Pan 2026, The Tasteful Agent: Measuring and Improving Taste in Long-Horizon Task](https://arxiv.org/abs/2609.25804) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/pan-2026-tasteful-agent.pdf` |
-| [Yang 2026, Terminal-RSI: Recursive Self-Improving Terminal Agents via Recursive S](https://arxiv.org/abs/2610.22192) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/yang-2026-terminal-rsi.pdf` |
-| [Zhang 2025, Can LLMs Ask Good Questions?](https://arxiv.org/abs/2501.03491) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/zhang-2025-can-llms-ask-good-questions.pdf` |
-| [Kalai 2025, Why Language Models Hallucinate](https://arxiv.org/abs/2509.04664) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/why-language-models-hallucinate-2025.pdf` |
-| [Wu 2025, Knowledge or Reasoning? A Close Look at How LLMs Think Across Domains](https://arxiv.org/abs/2506.02126) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/wu-2025-knowledge-or-reasoning.pdf` |
-| [Chen 2025, MedBrowseComp: Benchmarking Medical Deep Research and Computer Use](https://arxiv.org/abs/2505.14963) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/chen-2025-medbrowsecomp.pdf` |
-| [Zhao 2025, One Token to Fool LLM-as-a-Judge](https://arxiv.org/abs/2507.08794) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/zhao-2025-one-token-fool-llm-as.pdf` |
+| [Li 2026, SkillsBench: Benchmarking How Well Agent Skills Work Across Diverse Ta](https://arxiv.org/abs/2602.12670) | preprint |  | — | ✓ `generative-ai/08-eval/sources/li-2026-skillsbench.pdf` |
+| [Foundation 2026, ARC-AGI-3: A New Challenge for Frontier Agentic Intelligence](https://arxiv.org/abs/2603.24621) | preprint |  | — | ✓ `generative-ai/08-eval/sources/foundation-2026-arc-agi-3.pdf` |
+| [Norman 2026, Reliability without Validity: A Systematic, Large-Scale Evaluation of ](https://arxiv.org/abs/2606.19544) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/norman-2026-reliability-without-validity.pdf` |
+| [Pan 2026, The Tasteful Agent: Measuring and Improving Taste in Long-Horizon Task](https://arxiv.org/abs/2609.25804) | preprint |  | — | ✓ `generative-ai/08-eval/sources/pan-2026-tasteful-agent.pdf` |
+| [Yang 2026, Terminal-RSI: Recursive Self-Improving Terminal Agents via Recursive S](https://arxiv.org/abs/2610.22192) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/yang-2026-terminal-rsi.pdf` |
+| [Zhang 2025, Can LLMs Ask Good Questions?](https://arxiv.org/abs/2501.03491) | preprint |  | — | ✓ `generative-ai/08-eval/sources/zhang-2025-can-llms-ask-good-questions.pdf` |
+| [Kalai 2025, Why Language Models Hallucinate](https://arxiv.org/abs/2509.04664) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/why-language-models-hallucinate-2025.pdf` |
+| [Wu 2025, Knowledge or Reasoning? A Close Look at How LLMs Think Across Domains](https://arxiv.org/abs/2506.02126) | preprint |  | — | ✓ `generative-ai/08-eval/sources/wu-2025-knowledge-or-reasoning.pdf` |
+| [Chen 2025, MedBrowseComp: Benchmarking Medical Deep Research and Computer Use](https://arxiv.org/abs/2505.14963) | preprint |  | — | ✓ `generative-ai/08-eval/sources/chen-2025-medbrowsecomp.pdf` |
+| [Zhao 2025, One Token to Fool LLM-as-a-Judge](https://arxiv.org/abs/2507.08794) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/zhao-2025-one-token-fool-llm-as.pdf` |
 | [Wei 2025, BrowseComp: A Simple Yet Challenging Benchmark for Browsing Agents](https://arxiv.org/abs/2504.12516) | preprint |  | ✓ | — |
-| [Chollet 2025, ARC-AGI-2: A New Challenge for Frontier AI Reasoning Systems](https://arxiv.org/abs/2505.11831) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/chollet-2025-arc-agi-2.pdf` |
-| [Huang 2024, TrustLLM: Trustworthiness in Large Language Models](https://arxiv.org/abs/2401.05561) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/huang-2024-trustllm.pdf` |
+| [Chollet 2025, ARC-AGI-2: A New Challenge for Frontier AI Reasoning Systems](https://arxiv.org/abs/2505.11831) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/chollet-2025-arc-agi-2.pdf` |
+| [Huang 2024, TrustLLM: Trustworthiness in Large Language Models](https://arxiv.org/abs/2401.05561) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/huang-2024-trustllm.pdf` |
 | [Yao 2024, $τ$-bench: A Benchmark for Tool-Agent-User Interaction in Real-World D](https://arxiv.org/abs/2406.12045) | preprint |  | ✓ | — |
-| [Zhong 2024, Evaluation of OpenAI o1: Opportunities and Challenges of AGI](https://arxiv.org/abs/2409.18486) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/zhong-2024-evaluation-openai-o1.pdf` |
-| [Hosseini 2024, Not All LLM Reasoners Are Created Equal](https://arxiv.org/abs/2410.01748) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/hosseini-2024-not-all-llm-reasoners-created.pdf` |
-| [Simhi 2024, Distinguishing Ignorance from Error in LLM Hallucinations](https://arxiv.org/abs/2410.22071) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/simhi-2024-distinguishing-ignorance-error-llm-hallucinations.pdf` |
-| [Miller 2024, Adding Error Bars to Evals: A Statistical Approach to Language Model E](https://arxiv.org/abs/2411.00640) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/miller-2024-adding-error-bars-evals.pdf` |
-| [Gu 2024, A Survey on LLM-as-a-Judge](https://arxiv.org/abs/2411.15594) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/gu-2024-survey-llm-as-judge.pdf` |
-| [Li 2024, LLMs-as-Judges: A Comprehensive Survey on LLM-based Evaluation Methods](https://arxiv.org/abs/2412.05579) | preprint |  | ✓ | ✓ `ai-engineering/06-eval/sources/li-2024-llms-as-judges.pdf` |
-| [Ye 2023, A Comprehensive Capability Analysis of GPT-3 and GPT-3.5 Series Models](https://arxiv.org/abs/2303.10420) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/ye-2023-comprehensive-capability-analysis-gpt-3.pdf` |
-| [Borji 2023, A Categorical Archive of ChatGPT Failures](https://arxiv.org/abs/2302.03494) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/borji-2023-categorical-archive-chatgpt-failures.pdf` |
-| [Shevlane 2023, Model evaluation for extreme risks](https://arxiv.org/abs/2305.15324) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/shevlane-2023-model-evaluation-extreme-risks.pdf` |
-| [Liu 2023, Trustworthy LLMs: a Survey and Guideline for Evaluating Large Language](https://arxiv.org/abs/2308.05374) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/liu-2023-trustworthy-llms.pdf` |
-| [Rein 2023, GPQA: A Graduate-Level Google-Proof Q&A Benchmark](https://arxiv.org/abs/2311.12022) | preprint |  | — | ✓ `ai-engineering/06-eval/sources/rein-2023-gpqa.pdf` |
+| [Zhong 2024, Evaluation of OpenAI o1: Opportunities and Challenges of AGI](https://arxiv.org/abs/2409.18486) | preprint |  | — | ✓ `generative-ai/08-eval/sources/zhong-2024-evaluation-openai-o1.pdf` |
+| [Hosseini 2024, Not All LLM Reasoners Are Created Equal](https://arxiv.org/abs/2410.01748) | preprint |  | — | ✓ `generative-ai/08-eval/sources/hosseini-2024-not-all-llm-reasoners-created.pdf` |
+| [Simhi 2024, Distinguishing Ignorance from Error in LLM Hallucinations](https://arxiv.org/abs/2410.22071) | preprint |  | — | ✓ `generative-ai/08-eval/sources/simhi-2024-distinguishing-ignorance-error-llm-hallucinations.pdf` |
+| [Miller 2024, Adding Error Bars to Evals: A Statistical Approach to Language Model E](https://arxiv.org/abs/2411.00640) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/miller-2024-adding-error-bars-evals.pdf` |
+| [Gu 2024, A Survey on LLM-as-a-Judge](https://arxiv.org/abs/2411.15594) | preprint |  | — | ✓ `generative-ai/08-eval/sources/gu-2024-survey-llm-as-judge.pdf` |
+| [Li 2024, LLMs-as-Judges: A Comprehensive Survey on LLM-based Evaluation Methods](https://arxiv.org/abs/2412.05579) | preprint |  | ✓ | ✓ `generative-ai/08-eval/sources/li-2024-llms-as-judges.pdf` |
+| [Ye 2023, A Comprehensive Capability Analysis of GPT-3 and GPT-3.5 Series Models](https://arxiv.org/abs/2303.10420) | preprint |  | — | ✓ `generative-ai/08-eval/sources/ye-2023-comprehensive-capability-analysis-gpt-3.pdf` |
+| [Borji 2023, A Categorical Archive of ChatGPT Failures](https://arxiv.org/abs/2302.03494) | preprint |  | — | ✓ `generative-ai/08-eval/sources/borji-2023-categorical-archive-chatgpt-failures.pdf` |
+| [Shevlane 2023, Model evaluation for extreme risks](https://arxiv.org/abs/2305.15324) | preprint |  | — | ✓ `generative-ai/08-eval/sources/shevlane-2023-model-evaluation-extreme-risks.pdf` |
+| [Liu 2023, Trustworthy LLMs: a Survey and Guideline for Evaluating Large Language](https://arxiv.org/abs/2308.05374) | preprint |  | — | ✓ `generative-ai/08-eval/sources/liu-2023-trustworthy-llms.pdf` |
+| [Rein 2023, GPQA: A Graduate-Level Google-Proof Q&A Benchmark](https://arxiv.org/abs/2311.12022) | preprint |  | — | ✓ `generative-ai/08-eval/sources/rein-2023-gpqa.pdf` |
 | [Team 2023, Gemini: A Family of Highly Capable Multimodal Models](https://arxiv.org/abs/2312.11805) | preprint |  | ✓ | — |
 | [Chen 2021, Evaluating Large Language Models Trained on Code](https://arxiv.org/abs/2107.03374) | preprint |  | ✓ | ✓ `generative-ai/01-llm-fundamentals/sources/chen-2021-evaluating-large-language-models-trained.pdf` |
 
@@ -84,7 +84,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 13 | 4 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | 435 | — |
 | 12 | 4 | [Hendrycks 2021, Measuring Mathematical Problem Solving With the MATH Dataset](https://arxiv.org/abs/2103.03874) | peer-reviewed | NeurIPS Datasets and Benchmarks 2021 | 306 | — |
 | 10 | 5 | [Wei 2022, Chain-Of-Thought Prompting Elicits Reasoning in Large Language Models](https://doi.org/10.52202/068431-1800) | peer-reviewed | NeurIPS 2022 | 4472 | ✓ `ai-engineering/01-prompt-engineering/sources/wei-2022-chain-thought-prompting-elicits-reasoning.pdf` |
-| 10 | 0 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `ai-engineering/06-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
+| 10 | 0 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `generative-ai/08-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
 | 9 | 3 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | 575 | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
 | 9 | 3 | [Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/abs/2306.05685) | peer-reviewed | NeurIPS 2023 | 1868 | ✓ `generative-ai/05-RL/sources/zheng-2023-judging-llm-as-judge-mt.pdf` |
 | 9 | 2 | [Chowdhery 2022, PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/abs/2204.02311) | peer-reviewed | J. Mach. Learn. Res. 2023 | 2552 | ✓ `generative-ai/01-llm-fundamentals/sources/chowdhery-2022-palm.pdf` |
@@ -96,19 +96,19 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 8 | 2 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | 10926 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
 | 8 | 2 | [Bubeck 2023, Sparks of Artificial General Intelligence: Early experiments with GPT-](https://arxiv.org/abs/2303.12712) | preprint |  | 1526 | ✓ `generative-ai/01-llm-fundamentals/sources/bubeck-2023-sparks-artificial-general-intelligence.pdf` |
 | 8 | 1 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
-| 8 | 0 | [Rajpurkar 2016, SQuAD: 100,000+ Questions for Machine Comprehension of Text](https://doi.org/10.18653/v1/d16-1264) | peer-reviewed | EMNLP 2016 | 6203 | ✓ `ai-engineering/06-eval/sources/rajpurkar-2016-squad.pdf` |
+| 8 | 0 | [Rajpurkar 2016, SQuAD: 100,000+ Questions for Machine Comprehension of Text](https://doi.org/10.18653/v1/d16-1264) | peer-reviewed | EMNLP 2016 | 6203 | ✓ `generative-ai/08-eval/sources/rajpurkar-2016-squad.pdf` |
 | 8 | 0 | [Yang 2018, HotpotQA: A Dataset for Diverse, Explainable Multi-hop Question Answer](https://doi.org/10.18653/v1/d18-1259) | peer-reviewed | EMNLP 2018 | 1805 | — |
 | 7 | 2 | [OpenAI 2023, GPT-4 Technical Report](https://arxiv.org/abs/2303.08774) | tech-report |  | 2404 | ✓ `generative-ai/01-llm-fundamentals/sources/openai-2023-gpt-4-technical-report.pdf` |
 | 7 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |
 | 7 | 0 | [Joshi 2017, TriviaQA: A Large Scale Distantly Supervised Challenge Dataset for Rea](https://arxiv.org/abs/1705.03551) | peer-reviewed | ACL (1) 2017 | 1651 | — |
 | 7 | 0 | [Kwiatkowski 2019, Natural Questions: A Benchmark for Question Answering Research](https://doi.org/10.1162/tacl_a_00276) | peer-reviewed | Trans. Assoc. Comput. Linguistics 2019 | 2068 | — |
 | 7 | 0 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | peer-reviewed | ICLR 2024 | 72 | — |
-| 7 | 0 | [Liu 2023, AgentBench: Evaluating LLMs as Agents](https://arxiv.org/abs/2308.03688) | peer-reviewed | ICLR 2024 | 75 | ✓ `ai-engineering/06-eval/sources/liu-2023-agentbench.pdf` |
+| 7 | 0 | [Liu 2023, AgentBench: Evaluating LLMs as Agents](https://arxiv.org/abs/2308.03688) | peer-reviewed | ICLR 2024 | 75 | ✓ `generative-ai/08-eval/sources/liu-2023-agentbench.pdf` |
 | 6 | 3 | [Papineni 2001, BLEU](https://doi.org/10.3115/1073083.1073135) | peer-reviewed | ACL 2002 | 21340 | — |
 | 6 | 2 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
 | 6 | 1 | [Wang 2019, SuperGLUE: A Stickier Benchmark for General-Purpose Language Understan](https://arxiv.org/abs/1905.00537) | peer-reviewed | NeurIPS 2019 | 1051 | — |
-| 6 | 1 | [Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods](https://arxiv.org/abs/2109.07958) | peer-reviewed | ACL (1) 2022 | 899 | ✓ `ai-engineering/06-eval/sources/lin-2021-truthfulqa.pdf` |
-| 6 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
+| 6 | 1 | [Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods](https://arxiv.org/abs/2109.07958) | peer-reviewed | ACL (1) 2022 | 899 | ✓ `generative-ai/08-eval/sources/lin-2021-truthfulqa.pdf` |
+| 6 | 1 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `generative-ai/08-eval/sources/yao-2022-webshop.pdf` |
 | 6 | 1 | [Bommasani 2023, Holistic Evaluation of Language Models](https://doi.org/10.1111/nyas.15007) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 480 | — |
 | 5 | 2 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | 120297 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 5 | 1 | [Wang 2018, GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Languag](https://doi.org/10.18653/v1/w18-5446) | workshop | BlackboxNLP@EMNLP 2018 | 4222 | — |
@@ -117,7 +117,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 5 | 1 | [Wang 2023, Is ChatGPT a Good NLG Evaluator? A Preliminary Study](https://doi.org/10.18653/v1/2023.newsum-1.1) | workshop | Workshop on New Frontiers in Summarization (NewSum) | 235 | — |
 | 5 | 0 | [Christiano 2017, Deep reinforcement learning from human preferences](https://arxiv.org/abs/1706.03741) | peer-reviewed | NIPS 2017 | 1058 | ✓ `generative-ai/05-RL/sources/christiano-2017-deep-rl-from-human-preferences.pdf` |
 | 5 | 0 | [Zhang 2022, OPT: Open Pre-trained Transformer Language Models](https://arxiv.org/abs/2205.01068) | preprint |  | 878 | ✓ `generative-ai/01-llm-fundamentals/sources/zhang-2022-opt.pdf` |
-| 5 | 0 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | ✓ `ai-engineering/06-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf` |
+| 5 | 0 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | ✓ `generative-ai/08-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf` |
 
 ### Historical roots (RPYS peak years)
 
@@ -149,7 +149,7 @@ Cited by ≥3 of our papers and older than the median cited year (2022). The met
 | 9 | 3 | [Cobbe 2021, Training Verifiers to Solve Math Word Problems](https://arxiv.org/abs/2110.14168) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/cobbe-2021-training-verifiers-solve-math-word.pdf` |
 | 5 | 2 | [Vaswani 2017, Attention Is All You Need](https://arxiv.org/abs/1706.03762) | peer-reviewed | NIPS 2017 | ✓ `generative-ai/01-llm-fundamentals/sources/vaswani-2017-attention-all-you-need.pdf` |
 | 6 | 2 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
-| 4 | 2 | [Zhang 2019, BERTScore: Evaluating Text Generation with BERT](https://arxiv.org/abs/1904.09675) | peer-reviewed | ICLR 2020 | ✓ `ai-engineering/06-eval/sources/zhang-2019-bertscore.pdf` |
+| 4 | 2 | [Zhang 2019, BERTScore: Evaluating Text Generation with BERT](https://arxiv.org/abs/1904.09675) | peer-reviewed | ICLR 2020 | ✓ `generative-ai/08-eval/sources/zhang-2019-bertscore.pdf` |
 | 8 | 2 | [Raffel 2019, Exploring the Limits of Transfer Learning with a Unified Text-to-Text ](https://arxiv.org/abs/1910.10683) | peer-reviewed | J. Mach. Learn. Res. 2020 | ✓ `generative-ai/01-llm-fundamentals/sources/raffel-2019-exploring-limits-transfer-learning-unified.pdf` |
 | 3 | 2 | [Liu 2019, RoBERTa: A Robustly Optimized BERT Pretraining Approach](https://arxiv.org/abs/1907.11692) | preprint |  | ✓ `generative-ai/01-llm-fundamentals/sources/liu-2019-roberta.pdf` |
 | 3 | 1 | [Hinton 2015, Distilling the Knowledge in a Neural Network](https://arxiv.org/abs/1503.02531) | preprint |  | ✓ `generative-ai/05-RL/sources/hinton-2015-distilling-knowledge-neural-network.pdf` |
@@ -158,8 +158,8 @@ Cited by ≥3 of our papers and older than the median cited year (2022). The met
 | 6 | 1 | [Wang 2019, SuperGLUE: A Stickier Benchmark for General-Purpose Language Understan](https://arxiv.org/abs/1905.00537) | peer-reviewed | NeurIPS 2019 | — |
 | 3 | 1 | [Fan 2019, ELI5: Long Form Question Answering](https://arxiv.org/abs/1907.09190) | peer-reviewed | ACL (1) 2019 | ✓ `generative-ai/02-rag-retrieval/sources/fan-2019-eli5.pdf` |
 | 3 | 1 | [Reimers 2019, Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://doi.org/10.18653/v1/d19-1410) | peer-reviewed | EMNLP/IJCNLP (1) 2019 | ✓ `generative-ai/05-RL/sources/reimers-2019-sentence-bert.pdf` |
-| 3 | 1 | [Kryściński 2020, Evaluating the Factual Consistency of Abstractive Text Summarization](https://arxiv.org/abs/1910.12840) | peer-reviewed | EMNLP (1) 2020 | ✓ `ai-engineering/06-eval/sources/kryscinski-2020-evaluating-factual-consistency-abstractive-text.pdf` |
-| 4 | 1 | [Wang 2020, Asking and Answering Questions to Evaluate the Factual Consistency of ](https://arxiv.org/abs/2004.04228) | peer-reviewed | ACL 2020 | ✓ `ai-engineering/06-eval/sources/wang-2020-asking-answering-questions-evaluate-factual.pdf` |
+| 3 | 1 | [Kryściński 2020, Evaluating the Factual Consistency of Abstractive Text Summarization](https://arxiv.org/abs/1910.12840) | peer-reviewed | EMNLP (1) 2020 | ✓ `generative-ai/08-eval/sources/kryscinski-2020-evaluating-factual-consistency-abstractive-text.pdf` |
+| 4 | 1 | [Wang 2020, Asking and Answering Questions to Evaluate the Factual Consistency of ](https://arxiv.org/abs/2004.04228) | peer-reviewed | ACL 2020 | ✓ `generative-ai/08-eval/sources/wang-2020-asking-answering-questions-evaluate-factual.pdf` |
 
 ### Peer-reviewed papers to acquire (40)
 
@@ -216,50 +216,50 @@ Cite these as the venue version, e.g. *(Lewis et al., NeurIPS 2020)*.
 
 | Note | arXiv | Paper | Venue |
 |---|---|---|---|
-| [README.md](../../../ai-engineering/06-eval/README.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
-| [notes/02-defining-correct.md](../../../ai-engineering/06-eval/notes/02-defining-correct.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
-| [notes/03-eval-datasets.md](../../../ai-engineering/06-eval/notes/03-eval-datasets.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
-| [notes/03-eval-datasets.md](../../../ai-engineering/06-eval/notes/03-eval-datasets.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
-| [notes/03-eval-datasets.md](../../../ai-engineering/06-eval/notes/03-eval-datasets.md) | 2508.01191 | Zhao 2026, Is Chain-of-Thought Reasoning of LLMs a Mirage? A Data Distribution Le | ACL (Findings) 2026 |
-| [notes/04-graders.md](../../../ai-engineering/06-eval/notes/04-graders.md) | 2401.07103 | Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal | EMNLP 2024 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2303.16634 | Liu 2023, G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment | EMNLP 2023 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2304.05376 | Bran 2023, ChemCrow: Augmenting large-language models with chemistry tools | Nat. Mac. Intell. 2024 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2401.13178 | Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents | NeurIPS 2024 |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2411.15114 | Wijk 2024, RE-Bench: Evaluating frontier AI R&D capabilities of language model ag | ICML 2025 |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2504.13837 | Chen 2025, Does Reinforcement Learning Really Incentivize Reasoning Capacity in L | NeurIPS 2025 |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 2109.07958 | Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods | ACL (1) 2022 |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 2303.08896 | Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene | EMNLP 2023 |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 2305.14627 | Gao 2023, Enabling Large Language Models to Generate Text with Citations | EMNLP 2023 |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 2309.15217 | Es 2023, Ragas: Automated Evaluation of Retrieval Augmented Generation | EACL (Demonstrations) 2024 |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 2311.09476 | Saad-Falcon 2024, ARES: An Automated Evaluation Framework for Retrieval-Augmented Genera | Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT) |
-| [notes/12-failure-modes.md](../../../ai-engineering/06-eval/notes/12-failure-modes.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
-| [notes/12-failure-modes.md](../../../ai-engineering/06-eval/notes/12-failure-modes.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 1706.04599 | Guo 2017, On Calibration of Modern Neural Networks | ICML 2017 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2104.07567 | Shuster 2021, Retrieval Augmentation Reduces Hallucination in Conversation | EMNLP (Findings) 2021 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2109.07958 | Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods | ACL (1) 2022 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2303.08896 | Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene | EMNLP 2023 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2303.16634 | Liu 2023, G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment | EMNLP 2023 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2304.05376 | Bran 2023, ChemCrow: Augmenting large-language models with chemistry tools | Nat. Mac. Intell. 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2305.14627 | Gao 2023, Enabling Large Language Models to Generate Text with Citations | EMNLP 2023 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2309.15217 | Es 2023, Ragas: Automated Evaluation of Retrieval Augmented Generation | EACL (Demonstrations) 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2311.09476 | Saad-Falcon 2024, ARES: An Automated Evaluation Framework for Retrieval-Augmented Genera | Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT) |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2401.07103 | Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal | EMNLP 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2401.13178 | Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents | NeurIPS 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2406.13663 | Qi 2024, Model Internals-based Answer Attribution for Trustworthy Retrieval-Aug | EMNLP 2024 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2509.20859 | Chen 2026, Concise and Sufficient Sub-Sentence Citations for Retrieval-Augmented  | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
+| [README.md](../../../generative-ai/08-eval/README.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
+| [notes/02-defining-correct.md](../../../generative-ai/08-eval/notes/02-defining-correct.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
+| [notes/03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
+| [notes/03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
+| [notes/03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md) | 2508.01191 | Zhao 2026, Is Chain-of-Thought Reasoning of LLMs a Mirage? A Data Distribution Le | ACL (Findings) 2026 |
+| [notes/04-graders.md](../../../generative-ai/08-eval/notes/04-graders.md) | 2401.07103 | Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal | EMNLP 2024 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2303.16634 | Liu 2023, G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment | EMNLP 2023 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2304.05376 | Bran 2023, ChemCrow: Augmenting large-language models with chemistry tools | Nat. Mac. Intell. 2024 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2401.13178 | Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents | NeurIPS 2024 |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2411.15114 | Wijk 2024, RE-Bench: Evaluating frontier AI R&D capabilities of language model ag | ICML 2025 |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2504.13837 | Chen 2025, Does Reinforcement Learning Really Incentivize Reasoning Capacity in L | NeurIPS 2025 |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 2109.07958 | Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods | ACL (1) 2022 |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 2303.08896 | Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene | EMNLP 2023 |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 2305.14627 | Gao 2023, Enabling Large Language Models to Generate Text with Citations | EMNLP 2023 |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 2309.15217 | Es 2023, Ragas: Automated Evaluation of Retrieval Augmented Generation | EACL (Demonstrations) 2024 |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 2311.09476 | Saad-Falcon 2024, ARES: An Automated Evaluation Framework for Retrieval-Augmented Genera | Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT) |
+| [notes/12-failure-modes.md](../../../generative-ai/08-eval/notes/12-failure-modes.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
+| [notes/12-failure-modes.md](../../../generative-ai/08-eval/notes/12-failure-modes.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
+| [references.md](../../../generative-ai/08-eval/references.md) | 1706.04599 | Guo 2017, On Calibration of Modern Neural Networks | ICML 2017 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2104.07567 | Shuster 2021, Retrieval Augmentation Reduces Hallucination in Conversation | EMNLP (Findings) 2021 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2109.07958 | Lin 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods | ACL (1) 2022 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2303.08896 | Manakul 2023, SelfCheckGPT: Zero-Resource Black-Box Hallucination Detection for Gene | EMNLP 2023 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2303.16634 | Liu 2023, G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment | EMNLP 2023 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2304.05376 | Bran 2023, ChemCrow: Augmenting large-language models with chemistry tools | Nat. Mac. Intell. 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2305.14627 | Gao 2023, Enabling Large Language Models to Generate Text with Citations | EMNLP 2023 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2306.05685 | Zheng 2023, Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena | NeurIPS 2023 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2309.15217 | Es 2023, Ragas: Automated Evaluation of Retrieval Augmented Generation | EACL (Demonstrations) 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2311.09476 | Saad-Falcon 2024, ARES: An Automated Evaluation Framework for Retrieval-Augmented Genera | Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT) |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2401.07103 | Li 2024, Leveraging Large Language Models for NLG Evaluation: Advances and Chal | EMNLP 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2401.13178 | Ma 2024, AgentBoard: An Analytical Evaluation Board of Multi-turn LLM Agents | NeurIPS 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2404.12272 | Shankar 2024, Who Validates the Validators? Aligning LLM-Assisted Evaluation of LLM  | UIST 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2406.13663 | Qi 2024, Model Internals-based Answer Attribution for Trustworthy Retrieval-Aug | EMNLP 2024 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2407.01502 | Kapoor 2024, AI Agents That Matter | Trans. Mach. Learn. Res. 2025 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2501.14249 | Phan 2026, A benchmark of expert-level academic questions to assess AI capabiliti | Nature |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2509.20859 | Chen 2026, Concise and Sufficient Sub-Sentence Citations for Retrieval-Augmented  | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2510.04374 | Patwardhan 2026, GDPVAL: Evaluating AI Model Performance on Real-World Economically Val | ICLR 2026 |
+| [references.md](../../../generative-ai/08-eval/references.md) | 2609.12191 | Bodhwani 2026, GAUGE: When Not to Trust LLM-as-a-Judge in User-Simulated Evaluation o | Conference on Empirical Methods in Natural Language Processing (EMNLP) |
 
 ### Preprint exposure by note
 
@@ -267,13 +267,13 @@ Share of each note's resolved citations that are preprint-only.
 
 | Note | Cited | Peer-reviewed | Preprint | Other | Preprint share |
 |---|---|---|---|---|---|
-| [notes/09-reading-results.md](../../../ai-engineering/06-eval/notes/09-reading-results.md) | 2 | 0 | 2 | 0 | 100% |
-| [README.md](../../../ai-engineering/06-eval/README.md) | 3 | 1 | 2 | 0 | 67% |
-| [notes/12-failure-modes.md](../../../ai-engineering/06-eval/notes/12-failure-modes.md) | 5 | 2 | 3 | 0 | 60% |
-| [notes/02-defining-correct.md](../../../ai-engineering/06-eval/notes/02-defining-correct.md) | 2 | 1 | 1 | 0 | 50% |
-| [notes/04-graders.md](../../../ai-engineering/06-eval/notes/04-graders.md) | 2 | 1 | 1 | 0 | 50% |
-| [notes/03-eval-datasets.md](../../../ai-engineering/06-eval/notes/03-eval-datasets.md) | 5 | 3 | 2 | 0 | 40% |
-| [references.md](../../../ai-engineering/06-eval/references.md) | 31 | 19 | 12 | 0 | 39% |
-| [notes/05-llm-as-judge.md](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md) | 9 | 6 | 3 | 0 | 33% |
-| [notes/06-evaluating-agents.md](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md) | 9 | 6 | 3 | 0 | 33% |
-| [notes/07-evaluating-rag-and-grounding.md](../../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md) | 5 | 5 | 0 | 0 | 0% |
+| [notes/09-reading-results.md](../../../generative-ai/08-eval/notes/09-reading-results.md) | 2 | 0 | 2 | 0 | 100% |
+| [README.md](../../../generative-ai/08-eval/README.md) | 3 | 1 | 2 | 0 | 67% |
+| [notes/12-failure-modes.md](../../../generative-ai/08-eval/notes/12-failure-modes.md) | 5 | 2 | 3 | 0 | 60% |
+| [notes/02-defining-correct.md](../../../generative-ai/08-eval/notes/02-defining-correct.md) | 2 | 1 | 1 | 0 | 50% |
+| [notes/04-graders.md](../../../generative-ai/08-eval/notes/04-graders.md) | 2 | 1 | 1 | 0 | 50% |
+| [notes/03-eval-datasets.md](../../../generative-ai/08-eval/notes/03-eval-datasets.md) | 5 | 3 | 2 | 0 | 40% |
+| [references.md](../../../generative-ai/08-eval/references.md) | 31 | 19 | 12 | 0 | 39% |
+| [notes/05-llm-as-judge.md](../../../generative-ai/08-eval/notes/05-llm-as-judge.md) | 9 | 6 | 3 | 0 | 33% |
+| [notes/06-evaluating-agents.md](../../../generative-ai/08-eval/notes/06-evaluating-agents.md) | 9 | 6 | 3 | 0 | 33% |
+| [notes/07-evaluating-rag-and-grounding.md](../../../generative-ai/08-eval/notes/07-evaluating-rag-and-grounding.md) | 5 | 5 | 0 | 0 | 0% |

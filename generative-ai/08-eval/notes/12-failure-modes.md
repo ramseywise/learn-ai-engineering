@@ -106,11 +106,11 @@ The judge you train against is itself a proxy. DR Tulu trained a deep-research a
 Defenses:
 
 - **Multiple dimensions** with guardrails, never a single score ([04](04-graders.md#combining-graders-scoring-design)).
-- **Held-out tests** the optimizer (human or agent) can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md)).
+- **Held-out tests** the optimizer (human or agent) can't see ([04/03](../../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md)).
 - **Read the transcripts** of the biggest gains, not just the losses.
 - **Rotate and refresh** the suite from production.
 
-This bites hardest in automated loops, where an optimizer runs thousands of iterations against your grader. A loop finds a grader's blind spot faster than any human ([04/08](../../04-loop-engineering/notes/08-self-improving-loops.md)).
+This bites hardest in automated loops, where an optimizer runs thousands of iterations against your grader. A loop finds a grader's blind spot faster than any human ([04/08](../../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md)).
 
 ---
 

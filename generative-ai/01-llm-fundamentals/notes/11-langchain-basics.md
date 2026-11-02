@@ -173,7 +173,7 @@ When the flow needs loops, persistent state or human approval, move up to LangGr
 |---|---|---|
 | 2–3 | RAG: indexing and retrieval | [02-rag-retrieval](../../02-rag-retrieval/README.md) |
 | 4–7 | LangGraph memory, cognitive architectures, agents | [04-agentic-frameworks](../../04-agentic-frameworks/README.md), [03-agentic-foundations](../../03-agentic-foundations/README.md) |
-| 9–10 | Deployment, testing, evaluation, monitoring | [06-observability](../../06-observability/README.md), [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) |
+| 9–10 | Deployment, testing, evaluation, monitoring | [06-observability](../../06-observability/README.md), [generative-ai/08-eval](../../08-eval/README.md) |
 
 ---
 

@@ -31,7 +31,7 @@ and have not been renamed to the flat convention.
 | `agents/` (15: agent-components, agent-framework, cs-planning, cs-subagents, cs-verification-agent, cs-persistent-storage, customer-support-deep-agent, simple-dr-agent, parallelization, prompt-chaining, hugginggpt, autogen, chemcrow, agentbench, one unnamed screenshot) | agent architecture diagrams and a worked customer-support deep-agent | `03-harness-engineering` notes 01 and 07. The **cs-*** set illustrates sub-agents and persistent storage well. agentbench → `06-eval` |
 | `research/structured_outputs.png` | structured-output reliability | `01-prompt-engineering` structured-output note |
 | `research/reasoning-taxonomy.png`, `reasoning-techniques.png`, `reasoning-tasks.png` | reasoning-method taxonomies | 01 reasoning note, if it needs a map |
-| `llms/` (3: trustllm, trust-dimensions, truthfulness-leaderboard) | TrustLLM benchmark | `06-eval`, if the pillar covers trust dimensions |
+| `llms/` (3: trustllm, trust-dimensions, truthfulness-leaderboard) | TrustLLM benchmark | `generative-ai/08-eval`, if the pillar covers trust dimensions |
 
 ### Keep: real content, no current home
 
@@ -73,7 +73,7 @@ That is about 90 files. Deleting them loses nothing the course teaches.
 
 All 12 can go. The whole folder is safe to delete.
 
-## 06 Eval: `sources/images/unreferenced/notebooks/evaluating-ai-agents/` (10 files)
+## Eval (now `generative-ai/08-eval`): `sources/images/unreferenced/notebooks/evaluating-ai-agents/` (10 files)
 
 - **Redundant:**
   - `lab-1/images/agent.png` is identical to the copy in use.

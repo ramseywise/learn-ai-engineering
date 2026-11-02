@@ -21,6 +21,8 @@ sources:
   - https://arxiv.org/abs/2602.12662
   - https://arxiv.org/abs/2306.13649
   - https://arxiv.org/abs/2601.20802
+  - https://arxiv.org/abs/2511.01758 (RLAC, adversarial critic picks the rubric to verify)
+  - https://arxiv.org/abs/2502.19328 (RewardAgent, preference RM plus verification agents)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -129,6 +131,34 @@ content-free answers (see [Why SFT memorizes](05-post-training-for-agents.md#why
 gate protects against that. The book's held-out printout shows 8 of 10 Countdown items
 correct after 3 steps on 64 scenarios with 2 rollouts per group. No pre-training baseline is
 shown, so treat it as a smoke test, not evidence that the training helped.
+
+The gate can also be a sum. RewardAgent adds checker scores to a preference RM's score with
+weights of 1 ([arXiv:2502.19328](https://arxiv.org/abs/2502.19328) (Peng et al., ACL 2025)). A
+router picks which checkers an instruction needs. A factuality agent looks up only the facts on
+which two responses disagree, and an instruction agent writes and runs Python checks for hard
+constraints such as length. With GPT-4o mini running the agents on top of ArmoRM, **accuracy
+across RM-Bench, JudgeBench and a new constraint benchmark rose from 56.5 to 72.5**, above
+DeepSeek-R1 as a judge (69.1). On pairs that break a single constraint it rose from 59.5 to 78.0.
+Replacing the factuality agent with a plain LLM score cut RM-Bench from 73.1 to 54.0, so the
+checking procedure does the work, not the extra model. As a DPO labeller for Zephyr-7B on
+on-policy pairs, it moved TriviaQA from 51.6 to 55.3 and IFEval from 52.7 to 58.2 over ArmoRM
+labels, with MT-Bench flat. The router is the weak link: an oracle router scored higher still,
+and Google search as the evidence source did slightly worse than the model's own knowledge.
+
+**RLAC: let a trained critic pick which rubric to check.** When the rubric list is long or
+unbounded (every fact in a biography, every edge case of a program), checking all of it is too
+expensive and a static RM gets hacked. RLAC trains a critic to name the one rubric the output most
+likely fails, a suspect fact or a failing test input. An external validator checks only that
+rubric: FactScore's Wikipedia lookup, or running the input against a reference solution. The
+generator scores 1 if the claim survives, and the critic scores 1 if it doesn't; both are trained
+with DPO ([arXiv:2511.01758](https://arxiv.org/abs/2511.01758) (Wu et al., 2025-11, preprint)). On
+8-sentence biographies with Qwen3-8B it reached FactScore 0.889, against 0.867 for exhaustive
+checking (FactTune-FS), with **5.7× fewer validator calls**. An ArmoRM reward raised KL without
+gaining factuality. On code, trained on 2k AceCode problems, it beat rule-based and RM rewards on
+average across five benchmarks with 2.5% of the test executions, though by about one point. A
+frozen critic got gamed: its detection rate fell from 42% to 34%, and on biographies the generator
+"won" by stating fewer facts. With random validator labels training fell below the base model, so
+the scheme still rests on a trustworthy checker.
 
 **rLLM: train the workflow you already run.** Subclass its `Workflow`, implement `run()`,
 and return an `Episode` with every trajectory and reward. rLLM handles rollouts, retries

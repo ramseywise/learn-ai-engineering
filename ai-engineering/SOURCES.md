@@ -45,7 +45,7 @@ our six-pillar model treats eval as a peer foundation and is the better frame).
 Landed in the 2026-07-30 sweep:
 - [04-loop-engineering/notes/07-autonomy-ladder.md](04-loop-engineering/notes/07-autonomy-ladder.md) (was `loop-autonomy-ladder.md`)
 - [04-loop-engineering/notes/08-self-improving-loops.md](04-loop-engineering/notes/08-self-improving-loops.md#the-evolve-loop) — the evolve loop (was `evolve-loop.md`)
-- [06-eval/notes/11-production-and-the-maturity-ladder.md](06-eval/notes/11-production-and-the-maturity-ladder.md)
+- [06-eval/notes/11-production-and-the-maturity-ladder.md](../generative-ai/08-eval/notes/11-production-and-the-maturity-ladder.md)
 - [05-graph-engineering/notes/01-graph-vs-loop.md](05-graph-engineering/notes/01-graph-vs-loop.md) — escalation framing + decision tree (was graph-engineering.md §11)
 - [03-harness-engineering/notes/04-execution-boundaries.md](03-harness-engineering/notes/04-execution-boundaries.md) — role-label/canary section
 

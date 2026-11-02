@@ -90,7 +90,7 @@ HOMES = {
              "agent loops: control flow, verification, autonomy levels, self-improving loops"),
     "graph": ("ai-engineering/05-graph-engineering",
               "multi-agent graphs and topologies, LangGraph, knowledge graphs and KG-RAG"),
-    "eval": ("ai-engineering/06-eval",
+    "eval": ("generative-ai/08-eval",
              "evaluation: metrics, LLM-as-judge, benchmarks, tracing, production monitoring, feedback loops"),
     "inference": ("ai-engineering/07-inference-engineering",
                   "inference and systems performance: serving, batching, KV cache, prefill/decode, quantization, "

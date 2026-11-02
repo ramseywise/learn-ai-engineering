@@ -42,7 +42,7 @@ TEST_STARTS = pd.date_range("2012-07-01", periods=6, freq="MS")
 def calendar():
     X = pd.DataFrame(index=y.index)
     X["hour"] = y.index.hour
-    X["dow"] = y.index.dayofweek
+    X["dow"] = y.index.day_of_week
     X["month"] = y.index.month
     X["holiday"] = df["holiday"].ffill().fillna(0).values
     X["workingday"] = df["workingday"].ffill().fillna(0).values

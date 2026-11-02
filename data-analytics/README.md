@@ -1,128 +1,122 @@
 # Data Analytics
 
-> Foundation layer. Summary: [interviewing/guides/1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md) (sisyphus has no separate statistics pillar).
-> Position in the path: Python for data → **statistics and experimentation** → data science, data engineering or generative AI. Builds on [programming/python/04-python-for-data](01-python-for-data-analysis/README.md).
+> What a data analyst has to know: get data into a frame, describe it, test a claim, model a relationship, forecast it, explain it to someone, and know when the numbers lie.
 
----
+Position in the path: [programming/python](../programming/python/README.md) modules 01 to 03 come first. [Data science](../data-science/README.md), [data engineering](../data-engineering/README.md) and [generative AI](../generative-ai/README.md) build on this subject.
 
 ## What it is
 
-Data analytics here means the statistics you need to draw conclusions from data: which distribution generated it, whether a difference is real, how big a test has to be, when a correlation says nothing about cause, and how to turn a posterior into a decision. The Python itself (language, NumPy, pandas, plotting) is taught in [programming/python/](../programming/python/README.md); this layer assumes it.
+An analyst is handed a question and some data, and owes back an answer that somebody can act on. That takes more than statistics. The data has to be loaded and cleaned before anyone can test it, and a correct result is wasted if the person deciding cannot read the chart. The six pillars follow that order of work, from a messy export to a recommendation.
 
-The layer has two tracks that answer the same questions in different ways.
+The thread through all of them is the last clause of the framing, knowing when the numbers lie. A many-to-many join inflates revenue without raising an error. A mean of rates ranks regions wrongly. A test stopped at the first small p-value finds effects that are not there. A chart with two y axes implies a relationship its author chose. None of these announce themselves, so each pillar teaches the check along with the method.
 
-| | Frequentist track (notes 01–08) | Bayesian track (notes 09–14) |
+## The six pillars
+
+| Pillar | The analyst's job | What you learn | Chapters | Deck |
+|---|---|---|---|---|
+| [01 Python for data analysis](01-python-for-data-analysis/README.md) | get data into a frame | Load, clean, select, join, summarise and plot data in pandas, assuming no earlier pandas. | 7 | [deck](01-python-for-data-analysis/slides/python-for-data-analysis.pptx) |
+| [02 Probability and statistics](02-probability-and-statistics/README.md) | describe it, test a claim, model a relationship | Describe data, reason with probability, estimate with intervals, test, and fit regressions. | 6 | [deck](02-probability-and-statistics/slides/probability-and-statistics.pptx) |
+| [03 Experimentation and causality](03-experimentation-and-causality/README.md) | test a claim about a change | Run A/B tests, run them at scale, and decide when a correlation can bear a causal reading. | 3 | not built |
+| [04 Bayesian analysis](04-bayesian-analysis/README.md) | decide under uncertainty | Answer the same questions with posteriors: PyMC, priors, Bayesian A/B tests and loss functions. | 6 | not built |
+| [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md) | explain it to someone | Choose a chart, draw it in Python and JavaScript, and use it to get a decision made. | 5 | [deck](05-visualisation-and-storytelling/slides/visualisation-and-storytelling.pptx) |
+| [06 Applied analyses](06-applied-analyses/README.md) | forecast it, and do the real work | End-to-end analyses: forecasting, credit scoring, cohorts, funnels, segmentation and SQL. | 0 | not built |
+
+Read them in order the first time. [CURRICULUM.md](CURRICULUM.md) gives the sequence, the practice for each step and how you know you are done. [references.md](references.md) is the shared book library, with free courses and videos.
+
+## Two ways to answer the same question
+
+Pillars 02 and 03 and pillar 04 answer the same questions by different routes, and an analyst should be able to do both.
+
+| | Frequentist (02, 03) | Bayesian (04) |
 |---|---|---|
-| Core question | how surprising is this data if nothing is going on? | given the data, what should I believe and do? |
-| Tools | `scipy.stats`, `statsmodels` | PyMC 5, ArviZ, conjugate Beta updates |
-| A/B testing | power, sample size, z-test, peeking ([06](03-experimentation-and-causality/notes/01-ab-testing.md)) | P(B > A), expected loss ([12](04-bayesian-analysis/notes/04-bayesian-ab-testing.md)) |
-| Strength | standard, fast, what most teams report | small N, prior knowledge, decisions under asymmetric cost |
+| Core question | How surprising is this data if nothing is going on? | Given the data, what should I believe and do? |
+| Tools | `scipy.stats`, `statsmodels` | PyMC, ArviZ, conjugate Beta updates |
+| A/B testing | [Power, sample size, z-test, peeking](03-experimentation-and-causality/notes/01-ab-testing.md) | [P(B > A), expected loss](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
+| Strength | Standard, fast, and what most teams report | Small samples, prior knowledge, decisions with asymmetric costs |
 
-> **Name the distribution, fix the sample size before you look, and report effect sizes with intervals rather than bare p-values.**
-
----
-
-## Start here
-
-1. [01 — Probability foundations](02-probability-and-statistics/notes/01-probability-foundations.md) if conditional probability and expectation are rusty, then [02 — Distributions and sampling](02-probability-and-statistics/notes/02-distributions-and-sampling.md), [03 — Estimation](02-probability-and-statistics/notes/03-estimation.md) and [04 — Hypothesis testing](02-probability-and-statistics/notes/04-hypothesis-testing.md).
-2. [05 — Regression and GLMs](02-probability-and-statistics/notes/05-regression-and-glms.md), then [06 — Frequentist A/B testing](03-experimentation-and-causality/notes/01-ab-testing.md) with [practice/5_Statistical_Analysis.ipynb](02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb) open alongside, then [07 — Experimentation at scale](03-experimentation-and-causality/notes/02-experimentation-at-scale.md).
-3. [08 — Correlation and causation](03-experimentation-and-causality/notes/03-correlation-and-causation.md).
-4. [09 — Bayesian inference](04-bayesian-analysis/notes/01-bayesian-inference.md) and [12 — Bayesian A/B testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) to see the same A/B question answered the other way.
-5. The rest of the Bayesian track (10, 11, 13, 14) in order.
-
-Notes 01, 03, 05 and 07 are skeletons (added 2026-10-31); their sources are being gathered through `scripts/papers/discover.py`.
-
----
-
-## Layout
-
-```
-data-analytics/
-├── README.md            this file
-├── CURRICULUM.md        sequenced path and prerequisites
-├── references.md        every source, mapped to notes; readings; removed snapshots
-├── notes/               01–14, the course (01, 03, 05, 07 are skeletons)
-├── sources/             reference PDFs (14) and images/
-└── practice/            own coursework
-    ├── 5_Statistical_Analysis.ipynb
-    ├── AB-Bayes/        AB_Testing_with_Python.ipynb
-    ├── BayesianML/      Coursera Bayesian Methods for ML, weeks 2, 4, 5, 6 and final
-    └── courses/         Michigan and Wesleyan statistics scripts
-```
-
----
+Name the distribution, fix the sample size before you look, and report effect sizes with intervals and not bare p-values.
 
 ## Syllabus
 
-| # | Note | Covers |
-|---|---|---|
-| 01 | [Probability foundations](02-probability-and-statistics/notes/01-probability-foundations.md) (skeleton) | sample spaces, conditional probability, Bayes' rule, independence, expectation and variance, joint and marginal distributions |
-| 02 | [Distributions and sampling](02-probability-and-statistics/notes/02-distributions-and-sampling.md) | Normal, Binomial, Poisson, Exponential; `scipy.stats` API; LLN, CLT; the small-N trap |
-| 03 | [Estimation](02-probability-and-statistics/notes/03-estimation.md) (skeleton) | bias and variance, MLE, standard errors, confidence intervals, bootstrap, delta method |
-| 04 | [Hypothesis testing](02-probability-and-statistics/notes/04-hypothesis-testing.md) | t, chi-square, ANOVA; p-value misreadings; Mann-Whitney, Wilcoxon, KS, bootstrap; Bonferroni, Holm, BH |
-| 05 | [Regression and GLMs](02-probability-and-statistics/notes/05-regression-and-glms.md) (skeleton) | OLS in `statsmodels`, diagnostics, robust and clustered SEs, logistic and Poisson GLMs |
-| 06 | [Frequentist A/B testing](03-experimentation-and-causality/notes/01-ab-testing.md) | power and sample size; assignment cleaning, SRM; two-proportion z-test; peeking; CUPED |
-| 07 | [Experimentation at scale](03-experimentation-and-causality/notes/02-experimentation-at-scale.md) (skeleton) | CUPED, always-valid sequential tests, SRM and A/A checks, metric pitfalls, guardrails |
-| 08 | [Correlation and causation](03-experimentation-and-causality/notes/03-correlation-and-causation.md) | Pearson vs Spearman; confounding, partial correlation, colliders; Simpson's paradox; DiD, IV, RD, matching |
-| 09 | [Bayesian inference](04-bayesian-analysis/notes/01-bayesian-inference.md) | Bayes' theorem; Beta-Binomial; switchpoint model; randomised response; Challenger; German tank |
-| 10 | [MCMC and PyMC](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) | Metropolis, NUTS; mixture model; diagnostics (R-hat, ESS, autocorrelation); PyMC3 → PyMC 5 map |
-| 11 | [Priors and bandits](04-bayesian-analysis/notes/03-priors-and-bandits.md) | prior types; prior washout; ridge and lasso as priors; Thompson sampling, regret |
-| 12 | [Bayesian A/B testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) | PyMC delta model; Beta closed form; P(B > A); expected-loss stopping; ranking by lower credible bound |
-| 13 | [Loss functions and decisions](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) | loss catalogue; Bayes action; Price is Right; sign-sensitive stock loss; Dark Worlds |
-| 14 | [Bayesian machine learning](04-bayesian-analysis/notes/06-bayesian-machine-learning.md) | EM for GMMs; Bayesian logistic regression; VAEs and the ELBO; Gaussian processes, Bayesian optimisation |
+These are the chapters on disk as of 2 November 2026.
 
----
+### [01 Python for data analysis](01-python-for-data-analysis/README.md)
+
+1. [Series and DataFrame](01-python-for-data-analysis/notes/01-series-and-dataframe.md)
+2. [Loading and Cleaning](01-python-for-data-analysis/notes/02-loading-and-cleaning.md)
+3. [Indexing and Selection](01-python-for-data-analysis/notes/03-indexing-and-selection.md)
+4. [Reshaping and Joins](01-python-for-data-analysis/notes/04-reshaping-and-joins.md)
+5. [Groupby and Aggregation](01-python-for-data-analysis/notes/05-groupby-and-aggregation.md)
+6. [Time Series](01-python-for-data-analysis/notes/06-time-series.md)
+7. [Plotting](01-python-for-data-analysis/notes/07-plotting.md)
+
+### [02 Probability and statistics](02-probability-and-statistics/README.md)
+
+1. [Descriptive Statistics and EDA](02-probability-and-statistics/notes/01-descriptive-statistics-and-eda.md)
+2. [Probability Foundations](02-probability-and-statistics/notes/02-probability-foundations.md)
+3. [Distributions and Sampling](02-probability-and-statistics/notes/03-distributions-and-sampling.md)
+4. [Estimation](02-probability-and-statistics/notes/04-estimation.md)
+5. [Hypothesis Testing](02-probability-and-statistics/notes/05-hypothesis-testing.md)
+6. [Regression and GLMs](02-probability-and-statistics/notes/06-regression-and-glms.md)
+
+### [03 Experimentation and causality](03-experimentation-and-causality/README.md)
+
+1. [A/B Testing](03-experimentation-and-causality/notes/01-ab-testing.md)
+2. [Experimentation at Scale](03-experimentation-and-causality/notes/02-experimentation-at-scale.md)
+3. [Correlation, Confounding and Causation](03-experimentation-and-causality/notes/03-correlation-and-causation.md)
+
+### [04 Bayesian analysis](04-bayesian-analysis/README.md)
+
+1. [Bayesian Inference](04-bayesian-analysis/notes/01-bayesian-inference.md)
+2. [MCMC and PyMC](04-bayesian-analysis/notes/02-mcmc-and-pymc.md)
+3. [Priors and Bandits](04-bayesian-analysis/notes/03-priors-and-bandits.md)
+4. [Bayesian A/B Testing](04-bayesian-analysis/notes/04-bayesian-ab-testing.md)
+5. [Loss Functions and Bayesian Decisions](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md)
+6. [Bayesian Machine Learning](04-bayesian-analysis/notes/06-bayesian-machine-learning.md)
+
+### [05 Visualisation and storytelling](05-visualisation-and-storytelling/README.md)
+
+1. [Grammar of graphics and chart choice](05-visualisation-and-storytelling/notes/01-grammar-and-chart-choice.md)
+2. [Matplotlib and seaborn](05-visualisation-and-storytelling/notes/02-matplotlib-and-seaborn.md)
+3. [Plotly and interactive charts](05-visualisation-and-storytelling/notes/03-plotly-and-interactive.md)
+4. [JavaScript: D3, Vega-Lite and Observable Plot](05-visualisation-and-storytelling/notes/04-javascript-d3-vega-lite-observable-plot.md)
+5. [Dashboards and storytelling with data](05-visualisation-and-storytelling/notes/05-dashboards-and-storytelling.md)
+
+### [06 Applied analyses](06-applied-analyses/README.md)
+
+No chapters on disk yet. The planned chapters are forecasting, credit scoring, cohort and retention, funnel and conversion, segmentation and RFM, and SQL for analytics.
 
 ## Rules of thumb
 
-| Rule | Note |
+| Rule | Where |
 |---|---|
-| `sf(k)` is P(X > k); for "k or more" on a discrete distribution pass k − 1 | [02](02-probability-and-statistics/notes/02-distributions-and-sampling.md) |
-| The most extreme averages come from the smallest groups; always show N | [02](02-probability-and-statistics/notes/02-distributions-and-sampling.md) |
-| Default to Welch's t (`equal_var=False`) | [04](02-probability-and-statistics/notes/04-hypothesis-testing.md) |
-| Twenty tests at α = 0.05 give a 64% chance of a false positive; use Holm or BH | [04](02-probability-and-statistics/notes/04-hypothesis-testing.md) |
-| Halving the minimum detectable effect quadruples the sample size | [06](03-experimentation-and-causality/notes/01-ab-testing.md) |
-| Do not stop a fixed-horizon test the first time p < 0.05 | [06](03-experimentation-and-causality/notes/01-ab-testing.md) |
-| Control for confounders, never for colliders | [08](03-experimentation-and-causality/notes/03-correlation-and-causation.md) |
-| Compute derived quantities within each posterior sample, then summarise | [10](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) |
-| R-hat ≤ 1.01, no divergences, ESS in the hundreds before you trust a posterior | [10](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) |
-| Never put zero prior mass where the truth could be | [11](04-bayesian-analysis/notes/03-priors-and-bandits.md) |
-| Ship B when the expected loss of choosing it is below the smallest difference you care about | [12](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
-| Rank items with few ratings by a lower credible bound, not the raw average | [12](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
-| Squared loss → mean, absolute loss → median, zero-one → MAP; any other loss needs an optimiser | [13](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) |
+| State `how` and `validate` on a merge, then compare row counts and one total before and after | [01](01-python-for-data-analysis/notes/04-reshaping-and-joins.md) |
+| For a group's rate, sum the numerator and the denominator and then divide; never average the rates | [01](01-python-for-data-analysis/notes/05-groupby-and-aggregation.md) |
+| Make absent days visible with `asfreq`, and keep model features looking backward | [01](01-python-for-data-analysis/notes/06-time-series.md) |
+| `sf(k)` is P(X > k); for "k or more" on a discrete distribution, pass k − 1 | [02](02-probability-and-statistics/notes/03-distributions-and-sampling.md) |
+| The most extreme averages come from the smallest groups, so always show N | [02](02-probability-and-statistics/notes/03-distributions-and-sampling.md) |
+| Default to Welch's t (`equal_var=False`) | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
+| Twenty independent tests at α = 0.05 give a 64% chance of at least one false positive; use Holm or BH | [02](02-probability-and-statistics/notes/05-hypothesis-testing.md) |
+| Do not stop a fixed-horizon test the first time p < 0.05 | [03](03-experimentation-and-causality/notes/01-ab-testing.md) |
+| Control for confounders, never for colliders | [03](03-experimentation-and-causality/notes/03-correlation-and-causation.md) |
+| R-hat at most 1.01, no divergences and ESS in the hundreds before you trust a posterior | [04](04-bayesian-analysis/notes/02-mcmc-and-pymc.md) |
+| Never put zero prior mass where the truth could be | [04](04-bayesian-analysis/notes/03-priors-and-bandits.md) |
+| Ship B when the expected loss of choosing it is below the smallest difference you care about | [04](04-bayesian-analysis/notes/04-bayesian-ab-testing.md) |
+| Squared loss gives the mean, absolute loss the median, zero-one loss the MAP; any other loss needs an optimiser | [04](04-bayesian-analysis/notes/05-loss-functions-and-decisions.md) |
 
----
+## Layout
 
-## Resource map
+```text
+data-analytics/
+├── README.md         this file
+├── CURRICULUM.md     the sequenced path
+├── references.md     the shared book library, courses and videos
+├── sources/          PDFs and images/ shared by all six pillars
+└── 0N-<pillar>/      README.md, references.md, notes/, practice/, slides/
+```
 
-### Related notes elsewhere
-- [programming/python/04-python-for-data/](01-python-for-data-analysis/README.md): the seven `1_Overview` → `7_Time_Series` notebooks (NumPy, pandas, plotting, time series) and the Michigan/Wesleyan pandas scripts.
-- [data-science/](../data-science/README.md): modelling, evaluation metrics and the text-analytics companion code.
+Each pillar's README says how to run its practice, and its `references.md` maps books and papers to chapters.
 
-### Books and courses
-- Davidson-Pilon, *Bayesian Methods for Hackers* (MIT): condensed into notes 09–13 and part of 02; the snapshot was removed 2026-10-31 (see [references.md](references.md#removed-snapshots)).
-- Bruce & Bruce, *Practical Statistics for Data Scientists*, and Reinhart, *Statistics Done Wrong*: the frequentist references for notes 02–07.
-- Full list with chapter-to-note mapping: [references.md](references.md#books-and-courses).
+## Interview guide
 
-### Coursework and practice
-| Path | What | Label |
-|---|---|---|
-| [practice/5_Statistical_Analysis.ipynb](02-probability-and-statistics/practice/5_Statistical_Analysis.ipynb) | distributions, tests, A/B testing, correlation and Simpson's paradox on synthetic data (notes 02–08) | runs offline; needs `numpy scipy statsmodels pandas seaborn` |
-| [practice/AB-Bayes/AB_Testing_with_Python.ipynb](03-experimentation-and-causality/practice/AB-Bayes/AB_Testing_with_Python.ipynb) | frequentist A/B test on Kaggle `ab_data.csv` (note 06); restored from history 2026-10-31 | needs `ab_data.csv` (Kaggle, not included); add the missing imports `import statsmodels.stats.api as sms` and `from math import ceil` |
-| [practice/courses/](02-probability-and-statistics/practice/courses) | Michigan *Applied Data Science* and Wesleyan *Data Analysis and Interpretation* scripts (note 04) | needs the Coursera datasets (NESARC, AddHealth, grades; not included); paths hardcoded to `/Users/wiseer85/Desktop/` |
-| [practice/BayesianML/](04-bayesian-analysis/practice/BayesianML) | Coursera *Bayesian Methods for ML*: EM, MCMC, VAE, GPs, final project (notes 10, 14) | legacy; needs `bayesian.yml` (Python 3.7, TF 1.15, `pymc3==3.11.4`, `theano-pymc==1.1.2`) and the Coursera `grader` module (not included) |
-
-### Readings
-- [sources/](sources/): 14 PDFs (statistics, Bayesian methods, experimentation, pandas references) and figures in `images/`. Status of each file, including the duplicate ISLP copy: [references.md](references.md#readings-in-sources).
-
-### Interviewing guide
-- [1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md): compressed summary for interview prep. There is no statistics-specific pillar; notes 04–06 and 12 cover the usual stats and experimentation questions.
-
-### External references and source quality
-Every source the notes cite, the PyMC version audit, Jupyter quick hacks and quality flags: [references.md](references.md).
-
-### Previous and next layer
-← Builds on [programming/python/04-python-for-data/](01-python-for-data-analysis/README.md)
-→ [data-science/](../data-science/README.md) — models, evaluation and ML.
-→ [data-engineering/](../data-engineering/README.md) — pipelines and infrastructure.
-→ [generative-ai/](../generative-ai/README.md) — LLM applications, starting at 01-llm-fundamentals.
+[1-foundations](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/1-foundations/00-overview.md) is a compressed summary for interview preparation.

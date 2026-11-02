@@ -368,7 +368,7 @@ The sparse half fits in about 40 lines of standard-library Python. The formula, 
 - **MRR**: how high the first hit ranked.
 - **nDCG**: grades the whole ranked list.
 
-Check the definition and the k before comparing numbers across sources ([06-eval](../../../ai-engineering/06-eval/README.md)).
+Check the definition and the k before comparing numbers across sources ([06-eval](../../08-eval/README.md)).
 
 ---
 

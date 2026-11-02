@@ -311,7 +311,7 @@ user: ok           status: done       fast: All set: booked, confirmation 7Q2.
 - **Action chunking (ACT, 2023)** bridges the frequency gap. Control loops run at 50–1000 Hz, and VLA inference at 1–10 Hz; the original OpenVLA ran at 6 Hz and moved jerkily. Generate 25–50 actions (0.5–1 s at 50 Hz) per inference. Replay them while the next chunk computes, like video buffering.
   - The trade-off: longer chunks are smoother but **blind to sudden changes**. The two-layer design relocates the real-time tension. It doesn't remove it.
 
-**Sim2Real.** Domain randomization (see [06-eval environments](../../../ai-engineering/06-eval/README.md)) plus two steps you can't skip:
+**Sim2Real.** Domain randomization (see [06-eval environments](../../08-eval/README.md)) plus two steps you can't skip:
 1. **Calibrate the randomization range from measured real data.** Measure friction and motor delay. Too narrow misses reality. Too wide gives a policy that handles everything and masters nothing.
 2. **Align visuals.** Match the camera pose between simulation and reality, and splice in real backgrounds (greenscreen).
 
@@ -401,7 +401,7 @@ All ch. 6 labs (numbered 9-N in the book's experiment list) need API keys, GPUs 
 
 - **Upstream:** [03-agentic-foundations 01 — agent fundamentals](../../03-agentic-foundations/notes/01-agent-fundamentals.md) (the ReAct loop these systems extend), [05-RL 05 — post-training for agents](../../05-RL/notes/05-post-training-for-agents.md) (voice SFT, SimpleVLA-RL, data > architecture)
 - **Lateral:** [harness tool design](../../../ai-engineering/03-harness-engineering/notes/03-tool-design.md) (the computer/bash/editor action space), [context anatomy](../../../ai-engineering/02-context-engineering/notes/02-context-anatomy.md) (Agent Status Bar as the fast/slow channel), [orchestration](../../../ai-engineering/03-harness-engineering/notes/07-orchestration.md) (fast/slow as a two-agent pattern)
-- **Downstream:** [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) (OSWorld, AndroidWorld, simulation environments)
+- **Downstream:** [generative-ai/08-eval](../../08-eval/README.md) (OSWorld, AndroidWorld, simulation environments)
 
 ## Next
 

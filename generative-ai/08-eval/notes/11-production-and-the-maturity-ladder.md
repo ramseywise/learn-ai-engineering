@@ -38,7 +38,7 @@ Where to start when a system has no evals, and what each level buys:
 What each step needs:
 
 - **0 → 1:** highest return per effort. No LLM in the loop. Catches the structural failures that would otherwise eat judge budget ([04](04-graders.md#code-graders-more-than-you-think)).
-- **1 → 2:** a reviewer that didn't write the output and has no stake in it, ideally one that *runs* it rather than reads it ([03/05](../../03-harness-engineering/notes/05-verification-loops.md#separating-generation-from-evaluation)).
+- **1 → 2:** a reviewer that didn't write the output and has no stake in it, ideally one that *runs* it rather than reads it ([03/05](../../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md#separating-generation-from-evaluation)).
 - **2 → 3:** two things together, neither enough alone: rows harvested from observed failures ([03](03-eval-datasets.md#harvest-from-failures)), and traces of every step ([08](08-tracing-and-observability.md)).
 - **3 → 4:** the same graders running on sampled live traffic, with a baseline and alerts. This chapter.
 
@@ -228,7 +228,7 @@ A good eval environment is close to a reinforcement-learning environment. A rubr
 - **Throughput.** Environments must run much faster and more in parallel. Sandboxed MCP servers (AWorld: 26 servers, 126 tools for GAIA) avoid rate limits and side effects of live APIs.
 - **Fidelity vs. randomization.** Higher fidelity transfers better but costs more. Moderate **domain randomization** (positions, names, appearance) improves generalization. Too much makes tasks unlearnable.
 
-Post-training itself: [gen-AI 05-RL](../../../generative-ai/05-RL/README.md).
+Post-training itself: [gen-AI 05-RL](../../05-RL/README.md).
 
 ---
 
@@ -245,7 +245,7 @@ production traffic → sample → grade (human + judge) → failures labeled wit
 - Capability evals that reach high pass rates graduate into the regression suite ([01](01-what-an-eval-is.md)).
 - When the suite saturates, add harder tasks ([12](12-failure-modes.md#saturation)).
 
-Automating this loop (an agent proposing fixes and an eval accepting or rejecting them) is self-improvement, covered in [04/08](../../04-loop-engineering/notes/08-self-improving-loops.md). The eval is what keeps that loop honest.
+Automating this loop (an agent proposing fixes and an eval accepting or rejecting them) is self-improvement, covered in [04/08](../../../ai-engineering/04-loop-engineering/notes/08-self-improving-loops.md). The eval is what keeps that loop honest.
 
 ---
 

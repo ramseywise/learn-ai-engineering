@@ -366,7 +366,7 @@ Protocol shells as a context-engineering idea are in [context 09 — protocols](
 
 ## Evaluating agents: MLflow GenAI
 
-The repo's MLflow script logs runs and scores answers with built-in LLM judges (`answer_relevance`, `faithfulness`) plus a custom judge built with `make_genai_metric` (a privacy check). Evaluation proper lives in [06-observability](../../06-observability/README.md) and [ai-engineering 06 — eval](../../../ai-engineering/06-eval/README.md).
+The repo's MLflow script logs runs and scores answers with built-in LLM judges (`answer_relevance`, `faithfulness`) plus a custom judge built with `make_genai_metric` (a privacy check). Evaluation proper lives in [06-observability](../../06-observability/README.md) and [ai-engineering 06 — eval](../../08-eval/README.md).
 
 ---
 

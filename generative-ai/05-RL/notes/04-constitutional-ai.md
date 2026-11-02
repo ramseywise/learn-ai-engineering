@@ -3,6 +3,7 @@ origin: web-authored
 sources:
   - https://arxiv.org/abs/2212.08073 (Constitutional AI)
   - https://arxiv.org/abs/2309.00267 (RLAIF)
+  - https://arxiv.org/abs/2512.23707 (AI co-scientists, self-grading with privileged rubrics)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -366,6 +367,18 @@ also rose (65.1% → 81.7%). Two caveats: average AlpacaEval response length gre
 (the paper gives no unit) over the same iterations, and length is a known judge bias; the authors did not
 test reward hacking or safety beyond three rounds
 ([arXiv:2401.10020](https://arxiv.org/abs/2401.10020) (Yuan et al., ICML 2024)).
+
+A self-grader gets an edge if it sees something the policy doesn't. Goel et al. extract a research
+goal and ten goal-specific rubric items from each of about 7k ML papers. A frozen copy of
+Qwen3-30B-A3B grades the policy's plans with those rubrics as privileged information, and GRPO
+trains against the fraction of items that pass, with a 750-word cap on the plan. **ML experts
+preferred the trained model's plans for 70% of 100 goals** (3 experts each, 225 hours), and frontier
+judges scored 12–22% relative gains on medical and new arXiv goals. Dropping either the goal-specific
+rubrics or the seven general checks cut the 4B ablation's score from 29.7 to about 20, and SFT on
+the reference plans fell to 3.4. The self-grader was gamed after about 120 steps: its scores kept
+rising while a held-out Claude grader's stopped following. Experts also rated the trained plans
+slightly less feasible, and on cost-efficiency the self-grader rose while Claude's score fell
+([arXiv:2512.23707](https://arxiv.org/abs/2512.23707) (Goel et al., 2025-12, preprint)).
 
 **Limits of self-improvement:**
 - The model cannot critique outputs that exceed its own understanding. This is contested.

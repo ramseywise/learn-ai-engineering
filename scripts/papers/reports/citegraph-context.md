@@ -90,7 +90,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 3 | 1 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 3 | 1 | [Munkhdalai 2024, Leave No Context Behind: Efficient Infinite Context Transformers with ](https://arxiv.org/abs/2404.07143) | preprint |  | 23 | ✓ `ai-engineering/02-context-engineering/sources/munkhdalai-2024-leave-no-context-behind.pdf` |
 | 3 | 0 | [Jimenez 2023, SWE-bench: Can Language Models Resolve Real-World GitHub Issues?](https://arxiv.org/abs/2310.06770) | peer-reviewed | ICLR 2024 | 72 | — |
-| 3 | 0 | [Rein 2023, GPQA: A Graduate-Level Google-Proof Q&A Benchmark](https://arxiv.org/abs/2311.12022) | preprint |  | 30 | ✓ `ai-engineering/06-eval/sources/rein-2023-gpqa.pdf` |
+| 3 | 0 | [Rein 2023, GPQA: A Graduate-Level Google-Proof Q&A Benchmark](https://arxiv.org/abs/2311.12022) | preprint |  | 30 | ✓ `generative-ai/08-eval/sources/rein-2023-gpqa.pdf` |
 | 3 | 0 | [Rafailov 2023, Direct Preference Optimization: Your Language Model is Secretly a Rewa](https://doi.org/10.52202/075280-2338) | peer-reviewed | NeurIPS 2023 | 689 | ✓ `generative-ai/05-RL/sources/rafailov-2023-dpo.pdf` |
 | 3 | 0 | [Press 2023, Measuring and Narrowing the Compositionality Gap in Language Models](https://arxiv.org/abs/2210.03350) | peer-reviewed | EMNLP (Findings) 2023 | 295 | — |
 

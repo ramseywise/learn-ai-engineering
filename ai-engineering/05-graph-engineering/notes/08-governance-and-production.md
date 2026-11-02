@@ -135,7 +135,7 @@ n8n self-hosts via npm, Docker or Docker Compose, with provider guides for AWS, 
 
 ## Next layer
 
-Governance tells you what ran and what it cost. It doesn't tell you whether the answer was right. That is [06-eval](../../06-eval/README.md): measuring graph correctness, router accuracy, and coordination quality across runs.
+Governance tells you what ran and what it cost. It doesn't tell you whether the answer was right. That is [06-eval](../../../generative-ai/08-eval/README.md): measuring graph correctness, router accuracy, and coordination quality across runs.
 
 ---
 

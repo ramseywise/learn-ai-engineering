@@ -17,7 +17,7 @@ cleaned: 2026-10-28
 
 > A RAG answer can fail in retrieval, in generation, or in the gap between them. Score each stage separately, score only the rows each stage could have got right, and check grounding claim by claim instead of asking a judge for a vibe.
 
-*Context-side view (what to put in the window and how to measure that) is in [02/12](../../02-context-engineering/notes/12-evaluating-context.md). This chapter is the measurement machinery.*
+*Context-side view (what to put in the window and how to measure that) is in [02/12](../../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md). This chapter is the measurement machinery.*
 
 ---
 

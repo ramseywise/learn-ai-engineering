@@ -14,7 +14,7 @@ class CaptureClient(Client):
         self.captured[run_id] = {"name": name, "run_type": run_type, "inputs": inputs, **kwargs}
 
     def update_run(self, run_id, **kwargs):
-        self.captured.setdefault(str(run_id), {}).update(kwargs)
+        self.captured.setdefault(str(run_id), {}).update({k: v for k, v in kwargs.items() if v is not None})
 
 
 def print_tree(client: CaptureClient) -> None:

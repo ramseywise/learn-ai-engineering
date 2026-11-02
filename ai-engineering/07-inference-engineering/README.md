@@ -32,7 +32,7 @@ without turning into a GPU course.
 | Serving: batching, scheduling, routing, autoscaling | How transformers work: [generative-ai/01](../../generative-ai/01-llm-fundamentals/README.md) |
 | KV cache, prefix caching, prefill/decode disaggregation | Prompt caching as a context decision: [02/04](../02-context-engineering/notes/04-retrieval.md) |
 | Quantization, speculative decoding, compilers (torch.compile, Triton, XLA) | Fine-tuning and RL: [generative-ai/05](../../generative-ai/05-RL/README.md) |
-| GPU architecture, CUDA kernels, memory hierarchy, profiling | Cost per task as an eval metric: [06](../06-eval/README.md) |
+| GPU architecture, CUDA kernels, memory hierarchy, profiling | Cost per task as an eval metric: [06](../../generative-ai/08-eval/README.md) |
 | Multi-node networking, storage I/O, Kubernetes for GPUs | |
 
 ---

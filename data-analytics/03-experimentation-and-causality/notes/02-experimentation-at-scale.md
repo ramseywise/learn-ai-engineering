@@ -45,7 +45,7 @@ Note 06 covers one well-run test. At scale the hard parts are different: tests a
 ## Many tests, many metrics
 
 - Overall evaluation criterion, guardrail metrics; false discovery across a platform (note 04).
-- Hand-off: online evaluation of LLM features in [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md) uses the same machinery.
+- Hand-off: online evaluation of LLM features in [generative-ai/08-eval](../../../generative-ai/08-eval/README.md) uses the same machinery.
 
 ---
 

@@ -580,6 +580,6 @@ The dashboards and alerts in the product follow from the same data, and the nati
 
 ## Next
 
-You've followed one regression from a bad trace through scores, judges, an agent asking its own questions, a schema contract and finally the bill. The same case study is taken up from the evaluation side in [ai-engineering/06-eval 13](../../../ai-engineering/06-eval/notes/13-case-study-support-agent.md).
+You've followed one regression from a bad trace through scores, judges, an agent asking its own questions, a schema contract and finally the bill. The same case study is taken up from the evaluation side in [generative-ai/08-eval 13](../../08-eval/notes/13-case-study-support-agent.md).
 
 → [07 — Agentic applications](../../07-agentic-applications/README.md): building complete agents, now that you can see what they do and what they cost.

@@ -10,7 +10,7 @@ cleaned: 2026-10-31
 ---
 # References — Observability
 
-> Every source the notes cite, mapped to notes. **★** = read first. Eval-methodology sources live in [ai-engineering/06-eval/references.md](../../ai-engineering/06-eval/references.md) and are not repeated here.
+> Every source the notes cite, mapped to notes. **★** = read first. Eval-methodology sources live in [generative-ai/08-eval/references.md](../08-eval/references.md) and are not repeated here.
 
 ---
 

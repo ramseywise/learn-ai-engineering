@@ -11,7 +11,7 @@ cleaned: 2026-11-01
 
 A forecast is a promise about a future you cannot see, so the standard machine learning habit of shuffling rows and holding some out will report an accuracy you will never get in production. This chapter builds forecasters for one hourly bike rental series, and the main lesson is the procedure: state when the forecast is issued, compare against a naive baseline, and test only on the future. The modelling choices come second, and the measurements below show why.
 
-Scikit-learn gives you `fit` and `predict`, the [pandas time series chapter](../../../data-analytics/01-python-for-data-analysis/notes/06-time-series.md) gives you resampling and shifting, and [neural networks fundamentals](../../02-deep-learning/README.md) gives you the training loop. What is new here is what time does to each of them. Rows are no longer exchangeable, because every row is correlated with its neighbours. Features can only use what was known at the moment of prediction, and that moment has to be stated before any modelling. The level of the series drifts, so a test set can sit outside the range of everything the model has seen.
+Scikit-learn gives you `fit` and `predict`, the [pandas time series chapter](../../../data-analytics/01-python-for-data-analysis/notes/06-time-series.md) gives you resampling and shifting, and [neural networks fundamentals](../../02-deep-learning/notes/01-neural-networks-fundamentals.md) gives you the training loop. What is new here is what time does to each of them. Rows are no longer exchangeable, because every row is correlated with its neighbours. Features can only use what was known at the moment of prediction, and that moment has to be stated before any modelling. The level of the series drifts, so a test set can sit outside the range of everything the model has seen.
 
 The running example is the [UCI Bike Sharing Dataset](https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset) (Fanaee-T & Gama, *Progress in Artificial Intelligence*, 2014; CC BY 4.0): two years of hourly rentals from the Capital Bikeshare system in Washington, D.C. The decision we pretend to serve is rebalancing. Each midnight an operator needs the next 24 hours of demand, hour by hour, to plan where the vans go.
 
@@ -139,7 +139,7 @@ Why not ordinary K-fold? There is a real nuance here, and the common advice over
 
 ## Feature-based models
 
-The approach that wins most practical forecasting today turns the series into a table. Each row is one target hour, and the columns are what you knew at the issue time: calendar fields, and values of the series at safe lags. A gradient boosted tree then learns the mapping. The [boosting chapter](../../01-classical-ml/README.md) covers the tree side.
+The approach that wins most practical forecasting today turns the series into a table. Each row is one target hour, and the columns are what you knew at the issue time: calendar fields, and values of the series at safe lags. A gradient boosted tree then learns the mapping. The [boosting chapter](../../01-classical-ml/notes/07-boosting-in-practice.md) covers the tree side.
 
 The safe lags follow from the issue time. At midnight, the target at 23:00 today can see 24 hours back at the earliest, because anything nearer falls inside the forecast window. So every feature lag here is at least 24. This gives one "direct" model that covers all 24 horizons at once, with `hour` as a feature. The alternative is the recursive strategy, where you predict one step and feed the prediction back in. Recursion is more compact but lets errors compound. Direct models with honest lags are simpler to reason about, and they are what we use here.
 
@@ -153,7 +153,7 @@ LAGS = (24, 48, 168, 336)
 def features(y, df, weather=False):
     X = pd.DataFrame(index=y.index)
     X["hour"] = y.index.hour
-    X["dow"] = y.index.dayofweek
+    X["dow"] = y.index.day_of_week
     X["month"] = y.index.month
     X["holiday"] = df["holiday"].ffill().fillna(0).values
     X["workingday"] = df["workingday"].ffill().fillna(0).values
@@ -198,7 +198,7 @@ gbm relative 2012-11 46.724 0.734
 gbm relative 2012-12 41.787 0.653
 ```
 
-Dividing by the level takes MASE from 0.906 to 0.786, a bigger gain than most hyperparameter tuning could hope for, and it costs one line. The monthly rows show why you report folds: October is the only month above 1, and a single average would not tell you that. It is also the point to ask what happened that month. Hurricane Sandy shut the D.C. system down at the end of October 2012, and Fanaee-T and Gama use this dataset's anomalies as their subject, so this is not a model detail you could fix with more trees.
+Dividing by the level takes MASE from 0.906 to 0.786, a bigger gain than most hyperparameter tuning could hope for, and it costs one line. The monthly rows show why you report folds: October is the only month above 1, and a single average would not tell you that. It is also the point to ask what happened that month. The file records 22 rentals on 29 October 2012 and 1,096 on the 30th, against more than 7,000 a day the week before. Those are the days Hurricane Sandy reached the region. Neither lags nor a calendar can see a storm coming, so more trees would not fix this. A forecast that has to survive such a day needs a weather forecast as an input and an operational override.
 
 This is the method that won the M5 forecasting competition by a wide margin. Makridakis, Spiliotis and Assimakopoulos ([*International Journal of Forecasting*, 2022](https://ideas.repec.org/a/eee/intfor/v38y2022i4p1346-1364.html)) report on 42,840 hierarchical Walmart sales series with a 28-day horizon. It was the first competition in that series where all the top methods were pure machine learning and clearly better than statistical benchmarks. The winner, an equal-weighted mean of six LightGBM models, improved on the top benchmark by 22.4%, and most leading methods used LightGBM. Even so, only 7.5% of teams beat that benchmark and 35.8% beat the seasonal naive, so most entrants lost to a method they could have written in a line. Essentially all of the top 50 trained one "global" model across many series, which they call cross-learning. That is where machine learning earns its keep, since a global model can borrow patterns from thousands of related series. Januschowski and colleagues give a fuller account of why trees do so well here in ["Forecasting with trees"](https://doi.org/10.1016/j.ijforecast.2021.10.004) (*IJF*, 2022).
 
@@ -340,7 +340,7 @@ lstm                 63.632  1.039
 tcn                  60.188  0.981
 ```
 
-Read this table with the setup in mind. It is one series with about 550 midnight windows of training at most, no calendar input, no tuning beyond making them train stably, and a window-level normalisation. Under those conditions all three neural models beat the naive baselines, and the two-line DLinear gives up little to the LSTM. None of them beats the gradient boosted trees, which were handed holiday flags and a calendar. That does not prove trees beat networks. Neural forecasters such as DeepAR were designed for global training across many related series, and a single short series starves them. The conclusion that does hold is narrower and more useful: on a small tabular-style problem, start with features and trees, and require any deep model to beat that number in the same backtest.
+Read this table with the setup in mind. It is one series with roughly 540 to 690 midnight windows of training depending on the fold, no calendar input, no tuning beyond making them train stably, and a window-level normalisation. Under those conditions all three neural models beat the naive baselines, and DLinear, which trains in seconds, gives up little to the LSTM. None of them beats the gradient boosted trees, which were handed holiday flags and a calendar. That does not prove trees beat networks. Neural forecasters such as DeepAR were designed for global training across many related series, and a single short series starves them. The conclusion that does hold is narrower and more useful: on a small tabular-style problem, start with features and trees, and require any deep model to beat that number in the same backtest.
 
 ## Forecasts with error bars
 
@@ -372,7 +372,7 @@ nominal 80% interval, covered 78.9%, mean width 158 bikes
 2012-12    0.772
 ```
 
-An interval that claims 80% and covers less is overconfident, and it is usually overconfident for the same reason in every fold: the future contains shocks that the training period did not. Report coverage by fold, as with point error. DeepAR's probabilistic output is the deep learning analogue, and the same check applies to it.
+The overall figure of 78.9% looks close to the nominal 80%, and the monthly rows show what it conceals: 74.7% in July, 89.1% in August. A well calibrated average can be built from months that are too narrow and months that are too wide, so report coverage by fold, as with point error. Each quantile model is also fitted separately, which means the two curves can cross on a hard hour; sort them if a consumer needs a valid interval. DeepAR's probabilistic output is the deep learning analogue, and the same check applies to it.
 
 ## Pitfalls
 
@@ -398,7 +398,7 @@ uv run --with scikit-learn --with pandas python practice/01_forecast_lab.py
 
 <details><summary>Answer</summary>
 
-ANSWER1
+The lab reports MASE 0.778 against 0.786 for the chapter's model, a small gain. The four weekly lags it averages overlap with the `lag_168` and `lag_336` the trees already have, so the feature mostly reduces noise and adds little new information. Most tree-model feature ideas on a series this short behave the same way, which is why you measure each one instead of assuming it helps.
 
 </details>
 
@@ -406,7 +406,7 @@ ANSWER1
 
 <details><summary>Answer</summary>
 
-ANSWER2
+With a week's notice MASE rises from 0.786 to 0.880 and MAE from 48.2 to 54.1 bikes, which is a modest cost for six extra days of notice, and still better than last week's value. Same-hour-yesterday is no longer a legal baseline, since yesterday lies inside the horizon. Same-hour-last-week stays legal, because a value exactly 168 hours before any target in the coming week is already known at the issue time, so it is still the row to beat.
 
 </details>
 
@@ -414,7 +414,7 @@ ANSWER2
 
 <details><summary>Answer</summary>
 
-ANSWER3
+Not much either way. Trailing 365 days gives MASE 0.789 and trailing 180 days gives 0.809, against 0.786 for the expanding window. Dividing by the level already removes most of the drift, so older data stays useful: with 180 days the training set covers only part of the yearly cycle, and that is the part you lose. On a series with structural breaks the answer can reverse, so this is a measurement and not a rule.
 
 </details>
 

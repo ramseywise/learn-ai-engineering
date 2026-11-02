@@ -43,7 +43,7 @@ The first useful dataset is **20–50 tasks taken from real failures**: user com
 
 | Stage | Size | Purpose |
 |---|---|---|
-| **Example suite** | 5–20 | Eyeball diffs while iterating on a prompt ([01/09](../../01-prompt-engineering/notes/09-evaluating-prompts.md#offline-the-tech-tree)) |
+| **Example suite** | 5–20 | Eyeball diffs while iterating on a prompt ([01/09](../../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md#offline-the-tech-tree)) |
 | **First golden set** | 20–50 | Real failures, hand-reviewed. Enough to catch big regressions |
 | **Working set** | 100–300 | Enough for ±5–8 point error bars on a pass rate ([09](09-reading-results.md#how-many-tasks)) |
 | **LLM-graded sample** | 50–200 | Cost-capped subset for expensive judges |

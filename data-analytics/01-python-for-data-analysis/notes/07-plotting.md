@@ -372,4 +372,4 @@ print(table.stack().idxmax(), round(table.stack().max()))
 
 ## Next
 
-You can now get data into a frame, clean it, reshape it, summarise it and see it, and that is the toolkit for everything else in this subject. What it can't yet do is tell you whether a difference is real or luck. That takes probability: [Probability foundations](../../02-probability-and-statistics/notes/01-probability-foundations.md). For making charts that convince other people, go on to [pillar 05, visualisation and storytelling](../../05-visualisation-and-storytelling/README.md) when you reach it.
+You can now get data into a frame, clean it, reshape it, summarise it and see it, and that is the toolkit for everything else in this subject. What it can't yet do is tell you whether a difference is real or luck. That takes probability and statistics, and [the next pillar](../../02-probability-and-statistics/README.md) starts there, by describing data before it makes any claim about it. For making charts that convince other people, go on to [pillar 05, visualisation and storytelling](../../05-visualisation-and-storytelling/README.md) when you reach it.

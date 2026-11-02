@@ -17,7 +17,7 @@ cleaned: 2026-11-01
 
 The team at Acme Books knows from chapter 1 that some answers are wrong. Before `v2.0` shipped, someone did test it: they ran a new version of the agent over some questions, the average score went up, and they merged. That habit is how an agent gets better at twenty things and worse at the one that matters, because an average is built to smooth out exactly the category you should be looking at. This chapter builds the comparison properly and shows what it does and doesn't catch.
 
-The worked project behind this note is Pedro Leite's *Learning-LangFuse* (MIT), a healthcare Q&A chatbot on Groq-hosted Llama compared across two model versions, then a traced single agent and a traced multi-agent system. Its results are the published evidence below. The support agent is the running example you can execute. The theory of graders, judges and reading results is in [ai-engineering/06-eval](../../../ai-engineering/06-eval/README.md): [04 — graders](../../../ai-engineering/06-eval/notes/04-graders.md), [05 — LLM-as-judge](../../../ai-engineering/06-eval/notes/05-llm-as-judge.md), [09 — reading results](../../../ai-engineering/06-eval/notes/09-reading-results.md). This note is the Langfuse mechanics.
+The worked project behind this note is Pedro Leite's *Learning-LangFuse* (MIT), a healthcare Q&A chatbot on Groq-hosted Llama compared across two model versions, then a traced single agent and a traced multi-agent system. Its results are the published evidence below. The support agent is the running example you can execute. The theory of graders, judges and reading results is in [generative-ai/08-eval](../../08-eval/README.md): [04 — graders](../../08-eval/notes/04-graders.md), [05 — LLM-as-judge](../../08-eval/notes/05-llm-as-judge.md), [09 — reading results](../../08-eval/notes/09-reading-results.md). This note is the Langfuse mechanics.
 
 ---
 
@@ -485,7 +485,7 @@ get_client().flush()  # end of a script: send buffered spans before exit
 | Specialist | Medication (interactions, med info, history), symptoms (symptoms, history, booking), emergency (emergency, history, booking), general (no tools); shared `_run_specialist(max_iterations=5)` |
 | Tool calls | One span each, under the specialist |
 
-With that hierarchy you can score the **router** separately (was triage right?) from the **specialist** (was the answer right?), which is the agent-eval decomposition in [ai-engineering/06-eval 06 — evaluating agents](../../../ai-engineering/06-eval/notes/06-evaluating-agents.md). Our support agent has the same split: `route` and `answer` can each be wrong while the other is right, and the `wrong_route` failures in the fortnight are only visible because the router has its own span.
+With that hierarchy you can score the **router** separately (was triage right?) from the **specialist** (was the answer right?), which is the agent-eval decomposition in [generative-ai/08-eval 06 — evaluating agents](../../08-eval/notes/06-evaluating-agents.md). Our support agent has the same split: `route` and `answer` can each be wrong while the other is right, and the `wrong_route` failures in the fortnight are only visible because the router has its own span.
 
 ---
 

@@ -118,7 +118,7 @@ Later and optional: data visualisation (Knaflic, currently uncited), time series
    earliest in its cluster that our seeds cite. Disagreements go in a table in the report for
    you to settle (Phase 5).
 4. **`bridges` (new command).** It lists works cited from both a subject home and an AI home,
-   for example analytics A/B testing ↔ `ai-engineering/06-eval` online evaluation,
+   for example analytics A/B testing ↔ `generative-ai/08-eval` online evaluation,
    `classical-ml` calibration ↔ eval, `ml-systems` monitoring ↔ `generative-ai/06-observability`,
    and `data-systems` storage ↔ RAG vector stores. The output is `reports/bridges.md` plus
    cross-links to add to the notes.

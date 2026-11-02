@@ -117,7 +117,7 @@ sources/       chapter PDFs (Generative AI Design Patterns, AI Agents: The Defin
 - [ai-engineering/03-harness-engineering](../../ai-engineering/03-harness-engineering/README.md): [01 — what a harness is](../../ai-engineering/03-harness-engineering/notes/01-what-a-harness-is.md), [03 — tool design](../../ai-engineering/03-harness-engineering/notes/03-tool-design.md), [04 — execution boundaries](../../ai-engineering/03-harness-engineering/notes/04-execution-boundaries.md), [07 — orchestration](../../ai-engineering/03-harness-engineering/notes/07-orchestration.md).
 - [ai-engineering/04-loop-engineering](../../ai-engineering/04-loop-engineering/README.md): termination, scorekeepers, [framework bindings](../../ai-engineering/04-loop-engineering/notes/10-framework-bindings.md).
 - [ai-engineering/05-graph-engineering](../../ai-engineering/05-graph-engineering/README.md): multi-agent topology.
-- [ai-engineering/06-eval 06 — evaluating agents](../../ai-engineering/06-eval/notes/06-evaluating-agents.md) and [06-observability](../06-observability/README.md): tracing and scoring agents.
+- [generative-ai/08-eval 06 — evaluating agents](../08-eval/notes/06-evaluating-agents.md) and [06-observability](../06-observability/README.md): tracing and scoring agents.
 - [07-agentic-applications](../07-agentic-applications/README.md): deployed projects built with these frameworks.
 
 ### Books and courses

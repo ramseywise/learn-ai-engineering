@@ -21,6 +21,12 @@ sources:
   - https://doi.org/10.18653/v1/2022.acl-demo.9 (PromptSource)
   - https://doi.org/10.18653/v1/w17-4508 (Webis-TLDR-17)
   - https://arxiv.org/abs/2201.08239 (LaMDA)
+  - https://arxiv.org/abs/2307.04964 (Secrets of RLHF Part I, PPO-max)
+  - https://arxiv.org/abs/2401.12187 (WARM, weight-averaged reward models)
+  - https://arxiv.org/abs/2412.06000 (Does RLHF Scale?, diminishing returns)
+  - https://arxiv.org/abs/2503.13551 (Hierarchical reward model, PRM degrades with N)
+  - https://arxiv.org/abs/2505.02387 (RM-R1, reasoning reward model)
+  - https://arxiv.org/abs/2606.09076 (Z-Reward, distilled score-distribution RM)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -308,7 +314,7 @@ scalar head (Stage 2).
 GPT-2 355M with Llama 3 8B as a judge on a 0–100 scale: 50.32 on his 110 test items. The same
 setup gives the *untuned* Llama 3 8B base 58.51 and Llama 3 8B Instruct 82.6. A small model
 on 1,100 examples won't beat a larger base model. Those are 2024 small-model numbers for the
-mechanics, not a benchmark. For judge design see [06-eval](../../../ai-engineering/06-eval/README.md).
+mechanics, not a benchmark. For judge design see [06-eval](../../08-eval/README.md).
 
 **Where the demonstrations come from.** Instruction tuning, InstructGPT's labeler counts and the data engineering behind a good SFT set are in [06](06-data-and-environments.md#where-the-demonstrations-came-from).
 
@@ -412,6 +418,24 @@ the PPO prompts, scored up to 72.9 on the benchmark but gave worse policies (54.
 the policy's tokenizer were tested. When you choose an RM for PPO, match its base model and prompt
 distribution to the policy before you compare leaderboard scores.
 
+**A reward model can reason before it scores.** RM-R1 trains a generative RM to sort each pair into
+chat or reasoning, then either write weighted rubrics or solve the problem itself before it picks a
+winner. Training is distillation of under 9k o3/Claude traces, then GRPO with a ±1 correctness
+reward ([arXiv:2505.02387](https://arxiv.org/abs/2505.02387) (Chen et al., ICLR 2026)). **The 14B
+model averaged 79.6 across RewardBench, RM-Bench and RMB, above INF-ORM-Llama3.1-70B (78.8) and
+GPT-4o (77.7)**, and the 32B models reached 81.2–81.5. On a 32B base, RL alone reached 89.5 on
+RewardBench and the full recipe 91.4. On equal data, answer-only SFT trailed it by 3.8 points on
+average. The cost is a long chain of thought per comparison, and the authors measure no policy
+trained against it.
+Z-Reward, a text-to-image reward model, shows the cost can be distilled away. A 27B reasoning
+teacher scores each image as a distribution over rubric bins, and a 9B student learns that
+distribution by KL with no reasoning tokens. **The student reached 88.6% human-preference accuracy
+against the teacher's 89.6%, from one output token**, where on-policy distillation of the full
+traces reached 83.1% at about 750 tokens. Reading the reward as the expected score, not the parsed
+score token, also trained better: 3.8 and 4.2 both print as "4" and get the same advantage
+([arXiv:2606.09076](https://arxiv.org/abs/2606.09076) (Jin et al., 2026-06, preprint)). The test
+set is internal to Alibaba's image team.
+
 **Denser rewards.** One scalar per response does not say *which* part was wrong.
 Fine-Grained RLHF trains a separate reward model per error type, each scoring at its own density:
 relevance and factuality after every sentence, completeness once at the end
@@ -430,7 +454,12 @@ al., 2022-11, preprint)). Lightman et al. labelled each step of GPT-4-generated 
 made the step labels about 2.6× more data-efficient. The paper never trains a policy with RL against
 the PRM. DeepSeek-R1 tried PRMs and dropped them: a "step" is hard to define in general reasoning,
 labelling steps doesn't scale, and a model-based PRM invites reward hacking. It credits them only as
-rerankers and search guides ([03](03-preference-optimization.md)). The agent version of the trade-off is in
+rerankers and search guides ([03](03-preference-optimization.md)). Even as a reranker, a PRM can get worse
+with more samples. It penalizes a wrong step that a later step fixes, and in best-of-N on PRM800K
+with Qwen2.5-72B-Math-Instruct, a PRM's accuracy fell from 0.70 at N = 2 to 0.58 at N = 24.
+Training the same 1.5B scorer also on pairs of merged consecutive steps (HRM) rose instead, from 0.72
+to 0.80 ([arXiv:2503.13551](https://arxiv.org/abs/2503.13551) (Wang et al., 2025-03, preprint); the
+test set is about 90 problems with no error bars). The agent version of the trade-off is in
 [07](07-reward-design-and-tool-calling.md#reward-design-for-multi-turn-agents).
 
 You can fit the Bradley-Terry model itself in a few lines. Below, four answers have hidden quality scores, a simulated labeler compares random pairs, and the "reward model" is one learned number per answer, trained by gradient ascent on the log-likelihood:
@@ -510,6 +539,19 @@ gibberish such as "Love this ride instantly instantly instantly", even with an e
 
 InstructGPT ran PPO with ~31k prompts from a customer API dataset, iterating until
 preference evaluation plateaued.
+
+**Which PPO tricks matter for an LLM.** Zheng et al. ablated the standard PPO implementation
+details on a 7B LLaMA-family SFT model with an HH reward model. Vanilla PPO's reward and losses
+converged smoothly while the policy collapsed into longer, lower-perplexity responses that humans
+and GPT-4 rated worse, so **reward and loss curves did not show the collapse; response length,
+perplexity and KL to the SFT model did**. The fixes that held over long runs were policy
+constraints, chiefly a token-level KL penalty (0.05, against Anthropic's 0.001), plus reward
+normalize-and-clip and pre-training the critic. The entropy bonus failed with a 10% change in its
+clip threshold, and PPO from the pretrained model without SFT broke the model's language ability. The
+resulting "PPO-max" beat its SFT model on English harmless prompts in 62% of human comparisons
+against 5% ([arXiv:2307.04964](https://arxiv.org/abs/2307.04964) (Zheng et al., 2023-07,
+preprint)). It is one model size, mostly ablated on a Chinese subset with curves rather than
+held-out scores, and the authors say the setup favours stability over final quality.
 
 ---
 
@@ -597,6 +639,18 @@ and it shows up as verbose, ingratiating, rigorous-sounding filler.
 ![Line chart against KL from the supervised baseline (0 to 250, log scale). The dashed "RM prediction" line rises steadily from about 0.37 to 1.0 fraction preferred to the reference. The solid "Actual preference" line rises from about 0.24 to a peak near 0.47 at KL 10, stays near 0.42 to KL 75, then falls to about 0.05 at KL 250.](../sources/images/stiennon-learning-summarize-fig5.png)
 *Image Source: Stiennon et al., [Learning to summarize from human feedback](https://arxiv.org/abs/2009.01325) (2020), Fig. 5*
 
+The KL penalty limits drift; a sturdier reward model moves the peak. Ensembling several RMs'
+predictions helps but multiplies inference cost. **WARM instead averages the *weights* of M reward
+models fine-tuned from one shared SFT checkpoint**, with different learning rates, dropout and data
+order. This is the model-soups trick (Wortsman et al., ICML 2022) applied to RMs, and it costs one
+model at inference ([arXiv:2401.12187](https://arxiv.org/abs/2401.12187) (Ramé et al., ICML 2024)).
+On TL;DR summarization with PaLM-XXS RMs and a PaLM-L AI labeler as the oracle, the control reward
+held up longer as M grew, and an RL policy trained against WARM (M = 6) won **79.4%** of pairwise
+comparisons against one trained on the best single RM. With 25% of labels flipped, the averaged RM
+memorized the flipped labels less than a prediction ensemble did. It still collapses eventually,
+it allowed a smaller KL coefficient rather than none, and it keeps any bias every member shares,
+such as a length preference. The evidence is one task, small models and AI labels, no humans.
+
 **Why the KL is reverse, `KL(π_θ || π_ref)`.** The current policy comes first. Reverse KL
 penalizes probability mass where the reference has almost none, so it keeps the policy
 inside the region where the RM's scores are trustworthy. It is also **mode-seeking**: the
@@ -673,6 +727,17 @@ as a negative alignment tax, so far shown only for math.
   See [03-preference-optimization.md](03-preference-optimization.md).
 - For scale: the RL stage for Stiennon et al.'s 6.7B summarizer took about 320 GPU-days, and the
   labels took thousands of labeler hours.
+
+**Extra compute buys less in RLHF than in pre-training.** Hou et al. trained over 20 GLM-4 policies
+and outcome RMs at 9B, 32B and 200B with PPO and GRPO ([arXiv:2412.06000](https://arxiv.org/abs/2412.06000)
+(Hou et al., 2024-12, preprint)). **With a fixed 32B RM, the average gain on MATH, GPQA and
+LiveCodeBench fell from 4.4 points for a 9B policy to 1.9 for a 200B one.** Sampling 4 responses per
+prompt instead of 1 gave most of the benefit, and 16 gained little more. Past 200k prompts the
+training reward kept climbing while downstream scores flattened early. A bigger RM helped reasoning,
+but its policy gain lagged far behind the same RM's best-of-N gain, and on AlignBench the 9B RM did
+better. For the RM itself, more distinct prompts beat more responses per prompt at equal data size.
+PPO and GRPO scored within a point of each other. This is one model family with learned rewards,
+not verifiable ones, so read it as a limit of RM-driven RLHF, not of RL in general.
 
 **Watch the run, not just the curves.** In Ziegler et al., a refactor flipped the sign of both the
 reward and the KL penalty. The policy optimized for exactly what labelers were told to rate lowest,

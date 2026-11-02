@@ -43,10 +43,10 @@ Those notes stay where they are. This pillar links to them and covers what they 
 | Threat modelling an LLM app or agent: trust zones, the lethal trifecta, OWASP LLM and Agentic Top 10 | Attack catalogue and prompt-level defences: [01/10](../01-prompt-engineering/notes/10-adversarial-prompting.md) |
 | Design patterns that resist injection: dual LLM, plan-then-execute, CaMeL | Sandboxes, hooks, permission gates: [03/04](../03-harness-engineering/notes/04-execution-boundaries.md) |
 | Guardrails: input/output filters, moderation APIs, guard models (Llama Guard, ShieldGemma, Granite Guardian) | Alignment training (RLHF, constitutional AI): [generative-ai/05](../../generative-ai/05-RL/README.md) |
-| Red-teaming in practice: garak, PyRIT, promptfoo, AgentDojo | Grading safety as an eval metric: [06](../06-eval/README.md) |
+| Red-teaming in practice: garak, PyRIT, promptfoo, AgentDojo | Grading safety as an eval metric: [06](../../generative-ai/08-eval/README.md) |
 | Data security and privacy: PII, training-data extraction, RAG access control, end-user IDs, logging | Alignment research (scheming, alignment faking, interpretability): parked in the ledger, not taught |
 | Supply chain: model weights, MCP servers, poisoned datasets | Multimodal model internals: [08](../08-multimodal-engineering/README.md) |
-| Harm and fairness in deployed output: bias audits, refusal tuning, know-your-customer limits | Bias in LLM judges: [06/05](../06-eval/notes/05-llm-as-judge.md) |
+| Harm and fairness in deployed output: bias audits, refusal tuning, know-your-customer limits | Bias in LLM judges: [06/05](../../generative-ai/08-eval/notes/05-llm-as-judge.md) |
 
 ---
 

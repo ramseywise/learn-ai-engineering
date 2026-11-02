@@ -44,7 +44,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 2 | 0 | [Amodei 2016, Concrete Problems in AI Safety](https://arxiv.org/abs/1606.06565) | preprint |  | 1314 | — |
 | 2 | 0 | [Lewis 2020, Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) | peer-reviewed | NeurIPS 2020 | 3047 | ✓ `generative-ai/02-rag-retrieval/sources/2005.11401v4.pdf` |
 | 2 | 0 | [Austin 2021, Program Synthesis with Large Language Models](https://arxiv.org/abs/2108.07732) | preprint |  | 388 | ✓ `generative-ai/01-llm-fundamentals/sources/austin-2021-program-synthesis-large-language-models.pdf` |
-| 2 | 0 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | ✓ `ai-engineering/06-eval/sources/ahn-2022-do-as-i-can-not.pdf` |
+| 2 | 0 | [Ahn 2022, Do As I Can, Not As I Say: Grounding Language in Robotic Affordances](https://arxiv.org/abs/2204.01691) | peer-reviewed | CoRL 2023 | 624 | ✓ `generative-ai/08-eval/sources/ahn-2022-do-as-i-can-not.pdf` |
 | 2 | 0 | [Jiang 2023, Mistral 7B](https://arxiv.org/abs/2310.06825) | preprint |  | 330 | ✓ `generative-ai/01-llm-fundamentals/sources/jiang-2023-mistral-7b.pdf` |
 | 2 | 0 | [Yang 2023, Large Language Models as Optimizers](https://arxiv.org/abs/2309.03409) | peer-reviewed | ICLR 2024 | 151 | ✓ `ai-engineering/01-prompt-engineering/sources/yang-2023-large-language-models-as-optimizers.pdf` |
 | 2 | 0 | [Rozière 2023, Code Llama: Open Foundation Models for Code](https://arxiv.org/abs/2308.12950) | preprint |  | 531 | ✓ `generative-ai/01-llm-fundamentals/sources/roziere-2023-code-llama.pdf` |
@@ -69,8 +69,8 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 1 | 1 | [Hendrycks 2021, Measuring Massive Multitask Language Understanding](https://arxiv.org/abs/2009.03300) | peer-reviewed | ICLR 2021 | 435 | — |
 | 1 | 1 | [Xiao 2022, Uncertainty Quantification with Pre-trained Language Models: A Large-S](https://arxiv.org/abs/2210.04714) | peer-reviewed | EMNLP (Findings) 2022 | 34 | — |
 | 1 | 1 | [Huang 2022, Inner Monologue: Embodied Reasoning through Planning with Language Mod](https://arxiv.org/abs/2207.05608) | peer-reviewed | CoRL 2023 | 287 | ✓ `generative-ai/01-llm-fundamentals/sources/huang-2022-inner-monologue.pdf` |
-| 1 | 1 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | ✓ `ai-engineering/06-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf` |
-| 1 | 1 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `ai-engineering/06-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
+| 1 | 1 | [Kadavath 2022, Language Models (Mostly) Know What They Know](https://arxiv.org/abs/2207.05221) | preprint |  | 187 | ✓ `generative-ai/08-eval/sources/kadavath-2022-language-models-mostly-know-what.pdf` |
+| 1 | 1 | [Srivastava 2022, Beyond the Imitation Game: Quantifying and extrapolating the capabilit](https://arxiv.org/abs/2206.04615) | peer-reviewed | Trans. Mach. Learn. Res. 2023 | 569 | ✓ `generative-ai/08-eval/sources/srivastava-2022-beyond-imitation-game.pdf` |
 | 1 | 1 | [Lin 2022, Teaching Models to Express Their Uncertainty in Words](https://arxiv.org/abs/2205.14334) | peer-reviewed | Trans. Mach. Learn. Res. 2022 | 59 | — |
 | 1 | 1 | [Lu 2022, Fantastically Ordered Prompts and Where to Find Them: Overcoming Few-S](https://arxiv.org/abs/2104.08786) | peer-reviewed | ACL (1) 2022 | 610 | ✓ `ai-engineering/01-prompt-engineering/sources/lu-2022-fantastically-ordered-prompts-where-find.pdf` |
 

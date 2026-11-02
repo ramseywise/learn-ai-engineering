@@ -1,7 +1,7 @@
 # 06 — Observability
 
 > Depth layer. Summary: [interviewing/guides/6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md)
-> Position: sixth generative-ai pillar, the tooling layer. It sits after the agent and model pillars ([04](../04-agentic-frameworks/README.md), [05](../05-RL/README.md)) and before shipping them ([07](../07-agentic-applications/README.md)). Eval theory is in [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md).
+> Position: sixth generative-ai pillar, the tooling layer. It sits after the agent and model pillars ([04](../04-agentic-frameworks/README.md), [05](../05-RL/README.md)) and before shipping them ([07](../07-agentic-applications/README.md)). Eval theory is in [generative-ai/08-eval](../08-eval/README.md).
 
 ---
 
@@ -20,7 +20,7 @@ The pillar follows one data model, trace → span → score and dataset → run,
 
 A worked support-agent example closes it: the schema contract a real two-framework system logs.
 
-What a good grader is, how to calibrate a judge, and how to read a result with n=20 are covered in [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md). The notes here link to that pillar and don't repeat it.
+What a good grader is, how to calibrate a judge, and how to read a result with n=20 are covered in [generative-ai/08-eval](../08-eval/README.md). The notes here link to that pillar and don't repeat it.
 
 ---
 
@@ -28,7 +28,7 @@ What a good grader is, how to calibrate a judge, and how to read a result with n
 
 1. Read notes 01–04 in order: trace, score, judge at scale, query.
 2. Read 05 as the worked example of 01–04 applied to one system.
-3. For the theory behind any score here, follow the links into [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md).
+3. For the theory behind any score here, follow the links into [generative-ai/08-eval](../08-eval/README.md).
 4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
 
 ## Layout
@@ -72,7 +72,7 @@ notes/         01–05, the course; code inline
 ## Resource map
 
 ### Related notes elsewhere
-- Eval theory: [ai-engineering/06-eval](../../ai-engineering/06-eval/README.md), especially [05 LLM-as-judge](../../ai-engineering/06-eval/notes/05-llm-as-judge.md), [07 evaluating RAG and grounding](../../ai-engineering/06-eval/notes/07-evaluating-rag-and-grounding.md), [08 tracing and observability](../../ai-engineering/06-eval/notes/08-tracing-and-observability.md) and [13 case study: support agent](../../ai-engineering/06-eval/notes/13-case-study-support-agent.md).
+- Eval theory: [generative-ai/08-eval](../08-eval/README.md), especially [05 LLM-as-judge](../08-eval/notes/05-llm-as-judge.md), [07 evaluating RAG and grounding](../08-eval/notes/07-evaluating-rag-and-grounding.md), [08 tracing and observability](../08-eval/notes/08-tracing-and-observability.md) and [13 case study: support agent](../08-eval/notes/13-case-study-support-agent.md).
 - LangSmith, the alternative platform: [04-agentic-frameworks 05](../04-agentic-frameworks/notes/05-langsmith.md).
 - MCP as a protocol: [ai-engineering/02-context-engineering 09](../../ai-engineering/02-context-engineering/notes/09-protocols.md).
 

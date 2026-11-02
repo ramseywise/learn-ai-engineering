@@ -60,7 +60,7 @@ Local = how many of our papers cite it. Meth. = cited for methodology (Semantic 
 | 4 | 1 | [Bai 2022, Constitutional AI: Harmlessness from AI Feedback](https://arxiv.org/abs/2212.08073) | preprint |  | 325 | ✓ `generative-ai/05-RL/sources/bai-2022-constitutional-ai.pdf` |
 | 4 | 1 | [Touvron 2023, Llama 2: Open Foundation and Fine-Tuned Chat Models](https://arxiv.org/abs/2307.09288) | preprint |  | 2604 | ✓ `generative-ai/01-llm-fundamentals/sources/touvron-2023-llama-2.pdf` |
 | 4 | 0 | [Sutton 1998, Reinforcement Learning: An Introduction](https://doi.org/10.1109/tnn.1998.712192) | peer-reviewed | IEEE Trans. Neural Networks 1998 | 27217 | — |
-| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `ai-engineering/06-eval/sources/yao-2022-webshop.pdf` |
+| 4 | 0 | [Yao 2022, WebShop: Towards Scalable Real-World Web Interaction with Grounded Lan](https://arxiv.org/abs/2207.01206) | peer-reviewed | NeurIPS 2022 | 108 | ✓ `generative-ai/08-eval/sources/yao-2022-webshop.pdf` |
 | 4 | 0 | [Gao 2023, Retrieval-Augmented Generation for Large Language Models: A Survey](https://arxiv.org/abs/2312.10997) | preprint |  | 876 | ✓ `generative-ai/02-rag-retrieval/sources/2312.10997v5.pdf` |
 | 3 | 1 | [Devlin 2019, BERT: Pre-training of Deep Bidirectional Transformers for Language Und](https://doi.org/10.18653/v1/n19-1423) | peer-reviewed | NAACL-HLT (1) 2019 | 48487 | ✓ `generative-ai/01-llm-fundamentals/sources/devlin-2018-bert.pdf` |
 | 3 | 1 | [Nakano 2021, WebGPT: Browser-assisted question-answering with human feedback](https://arxiv.org/abs/2112.09332) | preprint |  | 266 | ✓ `generative-ai/01-llm-fundamentals/sources/nakano-2021-webgpt.pdf` |

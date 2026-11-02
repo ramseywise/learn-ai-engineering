@@ -11,7 +11,7 @@ cleaned: 2026-11-01
 ---
 # Quality dimensions and tests
 
-The monthly revenue report is wrong by 18%, and every job in the pipeline finished green. Nothing crashed, because a pipeline only fails when code fails, and nothing in this pipeline's code looks at what the data says. Sculley and colleagues named this the difference between code and data dependencies: compilers find broken code dependencies, and nothing equivalent finds broken data ones ([Sculley et al., NeurIPS 2015](https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html)). This chapter writes the missing checks. It starts with what "good data" can mean, turns each meaning into a query that returns bad rows, runs the same rules through Great Expectations and dbt, and ends with a scoreboard showing what tests cannot see.
+Suppose the monthly revenue report comes out 18% too high while every job in the pipeline finished green. Nothing crashed, because a pipeline only fails when code fails, and nothing in this pipeline's code looks at what the data says. Sculley and colleagues named this the difference between code and data dependencies: compilers find broken code dependencies, and nothing equivalent finds broken data ones ([Sculley et al., NeurIPS 2015](https://papers.nips.cc/paper_files/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html)). This chapter writes the missing checks. It starts with what "good data" can mean, turns each meaning into a query that returns bad rows, runs the same rules through Great Expectations and dbt, and ends with a scoreboard showing what tests cannot see.
 
 ## The running example: a feed with five faults
 
@@ -276,7 +276,7 @@ GX catches the same two, and then adds a useful failure. We wrote a distribution
 
 ## The same rules in dbt
 
-Where the transformation already lives in dbt, tests belong next to the model. The built-in generic tests are `unique`, `not_null`, `accepted_values` and `relationships`, declared in YAML. Anything else is a *singular* test: a SQL file in `tests/` that returns failing rows. The block below writes a complete small project and builds it with `dbt build`, which runs models and tests in dependency order. A failing test skips everything downstream ([dbt, Add data tests to your DAG](https://docs.getdbt.com/docs/build/data-tests)).
+Where the transformation already lives in dbt, tests belong next to the model. The built-in generic tests are `unique`, `not_null`, `accepted_values` and `relationships`, declared in YAML. Anything else is a *singular* test: a SQL file in `tests/` that returns failing rows. The block below writes a complete small project and builds it with `dbt build`, which runs models and tests in dependency order. A failing test skips everything downstream ([dbt, build](https://docs.getdbt.com/reference/commands/build)).
 
 ```python
 import subprocess, textwrap, pathlib
@@ -366,7 +366,7 @@ flowchart LR
   G -- drift --> F
 ```
 
-Each stage covers what the previous one cannot. A contract cannot see a null spike. A row test cannot see a missing day, because a missing day has no rows to test. Monitors catch those, though only after publication, and only by comparison with history. Iceberg's audit branches build the staging step into the table format, as covered with table formats in the [previous pillar](../../04-warehouse-lakehouse-streaming/notes/02-table-formats.md), and the [playbooks chapter](03-incident-playbooks.md) implements the gate with a DuckDB view.
+Each stage covers what the previous one cannot. A contract cannot see a null spike. A row test cannot see a missing day, because a missing day has no rows to test. Monitors catch those, though only after publication, and only by comparison with history. Iceberg's audit branches build the staging step into the table format ([Iceberg, Branching and Tagging](https://iceberg.apache.org/docs/latest/branching/)), and the [playbooks chapter](03-incident-playbooks.md) implements the gate with a DuckDB view.
 
 Not every failure should block. Blocking is right when wrong data does more harm than late data: finance numbers, or a model's training set. For a dashboard people glance at, warning and publishing is often better, since a stale chart is a failure too. Decide per table, and write it down.
 

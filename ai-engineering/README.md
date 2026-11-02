@@ -1,15 +1,17 @@
 # AI Engineering
 
-> **Depth domain.** This folder goes deep on the six foundations of AI engineering.
+> **Depth domain.** This folder goes deep on the five foundations of AI engineering, and on the
+> disciplines beneath and across them. Eval, which measures all of them, is the
+> [Eval pillar in generative-ai](../generative-ai/08-eval/README.md).
 > The [interviewing guides](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/00-start-here.md) are the compressed
 > summary layer — read those for exam prep. Read here for synthesis and depth.
 
 ---
 
-## The six peer foundations
+## The five peer foundations
 
 ```
-prompt → context → harness → loop → graph → eval
+prompt → context → harness → loop → graph
 ```
 
 The order is not a matter of taste — it encodes a nesting rule:
@@ -18,19 +20,23 @@ The order is not a matter of taste — it encodes a nesting rule:
 - Each **loop** step assembles **context**.
 - Each assembled **context** contains **prompts**.
 - **Graph** builds on loops — graphs make multi-agent organizations programmable the way loops make individual agent behavior programmable.
-- **Eval** measures every layer: prompt quality, context composition, harness reliability, loop behavior, graph correctness.
 
-All six are peer foundations. Graph is ordered fifth (after loop) because it *presumes loop mastery*, but it is a first-class discipline — not a frontier add-on.
+All five are peer foundations. Graph is ordered fifth (after loop) because it *presumes loop mastery*, but it is a first-class discipline — not a frontier add-on.
 
-**Underneath all six: [inference](07-inference-engineering/README.md)** (added 2026-10-31).
+**Measuring all five: [Eval](../generative-ai/08-eval/README.md)**, in generative-ai. It grades
+prompt quality, context composition, harness reliability, loop behavior and graph correctness.
+Each pillar here keeps its own chapter on what to measure; the Eval pillar owns the shared machinery.
+
+**Underneath all five: [inference](07-inference-engineering/README.md)** (added 2026-10-31).
 Serving, KV cache, batching and GPU performance decide what every call above costs in
-latency and money. It is numbered seventh because it is read last, not because it sits on top.
+latency and money. It is read after the five, not because it sits on top. Number 06 is unused here: Eval
+moved to generative-ai, and the folders were not renumbered.
 
-**Across all six: [multimodal](08-multimodal-engineering/README.md) and
+**Across all five: [multimodal](08-multimodal-engineering/README.md) and
 [safety and security](09-safety-and-security/README.md)** (both added 2026-10-31). Each
 changes every layer rather than adding one. Multimodal swaps text for images, documents and
 audio at the edges. Safety and security model the attack surface each layer opens. Read them
-after the six, in either order.
+after the five, in either order.
 
 ---
 
@@ -43,7 +49,7 @@ after the six, in either order.
 | harness | [03-harness-engineering/](03-harness-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [notes/01-what-a-harness-is.md](03-harness-engineering/notes/01-what-a-harness-is.md), [notes/07-orchestration.md](03-harness-engineering/notes/07-orchestration.md) |
 | loop | [04-loop-engineering/](04-loop-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](04-loop-engineering/README.md), [notes/](04-loop-engineering/notes/), [03 notes/05-verification-loops.md](03-harness-engineering/notes/05-verification-loops.md) |
 | graph | [05-graph-engineering/](05-graph-engineering/README.md) | [4-agents](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/4-agents/00-overview.md) | [README](05-graph-engineering/README.md), [notes/](05-graph-engineering/notes/) |
-| eval | [06-eval/](06-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](06-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
+| eval (in generative-ai) | [generative-ai/08-eval/](../generative-ai/08-eval/README.md) | [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) | [notes/01-what-an-eval-is.md](../generative-ai/08-eval/notes/01-what-an-eval-is.md), [support-agent-observability.md](../generative-ai/06-observability/notes/05-support-agent-observability.md) |
 | inference | [07-inference-engineering/](07-inference-engineering/README.md) | — (closest: 9-system-design) | [README](07-inference-engineering/README.md#reading-order), [notes/](07-inference-engineering/notes/) |
 | multimodal | [08-multimodal-engineering/](08-multimodal-engineering/README.md) | — (closest: 2-llm-fundamentals) | [README](08-multimodal-engineering/README.md#planned-notes) (notes not yet written) |
 | safety & security | [09-safety-and-security/](09-safety-and-security/README.md) | [7-security-safety](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/7-security-safety/) | [README](09-safety-and-security/README.md#planned-notes) (notes not yet written), [01/10](01-prompt-engineering/notes/10-adversarial-prompting.md), [03/04](03-harness-engineering/notes/04-execution-boundaries.md) |
@@ -52,7 +58,7 @@ after the six, in either order.
 
 ## Labs
 
-Decision (2026-11-01): **labs in both TypeScript and Python.** Each pillar from 01 to 07 has one lab in
+Decision (2026-11-01): **labs in both TypeScript and Python.** Each of pillars 01 to 05 and 07, and the Eval pillar in generative-ai, has one lab in
 `practice/`, in both languages side by side on the same inputs, so you can compare them. Every lab
 runs offline with a stub model by default, and each README says how to swap in a real model.
 
@@ -63,7 +69,7 @@ runs offline with a stub model by default, and each README says how to swap in a
 | 03 harness | Tool server with sandboxing | [tool-server-sandbox](03-harness-engineering/practice/tool-server-sandbox/README.md) | [tool-server-sandbox-py](03-harness-engineering/practice/tool-server-sandbox-py/README.md) |
 | 04 loop | Loop with a scorekeeper | [loop-scorekeeper](04-loop-engineering/practice/loop-scorekeeper/README.md) | [loop-scorekeeper-py](04-loop-engineering/practice/loop-scorekeeper-py/README.md) |
 | 05 graph | LangGraph graph | [langgraph-graph-ts](05-graph-engineering/practice/langgraph-graph-ts/README.md) | [langgraph-graph](05-graph-engineering/practice/langgraph-graph/README.md) |
-| 06 eval | Eval suite in CI | [eval-suite-ci](06-eval/practice/eval-suite-ci/README.md) | [eval-suite-ci-py](06-eval/practice/eval-suite-ci-py/README.md) |
+| Eval (generative-ai/08) | Eval suite in CI | [eval-suite-ci](../generative-ai/08-eval/practice/eval-suite-ci/README.md) | [eval-suite-ci-py](../generative-ai/08-eval/practice/eval-suite-ci-py/README.md) |
 | 07 inference | Inference simulator | [inference-lab-ts](07-inference-engineering/practice/inference-lab-ts/README.md) | [inference-lab](07-inference-engineering/practice/inference-lab/README.md) |
 
 ---
@@ -100,7 +106,7 @@ residual holding area for content not yet claimed by any pillar, not a canonical
 
 ## Working References — refs crosswalk
 
-Claude Code convention references (`~/.claude/refs/agent-*.md`) that map to the six pillars. Each ref is a practitioner-level convention file covering operational engineering knowledge. Consult the ref named in the pillar README's "Working References" section when working in that domain.
+Claude Code convention references (`~/.claude/refs/agent-*.md`) that map to the five pillars, inference and the Eval pillar. Each ref is a practitioner-level convention file covering operational engineering knowledge. Consult the ref named in the pillar README's "Working References" section when working in that domain.
 
 | Ref | Pillar(s) | What it covers |
 |---|---|---|
@@ -108,8 +114,8 @@ Claude Code convention references (`~/.claude/refs/agent-*.md`) that map to the 
 | `agent-architecture.md` | 04-loop, 05-graph | Loop shapes (ReAct/Plan-then-Act/Plan-and-Revise), turn termination control, planning strategy (who holds the plan), schema contracts, multi-agent orchestration patterns |
 | `agent-tools.md` | 03-harness, 04-loop | Tool design principles (reversible/idempotent/observable/parallel-safe), promote-from-bash heuristic, tool schema rules, MCP vs. in-process decision, write-operation safety |
 | `agent-memory.md` | 05-graph | Memory taxonomy (episodic/semantic/procedural), state persistence by lifetime, checkpointing conventions, single-writer rule, memory vs. context distinction |
-| `agent-observability.md` | 06-eval | Four span types, minimum span attributes, cost attribution, OTel GenAI semconv v1.41, the six questions a complete trace must answer |
+| `agent-observability.md` | generative-ai/06-observability, generative-ai/08-eval | Four span types, minimum span attributes, cost attribution, OTel GenAI semconv v1.41, the six questions a complete trace must answer |
 | `agent-safety.md` | 01-prompt, 03-harness | Five protection layers, threat model (trust zones), prompt injection defense, credential custody, write-operation confirm gate, sandboxing, PII handling |
 | `agent-reliability.md` | 03-harness, 04-loop | Failure taxonomy, retry policy defaults, idempotency keys, resumability requirements, graceful degradation, circuit breaking, structured error returns |
 | `agent-runtime.md` | 04-loop | Topology variants (stateless function / long-lived process / managed runtime), stateless function constraints, cost and latency levers, model routing and cascade, streaming conventions |
-| `agent-eval.md` | 06-eval | Unit/eval seam (deterministic vs. nondeterministic behavior), grader interface contract, gate ladder, failure taxonomy labels, golden dataset curation rules, grader calibration states |
+| `agent-eval.md` | generative-ai/08-eval | Unit/eval seam (deterministic vs. nondeterministic behavior), grader interface contract, gate ladder, failure taxonomy labels, golden dataset curation rules, grader calibration states |

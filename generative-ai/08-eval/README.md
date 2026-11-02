@@ -10,7 +10,7 @@
 
 Eval engineering is the discipline of measuring non-deterministic AI systems: defining what "correct" means, building tasks that represent real use, choosing graders you can trust, running them repeatedly, reading the results with error bars, and wiring them into CI, releases and production monitoring.
 
-It's a peer layer, not a QA step. Every other layer makes claims ("this prompt is better", "this harness is more reliable"), and this is where they get checked. Each layer keeps its own chapter on *what* to measure ([01/09](../01-prompt-engineering/notes/09-evaluating-prompts.md), [02/12](../02-context-engineering/notes/12-evaluating-context.md), [03/05](../03-harness-engineering/notes/05-verification-loops.md), [04/03](../04-loop-engineering/notes/03-the-scorekeeper.md)). This topic owns *how*: the shared machinery.
+It's a peer layer, not a QA step. Every other layer makes claims ("this prompt is better", "this harness is more reliable"), and this is where they get checked. Each layer keeps its own chapter on *what* to measure ([01/09](../../ai-engineering/01-prompt-engineering/notes/09-evaluating-prompts.md), [02/12](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md), [03/05](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md), [04/03](../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md)). This topic owns *how*: the shared machinery.
 
 **Inherits the weaknesses of:** all the layers it measures, plus its own. It can only grade what the harness exposes (no traces, no trajectory evals), and an eval is only as good as its tasks, its graders and its sample size.
 
@@ -77,10 +77,10 @@ The rules from the topic notes on one page. Each group links to the chapter that
 
 ## Where to start
 
-- **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 4-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=06-eval`).
-- **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01–05 can be read right after [01-prompt-engineering](../01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
+- **Lecture deck:** [slides/eval-engineering.pptx](slides/eval-engineering.pptx) — the notes as a 5-part talk (source: [slides/deck.yaml](slides/deck.yaml); rebuild with `make slides PILLAR=generative-ai/08-eval`).
+- **New to evals:** chapters [01](notes/01-what-an-eval-is.md)–05 in order. **01–05 can be read right after [01-prompt-engineering](../../ai-engineering/01-prompt-engineering/README.md)**; they don't need the harness or loop layers.
 - **Evaluating an agent now:** [02](notes/02-defining-correct.md#find-failure-modes-by-reading-error-analysis), [06](notes/06-evaluating-agents.md), [08](notes/08-tracing-and-observability.md).
-- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/13-case-study-support-agent.md).
+- **Evaluating RAG:** [07](notes/07-evaluating-rag-and-grounding.md) with [02/12](../../ai-engineering/02-context-engineering/notes/12-evaluating-context.md), and the [case study](notes/13-case-study-support-agent.md).
 - **A number moved and you don't know why:** [09](notes/09-reading-results.md), then [12](notes/12-failure-modes.md#the-debug-order).
 - **Shipping:** [10](notes/10-evals-in-ci.md), [11](notes/11-production-and-the-maturity-ladder.md).
 - **See it all on one real system:** [13](notes/13-case-study-support-agent.md), a multi-agent support system's eval design, including its mistakes.
@@ -109,7 +109,7 @@ An eval suite with a CI gate: 24 cases, three graders, a stored baseline, paired
 └── references.md                 ← papers and further reading, mapped to chapters
 ```
 
-### Topic notes ([notes/](notes/))
+### Topic notes ([notes/](notes))
 
 **Foundations**
 1. [What an eval is](notes/01-what-an-eval-is.md) — task, trial, trajectory, outcome, grader, suite; system under test vs. eval harness; test vs. eval; capability vs. regression; offline vs. online.
@@ -149,8 +149,8 @@ Pairwise ranking (Elo and Bradley–Terry) is a worked example in [05](notes/05-
 Trimmed templates live inline in the chapter that teaches them: the failure-taxonomy skeleton in [02](notes/02-defining-correct.md#the-failure-taxonomy), the row schema and its enums in [03](notes/03-eval-datasets.md), the judge prompt and calibration record in [05](notes/05-llm-as-judge.md#writing-the-judge-prompt), and the gate contract and CI workflow in [10](notes/10-evals-in-ci.md).
 
 ### Related
-- [support-agent-observability.md](../../generative-ai/06-observability/notes/05-support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.
-- [Learning-LangFuse-main](../../generative-ai/06-observability/notes/02-scoring-datasets-experiments.md) and [langfuse-evaluation-main](../../generative-ai/06-observability/notes/03-judge-pipelines-over-trace-exports.md) — Langfuse course code.
+- [support-agent-observability.md](../06-observability/notes/05-support-agent-observability.md) — trace metadata and experiment-tracking schema for the case-study system; two-layer human + judge strategy.
+- [Learning-LangFuse-main](../06-observability/notes/02-scoring-datasets-experiments.md) and [langfuse-evaluation-main](../06-observability/notes/03-judge-pipelines-over-trace-exports.md) — Langfuse course code.
 
 ### Interviewing guide
 - [6-evals-observability](https://github.com/ramseywise/sisyphus/blob/main/interviewing/guides/6-evals-observability/00-overview.md) — compressed summary for interview prep. This folder is the source of depth; if they drift, this folder wins.
@@ -188,4 +188,4 @@ What a trace must contain to debug a bad run after the fact, and how to attribut
 - The six questions a complete trace must answer; OTel GenAI conventions and their gaps (quality, safety and grounding scoring are project-local)
 
 ### `verification.md`
-The verification ladder and generator/evaluator separation, from the harness side ([03/05](../03-harness-engineering/notes/05-verification-loops.md)).
+The verification ladder and generator/evaluator separation, from the harness side ([03/05](../../ai-engineering/03-harness-engineering/notes/05-verification-loops.md)).

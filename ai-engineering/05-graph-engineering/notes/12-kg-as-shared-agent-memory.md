@@ -166,7 +166,7 @@ The synthesis's reference architecture keeps five concerns apart:
 | **Execution** | Tools, sub-agents and jobs in isolated environments | [05](05-topology-patterns.md), [07](07-failure-modes-at-scale.md) |
 | **Artifact** | Plans, drafts, code, reports and metrics as immutable versions | — |
 | **Graph** | Entities, claims, relations, provenance, task dependencies | 09–13 |
-| **Evaluation** | Deterministic checks, model graders, human review | [06-eval](../../06-eval/README.md) |
+| **Evaluation** | Deterministic checks, model graders, human review | [06-eval](../../../generative-ai/08-eval/README.md) |
 
 **Anti-pattern: "the chat transcript became the database."** If a run's only durable record is its conversation log, then that log is serving as database, workflow engine and audit log at once, and it does all three badly. You can't query it, you can't roll it back, and the next agent can't read it without reading everything.
 

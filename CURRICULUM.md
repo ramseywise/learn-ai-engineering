@@ -19,8 +19,8 @@ sequenced learning paths for each domain.
 | Data Analytics | [data-analytics/CURRICULUM.md](data-analytics/CURRICULUM.md) | Programming: Python 01–04 | Linear, 10 notes: distributions → hypothesis testing → A/B testing → Bayesian inference → Bayesian A/B and ML |
 | Data Engineering | [data-engineering/CURRICULUM.md](data-engineering/CURRICULUM.md) | Data analytics basics | Linear, 8 notes: ingest → transform → orchestrate → warehouse → monitor → feature-serve, then architectures and MLOps maturity; two DataTalks zoomcamps as runnable coursework |
 | Data Science | [data-science/CURRICULUM.md](data-science/CURRICULUM.md) | Data analytics basics | Tree, 17 notes: classical-ML core, then the NLP, neural-net and from-scratch (micrograd → nanoGPT) arcs. Bayesian methods live in data-analytics |
-| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 7-pillar sequential (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications) |
-| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 6-pillar sequential (prompt → context → harness → loop → graph → eval), plus inference as the substrate and two cross-cuts: multimodal, safety and security |
+| Generative AI | [generative-ai/README.md](generative-ai/README.md) | None required; DS/DE enrich it | 8 pillars (LLM fundamentals → RAG → Agentic foundations → Agentic frameworks → RL → Observability → Agentic applications → Eval) |
+| AI Engineering | [ai-engineering/README.md](ai-engineering/README.md) | Generative AI Pillar 1 | 5-pillar sequential (prompt → context → harness → loop → graph), plus inference as the substrate and two cross-cuts: multimodal, safety and security. Evaluation lives in [generative-ai/08-eval](generative-ai/08-eval/README.md) |
 
 **Reading the table:** "Prerequisites" are recommendations, not gates. You can start
 generative-ai cold — you'll just revisit data-science concepts as they come up rather than
@@ -116,6 +116,11 @@ map that links back to the depth dirs and the readings that support it.
 The curriculum is **structurally frozen** as of 2026-10-28: the six subjects and their
 pillars above are the full set. New material goes into an existing pillar; a new top-level
 folder or pillar needs a reason written here first.
+
+**Decision 2026-11-02: evaluation moves to generative-ai.** `ai-engineering/06-eval` is now
+[`generative-ai/08-eval`](generative-ai/08-eval/README.md), its own pillar beside
+[06-observability](generative-ai/06-observability/README.md). The ledger home key stays `eval`.
+ai-engineering keeps its other pillar numbers, so it runs 01 to 05, then 07 to 09.
 
 **Decision 2026-11-01: every subject is pillars, and a note is a chapter.** data-analytics,
 data-science and data-engineering move from flat `notes/` to `<NN-pillar>/` folders with raw courses

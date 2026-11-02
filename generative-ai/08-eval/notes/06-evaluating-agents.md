@@ -260,7 +260,7 @@ Every turn re-sends the whole context. Li's worked example (*AI Agents in Depth*
 - **Big tool outputs.** A 5,000-token web page returned on turn 2 is billed again on every later turn.
 - **Detours.** Ten turns instead of three, and the context passes 20,000 tokens.
 
-So the levers are turn count and context growth, not just a cheaper model ([02-context/03](../../02-context-engineering/notes/03-budgeting-the-window.md)). Set a **per-task cost cap** in the harness, and log thinking tokens separately.
+So the levers are turn count and context growth, not just a cheaper model ([02-context/03](../../../ai-engineering/02-context-engineering/notes/03-budgeting-the-window.md)). Set a **per-task cost cap** in the harness, and log thinking tokens separately.
 
 **Latency has two stages.** Prefill reads the context and sets **time to first token** (queueing + prefill; grows with context). Decode sets tokens/s. Report **p95**, not the mean: the mean hides the slow minority.
 
@@ -280,7 +280,7 @@ So the levers are turn count and context growth, not just a cheaper model ([02-c
 | Agent type | Add these to the suite |
 |---|---|
 | **Conversational** | Multi-turn tasks. Turn-count limits. Tone and interaction quality. Long, adversarial conversations. A simulated user ([below](#multi-turn-evaluation)) |
-| **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope, including a check that test files are untouched, since agents special-case tests ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)) |
+| **Coding** | Repo state + tests as the grader. Held-out tests the agent can't see ([04/03](../../../ai-engineering/04-loop-engineering/notes/03-the-scorekeeper.md#plus-the-fifth-hard-to-fake)). Diff scope, including a check that test files are untouched, since agents special-case tests ([12](12-failure-modes.md#goodhart-the-eval-becomes-the-target)) |
 | **Research** | Citation validity, coverage of required facts, source quality ([07](07-evaluating-rag-and-grounding.md)) |
 | **Computer use** | End-state checks on the environment. Sandboxed, reset per trial |
 | **Any tool-using agent** | Error-handling suite: malformed input, tool errors, timeouts, empty results. Adversarial suite: injection, out-of-scope requests ([case study](13-case-study-support-agent.md#adversarial-cases)) |
