@@ -498,7 +498,7 @@ ok  I need a real person to help me            escalation     0.84 []
 10/10 correct
 ```
 
-ROUTER_PROSE
+Ten out of ten looks decisive, and it isn't: ten test queries can only tell you the idea is not broken. The scores are more useful than the count. Right answers range from 0.70 to 0.84, so a floor of 0.55 only catches queries that match nothing. A wrong route is worse than a low-confidence one, because a query sent to the wrong source can't find its document at all, while flat search costs only some precision. That is why an unsure query falls through to both sources. The ablation below is what would justify switching this on.
 
 ### Taxonomy spec
 
@@ -709,7 +709,10 @@ In `hackathon_ab.ipynb`, add a cell that splits results into `cache_hit == True`
 <details>
 <summary>Answers</summary>
 
-ANSWERS_10
+1. "reset password" scores 0.939 against the right seed, so it is a good hit at 0.85. The mobile app question scores 0.880 against the same seed, so it counts as a false hit at 0.85 and is gone by 0.90. At 0.85 the sweep becomes 11 of 13 good hits and 5 of 13 false hits. Whether that mobile question really is a false hit is a judgement call, which is worth noticing: labelling near misses is the hard part of this experiment.
+2. Add `password` and `api key` to the pattern. The API key case now blocks, since the two term sets differ. On the twelve paraphrases the extension costs nothing new, because each paraphrase of the password seed also says "password". One paraphrase was already blocked by the original rule: "download invoices to a csv file" lacks the word "export", which shows that a guard list trades recall for safety.
+3. Five of the ten queries score below 0.80 and fall to `low_confidence`, including both `how_to` queries and both `error` queries. Nothing is routed wrongly, but half the traffic now searches both sources, so you lose most of the precision benefit the router was built for.
+4. On latency: 30% of 4.5 s is about 1.35 s and 0.6 LLM calls saved per query on average. On risk: 0.3 wrong cached answers per 100 queries. You still need the cost of a wrong answer (a ticket, a refund dispute, lost trust), whether wrong hits cluster on risky topics such as money or tax, and the normal pipeline's own error rate on the same questions, since the alternative isn't perfect either.
 
 </details>
 

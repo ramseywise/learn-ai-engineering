@@ -68,6 +68,11 @@ print("max_seq_length:", encoder.max_seq_length, " median pieces:", int(np.media
       " share truncated:", round(float((lengths > 254).mean()), 4))
 ```
 
+```text
+matrix: (4775, 384) float32  first row norm: 1.0
+max_seq_length: 256  median pieces: 69  share truncated: 0.0
+```
+
 What that gives over TF-IDF is easy to show. Ask both for the film nearest a description that shares few words with any of them.
 
 ```python
@@ -82,6 +87,19 @@ for name, sim in [("TF-IDF", tfidf_sim), ("MiniLM", minilm_sim)]:
     print(name)
     for i in sim.argsort()[-4:][::-1]:
         print(f"  {sim[i]:.2f}  {movies.title[i]:30.30}  {movies.genre[i]}")
+```
+
+```text
+TF-IDF
+  0.20  The Crew                        Action
+  0.20  Chicago Overcoat                Action
+  0.19  Bullet to the Head              Action
+  0.17  The Equalizer                   Thriller
+MiniLM
+  0.53  Kill List                       Horror
+  0.52  Bullet to the Head              Action
+  0.51  Exiled                          Action
+  0.51  Light Sleeper                   Drama
 ```
 
 TODO_NEAR
@@ -130,6 +148,17 @@ majority = pd.Series(y[idx_train]).value_counts().index[0]
 print("majority class accuracy:", round(float((y[idx_test] == majority).mean()), 3))
 ```
 
+```text
+ train   TF-IDF macro-F1   MiniLM macro-F1
+    60   0.144 +- 0.028    0.261 +- 0.009
+   150   0.199 +- 0.010    0.346 +- 0.019
+   300   0.224 +- 0.004    0.383 +- 0.008
+   600   0.271 +- 0.014    0.419 +- 0.023
+  1200   0.335 +- 0.013    0.439 +- 0.010
+  2877   0.404 +- 0.000    0.484 +- 0.000
+majority class accuracy: 0.315
+```
+
 TODO_CURVE
 
 ### Which head, and what else to feed it
@@ -166,6 +195,15 @@ report("MiniLM plus runtime, budget, revenue", LogisticRegression(max_iter=3000,
        np.hstack([A, sc.transform(tab[idx_train])]), np.hstack([B, sc.transform(tab[idx_test])]))
 ```
 
+```text
+MiniLM + logistic regression       macro-F1 0.484  accuracy 0.555    0.1s
+MiniLM + RBF SVM                   macro-F1 0.496  accuracy 0.578    1.3s
+MiniLM + gradient boosting         macro-F1 0.407  accuracy 0.549   16.7s
+TF-IDF + logistic regression       macro-F1 0.407  accuracy 0.549    0.6s
+TF-IDF and MiniLM together         macro-F1 0.484  accuracy 0.583    1.3s
+MiniLM plus runtime, budget, revenue macro-F1 0.487  accuracy 0.559    0.1s
+```
+
 TODO_HEADS
 
 How many of the 384 numbers do you need? Storage and search cost scale with the dimension, so it is worth a check. PCA fitted on training vectors alone shows how much each extra dimension buys on this task.
@@ -177,6 +215,15 @@ for d in [8, 16, 32, 64, 128, 384]:
     pca = PCA(n_components=d, random_state=0).fit(A)
     pred = LogisticRegression(max_iter=3000, C=10).fit(pca.transform(A), y[idx_train]).predict(pca.transform(B))
     print(f"{d:4} dims  explained variance {pca.explained_variance_ratio_.sum():.2f}  macro-F1 {f1_score(y[idx_test], pred, average='macro'):.3f}")
+```
+
+```text
+   8 dims  explained variance 0.18  macro-F1 0.424
+  16 dims  explained variance 0.28  macro-F1 0.477
+  32 dims  explained variance 0.41  macro-F1 0.462
+  64 dims  explained variance 0.59  macro-F1 0.469
+ 128 dims  explained variance 0.81  macro-F1 0.464
+ 384 dims  explained variance 1.00  macro-F1 0.482
 ```
 
 TODO_PCA
@@ -205,6 +252,14 @@ pred = setfit_model.predict(text[idx_test].tolist(), show_progress_bar=False)
 print("SetFit, 48 labels:         macro-F1", round(f1_score(y[idx_test], np.asarray(pred), average="macro"), 3), f" {time.time() - start:.0f}s on CPU")
 ```
 
+```text
+frozen encoder, 48 labels: macro-F1 0.272
+TF-IDF, 48 labels:         macro-F1 0.201
+{'embedding_loss': '0.1064', 'grad_norm': '0.9495', 'learning_rate': '0', 'epoch': '0.03333'}
+{'train_runtime': '5.524', 'train_samples_per_second': '86.9', 'train_steps_per_second': '5.431', 'train_loss': '0.2288', 'epoch': '1'}
+SetFit, 48 labels:         macro-F1 0.29  6s on CPU
+```
+
 TODO_SETFIT
 
 ## Clustering
@@ -222,6 +277,15 @@ for name, M in [("TF-IDF", T_all), ("TF-IDF, SVD 100", SVD), ("MiniLM", X_all)]:
     for k in [6, 20]:
         labels = KMeans(k, n_init=5, random_state=0).fit_predict(M)
         print(f"{name:16} k={k:2}  NMI with genre {nmi(movies.genre, labels):.3f}  largest cluster {np.bincount(labels).max() / len(labels):.0%}")
+```
+
+```text
+TF-IDF           k= 6  NMI with genre 0.041  largest cluster 40%
+TF-IDF           k=20  NMI with genre 0.066  largest cluster 16%
+TF-IDF, SVD 100  k= 6  NMI with genre 0.046  largest cluster 43%
+TF-IDF, SVD 100  k=20  NMI with genre 0.065  largest cluster 13%
+MiniLM           k= 6  NMI with genre 0.141  largest cluster 22%
+MiniLM           k=20  NMI with genre 0.143  largest cluster 9%
 ```
 
 TODO_KMEANS
@@ -252,6 +316,18 @@ topics = c_tf_idf(movies.description[keep].tolist(), clusters[keep])
 sizes = pd.Series(clusters[keep]).value_counts()
 for c in sizes.index[:8]:
     print(f"{c:3}  {sizes[c]:4} films  {', '.join(topics[c])}")
+```
+
+```text
+clusters: 35  noise share: 0.54  NMI on clustered films: 0.223
+ 17   600 films  agent, cop, police, crime, drug, man
+  9   122 films  dog, adventure, animal, animals, park, dinosaurs
+ 12   120 films  earth, planet, alien, space, crew, aliens
+ 15   110 films  team, coach, basketball, football, league, player
+  1    98 films  king, dragon, queen, god, warrior, princess
+ 32    95 films  love, story, woman, man, life, tale
+ 33    95 films  love, best, married, marriage, friends, tom
+  8    79 films  powers, new, hero, heroes, world, city
 ```
 
 TODO_HDB
@@ -285,6 +361,13 @@ is_lyric = np.r_[np.zeros(len(new), bool), np.ones(40, bool), np.zeros(40, bool)
 print("reference:", len(ref), " to score:", len(is_bad), " intruders:", is_bad.sum())
 ```
 
+```text
+median film words: 55 | lyric chunk: 31 | prose chunk: 55
+lyric: Bright her eyes as any star, Fairest o them all by far Is our darlin Mairi. Plenty herring, plenty meal Plenty
+prose: improvement followed ligation of the left common carotid in aneurysm of the transverse part of the aortic arch
+reference: 3800  to score: 1055  intruders: 80
+```
+
 Three detectors look at this in different ways. **k-nearest-neighbour distance** is the simplest: an outlier is far from its nearest neighbours in the reference. **Local outlier factor** ([Breunig et al., SIGMOD 2000](https://doi.org/10.1145/335191.335388)) divides that by how dense the neighbours' own surroundings are, so a point in a sparse-but-normal region is not penalised. **Isolation forest** ([Liu et al., ICDM 2008](https://doi.org/10.1109/ICDM.2008.17)) needs no distances: it splits on random features at random thresholds, and points that get isolated after few splits are anomalies. Each gets the same test, on both representations.
 
 ```python
@@ -311,6 +394,15 @@ evaluate("MiniLM, LOF", -LocalOutlierFactor(n_neighbors=20, novelty=True).fit(X_
 evaluate("MiniLM, isolation forest", -IsolationForest(n_estimators=300, random_state=0).fit(X_ref).score_samples(X_new))
 ```
 
+```text
+TF-IDF, kNN distance       AUROC 0.643  (lyrics 0.576, prose 0.710)  precision in top 80: 0.12
+TF-IDF SVD, LOF            AUROC 0.253  (lyrics 0.342, prose 0.165)  precision in top 80: 0.05
+TF-IDF SVD, forest         AUROC 0.255  (lyrics 0.335, prose 0.174)  precision in top 80: 0.03
+MiniLM, kNN distance       AUROC 0.939  (lyrics 0.914, prose 0.964)  precision in top 80: 0.59
+MiniLM, LOF                AUROC 0.944  (lyrics 0.919, prose 0.968)  precision in top 80: 0.60
+MiniLM, isolation forest   AUROC 0.799  (lyrics 0.712, prose 0.885)  precision in top 80: 0.30
+```
+
 TODO_ANOM
 
 ```python
@@ -324,6 +416,19 @@ print("lowest scoring intruders:")
 bad = np.where(is_bad)[0]
 for i in bad[np.argsort(score[bad])[:3]]:
     print(f"  {score[i]:.2f}  {all_new[i][:95]}")
+```
+
+```text
+highest scoring real films:
+  0.71  Are you the exception...or the rule? Remember that really cute guy who said he'd call – and did
+  0.69  A group of print workers in 1980s London club together to buy a race horse.
+  0.68  Un camping au bord d'un lac pendant les vacances d'été. Camille, 17 ans, y traîne son ennui coi
+  0.68  A lack of consumer confidence... or conspiracy? In 1996, electric cars began to appear on roads
+  0.67  Iris can best be described as a wallflower. She begins her first day as a temp for the nondescr
+lowest scoring intruders:
+  0.53  Called on Colonel Farrell to get ready for the slaughter. Next mornin early, before I rose for
+  0.55  And that was the end of sweet Molly Malone But her ghost wheels her barrow The Garden of Eden h
+  0.55  powers of his mind were more active and clearer than ever, but they acted apart from his will.
 ```
 
 TODO_ANOMREAD
@@ -345,6 +450,12 @@ for short, repo in candidates.items():
     print(f"{short:18} {V.shape[1]:4} dims  macro-F1 {f1_score(y[idx_test], pred, average='macro'):.3f}  {len(sample) / took:6.0f} docs/s on CPU")
 ```
 
+```text
+all-MiniLM-L6-v2    384 dims  macro-F1 0.484     640 docs/s on CPU
+bge-small-en-v1.5   384 dims  macro-F1 0.471     331 docs/s on CPU
+all-mpnet-base-v2   768 dims  macro-F1 0.507     105 docs/s on CPU
+```
+
 TODO_ENC
 
 The other half of the decision is what the vectors cost next to the sparse route. This is the same data, on the same machine, while other jobs were running, so read the orders of magnitude and not the digits.
@@ -356,6 +467,11 @@ start = time.time(); Vs = encoder.encode(docs, batch_size=32, normalize_embeddin
 sparse_bytes = (Ws.data.nbytes + Ws.indices.nbytes + Ws.indptr.nbytes) / Ws.shape[0]
 print(f"TF-IDF   {len(docs) / t_sparse:8.0f} docs/s   {sparse_bytes:6.0f} bytes per doc   {Ws.shape[1]:6} columns   {Ws.nnz / Ws.shape[0]:.0f} non-zero")
 print(f"MiniLM   {len(docs) / t_dense:8.0f} docs/s   {Vs.nbytes / len(Vs):6.0f} bytes per doc   {Vs.shape[1]:6} columns")
+```
+
+```text
+TF-IDF      33318 docs/s      744 bytes per doc    24287 columns   62 non-zero
+MiniLM        595 docs/s     1536 bytes per doc      384 columns
 ```
 
 TODO_COST
@@ -414,6 +530,12 @@ for k in [1, 5, 20]:
           " dirty AUROC", round(roc_auc_score(is_bad, knn_scores(X_dirty, X_new, k)), 3))
 ```
 
+```text
+k = 1  clean AUROC 0.919  dirty AUROC 0.0
+k = 5  clean AUROC 0.939  dirty AUROC 0.186
+k = 20  clean AUROC 0.927  dirty AUROC 0.677
+```
+
 TODO_A1
 
 </details>
@@ -426,6 +548,15 @@ TODO_A1
 for k in [5, 10, 15, 20, 30, 40]:
     labels = KMeans(k, n_init=3, random_state=0).fit_predict(X_all)
     print(k, round(silhouette_score(X_all, labels, metric="cosine", sample_size=2000, random_state=0), 4))
+```
+
+```text
+5 0.0389
+10 0.0326
+15 0.0347
+20 0.0329
+30 0.0305
+40 0.0271
 ```
 
 TODO_A2
@@ -442,6 +573,11 @@ p = PCA(n_components=64, random_state=0).fit(A)
 for name, (a, b) in {"first 64": first, "PCA 64": (p.transform(A), p.transform(B))}.items():
     pred = LogisticRegression(max_iter=3000, C=10).fit(a, y[idx_train]).predict(b)
     print(name, round(f1_score(y[idx_test], pred, average="macro"), 3))
+```
+
+```text
+first 64 0.41
+PCA 64 0.469
 ```
 
 TODO_A3

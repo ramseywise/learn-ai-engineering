@@ -6,11 +6,13 @@ sources:
   - https://neo4j.com/docs/cypher-manual/current/
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 9 — KG Fundamentals and Cypher
 
 > A knowledge graph stores typed entities and named relationships for one domain. It gives an LLM facts it can traverse and cite, rather than text it has to guess from. Neo4j and Cypher are enough to start.
+
+An agent can recite that a drug treats a disease and still have no way to show which source said so, or which of two things named "type 1 diabetes" it meant. Vector search returns similar text, not those distinctions. This chapter defines a knowledge graph by what it must hold, compares LPG and RDF, teaches the Cypher you need, and works through a rare-disease graph built from an ontology.
 
 Book citations in this note refer to Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), shortened to *KG & LLMs in Action* after this line.
 
@@ -463,4 +465,61 @@ Depth (book PDFs): [ch. 1](../sources/kg-and-llms-in-action/ch01-kg-llm-killer-c
 
 ---
 
-→ Next: [10-building-kgs-with-llms.md](10-building-kgs-with-llms.md): turning unstructured text into a graph you can trust.
+## Pitfalls
+
+- **Unbounded variable-length paths.** Symptom: a query that returns instantly on a small graph hangs once it crosses a hub. Fix: always write a bound, `*1..3` and not `*`.
+- **`MERGE` without a uniqueness constraint.** Symptom: duplicate nodes when writers race, as the course shows in L6. Fix: create the constraint first, so the race becomes an error you can see.
+- **`MERGE` on more than the identity key.** Symptom: `MERGE (c:Company {cik:$cik, name:$name})` creates a second company when the name is spelled differently. Fix: `MERGE` on `cik` alone, then `SET` the rest.
+- **Reading with `MERGE`.** Symptom: a "query" adds nodes, as listing 3.21 can when it inspects results with a `MERGE`. Fix: read with `MATCH`.
+- **Merging two roles into one ID.** Symptom: type 1 diabetes as a disease and as a feature of other syndromes collapse together, and rankings blur. Fix: keep both, `OMIM:222100` and `HP:0100651`, because the role changes the answer.
+- **Quoting the "~18% from typed edges" figure.** Symptom: a design doc cites a number with no primary source. Fix: leave it out; the argument for typed edges is that a query can only filter on distinctions the schema keeps.
+
+Two more sit beside the material they apply to: [fluent is not the same as reasoning](#what-a-knowledge-graph-is) and one edge per pair losing provenance, in the rare-disease worked example.
+
+## Try it
+
+1. Load the movies graph (171 nodes, 253 relationships). Write the query for "co-actors of Tom Hanks's co-actors he has never acted with", with no hop left unbounded.
+
+   <details><summary>Answer</summary>
+
+   ```cypher
+   MATCH (t:Person {name: 'Tom Hanks'})-[:ACTED_IN]->()<-[:ACTED_IN]-(c)
+         -[:ACTED_IN]->()<-[:ACTED_IN]-(fof)
+   WHERE fof <> t AND NOT (t)-[:ACTED_IN]->()<-[:ACTED_IN]-(fof)
+   RETURN fof.name, count(DISTINCT c) AS shared ORDER BY shared DESC LIMIT 10;
+   ```
+
+   The pattern fixes the path length, so nothing is unbounded, and `MATCH` means the read can't write. This query wasn't run for this note, because it needs a Neo4j loaded with the graph, so run it with `PROFILE` before trusting it.
+
+   </details>
+
+2. Two writers import the same company, one with name "Apple Inc." and one with "APPLE INC". Your statement is `MERGE (c:Company {cik:$cik, name:$name})`. What do you get, and what do you change?
+
+   <details><summary>Answer</summary>
+
+   Two nodes, because `MERGE` matches on the whole pattern. Add a uniqueness constraint on `cik` and write `MERGE (c:Company {cik:$cik}) ON CREATE SET c.name = $name`. With the constraint and the old statement, the second write fails visibly instead of quietly duplicating.
+
+   </details>
+
+3. You must store that a phenotype link has two sources, in LPG and then in RDF. What does each cost you?
+
+   <details><summary>Answer</summary>
+
+   In LPG the source is a property on the edge, and merging the edge on the source as well keeps both rows; the rare-disease example shows what is lost if you don't. In RDF a triple has no properties, so you need one of the workarounds this chapter covers. Choose by goal: RDF if standard ontologies, interchange and formal inference are the point.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What makes a knowledge graph more than a graph database? | The chapter's four pillars: evolution (it is never done), semantics (types and relationship names carry meaning), integration (several sources fused onto shared entities) and learning (the structure supports inference and graph ML). |
+| LPG or RDF? | Choose by goal: RDF and OWL when standard ontologies, interchange and formal inference are the point; LPG when you want properties on edges and fast traversal, as with `since` or `source`. |
+| Why put provenance on edges? | Fields such as `source`, `run_id` and `extracted_at` let you audit a fact and roll one back. Note 12's shared memory depends on them. |
+| A `MERGE` import created duplicates. What are the likely causes? | Writers racing with no uniqueness constraint, or `MERGE` on a non-key property such as a name spelled two ways. Add the constraint, `MERGE` on the key, then `SET` the rest. |
+| Why does the rare-disease graph keep two IDs for type 1 diabetes? | It is a disease (`OMIM:222100`) and a phenotypic feature of other syndromes (`HP:0100651`), and which applies depends on the role. Merging them would blur the ranking. |
+| Should you quote "typed edges improve accuracy 18%"? | No. That is an unsourced vendor claim. The principle holds without it: a query can only filter on distinctions the schema keeps. |
+
+## Next
+
+[10-building-kgs-with-llms.md](10-building-kgs-with-llms.md): turning unstructured text into a graph you can trust.

@@ -1,0 +1,454 @@
+# ML platform lecture deck. Covers notes 01-05.
+# Build: make slides PILLAR=data-engineering/06-ml-platform STRICT=1 PREVIEW=1
+# Running example: one taxi trip duration model, on synthetic rides, from notebook to monitored service.
+deck:
+  title: The ML Platform
+  subtitle: Everything around the model that decides whether it keeps working
+  tagline: |-
+    Features · Registry · Serving · Drift · Maturity
+  reference: "Notes: data-engineering/06-ml-platform"
+  output: ml-platform.pptx
+  notes: >-
+    A model silently trusts its inputs and keeps answering when they are wrong. We follow one taxi duration model from
+    a notebook to a monitored service, and at each step we meet a failure that throws no error.
+
+parts:
+  - title: Features you can trust
+    summary: Leakage · Point-in-time joins · Training-serving skew · Feature stores
+    notes: >-
+      The first failure happens before there is any model to deploy. The offline score is simply false.
+    slides:
+      - layout: statement
+        title: The offline score was a lie
+        kicker: The problem
+        statement: "Offline RMSE 2.79. In production, 5.48."
+        attribution: "Synthetic taxi rides, one leaky feature, in notes/01-feature-stores.md"
+        takeaway: A plain join lets a model read the future, and offline scores then promise what production cannot deliver.
+        source: notes/01-feature-stores.md
+        notes: >-
+          The feature was the average duration of recent rides in a zone. A plain join attached a value computed after
+          the ride. The score looked excellent and nothing raised an error.
+      - layout: code
+        title: Join as of the prediction time
+        lang: sql
+        code: |-
+          SELECT r.ride_id, r.duration, f.avg_duration_1h
+          FROM rides r ASOF JOIN zone_hourly f
+            ON r.zone = f.zone
+           AND r.pickup_ts >= f.feature_ts
+          WHERE r.pickup_ts - f.feature_ts
+                <= INTERVAL 3 HOUR;
+        bullets:
+          - "Each ride sees the latest value **before** its own time"
+          - "Same RMSE offline and in production: 3.81"
+          - "The coefficient falls from .54 to .12"
+        takeaway: A point-in-time join gives a worse score that is true, which is the only score you can act on.
+        source: notes/01-feature-stores.md
+        notes: >-
+          Run on the synthetic rides, the score gets worse and the gap vanishes. The inflated coefficient was the model
+          leaning on a feature that would not exist at prediction time.
+      - layout: flow
+        title: What a feature store adds
+        steps:
+          - {label: One definition, sub: "Written once", accent: 1E3A5F}
+          - {label: Offline store, sub: "History for training", accent: 0F7490}
+          - {label: Materialise, sub: "Latest value per key", accent: 0EA5C9}
+          - {label: Online store, sub: "Lookup at serving", accent: D4621A}
+        bullets:
+          - "Feast's history join uses a TTL: rows with nothing fresh enough are dropped, silently"
+          - "Its online store returned old values despite a 3 hour TTL in the version tested, 0.67"
+        takeaway: A feature store packages one definition, a point-in-time join and an online lookup, and its TTL rules need testing.
+        source: notes/01-feature-stores.md
+        notes: >-
+          These are behaviours we measured on Feast 0.67. The row count fell without warning, and the online store
+          returned old values. Test the tool's semantics before trusting them.
+      - layout: compare
+        title: Do you need a feature store?
+        left:
+          title: Not yet
+          bullets:
+            - One model, one team
+            - Batch serving from a table
+            - A shared function and ASOF joins do the job
+        right:
+          title: Now it pays
+          bullets:
+            - Several models share features
+            - Online lookups at low latency
+            - You must debug past feature values
+        emphasis: right
+        recall: What can you do without a store that still removes training-serving skew?
+        takeaway: The problem is consistency, and a shared function solves most of it before any platform is needed.
+        source: notes/01-feature-stores.md
+        notes: >-
+          Wilson's answer is strictly no, though he recommends one. Google's guide lists it as optional at its level one.
+
+  - title: A record of every model
+    summary: Tracking · Registry · The gate · Rollback
+    notes: >-
+      Now we have an honest model. The next failure is forgetting which one it was.
+    slides:
+      - layout: statement
+        title: Which notebook made this model?
+        kicker: The problem
+        statement: "Three months on, a model nobody saved cannot be explained, compared or restored."
+        attribution: "After Wilson, Machine Learning Engineering in Action, Manning 2022, ch. 16"
+        takeaway: Without a record of runs, a model in production cannot be explained, compared or rolled back.
+        source: notes/02-experiment-tracking-and-model-registry.md
+        notes: >-
+          Wilson's example is a regression noticed months later, with a need to recover the earlier artifact. That is
+          only possible if someone logged it.
+      - layout: code
+        title: Log what you need to rerun it
+        lang: python
+        code: |-
+          with mlflow.start_run(run_name=f"ridge-{alpha}"):
+              mlflow.set_tag("train_data", "rides-2024-01")
+              mlflow.log_param("alpha", alpha)
+              model.fit(to_dicts(train), train.duration)
+              mlflow.log_metric("rmse", rmse(...))
+              mlflow.sklearn.log_model(model, name="model")
+        bullets:
+          - "Parameters, metrics and the artifact, per run"
+          - "RMSE by alpha: 10.0 gives 3.07, 100 gives 3.23"
+          - "Pick by more than the metric: size, latency, simplicity"
+        takeaway: Tracking turns a pile of notebooks into a table of runs you can query and compare.
+        source: notes/02-experiment-tracking-and-model-registry.md
+        notes: >-
+          The numbers are from the chapter's synthetic run. The best run by a third decimal is rarely worth a more
+          complex model.
+      - layout: flow
+        title: The gate on a retrain
+        steps:
+          - {label: Retrain, sub: "New data", accent: 1E3A5F}
+          - {label: Register, sub: "Always a new version", accent: 0F7490}
+          - {label: Compare, sub: "Both on a current holdout", accent: 0EA5C9}
+          - {label: Move alias, sub: "Only on a win", accent: D4621A}
+        bullets:
+          - "March: challenger 3.054, champion 3.044. **Kept**, though newer"
+          - "May: the world moved. Challenger 3.060, champion 4.456. **Promoted**"
+        takeaway: Newer is not better, so a retrain must beat the champion on current data before it gets the alias.
+        source: notes/02-experiment-tracking-and-model-registry.md
+        notes: >-
+          This is Wilson's passive retraining. Keeping the loser registered matters too, because it is evidence of what
+          was tried. A gate on one metric is not enough for users, so it leads to a staged rollout.
+      - layout: cards
+        title: Registry vocabulary
+        cards:
+          - {title: Version, body: "An immutable model number. It never moves.", accent: 1E3A5F}
+          - {title: Alias, body: "A named pointer such as champion. It moves on promotion.", accent: D4621A}
+          - {title: Tag, body: "Free-form metadata on a model or version.", accent: 0F7490}
+          - {title: Stage (legacy), body: "One fixed lifecycle, deprecated since MLflow 2.9. Avoid.", accent: 94A3B8}
+        takeaway: Services load an alias, so rollback is one registry call, and predictions store the version because it never moves.
+        source: notes/02-experiment-tracking-and-model-registry.md
+        notes: >-
+          The registry labels but does not deploy. Something has to reload the model when the alias moves, and that
+          something is yours to build.
+
+  - title: Serving the answer
+    summary: Three shapes · Coverage · Latency · Rollout
+    notes: >-
+      The model is good and recorded. Now its answer has to reach someone at the right moment.
+    slides:
+      - layout: statement
+        title: The A/B test that showed nothing
+        kicker: The problem
+        statement: "The precomputed lists covered under 5% of sessions, so almost nobody saw the model."
+        attribution: "Hotel-deals story, Wilson, Machine Learning Engineering in Action, ch. 16"
+        takeaway: A model is only as good as the moment its answer arrives, so serving starts with when the consumer needs it.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          The model may have been fine. The serving decision meant that it had no chance to matter.
+      - layout: table
+        title: Three shapes, chosen by when the answer is used
+        header: [Shape, Latency, Trigger, Output]
+        widths: [2, 3, 2, 3]
+        rows:
+          - ["Batch", "Minutes to hours", "Schedule", "A partition in a table"]
+          - ["Streaming", "Seconds", "Event", "An event on a stream"]
+          - ["Online", "Milliseconds", "HTTP request", "A JSON response"]
+        bold_first: true
+        highlight: [0]
+        takeaway: Default to batch, because a failed job is a rerun and consumers keep reading the last good table.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          Online needs on-call, a latency budget and a fallback. If the consumer can read a table, let it.
+      - layout: table
+        title: Precompute only if traffic is concentrated
+        header: [Keys precomputed, Skewed traffic, Even traffic]
+        widths: [4, 3, 3]
+        rows:
+          - ["1,000", "95.1%", "0.4%"]
+          - ["10,000", "98.7%", "3.5%"]
+          - ["100,000", "100.0%", "21.5%"]
+        bold_first: true
+        recall: Which input makes precomputing impossible, whatever the skew?
+        takeaway: Measure key coverage from your request logs before you build, since a Zipf curve and a flat one lead to opposite plans.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          These are illustrations of two extremes, a Zipf distribution and a uniform one. Your logs give the real curve.
+          If the input includes the current session, you cannot precompute at all.
+      - layout: code
+        title: A schema at the boundary
+        lang: python
+        code: |-
+          class Ride(BaseModel):
+              PULocationID: int = Field(ge=1, le=265)
+              DOLocationID: int = Field(ge=1, le=265)
+              trip_distance: float = Field(ge=0, le=500)
+
+          @app.post("/predict")
+          def predict(ride: Ride):
+              x = prepare_features(ride.model_dump())
+              y = model.predict([x])[0]
+              return {"duration": round(float(y), 2),
+                      "model_version": MODEL_VERSION}
+        bullets:
+          - "Bad input: 422, where Flask gave 500"
+          - "A model always returns a number otherwise"
+          - "Version goes out with every answer"
+        takeaway: Validate at the boundary and return the version, so bad input is the client's error and each answer is traceable.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          A 500 pages the on-call for what was a client's mistake. The version is what monitoring joins on later.
+      - layout: table
+        title: Where the milliseconds go
+        header: [Step, Median, Note]
+        widths: [4, 2, 4]
+        rows:
+          - ["model.predict, one row", "0.08 ms", "Rarely the bottleneck"]
+          - ["In-process HTTP call", "1.35 ms", "Over ten times the model"]
+          - ["One call, 1,000 rows", "0.53 ms", "Vectors are cheap"]
+          - ["Key lookup, SQLite", "0.004 ms", "Indexed"]
+          - ["Same lookup, Parquet scan", "1.148 ms", "320 times slower"]
+        bold_first: true
+        takeaway: Measure before you optimise, because features, framework and network usually cost more than the model.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          One laptop, in-process, no network, so read the ratios only. That is why an online store answers by key.
+      - layout: flow
+        title: Rolling out a new model
+        steps:
+          - {label: Gate, sub: "Wins offline", accent: 1E3A5F}
+          - {label: Shadow, sub: "Both run, champion answers", accent: 0F7490}
+          - {label: Canary, sub: "Small share, hashed", accent: 0EA5C9}
+          - {label: A/B, sub: "Product metric", accent: D4621A}
+        bullets:
+          - "Shadow caught a weak challenger: 3.68 against 3.08, with nobody affected"
+          - "Shadow fails under feedback loops: the model never sees its own results"
+          - "Keep a fallback, and hash a stable key so a user stays on one side"
+        takeaway: Each stage risks more traffic for better evidence, so a bad model gets stopped where it harms the fewest people.
+        source: notes/03-batch-and-online-serving.md
+        notes: >-
+          Shankar's interviewees used one to four of these stages. Tie the last stage to a product metric.
+
+  - title: Knowing when the world moved
+    summary: Tests · False alarms · Concept drift · Retraining policy
+    notes: >-
+      The model is live. It will never tell you it has gone stale, so we build something that will, and see how that fails too.
+    slides:
+      - layout: statement
+        title: Models fail without an error
+        kicker: The problem
+        statement: "A stale model returns numbers in the right format, at the right speed, and they are wrong."
+        attribution: "Rabanser, Günnemann and Lipton, Failing Loudly, NeurIPS 2019"
+        takeaway: Service dashboards stay green while a stale model degrades, so a model needs its own monitor.
+        source: notes/04-drift.md
+        notes: >-
+          The paper opens with this observation. The natural answer is a drift monitor, and that has failure modes of
+          its own, which is what this part is about.
+      - layout: table
+        title: Significant is not the same as large
+        header: [Window, KS p-value, PSI, "PSI, no shift (median)"]
+        widths: [2, 3, 2, 3]
+        rows:
+          - ["200", "4.3e-03", "0.185", "0.082"]
+          - ["1,000", "1.1e-02", "0.029", "0.017"]
+          - ["5,000", "8.8e-05", "0.013", "0.003"]
+          - ["500,000", "8.1e-164", "0.005", "not run"]
+        bold_first: true
+        takeaway: With enough rows every shift is significant, and with few rows PSI measures noise, so report magnitude and calibrate.
+        source: notes/04-drift.md
+        notes: >-
+          The shift is the same 5 percent in every row. The usual PSI thresholds of 0.1 and 0.25 are conventions that I
+          could not trace to a study, so calibrate on your own quiet windows.
+      - layout: code
+        title: A monitor that rings every day
+        lang: python
+        code: |-
+          for day in range(200):      # no drift
+              ps = [ks_2samp(rng.normal(size=500),
+                             rng.normal(size=500)).pvalue
+                    for _ in range(100)]
+              alarm += min(ps) < 0.05
+              bonf += min(ps) < 0.05 / 100
+          # alarm: 200 of 200 days, bonf: 10 of 200
+        bullets:
+          - "No drift at all, 100 features"
+          - "Theory: 0.994 and 0.049"
+          - "A correction costs power on small shifts"
+        takeaway: Testing many features at a fixed alpha guarantees false alarms, so correct for it or expect the monitor to be muted.
+        source: notes/04-drift.md
+        notes: >-
+          Shankar's interviewees describe exactly this: many columns, false positives, then alert fatigue. Rabanser's
+          aggregated univariate tests use the Bonferroni correction.
+      - layout: compare
+        title: Input tests mislead in both directions
+        left:
+          title: Damage, no drift
+          bullets:
+            - "A mile takes longer; inputs do not move"
+            - "KS on distance: p = 0.315"
+            - "KS on predictions: p = 0.315"
+            - "**MAE 2.35 to 4.71**"
+        right:
+          title: Drift, no damage
+          bullets:
+            - "Trips get longer; the relationship holds"
+            - "KS on distance: p = 2.7e-113"
+            - "Linear model extrapolates correctly"
+            - "**MAE 2.35 to 2.36**"
+        recall: In the left case, why do predictions show the same p-value as distance?
+        takeaway: Input drift neither proves nor rules out damage, so only labels can tell you what a shift costs.
+        source: notes/04-drift.md
+        notes: >-
+          The left is Gama's real concept drift. On the right is what Failing Loudly saw on MNIST and COIL-100: detected
+          shifts that did no harm. So detect, characterise, then judge malignancy.
+      - layout: flow
+        title: On a drift alert
+        steps:
+          - {label: "Pipeline fault?", sub: "Units, nulls, a bad join", accent: D4621A}
+          - {label: "Labels?", sub: "Or sample the shifted rows", accent: 0F7490}
+          - {label: "Error up?", sub: "Beyond calibrated noise", accent: 0EA5C9}
+          - {label: Retrain, sub: "Gate, then roll out", accent: 1E3A5F}
+        bullets:
+          - "Shankar's interviewees rank failures: label delays, broken data, then natural drift"
+          - "Retraining on a broken feed teaches the model the bug"
+        takeaway: Check the pipeline first, because interviewees met broken data more often than natural drift, and retraining teaches the model the bug.
+        source: notes/04-drift.md
+        notes: >-
+          The first branch matters most, and it sends you to the incident playbook from the last pillar.
+      - layout: table
+        title: Scheduled or triggered retraining?
+        header: [Policy, Sudden change, Gradual change]
+        widths: [3, 4, 4]
+        rows:
+          - ["Never", "MAE 3.72, 1 fit", "MAE 3.34, 1 fit"]
+          - ["Monthly", "MAE 2.58, 13 fits", "MAE 2.42, 13 fits"]
+          - ["Triggered at +20%", "MAE 2.58, 2 fits", "MAE 2.71, 3 fits"]
+        bold_first: true
+        takeaway: Triggers save fits on a sudden change and lag on a gradual one, so start scheduled and defend the cadence by experiment.
+        source: notes/04-drift.md
+        notes: >-
+          Gama calls these blind and informed. Wilson advises passive first. Interviewees set cadence with no scientific
+          procedure. No policy avoids the month after a sudden change, which is why fallback and rollback are in the plan.
+
+  - title: How much should you automate?
+    summary: Maturity levels · ML Test Score · Tests · The chain
+    notes: >-
+      Each part added machinery. The last question is how much of it a given team should have.
+    slides:
+      - layout: statement
+        title: Nobody should adopt all of this at once
+        kicker: The problem
+        statement: "A closed retraining loop on a bad monitor is a machine for shipping incidents."
+        attribution: "Theme of notes/05-mlops-maturity-and-best-practices.md"
+        takeaway: Automation multiplies whatever is already there, so what to automate next depends on what you can trust now.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          Sculley's point stands: the model code is a small part of the system, and the debt builds up around it.
+      - layout: table
+        title: The Microsoft maturity levels
+        header: [Level, What is automated, Typical smell]
+        widths: [2, 4, 4]
+        rows:
+          - ["0", "Nothing", "Which notebook made this?"]
+          - ["1", "App build and deploy", "Models thrown over the wall"]
+          - ["2", "Training, tracking, registry", "Deploying is still manual"]
+          - ["3", "Model CI/CD, A/B, traceability", "A person decides when to retrain"]
+          - ["4", "Monitoring triggers retraining", "Needs strong monitoring first"]
+        bold_first: true
+        highlight: [2, 3]
+        takeaway: A proof of concept can stay at 0, a business model should reach 2 to 3, and 4 needs strong monitoring first.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          Treat levels as a continuum and a description. Amershi's Microsoft study found maturity correlated with
+          effectiveness, at Spearman 0.50 to 0.76, but it was self-reported.
+      - layout: code
+        title: A score you can compute
+        lang: python
+        code: |-
+          score = {"data": 4, "model": 5, "infra": 5,
+                   "monitoring": 1}
+          min(score.values())      # 1.0
+          score["model"] += 3      # three more tests
+          min(score.values())      # still 1.0
+          score["monitoring"] = 2  # automate two monitors
+          min(score.values())      # 2.0
+        bullets:
+          - "28 tests, 7 in each of 4 sections"
+          - "Half a point manual, one automated"
+          - "Final score is the **minimum**"
+        takeaway: The ML Test Score takes the minimum across sections, so a strong model section cannot hide absent monitoring.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          Breck and colleagues, IEEE Big Data 2017. Three more model tests changed nothing, and two automated monitors
+          doubled the score. Up to 1 may have serious holes, up to 2 is a first pass, up to 3 is reasonably tested.
+      - layout: cards
+        title: Test what changes, not only code
+        cards:
+          - {title: Code, body: "Inject callbacks and endpoints, so a handler runs with no cloud.", accent: 1E3A5F}
+          - {title: Data, body: "Nulls, ranges, allowed values, on every batch.", accent: 0F7490}
+          - {title: Behaviour, body: "A longer trip takes longer. A black box still has rules.", accent: 0EA5C9}
+          - {title: Model sanity, body: "Overfit 32 rows. A wrong optimiser stayed at loss 4.41, with no error.", accent: D4621A}
+        takeaway: A correct function on broken data gives a wrong model and passing tests, so code tests alone are not enough.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          The overfit test is the cheap one that people skip. The healthy model reached 0.0002. The optimiser given
+          another model's parameters stayed above 4, and nothing raised an error.
+      - layout: flow
+        title: The chain that blocks a bad image
+        steps:
+          - {label: Quality checks, sub: "isort, black, pylint", accent: 1E3A5F}
+          - {label: Unit tests, sub: "pytest", accent: 0F7490}
+          - {label: Integration, sub: "Real container, LocalStack", accent: 0EA5C9}
+          - {label: Publish, sub: "Terraform, then CD", accent: D4621A}
+        bullets:
+          - "`make publish` cannot push an image that failed any earlier step"
+          - "Have CI call the Makefile, so local and CI runs cannot drift"
+        takeaway: A dependency chain makes the safe path the only path, which is worth more than a checklist someone must remember.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          The course's pins are from 2022. Update them on purpose, and replace long-lived keys with OIDC if you copy the
+          workflows.
+
+  - title: Rules of thumb
+    agenda: false
+    divider: false
+    summary: What to keep and where to go next
+    slides:
+      - layout: cards
+        title: What to keep
+        cards:
+          - {title: Join as of then, body: "Offline scores are only true with point-in-time joins.", accent: 1E3A5F}
+          - {title: Newer is not better, body: "A retrain passes a gate on current data.", accent: 0F7490}
+          - {title: Default to batch, body: "Online only when someone is waiting.", accent: 0EA5C9}
+          - {title: Return the version, body: "So each answer can be traced.", accent: 0EA5C9}
+          - {title: Pipeline first, body: "On any alert, check the feed before retraining.", accent: D4621A}
+          - {title: Score the minimum, body: "Automate only what you can already monitor.", accent: 5B21B6}
+        takeaway: Each rule makes a silent failure visible or reversible, and that is the job of the platform.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          If you remember one thing, a model trusts its inputs and answers regardless, so all the checks have to live
+          around it.
+      - layout: bullets
+        title: Where next
+        bullets:
+          - "**Architecture and governance**: who owns many such pipelines, and who may read what"
+          - "**Data science**: how the models served here are built and evaluated"
+          - "**AI engineering**: the same patterns for LLM systems, with evaluation in the generative AI Eval pillar"
+          - "**Practice**: the MLOps Zoomcamp coursework, in the pillar's practice folder"
+        takeaway: The next pillar lifts the view from one model to an organisation of data products.
+        source: notes/05-mlops-maturity-and-best-practices.md
+        notes: >-
+          Next is architecture: mesh, fabric, the modern data warehouse, then access control and GDPR.

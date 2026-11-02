@@ -77,7 +77,16 @@ t = F.conv2d(torch.tensor(img).view(1, 1, 8, 8), torch.tensor(vertical_edge).vie
 print("matches nn.functional.conv2d:", np.allclose(t.numpy()[0, 0], edges))
 ```
 
-@@CONV@@
+```text
+input (8, 8) conv, no padding (6, 6) pad 1 (8, 8) stride 2 pad 1 (4, 4) pooled (4, 4)
+[[-0.2 -2.4 -2.6  1.1  2.8  1.2]
+ [-1.1 -2.2 -1.9  1.6  3.   1.1]
+ [-1.2 -2.5 -1.8  2.2  3.   0.7]
+ [-1.1 -2.6 -1.9  2.3  3.   0.7]
+ [-0.2 -3.  -2.8  2.1  3.   0.9]
+ [-0.1 -2.7 -2.9  1.3  3.   1.4]]
+matches nn.functional.conv2d: True
+```
 
 The filter responds where brightness changes from left to right, so the 1's two sides show up with opposite signs. In a CNN those filter values are weights, learned by the same `backward()`.
 
@@ -127,7 +136,10 @@ for name, build in [("MLP", mlp), ("CNN", cnn)]:
     print(f"{name}  params {n}  test {a:.3f}  test shifted one pixel {shifted:.3f}")
 ```
 
-@@CNNOUT@@
+```text
+MLP  params 4810  test 0.975  test shifted one pixel 0.473
+CNN  params 6090  test 0.983  test shifted one pixel 0.656
+```
 
 With similar parameter counts, the CNN is a little better on digits as given and far better when they move by a pixel. It is not fully shift-invariant: the max pool and the final linear layer still care about position, so its accuracy falls too. On 8×8 images the parameter counts are close, because the MLP is small. For a 64×64×3 image the first dense layer of 1,000 units would need about 12 million weights, against 448 for 16 filters of 3×3×3 with biases. That's the real argument for sharing. The **Application** notebook's TF graph translates line by line with [the translation table](01-neural-networks-fundamentals.md#translating-the-ng-notebooks-to-pytorch), and the same [`tf.contrib` status](01-neural-networks-fundamentals.md#tensorflow-1x-to-2x-status-and-migration-map) applies to it.
 
@@ -160,7 +172,14 @@ for blocks in [2, 10, 30]:
               f"train {accuracy(m, X_tr, y_tr):.3f}  test {accuracy(m, X_te, y_te):.3f}")
 ```
 
-@@RES@@
+```text
+6 layers plain     train 0.986  test 0.969
+ 6 layers residual  train 0.984  test 0.965
+22 layers plain     train 0.946  test 0.924
+22 layers residual  train 0.982  test 0.978
+62 layers plain     train 0.379  test 0.370
+62 layers residual  train 0.983  test 0.965
+```
 
 The plain 62-layer network has low training accuracy as well as test accuracy, so the problem is optimisation rather than overfitting. That is the paper's finding, on a small scale. Skip connections carried straight into Transformers.
 
@@ -194,7 +213,10 @@ print("IoU of boxes 0 and 1:", round(iou(boxes[0], boxes[1]), 3))
 print("kept:", nms(boxes, scores))
 ```
 
-@@NMS@@
+```text
+IoU of boxes 0 and 1: 0.822
+kept: [0, 2]
+```
 
 Two cars, five boxes, and two survive. `torchvision.ops.nms` does the same at speed.
 
@@ -247,9 +269,12 @@ print("seen digits    same %.3f  different %.3f" % gaps(X_te[seen], y_te[seen]))
 print("unseen 8 and 9 same %.3f  different %.3f" % gaps(X_te[~seen], y_te[~seen]))
 ```
 
-@@TRIP@@
+```text
+seen digits    same 0.331  different 0.935
+unseen 8 and 9 same 0.449  different 0.503
+```
 
-Seen classes separate cleanly, and the 8s and 9s barely at all. Eight training "identities" aren't enough for the embedding to generalise to new ones, which is why face systems train on very many people. The same loss idea, with text in place of faces, trains the models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md).
+Those are mean distances. Seen classes separate clearly (0.331 within a class against 0.935 across), and the 8s and 9s barely at all (0.449 against 0.503). Eight training "identities" aren't enough for the embedding to generalise to new ones, which is why face systems train on very many people. The same loss idea, with text in place of faces, trains the models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md).
 
 Self-supervised vision took the contrastive loss further, with no labels at all. CPC v2 trained a ResNet to predict the representation of a patch from the patches around it (above, below, left and right; the first version used only the context above), scored against negatives drawn from other patches and images ([arXiv:1905.09272](https://arxiv.org/abs/1905.09272) (Hénaff et al., ICML 2020)). It reached 71.5% ImageNet linear-probe accuracy, up from 48.7% for the first version. With 1% of the labels it scored 78.3% top-5 against 44.1% for supervised training, though the two runs used different architectures (over 500M parameters against ResNet-200's 60M). MoCo and SimCLR changed the positive pair to two augmented views of the same image. MoCo keeps a queue of encoded keys from past batches, so the number of negatives no longer depends on batch size. Keys come from a slowly updated copy of the encoder, with momentum 0.999 ([arXiv:1911.05722](https://arxiv.org/abs/1911.05722) (He et al., CVPR 2020)). With no momentum training failed, and at 0.9 linear accuracy was 55.2% against 59.0%. Its own linear accuracy was only 60.6%, yet its features transferred better than supervised ImageNet pretraining on 7 detection and segmentation tasks, by up to 3.7 AP on VOC when pretrained on 1B Instagram images (2.4 from ImageNet). SimCLR dropped the queue. Its negatives are the other 2(N−1) augmented images in a large batch, scored by cosine similarity with a temperature (the NT-Xent loss) ([arXiv:2002.05709](https://arxiv.org/abs/2002.05709) (Chen et al., ICML 2020)). Random cropping combined with colour distortion was the augmentation pair that mattered. The representation taken before a small projection head was over 10 points better than the one after it. A 4×-wide ResNet-50 reached 76.5% linear-probe accuracy, matching a supervised ResNet-50. Large batches mattered most for short training. With the learning rate scaled linearly with batch size, at 100 epochs batch 256 gave 57.5% against 64.8% at 8,192 (square-root scaling narrowed that to 62.8%), and at 800 epochs the gap narrowed to 66.6% against 69.0%. Speech took the CPC line and added BERT-style masking. wav2vec 2.0 encodes raw audio with a CNN into one frame per 20 ms, masks about half the frames, and has a transformer pick the true quantized frame at each masked position out of 100 distractors from the same utterance ([arXiv:2006.11477](https://arxiv.org/abs/2006.11477) (Baevski et al., NeurIPS 2020)). Only the targets are quantized. Quantizing the transformer's inputs as well raised dev WER from 7.97 to 12.18, and continuous targets made the task too easy (8.58). Pretrained on 53k hours of unlabelled LibriVox audio and fine-tuned with CTC on just 10 minutes of transcribed speech, the 317M model reached 4.8/8.2 WER on LibriSpeech test-clean/other, and with 1 hour it beat the previous best 100-hour system. Those numbers need a language model at decoding: without one, the 10-minute model scored 40.2/38.7. With all 960 labelled hours it tied supervised systems on the clean split (1.8 against 1.9) and led only on the noisy one (3.3 against 3.9). The same recipe of a contrastive loss with in-batch negatives trains the text embedding models in [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md).
 
@@ -299,9 +324,13 @@ for n in [20, 50, 100]:
     print(f"{n:>3} labels: contrastive + probe {np.mean(a):.3f}  supervised CNN {np.mean(b):.3f}")
 ```
 
-@@SIM@@
+```text
+20 labels: contrastive + probe 0.404  supervised CNN 0.618
+ 50 labels: contrastive + probe 0.571  supervised CNN 0.842
+100 labels: contrastive + probe 0.651  supervised CNN 0.900
+```
 
-Unlabelled pretraining helps most where labels are fewest, and the supervised model catches up as labels grow. The same shape is in CPC v2's result above, on a very different scale.
+Here the contrastive pretraining loses at every label count, which is worth seeing before quoting the papers. A small CNN learns digits from 20 labels quite well, there are only about 1,250 unlabelled rows, and a one-pixel roll with noise is a much weaker augmentation than the crops and colour changes in the papers. So the toy shows the mechanics of NT-Xent and a linear probe, and it does not reproduce the label-efficiency result, which CPC v2 and SimCLR report at ImageNet scale.
 
 ## Style transfer: optimising the input
 
@@ -333,7 +362,9 @@ for step in range(300):
 print(f"content cost {c0.item():.4f} to {c.item():.4f}, style cost {s0.item():.4f} to {s.item():.4f}")
 ```
 
-@@STYLE@@
+```text
+content cost 0.0000 to 0.0051, style cost 0.0058 to 0.0007
+```
 
 The style cost falls as the content cost rises from zero: the image gives up some of its match to its content to match the other's channel correlations. The `step` is on `img`, and no weight moved.
 
@@ -364,7 +395,11 @@ Every digits number here came from running the code shown. The numbers attribute
 
    <details><summary>Answer</summary>
 
-   @@A1@@
+   The convolution gives $\lfloor (32 + 4 - 5)/2 \rfloor + 1 = 16$, so 16×16×8, and the pool gives 8×8×8. Parameters are $8 \times (5 \times 5 \times 3) + 8 = 608$ with biases.
+
+   ```text
+   torch.Size([1, 8, 16, 16]) torch.Size([1, 8, 8, 8]) 608
+   ```
 
    </details>
 
@@ -372,7 +407,7 @@ Every digits number here came from running the code shown. The numbers attribute
 
    <details><summary>Answer</summary>
 
-   @@A2@@
+   Add `torch.roll(X_tr, 1, dims=3)` with the same labels and rerun `run(cnn(), X=..., y=..., lr=3e-3)` for three seeds. Mean accuracy on the original test set is 0.988, on the test set rolled the way training was 0.989, and on the test set rolled the other way 0.890. So the network now handles the shift it was shown, and the unseen direction is also far above the 0.656 from before. Augmentation is a cheap way to buy invariance, but only roughly for what you didn't show it.
 
    </details>
 
@@ -380,7 +415,7 @@ Every digits number here came from running the code shown. The numbers attribute
 
    <details><summary>Answer</summary>
 
-   @@A3@@
+   `threshold=0.1` returns `[0, 2]`, as all overlapping pairs exceed 0.1. `threshold=0.95` returns `[0, 2, 1, 4, 3]`, keeping all five, because the largest overlap here is 0.907, so nothing is suppressed. Too low a threshold would merge two nearby cars; too high leaves duplicates.
 
    </details>
 

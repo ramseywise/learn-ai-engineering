@@ -31,6 +31,10 @@ sources:
   - https://arxiv.org/abs/2602.04118 (TinyLoRA, RL reasoning gains with 13 trained parameters)
   - https://arxiv.org/abs/2512.07783 (Interplay of pre-, mid-training and RL, edge-of-competence data)
   - https://arxiv.org/abs/2510.14901 (Reasoning with Sampling, training-free power-distribution MCMC)
+  - https://arxiv.org/abs/2511.05933 (RL improves traversal of parametric knowledge)
+  - https://arxiv.org/abs/2606.26797 (TEMP, early-token loss for reasoning SFT data selection)
+  - https://arxiv.org/abs/2510.07312 (h1, curriculum RL on chained GSM8K problems)
+  - https://arxiv.org/abs/2602.06960 (InftyThink+, RL over summarize-and-resume reasoning rounds)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -219,6 +223,19 @@ above the base model's instead of falling below it. The cost is about 8.8× the 
 ordinary sample. The largest out-of-domain wins come from Phi-3.5-mini, whose GRPO baseline
 scored below its own base model. The paper reports single-shot scores with no seeds and no AIME.
 
+The same access-not-knowledge reading holds for factual recall. Across eight instruct and
+reasoning pairs from Qwen, DeepSeek and Kimi, the reasoning variant was up to 24 points better on
+MedConceptsQA code lookup. A prompt that told the instruct model to walk the code hierarchy cut
+DeepSeek-V3's 23.7-point deficit against R1 to 7.5 points
+([arXiv:2511.05933](https://arxiv.org/abs/2511.05933) (Zhang et al., 2025-11, preprint)). In a
+controlled test, GRPO on 731 PopQA facts that never co-occur in Dolma lifted Qwen3-8B-Instruct
+from 0% to **10.1% on 208 frequent but previously unanswerable facts with disjoint relations**.
+SFT on the same data reached 0.96%. Iterated rejection-sampling fine-tuning reached 9.62%, which
+is statistically tied with online GRPO, so the gain came from repeatedly training on fresh
+self-generated rollouts rather than from GRPO's negative signal. The instruct and reasoning
+pairs differ in undisclosed recipes, so only the injection experiment isolates RL, and it ran at
+8B and 30B-A3B.
+
 ### How little data and reward reasoning needs
 
 The cheap recipes of 2025 are the best evidence for the Yue reading, and most of them were
@@ -250,6 +267,18 @@ long CoT.
     examples. OpenThinker3-7B reached 53.3% AIME25 against 38.0% for R1-Distill-Qwen-7B.
   - QwQ-32B was a better teacher than DeepSeek-R1, although R1 scores higher itself.
   - Filtering traces for correct answers gave no significant gain.
+- **Choosing the 1,000 without an LLM judge.** TEMP
+  ([arXiv:2606.26797](https://arxiv.org/abs/2606.26797) (Jin et al., ICML 2026)) scores
+  difficulty by the loss on a trace's first 100 tokens under a noise-perturbed copy of the base
+  model. It clusters for diversity by the loss on the first 1k tokens at checkpoints extrapolated
+  along the fine-tuning direction.
+  - **Picking 1k of M23k's medical traces, it averaged 57.7% over 10 benchmarks on
+    Qwen2.5-7B-Instruct, against 56.6% for LLM-filtered m1k and 55.1% for random.** On
+    Llama-3.1-8B it scored 57.5% against 54.7% for random.
+  - It read 91% fewer tokens than the baselines on OpenThoughts-Math. On that already-filtered
+    pool its 43.9% math average was within noise of random's 43.1% (±3.2).
+  - The fine-tuning direction needs a model already fine-tuned on the pool, such as OpenThinker-7B,
+    and the token count leaves that cost out.
 - **AM-Thinking-v1** ([arXiv:2505.08311](https://arxiv.org/abs/2505.08311) (Ji et al., 2025-05,
   preprint)) is the same recipe at 32B, followed by RL.
   - 2.84M distilled SFT samples on Qwen2.5-32B base, then GRPO without KL on 54K math and code
@@ -284,6 +313,10 @@ long CoT.
 - Fatemi et al. ([arXiv:2504.05185](https://arxiv.org/abs/2504.05185) (Fatemi et al., 2025-04, tech report)) argue the growth is an optimization artifact, not reasoning. With per-token loss averaged over the response and GAE λ < 1, a negative terminal reward gives a PPO loss that shrinks like 1/length, so wrong answers push towards longer outputs and right ones towards shorter.
   - PPO on 4 OlympiadBench problems that R1-Distill-Qwen-1.5B never solved (reward fixed at −0.5) grew responses from about 12K to 20K tokens as the loss fell. GRPO on the same problems has zero advantage, so the KL term took over and outputs collapsed below 80 tokens.
   - Their fix is a second, short PPO phase on problems the model sometimes solves. **Eight MATH level-5 problems cut mean response length by 54% for R1-Distill-Qwen-1.5B and 40% for the 7B, with average accuracy over four benchmarks 57.0→58.4 and 71.6→72.1.** The average hides small math losses (MATH-500 84.2→81.0 at 1.5B) and rests on MMLU-STEM gains (40.6→53.1). Checkpoints were picked for shortest length at reasonable accuracy, and there is one run per setting, at 7B and below.
+- InftyThink+ removes the length cap by splitting the trace ([arXiv:2602.06960](https://arxiv.org/abs/2602.06960) (Yan et al., ICML 2026)). The model reasons in rounds of up to about 6–10K tokens, and each round ends with its own summary. The next round sees only the question and that summary. Every round of a trajectory shares one GRPO advantage, so a summary is credited when a later round gets the answer right. An SFT cold start on OpenThoughts traces, re-segmented with Qwen3-4B summaries, teaches the format. RL without it did not train stably.
+  - **On R1-Distill-Qwen-1.5B, task-reward RL took AIME24 avg@32 from 29.5% to 50.9%, against 26.7%→38.8% for ordinary long-CoT RL, at about two-thirds of the latency (103 s vs 175 s).** Multiplying in an iteration penalty cut average tokens from 20K to 10.7K and latency by half, for 3.4 points of average accuracy. The gain was smaller on Qwen3-4B-Base.
+  - After RL, swapping in an external model's summaries lowered AIME24 (50.9→48.4). Before RL the same swap had raised it. The summaries became part of the policy.
+  - **The budgets are not matched.** The iterative model could generate up to 10 × 8K tokens at test time and 5 × 10K in training, against a 32K and 30K cap for vanilla. There are no seeds. Delethink, a fixed-chunk alternative, was compared only by copying curves from its own paper.
 
 **Weak or no reward still moves Qwen2.5-Math.** Each of these tests the sharpening reading,
 and each gain shrinks off Qwen.
@@ -357,6 +390,8 @@ pretraining data held at least 1% of simple examples in it; at 0.1% RL did not t
 At equal compute, spending some of the budget on next-token training at the edge range before RL
 beat RL alone by 10.8 points on the hardest problems. Rewarding correct steps as well as the
 answer added 4–5 points of pass@1. All of it is synthetic arithmetic at 100M parameters.
+
+h1 builds the "just past the edge" data from a real model's existing problems. It chains GSM8K questions so that each one's input is the previous one's answer. Then it runs Dr. GRPO stage by stage on chains of length 1 to 5, 200 steps per stage, on Qwen2.5-3B-Instruct ([arXiv:2510.07312](https://arxiv.org/abs/2510.07312) (Motwani et al., 2025-10, preprint)). Chaining exposes skills beyond per-step accuracy. At 82.8% per question, independent errors predict 68.5% on two-question chains, but the model scored 35.1%. **Plain GSM8K RLVR left chains of two or more unchanged (39.4% at length 2). The curriculum reached 58.5% at length 2 and 9.8% at length 5 (from 3.6%), and stayed above the instruct model at pass@128 on unseen lengths 6–8.** Training on length 5 alone, or on a uniform mix of lengths, gave nothing. The paper's argument: outcome-reward signal-to-noise falls with the success rate, so long chains need a curriculum. The transfer is smaller than the abstract's "2.06×" suggests. AIME 2024 avg@32 went from 5.1% to 10.5%, MATH-500 64.2→69.2 and AIME 2025 1.8→3.0, all from one 3B run with no seeds.
 
 ## Pitfalls
 

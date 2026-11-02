@@ -31,6 +31,7 @@ sources:
   - https://arxiv.org/abs/2504.09639 (R1 answers as SFT data for non-reasoning models)
   - https://arxiv.org/abs/2404.07503 (best practices on synthetic data)
   - https://arxiv.org/abs/2408.16737 (compute-matched sampling from weaker teachers)
+  - https://arxiv.org/abs/2510.06499 (Webscale-RL, pretraining documents converted to verifiable QA)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -77,6 +78,8 @@ The asynchronous trainers behind both are in
 - **Coverage**, including the long tail.
 - **Diversity**, or the model collapses to one mode.
 - **Label accuracy.** Filter wrong CoT before you distill it.
+
+**Verifiable QA can be mined from pretraining text.** Webscale-RL has GPT-4.1 turn about 1M DCLM, Wikipedia, MegaMath and Stack-v2 documents into 1.2M short-answer questions across 9+ domains, using up to 3 personas per document. Each answer is checked against its source document ([arXiv:2510.06499](https://arxiv.org/abs/2510.06499) (Cen et al., 2025-10, preprint)). Qwen2.5-3B got a 10K SFT warm-up, then GRPO on 150K of the pairs. **Its seven-benchmark average went from 47.6 to 52.1, where continual pretraining on the same documents plus the same SFT reached 48.3.** MATH500 went 47.6→58.0, while coding barely moved (EvalPlus 57.3→57.8). The "100× fewer tokens" figure counts the source documents behind the QA pairs, and on the RL side those pairs were written and checked by GPT-4.1. So the comparison is RL on a strong model's extraction against imitation of raw text, at 3B, with one seed. Grading is a generative reward model matching against the answer, which adds inference cost to every rollout. For RL on the next token itself, with no QA step, see [01](01-rl-foundations.md#rl-applied-to-llms).
 
 ### Data engineering for post-training
 

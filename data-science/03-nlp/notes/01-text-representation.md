@@ -380,7 +380,7 @@ flowchart LR
 ## Reading and notebooks
 
 - *Natural Language Processing with Python* (Bird, Klein & Loper) in [`sources/`](../../sources/bird-klein-loper-nlp-with-python.pdf): chapters 1–3 (corpora, raw text, regex, normalisation) and 5 (tagging) are the NLTK reference for this chapter.
-- Sarkar chapters 3–4 in [`sources/`](../../sources/sarkar-text-analytics-with-python-2e.pdf).
+- Sarkar's *Text Analytics with Python*: the 2nd edition's chapters 3–4 match the notebooks below. The [PDF in `sources/`](../../sources/sarkar-text-analytics-with-python-2e.pdf) has the text of the 1st edition despite its file name (2016, seven chapters), where this material is in chapters 3–4 too, in shorter form.
 - M&G chapter 7 in [`sources/`](../../sources/mueller-guido-introduction-to-ml-with-python.pdf).
 
 | Notebook | Covers | Runs |

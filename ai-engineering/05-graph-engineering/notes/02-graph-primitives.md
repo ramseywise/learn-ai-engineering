@@ -7,11 +7,13 @@ sources:
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: high
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 2 — Graph Primitives
 
 > Nodes, edges, and the smallest LangGraph program. The design skill is deciding how much agency each node gets.
+
+Most graphs waste their first decision. A step that could be a function call becomes an agent, and the team pays tokens and variance for a parse. A router whose label nothing checks then sends a question down the wrong branch and returns a confident answer with no error anywhere. This chapter sets out what a node can be, how to budget agency per node, and how to make edges fail loudly.
 
 ---
 
@@ -73,7 +75,7 @@ The line under level 3 matters most. Up to the router, a human still decides wha
 
 ---
 
-## Edges choose what runs next
+## Edges choose what runs after a node
 
 Edges define which node executes next.
 
@@ -272,4 +274,60 @@ flowtivity also lists OpenClaw "Code Mode" (the model writes a small program ins
 
 ---
 
-→ Next: [03-state-and-reducers.md](03-state-and-reducers.md) — what nodes share, and what happens when two write the same key.
+## Pitfalls
+
+- **Making an agent of a node that could be code.** Symptom: token cost and output variance on a step such as fetching docs or formatting a reply. Fix: ask "could this be code?", then "could this be one call?", and only then make it an agent, as LangChain's docs agent does.
+- **Trusting a `Literal` in a `TypedDict`.** Symptom: `domain: Literal["records", "insurance"]` looks enforced, yet "Records." goes to insurance and nothing errors. Fix: it is only a type hint, so constrain the reply with a schema.
+- **Using one branch as the fallback.** Symptom: an `else` quietly gives every unrecognised label the insurance retriever and the insurance prompt. Fix: let the router say "unclear", and make the fallback a real node, such as one that asks a clarifying question.
+- **A back-edge with no bound.** Symptom: the run ends only at `GraphRecursionError`, or doesn't end at the point you wanted. Fix: put a counter in state and check it in the router, as `MAX_ATTEMPTS` does in generate-then-verify ([07](07-failure-modes-at-scale.md#mechanical-failures)).
+- **Paying the LLM reviewer for what code can catch.** Symptom: the reviewer spends a call on an empty draft or a schema failure. Fix: put a deterministic validator on the edge before the reviewer.
+- **Crossing the line under level 3 without noticing.** Symptom: a router gains a back-edge, and now the LLM decides when to stop, but no one added a bound or an eval. Fix: treat the step from level 3 to level 4 as a design change, because the graph has stopped being a DAG.
+
+## Try it
+
+1. Place each on the autonomy ladder: (a) a fixed chain that extracts, then summarises; (b) a classifier that picks one of three retrievers and never comes back; (c) a draft that is revised until a reviewer passes it; (d) an agent that writes and runs code for an action nobody pre-programmed.
+
+   <details><summary>Answer</summary>
+
+   (a) Level 2, chain. (b) Level 3, router: conditional edges, no cycles. (c) Level 4, state machine: the back-edge means the LLM decides when to stop. (d) Level 5, autonomous: it also decides which steps exist.
+
+   </details>
+
+2. Feed `"records"`, `"Records"`, `"records."` and `"medical"` to the book's `pick_retriever` above. Which reach the records retriever?
+
+   <details><summary>Answer</summary>
+
+   Only `"records"`. The other three reach `retrieve_insurance_faqs`, with no error. In the fixed version the schema rejects anything outside the allowed values and `unclear` has its own node.
+
+   </details>
+
+3. In the generate-then-verify program, trace a draft that the reviewer fails every time. How many times does `generate` run, and what does the caller see?
+
+   <details><summary>Answer</summary>
+
+   Three times, because `attempts` reaches `MAX_ATTEMPTS = 3` and `after_review` returns `END`. The caller gets `verdict == "fail"` and three reviewer lines in `feedback`, and it decides what to do next.
+
+   </details>
+
+4. Run the pillar lab, a support-triage graph that uses these primitives with a stub model: `uv run run.py` in [practice/langgraph-graph](../practice/langgraph-graph/README.md). Find one node that is code, one that is a router and one human checkpoint.
+
+   <details><summary>Answer</summary>
+
+   In `graph.py`, `gather` is plain code, `classify` is one model call that a conditional edge routes on, and `approve` calls `interrupt`. The README's "Things to try" list continues the exercise.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What can a node be? | Deterministic code, a router, a single LLM call, an agent with its own tool loop, or a human checkpoint. Each costs differently, and one graph should mix them. |
+| What does "spend agency per node" mean? | Give each node the least agency that can do its job, since every node that could be code and isn't costs tokens and variance. LangChain's docs agent is a fixed API call, one LLM call with no tools, and one agent node for the open-ended part. |
+| Where is the important line on the autonomy ladder? | Under level 3. Up to the router a human decides what can happen and the graph is a DAG; from the state machine down, back-edges let the LLM decide when to stop. |
+| Why is `Literal` in a `TypedDict` not enough for a router? | It is a type hint that nothing checks at runtime, so any other string falls through to the `else` branch without an error. Use a schema, an "unclear" value and a real fallback node. |
+| A router occasionally gives a confident wrong answer and logs show no errors. Where do you look? | At what its unrecognised labels fall through to, and at the route distribution. Then evaluate the router alone on a labelled set, as a classifier. |
+| When do you use `Command(goto=, update=)` rather than a separate router? | Use `Command` when the node doing the work is the only one that knows where to go next, and a separate router when the routing logic should be testable on its own. |
+
+## Next
+
+[03-state-and-reducers.md](03-state-and-reducers.md): what nodes share, and what happens when two write the same key.

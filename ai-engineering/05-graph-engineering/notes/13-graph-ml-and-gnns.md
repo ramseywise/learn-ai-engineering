@@ -5,11 +5,13 @@ sources:
   - sources/kg-and-llms-in-action/ch09-ml-on-knowledge-graphs.pdf
   - sources/kg-and-llms-in-action/ch10-graph-feature-engineering.pdf
 confidence: medium-high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 13 — Learning on Graphs: Tasks and Features
 
 > Notes 09–12 query the edges a graph already has. Graph ML predicts the ones it doesn't: missing links, unlabeled nodes, hidden communities. A prediction is a claim, not a fact, so it enters the graph with a confidence score.
+
+Standard classifiers assume independent rows, and a node's label depends on its neighbours. Fit one without that in mind and you get a model that sees test labels through its features, or a feature that only rewards hubs. This chapter frames what graph ML can predict, then builds the features: hand-written ones, DWPC over metapaths, and ReFeX, before anything is learned.
 
 All book citations in this note are to Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), abbreviated *KG & LLMs in Action*.
 
@@ -256,4 +258,60 @@ Depth: [ch. 4 PDF](../sources/kg-and-llms-in-action/ch04-multisource-integration
 
 ---
 
-→ Next: [13b-representation-learning-and-gnns.md](13b-representation-learning-and-gnns.md): when hand-built features stop scaling, learn the vectors instead.
+## Pitfalls
+
+- **Reading numbers from a tiny test set.** Symptom: karate club's F1 of 0.43, 0.64 and 0.93 are treated as a ranking. Fix: 14 test nodes means one node moves F1 by several points, so repeat across splits.
+- **Label leakage through features.** Symptom: "neighbours in faction A" computed over all labels. Fix: compute it from training labels only.
+- **Different featurisation at prediction time.** Symptom: scores drift as the graph changes. Fix: use exactly the training featurisation at prediction time.
+- **Counting paths through hubs.** Symptom: a generic process with 21 paths outranks T cell costimulation. Fix: damp with DWPC, where it falls behind 0.0335.
+- **Comparing DWPC across metapaths.** Symptom: an LLM prompt lists scores from different metapaths side by side, as ch. 4's does. Fix: compare only within one metapath and one *w*.
+- **Reaching for embeddings first.** Symptom: untuned Node2Vec at 0.64 loses to a hand-written homophily feature at 0.93. Fix: write the features you can explain as a baseline.
+
+## Try it
+
+1. Rerun the karate-club comparison 10 times per feature set and report the mean and spread of F1. Then tune Node2Vec until it matches the homophily baseline, or explain why it can't.
+
+   <details><summary>Answer, without Node2Vec</summary>
+
+   A logistic regression over 10 stratified splits with 40% test, scored by macro F1, gave this on our run. Your numbers will vary with classifier and seed, and they aren't the book's setup, though the ordering matches:
+
+   ```text
+   degree                         mean 0.44 sd 0.10 min 0.27 max 0.57
+   homophily, train labels        mean 0.90 sd 0.06 min 0.78 max 1.00
+   homophily, all labels (leak)   mean 0.92 sd 0.07 min 0.78 max 1.00
+   ```
+
+   A spread of 0.10 is why a single-split comparison means little here. The leak barely shows on this graph, since most test nodes' neighbours are in training, so leakage can be hard to see by looking at scores.
+
+   </details>
+
+2. Compute the DWPC of a two-edge path with endpoint degrees 4, 2, 1, 4 at *w* = 0.4. Then compute it at *w* = 0, and say what that means.
+
+   <details><summary>Answer</summary>
+
+   (4 × 2 × 1 × 4)^(−0.4) = 32^(−0.4) ≈ 0.25. At *w* = 0 every path scores 1, which is the plain path count, with no hub damping.
+
+   </details>
+
+3. On the fraud toy graph, would you use personalised PageRank toward known fraudsters on a graph where labels update each week? What has to happen at scoring time?
+
+   <details><summary>Answer</summary>
+
+   It is a good risk signal, but it uses labels, so it has to use only what was known at the scoring date, with the same parameters as in training. Otherwise it leaks future labels and breaks the featurisation-parity rule.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why are graph tasks semi-supervised? | Training sees the whole graph, unlabelled nodes included; only their labels are missing, and their neighbourhoods still inform the model. |
+| Homophily or structural equivalence? | Homophily says connected nodes are alike, and structural equivalence says nodes with similar neighbourhoods play similar roles even when far apart. They need different features. |
+| Why isn't community detection K-means? | K-means needs *k* up front and treats records as independent points, while Louvain and label propagation use the graph directly and need no training. |
+| Why write features by hand at all? | They are explainable, they work on small graphs, and they set a baseline: karate club got 0.93 from homophily against 0.64 from untuned Node2Vec, on 14 test nodes. |
+| What does DWPC fix, and what doesn't it let you do? | It discounts hubs in path counts, but scores compare only within one metapath and one exponent. |
+| You are predicting links on a changing graph. What is the hard rule? | Featurisation at prediction time must be exactly the one used at training time. |
+
+## Next
+
+[13b-representation-learning-and-gnns.md](13b-representation-learning-and-gnns.md): when you'd rather learn the features, and how GNNs and LLMs combine.

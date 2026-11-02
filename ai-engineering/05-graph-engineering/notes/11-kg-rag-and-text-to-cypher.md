@@ -10,11 +10,13 @@ sources:
   - https://neo4j.com/docs/neo4j-graphrag-python/current/
   - "flowtivity.ai (vendor, Tier 2): https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/"
 confidence: medium-high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 11 — KG-Powered RAG and Text-to-Cypher
 
 > Vector search finds text that sounds like the question. A graph finds things connected to the answer. Text-to-Cypher reaches the graph from natural language, and it is reliable only as a generate-then-verify loop.
+
+Vector RAG can rank three chunks at 0.906, 0.903 and 0.902 for a question about Lauritsen when only one of them mentions him. A graph fixes that class of failure and brings others: triples drop the condition in a plan, and generated Cypher can run cleanly and return nothing. This chapter covers what a graph adds, how to choose a retrieval mode, and the prompt behind reliable text-to-Cypher.
 
 ---
 
@@ -477,4 +479,44 @@ Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 
 
 ---
 
-→ Next: [11b-text-to-cypher-qa-agent.md](11b-text-to-cypher-qa-agent.md): the same pipeline wired as a LangGraph graph with bounded retries.
+## Pitfalls
+
+- **Quoting 53.4% vs 42.9% as a result.** Symptom: a slide with a multi-hop figure traced only to a vendor post. Fix: cite Edge et al. for what it did measure, LLM-judged comprehensiveness and diversity, with vector RAG winning directness.
+- **Storing only triples.** Symptom: "cancel the beach trip if it rains" survives as `(user, plans, beach trip)`. Fix: keep the source text next to the triple, and return it.
+- **Returning subgraphs by default.** Symptom: context fills with loosely related paths. Fix: match the unit to the question, smallest first.
+- **A schema with undocumented encodings.** Symptom: `color = "black"` returns nothing over stored `"BLK"`, and the user concludes no black car was involved. Fix: annotate value encodings in an LLM-ready schema.
+- **Reading empty as "no".** Symptom: `WHERE addr.city = 'California'` returns nothing, because California is a state. Fix: treat an empty result as something to check, and prefer canned queries for known questions.
+- **No way for the model to refuse.** Symptom: plausible Cypher for a question the schema can't answer. Fix: "use only the schema", plus `success: false` with a reason.
+
+## Try it
+
+1. For each, name the retrieval unit: (a) "when was this company founded?"; (b) "how is Lauritsen related to cyclotron research?"; (c) "what are the main themes across these diaries?"
+
+   <details><summary>Answer</summary>
+
+   (a) Node, a targeted lookup. (b) Path, restricted by rule or shortest paths because paths grow exponentially. (c) Community summaries, since similarity gives partial answers to aggregate questions.
+
+   </details>
+
+2. Write the annotation that stops the `"BLK"` failure, in the schema style this chapter uses, and say what else belongs in the KG-specific notes for that graph.
+
+   <details><summary>Answer</summary>
+
+   `color: STRING, /* abbreviated: BLK, GRY, SIL, WHI, ... */` on the vehicle node. In the KG-specific notes, add per-graph tips such as "`location` is a Neo4j point, use `point.distance`", which is in metres.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Name failures of vector RAG that a graph helps with. | Context fragmentation, embedding compression, and misses on aggregate questions: similarity optimises closeness, not coverage. |
+| What did Edge et al. actually show? | GraphRAG won LLM-judged head-to-heads on comprehensiveness (72–83%, 72–80%) and diversity (75–82%, 62–71%), and vector RAG won directness. It wasn't a ground-truth accuracy measure. |
+| What do triples lose? | Conditions and nuance, so the beach-trip plan loses "if it rains". Extraction errors also contaminate the graph, so keep the source text. |
+| How do you make text-to-Cypher reliable before retries? | An LLM-ready schema with value annotations, a query-writing prompt allowing `success: false`, the question restated last, and an `information` slot for the error on retry. |
+| Would you use text-to-Cypher for "firms near Palo Alto"? | No, if it is a known question: a fixed query with a parameter and `point.distance` in metres is cheaper and more reliable. |
+| What failure should you expect in L7? | Filtering `value` on the wrong node, which runs without any error from the database. A validator catches it. |
+
+## Next
+
+[11b-text-to-cypher-qa-agent.md](11b-text-to-cypher-qa-agent.md): the same pipeline wired as a LangGraph graph with validation and retries.

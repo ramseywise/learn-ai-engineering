@@ -1,7 +1,9 @@
 """Run every Python block in the pillar's notes and compare it with its printed output.
 
     uv run --with numpy --with scikit-learn --with faiss-cpu --with duckdb --with pydantic \
-        --with opentelemetry-sdk --with fastembed python check_blocks.py [note-prefix ...]
+        --with chromadb --with sentence-transformers --with bm25s --with tiktoken \
+        --with langchain-text-splitters --with opentelemetry-sdk --with fastembed \
+        --with boto3 python check_blocks.py [note-prefix ...]
 
 A block whose first lines contain "# illustrative" is skipped: it needs paid APIs or
 infrastructure and says which. A ```text fence directly after a block is treated as

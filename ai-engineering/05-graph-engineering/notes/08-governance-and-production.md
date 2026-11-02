@@ -7,11 +7,13 @@ sources:
   - https://medium.com/@rajveer.rathod1301/inside-n8ns-ai-workflow-builder-a-complete-architecture-deep-dive-f2eeb2d57ec8
   - https://docs.n8n.io/deploy/host-n8n
 confidence: medium
-cleaned: 2026-10-28
+cleaned: 2026-11-01
 ---
 # 8 — Governance and Production
 
 > Once work fans out across nodes, "the graph did it" is not an audit answer. Attribute every call, budget per node, gate the consequential edges.
+
+"The graph did it" is not an answer when the bill triples or a tool breaks production. One run can spawn fifty nodes, so a per-run total tells you it went wrong and nothing about which node did it. This chapter covers the identifiers every call has to carry, budgets at three levels, gates, model aliases, and how n8n's workflow builder applies them with published constants.
 
 ---
 
@@ -44,6 +46,41 @@ Graphs amplify spend through fan-out, retries and dynamically spawned subtasks. 
 | **Per tenant or team** | One customer or team consuming the shared budget |
 
 Per-node attribution is what makes the first one possible. Without `node_id` on every call, you only learn that a run was expensive, not why.
+
+The script below runs one graph with a misbehaving `discovery` node under two budgets. The costs are made up; the difference between the two lines is the point. With a per-run cap alone, the loop eats almost the whole budget before anything stops it. A per-node cap stops it at a third of that, and in both cases the ledger says exactly who spent what.
+
+```python
+# Same run, two budgets. The ledger rows carry graph_id, run_id and node_id, so spend has an owner.
+from collections import Counter
+
+PLAN = ["planner"] + ["discovery"] * 40 + ["builder", "reviewer"]   # discovery has gone wrong
+COST = {"planner": 1_000, "discovery": 800, "builder": 2_000, "reviewer": 500}
+
+def run(run_cap, node_caps):
+    ledger, spent = [], Counter()
+    for node in PLAN:
+        if sum(spent.values()) + COST[node] > run_cap:
+            return ledger, f"run cap hit at {node}"
+        if spent[node] + COST[node] > node_caps.get(node, run_cap):
+            return ledger, f"node cap hit at {node}"
+        spent[node] += COST[node]
+        ledger.append({"graph_id": "triage@v3", "run_id": "r-1", "node_id": node, "tokens": COST[node]})
+    return ledger, "finished"
+
+for name, caps in [("per-run only", {}), ("per-run + per-node", {"discovery": 8_000})]:
+    ledger, why = run(30_000, caps)
+    by_node = Counter()
+    for row in ledger:
+        by_node[row["node_id"]] += row["tokens"]
+    print(f"{name}: {why}; spent {sum(by_node.values())}; {dict(by_node)}")
+```
+
+Output:
+
+```text
+per-run only: run cap hit at discovery; spent 29800; {'planner': 1000, 'discovery': 28800}
+per-run + per-node: node cap hit at discovery; spent 9000; {'planner': 1000, 'discovery': 8000}
+```
 
 The tenant level is the one a run-scoped framework can't enforce on its own, because the limit has to hold across many concurrent runs. [TrueFoundry](https://www.truefoundry.com/blog/graph-engineering-enterprise-guide) puts it in the gateway: each team or tenant gets a virtual account (or a metadata tag on every call), and the budget rule is keyed on that, with separate limits per account. That is a vendor selling a gateway, but the shape holds with any proxy: the budget key has to be something every call carries, which is one more reason to propagate the IDs above.
 
@@ -133,7 +170,7 @@ n8n self-hosts via npm, Docker or Docker Compose, with provider guides for AWS, 
 
 ---
 
-## Next layer
+## What governance leaves open
 
 Governance tells you what ran and what it cost. It doesn't tell you whether the answer was right. That is [the Eval pillar](../../../generative-ai/08-eval/README.md): measuring graph correctness, router accuracy, and coordination quality across runs.
 
@@ -145,4 +182,53 @@ Governance tells you what ran and what it cost. It doesn't tell you whether the 
 
 ---
 
-→ Next: [09-kg-fundamentals-and-cypher.md](09-kg-fundamentals-and-cypher.md) — Track B: knowledge graphs.
+## Pitfalls
+
+- **Tracing the graph you drew.** Symptom: the diagram shows four nodes and the bill shows fifty calls, and no one can say which ran. Fix: with `Send` and conditional edges the graph that ran isn't the one you drew, so record the actual runtime work graph.
+- **Only a per-run cap.** Symptom: one looping node uses almost the whole run budget, and the run dies before the nodes that matter get to go. Fix: budget per node as well, using `node_id` on every call.
+- **Expecting a run-scoped framework to hold a tenant limit.** Symptom: each run is within budget and one customer still consumes the shared budget across concurrent runs. Fix: enforce it where calls converge, such as a gateway keyed on a virtual account or a metadata tag.
+- **Hard-coded model IDs.** Symptom: a model change means a code change everywhere and has no per-node rollback. Fix: route through a named alias such as "reviewer-model".
+- **Taking a teardown's numbers as fact.** Symptom: n8n's constants copied into a design as if n8n had published them. Fix: they come from Rathod's third-party teardown, so check them against the n8n repository first.
+- **Letting the artifact fill the context.** Symptom: an agent editing a large workflow spends its window reading it. Fix: cap the artifact under construction, as n8n's builder does at 30K tokens in a 200K window, with compaction at 150K.
+
+## Try it
+
+1. In the budget script, set the `discovery` cap to 4,000 and raise the run cap to 100,000. What is spent in each mode, and does the per-run-only run finish?
+
+   <details><summary>Answer</summary>
+
+   Per-run only finishes, spending 35,500: planner 1,000, discovery 32,000, builder 2,000, reviewer 500. So a loose run cap hides the fault, and 90% of the spend sits in one node. With the node cap, the run stops at 5,000 spent: planner 1,000, discovery 4,000.
+
+   </details>
+
+2. Score a graph of your own, or the [pillar lab](../practice/langgraph-graph/README.md), against the seven-question production checklist. Which questions can you answer yes to, with evidence?
+
+   <details><summary>What to look for</summary>
+
+   The lab has a run identity (`thread_id`) and an approval checkpoint, so those two can be yes. It is a lab, with no tenant budgets or gateway records, so don't tick those. The honest result is a list of gaps with an owner for each.
+
+   </details>
+
+3. n8n's builder compacts at 150K of a 200K window. Compute the threshold for a 1M window using the same ratio, and say what the 30K artifact cap would become if you kept the same share.
+
+   <details><summary>Answer</summary>
+
+   75% of 1M is 750K. 30K of 200K is 15%, which is 150K. The ratio is a starting point rather than a rule: the idea worth keeping is that the agent can't fill its own context with what it is editing.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Which identifiers should every call carry, and why? | `graph_id` to compare and roll back topology versions, `run_id` or `thread_id` to group and resume a run, and `node_id` for per-node cost, latency and error rate. |
+| Why record the actual runtime work graph? | With `Send` and conditional edges, the graph that ran isn't the one you drew. Traces are the only record of which nodes ran, how many times and in what order. |
+| At what levels do you budget, and what does each guard against? | Per node for one node looping or fanning out, per run for a whole run going wrong, per tenant for one customer consuming shared budget. |
+| Why can't the framework enforce a tenant budget? | The limit must hold across many concurrent runs, and a run-scoped framework only sees one. TrueFoundry's answer, which is also what it sells, is a gateway rule keyed on a virtual account or metadata tag. |
+| What does a model alias buy you? | A model change becomes a config change you can roll out and roll back per node, rather than a code edit. |
+| What is the transferable lesson from n8n's context budget? | Compaction starts at 75% of the window (150K of 200K), and the artifact under construction is capped at 30K tokens, so the agent can't fill its context with what it is editing. These come from a third-party teardown. |
+| A run's cost doubled overnight. How do you find out why? | Group the trace by `node_id` and compare it with the prior `graph_id`. Without `node_id` on every call, you only learn that the run was expensive. |
+
+## Next
+
+[09-kg-fundamentals-and-cypher.md](09-kg-fundamentals-and-cypher.md): Track B, knowledge graphs. Track A ends here, and [the Eval pillar](../../../generative-ai/08-eval/README.md) picks up the question governance leaves open, whether the answer was right.

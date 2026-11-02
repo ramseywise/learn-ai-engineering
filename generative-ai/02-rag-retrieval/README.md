@@ -7,7 +7,7 @@
 
 ## What it is
 
-Retrieval-augmented generation (RAG) augments a language model with external knowledge at inference time. It fetches relevant documents, puts them into the context and lets the model write the answer from them. It was the first widely deployed pattern that turned LLMs from demos into production systems.
+Retrieval-augmented generation (RAG) gives a language model external knowledge at inference time. It fetches relevant documents, puts them into the context and lets the model write the answer from them. It was the first widely deployed pattern that turned LLMs from demos into production systems.
 
 This pillar covers the pipeline end to end:
 - ingestion and chunking;
@@ -17,34 +17,28 @@ This pillar covers the pipeline end to end:
 - grounded generation and citations;
 - tracing, evaluation, cost and latency in production.
 
-Then come seven write-ups from a real support-agent RAG project.
+Then come five write-ups from production: one published stack and four chapters from a real support-agent RAG project, the last of which compares two managed services with building your own.
 
 > **Retrieval sets the ceiling: the LLM can't cite a document the retriever never returned.**
 
 Retrieval as one context lever (just-in-time retrieval, contextual retrieval, memory) lives in [02-context 04](../../ai-engineering/02-context-engineering/notes/04-retrieval.md). Knowledge graphs as a retrieval layer live in [05-graph 11](../../ai-engineering/05-graph-engineering/notes/11-kg-rag-and-text-to-cypher.md). This pillar does not repeat either.
 
-## Start here
+## Why it matters
+
+Most LLM applications at work need to answer from a company's own documents, and RAG is the default way to do it. Nearly all of its failures are retrieval failures that look like model failures: the answer reads well and is wrong, because the right passage never reached the prompt, or a stale one did. Knowing how to find which stage broke, and how to measure the fix, is the core skill here. It is also a standard topic in AI engineering interviews.
+
+## The story
+
+The whole pillar follows one running example. Tallybook is a small invoicing product, and its support bot tells a customer they have 14 days to get a refund. The current policy says 30. The 14 came from a 2024 archive page that is still in the index, and it scores about as well as the real one. Chasing that one wrong answer takes you through the pipeline. You ask how the bot found the page at all ([01](notes/01-rag-pipeline.md), [02](notes/02-why-rag-and-the-augmented-prompt.md)), then why search scored it highly and how to measure that ([03](notes/03-keyword-semantic-and-hybrid-search.md)). You look at where the vectors live ([04](notes/04-vector-databases-and-ann.md)), how the page was cut up and reranked ([05](notes/05-chunking-query-parsing-and-reranking.md)), what the model does with two contradictory passages ([06](notes/06-generation-for-rag.md)) and how you would catch this in production ([07](notes/07-rag-in-production.md)). The later chapters widen the view: a real multi-agent stack, choosing a store, caching answers, deciding which fix is worth building from an eval table, and finally asking whether to buy all of it from a cloud provider.
+
+## Reading order
 
 1. Read [01 The RAG pipeline](notes/01-rag-pipeline.md) for the map.
-2. Work through 02–07, the DeepLearning.AI course condensed with its lab code, one note per module.
-3. Read 08–14 as case studies: one published production stack (Bayer's PRINCE) and six project specs.
-4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary.
+2. Work through 02–07, the DeepLearning.AI course condensed with its lab code and worked examples, one note per module.
+3. Read 08–12 as case studies: Bayer's PRINCE stack, then the support-agent project's store comparison, cache, ablations and managed backends.
+4. Keep the [rules of thumb](#rules-of-thumb) as the one-page summary, and the [deck](slides/rag-retrieval.pptx) for review.
 
-## Layout
-
-```
-README.md      this file: overview, start here, rules of thumb, resource map
-references.md  every source the notes cite, mapped to notes; source quality
-notes/         01–14; figures and code inline
-sources/       paper PDFs, routed book chapters (<book-slug>/chNN-*.pdf)
-  images/      every figure the notes use (<author>-<slug>-…)
-```
-
----
-
-## Syllabus
-
-Note 01 is the overview. Notes 02–07 are the course. Notes 08–14 are production write-ups that apply it.
+Note 01 is the overview. Notes 02–07 are the course. Notes 08–12 are production write-ups that apply it.
 
 | # | Note | Covers |
 |---|---|---|
@@ -58,10 +52,8 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–14 are product
 | 8 | [Agentic RAG: the PRINCE stack](notes/08-agentic-rag-prince.md) | Intent clarification, ingestion, the query-time pipeline, Text-to-SQL, domain sub-agents, NER metadata repair, evaluation |
 | 9 | [Vector database comparison](notes/09-vector-database-comparison.md) | Side-by-side stores, when to use which, embedding ↔ dimension compatibility, HNSW vs. ANNOY, migration |
 | 10 | [Semantic cache](notes/10-semantic-cache.md) | A three-tier cache for support agents: offline index, runtime module, routing, eval and merge criteria |
-| 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, prioritised research items |
-| 12 | [Bedrock knowledge bases](notes/12-bedrock-knowledge-bases.md) | Reference spec: two retrieval modes, pipeline, cleaning, reranker, storage mapping, smoke test |
-| 13 | [GCP Vertex vs. Bedrock](notes/13-gcp-vertex-vs-bedrock.md) | The same job on two clouds: architecture, behaviour, eval axis, when to switch |
-| 14 | [kb_rag pipeline ADR](notes/14-kb-rag-pipeline-adr.md) | A self-built deterministic pipeline: module map, chunkers, rerankers, parsing, deferred items |
+| 11 | [Retrieval improvements](notes/11-retrieval-improvements.md) | Baseline eval, what the ablations showed, how much 32 queries can prove, prioritised research items |
+| 12 | [Managed RAG: Bedrock, Vertex, and building your own](notes/12-managed-rag.md) | Bedrock KB reference spec, Vertex comparison, score semantics, when to switch, and the `kb_rag` decision record |
 
 ## Rules of thumb
 
@@ -81,6 +73,31 @@ Note 01 is the overview. Notes 02–07 are the course. Notes 08–14 are product
 | Filter by user permission at retrieval time. Prompt instructions are not access control | [07](notes/07-rag-in-production.md) |
 | Ask a clarifying question before retrieving on an ambiguous query | [08](notes/08-agentic-rag-prince.md) |
 | Counting, filtering and aggregation are Text-to-SQL jobs, not vector search | [01](notes/01-rag-pipeline.md), [08](notes/08-agentic-rag-prince.md) |
+| On a small eval set, test a difference with a paired bootstrap before believing it | [11](notes/11-retrieval-improvements.md) |
+| Never compare scores across modes or backends. Compare systems on eval metrics | [12](notes/12-managed-rag.md) |
+| A managed service takes the index, not the eval set or the decision about what goes in | [12](notes/12-managed-rag.md) |
+
+## Deck and practice
+
+- **Deck:** [slides/rag-retrieval.pptx](slides/rag-retrieval.pptx), one slide or more for every note, built from [slides/deck.yaml](slides/deck.yaml). Rebuild with `make slides PILLAR=generative-ai/02-rag-retrieval STRICT=1` from the repo root.
+- **Practice:** [practice/](practice/README.md) holds the Tallybook corpus and a small retrieval kit that needs only NumPy, plus the checker that runs every code block in these notes:
+
+```bash
+cd generative-ai/02-rag-retrieval/practice
+uv run --with numpy python ragkit.py        # the BM25, dense and hybrid scoreboard
+```
+
+## Layout
+
+```
+README.md      this file: what, why, reading order, rules of thumb, resource map
+references.md  every source the notes cite, mapped to notes; source quality
+notes/         01–12; figures and code inline
+practice/      ragkit.py (Tallybook corpus and retrieval kit), check_blocks.py
+slides/        deck.yaml and the built deck
+sources/       paper PDFs, routed book chapters (<book-slug>/chNN-*.pdf)
+  images/      every figure the notes use (<author>-<slug>-…)
+```
 
 ---
 

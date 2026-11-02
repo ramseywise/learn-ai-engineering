@@ -11,6 +11,8 @@ cleaned: 2026-11-01
 
 > Assembly is deterministic on purpose: `MERGE` on a shared key, under a constraint, with provenance. The model's judgement stopped at resolution, and everything after the load is the work of keeping the result correct.
 
+Resolved mentions still aren't a graph. A load without a constraint duplicates nodes, a value stored on the wrong element breaks every later query, and a graph left alone goes stale and keeps facts you may be legally required to remove. This chapter assembles a graph deterministically, integrates structured sources with their counts checked, then assesses, cleans, enriches and retires what is there.
+
 ---
 
 ## Where it sits
@@ -234,4 +236,55 @@ Depth: *KG & LLMs in Action* ch. 4 and appendix C; the chapter files are listed 
 
 ---
 
-→ Next: [11-kg-rag-and-text-to-cypher.md](11-kg-rag-and-text-to-cypher.md): asking the graph questions in natural language.
+## Pitfalls
+
+- **`MERGE` before the constraint.** Symptom: duplicate `Company` nodes after a second import. Fix: create the uniqueness constraint first, as L3–L6 do, since it also indexes the key.
+- **Facts on the wrong element.** Symptom: text-to-Cypher writes `Company.value`, which doesn't exist. Fix: keep `value` and `shares` on the edge whose identity includes the quarter, and tell the query layer so.
+- **Adding sources before knowing the task.** Symptom: reconciliation work and noise from loosely related datasets. Fix: curate first, starting from a few sources that matter.
+- **Skipping count checks.** Symptom: an unexplained mismatch, like the appendix's overlap table summing to 3,872 miRNAs against 4,874 loaded. Fix: check node and edge counts, top-degree nodes and median degree after every load.
+- **Global metrics for a local question.** Symptom: WCC reports a giant component of 21,521 of 21,559 proteins, and says nothing about a pathway. Fix: add per-subgraph metrics, such as density against the background and conductance.
+- **Comparing DWPC across metapaths.** Symptom: scores from different metapaths ranked in one list. Fix: compare only within one metapath and one exponent.
+- **Loading inferred triples as fact.** Symptom: a prediction reappears as evidence for later predictions. Fix: load it flagged with a confidence score, and keep it out of default traversals until confirmed.
+
+## Try it
+
+1. **Try it on the course graph.** Add the uniqueness constraint *before* the L6 manager import, run it again without the constraint, and count the duplicate `Company` nodes the constraint prevented. On the L5 chunks, compare top-k retrieval with and without the ±1 `NEXT` window on three questions.
+
+
+
+   <details><summary>What to look for</summary>
+
+   Without the constraint you should see duplicates only if a write misses the key or writers race. Compare `count(c)` against `count(DISTINCT c.cik)`. For retrieval, the ±1 window should help questions whose answer crosses a chunk boundary and add noise to those that don't, so judge per question and not by average.
+
+   </details>
+
+2. The appendix's overlap table sums to 3,872 miRNAs and the load reports 4,874. How large is the gap, and what would you query to explain it?
+
+   <details><summary>Answer</summary>
+
+   1,002 miRNAs. Count `MiRNA` nodes by combination of source labels (`MiRNA_HMDD`, `MiRNA_dbDEMC`, `MiRNA_miR2Disease`), then compare the sum with the total. Nodes with no source label, or a table that left out one combination, would explain it. The book doesn't say which.
+
+   </details>
+
+3. A pathway subgraph has density 0.07 against 0.0015 for the whole network, with conductance 0.96. Is it a self-contained module?
+
+   <details><summary>Answer</summary>
+
+   No. It is about 47× denser than the background, and still sparse inside, while conductance near 1 means nearly all of its edge endpoints lead outward. That is what the chapter means when it says pathways connect mostly outward.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why is assembly deterministic when extraction isn't? | The model's judgement stops at resolution. After that, `MERGE` on a shared key under a constraint means the same input gives the same graph, and you can replay it. |
+| Where do `value` and `shares` go in the SEC graph, and why? | On the ownership edge, since a value belongs to a manager's stake in a quarter. The quarter is part of the edge's identity. |
+| You are merging a second source. What is your validation? | Map onto shared codes before `MERGE`, label provenance per source, then check counts, orphans and degree distributions after each load. |
+| Why is DWPC better than path count? | It damps paths through hubs. For celiac disease, T cell costimulation (10 paths) outranks a generic immune process (21 paths) with DWPC 0.0335 vs 0.0272. |
+| How do you handle a request to delete a user's data? | If every fact links to its source document, you can remove what came from it. The book connects traceability to privacy for this reason. |
+| What keeps running after deployment? | Four pipelines: updates as sources change, assessment of every write, cleaning for outdated or legally removed facts, and access control. |
+
+## Next
+
+[11-kg-rag-and-text-to-cypher.md](11-kg-rag-and-text-to-cypher.md): asking the graph questions in natural language.

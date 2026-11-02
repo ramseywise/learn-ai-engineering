@@ -11,6 +11,8 @@ cleaned: 2026-11-01
 
 > Hand-built features need someone to decide what matters. Embeddings and GNNs learn the vectors, and they give up the interpretability and the leak-free defaults you had before.
 
+Manual features don't scale to graphs with millions of nodes, and learned ones bring new ways to fool yourself: 0.95–0.98 weighted F1 while catching 68–83% of illicit nodes, or a model that simply sees the link it was meant to predict. This chapter covers embeddings and GNNs, how to split edges without leakage, and what to do with predictions once they land in a graph agents read.
+
 All book citations in this note are to Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), abbreviated *KG & LLMs in Action*.
 
 ---
@@ -258,4 +260,54 @@ Depth: [ch. 11 PDF](../sources/kg-and-llms-in-action/ch11-graph-representation-l
 
 ---
 
-→ Back to the start: [01-graph-vs-loop.md](01-graph-vs-loop.md). Next pillar: [Inference engineering](../../07-inference-engineering/README.md).
+## Pitfalls
+
+- **Reporting weighted F1 on imbalanced data.** Symptom: 0.95–0.98 in validation while only 68–83% of illicit transactions are caught. Fix: report recall and false-positive rate on the class you care about.
+- **Supervision edges in the message graph.** Symptom: link-prediction metrics too good to believe. Fix: split training edges into message and supervision sets, as in the book's 56,469 and 24,201.
+- **Building the loader over the full graph.** Symptom: the book's `data=data` runs message passing over validation and test edges. Fix: build it over `train_data`.
+- **Choosing a decoder that can't represent the relation.** Symptom: DistMult scores `causes` and `caused_by` the same. Fix: use ComplEx or RotatE for asymmetric relations.
+- **Stacking GNN layers for reach.** Symptom: every node looks the same. Fix: over-smoothing is the cause, so use the update variants that counter it.
+- **Asking a model for what a graph query does exactly.** Symptom: an LLM misses one predecessor of a node. Fix: degree, paths and predecessors are one line of Cypher or `networkx`, so give the model the results.
+- **Feeding predictions back unconfirmed.** Symptom: the model learns from its own guesses. Fix: flag with `predicted: true`, confidence and `run_id`, keep them out of default traversals, and don't train on them until they are confirmed.
+
+## Try it
+
+1. On a graph of your own, hold out 10% of one edge type, score candidates with manual pair features (common neighbours, Adamic–Adar, DWPC) and with GraphSAGE plus a dot-product decoder, write the top 20 back as flagged predictions, and read them by hand to count real missing links against hub artefacts.
+
+   <details><summary>What to look for</summary>
+
+   Check that held-out edges are absent from message passing before reading any score. If the top 20 are dominated by high-degree nodes, they are probably hub artefacts rather than links. If the manual features tie with GraphSAGE, prefer them: they are explainable and cheaper.
+
+   </details>
+
+2. A KG has 100 relation types and d = 100. Compare relation parameters for RESCAL and DistMult.
+
+   <details><summary>Answer</summary>
+
+   RESCAL: 100 × 100 × 100 = 1,000,000, one d × d matrix per relation. DistMult: 100 × 100 = 10,000, one diagonal per relation. The saving costs symmetry: DistMult can't tell `causes` from `caused_by`.
+
+   </details>
+
+3. From the results table, choose an encoder for AML triage, and for a recommender where false links are costly. Say what the table can't tell you.
+
+   <details><summary>Answer</summary>
+
+   SAGE for both: it caught 83% of illicit nodes at 1.1% licit flagged, and on links had the lowest false positives at 5.4%, at the cost of the lowest recall (71.5%, against GCN's 78.6%). If missing a link costs more, GCN wins. These are single runs of the book's code, so the table can't tell you the spread across seeds.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why negative sampling? | Scoring all pairs is hopeless: a million nodes means about a trillion candidates, nearly all absent. Each true triple is scored against a few corrupted ones. |
+| What distinguishes KG embedding decoders? | The patterns they represent: symmetric, asymmetric, inverse, compositional. DistMult is symmetric in head and tail, and RESCAL's matrix per relation is expressive and parameter-heavy. |
+| What are message edges and supervision edges? | Message edges carry information and supervision edges are what the model predicts. If they overlap, the model can see the answer and training metrics mean nothing. |
+| Your AML model has 0.97 weighted F1. Ship it? | Not on that number. With 90% licit nodes, weighted F1 stays high while only 68–83% of illicit nodes are caught, so look at per-class recall and false positives. |
+| GCN, GAT or GraphSAGE? | On the book's runs, GAT had the most parameters and never beat SAGE. SAGE caught most AML (83%) with fewest false links (5.4%), and GCN found most links (78.6%). |
+| How can LLMs and GNNs combine? | As predictor, encoder, aligner or labeller: an LLM can embed node text for the GNN, or label nodes zero-shot, or narrate a structural result without deciding it. |
+| What do you do with a predicted edge? | Write it through `GraphUpdate` flagged, with confidence and `run_id`, keep it out of default traversals, and watch false positives, since a false link acts like a false merge. |
+
+## Next
+
+[Inference engineering](../../07-inference-engineering/README.md): the next pillar, on what serving these models costs and how to make it fast. To go back to the start of this one, see [01-graph-vs-loop.md](01-graph-vs-loop.md).

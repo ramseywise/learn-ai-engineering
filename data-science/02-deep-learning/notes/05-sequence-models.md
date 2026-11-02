@@ -83,7 +83,11 @@ params = lambda n_a, n_x: (n_a * n_a + n_a * n_x + n_a, 4 * (n_a * (n_a + n_x) +
 print("parameters RNN, LSTM for n_a=64, n_x=8:", params(64, 8))
 ```
 
-@@CELL@@
+```text
+RNN state [ 0.77  1.   -0.97  0.98 -0.96]
+LSTM hidden [-0.   -0.01  0.21 -0.   -0.01] cell [-0.03 -0.45  0.38 -0.29 -1.05]
+parameters RNN, LSTM for n_a=64, n_x=8: (4672, 18688)
+```
 
 The LSTM ([doi:10.1162/neco.1997.9.8.1735](https://doi.org/10.1162/neco.1997.9.8.1735) (Hochreiter and Schmidhuber, Neural Computation 1997)) adds a cell state updated by addition, with gates that decide what to erase and write. It has four times the RNN's parameters at the same size. The GRU merges the forget and update gates and drops the separate cell state, so it has three sets ([arXiv:1406.1078](https://arxiv.org/abs/1406.1078) (Cho et al., EMNLP 2014)).
 
@@ -125,9 +129,13 @@ for cell in ["rnn", "gru", "lstm"]:
     print(f"{cell:<5} params {n:>6}  test {np.mean(res):.3f} +- {np.std(res):.3f}")
 ```
 
-@@ROWS@@
+```text
+rnn   params   5386  test 0.957 +- 0.006
+gru   params  14858  test 0.966 +- 0.005
+lstm  params  19594  test 0.962 +- 0.006
+```
 
-Eight steps is short, so a plain RNN keeps up, at far fewer parameters, and all three stay behind the CNN's 0.984. The next experiment makes the sequence long.
+Eight steps is short, so a plain RNN keeps up, at far fewer parameters, and all three stay behind the [CNN's 0.983](04-convolutional-networks.md#a-cnn-on-the-digits). The next experiment makes the sequence long.
 
 ## Vanishing gradients, and the forget-gate bias
 
@@ -139,23 +147,24 @@ def seqs(n, T, seed):
     x = (torch.randint(0, 2, (n, T, 1), generator=g) * 2 - 1).float()
     return x, (x[:, 0, 0] > 0).long()
 
-def memory_net(cell, forget_bias=False, h=32):
+def memory_net(cell, forget_bias=0.0, h=32):
     m = Reader(cell, inp=1, hidden=h, classes=2)
     if forget_bias:
         for name, q in m.rnn.named_parameters():
             if "bias" in name:
                 nn.init.zeros_(q)
-                q.data[h:2 * h] = 1.0     # PyTorch's order: input, forget, cell, output
+            if name == "bias_hh_l0":
+                q.data[h:2 * h] = forget_bias     # chunks in order: input, forget, cell, output
     return m
 
-variants = [("rnn", False), ("lstm", False), ("lstm", True)]
+variants = [("rnn", 0.0), ("lstm", 0.0), ("lstm", 1.0), ("lstm", 2.0)]
 for cell, fb in variants:
     torch.manual_seed(0)
     m = memory_net(cell, fb)
     x = torch.randn(1, 50, 1, requires_grad=True)
     m(x)[0, 0].backward()
     g = x.grad.abs().flatten()
-    print(f"{cell} forget_bias={fb!s:<5}  |d output / d x_t|  t=49 {g[49]:.1e}  t=25 {g[25]:.1e}  t=0 {g[0]:.1e}")
+    print(f"{cell:<4} forget bias {fb}  |d output / d x_t|  t=49 {g[49]:.1e}  t=25 {g[25]:.1e}  t=0 {g[0]:.1e}")
 
 for T in [20, 50]:
     for cell, fb in variants:
@@ -173,14 +182,29 @@ for T in [20, 50]:
                 opt.step()
             with torch.no_grad():
                 res.append((m(X_val).argmax(1) == y_val).float().mean().item())
-        print(f"T={T:<3} {cell} forget_bias={fb!s:<5}  accuracy per seed {np.round(res, 3)}")
+        print(f"T={T:<3} {cell:<4} forget bias {fb}  accuracy per seed {np.round(res, 3)}")
 ```
 
-@@MEM@@
+```text
+rnn  forget bias 0.0  |d output / d x_t|  t=49 4.5e-02  t=25 5.0e-07  t=0 1.4e-12
+lstm forget bias 0.0  |d output / d x_t|  t=49 1.7e-02  t=25 1.7e-07  t=0 1.2e-12
+lstm forget bias 1.0  |d output / d x_t|  t=49 1.5e-02  t=25 1.8e-04  t=0 9.5e-06
+lstm forget bias 2.0  |d output / d x_t|  t=49 1.4e-02  t=25 6.8e-03  t=0 2.0e-02
+T=20  rnn  forget bias 0.0  accuracy per seed [0.53 0.53 0.53]
+T=20  lstm forget bias 0.0  accuracy per seed [0.53 0.53 0.53]
+T=20  lstm forget bias 1.0  accuracy per seed [1. 1. 1.]
+T=20  lstm forget bias 2.0  accuracy per seed [1. 1. 1.]
+T=50  rnn  forget bias 0.0  accuracy per seed [0.51  0.502 0.502]
+T=50  lstm forget bias 0.0  accuracy per seed [0.502 0.502 0.502]
+T=50  lstm forget bias 1.0  accuracy per seed [0.502 0.502 0.5  ]
+T=50  lstm forget bias 2.0  accuracy per seed [0.502 0.892 1.   ]
+```
 
-Before training, an LSTM with PyTorch's defaults is no better than a plain RNN: the gradient from the first step is about $10^{-12}$ in both. With the forget-gate bias it is about 0.02, as large as the last step's. So the LSTM's advantage is not automatic. It depends on this initialisation, and without it both cells stayed at chance for $T=20$ in this budget. At $T=50$, even the biased LSTM doesn't always succeed in 500 steps, and it is clearly a harder task.
+Before training, an LSTM with PyTorch's defaults is no better than a plain RNN: the gradient from the first step is about $10^{-12}$ in both. A forget bias of 1 lifts it to about $10^{-5}$, and 2 to about 0.02, as large as the last step's. So the LSTM's advantage isn't automatic: without the bias, both cells stayed at chance even at $T=20$ in this budget. A bias of 1 solves $T=20$ on all seeds, and $T=50$ needs more (2 reached 0.892 and 1.0 on two of three seeds).
 
-The opposite failure is exploding gradients, and the fix is to rescale the whole gradient when its norm goes over a threshold, which is what the `clip_grad_norm_` line does. The next section prints its effect.
+One trap, which cost a debugging round when this chapter was written. An `nn.LSTM` has two bias vectors, `bias_ih_l0` and `bias_hh_l0`, and each gate adds both. The widely copied snippet that writes 1 to the forget chunk of every parameter with "bias" in its name therefore sets a total of 2, and a check against a wrong name such as `"bias_hh"` silently does nothing. Measure the effect rather than trust the assignment.
+
+The opposite failure is exploding gradients. The fix is to rescale the whole gradient when its norm goes over a threshold, which is what the `clip_grad_norm_` line does. The next section logs that norm.
 
 ## Character models and sampling
 
@@ -238,9 +262,15 @@ print("t=0.1:", [sample(0.1, s) for s in range(4)])
 print("t=3.0:", [sample(3.0, s) for s in range(4)])
 ```
 
-@@CHAR@@
+```text
+195 names vocabulary 22 examples ['alloceratops', 'allodon', 'allolodon']
+loss 0.299; gradient norm before clipping: first 0.61, largest 0.83, last 0.00
+t=1.0: ['tyrannosaurus', 'tricerariceratops', 'allolotitan', 'spinomaceratops']
+t=0.1: ['triceraloceratops', 'tricerariceratops', 'ankylolopteryx', 'stegoriceratops']
+t=3.0: ['typinn', 'pterodorociphte', 'aeluvenots', 'sluolocirapdontyxe']
+```
 
-Training feeds in the true previous character, and sampling feeds back its own output. The **Jazz** notebook has the same two modes for music. A low temperature concentrates on the likeliest next character, and a high one flattens the distribution until the structure goes.
+Training feeds in the true previous character, and sampling feeds back its own output. The **Jazz** notebook has the same two modes for music. On this small task the norm never reached the threshold of 1.0 (the largest was 0.83), so clipping was only insurance. It costs one line and matters on the run where a gradient does spike. A low temperature concentrates on the likeliest next character, and a high one flattens the distribution until the structure goes: compare the `t=3.0` line with the others.
 
 ## Word vectors
 
@@ -267,9 +297,14 @@ print("doctor vs gender direction, before %.3f, after %.3f" % (cosine(vec["docto
 print("nurse  vs gender direction, before %.3f, after %.3f" % (cosine(vec["nurse"], g), cosine(neutralise(vec["nurse"]), g)))
 ```
 
-@@WV@@
+```text
+man : woman :: king : queen
+man : woman :: boy  : girl
+doctor vs gender direction, before -0.337, after 0.000
+nurse  vs gender direction, before 0.408, after 0.000
+```
 
-Neutralise and its companion equalise come from Bolukbasi et al. ([arXiv:1607.06520](https://arxiv.org/abs/1607.06520) (Bolukbasi et al., NeurIPS 2016)). Occupations in real GloVe vectors do lean along the gender direction, which your notebook prints. **Emojify** shows the other use of pretrained vectors: averaging GloVe vectors then a softmax generalises from 127 training sentences, and swapping in an LSTM over the same embeddings lets it handle word order, which an average can't. [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) continues from here.
+Neutralise and its companion equalise come from Bolukbasi et al. ([arXiv:1607.06520](https://arxiv.org/abs/1607.06520) (Bolukbasi et al., NeurIPS 2016)). Occupations lean along the gender direction here because these numbers were built to, and in real GloVe vectors they do so because the training text does, which your notebook prints. **Emojify** shows the other use of pretrained vectors: averaging GloVe vectors then a softmax generalises from 127 training sentences, and swapping in an LSTM over the same embeddings lets it handle word order, which an average can't. [NLP embeddings](../../03-nlp/notes/04-embeddings-and-similarity.md) continues from here.
 
 ## Seq2seq and attention
 
@@ -347,9 +382,23 @@ for t, ch in enumerate(out):
     print(f"  output '{ch}' looks at '{text[alphas[t][0, :len(text)].argmax().item()]}' at position {alphas[t][0, :len(text)].argmax().item()}")
 ```
 
-@@ATT@@
+```text
+attention=False  characters right 0.774  whole date right 0.032
+attention=True   characters right 1.000  whole date right 1.000
+3 may 1979 -> 1979-05-03
+  output '1' looks at '9' at position 7
+  output '9' looks at '9' at position 7
+  output '7' looks at '7' at position 8
+  output '9' looks at '9' at position 9
+  output '-' looks at 'm' at position 2
+  output '0' looks at 'm' at position 2
+  output '5' looks at 'm' at position 2
+  output '-' looks at '3' at position 0
+  output '0' looks at ' ' at position 1
+  output '3' looks at '3' at position 0
+```
 
-Six epochs with attention get every date right, while the bottleneck model is still at about chance for whole dates. The printout shows what the weights are looking at. Take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
+After six epochs on the same data, attention gets every held-out date right, while the bottleneck model gets 3% of whole dates. The printout shows what the weights read. The year digits look at the year (the century at its neighbour, since only 19 and 20 occur), the month digits look at the "m" of "may", and the day digits look at the "3" and the space beside it. Now take the last step seriously. Remove the recurrence and let every position query every other, and you have the Transformer's self-attention, which [nanoGPT](../../04-llms-from-scratch/notes/03-nanogpt.md) builds. **Trigger word detection** is the remaining notebook: it synthesises audio by mixing clips into backgrounds, then runs spectrogram → Conv1D → GRU → a sigmoid at every step, so the sequence task can be labelling each step as well as classifying the whole.
 
 ## Reading
 
@@ -366,7 +415,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 | Symptom | Cause | Fix |
 |---|---|---|
 | Loss goes to `nan` during an RNN's training | Exploding gradients | `clip_grad_norm_` between `backward()` and `step()` |
-| LSTM doesn't beat a plain RNN on long sequences | Forget gate starts near 0.5, as PyTorch sets no bias | Set the forget-gate bias to 1 |
+| LSTM doesn't beat a plain RNN on long sequences | Forget gate starts near 0.5, as PyTorch sets no bias | Set the forget-gate bias to 1 or more on `bias_hh_l0`, and remember that `bias_ih_l0` adds to it |
 | Dimension errors when porting Keras or NumPy code | PyTorch's RNNs default to `(time, batch, features)` | `batch_first=True` |
 | `h_n` has the wrong shape for a classifier | It is `(layers * directions, batch, hidden)`, and a tuple for LSTM | Use `outputs[:, -1]`, or concatenate the last forward and backward states |
 | Padded batches give worse results | The last "step" for short sequences is padding | `pack_padded_sequence`, or index the true last step |
@@ -379,7 +428,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
    <details><summary>Answer</summary>
 
-   @@A1@@
+   The GRU is in the same trouble: `[0.53, 0.532, 0.532]` at $T=20$ with PyTorch's defaults. It has no forget-bias trick to reach for here, so the fix would be a different initialisation or a longer budget.
 
    </details>
 
@@ -387,7 +436,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
    <details><summary>Answer</summary>
 
-   @@A2@@
+   Three gates at $(64 \times 8 + 64 \times 64 + 64)$ give 14,016 with one bias per gate, but PyTorch keeps two bias vectors, so it is $3 \times (512 + 4096 + 64 + 64) = 14{,}208$. Adding the `Linear(64, 10)`, 650 parameters, gives the printed 14,858.
 
    </details>
 
@@ -395,7 +444,7 @@ All the numbers on digits, memory, names and dates came from running the code sh
 
    <details><summary>Answer</summary>
 
-   @@A3@@
+   With attention: characters 0.498, whole dates 0.000. Without: characters 0.316, whole dates 0.000. Neither solves it, because 500 pairs at batch size 64 make only 42 updates. Attention still gets further per update, but it needs enough steps to learn the alignment.
 
    </details>
 

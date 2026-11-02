@@ -5,6 +5,7 @@ sources:
   - https://arxiv.org/abs/2507.12507 (NVIDIA prolonged RL, KL plus reference-policy resets)
   - https://arxiv.org/abs/2512.16649 (JustRL, single-stage fixed-hyperparameter GRPO at 1.5B)
   - https://arxiv.org/abs/2509.03646 (HICRA, planning-token credit assignment)
+  - https://arxiv.org/abs/2607.13394 (GFlowRL, partition-free GFlowNet-style RL)
   - https://arxiv.org/abs/2305.18290 (DPO)
   - https://arxiv.org/abs/2311.10702 (Tülu 2: DPO scaled to 70B)
   - https://arxiv.org/abs/2402.03300 (DeepSeekMath / GRPO)
@@ -478,6 +479,21 @@ the method: token entropy fell while the diversity of planning phrases rose, and
 of high-entropy "fork" tokens were planning tokens, so falling token entropy need not mean
 exploration has stopped. Every comparison is one run, and HICRA's Qwen2.5-7B-Base row matches
 the ORZ baseline exactly on four of six benchmarks.
+
+A second line of work changes the target rather than the credit. It trains the policy to match a
+reward-weighted distribution, ∝ π_ref·exp(βr), instead of maximizing reward. The objective is
+GFlowNet trajectory balance (Bengio et al., NeurIPS 2021; Malkin et al., NeurIPS 2022), which
+FlowRL brought to LLM reasoning with a learned partition function Z (Zhu et al., ICLR 2026).
+GFlowRL showed that learned Z was doing nothing: replacing it with Gaussian noise scored 36.19
+against 35.63, and FlowRL's gradient norm exceeded 10⁶ on 55 of 421 steps
+([arXiv:2607.13394](https://arxiv.org/abs/2607.13394) (Liu et al., 2026-07, preprint)). It
+estimates log Z from the GRPO rollout group instead and clips the flow gap asymmetrically. On
+Qwen2.5-7B, **the six-benchmark math average reached 40.92, against 32.48 for GRPO and 35.63 for
+FlowRL**, and an o4-mini judge rated solution diversity 3.93 out of 5 against GRPO's 1.21.
+FlowRL diverged on MoE models where GFlowRL trained, though at 30B-A3B the margin over GRPO was
+2.5 points (78.32 against 75.78). An 8-point lead over GRPO at 7B suggests a weak GRPO baseline.
+Ablations ran 100 steps, no seeds are reported, and the in-batch estimate gets noisier as the
+group shrinks.
 
 **Several rewards break the group normalization.** Summing the rewards first and then
 normalizing within the group merges different reward combinations. With two binary rewards

@@ -13,11 +13,13 @@ sources:
   - "Michael Albada, Building Applications with AI Agents (O'Reilly, 2025), ch. 8"
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 5 — Topology Patterns
 
 > The handful of shapes that recur, what each costs, how each fails, and how the same shapes look in Claude Code.
+
+Teams pick a topology by reputation. They reach for a supervisor or a debate and find out in production that a substring match routed a tool result back into the loop, or that a self-review ratified a hallucination. Only a handful of shapes recur, and each has a known cost and a known way to fail. This chapter names them, shows them in Claude Code, and asks when collaboration brings in anything new.
 
 ---
 
@@ -369,4 +371,63 @@ From *AI Agents in Depth* ch. 10. All are linked upstream: the first three and 1
 
 ---
 
-→ Next: [06-when-not-to-build-a-graph.md](06-when-not-to-build-a-graph.md) — the negative case, and what fan-out really costs.
+## Pitfalls
+
+- **Routing on a substring.** Symptom: any tool output containing "regenerate" triggers another pass of Albada's actor-critic loop. Fix: route on a structured field such as `verdict: Literal["accept", "revise"]`, and count attempts, since `recursion_limit` is that listing's only stop.
+- **Writing keys the schema doesn't declare.** Symptom: the actor writes `candidates` with no channel for it, or `history + new` into an `operator.add` key appends the whole history again on each pass. Fix: declare every key you write and return only the new items.
+- **A supervisor that can't say "unknown".** Symptom: a reply such as "Inventory." ends the run with the label as the user's answer, or a return value missing from the path map crashes the run. Fix: use `with_structured_output` over a `Literal` that includes `unknown`, and route it to a clarify node that exists.
+- **A model per specialist from day one.** Symptom: several configurations to tune before you know any of them is needed. Fix: specialise by prompt first, as n8n does with every specialist on one model at temperature 0.
+- **A reviewer that can only read.** Symptom: reviews agree with the producer and the score doesn't move, since self-review and debate add no new information. Fix: give the reviewer something to run; execution feedback is what earns the node.
+- **Shared context past half the window.** Symptom: worker quality drops as a shared transcript grows. Fix: when cumulative context would pass about half the window, isolate workers and pass paths, not contents.
+- **Trusting choreography to end itself.** Symptom: agents hand off in cycles or defer politely forever. Fix: add a max-handoff guard, and carry a handoff package with the task, acceptance criteria, confirmed facts and artifact paths, never the full trajectory.
+- **Running a searched agent in your process.** Symptom: ADAS's `exec(forward_str, globals(), namespace)` runs model-written code with your globals. Fix: sandbox the evaluator, and keep a held-out test set the search never sees.
+
+## Try it
+
+1. Match each to a pattern, using the "Choosing a pattern" questions: (a) one reviewer per changed file, then one merged report; (b) billing, refunds and technical tickets that need different tools; (c) a security review another team owns and you reuse in three pipelines; (d) a draft checked by a test suite.
+
+   <details><summary>Answer</summary>
+
+   (a) Fan-out / fan-in with a reducer. (b) Supervisor over specialists. (c) A subgraph behind a wrapper node, so the contract is explicit. (d) Generate-then-verify, where the test suite is the deterministic check, and the place to start.
+
+   </details>
+
+2. You share a subgraph with a parent whose schema differs. What does the wrapper do, and what does it prevent?
+
+   <details><summary>Answer</summary>
+
+   It maps parent state to the child's input and the child's output to a parent update. That makes the contract explicit, and it stops the child from writing parent keys it shouldn't touch.
+
+   </details>
+
+3. Read the ADAS table with its error bars. On which benchmarks can you say the discovered agent beat the best baseline?
+
+   <details><summary>Answer</summary>
+
+   DROP (+13.6 with ±0.8) and MGSM (+14.4 with ±3.5). On MMLU (+2.0 with ±3.2) and GPQA (+1.7 with ±3.2) the margin is inside the interval, so those two are not distinguishable from prompt optimisation.
+
+   </details>
+
+4. Pick one lab from the table above and draw its topology, naming who holds the plan and what crosses each edge. For offline work, 10-6 and 10-8 need no key, though their code and data are in Chinese.
+
+   <details><summary>What to check</summary>
+
+   For 10-3, book translation, you should have a sequential manager holding only the file index, so files rather than text cross the edges. If your drawing shows contents crossing every edge, compare it with the "pass paths, not contents" rule.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Name the five recurring topologies and how each fails. | Generate-then-verify (the checker agrees with reasoning it can see), supervisor (mis-routing, bottleneck), fan-out (missing reducer, correlated errors), hierarchical (failures hidden inside the subgraph), handoff (status values drift). |
+| What is the fix for a supervisor that mis-routes? | A schema rather than a firmer prompt: `with_structured_output` over a `Literal` with an `unknown` value, routed to a clarify or escalate node that exists in the graph. |
+| What do you lose building a graph with Claude Code subagents instead of LangGraph? | Typed shared state, reducers and checkpoints. State is whatever the orchestrator passes along, which is a context firewall when you want one and a liability when you need resume. |
+| When should agents share context and when should it be isolated? | Li's rule is not to share when cumulative context would pass about half the window. Isolated agents then pass paths rather than contents, as threads versus processes would suggest. |
+| Should you add a second LLM to review the first? | Ask if the collaboration brings in information. Self-review is neutral or harmful and debate doesn't help much, but a reviewer that can run something gets execution feedback and earns its node. |
+| A single agent passes 60% of your task set. Does adding a team help? | Probably not on those numbers: Kim et al. found negative returns from extra agents above about 45% single-agent performance. Measure on your own tasks before adding any. |
+| Orchestration or choreography? | Orchestration has a conductor, which is a bottleneck and a single point of failure. Choreography removes both and makes the flow harder to see, so it needs a max-handoff guard. |
+
+## Next
+
+[06-when-not-to-build-a-graph.md](06-when-not-to-build-a-graph.md): the negative case, and what fan-out really costs.

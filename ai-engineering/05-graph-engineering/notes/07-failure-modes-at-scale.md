@@ -9,11 +9,13 @@ sources:
   - https://arxiv.org/abs/2512.08296
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 9"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 7 — Failure Modes at Scale
 
 > A single loop fails by not converging. A graph fails by mis-routing, deadlocking, racing on shared state, and drifting away from reality while staying perfectly self-consistent.
+
+A graph can pass every internal check while being wrong. Nine workers agree because they share a model, a proofreader passes a mistranslation because it checks against the glossary that contains it, and each metric improves while the thing it measured gets worse. The wiring failures raise errors if you let them, and the rest raise nothing. This chapter catalogues both families and what catches each.
 
 ---
 
@@ -26,6 +28,20 @@ cleaned: 2026-10-31
 
 Mechanical failures are mostly caught by the framework if you let it. Control failures aren't caught by anything unless you design for them.
 
+Where each one lands in an ordinary supervisor graph:
+
+```mermaid
+flowchart LR
+    R{Router} -->|"mis-routing"| W1[Worker]
+    R -->|"unbounded Send"| W2[Worker × N]
+    W1 -->|"back-edge with no bound"| R
+    W1 -->|"race on one key"| S[(Shared state)]
+    W2 -->|"correlated errors"| S
+    S --> V[Verifier]
+    V -.->|"sees the reasoning, ratifies it"| W1
+    A[/"Anchor: held-out set the graph can't edit"/] -.->|"catches drift"| V
+```
+
 ---
 
 ## Mechanical failures
@@ -36,7 +52,7 @@ Mechanical failures are mostly caught by the framework if you let it. Control fa
 | **Deadlock** | Run stalls at a join | A join waits for a branch that was never scheduled, or two nodes each wait for the other's output | Run idle with no node active | Make every join's inputs explicit; route errors to a node that still writes the expected key |
 | **Race on shared state** | `InvalidUpdateError`, or silently lost work outside LangGraph | Two parallel branches write one key with no reducer | The error, if your framework raises it | A reducer, or one writer per key ([03](03-state-and-reducers.md)) |
 | **Unbounded fan-out** | Token spend spikes; rate limits | `Send` over an input with no cap | Cost per run | Cap N; batch; budget per run *and* per node ([08](08-governance-and-production.md)) |
-| **Mis-routing** | Right answer from the wrong specialist, or a wrong answer from a confident one | Router prompt too vague; status values drift; a free-text label matched with an `else` default ([02](02-graph-primitives.md#edges-choose-what-runs-next), [05](05-topology-patterns.md#supervisor)) | Route distribution in traces; eval on the router alone; count of fallback-branch hits | Treat the router as a classifier: give it a labelled test set ([the Eval pillar](../../../generative-ai/08-eval/README.md)); constrain its output to a `Literal` with an explicit `unknown` route |
+| **Mis-routing** | Right answer from the wrong specialist, or a wrong answer from a confident one | Router prompt too vague; status values drift; a free-text label matched with an `else` default ([02](02-graph-primitives.md#edges-choose-what-runs-after-a-node), [05](05-topology-patterns.md#supervisor)) | Route distribution in traces; eval on the router alone; count of fallback-branch hits | Treat the router as a classifier: give it a labelled test set ([the Eval pillar](../../../generative-ai/08-eval/README.md)); constrain its output to a `Literal` with an explicit `unknown` route |
 | **File-space collision** | Parallel workers overwrite each other's files | Workers share a working directory | Diffs that don't match any one worker | One worktree or directory per worker |
 
 Every node that loops should be bounded on its own, not only the graph as a whole. n8n's workflow builder caps its Discovery node at 50 iterations and its Builder at 100 per session ([08](08-governance-and-production.md#case-study-n8ns-ai-workflow-builder)).
@@ -52,6 +68,42 @@ These failures only appear once work is parallel or spread across agents.
 Parallel workers usually share a model, a prompt template and a retrieval index. When one makes a mistake, the others tend to make the same one, so N agreeing workers are much less evidence than N independent ones. A synthesiser that counts votes will be confidently wrong. Vary what you can (sources, prompts, models), and make the synthesiser check claims against sources rather than against each other.
 
 The clearest example is a simulated court. Nine LLM "judges" each write an opinion on a case, and the majority opinion wins (Hamilton, 2023, [arXiv:2301.05327](https://arxiv.org/abs/2301.05327)). Raieli & Iuculano present it as a way to mitigate hallucination, then name the catch themselves: all nine judges are the same model, so they share its biases and the opinions come out repetitive. They suggest building the ensemble from different models (*Building AI Agents with LLMs, RAG, and Knowledge Graphs*, ch. 9). Nine copies of one model voting amounts to sampling one model nine times. That can smooth out sampling noise, but it can't outvote a bias all nine copies share.
+
+A short simulation shows how much agreement is worth once workers share a failure. It is illustrative: the 0.7 accuracy and the correlation levels are inputs, not measurements of any model.
+
+```python
+# Why nine agreeing workers are not nine pieces of evidence. Illustrative simulation:
+# each worker is right with probability 0.7, and with probability rho all nine simply
+# repeat one shared draw (same model, same prompt, same index). Seeded, 200,000 trials.
+import random
+
+def majority_right(n, p, rho, trials=200_000, seed=7):
+    rng = random.Random(seed)
+    wins = 0
+    for _ in range(trials):
+        if rng.random() < rho:
+            wins += rng.random() < p                    # one shared answer, copied n times
+        else:
+            wins += sum(rng.random() < p for _ in range(n)) > n / 2
+    return wins / trials
+
+print("rho   majority of 9 right")
+for rho in (0.0, 0.25, 0.5, 0.75, 1.0):
+    print(f"{rho:<5} {majority_right(9, 0.7, rho):.3f}")
+```
+
+Output:
+
+```text
+rho   majority of 9 right
+0.0   0.901
+0.25  0.851
+0.5   0.801
+0.75  0.752
+1.0   0.701
+```
+
+Nine independent workers at 70% push the majority to about 90%. When they always share one answer, the majority is exactly as good as one worker, at nine times the cost. The vote count looks the same in both cases, so a synthesiser can't tell them apart without checking sources.
 
 ### Verifiers need isolated context
 
@@ -142,4 +194,62 @@ Before running a graph unattended:
 
 ---
 
-→ Next: [08-governance-and-production.md](08-governance-and-production.md) — tracing, attribution, budgets, and a production case study.
+## Pitfalls
+
+- **A graph-wide limit and nothing per node.** Symptom: one node eats the whole `recursion_limit` (default 25 super-steps) and the run dies with `GraphRecursionError`. Fix: bound every looping node on its own, as n8n does with Discovery at 50 and Builder at 100.
+- **Counting agreement as evidence.** Symptom: unanimous workers, confidently wrong, as with Hamilton's nine judges who share one model's biases. Fix: vary sources, prompts and models, and have the synthesiser check claims against sources.
+- **Handling Byzantine faults with crash tools.** Symptom: timeouts and retries are all green while a worker returns a well-formed hallucination. Fix: use cross-validation, voting over independent sources and deterministic checks.
+- **Thinking locks stop every conflict.** Symptom: both figure-renumbering agents succeed and every number in the document is off by one. Fix: optimistic locking turns the lost update into a retry, but semantic conflicts also need a check on the combined result.
+- **Merging independent agents without cross-checks.** Symptom: errors multiply on the way to the result; Kim et al. counted 17.2× for independent agents and 4.4× with a validating orchestrator. Fix: validate workers' output before aggregating it.
+- **Fixing structure with wording.** Symptom: rounds of prompt edits with little to show, as with ChatDev's +15.6% from prompts and roles. Fix: look to topology or verification changes, because MAST finds most failures are structural.
+- **Making an anchor tunable.** Symptom: the held-out set gets "refreshed" and all the numbers improve together. Fix: keep at least one measurement the graph can't edit, with someone watching it.
+
+## Try it
+
+1. In the simulation, set `p` to 0.4 instead of 0.7 with `rho = 0`. What does a nine-worker majority do, and what does that say about voting?
+
+   <details><summary>Answer</summary>
+
+   The majority falls to about 0.27, below a single worker's 0.40. Voting amplifies whichever way the workers lean, so it makes weak workers worse.
+
+   </details>
+
+2. Classify each as mechanical or control, and say what detects it: (a) a run that stalls at a join because a branch was never scheduled; (b) a support bot's resolution rate rises while complaints rise; (c) two reviewers alternate until the run dies; (d) the eval's labelling guide changed and nobody re-scored the baseline.
+
+   <details><summary>Answer</summary>
+
+   (a) Mechanical, deadlock: a run idle with no node active. (b) Control, Goodhart: a paired counter-metric catches it. (c) Mechanical, oscillation: `GraphRecursionError`. (d) Control, measurement decay: frozen nodes and an anchor catch it.
+
+   </details>
+
+3. In the book's translation lab, glossary, translator and proofreader all pass a wrong rendering of "reasoning". What single change would have caught it?
+
+   <details><summary>Answer</summary>
+
+   A check from an independent perspective, such as a reviewer who reads the output without the glossary. Every existing stage was checking against the bad premise, so none of them could see it.
+
+   </details>
+
+4. Run the note's pre-flight check against the [pillar lab](../practice/langgraph-graph/README.md). Which items does it meet?
+
+   <details><summary>What to look for</summary>
+
+   Read `graph.py` for the attempt counter on the back-edge, the cap on `Send`, and the reducer on `evidence`. An anchor is out of scope for a lab, so that item stays open; say so rather than ticking it.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What are the two families of graph failure? | Mechanical failures come from wiring (cycles, races, unbounded fan-out, mis-routing) and the framework mostly catches them. Control failures come from interacting feedback loops, and nothing catches them unless you design for it. |
+| Why are N agreeing workers weak evidence? | They usually share a model, prompt template and index, so their errors correlate. In the note's simulation, a nine-worker majority at 70% each falls from about 90% to 70% as sharing goes from none to total. |
+| What should a verifier see? | The task and the output, not the generator's reasoning, because a verifier that sees the reasoning tends to ratify it. |
+| Why are agent failures Byzantine rather than crash faults? | A worker that hallucinates still returns a well-formed summary, so timeouts and retries see nothing. Only cross-validation, independent voting and deterministic checks catch it. |
+| How much does topology change error spread? | Kim et al. measured trace-level errors at 17.2× a single agent for independent agents merged without cross-checks, and 4.4× with a validating orchestrator, across six benchmarks. |
+| A team's ChatDev-style system keeps failing and they want to rewrite the prompts. What do you say? | MAST found prompt and role fixes gave only +15.6% on ChatDev, and that most failures are structural, so look at topology and verification first. |
+| What is an anchor, and why can't it be tunable? | An external fixed node the machinery is forbidden to rewrite, such as a held-out test set. Without one a graph can be self-consistent while drifting away from reality, and a tunable anchor eventually gets tuned. |
+
+## Next
+
+[08-governance-and-production.md](08-governance-and-production.md): tracing, attribution, budgets, and a production case study.

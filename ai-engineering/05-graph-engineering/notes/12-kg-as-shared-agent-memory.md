@@ -11,11 +11,13 @@ sources:
   - https://flowtivity.ai/blog/graph-engineering-2026-guide-openclaw-codex/ (vendor; secondary)
   - https://arxiv.org/abs/2608.28978
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 12 — KG as Shared Agent Memory
 
 > Fan-out without shared state re-derives the same findings. Fan-out over a shared, typed, provenance-carrying graph accumulates them. The agent forgets; the graph does not.
+
+A fan-out of ten agents with no shared record derives the same findings ten times. Give them a shared graph and they can accumulate, but mistakes now persist: a bad loop iteration gets reverted, while a false merge in shared memory misleads every agent that reads it afterwards. This chapter is about the write path that makes that safe, and how to measure whether the graph earns its place.
 
 ---
 
@@ -236,4 +238,53 @@ Related: [02-context note 06](../../02-context-engineering/notes/06-memory.md) (
 
 ---
 
-→ Next: [13-graph-ml-and-gnns.md](13-graph-ml-and-gnns.md): predicting the edges and labels the graph doesn't have yet.
+## Pitfalls
+
+- **Letting workers write directly.** Symptom: a fact in the graph with no source and no way to remove it. Fix: every worker submits a `GraphUpdate` that a validator checks, with `minItems: 1` on `sources`.
+- **Merging destructively.** Symptom: a false merge can't be separated. Fix: store `ALIAS_OF` and `RESOLVES_TO` edges with evidence and confidence.
+- **Storing conclusions as truths.** Symptom: one agent's error overwrites a contradicting finding. Fix: store "agent A claims X, citing source S", and let contradictions coexist.
+- **Using a transcript as your database.** Symptom: the only durable record is a conversation log. Fix: keep the five planes apart, with control, execution, artifacts, graph and evaluation each stored separately.
+- **Reading compression as quality.** Symptom: a higher ratio of surface forms to canonicals is reported as progress. Fix: that ratio rewards over-merging, so measure pairwise precision and false-merge rate.
+- **Starting at the swarm.** Symptom: no baseline to say whether the graph helped. Fix: follow the four stages, and move on only when the current one has been measured.
+- **Quoting the Bun port.** Symptom: a slide says "$165,000 and peak parallelism 64". Fix: it is marked unverified here; plan from your own measured cost.
+
+## Try it
+
+1. Run the note's contamination drill on any small graph: inject one false `RESOLVES_TO` under a fake `run_id`, rerun your questions, trace every changed answer to the edge, and roll back. What must be true for the rollback to return the same answers?
+
+   <details><summary>Answer</summary>
+
+   Every derived fact must carry a `run_id` and a source span, and resolution must be edges rather than merged nodes. If a later agent wrote a conclusion from the bad edge, removing the edge leaves that claim behind, so you also need to find claims derived from it.
+
+   </details>
+
+2. Write the JSON a worker would submit for "Compound X binds Gene Y (paper P, chars 120–180)". Which fields would the validator reject if missing?
+
+   <details><summary>What to check</summary>
+
+   Check it against the schema above. `sources` must have at least one span, so an empty list is rejected. `run_id` and `agent_id` must be present to meet non-negotiable 1. Compute the offsets in code rather than trusting the model's.
+
+   </details>
+
+3. At which of the four stages is a team that has a verifier with isolated context, but no measurement across sessions? What gate comes next?
+
+   <details><summary>Answer</summary>
+
+   Stage 2, a role split. Stage 3 is a persistent graph, gated on queries across sessions working, and it should be tested against flat retrieval as well as against no memory.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| How is a KG different from graph state? | State lasts one run, in one process, and mistakes die with it. A KG lasts across runs, any agent reads it, and mistakes persist and spread. |
+| What are the non-negotiables of the write path? | Complete provenance, reversible entity resolution, and claims stored as claims rather than truths. |
+| Why isn't a swarm enough? | Without shared state, workers re-derive the same findings. Publishing to a shared typed graph turns that redundancy into accumulation. |
+| What does Claude Code's workflow limit tell you about cost? | Third-party write-ups report 16 concurrent and 1,000 total sub-agents per run, and Anthropic reports about 15× tokens for its multi-agent system. Topology makes spend tractable, not cheap. |
+| How do you test if the graph is earning its place? | Fan out 5–10 workers over one corpus with and without shared memory, compare redundancy, tokens and quality, and gate against flat retrieval too. |
+| A right answer came from an unsupported path. Is that a pass? | No. Evaluate path validity as well as correctness, because a right answer reached through a wrong path is luck. |
+
+## Next
+
+[13-graph-ml-and-gnns.md](13-graph-ml-and-gnns.md): predicting the edges and labels the graph doesn't have yet.

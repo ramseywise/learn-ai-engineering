@@ -9,6 +9,8 @@ cleaned: 2026-11-01
 
 > Text-to-Cypher is a Track B technique that only becomes reliable with Track A machinery: named nodes, typed state, a checkpointer and a retry edge with a bound.
 
+A text-to-Cypher prompt alone leaves a user staring at one failed query or at a clean empty result. Reliability comes from what surrounds it: a router, a retry edge that returns the database's error to the generator, a validator ahead of execution, and state you can audit. This chapter wires ch. 15's agent as a LangGraph graph, and fixes the bugs in the book's listings on the way.
+
 ---
 
 ## Where it sits
@@ -141,7 +143,7 @@ Ch15's demo chains five questions, each building on the previous selection (ch. 
 
 The lesson is the selection mechanism. Refinement works because each turn can point at nodes from the last one instead of restating them.
 
-### Where to take it next
+### Where ch. 15 goes from here
 
 From ch15's closing section:
 
@@ -159,4 +161,52 @@ Depth: Negro et al., *Knowledge Graphs and LLMs in Action* (Manning, 2025), ch. 
 
 ---
 
-→ Next: [12-kg-as-shared-agent-memory.md](12-kg-as-shared-agent-memory.md): where the two kinds of graph meet.
+## Pitfalls
+
+- **Reading `retries < 3` as three retries.** Symptom: logs show one fewer retry than planned. Fix: `retries` goes up on every execution, so `< 3` means three executions and two retries.
+- **Treating empty as success.** Symptom: wrong filters return nothing and never reach the retry edge, because only `ClientError` is caught. Fix: validate before execution, and decide what an empty result should trigger.
+- **Executing before validating.** Symptom: semantically wrong queries run, such as one using `Company.value`. Fix: `EXPLAIN`, a schema check on labels and `var.prop`, and rejection of unbounded paths, as a read-only user.
+- **Retrying from the top.** Symptom: schema extraction reruns on every attempt. Fix: route back to `text_to_cypher` only, since just the query changes.
+- **Keeping results on the agent instance.** Symptom: concurrent users collide, and the checkpointer never sees records held in `self.results`. Fix: move what must survive into `AgentState`.
+- **Copying listing 15.12 as it stands.** Symptom: `self.memory` is used and never defined. Fix: define a checkpointer and pass a fresh `thread_id` per question.
+
+## Try it
+
+1. In the validator, what does `MATCH (c:Company) WHERE c.value > 1000 RETURN c` do on the L7 schema, and what goes into `information`?
+
+   <details><summary>Answer</summary>
+
+   Step 2 rejects it, because `value` isn't a property of `Company`; it sits on the `OWNS_STOCK_IN` edge. The reason goes into `information`, and the query goes back to the generator without running. Syntax alone wouldn't catch it, since it would parse and return nothing.
+
+   </details>
+
+2. Add a counter for first-pass validity and the rate after retries, over 20 questions on any graph you have. What would you change first if first-pass validity is 60% and post-retry validity is 95%?
+
+   <details><summary>What to look for</summary>
+
+   The retries are doing real work, at a cost per question. Read the validator's reasons and fix the commonest class in the schema annotations or few-shot examples, since each retry is another model call. If post-retry validity were also low, the prompt is missing information a retry can't supply.
+
+   </details>
+
+3. Draw this graph's five nodes and mark which are generate-then-verify, which edge is bounded, and where a validator node would go.
+
+   <details><summary>Answer</summary>
+
+   `intent_detection` → `schema_extraction` → `text_to_cypher` → `query_execution` → `generate_summary`. `text_to_cypher` generates and the database verifies. The bounded back-edge runs from `query_execution` to `text_to_cypher`. The validator goes between those two, with its failure edge returning to `text_to_cypher`.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why does the retry edge go to `text_to_cypher` and not to schema extraction? | The schema doesn't change between attempts, only the query, which now has the database's error in the prompt's `information` slot. |
+| What can't the retry loop catch? | A query that runs and returns nothing, because only `ClientError` is caught. Semantic errors need a validator before execution. |
+| What are the steps of a validator? | `EXPLAIN` to parse and plan, check labels, relationship types and `var.prop` against the schema, reject unbounded paths, then route failures back; execute only as a read-only user. |
+| Why do you summarise when the user can see the result? | The summary complements the view, pointing out what isn't visible, such as a detail in a `description`. `results_analysis` makes the choice to analyse easy to monitor. |
+| Why does the five-step investigation work without restating anything? | Each turn can point at the nodes selected in the last one, so "the selected crime" resolves from the UI selection. |
+| What would you measure in production? | First-pass validity and validity after retries, which tell you whether the prompt or the retry edge does the work. |
+
+## Next
+
+[12-kg-as-shared-agent-memory.md](12-kg-as-shared-agent-memory.md): what changes when many agents write to the graph, not just read it.

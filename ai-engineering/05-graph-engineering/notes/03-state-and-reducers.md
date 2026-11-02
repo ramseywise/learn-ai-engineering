@@ -6,11 +6,13 @@ sources:
   - https://youmind.com/landing/x-viral-articles/graph-engineering-ai-agent-loops
   - "Mayo Oshin & Nuno Campos, Learning LangChain (O'Reilly, 2025), ch. 5"
 confidence: medium
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 3 — State and Reducers
 
 > State is the substrate nodes coordinate through. Reducers are the concurrency primitive: they decide what happens when two branches write the same key.
+
+Two workers finish at once and both write `findings`. In LangGraph that raises `InvalidUpdateError` on the first run, while in a hand-rolled system the same bug raises nothing and one worker's results vanish. State is how nodes coordinate, and reducers decide what happens when writes meet, so this chapter covers declaring who writes each key, how `Send` creates parallel writers, and how to test whether an edge is real.
 
 ---
 
@@ -218,4 +220,53 @@ If yes, it is a **true dependency** and the edge is real. If no, the ordering is
 
 ---
 
-→ Next: [04-durable-execution-and-interrupts.md](04-durable-execution-and-interrupts.md) — checkpointers, and why pause, resume and replay are one mechanism.
+## Pitfalls
+
+- **A shared key with neither one writer nor a reducer.** Symptom: `InvalidUpdateError: At key 'findings': Can receive only one value per step.` Outside LangGraph, the symptom is lost work and no error. Fix: give every key exactly one writer or an explicit reducer.
+- **`Send` with no cap.** Symptom: token spend spikes because the input list was longer than anyone assumed. Fix: slice before fanning out, as `state["items"][:MAX_FANOUT]` does.
+- **Using the output schema as a privacy filter.** Symptom: internal keys don't appear in `invoke`'s result but do reach the client through `stream()`. Fix: filter the stream too, or keep the data out of state.
+- **Assuming the input schema validates.** Symptom: a missing `user_query` fails inside the first node that reads it, not at the graph's boundary. Fix: validate at the API layer, or use a Pydantic model as the state schema.
+- **Handing every node the whole state.** Symptom: a reviewer reads working keys and inherits the generator's framing. Fix: remember that state is what the graph stores and context is what you load from it, and give the reviewer the draft and the task ([07](07-failure-modes-at-scale.md#verifiers-need-isolated-context)).
+- **Sequencing steps because a person would.** Symptom: a slow pipeline in which the next step never reads the previous step's output. Fix: apply the edge test below, and fan out the incidental steps.
+
+## Try it
+
+1. In `fan_out.py`, set `MAX_FANOUT = 2` and run it with the same three items. What prints? What does that say about where a cap belongs?
+
+   <details><summary>Answer</summary>
+
+   `2 findings ['a.py: ok', 'b.py: ok']`. `c.py` is dropped with no error, so a cap on its own hides work. Record what was cut, or route the remainder to a later batch.
+
+   </details>
+
+2. Write a reducer for `findings` that keeps one entry per file with the latest result, replacing `operator.add`. What are the arguments, and what breaks if you overwrite instead of merge?
+
+   <details><summary>Answer</summary>
+
+   A reducer is a plain function of `(old, new)`, for example `lambda old, new: list({f.split(":")[0]: f for f in old + new}.values())`. A reducer that returns only `new` runs into the same problem as no reducer: in one super-step, one worker's update replaces another's and work is lost.
+
+   </details>
+
+3. A pipeline is fetch docs → summarise each → check style guide → generate changelog → notify. Which edges are real?
+
+   <details><summary>Answer</summary>
+
+   Fetch → summarise is real. If the style check reads the summaries and the changelog reads them too, those two are siblings and can fan out from summarise. Notify reads the changelog, so that edge is real. The test is whether the next step reads the previous step's output, not the order a person would work in.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| What is the difference between state and context? | State is what the graph stores. Context is what you choose to load from it into one node's prompt, so a reviewer sees the draft and the task rather than every key. |
+| What does a reducer do? | It decides how a node's update combines with what's there: overwrite with no reducer, append with `operator.add`, append-or-replace by ID with `add_messages`, or anything a custom `(old, new)` function returns. |
+| What is a super-step, and why does it matter for races? | Every node scheduled for the same super-step runs in parallel and their updates apply together at the end, with no checkpoint between them. The reducer alone decides how they combine. |
+| State the rule for shared keys. | Every key has exactly one writer or an explicit reducer. n8n's builder enforces the same rule by compare-and-swap, rejecting a write that lacks the `versionId` and `expectedChecksum` it read. |
+| How do `Send` and reducers relate? | `Send` creates the parallel writers and the reducer makes their writes safe, so without the reducer the fan-out graph raises on its first run with two items. |
+| A customer's internal fields leak through your API although the output schema excludes them. Why? | The output schema filters `invoke`'s return value, not `stream()`. Filter the stream as well, or keep those fields out of state. |
+| How do you find steps to parallelise? | For each edge, ask whether the next step actually reads the previous step's output. If it doesn't, the ordering is incidental and the step can fan out. |
+
+## Next
+
+[04-durable-execution-and-interrupts.md](04-durable-execution-and-interrupts.md): checkpointers, and why pause, resume and replay are one mechanism.

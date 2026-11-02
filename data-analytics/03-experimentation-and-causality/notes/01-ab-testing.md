@@ -440,7 +440,7 @@ A one-in-four false-positive rate from twenty looks is more than enough to make 
 |---|---|
 | a few planned interim looks | group-sequential design with O'Brien-Fleming or Pocock boundaries |
 | continuous monitoring | always-valid p-values / mSPRT |
-| you want a probability, not a test | [Bayesian A/B](../../04-bayesian-analysis/notes/04-bayesian-ab-testing.md) (peeking is less damaging, not free) |
+| you want a probability, not a test | [Bayesian A/B](../../04-bayesian-analysis/notes/04-bayesian-ab-testing.md) (peeking is not free there either) |
 | you want to stop sending traffic to losers | a [bandit](../../04-bayesian-analysis/notes/03-priors-and-bandits.md) |
 
 ## What a test cannot tell you

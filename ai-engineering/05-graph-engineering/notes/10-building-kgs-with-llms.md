@@ -6,11 +6,13 @@ sources:
   - https://platform.claude.com/cookbook/capabilities-knowledge-graph-guide
   - "Salvatore Raieli & Gabriele Iuculano, Building AI Agents with LLMs, RAG, and Knowledge Graphs (Packt, 2025), ch. 7"
 confidence: medium-high
-cleaned: 2026-10-31
+cleaned: 2026-11-01
 ---
 # 10 — Building KGs with LLMs: Extraction and Resolution
 
 > Extraction is the easy part. The graph is only as good as its entity resolution: one false merge silently joins two people, and every multi-hop answer that passes through the join is wrong.
+
+An LLM will turn any document into triples that look right, and that is the danger. If each hop in a chain is a little wrong the errors compound, and a false merge joins two people whom traversal then treats as one. This chapter walks extraction and resolution stage by stage, and ends with what has to be measured before anything is loaded.
 
 ---
 
@@ -425,4 +427,46 @@ Depth: *KG & LLMs in Action* ch. 5–8; the chapter files are listed in [referen
 
 ---
 
-→ Next: [10b-assembling-and-maintaining-kgs.md](10b-assembling-and-maintaining-kgs.md): loading resolved mentions into a graph, then keeping it correct.
+## Pitfalls
+
+- **Executing model-written Cypher.** Symptom: `{name: "Jane"}` and `{name: "Jane", age: 1993}` become two Janes, because `MERGE` matches the whole map. Fix: have the model emit structured mentions, then assemble with deterministic `MERGE` on a resolved key.
+- **Treating temperature 0 as stability.** Symptom: the same paragraph gives different extractions across runs. Fix: run each document several times and report stability as a metric.
+- **Trusting LLM character offsets.** Symptom: source spans that point at the wrong text. Fix: recompute span positions deterministically.
+- **Merging at extraction time.** Symptom: a bad merge can't be undone, since nothing recorded the mentions it joined. Fix: write one `Entity` per mention, resolve with similarity edges on top, and generate the KG layer from those clusters.
+- **Scoring only on similarity.** Symptom: Laurence Irving, a physiologist, lands in the cyclotron subgraph, because extraction spelled him "Lawrence". Fix: send borderline clusters to a human review queue.
+- **Weighing merges and splits equally.** Symptom: a tuned-up compression ratio with invented connections behind it. Fix: weight false merges more heavily; a split like the two Langmuir nodes only loses a connection.
+- **Linking through hubs.** Symptom: every candidate looks related, because "Infectious process" connects everything. Fix: drop hub nodes before shortest-path disambiguation.
+
+## Try it
+
+1. **Try it.** Take 10–20 documents rich in people and organisations and hand-label 50 mentions with their gold canonical entity. Extract mentions with descriptions using a small model under a JSON schema. Resolve them two ways: string similarity + WCC, and LLM clustering over names with descriptions. Write the result as `RESOLVES_TO {evidence, confidence}`, compare the two on the metrics above, then delete one `RESOLVES_TO` edge and check the graph returns to its earlier state. If it doesn't, resolution isn't reversible yet.
+
+
+
+   <details><summary>What to check</summary>
+
+   The likely result is that string similarity leaves false splits on bare surnames, and that LLM clustering with descriptions adds false merges when two people share a page. Score false merges more heavily than false splits, per entity type. A false-merge count of zero on 50 mentions is weak evidence, so grow the gold set before relying on it.
+
+   </details>
+
+2. Rename the type "Topic" to "Occupation" in a v1 prompt. What should you run to know if it helped, and on what?
+
+   <details><summary>Answer</summary>
+
+   Rerun the same pages several times with each name and compare completeness and stability, as ch. 5 did. That result is one paragraph judged by eye, so treat it as a lead to test on your own gold set, not as a measured improvement.
+
+   </details>
+
+## Interview checklist
+
+| Prompt | Answer in one line |
+|---|---|
+| Why is entity resolution the load-bearing step? | Each hop of a traversal multiplies the error per edge, and a false merge creates paths that don't exist, which later agents follow confidently. |
+| NLP pipeline or LLM extraction? | scispaCy-style pipelines are cheap and deterministic where a domain model exists; LLMs handle domains without one and equivalences with no surface pattern, and need temperature 0 plus stability tests. |
+| Why write a mention per page, and not merge? | Nothing is deleted, so the KG can be rebuilt from mentions when the resolution changes. That is what makes resolution reversible. |
+| How does graph-based ER decide on a canonical entity? | Write `META_SIMILAR` where the evidence is strong, run weakly connected components, name each after its longest name, and send borderline clusters to a person. |
+| You have budget for 100 labels. How do you evaluate? | Label a gold set of 50–100 mentions and report precision, recall and F1 per type, plus false-merge and false-split rates, weighting merges more heavily. |
+
+## Next
+
+[10b-assembling-and-maintaining-kgs.md](10b-assembling-and-maintaining-kgs.md): loading resolved mentions into a graph and keeping it correct.

@@ -246,7 +246,7 @@ x=175: P(cluster 0) = 0.000
 midpoint of the centres: 159.8
 ```
 
-Nearest centre would split at 159.8. The posterior puts the even odds near 148, because cluster 1 has about twice the spread and nearly twice the weight, so it reaches well into the gap. Reasoning with centres alone ignores both.
+Nearest centre would split at 159.8. The posterior puts the even odds near 147, because cluster 1 has about twice the spread and nearly twice the weight, so it reaches well into the gap. Reasoning with centres alone ignores both.
 
 > **Do not mix posterior samples across indices.** Each sample is a joint draw. If x + y = 10 is a constraint, pairing x from sample 3 with y from sample 900 breaks it. Compute derived quantities within a sample, then summarise.
 
@@ -322,7 +322,7 @@ r_hat: [1. 1.]
 
 **Burn-in.** Early samples reflect the starting point, not the posterior. PyMC handles this with `tune=` and discards tuning draws by default. PyMC3-era code sliced `trace[1000:]` by hand.
 
-**Autocorrelation and thinning.** Consecutive samples are correlated. Thinning, keeping every k-th sample, reduces storage, and BMH notes k ≤ 10 is usually enough. It does not add information. ESS is what matters.
+**Autocorrelation and thinning.** Consecutive samples are correlated. Thinning, keeping every k-th sample, reduces storage and the correlation between the samples you keep, but it does not add information. ESS is what matters.
 
 **HDI vs equal-tailed interval.** The highest-density interval (`az.hdi`) is the narrowest interval containing a given share of the mass. The equal-tailed interval cuts the same probability from each tail. They match for symmetric posteriors and differ for skewed ones. Current ArviZ's `az.summary` reports an 89% equal-tailed interval by default (columns `eti89_lb`, `eti89_ub`), so state which you are quoting.
 
@@ -384,11 +384,11 @@ Divergences fall from 88 to 2, and τ's ESS rises from 64 to over 2,000. The two
 | Rescale inputs | mean 0, sd 1, as Challenger shows |
 | When it will not converge | reconsider the model |
 
-> **The Folk Theorem of statistical computing (Gelman, as quoted in BMH): "If you are having computational problems, probably your model is wrong."**
+> **The Folk Theorem of Statistical Computing, as BMH ch. 3 states it: "If you are having computational problems, probably your model is wrong."**
 
 ## PyMC3 to current PyMC
 
-BMH, the talk and most posts before 2022 use PyMC3 on a Theano backend. BMH's maintained code uses a later PyMC, but the BayesianML week 4 coursework does not, and is pinned at `pymc3==3.11.4 theano-pymc==1.1.2` (see [practice/BayesianML/](../practice/BayesianML)). The code in this pillar runs on PyMC 6.4 and ArviZ 1.3. There the return value is an xarray `DataTree` with the same `posterior` access as the older `InferenceData`:
+BMH's notebooks, the talk and most posts before 2022 use PyMC3 on a Theano backend. So does the BayesianML week 4 coursework, pinned at `pymc3==3.11.4 theano-pymc==1.1.2` (see [practice/BayesianML/](../practice/BayesianML)). The code in this pillar runs on PyMC 6.4 and ArviZ 1.3. There the return value is an xarray `DataTree` with the same `posterior` access as the older `InferenceData`:
 
 ```python
 print(type(mix).__name__, list(mix.posterior.data_vars))

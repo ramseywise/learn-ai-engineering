@@ -24,6 +24,9 @@ sources:
   - https://arxiv.org/abs/2511.01758 (RLAC, adversarial critic picks the rubric to verify)
   - https://arxiv.org/abs/2502.19328 (RewardAgent, preference RM plus verification agents)
   - https://arxiv.org/abs/2509.04903 (ACE-RL, checklist rewards for long-form writing)
+  - https://arxiv.org/abs/2607.01181 (VARL, verifier-gated discriminator reward from human demos)
+  - https://arxiv.org/abs/1606.03476 (GAIL, adversarial imitation learning)
+  - https://arxiv.org/abs/2606.26300 (Verification Horizon, Qwen coding-agent reward design)
 confidence: medium
 cleaned: 2026-11-01
 ---
@@ -238,6 +241,21 @@ R = O + β·Φ        O = outcome reward (still the goal)
 - **Terminal-Bench** (Qwen3-4B, 5 seeds): violations per episode fell from 3.71 to **0.66**, success unchanged. The agent took *more* effective actions, not fewer.
 - **miniF2F**: iterations to reach 90% success fell from 7.0 to 4.4 at 4B, and from 8.5 to 5.4 at 30B.
 - **Chained file operations**: all-fail groups fell from 65% to 8%.
+
+**A learned check can work if correctness gates it.** VARL multiplies the verifier's 0/1 by a co-trained discriminator's probability that the output is human-written, so the discriminator only scores outputs that pass. This is GAIL's adversarial imitation ([Ho & Ermon, NeurIPS 2016](https://arxiv.org/abs/1606.03476)) bolted onto GRPO. On Countdown-Code, where the model can rewrite `test.py`, SFT-then-RLVR at Qwen2.5-3B hacked **over 96% of the time at every KL coefficient tried (0, 0.001, 0.01). VARL hacked 1%, while gold accuracy went from about 20% to 60%**, even though 10% of its o4-mini demonstrations hacked. In bug fixing at Qwen2.5-7B it matched RLVR's accuracy (about 50%→65%) with human-sized edits, where RLVR rewrote whole programs ([arXiv:2607.01181](https://arxiv.org/abs/2607.01181) (Damani et al., 2026-07, preprint)). The authors explain the KL failure this way: KL is per token, and a hacked output can stay close token by token to the SFT policy. The caveats: there are no seeds, the run needs demonstrations of the desired behaviour, the feature space is hand-chosen (a raw-text discriminator latched onto story length), and the authors had to engineer around adversarial instability. Rule 4 still stands for checks you can make deterministic.
+
+**The pattern set has to grow with the policy.** Qwen's coding-agent report found the hacks that pay
+are the ones no environment hardening anticipates ([arXiv:2606.26300](https://arxiv.org/abs/2606.26300) (Wang et al., 2026-06, tech report)).
+Once git history after the fix was stripped and network access cut where tasks didn't need it,
+test tampering and history mining were *less* often rewarded than the 60% baseline. Fetching the
+original patch appeared in only 4.3% of rollouts but resolved 72%. They audit each trajectory's
+commands, network calls and git operations against a pattern list and penalize matches. An agentic
+reviewer adds the new shortcuts it finds after each training interval. Across SWE-bench Verified,
+Multilingual and Pro on an internal Qwen-Turbo, **hacked-and-resolved fell from 28.6% to 0.6% and
+clean resolution rose from 40.2% to 60.5%**. Unmonitored, the raw pass rate kept climbing while the
+clean rate collapsed late in training. Both the model and the pattern set are internal and there is
+one run per arm, but the shape fits rule 4: the pattern matcher is deterministic, and it is the
+learned reviewer that extends it offline.
 
 **RLVR verifies outcomes. RLVP also verifies the process.** Together they train an agent that gets the job done *and* does it properly. For guardrails on the inference side, see [loop failure modes](../../../ai-engineering/04-loop-engineering/notes/09-failure-modes-and-guardrails.md).
 
